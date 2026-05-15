@@ -3,7 +3,6 @@ import { Op } from 'sequelize';
 import { getElasticsearchService } from '../../elasticsearch/ElasticsearchService';
 import { ES_DATA_STREAM } from '../../elasticsearch/dataStreams';
 import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
-import { SaasDadosEmpresa } from '../../../models/saas/SaasDadosEmpresa';
 import { Cliente } from '../../../models/clientes/Cliente';
 
 function clienteNomeDisplay(c: { razao_social?: string | null; nome_fantasia?: string | null }): string | null {
@@ -405,39 +404,25 @@ export class AuditoriaQueryService {
 
   /**
    * Enriquece logs com empresa_nome (tenant) para exibição
-   * @param isSaas - true para painel SaaS (usa SaasDadosEmpresa), false para ERP (usa DadosEmpresa)
-   * @param mixed - true quando a lista pode ter logs ERP e SaaS (usa ambos os modelos)
+   * @param _isSaas - legado; empresa_id nos logs é sempre tenant (adm_sistema_tenants)
+   * @param mixed - legado; mantido por compatibilidade de assinatura
    */
-  static async enrichLogsWithEmpresaNome(logs: Record<string, unknown>[], isSaas: boolean, mixed = false): Promise<void> {
-    const idsBySaas = { saas: new Set<number>(), erp: new Set<number>() };
+  static async enrichLogsWithEmpresaNome(logs: Record<string, unknown>[], _isSaas: boolean, mixed = false): Promise<void> {
+    void mixed;
+    const ids = new Set<number>();
     for (const log of logs) {
       const eid = log.empresa_id as number | null | undefined;
-      if (eid == null || eid <= 0) continue;
-      if (mixed) {
-        (this.isAuditDocSaas(log) ? idsBySaas.saas : idsBySaas.erp).add(eid);
-      } else {
-        (isSaas ? idsBySaas.saas : idsBySaas.erp).add(eid);
-      }
+      if (eid != null && eid > 0) ids.add(eid);
     }
 
-    const saasMap = new Map<number, string>();
-    const erpMap = new Map<number, string>();
-    if (idsBySaas.saas.size > 0) {
-      const rows = await SaasDadosEmpresa.findAll({
-        where: { id: { [Op.in]: [...idsBySaas.saas] } },
-        attributes: ['id', 'razao_social', 'nome_fantasia']
-      });
-      for (const r of rows) {
-        saasMap.set(r.id, r.razao_social || r.nome_fantasia || `Empresa ${r.id}`);
-      }
-    }
-    if (idsBySaas.erp.size > 0) {
+    const nomeMap = new Map<number, string>();
+    if (ids.size > 0) {
       const rows = await DadosEmpresa.findAll({
-        where: { id: { [Op.in]: [...idsBySaas.erp] } },
-        attributes: ['id', 'razao_social', 'nome_fantasia']
+        where: { id: { [Op.in]: [...ids] } },
+        attributes: ['id', 'razao_social', 'nome_fantasia'],
       });
       for (const r of rows) {
-        erpMap.set(r.id, r.razao_social || (r.nome_fantasia ?? `Empresa ${r.id}`));
+        nomeMap.set(r.id, r.razao_social || r.nome_fantasia || `Empresa ${r.id}`);
       }
     }
 
@@ -447,9 +432,7 @@ export class AuditoriaQueryService {
         log.empresa_nome = null;
         continue;
       }
-      const map =
-        mixed ? (this.isAuditDocSaas(log) ? saasMap : erpMap) : isSaas ? saasMap : erpMap;
-      log.empresa_nome = map.get(eid) ?? `#${eid}`;
+      log.empresa_nome = nomeMap.get(eid) ?? `#${eid}`;
     }
   }
 

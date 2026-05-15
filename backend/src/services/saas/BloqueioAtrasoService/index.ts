@@ -1,10 +1,10 @@
-import SaasDadosEmpresa from '../../../models/saas/SaasDadosEmpresa';
+import { Op } from 'sequelize';
+import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import SaasTitulo from '../../../models/saas/SaasTitulo';
 import SaasParametros from '../../../models/saas/SaasParametros';
-import { Op } from 'sequelize';
 
 /**
- * Se a empresa não tiver mais faturas em atraso (além do limite configurado), desbloqueia.
+ * Se a empresa (tenant) não tiver mais faturas em atraso (além do limite configurado), desbloqueia.
  */
 export async function desbloquearSeSemAtraso(empresaId: number): Promise<void> {
   const parametros = await SaasParametros.findOne();
@@ -21,12 +21,12 @@ export async function desbloquearSeSemAtraso(empresaId: number): Promise<void> {
       empresa_id: empresaId,
       pago: false,
       status: { [Op.in]: ['pendente', 'vencido'] },
-      data_vencimento: { [Op.lte]: dataLimite }
-    }
+      data_vencimento: { [Op.lte]: dataLimite },
+    },
   });
 
   if (count === 0) {
-    await SaasDadosEmpresa.update({ bloqueado_por_atraso: false }, { where: { id: empresaId } });
+    await DadosEmpresa.update({ bloqueado_por_atraso: false }, { where: { id: empresaId } });
   }
 }
 
@@ -38,11 +38,11 @@ export interface BloqueioAtrasoInfo {
 }
 
 /**
- * Verifica se a empresa está bloqueada por atraso e retorna dados para redirecionar ao pagamento.
+ * Verifica se o tenant está bloqueado por atraso e retorna dados para redirecionar ao pagamento.
  */
 export async function getBloqueioAtrasoInfo(empresaId: number): Promise<BloqueioAtrasoInfo> {
-  const empresa = await SaasDadosEmpresa.findByPk(empresaId, {
-    attributes: ['id', 'bloqueado_por_atraso', 'data_fim_desbloqueio_manual', 'nome_empresa']
+  const empresa = await DadosEmpresa.findByPk(empresaId, {
+    attributes: ['id', 'bloqueado_por_atraso', 'data_fim_desbloqueio_manual', 'razao_social', 'nome_fantasia'],
   });
 
   if (!empresa || !empresa.bloqueado_por_atraso) {
@@ -62,16 +62,16 @@ export async function getBloqueioAtrasoInfo(empresaId: number): Promise<Bloqueio
       empresa_id: empresaId,
       pago: false,
       status: { [Op.in]: ['pendente', 'vencido'] },
-      data_vencimento: { [Op.lt]: hoje }
+      data_vencimento: { [Op.lt]: hoje },
     },
     order: [['data_vencimento', 'ASC']],
-    attributes: ['id', 'url_boleto', 'numero_titulo', 'valor', 'data_vencimento']
+    attributes: ['id', 'url_boleto', 'numero_titulo', 'valor', 'data_vencimento'],
   });
 
   if (!tituloAtraso) {
     return {
       bloqueado: true,
-      mensagem: 'Acesso bloqueado. Entre em contato com o suporte para regularizar sua fatura.'
+      mensagem: 'Acesso bloqueado. Entre em contato com o suporte para regularizar sua fatura.',
     };
   }
 
@@ -79,6 +79,6 @@ export async function getBloqueioAtrasoInfo(empresaId: number): Promise<Bloqueio
     bloqueado: true,
     titulo_id: tituloAtraso.id,
     url_pagamento: tituloAtraso.url_boleto ?? null,
-    mensagem: 'Acesso bloqueado devido a fatura em atraso. Efetue o pagamento para liberar o uso da plataforma.'
+    mensagem: 'Acesso bloqueado devido a fatura em atraso. Efetue o pagamento para liberar o uso da plataforma.',
   };
 }

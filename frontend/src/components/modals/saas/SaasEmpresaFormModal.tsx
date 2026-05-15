@@ -170,7 +170,12 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
   });
   const updateMutation = useMutation({
     mutationFn: (d: Partial<SaasEmpresa>) => saasEmpresasService.update(effectiveId!, d),
-    onSuccess: () => { success(t('messages.success')); queryClient.invalidateQueries({ queryKey: ['saas-empresas'] }); onSuccess?.(); },
+    onSuccess: () => {
+      success(t('messages.success'));
+      queryClient.invalidateQueries({ queryKey: ['saas-empresas'] });
+      if (effectiveId) queryClient.invalidateQueries({ queryKey: ['saas-empresa', effectiveId] });
+      onSuccess?.();
+    },
     onError: (e: unknown) => error((e as { response?: { data?: { message?: string } } })?.response?.data?.message || t('messages.error')),
   });
   const isPending = createMutation.isPending || updateMutation.isPending;

@@ -2,7 +2,6 @@ import { Response as ExpressResponse } from 'express';
 import { Op } from 'sequelize';
 import { sequelize } from '../../../config/database';
 import { SaasMensagemHistorico } from '../../../models/saas/SaasMensagemHistorico';
-import { SaasDadosEmpresa } from '../../../models/saas/SaasDadosEmpresa';
 import { MensagemHistorico } from '../../../models/comunicacao/MensagemHistorico';
 import { Usuario } from '../../../models/cadastros/Usuario';
 import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
@@ -130,9 +129,9 @@ export class SaasMensagemHistoricoController {
               where: { id: saasIds },
               include: [
                 {
-                  model: SaasDadosEmpresa,
+                  model: DadosEmpresa,
                   as: 'empresa',
-                  attributes: ['id', 'razao_social', 'nome_fantasia', 'nome_empresa'],
+                  attributes: ['id', 'razao_social', 'nome_fantasia'],
                   required: false,
                 },
               ],
@@ -278,9 +277,9 @@ export class SaasMensagemHistoricoController {
       const mensagem = await SaasMensagemHistorico.findByPk(pk, {
         include: [
           {
-            model: SaasDadosEmpresa,
+            model: DadosEmpresa,
             as: 'empresa',
-            attributes: ['id', 'razao_social', 'nome_fantasia', 'nome_empresa', 'email', 'telefone'],
+            attributes: ['id', 'razao_social', 'nome_fantasia', 'email', 'telefone'],
             required: false,
           },
         ],
@@ -319,9 +318,9 @@ export class SaasMensagemHistoricoController {
         where,
         include: [
           {
-            model: SaasDadosEmpresa,
+            model: DadosEmpresa,
             as: 'empresa',
-            attributes: ['id', 'razao_social', 'nome_fantasia', 'nome_empresa'],
+            attributes: ['id', 'razao_social', 'nome_fantasia'],
             required: false,
           },
         ],

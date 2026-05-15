@@ -4,7 +4,6 @@ import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { SaasPlano } from '../../../models/saas/SaasPlano';
 import { SaasContrato } from '../../../models/saas/SaasContrato';
 import { SaasTitulo } from '../../../models/saas/SaasTitulo';
-import { SaasDadosEmpresa } from '../../../models/saas/SaasDadosEmpresa';
 import { formatDateISOForAPI } from '../../../utils/timezoneUtils';
 import { getStartOfLocalDay } from '../../../utils/dateUtils';
 import { buildSaasDashboardStatsGraficos } from '../../sistema/dashboardGraficosStats';
@@ -488,7 +487,7 @@ export class SaasDashboardService {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
 
-    const empresasBloqueadas = await SaasDadosEmpresa.findAll({
+    const empresasBloqueadas = await DadosEmpresa.findAll({
       where: { bloqueado_por_atraso: true },
       attributes: ['id'],
     });

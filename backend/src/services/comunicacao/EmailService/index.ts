@@ -162,13 +162,13 @@ export class EmailService {
 
     if (saas) {
       const { SaasTitulo } = await import('../../../models/saas/SaasTitulo');
-      const { SaasDadosEmpresa } = await import('../../../models/saas/SaasDadosEmpresa');
+      const { DadosEmpresa } = await import('../../../models/sistema/DadosEmpresa');
       const { SaasPlano } = await import('../../../models/saas/SaasPlano');
       const { SaasBanco } = await import('../../../models/saas/SaasBanco');
       const rows = await SaasTitulo.findAll({
         where: { status: { [Op.in]: ['pendente', 'vencido'] } as never, pago: false, data_vencimento: { [Op.gte]: dataVencimento, [Op.lt]: proximoDia } },
         include: [
-          { model: SaasDadosEmpresa, as: 'empresa', required: true, attributes: ['id', 'razao_social', 'nome_fantasia', 'nome_empresa', 'email', 'telefone'] },
+          { model: DadosEmpresa, as: 'empresa', required: true, attributes: ['id', 'razao_social', 'nome_fantasia', 'email', 'telefone'] },
           { model: SaasPlano, as: 'plano', required: false },
           { model: SaasBanco, as: 'banco', required: false },
         ],
@@ -179,7 +179,7 @@ export class EmailService {
         const plain = t.get({ plain: true }) as Record<string, unknown>;
         return {
           ...plain,
-          cliente: { razao_social: empData.razao_social || empData.nome_empresa, nome_fantasia: empData.nome_fantasia, email: empData.email },
+          cliente: { razao_social: empData.razao_social || empData.nome_fantasia, nome_fantasia: empData.nome_fantasia, email: empData.email },
           banco: (t as unknown as { banco?: unknown }).banco,
           plano: (t as unknown as { plano?: unknown }).plano,
         } as TituloParaEnvio;

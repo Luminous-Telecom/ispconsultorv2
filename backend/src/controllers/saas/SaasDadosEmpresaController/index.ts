@@ -1,7 +1,8 @@
 import { Response } from 'express';
 import Joi from 'joi';
-import SaasDadosEmpresa from '../../../models/saas/SaasDadosEmpresa';
+import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { SaasDadosEmpresaService } from '../../../services/saas/SaasDadosEmpresaService';
+import { cache } from '../../../utils/cache';
 import { DesbloqueioManualService } from '../../../services/saas/DesbloqueioManualService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
@@ -94,15 +95,18 @@ export class SaasDadosEmpresaController {
         }, {}));
         return;
       }
-      const empresaAntiga = await SaasDadosEmpresaService.getById(Number(req.params.id));
-      await SaasDadosEmpresaService.update(Number(req.params.id), value);
-      if (empresaAntiga) {
-        await registrarAtualizacao(req as any, 'SaasDadosEmpresa', Number(req.params.id),
-          empresaAntiga.toJSON() as Record<string, unknown>,
-          { ...empresaAntiga.toJSON(), ...value } as Record<string, unknown>,
-          undefined, null);
+      const id = Number(req.params.id);
+      const empresaAntiga = await SaasDadosEmpresaService.getById(id);
+      if (!empresaAntiga) {
+        sendNotFound(res, 'Empresa não encontrada');
+        return;
       }
-      sendSuccess(res, null, 'Empresa atualizada com sucesso');
+      const empresaAtualizada = await SaasDadosEmpresaService.update(id, value);
+      await registrarAtualizacao(req as any, 'SaasDadosEmpresa', id,
+        empresaAntiga.toJSON() as Record<string, unknown>,
+        empresaAtualizada.toJSON() as Record<string, unknown>,
+        undefined, null);
+      sendSuccess(res, empresaAtualizada.toJSON(), 'Empresa atualizada com sucesso');
     } catch (err) {
       sendError(res, err, 'Erro ao atualizar empresa', 500, true);
     }
@@ -142,10 +146,12 @@ export class SaasDadosEmpresaController {
         ? null
         : String(data_fim_desbloqueio_manual).trim().slice(0, 10) || null;
       const empresaAntiga = await SaasDadosEmpresaService.getById(id);
-      const [affected] = await SaasDadosEmpresa.update(
+      const [affected] = await DadosEmpresa.update(
         { data_fim_desbloqueio_manual: value },
         { where: { id } }
       );
+      cache.delete(`dados_empresa:config:${id}`);
+      cache.delete('dados_empresa:config');
       if (affected === 0) {
         sendNotFound(res, 'Empresa não encontrada');
         return;

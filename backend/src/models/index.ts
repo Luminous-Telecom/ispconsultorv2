@@ -322,20 +322,20 @@ MensagemHistorico.belongsTo(Usuario, {
 SistemaLogOperacional.belongsTo(DadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
 SistemaLogOperacional.belongsTo(Usuario, { foreignKey: 'usuario_id', as: 'usuario' });
 
-// SaaS
-SaasPlano.hasMany(SaasDadosEmpresa, { foreignKey: 'plano_id', as: 'empresas' });
-SaasDadosEmpresa.belongsTo(SaasPlano, { foreignKey: 'plano_id', as: 'plano' });
-
+// SaaS — tenants em adm_sistema_tenants; saas_saas_dados_empresa = empresa operadora do SaaS
 DadosEmpresa.hasMany(SaasContrato, { foreignKey: 'empresa_id', as: 'saasContratos' });
 SaasContrato.belongsTo(DadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
 SaasPlano.hasMany(SaasContrato, { foreignKey: 'plano_id', as: 'contratos' });
 SaasContrato.belongsTo(SaasPlano, { foreignKey: 'plano_id', as: 'plano' });
 
-SaasDadosEmpresa.hasMany(SaasMensagemHistorico, { foreignKey: 'empresa_id', as: 'mensagensHistorico' });
-SaasMensagemHistorico.belongsTo(SaasDadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
+DadosEmpresa.hasMany(SaasMensagemHistorico, { foreignKey: 'empresa_id', as: 'mensagensHistorico' });
+SaasMensagemHistorico.belongsTo(DadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
 
-SaasDadosEmpresa.hasMany(SaasTitulo, { foreignKey: 'empresa_id', as: 'titulos' });
-SaasTitulo.belongsTo(SaasDadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
+DadosEmpresa.hasMany(SaasTitulo, { foreignKey: 'empresa_id', as: 'titulos' });
+SaasTitulo.belongsTo(DadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
+
+SaasPlano.hasMany(SaasDadosEmpresa, { foreignKey: 'plano_id', as: 'empresas' });
+SaasDadosEmpresa.belongsTo(SaasPlano, { foreignKey: 'plano_id', as: 'plano' });
 
 SaasPlano.hasMany(SaasTitulo, { foreignKey: 'plano_id', as: 'titulos' });
 SaasTitulo.belongsTo(SaasPlano, { foreignKey: 'plano_id', as: 'plano' });

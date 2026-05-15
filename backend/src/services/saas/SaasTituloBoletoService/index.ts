@@ -1,11 +1,11 @@
 import { SaasTitulo } from '../../../models/saas/SaasTitulo';
-import { SaasDadosEmpresa } from '../../../models/saas/SaasDadosEmpresa';
+import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { SaasPlano } from '../../../models/saas/SaasPlano';
 import { SaasBanco } from '../../../models/saas/SaasBanco';
 import { BancoApiService } from '../../bancos/BancoApiService';
 
 /**
- * Gera boleto para SaasTitulo. Sacado vem de saas_saas_dados_empresa (empresa/tenant).
+ * Gera boleto para SaasTitulo. Sacado vem do tenant (adm_sistema_tenants).
  * Adapta SaasPlano.nome -> nome_plano e usa bancoTable='saas_saas_bancos'.
  */
 export class SaasTituloBoletoService {
@@ -30,20 +30,15 @@ export class SaasTituloBoletoService {
       return { success: false, message: 'Banco não configurado para geração de boleto (Efi/Asaas)' };
     }
 
-    let empresa = await SaasDadosEmpresa.findByPk(titulo.empresa_id);
+    const empresa = await DadosEmpresa.findByPk(titulo.empresa_id);
     if (!empresa) {
-      const { DadosEmpresa } = await import('../../../models/sistema/DadosEmpresa');
-      const dadosEmpresa = await DadosEmpresa.findByPk(titulo.empresa_id);
-      if (!dadosEmpresa) {
-        return { success: false, message: 'Empresa não encontrada para o título' };
-      }
-      empresa = dadosEmpresa as unknown as import('../../../models/saas/SaasDadosEmpresa').SaasDadosEmpresa;
+      return { success: false, message: 'Empresa (tenant) não encontrada para o título' };
     }
 
     const emp = empresa.get({ plain: true }) as Record<string, unknown>;
     const clienteData: Record<string, unknown> = {
       id: empresa.id,
-      razao_social: emp.razao_social || emp.nome_empresa || 'Sacado',
+      razao_social: emp.razao_social || emp.nome_fantasia || 'Sacado',
       nome_fantasia: emp.nome_fantasia || null,
       cnpj: emp.cnpj || '',
       email: emp.email || '',

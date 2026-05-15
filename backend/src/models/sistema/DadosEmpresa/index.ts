@@ -33,6 +33,8 @@ export class DadosEmpresa extends Model<
   declare responsavel_cargo: string | null;
   declare responsavel_assinatura: string | null;
   declare logo: string | null;
+  declare bloqueado_por_atraso: CreationOptional<boolean>;
+  declare data_fim_desbloqueio_manual: CreationOptional<string | null>;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 }
@@ -129,6 +131,16 @@ DadosEmpresa.init(
       type: DataTypes.STRING,
       allowNull: true
     },
+    bloqueado_por_atraso: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    data_fim_desbloqueio_manual: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+      defaultValue: null,
+    },
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,
@@ -142,8 +154,10 @@ DadosEmpresa.init(
   },
   {
     sequelize,
-    tableName: 'adm_sistema_dados_empresa',
+    tableName: 'adm_sistema_tenants',
     timestamps: true,
-    underscored: true
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
+    underscored: true,
   }
 );

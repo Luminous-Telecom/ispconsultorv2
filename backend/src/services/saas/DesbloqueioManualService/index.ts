@@ -1,5 +1,6 @@
-import SaasDadosEmpresa from '../../../models/saas/SaasDadosEmpresa';
+import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import SaasParametros from '../../../models/saas/SaasParametros';
+import { cache } from '../../../utils/cache';
 
 export interface DesbloqueioManualResult {
   success: boolean;
@@ -8,14 +9,13 @@ export interface DesbloqueioManualResult {
 }
 
 /**
- * Desbloqueia manualmente uma empresa bloqueada por atraso.
+ * Desbloqueia manualmente um tenant bloqueado por atraso.
  * Define data_fim_desbloqueio_manual = hoje + dias_desbloqueio_manual.
- * Após essa data, a rotina BloquearSaasAtrasoRoutine rebloqueia se houver atraso.
  */
 export class DesbloqueioManualService {
   static async desbloquear(empresaId: number): Promise<DesbloqueioManualResult> {
-    const empresa = await SaasDadosEmpresa.findByPk(empresaId, {
-      attributes: ['id', 'bloqueado_por_atraso', 'nome_empresa']
+    const empresa = await DadosEmpresa.findByPk(empresaId, {
+      attributes: ['id', 'bloqueado_por_atraso', 'razao_social', 'nome_fantasia'],
     });
 
     if (!empresa) {
@@ -27,14 +27,14 @@ export class DesbloqueioManualService {
     }
 
     const parametros = await SaasParametros.findOne({
-      attributes: ['dias_desbloqueio_manual']
+      attributes: ['dias_desbloqueio_manual'],
     });
 
     const dias = parametros?.dias_desbloqueio_manual ?? null;
     if (dias == null || dias <= 0) {
       return {
         success: false,
-        message: 'Configure "Dias para desbloqueio manual" em Parâmetros > Recursos do Sistema'
+        message: 'Configure "Dias para desbloqueio manual" em Parâmetros > Recursos do Sistema',
       };
     }
 
@@ -43,15 +43,17 @@ export class DesbloqueioManualService {
     dataFim.setDate(dataFim.getDate() + dias);
     const dataFimStr = dataFim.toISOString().slice(0, 10);
 
-    await SaasDadosEmpresa.update(
+    await DadosEmpresa.update(
       { bloqueado_por_atraso: false, data_fim_desbloqueio_manual: dataFimStr },
       { where: { id: empresaId } }
     );
+    cache.delete(`dados_empresa:config:${empresaId}`);
+    cache.delete('dados_empresa:config');
 
     return {
       success: true,
       message: `Empresa desbloqueada. Prazo para regularizar: ${dias} dias (até ${dataFimStr})`,
-      data: { data_fim_desbloqueio_manual: dataFimStr }
+      data: { data_fim_desbloqueio_manual: dataFimStr },
     };
   }
 }

@@ -3,8 +3,9 @@ import { logger } from '../../../utils/logger';
 import { IRoutine, RoutineResult } from '../../../interfaces/IRoutine';
 import type { JsonValue } from '../../../types/index';
 import SaasParametros from '../../../models/saas/SaasParametros';
-import SaasDadosEmpresa from '../../../models/saas/SaasDadosEmpresa';
+import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import SaasTitulo from '../../../models/saas/SaasTitulo';
+import { cache } from '../../../utils/cache';
 
 /**
  * Rotina SaaS que verifica faturas em atraso e bloqueia empresas
@@ -75,14 +76,14 @@ export class BloquearSaasAtrasoRoutine implements IRoutine {
 
       const idsComAtraso = Array.from(empresasComAtraso.keys());
       const empresasComAtrasoData = idsComAtraso.length > 0
-        ? await SaasDadosEmpresa.findAll({
+        ? await DadosEmpresa.findAll({
             where: { id: { [Op.in]: idsComAtraso } },
             attributes: ['id', 'bloqueado_por_atraso', 'data_fim_desbloqueio_manual']
           })
         : [];
       const mapaEmpresas = new Map(empresasComAtrasoData.map(e => [e.id, e]));
 
-      const empresasBloqueadas = await SaasDadosEmpresa.findAll({
+      const empresasBloqueadas = await DadosEmpresa.findAll({
         where: { bloqueado_por_atraso: true },
         attributes: ['id']
       });
@@ -103,29 +104,31 @@ export class BloquearSaasAtrasoRoutine implements IRoutine {
         }
 
         if (!idsBloqueados.has(empresaId)) {
-          await SaasDadosEmpresa.update(
+          await DadosEmpresa.update(
             { bloqueado_por_atraso: true, data_fim_desbloqueio_manual: null },
             { where: { id: empresaId } }
           );
+          cache.delete(`dados_empresa:config:${empresaId}`);
           bloqueadas++;
           logger.info('BloquearSaasAtrasoRoutine - Empresa bloqueada por atraso', {
             empresa_id: empresaId,
             dias_limite: diasLimite
           });
         } else if (emp?.data_fim_desbloqueio_manual && emp.data_fim_desbloqueio_manual < hojeStr) {
-          await SaasDadosEmpresa.update(
+          await DadosEmpresa.update(
             { data_fim_desbloqueio_manual: null },
             { where: { id: empresaId } }
           );
+          cache.delete(`dados_empresa:config:${empresaId}`);
         }
       }
 
-      const empresasSemAtraso = await SaasDadosEmpresa.findAll({
+      const empresasSemAtraso = await DadosEmpresa.findAll({
         where: {
           bloqueado_por_atraso: true,
           id: { [Op.notIn]: Array.from(empresasComAtraso.keys()) }
         },
-        attributes: ['id', 'nome_empresa']
+        attributes: ['id', 'razao_social', 'nome_fantasia']
       });
 
       for (const emp of empresasSemAtraso) {
@@ -138,14 +141,15 @@ export class BloquearSaasAtrasoRoutine implements IRoutine {
           }
         });
         if (titulosAberto === 0) {
-          await SaasDadosEmpresa.update(
+          await DadosEmpresa.update(
             { bloqueado_por_atraso: false },
             { where: { id: emp.id } }
           );
+          cache.delete(`dados_empresa:config:${emp.id}`);
           desbloqueadas++;
           logger.info('BloquearSaasAtrasoRoutine - Empresa desbloqueada (sem faturas em atraso)', {
             empresa_id: emp.id,
-            nome_empresa: emp.nome_empresa
+            razao_social: emp.razao_social || emp.nome_fantasia
           });
         }
       }

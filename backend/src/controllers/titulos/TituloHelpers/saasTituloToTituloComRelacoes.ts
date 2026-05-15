@@ -12,8 +12,8 @@ export function saasTituloToTituloComRelacoes(saasTitulo: {
   const empPlain = (typeof emp?.get === 'function' ? emp.get({ plain: true }) : emp) as Record<string, unknown> | undefined;
   const cliente = {
     id: empPlain?.id ?? tituloData.empresa_id,
-    razao_social: String(empPlain?.razao_social ?? empPlain?.nome_empresa ?? ''),
-    nome: String(empPlain?.nome_fantasia ?? empPlain?.nome_empresa ?? empPlain?.razao_social ?? ''),
+    razao_social: String(empPlain?.razao_social ?? empPlain?.nome_fantasia ?? ''),
+    nome: String(empPlain?.nome_fantasia ?? empPlain?.razao_social ?? ''),
     cnpj: empPlain?.cnpj ? String(empPlain.cnpj) : undefined,
     cpf: empPlain?.cpf ? String(empPlain.cpf) : undefined,
     endereco: empPlain?.endereco ? String(empPlain.endereco) : undefined,

@@ -4,14 +4,14 @@ import { getBloqueioAtrasoInfo } from '../../../services/saas/BloqueioAtrasoServ
 import { SaasTituloBoletoService } from '../../../services/saas/SaasTituloBoletoService';
 import { TituloPDFService } from '../../../services/titulos/TituloPDFService';
 import { SaasTitulo } from '../../../models/saas/SaasTitulo';
-import { SaasDadosEmpresa } from '../../../models/saas/SaasDadosEmpresa';
+import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { SaasPlano } from '../../../models/saas/SaasPlano';
 import { SaasBanco } from '../../../models/saas/SaasBanco';
 import { saasTituloToTituloComRelacoes } from '../../titulos/TituloHelpers/saasTituloToTituloComRelacoes';
 import { sendSuccess, sendError, sendNotFound } from '../../../utils/responseUtils';
 
 const tituloIncludes = [
-  { model: SaasDadosEmpresa, as: 'empresa', attributes: ['id', 'razao_social', 'nome_empresa', 'nome_fantasia', 'cnpj', 'cep', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado'] },
+  { model: DadosEmpresa, as: 'empresa', attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj', 'cep', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado'] },
   { model: SaasPlano, as: 'plano', attributes: ['id', 'nome', 'valor_mensal'] },
   { model: SaasBanco, as: 'banco', attributes: ['id', 'nome', 'banco', 'tipo_banco', 'codigo', 'percentual_multa', 'percentual_juros', 'instrucao_linha_1', 'instrucao_linha_2', 'instrucao_linha_3', 'instrucao_linha_4', 'instrucao_linha_5'] },
 ];
@@ -85,7 +85,7 @@ export class TenantBoletoAtrasoController {
         return;
       }
 
-      const stTyped = st as SaasTitulo & { banco?: SaasBanco | null; empresa?: SaasDadosEmpresa | null; plano?: SaasPlano | null };
+      const stTyped = st as SaasTitulo & { banco?: SaasBanco | null; empresa?: DadosEmpresa | null; plano?: SaasPlano | null };
       if (stTyped.empresa_id !== empresaId) {
         res.status(403).json({ success: false, message: 'Título não pertence a esta empresa' });
         return;

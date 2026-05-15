@@ -4,7 +4,6 @@ import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { DadosEmpresaService } from '../../../services/sistema/DadosEmpresaService';
 import { SaasTituloService } from '../../../services/saas/SaasCrudService';
 import { SaasTitulo } from '../../../models/saas/SaasTitulo';
-import { SaasDadosEmpresa } from '../../../models/saas/SaasDadosEmpresa';
 import { SaasPlano } from '../../../models/saas/SaasPlano';
 import { SaasBanco } from '../../../models/saas/SaasBanco';
 import { saasTituloToTituloComRelacoes } from '../../titulos/TituloHelpers/saasTituloToTituloComRelacoes';
@@ -95,7 +94,7 @@ export class DadosEmpresaController {
   }
 
   /**
-   * Lista saas_saas_titulos por empresa_id (adm_sistema_dados_empresa).
+   * Lista saas_saas_titulos por empresa_id (adm_sistema_tenants).
    * Usa auth admin para permitir visualizar titulos SaaS da empresa no modal Dados Empresa.
    * Query: tipo=abertas (pendente,vencido) ou tipo=pagas (pago,pago_atraso,parcial). Default: abertas.
    */
@@ -151,7 +150,7 @@ export class DadosEmpresaController {
       }
 
       const tituloIncludes = [
-        { model: SaasDadosEmpresa, as: 'empresa', attributes: ['id', 'razao_social', 'nome_empresa', 'nome_fantasia', 'cnpj', 'cep', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado'] },
+        { model: DadosEmpresa, as: 'empresa', attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj', 'cep', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado'] },
         { model: SaasPlano, as: 'plano', attributes: ['id', 'nome', 'valor_mensal'] },
         { model: SaasBanco, as: 'banco', attributes: ['id', 'nome', 'banco', 'tipo_banco', 'codigo', 'percentual_multa', 'percentual_juros', 'instrucao_linha_1', 'instrucao_linha_2', 'instrucao_linha_3', 'instrucao_linha_4', 'instrucao_linha_5'] },
       ];
@@ -166,7 +165,7 @@ export class DadosEmpresaController {
         return;
       }
 
-      type SaasTituloComIncludes = SaasTitulo & { banco?: SaasBanco | null; empresa?: SaasDadosEmpresa | null; plano?: SaasPlano | null };
+      type SaasTituloComIncludes = SaasTitulo & { banco?: SaasBanco | null; empresa?: DadosEmpresa | null; plano?: SaasPlano | null };
       const filtrados = saasTitulos.filter((t: SaasTituloComIncludes) => t.status !== 'cancelado');
 
       const titulosComRelacoes: import('../../titulos/TituloHelpers/types').TituloComRelacoes[] = [];

@@ -39,7 +39,7 @@ RpkiAspa.init(
     empresa_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      references: { model: 'adm_sistema_dados_empresa', key: 'id' },
+      references: { model: 'adm_sistema_tenants', key: 'id' },
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL',
     },

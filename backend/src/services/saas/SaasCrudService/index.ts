@@ -6,7 +6,7 @@ import { SaasTitulo } from '../../../models/saas/SaasTitulo';
 import { SaasPlano } from '../../../models/saas/SaasPlano';
 import { SaasBanco } from '../../../models/saas/SaasBanco';
 import { SaasContrato } from '../../../models/saas/SaasContrato';
-import { SaasDadosEmpresa } from '../../../models/saas/SaasDadosEmpresa';
+import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 
 interface ListFilters {
   page?: number;
@@ -116,9 +116,9 @@ export class SaasDiasVencimentoService {
 // ─── Títulos ─────────────────────────────────────────────────────────────────
 
 const tituloEmpresaInclude = {
-  model: SaasDadosEmpresa,
+  model: DadosEmpresa,
   as: 'empresa',
-  attributes: ['id', 'nome_empresa', 'razao_social', 'nome_fantasia'],
+  attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj', 'email'],
 };
 
 /** Mesmo shape de `getById` / list — usado em reload pós-update e auditoria. */
@@ -251,7 +251,7 @@ export class SaasTituloResumoService {
 
 async function getStatusEmpresa(empresaId: number): Promise<{ bloqueado_por_atraso: boolean; em_atraso: boolean; data_fim_desbloqueio_manual?: string | null }> {
   const [empresa, countEmAtraso] = await Promise.all([
-    SaasDadosEmpresa.findByPk(empresaId, { attributes: ['bloqueado_por_atraso', 'data_fim_desbloqueio_manual'] }),
+    DadosEmpresa.findByPk(empresaId, { attributes: ['bloqueado_por_atraso', 'data_fim_desbloqueio_manual'] }),
     SaasTitulo.count({
       where: {
         empresa_id: empresaId,

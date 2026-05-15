@@ -167,13 +167,13 @@ export class WhatsAppBoletoService {
 
     if (saas) {
       const { SaasTitulo } = await import('../../../models/saas/SaasTitulo');
-      const { SaasDadosEmpresa } = await import('../../../models/saas/SaasDadosEmpresa');
+      const { DadosEmpresa } = await import('../../../models/sistema/DadosEmpresa');
       const { SaasPlano } = await import('../../../models/saas/SaasPlano');
       const { SaasBanco } = await import('../../../models/saas/SaasBanco');
       titulos = await SaasTitulo.findAll({
         where: { status: { [Op.in]: ['pendente', 'vencido'] } as never, pago: false, data_vencimento: { [Op.gte]: dataVencimento, [Op.lt]: proximoDia } },
         include: [
-          { model: SaasDadosEmpresa, as: 'empresa', required: true, attributes: ['id', 'razao_social', 'nome_fantasia', 'nome_empresa', 'telefone', 'celular'] },
+          { model: DadosEmpresa, as: 'empresa', required: true, attributes: ['id', 'razao_social', 'nome_fantasia', 'telefone', 'celular'] },
           { model: SaasPlano, as: 'plano', required: false },
           { model: SaasBanco, as: 'banco', required: false },
         ],
@@ -223,7 +223,7 @@ export class WhatsAppBoletoService {
         const emp = (titulo as unknown as { empresa?: { get: (o: { plain: boolean }) => Record<string, unknown> } }).empresa;
         const empData = emp?.get?.({ plain: true }) as Record<string, unknown> | undefined;
         const telefone = (empData?.telefone || empData?.celular) as string | undefined;
-        cliente = (empData ? { telefone, razao_social: (empData.razao_social || empData.nome_empresa) as string } : null) as Cliente;
+        cliente = (empData ? { telefone, razao_social: (empData.razao_social || empData.nome_fantasia) as string } : null) as Cliente;
         contrato = null;
       } else {
         cliente = (titulo as Titulo & { cliente?: Cliente | null }).cliente ?? null;

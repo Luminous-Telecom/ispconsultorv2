@@ -2,6 +2,7 @@ import { Op, QueryTypes, WhereOptions } from 'sequelize';
 import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { SaasContrato } from '../../../models/saas/SaasContrato';
 import { sequelize } from '../../../config/database';
+import { cache } from '../../../utils/cache';
 
 interface ListFilters {
   page?: number;
@@ -118,8 +119,23 @@ export class SaasDadosEmpresaService {
     return DadosEmpresa.create(data as DadosEmpresa['_creationAttributes']);
   }
 
-  static async update(id: number, data: Partial<DadosEmpresa>): Promise<void> {
-    await DadosEmpresa.update(data, { where: { id } });
+  static async update(id: number, data: Partial<DadosEmpresa>): Promise<DadosEmpresa> {
+    const empresa = await DadosEmpresa.findByPk(id);
+    if (!empresa) {
+      throw new Error('Empresa (tenant) não encontrada');
+    }
+    const payload = { ...data };
+    if (payload.responsavel_nome === '' || payload.responsavel_nome == null) {
+      payload.responsavel_nome = empresa.responsavel_nome;
+    }
+    if (payload.responsavel_cpf === '' || payload.responsavel_cpf == null) {
+      payload.responsavel_cpf = empresa.responsavel_cpf;
+    }
+    await empresa.update(payload);
+    await empresa.reload();
+    cache.delete(`dados_empresa:config:${id}`);
+    cache.delete('dados_empresa:config');
+    return empresa;
   }
 
   static async delete(id: number): Promise<void> {

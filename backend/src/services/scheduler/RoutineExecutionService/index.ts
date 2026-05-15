@@ -527,7 +527,7 @@ export class RoutineExecutionService {
   public async executeRemessaBancariaSaas(_routine: SaasScheduledRoutine): Promise<RemessaBancariaResult> {
     const { SaasTitulo } = await import('../../../models/saas/SaasTitulo');
     const { SaasBanco } = await import('../../../models/saas/SaasBanco');
-    const { SaasDadosEmpresa } = await import('../../../models/saas/SaasDadosEmpresa');
+    const { DadosEmpresa } = await import('../../../models/sistema/DadosEmpresa');
     const { SaasPlano } = await import('../../../models/saas/SaasPlano');
     const { BancoApiService } = await import('../../bancos/BancoApiService');
 
@@ -536,7 +536,7 @@ export class RoutineExecutionService {
         where: { status: 'pendente', charge_id: null },
         include: [
           { model: SaasBanco, as: 'banco', required: true, attributes: ['id', 'nome', 'tipo_banco', 'codigo', 'sandbox', 'client_id_producao', 'client_secret_producao', 'url_retorno', 'percentual_multa', 'percentual_juros'] },
-          { model: SaasDadosEmpresa, as: 'empresa', required: true, attributes: ['id', 'razao_social', 'nome_fantasia', 'nome_empresa', 'cnpj', 'telefone', 'celular', 'email', 'cep', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado'] },
+          { model: DadosEmpresa, as: 'empresa', required: true, attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj', 'telefone', 'celular', 'email', 'cep', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado'] },
           { model: SaasPlano, as: 'plano', required: true, attributes: ['id', 'nome'] },
         ],
         limit: 100,
@@ -553,7 +553,7 @@ export class RoutineExecutionService {
           const emp = empresa.get({ plain: true }) as Record<string, unknown>;
           const clienteData: Record<string, unknown> = {
             id: empresa.id,
-            razao_social: emp.razao_social || emp.nome_empresa || 'Sacado',
+            razao_social: emp.razao_social || emp.nome_fantasia || 'Sacado',
             nome_fantasia: emp.nome_fantasia || null,
             cnpj: emp.cnpj || '',
             email: emp.email || '',
