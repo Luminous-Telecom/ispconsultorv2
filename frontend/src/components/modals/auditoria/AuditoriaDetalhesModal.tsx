@@ -10,6 +10,8 @@ export interface AuditoriaDetalhesModalProps {
   detalhe: AuditoriaLog | null;
   modalId?: string;
   showEmpresaColumn?: boolean;
+  /** Rótulo do campo nome do tenant (ex.: SuperAdmin); padrão “Empresa”. */
+  empresaNomeFieldLabel?: string;
   showClienteColumn?: boolean;
   esLoading?: boolean;
   esIndisponivel?: boolean;
@@ -22,6 +24,7 @@ const AuditoriaDetalhesModal: React.FC<AuditoriaDetalhesModalProps> = ({
   detalhe,
   modalId = 'auditoria-detalhes-modal',
   showEmpresaColumn = false,
+  empresaNomeFieldLabel,
   showClienteColumn = false,
   esLoading = false,
   esIndisponivel = false,
@@ -107,7 +110,7 @@ const AuditoriaDetalhesModal: React.FC<AuditoriaDetalhesModalProps> = ({
           </div>
           {showEmpresaColumn && (
             <div className="col-md-6">
-              <label className="form-label small text-muted mb-1">{t('company.title')}</label>
+              <label className="form-label small text-muted mb-1">{empresaNomeFieldLabel ?? t('company.title')}</label>
               <input
                 type="text"
                 className="form-control form-control-sm bg-secondary bg-opacity-10"
@@ -156,7 +159,7 @@ const AuditoriaDetalhesModal: React.FC<AuditoriaDetalhesModalProps> = ({
           </div>
           {!showEmpresaColumn && d.empresa_nome && (
             <div className="col-md-6">
-              <label className="form-label small text-muted mb-1">{t('audit.tenant')}</label>
+              <label className="form-label small text-muted mb-1">{t('audit.tenants')}</label>
               <input
                 type="text"
                 className="form-control form-control-sm bg-secondary bg-opacity-10"

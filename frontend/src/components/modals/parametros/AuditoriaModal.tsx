@@ -179,7 +179,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
       },
       {
         key: 'empresa_nome',
-        label: t('audit.tenant'),
+        label: t('audit.tenants'),
         sortable: true,
         width: '140px',
         render: (log: AuditoriaLog) => (

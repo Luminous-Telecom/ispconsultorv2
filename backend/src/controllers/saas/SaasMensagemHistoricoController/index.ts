@@ -332,11 +332,10 @@ export class SaasMensagemHistoricoController {
           attributes: ['id', 'razao_social', 'nome_fantasia'],
         });
         for (const e of empresas) {
-          const nome =
-            e.nome_fantasia && String(e.nome_fantasia).trim() !== ''
-              ? String(e.nome_fantasia).trim()
-              : e.razao_social;
-          nomeEmpresaErp.set(e.id, nome);
+          const rs = e.razao_social != null ? String(e.razao_social).trim() : '';
+          const nf = e.nome_fantasia != null ? String(e.nome_fantasia).trim() : '';
+          const nome = rs !== '' ? rs : nf !== '' ? nf : null;
+          if (nome != null) nomeEmpresaErp.set(e.id, nome);
         }
       }
 
@@ -428,10 +427,9 @@ export class SaasMensagemHistoricoController {
             attributes: ['id', 'razao_social', 'nome_fantasia'],
           });
           if (emp) {
-            plain.empresa_nome =
-              emp.nome_fantasia && String(emp.nome_fantasia).trim() !== ''
-                ? String(emp.nome_fantasia).trim()
-                : emp.razao_social;
+            const rs = emp.razao_social != null ? String(emp.razao_social).trim() : '';
+            const nf = emp.nome_fantasia != null ? String(emp.nome_fantasia).trim() : '';
+            plain.empresa_nome = rs !== '' ? rs : nf !== '' ? nf : null;
           }
         }
         sendSuccess(res, plain, 'Mensagem encontrada');

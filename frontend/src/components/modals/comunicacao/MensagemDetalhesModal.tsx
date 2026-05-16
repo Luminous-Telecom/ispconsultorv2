@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import DraggableModal from '../../common/DraggableModal';
 import { formatDateTime } from '../../../utils/formatters';
 import { useI18n } from '../../../contexts/I18nContext';
@@ -58,6 +59,8 @@ const MensagemDetalhesModal: React.FC<MensagemDetalhesModalProps> = ({
   mensagem
 }) => {
   const { t } = useI18n();
+  const { pathname } = useLocation();
+  const tenantEmpresaLabel = pathname.startsWith('/saas') ? t('audit.tenants') : t('company.title');
   if (!mensagem) return null;
 
   const formatTipo = (tipo: string) => (tipo === 'email' ? t('history.email') : t('history.whatsapp'));
@@ -70,8 +73,11 @@ const MensagemDetalhesModal: React.FC<MensagemDetalhesModalProps> = ({
     : t('history.system');
   const empresaText = (() => {
     const e = mensagem.empresa;
-    const nome = (e?.razao_social || e?.nome_fantasia || e?.nome_empresa || '').trim();
-    return nome || '';
+    const razao = (e?.razao_social ?? '').trim();
+    if (razao) return razao;
+    const fantasia = (e?.nome_fantasia ?? '').trim();
+    if (fantasia) return fantasia;
+    return (e?.nome_empresa ?? '').trim();
   })();
 
   return (
@@ -132,7 +138,7 @@ const MensagemDetalhesModal: React.FC<MensagemDetalhesModalProps> = ({
             </div>
             {empresaText ? (
               <div className="col-md-6">
-                <label className="form-label small text-muted mb-1">{t('company.title')}</label>
+                <label className="form-label small text-muted mb-1">{tenantEmpresaLabel}</label>
                 <input
                   type="text"
                   className="form-control form-control-sm bg-secondary bg-opacity-10"

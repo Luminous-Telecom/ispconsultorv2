@@ -141,6 +141,9 @@ export class SaasAuditoriaController {
 
       const painelAggregate = empresaId == null || empresaId <= 0;
 
+      /** Modais "Logs ERP" no SuperAdmin: todos os tenants; "Logs SaaS" usa `painel_saas` e fica só no escopo plataforma. */
+      const excludeSaasEntities = !painelSaasLogs;
+
       const { logs, total } = await AuditoriaOperacionalMysqlService.list({
         page,
         limit,
@@ -155,7 +158,7 @@ export class SaasAuditoriaController {
         sortColumn,
         sortDirection,
         empresaId: empresaId ?? null,
-        excludeSaasEntities: false,
+        excludeSaasEntities,
         filterSaasOnly: false,
         filterPainelLogsSaasOnly: Boolean(painelSaasLogs && painelAggregate),
         filterAcessoUsuarioSuperSaas: Boolean(

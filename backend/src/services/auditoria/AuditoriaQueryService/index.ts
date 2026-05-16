@@ -433,7 +433,9 @@ export class AuditoriaQueryService {
         attributes: ['id', 'razao_social', 'nome_fantasia'],
       });
       for (const r of rows) {
-        nomeMap.set(r.id, r.razao_social || r.nome_fantasia || `Empresa ${r.id}`);
+        const rs = r.razao_social != null ? String(r.razao_social).trim() : '';
+        const nf = r.nome_fantasia != null ? String(r.nome_fantasia).trim() : '';
+        nomeMap.set(r.id, rs !== '' ? rs : nf !== '' ? nf : `Empresa ${r.id}`);
       }
     }
 

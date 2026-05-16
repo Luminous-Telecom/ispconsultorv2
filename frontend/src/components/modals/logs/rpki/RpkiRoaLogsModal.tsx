@@ -9,6 +9,7 @@ import { useModalSelect } from 'hooks/useModalSelect';
 import DraggableModal from 'components/common/DraggableModal';
 import { defaultApiClient } from 'services/core';
 import { formatDateTime } from 'utils/formatters';
+import { useI18n } from 'contexts/I18nContext';
 
 interface SyncLogRow {
   id: number;
@@ -33,6 +34,7 @@ interface RpkiRoaLogsModalProps {
 }
 
 const RpkiRoaLogsModal: React.FC<RpkiRoaLogsModalProps> = ({ show }) => {
+  const { t } = useI18n();
   const isSaasPortal = useSaasPortalPath();
   const tableFilters = useTableFilters({
     initialSearch: '',
@@ -95,7 +97,7 @@ const RpkiRoaLogsModal: React.FC<RpkiRoaLogsModalProps> = ({ show }) => {
       ? [
           {
             key: 'empresa_saas',
-            label: 'Empresa SaaS',
+            label: t('audit.tenants'),
             sortable: false,
             width: '200px',
             render: (item) => (
@@ -201,7 +203,7 @@ const RpkiRoaLogsModal: React.FC<RpkiRoaLogsModalProps> = ({ show }) => {
         ),
       },
     ];
-  }, [isSaasPortal]);
+  }, [isSaasPortal, t]);
 
   return (
     <>
@@ -278,7 +280,7 @@ const RpkiRoaLogsModal: React.FC<RpkiRoaLogsModalProps> = ({ show }) => {
               </div>
               {isSaasPortal ? (
                 <div className="col-12">
-                  <label className="form-label small text-muted mb-1">Empresa SaaS</label>
+                  <label className="form-label small text-muted mb-1">{t('audit.tenants')}</label>
                   <input
                     type="text"
                     className="form-control form-control-sm bg-secondary bg-opacity-10"

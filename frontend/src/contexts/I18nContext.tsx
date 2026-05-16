@@ -1184,6 +1184,8 @@ export interface TranslationKeys {
   'audit.user': string;
   'audit.ip': string;
   'audit.tenant': string;
+  /** Coluna agregada no SuperAdmin: cadastro do tenant (valor = razão social). */
+  'audit.tenants': string;
   'audit.route': string;
   'audit.userAgent': string;
   'audit.viewDetails': string;
@@ -2748,6 +2750,7 @@ const translations: Translations = {
     'audit.user': 'Usuário',
     'audit.ip': 'IP',
     'audit.tenant': 'Tenant',
+    'audit.tenants': 'Tenants',
     'audit.route': 'Rota',
     'audit.userAgent': 'User-Agent',
     'audit.viewDetails': 'Ver Detalhes',
@@ -4306,6 +4309,7 @@ const translations: Translations = {
     'audit.user': 'User',
     'audit.ip': 'IP',
     'audit.tenant': 'Tenant',
+    'audit.tenants': 'Tenants',
     'audit.route': 'Route',
     'audit.userAgent': 'User-Agent',
     'audit.viewDetails': 'View Details',
@@ -5866,6 +5870,7 @@ const translations: Translations = {
     'audit.user': 'Usuario',
     'audit.ip': 'IP',
     'audit.tenant': 'Tenant',
+    'audit.tenants': 'Tenants',
     'audit.route': 'Ruta',
     'audit.userAgent': 'User-Agent',
     'audit.viewDetails': 'Ver Detalles',

@@ -82,8 +82,12 @@ function formatMensagemEmpresaNome(i: MensagemItem & { empresa_nome?: string | n
   const flat = (i.empresa_nome ?? '').trim();
   if (flat) return flat;
   const e = i.empresa;
-  const nome = (e?.razao_social || e?.nome_fantasia || e?.nome_empresa || '').trim();
-  return nome || '—';
+  const razao = (e?.razao_social ?? '').trim();
+  if (razao) return razao;
+  const fantasia = (e?.nome_fantasia ?? '').trim();
+  if (fantasia) return fantasia;
+  const ne = (e?.nome_empresa ?? '').trim();
+  return ne || '—';
 }
 
 function formatOperacionalPayloadPreview(
@@ -435,7 +439,7 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
     ...(showEmpresaColumn
       ? [{
           key: 'empresa_nome' as const,
-          label: t('company.title'),
+          label: t('audit.tenants'),
           sortable: true,
           width: '168px',
           sortValue: (log: AuditoriaLog) => log.empresa_nome?.trim() ?? '',
@@ -486,7 +490,7 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
     ...(showEmpresaColumn
       ? [{
           key: 'empresa_nome' as const,
-          label: t('company.title'),
+          label: t('audit.tenants'),
           sortable: false,
           width: '160px',
           render: (i: BlockdomiLogAcessoItem) => {
@@ -530,7 +534,7 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
     ...(showEmpresaColumn
       ? [{
           key: 'empresa_id' as const,
-          label: t('company.title'),
+          label: t('audit.tenants'),
           sortable: false,
           width: '168px',
           render: (i: MensagemItem) => {
@@ -701,7 +705,7 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
           detalhe={auditoriaExibirDetalhe}
           modalId="logs-auditoria-details"
           showEmpresaColumn={showEmpresaColumn}
-          showClienteColumn={showEmpresaColumn}
+          empresaNomeFieldLabel={t('audit.tenants')}          showClienteColumn={showEmpresaColumn}
           esLoading={auditoriaDetalheEsLoading}
           esIndisponivel={auditoriaEsIndisponivel}
           temVinculoEs={auditoriaTemVinculoEs}
