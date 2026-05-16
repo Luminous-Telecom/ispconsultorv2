@@ -372,6 +372,18 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
     }, 0);
   }, [tableFilters]);
 
+  const handleSelectAllPages = useCallback(async (): Promise<IPv4[]> => {
+    const res = await IPv4Service.list({
+      search: tableFilters.debouncedSearch || undefined,
+      searchField: tableFilters.searchField || undefined,
+      page: 1,
+      limit: 99999,
+      sortColumn: tableFilters.sortColumn,
+      sortDirection: tableFilters.sortDirection
+    });
+    return res?.data ?? [];
+  }, [tableFilters.debouncedSearch, tableFilters.searchField, tableFilters.sortColumn, tableFilters.sortDirection]);
+
   const modalContent = (
     <>
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -392,7 +404,7 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
               hover: true,
               responsive: true,
               selectable: true,
-              multiSelect: false,
+              multiSelect: true,
               bulkActions: bulkActions.map(action => ({
                 key: action.label.toLowerCase().replace(/\s+/g, '-'),
                 label: action.label,
@@ -438,6 +450,7 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
             }}
             onSearch={(search, field) => handleSearchChange(search, field)}
             search={tableFilters.search}
+            onSelectAllPages={handleSelectAllPages}
           />
         </div>
       </div>
