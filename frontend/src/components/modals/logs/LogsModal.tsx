@@ -142,7 +142,8 @@ function useLogsContent(
   logType: LogsModalType,
   show: boolean,
   apiVariant: 'erp' | 'saas',
-  painelSaasLogs: boolean
+  painelSaasLogs: boolean,
+  mesclarMensagensErp: boolean
 ) {
   const isSaas = apiVariant === 'saas';
   const mensagemService = getMensagemHistoricoService(isSaas);
@@ -205,14 +206,21 @@ function useLogsContent(
       searchField: tableFilters.searchField || (tableFilters.debouncedSearch ? 'destinatario' : undefined),
       sortColumn: tableFilters.sortColumn,
       sortDirection: tableFilters.sortDirection,
+      ...(mesclarMensagensErp && apiVariant === 'saas' ? { incluir_erp: true as const } : {}),
     }),
-    [tableFilters, isEmail]
+    [tableFilters, isEmail, mesclarMensagensErp, apiVariant]
   );
 
   const auditoriaQuery = useQuery({
     queryKey: ['auditoria-operacional-logs', apiVariant, painelSaasLogs, logType, auditoriaFilters],
     queryFn: async () => {
-      const filtersSaas = painelSaasLogs ? { ...auditoriaFilters, painelSaas: true as const } : auditoriaFilters;
+      const filtersSaas = painelSaasLogs
+        ? {
+            ...auditoriaFilters,
+            painelSaas: true as const,
+            ...(logType === 'acesso-sistema' ? { acessoPainelSaas: true as const } : {}),
+          }
+        : auditoriaFilters;
       const r =
         apiVariant === 'saas'
           ? await auditoriaService.listOperacionalSaas(filtersSaas)
@@ -225,7 +233,13 @@ function useLogsContent(
   });
 
   const mensagemQuery = useQuery({
-    queryKey: ['mensagens-historico', isEmail ? 'email' : 'whatsapp', isSaas ? 'saas' : 'tenant', mensagemFilters],
+    queryKey: [
+      'mensagens-historico',
+      isEmail ? 'email' : 'whatsapp',
+      isSaas ? 'saas' : 'tenant',
+      mesclarMensagensErp,
+      mensagemFilters,
+    ],
     queryFn: () => mensagemService.list(mensagemFilters),
     enabled: show && (isEmail || isWhatsapp),
     refetchOnWindowFocus: false,
@@ -280,8 +294,9 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
   const { pathname } = useLocation();
   /** SuperAdmin em /saas: modais `logs-*` do registry vêm como erp, mas devem usar APIs agregadas (`/saas/*`). */
   const effectiveVariant = variant === 'erp' && pathname.startsWith('/saas') ? 'saas' : variant;
+  const mesclarMensagensErp = variant === 'erp' && pathname.startsWith('/saas');
   const showEmpresaColumn = pathname.startsWith('/saas');
-  const ctx = useLogsContent(logType, show, effectiveVariant, variant === 'saas');
+  const ctx = useLogsContent(logType, show, effectiveVariant, variant === 'saas', mesclarMensagensErp);
   const [showBlockdomiLogsReal, setShowBlockdomiLogsReal] = useState(false);
   const [whoisIp, setWhoisIp] = useState<string | null>(null);
 

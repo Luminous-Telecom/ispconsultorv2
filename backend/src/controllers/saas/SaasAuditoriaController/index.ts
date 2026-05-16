@@ -7,6 +7,7 @@ import { AuditoriaOperacionalMysqlService } from '../../../services/auditoria/Au
 import { AuditoriaPDFService } from '../../../services/auditoria/AuditoriaPDFService';
 import { logger } from '../../../utils/logger';
 import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../../../utils/responseUtils';
+import { SaasUsuarioSuper } from '../../../models/saas/SaasUsuarioSuper';
 
 export class SaasAuditoriaController {
   /**
@@ -134,6 +135,11 @@ export class SaasAuditoriaController {
       const painelSaasLogs =
         req.query.painel_saas === 'true' ||
         req.query.painelSaas === 'true';
+      const acessoPainelSaas =
+        req.query.acesso_painel_saas === 'true' ||
+        req.query.acessoPainelSaas === 'true';
+
+      const painelAggregate = empresaId == null || empresaId <= 0;
 
       const { logs, total } = await AuditoriaOperacionalMysqlService.list({
         page,
@@ -151,7 +157,10 @@ export class SaasAuditoriaController {
         empresaId: empresaId ?? null,
         excludeSaasEntities: false,
         filterSaasOnly: false,
-        filterPainelLogsSaasOnly: Boolean(painelSaasLogs && (empresaId == null || empresaId <= 0)),
+        filterPainelLogsSaasOnly: Boolean(painelSaasLogs && painelAggregate),
+        filterAcessoUsuarioSuperSaas: Boolean(
+          acessoPainelSaas && painelSaasLogs && painelAggregate
+        ),
         comUsuarioObrigatorio,
         semUsuarioObrigatorio,
         origemAuditoria,
@@ -159,6 +168,31 @@ export class SaasAuditoriaController {
 
       const lastPage = Math.max(1, Math.ceil(total / limit));
       const rawLogs = logs as Record<string, unknown>[];
+      if (acessoPainelSaas && painelSaasLogs && painelAggregate && rawLogs.length > 0) {
+        const uids = [
+          ...new Set(
+            rawLogs
+              .map((l) => l.usuario_id)
+              .filter((x): x is number => typeof x === 'number' && x > 0)
+          ),
+        ];
+        if (uids.length > 0) {
+          const supers = await SaasUsuarioSuper.findAll({
+            where: { id: uids },
+            attributes: ['id', 'nome', 'email'],
+          });
+          const map = new Map(supers.map((u) => [u.id, { nome: u.nome, email: u.email }]));
+          for (const log of rawLogs) {
+            const uid = log.usuario_id;
+            if (typeof uid !== 'number') continue;
+            const s = map.get(uid);
+            if (s) {
+              log.usuario_nome = s.nome;
+              log.usuario_email = s.email;
+            }
+          }
+        }
+      }
       await AuditoriaQueryService.enrichLogsWithEmpresaNome(rawLogs, true, true);
       await AuditoriaQueryService.enrichLogsWithClienteNome(rawLogs);
 

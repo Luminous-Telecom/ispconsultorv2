@@ -45,6 +45,8 @@ export interface MensagemHistoricoFilters {
   limit?: number;
   sortColumn?: string;
   sortDirection?: 'asc' | 'desc';
+  /** SuperAdmin: mesclar ERP + SaaS na rota `/saas/mensagens-historico` */
+  incluir_erp?: boolean;
   [key: string]: string | number | boolean | undefined;
 }
 

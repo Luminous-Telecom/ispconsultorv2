@@ -14,9 +14,17 @@ const ERP_HISTORICO_ID_BIAS = 5_000_000_000;
 
 export class SaasMensagemHistoricoController {
   /**
-   * Listar histórico de mensagens do SaaS com paginação e filtros
+   * Lista histórico. Por padrão apenas `SaasMensagemHistorico`.
+   * Com `incluir_erp=true`: mescla com `MensagemHistorico` (visão agregada SuperAdmin / pasta Logs ERP).
    */
   static async list(req: SaasAuthenticatedRequest, res: ExpressResponse): Promise<void> {
+    const incluirErp =
+      req.query.incluir_erp === 'true' || req.query.incluirErp === 'true';
+    if (incluirErp) {
+      await SaasMensagemHistoricoController.listMergedSaasErp(req, res);
+      return;
+    }
+
     try {
       const {
         page = 1,
@@ -55,7 +63,161 @@ export class SaasMensagemHistoricoController {
             where.id = num;
           } else {
             (where as Record<string | symbol, unknown>)[Op.and] = [
-              sequelize.where(sequelize.cast(sequelize.col('id'), 'CHAR'), { [Op.like]: `%${searchTerm}%` })
+              sequelize.where(
+                sequelize.cast(sequelize.col(`${SaasMensagemHistorico.tableName}.id`), 'CHAR'),
+                { [Op.like]: `%${searchTerm}%` }
+              ),
+            ];
+          }
+        } else if (field === 'tipo') {
+          where.tipo = searchTerm;
+        } else if (field === 'status') {
+          where.status = searchTerm;
+        } else if (['cliente_nome', 'titulo', 'destinatario', 'mensagem'].includes(field)) {
+          (where as Record<string, unknown>)[field] = { [Op.like]: `%${searchTerm}%` };
+        } else {
+          where.destinatario = { [Op.like]: `%${searchTerm}%` };
+        }
+      } else if (destinatario) {
+        where.destinatario = { [Op.like]: `%${destinatario}%` };
+      }
+      if (entidade_tipo) {
+        where.entidade_tipo = entidade_tipo;
+      }
+      if (entidade_id) {
+        where.entidade_id = Number(entidade_id);
+      }
+      if (empresa_id) {
+        where.empresa_id = Number(empresa_id);
+      }
+      if (data_inicio || data_fim) {
+        const createdAt: { [key: symbol]: Date } = {};
+        if (data_inicio) {
+          createdAt[Op.gte] = new Date(data_inicio as string);
+        }
+        if (data_fim) {
+          createdAt[Op.lte] = new Date(data_fim as string);
+        }
+        where.created_at = createdAt;
+      }
+
+      const sortDirectionStr = Array.isArray(sortDirection) ? sortDirection[0] : sortDirection;
+      const sortDirectionValue = typeof sortDirectionStr === 'string' ? sortDirectionStr : 'desc';
+      const sortAsc = String(sortDirectionValue).toLowerCase() === 'asc';
+      const dir = sortAsc ? 'ASC' : 'DESC';
+
+      const validSortColumns = [
+        'id',
+        'empresa_id',
+        'tipo',
+        'destinatario',
+        'titulo',
+        'status',
+        'created_at',
+        'updated_at',
+        'cliente_nome',
+        'mensagem',
+      ];
+      const col = typeof sortColumn === 'string' && validSortColumns.includes(sortColumn) ? sortColumn : 'created_at';
+      const order: [string, string][] = [[col, dir]];
+
+      const { count, rows } = await SaasMensagemHistorico.findAndCountAll({
+        where,
+        include: [
+          {
+            model: DadosEmpresa,
+            as: 'empresa',
+            attributes: ['id', 'razao_social', 'nome_fantasia'],
+            required: false,
+          },
+        ],
+        limit: Number(limit),
+        offset,
+        order,
+        distinct: true,
+      });
+
+      const limitNum = Number(limit);
+      const totalPages = Math.ceil(count / limitNum);
+      const pageNum = Number(page);
+      const from = count > 0 ? offset + 1 : 0;
+      const to = count > 0 ? Math.min(offset + limitNum, count) : 0;
+
+      const data = rows.map((row) => {
+        const plain = row.get({ plain: true }) as unknown as Record<string, unknown>;
+        plain.historico_origem = 'saas';
+        return plain;
+      });
+
+      const result = {
+        data,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total: count,
+          totalPages,
+          hasNext: pageNum < totalPages,
+          hasPrev: pageNum > 1,
+          current_page: pageNum,
+          per_page: limitNum,
+          last_page: totalPages,
+          from,
+          to,
+        },
+        filters: { tipo, status, destinatario, entidade_tipo, entidade_id, empresa_id, data_inicio, data_fim },
+        sort: { column: sortColumn, direction: sortDirection },
+      };
+
+      sendSuccess(res, result, 'Histórico de mensagens listado com sucesso');
+    } catch (error) {
+      logger.error('Erro ao listar histórico de mensagens SaaS:', error);
+      sendError(res, error, 'Erro ao listar histórico de mensagens', 500, true);
+    }
+  }
+
+  private static async listMergedSaasErp(
+    req: SaasAuthenticatedRequest,
+    res: ExpressResponse
+  ): Promise<void> {
+    try {
+      const {
+        page = 1,
+        limit = 20,
+        tipo,
+        status,
+        destinatario,
+        search,
+        searchField,
+        entidade_tipo,
+        entidade_id,
+        empresa_id,
+        data_inicio,
+        data_fim,
+        sortColumn = 'created_at',
+        sortDirection = 'desc',
+      } = req.query;
+
+      const offset = (Number(page) - 1) * Number(limit);
+
+      const where: Record<string, unknown> = {};
+
+      if (tipo) {
+        where.tipo = tipo;
+      }
+      if (status) {
+        where.status = status;
+      }
+
+      const searchTerm = (search as string)?.trim();
+      const field = (searchField as string)?.trim() || 'destinatario';
+      if (searchTerm) {
+        if (field === 'id') {
+          const num = parseInt(searchTerm, 10);
+          if (!Number.isNaN(num) && String(num) === searchTerm) {
+            where.id = num;
+          } else {
+            (where as Record<string | symbol, unknown>)[Op.and] = [
+              sequelize.where(sequelize.cast(sequelize.col('id'), 'CHAR'), { [Op.like]: `%${searchTerm}%` }),
             ];
           }
         } else if (field === 'tipo') {
@@ -225,18 +387,20 @@ export class SaasMensagemHistoricoController {
 
       sendSuccess(res, result, 'Histórico de mensagens listado com sucesso');
     } catch (error) {
-      logger.error('Erro ao listar histórico de mensagens SaaS:', error);
+      logger.error('Erro ao listar histórico de mensagens SaaS (mesclado):', error);
       sendError(res, error, 'Erro ao listar histórico de mensagens', 500, true);
     }
   }
 
-  /**
-   * Buscar mensagem por ID
-   */
   static async show(req: SaasAuthenticatedRequest, res: ExpressResponse): Promise<void> {
     try {
       const idNum = Number(req.params.id);
-      const fromErpList = Number.isFinite(idNum) && idNum >= ERP_HISTORICO_ID_BIAS;
+      if (!Number.isFinite(idNum)) {
+        sendError(res, null, 'Mensagem não encontrada', 404);
+        return;
+      }
+
+      const fromErpList = idNum >= ERP_HISTORICO_ID_BIAS;
       const pk = fromErpList ? idNum - ERP_HISTORICO_ID_BIAS : idNum;
 
       if (fromErpList) {
@@ -290,16 +454,15 @@ export class SaasMensagemHistoricoController {
         return;
       }
 
-      sendSuccess(res, mensagem, 'Mensagem encontrada');
+      const plain = mensagem.get({ plain: true }) as unknown as Record<string, unknown>;
+      plain.historico_origem = 'saas';
+      sendSuccess(res, plain, 'Mensagem encontrada');
     } catch (error) {
       logger.error('Erro ao buscar mensagem SaaS:', error);
       sendError(res, error, 'Erro ao buscar mensagem', 500, true);
     }
   }
 
-  /**
-   * Buscar mensagens por entidade
-   */
   static async getByEntity(req: SaasAuthenticatedRequest, res: ExpressResponse): Promise<void> {
     try {
       const { entidade_tipo, entidade_id } = req.params;

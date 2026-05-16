@@ -69,13 +69,26 @@ const ImprimirModal: React.FC<ImprimirModalProps> = ({
     >
       <div style={{ height: '80vh', width: '100%', position: 'relative' }}>
         {isGenerating || !pdfUrl ? (
-          <div className="h-100" style={{ minHeight: 0 }}>
+          <div className="d-flex align-items-center justify-content-center h-100" style={{ minHeight: 0 }}>
             <Loading message="Carregando documento..." />
           </div>
         ) : (
           <>
             {isLoading && (
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1, backgroundColor: 'var(--bg-primary)', opacity: 0.95, minHeight: 0 }}>
+              <div
+                className="d-flex align-items-center justify-content-center"
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  zIndex: 1,
+                  backgroundColor: 'var(--bg-primary)',
+                  opacity: 0.95,
+                  minHeight: 0,
+                }}
+              >
                 <Loading message="Carregando documento..." />
               </div>
             )}

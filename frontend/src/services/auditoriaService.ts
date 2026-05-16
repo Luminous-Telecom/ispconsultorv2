@@ -56,6 +56,10 @@ export interface AuditoriaFilters {
    * comunicação (auditoria), assinatura, acesso; exclui infra ERP irrelevante.
    */
   painelSaas?: boolean;
+  /**
+   * Modal "Acesso ao sistema" na pasta Logs SaaS — apenas login/logout de `SaasUsuarioSuper` (painel SuperAdmin).
+   */
+  acessoPainelSaas?: boolean;
 }
 
 export interface AuditoriaStats {
@@ -88,6 +92,7 @@ class AuditoriaService {
     if (filters.origemAuditoria) params.append('origem_auditoria', filters.origemAuditoria);
     if (filters.moduloBlockdomi) params.append('modulo_blockdomi', 'true');
     if (filters.painelSaas) params.append('painel_saas', 'true');
+    if (filters.acessoPainelSaas) params.append('acesso_painel_saas', 'true');
   }
 
   private parseOperacionalListResponse(

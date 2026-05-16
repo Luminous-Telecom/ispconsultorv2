@@ -37,6 +37,8 @@ export interface ListOperacionalMysqlParams {
   filterSaasOnly?: boolean;
   /** Lista agregada dos modais "Logs SaaS" — restringe `recurso` a {@link AuditoriaQueryService.ENTIDADES_PAINEL_LOGS_SAAS} */
   filterPainelLogsSaasOnly?: boolean;
+  /** Apenas login/logout cujo usuário existe em `saas_saas_usuarios_super` (modal acesso no painel SaaS). */
+  filterAcessoUsuarioSuperSaas?: boolean;
   comUsuarioObrigatorio?: boolean;
   semUsuarioObrigatorio?: boolean;
   origemAuditoria?: string;
@@ -174,6 +176,14 @@ export class AuditoriaOperacionalMysqlService {
     }
     if (params.filterPainelLogsSaasOnly) {
       and.push({ recurso: { [Op.in]: [...AuditoriaQueryService.ENTIDADES_PAINEL_LOGS_SAAS] } });
+    }
+
+    if (params.filterAcessoUsuarioSuperSaas) {
+      and.push(
+        literal(
+          '`SistemaLogOperacional`.`usuario_id` IN (SELECT `id` FROM `saas_saas_usuarios_super`)'
+        )
+      );
     }
 
     if (params.usuario_id != null && params.usuario_id > 0) {
