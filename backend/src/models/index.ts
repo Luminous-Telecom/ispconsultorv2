@@ -52,6 +52,7 @@ import { IPv6 } from './blockdomi/IPv6';
 import { VersaoBlockdomi } from './blockdomi/VersaoBlockdomi';
 import { NumeroSeiAnatelBlockdomi } from './blockdomi/NumeroSeiAnatelBlockdomi';
 import { IpPermitidoBlockdomi } from './blockdomi/IpPermitidoBlockdomi';
+import { BlockdomiLogAcesso } from './blockdomi/BlockdomiLogAcesso';
 
 // SSH Manager
 import { SshDevice } from './ssh-manager/SshDevice';
