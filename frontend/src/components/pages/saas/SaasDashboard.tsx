@@ -13,6 +13,7 @@ import { Spinner } from 'components/ui';
 import { useModal } from 'contexts/ModalContext';
 import { useI18n } from 'contexts/I18nContext';
 import { useTableHeader } from 'contexts/TableHeaderContext';
+import { getSaasTenantHeaderSearchFields } from '../../modals/saas/saasTenantListTableConfig';
 import SaasDashboardSearchResult from './SaasDashboardSearchResult';
 
 function formatBytes(bytes: number): string {
@@ -38,26 +39,19 @@ function getUsageColor(percent: number): string {
 
 const SAAS_DASHBOARD_SEARCH_DEBOUNCE_MS = 400;
 
-const SAAS_SEARCH_FIELDS = [
-  { id: 'todos', label: 'Todos' },
-  { id: 'id', label: 'ID' },
-  { id: 'cnpj', label: 'CNPJ' },
-  { id: 'razao_social', label: 'Razão Social' },
-  { id: 'nome_fantasia', label: 'Nome Fantasia' },
-  { id: 'email', label: 'Email' },
-];
-
 const SaasDashboard: React.FC = () => {
   const { t } = useI18n();
-  const { searchValue, searchField, setAvailableSearchFields, setSearchPlaceholder } = useTableHeader();
+  const { searchValue, setAvailableSearchFields, setSearchPlaceholder } = useTableHeader();
   const debouncedSearch = useDebouncedValue(searchValue.trim(), SAAS_DASHBOARD_SEARCH_DEBOUNCE_MS);
   const { activeModal } = useModal();
   const { startDate, endDate } = useDashboardFilters();
 
+  const saasSearchFields = useMemo(() => getSaasTenantHeaderSearchFields(t), [t]);
+
   useEffect(() => {
-    setAvailableSearchFields(SAAS_SEARCH_FIELDS);
-    setSearchPlaceholder('Buscar clientes tenants...');
-  }, [setAvailableSearchFields, setSearchPlaceholder]);
+    setAvailableSearchFields(saasSearchFields);
+    setSearchPlaceholder(t('layout.searchPlaceholder'));
+  }, [saasSearchFields, setAvailableSearchFields, setSearchPlaceholder, t]);
 
   const {
     hiddenClientes,
@@ -149,7 +143,7 @@ const SaasDashboard: React.FC = () => {
     return (
       <div className="dashboard-container">
         <div className="container-fluid px-0">
-          <SaasDashboardSearchResult searchTerm={debouncedSearch} searchField={searchField} />
+          <SaasDashboardSearchResult searchTerm={debouncedSearch} />
         </div>
       </div>
     );

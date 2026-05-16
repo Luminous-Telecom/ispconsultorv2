@@ -4,10 +4,17 @@ import { SaasContrato } from '../../../models/saas/SaasContrato';
 import { sequelize } from '../../../config/database';
 import { cache } from '../../../utils/cache';
 
+/** Campos textuais da busca "todos" / LIKE por coluna na listagem de tenants SaaS */
+const TENANT_LIKE_FIELDS = [
+  'cnpj', 'razao_social', 'nome_fantasia', 'email', 'telefone', 'celular',
+  'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado',
+] as const;
+
 interface ListFilters {
   page?: number;
   limit?: number;
   search?: string;
+  searchField?: string;
   sortColumn?: string;
   sortDirection?: 'asc' | 'desc';
   created_at_inicio?: string;
@@ -22,6 +29,7 @@ export class SaasDadosEmpresaService {
       page = 1,
       limit = 20,
       search,
+      searchField,
       sortColumn = 'id',
       sortDirection = 'desc',
       created_at_inicio,
@@ -29,8 +37,32 @@ export class SaasDadosEmpresaService {
       plano_id,
     } = filters;
 
-    const allowedColumns = ['id', 'razao_social', 'nome_fantasia', 'cnpj', 'email', 'cidade', 'estado', 'created_at'];
-    const col = allowedColumns.includes(sortColumn) ? sortColumn : 'id';
+    const allowedColumns = [
+      'id',
+      'razao_social',
+      'nome_fantasia',
+      'cnpj',
+      'email',
+      'cidade',
+      'estado',
+      'created_at',
+      'endereco',
+      'numero',
+      'complemento',
+      'bairro',
+      'telefone',
+      'celular',
+      'bloqueado_por_atraso',
+    ];
+
+    let orderCol = allowedColumns.includes(sortColumn ?? '') ? sortColumn! : 'id';
+    let orderDir = (sortDirection ?? 'desc').toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+    if (sortColumn === 'whatsapp') {
+      orderCol = 'celular';
+    } else if (sortColumn === 'ativo') {
+      orderCol = 'bloqueado_por_atraso';
+      orderDir = orderDir === 'ASC' ? 'DESC' : 'ASC';
+    }
 
     const where: WhereOptions = {};
 
@@ -63,42 +95,57 @@ export class SaasDadosEmpresaService {
     }
 
     if (search) {
-      Object.assign(where, {
-        [Op.or]: [
-          { razao_social: { [Op.like]: `%${search}%` } },
-          { nome_fantasia: { [Op.like]: `%${search}%` } },
-          { email: { [Op.like]: `%${search}%` } },
-          { cnpj: { [Op.like]: `%${search}%` } },
-        ],
-      });
+      const trimmed = String(search).trim();
+      const searchPattern = `%${search}%`;
+      const field = searchField?.trim();
+
+      if (field === 'todos' || !field) {
+        const orConditions: WhereOptions[] = TENANT_LIKE_FIELDS.map((f) => ({ [f]: { [Op.like]: searchPattern } }));
+        const numExact = /^\d+$/.test(trimmed) ? parseInt(trimmed, 10) : null;
+        if (numExact !== null) {
+          orConditions.push({ id: numExact });
+        }
+        if (/^ativo$/i.test(trimmed)) {
+          orConditions.push({ bloqueado_por_atraso: false });
+        }
+        if (/^inativo$/i.test(trimmed)) {
+          orConditions.push({ bloqueado_por_atraso: true });
+        }
+        (where as WhereOptions & { [Op.or]?: WhereOptions[] })[Op.or] = orConditions;
+      } else {
+        const allowedFields = ['id', 'cnpj', 'razao_social', 'nome_fantasia', 'email', 'whatsapp', 'telefone', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado'];
+        if (field && allowedFields.includes(field)) {
+          if (field === 'id') {
+            const numExact = /^\d+$/.test(trimmed) ? parseInt(trimmed, 10) : null;
+            if (numExact !== null) {
+              Object.assign(where, { id: numExact });
+            } else {
+              Object.assign(where, { id: { [Op.lt]: 0 } });
+            }
+          } else if (field === 'whatsapp') {
+            Object.assign(where, {
+              [Op.or]: [
+                { telefone: { [Op.like]: searchPattern } },
+                { celular: { [Op.like]: searchPattern } },
+              ],
+            });
+          } else {
+            Object.assign(where, { [field]: { [Op.like]: searchPattern } });
+          }
+        }
+      }
     }
 
     const offset = (page - 1) * limit;
 
     const { count, rows } = await DadosEmpresa.findAndCountAll({
       where,
-      order: [[col, sortDirection.toUpperCase()]],
+      order: [[orderCol, orderDir]],
       limit,
       offset,
     });
 
-    // Contar usuários por empresa
-    const empresaIds = rows.map(e => e.id);
-    const countMap: Record<number, number> = {};
-    if (empresaIds.length > 0) {
-      const counts = await sequelize.query<{ empresa_id: number; total: string }>(
-        `SELECT empresa_id, COUNT(id) AS total FROM adm_cadastros_usuarios WHERE empresa_id IN (:ids) GROUP BY empresa_id`,
-        { replacements: { ids: empresaIds }, type: QueryTypes.SELECT }
-      );
-      for (const row of counts) {
-        countMap[row.empresa_id] = parseInt(row.total, 10);
-      }
-    }
-
-    const data = rows.map(e => ({
-      ...e.toJSON(),
-      total_usuarios: countMap[e.id] || 0,
-    }));
+    const data = rows.map(e => e.toJSON());
 
     return {
       data,

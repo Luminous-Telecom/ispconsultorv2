@@ -21,8 +21,9 @@ export interface SaasEmpresa {
   bairro: string;
   cidade: string;
   estado: string;
-  total_usuarios?: number;
+  bloqueado_por_atraso?: boolean;
   created_at?: string;
+  created_at_formatada?: string | null;
   updated_at?: string;
 }
 
@@ -35,7 +36,7 @@ const buildParams = (f: Record<string, unknown>) => {
 };
 
 export const saasEmpresasService = {
-  list: (f: { page?: number; limit?: number; search?: string; sortColumn?: string; sortDirection?: 'asc' | 'desc'; created_at_inicio?: string; created_at_fim?: string; plano_id?: number } = {}) =>
+  list: (f: { page?: number; limit?: number; search?: string; searchField?: string; sortColumn?: string; sortDirection?: 'asc' | 'desc'; created_at_inicio?: string; created_at_fim?: string; plano_id?: number } = {}) =>
     defaultApiClient.get<SaasConfigListResponse<SaasEmpresa>>(`/saas/empresas?${buildParams(f)}`),
   getById: (id: number) => defaultApiClient.get<ApiResponse<SaasEmpresa>>(`/saas/empresas/${id}`),
   create: (d: Partial<SaasEmpresa>) => defaultApiClient.post('/saas/empresas', d),
