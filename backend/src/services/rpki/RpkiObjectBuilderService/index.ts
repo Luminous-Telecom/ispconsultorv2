@@ -241,6 +241,11 @@ interface EeCertParams {
   resourceCertUrl: string;
   crlUri: string;
   objectUri: string;
+  /** Data de início da validade do EE (padrão: 5 min atrás, como Krill). */
+  notBefore?: Date;
+  /** Data de fim da validade do EE (padrão: notBefore + 52 semanas, como Krill). */
+  notAfter?: Date;
+  /** @deprecated use notBefore/notAfter */
   validHours?: number;
 }
 
@@ -249,6 +254,10 @@ async function issueRpkiEeCert(
 ): Promise<{ certPem: string; keyPem: string }> {
   const resourceProfile = parseResourceCertProfile(params.resourceCaCertPem);
   const ipInheritDer = buildIpInheritDer(resourceProfile.hasIpv4, resourceProfile.hasIpv6);
+
+  // Krill: notBefore = five_minutes_ago, notAfter = notBefore + 52 semanas.
+  const nbDate = params.notBefore ?? new Date(Date.now() - 5 * 60 * 1000);
+  const naDate = params.notAfter ?? new Date(nbDate.getTime() + 52 * 7 * 24 * 3600 * 1000);
 
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'rpki-ee-'));
   try {
@@ -294,16 +303,20 @@ async function issueRpkiEeCert(
 
     await fs.writeFile(extPath, extCnf, 'utf8');
 
-    const validDays = Math.max(1, Math.ceil((params.validHours ?? 24) / 24));
+    // Datas explícitas: -startdate e -enddate (formato ASN.1 YYYYMMDDHHMMSSZ).
+    const fmt = (d: Date) =>
+      d.toISOString().replace(/[-:T]/g, '').replace(/\.\d+Z$/, 'Z');
+
     await execFileAsync('openssl', [
       'x509', '-req',
-      '-days', String(validDays),
       '-in', eeCsrPath,
       '-CA', caCertPath,
       '-CAkey', caKeyPath,
       '-CAcreateserial',
       '-extfile', extPath,
       '-extensions', 'v3_ee',
+      '-startdate', fmt(nbDate),
+      '-enddate', fmt(naDate),
       '-out', eeCertPath,
     ]);
 
@@ -361,6 +374,11 @@ export async function buildCrlDer(params: {
   resourceCaCertPem: string;
   resourceCaKeyPem: string;
   crlNumber: number;
+  /** Se fornecido, usa como thisUpdate (para backdate de 5 min como Krill). */
+  thisUpdate?: Date;
+  /** Se fornecido, usa como nextUpdate; caso contrário thisUpdate + 24h. */
+  nextUpdate?: Date;
+  /** @deprecated use thisUpdate/nextUpdate */
   validHours?: number;
 }): Promise<{ derBuffer: Buffer; sha256Hex: string }> {
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'rpki-crl-'));
@@ -383,7 +401,11 @@ export async function buildCrlDer(params: {
     }
     await fs.writeFile(crlNumPath, crlNumHex + '\n', 'utf8');
 
-    const validDays = Math.max(1, Math.ceil((params.validHours ?? 24) / 24));
+    // Calcula dias entre thisUpdate e nextUpdate para passar ao OpenSSL.
+    const base = params.thisUpdate ?? new Date();
+    const end = params.nextUpdate ?? new Date(base.getTime() + 24 * 3600 * 1000);
+    const validDays = Math.max(1, Math.ceil((end.getTime() - base.getTime()) / (24 * 3600 * 1000)));
+
     const cnf = [
       '[ca]',
       'default_ca = CA_default',
@@ -428,6 +450,10 @@ export async function buildRoaCmsObject(params: {
   resourceCertUrl: string;
   crlUri: string;
   objectUri: string;
+  /** Início da validade do EE (padrão: 5 min atrás). */
+  notBefore?: Date;
+  /** Fim da validade do EE (padrão: 52 semanas após notBefore). Usa data do ROA quando disponível. */
+  notAfter?: Date;
 }): Promise<{ derBuffer: Buffer; sha256Hex: string }> {
   assertRoaEntriesMatchResourceCert(params.entries, params.resourceCaCertPem);
   const roaContent = buildRoaContent(params.entries);
@@ -437,7 +463,8 @@ export async function buildRoaCmsObject(params: {
     resourceCertUrl: params.resourceCertUrl,
     crlUri: params.crlUri,
     objectUri: params.objectUri,
-    validHours: 24,
+    notBefore: params.notBefore,
+    notAfter: params.notAfter,
   });
   const derBuffer = await signRpkiCms({
     contentDer: roaContent,
@@ -484,13 +511,13 @@ export async function buildAspaCmsObject(params: {
   objectUri: string;
 }): Promise<{ derBuffer: Buffer; sha256Hex: string }> {
   const aspaContent = buildAspaContent(params.entry);
+  // EE do ASPA: padrão 5 min atrás / 52 semanas (como Krill).
   const { certPem, keyPem } = await issueRpkiEeCert({
     resourceCaCertPem: params.resourceCaCertPem,
     resourceCaKeyPem: params.resourceCaKeyPem,
     resourceCertUrl: params.resourceCertUrl,
     crlUri: params.crlUri,
     objectUri: params.objectUri,
-    validHours: 24,
   });
   const derBuffer = await signRpkiCms({
     contentDer: aspaContent,
@@ -521,13 +548,15 @@ export async function buildManifestCmsObject(params: {
     nextUpdate: params.nextUpdate,
     files: params.files,
   });
+  // EE do manifesto: notBefore = thisUpdate (já backdatado), notAfter = nextUpdate.
   const { certPem, keyPem } = await issueRpkiEeCert({
     resourceCaCertPem: params.resourceCaCertPem,
     resourceCaKeyPem: params.resourceCaKeyPem,
     resourceCertUrl: params.resourceCertUrl,
     crlUri: params.crlUri,
     objectUri: params.mftUri,
-    validHours: 24,
+    notBefore: params.thisUpdate,
+    notAfter: params.nextUpdate,
   });
   const derBuffer = await signRpkiCms({
     contentDer: mftContent,

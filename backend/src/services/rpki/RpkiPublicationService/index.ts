@@ -41,12 +41,22 @@ function sha256HexOfBuffer(buf: Buffer): string {
   return crypto.createHash('sha256').update(buf).digest('hex');
 }
 
-function roaFilename(sha256Hex: string): string {
-  return `${sha256Hex.slice(0, 32)}.roa`;
+/**
+ * Nome determinístico de arquivo ROA, derivado do conteúdo (asn + prefixo + maxLength).
+ * Estável entre reemissões: a SIA dentro do EE sempre bate com o URI publicado.
+ * (Krill: ObjectName::from(RouteAuthorization { asn, prefix }))
+ */
+function roaDeterministicFilename(asn: number, prefix: string, maxLength: number): string {
+  const key = `${asn}:${prefix}:${maxLength}`;
+  return `${sha256HexOfBuffer(Buffer.from(key, 'utf8')).slice(0, 32)}.roa`;
 }
 
-function aspaFilename(sha256Hex: string): string {
-  return `${sha256Hex.slice(0, 32)}.asa`;
+/**
+ * Nome determinístico de arquivo ASPA, derivado do customerASN.
+ * (Krill: ObjectName::from(CustomerAsn))
+ */
+function aspaDeterministicFilename(customerAsn: number): string {
+  return `${sha256HexOfBuffer(Buffer.from(`aspa:${customerAsn}`, 'utf8')).slice(0, 32)}.asa`;
 }
 
 export class RpkiPublicationService {
@@ -94,6 +104,9 @@ export class RpkiPublicationService {
     const newManifestNumber = (Number(ca.manifest_number) || 0) + 1;
 
     const now = new Date();
+    // thisUpdate 5 minutos atrás — como Krill (Time::five_minutes_ago).
+    // Evita rejeição por relógio levemente adiantado no repositório ou validator.
+    const thisUpdate = new Date(now.getTime() - 5 * 60 * 1000);
     const nextUpdate = new Date(now.getTime() + 24 * 3600 * 1000);
 
     // 3. Constrói CRL
@@ -101,7 +114,8 @@ export class RpkiPublicationService {
       resourceCaCertPem: ca.resource_cert_pem,
       resourceCaKeyPem: ca.resource_key_pem,
       crlNumber: newCrlNumber,
-      validHours: 24,
+      thisUpdate,
+      nextUpdate,
     });
 
     // 4. Constrói ROAs
@@ -125,17 +139,21 @@ export class RpkiPublicationService {
       const entries: RoaEntry[] = [
         { prefix: roa.prefix, asn, maxLength: roa.max_length },
       ];
-      const objectUri = `${siaBase}TEMP.roa`; // placeholder para calcular hash e URI real
+      // Nome determinístico: SIA dentro do EE e URI publicada são sempre iguais.
+      // (Krill: ObjectName::from(RouteAuthorization { asn, prefix }))
+      const filename = roaDeterministicFilename(asn, roa.prefix, roa.max_length);
+      const objectUri = `${siaBase}${filename}`;
       const built = await buildRoaCmsObject({
         entries,
         resourceCaCertPem: ca.resource_cert_pem,
         resourceCaKeyPem: ca.resource_key_pem,
         resourceCertUrl: ca.resource_cert_url,
         crlUri,
-        objectUri: `${siaBase}${roaFilename(sha256HexOfBuffer(Buffer.from([asn])))}`,
+        objectUri,
+        notBefore: roa.not_before,
+        notAfter: roa.not_after,
       });
-      const filename = roaFilename(built.sha256Hex);
-      const uri = `${siaBase}${filename}`;
+      const uri = objectUri;
       builtRoas.push({
         roaId: roa.id,
         derBuffer: built.derBuffer,
@@ -173,16 +191,19 @@ export class RpkiPublicationService {
         return { providerAsn, afi } as AspaEntry['providers'][number];
       });
       const entry: AspaEntry = { customerAsn, providers };
+      // Nome determinístico por customerASN — SIA e URI publicada sempre iguais.
+      const aspaFile = aspaDeterministicFilename(customerAsn);
+      const aspaObjectUri = `${siaBase}${aspaFile}`;
       const built = await buildAspaCmsObject({
         entry,
         resourceCaCertPem: ca.resource_cert_pem!,
         resourceCaKeyPem: ca.resource_key_pem!,
         resourceCertUrl: ca.resource_cert_url!,
         crlUri,
-        objectUri: `${siaBase}${aspaFilename(sha256HexOfBuffer(Buffer.from([customerAsn])))}`,
+        objectUri: aspaObjectUri,
       });
-      const filename = aspaFilename(built.sha256Hex);
-      const uri = `${siaBase}${filename}`;
+      const filename = aspaFile;
+      const uri = aspaObjectUri;
       builtAspas.push({ aspaId: aspa.id, derBuffer: built.derBuffer, sha256Hex: built.sha256Hex, filename, uri });
     }
 
@@ -195,7 +216,7 @@ export class RpkiPublicationService {
 
     const mft = await buildManifestCmsObject({
       manifestNumber: newManifestNumber,
-      thisUpdate: now,
+      thisUpdate,
       nextUpdate,
       files: manifestFiles,
       resourceCaCertPem: ca.resource_cert_pem,
