@@ -14,19 +14,13 @@ import path from 'path';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 import { logger } from '../../../utils/logger';
-import {
-  generateBpkiCrlDer,
-  injectRpkiCrlFieldIntoSignedDataCms,
-} from '../RpkiProvisioningService';
+import { signKrillIdCertCms } from '../RpkiIdCert';
 
 const execFileAsync = promisify(execFile);
 
 const PUBLICATION_NS = 'http://www.hactrn.net/uris/rpki/rpki-setup/';
 const PUBLICATION_CONTENT_TYPE = 'application/rpki-publication';
 const PUBLICATION_MSG_VERSION = '4';
-
-// OID id-smime-ct-XML (usado tanto no RFC 6492 quanto no RFC 8181)
-const OID_RPKI_PUBLICATION_CONTENT = '1.2.840.113549.1.9.16.1.28';
 
 export interface PublishObject {
   uri: string;
@@ -45,51 +39,23 @@ export interface ListedObject {
   hashHex: string;
 }
 
-// ─── Assinatura CMS para RFC 8181 (igual ao RFC 6492) ────────────────────────
+// ─── Assinatura CMS para RFC 8181 (Krill SignedMessage / IdCert efêmero) ───
 
-async function signPublicationCms(xml: string, certPem: string, keyPem: string): Promise<Buffer> {
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'rpki-pub-sign-'));
+async function signPublicationCms(
+  xml: string,
+  idCertTaPem: string,
+  idCertTaKeyPem: string
+): Promise<Buffer> {
   try {
-    const xmlPath = path.join(tempDir, 'msg.xml');
-    const certPath = path.join(tempDir, 'cert.pem');
-    const keyPath = path.join(tempDir, 'key.pem');
-    const outPath = path.join(tempDir, 'msg.cms.der');
-
-    await fs.writeFile(xmlPath, xml, 'utf8');
-    await fs.writeFile(certPath, certPem, 'utf8');
-    await fs.writeFile(keyPath, keyPem, 'utf8');
-
-    await execFileAsync('openssl', [
-      'cms', '-sign',
-      '-in', xmlPath,
-      '-signer', certPath,
-      '-inkey', keyPath,
-      '-binary', '-nodetach', '-nosmimecap',
-      '-keyid',
-      '-md', 'sha256',
-      '-econtent_type', OID_RPKI_PUBLICATION_CONTENT,
-      '-outform', 'DER',
-      '-out', outPath,
-    ]);
-
-    const raw = await fs.readFile(outPath);
-
-    // RFC 6488 exige o campo crls [1] no SignedData com a CRL da CA emissora do IdCert.
-    // O Krill rejeita CMS sem CRL com "Could not decode CMS: missing further values".
-    try {
-      const crlDer = await generateBpkiCrlDer(certPem, keyPem);
-      return injectRpkiCrlFieldIntoSignedDataCms(raw, crlDer);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      logger.warn('RFC 8181: não foi possível injetar CRL no CMS de publicação', {
-        context: 'Rfc8181PublicationService',
-        action: 'signPublicationCms',
-        error: msg,
-      });
-      return raw;
-    }
-  } finally {
-    await fs.rm(tempDir, { recursive: true, force: true });
+    return await signKrillIdCertCms(xml, idCertTaPem, idCertTaKeyPem);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.warn('RFC 8181: falha ao assinar CMS estilo Krill', {
+      context: 'Rfc8181PublicationService',
+      action: 'signPublicationCms',
+      error: msg,
+    });
+    throw err;
   }
 }
 
@@ -225,7 +191,7 @@ async function sendToPublicationServer(
 export class Rfc8181PublicationService {
   /**
    * Publica objetos e/ou retira objetos do servidor de publicação RFC 8181.
-   * Usa o certificado BPKI (ca_cert_pem / private_key_pem) para assinar o CMS.
+   * Assina CMS com IdCert TA (EE efêmero por mensagem, como Krill SignedMessage).
    */
   static async sendObjects(params: {
     serviceUri: string;

@@ -18,6 +18,13 @@ import path from 'path';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 import crypto from 'crypto';
+import {
+  assertRoaEntriesMatchResourceCert,
+  buildAsInheritDer,
+  buildIpInheritDer,
+  bufToHexColon,
+  parseResourceCertProfile,
+} from '../RpkiCertProfile';
 
 const execFileAsync = promisify(execFile);
 
@@ -97,17 +104,6 @@ function derBitString(data: Buffer, unusedBits = 0): Buffer {
 
 // ─── Extensões DER para certificados EE (RFC 6487) ───────────────────────────
 
-/** id-pe-ipAddrBlocks com "inherit" para IPv4 e IPv6 */
-const IP_INHERIT_DER = SEQ(
-  Buffer.concat([
-    SEQ(Buffer.concat([OCTET(Buffer.from([0x00, 0x01])), NULL_DER()])), // IPv4
-    SEQ(Buffer.concat([OCTET(Buffer.from([0x00, 0x02])), NULL_DER()])), // IPv6
-  ])
-);
-
-/** id-pe-autonomousSysNum com "inherit" */
-const AS_INHERIT_DER = SEQ(CTX0_CONS(NULL_DER()));
-
 function buildSiaDer(objectUri: string): Buffer {
   const accessDesc = SEQ(
     Buffer.concat([derOid(OID_AD_SIGNED_OBJECT), CTX6_IMP(Buffer.from(objectUri, 'ascii'))])
@@ -128,12 +124,6 @@ function buildCrldpDer(crlUri: string): Buffer {
   const dpName = tlv(0xa0, fullName);        // [0] distributionPoint
   const dp = SEQ(dpName);
   return SEQ(dp);
-}
-
-function bufToHexColon(buf: Buffer): string {
-  return Array.from(buf)
-    .map((b) => b.toString(16).padStart(2, '0').toUpperCase())
-    .join(':');
 }
 
 // ─── ROA content (RFC 6482) ──────────────────────────────────────────────────
@@ -257,6 +247,9 @@ interface EeCertParams {
 async function issueRpkiEeCert(
   params: EeCertParams
 ): Promise<{ certPem: string; keyPem: string }> {
+  const resourceProfile = parseResourceCertProfile(params.resourceCaCertPem);
+  const ipInheritDer = buildIpInheritDer(resourceProfile.hasIpv4, resourceProfile.hasIpv6);
+
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'rpki-ee-'));
   try {
     const caKeyPath = path.join(tempDir, 'ca_key.pem');
@@ -270,9 +263,10 @@ async function issueRpkiEeCert(
     await fs.writeFile(caCertPath, params.resourceCaCertPem, 'utf8');
 
     await execFileAsync('openssl', ['genrsa', '-out', eeKeyPath, '2048']);
+    // RFC 6487: subject vazio em certificados EE RPKI (como Krill).
     await execFileAsync('openssl', [
       'req', '-new', '-key', eeKeyPath,
-      '-subj', '/CN=RPKI-EE',
+      '-subj', '/',
       '-out', eeCsrPath,
     ]);
 
@@ -280,23 +274,23 @@ async function issueRpkiEeCert(
     const aiaDer = buildAiaDer(params.resourceCertUrl);
     const crldpDer = buildCrldpDer(params.crlUri);
 
-    const extCnf = [
+    const extLines = [
       '[v3_ee]',
       'basicConstraints = critical,CA:FALSE',
       'keyUsage = critical,digitalSignature',
       'subjectKeyIdentifier = hash',
       'authorityKeyIdentifier = keyid',
-      // RPKI: IP resources inherit (IPv4 + IPv6)
-      `${OID_IP_ADDR_BLOCKS} = critical,DER:${bufToHexColon(IP_INHERIT_DER)}`,
-      // RPKI: ASN inherit
-      `${OID_AS_IDENT} = critical,DER:${bufToHexColon(AS_INHERIT_DER)}`,
-      // SIA: signedObject pointing to this object
+      `${OID_IP_ADDR_BLOCKS} = critical,DER:${bufToHexColon(ipInheritDer)}`,
+    ];
+    if (resourceProfile.hasAsn) {
+      extLines.push(`${OID_AS_IDENT} = critical,DER:${bufToHexColon(buildAsInheritDer())}`);
+    }
+    extLines.push(
       `${OID_SIA} = DER:${bufToHexColon(siaDer)}`,
-      // AIA: caIssuers pointing to resource CA cert
       `${OID_AIA} = DER:${bufToHexColon(aiaDer)}`,
-      // CRL Distribution Points
-      `${OID_CRLDP} = DER:${bufToHexColon(crldpDer)}`,
-    ].join('\n');
+      `${OID_CRLDP} = DER:${bufToHexColon(crldpDer)}`
+    );
+    const extCnf = extLines.join('\n');
 
     await fs.writeFile(extPath, extCnf, 'utf8');
 
@@ -435,6 +429,7 @@ export async function buildRoaCmsObject(params: {
   crlUri: string;
   objectUri: string;
 }): Promise<{ derBuffer: Buffer; sha256Hex: string }> {
+  assertRoaEntriesMatchResourceCert(params.entries, params.resourceCaCertPem);
   const roaContent = buildRoaContent(params.entries);
   const { certPem, keyPem } = await issueRpkiEeCert({
     resourceCaCertPem: params.resourceCaCertPem,

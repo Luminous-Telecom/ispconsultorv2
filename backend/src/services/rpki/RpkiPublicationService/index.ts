@@ -27,7 +27,11 @@ import {
   type AspaEntry,
 } from '../RpkiObjectBuilderService';
 import { Rfc8181PublicationService, type PublishObject, type WithdrawObject } from '../Rfc8181PublicationService';
-import { RpkiProvisioningService } from '../RpkiProvisioningService';
+import {
+  RpkiProvisioningService,
+  ensureBpkiEeMaterialForCa,
+  getBpkiIdCertMaterial,
+} from '../RpkiProvisioningService';
 
 function normalizeSiaBase(base: string): string {
   return base.endsWith('/') ? base : base + '/';
@@ -64,9 +68,9 @@ export class RpkiPublicationService {
     if (!repository.rsync_base_uri) {
       throw new Error('Repositório sem rsync_base_uri — importe o repository_response primeiro.');
     }
-    if (!ca.ca_cert_pem || !ca.private_key_pem) {
-      throw new Error('CA sem material BPKI (ca_cert_pem / private_key_pem).');
-    }
+    await ensureBpkiEeMaterialForCa(ca);
+    await ca.reload();
+    getBpkiIdCertMaterial(ca);
 
     // 1. Garante certificado de recurso
     await RpkiPublicationService.ensureResourceCert(ca, params.empresaId);
@@ -265,10 +269,11 @@ export class RpkiPublicationService {
     // 8. Envia para o servidor de publicação RFC 8181
     if (toPublish.length > 0 || toWithdraw.length > 0) {
       try {
+        const idCert = getBpkiIdCertMaterial(ca);
         await Rfc8181PublicationService.sendObjects({
           serviceUri: repository.publication_service_uri,
-          bpkiCertPem: ca.ca_cert_pem,
-          bpkiKeyPem: ca.private_key_pem,
+          bpkiCertPem: idCert.certPem,
+          bpkiKeyPem: idCert.keyPem,
           publish: toPublish,
           withdraw: toWithdraw,
         });
@@ -369,17 +374,21 @@ export class RpkiPublicationService {
     repository: RpkiRepository
   ): Promise<void> {
     const serviceUri = repository.publication_service_uri;
-    const bpkiCertPem = ca.ca_cert_pem;
-    const bpkiKeyPem = ca.private_key_pem;
-    if (!serviceUri || !bpkiCertPem || !bpkiKeyPem) {
+    if (!serviceUri) {
+      return;
+    }
+    let idCert: ReturnType<typeof getBpkiIdCertMaterial>;
+    try {
+      idCert = getBpkiIdCertMaterial(ca);
+    } catch {
       return;
     }
 
     try {
       const listed = await Rfc8181PublicationService.listPublished({
         serviceUri,
-        bpkiCertPem,
-        bpkiKeyPem,
+        bpkiCertPem: idCert.certPem,
+        bpkiKeyPem: idCert.keyPem,
       });
       const remoteByUri = new Map(
         listed.map((o) => [o.uri, o.hashHex.toLowerCase()])

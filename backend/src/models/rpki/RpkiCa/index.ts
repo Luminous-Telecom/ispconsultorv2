@@ -19,8 +19,14 @@ export class RpkiCa extends Model<
   declare nome: string;
   declare handle: string;
   declare status: RpkiCaStatus;
+  /** IdCert BPKI TA (Krill Rfc8183Id) — child_bpki_ta / chave de assinatura CMS. */
   declare ca_cert_pem: string | null;
+  /** Chave privada da BPKI TA (identidade / emissor do EE). */
   declare private_key_pem: string | null;
+  /** Certificado BPKI TA (child_bpki_ta / publisher_bpki_ta). */
+  declare bpki_ta_cert_pem: string | null;
+  /** Chave privada do par BPKI EE (separada da TA, como no Krill). */
+  declare bpki_ee_key_pem: string | null;
   /** Certificado de recurso emitido pelo parent via RFC 6492 (PEM). */
   declare resource_cert_pem: string | null;
   /** Chave privada do par de chaves do certificado de recurso. */
@@ -77,6 +83,14 @@ RpkiCa.init(
       allowNull: true,
     },
     private_key_pem: {
+      type: DataTypes.TEXT('long'),
+      allowNull: true,
+    },
+    bpki_ta_cert_pem: {
+      type: DataTypes.TEXT('long'),
+      allowNull: true,
+    },
+    bpki_ee_key_pem: {
       type: DataTypes.TEXT('long'),
       allowNull: true,
     },

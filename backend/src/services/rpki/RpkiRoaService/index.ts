@@ -7,6 +7,7 @@ import { RpkiValidationLog } from '../../../models/rpki/RpkiValidationLog';
 import { RpkiActivityLog } from '../../../models/rpki/RpkiActivityLog';
 import { RpkiClientError } from '../../../utils/errorUtils';
 import { RpkiCaService } from '../RpkiCaService';
+import { assertRoaEntriesMatchResourceCert } from '../RpkiCertProfile';
 import { collectRisWhoisSuggestedRoas } from '../RpkiBgpRisWhoisService';
 
 interface CreateRpkiRoaInput {
@@ -154,6 +155,18 @@ export class RpkiRoaService {
       throw new RpkiClientError('Prefixo ROA não pertence aos recursos atualmente delegados para esta CA.');
     }
 
+    const ca = await RpkiCa.findByPk(input.caId);
+    if (ca?.resource_cert_pem) {
+      try {
+        assertRoaEntriesMatchResourceCert(
+          [{ prefix: input.prefix.trim() }],
+          ca.resource_cert_pem
+        );
+      } catch (err) {
+        throw new RpkiClientError(err instanceof Error ? err.message : 'ROA incompatível com certificado de recurso.');
+      }
+    }
+
     const duplicate = await RpkiRoa.findOne({
       where: {
         ca_id: input.caId,
@@ -236,6 +249,15 @@ export class RpkiRoaService {
     });
     if (!hasCoverage) {
       throw new RpkiClientError('Prefixo ROA não pertence aos recursos atualmente delegados para esta CA.');
+    }
+
+    const ca = await RpkiCa.findByPk(caId);
+    if (ca?.resource_cert_pem) {
+      try {
+        assertRoaEntriesMatchResourceCert([{ prefix: nextPrefix }], ca.resource_cert_pem);
+      } catch (err) {
+        throw new RpkiClientError(err instanceof Error ? err.message : 'ROA incompatível com certificado de recurso.');
+      }
     }
 
     const duplicate = await RpkiRoa.findOne({

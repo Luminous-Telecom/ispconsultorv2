@@ -11,9 +11,16 @@ import { RpkiCaResource } from '../../../models/rpki/RpkiCaResource';
 import { RpkiRepository } from '../../../models/rpki/RpkiRepository';
 import { logger } from '../../../utils/logger';
 import { RpkiClientError } from '../../../utils/errorUtils';
-const execFileAsync = promisify(execFile);
+import {
+  hasKrillStyleIdCertTa,
+  issueIdCertTa,
+  signKrillIdCertCms,
+} from '../RpkiIdCert';
+export { encodeCmsSignedDataCrlsField, injectRpkiCrlFieldIntoSignedDataCms } from '../RpkiCmsCrl';
+export { generateBpkiCrlDer } from '../RpkiIdCert';
 
-const RFC8183_SETUP_NS = 'http://www.hactrn.net/uris/rpki/rpki-setup/';
+const execFileAsync = promisify(execFile);
+const RFC8183 = 'http://www.hactrn.net/uris/rpki/rpki-setup/';
 const isRpkiDebugCmsEnabled = String(process.env.RPKI_DEBUG_CMS ?? '').toLowerCase() === 'true';
 
 /** Headers extras para HTTP RPKI (Up/Down). Defina RPKI_HTTP_USER_AGENT no .env se o provedor exigir UA específico. */
@@ -557,200 +564,26 @@ async function syncResourcesFromParentResponse(params: {
 }
 
 
-function encodeDerContentLength(length: number): Buffer {
-  if (length < 0x80) {
-    return Buffer.from([length]);
-  }
-  if (length <= 0xff) {
-    return Buffer.from([0x81, length]);
-  }
-  if (length <= 0xffff) {
-    return Buffer.from([0x82, (length >> 8) & 0xff, length & 0xff]);
-  }
-  throw new Error('CMS: comprimento DER fora do intervalo suportado');
-}
-
-/** RFC6492: campo `crls` [1] IMPLICIT = corpo SET OF; um CRL → `A1` + len + CRL DER. */
-export function encodeCmsSignedDataCrlsField(crlDer: Buffer): Buffer {
-  if (!crlDer.length || crlDer[0] !== 0x30) {
-    throw new Error('CMS: CRL DER inválida (esperado CertificateList SEQUENCE)');
-  }
-  return Buffer.concat([Buffer.from([0xa1]), encodeDerContentLength(crlDer.length), crlDer]);
-}
-
-export async function generateBpkiCrlDer(certPem: string, keyPem: string): Promise<Buffer> {
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'rpki-bpki-crl-'));
+async function runOpenSslCmsSign(xml: string, idCertTaPem: string, idCertTaKeyPem: string): Promise<Buffer> {
   try {
-    const demoCaDir = path.join(tempDir, 'demoCA');
-    await fs.mkdir(demoCaDir, { recursive: true });
-    await fs.writeFile(path.join(demoCaDir, 'index.txt'), '', 'utf8');
-    await fs.writeFile(path.join(demoCaDir, 'serial'), '1000\n', 'utf8');
-    await fs.writeFile(path.join(demoCaDir, 'crlnumber'), '1000\n', 'utf8');
-    await fs.writeFile(path.join(tempDir, 'cert.pem'), certPem, 'utf8');
-    await fs.writeFile(path.join(tempDir, 'key.pem'), keyPem, 'utf8');
-    await fs.writeFile(
-      path.join(tempDir, 'openssl.cnf'),
-      `[ca]
-default_ca = CA_default
-
-[CA_default]
-dir = ./demoCA
-database = $dir/index.txt
-serial = $dir/serial
-crlnumber = $dir/crlnumber
-certificate = ./cert.pem
-private_key = ./key.pem
-default_md = sha256
-default_crl_days = 30
-`,
-      'utf8'
-    );
-
-    await execFileAsync(
-      'openssl',
-      ['ca', '-config', 'openssl.cnf', '-gencrl', '-out', 'crl.pem', '-batch'],
-      { cwd: tempDir }
-    );
-    await execFileAsync(
-      'openssl',
-      ['crl', '-in', 'crl.pem', '-outform', 'DER', '-out', 'crl.der'],
-      { cwd: tempDir }
-    );
-    return await fs.readFile(path.join(tempDir, 'crl.der'));
-  } finally {
-    await fs.rm(tempDir, { recursive: true, force: true });
-  }
-}
-
-/**
- * Injeta CRL no campo crls [1] IMPLICIT do SignedData CMS via walker DER puro.
- * OpenSSL não inclui crls; este campo é exigido pelo Krill (RFC 6488 / RFC 6492 / RFC 8181).
- * A assinatura não é afetada porque crls fica fora dos SignedAttributes.
- */
-export function injectRpkiCrlFieldIntoSignedDataCms(cmsDer: Buffer, crlDer: Buffer): Buffer {
-  // Lê comprimento DER (forma curta ou longa), retorna { value, size }
-  const readLen = (off: number): { value: number; size: number } => {
-    const b = cmsDer[off];
-    if (b < 0x80) return { value: b, size: 1 };
-    const n = b & 0x7f;
-    let v = 0;
-    for (let i = 1; i <= n; i++) v = (v << 8) | cmsDer[off + i];
-    return { value: v, size: 1 + n };
-  };
-  // Tamanho total de um TLV a partir de 'off' (tag + comprimento + conteúdo)
-  const tlvSize = (off: number): number => {
-    const len = readLen(off + 1);
-    return 1 + len.size + len.value;
-  };
-
-  // ContentInfo SEQUENCE → entra no conteúdo
-  const ciLenOff = 1;
-  const ciLen = readLen(ciLenOff);
-  let p = 1 + ciLen.size;
-
-  p += tlvSize(p); // pula OID contentType
-
-  // [0] EXPLICIT (conteúdo do SignedData) → entra no conteúdo
-  const expLenOff = p + 1;
-  const expLen = readLen(expLenOff);
-  p += 1 + expLen.size;
-
-  // SignedData SEQUENCE → entra no conteúdo
-  const sdLenOff = p + 1;
-  const sdLen = readLen(sdLenOff);
-  p += 1 + sdLen.size;
-
-  p += tlvSize(p); // pula version INTEGER
-  p += tlvSize(p); // pula digestAlgorithms SET
-  p += tlvSize(p); // pula encapContentInfo SEQUENCE
-  if (cmsDer[p] === 0xa0) p += tlvSize(p); // pula certificates [0] opcional
-  if (cmsDer[p] === 0xa1) return cmsDer;   // crls [1] já presente → nada a fazer
-
-  // p aponta para signerInfos SET (tag 0x31); injeta CRL antes dele
-  const insertAt = p;
-  const crlField = encodeCmsSignedDataCrlsField(crlDer);
-  const delta = crlField.length;
-
-  const result = Buffer.concat([cmsDer.subarray(0, insertAt), crlField, cmsDer.subarray(insertAt)]);
-
-  // Atualiza comprimentos de ContentInfo, [0] EXPLICIT e SignedData SEQUENCE (todos antes de insertAt)
-  const patchLen = (lenOff: number, old: { value: number; size: number }): void => {
-    let newVal = old.value + delta;
-    for (let i = old.size - 1; i >= 1; i--) {
-      result[lenOff + i] = newVal & 0xff;
-      newVal >>= 8;
-    }
-    if (old.size === 1) result[lenOff] = old.value + delta;
-  };
-
-  patchLen(ciLenOff, ciLen);
-  patchLen(expLenOff, expLen);
-  patchLen(sdLenOff, sdLen);
-
-  return result;
-}
-
-async function runOpenSslCmsSign(xml: string, certPem: string, keyPem: string): Promise<Buffer> {
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'rpki-updown-sign-'));
-  const xmlPath = path.join(tempDir, 'message.xml');
-  const certPath = path.join(tempDir, 'cert.pem');
-  const keyPath = path.join(tempDir, 'key.pem');
-  const outPath = path.join(tempDir, 'message.cms.der');
-
-  try {
-    await fs.writeFile(xmlPath, xml, 'utf8');
-    await fs.writeFile(certPath, certPem, 'utf8');
-    await fs.writeFile(keyPath, keyPem, 'utf8');
-
-    const args = [
-      'cms',
-      '-sign',
-      '-in',
-      xmlPath,
-      '-signer',
-      certPath,
-      '-inkey',
-      keyPath,
-      '-binary',
-      '-nodetach',
-      '-nosmimecap',
-      '-keyid',
-      '-md',
-      'sha256',
-      '-econtent_type',
-      '1.2.840.113549.1.9.16.1.28',
-      '-outform',
-      'DER',
-      '-out',
-      outPath,
-    ];
-    await execFileAsync('openssl', args);
-
-    const raw = await fs.readFile(outPath);
-    let finalCms = Buffer.from(raw);
-    try {
-      // Alguns pais (ex.: NIC.br) exigem o campo SignedData.crls no CMS RFC6492.
-      const crlDer = await generateBpkiCrlDer(certPem, keyPem);
-      finalCms = Buffer.from(injectRpkiCrlFieldIntoSignedDataCms(raw, crlDer));
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.warn('RPKI up-down: não foi possível injetar CRL no CMS, usando assinatura padrão', {
-        context: 'RpkiProvisioningService',
-        action: 'runOpenSslCmsSign',
-        error: errorMessage,
-      });
-    }
+    const finalCms = await signKrillIdCertCms(xml, idCertTaPem, idCertTaKeyPem);
     logRpkiCmsDebug('RPKI up-down: CMS assinado gerado', {
       context: 'RpkiProvisioningService',
       action: 'runOpenSslCmsSign',
-      cms_profile: 'rfc6492-default',
+      cms_profile: 'krill-idcert-ephemeral-ee',
       cms_length: finalCms.length,
       cms_prefix_hex: toHexPreview(finalCms, 32),
-      cert_serial_hex: getCertSerialHexFromPem(certPem),
+      cert_serial_hex: getCertSerialHexFromPem(idCertTaPem),
     });
     return finalCms;
-  } finally {
-    await fs.rm(tempDir, { recursive: true, force: true });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    logger.warn('RPKI up-down: falha ao assinar CMS estilo Krill', {
+      context: 'RpkiProvisioningService',
+      action: 'runOpenSslCmsSign',
+      error: errorMessage,
+    });
+    throw error;
   }
 }
 
@@ -792,7 +625,8 @@ async function fetchResourcesViaUpDown(params: {
          sender="${params.parent.child_handle}"
          recipient="${params.parent.parent_handle}"
          type="list"/>`;
-  const cmsRequest = await runOpenSslCmsSign(queryXml, params.ca.ca_cert_pem, params.ca.private_key_pem);
+  const idCert = getBpkiIdCertMaterial(params.ca);
+  const cmsRequest = await runOpenSslCmsSign(queryXml, idCert.certPem, idCert.keyPem);
   logRpkiCmsDebug('RPKI up-down: enviando list query', {
     context: 'RpkiProvisioningService',
     action: 'fetchResourcesViaUpDown',
@@ -869,196 +703,79 @@ async function fetchResourcesViaUpDown(params: {
   throw new Error(errMsg);
 }
 
-function generateSafePositiveSerialHex(): string {
-  const bytes = forge.random.getBytesSync(16).split('').map((ch) => ch.charCodeAt(0));
-  if (bytes.length === 0) return '01';
-  // DER INTEGER precisa ser positivo; limpa bit de sinal.
-  bytes[0] &= 0x7f;
-  // Evita serial zero.
-  const hasAnyNonZeroByte = bytes.some((b) => b !== 0);
-  if (!hasAnyNonZeroByte) {
-    bytes[bytes.length - 1] = 1;
+/** IdCert TA persistido (Krill Rfc8183Id / child_bpki_ta). */
+export function getBpkiIdCertMaterial(ca: RpkiCa): { certPem: string; keyPem: string } {
+  const certPem = ca.ca_cert_pem ?? ca.bpki_ta_cert_pem;
+  const keyPem = ca.private_key_pem;
+  if (!certPem || !keyPem) {
+    throw new RpkiClientError('CA sem IdCert BPKI (TA) para assinar CMS');
   }
-  const hex = Buffer.from(bytes).toString('hex').replace(/^0+/, '');
-  return hex.length > 0 ? hex : '01';
+  return { certPem, keyPem };
 }
 
-function sanitizeCommonNameForOpenSsl(input: string): string {
-  const value = String(input || '')
-    .replace(/[^\w .:@\-_/]/g, '')
-    .trim();
-  return value || 'BackNet-RPKI';
+/** @deprecated use getBpkiIdCertMaterial */
+export function getBpkiCmsSigningMaterial(ca: RpkiCa): { certPem: string; keyPem: string } {
+  return getBpkiIdCertMaterial(ca);
 }
 
-async function issueSelfSignedEeCertWithOpenSsl(privateKeyPem: string, commonName: string): Promise<string> {
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'rpki-bpki-ee-openssl-'));
-  try {
-    const keyPath = path.join(tempDir, 'key.pem');
-    const certPath = path.join(tempDir, 'cert.pem');
-    const csrPath = path.join(tempDir, 'req.csr');
-    const extPath = path.join(tempDir, 'ext.cnf');
-    await fs.writeFile(keyPath, privateKeyPem, 'utf8');
-    await fs.writeFile(
-      extPath,
-      `basicConstraints=critical,CA:FALSE
-keyUsage=critical,digitalSignature
-subjectKeyIdentifier=hash
-authorityKeyIdentifier=keyid,issuer
-`,
-      'utf8'
-    );
-
-    const cn = sanitizeCommonNameForOpenSsl(commonName);
-    await execFileAsync('openssl', ['req', '-new', '-key', keyPath, '-subj', `/CN=${cn}`, '-out', csrPath]);
-    await execFileAsync('openssl', [
-      'x509',
-      '-req',
-      '-in',
-      csrPath,
-      '-signkey',
-      keyPath,
-      '-days',
-      '1825',
-      '-sha256',
-      '-extfile',
-      extPath,
-      '-out',
-      certPath,
-    ]);
-
-    return await fs.readFile(certPath, 'utf8');
-  } finally {
-    await fs.rm(tempDir, { recursive: true, force: true });
-  }
+/** @deprecated use getBpkiIdCertMaterial */
+export function getBpkiTaCrlMaterial(ca: RpkiCa): { certPem: string; keyPem: string } {
+  return getBpkiIdCertMaterial(ca);
 }
 
-async function generateBpkiMaterialWithOpenSsl(commonName: string): Promise<{ certPem: string; privateKeyPem: string }> {
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'rpki-bpki-material-openssl-'));
+function getSetupTaCertPemForXml(ca: RpkiCa): string {
+  return getBpkiIdCertMaterial(ca).certPem;
+}
+
+async function generateInitialIdCertKeyPair(): Promise<{ privateKeyPem: string; idCertTaPem: string }> {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'rpki-id-init-'));
   try {
     const keyPath = path.join(tempDir, 'key.pem');
     await execFileAsync('openssl', ['genrsa', '-out', keyPath, '2048']);
     const privateKeyPem = await fs.readFile(keyPath, 'utf8');
-    const certPem = await issueSelfSignedEeCertWithOpenSsl(privateKeyPem, commonName);
-    return { certPem, privateKeyPem };
+    const idCertTaPem = await issueIdCertTa(privateKeyPem);
+    return { privateKeyPem, idCertTaPem };
   } finally {
     await fs.rm(tempDir, { recursive: true, force: true });
   }
 }
 
-/** BPKI TA para setup RFC8183 (perfil semelhante ao Krill: CA=true, keyCertSign/cRLSign). */
-function applyBpkiTaX509Extensions(cert: forge.pki.Certificate): void {
-  cert.setExtensions([
-    { name: 'basicConstraints', cA: true, critical: true },
-    { name: 'keyUsage', keyCertSign: true, cRLSign: true, critical: true },
-    { name: 'subjectKeyIdentifier' },
-    { name: 'authorityKeyIdentifier', keyIdentifier: true },
-  ]);
-}
+/** Garante IdCert TA estilo Krill (único certificado BPKI; CMS usa EE efêmero por mensagem). */
+export async function ensureBpkiEeMaterialForCa(ca: RpkiCa): Promise<void> {
+  let taKey = ca.private_key_pem;
 
-/** Reemite cert autoassinado TA (CA=true) usando a mesma chave pública/privada. */
-function reissueSelfSignedTaFromExistingPair(certPem: string, privateKeyPem: string): { certPem: string } {
-  const oldCert = forge.pki.certificateFromPem(certPem);
-  const privateKey = forge.pki.privateKeyFromPem(privateKeyPem);
-  const cert = forge.pki.createCertificate();
-  cert.publicKey = oldCert.publicKey;
-  cert.serialNumber = generateSafePositiveSerialHex();
-  cert.validity.notBefore = new Date();
-  cert.validity.notAfter = new Date();
-  cert.validity.notAfter.setFullYear(cert.validity.notBefore.getFullYear() + 15);
-  cert.setSubject(oldCert.subject.attributes);
-  cert.setIssuer(oldCert.subject.attributes);
-  applyBpkiTaX509Extensions(cert);
-  cert.sign(privateKey, forge.md.sha256.create());
-  return { certPem: forge.pki.certificateToPem(cert) };
-}
-
-function hasCompatibleBpkiCert(pemCert: string): boolean {
-  try {
-    const cert = forge.pki.certificateFromPem(pemCert);
-    const basicConstraints = cert.getExtension('basicConstraints') as { cA?: boolean } | undefined;
-    const keyUsage = cert.getExtension('keyUsage') as {
-      digitalSignature?: boolean;
-      keyCertSign?: boolean;
-    } | undefined;
-    const isCaStyle = Boolean(basicConstraints?.cA) || Boolean(keyUsage?.keyCertSign);
-    if (isCaStyle) {
-      return false;
-    }
-    const isEe = basicConstraints?.cA !== true;
-    const canSignCms = Boolean(keyUsage?.digitalSignature);
-    return isEe && canSignCms;
-  } catch {
-    return false;
-  }
-}
-
-function hasStrictSafeSerialForParentDecoder(pemCert: string): boolean {
-  try {
-    const cert = forge.pki.certificateFromPem(pemCert);
-    const serialHex = String(cert.serialNumber || '').replace(/^0+/, '').toLowerCase();
-    if (!serialHex) return false;
-    const firstByteHex = serialHex.length >= 2 ? serialHex.slice(0, 2) : `0${serialHex}`;
-    const firstByte = Number.parseInt(firstByteHex, 16);
-    if (!Number.isFinite(firstByte)) return false;
-    // Alguns decoders antigos rejeitam serial com bit de sinal alto.
-    return firstByte < 0x80;
-  } catch {
-    return false;
-  }
-}
-
-function hasCompatibleBpkiTaCert(pemCert: string): boolean {
-  try {
-    const cert = forge.pki.certificateFromPem(pemCert);
-    const basicConstraints = cert.getExtension('basicConstraints') as { cA?: boolean } | undefined;
-    const keyUsage = cert.getExtension('keyUsage') as {
-      keyCertSign?: boolean;
-      cRLSign?: boolean;
-    } | undefined;
-    return Boolean(basicConstraints?.cA) && Boolean(keyUsage?.keyCertSign || keyUsage?.cRLSign);
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Certificado BPKI TA usado em child_request/publisher_request.
- * Mantém a mesma chave da CA para preservar continuidade operacional.
- */
-function getSetupTaCertPemForXml(ca: RpkiCa): string {
-  if (!ca.private_key_pem) {
-    throw new RpkiClientError('CA sem chave privada para gerar BPKI TA de setup');
-  }
-  if (ca.ca_cert_pem && hasCompatibleBpkiTaCert(ca.ca_cert_pem)) {
-    return ca.ca_cert_pem;
-  }
-  if (!ca.ca_cert_pem) {
-    throw new RpkiClientError('CA sem certificado base para derivar BPKI TA');
-  }
-  return reissueSelfSignedTaFromExistingPair(ca.ca_cert_pem, ca.private_key_pem).certPem;
-}
-
-async function ensureBpkiEeMaterialForCa(ca: RpkiCa): Promise<void> {
-  if (
-    hasCompatibleBpkiCert(ca.ca_cert_pem ?? '') &&
-    hasStrictSafeSerialForParentDecoder(ca.ca_cert_pem ?? '') &&
-    ca.ca_cert_pem &&
-    ca.private_key_pem
-  ) {
-    return;
-  }
-  if (ca.ca_cert_pem && ca.private_key_pem) {
-    const certPem = await issueSelfSignedEeCertWithOpenSsl(ca.private_key_pem, ca.nome);
-    await ca.update({ ca_cert_pem: certPem });
+  if (!taKey) {
+    const init = await generateInitialIdCertKeyPair();
+    await ca.update({
+      private_key_pem: init.privateKeyPem,
+      ca_cert_pem: init.idCertTaPem,
+      bpki_ta_cert_pem: init.idCertTaPem,
+      bpki_ee_key_pem: null,
+    });
     await ca.reload();
     return;
   }
-  const generated = await generateBpkiMaterialWithOpenSsl(ca.nome);
-  await ca.update({
-    ca_cert_pem: generated.certPem,
-    private_key_pem: generated.privateKeyPem,
-  });
-  await ca.reload();
+
+  const currentTa = ca.ca_cert_pem ?? ca.bpki_ta_cert_pem;
+  if (!currentTa || !hasKrillStyleIdCertTa(currentTa)) {
+    const idCertTaPem = await issueIdCertTa(taKey);
+    await ca.update({
+      ca_cert_pem: idCertTaPem,
+      bpki_ta_cert_pem: idCertTaPem,
+      bpki_ee_key_pem: null,
+    });
+    await ca.reload();
+    return;
+  }
+
+  if (ca.ca_cert_pem !== currentTa || ca.bpki_ta_cert_pem !== currentTa || ca.bpki_ee_key_pem) {
+    await ca.update({
+      ca_cert_pem: currentTa,
+      bpki_ta_cert_pem: currentTa,
+      bpki_ee_key_pem: null,
+    });
+    await ca.reload();
+  }
 }
 
 // ─── Helpers para RFC 6492 request/issue ─────────────────────────────────────
@@ -1400,7 +1117,8 @@ export class RpkiProvisioningService {
       className: targetClass.className,
       request_xml_preview: requestXml.slice(0, 800),
     });
-    const cmsDer = await runOpenSslCmsSign(requestXml, ca.ca_cert_pem, ca.private_key_pem);
+    const idCert = getBpkiIdCertMaterial(ca);
+    const cmsDer = await runOpenSslCmsSign(requestXml, idCert.certPem, idCert.keyPem);
 
     const contentType = 'application/rpki-updown';
     const response = await axios.post<ArrayBuffer>(parent.service_uri, cmsDer, {
@@ -1476,23 +1194,8 @@ export class RpkiProvisioningService {
   }
 
   static async generateChildRequest(ca: RpkiCa): Promise<{ xml: string; ca: RpkiCa }> {
-    let certPem = ca.ca_cert_pem;
-    let privateKeyPem = ca.private_key_pem;
-
-    if (!certPem || !privateKeyPem || !hasCompatibleBpkiCert(certPem)) {
-      if (certPem && privateKeyPem) {
-        certPem = await issueSelfSignedEeCertWithOpenSsl(privateKeyPem, ca.nome);
-        await ca.update({ ca_cert_pem: certPem });
-      } else {
-        const generated = await generateBpkiMaterialWithOpenSsl(ca.nome);
-        certPem = generated.certPem;
-        privateKeyPem = generated.privateKeyPem;
-        await ca.update({
-          ca_cert_pem: certPem,
-          private_key_pem: privateKeyPem,
-        });
-      }
-    }
+    await ensureBpkiEeMaterialForCa(ca);
+    await ca.reload();
 
     const protocolHandle = toProtocolSafeHandle(ca.handle || ca.nome);
     if (protocolHandle !== ca.handle) {
