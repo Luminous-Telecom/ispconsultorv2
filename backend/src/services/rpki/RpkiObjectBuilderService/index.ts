@@ -303,9 +303,10 @@ async function issueRpkiEeCert(
 
     await fs.writeFile(extPath, extCnf, 'utf8');
 
-    // Datas explícitas: -startdate e -enddate (formato ASN.1 YYYYMMDDHHMMSSZ).
-    const fmt = (d: Date) =>
-      d.toISOString().replace(/[-:T]/g, '').replace(/\.\d+Z$/, 'Z');
+    // openssl x509 -req aceita apenas -days (compatível com todas as versões).
+    // Calcula dias de agora até notAfter; notBefore será "now" pelo OpenSSL,
+    // o que é aceitável — validators toleram segundos/minutos de diferença.
+    const validDays = Math.max(1, Math.ceil((naDate.getTime() - Date.now()) / (24 * 3600 * 1000)));
 
     await execFileAsync('openssl', [
       'x509', '-req',
@@ -313,10 +314,9 @@ async function issueRpkiEeCert(
       '-CA', caCertPath,
       '-CAkey', caKeyPath,
       '-CAcreateserial',
+      '-days', String(validDays),
       '-extfile', extPath,
       '-extensions', 'v3_ee',
-      '-startdate', fmt(nbDate),
-      '-enddate', fmt(naDate),
       '-out', eeCertPath,
     ]);
 
