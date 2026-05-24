@@ -3,8 +3,6 @@ import axios from 'axios';
 import { promises as fs } from 'fs';
 import os from 'os';
 import path from 'path';
-import { execFile } from 'child_process';
-import { promisify } from 'util';
 import { RpkiCa } from '../../../models/rpki/RpkiCa';
 import { RpkiCaParent } from '../../../models/rpki/RpkiCaParent';
 import { RpkiCaResource } from '../../../models/rpki/RpkiCaResource';
@@ -12,14 +10,15 @@ import { RpkiRepository } from '../../../models/rpki/RpkiRepository';
 import { logger } from '../../../utils/logger';
 import { RpkiClientError } from '../../../utils/errorUtils';
 import {
+  extractCmsContentAsUtf8,
+  generateInitialIdCertKeyPair,
+  generateRpkiCsr,
   hasKrillStyleIdCertTa,
   issueIdCertTa,
   signKrillIdCertCms,
-} from '../RpkiIdCert';
+} from '../RpkiOpenSslLib';
 export { encodeCmsSignedDataCrlsField, injectRpkiCrlFieldIntoSignedDataCms } from '../RpkiCmsCrl';
-export { generateBpkiCrlDer } from '../RpkiIdCert';
 
-const execFileAsync = promisify(execFile);
 const RFC8183 = 'http://www.hactrn.net/uris/rpki/rpki-setup/';
 const isRpkiDebugCmsEnabled = String(process.env.RPKI_DEBUG_CMS ?? '').toLowerCase() === 'true';
 
@@ -564,48 +563,6 @@ async function syncResourcesFromParentResponse(params: {
 }
 
 
-async function runOpenSslCmsSign(xml: string, idCertTaPem: string, idCertTaKeyPem: string): Promise<Buffer> {
-  try {
-    const finalCms = await signKrillIdCertCms(xml, idCertTaPem, idCertTaKeyPem);
-    logRpkiCmsDebug('RPKI up-down: CMS assinado gerado', {
-      context: 'RpkiProvisioningService',
-      action: 'runOpenSslCmsSign',
-      cms_profile: 'krill-idcert-ephemeral-ee',
-      cms_length: finalCms.length,
-      cms_prefix_hex: toHexPreview(finalCms, 32),
-      cert_serial_hex: getCertSerialHexFromPem(idCertTaPem),
-    });
-    return finalCms;
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-    logger.warn('RPKI up-down: falha ao assinar CMS estilo Krill', {
-      context: 'RpkiProvisioningService',
-      action: 'runOpenSslCmsSign',
-      error: errorMessage,
-    });
-    throw error;
-  }
-}
-
-async function runOpenSslCmsExtractContent(cmsDer: Buffer): Promise<string> {
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'rpki-updown-verify-'));
-  const inPath = path.join(tempDir, 'response.cms.der');
-  const outPath = path.join(tempDir, 'response.xml');
-
-  try {
-    await fs.writeFile(inPath, cmsDer);
-    await execFileAsync('openssl', [
-      'cms', '-verify', '-inform', 'DER',
-      '-in', inPath,
-      '-noverify',
-      '-out', outPath,
-    ]);
-    return await fs.readFile(outPath, 'utf8');
-  } finally {
-    await fs.rm(tempDir, { recursive: true, force: true });
-  }
-}
-
 async function fetchResourcesViaUpDown(params: {
   ca: RpkiCa;
   parent: RpkiCaParent;
@@ -626,7 +583,15 @@ async function fetchResourcesViaUpDown(params: {
          recipient="${params.parent.parent_handle}"
          type="list"/>`;
   const idCert = getBpkiIdCertMaterial(params.ca);
-  const cmsRequest = await runOpenSslCmsSign(queryXml, idCert.certPem, idCert.keyPem);
+  const cmsRequest = await signKrillIdCertCms(queryXml, idCert.certPem, idCert.keyPem);
+  logRpkiCmsDebug('RPKI up-down: CMS assinado gerado', {
+    context: 'RpkiProvisioningService',
+    action: 'fetchResourcesViaUpDown',
+    cms_profile: 'krill-idcert-ephemeral-ee',
+    cms_length: cmsRequest.length,
+    cms_prefix_hex: toHexPreview(cmsRequest, 32),
+    cert_serial_hex: getCertSerialHexFromPem(idCert.certPem),
+  });
   logRpkiCmsDebug('RPKI up-down: enviando list query', {
     context: 'RpkiProvisioningService',
     action: 'fetchResourcesViaUpDown',
@@ -661,7 +626,7 @@ async function fetchResourcesViaUpDown(params: {
     const responseContentType = String(response.headers['content-type'] ?? '').toLowerCase();
     const isXmlLike =
       responseContentType.includes('xml') || responseBody.toString('utf8', 0, 32).includes('<?xml');
-    const xml = isXmlLike ? responseBody.toString('utf8') : await runOpenSslCmsExtractContent(responseBody);
+    const xml = isXmlLike ? responseBody.toString('utf8') : await extractCmsContentAsUtf8(responseBody);
     const result = parseUpDownListResponseXml(xml);
     const { RpkiSyncLog } = await import('../../../models/rpki/RpkiSyncLog');
     RpkiSyncLog.create({
@@ -713,31 +678,8 @@ export function getBpkiIdCertMaterial(ca: RpkiCa): { certPem: string; keyPem: st
   return { certPem, keyPem };
 }
 
-/** @deprecated use getBpkiIdCertMaterial */
-export function getBpkiCmsSigningMaterial(ca: RpkiCa): { certPem: string; keyPem: string } {
-  return getBpkiIdCertMaterial(ca);
-}
-
-/** @deprecated use getBpkiIdCertMaterial */
-export function getBpkiTaCrlMaterial(ca: RpkiCa): { certPem: string; keyPem: string } {
-  return getBpkiIdCertMaterial(ca);
-}
-
 function getSetupTaCertPemForXml(ca: RpkiCa): string {
   return getBpkiIdCertMaterial(ca).certPem;
-}
-
-async function generateInitialIdCertKeyPair(): Promise<{ privateKeyPem: string; idCertTaPem: string }> {
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'rpki-id-init-'));
-  try {
-    const keyPath = path.join(tempDir, 'key.pem');
-    await execFileAsync('openssl', ['genrsa', '-out', keyPath, '2048']);
-    const privateKeyPem = await fs.readFile(keyPath, 'utf8');
-    const idCertTaPem = await issueIdCertTa(privateKeyPem);
-    return { privateKeyPem, idCertTaPem };
-  } finally {
-    await fs.rm(tempDir, { recursive: true, force: true });
-  }
 }
 
 /** Garante IdCert TA estilo Krill (único certificado BPKI; CMS usa EE efêmero por mensagem). */
@@ -829,15 +771,6 @@ function buildRpkiSiaDerHex(caRepository: string, manifestUri: string): string {
   return siaValue.toString('hex').toUpperCase();
 }
 
-/**
- * Gera um CSR RPKI com as extensões obrigatórias exigidas pelo Krill/bcder (RFC 6492):
- *   - BasicConstraints: CA:TRUE (critical)
- *   - KeyUsage: keyCertSign + cRLSign (critical)
- *   - SubjectInfoAccess: caRepository + rpkiManifest (not critical)
- *
- * Usa OpenSSL para garantir DER canônico (boolean TRUE = 0xff, exigido pelo bcder).
- * node-forge codifica boolean como 0x01 (não-canônico), o que o Krill rejeita.
- */
 async function generateRpkiCsrForCa(params: {
   childHandle: string;
   rsyncBaseUri: string;
@@ -846,56 +779,10 @@ async function generateRpkiCsrForCa(params: {
     ? params.rsyncBaseUri
     : `${params.rsyncBaseUri}/`;
   const manifestUri = `${caRepository}${params.childHandle}.mft`;
-
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'rpki-rkey-'));
-  try {
-    const keyPath = path.join(tempDir, 'resource_key.pem');
-    const csrPemPath = path.join(tempDir, 'resource_csr.pem');
-    const csrDerPath = path.join(tempDir, 'resource_csr.der');
-    const configPath = path.join(tempDir, 'csr.cnf');
-
-    await execFileAsync('openssl', ['genrsa', '-out', keyPath, '2048']);
-
-    const siaDerHex = buildRpkiSiaDerHex(caRepository, manifestUri);
-
-    // Config OpenSSL: OpenSSL garante DER canônico (boolean TRUE = 0xff)
-    const config = [
-      '[req]',
-      'prompt = no',
-      'distinguished_name = dn',
-      'req_extensions = rpki_ext',
-      '',
-      '[dn]',
-      '',
-      '[rpki_ext]',
-      'basicConstraints = critical, CA:TRUE',
-      'keyUsage = critical, keyCertSign, cRLSign',
-      `1.3.6.1.5.5.7.1.11 = DER:${siaDerHex}`,
-    ].join('\n');
-    await fs.writeFile(configPath, config, 'utf8');
-
-    // -subj "/" gera subject vazio (recomendado pelo RFC 6487 para CAs RPKI)
-    await execFileAsync('openssl', [
-      'req', '-new',
-      '-key', keyPath,
-      '-subj', '/',
-      '-config', configPath,
-      '-out', csrPemPath,
-    ]);
-    await execFileAsync('openssl', [
-      'req', '-in', csrPemPath,
-      '-outform', 'DER',
-      '-out', csrDerPath,
-    ]);
-
-    const [keyPem, csrDer] = await Promise.all([
-      fs.readFile(keyPath, 'utf8'),
-      fs.readFile(csrDerPath),
-    ]);
-    return { keyPem, csrBase64: csrDer.toString('base64'), manifestUri };
-  } finally {
-    await fs.rm(tempDir, { recursive: true, force: true });
-  }
+  const siaDerHex = buildRpkiSiaDerHex(caRepository, manifestUri);
+  const siaDer = Buffer.from(siaDerHex, 'hex');
+  const { keyPem, csrBase64 } = await generateRpkiCsr({ siaDer });
+  return { keyPem, csrBase64, manifestUri };
 }
 
 function escapeUpDownXmlAttr(s: string): string {
@@ -1118,7 +1005,7 @@ export class RpkiProvisioningService {
       request_xml_preview: requestXml.slice(0, 800),
     });
     const idCert = getBpkiIdCertMaterial(ca);
-    const cmsDer = await runOpenSslCmsSign(requestXml, idCert.certPem, idCert.keyPem);
+    const cmsDer = await signKrillIdCertCms(requestXml, idCert.certPem, idCert.keyPem);
 
     const contentType = 'application/rpki-updown';
     const response = await axios.post<ArrayBuffer>(parent.service_uri, cmsDer, {
@@ -1158,7 +1045,7 @@ export class RpkiProvisioningService {
       responseContentType.includes('xml') || responseBody.toString('utf8', 0, 32).includes('<?xml');
     const responseXml = isXmlLike
       ? responseBody.toString('utf8')
-      : await runOpenSslCmsExtractContent(responseBody);
+      : await extractCmsContentAsUtf8(responseBody);
 
     // 6. Parseia a resposta (type="issue_response")
     const issued = parseUpDownIssueResponseXml(responseXml);

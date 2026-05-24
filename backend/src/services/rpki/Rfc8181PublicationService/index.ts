@@ -8,15 +8,7 @@
  * Referências: RFC 8181, RFC 8183.
  */
 import axios from 'axios';
-import { promises as fs } from 'fs';
-import os from 'os';
-import path from 'path';
-import { execFile } from 'child_process';
-import { promisify } from 'util';
-import { logger } from '../../../utils/logger';
-import { signKrillIdCertCms } from '../RpkiIdCert';
-
-const execFileAsync = promisify(execFile);
+import { extractCmsContentAsUtf8, signKrillIdCertCms } from '../RpkiOpenSslLib';
 
 const PUBLICATION_NS = 'http://www.hactrn.net/uris/rpki/rpki-setup/';
 const PUBLICATION_CONTENT_TYPE = 'application/rpki-publication';
@@ -37,46 +29,6 @@ export interface WithdrawObject {
 export interface ListedObject {
   uri: string;
   hashHex: string;
-}
-
-// ─── Assinatura CMS para RFC 8181 (Krill SignedMessage / IdCert efêmero) ───
-
-async function signPublicationCms(
-  xml: string,
-  idCertTaPem: string,
-  idCertTaKeyPem: string
-): Promise<Buffer> {
-  try {
-    return await signKrillIdCertCms(xml, idCertTaPem, idCertTaKeyPem);
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    logger.warn('RFC 8181: falha ao assinar CMS estilo Krill', {
-      context: 'Rfc8181PublicationService',
-      action: 'signPublicationCms',
-      error: msg,
-    });
-    throw err;
-  }
-}
-
-async function extractPublicationCmsContent(cmsDer: Buffer): Promise<string> {
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'rpki-pub-verify-'));
-  try {
-    const inPath = path.join(tempDir, 'response.cms.der');
-    const outPath = path.join(tempDir, 'response.xml');
-
-    await fs.writeFile(inPath, cmsDer);
-    await execFileAsync('openssl', [
-      'cms', '-verify', '-inform', 'DER',
-      '-in', inPath,
-      '-noverify',
-      '-out', outPath,
-    ]);
-
-    return await fs.readFile(outPath, 'utf8');
-  } finally {
-    await fs.rm(tempDir, { recursive: true, force: true });
-  }
 }
 
 // ─── XML helpers ─────────────────────────────────────────────────────────────
@@ -206,7 +158,7 @@ export class Rfc8181PublicationService {
     if (publishList.length === 0 && withdrawList.length === 0) return;
 
     const xml = buildPublishXml(publishList, withdrawList);
-    const cmsDer = await signPublicationCms(xml, params.bpkiCertPem, params.bpkiKeyPem);
+    const cmsDer = await signKrillIdCertCms(xml, params.bpkiCertPem, params.bpkiKeyPem);
     const responseBody = await sendToPublicationServer(params.serviceUri, cmsDer);
 
     let responseXml: string;
@@ -214,7 +166,7 @@ export class Rfc8181PublicationService {
     if (contentLooks.includes('<?xml') || contentLooks.includes('<msg')) {
       responseXml = responseBody.toString('utf8');
     } else {
-      responseXml = await extractPublicationCmsContent(responseBody);
+      responseXml = await extractCmsContentAsUtf8(responseBody);
     }
 
     const result = parsePublicationReply(responseXml);
@@ -235,7 +187,7 @@ export class Rfc8181PublicationService {
     bpkiKeyPem: string;
   }): Promise<ListedObject[]> {
     const xml = buildListXml();
-    const cmsDer = await signPublicationCms(xml, params.bpkiCertPem, params.bpkiKeyPem);
+    const cmsDer = await signKrillIdCertCms(xml, params.bpkiCertPem, params.bpkiKeyPem);
     const responseBody = await sendToPublicationServer(params.serviceUri, cmsDer);
 
     let responseXml: string;
@@ -243,7 +195,7 @@ export class Rfc8181PublicationService {
     if (contentLooks.includes('<?xml') || contentLooks.includes('<msg')) {
       responseXml = responseBody.toString('utf8');
     } else {
-      responseXml = await extractPublicationCmsContent(responseBody);
+      responseXml = await extractCmsContentAsUtf8(responseBody);
     }
 
     const replyCheck = parsePublicationReply(responseXml);

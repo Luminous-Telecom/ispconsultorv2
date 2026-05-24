@@ -7,35 +7,32 @@
  *
  * O pipeline por objeto é:
  *   1. Construir conteúdo DER do objeto (RouteOriginAttestation / Manifest)
- *   2. Emitir certificado EE assinado pelo resource CA (via OpenSSL)
- *   3. Assinar o conteúdo com CMS (via openssl cms -sign)
+ *   2. Emitir certificado EE assinado pelo resource CA (OpenSSL lib via Node)
+ *   3. Assinar o conteúdo com CMS (pkijs / OpenSSL lib)
  *   4. Retornar DER final + SHA-256 para publicação
  */
-import forge from 'node-forge';
-import { promises as fs } from 'fs';
-import os from 'os';
-import path from 'path';
-import { execFile } from 'child_process';
-import { promisify } from 'util';
 import crypto from 'crypto';
 import {
   assertRoaEntriesMatchResourceCert,
   buildAsInheritDer,
   buildIpInheritDer,
-  bufToHexColon,
   parseResourceCertProfile,
 } from '../RpkiCertProfile';
+import {
+  buildCrlDer,
+  extractEeRevocationFromCmsDer,
+  issueRpkiEeCert,
+  signCmsAttached,
+  type CrlRevocationEntry,
+} from '../RpkiOpenSslLib';
 
-const execFileAsync = promisify(execFile);
+export { buildCrlDer, type CrlRevocationEntry, extractEeRevocationFromCmsDer };
 
 // ─── OIDs usados em objetos RPKI ─────────────────────────────────────────────
 const OID_ROA_CONTENT_TYPE  = '1.2.840.113549.1.9.16.1.24';
 const OID_MFT_CONTENT_TYPE  = '1.2.840.113549.1.9.16.1.26';
 const OID_ASPA_CONTENT_TYPE = '1.2.840.113549.1.9.16.1.49';
 const OID_SHA256 = '2.16.840.1.101.3.4.2.1';
-// id-pe-ipAddrBlocks / id-pe-autonomousSysNum
-const OID_IP_ADDR_BLOCKS = '1.3.6.1.5.5.7.1.7';
-const OID_AS_IDENT = '1.3.6.1.5.5.7.1.8';
 // id-ad-signedObject / id-ad-caIssuers
 const OID_AD_SIGNED_OBJECT = '1.3.6.1.5.5.7.48.11';
 const OID_AD_CA_ISSUERS = '1.3.6.1.5.5.7.48.2';
@@ -208,13 +205,14 @@ export function buildRoaIpBlocksDerForEeCert(entries: RoaEntry[]): Buffer {
 
   function buildCertIpAddress(e: RoaEntry): Buffer {
     const { bits, unusedBits } = cidrToPrefixBitString(e.prefix);
-    // RFC 6487 (cert EE): IPAddress ::= BIT STRING — maxLength fica só no conteúdo ROA.
+    // RFC 3779 / Krill IpBlock::Prefix: IPAddressPrefix ::= BIT STRING (maxLength só no conteúdo ROA).
     return derBitString(bits, unusedBits);
   }
 
   function buildFamily(afi: Buffer, es: RoaEntry[]): Buffer {
+    // Krill IpResources::blocks: IPAddressChoice = SEQUENCE OF IPAddressOrRange (tag 0x30, não [0]).
     return SEQ(
-      Buffer.concat([OCTET(afi), CTX0_CONS(SEQ(Buffer.concat(es.map(buildCertIpAddress))))])
+      Buffer.concat([OCTET(afi), SEQ(Buffer.concat(es.map(buildCertIpAddress)))])
     );
   }
 
@@ -225,60 +223,6 @@ export function buildRoaIpBlocksDerForEeCert(entries: RoaEntry[]): Buffer {
     throw new Error('ROA sem prefixos IPv4/IPv6 para certificado EE');
   }
   return SEQ(Buffer.concat(families));
-}
-
-export interface CrlRevocationEntry {
-  serialHex: string;
-  notAfter: Date;
-}
-
-function fmtOpenSslCertDate(d: Date): string {
-  const pad = (n: number, w = 2) => String(n).padStart(w, '0');
-  return (
-    `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}` +
-    `${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`
-  );
-}
-
-function fmtOpenSslIndexDate(d: Date): string {
-  const pad = (n: number, w = 2) => String(n).padStart(w, '0');
-  const yy = String(d.getUTCFullYear()).slice(-2);
-  return `${yy}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`;
-}
-
-/** Extrai serial e expiry do certificado EE embutido em CMS (ROA/MFT/ASPA). */
-export async function extractEeRevocationFromCmsDer(cmsDer: Buffer): Promise<CrlRevocationEntry | null> {
-  if (!cmsDer.length) return null;
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'rpki-cms-rev-'));
-  try {
-    const cmsPath = path.join(tempDir, 'obj.cms');
-    const certPath = path.join(tempDir, 'ee.pem');
-    await fs.writeFile(cmsPath, cmsDer);
-    await execFileAsync('openssl', [
-      'cms', '-inform', 'DER', '-in', cmsPath, '-cmsout', '-print_certs', '-out', certPath,
-    ]);
-    const certPem = await fs.readFile(certPath, 'utf8');
-    if (!certPem.includes('BEGIN CERTIFICATE')) return null;
-
-    const { stdout: serialOut } = await execFileAsync('openssl', [
-      'x509', '-in', certPath, '-serial', '-noout',
-    ]);
-    const { stdout: endOut } = await execFileAsync('openssl', [
-      'x509', '-in', certPath, '-enddate', '-noout',
-    ]);
-    const serialMatch = serialOut.match(/serial=([0-9A-Fa-f]+)/);
-    const endMatch = endOut.match(/notAfter=(.+)/);
-    if (!serialMatch?.[1] || !endMatch?.[1]) return null;
-
-    const notAfter = new Date(endMatch[1].trim());
-    if (Number.isNaN(notAfter.getTime()) || notAfter <= new Date()) return null;
-
-    return { serialHex: serialMatch[1].toUpperCase(), notAfter };
-  } catch {
-    return null;
-  } finally {
-    await fs.rm(tempDir, { recursive: true, force: true });
-  }
 }
 
 // ─── Manifest content (RFC 9286) ─────────────────────────────────────────────
@@ -316,217 +260,56 @@ export function buildManifestContent(params: {
   return content;
 }
 
-// ─── Geração de chave + certificado EE via OpenSSL ──────────────────────────
-
-interface EeCertParams {
+async function buildEeCertMaterial(params: {
   resourceCaCertPem: string;
   resourceCaKeyPem: string;
   resourceCertUrl: string;
   crlUri: string;
   objectUri: string;
-  /** Blocos IP explícitos (ROA). Se omitido, usa inherit. */
   ipAddrBlocksDer?: Buffer;
-  /** Data de início da validade do EE (padrão: 5 min atrás, como Krill). */
   notBefore?: Date;
-  /** Data de fim da validade do EE (padrão: notBefore + 52 semanas, como Krill). */
   notAfter?: Date;
-  /** @deprecated use notBefore/notAfter */
-  validHours?: number;
-}
-
-async function issueRpkiEeCert(
-  params: EeCertParams
-): Promise<{ certPem: string; keyPem: string }> {
+}): Promise<{ certPem: string; keyPem: string }> {
   const resourceProfile = parseResourceCertProfile(params.resourceCaCertPem);
-  const ipInheritDer = params.ipAddrBlocksDer ?? buildIpInheritDer(resourceProfile.hasIpv4, resourceProfile.hasIpv6);
+  const ipAddrBlocksExtDer =
+    params.ipAddrBlocksDer ?? buildIpInheritDer(resourceProfile.hasIpv4, resourceProfile.hasIpv6);
 
-  const nbDate = params.notBefore ?? new Date(Date.now() - 5 * 60 * 1000);
-  const naDate = params.notAfter ?? new Date(nbDate.getTime() + 52 * 7 * 24 * 3600 * 1000);
-
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'rpki-ee-'));
-  try {
-    const caKeyPath = path.join(tempDir, 'ca_key.pem');
-    const caCertPath = path.join(tempDir, 'ca_cert.pem');
-    const eeKeyPath = path.join(tempDir, 'ee_key.pem');
-    const eeCsrPath = path.join(tempDir, 'ee_csr.pem');
-    const eeCertPath = path.join(tempDir, 'ee_cert.pem');
-    const extPath = path.join(tempDir, 'ee_ext.cnf');
-
-    await fs.writeFile(caKeyPath, params.resourceCaKeyPem, 'utf8');
-    await fs.writeFile(caCertPath, params.resourceCaCertPem, 'utf8');
-
-    await execFileAsync('openssl', ['genrsa', '-out', eeKeyPath, '2048']);
-    await execFileAsync('openssl', [
-      'req', '-new', '-key', eeKeyPath,
-      '-subj', '/',
-      '-out', eeCsrPath,
-    ]);
-
-    const siaDer = buildSiaDer(params.objectUri);
-    const aiaDer = buildAiaDer(params.resourceCertUrl);
-    const crldpDer = buildCrldpDer(params.crlUri);
-
-    const extLines = [
-      '[v3_ee]',
-      'basicConstraints = critical,CA:FALSE',
-      'keyUsage = critical,digitalSignature',
-      'subjectKeyIdentifier = hash',
-      'authorityKeyIdentifier = keyid',
-      `${OID_IP_ADDR_BLOCKS} = critical,DER:${bufToHexColon(ipInheritDer)}`,
-    ];
-    if (resourceProfile.hasAsn) {
-      extLines.push(`${OID_AS_IDENT} = critical,DER:${bufToHexColon(buildAsInheritDer())}`);
-    }
-    extLines.push(
-      `${OID_SIA} = DER:${bufToHexColon(siaDer)}`,
-      `${OID_AIA} = DER:${bufToHexColon(aiaDer)}`,
-      `${OID_CRLDP} = DER:${bufToHexColon(crldpDer)}`
-    );
-    await fs.writeFile(extPath, extLines.join('\n'), 'utf8');
-
-    const validDays = Math.max(1, Math.ceil((naDate.getTime() - Date.now()) / (24 * 3600 * 1000)));
-
-    await execFileAsync('openssl', [
-      'x509', '-req',
-      '-in', eeCsrPath,
-      '-CA', caCertPath,
-      '-CAkey', caKeyPath,
-      '-CAcreateserial',
-      '-days', String(validDays),
-      '-extfile', extPath,
-      '-extensions', 'v3_ee',
-      '-out', eeCertPath,
-    ]);
-
-    const [certPem, keyPem] = await Promise.all([
-      fs.readFile(eeCertPath, 'utf8'),
-      fs.readFile(eeKeyPath, 'utf8'),
-    ]);
-    return { certPem, keyPem };
-  } finally {
-    await fs.rm(tempDir, { recursive: true, force: true });
-  }
+  return issueRpkiEeCert({
+    resourceCaCertPem: params.resourceCaCertPem,
+    resourceCaKeyPem: params.resourceCaKeyPem,
+    ipAddrBlocksDer: ipAddrBlocksExtDer,
+    asIdentDer: resourceProfile.hasAsn ? buildAsInheritDer() : undefined,
+    siaDer: buildSiaDer(params.objectUri),
+    aiaDer: buildAiaDer(params.resourceCertUrl),
+    crldpDer: buildCrldpDer(params.crlUri),
+    notBefore: params.notBefore,
+    notAfter: params.notAfter,
+  });
 }
 
-// ─── CMS signing (openssl cms -sign) ────────────────────────────────────────
-
-async function signRpkiCms(params: {
+async function buildSignedResourceCms(params: {
   contentDer: Buffer;
   contentOid: string;
-  eeCertPem: string;
-  eeKeyPem: string;
-}): Promise<Buffer> {
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'rpki-cms-'));
-  try {
-    const contentPath = path.join(tempDir, 'content.der');
-    const certPath = path.join(tempDir, 'ee_cert.pem');
-    const keyPath = path.join(tempDir, 'ee_key.pem');
-    const outPath = path.join(tempDir, 'signed.der');
-
-    await fs.writeFile(contentPath, params.contentDer);
-    await fs.writeFile(certPath, params.eeCertPem, 'utf8');
-    await fs.writeFile(keyPath, params.eeKeyPem, 'utf8');
-
-    await execFileAsync('openssl', [
-      'cms', '-sign',
-      '-binary', '-nodetach', '-nosmimecap',
-      '-in', contentPath,
-      '-signer', certPath,
-      '-inkey', keyPath,
-      '-econtent_type', params.contentOid,
-      '-md', 'sha256',
-      '-keyid',
-      '-outform', 'DER',
-      '-out', outPath,
-    ]);
-
-    return await fs.readFile(outPath);
-  } finally {
-    await fs.rm(tempDir, { recursive: true, force: true });
-  }
-}
-
-// ─── CRL via OpenSSL CA (mínima, sem revogações) ────────────────────────────
-
-export async function buildCrlDer(params: {
   resourceCaCertPem: string;
   resourceCaKeyPem: string;
-  crlNumber: number;
-  thisUpdate?: Date;
-  nextUpdate?: Date;
-  /** EE de objetos CMS substituídos/retirados (Krill: revocations). */
-  revocations?: CrlRevocationEntry[];
-  validHours?: number;
+  resourceCertUrl: string;
+  crlUri: string;
+  objectUri: string;
+  ipAddrBlocksDer?: Buffer;
+  notBefore?: Date;
+  notAfter?: Date;
 }): Promise<{ derBuffer: Buffer; sha256Hex: string }> {
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'rpki-crl-'));
-  try {
-    const caKeyPath = path.join(tempDir, 'ca_key.pem');
-    const caCertPath = path.join(tempDir, 'ca_cert.pem');
-    const indexPath = path.join(tempDir, 'index.txt');
-    const crlNumPath = path.join(tempDir, 'crlnumber');
-    const cnfPath = path.join(tempDir, 'openssl.cnf');
-    const crlPemPath = path.join(tempDir, 'crl.pem');
-    const crlDerPath = path.join(tempDir, 'crl.der');
-
-    await fs.writeFile(caKeyPath, params.resourceCaKeyPem, 'utf8');
-    await fs.writeFile(caCertPath, params.resourceCaCertPem, 'utf8');
-
-    const revokedAt = params.thisUpdate ?? new Date(Date.now() - 5 * 60 * 1000);
-    const indexLines = (params.revocations ?? [])
-      .filter((r) => r.notAfter > new Date())
-      .map((r) => {
-        const serial = r.serialHex.replace(/^0+/, '') || '0';
-        return `R\t${fmtOpenSslIndexDate(r.notAfter)}\t${fmtOpenSslIndexDate(revokedAt)}\t${serial}\tunknown\t/`;
-      });
-    await fs.writeFile(indexPath, indexLines.length > 0 ? `${indexLines.join('\n')}\n` : '', 'utf8');
-    // OpenSSL exige quantidade par de dígitos hex no arquivo crlnumber (ASN.1 INTEGER).
-    let crlNumHex = params.crlNumber.toString(16).toUpperCase();
-    if (crlNumHex.length % 2 === 1) {
-      crlNumHex = `0${crlNumHex}`;
-    }
-    await fs.writeFile(crlNumPath, crlNumHex + '\n', 'utf8');
-
-    // Calcula dias entre thisUpdate e nextUpdate para passar ao OpenSSL.
-    const base = params.thisUpdate ?? new Date();
-    const end = params.nextUpdate ?? new Date(base.getTime() + 24 * 3600 * 1000);
-    const validDays = Math.max(1, Math.ceil((end.getTime() - base.getTime()) / (24 * 3600 * 1000)));
-
-    const cnf = [
-      '[ca]',
-      'default_ca = CA_default',
-      '[CA_default]',
-      `dir = ${tempDir}`,
-      `certificate = ${caCertPath}`,
-      `private_key = ${caKeyPath}`,
-      `database = ${indexPath}`,
-      `crlnumber = ${crlNumPath}`,
-      `default_crl_days = ${validDays}`,
-      'default_md = sha256',
-      'policy = policy_any',
-      '[policy_any]',
-      'commonName = optional',
-      '[crl_ext]',
-      'authorityKeyIdentifier = keyid:always',
-    ].join('\n');
-
-    await fs.writeFile(cnfPath, cnf, 'utf8');
-
-    await execFileAsync('openssl', [
-      'ca', '-config', cnfPath,
-      '-gencrl', '-crlexts', 'crl_ext',
-      '-out', crlPemPath,
-    ]);
-
-    await execFileAsync('openssl', [
-      'crl', '-in', crlPemPath, '-outform', 'DER', '-out', crlDerPath,
-    ]);
-
-    const derBuffer = await fs.readFile(crlDerPath);
-    const sha256Hex = crypto.createHash('sha256').update(derBuffer).digest('hex');
-    return { derBuffer, sha256Hex };
-  } finally {
-    await fs.rm(tempDir, { recursive: true, force: true });
-  }
+  const { certPem, keyPem } = await buildEeCertMaterial(params);
+  const derBuffer = await signCmsAttached({
+    content: params.contentDer,
+    contentTypeOid: params.contentOid,
+    signerCertPem: certPem,
+    signerKeyPem: keyPem,
+  });
+  return {
+    derBuffer,
+    sha256Hex: crypto.createHash('sha256').update(derBuffer).digest('hex'),
+  };
 }
 
 // ─── ROA completo (DER conteúdo + EE cert + CMS assinado) ───────────────────
@@ -544,24 +327,18 @@ export async function buildRoaCmsObject(params: {
   notAfter?: Date;
 }): Promise<{ derBuffer: Buffer; sha256Hex: string }> {
   assertRoaEntriesMatchResourceCert(params.entries, params.resourceCaCertPem);
-  const roaContent = buildRoaContent(params.entries);
-  const { certPem, keyPem } = await issueRpkiEeCert({
+  return buildSignedResourceCms({
+    contentDer: buildRoaContent(params.entries),
+    contentOid: OID_ROA_CONTENT_TYPE,
     resourceCaCertPem: params.resourceCaCertPem,
     resourceCaKeyPem: params.resourceCaKeyPem,
     resourceCertUrl: params.resourceCertUrl,
     crlUri: params.crlUri,
     objectUri: params.objectUri,
+    ipAddrBlocksDer: buildRoaIpBlocksDerForEeCert(params.entries),
     notBefore: params.notBefore,
     notAfter: params.notAfter,
   });
-  const derBuffer = await signRpkiCms({
-    contentDer: roaContent,
-    contentOid: OID_ROA_CONTENT_TYPE,
-    eeCertPem: certPem,
-    eeKeyPem: keyPem,
-  });
-  const sha256Hex = crypto.createHash('sha256').update(derBuffer).digest('hex');
-  return { derBuffer, sha256Hex };
 }
 
 // ─── ASPA content (RFC 9582) ─────────────────────────────────────────────────
@@ -598,23 +375,15 @@ export async function buildAspaCmsObject(params: {
   crlUri: string;
   objectUri: string;
 }): Promise<{ derBuffer: Buffer; sha256Hex: string }> {
-  const aspaContent = buildAspaContent(params.entry);
-  // EE do ASPA: padrão 5 min atrás / 52 semanas (como Krill).
-  const { certPem, keyPem } = await issueRpkiEeCert({
+  return buildSignedResourceCms({
+    contentDer: buildAspaContent(params.entry),
+    contentOid: OID_ASPA_CONTENT_TYPE,
     resourceCaCertPem: params.resourceCaCertPem,
     resourceCaKeyPem: params.resourceCaKeyPem,
     resourceCertUrl: params.resourceCertUrl,
     crlUri: params.crlUri,
     objectUri: params.objectUri,
   });
-  const derBuffer = await signRpkiCms({
-    contentDer: aspaContent,
-    contentOid: OID_ASPA_CONTENT_TYPE,
-    eeCertPem: certPem,
-    eeKeyPem: keyPem,
-  });
-  const sha256Hex = crypto.createHash('sha256').update(derBuffer).digest('hex');
-  return { derBuffer, sha256Hex };
 }
 
 // ─── Manifest completo (DER conteúdo + EE cert + CMS assinado) ──────────────
@@ -630,14 +399,14 @@ export async function buildManifestCmsObject(params: {
   crlUri: string;
   mftUri: string;
 }): Promise<{ derBuffer: Buffer; sha256Hex: string }> {
-  const mftContent = buildManifestContent({
-    manifestNumber: params.manifestNumber,
-    thisUpdate: params.thisUpdate,
-    nextUpdate: params.nextUpdate,
-    files: params.files,
-  });
-  // EE do manifesto: notBefore = thisUpdate (já backdatado), notAfter = nextUpdate.
-  const { certPem, keyPem } = await issueRpkiEeCert({
+  return buildSignedResourceCms({
+    contentDer: buildManifestContent({
+      manifestNumber: params.manifestNumber,
+      thisUpdate: params.thisUpdate,
+      nextUpdate: params.nextUpdate,
+      files: params.files,
+    }),
+    contentOid: OID_MFT_CONTENT_TYPE,
     resourceCaCertPem: params.resourceCaCertPem,
     resourceCaKeyPem: params.resourceCaKeyPem,
     resourceCertUrl: params.resourceCertUrl,
@@ -646,12 +415,4 @@ export async function buildManifestCmsObject(params: {
     notBefore: params.thisUpdate,
     notAfter: params.nextUpdate,
   });
-  const derBuffer = await signRpkiCms({
-    contentDer: mftContent,
-    contentOid: OID_MFT_CONTENT_TYPE,
-    eeCertPem: certPem,
-    eeKeyPem: keyPem,
-  });
-  const sha256Hex = crypto.createHash('sha256').update(derBuffer).digest('hex');
-  return { derBuffer, sha256Hex };
 }
