@@ -7,6 +7,7 @@ import { useTableFilters } from 'hooks/useTableFilters';
 import { useI18n } from 'contexts/I18nContext';
 import { RpkiCa, RpkiCaService } from 'services/rpkiCaService';
 import { ClienteService } from 'services/clienteService';
+import { useRpkiCas } from 'hooks/useRpkiCas';
 import RpkiCaCreateModal from './RpkiCaCreateModal';
 import { useAuditoria } from 'hooks/useAuditoria';
 import ImprimirModal from 'components/common/ImprimirModal';
@@ -15,6 +16,8 @@ interface RpkiCaListModalProps {
   show: boolean;
   onClose: () => void;
   skipWrapper?: boolean;
+  clienteIdFilter?: number;
+  tableTitle?: string;
 }
 
 function getSortableValue(row: RpkiCa, sortKey: string): string {
@@ -36,7 +39,10 @@ function getSortableValue(row: RpkiCa, sortKey: string): string {
   }
 }
 
-const RpkiCaListModal: React.FC<RpkiCaListModalProps> = () => {
+const RpkiCaListModal: React.FC<RpkiCaListModalProps> = ({
+  clienteIdFilter,
+  tableTitle = 'CAs RPKI',
+}) => {
   const { t } = useI18n();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedCa, setSelectedCa] = useState<RpkiCa | null>(null);
@@ -60,16 +66,14 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = () => {
     resetPageOnFilterChange: true,
   });
 
-  const { data: cas = [], isLoading, refetch } = useQuery({
-    queryKey: ['rpki-cas'],
-    queryFn: () => RpkiCaService.list(),
-  });
+  const { cas, isLoading, refetch } = useRpkiCas(clienteIdFilter);
   const { data: clientes = [] } = useQuery({
     queryKey: ['clientes-rpki'],
     queryFn: async () => {
       const response = await ClienteService.list({ limit: 1000 });
       return response.data ?? [];
     },
+    enabled: clienteIdFilter == null,
   });
   const deleteMutation = useMutation({
     mutationFn: (caId: number) => RpkiCaService.delete(caId),
@@ -141,37 +145,44 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = () => {
     return map;
   }, [clientes]);
 
-  const columns: TableConfig<RpkiCa>['columns'] = [
-    { key: 'id', label: 'ID', sortable: true, width: '50px', render: (item) => item.id },
-    { key: 'nome', label: 'Nome', sortable: true, width: '220px', render: (item) => item.nome },
-    {
-      key: 'cliente_id',
-      label: 'Cliente',
-      sortable: false,
-      width: '220px',
-      render: (item) =>
-        item.cliente_id != null ? (clienteNomeById.get(item.cliente_id) ?? '—') : '—',
-    },
-    { key: 'handle', label: 'Handle', sortable: true, width: '220px', render: (item) => item.handle || '-' },
-    {
-      key: 'status',
-      label: 'Status',
-      sortable: true,
-      badgeLabels: ['pending', 'active', 'error', 'disabled'],
-      render: (item) => {
-        const labels: Record<string, string> = { pending: 'Pendente', active: 'Ativo', error: 'Erro', disabled: 'Desabilitado' };
-        const cor = item.status === 'active' ? 'bg-success' : item.status === 'error' ? 'bg-danger' : 'bg-secondary';
-        return <span className={`badge ${cor}`}>{labels[item.status] ?? item.status}</span>;
-      },
-    },
-  ];
+  const columns: TableConfig<RpkiCa>['columns'] = useMemo(() => {
+    const base: TableConfig<RpkiCa>['columns'] = [
+      { key: 'id', label: 'ID', sortable: true, width: '50px', render: (item) => item.id },
+      { key: 'nome', label: 'Nome', sortable: true, width: '220px', render: (item) => item.nome },
+    ];
+    if (clienteIdFilter == null) {
+      base.push({
+        key: 'cliente_id',
+        label: 'Cliente',
+        sortable: false,
+        width: '220px',
+        render: (item) =>
+          item.cliente_id != null ? (clienteNomeById.get(item.cliente_id) ?? '—') : '—',
+      });
+    }
+    base.push(
+      { key: 'handle', label: 'Handle', sortable: true, width: '220px', render: (item) => item.handle || '-' },
+      {
+        key: 'status',
+        label: 'Status',
+        sortable: true,
+        badgeLabels: ['pending', 'active', 'error', 'disabled'],
+        render: (item) => {
+          const labels: Record<string, string> = { pending: 'Pendente', active: 'Ativo', error: 'Erro', disabled: 'Desabilitado' };
+          const cor = item.status === 'active' ? 'bg-success' : item.status === 'error' ? 'bg-danger' : 'bg-secondary';
+          return <span className={`badge ${cor}`}>{labels[item.status] ?? item.status}</span>;
+        },
+      }
+    );
+    return base;
+  }, [clienteIdFilter, clienteNomeById]);
 
   return (
     <>
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
-            title="CAs RPKI"
+            title={tableTitle}
             config={{
               columns,
               data: pagedRows,
@@ -203,8 +214,8 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = () => {
               },
               bulkActions: [
                 {
-                  key: 'criar-ca',
-                  label: 'Criar CA',
+                  key: 'novo-ca',
+                  label: t('buttons.new'),
                   variant: 'primary',
                   requiresSelection: false,
                   onClick: () => setShowCreateModal(true),
@@ -248,7 +259,11 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = () => {
         </div>
       </div>
 
-      <RpkiCaCreateModal show={showCreateModal} onClose={() => setShowCreateModal(false)} />
+      <RpkiCaCreateModal
+        show={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        defaultClienteId={clienteIdFilter}
+      />
 
       <ImprimirModal
         show={auditoria.showPreview}

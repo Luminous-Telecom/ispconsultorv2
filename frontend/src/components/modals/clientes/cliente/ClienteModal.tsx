@@ -34,6 +34,11 @@ import ArquivosTab from './abas/ArquivosTab';
 import ClienteTunelTab from './abas/ClienteTunelTab';
 import ClienteSshDevicesTab from './abas/ClienteSshDevicesTab';
 import ClienteSshBackupsTab from './abas/ClienteSshBackupsTab';
+import ClienteRpkiCasTab from './abas/ClienteRpkiCasTab';
+import ClienteRpkiCaPaiTab from './abas/ClienteRpkiCaPaiTab';
+import ClienteRpkiRepositoriosTab from './abas/ClienteRpkiRepositoriosTab';
+import ClienteRpkiRoasTab from './abas/ClienteRpkiRoasTab';
+import ClienteRpkiAspasTab from './abas/ClienteRpkiAspasTab';
 
 interface ClienteModalProps {
   show: boolean;
@@ -41,6 +46,14 @@ interface ClienteModalProps {
   clienteId?: number | null;
   onSuccess?: () => void;
 }
+
+const CLIENTE_RPKI_TAB_IDS = [
+  'rpki-cas',
+  'rpki-cas-pai',
+  'rpki-repositorios',
+  'rpki-roas',
+  'rpki-aspas',
+] as const;
 
 const ClienteModal = ({
   show,
@@ -53,6 +66,7 @@ const ClienteModal = ({
   const formPrefix = useFormPrefix('ClienteEditModal');
   const isMobile = useIsMobile();
   const hasModuloEquipamentos = hasModulo('equipamentos');
+  const hasModuloRpki = hasModulo('rpki');
 
   // Estados de modais aninhados
   const [activeTab, setActiveTab] = useState('dados-basicos');
@@ -79,6 +93,12 @@ const ClienteModal = ({
       setActiveTab('dados-basicos');
     }
   }, [hasModuloEquipamentos, activeTab]);
+
+  useEffect(() => {
+    if (!hasModuloRpki && CLIENTE_RPKI_TAB_IDS.includes(activeTab as (typeof CLIENTE_RPKI_TAB_IDS)[number])) {
+      setActiveTab('dados-basicos');
+    }
+  }, [hasModuloRpki, activeTab]);
 
   // Hook de formulário
   const formHook = useClienteForm({
@@ -427,7 +447,7 @@ const ClienteModal = ({
           {/* Conteúdo das Abas - Com Scroll */}
           <div
             className={`tab-content cliente-tab-content ${
-              (activeTab === 'contratos' || activeTab === 'financeiro' || activeTab === 'arquivos' || activeTab === 'tunel' || activeTab === 'ssh-devices' || activeTab === 'ssh-backups')
+              (activeTab === 'contratos' || activeTab === 'financeiro' || activeTab === 'arquivos' || activeTab === 'tunel' || activeTab === 'ssh-devices' || activeTab === 'ssh-backups' || CLIENTE_RPKI_TAB_IDS.includes(activeTab as (typeof CLIENTE_RPKI_TAB_IDS)[number]))
                 ? 'cliente-tab-content-scrollable'
                 : 'cliente-tab-content-padded'
             }`}
@@ -543,6 +563,26 @@ const ClienteModal = ({
 
             {hasModuloEquipamentos && activeTab === 'ssh-backups' && (
               <ClienteSshBackupsTab clienteId={effectiveClienteIdForParcelas} />
+            )}
+
+            {hasModuloRpki && activeTab === 'rpki-cas' && (
+              <ClienteRpkiCasTab clienteId={effectiveClienteIdForParcelas} />
+            )}
+
+            {hasModuloRpki && activeTab === 'rpki-cas-pai' && (
+              <ClienteRpkiCaPaiTab clienteId={effectiveClienteIdForParcelas} />
+            )}
+
+            {hasModuloRpki && activeTab === 'rpki-repositorios' && (
+              <ClienteRpkiRepositoriosTab clienteId={effectiveClienteIdForParcelas} />
+            )}
+
+            {hasModuloRpki && activeTab === 'rpki-roas' && (
+              <ClienteRpkiRoasTab clienteId={effectiveClienteIdForParcelas} />
+            )}
+
+            {hasModuloRpki && activeTab === 'rpki-aspas' && (
+              <ClienteRpkiAspasTab clienteId={effectiveClienteIdForParcelas} />
             )}
           </div>
       </div>
@@ -661,6 +701,60 @@ const ClienteModal = ({
                       {t('tabs.files')}
                     </button>
                   </li>
+                  {hasModuloRpki && (
+                    <>
+                      <li className="nav-item" role="presentation">
+                        <button
+                          className={`nav-link modal-tab-hover ${activeTab === 'rpki-cas' ? 'active' : ''}`}
+                          onClick={() => setActiveTab('rpki-cas')}
+                          type="button"
+                          disabled={!canEditContratosFinanceiro}
+                        >
+                          {t('tabs.rpkiCas')}
+                        </button>
+                      </li>
+                      <li className="nav-item" role="presentation">
+                        <button
+                          className={`nav-link modal-tab-hover ${activeTab === 'rpki-cas-pai' ? 'active' : ''}`}
+                          onClick={() => setActiveTab('rpki-cas-pai')}
+                          type="button"
+                          disabled={!canEditContratosFinanceiro}
+                        >
+                          {t('tabs.rpkiCaPai')}
+                        </button>
+                      </li>
+                      <li className="nav-item" role="presentation">
+                        <button
+                          className={`nav-link modal-tab-hover ${activeTab === 'rpki-repositorios' ? 'active' : ''}`}
+                          onClick={() => setActiveTab('rpki-repositorios')}
+                          type="button"
+                          disabled={!canEditContratosFinanceiro}
+                        >
+                          {t('tabs.rpkiRepositorios')}
+                        </button>
+                      </li>
+                      <li className="nav-item" role="presentation">
+                        <button
+                          className={`nav-link modal-tab-hover ${activeTab === 'rpki-roas' ? 'active' : ''}`}
+                          onClick={() => setActiveTab('rpki-roas')}
+                          type="button"
+                          disabled={!canEditContratosFinanceiro}
+                        >
+                          {t('tabs.rpkiRoas')}
+                        </button>
+                      </li>
+                      <li className="nav-item" role="presentation">
+                        <button
+                          className={`nav-link modal-tab-hover ${activeTab === 'rpki-aspas' ? 'active' : ''}`}
+                          onClick={() => setActiveTab('rpki-aspas')}
+                          type="button"
+                          disabled={!canEditContratosFinanceiro}
+                        >
+                          {t('tabs.rpkiAspas')}
+                        </button>
+                      </li>
+                    </>
+                  )}
                   {hasModuloEquipamentos && (
                     <>
                       <li className="nav-item" role="presentation">
@@ -699,7 +793,7 @@ const ClienteModal = ({
               </div>
             </div>
     );
-  }, [formHook.isLoadingCliente, formHook.isEditing, formHook.cliente, formHook.isSubmitting, formHook.handleSubmit, canEditContratosFinanceiro, activeTab, isMobile, handleClose, t, hasModuloEquipamentos]);
+  }, [formHook.isLoadingCliente, formHook.isEditing, formHook.cliente, formHook.isSubmitting, formHook.handleSubmit, canEditContratosFinanceiro, activeTab, isMobile, handleClose, t, hasModuloEquipamentos, hasModuloRpki]);
 
 
   const renderModalContent = () => {

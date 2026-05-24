@@ -7,6 +7,7 @@ import { useNotificationContext } from 'components/notifications/NotificationPro
 import { useTableFilters } from 'hooks/useTableFilters';
 import { ClienteService } from 'services/clienteService';
 import { RpkiCaRepository, RpkiCaService } from 'services/rpkiCaService';
+import { useRpkiCas } from 'hooks/useRpkiCas';
 import RpkiRepositoryCreateModal from './RpkiRepositoryCreateModal';
 import { useAuditoria } from 'hooks/useAuditoria';
 import ImprimirModalBase from 'components/common/ImprimirModal';
@@ -22,6 +23,8 @@ interface RpkiRepositoryListModalProps {
   show: boolean;
   onClose: () => void;
   skipWrapper?: boolean;
+  clienteIdFilter?: number;
+  tableTitle?: string;
 }
 
 function getSortableValue(row: RepositoryRow, sortKey: string): string {
@@ -50,7 +53,10 @@ function formatLastExchange(value: string | null): string {
   return date.toLocaleString('pt-BR');
 }
 
-const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = () => {
+const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = ({
+  clienteIdFilter,
+  tableTitle = 'Repositórios RPKI',
+}) => {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const { success, error } = useNotificationContext();
@@ -74,19 +80,17 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = () => {
     resetPageOnFilterChange: true,
   });
 
-  const { data: cas = [] } = useQuery({
-    queryKey: ['rpki-cas'],
-    queryFn: () => RpkiCaService.list(),
-  });
+  const { cas, caIdsKey } = useRpkiCas(clienteIdFilter);
   const { data: clientes = [] } = useQuery({
     queryKey: ['clientes-rpki'],
     queryFn: async () => {
       const response = await ClienteService.list({ limit: 1000 });
       return response.data ?? [];
     },
+    enabled: clienteIdFilter == null,
   });
   const { data: repositories = [], isLoading, refetch } = useQuery({
-    queryKey: ['rpki-repositories-all', cas.map((c) => c.id).join(',')],
+    queryKey: ['rpki-repositories-all', caIdsKey],
     queryFn: async () => {
       const rows = await Promise.all(cas.map((ca) => RpkiCaService.listRepositories(ca.id)));
       return rows.flat();
@@ -176,10 +180,21 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = () => {
   const to = total === 0 ? 0 : Math.min(safePage * perPage, total);
   const pagedRows = filtered.slice(from > 0 ? from - 1 : 0, to);
 
-  const columns: TableConfig<RepositoryRow>['columns'] = [
-    { key: 'id', label: 'ID', sortable: true, width: '50px', render: (item) => item.id },
-    { key: 'ca_nome', label: 'CA', sortable: true, width: '180px', render: (item) => item.ca_nome || '-' },
-    { key: 'cliente_nome', label: 'Cliente', sortable: true, width: '200px', render: (item) => item.cliente_nome || '-' },
+  const columns: TableConfig<RepositoryRow>['columns'] = useMemo(() => {
+    const cols: TableConfig<RepositoryRow>['columns'] = [
+      { key: 'id', label: 'ID', sortable: true, width: '50px', render: (item) => item.id },
+      { key: 'ca_nome', label: 'CA', sortable: true, width: '180px', render: (item) => item.ca_nome || '-' },
+    ];
+    if (clienteIdFilter == null) {
+      cols.push({
+        key: 'cliente_nome',
+        label: 'Cliente',
+        sortable: true,
+        width: '200px',
+        render: (item) => item.cliente_nome || '-',
+      });
+    }
+    cols.push(
     { key: 'repository_name', label: 'Publisher Handle', sortable: true, width: '220px', render: (item) => item.repository_name || '-' },
     { key: 'publication_service_uri', label: 'Service URI', sortable: false, width: '250px', render: (item) => item.publication_service_uri || '—' },
     { key: 'rsync_base_uri', label: 'rsync', sortable: false, width: '220px', render: (item) => item.rsync_base_uri || '—' },
@@ -200,15 +215,16 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = () => {
         const cor = item.publication_status === 'active' ? 'bg-success' : item.publication_status === 'error' ? 'bg-danger' : 'bg-secondary';
         return <span className={`badge ${cor}`}>{labels[item.publication_status] ?? item.publication_status}</span>;
       },
-    },
-  ];
+    });
+    return cols;
+  }, [clienteIdFilter]);
 
   return (
     <>
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
-            title="Repositórios RPKI"
+            title={tableTitle}
             config={{
               columns,
               data: pagedRows,
@@ -242,7 +258,7 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = () => {
               bulkActions: [
                 {
                   key: 'novo-repositorio',
-                  label: 'Criar repositório',
+                  label: t('buttons.new'),
                   variant: 'primary',
                   requiresSelection: false,
                   onClick: () => setShowCreateModal(true),
@@ -285,7 +301,12 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = () => {
         </div>
       </div>
 
-      <RpkiRepositoryCreateModal show={showCreateModal} onClose={() => setShowCreateModal(false)} />
+      <RpkiRepositoryCreateModal
+        show={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        allowedCaIds={cas.map((c) => c.id)}
+        initialCaId={cas.length === 1 ? cas[0].id : null}
+      />
 
       <AuditPdfModal
         show={auditoria.showPreview}

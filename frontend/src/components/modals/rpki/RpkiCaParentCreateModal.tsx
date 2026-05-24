@@ -1,17 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from 'components/common/DraggableModal';
 import { Button, FormField } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useI18n } from 'contexts/I18nContext';
 import { RpkiCaService } from 'services/rpkiCaService';
 
 interface RpkiCaParentCreateModalProps {
   show: boolean;
   onClose: () => void;
   initialCaId?: number | null;
+  allowedCaIds?: number[];
 }
 
-const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({ show, onClose, initialCaId }) => {
+const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
+  show,
+  onClose,
+  initialCaId,
+  allowedCaIds,
+}) => {
+  const { t } = useI18n();
   const [caId, setCaId] = useState('');
   const [parentName, setParentName] = useState('');
   const [childRequestXml, setChildRequestXml] = useState('');
@@ -24,19 +32,25 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({ show,
     queryFn: () => RpkiCaService.list(),
   });
 
+  const selectableCas = useMemo(() => {
+    if (!allowedCaIds?.length) return cas;
+    const allowed = new Set(allowedCaIds);
+    return cas.filter((ca) => allowed.has(ca.id));
+  }, [cas, allowedCaIds]);
+
   useEffect(() => {
     if (!show) return;
-    if (initialCaId) {
+    if (initialCaId && selectableCas.some((ca) => ca.id === initialCaId)) {
       setCaId(String(initialCaId));
-    } else if (cas.length > 0) {
-      setCaId(String(cas[0].id));
+    } else if (selectableCas.length > 0) {
+      setCaId(String(selectableCas[0].id));
     } else {
       setCaId('');
     }
     setParentName('');
     setChildRequestXml('');
     setResponseXml('');
-  }, [show, initialCaId, cas]);
+  }, [show, initialCaId, selectableCas]);
 
   useEffect(() => {
     if (!show || !caId.trim()) {
@@ -84,7 +98,7 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({ show,
   });
 
   return (
-    <DraggableModal show={show} onClose={onClose} title="Criar CA-pai" size="lg" modalId="rpki-ca-parent-create-modal">
+    <DraggableModal show={show} onClose={onClose} title="Novo CA-pai" size="lg" modalId="rpki-ca-parent-create-modal">
       <div className="p-2">
         <div className="row g-2">
           <div className="col-md-4">
@@ -94,7 +108,7 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({ show,
               label="CA"
               size="sm"
               value={caId}
-              options={cas.map((ca) => ({ value: ca.id, label: ca.nome }))}
+              options={selectableCas.map((ca) => ({ value: ca.id, label: ca.nome }))}
               onChange={(v) => setCaId(String(v ?? ''))}
             />
           </div>
@@ -168,7 +182,7 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({ show,
               })
             }
           >
-            Criar CA-pai
+            {t('buttons.new')}
           </Button>
         </div>
       </div>

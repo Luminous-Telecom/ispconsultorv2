@@ -1,16 +1,25 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from 'components/common/DraggableModal';
 import { Button, FormField } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useI18n } from 'contexts/I18nContext';
 import { RpkiCaService } from 'services/rpkiCaService';
 
 interface RpkiRepositoryCreateModalProps {
   show: boolean;
   onClose: () => void;
+  allowedCaIds?: number[];
+  initialCaId?: number | null;
 }
 
-const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({ show, onClose }) => {
+const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
+  show,
+  onClose,
+  allowedCaIds,
+  initialCaId,
+}) => {
+  const { t } = useI18n();
   const [caId, setCaId] = useState('');
   const [parentId, setParentId] = useState('');
   const [publisherRequestXml, setPublisherRequestXml] = useState('');
@@ -23,6 +32,11 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({ s
     queryKey: ['rpki-cas'],
     queryFn: () => RpkiCaService.list(),
   });
+  const selectableCas = useMemo(() => {
+    if (!allowedCaIds?.length) return cas;
+    const allowed = new Set(allowedCaIds);
+    return cas.filter((ca) => allowed.has(ca.id));
+  }, [cas, allowedCaIds]);
   const selectedCaId = Number(caId || 0);
   const { data: parents = [] } = useQuery({
     queryKey: ['rpki-ca-parents', selectedCaId],
@@ -32,15 +46,17 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({ s
 
   useEffect(() => {
     if (!show) return;
-    if (cas.length > 0) {
-      setCaId(String(cas[0].id));
+    if (initialCaId && selectableCas.some((ca) => ca.id === initialCaId)) {
+      setCaId(String(initialCaId));
+    } else if (selectableCas.length > 0) {
+      setCaId(String(selectableCas[0].id));
     } else {
       setCaId('');
     }
     setParentId('');
     setPublisherRequestXml('');
     setRepositoryResponseXml('');
-  }, [show, cas]);
+  }, [show, selectableCas, initialCaId]);
 
   useEffect(() => {
     errorRef.current = error;
@@ -104,7 +120,7 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({ s
   });
 
   return (
-    <DraggableModal show={show} onClose={onClose} title="Criar Repositório" size="lg" modalId="rpki-repository-create-modal">
+    <DraggableModal show={show} onClose={onClose} title="Novo Repositório" size="lg" modalId="rpki-repository-create-modal">
       <div className="p-2">
         <div className="row g-2">
           <div className="col-md-4">
@@ -114,7 +130,7 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({ s
               label="CA"
               size="sm"
               value={caId}
-              options={cas.map((ca) => ({ value: ca.id, label: ca.nome }))}
+              options={selectableCas.map((ca) => ({ value: ca.id, label: ca.nome }))}
               onChange={(v) => {
                 setCaId(String(v ?? ''));
                 setParentId('');
@@ -193,7 +209,7 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({ s
               })
             }
           >
-            Criar repositório
+            {t('buttons.new')}
           </Button>
         </div>
       </div>

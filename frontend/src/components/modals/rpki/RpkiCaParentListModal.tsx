@@ -5,6 +5,7 @@ import { TableConfig } from 'components/tables/types';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { RpkiCaParent, RpkiCaResource, RpkiCaService } from 'services/rpkiCaService';
 import { ClienteService } from 'services/clienteService';
+import { useRpkiCas } from 'hooks/useRpkiCas';
 import { useI18n } from 'contexts/I18nContext';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import RpkiCaParentCreateModal from './RpkiCaParentCreateModal';
@@ -15,6 +16,8 @@ interface RpkiCaParentListModalProps {
   show: boolean;
   onClose: () => void;
   skipWrapper?: boolean;
+  clienteIdFilter?: number;
+  tableTitle?: string;
 }
 
 function getSortableValue(row: RpkiCaParent, sortKey: string): string {
@@ -36,7 +39,10 @@ function getSortableValue(row: RpkiCaParent, sortKey: string): string {
   }
 }
 
-const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = () => {
+const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
+  clienteIdFilter,
+  tableTitle = 'CAs-pai',
+}) => {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const { success, error } = useNotificationContext();
@@ -60,20 +66,18 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = () => {
     resetPageOnFilterChange: true,
   });
 
-  const { data: cas = [] } = useQuery({
-    queryKey: ['rpki-cas'],
-    queryFn: () => RpkiCaService.list(),
-  });
+  const { cas, caIdsKey } = useRpkiCas(clienteIdFilter);
   const { data: clientes = [] } = useQuery({
     queryKey: ['clientes-rpki'],
     queryFn: async () => {
       const response = await ClienteService.list({ limit: 1000 });
       return response.data ?? [];
     },
+    enabled: clienteIdFilter == null,
   });
 
   const { data: parents = [], isLoading, refetch } = useQuery({
-    queryKey: ['rpki-ca-parents-all', cas.map((c) => c.id).join(',')],
+    queryKey: ['rpki-ca-parents-all', caIdsKey],
     queryFn: async () => {
       const rows = await Promise.all(cas.map((ca) => RpkiCaService.listParents(ca.id)));
       return rows.flat();
@@ -81,7 +85,7 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = () => {
     enabled: cas.length > 0,
   });
   const { data: resourcesByCa = new Map<number, RpkiCaResource[]>() } = useQuery({
-    queryKey: ['rpki-ca-resources-all', cas.map((c) => c.id).join(',')],
+    queryKey: ['rpki-ca-resources-all', caIdsKey],
     queryFn: async () => {
       const rows = await Promise.all(
         cas.map(async (ca) => ({
@@ -175,26 +179,31 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = () => {
   const to = total === 0 ? 0 : Math.min(safePage * perPage, total);
   const pagedRows = filtered.slice(from > 0 ? from - 1 : 0, to);
 
-  const columns: TableConfig<RpkiCaParent>['columns'] = [
-    { key: 'id', label: 'ID', sortable: true, width: '50px', render: (item) => item.id },
-    {
-      key: 'ca_id',
-      label: 'CA',
-      sortable: false,
-      width: '200px',
-      render: (item) => caById.get(item.ca_id)?.nome || `#${item.ca_id}`,
-    },
-    {
-      key: 'cliente',
-      label: 'Cliente',
-      sortable: false,
-      width: '220px',
-      render: (item) => {
-        const ca = caById.get(item.ca_id);
-        if (!ca?.cliente_id) return '—';
-        return clienteNomeById.get(ca.cliente_id) || '—';
+  const columns: TableConfig<RpkiCaParent>['columns'] = useMemo(() => {
+    const cols: TableConfig<RpkiCaParent>['columns'] = [
+      { key: 'id', label: 'ID', sortable: true, width: '50px', render: (item) => item.id },
+      {
+        key: 'ca_id',
+        label: 'CA',
+        sortable: false,
+        width: '200px',
+        render: (item) => caById.get(item.ca_id)?.nome || `#${item.ca_id}`,
       },
-    },
+    ];
+    if (clienteIdFilter == null) {
+      cols.push({
+        key: 'cliente',
+        label: 'Cliente',
+        sortable: false,
+        width: '220px',
+        render: (item) => {
+          const ca = caById.get(item.ca_id);
+          if (!ca?.cliente_id) return '—';
+          return clienteNomeById.get(ca.cliente_id) || '—';
+        },
+      });
+    }
+    cols.push(
     { key: 'parent_name', label: 'Nome da CA-pai', sortable: true, width: '220px', render: (item) => item.parent_name || '-' },
     {
       key: 'asn',
@@ -258,15 +267,16 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = () => {
         const cor = item.provisioning_status === 'active' ? 'bg-success' : item.provisioning_status === 'error' ? 'bg-danger' : 'bg-secondary';
         return <span className={`badge ${cor}`}>{labels[item.provisioning_status] ?? item.provisioning_status}</span>;
       },
-    },
-  ];
+    });
+    return cols;
+  }, [caById, clienteIdFilter, clienteNomeById, resourcesByCa]);
 
   return (
     <>
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
-            title="CAs-pai"
+            title={tableTitle}
             config={{
               columns,
               data: pagedRows,
@@ -300,7 +310,7 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = () => {
               bulkActions: [
                 {
                   key: 'novo-ca-pai',
-                  label: 'Criar CA-pai',
+                  label: t('buttons.new'),
                   variant: 'primary',
                   requiresSelection: false,
                   onClick: () => setShowCreateModal(true),
@@ -348,7 +358,8 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = () => {
       <RpkiCaParentCreateModal
         show={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        initialCaId={null}
+        initialCaId={cas.length === 1 ? cas[0].id : null}
+        allowedCaIds={cas.map((c) => c.id)}
       />
 
       <ImprimirModal

@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import DraggableModal from 'components/common/DraggableModal';
 import { Button, FormField } from 'components/ui';
+import { useI18n } from 'contexts/I18nContext';
 import { RpkiCaService } from 'services/rpkiCaService';
 
 interface RpkiAspaCreatePayload {
@@ -14,9 +15,18 @@ interface RpkiAspaCreateModalProps {
   show: boolean;
   onClose: () => void;
   onSave: (payload: RpkiAspaCreatePayload) => void;
+  allowedCaIds?: number[];
+  initialCaId?: number | null;
 }
 
-const RpkiAspaCreateModal: React.FC<RpkiAspaCreateModalProps> = ({ show, onClose, onSave }) => {
+const RpkiAspaCreateModal: React.FC<RpkiAspaCreateModalProps> = ({
+  show,
+  onClose,
+  onSave,
+  allowedCaIds,
+  initialCaId,
+}) => {
+  const { t } = useI18n();
   const [caId, setCaId] = useState('');
   const [customerAsn, setCustomerAsn] = useState('');
   const [providers, setProviders] = useState('');
@@ -25,16 +35,25 @@ const RpkiAspaCreateModal: React.FC<RpkiAspaCreateModalProps> = ({ show, onClose
     queryKey: ['rpki-cas'],
     queryFn: () => RpkiCaService.list(),
   });
+  const selectableCas = useMemo(() => {
+    if (!allowedCaIds?.length) return cas;
+    const allowed = new Set(allowedCaIds);
+    return cas.filter((ca) => allowed.has(ca.id));
+  }, [cas, allowedCaIds]);
 
   useEffect(() => {
     if (!show) return;
-    setCaId('');
+    if (initialCaId && selectableCas.some((ca) => ca.id === initialCaId)) {
+      setCaId(String(initialCaId));
+    } else {
+      setCaId('');
+    }
     setCustomerAsn('');
     setProviders('');
-  }, [show]);
+  }, [show, initialCaId, selectableCas]);
 
   return (
-    <DraggableModal show={show} onClose={onClose} title="Criar ASPA" size="sm" modalId="rpki-aspa-create-modal">
+    <DraggableModal show={show} onClose={onClose} title="Novo ASPA" size="sm" modalId="rpki-aspa-create-modal">
       <div className="p-2">
         <FormField
           name="rpki_aspa_ca_id"
@@ -42,7 +61,7 @@ const RpkiAspaCreateModal: React.FC<RpkiAspaCreateModalProps> = ({ show, onClose
           label="CA"
           size="sm"
           value={caId}
-          options={cas.map((ca) => ({ value: ca.id, label: ca.nome }))}
+          options={selectableCas.map((ca) => ({ value: ca.id, label: ca.nome }))}
           onChange={(v) => setCaId(String(v ?? ''))}
         />
         <div className="mt-2">
@@ -80,7 +99,7 @@ const RpkiAspaCreateModal: React.FC<RpkiAspaCreateModalProps> = ({ show, onClose
               })
             }
           >
-            Criar ASPA
+            {t('buttons.new')}
           </Button>
         </div>
       </div>

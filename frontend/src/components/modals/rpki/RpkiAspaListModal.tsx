@@ -6,6 +6,7 @@ import { useNotificationContext } from 'components/notifications/NotificationPro
 import { useI18n } from 'contexts/I18nContext';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { RpkiCaService, type RpkiAspa } from 'services/rpkiCaService';
+import { useRpkiCas } from 'hooks/useRpkiCas';
 import RpkiAspaCreateModal from './RpkiAspaCreateModal';
 import { useAuditoria } from 'hooks/useAuditoria';
 import ImprimirModal from 'components/common/ImprimirModal';
@@ -14,11 +15,16 @@ interface RpkiAspaListModalProps {
   show: boolean;
   onClose: () => void;
   skipWrapper?: boolean;
+  clienteIdFilter?: number;
+  tableTitle?: string;
 }
 
 const statusLabels: Record<string, string> = { active: 'Ativo', revoked: 'Revogado', expired: 'Expirado' };
 
-const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = () => {
+const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = ({
+  clienteIdFilter,
+  tableTitle = 'ASPAs',
+}) => {
   const { t } = useI18n();
   const { error: showError, success } = useNotificationContext();
   const auditoria = useAuditoria();
@@ -41,13 +47,10 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = () => {
     resetPageOnFilterChange: true,
   });
 
-  const { data: cas = [] } = useQuery({
-    queryKey: ['rpki-cas'],
-    queryFn: () => RpkiCaService.list(),
-  });
+  const { cas, caIdsKey } = useRpkiCas(clienteIdFilter);
 
   const { isLoading, refetch } = useQuery({
-    queryKey: ['rpki-aspas', cas.map((c) => c.id)],
+    queryKey: ['rpki-aspas', caIdsKey],
     queryFn: async () => {
       const all: RpkiAspa[] = [];
       for (const ca of cas) {
@@ -110,7 +113,7 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = () => {
   const bulkActions = [
     {
       key: 'novo-aspa',
-      label: 'Criar ASPA',
+      label: t('buttons.new'),
       variant: 'primary' as const,
       requiresSelection: false,
       onClick: () => setShowCreateModal(true),
@@ -154,7 +157,7 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = () => {
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
-            title="ASPAs"
+            title={tableTitle}
             config={{
               columns,
               data: pagedRows,
@@ -195,6 +198,8 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = () => {
       <RpkiAspaCreateModal
         show={showCreateModal}
         onClose={() => setShowCreateModal(false)}
+        allowedCaIds={cas.map((c) => c.id)}
+        initialCaId={cas.length === 1 ? cas[0].id : null}
         onSave={(payload) => {
           RpkiCaService.createAspa(payload)
             .then((created) => {

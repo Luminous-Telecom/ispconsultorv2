@@ -1047,6 +1047,12 @@ export interface TranslationKeys {
   'tabs.files': string;
   'tabs.tunnelAgents': string;
   'tabs.sshDevicesSection': string;
+  'tabs.rpki': string;
+  'tabs.rpkiCas': string;
+  'tabs.rpkiCaPai': string;
+  'tabs.rpkiRepositorios': string;
+  'tabs.rpkiRoas': string;
+  'tabs.rpkiAspas': string;
   'tabs.salePlan': string;
   'tabs.servicesObservations': string;
   'tabs.contractData': string;
@@ -1384,6 +1390,7 @@ export interface TranslationKeys {
   'messages.saveClientFirstTunnel': string;
   'messages.saveClientFirstSshDevices': string;
   'messages.saveClientFirstSshBackups': string;
+  'messages.saveClientFirstRpki': string;
   'messages.saveBankBeforeTest': string;
   'messages.testingConnection': string;
   'messages.connectionSuccess': string;
@@ -2581,6 +2588,12 @@ const translations: Translations = {
     'tabs.files': 'Arquivos',
     'tabs.tunnelAgents': 'Túneis (agentes)',
     'tabs.sshDevicesSection': 'Equipamentos',
+    'tabs.rpki': 'RPKI',
+    'tabs.rpkiCas': 'CAs',
+    'tabs.rpkiCaPai': 'CAs-pai',
+    'tabs.rpkiRepositorios': 'Repositórios',
+    'tabs.rpkiRoas': 'ROAs',
+    'tabs.rpkiAspas': 'ASPAs',
     'tabs.salePlan': 'Plano de Venda',
     'tabs.servicesObservations': 'Observações',
     'tabs.contractData': 'Dados do Contrato',
@@ -2947,6 +2960,7 @@ const translations: Translations = {
     'messages.saveClientFirstTunnel': 'Salve o cliente primeiro para gerenciar túneis (agentes).',
     'messages.saveClientFirstSshDevices': 'Salve o cliente primeiro para gerenciar devices SSH.',
     'messages.saveClientFirstSshBackups': 'Salve o cliente primeiro para ver os backups dos equipamentos.',
+    'messages.saveClientFirstRpki': 'Salve o cliente primeiro para gerenciar recursos RPKI.',
     'messages.saveBankBeforeTest': 'Salve o banco antes de testar a conexão',
     'messages.testingConnection': 'Testando conexão...',
     'messages.connectionSuccess': 'Conexão testada com sucesso!',
@@ -4140,6 +4154,12 @@ const translations: Translations = {
     'tabs.files': 'Files',
     'tabs.tunnelAgents': 'Tunnels (agents)',
     'tabs.sshDevicesSection': 'Equipment',
+    'tabs.rpki': 'RPKI',
+    'tabs.rpkiCas': 'CAs',
+    'tabs.rpkiCaPai': 'Parent CAs',
+    'tabs.rpkiRepositorios': 'Repositories',
+    'tabs.rpkiRoas': 'ROAs',
+    'tabs.rpkiAspas': 'ASPAs',
     'tabs.salePlan': 'Sale Plan',
     'tabs.servicesObservations': 'Observations',
     'tabs.contractData': 'Contract Data',
@@ -4506,6 +4526,7 @@ const translations: Translations = {
     'messages.saveClientFirstTunnel': 'Save the client first to manage tunnels (agents).',
     'messages.saveClientFirstSshDevices': 'Save the client first to manage SSH devices.',
     'messages.saveClientFirstSshBackups': 'Save the client first to view equipment backups.',
+    'messages.saveClientFirstRpki': 'Save the client first to manage RPKI resources.',
     'messages.saveBankBeforeTest': 'Save the bank before testing the connection',
     'messages.testingConnection': 'Testing connection...',
     'messages.connectionSuccess': 'Connection tested successfully!',
@@ -5701,6 +5722,12 @@ const translations: Translations = {
     'tabs.files': 'Archivos',
     'tabs.tunnelAgents': 'Túneles (agentes)',
     'tabs.sshDevicesSection': 'Equipos',
+    'tabs.rpki': 'RPKI',
+    'tabs.rpkiCas': 'CAs',
+    'tabs.rpkiCaPai': 'CAs padre',
+    'tabs.rpkiRepositorios': 'Repositorios',
+    'tabs.rpkiRoas': 'ROAs',
+    'tabs.rpkiAspas': 'ASPAs',
     'tabs.salePlan': 'Plan de Venta',
     'tabs.servicesObservations': 'Observaciones',
     'tabs.contractData': 'Datos del Contrato',
@@ -6063,6 +6090,7 @@ const translations: Translations = {
     'messages.saveClientFirstTunnel': 'Guarde al cliente primero para gestionar túneles (agentes).',
     'messages.saveClientFirstSshDevices': 'Guarde al cliente primero para gestionar dispositivos SSH.',
     'messages.saveClientFirstSshBackups': 'Guarde al cliente primero para ver las copias de los equipos.',
+    'messages.saveClientFirstRpki': 'Guarde al cliente primero para gestionar recursos RPKI.',
     'messages.saveBankBeforeTest': 'Guarde el banco antes de probar la conexión',
     'messages.testingConnection': 'Probando conexión...',
     'messages.connectionSuccess': '¡Conexión probada con éxito!',

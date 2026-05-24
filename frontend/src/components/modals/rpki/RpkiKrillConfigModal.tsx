@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button, FormField } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useI18n } from 'contexts/I18nContext';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RpkiCaService, type RpkiCaRepository } from 'services/rpkiCaService';
 
@@ -25,6 +26,7 @@ interface AspaItem {
 }
 
 const RpkiKrillConfigModal: React.FC<RpkiKrillConfigModalProps> = ({ initialSection }) => {
+  const { t } = useI18n();
   const [aspas, setAspas] = useState<AspaItem[]>([]);
   const { success, error, warning: showWarning } = useNotificationContext();
   const queryClient = useQueryClient();
@@ -274,7 +276,7 @@ const RpkiKrillConfigModal: React.FC<RpkiKrillConfigModalProps> = ({ initialSect
                   createCaMutation.mutate({ nome: caNome.trim() });
                 }}
               >
-                Criar CA
+                {t('buttons.new')}
               </Button>
             </div>
           </div>
