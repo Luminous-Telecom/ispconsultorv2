@@ -22,6 +22,8 @@ import {
   buildRoaCmsObject,
   buildAspaCmsObject,
   buildManifestCmsObject,
+  extractEeRevocationFromCmsDer,
+  type CrlRevocationEntry,
   type ManifestFile,
   type RoaEntry,
   type AspaEntry,
@@ -57,6 +59,48 @@ function roaDeterministicFilename(asn: number, prefix: string, maxLength: number
  */
 function aspaDeterministicFilename(customerAsn: number): string {
   return `${sha256HexOfBuffer(Buffer.from(`aspa:${customerAsn}`, 'utf8')).slice(0, 32)}.asa`;
+}
+
+async function collectCmsRevocations(params: {
+  publishedByUri: Map<string, RpkiPublishedObject>;
+  newRoaUris: Set<string>;
+  newAspaUris: Set<string>;
+  mftUri: string;
+  builtRoas: Array<{ uri: string; sha256Hex: string }>;
+  builtAspas: Array<{ uri: string; sha256Hex: string }>;
+}): Promise<CrlRevocationEntry[]> {
+  const revocations: CrlRevocationEntry[] = [];
+  const seenSerials = new Set<string>();
+
+  const addFromPublished = async (pub: RpkiPublishedObject) => {
+    if (!['roa', 'mft', 'aspa'].includes(pub.object_type)) return;
+    const rev = await extractEeRevocationFromCmsDer(Buffer.from(pub.object_der_b64, 'base64'));
+    if (rev && !seenSerials.has(rev.serialHex)) {
+      seenSerials.add(rev.serialHex);
+      revocations.push(rev);
+    }
+  };
+
+  for (const [uri, pub] of params.publishedByUri.entries()) {
+    if (pub.object_type === 'roa' && !params.newRoaUris.has(uri)) {
+      await addFromPublished(pub);
+    }
+    if (pub.object_type === 'aspa' && !params.newAspaUris.has(uri)) {
+      await addFromPublished(pub);
+    }
+  }
+
+  const oldMft = params.publishedByUri.get(params.mftUri);
+  if (oldMft) await addFromPublished(oldMft);
+
+  for (const built of [...params.builtRoas, ...params.builtAspas]) {
+    const existing = params.publishedByUri.get(built.uri);
+    if (existing && existing.hash_sha256_hex.toLowerCase() !== built.sha256Hex.toLowerCase()) {
+      await addFromPublished(existing);
+    }
+  }
+
+  return revocations;
 }
 
 export class RpkiPublicationService {
@@ -109,16 +153,19 @@ export class RpkiPublicationService {
     const thisUpdate = new Date(now.getTime() - 5 * 60 * 1000);
     const nextUpdate = new Date(now.getTime() + 24 * 3600 * 1000);
 
-    // 3. Constrói CRL
-    const crl = await buildCrlDer({
-      resourceCaCertPem: ca.resource_cert_pem,
-      resourceCaKeyPem: ca.resource_key_pem,
-      crlNumber: newCrlNumber,
-      thisUpdate,
-      nextUpdate,
+    // Estado publicado atual (antes de construir objetos — revogações dependem disso).
+    let currentlyPublished = await RpkiPublishedObject.findAll({
+      where: { ca_id: ca.id, repository_id: repository.id },
     });
+    if (currentlyPublished.length > 0) {
+      await RpkiPublicationService.reconcilePublicationStateFromRemote(ca, repository);
+      currentlyPublished = await RpkiPublishedObject.findAll({
+        where: { ca_id: ca.id, repository_id: repository.id },
+      });
+    }
+    const publishedByUri = new Map(currentlyPublished.map((p) => [p.uri, p]));
 
-    // 4. Constrói ROAs
+    // 3. Constrói ROAs
     const activeRoas = await RpkiRoa.findAll({
       where: { ca_id: ca.id, status: 'active' },
     });
@@ -207,7 +254,28 @@ export class RpkiPublicationService {
       builtAspas.push({ aspaId: aspa.id, derBuffer: built.derBuffer, sha256Hex: built.sha256Hex, filename, uri });
     }
 
-    // 6. Constrói Manifest (listando CRL + ROAs + ASPAs)
+    const newRoaUris = new Set(builtRoas.map((r) => r.uri));
+    const newAspaUris = new Set(builtAspas.map((a) => a.uri));
+    const revocations = await collectCmsRevocations({
+      publishedByUri,
+      newRoaUris,
+      newAspaUris,
+      mftUri,
+      builtRoas,
+      builtAspas,
+    });
+
+    // 4. Constrói CRL (com revogações de EE substituídos, como Krill)
+    const crl = await buildCrlDer({
+      resourceCaCertPem: ca.resource_cert_pem,
+      resourceCaKeyPem: ca.resource_key_pem,
+      crlNumber: newCrlNumber,
+      thisUpdate,
+      nextUpdate,
+      revocations,
+    });
+
+    // 5. Constrói Manifest (listando CRL + ROAs + ASPAs)
     const manifestFiles: ManifestFile[] = [
       { filename: crlFilename, sha256Hex: crl.sha256Hex },
       ...builtRoas.map((r) => ({ filename: r.filename, sha256Hex: r.sha256Hex })),
@@ -226,18 +294,7 @@ export class RpkiPublicationService {
       mftUri,
     });
 
-    // 7. Calcula diff com o que está publicado
-    let currentlyPublished = await RpkiPublishedObject.findAll({
-      where: { ca_id: ca.id, repository_id: repository.id },
-    });
-    if (currentlyPublished.length > 0) {
-      await RpkiPublicationService.reconcilePublicationStateFromRemote(ca, repository);
-      currentlyPublished = await RpkiPublishedObject.findAll({
-        where: { ca_id: ca.id, repository_id: repository.id },
-      });
-    }
-    const publishedByUri = new Map(currentlyPublished.map((p) => [p.uri, p]));
-
+    // 6. Calcula diff com o que está publicado
     const toPublish: PublishObject[] = [];
     const toWithdraw: WithdrawObject[] = [];
 

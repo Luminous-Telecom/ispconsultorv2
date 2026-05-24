@@ -198,6 +198,91 @@ export function buildRoaContent(entries: RoaEntry[]): Buffer {
   return SEQ(Buffer.concat([derIntegerUInt(asn), SEQ(Buffer.concat(families))]));
 }
 
+/**
+ * IPAddrBlocks no certificado EE da ROA com prefixos explícitos (Krill: to_resources()).
+ * Manifesto/ASPA continuam com inherit.
+ */
+function buildRoaIpBlocksDerForEeCert(entries: RoaEntry[]): Buffer {
+  const ipv4 = entries.filter((e) => !e.prefix.includes(':'));
+  const ipv6 = entries.filter((e) => e.prefix.includes(':'));
+
+  function buildCertIpAddress(e: RoaEntry): Buffer {
+    const { bits, unusedBits } = cidrToPrefixBitString(e.prefix);
+    const addrBS = derBitString(bits, unusedBits);
+    const prefixLen = parseInt(e.prefix.split('/')[1], 10);
+    if (e.maxLength === prefixLen) return SEQ(addrBS);
+    return SEQ(Buffer.concat([addrBS, derIntegerUInt(e.maxLength)]));
+  }
+
+  function buildFamily(afi: Buffer, es: RoaEntry[]): Buffer {
+    return SEQ(
+      Buffer.concat([OCTET(afi), CTX0_CONS(SEQ(Buffer.concat(es.map(buildCertIpAddress))))])
+    );
+  }
+
+  const families: Buffer[] = [];
+  if (ipv4.length > 0) families.push(buildFamily(Buffer.from([0x00, 0x01]), ipv4));
+  if (ipv6.length > 0) families.push(buildFamily(Buffer.from([0x00, 0x02]), ipv6));
+  if (families.length === 0) {
+    throw new Error('ROA sem prefixos IPv4/IPv6 para certificado EE');
+  }
+  return SEQ(Buffer.concat(families));
+}
+
+export interface CrlRevocationEntry {
+  serialHex: string;
+  notAfter: Date;
+}
+
+function fmtOpenSslCertDate(d: Date): string {
+  const pad = (n: number, w = 2) => String(n).padStart(w, '0');
+  return (
+    `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}` +
+    `${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`
+  );
+}
+
+function fmtOpenSslIndexDate(d: Date): string {
+  const pad = (n: number, w = 2) => String(n).padStart(w, '0');
+  const yy = String(d.getUTCFullYear()).slice(-2);
+  return `${yy}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`;
+}
+
+/** Extrai serial e expiry do certificado EE embutido em CMS (ROA/MFT/ASPA). */
+export async function extractEeRevocationFromCmsDer(cmsDer: Buffer): Promise<CrlRevocationEntry | null> {
+  if (!cmsDer.length) return null;
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'rpki-cms-rev-'));
+  try {
+    const cmsPath = path.join(tempDir, 'obj.cms');
+    const certPath = path.join(tempDir, 'ee.pem');
+    await fs.writeFile(cmsPath, cmsDer);
+    await execFileAsync('openssl', [
+      'cms', '-inform', 'DER', '-in', cmsPath, '-cmsout', '-print_certs', '-out', certPath,
+    ]);
+    const certPem = await fs.readFile(certPath, 'utf8');
+    if (!certPem.includes('BEGIN CERTIFICATE')) return null;
+
+    const { stdout: serialOut } = await execFileAsync('openssl', [
+      'x509', '-in', certPath, '-serial', '-noout',
+    ]);
+    const { stdout: endOut } = await execFileAsync('openssl', [
+      'x509', '-in', certPath, '-enddate', '-noout',
+    ]);
+    const serialMatch = serialOut.match(/serial=([0-9A-Fa-f]+)/);
+    const endMatch = endOut.match(/notAfter=(.+)/);
+    if (!serialMatch?.[1] || !endMatch?.[1]) return null;
+
+    const notAfter = new Date(endMatch[1].trim());
+    if (Number.isNaN(notAfter.getTime()) || notAfter <= new Date()) return null;
+
+    return { serialHex: serialMatch[1].toUpperCase(), notAfter };
+  } catch {
+    return null;
+  } finally {
+    await fs.rm(tempDir, { recursive: true, force: true });
+  }
+}
+
 // ─── Manifest content (RFC 9286) ─────────────────────────────────────────────
 
 export interface ManifestFile {
@@ -241,6 +326,8 @@ interface EeCertParams {
   resourceCertUrl: string;
   crlUri: string;
   objectUri: string;
+  /** Blocos IP explícitos (ROA). Se omitido, usa inherit. */
+  ipAddrBlocksDer?: Buffer;
   /** Data de início da validade do EE (padrão: 5 min atrás, como Krill). */
   notBefore?: Date;
   /** Data de fim da validade do EE (padrão: notBefore + 52 semanas, como Krill). */
@@ -253,9 +340,8 @@ async function issueRpkiEeCert(
   params: EeCertParams
 ): Promise<{ certPem: string; keyPem: string }> {
   const resourceProfile = parseResourceCertProfile(params.resourceCaCertPem);
-  const ipInheritDer = buildIpInheritDer(resourceProfile.hasIpv4, resourceProfile.hasIpv6);
+  const ipInheritDer = params.ipAddrBlocksDer ?? buildIpInheritDer(resourceProfile.hasIpv4, resourceProfile.hasIpv6);
 
-  // Krill: notBefore = five_minutes_ago, notAfter = notBefore + 52 semanas.
   const nbDate = params.notBefore ?? new Date(Date.now() - 5 * 60 * 1000);
   const naDate = params.notAfter ?? new Date(nbDate.getTime() + 52 * 7 * 24 * 3600 * 1000);
 
@@ -267,12 +353,18 @@ async function issueRpkiEeCert(
     const eeCsrPath = path.join(tempDir, 'ee_csr.pem');
     const eeCertPath = path.join(tempDir, 'ee_cert.pem');
     const extPath = path.join(tempDir, 'ee_ext.cnf');
+    const indexPath = path.join(tempDir, 'index.txt');
+    const serialPath = path.join(tempDir, 'serial');
+    const newCertsDir = path.join(tempDir, 'new_certs');
+    const cnfPath = path.join(tempDir, 'openssl.cnf');
 
+    await fs.mkdir(newCertsDir);
     await fs.writeFile(caKeyPath, params.resourceCaKeyPem, 'utf8');
     await fs.writeFile(caCertPath, params.resourceCaCertPem, 'utf8');
+    await fs.writeFile(indexPath, '', 'utf8');
+    await fs.writeFile(serialPath, `${crypto.randomBytes(8).toString('hex').toUpperCase()}\n`, 'utf8');
 
     await execFileAsync('openssl', ['genrsa', '-out', eeKeyPath, '2048']);
-    // RFC 6487: subject vazio em certificados EE RPKI (como Krill).
     await execFileAsync('openssl', [
       'req', '-new', '-key', eeKeyPath,
       '-subj', '/',
@@ -299,25 +391,37 @@ async function issueRpkiEeCert(
       `${OID_AIA} = DER:${bufToHexColon(aiaDer)}`,
       `${OID_CRLDP} = DER:${bufToHexColon(crldpDer)}`
     );
-    const extCnf = extLines.join('\n');
+    await fs.writeFile(extPath, extLines.join('\n'), 'utf8');
 
-    await fs.writeFile(extPath, extCnf, 'utf8');
+    const cnf = [
+      '[ca]',
+      'default_ca = CA_default',
+      '[CA_default]',
+      `dir = ${tempDir}`,
+      `certificate = ${caCertPath}`,
+      `private_key = ${caKeyPath}`,
+      `database = ${indexPath}`,
+      `serial = ${serialPath}`,
+      `new_certs_dir = ${newCertsDir}`,
+      'unique_subject = no',
+      'default_md = sha256',
+      'policy = policy_any',
+      '[policy_any]',
+      'commonName = optional',
+    ].join('\n');
+    await fs.writeFile(cnfPath, cnf, 'utf8');
 
-    // openssl x509 -req aceita apenas -days (compatível com todas as versões).
-    // Calcula dias de agora até notAfter; notBefore será "now" pelo OpenSSL,
-    // o que é aceitável — validators toleram segundos/minutos de diferença.
-    const validDays = Math.max(1, Math.ceil((naDate.getTime() - Date.now()) / (24 * 3600 * 1000)));
-
+    // openssl ca suporta -startdate/-enddate (Krill: five_minutes_ago → notAfter).
     await execFileAsync('openssl', [
-      'x509', '-req',
+      'ca', '-config', cnfPath,
       '-in', eeCsrPath,
-      '-CA', caCertPath,
-      '-CAkey', caKeyPath,
-      '-CAcreateserial',
-      '-days', String(validDays),
+      '-out', eeCertPath,
+      '-batch',
+      '-startdate', fmtOpenSslCertDate(nbDate),
+      '-enddate', fmtOpenSslCertDate(naDate),
       '-extfile', extPath,
       '-extensions', 'v3_ee',
-      '-out', eeCertPath,
+      '-notext',
     ]);
 
     const [certPem, keyPem] = await Promise.all([
@@ -374,11 +478,10 @@ export async function buildCrlDer(params: {
   resourceCaCertPem: string;
   resourceCaKeyPem: string;
   crlNumber: number;
-  /** Se fornecido, usa como thisUpdate (para backdate de 5 min como Krill). */
   thisUpdate?: Date;
-  /** Se fornecido, usa como nextUpdate; caso contrário thisUpdate + 24h. */
   nextUpdate?: Date;
-  /** @deprecated use thisUpdate/nextUpdate */
+  /** EE de objetos CMS substituídos/retirados (Krill: revocations). */
+  revocations?: CrlRevocationEntry[];
   validHours?: number;
 }): Promise<{ derBuffer: Buffer; sha256Hex: string }> {
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'rpki-crl-'));
@@ -393,7 +496,15 @@ export async function buildCrlDer(params: {
 
     await fs.writeFile(caKeyPath, params.resourceCaKeyPem, 'utf8');
     await fs.writeFile(caCertPath, params.resourceCaCertPem, 'utf8');
-    await fs.writeFile(indexPath, '', 'utf8');
+
+    const revokedAt = params.thisUpdate ?? new Date(Date.now() - 5 * 60 * 1000);
+    const indexLines = (params.revocations ?? [])
+      .filter((r) => r.notAfter > new Date())
+      .map((r) => {
+        const serial = r.serialHex.replace(/^0+/, '') || '0';
+        return `R\t${fmtOpenSslIndexDate(r.notAfter)}\t${fmtOpenSslIndexDate(revokedAt)}\t${serial}\tunknown\t/`;
+      });
+    await fs.writeFile(indexPath, indexLines.length > 0 ? `${indexLines.join('\n')}\n` : '', 'utf8');
     // OpenSSL exige quantidade par de dígitos hex no arquivo crlnumber (ASN.1 INTEGER).
     let crlNumHex = params.crlNumber.toString(16).toUpperCase();
     if (crlNumHex.length % 2 === 1) {
@@ -417,6 +528,9 @@ export async function buildCrlDer(params: {
       `crlnumber = ${crlNumPath}`,
       `default_crl_days = ${validDays}`,
       'default_md = sha256',
+      'policy = policy_any',
+      '[policy_any]',
+      'commonName = optional',
       '[crl_ext]',
       'authorityKeyIdentifier = keyid:always',
     ].join('\n');
@@ -463,6 +577,7 @@ export async function buildRoaCmsObject(params: {
     resourceCertUrl: params.resourceCertUrl,
     crlUri: params.crlUri,
     objectUri: params.objectUri,
+    ipAddrBlocksDer: buildRoaIpBlocksDerForEeCert(params.entries),
     notBefore: params.notBefore,
     notAfter: params.notAfter,
   });
