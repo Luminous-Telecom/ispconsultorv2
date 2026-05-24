@@ -1,9 +1,8 @@
 import { Op } from 'sequelize';
 import { RpkiAspa } from '../../../models/rpki/RpkiAspa';
-import { RpkiRepository } from '../../../models/rpki/RpkiRepository';
 import { RpkiActivityLog } from '../../../models/rpki/RpkiActivityLog';
 import { RpkiClientError } from '../../../utils/errorUtils';
-import { RpkiCaService } from '../RpkiCaService';
+import { syncKrillAspasForCa } from '../KrillSyncService';
 
 function parseAsn(raw: string): number {
   const cleaned = String(raw).trim().toUpperCase().replace(/^AS/, '');
@@ -81,7 +80,7 @@ export class RpkiAspaService {
       details: JSON.stringify({ customer_asn: row.customer_asn, providers: providersJson }),
     }).catch(() => undefined);
 
-    await this.syncRepositoriesForCa(input.caId);
+    await syncKrillAspasForCa(input.caId, 'aspa');
     return row;
   }
 
@@ -101,7 +100,7 @@ export class RpkiAspaService {
       details: JSON.stringify({ customer_asn: row.customer_asn }),
     }).catch(() => undefined);
 
-    await this.syncRepositoriesForCa(caId);
+    await syncKrillAspasForCa(caId, 'aspa');
     return row;
   }
 
@@ -120,16 +119,6 @@ export class RpkiAspaService {
       details: JSON.stringify({ customer_asn: row.customer_asn }),
     }).catch(() => undefined);
 
-    await this.syncRepositoriesForCa(caId);
-  }
-
-  private static async syncRepositoriesForCa(caId: number): Promise<void> {
-    const repositories = await RpkiRepository.findAll({
-      where: { ca_id: caId },
-      attributes: ['id'],
-    });
-    for (const repository of repositories) {
-      await RpkiCaService.syncRepository(caId, repository.id, 'aspa');
-    }
+    await syncKrillAspasForCa(caId, 'aspa');
   }
 }

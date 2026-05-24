@@ -4,7 +4,8 @@ import { RpkiCaParent } from '../../../models/rpki/RpkiCaParent';
 import { RpkiCaResource } from '../../../models/rpki/RpkiCaResource';
 import { RpkiRepository } from '../../../models/rpki/RpkiRepository';
 import { RpkiClientError } from '../../../utils/errorUtils';
-import { RpkiPublicationService } from '../RpkiPublicationService';
+import { KrillApiService } from '../KrillApiService';
+import { syncKrillRepositoryForCa } from '../KrillSyncService';
 import { logger } from '../../../utils/logger';
 
 export interface ListRpkiCaFilters {
@@ -71,6 +72,8 @@ export class RpkiCaService {
 
     const handle = await generateUniqueHandle(empresa_id, nome);
 
+    await KrillApiService.ensureCa(handle);
+
     return RpkiCa.create({
       empresa_id,
       cliente_id,
@@ -111,15 +114,25 @@ export class RpkiCaService {
   }
 
   static async deleteParent(ca_id: number, parent_id: number): Promise<void> {
-    const deleted = await RpkiCaParent.destroy({
-      where: {
-        id: parent_id,
-        ca_id,
-      },
-    });
-    if (!deleted) {
-      throw new RpkiClientError('CA-pai não encontrada para exclusão');
+    const parent = await RpkiCaParent.findOne({ where: { id: parent_id, ca_id } });
+    if (!parent) throw new RpkiClientError('CA-pai não encontrada para exclusão');
+
+    const ca = await RpkiCa.findByPk(ca_id);
+    if (ca?.handle && parent.parent_name) {
+      try {
+        await KrillApiService.removeParent(ca.handle, parent.parent_name);
+      } catch (err) {
+        logger.warn('RpkiCaService.deleteParent: falha ao remover parent no Krill', {
+          context: 'RpkiCaService',
+          action: 'deleteParent',
+          caId: ca_id,
+          parentId: parent_id,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
     }
+
+    await RpkiCaParent.destroy({ where: { id: parent_id, ca_id } });
   }
 
   static async deleteRepository(ca_id: number, repository_id: number): Promise<void> {
@@ -148,32 +161,21 @@ export class RpkiCaService {
     }
 
     if (!repository.publication_service_uri) {
-      logger.warn('RpkiCaService.syncRepository: repositório sem publication_service_uri; marcando ativo sem publicar', {
+      logger.warn('RpkiCaService.syncRepository: repositório sem publication_service_uri; sincronizando via Krill', {
         context: 'RpkiCaService',
         action: 'syncRepository',
         caId: ca_id,
         repositoryId: repository_id,
       });
-      await repository.update({
-        publication_status: 'active',
-        last_publish_at: new Date(),
-        last_error: null,
-      });
-      return repository;
     }
 
-    await RpkiPublicationService.publishAll({
-      ca,
-      repository,
-      empresaId: ca.empresa_id,
-      triggerType: triggerType ?? null,
-    });
-
-    await repository.reload();
-    return repository;
+    return syncKrillRepositoryForCa(ca_id, repository_id, triggerType ?? null);
   }
 
   static async delete(ca_id: number): Promise<void> {
+    const ca = await RpkiCa.findByPk(ca_id);
+    if (!ca) throw new RpkiClientError('CA não encontrada');
+
     const [parentsCount, resourcesCount, repositoriesCount] = await Promise.all([
       RpkiCaParent.count({ where: { ca_id } }),
       RpkiCaResource.count({ where: { ca_id } }),
@@ -184,6 +186,18 @@ export class RpkiCaService {
       throw new RpkiClientError(
         'Não é possível excluir a CA: existem vínculos (CA-pai, recursos ou repositório). Remova os vínculos antes de excluir.'
       );
+    }
+
+    try {
+      await KrillApiService.deleteCa(ca.handle);
+    } catch (err) {
+      logger.warn('RpkiCaService.delete: falha ao remover CA no Krill (seguindo exclusão local)', {
+        context: 'RpkiCaService',
+        action: 'delete',
+        caId: ca_id,
+        handle: ca.handle,
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
 
     await RpkiCa.destroy({ where: { id: ca_id } });

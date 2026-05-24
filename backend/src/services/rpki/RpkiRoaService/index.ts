@@ -2,12 +2,10 @@ import { Op } from 'sequelize';
 import { RpkiRoa } from '../../../models/rpki/RpkiRoa';
 import { RpkiCa } from '../../../models/rpki/RpkiCa';
 import { RpkiCaResource } from '../../../models/rpki/RpkiCaResource';
-import { RpkiRepository } from '../../../models/rpki/RpkiRepository';
 import { RpkiValidationLog } from '../../../models/rpki/RpkiValidationLog';
 import { RpkiActivityLog } from '../../../models/rpki/RpkiActivityLog';
 import { RpkiClientError } from '../../../utils/errorUtils';
-import { RpkiCaService } from '../RpkiCaService';
-import { assertRoaEntriesMatchResourceCert } from '../RpkiCertProfile';
+import { syncKrillRoutesForCa, syncRoasFromKrillToDb } from '../KrillSyncService';
 import { collectRisWhoisSuggestedRoas } from '../RpkiBgpRisWhoisService';
 
 interface CreateRpkiRoaInput {
@@ -118,74 +116,20 @@ function normalizeValidationPrefix(prefix: string, prefixLength: number): string
 
 export class RpkiRoaService {
   static async listByCa(caId: number): Promise<RpkiRoa[]> {
+    await syncRoasFromKrillToDb(caId);
     return RpkiRoa.findAll({
-      where: { ca_id: caId },
+      where: { ca_id: caId, status: 'active' },
       order: [['id', 'DESC']],
     });
   }
 
   static async create(input: CreateRpkiRoaInput): Promise<RpkiRoa> {
-    const asn = parseAsn(input.asn);
-    const cidr = parseCidr(input.prefix);
-    if (!Number.isInteger(input.maxLength)) {
-      throw new RpkiClientError('maxLength inválido. Informe um número inteiro.');
-    }
-    if (input.maxLength < cidr.prefixLength) {
-      throw new RpkiClientError('maxLength inválido. Não pode ser menor que o tamanho do prefixo CIDR.');
-    }
-    if ((cidr.version === 'ipv4' && input.maxLength > 32) || (cidr.version === 'ipv6' && input.maxLength > 128)) {
-      throw new RpkiClientError('maxLength inválido para a versão do IP informada.');
-    }
-    if (input.notAfter <= input.notBefore) {
-      throw new RpkiClientError('Período inválido. "notAfter" deve ser maior que "notBefore".');
-    }
-
-    const resourceType = cidr.version;
-    const resources = await RpkiCaResource.findAll({
-      where: {
-        ca_id: input.caId,
-        resource_type: resourceType,
-      },
-    });
-    const hasCoverage = resources.some((resource) => {
-      const start = resource.start_range?.trim();
-      return start ? isPrefixContained(input.prefix, start) : false;
-    });
-    if (!hasCoverage) {
-      throw new RpkiClientError('Prefixo ROA não pertence aos recursos atualmente delegados para esta CA.');
-    }
-
-    const ca = await RpkiCa.findByPk(input.caId);
-    if (ca?.resource_cert_pem) {
-      try {
-        assertRoaEntriesMatchResourceCert(
-          [{ prefix: input.prefix.trim() }],
-          ca.resource_cert_pem
-        );
-      } catch (err) {
-        throw new RpkiClientError(err instanceof Error ? err.message : 'ROA incompatível com certificado de recurso.');
-      }
-    }
-
-    const duplicate = await RpkiRoa.findOne({
-      where: {
-        ca_id: input.caId,
-        prefix: input.prefix.trim(),
-        asn,
-        max_length: input.maxLength,
-        status: { [Op.ne]: 'revoked' },
-      },
-    });
-    if (duplicate) {
-      throw new RpkiClientError('Já existe um ROA ativo/expirado com o mesmo prefixo, ASN e maxLength nesta CA.');
-    }
-
     const row = await RpkiRoa.create({
       empresa_id: input.empresaId,
       ca_id: input.caId,
       prefix: input.prefix.trim(),
-      asn,
-      max_length: input.maxLength,
+      asn: parseAsn(input.asn),
+      max_length: Math.trunc(input.maxLength),
       not_before: input.notBefore,
       not_after: input.notAfter,
       status: 'active',
@@ -201,7 +145,7 @@ export class RpkiRoaService {
       details: JSON.stringify({ prefix: row.prefix, asn: row.asn, max_length: row.max_length }),
     }).catch(() => undefined);
 
-    await this.syncRepositoriesForCa(input.caId);
+    await syncKrillRoutesForCa(input.caId, 'roa');
     return row;
   }
 
@@ -215,67 +159,12 @@ export class RpkiRoaService {
     const payload: Record<string, unknown> = {};
     if (input.prefix != null) payload.prefix = input.prefix.trim();
     if (input.asn != null) payload.asn = parseAsn(input.asn);
-    if (input.maxLength != null) payload.max_length = input.maxLength;
+    if (input.maxLength != null) payload.max_length = Math.trunc(input.maxLength);
     if (input.notBefore != null) payload.not_before = input.notBefore;
     if (input.notAfter != null) payload.not_after = input.notAfter;
 
-    const nextPrefix = String(payload.prefix ?? row.prefix);
-    const nextAsn = String(payload.asn ?? row.asn);
-    const nextMaxLength = Number(payload.max_length ?? row.max_length);
-    const nextNotBefore = new Date(payload.not_before as Date ?? row.not_before);
-    const nextNotAfter = new Date(payload.not_after as Date ?? row.not_after);
-
-    const cidr = parseCidr(nextPrefix);
-    if (!Number.isInteger(nextMaxLength)) {
-      throw new RpkiClientError('maxLength inválido. Informe um número inteiro.');
-    }
-    if (nextMaxLength < cidr.prefixLength) {
-      throw new RpkiClientError('maxLength inválido. Não pode ser menor que o tamanho do prefixo CIDR.');
-    }
-    if ((cidr.version === 'ipv4' && nextMaxLength > 32) || (cidr.version === 'ipv6' && nextMaxLength > 128)) {
-      throw new RpkiClientError('maxLength inválido para a versão do IP informada.');
-    }
-    if (nextNotAfter <= nextNotBefore) {
-      throw new RpkiClientError('Período inválido. "notAfter" deve ser maior que "notBefore".');
-    }
-
-    const resourceType = cidr.version;
-    const resources = await RpkiCaResource.findAll({
-      where: { ca_id: caId, resource_type: resourceType },
-    });
-    const hasCoverage = resources.some((resource) => {
-      const start = resource.start_range?.trim();
-      return start ? isPrefixContained(nextPrefix, start) : false;
-    });
-    if (!hasCoverage) {
-      throw new RpkiClientError('Prefixo ROA não pertence aos recursos atualmente delegados para esta CA.');
-    }
-
-    const ca = await RpkiCa.findByPk(caId);
-    if (ca?.resource_cert_pem) {
-      try {
-        assertRoaEntriesMatchResourceCert([{ prefix: nextPrefix }], ca.resource_cert_pem);
-      } catch (err) {
-        throw new RpkiClientError(err instanceof Error ? err.message : 'ROA incompatível com certificado de recurso.');
-      }
-    }
-
-    const duplicate = await RpkiRoa.findOne({
-      where: {
-        id: { [Op.ne]: roaId },
-        ca_id: caId,
-        prefix: nextPrefix,
-        asn: nextAsn,
-        max_length: nextMaxLength,
-        status: { [Op.ne]: 'revoked' },
-      },
-    });
-    if (duplicate) {
-      throw new RpkiClientError('Já existe outro ROA ativo/expirado com o mesmo prefixo, ASN e maxLength nesta CA.');
-    }
-
     await row.update(payload);
-    await this.syncRepositoriesForCa(caId);
+    await syncKrillRoutesForCa(caId, 'roa');
     return row;
   }
 
@@ -298,7 +187,7 @@ export class RpkiRoaService {
       details: JSON.stringify({ prefix: row.prefix, asn: row.asn, max_length: row.max_length }),
     }).catch(() => undefined);
 
-    await this.syncRepositoriesForCa(caId);
+    await syncKrillRoutesForCa(caId, 'roa');
     return row;
   }
 
@@ -317,7 +206,7 @@ export class RpkiRoaService {
       details: JSON.stringify({ prefix: row.prefix, asn: row.asn, max_length: row.max_length }),
     }).catch(() => undefined);
 
-    await this.syncRepositoriesForCa(caId);
+    await syncKrillRoutesForCa(caId, 'roa');
   }
 
   static async analyzeByCa(caId: number): Promise<{
@@ -338,6 +227,7 @@ export class RpkiRoaService {
     }>;
     details: Array<{ roa_id: number; prefix: string; asn: string; reason: string }>;
   }> {
+    await syncRoasFromKrillToDb(caId);
     const roas = await RpkiRoa.findAll({
       where: { ca_id: caId },
       order: [['id', 'DESC']],
@@ -608,16 +498,6 @@ export class RpkiRoaService {
       created += 1;
     }
     return { created };
-  }
-
-  private static async syncRepositoriesForCa(caId: number): Promise<void> {
-    const repositories = await RpkiRepository.findAll({
-      where: { ca_id: caId },
-      attributes: ['id'],
-    });
-    for (const repository of repositories) {
-      await RpkiCaService.syncRepository(caId, repository.id, 'roa');
-    }
   }
 }
 

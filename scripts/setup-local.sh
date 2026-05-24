@@ -15,6 +15,8 @@ DB_NAME="backnet"
 DB_USER="backnet"
 DB_PASSWORD=""
 REDIS_PASSWORD=""
+KRILL_API_URL="https://127.0.0.1:3100"
+KRILL_API_TOKEN=""
 if [ -f "$ENV_FILE" ]; then
   echo ">>> Carregando $ENV_FILE"
   while IFS= read -r line; do
@@ -29,13 +31,15 @@ if [ -f "$ENV_FILE" ]; then
       DB_USER)   DB_USER="$val" ;;
       DB_PASSWORD) DB_PASSWORD="$val" ;;
       REDIS_PASSWORD) REDIS_PASSWORD="$val" ;;
+      KRILL_API_URL) KRILL_API_URL="$val" ;;
+      KRILL_API_TOKEN) KRILL_API_TOKEN="$val" ;;
     esac
   done < "$ENV_FILE"
 fi
 
 export DB_NAME DB_USER DB_PASSWORD REDIS_PASSWORD
 
-echo "=== BackNet: instalação local (MariaDB, Redis, Elasticsearch) ==="
+echo "=== BackNet: instalação local (MariaDB, Redis, Elasticsearch, Krill) ==="
 
 # Detecta gerenciador de pacotes
 if command -v apt-get &>/dev/null; then
@@ -119,6 +123,87 @@ fi
 systemctl start elasticsearch 2>/dev/null || true
 systemctl enable elasticsearch 2>/dev/null || true
 
+# --- Krill (motor RPKI) ---
+echo ""
+echo ">>> Instalando Krill (motor RPKI)..."
+KRILL_CONF="/etc/krill.conf"
+KRILL_PORT="${KRILL_API_URL##*:}"
+KRILL_PORT="${KRILL_PORT%%/*}"
+KRILL_PORT="${KRILL_PORT:-3100}"
+KRILL_URL="https://127.0.0.1:${KRILL_PORT}"
+
+if command -v apt-get &>/dev/null; then
+  if ! command -v krill &>/dev/null; then
+    $PKG_INSTALL curl ca-certificates gnupg
+  fi
+
+  if ! command -v krill &>/dev/null; then
+    DEB_CODENAME="$(lsb_release -cs 2>/dev/null || true)"
+    if [ -z "$DEB_CODENAME" ] && [ -f /etc/os-release ]; then
+      # shellcheck disable=SC1091
+      . /etc/os-release
+      DEB_CODENAME="${VERSION_CODENAME:-}"
+    fi
+    if [ -z "$DEB_CODENAME" ]; then
+      echo "Erro: não foi possível detectar o codename Debian (lsb_release / VERSION_CODENAME)."
+      exit 1
+    fi
+
+    curl -fsSL https://packages.nlnetlabs.nl/aptkey.asc -o /tmp/nlnetlabs.asc
+    gpg --no-tty --batch --dearmor < /tmp/nlnetlabs.asc > /usr/share/keyrings/nlnetlabs-archive-keyring.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/nlnetlabs-archive-keyring.gpg] https://packages.nlnetlabs.nl/linux/debian ${DEB_CODENAME} main" \
+      | tee /etc/apt/sources.list.d/nlnetlabs.list
+    $PKG_UPDATE
+    $PKG_INSTALL krill
+  fi
+else
+  echo "Aviso: Krill disponível via apt (Debian/Ubuntu). Instale manualmente se usar outro gerenciador."
+fi
+
+if command -v krill &>/dev/null; then
+  if [ -f "$KRILL_CONF" ]; then
+    EXISTING_TOKEN="$(grep -E '^admin_token' "$KRILL_CONF" | head -1 | sed -E 's/^admin_token *= *"?([^"]+)"?.*/\1/')"
+    [ -n "$EXISTING_TOKEN" ] && KRILL_API_TOKEN="$EXISTING_TOKEN"
+  fi
+  if [ -z "$KRILL_API_TOKEN" ]; then
+    KRILL_API_TOKEN="$(openssl rand -hex 32)"
+  fi
+
+  cat > "$KRILL_CONF" <<EOF
+log_type = "syslog"
+storage_uri = "/var/lib/krill/data/"
+admin_token = "${KRILL_API_TOKEN}"
+ip = "127.0.0.1"
+port = ${KRILL_PORT}
+service_uri = "${KRILL_URL}/"
+log_level = "info"
+EOF
+
+  systemctl enable krill 2>/dev/null || true
+  systemctl restart krill 2>/dev/null || systemctl start krill 2>/dev/null || true
+
+  echo "Krill configurado em ${KRILL_URL} (somente localhost)"
+else
+  echo "Aviso: Krill não instalado. RPKI não funcionará até instalar o serviço."
+fi
+
+update_krill_env() {
+  local env_path="$1"
+  [ -f "$env_path" ] || return 0
+  [ -z "$KRILL_API_TOKEN" ] && return 0
+
+  if grep -q "^KRILL_API_URL=" "$env_path"; then
+    sed -i "s|^KRILL_API_URL=.*|KRILL_API_URL=${KRILL_URL}|" "$env_path"
+  else
+    echo "KRILL_API_URL=${KRILL_URL}" >> "$env_path"
+  fi
+  if grep -q "^KRILL_API_TOKEN=" "$env_path"; then
+    sed -i "s|^KRILL_API_TOKEN=.*|KRILL_API_TOKEN=${KRILL_API_TOKEN}|" "$env_path"
+  else
+    echo "KRILL_API_TOKEN=${KRILL_API_TOKEN}" >> "$env_path"
+  fi
+}
+
 # Cria .env a partir do .env.example se não existir
 if [ ! -f "$PROJECT_ROOT/backend/.env" ]; then
   echo ""
@@ -135,10 +220,17 @@ if [ ! -f "$PROJECT_ROOT/backend/.env" ]; then
   echo "backend/.env criado. Ajuste JWT_SECRET e outras variáveis conforme necessário."
 fi
 
+update_krill_env "$PROJECT_ROOT/backend/.env"
+
 echo ""
 echo "=== Concluído ==="
 echo "MariaDB: localhost:3306 ($DB_USER / $DB_NAME)"
 echo "Redis:   localhost:6379 $([ -n "$REDIS_PASSWORD" ] && echo "(com senha)" || echo "(sem senha)")"
 echo "Elastic: localhost:9200 (segurança desabilitada para dev)"
+if command -v krill &>/dev/null; then
+  echo "Krill:   ${KRILL_URL} (token em backend/.env → KRILL_API_TOKEN)"
+else
+  echo "Krill:   não instalado"
+fi
 echo ""
 echo "Execute: cd backend && npm run migrate"
