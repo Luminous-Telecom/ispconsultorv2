@@ -2,7 +2,7 @@ import { Op } from 'sequelize';
 import { RpkiAspa } from '../../../models/rpki/RpkiAspa';
 import { RpkiActivityLog } from '../../../models/rpki/RpkiActivityLog';
 import { RpkiClientError } from '../../../utils/errorUtils';
-import { syncKrillAspasForCa } from '../KrillSyncService';
+import { syncKrillAspasForCa, syncAspasFromKrillToDb } from '../KrillSyncService';
 
 function parseAsn(raw: string): number {
   const cleaned = String(raw).trim().toUpperCase().replace(/^AS/, '');
@@ -33,8 +33,9 @@ interface CreateAspaInput {
 
 export class RpkiAspaService {
   static async listByCa(caId: number): Promise<RpkiAspa[]> {
+    await syncAspasFromKrillToDb(caId);
     return RpkiAspa.findAll({
-      where: { ca_id: caId },
+      where: { ca_id: caId, status: 'active' },
       order: [['id', 'DESC']],
     });
   }

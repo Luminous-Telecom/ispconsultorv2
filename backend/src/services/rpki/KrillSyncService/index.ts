@@ -86,6 +86,63 @@ function aspaKey(customer: number, providers: number[]): string {
   return `${customer}|${[...providers].sort((a, b) => a - b).join(',')}`;
 }
 
+function dbAspaKey(aspa: RpkiAspa): string {
+  const entry = dbAspaToKrill(aspa);
+  return aspaKey(entry.customer, entry.providers);
+}
+
+/** Espelha ASPAs do Krill no banco local (ids estáveis para a UI). */
+export async function syncAspasFromKrillToDb(caId: number): Promise<void> {
+  const { ca, handle } = await resolveCaHandle(caId);
+  const aspas = await KrillApiService.listAspas(handle);
+  const krillKeys = new Set<string>();
+  const now = new Date();
+  const defaultEnd = new Date('2041-12-31');
+
+  for (const entry of aspas) {
+    const customerAsn = String(entry.customer);
+    const providersJson = entry.providers.map(String);
+    krillKeys.add(aspaKey(entry.customer, entry.providers));
+
+    const [row] = await RpkiAspa.findOrCreate({
+      where: { ca_id: caId, customer_asn: customerAsn },
+      defaults: {
+        empresa_id: ca.empresa_id,
+        ca_id: caId,
+        customer_asn: customerAsn,
+        providers_json: providersJson,
+        afi: 'both',
+        status: 'active',
+        not_before: now,
+        not_after: defaultEnd,
+        revoked_at: null,
+      },
+    });
+
+    const currentProviders = dbAspaToKrill(row).providers.map(String).sort().join(',');
+    const newProviders = providersJson.slice().sort().join(',');
+    const payload: Record<string, unknown> = {};
+
+    if (currentProviders !== newProviders) {
+      payload.providers_json = providersJson;
+    }
+    if (row.status !== 'active' || row.revoked_at) {
+      payload.status = 'active';
+      payload.revoked_at = null;
+    }
+    if (Object.keys(payload).length > 0) {
+      await row.update(payload);
+    }
+  }
+
+  const activeDb = await RpkiAspa.findAll({ where: { ca_id: caId, status: 'active' } });
+  for (const aspa of activeDb) {
+    if (!krillKeys.has(dbAspaKey(aspa))) {
+      await aspa.update({ status: 'revoked', revoked_at: new Date() });
+    }
+  }
+}
+
 export async function resolveCaHandle(caId: number): Promise<{ ca: RpkiCa; handle: string }> {
   const ca = await RpkiCa.findByPk(caId);
   if (!ca) throw new RpkiClientError('CA não encontrada');
