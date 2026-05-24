@@ -43,11 +43,83 @@ echo "=== BackNet: instalação local (MariaDB, Redis, Elasticsearch, Krill) ===
 
 # Detecta gerenciador de pacotes
 if command -v apt-get &>/dev/null; then
-  PKG_UPDATE="apt-get update"
-  PKG_INSTALL="apt-get install -y"
+  APT_LOCK_WAIT_SECONDS="${APT_LOCK_WAIT_SECONDS:-300}"
+
+  wait_for_apt() {
+    local waited=0
+    while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 \
+       || fuser /var/lib/dpkg/lock >/dev/null 2>&1 \
+       || fuser /var/lib/apt/lists/lock >/dev/null 2>&1; do
+      if [ "$waited" -eq 0 ]; then
+        echo ">>> Aguardando liberação do apt (outro processo em execução)..."
+        ps aux | grep -E '[a]pt-get|[a]pt |[d]pkg' | head -5 || true
+      fi
+      if [ "$waited" -ge "$APT_LOCK_WAIT_SECONDS" ]; then
+        echo "Erro: apt bloqueado há mais de ${APT_LOCK_WAIT_SECONDS}s."
+        echo "Verifique o processo ativo: ps aux | grep -E 'apt|dpkg'"
+        echo "Quando terminar, execute o script novamente (é idempotente)."
+        exit 1
+      fi
+      sleep 5
+      waited=$((waited + 5))
+    done
+  }
+
+  apt_update() {
+    wait_for_apt
+    DEBIAN_FRONTEND=noninteractive apt-get update
+  }
+
+  apt_install() {
+    wait_for_apt
+    DEBIAN_FRONTEND=noninteractive apt-get install -y "$@"
+  }
+
+  pkg_installed() {
+    dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "install ok installed"
+  }
+
+  # Instala apenas pacotes ausentes; pula apt update/install se todos já existirem.
+  apt_install_if_missing() {
+    local pkg missing=()
+    for pkg in "$@"; do
+      if pkg_installed "$pkg"; then
+        echo "  $pkg: já instalado"
+      else
+        missing+=("$pkg")
+      fi
+    done
+    if [ ${#missing[@]} -eq 0 ]; then
+      return 0
+    fi
+    echo ">>> Instalando: ${missing[*]}"
+    apt_update
+    apt_install "${missing[@]}"
+  }
 elif command -v dnf &>/dev/null; then
-  PKG_UPDATE="dnf check-update || true"
-  PKG_INSTALL="dnf install -y"
+  apt_update() { dnf check-update || true; }
+  apt_install() { dnf install -y "$@"; }
+
+  pkg_installed() {
+    rpm -q "$1" &>/dev/null
+  }
+
+  apt_install_if_missing() {
+    local pkg missing=()
+    for pkg in "$@"; do
+      if pkg_installed "$pkg"; then
+        echo "  $pkg: já instalado"
+      else
+        missing+=("$pkg")
+      fi
+    done
+    if [ ${#missing[@]} -eq 0 ]; then
+      return 0
+    fi
+    echo ">>> Instalando: ${missing[*]}"
+    apt_update
+    apt_install "${missing[@]}"
+  }
 else
   echo "Erro: apt ou dnf não encontrado. Instale manualmente."
   exit 1
@@ -55,9 +127,13 @@ fi
 
 # --- MariaDB ---
 echo ""
-echo ">>> Instalando MariaDB..."
-$PKG_UPDATE
-$PKG_INSTALL mariadb-server mariadb-client || $PKG_INSTALL mysql-server mysql-client
+echo ">>> MariaDB..."
+if pkg_installed mariadb-server || pkg_installed mysql-server; then
+  echo "MariaDB já instalado, pulando..."
+else
+  apt_install_if_missing mariadb-server mariadb-client \
+    || apt_install_if_missing mysql-server mysql-client
+fi
 
 systemctl start mariadb 2>/dev/null || systemctl start mysql 2>/dev/null || true
 systemctl enable mariadb 2>/dev/null || systemctl enable mysql 2>/dev/null || true
@@ -74,8 +150,12 @@ fi
 
 # --- Redis ---
 echo ""
-echo ">>> Instalando Redis..."
-$PKG_INSTALL redis-server
+echo ">>> Redis..."
+if pkg_installed redis-server; then
+  echo "Redis já instalado, pulando..."
+else
+  apt_install_if_missing redis-server
+fi
 
 systemctl start redis-server 2>/dev/null || systemctl start redis 2>/dev/null || true
 systemctl enable redis-server 2>/dev/null || systemctl enable redis 2>/dev/null || true
@@ -100,14 +180,20 @@ fi
 
 # --- Elasticsearch ---
 echo ""
-echo ">>> Instalando Elasticsearch..."
-if ! command -v elasticsearch &>/dev/null; then
+echo ">>> Elasticsearch..."
+if pkg_installed elasticsearch || command -v elasticsearch &>/dev/null; then
+  echo "Elasticsearch já instalado, pulando..."
+else
   if command -v apt-get &>/dev/null; then
-    apt-get install -y apt-transport-https wget
-    wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg
-    echo "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main" | tee /etc/apt/sources.list.d/elastic-8.x.list
-    $PKG_UPDATE
-    $PKG_INSTALL elasticsearch
+    apt_install_if_missing apt-transport-https wget
+    if [ ! -f /usr/share/keyrings/elasticsearch-keyring.gpg ]; then
+      wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg
+    fi
+    if [ ! -f /etc/apt/sources.list.d/elastic-8.x.list ]; then
+      echo "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main" \
+        | tee /etc/apt/sources.list.d/elastic-8.x.list
+    fi
+    apt_install_if_missing elasticsearch
   else
     echo "Instale Elasticsearch manualmente: https://www.elastic.co/guide/en/elasticsearch/reference/current/install-elasticsearch.html"
   fi
@@ -125,7 +211,7 @@ systemctl enable elasticsearch 2>/dev/null || true
 
 # --- Krill (motor RPKI) ---
 echo ""
-echo ">>> Instalando Krill (motor RPKI)..."
+echo ">>> Krill (motor RPKI)..."
 KRILL_CONF="/etc/krill.conf"
 KRILL_PORT="${KRILL_API_URL##*:}"
 KRILL_PORT="${KRILL_PORT%%/*}"
@@ -133,11 +219,11 @@ KRILL_PORT="${KRILL_PORT:-3100}"
 KRILL_URL="https://127.0.0.1:${KRILL_PORT}"
 
 if command -v apt-get &>/dev/null; then
-  if ! command -v krill &>/dev/null; then
-    $PKG_INSTALL curl ca-certificates gnupg
-  fi
+  if pkg_installed krill || command -v krill &>/dev/null; then
+    echo "Krill já instalado, pulando..."
+  else
+    apt_install_if_missing curl ca-certificates gnupg
 
-  if ! command -v krill &>/dev/null; then
     DEB_CODENAME="$(lsb_release -cs 2>/dev/null || true)"
     if [ -z "$DEB_CODENAME" ] && [ -f /etc/os-release ]; then
       # shellcheck disable=SC1091
@@ -149,12 +235,15 @@ if command -v apt-get &>/dev/null; then
       exit 1
     fi
 
-    curl -fsSL https://packages.nlnetlabs.nl/aptkey.asc -o /tmp/nlnetlabs.asc
-    gpg --no-tty --batch --dearmor < /tmp/nlnetlabs.asc > /usr/share/keyrings/nlnetlabs-archive-keyring.gpg
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/nlnetlabs-archive-keyring.gpg] https://packages.nlnetlabs.nl/linux/debian ${DEB_CODENAME} main" \
-      | tee /etc/apt/sources.list.d/nlnetlabs.list
-    $PKG_UPDATE
-    $PKG_INSTALL krill
+    if [ ! -f /usr/share/keyrings/nlnetlabs-archive-keyring.gpg ]; then
+      curl -fsSL https://packages.nlnetlabs.nl/aptkey.asc -o /tmp/nlnetlabs.asc
+      gpg --no-tty --batch --dearmor < /tmp/nlnetlabs.asc > /usr/share/keyrings/nlnetlabs-archive-keyring.gpg
+    fi
+    if [ ! -f /etc/apt/sources.list.d/nlnetlabs.list ]; then
+      echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/nlnetlabs-archive-keyring.gpg] https://packages.nlnetlabs.nl/linux/debian ${DEB_CODENAME} main" \
+        | tee /etc/apt/sources.list.d/nlnetlabs.list
+    fi
+    apt_install_if_missing krill
   fi
 else
   echo "Aviso: Krill disponível via apt (Debian/Ubuntu). Instale manualmente se usar outro gerenciador."
