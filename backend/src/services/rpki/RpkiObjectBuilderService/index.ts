@@ -202,16 +202,14 @@ export function buildRoaContent(entries: RoaEntry[]): Buffer {
  * IPAddrBlocks no certificado EE da ROA com prefixos explícitos (Krill: to_resources()).
  * Manifesto/ASPA continuam com inherit.
  */
-function buildRoaIpBlocksDerForEeCert(entries: RoaEntry[]): Buffer {
+export function buildRoaIpBlocksDerForEeCert(entries: RoaEntry[]): Buffer {
   const ipv4 = entries.filter((e) => !e.prefix.includes(':'));
   const ipv6 = entries.filter((e) => e.prefix.includes(':'));
 
   function buildCertIpAddress(e: RoaEntry): Buffer {
     const { bits, unusedBits } = cidrToPrefixBitString(e.prefix);
-    const addrBS = derBitString(bits, unusedBits);
-    const prefixLen = parseInt(e.prefix.split('/')[1], 10);
-    if (e.maxLength === prefixLen) return SEQ(addrBS);
-    return SEQ(Buffer.concat([addrBS, derIntegerUInt(e.maxLength)]));
+    // RFC 6487 (cert EE): IPAddress ::= BIT STRING — maxLength fica só no conteúdo ROA.
+    return derBitString(bits, unusedBits);
   }
 
   function buildFamily(afi: Buffer, es: RoaEntry[]): Buffer {
@@ -353,16 +351,9 @@ async function issueRpkiEeCert(
     const eeCsrPath = path.join(tempDir, 'ee_csr.pem');
     const eeCertPath = path.join(tempDir, 'ee_cert.pem');
     const extPath = path.join(tempDir, 'ee_ext.cnf');
-    const indexPath = path.join(tempDir, 'index.txt');
-    const serialPath = path.join(tempDir, 'serial');
-    const newCertsDir = path.join(tempDir, 'new_certs');
-    const cnfPath = path.join(tempDir, 'openssl.cnf');
 
-    await fs.mkdir(newCertsDir);
     await fs.writeFile(caKeyPath, params.resourceCaKeyPem, 'utf8');
     await fs.writeFile(caCertPath, params.resourceCaCertPem, 'utf8');
-    await fs.writeFile(indexPath, '', 'utf8');
-    await fs.writeFile(serialPath, `${crypto.randomBytes(8).toString('hex').toUpperCase()}\n`, 'utf8');
 
     await execFileAsync('openssl', ['genrsa', '-out', eeKeyPath, '2048']);
     await execFileAsync('openssl', [
@@ -393,35 +384,18 @@ async function issueRpkiEeCert(
     );
     await fs.writeFile(extPath, extLines.join('\n'), 'utf8');
 
-    const cnf = [
-      '[ca]',
-      'default_ca = CA_default',
-      '[CA_default]',
-      `dir = ${tempDir}`,
-      `certificate = ${caCertPath}`,
-      `private_key = ${caKeyPath}`,
-      `database = ${indexPath}`,
-      `serial = ${serialPath}`,
-      `new_certs_dir = ${newCertsDir}`,
-      'unique_subject = no',
-      'default_md = sha256',
-      'policy = policy_any',
-      '[policy_any]',
-      'commonName = optional',
-    ].join('\n');
-    await fs.writeFile(cnfPath, cnf, 'utf8');
+    const validDays = Math.max(1, Math.ceil((naDate.getTime() - Date.now()) / (24 * 3600 * 1000)));
 
-    // openssl ca suporta -startdate/-enddate (Krill: five_minutes_ago → notAfter).
     await execFileAsync('openssl', [
-      'ca', '-config', cnfPath,
+      'x509', '-req',
       '-in', eeCsrPath,
-      '-out', eeCertPath,
-      '-batch',
-      '-startdate', fmtOpenSslCertDate(nbDate),
-      '-enddate', fmtOpenSslCertDate(naDate),
+      '-CA', caCertPath,
+      '-CAkey', caKeyPath,
+      '-CAcreateserial',
+      '-days', String(validDays),
       '-extfile', extPath,
       '-extensions', 'v3_ee',
-      '-notext',
+      '-out', eeCertPath,
     ]);
 
     const [certPem, keyPem] = await Promise.all([
@@ -577,7 +551,6 @@ export async function buildRoaCmsObject(params: {
     resourceCertUrl: params.resourceCertUrl,
     crlUri: params.crlUri,
     objectUri: params.objectUri,
-    ipAddrBlocksDer: buildRoaIpBlocksDerForEeCert(params.entries),
     notBefore: params.notBefore,
     notAfter: params.notAfter,
   });
