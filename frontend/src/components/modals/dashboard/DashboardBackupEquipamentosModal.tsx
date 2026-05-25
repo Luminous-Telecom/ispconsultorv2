@@ -169,9 +169,8 @@ const DashboardBackupEquipamentosModal: React.FC<DashboardBackupEquipamentosModa
         label: t('sshDevice.backupFileColumn'),
         sortable: true,
         searchable: true,
-        render: (row) => (
-          <span className="small text-break">{row.fileName?.trim() ? row.fileName : '—'}</span>
-        ),
+        className: 'text-wrap',
+        render: (row) => (row.fileName?.trim() ? row.fileName : '—'),
       },
       {
         key: 'sizeBytes',
@@ -215,8 +214,6 @@ const DashboardBackupEquipamentosModal: React.FC<DashboardBackupEquipamentosModa
 
   return (
     <>
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-        <div style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
           <Table<BackupEquipRow>
             key={tableResetKey}
             tableId="dashboard-backup-equipamentos"
@@ -263,8 +260,6 @@ const DashboardBackupEquipamentosModal: React.FC<DashboardBackupEquipamentosModa
             onPageSizeChange={(size) => setTimeout(() => tableFilters.setLimit(size), 0)}
             onSelectionChange={(sel) => handleSelectionChange(sel)}
           />
-        </div>
-      </div>
 
       {detailRow && (
         <DraggableModal

@@ -18,9 +18,7 @@ const ClienteRpkiAspasTab: React.FC<ClienteRpkiAspasTabProps> = ({ clienteId }) 
   }
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <RpkiAspaListModal
+    <RpkiAspaListModal
           key={`cliente-rpki-aspas-${clienteId}`}
           show
           onClose={() => {}}
@@ -28,8 +26,6 @@ const ClienteRpkiAspasTab: React.FC<ClienteRpkiAspasTabProps> = ({ clienteId }) 
           clienteIdFilter={clienteId}
           tableTitle={t('tabs.rpkiAspas')}
         />
-      </div>
-    </div>
   );
 };
 

@@ -73,9 +73,7 @@ const SaasTipoCobrancaModal: React.FC<Props> = ({ show, onClose, skipWrapper = f
   ], [selectedItem, handleEdit, handleDelete, t]);
 
   const modalContent = (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <Table title={t('modal.billingType')} config={{
+    <Table title={t('modal.billingType')} config={{
           columns, data: items, loading: isLoading, searchable: true, searchPlaceholder: t('layout.searchPlaceholder'), sortable: true, sortColumn: tf.sortColumn, sortDirection: tf.sortDirection, striped: true, hover: true, responsive: true, selectable: true, multiSelect: false,
           bulkActions: bulkActions.map(a => ({ key: a.label.toLowerCase().replace(/\s+/g, '-'), label: a.label, onClick: (s: SaasTipoCobranca[]) => { const u = s.length > 0 ? s : (selectedItem ? [selectedItem] : []); a.action(u); }, disabled: a.disabled, variant: a.variant })),
           emptyMessage: t('messages.noData'), pagination,
@@ -86,9 +84,7 @@ const SaasTipoCobrancaModal: React.FC<Props> = ({ show, onClose, skipWrapper = f
           onRefresh={refetch} onAudit={i => auditoria.handleAudit('SaasTipoCobranca', i.id)} auditEntity="SaasTipoCobranca"
           onPageChange={tf.setPage} onPageSizeChange={tf.setLimit} onSort={(c, d) => tf.setSort(c, d)}
           onSearch={(s, f) => setTimeout(() => { tf.setSearch(s); if (f) tf.setSearchField(f); }, 0)} search={tf.search}
-        />
-      </div>
-    </div>
+          />
   );
 
   const auxiliaryModals = (

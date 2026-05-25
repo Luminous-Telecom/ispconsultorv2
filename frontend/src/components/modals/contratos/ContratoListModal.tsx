@@ -629,10 +629,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   }, [tableFilters]);
 
   const modalContent = (
-    <>
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <Table
+    <div className="d-flex flex-column" style={{ height: '100%', minHeight: 0 }}>
+      <Table
           title={displayTitle}
           config={{
             columns,
@@ -691,10 +689,9 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
           onPageSizeChange={tableFilters.setLimit}
           onSort={(column, direction) => tableFilters.setSort(column, direction)}
           onSearch={(search, field) => handleSearchChange(search, field)}
-            search={tableFilters.search}
-          />
-        </div>
-        
+          search={tableFilters.search}
+        />
+
         {/* Resumo - Fixo no final do modal */}
         <div 
           className="p-3 bg-light rounded contrato-totais-resumo" 
@@ -717,7 +714,6 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
             </div>
           </div>
         </div>
-      </div>
 
       <ContratoModal
         show={showCreateModal || showEditModal}
@@ -763,7 +759,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
 
       {/* ConfirmModal */}
       {modalProps && <ConfirmModal {...modalProps} />}
-    </>
+    </div>
   );
 
   if (skipWrapper) {

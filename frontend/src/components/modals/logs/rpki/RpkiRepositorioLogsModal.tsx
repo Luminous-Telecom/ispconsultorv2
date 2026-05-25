@@ -235,9 +235,7 @@ const RpkiRepositorioLogsModal: React.FC<RpkiRepositorioLogsModalProps> = ({ sho
 
   return (
     <>
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <Table<SyncLogRow>
+      <Table<SyncLogRow>
             title="Logs de repositórios (RFC 8181)"
             config={{
               columns,
@@ -279,8 +277,6 @@ const RpkiRepositorioLogsModal: React.FC<RpkiRepositorioLogsModalProps> = ({ sho
             }}
             search={tableFilters.search}
           />
-        </div>
-      </div>
 
       {selectedLog && (
         <DraggableModal

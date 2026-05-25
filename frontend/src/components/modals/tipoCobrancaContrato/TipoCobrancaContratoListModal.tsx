@@ -201,9 +201,7 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
 
   const modalContent = (
     <>
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <Table
+      <Table
             title={defaultTitle}
             config={{
               columns: tableColumns,
@@ -242,8 +240,6 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
             onSearch={(s, f) => { tableFilters.setSearch(s); if (f) tableFilters.setSearchField(f); }}
             search={tableFilters.search}
           />
-        </div>
-      </div>
     </>
   );
 

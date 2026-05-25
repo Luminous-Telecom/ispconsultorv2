@@ -156,7 +156,8 @@ const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }
         label: t('sshDevice.backupFileColumn'),
         sortable: true,
         searchable: true,
-        render: (row) => <span className="small text-break">{row.fileName}</span>,
+        className: 'text-wrap',
+        render: (row) => row.fileName,
       },
       {
         key: 'size',
@@ -241,32 +242,7 @@ const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }
 
   return (
     <>
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div
-        className="row"
-        style={{
-          height: '100%',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-          margin: 0,
-          padding: 0,
-          flex: 1,
-          minHeight: 0,
-        }}
-      >
-        <div
-          className="col-12"
-          style={{
-            height: '100%',
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-            padding: 0,
-          }}
-        >
-          <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-            <Table<ClienteBackupRow>
+          <Table<ClienteBackupRow>
               key="cliente-ssh-backups-tab-table"
               title={t('tabs.sshDeviceBackups')}
               className="no-padding"
@@ -304,11 +280,7 @@ const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }
               onRefresh={refetch}
               onSelectionChange={setSelectedItems}
               onSort={(col, dir) => tableFilters.setSort(col, dir)}
-            />
-          </div>
-        </div>
-      </div>
-    </div>
+          />
     <TextPreviewModal
       show={showPreview}
       onClose={closePreview}

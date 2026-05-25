@@ -93,9 +93,7 @@ const SaasClientesModal: React.FC<Props> = ({ show, onClose, skipWrapper = false
   }, [tf]);
 
   const modalContent = (
-    <div className="list-modal-table-wrapper" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div className="list-modal-scroll-wrapper" style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <Table title={t('modal.clientsTenants')} config={{
+    <Table title={t('modal.clientsTenants')} config={{
           columns, data: items as SaasEmpresaRow[], loading: isLoading, searchable: true, searchPlaceholder: t('layout.searchPlaceholder'), searchFields, sortable: true, sortColumn: tf.sortColumn, sortDirection: tf.sortDirection, striped: true, hover: true, responsive: true, selectable: true, multiSelect: false,
           bulkActions: bulkActions.map(a => ({ key: a.label.toLowerCase().replace(/\s+/g, '-'), label: a.label, onClick: (s: SaasEmpresa[]) => { const u = s.length > 0 ? s : (selectedItem ? [selectedItem] : []); a.action(u); }, disabled: a.disabled, variant: a.variant })),
           emptyMessage: t('messages.noData'), pagination, className: 'no-padding',
@@ -106,9 +104,7 @@ const SaasClientesModal: React.FC<Props> = ({ show, onClose, skipWrapper = false
           onRefresh={refetch} onAudit={i => auditoria.handleAudit('DadosEmpresa', i.id)} auditEntity="DadosEmpresa"
           onPageChange={tf.setPage} onPageSizeChange={tf.setLimit} onSort={(c, d) => tf.setSort(c, d)}
           onSearch={handleSearchChange} search={tf.search}
-        />
-      </div>
-    </div>
+          />
   );
 
   const auxiliaryModals = (

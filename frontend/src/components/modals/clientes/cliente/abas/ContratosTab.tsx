@@ -39,9 +39,8 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
   }));
   
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <Table
+    <>
+    <Table
             key={`cliente-contratos-${clienteId || 'new'}`}
             syncWithHeader={false}
             title={t('nav.contracts')}
@@ -290,8 +289,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
           onSort={onSort}
           onAudit={onAudit}
           auditEntity={auditEntity}
-        />
-      </div>
+          />
 
       {/* Resumo de Contratos - Fixo no final */}
       {sortedContratosData.length > 0 && (
@@ -318,7 +316,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

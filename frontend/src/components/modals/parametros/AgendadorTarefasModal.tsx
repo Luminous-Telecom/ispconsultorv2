@@ -372,9 +372,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
         modalId={MODAL_ID}
         className="no-padding"
       >
-        <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-            <Table
+        <Table
               syncWithHeader={false}
               title={t('scheduler.title')}
               config={{
@@ -424,9 +422,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
                 setTimeout(() => tableFilters.setSearchField(field), 0);
               }}
               search={tableFilters.search}
-            />
-          </div>
-        </div>
+          />
       </DraggableModal>
 
       <RotinaAgendadaModal

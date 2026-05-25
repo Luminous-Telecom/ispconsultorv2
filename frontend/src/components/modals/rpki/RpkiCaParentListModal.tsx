@@ -273,9 +273,7 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
 
   return (
     <>
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <Table
+      <Table
             title={tableTitle}
             config={{
               columns,
@@ -352,8 +350,6 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
             onSearch={(search) => tableFilters.setSearch(search)}
             search={tableFilters.search}
           />
-        </div>
-      </div>
 
       <RpkiCaParentCreateModal
         show={showCreateModal}

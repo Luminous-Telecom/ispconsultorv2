@@ -5,6 +5,7 @@ import { FilterValue } from 'types/common';
 import { useTable } from './useTable';
 import { useColumnResizing } from 'hooks/useColumnResizing';
 import TableColumn from './TableColumn';
+import TableLayoutWrapper from './TableLayoutWrapper';
 import Spinner from '../ui/Spinner';
 import SearchBar from '../ui/SearchBar';
 import { useIsMobile } from 'hooks/useMediaQuery';
@@ -23,6 +24,10 @@ function getTitleMinWidth(label?: string): number {
   if (!label) return 40;
   return Math.max(40, label.length * 7 + 28);
 }
+
+/** Largura fixa da coluna de seleção (checkbox) — alinhada com `.col-checkbox` em `_tables.scss` */
+const CHECKBOX_COLUMN_WIDTH_PX = 35;
+const ACTIONS_COLUMN_WIDTH_PX = 120;
 
 function getColumnMinWidth(column: { badgeLabels?: string[]; minWidth?: string | number; label?: string }): number | undefined {
   const titleMin = getTitleMinWidth(column.label);
@@ -90,6 +95,8 @@ interface TableProps<T = Record<string, unknown>> {
   title?: string;
   /** Se false, não sincroniza com o header global (use em modais) */
   syncWithHeader?: boolean;
+  /** Envolve em layout flex/scroll de modal. Padrão: igual a `!syncWithHeader`. */
+  layoutWrapper?: boolean;
 }
 
 function Table<T extends { id: number | string }>({
@@ -113,7 +120,8 @@ function Table<T extends { id: number | string }>({
   className = '',
   tableId,
   title,
-  syncWithHeader = true
+  syncWithHeader = true,
+  layoutWrapper
 }: TableProps<T>) {
   // Gerar ID único para a tabela
   const uniqueTableId = tableId || `table-${Math.random().toString(36).substr(2, 9)}`;
@@ -470,8 +478,8 @@ function Table<T extends { id: number | string }>({
         total += colMin ?? 120;
       }
     });
-    if (selectable) total += 50;
-    if (_actions.length > 0) total += 120;
+    if (selectable) total += CHECKBOX_COLUMN_WIDTH_PX;
+    if (_actions.length > 0) total += ACTIONS_COLUMN_WIDTH_PX;
     return total;
   }, [columns, columnWidths, selectable, _actions.length]);
 
@@ -566,6 +574,12 @@ function Table<T extends { id: number | string }>({
 
   // Cálculo dinâmico de linhas por página baseado no espaço disponível
   useEffect(() => {
+    // Em modais/abas (syncWithHeader=false) a paginação é controlada pelo contexto.
+    // O scroll da tabela ocorre naturalmente quando as linhas excedem a altura do table-responsive.
+    if (!syncWithHeader) {
+      return;
+    }
+
     if (!normalizedPagination || !onPageSizeChange || autoRowsAppliedRef.current) {
       return;
     }
@@ -902,6 +916,46 @@ function Table<T extends { id: number | string }>({
     }
   }, [openDropdown, handleClickOutside]);
 
+  const visibleColumns = useMemo(
+    () => columns.filter(col => !col.hidden),
+    [columns]
+  );
+
+  const getColumnWidthPx = useCallback((column: (typeof columns)[number]): number | undefined => {
+    const rawWidth = columnWidths[column.key];
+    const colMinWidth = getColumnMinWidth(column);
+    if (rawWidth !== undefined) {
+      return colMinWidth != null ? Math.max(rawWidth, colMinWidth) : rawWidth;
+    }
+    if (column.width !== undefined) {
+      const px = typeof column.width === 'string'
+        ? parseInt(column.width.replace('px', ''), 10)
+        : column.width;
+      return Number.isNaN(px) ? undefined : px;
+    }
+    return colMinWidth;
+  }, [columnWidths]);
+
+  const renderTableColGroup = () => (
+    <colgroup>
+      {selectable && (
+        <col className="col-checkbox" style={{ width: CHECKBOX_COLUMN_WIDTH_PX }} />
+      )}
+      {visibleColumns.map(column => {
+        const widthPx = getColumnWidthPx(column);
+        return (
+          <col
+            key={column.key}
+            style={widthPx != null ? { width: widthPx } : undefined}
+          />
+        );
+      })}
+      {_actions.length > 0 && (
+        <col style={{ width: ACTIONS_COLUMN_WIDTH_PX }} />
+      )}
+    </colgroup>
+  );
+
   // Renderizar cabeçalho da tabela
   const renderTableHeader = () => {
     return (
@@ -909,7 +963,7 @@ function Table<T extends { id: number | string }>({
         <tr>
           {/* Checkbox de seleção - renderiza sempre que selectable for true */}
           {selectable && (
-            <th className="text-center" style={{ width: '50px' }}>
+            <th className="text-center col-checkbox">
               <input
                 className="form-check-input"
                 type="checkbox"
@@ -928,8 +982,7 @@ function Table<T extends { id: number | string }>({
           )}
           
           {/* Colunas */}
-          {columns
-            .filter(col => !col.hidden)
+          {visibleColumns
             .map((column, index) => {
               const rawWidth = columnWidths[column.key];
               const colMinWidth = getColumnMinWidth(column);
@@ -954,14 +1007,14 @@ function Table<T extends { id: number | string }>({
                   return Math.max(30, col.label.length * 7 + 20);
                 }}
                 isResizing={isResizing}
-                isLastColumn={index === columns.filter(col => !col.hidden).length - 1}
+                isLastColumn={index === visibleColumns.length - 1}
               />
             );
             })}
           
           {/* Coluna de ações */}
           {_actions.length > 0 && (
-            <th className="text-center" style={{ width: '120px' }}>
+            <th className="text-center col-actions">
               Ações
             </th>
           )}
@@ -1308,7 +1361,7 @@ function Table<T extends { id: number | string }>({
             >
               {/* Checkbox de seleção */}
               {selectable && (
-                <td className="text-center" onClick={(e) => e.stopPropagation()}>
+                <td className="text-center col-checkbox" onClick={(e) => e.stopPropagation()}>
                   <input
                     className="form-check-input"
                     type="checkbox"
@@ -1325,8 +1378,7 @@ function Table<T extends { id: number | string }>({
               )}
               
               {/* Células de dados: largura fixa por coluna; minWidth = width para não encolher ao arrastar outra */}
-              {columns
-                .filter(col => !col.hidden)
+              {visibleColumns
                 .map(column => {
                   const resizedWidth = columnWidths[column.key];
                   const colMinWidth = getColumnMinWidth(column);
@@ -1352,7 +1404,7 @@ function Table<T extends { id: number | string }>({
                   return (
                     <td
                       key={column.key}
-                      className={`${column.align ? `text-${column.align}` : ''}`}
+                      className={[column.align ? `text-${column.align}` : '', column.className].filter(Boolean).join(' ')}
                       style={widthStyle}
                     >
                       {column.render ? column.render(item, index) : String(item[column.key as keyof T] || '')}
@@ -1362,7 +1414,7 @@ function Table<T extends { id: number | string }>({
               
               {/* Coluna de ações */}
               {_actions.length > 0 && (
-                <td className="text-center" onClick={(e) => e.stopPropagation()}>
+                <td className="text-center col-actions" onClick={(e) => e.stopPropagation()}>
                   <div className="table-actions-desktop">
                     <button
                       type="button"
@@ -1438,7 +1490,7 @@ function Table<T extends { id: number | string }>({
   };
 
 
-  return (
+  const tableElement = (
     <div
       ref={tableContainerRef}
       className={`${className} table-container-custom`}
@@ -1773,6 +1825,7 @@ function Table<T extends { id: number | string }>({
             className={`table table-striped table-sm table-custom table-resizable table-resizable-enabled ${isResizing ? 'resizing' : ''}`}
             style={{ ['--table-min-width' as string]: `${tableMinWidth}px` }}
           >
+            {renderTableColGroup()}
             {renderTableHeader()}
             {renderTableBody()}
           </table>
@@ -1956,6 +2009,13 @@ function Table<T extends { id: number | string }>({
       })()}
     </div>
   );
+
+  const shouldWrapLayout = layoutWrapper ?? !syncWithHeader;
+  if (shouldWrapLayout) {
+    return <TableLayoutWrapper>{tableElement}</TableLayoutWrapper>;
+  }
+
+  return tableElement;
 };
 
 // Componente já usa useMemo e useCallback internamente para otimização

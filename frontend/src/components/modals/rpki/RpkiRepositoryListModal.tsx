@@ -221,9 +221,7 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = ({
 
   return (
     <>
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <Table
+      <Table
             title={tableTitle}
             config={{
               columns,
@@ -298,8 +296,6 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = ({
             onSearch={(search) => tableFilters.setSearch(search)}
             search={tableFilters.search}
           />
-        </div>
-      </div>
 
       <RpkiRepositoryCreateModal
         show={showCreateModal}

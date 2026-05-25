@@ -371,15 +371,11 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
   const modalData = useMemo(() => data?.data || [], [data?.data]);
 
   const modalContent = (
-    <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', margin: 0, padding: 0 }}>
-      <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0 }}>
-        {/* Filtros */}
+    <>
         <div style={{ padding: '16px', paddingBottom: '8px', flexShrink: 0 }}>
           {customFilters}
         </div>
-        {/* Tabela */}
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <Table
+        <Table
             syncWithHeader={false}
             title={t('audit.title')}
             config={{
@@ -426,9 +422,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
               }, 0);
             }}
           />
-        </div>
-      </div>
-    </div>
+    </>
   );
 
   const auditoriaDetalhesModal = (

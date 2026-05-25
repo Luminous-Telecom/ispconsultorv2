@@ -18,9 +18,7 @@ const ClienteSshDevicesTab: React.FC<ClienteSshDevicesTabProps> = ({ clienteId }
   }
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <SshDeviceListModal
+    <SshDeviceListModal
           key={`cliente-ssh-devices-${clienteId}`}
           show
           onClose={() => {}}
@@ -28,8 +26,6 @@ const ClienteSshDevicesTab: React.FC<ClienteSshDevicesTabProps> = ({ clienteId }
           clienteIdFilter={clienteId}
           tableTitle={t('tabs.sshDevicesSection')}
         />
-      </div>
-    </div>
   );
 };
 

@@ -178,9 +178,7 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
       modalId="selecionar-termo-modal"
       className="no-padding"
     >
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <Table
+      <Table
             syncWithHeader={false}
             title="Selecionar Termo Cadastrado"
             config={{
@@ -234,8 +232,6 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
             onSearch={(search, field) => handleSearchChange(search, field)}
             search={tableFilters.search}
           />
-        </div>
-      </div>
     </DraggableModal>
   );
 };

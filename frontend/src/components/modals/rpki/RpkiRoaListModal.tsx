@@ -395,9 +395,7 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({
 
   return (
     <>
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <Table
+      <Table
             title={tableTitle}
             config={{
               columns: tableColumns,
@@ -428,8 +426,6 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({
             onAudit={handleAuditRoa}
             auditEntity="RpkiRoa"
           />
-        </div>
-      </div>
 
       <RpkiRoaCreateEditModal
         show={showFormModal}

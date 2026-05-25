@@ -105,9 +105,7 @@ const SaasBancosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false, 
   ], [selectedItem, handleEdit, handleDelete, onSelectBanco, clearSelection, onClose, handleSelect, t]);
 
   const modalContent = (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <Table title={title ?? (onSelectBanco ? t('ui.selectBank') : t('modal.banks'))} config={{ columns, data: items, loading: isLoading, searchable: true, searchPlaceholder: t('layout.searchPlaceholder'), searchFields, sortable: true, sortColumn: tf.sortColumn, sortDirection: tf.sortDirection, striped: true, hover: true, responsive: true, selectable: true, multiSelect: false,
+    <Table title={title ?? (onSelectBanco ? t('ui.selectBank') : t('modal.banks'))} config={{ columns, data: items, loading: isLoading, searchable: true, searchPlaceholder: t('layout.searchPlaceholder'), searchFields, sortable: true, sortColumn: tf.sortColumn, sortDirection: tf.sortDirection, striped: true, hover: true, responsive: true, selectable: true, multiSelect: false,
           bulkActions: bulkActions.map(a => ({ key: a.label.toLowerCase().replace(/\s+/g, '-'), label: a.label, onClick: (s: SaasBanco[]) => { const u = s.length > 0 ? s : (selectedItem ? [selectedItem] : []); a.action(u); }, disabled: a.disabled, variant: a.variant })),
           emptyMessage: 'Nenhum banco encontrado', pagination,
         }}
@@ -117,9 +115,7 @@ const SaasBancosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false, 
           onRefresh={refetch} onAudit={i => auditoria.handleAudit('SaasBanco', i.id)} auditEntity="SaasBanco"
           onPageChange={tf.setPage} onPageSizeChange={tf.setLimit} onSort={(c, d) => tf.setSort(c, d)}
           onSearch={(s, f) => setTimeout(() => { tf.setSearch(s); if (f) tf.setSearchField(f); }, 0)} search={tf.search}
-        />
-      </div>
-    </div>
+          />
   );
 
   const auxiliaryModals = (

@@ -70,14 +70,6 @@ function ListModal<T extends { id: number | string }>({
   }, [columns]);
 
   const tableContent = (
-    <div 
-      className="list-modal-table-wrapper" 
-      style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-    >
-      <div 
-        className="list-modal-scroll-wrapper" 
-        style={{ flex: 1, overflow: 'auto', minHeight: 0 }}
-      >
         <Table
         syncWithHeader={false}
         title={title}
@@ -144,8 +136,6 @@ function ListModal<T extends { id: number | string }>({
         onRowDoubleClick={onRowDoubleClick}
         tableId={tableId}
       />
-      </div>
-    </div>
   );
 
   if (skipWrapper) {

@@ -136,9 +136,7 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
       modalId="modelo-contrato-select-modal"
       className="no-padding"
     >
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <Table
+      <Table
             syncWithHeader={false}
             title={defaultTitle}
             config={{
@@ -192,8 +190,6 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
             onSearch={(search, field) => handleSearchChange(search, field)}
             search={tableFilters.search}
           />
-        </div>
-      </div>
     </DraggableModal>
   );
 };

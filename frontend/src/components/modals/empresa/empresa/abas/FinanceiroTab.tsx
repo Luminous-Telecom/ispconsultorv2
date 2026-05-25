@@ -246,8 +246,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({ empresaId, tipo }) => {
 
   return (
     <div className="empresa-financeiro-tab-full" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <Table
+      <Table
           key={`dados-empresa-faturas-tab-${tipo}`}
           syncWithHeader={false}
           title={tipo === 'abertas' ? t('tabs.faturasAbertas') : t('tabs.faturasPagas')}
@@ -272,8 +271,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({ empresaId, tipo }) => {
           onSelectionChange={(items) => setSelectedItems(items as SaasTitulo[])}
           onRefresh={refetch}
           onSort={handleSort}
-        />
-      </div>
+          />
       {titulos.length >= 50 && !searchTerm && (
         <div className="small text-muted mt-2 px-3 pb-2">
           Exibindo até 50 registros. Use Contas a Receber para ver todos.

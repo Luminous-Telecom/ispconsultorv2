@@ -82,7 +82,8 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
       label: t('blockdomi.faixaIps'),
       sortable: true,
       width: '300px',
-      render: (item) => <span className="text-break">{item.faixa_ips}</span>
+      className: 'text-wrap',
+      render: (item) => item.faixa_ips || '-'
     },
     {
       key: 'created_at',
@@ -216,8 +217,6 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
 
   const modalContent = (
     <>
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
             title={defaultTitle}
             config={{
@@ -274,8 +273,6 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
               setShowEditModal(true);
             }}
           />
-        </div>
-      </div>
     </>
   );
 

@@ -247,11 +247,8 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({
   }
 
   return (
-    <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', margin: 0, padding: 0 }}>
-      <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0 }}>
-        {/* Tabela de arquivos */}
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <Table
+    <>
+        <Table
             key="cliente-arquivos-tab-table"
             syncWithHeader={false}
             title={t('tabs.files')}
@@ -262,8 +259,6 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({
             auditEntity={auditEntity}
             onSort={finalOnSort}
           />
-        </div>
-      </div>
 
       {/* Modal de adicionar arquivo */}
       {clienteId && (
@@ -297,7 +292,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({
 
       {/* ConfirmModal */}
       {modalProps && <ConfirmModal {...modalProps} />}
-    </div>
+    </>
   );
 };
 

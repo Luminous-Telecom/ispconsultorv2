@@ -113,10 +113,7 @@ const RpkiRoaAnalysisModal: React.FC<RpkiRoaAnalysisModalProps> = ({
         </div>
       }
     >
-      <div
-        className="list-modal-table-wrapper"
-        style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-      >
+      <div className="list-modal-table-wrapper">
         <div
           className="alert alert-info rounded-0 border-0 border-bottom py-2 px-3 mb-0 small d-flex gap-2 align-items-start"
           role="status"
@@ -127,8 +124,9 @@ const RpkiRoaAnalysisModal: React.FC<RpkiRoaAnalysisModalProps> = ({
             confirme.
           </span>
         </div>
-        <div className="list-modal-scroll-wrapper" style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+        <div className="list-modal-scroll-wrapper">
           <Table<AnalysisTableRow>
+            layoutWrapper={false}
             className="no-padding"
             title="Análise de ROAs"
             config={{

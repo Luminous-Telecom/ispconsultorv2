@@ -18,9 +18,7 @@ const ClienteRpkiRepositoriosTab: React.FC<ClienteRpkiRepositoriosTabProps> = ({
   }
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <RpkiRepositoryListModal
+    <RpkiRepositoryListModal
           key={`cliente-rpki-repositorios-${clienteId}`}
           show
           onClose={() => {}}
@@ -28,8 +26,6 @@ const ClienteRpkiRepositoriosTab: React.FC<ClienteRpkiRepositoriosTabProps> = ({
           clienteIdFilter={clienteId}
           tableTitle={t('tabs.rpkiRepositorios')}
         />
-      </div>
-    </div>
   );
 };
 

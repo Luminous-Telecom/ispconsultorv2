@@ -130,9 +130,8 @@ const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
   }, [bulkActions]);
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <Table
+    <>
+    <Table
             key={`financeiro-avulso-tab-table-${showCancelados}`}
             syncWithHeader={false}
             title={t('tabs.financialMisc')}
@@ -195,7 +194,6 @@ const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
             onAudit={onAudit}
             auditEntity={auditEntity}
           />
-      </div>
 
       {/* Resumo Financeiro - Fixo no final */}
       {filteredData.length > 0 && (
@@ -235,7 +233,7 @@ const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

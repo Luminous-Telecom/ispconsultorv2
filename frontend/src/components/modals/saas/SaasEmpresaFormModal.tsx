@@ -719,9 +719,8 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
           )}
 
           {activeTab === 'contratos' && empresaId && (
-            <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-                <Table
+            <>
+            <Table
                   key={`saas-contratos-${empresaId}`}
                   title={t('form.plan')}
                   syncWithHeader={false}
@@ -800,8 +799,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                   search={contratosTf.search}
                   onAudit={(i) => auditoria.handleAudit('SaasContrato', i.id)}
                   auditEntity="SaasContrato"
-                />
-              </div>
+          />
               {contratosRaw.length > 0 && (
                 <div className="d-flex justify-content-between align-items-center p-3 bg-light financeiro-resumo" style={{ flexShrink: 0, marginTop: isMobile ? '0.25rem' : '0.5rem', marginBottom: 0, marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
                   <div className="d-flex align-items-center">
@@ -823,13 +821,11 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                   </div>
                 </div>
               )}
-            </div>
+            </>
           )}
 
           {activeTab === 'usuarios' && empresaId && (
-            <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-                <Table
+            <Table
                   key={`saas-usuarios-${empresaId}`}
                   title="Usuários"
                   syncWithHeader={false}
@@ -876,15 +872,12 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                   onSearch={(s, f) => { usuariosTf.setSearch(s); if (f) usuariosTf.setSearchField(f); }}
                   onSearchFieldChange={(f) => usuariosTf.setSearchField(f)}
                   search={usuariosTf.search}
-                />
-              </div>
-            </div>
+          />
           )}
 
           {activeTab === 'financeiro' && empresaId && (
-            <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-                <Table
+            <>
+            <Table
                   key={`saas-titulos-${empresaId}`}
                   title={t('tabs.financial')}
                   syncWithHeader={false}
@@ -958,7 +951,6 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                   onAudit={(i) => auditoria.handleAudit('SaasTitulo', i.id)}
                   auditEntity="SaasTitulo"
                 />
-              </div>
               {titulosParaFiltro.length > 0 && (
                 <div className="d-flex justify-content-end align-items-center p-3 bg-light financeiro-resumo" style={{ flexShrink: 0, marginTop: isMobile ? '0.25rem' : '0.5rem', marginBottom: 0, marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
                   <div className="d-flex flex-wrap gap-2 gap-md-4 justify-content-end">
@@ -981,13 +973,11 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                   </div>
                 </div>
               )}
-            </div>
+            </>
           )}
 
           {activeTab === 'logs' && empresaId && (
-            <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-                <Table
+            <Table
                   key={`saas-logs-${empresaId}`}
                   title="Logs"
                   syncWithHeader={false}
@@ -1073,8 +1063,6 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                   onPageSizeChange={(l) => logsTf.setLimit(l)}
                   onRowDoubleClick={(log) => handleViewLog(log)}
                 />
-              </div>
-            </div>
           )}
 
           </div>

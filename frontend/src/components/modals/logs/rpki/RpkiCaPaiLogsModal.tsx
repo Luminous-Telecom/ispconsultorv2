@@ -235,9 +235,7 @@ const RpkiCaPaiLogsModal: React.FC<RpkiCaPaiLogsModalProps> = ({ show }) => {
 
   return (
     <>
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <Table<SyncLogRow>
+      <Table<SyncLogRow>
             title="Logs de CA-pai (RFC 6492)"
             config={{
               columns,
@@ -279,8 +277,6 @@ const RpkiCaPaiLogsModal: React.FC<RpkiCaPaiLogsModalProps> = ({ show }) => {
             }}
             search={tableFilters.search}
           />
-        </div>
-      </div>
 
       {selectedLog && (
         <DraggableModal

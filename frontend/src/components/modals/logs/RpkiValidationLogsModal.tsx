@@ -235,9 +235,7 @@ const RpkiValidationLogsModal: React.FC<RpkiValidationLogsModalProps> = ({ show 
 
   return (
     <>
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <Table<RpkiSyncLogRow>
+      <Table<RpkiSyncLogRow>
             title="Logs de Sincronização RPKI"
             config={{
               columns,
@@ -279,8 +277,6 @@ const RpkiValidationLogsModal: React.FC<RpkiValidationLogsModalProps> = ({ show 
             }}
             search={tableFilters.search}
           />
-        </div>
-      </div>
 
       {selectedLog && (
         <DraggableModal

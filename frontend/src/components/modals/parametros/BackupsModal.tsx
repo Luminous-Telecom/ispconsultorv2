@@ -174,7 +174,8 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
       key: 'nome',
       label: t('backup.columnName'),
       sortable: true,
-      render: (item) => <span className="text-break">{item.nome}</span>
+      className: 'text-wrap',
+      render: (item) => item.nome
     },
     {
       key: 'tamanhoFormatado',
@@ -260,7 +261,7 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
   }), [sortedData.length]);
 
   const modalContent = (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <>
       <input
         ref={fileInputRef}
         type="file"
@@ -268,8 +269,7 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
         style={{ display: 'none' }}
         onChange={handleFileChange}
       />
-      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <Table
+      <Table
           syncWithHeader={false}
           title={t('backup.title')}
           config={{
@@ -301,9 +301,8 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
           onSearchFieldChange={(f) => setSearchField(f)}
           onSort={handleSort}
           search={searchTerm}
-        />
-      </div>
-    </div>
+          />
+    </>
   );
 
   if (skipWrapper) {

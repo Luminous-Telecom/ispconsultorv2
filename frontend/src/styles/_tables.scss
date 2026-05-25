@@ -34,6 +34,11 @@
   user-select: none;
 }
 
+.table-resizable-enabled th.col-checkbox {
+  min-width: 35px !important;
+  max-width: 35px !important;
+}
+
 .table-resizable-enabled th:last-child .resize-handle {
   display: none; /* Última coluna não pode ser redimensionada */
 }
@@ -217,6 +222,25 @@ label {
   color: var(--text-primary) !important;
 }
 
+.table tbody td.col-checkbox {
+  max-width: 35px !important;
+  overflow: visible;
+  white-space: normal;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+
+.table tbody td.col-actions {
+  max-width: 120px !important;
+  overflow: visible;
+}
+
+.table thead th.col-checkbox {
+  cursor: default;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+
 /* Para células que precisam de quebra de linha (como descrições longas) */
 .table tbody td.text-wrap {
   white-space: normal;
@@ -308,10 +332,35 @@ label {
 }
 
 .table th.col-checkbox,
-.table td.col-checkbox {
+.table td.col-checkbox,
+colgroup col.col-checkbox {
   width: 35px !important;
   min-width: 35px !important;
   max-width: 35px !important;
+}
+
+.table th.col-checkbox,
+.table td.col-checkbox {
+  text-align: center !important;
+}
+
+.table th.col-checkbox .form-check-input,
+.table td.col-checkbox .form-check-input {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.table th.col-actions,
+.table td.col-actions {
+  width: 120px !important;
+  min-width: 120px !important;
+  max-width: 120px !important;
+}
+
+.table-resizable-enabled th.col-actions {
+  min-width: 120px !important;
+  max-width: 120px !important;
 }
 
 .table th.col-status,
@@ -1183,15 +1232,6 @@ label {
    ESTILOS INLINE DO TABLE.TSX - SUBSTITUTOS CSS
    ============================================ */
 
-/* Checkbox header column */
-.table-checkbox-header {
-  font-size: 0.7rem !important;
-  font-weight: 700 !important;
-  padding: 0.5rem !important;
-  width: 40px !important;
-  text-transform: none !important;
-}
-
 /* Actions header column */
 .table-actions-header {
   font-size: 0.7rem !important;
@@ -1200,13 +1240,6 @@ label {
   width: 150px !important;
   text-align: right !important;
   text-transform: none !important;
-}
-
-/* Checkbox cell */
-.table-checkbox-cell {
-  font-size: 0.7rem !important;
-  padding: 0.5rem !important;
-  width: 40px !important;
 }
 
 /* Data cell */
@@ -1228,40 +1261,41 @@ label {
 }
 
 /* ListModal: ocupa toda a largura do modal e estrutura flex para scroll */
-.draggable-modal-body-custom > .list-modal-table-wrapper,
 .list-modal-table-wrapper {
   flex: 1 1 0 !important;
-  min-width: 0 !important;
   min-height: 0 !important;
+  min-width: 0 !important;
   width: 100% !important;
-  max-width: 100% !important;
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
-  box-sizing: border-box !important;
   padding-top: 0.5rem !important;
 }
 
-/* Área de scroll: largura do modal (100% do wrapper), não cresce com o conteúdo para scroll horizontal */
+/* Área de scroll: bloqueia propagação de scroll para o modal */
 .list-modal-scroll-wrapper {
   flex: 1 1 0 !important;
-  overflow: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
   min-height: 0 !important;
   min-width: 0 !important;
   width: 100% !important;
   max-width: 100% !important;
 }
 
-/* Container: 100% quando a tabela é mais estreita que o modal; mais largo quando tabela é maior (scroll) */
+/* flex:1 para ocupar toda a altura disponível no scroll-wrapper */
 .list-modal-scroll-wrapper .table-container-custom {
-  min-width: max(100%, var(--table-min-width, 0px)) !important;
-  width: max(100%, var(--table-min-width, 0px)) !important;
-  max-width: none !important;
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
 }
 
 /* Table container */
 .table-container-custom {
   width: 100% !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
   margin: 0 !important;
   padding: 0 !important;
   box-sizing: border-box !important;
@@ -1269,6 +1303,7 @@ label {
 
 /* Table header container */
 .table-header-custom {
+  flex-shrink: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
   background: transparent !important;
@@ -1360,9 +1395,13 @@ label {
 
 /* Table responsive container */
 .table-responsive-custom {
+  flex: 1 1 0 !important;
+  /* NÃO usar height: 100% — flex: 1 1 0 com min-height: 0 já limita corretamente */
+  min-height: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
-  overflow-x: auto !important;
+  overflow: auto !important;
+  overscroll-behavior: contain !important;
   -webkit-overflow-scrolling: touch;
   width: 100% !important;
   box-sizing: border-box !important;

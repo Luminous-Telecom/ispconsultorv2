@@ -18,9 +18,7 @@ const ClienteRpkiRoasTab: React.FC<ClienteRpkiRoasTabProps> = ({ clienteId }) =>
   }
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <RpkiRoaListModal
+    <RpkiRoaListModal
           key={`cliente-rpki-roas-${clienteId}`}
           show
           onClose={() => {}}
@@ -28,8 +26,6 @@ const ClienteRpkiRoasTab: React.FC<ClienteRpkiRoasTabProps> = ({ clienteId }) =>
           clienteIdFilter={clienteId}
           tableTitle={t('tabs.rpkiRoas')}
         />
-      </div>
-    </div>
   );
 };
 

@@ -386,9 +386,7 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
 
   const modalContent = (
     <>
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <Table
+      <Table
             title={defaultTitle}
             config={{
               columns: tableColumns,
@@ -452,8 +450,6 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
             search={tableFilters.search}
             onSelectAllPages={handleSelectAllPages}
           />
-        </div>
-      </div>
     </>
   );
 

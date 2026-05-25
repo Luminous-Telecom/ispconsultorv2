@@ -332,9 +332,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
 
   const modalContent = (
     <>
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <Table
+      <Table
             title={defaultTitle}
             config={{
               columns: tableColumns,
@@ -385,8 +383,6 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
             onSearch={(search, field) => handleSearchChange(search, field)}
             search={tableFilters.search}
           />
-        </div>
-      </div>
     </>
   );
 

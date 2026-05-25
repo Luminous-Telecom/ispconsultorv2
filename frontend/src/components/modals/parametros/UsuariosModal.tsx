@@ -241,8 +241,6 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
 
   const modalContent = (
     <>
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <div style={{ flex: 1, overflow: 'auto' }}>
           <Table
             syncWithHeader={false}
             title={t('params.users')}
@@ -288,8 +286,6 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
             onAudit={handleAudit}
             auditEntity="Usuario"
           />
-        </div>
-      </div>
 
       <UsuarioFormModal
         show={showCreateModal || showEditModal}

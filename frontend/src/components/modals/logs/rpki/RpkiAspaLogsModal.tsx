@@ -207,9 +207,7 @@ const RpkiAspaLogsModal: React.FC<RpkiAspaLogsModalProps> = ({ show }) => {
 
   return (
     <>
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <Table<SyncLogRow>
+      <Table<SyncLogRow>
             title="Logs de Publicação de ASPAs (RFC 8181)"
             config={{
               columns,
@@ -247,8 +245,6 @@ const RpkiAspaLogsModal: React.FC<RpkiAspaLogsModalProps> = ({ show }) => {
             onSearch={(s) => tableFilters.setSearch(s)}
             search={tableFilters.search}
           />
-        </div>
-      </div>
 
       {selectedLog && (
         <DraggableModal

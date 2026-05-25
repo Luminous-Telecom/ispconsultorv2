@@ -551,9 +551,8 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   const hasResumo = show && modalData.length > 0;
   
   const modalContent = (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <Table
+    <>
+    <Table
           title={defaultTitle}
           config={{
             columns: tableColumns,
@@ -642,8 +641,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
               tableFilters.setFilters(convertedFilters);
             }, 0);
           }}
-        />
-      </div>
+          />
 
       {/* Resumo Financeiro - Fixo no final do modal */}
       {hasResumo && (
@@ -672,7 +670,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 
   const modals = (

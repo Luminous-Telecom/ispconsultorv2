@@ -160,9 +160,7 @@ const SaasUsuariosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false
   ], [selectedItem, handleEdit, handleDelete]);
 
   const modalContent = (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <Table
+    <Table
           syncWithHeader={false}
           title="Usuários SaaS"
           config={{
@@ -212,9 +210,7 @@ const SaasUsuariosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false
             }, 0);
           }}
           search={tableFilters.search}
-        />
-      </div>
-    </div>
+          />
   );
 
   const auxiliaryModals = (

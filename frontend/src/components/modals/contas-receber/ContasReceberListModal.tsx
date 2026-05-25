@@ -1072,9 +1072,8 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
   ]);
 
   const modalContent = (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <Table<TituloItemUnion>
+    <>
+    <Table<TituloItemUnion>
             title={t('menu.accountsReceivable')}
             config={tableConfig as TableConfig<TituloItemUnion>}
             tableId="financeiro-modal"
@@ -1092,7 +1091,6 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
             auditEntity={isSaas ? 'SaasTitulo' : 'Titulo'}
             syncWithHeader={false}
           />
-      </div>
 
       {/* Resumo Financeiro - Fixo no final do modal */}
       {filteredData.length > 0 && (
@@ -1138,7 +1136,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 
   if (skipWrapper) {

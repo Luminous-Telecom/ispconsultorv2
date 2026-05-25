@@ -18,9 +18,7 @@ const ClienteTunelTab: React.FC<ClienteTunelTabProps> = ({ clienteId }) => {
   }
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <AgentListModal
+    <AgentListModal
           key={`cliente-tunel-${clienteId}`}
           show
           onClose={() => {}}
@@ -28,8 +26,6 @@ const ClienteTunelTab: React.FC<ClienteTunelTabProps> = ({ clienteId }) => {
           clienteIdFilter={clienteId}
           tableTitle={t('tabs.tunnelAgents')}
         />
-      </div>
-    </div>
   );
 };
 

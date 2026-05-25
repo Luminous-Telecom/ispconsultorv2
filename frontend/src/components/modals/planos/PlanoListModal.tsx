@@ -325,9 +325,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
 
   const modalContent = (
     <>
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <Table
+      <Table
             title={defaultTitle}
             config={{
               columns: tableColumns,
@@ -378,8 +376,6 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
             onSearch={(search, field) => handleSearchChange(search, field)}
             search={tableFilters.search}
           />
-        </div>
-      </div>
     </>
   );
 

@@ -295,9 +295,7 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
 
   const content = (
     <>
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <Table<Agent>
+      <Table<Agent>
             title={tableTitle ?? 'Agentes Backnet'}
             config={{
               columns: tableColumns,
@@ -343,8 +341,6 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
             onAudit={!onSelectAgent ? handleAudit : undefined}
             auditEntity={!onSelectAgent ? 'Agent' : undefined}
           />
-        </div>
-      </div>
 
       {!onSelectAgent && (
         <>

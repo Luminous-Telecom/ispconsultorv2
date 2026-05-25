@@ -27,9 +27,8 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
   const isMobile = useIsMobile();
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <Table
+    <>
+    <Table
             key="cliente-financeiro-tab-table"
             syncWithHeader={false}
             title={t('tabs.financial')}
@@ -123,8 +122,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
           onRefresh={onRefresh}
           onAudit={onAudit}
           auditEntity={auditEntity}
-        />
-      </div>
+          />
 
       {/* Resumo Financeiro - Fixo no final */}
       {sortedData.length > 0 && (
@@ -162,7 +160,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

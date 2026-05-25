@@ -176,16 +176,11 @@
 .modal-body.draggable-modal-body-custom.force-no-scroll,
 .modal-body.draggable-modal-body-custom.list-modal-no-body-scroll {
   overflow: hidden !important;
-  overflow-y: hidden !important;
-  overflow-x: hidden !important;
 }
 
-/* Forçar overflow hidden quando há list-modal-table-wrapper dentro do body */
-body .draggable-modal-container-custom .modal-body.draggable-modal-body-custom:has(> .list-modal-table-wrapper),
+/* Bloqueia scroll do body do modal quando contém uma tabela com scroll próprio */
 body .draggable-modal-container-custom .modal-body.draggable-modal-body-custom:has(.list-modal-table-wrapper) {
   overflow: hidden !important;
-  overflow-y: hidden !important;
-  overflow-x: hidden !important;
 }
 
 /* Conteúdo com abas/tabelas: preencher todo o espaço disponível */
@@ -235,7 +230,11 @@ body .draggable-modal-container-custom .modal-body.draggable-modal-body-custom:h
 .whatsapp-tab-content-padded,
 .email-tab-content-padded,
 .sistema-tab-content-padded {
-  flex: 0 1 auto;
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
   padding: 16px;
 
   .row > * {

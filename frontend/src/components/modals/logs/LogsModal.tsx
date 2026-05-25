@@ -649,9 +649,8 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
   const searchPlaceholder = isBlockdomiApi || isAuditoria ? t('layout.searchPlaceholder') : (isEmail ? t('history.searchEmail') : t('history.searchPhone'));
 
   const tableContent = (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <Table
+    <>
+      <Table
           title={title}
           config={{
             columns: columns as TableConfig<unknown>['columns'],
@@ -691,9 +690,8 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
           onSearch={handleSearchChange}
           onSearchFieldChange={(f) => setTimeout(() => tableFilters.setSearchField(f), 0)}
           search={tableFilters.search}
-        />
-      </div>
-    </div>
+          />
+    </>
   );
 
   const detailsModal = (() => {
@@ -705,7 +703,8 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
           detalhe={auditoriaExibirDetalhe}
           modalId="logs-auditoria-details"
           showEmpresaColumn={showEmpresaColumn}
-          empresaNomeFieldLabel={t('audit.tenants')}          showClienteColumn={showEmpresaColumn}
+          empresaNomeFieldLabel={t('audit.tenants')}
+          showClienteColumn={showEmpresaColumn}
           esLoading={auditoriaDetalheEsLoading}
           esIndisponivel={auditoriaEsIndisponivel}
           temVinculoEs={auditoriaTemVinculoEs}

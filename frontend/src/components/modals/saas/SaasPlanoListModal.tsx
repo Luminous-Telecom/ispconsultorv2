@@ -169,9 +169,7 @@ const SaasPlanoListModal: React.FC<Props> = ({ show, onClose, skipWrapper = fals
 
   const modalContent = (
     <>
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <Table
+      <Table
             title={title ?? (onSelectPlano ? t('ui.selectPlan') : t('modal.plans'))}
             config={{
               columns,
@@ -205,8 +203,6 @@ const SaasPlanoListModal: React.FC<Props> = ({ show, onClose, skipWrapper = fals
             onAudit={handleAudit}
             auditEntity="SaasPlano"
           />
-        </div>
-      </div>
     </>
   );
 

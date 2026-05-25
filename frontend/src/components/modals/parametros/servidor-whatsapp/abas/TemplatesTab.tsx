@@ -127,9 +127,7 @@ const TemplatesTab: React.FC<TemplatesTabProps> = () => {
 
   return (
     <>
-      <div className="list-modal-table-wrapper" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div className="list-modal-scroll-wrapper" style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <Table
+      <Table
           syncWithHeader={false}
           title=""
           config={{
@@ -164,9 +162,7 @@ const TemplatesTab: React.FC<TemplatesTabProps> = () => {
           onSearch={(s, f) => { tableFilters.setSearch(s); if (f) tableFilters.setSearchField(f); }}
           onSearchFieldChange={(f) => tableFilters.setSearchField(f)}
           search={tableFilters.search}
-        />
-        </div>
-      </div>
+          />
       <ImprimirModal
         show={auditoria.showPreview}
         onClose={auditoria.handleClosePreview}

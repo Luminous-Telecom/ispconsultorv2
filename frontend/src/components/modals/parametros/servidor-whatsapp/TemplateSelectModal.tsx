@@ -139,8 +139,7 @@ const TemplateSelectModal: React.FC<TemplateSelectModalProps> = ({
           </div>
         )}
         {!error && (
-          <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-            <Table
+          <Table
               syncWithHeader={false}
               title={defaultTitle}
               config={{
@@ -174,8 +173,7 @@ const TemplateSelectModal: React.FC<TemplateSelectModalProps> = ({
               onSearch={(s, f) => { tableFilters.setSearch(s); if (f) tableFilters.setSearchField(f); }}
               onSearchFieldChange={(f) => tableFilters.setSearchField(f)}
               search={tableFilters.search}
-            />
-          </div>
+          />
         )}
       </div>
     </DraggableModal>

@@ -145,7 +145,8 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
         label: t('sshDevice.backupFileColumn'),
         sortable: true,
         searchable: true,
-        render: (row) => <span className="small text-break">{row.fileName}</span>,
+        className: 'text-wrap',
+        render: (row) => row.fileName,
       },
       {
         key: 'size',
@@ -276,17 +277,8 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
               padding: 0,
             }}
           >
-            <div
-              className="col-12"
-              style={{
-                height: '100%',
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column',
-                padding: 0,
-              }}
-            >
-              <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>{inner}</div>
+            <div className="col-12 p-0" style={{ height: '100%', minHeight: 0 }}>
+              {inner}
             </div>
           </div>
         </div>

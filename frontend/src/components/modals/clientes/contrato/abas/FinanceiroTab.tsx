@@ -122,9 +122,8 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
   }, [bulkActions]);
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <Table
+    <>
+    <Table
             key="financeiro-tab-table"
             syncWithHeader={false}
             title={t('tabs.financial')}
@@ -188,7 +187,6 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
             onAudit={onAudit}
             auditEntity={auditEntity}
           />
-      </div>
 
       {/* Resumo Financeiro - Fixo no final */}
       {filteredData.length > 0 && (
@@ -228,7 +226,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

@@ -190,10 +190,7 @@ const RecibosTab: React.FC<RecibosTabProps> = ({ contratoId: _contratoId }) => {
 
   return (
     <>
-      <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', margin: 0, padding: 0 }}>
-        <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0 }}>
-          <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-            <Table
+      <Table
               key="recibos-tab-table"
               syncWithHeader={false}
               title="Recibos"
@@ -229,10 +226,7 @@ const RecibosTab: React.FC<RecibosTabProps> = ({ contratoId: _contratoId }) => {
               onRefresh={refetch}
               onAudit={handleAudit}
               auditEntity="ModeloDocumento"
-            />
-          </div>
-        </div>
-      </div>
+          />
 
       {/* Modal de Documento */}
       {showDocumentoModal && (

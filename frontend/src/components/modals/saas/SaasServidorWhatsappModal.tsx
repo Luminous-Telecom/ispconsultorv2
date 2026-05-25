@@ -72,9 +72,7 @@ const SaasServidorWhatsappModal: React.FC<Props> = ({ show, onClose, skipWrapper
   ], [selectedItem, handleEdit, handleDelete]);
 
   const modalContent = (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <Table title="Servidores WhatsApp" config={{ columns, data: items, loading: isLoading, searchable: true, searchPlaceholder: '', searchField: tf.searchField || 'nome', searchFields: [{ key: 'id', label: 'ID' }, { key: 'nome', label: 'Nome' }, { key: 'numero', label: 'Número' }, { key: 'status', label: 'Status' }], sortable: true, sortColumn: tf.sortColumn, sortDirection: tf.sortDirection, striped: true, hover: true, responsive: true, selectable: true, multiSelect: false,
+    <Table title="Servidores WhatsApp" config={{ columns, data: items, loading: isLoading, searchable: true, searchPlaceholder: '', searchField: tf.searchField || 'nome', searchFields: [{ key: 'id', label: 'ID' }, { key: 'nome', label: 'Nome' }, { key: 'numero', label: 'Número' }, { key: 'status', label: 'Status' }], sortable: true, sortColumn: tf.sortColumn, sortDirection: tf.sortDirection, striped: true, hover: true, responsive: true, selectable: true, multiSelect: false,
           bulkActions: bulkActions.map(a => ({ key: a.label.toLowerCase(), label: a.label, onClick: (s: SaasServidorWhatsapp[]) => { const u = s.length > 0 ? s : (selectedItem ? [selectedItem] : []); a.action(u); }, disabled: a.disabled, variant: a.variant })),
           emptyMessage: 'Nenhum servidor cadastrado', pagination,
         }}
@@ -84,9 +82,7 @@ const SaasServidorWhatsappModal: React.FC<Props> = ({ show, onClose, skipWrapper
           onRefresh={refetch} onAudit={i => auditoria.handleAudit('SaasServidorWhatsapp', i.id)} auditEntity="SaasServidorWhatsapp"
           onPageChange={tf.setPage} onPageSizeChange={tf.setLimit} onSort={(c, d) => tf.setSort(c, d)}
           onSearch={(s, f) => setTimeout(() => { tf.setSearch(s); if (f) tf.setSearchField(f); }, 0)} onSearchFieldChange={(f) => tf.setSearchField(f)} search={tf.search}
-        />
-      </div>
-    </div>
+          />
   );
 
   const auxiliaryModals = (
