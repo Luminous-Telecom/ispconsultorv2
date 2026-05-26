@@ -12,7 +12,7 @@ import { useAuditoria } from 'hooks/useAuditoria';
 import { useConfirmModal } from 'hooks/useConfirmModal';
 import ImprimirModal from 'components/common/ImprimirModal';
 import ConfirmModal from 'components/modals/ConfirmModal';
-import { Button } from 'components/ui';
+import { DeletarButton, EditarButton, NovoButton } from 'components/ui';
 import type { IpPermitido } from 'services/ipsPermitidosService';
 
 interface IpsPermitidosListModalProps {
@@ -172,29 +172,19 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
 
   const headerActionsContent = useMemo(() => (
     <div className="d-flex gap-2 modal-header-actions">
-      <Button type="button" variant="primary" size="sm" onClick={handleCreate}>
-        {t('actions.create')}
-      </Button>
-      <Button
+      <NovoButton type="button" onClick={handleCreate} />
+      <EditarButton
         type="button"
-        variant="primary"
-        size="sm"
         onClick={handleEdit}
         disabled={selectedItems.length === 0}
-      >
-        {t('actions.edit')}
-      </Button>
-      <Button
+      />
+      <DeletarButton
         type="button"
-        variant="primary"
-        size="sm"
         onClick={handleBulkDelete}
         disabled={selectedItems.length === 0}
-      >
-        {t('actions.delete')}
-      </Button>
+      />
     </div>
-  ), [handleCreate, handleEdit, handleBulkDelete, selectedItems.length, t]);
+  ), [handleCreate, handleEdit, handleBulkDelete, selectedItems.length]);
 
   const headerActionsRef = useRef(headerActionsContent);
   headerActionsRef.current = headerActionsContent;

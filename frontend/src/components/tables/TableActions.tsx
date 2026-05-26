@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback } from 'react';
 import { TableAction, BulkAction } from './types';
-import Button from '../ui/Button';
+import { BulkActionButton } from '../ui';
 import { useConfirmModal } from 'hooks/useConfirmModal';
 import ConfirmModal from 'components/modals/ConfirmModal';
 
@@ -92,17 +92,17 @@ const TableActions = <T extends { id: number | string }>({
             : action.disabled;
 
           return (
-            <Button
+            <BulkActionButton
               key={action.key}
-              variant={action.variant || 'outline-secondary'}
-              size="sm"
-              icon={action.icon}
+              label={action.label}
+              variant={
+                (action.variant as 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark') ||
+                'secondary'
+              }
               disabled={isDisabled}
               onClick={() => handleActionClick(action)}
-              tooltip={action.label}
-            >
-              {action.label}
-            </Button>
+              title={action.label}
+            />
           );
         })}
       </div>
@@ -125,16 +125,15 @@ const TableActions = <T extends { id: number | string }>({
             : action.disabled;
 
           return (
-            <Button
+            <BulkActionButton
               key={action.key}
-              variant={action.variant || 'primary'}
-              size="sm"
-              icon={action.icon}
+              label={action.label}
+              variant={
+                (action.variant as 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark') || 'primary'
+              }
               disabled={isDisabled}
               onClick={() => handleBulkActionClick(action)}
-            >
-              {action.label}
-            </Button>
+            />
           );
         })}
       </div>

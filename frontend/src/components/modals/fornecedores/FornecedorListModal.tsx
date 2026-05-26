@@ -3,6 +3,7 @@ import { useFornecedores, useDeleteFornecedor } from 'hooks/useFornecedores';
 import { useModalSelect } from 'hooks/useModalSelect';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { useI18n } from 'contexts/I18nContext';
+import {useBulkBtn} from 'components/ui';
 import { formatDateTime } from 'utils/formatters';
 import { Fornecedor } from 'types';
 import DraggableModal from 'components/common/DraggableModal';
@@ -30,6 +31,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
   skipWrapper = false 
 }) => {
   const { t } = useI18n();
+  const bulkBtn = useBulkBtn();
   const defaultTitle = title || t('menu.suppliers');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -275,28 +277,28 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
   // Bulk actions memoizados
   const bulkActions = useMemo(() => onSelectFornecedor ? [
     {
-        label: t('buttons.cancel'),
-        variant: 'primary' as const,
+        label: bulkBtn.cancelar.label,
+        variant: bulkBtn.cancelar.variant,
         action: () => {
           clearSelection();
           onClose();
         }
       },
       {
-        label: t('buttons.select'),
-        variant: 'primary' as const,
+        label: bulkBtn.selecionar.label,
+        variant: bulkBtn.selecionar.variant,
         disabled: (selectedItems: Fornecedor[]) => selectedItems.length === 0 && !selectedItem,
         action: (selectedItems: Fornecedor[]) => handleSelect(selectedItems)
       }
     ] : [
       {
-        label: t('actions.create'),
-        variant: 'primary' as const,
+        label: bulkBtn.novo.label,
+        variant: bulkBtn.novo.variant,
         action: () => setShowCreateModal(true)
       },
       {
-        label: t('actions.edit'),
-        variant: 'primary' as const,
+        label: bulkBtn.editar.label,
+        variant: bulkBtn.editar.variant,
         disabled: (selectedItems: Fornecedor[]) => selectedItems.length === 0,
         action: (selectedItems: Fornecedor[]) => {
           const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
@@ -307,7 +309,8 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
         }
       },
       {
-        label: t('actions.delete'),
+        label: bulkBtn.deletar.label,
+        variant: bulkBtn.deletar.variant,
         disabled: (selectedItems: Fornecedor[]) => selectedItems.length === 0,
         action: async (selectedItems: Fornecedor[]) => {
           const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
@@ -317,10 +320,11 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
         if (confirmed) {
           handleDelete(item.id);
         }
-      }
-    }
-  ], [onSelectFornecedor, selectedItem, clearSelection, onClose, handleSelect, handleDelete, t]);
-
+        },
+      },
+    ],
+    [onSelectFornecedor, selectedItem, clearSelection, onClose, handleSelect, handleDelete, t, bulkBtn]
+  );
   const modalData = useMemo(() => (fornecedoresData?.data || []).filter(item => item.id != null), [fornecedoresData?.data]);
 
   const handleSearchChange = useCallback((search: string, field?: string) => {

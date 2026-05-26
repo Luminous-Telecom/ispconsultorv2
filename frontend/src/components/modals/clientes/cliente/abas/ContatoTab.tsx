@@ -5,7 +5,7 @@ import { useI18n } from 'contexts/I18nContext';
 import FormField from 'components/ui/FormField';
 import ContactFields from 'components/forms/ContactFields';
 import { ClienteTabProps } from '../types';
-import { Button } from 'components/ui';
+import { AbrirCentralAssinanteButton } from 'components/ui';
 import { DadosEmpresaService } from 'services/dadosEmpresaService';
 import { slugify } from 'utils/stringUtils';
 
@@ -82,14 +82,10 @@ const ContatoTab: React.FC<ClienteTabProps> = ({
           helpText="Senha para acesso à central do assinante. Deixe em branco para não alterar."
         />
         <div className="mt-2">
-          <Button
+          <AbrirCentralAssinanteButton
             type="button"
-            variant="secondary"
-            size="sm"
             onClick={() => window.open(centralUrl, '_blank')}
-          >
-            Abrir Central do Assinante
-          </Button>
+          />
           <div className="small text-muted mt-2">
             O cliente pode acessar a central do assinante em: <code>{centralUrl}</code>
             <br />

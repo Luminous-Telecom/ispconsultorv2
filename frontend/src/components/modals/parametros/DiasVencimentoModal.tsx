@@ -4,7 +4,7 @@ import { saasDiasVencimentoService } from 'services/saas/saasCrudService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
+import { SalvarButton } from 'components/ui';
 
 interface DiasVencimentoModalProps {
   show: boolean;
@@ -79,9 +79,7 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({
   const canSave = true;
 
   const saveButton = (
-    <Button type="button" variant="primary" size="sm" onClick={handleSave} disabled={!canSave}>
-      Salvar
-    </Button>
+    <SalvarButton type="button" onClick={handleSave} disabled={!canSave} />
   );
 
   const content = (

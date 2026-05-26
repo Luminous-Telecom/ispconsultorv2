@@ -1,7 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, FormField } from 'components/ui';
+import {
+  ConfirmarButton,
+  FormField,
+  GerarButton,
+  GerarRequisicaoCaFilhaButton,
+  NovoButton,
+  SalvarButton,
+  SincronizarButton,
+} from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
-import { useI18n } from 'contexts/I18nContext';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RpkiCaService, type RpkiCaRepository } from 'services/rpkiCaService';
 
@@ -26,7 +33,6 @@ interface AspaItem {
 }
 
 const RpkiKrillConfigModal: React.FC<RpkiKrillConfigModalProps> = ({ initialSection }) => {
-  const { t } = useI18n();
   const [aspas, setAspas] = useState<AspaItem[]>([]);
   const { success, error, warning: showWarning } = useNotificationContext();
   const queryClient = useQueryClient();
@@ -266,18 +272,15 @@ const RpkiKrillConfigModal: React.FC<RpkiKrillConfigModalProps> = ({ initialSect
               <FormField name="ca_nome" label="Nome da CA" size="sm" value={caNome} onChange={(v) => setCaNome(String(v ?? ''))} />
             </div>
             <div className="col-md-4 d-flex align-items-end">
-              <Button
+              <NovoButton
                 type="button"
-                variant="primary"
-                size="sm"
                 disabled={createCaMutation.isPending}
+                isPending={createCaMutation.isPending}
                 onClick={() => {
                   if (!caNome.trim()) return;
                   createCaMutation.mutate({ nome: caNome.trim() });
                 }}
-              >
-                {t('buttons.new')}
-              </Button>
+              />
             </div>
           </div>
           <div className="table-responsive">
@@ -327,20 +330,17 @@ const RpkiKrillConfigModal: React.FC<RpkiKrillConfigModalProps> = ({ initialSect
               />
             </div>
             <div className="col-md-2 d-flex align-items-end">
-              <Button
+              <GerarRequisicaoCaFilhaButton
                 type="button"
-                variant="primary"
-                size="sm"
                 disabled={generateChildRequestMutation.isPending}
+                isPending={generateChildRequestMutation.isPending}
                 onClick={() => {
                   if (!parentCaId.trim()) return;
                   const selectedCa = cas.find((ca) => String(ca.id) === parentCaId);
                   if (!selectedCa) return;
                   generateChildRequestMutation.mutate(Number(selectedCa.id));
                 }}
-              >
-                Gerar Requisicao da CA-filha
-              </Button>
+              />
             </div>
             <div className="col-md-6">
               <FormField
@@ -380,11 +380,10 @@ const RpkiKrillConfigModal: React.FC<RpkiKrillConfigModalProps> = ({ initialSect
               />
             </div>
             <div className="col-md-2 d-flex align-items-end">
-              <Button
+              <ConfirmarButton
                 type="button"
-                variant="primary"
-                size="sm"
                 disabled={importParentResponseMutation.isPending}
+                isPending={importParentResponseMutation.isPending}
                 onClick={() => {
                   if (!parentCaId.trim() || !parentChildRequestXml.trim() || !parentResponseXml.trim() || !parentNome.trim()) return;
                   const selectedCa = cas.find((ca) => String(ca.id) === parentCaId);
@@ -405,9 +404,7 @@ const RpkiKrillConfigModal: React.FC<RpkiKrillConfigModalProps> = ({ initialSect
                     }
                   );
                 }}
-              >
-                Confirmar
-              </Button>
+              />
             </div>
           </div>
           <div className="table-responsive">
@@ -442,11 +439,12 @@ const RpkiKrillConfigModal: React.FC<RpkiKrillConfigModalProps> = ({ initialSect
                       )}
                     </td>
                     <td>
-                      <Button
+                      <SincronizarButton
                         type="button"
                         variant="secondary"
-                        size="sm"
+                        label="Atualizar"
                         disabled={syncParentResourcesMutation.isPending}
+                        isPending={syncParentResourcesMutation.isPending}
                         onClick={() => {
                           if (!item.ca_id || !item.id) return;
                           syncParentResourcesMutation.mutate({
@@ -454,9 +452,7 @@ const RpkiKrillConfigModal: React.FC<RpkiKrillConfigModalProps> = ({ initialSect
                             parentId: Number(item.id),
                           });
                         }}
-                      >
-                        Atualizar
-                      </Button>
+                      />
                     </td>
                   </tr>
                 ))}
@@ -523,11 +519,11 @@ const RpkiKrillConfigModal: React.FC<RpkiKrillConfigModalProps> = ({ initialSect
               />
             </div>
             <div className="col-12 d-flex align-items-end">
-              <Button
+              <GerarButton
                 type="button"
-                variant="primary"
-                size="sm"
+                label="Gerar Requisicao de Repositorio"
                 disabled={!repositoryCaId.trim() || generatePublisherRequestMutation.isPending}
+                isPending={generatePublisherRequestMutation.isPending}
                 onClick={() => {
                   if (!repositoryCaId.trim()) return;
                   const caId = Number(repositoryCaId);
@@ -539,9 +535,7 @@ const RpkiKrillConfigModal: React.FC<RpkiKrillConfigModalProps> = ({ initialSect
                     ...(snippet ? { parentResponseXml: snippet } : {}),
                   });
                 }}
-              >
-                Gerar Requisicao de Repositorio
-              </Button>
+              />
             </div>
             <div className="col-md-12">
               <FormField
@@ -569,15 +563,15 @@ const RpkiKrillConfigModal: React.FC<RpkiKrillConfigModalProps> = ({ initialSect
               />
             </div>
             <div className="col-md-2 d-flex align-items-end">
-              <Button
+              <ConfirmarButton
                 type="button"
-                variant="primary"
-                size="sm"
+                label="Vincular Repositorio"
                 disabled={
                   !repositoryCaId.trim() ||
                   !repositoryResponseXml.trim() ||
                   importRepositoryResponseMutation.isPending
                 }
+                isPending={importRepositoryResponseMutation.isPending}
                 onClick={() => {
                   if (!repositoryCaId.trim() || !repositoryResponseXml.trim()) return;
                   importRepositoryResponseMutation.mutate({
@@ -585,9 +579,7 @@ const RpkiKrillConfigModal: React.FC<RpkiKrillConfigModalProps> = ({ initialSect
                     responseXml: repositoryResponseXml.trim(),
                   });
                 }}
-              >
-                Vincular Repositorio
-              </Button>
+              />
             </div>
           </div>
           <div className="table-responsive">
@@ -651,10 +643,8 @@ const RpkiKrillConfigModal: React.FC<RpkiKrillConfigModalProps> = ({ initialSect
               <FormField name="providers" label="Providers ASN (csv)" size="sm" value={providers} onChange={(v) => setProviders(String(v ?? ''))} />
             </div>
             <div className="col-md-2 d-flex align-items-end">
-              <Button
+              <SalvarButton
                 type="button"
-                variant="primary"
-                size="sm"
                 onClick={() => {
                   if (!aspaCaId.trim() || !customerAsn.trim() || !providers.trim()) return;
                   const selectedCa = cas.find((ca) => String(ca.id) === aspaCaId);
@@ -672,9 +662,7 @@ const RpkiKrillConfigModal: React.FC<RpkiKrillConfigModalProps> = ({ initialSect
                   setCustomerAsn('');
                   setProviders('');
                 }}
-              >
-                Salvar
-              </Button>
+              />
             </div>
           </div>
           <div className="table-responsive">

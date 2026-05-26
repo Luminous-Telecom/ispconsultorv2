@@ -5,7 +5,7 @@ import { useIsMobile } from 'hooks/useMediaQuery';
 import { useI18n } from 'contexts/I18nContext';
 import { ServidorEmailService, MensagemEmail } from 'services/servidorEmailService';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button, Spinner } from 'components/ui';
+import { FecharButton, LimparButton, RemoverButton, SalvarButton, Spinner } from 'components/ui';
 import { ServidorEmailForm, ServidorEmailModalProps } from './types';
 import ServidorTab from './abas/ServidorTab';
 import MensagensTab from './abas/MensagensTab';
@@ -263,33 +263,25 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
     <div className="email-header-unified">
       {/* Botões à direita - ordem padrão: Cancelar/Fechar, Salvar, Remover */}
       <div className="email-header-buttons modal-header-actions">
-        <Button
+        <FecharButton type="button" onClick={handleClose} isPending={saveServidorMutation.isPending} />
+        <SalvarButton
           type="button"
-          variant="primary"
-          size="sm"
-          onClick={handleClose}
-          disabled={saveServidorMutation.isPending}
-        >
-          {t('buttons.close')}
-        </Button>
-        <Button
-          type="button"
-          variant="primary"
-          size="sm"
           onClick={handleSaveClick}
-          isLoading={saveServidorMutation.isPending || saveMensagemMutation.isPending}
-        >
-          {t('actions.save')}
-        </Button>
-        <Button
-          type="button"
-          variant="outline-primary"
-          size="sm"
-          onClick={handleReset}
-          disabled={saveServidorMutation.isPending}
-        >
-          {(show && servidorAtivo?.data) ? t('whatsappServer.removeServer') : t('buttons.clear')}
-        </Button>
+          isPending={saveServidorMutation.isPending || saveMensagemMutation.isPending}
+        />
+        {(show && servidorAtivo?.data) ? (
+          <RemoverButton
+            type="button"
+            onClick={handleReset}
+            disabled={saveServidorMutation.isPending}
+          />
+        ) : (
+          <LimparButton
+            type="button"
+            onClick={handleReset}
+            disabled={saveServidorMutation.isPending}
+          />
+        )}
       </div>
 
       {/* Abas na parte inferior do header */}

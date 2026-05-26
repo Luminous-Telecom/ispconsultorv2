@@ -1,5 +1,5 @@
 import React, { Component, ReactNode } from 'react';
-import { Button } from '../ui';
+import { RecarregarButton, TentarNovamenteButton } from '../ui';
 
 interface Props {
   children: ReactNode;
@@ -44,19 +44,14 @@ class ErrorBoundary extends Component<Props, State> {
             Ocorreu um erro inesperado. Tente recarregar a página ou entre em contato com o suporte se o problema persistir.
           </p>
           <div className="d-flex gap-2 justify-content-center">
-            <Button
-              variant="primary"
+            <RecarregarButton
+              type="button"
               onClick={() => window.location.reload()}
-              leftIcon={<i className="bi bi-arrow-clockwise"></i>}
-            >
-              Recarregar Página
-            </Button>
-            <Button
-              variant="outline-primary"
+            />
+            <TentarNovamenteButton
+              type="button"
               onClick={() => this.setState({ hasError: false, error: undefined })}
-            >
-              Tentar Novamente
-            </Button>
+            />
           </div>
           {process.env.NODE_ENV === 'development' && this.state.error && (
             <details className="mt-4 text-start">

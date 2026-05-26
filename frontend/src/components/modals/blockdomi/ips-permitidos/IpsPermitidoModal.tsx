@@ -3,7 +3,7 @@ import { useCreateIpPermitido, useUpdateIpPermitido } from 'hooks/useIpsPermitid
 import { IpsPermitidosService, type IpPermitido } from 'services/ipsPermitidosService';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
+import { ModalFormActions } from 'components/ui';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import ClienteListModal from 'components/modals/clientes/ClienteListModal';
 
@@ -96,14 +96,11 @@ const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   const headerActions = (
-    <div className="d-flex gap-2 modal-header-actions">
-      <Button type="button" variant="outline-secondary" size="sm" onClick={onClose} disabled={isSubmitting}>
-        {t('actions.cancel')}
-      </Button>
-      <Button type="submit" form="ips-permitido-form" variant="primary" size="sm" disabled={isSubmitting}>
-        {t('buttons.save')}
-      </Button>
-    </div>
+    <ModalFormActions
+      onCancel={onClose}
+      formId="ips-permitido-form"
+      isPending={isSubmitting}
+    />
   );
 
   return (

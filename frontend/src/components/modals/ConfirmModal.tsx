@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { Button } from 'components/ui';
+import { CancelarButton, ConfirmarButton } from 'components/ui';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -192,21 +192,18 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
           {/* Footer */}
           <div className="modal-footer">
-            <Button
-              variant="outline-primary"
+            <CancelarButton
               onClick={onClose}
-              disabled={isLoading}
-            >
-              {defaultCancelText}
-            </Button>
-            <Button
+              isPending={isLoading}
+              label={cancelText ? defaultCancelText : undefined}
+            />
+            <ConfirmarButton
               variant={confirmButtonVariant}
               onClick={onConfirm}
+              isPending={isLoading}
               disabled={isLoading}
-              isLoading={isLoading}
-            >
-              {defaultConfirmText}
-            </Button>
+              label={confirmText ? defaultConfirmText : undefined}
+            />
           </div>
         </div>
       </div>

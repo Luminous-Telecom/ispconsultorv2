@@ -9,7 +9,7 @@ import { useBancoForm } from 'hooks/useBancoForm';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { Banco } from 'types';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button, Spinner } from 'components/ui';
+import { ModalFormActions, Spinner, TestarConexaoButton } from 'components/ui';
 import { InformacoesBasicasTab, ConfiguracoesApiTab } from './banco';
 import { BancoForm } from './banco/types';
 import AsaasForm from './banco/especificos/AsaasForm';
@@ -258,34 +258,18 @@ const BancoModal: React.FC<BancoModalProps> = ({
           <div className="banco-header-unified">
             {/* Botões à direita */}
             <div className="banco-header-buttons modal-header-actions d-flex align-items-center gap-2 flex-wrap">
-              <Button
-                type="button"
-                variant="primary"
-                size="sm"
-                onClick={handleCancel}
-                disabled={formHook.isSubmitting}
-              >
-                {t('buttons.cancel')}
-              </Button>
-              <Button
-                type="submit"
-                form="banco-form"
-                variant="primary"
-                size="sm"
-                isLoading={formHook.isSubmitting}
-              >
-                {t('buttons.save')}
-              </Button>
+              <ModalFormActions
+                className="d-flex gap-2"
+                onCancel={handleCancel}
+                formId="banco-form"
+                isPending={formHook.isSubmitting}
+              />
               {(formHook.effectiveBancoId != null) && (
-                <Button
+                <TestarConexaoButton
                   type="button"
-                  variant="primary"
-                  size="sm"
                   onClick={handleTestConnection}
-                  disabled={formHook.isSubmitting}
-                >
-                  {t('buttons.testConnection')}
-                </Button>
+                  isPending={formHook.isSubmitting}
+                />
               )}
             </div>
 

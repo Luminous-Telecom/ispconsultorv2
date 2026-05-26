@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
+import { ModalFormActions } from 'components/ui';
 import FormField from 'components/ui/FormField';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
@@ -252,10 +252,7 @@ const SaasContratoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, item
     <>
     <DraggableModal show={show} onClose={onClose} title={t('nav.contracts')} size="md" modalId="saas-contrato-form"
       headerActions={
-        <div className="d-flex gap-2 modal-header-actions">
-          <Button type="button" variant="primary" size="sm" onClick={onClose} disabled={isPending}>{t('buttons.cancel')}</Button>
-          <Button type="submit" form="saas-contrato-form-id" variant="primary" size="sm" disabled={isPending}>{t('buttons.save')}</Button>
-        </div>
+        <ModalFormActions onCancel={onClose} formId="saas-contrato-form-id" isPending={isPending} />
       }
     >
       <form id="saas-contrato-form-id" onSubmit={handleSubmit} className="p-3">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { PagarButton } from 'components/ui';
 import { defaultApiClient } from 'services/core';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -88,14 +89,13 @@ const BloqueioAtrasoOverlay: React.FC = () => {
           <p className="text-muted mb-4">{mensagem}</p>
           {podePagar ? (
             <>
-              <button
+              <PagarButton
                 type="button"
-                className="btn btn-primary"
+                label="Pagar fatura em atraso"
                 onClick={handlePagarFatura}
                 disabled={isLoading}
-              >
-                Pagar fatura em atraso
-              </button>
+                isPending={isLoading}
+              />
               {erroBoleto && <p className="small text-danger mt-2 mb-0">{erroBoleto}</p>}
             </>
           ) : (

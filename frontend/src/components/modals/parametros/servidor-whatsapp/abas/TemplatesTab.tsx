@@ -7,6 +7,7 @@ import { TemplateWhatsAppService, TemplateWhatsApp } from 'services/templateWhat
 import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
 import { useI18n } from 'contexts/I18nContext';
+import { useBulkBtn } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import ImprimirModal from 'components/common/ImprimirModal';
 
@@ -17,6 +18,7 @@ export interface TemplatesTabProps {
 
 const TemplatesTab: React.FC<TemplatesTabProps> = () => {
   const { t } = useI18n();
+  const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
   const { success, error: showError } = useNotificationContext();
   const auditoria = useAuditoria();
@@ -87,12 +89,12 @@ const TemplatesTab: React.FC<TemplatesTabProps> = () => {
   const bulkActions = useMemo(() => [
     {
       key: 'deletar',
-      label: t('buttons.delete'),
-      variant: 'danger' as const,
+      label: bulkBtn.deletar.label,
+      variant: bulkBtn.deletar.variant,
       disabled: (items: TemplateWhatsApp[]) => items.length === 0,
       onClick: (selectedItems: TemplateWhatsApp[]) => handleRemover(selectedItems)
     }
-  ], [handleRemover, t]);
+  ], [handleRemover, bulkBtn]);
 
   const tableColumns: TableConfig<TemplateWhatsApp>['columns'] = useMemo(() => [
     {

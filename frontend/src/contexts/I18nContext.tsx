@@ -720,6 +720,21 @@ export interface TranslationKeys {
   'buttons.select': string;
   'buttons.add': string;
   'buttons.remove': string;
+  'buttons.sync': string;
+  'buttons.createEntity': string;
+  'buttons.validate': string;
+  'buttons.apply': string;
+  'agent.install': string;
+
+  // RPKI
+  'rpki.generateChildCaRequest': string;
+  'messages.tryAgain': string;
+  'central.openPortal': string;
+  'central.sendPassword': string;
+  'central.changePassword': string;
+  'central.copyBarcode': string;
+  'central.copyPix': string;
+  'central.logout': string;
 
   // Form Labels
   'form.name': string;
@@ -2293,6 +2308,19 @@ const translations: Translations = {
     'buttons.select': 'Selecionar',
     'buttons.add': 'Adicionar',
     'buttons.remove': 'Remover',
+    'buttons.sync': 'Sincronizar',
+    'buttons.createEntity': 'Criar ${entity}',
+    'buttons.validate': 'Validar',
+    'buttons.apply': 'Aplicar',
+    'agent.install': 'Instalar Agente',
+    'rpki.generateChildCaRequest': 'Gerar Requisicao da CA-filha',
+    'messages.tryAgain': 'Tentar Novamente',
+    'central.openPortal': 'Abrir Central do Assinante',
+    'central.sendPassword': 'Enviar Senha',
+    'central.changePassword': 'Alterar Senha',
+    'central.copyBarcode': 'Copiar Código de Barras',
+    'central.copyPix': 'Copiar Código PIX',
+    'central.logout': 'Sair',
 
     // Form Labels
     'form.name': 'Nome',
@@ -3859,6 +3887,19 @@ const translations: Translations = {
     'buttons.select': 'Select',
     'buttons.add': 'Add',
     'buttons.remove': 'Remove',
+    'buttons.sync': 'Sync',
+    'buttons.createEntity': 'Create ${entity}',
+    'buttons.validate': 'Validate',
+    'buttons.apply': 'Apply',
+    'agent.install': 'Install Agent',
+    'rpki.generateChildCaRequest': 'Generate Child CA Request',
+    'messages.tryAgain': 'Try Again',
+    'central.openPortal': 'Open Subscriber Portal',
+    'central.sendPassword': 'Send Password',
+    'central.changePassword': 'Change Password',
+    'central.copyBarcode': 'Copy Barcode',
+    'central.copyPix': 'Copy PIX Code',
+    'central.logout': 'Log out',
 
     // Form Labels
     'form.name': 'Name',
@@ -5427,6 +5468,19 @@ const translations: Translations = {
     'buttons.select': 'Seleccionar',
     'buttons.add': 'Agregar',
     'buttons.remove': 'Remover',
+    'buttons.sync': 'Sincronizar',
+    'buttons.createEntity': 'Crear ${entity}',
+    'buttons.validate': 'Validar',
+    'buttons.apply': 'Aplicar',
+    'agent.install': 'Instalar Agente',
+    'rpki.generateChildCaRequest': 'Generar solicitud de CA hija',
+    'messages.tryAgain': 'Intentar de Nuevo',
+    'central.openPortal': 'Abrir Portal del Suscriptor',
+    'central.sendPassword': 'Enviar Contraseña',
+    'central.changePassword': 'Cambiar Contraseña',
+    'central.copyBarcode': 'Copiar Código de Barras',
+    'central.copyPix': 'Copiar Código PIX',
+    'central.logout': 'Salir',
 
     // Form Labels
     'form.name': 'Nombre',

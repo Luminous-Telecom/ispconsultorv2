@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useIPv4, useCreateIPv4, useUpdateIPv4 } from 'hooks/useIPv4';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button, FormField, AtivoInativoField } from 'components/ui';
+import { FormField, AtivoInativoField, ModalFormActions } from 'components/ui';
 import { isValidIPv4 } from 'utils/validators';
 
 interface IPv4ModalProps {
@@ -77,8 +77,8 @@ const IPv4Modal: React.FC<IPv4ModalProps> = ({
     }
   }, [show, isEditing, ipv4Data]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
 
     const newErrors: Record<string, string> = {};
     if (!formData.ip.trim()) {
@@ -126,26 +126,12 @@ const IPv4Modal: React.FC<IPv4ModalProps> = ({
       title={isEditing ? t('blockdomi.editIPv4') : t('blockdomi.createIPv4')}
       size="lg"
       headerActions={
-        <div className="d-flex gap-2 modal-header-actions">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={onClose}
-            disabled={isSubmitting}
-          >
-            {t('buttons.cancel')}
-          </Button>
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-          >
-            {t('buttons.save')}
-          </Button>
-        </div>
+        <ModalFormActions
+          onCancel={onClose}
+          isPending={isSubmitting}
+          saveType="button"
+          onSave={handleSubmit}
+        />
       }
     >
       <div style={{ padding: '16px' }}>

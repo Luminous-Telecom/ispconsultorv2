@@ -6,7 +6,7 @@ import { useNotificationContext } from 'components/notifications/NotificationPro
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { usePlanoModulos } from 'hooks/usePlanoModulos';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button, FormField } from 'components/ui';
+import { DeletarButton, FormField, ModalFormActions, NovoButton } from 'components/ui';
 import CronFieldSection from './CronFieldSection';
 import { useI18n } from 'contexts/I18nContext';
 import {
@@ -245,21 +245,17 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
       modalId="saas-rotina-agendada-form-modal"
       headerActions={
         <div className="d-flex gap-2 modal-header-actions">
-          <Button type="button" variant="primary" size="sm" onClick={handleClose} disabled={isSaving}>
-            {t('buttons.cancel')}
-          </Button>
-          <Button type="submit" form={formId} variant="primary" size="sm" disabled={isSaving}>
-            {t('buttons.save')}
-          </Button>
+          <ModalFormActions
+            className="d-flex gap-2"
+            onCancel={handleClose}
+            formId={formId}
+            isPending={isSaving}
+          />
           {!isEditMode && (
-            <Button type="button" variant="primary" size="sm" onClick={handleNovo} disabled={isSaving}>
-              {t('actions.new')}
-            </Button>
+            <NovoButton type="button" onClick={handleNovo} isPending={isSaving} />
           )}
           {isEditMode && (
-            <Button type="button" variant="primary" size="sm" onClick={handleDelete} disabled={isSaving}>
-              {t('buttons.delete')}
-            </Button>
+            <DeletarButton type="button" onClick={handleDelete} isPending={isSaving} />
           )}
         </div>
       }

@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
+import { FecharButton, SalvarButton, TestarConexaoButton } from 'components/ui';
 import NFSeConfigSection from './NFSeConfigSection';
 
 interface NFSeModalProps {
@@ -56,37 +56,20 @@ const NFSeModal: React.FC<NFSeModalProps> = ({
       headerActions={
         <div className="d-flex gap-2 modal-header-actions">
           {hasTestButton && (
-            <Button
+            <TestarConexaoButton
               type="button"
-              variant="outline-primary"
-              size="sm"
               onClick={handleTestClick}
               disabled={!canTest || isTesting || !handleTestRef.current}
-              isLoading={isTesting}
-            >
-              {isTesting ? 'Testando...' : 'Teste'}
-            </Button>
+              isPending={isTesting}
+            />
           )}
-          <Button
+          <SalvarButton
             type="submit"
             form="nfse-config-form"
-            variant="primary"
-            size="sm"
-            leftIcon={<i className="bi bi-check-lg"></i>}
             onClick={handleSaveClick}
-            isLoading={isSaving}
-          >
-            Salvar
-          </Button>
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            leftIcon={<i className="bi bi-x-lg"></i>}
-            onClick={onClose}
-          >
-            Fechar
-          </Button>
+            isPending={isSaving}
+          />
+          <FecharButton type="button" onClick={onClose} />
         </div>
       }
     >

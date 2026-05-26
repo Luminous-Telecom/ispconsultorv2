@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button, FormField } from 'components/ui';
+import { CancelarButton, CopiarButton, FormField, NovoButton } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
-import { useI18n } from 'contexts/I18nContext';
 import { RpkiCaService } from 'services/rpkiCaService';
 
 interface RpkiRepositoryCreateModalProps {
@@ -19,7 +18,6 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
   allowedCaIds,
   initialCaId,
 }) => {
-  const { t } = useI18n();
   const [caId, setCaId] = useState('');
   const [parentId, setParentId] = useState('');
   const [publisherRequestXml, setPublisherRequestXml] = useState('');
@@ -159,14 +157,10 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
                 value={publisherRequestXml}
                 onChange={(v) => setPublisherRequestXml(String(v ?? ''))}
               />
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
+              <CopiarButton
+                iconOnly
                 style={{ position: 'absolute', top: 30, right: 18, zIndex: 2, minWidth: 36, padding: '4px 8px' }}
                 disabled={!publisherRequestXml.trim()}
-                title="Copiar"
-                aria-label="Copiar publisher_request"
                 onClick={async () => {
                   if (!publisherRequestXml.trim()) return;
                   try {
@@ -176,9 +170,7 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
                     error('Não foi possível copiar o publisher_request');
                   }
                 }}
-              >
-                <i className="bi bi-clipboard"></i>
-              </Button>
+              />
             </div>
           </div>
           <div className="col-12">
@@ -194,23 +186,18 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
           </div>
         </div>
         <div className="d-flex justify-content-end gap-2 mt-3">
-          <Button type="button" variant="secondary" size="sm" onClick={onClose} disabled={importMutation.isPending}>
-            Cancelar
-          </Button>
-          <Button
+          <CancelarButton type="button" onClick={onClose} isPending={importMutation.isPending} />
+          <NovoButton
             type="button"
-            variant="primary"
-            size="sm"
             disabled={importMutation.isPending || !caId.trim() || !parentId.trim() || !repositoryResponseXml.trim()}
+            isPending={importMutation.isPending}
             onClick={() =>
               importMutation.mutate({
                 caId: Number(caId),
                 responseXml: repositoryResponseXml.trim(),
               })
             }
-          >
-            {t('buttons.new')}
-          </Button>
+          />
         </div>
       </div>
     </DraggableModal>

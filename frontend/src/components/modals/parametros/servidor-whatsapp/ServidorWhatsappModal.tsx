@@ -6,7 +6,7 @@ import { useIsMobile } from 'hooks/useMediaQuery';
 import { ServidorWhatsAppService, MensagemWhatsApp } from 'services/servidorWhatsAppService';
 import { defaultApiClient } from 'services/core';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button, Spinner } from 'components/ui';
+import { FecharButton, LimparButton, RemoverButton, SalvarButton, Spinner } from 'components/ui';
 import { ServidorWhatsAppForm, ServidorWhatsappModalProps } from './types';
 import ServidorTab from './abas/ServidorTab';
 import MensagensTab from './abas/MensagensTab';
@@ -341,19 +341,9 @@ const saveMensagemMutation = useMutation({
     <div className="whatsapp-header-unified">
       {/* Botões à direita - ordem padrão: Fechar, Salvar, Remover */}
       <div className="whatsapp-header-buttons modal-header-actions">
-        <Button
+        <FecharButton type="button" onClick={handleClose} isPending={saveServidorMutation.isPending} />
+        <SalvarButton
           type="button"
-          variant="primary"
-          size="sm"
-          onClick={handleClose}
-          disabled={saveServidorMutation.isPending}
-        >
-          {t('buttons.close')}
-        </Button>
-        <Button
-          type="button"
-          variant="primary"
-          size="sm"
           onClick={(e) => {
             if (activeTab === 'servidor') {
               const form = document.getElementById('servidor-whatsapp-form') as HTMLFormElement;
@@ -364,19 +354,21 @@ const saveMensagemMutation = useMutation({
             }
           }}
           disabled={activeTab === 'templates' || activeTab === 'templates_meta'}
-          isLoading={saveServidorMutation.isPending || saveMensagemMutation.isPending}
-        >
-          {t('actions.save')}
-        </Button>
-        <Button
-          type="button"
-          variant="outline-primary"
-          size="sm"
-          onClick={handleReset}
-          disabled={saveServidorMutation.isPending}
-        >
-          {servidorAtivo?.data ? t('whatsappServer.removeServer') : t('buttons.clear')}
-        </Button>
+          isPending={saveServidorMutation.isPending || saveMensagemMutation.isPending}
+        />
+        {servidorAtivo?.data ? (
+          <RemoverButton
+            type="button"
+            onClick={handleReset}
+            disabled={saveServidorMutation.isPending}
+          />
+        ) : (
+          <LimparButton
+            type="button"
+            onClick={handleReset}
+            disabled={saveServidorMutation.isPending}
+          />
+        )}
       </div>
 
       {/* Abas na parte inferior do header */}

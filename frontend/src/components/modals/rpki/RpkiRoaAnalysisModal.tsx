@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
+import { CancelarButton, ConfirmarButton } from 'components/ui';
 import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
 
@@ -98,18 +98,12 @@ const RpkiRoaAnalysisModal: React.FC<RpkiRoaAnalysisModalProps> = ({
       className="no-padding list-modal-no-body-scroll"
       headerActions={
         <div className="d-flex gap-2 modal-header-actions">
-          <Button type="button" variant="secondary" size="sm" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button
+          <CancelarButton type="button" onClick={onClose} />
+          <ConfirmarButton
             type="button"
-            variant="primary"
-            size="sm"
             disabled={rows.length === 0 || !hasApplicableSelection}
             onClick={() => onConfirm(selectedRows)}
-          >
-            Confirmar
-          </Button>
+          />
         </div>
       }
     >

@@ -3,6 +3,7 @@ import { useAgents, useDeleteAgent, useTestAgent, useUpdateAgent } from 'hooks/u
 import { useModalSelect } from 'hooks/useModalSelect';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useI18n } from 'contexts/I18nContext';
+import {useBulkBtn} from 'components/ui';
 import { Agent } from 'types';
 import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
@@ -35,6 +36,7 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
   onSelectAgent,
 }) => {
   const { t } = useI18n();
+  const bulkBtn = useBulkBtn();
   const { success } = useNotificationContext();
   const auditoria = useAuditoria();
 
@@ -195,8 +197,8 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
     if (onSelectAgent) {
       return [
         {
-          label: t('actions.cancel'),
-          variant: 'primary' as const,
+          label: bulkBtn.cancelar.label,
+          variant: bulkBtn.cancelar.variant,
           requiresSelection: false,
           onClick: () => {
             clearSelection();
@@ -204,8 +206,8 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
           },
         },
         {
-          label: t('buttons.select'),
-          variant: 'primary' as const,
+          label: bulkBtn.selecionar.label,
+          variant: bulkBtn.selecionar.variant,
           disabled: (items: Agent[]) => items.length === 0 && !selectedItem,
           onClick: (items: Agent[]) => handleConfirmSelect(items),
         },
@@ -213,14 +215,14 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
     }
     return [
     {
-      label: 'Novo',
-      variant: 'primary' as const,
+      label: bulkBtn.novo.label,
+      variant: bulkBtn.novo.variant,
       requiresSelection: false,
       onClick: () => setShowCreateModal(true),
     },
     {
-      label: 'Editar',
-      variant: 'primary' as const,
+      label: bulkBtn.editar.label,
+      variant: bulkBtn.editar.variant,
       disabled: (items: Agent[]) => items.length !== 1,
       onClick: (items: Agent[]) => {
         if (items.length !== 1) return;
@@ -229,8 +231,8 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
       },
     },
     {
-      label: 'Deletar',
-      variant: 'primary' as const,
+      label: bulkBtn.deletar.label,
+      variant: bulkBtn.deletar.variant,
       disabled: (items: Agent[]) => items.length !== 1,
       onClick: async (items: Agent[]) => {
         if (items.length !== 1) return;
@@ -280,9 +282,8 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
       ],
     },
   ];
-  }, [
+  }, [bulkBtn,
     onSelectAgent,
-    t,
     clearSelection,
     onClose,
     selectedItem,

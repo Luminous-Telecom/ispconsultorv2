@@ -1,3 +1,4 @@
+/** Primitivo interno — use apenas `components/ui/buttons`. Não exportar via `components/ui`. */
 import React from 'react';
 import { ButtonHTMLAttributes } from 'react';
 import { useIsMobile } from 'hooks/useMediaQuery';

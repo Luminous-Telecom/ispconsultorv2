@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NotificationState, NotificationAction } from './types';
-import Button from '../ui/Button';
+import { BulkActionButton, FecharButton } from '../ui';
 import { usePrefersRealHover } from '../../hooks/usePrefersRealHover';
 
 interface NotificationProps {
@@ -166,15 +166,16 @@ const Notification: React.FC<NotificationProps> = ({
     return (
       <div className="notification-actions">
         {config.actions.map(action => (
-          <Button
+          <BulkActionButton
             key={action.key}
-            variant={action.variant || 'outline-primary'}
+            label={action.label}
+            variant={
+              action.variant === 'outline-primary' ? 'primary' :
+              (action.variant as 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark') || 'primary'
+            }
             size={action.size || 'sm'}
-            icon={action.icon}
             onClick={() => handleActionClick(action)}
-          >
-            {action.label}
-          </Button>
+          />
         ))}
       </div>
     );
@@ -281,15 +282,10 @@ const Notification: React.FC<NotificationProps> = ({
         {/* Botão de fechar */}
         {config.dismissible !== false && (
           <div className="notification-close">
-            <Button
-              variant="outline-primary"
+            <FecharButton
               size="sm"
-              icon="x"
               onClick={handleClose}
-              tooltip="Fechar"
-            >
-              {''}
-            </Button>
+            />
           </div>
         )}
       </div>

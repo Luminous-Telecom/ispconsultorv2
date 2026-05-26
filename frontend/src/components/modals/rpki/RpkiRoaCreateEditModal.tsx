@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button, FormField } from 'components/ui';
-import { useI18n } from 'contexts/I18nContext';
+import { FormField } from 'components/ui';
+import { CancelarButton, NovoButton, SalvarButton } from 'components/ui/buttons/buttons';
 import { RpkiCaService } from 'services/rpkiCaService';
 import { normalizeDateOnlyForInput } from 'utils/formatters';
 
@@ -67,8 +67,6 @@ const RpkiRoaCreateEditModal: React.FC<RpkiRoaCreateEditModalProps> = ({
   cas,
   onSuccess,
 }) => {
-  const { t } = useI18n();
-
   const isEditing = mode === 'edit';
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -204,7 +202,6 @@ const RpkiRoaCreateEditModal: React.FC<RpkiRoaCreateEditModalProps> = ({
   };
 
   const title = isEditing ? 'Editar ROA' : 'Novo ROA';
-  const saveLabel = isEditing ? t('buttons.save') : t('buttons.new');
 
   return (
     <DraggableModal
@@ -214,26 +211,24 @@ const RpkiRoaCreateEditModal: React.FC<RpkiRoaCreateEditModalProps> = ({
       size="lg"
       headerActions={
         <div className="d-flex gap-2 modal-header-actions">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={onClose}
-            disabled={isSubmitting}
-          >
-            {t('buttons.cancel')}
-          </Button>
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            onClick={() => {
-              void handleSubmit();
-            }}
-            disabled={isSubmitting}
-          >
-            {saveLabel}
-          </Button>
+          <CancelarButton type="button" onClick={onClose} isPending={isSubmitting} />
+          {isEditing ? (
+            <SalvarButton
+              type="button"
+              onClick={() => {
+                void handleSubmit();
+              }}
+              isPending={isSubmitting}
+            />
+          ) : (
+            <NovoButton
+              type="button"
+              onClick={() => {
+                void handleSubmit();
+              }}
+              isPending={isSubmitting}
+            />
+          )}
         </div>
       }
     >

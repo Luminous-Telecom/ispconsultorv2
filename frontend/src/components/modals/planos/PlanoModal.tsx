@@ -3,7 +3,7 @@ import { usePlanoForm } from 'hooks/usePlanoForm';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button, Spinner } from 'components/ui';
+import { ModalFormActions, Spinner } from 'components/ui';
 import { InformacoesBasicasTab, ServicosObservacoesTab } from './plano';
 
 interface PlanoModalProps {
@@ -102,26 +102,12 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
         !(formHook.isLoadingPlano && formHook.isEditing) ? (
           <div className="plano-header-unified">
             {/* Botões à direita */}
-            <div className="plano-header-buttons modal-header-actions">
-              <Button
-                type="button"
-                variant="primary"
-                size="sm"
-                onClick={onClose}
-                disabled={formHook.isSubmitting}
-              >
-                {t('buttons.cancel')}
-              </Button>
-              <Button
-                type="submit"
-                form={formHook.isEditing ? 'plano-edit-form' : 'plano-create-form'}
-                variant="primary"
-                size="sm"
-                isLoading={formHook.isSubmitting}
-              >
-                {t('buttons.save')}
-              </Button>
-            </div>
+            <ModalFormActions
+              className="plano-header-buttons modal-header-actions d-flex gap-2"
+              onCancel={onClose}
+              formId={formHook.isEditing ? 'plano-edit-form' : 'plano-create-form'}
+              isPending={formHook.isSubmitting}
+            />
 
             {/* Abas na parte inferior do header */}
             <div className="plano-header-tabs">

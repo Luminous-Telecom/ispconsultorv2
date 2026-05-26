@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Agent } from 'types';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
+import { CancelarButton, CopiarButton, FecharButton, GerarButton, InstalarAgenteButton } from 'components/ui';
+import { useI18n } from 'contexts/I18nContext';
 import FormField from 'components/ui/FormField';
 import { defaultApiClient } from 'services/core';
 import { AgentService } from 'services/agentService';
@@ -26,6 +27,7 @@ const REQUIREMENTS = [
 const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
   show, onClose, agent, onSuccess,
 }) => {
+  const { t } = useI18n();
   const [mode, setMode] = useState<InstallMode>('auto');
 
   // ── modo auto ──────────────────────────────────────────────────────────────
@@ -212,28 +214,24 @@ const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
       <div className="banco-header-buttons modal-header-actions d-flex align-items-center gap-2 flex-wrap">
         {mode === 'auto' && status === 'idle' && (
           <>
-            <Button type="button" variant="secondary" size="sm" onClick={handleClose}>Cancelar</Button>
-            <Button type="button" variant="primary"   size="sm" onClick={handleInstall}>
-              Instalar Agente
-            </Button>
+            <CancelarButton type="button" onClick={handleClose} />
+            <InstalarAgenteButton type="button" onClick={handleInstall} />
           </>
         )}
         {mode === 'auto' && isRunning && (
-          <Button type="button" variant="danger" size="sm" onClick={handleClose}>Cancelar</Button>
+          <CancelarButton type="button" variant="danger" onClick={handleClose} />
         )}
         {mode === 'auto' && isDone && (
-          <Button type="button" variant="secondary" size="sm" onClick={handleClose}>Fechar</Button>
+          <FecharButton type="button" onClick={handleClose} />
         )}
         {mode === 'manual' && !generatedCmd && (
           <>
-            <Button type="button" variant="secondary" size="sm" onClick={handleClose}>Cancelar</Button>
-            <Button type="button" variant="primary" size="sm" onClick={handleGenerateCmd} disabled={generating}>
-              {generating ? 'Gerando...' : 'Gerar Comando'}
-            </Button>
+            <CancelarButton type="button" onClick={handleClose} />
+            <GerarButton type="button" onClick={handleGenerateCmd} isPending={generating} disabled={generating} />
           </>
         )}
         {mode === 'manual' && generatedCmd && (
-          <Button type="button" variant="secondary" size="sm" onClick={handleClose}>Fechar</Button>
+          <FecharButton type="button" onClick={handleClose} />
         )}
       </div>
 
@@ -389,24 +387,11 @@ const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
               }}>
                 {generatedCmd}
               </span>
-              <button
-                type="button"
-                title={cmdCopied ? 'Copiado!' : 'Copiar'}
+              <CopiarButton
+                iconOnly
                 onClick={handleCopy}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: cmdCopied ? 'var(--bs-success)' : 'var(--text-secondary)',
-                  padding: '2px 4px',
-                  flexShrink: 0,
-                  fontSize: '15px',
-                  lineHeight: 1,
-                  transition: 'color 0.2s',
-                }}
-              >
-                <i className={cmdCopied ? 'bi bi-check-lg' : 'bi bi-copy'} />
-              </button>
+                label={cmdCopied ? t('blockdomi.copiedToClipboard') : undefined}
+              />
             </div>
             <div className="alert alert-warning small mt-3 py-2 mb-0" style={{ fontSize: '11px' }}>
               <strong>Atenção:</strong> este comando inclui o token do agente. Não compartilhe em locais públicos.

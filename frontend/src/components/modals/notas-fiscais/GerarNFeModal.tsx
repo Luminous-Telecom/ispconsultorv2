@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
+import { CancelarButton, GerarNFSeAvulsaButton } from 'components/ui';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useI18n } from 'contexts/I18nContext';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
@@ -180,24 +180,12 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
       modalId="gerar-nfe-modal-financeiro"
       headerActions={
         <div className="d-flex gap-2 modal-header-actions">
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            onClick={onClose}
-            disabled={isSubmitting}
-          >
-            {t('buttons.cancel')}
-          </Button>
-          <Button
+          <CancelarButton type="button" onClick={onClose} isPending={isSubmitting} />
+          <GerarNFSeAvulsaButton
             type="submit"
             form="nfe-form"
-            variant="primary"
-            size="sm"
-            isLoading={isSubmitting}
-          >
-            {t('buttons.generate')} NFS-e
-          </Button>
+            isPending={isSubmitting}
+          />
         </div>
       }
     >

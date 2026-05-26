@@ -11,6 +11,7 @@ import SearchBar from '../ui/SearchBar';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useTableHeader } from 'contexts/TableHeaderContext';
 import { useI18n } from 'contexts/I18nContext';
+import { AuditarButton, BulkActionButton, RecarregarButton } from 'components/ui';
 
 // Calcula minWidth dinâmico a partir dos labels do badge (~7px/char + 24px padding)
 function getMinWidthFromBadgeLabels(labels: string[]): number {
@@ -1525,19 +1526,20 @@ function Table<T extends { id: number | string }>({
                 const isOpen = openDropdown === index;
                 return (
                   <div key={index} className="dropdown table-dropdown-relative">
-                    <button
-                      type="button"
-                      className={`btn btn-sm btn-${bulkAction.variant || 'primary'} dropdown-toggle table-flex-shrink-0 dropdown-toggle-custom`}
+                    <BulkActionButton
+                      label={bulkAction.label}
+                      variant={
+                        (bulkAction.variant as 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark') || 'primary'
+                      }
+                      dropdown
+                      disabled={isDisabled}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         setOpenDropdown(isOpen ? null : index);
                       }}
-                      disabled={isDisabled}
                       aria-expanded={isOpen}
-                    >
-                      {bulkAction.label}
-                    </button>
+                    />
                     {isOpen && (
                       <ul className="dropdown-menu show">
                         {bulkAction.dropdown.map((item, itemIndex) => {
@@ -1571,19 +1573,19 @@ function Table<T extends { id: number | string }>({
               }
 
               return (
-                <button
-                  type="button"
+                <BulkActionButton
                   key={index}
-                  className={`btn btn-sm btn-${bulkAction.variant || 'primary'} table-flex-shrink-0`}
-                  onClick={(_event) => {
+                  label={bulkAction.label}
+                  variant={
+                    (bulkAction.variant as 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark') || 'primary'
+                  }
+                  disabled={isDisabled}
+                  onClick={() => {
                     if (!isDisabled && bulkAction.onClick) {
                       drainPossiblePromise(bulkAction.onClick(state.selectedItems));
                     }
                   }}
-                  disabled={isDisabled}
-                >
-                  {bulkAction.label}
-                </button>
+                />
               );
             })}
               </div>
@@ -1784,24 +1786,16 @@ function Table<T extends { id: number | string }>({
           {/* Botões de reload e auditar à direita */}
           <div className="d-flex align-items-center gap-2">
             {onAudit && auditEntity && (
-              <button
-                type="button"
-                className="btn btn-outline-primary btn-sm"
+              <AuditarButton
                 onClick={handleAuditClick}
                 disabled={loading || state.selectedItems.length !== 1}
                 title={state.selectedItems.length === 1 ? "Auditar registro selecionado" : "Selecione exatamente 1 registro para auditar"}
-              >
-                <i className="bi bi-shield-check"></i> {t('buttons.audit')}
-              </button>
+              />
             )}
-            <button
-              type="button"
-              className="btn btn-outline-primary btn-sm"
+            <RecarregarButton
               onClick={onRefresh}
-              title="Recarregar dados"
-            >
-              <i className="bi bi-arrow-clockwise"></i> {t('ui.refresh')}
-            </button>
+              title={t('ui.refresh')}
+            />
           </div>
         </div>
       </div>

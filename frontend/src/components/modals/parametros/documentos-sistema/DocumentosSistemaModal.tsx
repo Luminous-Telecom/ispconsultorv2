@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef, useLayoutEffe
 import { useSelectedEntity } from 'hooks/useSelectedEntity';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
+import { CancelarButton } from 'components/ui';
 import { DocumentoModal } from '../documento';
 import { DocumentosSistemaModalProps, TipoDocumento, DocumentoUnion } from './types';
 import DocumentoTab from './abas/DocumentoTab';
@@ -42,14 +42,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
     <div className="sistema-header-unified">
       {/* Botões à direita */}
       <div className="sistema-header-buttons modal-header-actions">
-        <Button
-          type="button"
-          variant="primary"
-          size="sm"
-          onClick={handleClose}
-        >
-          Cancelar
-        </Button>
+        <CancelarButton type="button" onClick={handleClose} />
       </div>
       {/* Abas na parte inferior do header */}
       <div className="sistema-header-tabs">

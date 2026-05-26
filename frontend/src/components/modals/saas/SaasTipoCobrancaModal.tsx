@@ -4,6 +4,7 @@ import { useTableFilters } from 'hooks/useTableFilters';
 import { useModalSelect } from 'hooks/useModalSelect';
 import { useAuditoria } from 'hooks/useAuditoria';
 import { useI18n } from 'contexts/I18nContext';
+import { useBulkBtn } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
@@ -21,6 +22,7 @@ const PERIODICIDADE_LABEL: Record<string, string> = {
 
 const SaasTipoCobrancaModal: React.FC<Props> = ({ show, onClose, skipWrapper = false }) => {
   const { t } = useI18n();
+  const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
   const { error } = useNotificationContext();
   const auditoria = useAuditoria();
@@ -67,10 +69,10 @@ const SaasTipoCobrancaModal: React.FC<Props> = ({ show, onClose, skipWrapper = f
   ], [t]);
 
   const bulkActions = useMemo(() => [
-    { label: t('actions.create'), variant: 'primary' as const, action: () => setShowCreate(true) },
-    { label: t('actions.edit'), variant: 'primary' as const, disabled: (s: SaasTipoCobranca[]) => s.length === 0 && !selectedItem, action: handleEdit },
-    { label: t('actions.delete'), disabled: (s: SaasTipoCobranca[]) => s.length === 0 && !selectedItem, action: handleDelete },
-  ], [selectedItem, handleEdit, handleDelete, t]);
+    { label: bulkBtn.novo.label, variant: bulkBtn.novo.variant, action: () => setShowCreate(true) },
+    { label: bulkBtn.editar.label, variant: bulkBtn.editar.variant, disabled: (s: SaasTipoCobranca[]) => s.length === 0 && !selectedItem, action: handleEdit },
+    { label: bulkBtn.deletar.label, variant: bulkBtn.deletar.variant, disabled: (s: SaasTipoCobranca[]) => s.length === 0 && !selectedItem, action: handleDelete },
+  ], [selectedItem, handleEdit, handleDelete, bulkBtn]);
 
   const modalContent = (
     <Table title={t('modal.billingType')} config={{

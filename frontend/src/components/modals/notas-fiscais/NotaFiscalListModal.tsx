@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useI18n } from 'contexts/I18nContext';
+import { useBulkBtn } from 'components/ui';
 import { useNotasFiscais } from 'hooks/useNotasFiscais';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { useAuditoria } from 'hooks/useAuditoria';
@@ -27,6 +28,7 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
   skipWrapper = false
 }) => {
   const { t } = useI18n();
+  const bulkBtn = useBulkBtn();
   const { error, success } = useNotificationContext();
   const defaultTitle = title || t('menu.invoices');
   const auditoria = useAuditoria();
@@ -271,10 +273,10 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
 
   const bulkActions = useMemo(() => [
     {
-      label: t('buttons.print'),
-      variant: 'primary' as const,
+      label: bulkBtn.imprimir.label,
+      variant: bulkBtn.imprimir.variant,
       disabled: (selectedItems: NotaFiscal[]) => selectedItems.length === 0,
-      action: (selectedItems: NotaFiscal[]) => handleImprimir(selectedItems)
+      action: (selectedItems: NotaFiscal[]) => handleImprimir(selectedItems),
     },
     {
       label: t('modal.cancelInvoice'),
@@ -283,9 +285,9 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
         const notaFiscal = selectedItems[0];
         return notaFiscal.status !== 'AUTORIZADA';
       },
-      action: (selectedItems: NotaFiscal[]) => handleCancelar(selectedItems)
-    }
-  ], [handleImprimir, handleCancelar, t]);
+      action: (selectedItems: NotaFiscal[]) => handleCancelar(selectedItems),
+    },
+  ], [bulkBtn, handleImprimir, handleCancelar, t]);
 
   const modalData = useMemo(() => notasFiscaisData?.data || [], [notasFiscaisData?.data]);
 

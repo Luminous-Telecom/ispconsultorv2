@@ -4,7 +4,7 @@ import { useNotificationContext } from 'components/notifications/NotificationPro
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useClienteArquivos } from 'hooks/useClienteArquivos';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
+import { ModalFormActions } from 'components/ui';
 import FormField from 'components/ui/FormField';
 import { FormValue } from 'types/common';
 
@@ -62,8 +62,8 @@ const AdicionarArquivoModal: React.FC<AdicionarArquivoModalProps> = ({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
 
     if (!arquivo) {
       error(t('messages.selectFile'));
@@ -99,24 +99,13 @@ const AdicionarArquivoModal: React.FC<AdicionarArquivoModalProps> = ({
   };
 
   const headerActions = (
-    <div className="d-flex gap-2 modal-header-actions">
-      <Button
-        variant="primary"
-        onClick={onClose}
-        disabled={isSubmitting}
-      >
-        {t('actions.cancel')}
-      </Button>
-      <Button
-        variant="primary"
-        onClick={handleSubmit}
-        disabled={isSubmitting}
-        isLoading={isSubmitting}
-        form="adicionar-arquivo-form"
-      >
-        {t('actions.save')}
-      </Button>
-    </div>
+    <ModalFormActions
+      onCancel={onClose}
+      formId="adicionar-arquivo-form"
+      isPending={isSubmitting}
+      saveType="button"
+      onSave={handleSubmit}
+    />
   );
 
   return (

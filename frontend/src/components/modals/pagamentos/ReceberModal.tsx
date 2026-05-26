@@ -7,7 +7,7 @@ import { useI18n } from 'contexts/I18nContext';
 import { formatDate } from 'utils/formatters';
 import { receberSchema, ReceberFormData } from 'schemas/receber.schema';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
+import { CancelarButton, ReceberButton } from 'components/ui';
 import FormField from 'components/ui/FormField';
 
 interface ReceberModalProps {
@@ -189,23 +189,8 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
         </div>
 
         <div className="d-flex justify-content-end gap-2 mt-4">
-          <Button
-            type="button"
-            variant="primary"
-            leftIcon={<i className="bi bi-x-lg"></i>}
-            onClick={onClose}
-            disabled={marcarPagoMutation.isPending}
-          >
-            {t('actions.cancel')}
-          </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            leftIcon={<i className="bi bi-check-lg"></i>}
-            isLoading={marcarPagoMutation.isPending}
-          >
-            {t('actions.receive')}
-          </Button>
+          <CancelarButton type="button" onClick={onClose} isPending={marcarPagoMutation.isPending} />
+          <ReceberButton type="submit" isPending={marcarPagoMutation.isPending} />
         </div>
       </form>
     </DraggableModal>

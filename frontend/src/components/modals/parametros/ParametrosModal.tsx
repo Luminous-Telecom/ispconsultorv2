@@ -7,7 +7,7 @@ import { useIsMobile } from 'hooks/useMediaQuery';
 import { ParametrosService } from 'services/parametrosService';
 import { useFormReset } from 'hooks/useFormReset';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
+import { ModalFormActions } from 'components/ui';
 interface ParametrosModalProps {
   show: boolean;
   onClose: () => void;
@@ -114,26 +114,11 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
       size="md"
       modalId="parametros-modal"
       headerActions={
-        <div className="d-flex gap-2 modal-header-actions">
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            onClick={handleCancel}
-            disabled={updateParametrosMutation.isPending}
-          >
-            {t('buttons.cancel')}
-          </Button>
-          <Button
-            type="submit"
-            form="parametros-form"
-            variant="primary"
-            size="sm"
-            isLoading={updateParametrosMutation.isPending}
-          >
-            {t('buttons.save')}
-          </Button>
-        </div>
+        <ModalFormActions
+          onCancel={handleCancel}
+          formId="parametros-form"
+          isPending={updateParametrosMutation.isPending}
+        />
       }
     >
       {isLoading ? (

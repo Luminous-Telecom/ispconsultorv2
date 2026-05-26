@@ -6,7 +6,7 @@ import { useIsMobile } from 'hooks/useMediaQuery';
 import { useFormReset } from 'hooks/useFormReset';
 import { useUsuario, useGerarWebhookSecret } from 'hooks/useUsuarios';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button, FormField, AtivoInativoField } from 'components/ui';
+import { CopiarButton, FormField, AtivoInativoField, GerarTokenButton, ModalFormActions } from 'components/ui';
 import { useI18n } from 'contexts/I18nContext';
 
 interface UsuarioForm {
@@ -173,26 +173,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
       size="md"
       modalId="usuario-form-modal"
       headerActions={
-        <div className="d-flex gap-2 modal-header-actions">
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            onClick={onClose}
-            disabled={isPending}
-          >
-            {t('actions.cancel')}
-          </Button>
-          <Button
-            type="submit"
-            form="usuario-form"
-            variant="primary"
-            size="sm"
-            disabled={isPending}
-          >
-            {t('actions.save')}
-          </Button>
-        </div>
+        <ModalFormActions onCancel={onClose} formId="usuario-form" isPending={isPending} />
       }
   >
     <form id="usuario-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
@@ -270,24 +251,17 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
                   autoComplete="off"
                 />
                 <div className="d-flex flex-wrap gap-2 mt-2">
-                  <Button
+                  <GerarTokenButton
                     type="button"
-                    variant="outline-primary"
-                    size="sm"
                     onClick={handleGenerateWebhookSecret}
+                    isPending={isPending || isGeneratingSecret}
                     disabled={isPending || isGeneratingSecret}
-                  >
-                    {t('user.generateToken')}
-                  </Button>
-                  <Button
+                  />
+                  <CopiarButton
                     type="button"
-                    variant="outline-primary"
-                    size="sm"
                     onClick={handleCopyWebhookSecret}
                     disabled={!webhookSecret}
-                  >
-                    {t('user.copy')}
-                  </Button>
+                  />
                 </div>
                 <small className="text-secondary d-block mt-1">
                   {webhookSecret

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormField, Button } from 'components/ui';
+import { EnviarButton, FormField } from 'components/ui';
 import { ServidorTabProps } from '../types';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -191,15 +191,11 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
               </div>
             </div>
             <div className="d-flex gap-2">
-              <Button
+              <EnviarButton
                 type="button"
-                variant="outline-primary"
-                leftIcon={<i className="bi bi-send"></i>}
                 onClick={onSendTestMessage}
-                isLoading={isSendingTest}
-              >
-                {t('settings.test.send')}
-              </Button>
+                isPending={isSendingTest}
+              />
             </div>
           </div>
         </div>

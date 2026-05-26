@@ -5,6 +5,7 @@ import { TableConfig } from 'components/tables/types';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { useI18n } from 'contexts/I18nContext';
+import { useBulkBtn } from 'components/ui';
 import { RpkiCa, RpkiCaService } from 'services/rpkiCaService';
 import { ClienteService } from 'services/clienteService';
 import { useRpkiCas } from 'hooks/useRpkiCas';
@@ -44,6 +45,7 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = ({
   tableTitle = 'CAs RPKI',
 }) => {
   const { t } = useI18n();
+  const bulkBtn = useBulkBtn();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedCa, setSelectedCa] = useState<RpkiCa | null>(null);
   const queryClient = useQueryClient();
@@ -213,14 +215,15 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = ({
               bulkActions: [
                 {
                   key: 'novo-ca',
-                  label: t('buttons.new'),
-                  variant: 'primary',
+                  label: bulkBtn.novo.label,
+                  variant: bulkBtn.novo.variant,
                   requiresSelection: false,
                   onClick: () => setShowCreateModal(true),
                 },
                 {
                   key: 'deletar-ca',
-                  label: t('actions.delete'),
+                  label: bulkBtn.deletar.label,
+                  variant: bulkBtn.deletar.variant,
                   disabled: (selectedItems: RpkiCa[]) => selectedItems.length === 0 && !selectedCa,
                   onClick: (selectedItems: RpkiCa[]) => {
                     const target = selectedItems[0] || selectedCa;

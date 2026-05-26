@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from 'components/common/DraggableModal';
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-import { Button, FormField, AtivoInativoField } from 'components/ui';
+import { FormField, AtivoInativoField, ModalFormActions } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useFormReset } from 'hooks/useFormReset';
 import { saasUsuariosService, type SaasUsuarioSuper, type SaasNivelAcesso } from 'services/saas/saasUsuariosService';
@@ -126,14 +126,7 @@ const SaasUsuarioFormModal: React.FC<Props> = ({ show, onClose, onSuccess, usuar
       size="md"
       modalId="saas-usuario-form-modal"
       headerActions={
-        <div className="d-flex gap-2 modal-header-actions">
-          <Button type="button" variant="primary" size="sm" onClick={onClose} disabled={isPending}>
-            Cancelar
-          </Button>
-          <Button type="submit" form="saas-usuario-form" variant="primary" size="sm" disabled={isPending}>
-            Salvar
-          </Button>
-        </div>
+        <ModalFormActions onCancel={onClose} formId="saas-usuario-form" isPending={isPending} />
       }
     >
       <form id="saas-usuario-form" onSubmit={handleSubmit} style={{ padding: '16px' }}>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
+import { ModalFormActions } from 'components/ui';
 import FormField from 'components/ui/FormField';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useFormReset } from 'hooks/useFormReset';
@@ -78,10 +78,7 @@ const SaasServidorEmailFormModal: React.FC<Props> = ({ show, onClose, onSuccess,
 
   return (
     <DraggableModal show={show} onClose={onClose} title="Servidor Email" size="md" modalId="saas-servidor-email-form"
-      headerActions={<div className="d-flex gap-2 modal-header-actions">
-        <Button type="button" variant="primary" size="sm" onClick={onClose} disabled={isPending}>Cancelar</Button>
-        <Button type="submit" form="saas-servidor-email-form-id" variant="primary" size="sm" disabled={isPending}>Salvar</Button>
-      </div>}
+      headerActions={<ModalFormActions onCancel={onClose} formId="saas-servidor-email-form-id" isPending={isPending} />}
     >
       <form id="saas-servidor-email-form-id" onSubmit={handleSubmit} style={{ padding: '16px' }}>
         <div className="row g-1">

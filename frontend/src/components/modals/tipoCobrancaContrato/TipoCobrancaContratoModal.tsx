@@ -4,7 +4,7 @@ import { useCreateTipoCobrancaContrato, useUpdateTipoCobrancaContrato, useTipoCo
 import { useFormReset } from 'hooks/useFormReset';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
-import { AtivoInativoField, Button, Spinner } from 'components/ui';
+import { AtivoInativoField, ModalFormActions, Spinner } from 'components/ui';
 
 const PERIODICIDADES = [
   { value: 'mensal', key: 'form.periodicityMonthly' },
@@ -119,26 +119,11 @@ const TipoCobrancaContratoModal: React.FC<TipoCobrancaContratoModalProps> = ({
       modalId="tipo-cobranca-contrato-modal"
       headerActions={
         !(isEdit && isLoadingTipo) ? (
-          <div className="d-flex gap-2 modal-header-actions">
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              onClick={onClose}
-              disabled={isPending}
-            >
-              {t('buttons.cancel')}
-            </Button>
-            <Button
-              type="submit"
-              form="tipo-cobranca-form"
-              variant="primary"
-              size="sm"
-              isLoading={isPending}
-            >
-              {t('buttons.save')}
-            </Button>
-          </div>
+          <ModalFormActions
+            onCancel={onClose}
+            formId="tipo-cobranca-form"
+            isPending={isPending}
+          />
         ) : undefined
       }
     >

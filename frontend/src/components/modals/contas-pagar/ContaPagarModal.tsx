@@ -5,7 +5,7 @@ import { useIsMobile } from 'hooks/useMediaQuery';
 import { useEntitySelectField } from 'hooks/useEntitySelectField';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button, Spinner } from 'components/ui';
+import { CancelarButton, ConfirmarPagamentoButton, ModalFormActions, Spinner } from 'components/ui';
 import FormField from 'components/ui/FormField';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import FornecedorListModal from 'components/modals/fornecedores/FornecedorListModal';
@@ -584,26 +584,11 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
           modalId={isEditing ? 'conta-pagar-edit-modal' : 'conta-pagar-create-modal'}
           headerActions={
             !(isLoadingContaPagar && isEditing) ? (
-              <div className="d-flex gap-2 modal-header-actions">
-                <Button
-                  type="button"
-                  variant="primary"
-                  size="sm"
-                  onClick={onClose}
-                  disabled={createMutation.isPending || updateMutation.isPending || pagarMutation.isPending}
-                >
-                  {t('buttons.cancel')}
-                </Button>
-                <Button
-                  type="submit"
-                  form={isEditing ? 'conta-pagar-edit-form' : 'conta-pagar-create-form'}
-                  variant="primary"
-                  size="sm"
-                  isLoading={createMutation.isPending || updateMutation.isPending}
-                >
-                  {t('buttons.save')}
-                </Button>
-              </div>
+              <ModalFormActions
+                onCancel={onClose}
+                formId={isEditing ? 'conta-pagar-edit-form' : 'conta-pagar-create-form'}
+                isPending={createMutation.isPending || updateMutation.isPending || pagarMutation.isPending}
+              />
             ) : undefined
           }
         >
@@ -634,28 +619,20 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
             modalId="conta-pagar-pagamento-modal"
           headerActions={
             <div className="d-flex gap-2 modal-header-actions">
-              <Button
+              <CancelarButton
                 type="button"
-                variant="primary"
-                size="sm"
                 onClick={() => {
                   setShowPagamentoModal(false);
                   setPagamentoData(getInitialPagamentoData());
                 }}
-                disabled={pagarMutation.isPending}
-              >
-                {t('buttons.cancel')}
-              </Button>
-              <Button
+                isPending={pagarMutation.isPending}
+              />
+              <ConfirmarPagamentoButton
                 type="button"
-                variant="primary"
-                size="sm"
                 onClick={handlePagarManual}
-                isLoading={pagarMutation.isPending}
+                isPending={pagarMutation.isPending}
                 disabled={valorTotal <= 0}
-              >
-                {t('buttons.confirmPayment')}
-              </Button>
+              />
             </div>
           }
         >

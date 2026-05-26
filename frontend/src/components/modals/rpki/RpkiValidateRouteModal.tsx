@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Button, Input, Badge, type ChangeEvent } from 'components/ui';
+import { Input, Badge, ValidarButton, type ChangeEvent } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { RpkiCaService, type RpkiValidateRouteResult, type RpkiValidatingRoa } from 'services/rpkiCaService';
 
@@ -164,16 +164,13 @@ const RpkiValidateRouteModal: React.FC<RpkiValidateRouteModalProps> = ({
             />
           </div>
           <div className="col-md-3">
-            <Button
+            <ValidarButton
               id="rpki_validate_submit"
               type="button"
-              variant="primary"
-              size="sm"
               disabled={isPending || !prefix.trim()}
               onClick={handleValidate}
-            >
-              Validar
-            </Button>
+              isPending={isPending}
+            />
           </div>
         </div>
       </div>

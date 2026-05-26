@@ -4,7 +4,7 @@ import { useSshDevice, useCreateSshDevice, useUpdateSshDevice } from 'hooks/useS
 import { useAgents } from 'hooks/useAgents';
 import { SshDeviceType } from 'types';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button, FormField, AtivoInativoField } from 'components/ui';
+import { FormField, AtivoInativoField, ModalFormActions } from 'components/ui';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import ClienteListModal from 'components/modals/clientes/ClienteListModal';
 import AgentListModal from 'components/modals/agent/AgentListModal';
@@ -268,20 +268,12 @@ const SshDeviceModal: React.FC<SshDeviceModalProps> = ({
       headerActions={
         !(isLoading && isEditing) ? (
           <div className="ssh-device-header-unified">
-            <div className="ssh-device-header-buttons modal-header-actions">
-              <Button type="button" variant="primary" size="sm" onClick={onClose} disabled={isSubmitting}>
-                {t('buttons.cancel')}
-              </Button>
-              <Button
-                type="submit"
-                form={formId}
-                variant="primary"
-                size="sm"
-                isLoading={isSubmitting}
-              >
-                {t('buttons.save')}
-              </Button>
-            </div>
+            <ModalFormActions
+              className="ssh-device-header-buttons modal-header-actions"
+              onCancel={onClose}
+              formId={formId}
+              isPending={isSubmitting}
+            />
             <div className="ssh-device-header-tabs">
               <ul
                 className={`nav nav-tabs plano-tabs-unified ${isMobile ? 'plano-tabs-mobile' : ''}`}

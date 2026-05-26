@@ -40,7 +40,7 @@ interface UseClienteFormReturn {
   
   // Handlers (mantidos para compatibilidade)
   handleInputChange: (field: keyof ClienteFormData, value: FormValue) => Promise<void>;
-  handleSubmit: (e: React.FormEvent) => void;
+  handleSubmit: (e?: React.FormEvent) => void;
   validateForm: () => boolean;
   
   // Dados do cliente (quando editando)
@@ -416,9 +416,9 @@ export const useClienteForm = ({
   };
 
   // Handler de submit mantido para compatibilidade
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    rhfHandleSubmit(onSubmit)(e);
+  const handleSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    rhfHandleSubmit(onSubmit)(e as React.FormEvent);
   };
 
   return {

@@ -4,6 +4,7 @@ import { useModalSelect } from 'hooks/useModalSelect';
 import { useTableFilters } from 'hooks/useTableFilters';
 import DraggableModal from 'components/common/DraggableModal';
 import SearchBar from 'components/ui/SearchBar';
+import { LimparButton } from 'components/ui';
 import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
 import { auditoriaService, AuditoriaLog, AuditoriaFilters } from 'services/auditoriaService';
@@ -358,12 +359,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
         </select>
       </div>
       <div className="col-md-2 d-flex align-items-end">
-        <button
-          className="btn btn-sm btn-outline-primary w-100"
-          onClick={handleClearFilters}
-        >
-          {t('buttons.clear')}
-        </button>
+        <LimparButton type="button" className="w-100" onClick={handleClearFilters} />
       </div>
     </div>
   );

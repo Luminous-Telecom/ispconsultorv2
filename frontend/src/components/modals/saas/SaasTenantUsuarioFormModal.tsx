@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button, FormField } from 'components/ui';
+import { FormField, ModalFormActions } from 'components/ui';
 import AtivoInativoField from 'components/ui/AtivoInativoField';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useFormReset } from 'hooks/useFormReset';
@@ -102,10 +102,7 @@ const SaasTenantUsuarioFormModal: React.FC<Props> = ({ show, onClose, onSuccess,
       size="md"
       modalId="saas-tenant-usuario-form"
       headerActions={
-        <div className="d-flex gap-2 modal-header-actions">
-          <Button type="button" variant="primary" size="sm" onClick={onClose} disabled={isPending}>Cancelar</Button>
-          <Button type="submit" form="saas-tenant-usuario-form-id" variant="primary" size="sm" disabled={isPending}>Salvar</Button>
-        </div>
+        <ModalFormActions onCancel={onClose} formId="saas-tenant-usuario-form-id" isPending={isPending} />
       }
     >
       <form id="saas-tenant-usuario-form-id" onSubmit={handleSubmit} className="p-3">

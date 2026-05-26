@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import FormField from 'components/ui/FormField';
-import { Button, Input } from 'components/ui';
+import { CopiarButton, Input } from 'components/ui';
 import { BancoTabProps } from '../types';
 import { useI18n } from 'contexts/I18nContext';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
@@ -93,15 +93,11 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
                     validationMessage={errors?.url_retorno}
                     className={errors?.url_retorno ? 'is-invalid' : ''}
                   />
-                  <Button
+                  <CopiarButton
                     type="button"
-                    variant="outline-secondary"
-                    size="sm"
                     onClick={handleCopyWebhookUrl}
                     disabled={isPending}
-                  >
-                    {t('buttons.copy')}
-                  </Button>
+                  />
                 </div>
                 {errors?.url_retorno && <div className="invalid-feedback d-block">{errors.url_retorno}</div>}
               </div>
@@ -151,15 +147,11 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
                     validationMessage={errors?.url_retorno}
                     className={errors?.url_retorno ? 'is-invalid' : ''}
                   />
-                  <Button
+                  <CopiarButton
                     type="button"
-                    variant="outline-secondary"
-                    size="sm"
                     onClick={handleCopyWebhookUrl}
                     disabled={isPending}
-                  >
-                    {t('buttons.copy')}
-                  </Button>
+                  />
                 </div>
                 {errors?.url_retorno && <div className="invalid-feedback d-block">{errors.url_retorno}</div>}
               </div>

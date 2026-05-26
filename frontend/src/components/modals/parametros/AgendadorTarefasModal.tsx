@@ -13,6 +13,7 @@ import ImprimirModal from 'components/common/ImprimirModal';
 import { useConfirmModal } from 'hooks/useConfirmModal';
 import ConfirmModal from 'components/modals/ConfirmModal';
 import { useI18n } from 'contexts/I18nContext';
+import { getSystemButtonBulkPropsByKey } from 'components/ui';
 import { extractApiErrorMessageSync } from 'utils/apiErrorHelper';
 import { getCronDisplayFromRotina } from 'utils/schedulerCronDisplay';
 import { formatDateTime } from 'utils/formatters';
@@ -35,6 +36,14 @@ interface AgendadorTarefasModalProps {
 
 const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onClose }) => {
   const { t } = useI18n();
+  const bulkBtn = useMemo(
+    () => ({
+      novo: getSystemButtonBulkPropsByKey('actions.new', t),
+      editar: getSystemButtonBulkPropsByKey('actions.edit', t),
+      deletar: getSystemButtonBulkPropsByKey('actions.delete', t),
+    }),
+    [t]
+  );
   const queryClient = useQueryClient();
   const { success, error: showError } = useNotificationContext();
   const auditoria = useAuditoria();
@@ -281,21 +290,22 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
     () => [
       {
         key: 'new',
-        label: t('actions.new'),
-        variant: 'primary' as const,
+        label: bulkBtn.novo.label,
+        variant: bulkBtn.novo.variant,
         requiresSelection: false as const,
         action: handleCreate,
       },
       {
         key: 'edit',
-        label: t('actions.edit'),
-        variant: 'primary' as const,
+        label: bulkBtn.editar.label,
+        variant: bulkBtn.editar.variant,
         disabled: (selectedItems: RotinaAgendada[]) => selectedItems.length === 0 && !selectedItem,
         action: handleEdit,
       },
       {
         key: 'delete',
-        label: t('actions.delete'),
+        label: bulkBtn.deletar.label,
+        variant: bulkBtn.deletar.variant,
         disabled: (selectedItems: RotinaAgendada[]) => selectedItems.length === 0 && !selectedItem,
         action: (selectedItems: RotinaAgendada[]) => {
           const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
@@ -346,7 +356,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
         },
       },
     ],
-    [t, selectedItem, handleCreate, handleEdit, handleExecute, handleDelete, toggleAtivoMutation]
+    [bulkBtn, t, selectedItem, handleCreate, handleEdit, handleExecute, handleDelete, toggleAtivoMutation]
   );
 
   const handleSearchChange = useCallback(

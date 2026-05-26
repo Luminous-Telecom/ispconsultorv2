@@ -6,7 +6,7 @@ import { useFormPrefix } from 'hooks/useFormId';
 import { useSaasBancoForm } from 'hooks/useSaasBancoForm';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button, Spinner } from 'components/ui';
+import { ModalFormActions, Spinner, TestarConexaoButton } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { InformacoesBasicasTab, ConfiguracoesApiTab } from '../bancos/banco';
 import { BancoForm } from '../bancos/banco/types';
@@ -142,18 +142,18 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
         !(isEdit && isLoading) ? (
           <div className="banco-header-unified">
             <div className="banco-header-buttons modal-header-actions d-flex align-items-center gap-2 flex-wrap">
-              <Button type="button" variant="primary" size="sm" onClick={handleCancel} disabled={formHook.isSubmitting}>{t('buttons.cancel')}</Button>
-              <Button type="submit" form="saas-banco-form-id" variant="primary" size="sm" disabled={formHook.isSubmitting}>{t('buttons.save')}</Button>
+              <ModalFormActions
+                className="d-flex gap-2"
+                onCancel={handleCancel}
+                formId="saas-banco-form-id"
+                isPending={formHook.isSubmitting}
+              />
               {(formHook.effectiveBancoId != null) && (
-                <Button
+                <TestarConexaoButton
                   type="button"
-                  variant="primary"
-                  size="sm"
                   onClick={handleTestConnection}
-                  disabled={formHook.isSubmitting}
-                >
-                  {t('buttons.testConnection')}
-                </Button>
+                  isPending={formHook.isSubmitting}
+                />
               )}
             </div>
             <div className="banco-header-tabs">

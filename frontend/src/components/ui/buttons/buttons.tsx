@@ -1,0 +1,87 @@
+import React from 'react';
+import SystemButton from './SystemButton';
+import type { SystemActionButtonProps } from './types';
+import type { SystemButtonAction } from './config';
+import { SYSTEM_BUTTON_CONFIG, SYSTEM_BUTTON_EXPORT_NAMES } from './config';
+
+type ActionButtonProps = SystemActionButtonProps;
+
+function createButton(action: SystemButtonAction): React.FC<ActionButtonProps> {
+  const displayName = SYSTEM_BUTTON_EXPORT_NAMES[action];
+  const Component: React.FC<ActionButtonProps> = (props) => <SystemButton action={action} {...props} />;
+  Component.displayName = displayName;
+  return Component;
+}
+
+const actions = Object.keys(SYSTEM_BUTTON_CONFIG) as SystemButtonAction[];
+
+/** Todos os botões do sistema — gerados a partir de `SYSTEM_BUTTON_CONFIG`. */
+export const NovoButton = createButton('novo');
+export const EditarButton = createButton('editar');
+export const DeletarButton = createButton('deletar');
+export const SalvarButton = createButton('salvar');
+export const CancelarButton = createButton('cancelar');
+export const FecharButton = createButton('fechar');
+export const ConfirmarButton = createButton('confirmar');
+export const ConfirmarPagamentoButton = createButton('confirmarPagamento');
+export const ConfirmarCancelamentoButton = createButton('confirmarCancelamento');
+export const SincronizarButton = createButton('sincronizar');
+export const AuditarButton = createButton('auditar');
+export const RecarregarButton = createButton('recarregar');
+export const CopiarButton = createButton('copiar');
+export const ImprimirButton = createButton('imprimir');
+export const ImprimirNFButton = createButton('imprimirNF');
+export const ExportarButton = createButton('exportar');
+export const ImportarButton = createButton('importar');
+export const VisualizarButton = createButton('visualizar');
+export const BaixarButton = createButton('baixar');
+export const GerarButton = createButton('gerar');
+export const GerarTokenButton = createButton('gerarToken');
+export const GerarNFSeAvulsaButton = createButton('gerarNFSeAvulsa');
+export const BuscarButton = createButton('buscar');
+export const FiltrarButton = createButton('filtrar');
+export const LimparButton = createButton('limpar');
+export const VoltarButton = createButton('voltar');
+export const ProximoButton = createButton('proximo');
+export const AnteriorButton = createButton('anterior');
+export const FinalizarButton = createButton('finalizar');
+export const EnviarButton = createButton('enviar');
+export const ReceberButton = createButton('receber');
+export const EstornarButton = createButton('estornar');
+export const ViaWhatsAppButton = createButton('viaWhatsApp');
+export const ViaEmailButton = createButton('viaEmail');
+export const TestarConexaoButton = createButton('testarConexao');
+export const SelecionarButton = createButton('selecionar');
+export const AdicionarButton = createButton('adicionar');
+export const RemoverButton = createButton('remover');
+export const SelecionadosButton = createButton('selecionados');
+export const AbertosButton = createButton('abertos');
+export const ReciboButton = createButton('recibo');
+export const PagarButton = createButton('pagar');
+export const DuplicarButton = createButton('duplicar');
+export const InserirButton = createButton('inserir');
+export const NfseButton = createButton('nfse');
+export const CriarTituloButton = createButton('criarTitulo');
+export const AtualizarSistemaButton = createButton('atualizarSistema');
+export const ValidarButton = createButton('validar');
+export const InstalarAgenteButton = createButton('instalarAgente');
+export const TentarNovamenteButton = createButton('tentarNovamente');
+export const AbrirCentralAssinanteButton = createButton('abrirCentralAssinante');
+export const EntrarButton = createButton('entrar');
+export const EnviarSenhaButton = createButton('enviarSenha');
+export const AlterarSenhaButton = createButton('alterarSenha');
+export const CopiarCodigoBarrasButton = createButton('copiarCodigoBarras');
+export const CopiarPixButton = createButton('copiarPix');
+export const AplicarButton = createButton('aplicar');
+export const AplicarSelecaoButton = createButton('aplicarSelecao');
+export const ExtrairSeiAnatelButton = createButton('extrairSeiAnatel');
+export const ExtrairDominiosPdfButton = createButton('extrairDominiosPdf');
+export const ExtrairPlanilhaUrlButton = createButton('extrairPlanilhaUrl');
+export const ValidarCnpjButton = createButton('validarCnpj');
+export const ValidarCepButton = createButton('validarCep');
+export const OcultarFiltrosButton = createButton('ocultarFiltros');
+export const MostrarFiltrosButton = createButton('mostrarFiltros');
+export const SairButton = createButton('sair');
+export const GerarRequisicaoCaFilhaButton = createButton('gerarRequisicaoCaFilha');
+
+void actions;

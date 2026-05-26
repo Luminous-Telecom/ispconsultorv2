@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useModalSelect } from 'hooks/useModalSelect';
 import { useAuditoria } from 'hooks/useAuditoria';
 import { useI18n } from 'contexts/I18nContext';
+import {useBulkBtn} from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
@@ -22,6 +23,7 @@ interface Props {
 
 const SaasPlanoListModal: React.FC<Props> = ({ show, onClose, skipWrapper = false, onSelectPlano, title }) => {
   const { t } = useI18n();
+  const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
   const { error } = useNotificationContext();
   const auditoria = useAuditoria();
@@ -138,34 +140,35 @@ const SaasPlanoListModal: React.FC<Props> = ({ show, onClose, skipWrapper = fals
 
   const bulkActions = useMemo(() => onSelectPlano ? [
     {
-      label: t('buttons.cancel'),
-      variant: 'primary' as const,
+      label: bulkBtn.cancelar.label,
+      variant: bulkBtn.cancelar.variant,
       action: () => { clearSelection(); onClose(); },
     },
     {
-      label: t('buttons.select'),
-      variant: 'primary' as const,
+      label: bulkBtn.selecionar.label,
+      variant: bulkBtn.selecionar.variant,
       disabled: (items: SaasPlano[]) => items.length === 0 && !selectedItem,
       action: handleSelect,
     },
   ] : [
     {
-      label: t('actions.create'),
-      variant: 'primary' as const,
+      label: bulkBtn.novo.label,
+      variant: bulkBtn.novo.variant,
       action: () => setShowCreateModal(true),
     },
     {
-      label: t('actions.edit'),
-      variant: 'primary' as const,
+      label: bulkBtn.editar.label,
+      variant: bulkBtn.editar.variant,
       disabled: (items: SaasPlano[]) => items.length === 0 && !selectedItem,
       action: handleEdit,
     },
     {
-      label: t('actions.delete'),
+      label: bulkBtn.deletar.label,
+      variant: bulkBtn.deletar.variant,
       disabled: (items: SaasPlano[]) => items.length === 0 && !selectedItem,
       action: handleDelete,
     },
-  ], [selectedItem, handleEdit, handleDelete, onSelectPlano, clearSelection, onClose, handleSelect, t]);
+  ], [bulkBtn, selectedItem, handleEdit, handleDelete, onSelectPlano, clearSelection, onClose, handleSelect]);
 
   const modalContent = (
     <>

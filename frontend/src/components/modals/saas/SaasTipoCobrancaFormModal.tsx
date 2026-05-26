@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button, FormField, AtivoInativoField } from 'components/ui';
+import { FormField, AtivoInativoField, ModalFormActions } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useFormReset } from 'hooks/useFormReset';
 import { saasTipoCobrancaService, type SaasTipoCobranca } from 'services/saas/saasCrudService';
@@ -83,10 +83,7 @@ const SaasTipoCobrancaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, 
   return (
     <DraggableModal show={show} onClose={onClose} title="Tipo de Cobrança" size="md" modalId="saas-tipo-cobranca-form"
       headerActions={
-        <div className="d-flex gap-2 modal-header-actions">
-          <Button type="button" variant="primary" size="sm" onClick={onClose} disabled={isPending}>Cancelar</Button>
-          <Button type="submit" form="saas-tipo-cobranca-form-id" variant="primary" size="sm" disabled={isPending}>Salvar</Button>
-        </div>
+        <ModalFormActions onCancel={onClose} formId="saas-tipo-cobranca-form-id" isPending={isPending} />
       }
     >
       <form id="saas-tipo-cobranca-form-id" onSubmit={handleSubmit} style={{ padding: '16px' }}>

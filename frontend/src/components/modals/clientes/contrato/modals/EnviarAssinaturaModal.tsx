@@ -4,7 +4,7 @@ import { TermoContrato } from 'services/termoContratoService';
 import { Cliente } from 'types';
 import { AssinaturaDigitalService, EnviarAssinaturaRequest } from 'services/assinaturaDigitalService';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
+import { CancelarButton, EnviarButton } from 'components/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useIsMobile } from 'hooks/useMediaQuery';
 
@@ -114,25 +114,13 @@ const EnviarAssinaturaModal: React.FC<EnviarAssinaturaModalProps> = ({
 
   const headerActions = (
     <div className="d-flex gap-2 modal-header-actions">
-      <Button
-        type="button"
-        variant="primary"
-        size="sm"
-        onClick={onClose}
-        disabled={isSubmitting}
-      >
-        Cancelar
-      </Button>
-      <Button
+      <CancelarButton type="button" onClick={onClose} isPending={isSubmitting} />
+      <EnviarButton
         type="submit"
         form="enviar-assinatura-form"
-        variant="primary"
-        size="sm"
+        isPending={isSubmitting}
         disabled={isSubmitting}
-        isLoading={isSubmitting}
-      >
-        Salvar
-      </Button>
+      />
     </div>
   );
 

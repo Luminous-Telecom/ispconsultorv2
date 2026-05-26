@@ -4,6 +4,7 @@ import { DadosEmpresaService } from 'services/dadosEmpresaService';
 import type { SaasTitulo } from 'services/saas/saasCrudService';
 import { formatDate, formatCurrency } from 'utils/formatters';
 import { useI18n } from 'contexts/I18nContext';
+import { useBulkBtn } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import Spinner from 'components/ui/Spinner';
 import SearchBar from 'components/ui/SearchBar';
@@ -20,6 +21,7 @@ type SaasTituloComPlano = SaasTitulo & { plano_nome?: string };
 
 const FinanceiroTab: React.FC<FinanceiroTabProps> = ({ empresaId, tipo }) => {
   const { t } = useI18n();
+  const bulkBtn = useBulkBtn();
   const { success, error } = useNotificationContext();
   const [selectedItems, setSelectedItems] = useState<SaasTitulo[]>([]);
   const [showImprimirModal, setShowImprimirModal] = useState(false);
@@ -212,13 +214,13 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({ empresaId, tipo }) => {
     return [
       {
         key: 'imprimir',
-        label: t('buttons.print'),
-        variant: 'primary',
+        label: bulkBtn.imprimir.label,
+        variant: bulkBtn.imprimir.variant,
         requiresSelection: false,
         dropdown,
       },
     ];
-  }, [t, tipo, handleImprimirSelecionados, handleImprimirTodosEmAberto]);
+  }, [bulkBtn, t, tipo, handleImprimirSelecionados, handleImprimirTodosEmAberto]);
 
   if (isLoading) {
     return (

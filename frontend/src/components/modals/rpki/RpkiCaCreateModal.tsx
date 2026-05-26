@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button, FormField } from 'components/ui';
+import { FormField } from 'components/ui';
+import { CancelarButton, LimparButton, NovoButton } from 'components/ui/buttons/buttons';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
-import { useI18n } from 'contexts/I18nContext';
 import { RpkiCaService } from 'services/rpkiCaService';
 import { Cliente } from 'types';
 import ClienteListModal from 'components/modals/clientes/ClienteListModal';
@@ -17,7 +17,6 @@ interface RpkiCaCreateModalProps {
 }
 
 const RpkiCaCreateModal: React.FC<RpkiCaCreateModalProps> = ({ show, onClose, defaultClienteId }) => {
-  const { t } = useI18n();
   const [nome, setNome] = useState('');
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
   const [showClienteSelector, setShowClienteSelector] = useState(false);
@@ -85,36 +84,27 @@ const RpkiCaCreateModal: React.FC<RpkiCaCreateModalProps> = ({ show, onClose, de
               searchButtonTitle="Selecionar cliente"
             />
             <div className="d-flex gap-2 mt-2">
-              <Button
+              <LimparButton
                 type="button"
-                variant="secondary"
-                size="sm"
                 disabled={!selectedCliente}
                 onClick={() => setSelectedCliente(null)}
-              >
-                Limpar
-              </Button>
+              />
             </div>
           </div>
         )}
         <div className="d-flex justify-content-end gap-2 mt-3">
-          <Button type="button" variant="secondary" size="sm" onClick={onClose} disabled={createMutation.isPending}>
-            Cancelar
-          </Button>
-          <Button
+          <CancelarButton type="button" onClick={onClose} isPending={createMutation.isPending} />
+          <NovoButton
             type="button"
-            variant="primary"
-            size="sm"
             disabled={createMutation.isPending || !nome.trim()}
+            isPending={createMutation.isPending}
             onClick={() =>
               createMutation.mutate({
                 nome: nome.trim(),
                 clienteId: defaultClienteId ?? selectedCliente?.id ?? null,
               })
             }
-          >
-            {t('buttons.new')}
-          </Button>
+          />
         </div>
       </div>
       <ClienteListModal

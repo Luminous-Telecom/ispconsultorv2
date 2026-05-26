@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useI18n } from 'contexts/I18nContext';
+import { useBulkBtn } from 'components/ui';
 import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
@@ -32,7 +33,8 @@ const BACKUP_MANUAL_OPTIONS: { tipo: BackupManualTipo; labelKey: string; icon: s
 
 const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper = false }) => {
   const { t } = useI18n();
-  const { success, error: showError } = useNotificationContext();
+  const bulkBtn = useBulkBtn();
+    const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
   const [actionLoading, setActionLoading] = useState<{ delete?: string; download?: string; restore?: string; upload?: boolean }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -213,8 +215,8 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
     },
     {
       key: 'deletar',
-      label: t('actions.delete'),
-      variant: 'primary' as const,
+      label: bulkBtn.deletar.label,
+      variant: bulkBtn.deletar.variant,
       disabled: (items: BackupWithId[]) => items.length === 0 || !!(actionLoading.delete || actionLoading.download || actionLoading.restore),
       onClick: (items: BackupWithId[]) => {
         const item = items[0];
@@ -231,8 +233,8 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
     },
     {
       key: 'baixar',
-      label: t('buttons.download'),
-      variant: 'primary' as const,
+      label: bulkBtn.baixar.label,
+      variant: bulkBtn.baixar.variant,
       disabled: (items: BackupWithId[]) => items.length === 0 || !!(actionLoading.delete || actionLoading.download || actionLoading.restore),
       onClick: (items: BackupWithId[]) => {
         const item = items[0];
@@ -249,7 +251,7 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
         if (item) handleRestore(item);
       }
     }
-  ], [t, actionLoading, manualMutation, handleImportClick, handleDelete, handleDownload, handleRestore]);
+  ], [t, actionLoading, manualMutation, handleImportClick, handleDelete, handleDownload, handleRestore, bulkBtn]);
 
   const pagination = useMemo(() => ({
     currentPage: 1,

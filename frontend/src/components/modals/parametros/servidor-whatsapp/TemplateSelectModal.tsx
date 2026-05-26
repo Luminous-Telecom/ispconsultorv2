@@ -7,6 +7,7 @@ import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
 import { useI18n } from 'contexts/I18nContext';
+import { getSystemButtonBulkPropsByKey } from 'components/ui';
 
 interface TemplateSelectModalProps {
   show: boolean;
@@ -22,6 +23,13 @@ const TemplateSelectModal: React.FC<TemplateSelectModalProps> = ({
   title
 }) => {
   const { t } = useI18n();
+  const bulkBtn = useMemo(
+    () => ({
+      cancelar: getSystemButtonBulkPropsByKey('actions.cancel', t),
+      inserir: getSystemButtonBulkPropsByKey('actions.insert', t),
+    }),
+    [t]
+  );
 
   const tableFilters = useTableFilters({
     initialSearch: '',
@@ -57,8 +65,8 @@ const TemplateSelectModal: React.FC<TemplateSelectModalProps> = ({
   const bulkActions = useMemo(() => [
     {
       key: 'cancelar',
-      label: t('actions.cancel'),
-      variant: 'primary' as const,
+      label: bulkBtn.cancelar.label,
+      variant: bulkBtn.cancelar.variant,
       requiresSelection: false,
       onClick: () => {
         clearSelection();
@@ -67,12 +75,12 @@ const TemplateSelectModal: React.FC<TemplateSelectModalProps> = ({
     },
     {
       key: 'inserir',
-      label: t('actions.insert'),
-      variant: 'primary' as const,
+      label: bulkBtn.inserir.label,
+      variant: bulkBtn.inserir.variant,
       disabled: (items: TemplateWhatsApp[]) => items.length === 0 && !selectedItem,
       onClick: (selectedItems: TemplateWhatsApp[]) => handleSelect(selectedItems)
     }
-  ], [t, selectedItem, clearSelection, onClose, handleSelect]);
+  ], [bulkBtn, selectedItem, clearSelection, onClose, handleSelect]);
 
   const filteredTemplates = useMemo(() => {
     const search = (tableFilters.search || '').toLowerCase().trim();

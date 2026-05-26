@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { TituloService } from '../services/tituloService';
@@ -10,6 +10,7 @@ import { formatCurrency } from '../utils/formatters';
 import { BulkAction } from '../components/modals/clientes/cliente/types';
 import { useConfirmModal } from './useConfirmModal';
 import { useI18n } from '../contexts/I18nContext';
+import { getSystemButtonBulkPropsByKey } from '../components/ui';
 
 interface UseClienteBulkActionsParams {
   clienteId: number | null;
@@ -110,7 +111,29 @@ export const useClienteBulkActions = ({
     return getItemsCompletos.some(item => item.nfse_status === 'emitida' && item.nfse_numero);
   }, [getItemsCompletos]);
 
-  const handleCancelarTitulos = async (items: CarneParcela[]) => {
+  const bulkBtn = useMemo(
+    () => ({
+      editar: getSystemButtonBulkPropsByKey('actions.edit', t),
+      deletar: getSystemButtonBulkPropsByKey('actions.delete', t),
+      receber: getSystemButtonBulkPropsByKey('actions.receive', t),
+      cancelar: getSystemButtonBulkPropsByKey('actions.cancel', t),
+      estornar: getSystemButtonBulkPropsByKey('actions.reverse', t),
+      imprimir: getSystemButtonBulkPropsByKey('actions.print', t),
+      enviar: getSystemButtonBulkPropsByKey('actions.send', t),
+      nfse: getSystemButtonBulkPropsByKey('actions.nfse', t),
+      novo: getSystemButtonBulkPropsByKey('buttons.new', t),
+      selecionados: getSystemButtonBulkPropsByKey('buttons.selected', t),
+      abertos: getSystemButtonBulkPropsByKey('buttons.open', t),
+      recibo: getSystemButtonBulkPropsByKey('buttons.receipt', t),
+      imprimirNF: getSystemButtonBulkPropsByKey('buttons.printNF', t),
+      viaWhatsApp: getSystemButtonBulkPropsByKey('buttons.viaWhatsApp', t),
+      viaEmail: getSystemButtonBulkPropsByKey('buttons.viaEmail', t),
+      gerarNFSeAvulsa: getSystemButtonBulkPropsByKey('buttons.generateNFSeAvulsa', t),
+    }),
+    [t]
+  );
+
+  const handleCancelarTitulos = useCallback(async (items: CarneParcela[]) => {
     if (items.length === 0) return;
     
     const confirmMessage = items.length === 1 
@@ -157,9 +180,9 @@ export const useClienteBulkActions = ({
           error(t('messages.errorCancelTitlesGeneral'));
         }
       }
-  };
+  }, [t, effectiveClienteId, queryClient, onRefreshParcelas, success, error]);
 
-  const handleEstornarTitulo = async (titulo: CarneParcela) => {
+  const handleEstornarTitulo = useCallback(async (titulo: CarneParcela) => {
     if (titulo.status !== 'pago') {
       info(t('financial.canOnlyReversePaid'));
       return;
@@ -178,9 +201,9 @@ export const useClienteBulkActions = ({
           error(errorObj.message || t('messages.errorReverseTitle'));
         }
       }
-  };
+  }, [t, effectiveClienteId, queryClient, onRefreshParcelas, info, success, error]);
 
-  const handleEnviarWhatsApp = async (items: CarneParcela[]) => {
+  const handleEnviarWhatsApp = useCallback(async (items: CarneParcela[]) => {
     if (items.length > 0) {
       try {
         let successCount = 0;
@@ -228,9 +251,9 @@ export const useClienteBulkActions = ({
         error(t('messages.errorSendMessagesGeneral'));
       }
     }
-  };
+  }, [t, success, error]);
 
-  const handleEnviarEmail = async (items: CarneParcela[]) => {
+  const handleEnviarEmail = useCallback(async (items: CarneParcela[]) => {
     if (items.length > 0) {
       try {
         let successCount = 0;
@@ -278,50 +301,58 @@ export const useClienteBulkActions = ({
         error(t('messages.errorSendEmailsGeneral'));
       }
     }
-  };
+  }, [t, success, error]);
 
-  const handleDeletarContratos = async (items: Contrato[]) => {
-    if (items.length === 0) return;
-    
-    const confirmMessage = items.length === 1
-      ? t('messages.confirmDelete')
-      : t('messages.confirmDeleteAdditionalServices', { count: items.length });
-    const confirmed = window.confirm(confirmMessage);
-    if (confirmed) {
+  const handleDeletarContratos = useCallback(
+    async (items: Contrato[]) => {
+      if (items.length === 0) return;
+
+      const confirmMessage =
+        items.length === 1
+          ? t('messages.confirmDelete')
+          : t('messages.confirmDeleteAdditionalServices', { count: items.length });
+      const confirmed = window.confirm(confirmMessage);
+      if (confirmed) {
         try {
           for (const item of items) {
             try {
               await deleteContratoMutation.mutateAsync(item.id);
             } catch (err) {
               const axiosError = err as AxiosError<{ message: string; error?: string }>;
-              const errorMessage = axiosError?.response?.data?.message || 
-                                 axiosError?.response?.data?.error || 
-                                 `${t('contracts.messages.deleteError')} ${item.id}`;
+              const errorMessage =
+                axiosError?.response?.data?.message ||
+                axiosError?.response?.data?.error ||
+                `${t('contracts.messages.deleteError')} ${item.id}`;
               error(errorMessage);
             }
           }
           onRefreshContratos();
           setSelectedContratosItems([]);
-        } catch (err) {
+        } catch {
           error(t('contracts.messages.deleteError'));
         }
       }
-  };
+    },
+    [t, deleteContratoMutation, onRefreshContratos, error]
+  );
 
-  const handleImprimirRecibosWrapper = async (items: CarneParcela[]) => {
-    const tituloItems: TituloItem[] = items.map(item => ({
-      id: item.id,
-      numero_titulo: (item.numero_titulo || item.numero_parcela || `Título ${item.id}`).toString(),
-      valor_parcela: item.valor || item.valor_parcela || 0,
-      data_vencimento: item.data_vencimento,
-      status: item.status,
-      valor_pago: item.valor_pago || 0,
-      data_pagamento: item.data_pagamento || null,
-      charge_id: item.charge_id || null,
-      cliente: undefined
-    }));
-    await handleImprimirRecibos(tituloItems);
-  };
+  const handleImprimirRecibosWrapper = useCallback(
+    async (items: CarneParcela[]) => {
+      const tituloItems: TituloItem[] = items.map(item => ({
+        id: item.id,
+        numero_titulo: (item.numero_titulo || item.numero_parcela || `Título ${item.id}`).toString(),
+        valor_parcela: item.valor || item.valor_parcela || 0,
+        data_vencimento: item.data_vencimento,
+        status: item.status,
+        valor_pago: item.valor_pago || 0,
+        data_pagamento: item.data_pagamento || null,
+        charge_id: item.charge_id || null,
+        cliente: undefined
+      }));
+      await handleImprimirRecibos(tituloItems);
+    },
+    [handleImprimirRecibos]
+  );
 
   const isTituloDeletavel = (t: CarneParcela): boolean => {
     if (t.status === 'cancelado') return true;
@@ -330,7 +361,7 @@ export const useClienteBulkActions = ({
     return !registrado;
   };
 
-  const handleDeletarTitulos = async (items: CarneParcela[]) => {
+  const handleDeletarTitulos = useCallback(async (items: CarneParcela[]) => {
     const deletaveis = items.filter(isTituloDeletavel);
     if (deletaveis.length === 0) return;
     const confirmMessage = deletaveis.length === 1
@@ -364,14 +395,14 @@ export const useClienteBulkActions = ({
         error(t('financial.errorDeleteTitlesGeneral'));
       }
     }
-  };
+  }, [t, queryClient, effectiveClienteId, onRefreshParcelas, success, error]);
 
   // Ações em lote para títulos
-  const titulosBulkActions: BulkAction<CarneParcela>[] = [
+  const titulosBulkActions: BulkAction<CarneParcela>[] = useMemo(() => [
     {
       key: 'editar',
-      label: t('actions.edit'),
-      variant: 'primary',
+      label: bulkBtn.editar.label,
+      variant: bulkBtn.editar.variant,
       disabled: (selectedItems) => selectedItems.length !== 1,
       onClick: (selectedItems: CarneParcela[]) => {
         if (selectedItems.length > 0) {
@@ -382,8 +413,8 @@ export const useClienteBulkActions = ({
     },
     {
       key: 'excluir',
-      label: t('actions.delete'),
-      variant: 'primary',
+      label: bulkBtn.deletar.label,
+      variant: bulkBtn.deletar.variant,
       disabled: (selectedItems) => {
         if (selectedItems.length === 0) return true;
         return selectedItems.every(item => !isTituloDeletavel(item));
@@ -392,8 +423,8 @@ export const useClienteBulkActions = ({
     },
     {
       key: 'receber',
-      label: t('actions.receive'),
-      variant: 'primary',
+      label: bulkBtn.receber.label,
+      variant: bulkBtn.receber.variant,
       disabled: (selectedItems) => {
         if (selectedItems.length === 0) return true;
         return selectedItems.every(item => item.status === 'pago' || item.status === 'cancelado');
@@ -410,8 +441,8 @@ export const useClienteBulkActions = ({
     },
     {
       key: 'cancelar',
-      label: t('actions.cancel'),
-      variant: 'primary',
+      label: bulkBtn.cancelar.label,
+      variant: bulkBtn.cancelar.variant,
       disabled: (selectedItems) => {
         if (selectedItems.length === 0) return true;
         return selectedItems.every(item => item.status === 'pago' || item.status === 'cancelado');
@@ -420,8 +451,8 @@ export const useClienteBulkActions = ({
     },
     {
       key: 'estornar',
-      label: t('actions.reverse'),
-      variant: 'primary',
+      label: bulkBtn.estornar.label,
+      variant: bulkBtn.estornar.variant,
       disabled: (selectedItems: CarneParcela[]) => {
         if (selectedItems.length === 0) return true;
         return selectedItems.every(item => item.status !== 'pago');
@@ -434,19 +465,19 @@ export const useClienteBulkActions = ({
     },
     {
       key: 'imprimir',
-      label: t('actions.print'),
-      variant: 'primary',
+      label: bulkBtn.imprimir.label,
+      variant: bulkBtn.imprimir.variant,
       dropdown: [
         {
-          label: t('buttons.selected'),
+          label: bulkBtn.selecionados.label,
           action: () => handleImprimirTitulosSelecionados(selectedItems as TituloItem[])
         },
         {
-          label: t('buttons.open'),
+          label: bulkBtn.abertos.label,
           action: handleImprimirTodosEmAberto
         },
         {
-          label: t('buttons.receipt'),
+          label: bulkBtn.recibo.label,
           action: () => {
             handleImprimirRecibosWrapper(getItemsCompletos);
           },
@@ -456,7 +487,7 @@ export const useClienteBulkActions = ({
           }
         },
         ...(hasNFSeEmitida ? [{
-          label: t('buttons.printNF'),
+          label: bulkBtn.imprimirNF.label,
           action: () => {
             const itensComNFSe = getItemsCompletos.filter(item => item.nfse_status === 'emitida' && item.nfse_numero);
             if (itensComNFSe.length === 0) {
@@ -470,31 +501,31 @@ export const useClienteBulkActions = ({
     },
     {
       key: 'enviar',
-      label: t('actions.send'),
-      variant: 'primary',
+      label: bulkBtn.enviar.label,
+      variant: bulkBtn.enviar.variant,
       disabled: (selectedItems: CarneParcela[]) => {
         if (selectedItems.length === 0) return true;
         return selectedItems.every(item => item.status === 'cancelado');
       },
       dropdown: [
         {
-          label: t('buttons.viaWhatsApp'),
+          label: bulkBtn.viaWhatsApp.label,
           action: () => handleEnviarWhatsApp(getItemsCompletos)
         },
         {
-          label: t('buttons.viaEmail'),
+          label: bulkBtn.viaEmail.label,
           action: () => handleEnviarEmail(getItemsCompletos)
         }
       ]
     },
     {
       key: 'nfse',
-      label: t('actions.nfse'),
-      variant: 'primary',
+      label: bulkBtn.nfse.label,
+      variant: bulkBtn.nfse.variant,
       disabled: (selectedItems: CarneParcela[]) => selectedItems.length === 0,
       dropdown: [
         {
-          label: t('buttons.generateNFSeAvulsa'),
+          label: bulkBtn.gerarNFSeAvulsa.label,
           action: (selectedItems?: CarneParcela[]) => {
             if (selectedItems && selectedItems.length > 0) {
               onShowGerarNFeModal(selectedItems[0]);
@@ -503,20 +534,20 @@ export const useClienteBulkActions = ({
         },
       ]
     }
-  ];
+  ], [bulkBtn, t, hasNFSeEmitida, handleDeletarTitulos, handleCancelarTitulos, handleEstornarTitulo, handleEnviarWhatsApp, handleEnviarEmail, onShowTituloEditModal, onShowReceberModal, onShowGerarNFeModal, handleImprimirNF, handleImprimirTitulosSelecionados, handleImprimirTodosEmAberto, handleImprimirRecibosWrapper, error, getItemsCompletos, selectedItems]);
 
   // Ações em lote para contratos
-  const contratosBulkActions: BulkAction<Contrato>[] = [
+  const contratosBulkActions: BulkAction<Contrato>[] = useMemo(() => [
     {
       key: 'novo',
-      label: t('buttons.new'),
-      variant: 'primary',
+      label: bulkBtn.novo.label,
+      variant: bulkBtn.novo.variant,
       onClick: () => onShowContratoCreateModal()
     },
     {
       key: 'editar',
-      label: t('actions.edit'),
-      variant: 'primary',
+      label: bulkBtn.editar.label,
+      variant: bulkBtn.editar.variant,
       disabled: (selectedItems) => selectedItems.length === 0,
       onClick: (selectedItems) => {
         if (selectedItems.length > 0) {
@@ -526,8 +557,8 @@ export const useClienteBulkActions = ({
     },
     {
       key: 'excluir',
-      label: t('actions.delete'),
-      variant: 'primary',
+      label: bulkBtn.deletar.label,
+      variant: bulkBtn.deletar.variant,
       disabled: (selectedItems) => selectedItems.length === 0,
       onClick: handleDeletarContratos,
       confirm: {
@@ -539,8 +570,8 @@ export const useClienteBulkActions = ({
     },
     {
       key: 'imprimir',
-      label: t('actions.print'),
-      variant: 'primary',
+      label: bulkBtn.imprimir.label,
+      variant: bulkBtn.imprimir.variant,
       disabled: (selectedItems) => selectedItems.length === 0,
       dropdown: [
         {
@@ -569,7 +600,7 @@ export const useClienteBulkActions = ({
         }
       ]
     }
-  ];
+  ], [bulkBtn, t, onShowContratoCreateModal, onShowContratoEditModal, handleDeletarContratos, selectedContratosItems, handleImprimirContrato, handleImprimirTermoAdesao, handleImprimirContratoPermanencia]);
 
   return {
     selectedItems,

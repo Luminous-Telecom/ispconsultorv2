@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useSaasAuth } from 'contexts/SaasAuthContext';
+import { EntrarButton } from 'components/ui';
 import BackNetLogo from 'components/common/BackNetLogo';
 
 const SaasLogin: React.FC = () => {
@@ -85,13 +86,12 @@ const SaasLogin: React.FC = () => {
                     />
                   </div>
 
-                  <button
+                  <EntrarButton
                     type="submit"
-                    className="btn btn-primary w-100 mb-3"
+                    className="w-100 mb-3"
                     disabled={isLoading}
-                  >
-                    Entrar
-                  </button>
+                    isPending={isLoading}
+                  />
                 </form>
 
                 <div className="text-center pt-2 border-top">

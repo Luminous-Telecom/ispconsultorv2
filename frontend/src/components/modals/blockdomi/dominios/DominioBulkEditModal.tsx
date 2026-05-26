@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useI18n } from 'contexts/I18nContext';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button, FormField, AtivoInativoField } from 'components/ui';
+import { FormField, AtivoInativoField, ModalFormActions } from 'components/ui';
 import { Dominio } from 'types';
 import { DominioService } from 'services/dominioService';
 
@@ -55,8 +55,8 @@ const DominioBulkEditModal: React.FC<DominioBulkEditModalProps> = ({
     }
   }, [show, dominios]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (dominios.length === 0) return;
 
     setIsSubmitting(true);
@@ -95,26 +95,12 @@ const DominioBulkEditModal: React.FC<DominioBulkEditModalProps> = ({
       title={t('blockdomi.bulkEditDomains').replace('{count}', String(count))}
       size="lg"
       headerActions={
-        <div className="d-flex gap-2 modal-header-actions">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={onClose}
-            disabled={isSubmitting}
-          >
-            {t('buttons.cancel')}
-          </Button>
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-          >
-            {t('buttons.save')}
-          </Button>
-        </div>
+        <ModalFormActions
+          onCancel={onClose}
+          isPending={isSubmitting}
+          saveType="button"
+          onSave={handleSubmit}
+        />
       }
     >
       <div style={{ padding: '16px' }}>

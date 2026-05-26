@@ -4,7 +4,7 @@ import { formatDate } from 'utils/formatters';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { apiService } from 'services/api';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
-import { Button } from 'components/ui';
+import { AtualizarSistemaButton, FecharButton } from 'components/ui';
 import { ApiResponse } from 'types/api';
 import { API_CONFIG } from 'config/api';
 import { useConfirmModal } from 'hooks/useConfirmModal';
@@ -225,28 +225,18 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
   const headerActions = (
     <div className="d-flex gap-2 modal-header-actions">
       {!isLoading && !error && atualizacoes && atualizacoes.length > 0 && (
-        <Button
+        <AtualizarSistemaButton
           type="button"
-          variant="primary"
-          size="sm"
-          leftIcon={<i className="bi bi-arrow-clockwise"></i>}
           onClick={handleUpdate}
           disabled={isUpdating || updateMutation.isPending}
-          isLoading={isUpdating || updateMutation.isPending}
-        >
-          {t('updates.updateSystem')}
-        </Button>
+          isPending={isUpdating || updateMutation.isPending}
+        />
       )}
-      <Button
+      <FecharButton
         type="button"
-        variant="primary"
-        size="sm"
-        leftIcon={<i className="bi bi-x-lg"></i>}
         onClick={onClose}
-        disabled={isUpdating || updateMutation.isPending}
-      >
-        {t('buttons.close')}
-      </Button>
+        isPending={isUpdating || updateMutation.isPending}
+      />
     </div>
   );
 

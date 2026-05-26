@@ -3,6 +3,7 @@ import { useTipoCobrancaContratos, useDeleteTipoCobrancaContrato } from 'hooks/u
 import { useTableFilters } from 'hooks/useTableFilters';
 import { TipoCobrancaContrato } from 'services/tipoCobrancaContratoService';
 import { useI18n } from 'contexts/I18nContext';
+import { useBulkBtn } from 'components/ui';
 import { formatDateTime } from 'utils/formatters';
 import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
@@ -39,6 +40,7 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
   skipWrapper = false
 }) => {
   const { t } = useI18n();
+  const bulkBtn = useBulkBtn();
   const defaultTitle = title || (onSelectTipo ? `Selecionar ${t('modal.billingType')}` : t('menu.billingType'));
   const [showTipoModal, setShowTipoModal] = useState(false);
   const [selectedTipoId, setSelectedTipoId] = useState<number | null>(null);
@@ -143,16 +145,16 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
   const bulkActions = useMemo(() => {
     const base = [
       {
-        label: t('actions.create'),
-        variant: 'primary' as const,
+        label: bulkBtn.novo.label,
+        variant: bulkBtn.novo.variant,
         action: () => {
           setSelectedTipoId(null);
           setShowTipoModal(true);
         }
       },
       {
-        label: t('actions.edit'),
-        variant: 'primary' as const,
+        label: bulkBtn.editar.label,
+        variant: bulkBtn.editar.variant,
         disabled: (items: TipoCobrancaContrato[]) => items.length === 0,
         action: (items: TipoCobrancaContrato[]) => {
           const item = items[0];
@@ -163,7 +165,8 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
         }
       },
       {
-        label: t('actions.delete'),
+        label: bulkBtn.deletar.label,
+        variant: bulkBtn.deletar.variant,
         disabled: (items: TipoCobrancaContrato[]) => items.length === 0,
         action: async (items: TipoCobrancaContrato[]) => {
           const item = items[0];
@@ -174,10 +177,10 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
       }
     ];
     return onSelectTipo ? [
-      { label: t('buttons.cancel'), variant: 'primary' as const, action: () => onClose() },
+      { label: bulkBtn.cancelar.label, variant: bulkBtn.cancelar.variant, action: () => onClose() },
       {
-        label: t('buttons.select'),
-        variant: 'primary' as const,
+        label: bulkBtn.selecionar.label,
+        variant: bulkBtn.selecionar.variant,
         disabled: (items: TipoCobrancaContrato[]) => items.length === 0,
         action: (items: TipoCobrancaContrato[]) => {
           const item = items[0];
@@ -188,7 +191,7 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
         }
       }
     ] : base;
-  }, [t, onSelectTipo, onClose, handleDelete]);
+  }, [bulkBtn, t, onSelectTipo, onClose, handleDelete]);
 
   const modalData = useMemo(() => {
     const d = tiposData?.data;

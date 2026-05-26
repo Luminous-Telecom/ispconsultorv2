@@ -4,6 +4,7 @@ import { useModalSelect } from 'hooks/useModalSelect';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { Banco } from 'types';
 import { useI18n } from 'contexts/I18nContext';
+import {useBulkBtn} from 'components/ui';
 import { formatDateTime } from 'utils/formatters';
 import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
@@ -29,6 +30,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
   skipWrapper = false
 }) => {
   const { t } = useI18n();
+  const bulkBtn = useBulkBtn();
   const defaultTitle = title || (onSelectBanco ? t('ui.selectBank') : t('menu.banks'));
   const [showBancoModal, setShowBancoModal] = useState(false);
   const [selectedBancoId, setSelectedBancoId] = useState<number | null>(null);
@@ -221,31 +223,31 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
   // Bulk actions memoizados
   const bulkActions = useMemo(() => onSelectBanco ? [
     {
-        label: t('buttons.cancel'),
-        variant: 'primary' as const,
+        label: bulkBtn.cancelar.label,
+        variant: bulkBtn.cancelar.variant,
         action: () => {
           clearSelection();
           onClose();
         }
       },
       {
-        label: t('buttons.select'),
-        variant: 'primary' as const,
+        label: bulkBtn.selecionar.label,
+        variant: bulkBtn.selecionar.variant,
         disabled: (selectedItems: Banco[]) => selectedItems.length === 0 && !selectedBanco,
         action: (selectedItems: Banco[]) => handleSelect(selectedItems)
       }
     ] : [
       {
-        label: t('actions.create'),
-        variant: 'primary' as const,
+        label: bulkBtn.novo.label,
+        variant: bulkBtn.novo.variant,
         action: () => {
           setSelectedBancoId(null);
           setShowBancoModal(true);
         }
       },
       {
-        label: t('actions.edit'),
-        variant: 'primary' as const,
+        label: bulkBtn.editar.label,
+        variant: bulkBtn.editar.variant,
         disabled: (selectedItems: Banco[]) => selectedItems.length === 0 && !selectedBanco,
         action: (selectedItems: Banco[]) => {
           const item = selectedItems.length > 0 ? selectedItems[0] : selectedBanco;
@@ -256,20 +258,22 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         }
       },
       {
-        label: t('actions.delete'),
+        label: bulkBtn.deletar.label,
+        variant: bulkBtn.deletar.variant,
         disabled: (selectedItems: Banco[]) => selectedItems.length === 0 && !selectedBanco,
         action: async (selectedItems: Banco[]) => {
           const item = selectedItems.length > 0 ? selectedItems[0] : selectedBanco;
           if (!item) return;
           
           const confirmed = window.confirm(t('messages.confirmDelete'));
-        if (confirmed) {
-          handleDelete(item.id);
-        }
-      }
-    }
-  ], [onSelectBanco, selectedBanco, clearSelection, onClose, handleSelect, handleDelete, t]);
-
+          if (confirmed) {
+            handleDelete(item.id);
+          }
+        },
+      },
+    ],
+    [onSelectBanco, selectedBanco, clearSelection, onClose, handleSelect, handleDelete, t, bulkBtn]
+  );
   const modalData = useMemo(() => bancosData?.data || [], [bancosData?.data]);
 
   const handleSearchChange = useCallback((search: string, field?: string) => {

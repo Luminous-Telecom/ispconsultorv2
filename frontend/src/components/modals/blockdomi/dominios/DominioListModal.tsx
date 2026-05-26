@@ -6,6 +6,7 @@ import { useModalSelect } from 'hooks/useModalSelect';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { Dominio } from 'types';
 import { useI18n } from 'contexts/I18nContext';
+import { getSystemButtonBulkPropsByKey } from 'components/ui';
 import { formatDateTime, formatDate } from 'utils/formatters';
 import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
@@ -34,6 +35,17 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
   skipWrapper = false
 }) => {
   const { t } = useI18n();
+  const bulkBtn = useMemo(
+    () => ({
+      cancelar: getSystemButtonBulkPropsByKey('actions.cancel', t),
+      selecionar: getSystemButtonBulkPropsByKey('buttons.select', t),
+      novo: getSystemButtonBulkPropsByKey('buttons.new', t),
+      editar: getSystemButtonBulkPropsByKey('actions.edit', t),
+      deletar: getSystemButtonBulkPropsByKey('actions.delete', t),
+      sincronizar: getSystemButtonBulkPropsByKey('buttons.sync', t),
+    }),
+    [t]
+  );
   const queryClient = useQueryClient();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -300,28 +312,28 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
 
   const bulkActions = useMemo(() => onSelectDominio ? [
     {
-      label: t('actions.cancel'),
-      variant: 'primary' as const,
+      label: bulkBtn.cancelar.label,
+      variant: bulkBtn.cancelar.variant,
       action: () => {
         clearSelection();
         onClose();
       }
     },
     {
-      label: t('buttons.select'),
-      variant: 'primary' as const,
+      label: bulkBtn.selecionar.label,
+      variant: bulkBtn.selecionar.variant,
       disabled: (selectedItems: Dominio[]) => selectedItems.length === 0 && !selectedItem,
       action: (selectedItems: Dominio[]) => handleSelect(selectedItems)
     }
   ] : [
     {
-      label: t('actions.create'),
-      variant: 'primary' as const,
+      label: bulkBtn.novo.label,
+      variant: bulkBtn.novo.variant,
       action: () => setShowCreateModal(true)
     },
     {
-      label: t('actions.edit'),
-      variant: 'primary' as const,
+      label: bulkBtn.editar.label,
+      variant: bulkBtn.editar.variant,
       disabled: (selectedItems: Dominio[]) => {
         const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
         return items.length === 0;
@@ -339,7 +351,8 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
       }
     },
     {
-      label: t('actions.delete'),
+      label: bulkBtn.deletar.label,
+      variant: bulkBtn.deletar.variant,
       disabled: (selectedItems: Dominio[]) => selectedItems.length === 0 && !selectedItem,
       action: async (selectedItems: Dominio[]) => {
         const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
@@ -401,15 +414,15 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
       }
     },
     {
-      label: t('blockdomi.syncSeiAnatel'),
-      variant: 'primary' as const,
+      label: bulkBtn.sincronizar.label,
+      variant: bulkBtn.sincronizar.variant,
       requiresSelection: false as const,
       disabled: (_selectedItems: Dominio[]) => isSyncingSei,
       action: () => {
         void handleSincronizarSeiAnatel();
       }
     }
-  ], [onSelectDominio, selectedItem, clearSelection, onClose, handleSelect, handleDelete, handleBulkDelete, handleSincronizarSeiAnatel, isSyncingSei, t]);
+  ], [onSelectDominio, selectedItem, clearSelection, onClose, handleSelect, handleDelete, handleBulkDelete, handleSincronizarSeiAnatel, isSyncingSei, bulkBtn, t]);
 
   const modalData = useMemo(() => dominiosData?.data || [], [dominiosData?.data]);
 

@@ -16,6 +16,7 @@ import SingleModalWrapper from '../common/SingleModalWrapper';
 import SearchBar from '../ui/SearchBar';
 import BackNetLogo from '../common/BackNetLogo';
 import BloqueioAtrasoOverlayComponent from '../common/BloqueioAtrasoOverlay';
+import { RecarregarButton } from '../ui';
 import { DadosEmpresaService } from 'services/dadosEmpresaService';
 import { usePlanoModulos } from 'hooks/usePlanoModulos';
 import { MODAL_MODULO_MAP } from 'constants/planoModulos';
@@ -340,13 +341,11 @@ const Layout: React.FC = () => {
         <div className="text-center p-4">
           <i className="bi bi-cloud-off text-danger" style={{ fontSize: '4rem' }}></i>
           <h4 className="mt-3 text-danger">{t('ui.serverUnavailable')}</h4>
-          <button
+          <RecarregarButton
             type="button"
-            className="btn btn-primary mt-3"
+            className="mt-3"
             onClick={() => window.location.reload()}
-          >
-            {t('ui.reloadPage')}
-          </button>
+          />
         </div>
       </div>
     );

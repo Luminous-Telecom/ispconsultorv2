@@ -4,6 +4,7 @@ import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useI18n } from 'contexts/I18nContext';
+import { useBulkBtn } from 'components/ui';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { RpkiCaService, type RpkiAspa } from 'services/rpkiCaService';
 import { useRpkiCas } from 'hooks/useRpkiCas';
@@ -26,6 +27,7 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = ({
   tableTitle = 'ASPAs',
 }) => {
   const { t } = useI18n();
+  const bulkBtn = useBulkBtn();
   const { error: showError, success } = useNotificationContext();
   const auditoria = useAuditoria();
   const handleAuditAspa = useCallback(
@@ -113,8 +115,8 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = ({
   const bulkActions = [
     {
       key: 'novo-aspa',
-      label: t('buttons.new'),
-      variant: 'primary' as const,
+      label: bulkBtn.novo.label,
+      variant: bulkBtn.novo.variant,
       requiresSelection: false,
       onClick: () => setShowCreateModal(true),
     },

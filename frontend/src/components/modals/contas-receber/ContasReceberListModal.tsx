@@ -14,6 +14,7 @@ import { TableConfig, BulkAction } from 'components/tables/types';
 import { TituloModal } from 'components/modals/titulos';
 import ReceberModal from 'components/modals/pagamentos/ReceberModal';
 import { useI18n } from 'contexts/I18nContext';
+import { getSystemButtonBulkPropsByKey } from 'components/ui';
 import ImprimirModal from 'components/common/ImprimirModal';
 import GerarNFeModal from 'components/modals/notas-fiscais/GerarNFeModal';
 import { useIsMobile } from 'hooks/useMediaQuery';
@@ -45,6 +46,18 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
 }) => {
   const isSaas = variant === 'saas';
   const { t } = useI18n();
+  const bulkBtn = useMemo(
+    () => ({
+      editar: getSystemButtonBulkPropsByKey('actions.edit', t),
+      deletar: getSystemButtonBulkPropsByKey('actions.delete', t),
+      receber: getSystemButtonBulkPropsByKey('actions.receive', t),
+      cancelar: getSystemButtonBulkPropsByKey('actions.cancel', t),
+      estornar: getSystemButtonBulkPropsByKey('actions.reverse', t),
+      imprimir: getSystemButtonBulkPropsByKey('buttons.print', t),
+      nfse: getSystemButtonBulkPropsByKey('actions.nfse', t),
+    }),
+    [t]
+  );
   const isMobile = useIsMobile();
   const tableFilters = useTableFilters({
     initialSearch: '',
@@ -747,8 +760,8 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
     if (!isSaas) {
       actions.push({
         key: 'editar',
-        label: t('buttons.edit'),
-        variant: 'primary' as const,
+        label: bulkBtn.editar.label,
+        variant: bulkBtn.editar.variant,
         onClick: (s: TituloItemUnion[]) => {
           if (s.length > 0) {
             setSelectedTituloId((s[0] as Titulo).id);
@@ -761,8 +774,8 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
 
     actions.push({
       key: 'excluir',
-      label: t('buttons.delete'),
-      variant: 'primary' as const,
+      label: bulkBtn.deletar.label,
+      variant: bulkBtn.deletar.variant,
       onClick: (s: TituloItemUnion[]) => {
         if (isSaas) handleDeleteSaas(s as SaasTitulo[]);
         else (async () => {
@@ -792,8 +805,8 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
     if (!isSaas) {
       actions.push({
         key: 'receber',
-        label: t('buttons.receive'),
-        variant: 'primary' as const,
+        label: bulkBtn.receber.label,
+        variant: bulkBtn.receber.variant,
         onClick: (s: TituloItemUnion[]) => {
           if (s.length > 0) {
             const item = s[0] as Titulo;
@@ -815,8 +828,8 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
     } else {
       actions.push({
         key: 'gerar-boleto',
-        label: t('buttons.receive'),
-        variant: 'primary' as const,
+        label: bulkBtn.receber.label,
+        variant: bulkBtn.receber.variant,
         onClick: (s: TituloItemUnion[]) => handleGerarBoletoSaas(s as SaasTitulo[]),
         disabled: (s: TituloItemUnion[]): boolean => {
           const items = s.length > 0 ? s : selectedItems;
@@ -828,8 +841,8 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
 
     actions.push({
       key: 'cancelar',
-      label: t('buttons.cancel'),
-      variant: 'primary' as const,
+      label: bulkBtn.cancelar.label,
+      variant: bulkBtn.cancelar.variant,
       onClick: (s: TituloItemUnion[]) => {
         if (isSaas) handleCancelarSaas(s as SaasTitulo[]);
         else (async () => {
@@ -854,8 +867,8 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
 
     actions.push({
       key: 'estornar',
-      label: t('buttons.reverse'),
-      variant: 'primary' as const,
+      label: bulkBtn.estornar.label,
+      variant: bulkBtn.estornar.variant,
       onClick: (s: TituloItemUnion[]) => {
         if (isSaas) handleEstornarSaas(s as SaasTitulo[]);
         else (async () => {
@@ -883,8 +896,8 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
 
     actions.push({
       key: 'imprimir',
-      label: t('buttons.print'),
-      variant: 'primary' as const,
+      label: bulkBtn.imprimir.label,
+      variant: bulkBtn.imprimir.variant,
       dropdown: isSaas
         ? [
             { label: t('other.selected'), action: () => handleImprimirSelecionadosSaas() },
@@ -909,8 +922,8 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
     if (!isSaas) {
       actions.push({
         key: 'nfse',
-        label: t('actions.nfse'),
-        variant: 'primary' as const,
+        label: bulkBtn.nfse.label,
+        variant: bulkBtn.nfse.variant,
         disabled: () => selectedItems.length === 0,
         dropdown: [{
           label: t('other.generateNFSeStandalone'),
@@ -925,7 +938,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
     }
 
     return actions;
-  }, [isSaas, selectedItems, gerandoBoletoId, handleGerarBoletoSaas, handleDeleteSaas, handleCancelarSaas, handleEstornarSaas, handleImprimirSelecionadosSaas, handleImprimirTodosEmAbertoSaas, success, error, handleRefreshData, handleImprimirSelecionados, handleImprimirTodosEmAberto, handleImprimirRecibos, hasNFSeEmitida, handleImprimirNFSe, getItensComNFSe, t]);
+  }, [isSaas, selectedItems, gerandoBoletoId, handleGerarBoletoSaas, handleDeleteSaas, handleCancelarSaas, handleEstornarSaas, handleImprimirSelecionadosSaas, handleImprimirTodosEmAbertoSaas, success, error, handleRefreshData, handleImprimirSelecionados, handleImprimirTodosEmAberto, handleImprimirRecibos, hasNFSeEmitida, handleImprimirNFSe, getItensComNFSe, bulkBtn, t]);
 
   const handleSearch = useCallback((term: string, field?: string) => {
     // Usar setTimeout para evitar atualização durante render cycle

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useI18n } from 'contexts/I18nContext';
+import { useBulkBtn } from 'components/ui';
 import { useClienteArquivos } from 'hooks/useClienteArquivos';
 import { ClienteArquivo } from 'services/clienteArquivoService';
 import { formatDateTime } from 'utils/formatters';
@@ -29,7 +30,8 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({
   onSort
 }) => {
   const { t } = useI18n();
-  const [_selectedItems, setSelectedItems] = useState<ClienteArquivo[]>([]);
+  const bulkBtn = useBulkBtn();
+        const [_selectedItems, setSelectedItems] = useState<ClienteArquivo[]>([]);
   const [showPreview, setShowPreview] = useState(false);
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -69,14 +71,14 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({
     const isImage = isImageFile(arquivo);
     
     setPreviewUrl(url);
-    setPreviewTitle(isImage ? `${t('buttons.view')} ${t('form.fileTypePhoto')} - ${arquivo.nome}` : `${t('buttons.view')} ${t('form.fileTypeDocument')} - ${arquivo.nome}`);
+    setPreviewTitle(isImage ? `${bulkBtn.visualizar.label} ${t('form.fileTypePhoto')} - ${arquivo.nome}` : `${bulkBtn.visualizar.label} ${t('form.fileTypeDocument')} - ${arquivo.nome}`);
     
     if (isImage) {
       setShowImagePreview(true);
     } else {
       setShowPreview(true);
     }
-  }, [isImageFile, t]);
+  }, [isImageFile, t, bulkBtn]);
 
   const handleClosePreview = useCallback(() => {
     setShowPreview(false);
@@ -174,8 +176,8 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({
     bulkActions: [
       {
         key: 'new',
-        label: t('actions.create'),
-        variant: 'primary' as const,
+        label: bulkBtn.novo.label,
+        variant: bulkBtn.novo.variant,
         disabled: () => false,
         onClick: async () => {
           setShowAdicionarModal(true);
@@ -183,7 +185,8 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({
       },
       {
         key: 'delete-selected',
-        label: t('actions.delete'),
+        label: bulkBtn.deletar.label,
+        variant: bulkBtn.deletar.variant,
         disabled: (selectedItems: ClienteArquivo[]) => selectedItems.length === 0 || deleteMutation.isPending,
         onClick: async (selectedItems: ClienteArquivo[]) => {
           if (selectedItems.length === 0) return;
@@ -198,7 +201,8 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({
       },
       {
         key: 'view',
-        label: t('buttons.view'),
+        label: bulkBtn.visualizar.label,
+        variant: bulkBtn.visualizar.variant,
         disabled: (items: ClienteArquivo[]) => {
           if (items.length === 0) return true;
           const extensoesVisiveis = /\.(pdf|jpg|jpeg|png|gif|bmp|webp|svg|ico|mp4|webm|ogg|mov|avi|txt|csv|json|xml|html|css|js|md)$/i;
@@ -217,8 +221,8 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({
       },
       {
         key: 'download',
-        label: t('buttons.download'),
-        variant: 'primary' as const,
+        label: bulkBtn.baixar.label,
+        variant: bulkBtn.baixar.variant,
         disabled: (selectedItems: ClienteArquivo[]) => selectedItems.length === 0,
         onClick: async (selectedItems: ClienteArquivo[]) => {
           // Baixar todos os arquivos selecionados
@@ -236,7 +240,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({
       { key: 'origem', label: t('table.fileOrigin') }
     ],
     emptyMessage: t('empty.noFiles')
-  }), [arquivos, deleteMutation, handleDownload, handleView, t, finalSortColumn, finalSortDirection]);
+  }), [arquivos, bulkBtn, deleteMutation, handleDownload, handleView, t, finalSortColumn, finalSortDirection]);
 
   if (!clienteId) {
     return (

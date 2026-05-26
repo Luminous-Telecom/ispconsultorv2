@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
+import { ModalFormActions, getSystemButtonBulkPropsByKey } from 'components/ui';
 import FormField from 'components/ui/FormField';
 import AddressFields from 'components/forms/AddressFields';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
@@ -62,6 +62,18 @@ type TabId = 'dados-basicos' | 'endereco' | 'contato' | 'contratos' | 'usuarios'
 
 const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId }) => {
   const { t } = useI18n();
+  const bulkBtn = useMemo(
+    () => ({
+      novo: getSystemButtonBulkPropsByKey('actions.create', t),
+      editar: getSystemButtonBulkPropsByKey('actions.edit', t),
+      deletar: getSystemButtonBulkPropsByKey('actions.delete', t),
+      receber: getSystemButtonBulkPropsByKey('actions.receive', t),
+      cancelar: getSystemButtonBulkPropsByKey('buttons.cancel', t),
+      estornar: getSystemButtonBulkPropsByKey('buttons.reverse', t),
+      imprimir: getSystemButtonBulkPropsByKey('buttons.print', t),
+    }),
+    [t]
+  );
   const queryClient = useQueryClient();
   const { success, error, info } = useNotificationContext();
   const lastCnpjConsulted = useRef<string>('');
@@ -418,10 +430,10 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
   }, [refetchUsuarios, success, error, t]);
 
   const usuariosBulkActions = useMemo(() => [
-    { key: 'novo', label: t('actions.create'), variant: 'primary' as const, requiresSelection: false, onClick: () => setShowUsuarioCreate(true) },
-    { key: 'editar', label: t('actions.edit'), variant: 'primary' as const, onClick: (sel: SaasTenantUsuario[]) => { if (sel[0]) { setSelectedUsuarioId(sel[0].id); setShowUsuarioEdit(true); } } },
-    { key: 'deletar', label: t('actions.delete'), onClick: handleDeleteUsuario },
-  ], [t, handleDeleteUsuario]);
+    { key: 'novo', label: bulkBtn.novo.label, variant: bulkBtn.novo.variant, requiresSelection: false, onClick: () => setShowUsuarioCreate(true) },
+    { key: 'editar', label: bulkBtn.editar.label, variant: bulkBtn.editar.variant, onClick: (sel: SaasTenantUsuario[]) => { if (sel[0]) { setSelectedUsuarioId(sel[0].id); setShowUsuarioEdit(true); } } },
+    { key: 'deletar', label: bulkBtn.deletar.label, variant: bulkBtn.deletar.variant, onClick: handleDeleteUsuario },
+  ], [bulkBtn, handleDeleteUsuario]);
 
   const formDataForAddress = useMemo(() => ({
     cep: form.cep, endereco: form.endereco, numero: form.numero, complemento: form.complemento,
@@ -454,15 +466,15 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
 
   const contratosBulkActions = useMemo(() => {
     const base = [
-      { key: 'novo', label: t('actions.create'), variant: 'primary' as const, requiresSelection: false, onClick: () => setShowContratoCreate(true) },
-      { key: 'editar', label: t('actions.edit'), variant: 'primary' as const, onClick: (sel: SaasContrato[]) => { if (sel[0]) { setSelectedContratoId(sel[0].id); setShowContratoEdit(true); } } },
-      { key: 'deletar', label: t('actions.delete'), onClick: handleDeleteContrato },
+      { key: 'novo', label: bulkBtn.novo.label, variant: bulkBtn.novo.variant, requiresSelection: false, onClick: () => setShowContratoCreate(true) },
+      { key: 'editar', label: bulkBtn.editar.label, variant: bulkBtn.editar.variant, onClick: (sel: SaasContrato[]) => { if (sel[0]) { setSelectedContratoId(sel[0].id); setShowContratoEdit(true); } } },
+      { key: 'deletar', label: bulkBtn.deletar.label, variant: bulkBtn.deletar.variant, onClick: handleDeleteContrato },
     ];
     if (statusEmpresa?.bloqueado_por_atraso) {
       base.push({ key: 'desbloquear', label: t('saas.manualUnblock') || 'Desbloquear manualmente', variant: 'primary' as const, requiresSelection: true, onClick: handleDesbloquearManual });
     }
     return base;
-  }, [t, handleDeleteContrato, statusEmpresa?.bloqueado_por_atraso, handleDesbloquearManual]);
+  }, [bulkBtn, t, handleDeleteContrato, statusEmpresa?.bloqueado_por_atraso, handleDesbloquearManual]);
 
   const handleDeleteTitulo = useCallback(async (sel: SaasTitulo[]) => {
     const item = sel[0];
@@ -583,9 +595,9 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
   }, [titulosParaFiltro, error, success, openPrintModal, t]);
 
   const titulosBulkActions = useMemo(() => [
-    { key: 'novo', label: t('actions.create'), variant: 'primary' as const, requiresSelection: false, onClick: () => setShowTituloCreate(true) },
-    { key: 'excluir', label: t('buttons.delete'), variant: 'primary' as const, disabled: (s: SaasTitulo[]) => s.length === 0, onClick: handleDeleteTitulo },
-    { key: 'receber', label: t('actions.receive'), variant: 'primary' as const, disabled: (s: SaasTitulo[]) => {
+    { key: 'novo', label: bulkBtn.novo.label, variant: bulkBtn.novo.variant, requiresSelection: false, onClick: () => setShowTituloCreate(true) },
+    { key: 'excluir', label: bulkBtn.deletar.label, variant: bulkBtn.deletar.variant, disabled: (s: SaasTitulo[]) => s.length === 0, onClick: handleDeleteTitulo },
+    { key: 'receber', label: bulkBtn.receber.label, variant: bulkBtn.receber.variant, disabled: (s: SaasTitulo[]) => {
       const items = s.length > 0 ? s : selectedTitulos;
       const emAberto = items.filter(i => !i.pago && (i as { status?: string }).status !== 'cancelado');
       return emAberto.length !== 1;
@@ -597,27 +609,29 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
         setShowReceberModal(true);
       }
     } },
-    { key: 'cancelar', label: t('buttons.cancel'), variant: 'primary' as const, disabled: (s: SaasTitulo[]) => {
+    { key: 'cancelar', label: bulkBtn.cancelar.label, variant: bulkBtn.cancelar.variant, disabled: (s: SaasTitulo[]) => {
       const items = s.length > 0 ? s : selectedTitulos;
       return items.length === 0 || items.every(i => i.status === 'pago' || i.status === 'cancelado');
     }, onClick: handleCancelarTitulo },
-    { key: 'estornar', label: t('buttons.reverse'), variant: 'primary' as const, disabled: (s: SaasTitulo[]) => {
+    { key: 'estornar', label: bulkBtn.estornar.label, variant: bulkBtn.estornar.variant, disabled: (s: SaasTitulo[]) => {
       const items = s.length > 0 ? s : selectedTitulos;
       const statusPago = (st: string) => st === 'pago' || st === 'pago_atraso' || st === 'parcial';
       return items.length === 0 || items.every(i => !statusPago(i.status || ''));
     }, onClick: handleEstornarTitulo },
-    { key: 'imprimir', label: t('buttons.print'), variant: 'primary' as const, dropdown: [
+    { key: 'imprimir', label: bulkBtn.imprimir.label, variant: bulkBtn.imprimir.variant, dropdown: [
       { label: t('other.selected'), action: (sel?: SaasTitulo[]) => handleImprimirSelecionados(sel) },
       { label: t('other.open'), action: () => handleImprimirTodosEmAberto() },
     ] },
-  ], [selectedTitulos, handleCancelarTitulo, handleDeleteTitulo, handleEstornarTitulo, handleImprimirSelecionados, handleImprimirTodosEmAberto, t]);
+  ], [selectedTitulos, handleCancelarTitulo, handleDeleteTitulo, handleEstornarTitulo, handleImprimirSelecionados, handleImprimirTodosEmAberto, bulkBtn, t]);
 
   const headerActionsContent = useMemo(() => (
     <div className="cliente-header-unified">
-      <div className="cliente-header-buttons modal-header-actions">
-        <Button type="button" variant="primary" size="sm" onClick={onClose} disabled={isPending}>{t('buttons.cancel')}</Button>
-        <Button type="submit" form="saas-empresa-form-id" variant="primary" size="sm" disabled={isPending}>{t('buttons.save')}</Button>
-      </div>
+      <ModalFormActions
+        className="cliente-header-buttons modal-header-actions"
+        onCancel={onClose}
+        formId="saas-empresa-form-id"
+        isPending={isPending}
+      />
       <div className="cliente-header-tabs">
         <ul
           className={`nav nav-tabs cliente-tabs-unified ${isMobile ? 'cliente-tabs-mobile' : ''}`}

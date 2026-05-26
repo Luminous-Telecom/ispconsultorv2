@@ -5,7 +5,7 @@ import { useNotificationContext } from 'components/notifications/NotificationPro
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { AssinaturaDigitalProviderService, AssinaturaDigitalProviderType } from 'services/assinaturaDigitalProviderService';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
+import { CancelarButton, SalvarButton } from 'components/ui';
 import { useI18n } from 'contexts/I18nContext';
 
 interface AssinaturaDigitalModalProps {
@@ -158,27 +158,20 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
 
   const headerActionsContent = useMemo(() => (
     <div className="d-flex gap-2 modal-header-actions">
-      <Button
+      <CancelarButton
         type="button"
-        variant="primary"
-        size="sm"
         onClick={onClose}
+        isPending={updateMutation.isPending}
         disabled={updateMutation.isPending || isLoading || isLoadingEnabled}
-      >
-        {t('actions.cancel')}
-      </Button>
-      <Button
+      />
+      <SalvarButton
         type="submit"
         form="assinatura-digital-form"
-        variant="primary"
-        size="sm"
-        isLoading={updateMutation.isPending}
+        isPending={updateMutation.isPending}
         disabled={isLoading || isLoadingEnabled}
-      >
-        {t('actions.save')}
-      </Button>
+      />
     </div>
-  ), [onClose, updateMutation.isPending, isLoading, isLoadingEnabled, t]);
+  ), [onClose, updateMutation.isPending, isLoading, isLoadingEnabled]);
 
   // useLayoutEffect garante que os botões apareçam antes da pintura
   useLayoutEffect(() => {

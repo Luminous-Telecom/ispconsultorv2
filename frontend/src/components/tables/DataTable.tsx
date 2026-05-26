@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Spinner } from '../ui';
-import Button from '../ui/Button';
+import { RecarregarButton, Spinner } from '../ui';
 import SearchBar from '../ui/SearchBar';
 
 interface DataTableColumn<T = Record<string, unknown>> {
@@ -110,14 +109,12 @@ const DataTable = <T extends Record<string, unknown> = Record<string, unknown>>(
               </div>
             )}
             {onRefresh && (
-              <Button
-                variant="outline-secondary"
+              <RecarregarButton
                 size="sm"
                 onClick={handleRefresh}
                 disabled={isLoading}
-              >
-                <i className="fas fa-sync-alt"></i>
-              </Button>
+                isPending={isLoading}
+              />
             )}
           </div>
         </div>

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { useI18n } from 'contexts/I18nContext';
+import { useBulkBtn } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useModalSelect } from 'hooks/useModalSelect';
 import { useTableFilters } from 'hooks/useTableFilters';
@@ -43,7 +44,8 @@ type PendingBackupAction = { kind: 'download' | 'delete'; fileName: string };
 
 const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId, variant = 'section' }) => {
   const { t } = useI18n();
-  const { success, error: showError } = useNotificationContext();
+  const bulkBtn = useBulkBtn();
+      const { success, error: showError } = useNotificationContext();
   const tableFilters = useTableFilters({
     initialSortColumn: 'modifiedAt',
     initialSortDirection: 'desc',
@@ -184,8 +186,8 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
     return [
       {
         key: 'view-backup',
-        label: t('buttons.view'),
-        variant: 'primary' as const,
+        label: bulkBtn.visualizar.label,
+        variant: bulkBtn.visualizar.variant,
         disabled: (selectedItems: BackupTableRow[]) =>
           selectedItems.length !== 1 ||
           !isTextPreviewSupported(selectedItems[0].fileName) ||
@@ -198,8 +200,8 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
       },
       {
         key: 'download-backup',
-        label: t('buttons.download'),
-        variant: 'primary' as const,
+        label: bulkBtn.baixar.label,
+        variant: bulkBtn.baixar.variant,
         disabled: (selectedItems: BackupTableRow[]) => selectedItems.length !== 1 || isBusy,
         onClick: async (selectedItems: BackupTableRow[]) => {
           if (selectedItems.length !== 1) return;
@@ -208,8 +210,8 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
       },
       {
         key: 'delete-backup',
-        label: t('actions.delete'),
-        variant: 'primary' as const,
+        label: bulkBtn.deletar.label,
+        variant: bulkBtn.deletar.variant,
         disabled: (selectedItems: BackupTableRow[]) => selectedItems.length !== 1 || isBusy,
         onClick: async (selectedItems: BackupTableRow[]) => {
           if (selectedItems.length !== 1) return;
@@ -217,7 +219,7 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
         },
       },
     ];
-  }, [t, pendingAction, handleDownload, handleDeleteBackup, previewLoading, handleView]);
+  }, [bulkBtn, pendingAction, handleDownload, handleDeleteBackup, previewLoading, handleView]);
 
   const rootClass = variant === 'tab' ? '' : 'mt-4 pt-3 border-top';
 

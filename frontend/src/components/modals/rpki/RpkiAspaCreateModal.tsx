@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button, FormField } from 'components/ui';
-import { useI18n } from 'contexts/I18nContext';
+import { CancelarButton, FormField, NovoButton } from 'components/ui';
 import { RpkiCaService } from 'services/rpkiCaService';
 
 interface RpkiAspaCreatePayload {
@@ -26,7 +25,6 @@ const RpkiAspaCreateModal: React.FC<RpkiAspaCreateModalProps> = ({
   allowedCaIds,
   initialCaId,
 }) => {
-  const { t } = useI18n();
   const [caId, setCaId] = useState('');
   const [customerAsn, setCustomerAsn] = useState('');
   const [providers, setProviders] = useState('');
@@ -83,13 +81,9 @@ const RpkiAspaCreateModal: React.FC<RpkiAspaCreateModalProps> = ({
           />
         </div>
         <div className="d-flex justify-content-end gap-2 mt-3">
-          <Button type="button" variant="secondary" size="sm" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button
+          <CancelarButton type="button" onClick={onClose} />
+          <NovoButton
             type="button"
-            variant="primary"
-            size="sm"
             disabled={!caId.trim() || !customerAsn.trim() || !providers.trim()}
             onClick={() =>
               onSave({
@@ -98,9 +92,7 @@ const RpkiAspaCreateModal: React.FC<RpkiAspaCreateModalProps> = ({
                 providers: providers.trim(),
               })
             }
-          >
-            {t('buttons.new')}
-          </Button>
+          />
         </div>
       </div>
     </DraggableModal>

@@ -8,7 +8,7 @@ import { useNotificationContext } from 'components/notifications/NotificationPro
 import { formatDate } from 'utils/formatters';
 import { receberSchema, ReceberFormData } from 'schemas/receber.schema';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
+import { CancelarButton, ReceberButton } from 'components/ui';
 import FormField from 'components/ui/FormField';
 import { saasTituloService, type SaasTitulo } from 'services/saas/saasCrudService';
 
@@ -193,22 +193,8 @@ const SaasReceberModal: React.FC<SaasReceberModalProps> = ({
         </div>
 
         <div className="d-flex justify-content-end gap-2 mt-4">
-          <Button
-            type="button"
-            variant="primary"
-            onClick={onClose}
-            disabled={marcarPagoMutation.isPending}
-          >
-            {t('actions.cancel')}
-          </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            isLoading={marcarPagoMutation.isPending}
-            disabled={marcarPagoMutation.isPending}
-          >
-            {t('actions.receive')}
-          </Button>
+          <CancelarButton type="button" onClick={onClose} isPending={marcarPagoMutation.isPending} />
+          <ReceberButton type="submit" isPending={marcarPagoMutation.isPending} disabled={marcarPagoMutation.isPending} />
         </div>
       </form>
     </DraggableModal>

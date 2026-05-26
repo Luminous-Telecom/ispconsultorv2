@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
 import { useI18n } from 'contexts/I18nContext';
+import { useBulkBtn } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { ClienteService } from 'services/clienteService';
@@ -58,6 +59,7 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = ({
   tableTitle = 'Repositórios RPKI',
 }) => {
   const { t } = useI18n();
+  const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
   const { success, error } = useNotificationContext();
   const auditoria = useAuditoria();
@@ -256,14 +258,15 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = ({
               bulkActions: [
                 {
                   key: 'novo-repositorio',
-                  label: t('buttons.new'),
-                  variant: 'primary',
+                  label: bulkBtn.novo.label,
+                  variant: bulkBtn.novo.variant,
                   requiresSelection: false,
                   onClick: () => setShowCreateModal(true),
                 },
                 {
                   key: 'deletar-repositorio',
-                  label: t('actions.delete'),
+                  label: bulkBtn.deletar.label,
+                  variant: bulkBtn.deletar.variant,
                   disabled: (selectedItems: RepositoryRow[]) => selectedItems.length === 0 && !selectedRow,
                   onClick: (selectedItems: RepositoryRow[]) => {
                     const target = selectedItems[0] || selectedRow;

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { authService } from 'services/authService';
 import { removeAuthToken } from 'services/core';
+import { EntrarButton } from 'components/ui';
 import BackNetLogo from 'components/common/BackNetLogo';
 import { useI18n } from 'contexts/I18nContext';
 import './Login.scss';
@@ -125,20 +126,12 @@ const Login: React.FC = () => {
                     />
                   </div>
 
-                  <button
+                  <EntrarButton
                     type="submit"
-                    className="btn btn-primary w-100 mb-3"
+                    className="w-100 mb-3"
                     disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        {t('login.entering')}
-                      </>
-                    ) : (
-                      t('login.enter')
-                    )}
-                  </button>
+                    isPending={isLoading}
+                  />
                 </form>
 
                 <div className="card-footer bg-transparent border-top text-center pt-3">

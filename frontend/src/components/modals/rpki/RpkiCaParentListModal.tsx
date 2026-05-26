@@ -7,6 +7,7 @@ import { RpkiCaParent, RpkiCaResource, RpkiCaService } from 'services/rpkiCaServ
 import { ClienteService } from 'services/clienteService';
 import { useRpkiCas } from 'hooks/useRpkiCas';
 import { useI18n } from 'contexts/I18nContext';
+import { useBulkBtn } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import RpkiCaParentCreateModal from './RpkiCaParentCreateModal';
 import { useAuditoria } from 'hooks/useAuditoria';
@@ -44,6 +45,7 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
   tableTitle = 'CAs-pai',
 }) => {
   const { t } = useI18n();
+  const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
   const { success, error } = useNotificationContext();
   const auditoria = useAuditoria();
@@ -308,14 +310,15 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
               bulkActions: [
                 {
                   key: 'novo-ca-pai',
-                  label: t('buttons.new'),
-                  variant: 'primary',
+                  label: bulkBtn.novo.label,
+                  variant: bulkBtn.novo.variant,
                   requiresSelection: false,
                   onClick: () => setShowCreateModal(true),
                 },
                 {
                   key: 'deletar-ca-pai',
-                  label: t('actions.delete'),
+                  label: bulkBtn.deletar.label,
+                  variant: bulkBtn.deletar.variant,
                   disabled: (selectedItems: RpkiCaParent[]) =>
                     selectedItems.length === 0 && !selectedParent,
                   onClick: (selectedItems: RpkiCaParent[]) => {

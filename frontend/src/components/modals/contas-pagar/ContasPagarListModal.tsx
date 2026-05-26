@@ -6,6 +6,7 @@ import { useTableFilters } from 'hooks/useTableFilters';
 import { useAuditoria } from 'hooks/useAuditoria';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useI18n } from 'contexts/I18nContext';
+import { getSystemButtonBulkPropsByKey } from 'components/ui';
 import { formatDateTime, formatDate, formatCurrency } from 'utils/formatters';
 import { ContaPagar, ContaPagarFilters } from 'types';
 import Table from 'components/tables/Table';
@@ -34,6 +35,18 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   initialFilters
 }) => {
   const { t } = useI18n();
+  const bulkBtn = useMemo(
+    () => ({
+      cancelar: getSystemButtonBulkPropsByKey('actions.cancel', t),
+      novo: getSystemButtonBulkPropsByKey('buttons.new', t),
+      editar: getSystemButtonBulkPropsByKey('actions.edit', t),
+      deletar: getSystemButtonBulkPropsByKey('actions.delete', t),
+      inserir: getSystemButtonBulkPropsByKey('actions.insert', t),
+      pagar: getSystemButtonBulkPropsByKey('actions.pay', t),
+      duplicar: getSystemButtonBulkPropsByKey('actions.duplicate', t),
+    }),
+    [t]
+  );
   const defaultTitle = title || t('financial.accountsPayable');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -468,28 +481,28 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   // Bulk actions
   const bulkActions = onSelectContaPagar ? [
     {
-      label: t('buttons.cancel'),
-      variant: 'primary' as const,
+      label: bulkBtn.cancelar.label,
+      variant: bulkBtn.cancelar.variant,
       action: () => {
         clearSelection();
         onClose();
       }
     },
     {
-      label: t('actions.insert'),
-      variant: 'primary' as const,
+      label: bulkBtn.inserir.label,
+      variant: bulkBtn.inserir.variant,
       disabled: (selectedItems: ContaPagar[]) => selectedItems.length === 0 && !selectedItem,
       action: (selectedItems: ContaPagar[]) => handleSelect(selectedItems)
     }
   ] : [
     {
-      label: t('actions.new'),
-      variant: 'primary' as const,
+      label: bulkBtn.novo.label,
+      variant: bulkBtn.novo.variant,
       action: () => setShowCreateModal(true)
     },
     {
-      label: t('buttons.edit'),
-      variant: 'primary' as const,
+      label: bulkBtn.editar.label,
+      variant: bulkBtn.editar.variant,
       disabled: (selectedItems: ContaPagar[]) => selectedItems.length === 0,
       action: (selectedItems: ContaPagar[]) => {
         const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
@@ -500,7 +513,8 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
       }
     },
     {
-      label: t('buttons.delete'),
+      label: bulkBtn.deletar.label,
+      variant: bulkBtn.deletar.variant,
       disabled: (selectedItems: ContaPagar[]) => selectedItems.length === 0,
       action: async (selectedItems: ContaPagar[]) => {
         const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
@@ -513,8 +527,8 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
       }
     },
     {
-      label: t('actions.pay'),
-      variant: 'primary' as const,
+      label: bulkBtn.pagar.label,
+      variant: bulkBtn.pagar.variant,
       disabled: (selectedItems: ContaPagar[]) => {
         const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
         return !item || item.status === 'PAGO' || item.status === 'CANCELADO';
@@ -528,8 +542,8 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
       }
     },
     {
-      label: t('actions.duplicate'),
-      variant: 'primary' as const,
+      label: bulkBtn.duplicar.label,
+      variant: bulkBtn.duplicar.variant,
       disabled: (selectedItems: ContaPagar[]) => selectedItems.length === 0,
       action: (selectedItems: ContaPagar[]) => {
         const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;

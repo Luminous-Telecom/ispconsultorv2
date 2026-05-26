@@ -2,6 +2,7 @@ import React, { useMemo, useCallback, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { useI18n } from 'contexts/I18nContext';
+import { useBulkBtn } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { SshDeviceBackupService } from 'services/sshDeviceBackupService';
 import Table from 'components/tables/Table';
@@ -48,7 +49,8 @@ function getErrorMessage(err: unknown, fallback: string): string {
 
 const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }) => {
   const { t } = useI18n();
-  const { error: showError } = useNotificationContext();
+  const bulkBtn = useBulkBtn();
+      const { error: showError } = useNotificationContext();
   const tableFilters = useTableFilters({
     initialSortColumn: 'modifiedAt',
     initialSortDirection: 'desc',
@@ -194,8 +196,8 @@ const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }
     () => [
       {
         key: 'view-backup',
-        label: t('buttons.view'),
-        variant: 'primary' as const,
+        label: bulkBtn.visualizar.label,
+        variant: bulkBtn.visualizar.variant,
         disabled: (items: ClienteBackupRow[]) =>
           items.length !== 1 ||
           !items[0].device_id ||
@@ -208,8 +210,8 @@ const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }
       },
       {
         key: 'download-selected',
-        label: t('buttons.download'),
-        variant: 'primary' as const,
+        label: bulkBtn.baixar.label,
+        variant: bulkBtn.baixar.variant,
         disabled: (items: ClienteBackupRow[]) =>
           items.length === 0 || downloadingKey !== null || items.some((r) => !r.device_id),
         onClick: async (items: ClienteBackupRow[]) => {
@@ -222,14 +224,14 @@ const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }
       },
       {
         key: 'delete-selected',
-        label: t('buttons.delete'),
-        variant: 'danger' as const,
+        label: bulkBtn.deletar.label,
+        variant: bulkBtn.deletar.variant,
         disabled: (items: ClienteBackupRow[]) =>
           items.length === 0 || deletingKey !== null || items.some((r) => !r.device_id),
         onClick: handleDelete,
       },
     ],
-    [t, downloadingKey, deletingKey, handleDownloadOne, handleDelete, previewLoading, handleView]
+    [bulkBtn, downloadingKey, deletingKey, handleDownloadOne, handleDelete, previewLoading, handleView]
   );
 
   if (!clienteId) {

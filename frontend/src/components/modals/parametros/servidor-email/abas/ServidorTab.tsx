@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormField, Checkbox, Button } from 'components/ui';
+import { FormField, Checkbox, EnviarButton } from 'components/ui';
 import { ServidorTabProps } from '../types';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -159,15 +159,11 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                     onChange={(value) => onEmailTesteChange(value as string)}
                     className="flex-grow-1"
                   />
-                  <Button
+                  <EnviarButton
                     type="button"
-                    variant="outline-primary"
-                    leftIcon={<i className="bi bi-send"></i>}
                     onClick={onSendTestEmail}
-                    isLoading={isSendingTest}
-                  >
-                    {t('emailServer.testEmailButton')}
-                  </Button>
+                    isPending={isSendingTest}
+                  />
                 </div>
               </div>
             </div>

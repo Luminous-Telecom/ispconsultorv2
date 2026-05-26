@@ -6,7 +6,7 @@ import { useIsMobile } from 'hooks/useMediaQuery';
 import { ParametrosService } from 'services/parametrosService';
 import { useFormReset } from 'hooks/useFormReset';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
+import { ModalFormActions } from 'components/ui';
 
 interface RecursosSistemaModalProps {
   show: boolean;
@@ -99,26 +99,11 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
   };
 
   const headerActionsContent = useMemo(() => (
-    <div className="d-flex gap-2 modal-header-actions">
-      <Button
-        type="button"
-        variant="primary"
-        size="sm"
-        onClick={onClose}
-        disabled={updateParametrosMutation.isPending}
-      >
-        Cancelar
-      </Button>
-      <Button
-        type="submit"
-        form="recursos-sistema-form"
-        variant="primary"
-        size="sm"
-        isLoading={updateParametrosMutation.isPending}
-      >
-        Salvar
-      </Button>
-    </div>
+    <ModalFormActions
+      onCancel={onClose}
+      formId="recursos-sistema-form"
+      isPending={updateParametrosMutation.isPending}
+    />
   ), [onClose, updateParametrosMutation.isPending]);
 
   // Passar headerActions para o SingleModalWrapper quando skipWrapper for true.

@@ -7,7 +7,7 @@ import { useCep } from 'hooks/useCep';
 import { formatCPF, formatCNPJ, formatCEP } from 'utils/formatters';
 import { isValidCPF, isValidCNPJ } from 'utils/validators';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button, Spinner } from 'components/ui';
+import { ModalFormActions, Spinner } from 'components/ui';
 import FormField from 'components/ui/FormField';
 import { CreateFornecedor } from 'types';
 import { FornecedorService } from 'services/fornecedorService';
@@ -559,26 +559,12 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
         !(isLoadingFornecedor && isEditing) ? (
           <div className="fornecedor-header-unified">
             {/* Botões à direita */}
-            <div className="fornecedor-header-buttons modal-header-actions">
-              <Button
-                type="button"
-                variant="primary"
-                size="sm"
-                onClick={onClose}
-                disabled={isSubmitting}
-              >
-                {t('buttons.cancel')}
-              </Button>
-              <Button
-                type="submit"
-                form={isEditing ? 'fornecedor-edit-form' : 'fornecedor-create-form'}
-                variant="primary"
-                size="sm"
-                isLoading={isSubmitting}
-              >
-                {t('buttons.save')}
-              </Button>
-            </div>
+            <ModalFormActions
+              className="fornecedor-header-buttons modal-header-actions"
+              onCancel={onClose}
+              formId={isEditing ? 'fornecedor-edit-form' : 'fornecedor-create-form'}
+              isPending={isSubmitting}
+            />
 
             {/* Abas na parte inferior do header */}
             <div className="fornecedor-header-tabs">

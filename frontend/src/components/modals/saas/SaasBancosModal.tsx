@@ -4,6 +4,7 @@ import { useTableFilters } from 'hooks/useTableFilters';
 import { useModalSelect } from 'hooks/useModalSelect';
 import { useAuditoria } from 'hooks/useAuditoria';
 import { useI18n } from 'contexts/I18nContext';
+import {useBulkBtn} from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
@@ -16,6 +17,7 @@ interface Props { show: boolean; onClose: () => void; skipWrapper?: boolean; onH
 
 const SaasBancosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false, onSelectBanco, title }) => {
   const { t } = useI18n();
+  const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
   const { error } = useNotificationContext();
   const auditoria = useAuditoria();
@@ -96,13 +98,13 @@ const SaasBancosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false, 
   }, [t]);
 
   const bulkActions = useMemo(() => onSelectBanco ? [
-    { label: t('buttons.cancel'), variant: 'primary' as const, action: () => { clearSelection(); onClose(); } },
-    { label: t('buttons.select'), variant: 'primary' as const, disabled: (s: SaasBanco[]) => s.length === 0 && !selectedItem, action: handleSelect },
+    { label: bulkBtn.cancelar.label, variant: bulkBtn.cancelar.variant, action: () => { clearSelection(); onClose(); } },
+    { label: bulkBtn.selecionar.label, variant: bulkBtn.selecionar.variant, disabled: (s: SaasBanco[]) => s.length === 0 && !selectedItem, action: handleSelect },
   ] : [
-    { label: t('actions.create'), variant: 'primary' as const, action: () => setShowCreate(true) },
-    { label: t('actions.edit'), variant: 'primary' as const, disabled: (s: SaasBanco[]) => s.length === 0 && !selectedItem, action: handleEdit },
-    { label: t('actions.delete'), disabled: (s: SaasBanco[]) => s.length === 0 && !selectedItem, action: handleDelete },
-  ], [selectedItem, handleEdit, handleDelete, onSelectBanco, clearSelection, onClose, handleSelect, t]);
+    { label: bulkBtn.novo.label, variant: bulkBtn.novo.variant, action: () => setShowCreate(true) },
+    { label: bulkBtn.editar.label, variant: bulkBtn.editar.variant, disabled: (s: SaasBanco[]) => s.length === 0 && !selectedItem, action: handleEdit },
+    { label: bulkBtn.deletar.label, variant: bulkBtn.deletar.variant, disabled: (s: SaasBanco[]) => s.length === 0 && !selectedItem, action: handleDelete },
+  ], [bulkBtn, selectedItem, handleEdit, handleDelete, onSelectBanco, clearSelection, onClose, handleSelect]);
 
   const modalContent = (
     <Table title={title ?? (onSelectBanco ? t('ui.selectBank') : t('modal.banks'))} config={{ columns, data: items, loading: isLoading, searchable: true, searchPlaceholder: t('layout.searchPlaceholder'), searchFields, sortable: true, sortColumn: tf.sortColumn, sortDirection: tf.sortDirection, striped: true, hover: true, responsive: true, selectable: true, multiSelect: false,

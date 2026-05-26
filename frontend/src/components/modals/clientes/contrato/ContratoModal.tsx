@@ -35,7 +35,7 @@ import { useIsMobile } from 'hooks/useMediaQuery';
 import { useAuditoria } from 'hooks/useAuditoria';
 import { useI18n } from 'contexts/I18nContext';
 import ModeloContratoSelectModal from 'components/modals/parametros/ModeloContratoSelectModal';
-import { Button, Spinner } from 'components/ui';
+import { ImprimirButton, ModalFormActions, Spinner, getSystemButtonBulkPropsByKey } from 'components/ui';
 import { useConfirmModal } from 'hooks/useConfirmModal';
 import ConfirmModal from 'components/modals/ConfirmModal';
 import ContratoTab from './abas/ContratoTab';
@@ -63,6 +63,19 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   clienteId
 }) => {
   const { t } = useI18n();
+  const bulkBtn = useMemo(
+    () => ({
+      editar: getSystemButtonBulkPropsByKey('actions.edit', t),
+      deletar: getSystemButtonBulkPropsByKey('actions.delete', t),
+      receber: getSystemButtonBulkPropsByKey('actions.receive', t),
+      cancelar: getSystemButtonBulkPropsByKey('actions.cancel', t),
+      estornar: getSystemButtonBulkPropsByKey('actions.reverse', t),
+      imprimir: getSystemButtonBulkPropsByKey('buttons.print', t),
+      enviar: getSystemButtonBulkPropsByKey('buttons.send', t),
+      novo: getSystemButtonBulkPropsByKey('actions.create', t),
+    }),
+    [t]
+  );
   const isMobile = useIsMobile();
   const auditoria = useAuditoria();
   // Estado interno para controlar o contratoId após criação
@@ -599,7 +612,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       }
     },
     {
-      label: t('actions.edit'),
+      label: bulkBtn.editar.label,
+      variant: bulkBtn.editar.variant,
       action: (selectedItems: Titulo[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
@@ -610,7 +624,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       disabled: (selectedItems: Titulo[]) => selectedItems.length !== 1
     },
     {
-      label: t('actions.receive'),
+      label: bulkBtn.receber.label,
+      variant: bulkBtn.receber.variant,
       action: (selectedItems: Titulo[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
@@ -624,7 +639,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       }
     },
     {
-      label: t('actions.cancel'),
+      label: bulkBtn.cancelar.label,
+      variant: bulkBtn.cancelar.variant,
       action: async (selectedItems: Titulo[]) => {
         if (selectedItems.length === 0) return;
         
@@ -677,7 +693,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       }
     },
     {
-      label: t('actions.reverse'),
+      label: bulkBtn.estornar.label,
+      variant: bulkBtn.estornar.variant,
       action: async (selectedItems: Titulo[]) => {
         if (selectedItems.length === 0) return;
         
@@ -706,8 +723,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       }
     },
     {
-      label: t('buttons.print'),
-      variant: 'primary',
+      label: bulkBtn.imprimir.label,
+      variant: bulkBtn.imprimir.variant,
       disabled: () => false,
       dropdown: [
         {
@@ -721,7 +738,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       ]
     },
     {
-      label: t('buttons.send'),
+      label: bulkBtn.enviar.label,
+      variant: bulkBtn.enviar.variant,
       disabled: (selectedItems: Titulo[]) => {
         if (selectedItems.length === 0) return true;
         return selectedItems.every(item => item.status === 'cancelado');
@@ -847,7 +865,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       }
     },
     {
-      label: t('actions.edit'),
+      label: bulkBtn.editar.label,
+      variant: bulkBtn.editar.variant,
       action: (selectedItems: Titulo[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
@@ -858,7 +877,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       disabled: (selectedItems: Titulo[]) => selectedItems.length !== 1
     },
     {
-      label: t('actions.receive'),
+      label: bulkBtn.receber.label,
+      variant: bulkBtn.receber.variant,
       action: (selectedItems: Titulo[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
@@ -872,7 +892,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       }
     },
     {
-      label: t('actions.cancel'),
+      label: bulkBtn.cancelar.label,
+      variant: bulkBtn.cancelar.variant,
       action: async (selectedItems: Titulo[]) => {
         if (selectedItems.length === 0) return;
         
@@ -925,7 +946,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       }
     },
     {
-      label: t('actions.reverse'),
+      label: bulkBtn.estornar.label,
+      variant: bulkBtn.estornar.variant,
       action: async (selectedItems: Titulo[]) => {
         if (selectedItems.length === 0) return;
         
@@ -954,8 +976,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       }
     },
     {
-      label: t('buttons.print'),
-      variant: 'primary',
+      label: bulkBtn.imprimir.label,
+      variant: bulkBtn.imprimir.variant,
       disabled: () => false,
       dropdown: [
         {
@@ -969,7 +991,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       ]
     },
     {
-      label: t('buttons.send'),
+      label: bulkBtn.enviar.label,
+      variant: bulkBtn.enviar.variant,
       disabled: (selectedItems: Titulo[]) => {
         if (selectedItems.length === 0) return true;
         return selectedItems.every(item => item.status === 'cancelado');
@@ -1088,7 +1111,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   // Bulk actions para termos (apenas no modo edição)
   const termosBulkActions: BulkAction<TermoContrato>[] = isEditMode ? [
     {
-      label: t('actions.create'),
+      label: bulkBtn.novo.label,
+      variant: bulkBtn.novo.variant,
       action: () => {
         setEditingTermo(null);
         setTermoFormData({
@@ -1099,7 +1123,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       }
     },
     {
-      label: t('actions.edit'),
+      label: bulkBtn.editar.label,
+      variant: bulkBtn.editar.variant,
       action: (selectedItems: TermoContrato[]) => {
         const termo = selectedItems && selectedItems.length > 0 ? selectedItems[0] : (selectedTermosItems.length > 0 ? selectedTermosItems[0] : null);
         if (termo) {
@@ -1114,7 +1139,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       disabled: (selectedItems: TermoContrato[]) => selectedItems.length === 0 && selectedTermosItems.length === 0
     },
     {
-      label: t('actions.delete'),
+      label: bulkBtn.deletar.label,
+      variant: bulkBtn.deletar.variant,
       action: async (selectedItems: TermoContrato[]) => {
         const items = selectedItems && selectedItems.length > 0 ? selectedItems : selectedTermosItems;
         if (items.length === 0) return;
@@ -1148,8 +1174,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       disabled: (selectedItems: TermoContrato[]) => selectedItems.length === 0 && selectedTermosItems.length === 0
     },
     {
-      label: t('buttons.print'),
-      variant: 'primary',
+      label: bulkBtn.imprimir.label,
+      variant: bulkBtn.imprimir.variant,
       disabled: () => selectedTermosItems.length === 0,
       action: async () => {
         if (selectedTermosItems.length > 0 && internalContratoId) {
@@ -1199,14 +1225,16 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   // Bulk actions para serviços adicionais (apenas no modo edição)
   const servicosAdicionaisBulkActions: BulkAction<ContratoPlanoAdicional>[] = isEditMode ? [
     {
-      label: t('actions.create'),
+      label: bulkBtn.novo.label,
+      variant: bulkBtn.novo.variant,
       action: () => {
         setEditingServicoAdicional(null);
         setShowServicoAdicionalModal(true);
       }
     },
     {
-      label: t('actions.edit'),
+      label: bulkBtn.editar.label,
+      variant: bulkBtn.editar.variant,
       action: (selectedItems: ContratoPlanoAdicional[]) => {
         if (selectedItems.length > 0) {
           const servico = selectedItems[0];
@@ -1217,7 +1245,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       disabled: (selectedItems: ContratoPlanoAdicional[]) => selectedItems.length === 0
     },
     {
-      label: t('actions.delete'),
+      label: bulkBtn.deletar.label,
+      variant: bulkBtn.deletar.variant,
       action: async (selectedItems: ContratoPlanoAdicional[]) => {
         if (selectedItems.length === 0) return;
         
@@ -1743,31 +1772,21 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         <div className="contrato-header-unified">
           <div className="contrato-header-buttons modal-header-actions d-flex gap-2 flex-wrap">
             {isEditMode && (
-              <Button
+              <ImprimirButton
                 type="button"
-                variant="primary"
-                size="sm"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   handleImprimirContrato();
                 }}
-              >
-                {t('buttons.print')}
-              </Button>
+              />
             )}
-            <Button type="button" variant="primary" size="sm" onClick={onClose}>
-              {t('buttons.cancel')}
-            </Button>
-            <Button
-              type="submit"
-              form="contrato-form"
-              variant="primary"
-              size="sm"
-              disabled={formHook.isSubmitting}
-            >
-              {t('buttons.save')}
-            </Button>
+            <ModalFormActions
+              className="d-flex gap-2"
+              onCancel={onClose}
+              formId="contrato-form"
+              isPending={formHook.isSubmitting}
+            />
           </div>
           <div className="contrato-header-tabs">
               <ul

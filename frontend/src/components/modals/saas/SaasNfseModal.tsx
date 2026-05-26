@@ -4,7 +4,7 @@
 import React, { useState, useRef } from 'react';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
+import { FecharButton, SalvarButton, TestarConexaoButton } from 'components/ui';
 import SaasNFSeConfigSection from './SaasNFSeConfigSection';
 
 interface SaasNfseModalProps {
@@ -55,30 +55,20 @@ const SaasNfseModal: React.FC<SaasNfseModalProps> = ({ show, onClose }) => {
       headerActions={
         <div className="d-flex gap-2 modal-header-actions">
           {hasTestButton && (
-            <Button
+            <TestarConexaoButton
               type="button"
-              variant="outline-primary"
-              size="sm"
               onClick={handleTestClick}
               disabled={!canTest || isTesting || !handleTestRef.current}
-              isLoading={isTesting}
-            >
-              Teste
-            </Button>
+              isPending={isTesting}
+            />
           )}
-          <Button
+          <SalvarButton
             type="submit"
             form="saas-nfse-config-form"
-            variant="primary"
-            size="sm"
             onClick={handleSaveClick}
-            isLoading={isSaving}
-          >
-            Salvar
-          </Button>
-          <Button type="button" variant="primary" size="sm" onClick={onClose}>
-            Fechar
-          </Button>
+            isPending={isSaving}
+          />
+          <FecharButton type="button" onClick={onClose} />
         </div>
       }
     >

@@ -3,8 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useI18n } from 'contexts/I18nContext';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
-import { FormField, AtivoInativoField } from 'components/ui';
+import { FormField, AtivoInativoField, ModalFormActions } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useFormReset } from 'hooks/useFormReset';
 import { saasPlanoService, type SaasPlano } from 'services/saas/saasPlanoService';
@@ -219,14 +218,12 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
       modalId="saas-plano-form-modal"
       headerActions={
         <div className="plano-header-unified">
-          <div className="plano-header-buttons modal-header-actions d-flex gap-2">
-            <Button type="button" variant="primary" size="sm" onClick={onClose} disabled={isPending}>
-              {t('buttons.cancel')}
-            </Button>
-            <Button type="submit" form="saas-plano-form" variant="primary" size="sm" disabled={isPending}>
-              {t('buttons.save')}
-            </Button>
-          </div>
+          <ModalFormActions
+            className="plano-header-buttons modal-header-actions d-flex gap-2"
+            onCancel={onClose}
+            formId="saas-plano-form"
+            isPending={isPending}
+          />
           <div className="plano-header-tabs">
             <ul
               className={`nav nav-tabs plano-tabs-unified ${isMobile ? 'plano-tabs-mobile' : ''}`}

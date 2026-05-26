@@ -4,6 +4,7 @@ import { useModalSelect } from 'hooks/useModalSelect';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { formatDateTime } from 'utils/formatters';
 import { useI18n } from 'contexts/I18nContext';
+import {useBulkBtn} from 'components/ui';
 import { useAuditoria } from 'hooks/useAuditoria';
 import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
@@ -32,6 +33,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   initialFilters
 }) => {
   const { t } = useI18n();
+  const bulkBtn = useBulkBtn();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedClienteId, setSelectedClienteId] = useState<number | null>(null);
@@ -310,38 +312,39 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   const bulkActions = useMemo(() => {
     return onSelectClient ? [
       {
-        label: t('buttons.cancel'),
-        variant: 'primary' as const,
+        label: bulkBtn.cancelar.label,
+        variant: bulkBtn.cancelar.variant,
         action: () => {
           clearSelection();
           onClose();
         }
       },
       {
-        label: t('buttons.select'),
-        variant: 'primary' as const,
+        label: bulkBtn.selecionar.label,
+        variant: bulkBtn.selecionar.variant,
         disabled: (selectedItems: Cliente[]) => selectedItems.length === 0 && !selectedItem,
         action: handleSelect
       }
     ] : [
       {
-        label: t('actions.create'),
-        variant: 'primary' as const,
+        label: bulkBtn.novo.label,
+        variant: bulkBtn.novo.variant,
         action: () => setShowCreateModal(true)
       },
       {
-        label: t('actions.edit'),
-        variant: 'primary' as const,
+        label: bulkBtn.editar.label,
+        variant: bulkBtn.editar.variant,
         disabled: (selectedItems: Cliente[]) => selectedItems.length === 0 && !selectedItem,
         action: handleEdit
       },
       {
-        label: t('actions.delete'),
+        label: bulkBtn.deletar.label,
+        variant: bulkBtn.deletar.variant,
         disabled: (selectedItems: Cliente[]) => selectedItems.length === 0 && !selectedItem,
         action: handleEditDelete
       }
     ];
-  }, [onSelectClient, selectedItem, clearSelection, onClose, handleSelect, handleEdit, handleEditDelete, t]);
+  }, [bulkBtn, onSelectClient, selectedItem, clearSelection, onClose, handleSelect, handleEdit, handleEditDelete]);
 
   const modalData = useMemo(() => clientesData?.data || [], [clientesData?.data]);
 

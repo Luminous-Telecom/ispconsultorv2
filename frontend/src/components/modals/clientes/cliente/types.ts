@@ -4,7 +4,7 @@ import { Contrato } from 'hooks/useContratos';
 export interface BulkAction<T = Record<string, unknown>> {
   key: string;
   label: string;
-  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info';
+  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info' | 'light' | 'dark';
   disabled?: boolean | ((selectedItems: T[]) => boolean);
   onClick?: (selectedItems: T[]) => void;
   confirm?: {

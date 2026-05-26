@@ -3,6 +3,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { saasPlanoService, type SaasPlano } from 'services/saas/saasPlanoService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import AtivoInativoField from 'components/ui/AtivoInativoField';
+import {
+  RecarregarButton,
+  NovoButton,
+  SalvarButton,
+  CancelarButton,
+  EditarButton,
+  DeletarButton,
+} from 'components/ui';
 import { useI18n } from 'contexts/I18nContext';
 
 const EMPTY_FORM: Partial<SaasPlano> = {
@@ -99,12 +107,8 @@ const SaasPlanos: React.FC = () => {
           <p className="text-muted mb-0 small">Gerencie os planos disponíveis na plataforma</p>
         </div>
         <div className="d-flex gap-2">
-          <button type="button" className="btn btn-outline-secondary" onClick={() => refetch()}>
-            Atualizar
-          </button>
-          <button type="button" className="btn btn-primary" onClick={handleNew}>
-            Criar Plano
-          </button>
+          <RecarregarButton type="button" onClick={() => refetch()} />
+          <NovoButton entity="Plano" type="button" onClick={handleNew} />
         </div>
       </div>
 
@@ -179,12 +183,8 @@ const SaasPlanos: React.FC = () => {
                 </div>
               </div>
               <div className="d-flex gap-2 mt-3">
-                <button type="submit" className="btn btn-primary" disabled={isPending}>
-                  Salvar
-                </button>
-                <button type="button" className="btn btn-outline-secondary" onClick={() => setShowForm(false)}>
-                  Cancelar
-                </button>
+                <SalvarButton type="submit" disabled={isPending} isPending={isPending} />
+                <CancelarButton type="button" onClick={() => setShowForm(false)} />
               </div>
             </form>
           </div>
@@ -227,20 +227,17 @@ const SaasPlanos: React.FC = () => {
                     </div>
                   </div>
                   <div className="d-flex gap-2">
-                    <button
+                    <EditarButton
                       type="button"
-                      className="btn btn-sm btn-outline-primary flex-grow-1"
+                      size="sm"
+                      className="flex-grow-1"
                       onClick={() => handleEdit(plano)}
-                    >
-                      Editar
-                    </button>
-                    <button
+                    />
+                    <DeletarButton
                       type="button"
-                      className="btn btn-sm btn-outline-danger"
+                      size="sm"
                       onClick={() => handleDelete(plano.id, plano.nome)}
-                    >
-                      Excluir
-                    </button>
+                    />
                   </div>
                 </div>
               </div>

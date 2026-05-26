@@ -6,7 +6,7 @@ import { useCreateTermoContrato, useUpdateTermoContrato } from 'hooks/useTermosC
 import { useModelosTermo } from 'hooks/useModelosTermo';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
+import { ModalFormActions } from 'components/ui';
 import { TermoFormData } from '../types';
 
 interface TermoEditModalProps {
@@ -72,27 +72,14 @@ const TermoEditModal: React.FC<TermoEditModalProps> = ({
     }
   };
 
+  const isPending = createTermoMutation.isPending || updateTermoMutation.isPending;
+
   const headerActions = (
-    <div className="d-flex gap-2 modal-header-actions">
-      <Button
-        type="button"
-        variant="primary"
-        size="sm"
-        onClick={onClose}
-        disabled={createTermoMutation.isPending || updateTermoMutation.isPending}
-      >
-        Cancelar
-      </Button>
-      <Button
-        type="submit"
-        form="termo-edit-form"
-        variant="primary"
-        size="sm"
-        isLoading={createTermoMutation.isPending || updateTermoMutation.isPending}
-      >
-        Salvar
-      </Button>
-    </div>
+    <ModalFormActions
+      onCancel={onClose}
+      formId="termo-edit-form"
+      isPending={isPending}
+    />
   );
 
   return (

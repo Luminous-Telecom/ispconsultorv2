@@ -4,7 +4,7 @@ import { useIsMobile } from 'hooks/useMediaQuery';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { defaultApiClient } from 'services/core';
 import { TemplateWhatsAppService } from 'services/templateWhatsAppService';
-import { Button, Spinner } from 'components/ui';
+import { RecarregarButton, Spinner, SystemButton } from 'components/ui';
 
 interface Template {
   name: string;
@@ -207,15 +207,7 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
   return (
     <div style={{ padding: isMobile ? '0' : '16px' }}>
       <div className="d-flex gap-2 mb-3">
-        <Button
-          type="button"
-          variant="outline-primary"
-          size="sm"
-          onClick={() => refetch()}
-          isLoading={isLoading}
-        >
-          Atualizar
-        </Button>
+        <RecarregarButton type="button" onClick={() => refetch()} isPending={isLoading} />
       </div>
 
       {isLoading && (
@@ -333,24 +325,21 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
                       </div>
                       <div className="mt-3 pt-3 border-top">
                         {mensagemType && onSalvarVincular ? (
-                          <Button
+                          <SystemButton
+                            action="salvar"
                             type="button"
-                            variant="primary"
-                            size="sm"
+                            label={`Salvar e vincular ao tipo "${mensagemType.replace(/_/g, ' ')}"`}
                             onClick={() => handleSalvarVincular(template, expandedKey)}
-                          >
-                            {`Salvar e vincular ao tipo "${mensagemType.replace(/_/g, ' ')}"`}
-                          </Button>
+                          />
                         ) : (
-                          <Button
+                          <SystemButton
+                            action="novo"
                             type="button"
-                            variant="primary"
-                            size="sm"
+                            label="Criar template"
                             onClick={() => handleCriarTemplate(template, expandedKey)}
                             disabled={createTemplateMutation.isPending}
-                          >
-                            Criar template
-                          </Button>
+                            isPending={createTemplateMutation.isPending}
+                          />
                         )}
                       </div>
                     </div>

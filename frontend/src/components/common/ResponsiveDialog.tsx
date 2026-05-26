@@ -2,9 +2,17 @@ import React, { useEffect, useState, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useTableHeader } from 'contexts/TableHeaderContext';
 import { useIsMobile } from 'hooks/useMediaQuery';
-import { Button, Spinner } from 'components/ui';
+import { RecarregarButton, Spinner, VoltarButton } from 'components/ui';
 import SearchBar from 'components/ui/SearchBar';
 import { useI18n } from 'contexts/I18nContext';
+
+function isActionButtonComponent(type: unknown): boolean {
+  if (typeof type === 'function') {
+    const displayName = (type as React.FC).displayName;
+    return !!displayName && displayName.endsWith('Button') && displayName !== 'Button';
+  }
+  return false;
+}
 
 interface ResponsiveDialogProps {
   isOpen: boolean;
@@ -92,25 +100,11 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
         className="d-flex align-items-center border-bottom responsive-dialog-header-custom"
       >
         {/* Botão voltar */}
-        <button
+        <VoltarButton
           type="button"
           className="btn btn-link p-0 me-3 responsive-dialog-back-btn responsive-dialog-btn-auto"
           onClick={onClose}
-          aria-label={t('buttons.back')}
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-        </button>
+        />
 
         {/* Título */}
         <h5
@@ -160,8 +154,9 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
 
                 {/* Reload Action */}
                 {tableHeader.showReload && (
-                  <button
-                    className="dropdown-item d-flex align-items-center gap-2 py-2 responsive-dialog-text-primary"
+                  <RecarregarButton
+                    type="button"
+                    className="dropdown-item d-flex align-items-center gap-2 py-2 responsive-dialog-text-primary border-0 bg-transparent w-100 text-start"
                     onClick={() => {
                       if (tableHeader.onReloadClick) {
                         tableHeader.onReloadClick();
@@ -169,10 +164,8 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
                       setShowMenu(false);
                     }}
                     disabled={tableHeader.loading}
-                  >
-                    <i className="bi bi-arrow-clockwise"></i>
-                    <span>{t('buttons.reload')}</span>
-                  </button>
+                    isPending={tableHeader.loading}
+                  />
                 )}
 
                 {/* Header Actions Customizados - Renderizar como dropdown-items */}
@@ -188,16 +181,42 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
                           leftIcon?: React.ReactNode;
                           icon?: string;
                           isLoading?: boolean;
+                          isPending?: boolean;
                           disabled?: boolean;
                           onClick?: (e: React.MouseEvent | React.FormEvent) => void;
                           type?: string;
                           form?: string;
                           children?: React.ReactNode;
+                          className?: string;
                           key?: string | number;
                         };
+
+                        if (isActionButtonComponent(buttonChild.type)) {
+                          return (
+                            <div
+                              key={props.key || Math.random()}
+                              className="dropdown-item p-1 border-0 bg-transparent"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {React.cloneElement(
+                                buttonChild as React.ReactElement<{
+                                  className?: string;
+                                  onClick?: (e: React.MouseEvent) => void;
+                                }>,
+                                {
+                                  className: [props.className, 'w-100'].filter(Boolean).join(' '),
+                                  onClick: (e: React.MouseEvent) => {
+                                    props.onClick?.(e);
+                                    setTimeout(() => setShowMenu(false), 0);
+                                  },
+                                }
+                              )}
+                            </div>
+                          );
+                        }
                         
                         const leftIcon = props.leftIcon || (props.icon ? <i className={`bi bi-${props.icon}`}></i> : null);
-                        const isLoading = props.isLoading || false;
+                        const isLoading = props.isLoading || props.isPending || false;
                         const buttonType = (props.type as 'button' | 'submit' | 'reset') || 'button';
                         
                         // Se for type="submit" com form, usar o comportamento nativo do formulário
@@ -268,7 +287,7 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
                       };
                       
                       // Se for um Button component, renderizar como dropdown-item
-                      if (child.type === Button) {
+                      if (isActionButtonComponent(child.type)) {
                         return renderButtonAsDropdownItem(child);
                       }
                       
@@ -279,7 +298,7 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
                           return React.Children.map(divProps.children, (buttonChild) => {
                             if (!React.isValidElement(buttonChild)) return buttonChild;
                             
-                            if (buttonChild.type === Button) {
+                            if (isActionButtonComponent(buttonChild.type)) {
                               return renderButtonAsDropdownItem(buttonChild);
                             }
                             

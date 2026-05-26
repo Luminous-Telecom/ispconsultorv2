@@ -12,6 +12,7 @@ import { formatDateTime, formatRpkiValidityDisplay } from 'utils/formatters';
 import { useAuditoria } from 'hooks/useAuditoria';
 import ImprimirModalBase from 'components/common/ImprimirModal';
 import { useI18n } from 'contexts/I18nContext';
+import { useBulkBtn } from 'components/ui';
 import { useModal } from 'contexts/ModalContext';
 
 const AuditPdfModal = ImprimirModalBase;
@@ -44,7 +45,8 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({
   tableTitle = 'ROAs',
 }) => {
   const { t } = useI18n();
-  const { openModal } = useModal();
+  const bulkBtn = useBulkBtn();
+      const { openModal } = useModal();
   const { error: showError, success } = useNotificationContext();
   const auditoria = useAuditoria();
   const handleAuditRoa = useCallback(
@@ -228,8 +230,8 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({
 
   const bulkActions = useMemo(() => [
     {
-      label: t('buttons.new'),
-      variant: 'primary' as const,
+      label: bulkBtn.novo.label,
+      variant: bulkBtn.novo.variant,
       requiresSelection: false,
       action: (_selectedItems: RpkiRoaRow[]) => {
         setFormMode('create');
@@ -238,8 +240,8 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({
       },
     },
     {
-      label: 'Editar',
-      variant: 'primary' as const,
+      label: bulkBtn.editar.label,
+      variant: bulkBtn.editar.variant,
       disabled: false,
       action: (selectedItems: RpkiRoaRow[]) => {
         const selected = selectedItems[0];
@@ -250,8 +252,8 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({
       },
     },
     {
-      label: 'Deletar',
-      variant: 'primary' as const,
+      label: bulkBtn.deletar.label,
+      variant: bulkBtn.deletar.variant,
       disabled: false,
       action: (selectedItems: RpkiRoaRow[]) => {
         const selected = selectedItems[0];
@@ -384,7 +386,7 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({
         openModal('rpki-validar-rota', { initialPrefix: pref, initialAsn: asn });
       },
     },
-  ], [cas, openModal, roas, showError, success, t]);
+  ], [cas, openModal, roas, showError, success, bulkBtn]);
 
   useEffect(() => {
     if (!show) {

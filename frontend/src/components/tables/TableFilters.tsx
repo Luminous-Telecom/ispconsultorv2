@@ -3,7 +3,7 @@ import { TableFilter } from './types';
 import { FilterValue } from 'types/common';
 import { useI18n } from 'contexts/I18nContext';
 import FormField from '../ui/FormField';
-import Button from '../ui/Button';
+import { AplicarButton, LimparButton, MostrarFiltrosButton, OcultarFiltrosButton } from '../ui';
 
 interface TableFiltersProps {
   filters: TableFilter[];
@@ -164,26 +164,18 @@ const TableFilters: React.FC<TableFiltersProps> = ({
     return (
       <div className="filter-actions d-flex gap-2">
         {showApplyButton && (
-          <Button
-            variant="primary"
+          <AplicarButton
             size="sm"
             onClick={applyFilters}
-            icon="check"
-          >
-            Aplicar
-          </Button>
+          />
         )}
         
         {showClearButton && (
-          <Button
-            variant="outline-primary"
+          <LimparButton
             size="sm"
             onClick={clearFilters}
             disabled={!hasActiveFilters}
-            icon="x"
-          >
-            Limpar
-          </Button>
+          />
         )}
       </div>
     );
@@ -203,15 +195,17 @@ const TableFilters: React.FC<TableFiltersProps> = ({
         </div>
         
         {collapsible && (
-            <Button
-              variant="outline-primary"
-              size="sm"
-              icon={isExpanded ? 'chevron-up' : 'chevron-down'}
-              onClick={() => setIsExpanded(!isExpanded)}
-              tooltip={isExpanded ? t('ui.hideFilters') : t('ui.showFilters')}
-            >
-              {''}
-            </Button>
+            isExpanded ? (
+              <OcultarFiltrosButton
+                size="sm"
+                onClick={() => setIsExpanded(false)}
+              />
+            ) : (
+              <MostrarFiltrosButton
+                size="sm"
+                onClick={() => setIsExpanded(true)}
+              />
+            )
         )}
       </div>
 

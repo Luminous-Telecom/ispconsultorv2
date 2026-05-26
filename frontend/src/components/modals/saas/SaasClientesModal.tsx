@@ -4,6 +4,7 @@ import { useTableFilters } from 'hooks/useTableFilters';
 import { useModalSelect } from 'hooks/useModalSelect';
 import { useAuditoria } from 'hooks/useAuditoria';
 import { useI18n } from 'contexts/I18nContext';
+import { useBulkBtn } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { formatDateTime } from 'utils/formatters';
 import DraggableModal from 'components/common/DraggableModal';
@@ -22,6 +23,7 @@ interface Props { show: boolean; onClose: () => void; skipWrapper?: boolean; onH
 
 const SaasClientesModal: React.FC<Props> = ({ show, onClose, skipWrapper = false, empresaId, initialFilters }) => {
   const { t } = useI18n();
+  const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
   const { error } = useNotificationContext();
   const auditoria = useAuditoria();
@@ -80,10 +82,10 @@ const SaasClientesModal: React.FC<Props> = ({ show, onClose, skipWrapper = false
   const columns = useMemo(() => getSaasTenantListColumns(t, formatDateTime), [t]);
 
   const bulkActions = useMemo(() => [
-    { label: t('actions.create'), variant: 'primary' as const, action: () => setShowCreate(true) },
-    { label: t('actions.edit'), variant: 'primary' as const, disabled: (s: SaasEmpresa[]) => s.length === 0 && !selectedItem, action: handleEdit },
-    { label: t('actions.delete'), disabled: (s: SaasEmpresa[]) => s.length === 0 && !selectedItem, action: handleDelete },
-  ], [selectedItem, handleEdit, handleDelete, t]);
+    { label: bulkBtn.novo.label, variant: bulkBtn.novo.variant, action: () => setShowCreate(true) },
+    { label: bulkBtn.editar.label, variant: bulkBtn.editar.variant, disabled: (s: SaasEmpresa[]) => s.length === 0 && !selectedItem, action: handleEdit },
+    { label: bulkBtn.deletar.label, variant: bulkBtn.deletar.variant, disabled: (s: SaasEmpresa[]) => s.length === 0 && !selectedItem, action: handleDelete },
+  ], [selectedItem, handleEdit, handleDelete, bulkBtn]);
 
   const handleSearchChange = useCallback((search: string, field?: string) => {
     setTimeout(() => {

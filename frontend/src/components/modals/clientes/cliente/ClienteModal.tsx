@@ -20,7 +20,7 @@ import { TituloModal } from 'components/modals/titulos/titulo';
 import ReceberModal from 'components/modals/pagamentos/ReceberModal';
 import ContratoModal from '../contrato/ContratoModal';
 import GerarNFeModal from 'components/modals/notas-fiscais/GerarNFeModal';
-import { Button, Spinner } from 'components/ui';
+import { ModalFormActions, Spinner } from 'components/ui';
 import ConfirmModal, { ConfirmModalProps } from 'components/modals/ConfirmModal';
 // import './ClienteModal.css'; // Estilos movidos para _components.scss
 // Componentes de abas
@@ -591,36 +591,22 @@ const ClienteModal = ({
 
   // Construir headerActions
   const headerActionsContent = useMemo(() => {
-    const condition1 = !(formHook.isLoadingCliente && formHook.isEditing);
-    const condition2 = !(!formHook.cliente && formHook.isEditing);
-    const shouldRender = condition1 && condition2;
-    
+    const shouldRender =
+      !(formHook.isLoadingCliente && formHook.isEditing) &&
+      !(!formHook.cliente && formHook.isEditing);
+
     if (!shouldRender) return undefined;
 
     return (
       <div className="cliente-header-unified">
               {/* Botões à direita */}
-              <div className="cliente-header-buttons modal-header-actions">
-                <Button
-                  type="button"
-                  variant="primary"
-                  size="sm"
-                  leftIcon={<i className="bi bi-x-lg"></i>}
-                  onClick={handleClose}
-                >
-                  {t('buttons.cancel')}
-                </Button>
-                <Button
-                  type="button"
-                  variant="primary"
-                  size="sm"
-                  leftIcon={<i className="bi bi-check-lg"></i>}
-                  isLoading={formHook.isSubmitting}
-                  onClick={formHook.handleSubmit}
-                >
-                  {t('buttons.save')}
-                </Button>
-              </div>
+              <ModalFormActions
+                className="cliente-header-buttons modal-header-actions"
+                onCancel={handleClose}
+                isPending={formHook.isSubmitting}
+                saveType="button"
+                onSave={() => formHook.handleSubmit()}
+              />
 
               {/* Abas na parte inferior do header */}
               <div className="cliente-header-tabs">
@@ -793,7 +779,7 @@ const ClienteModal = ({
               </div>
             </div>
     );
-  }, [formHook.isLoadingCliente, formHook.isEditing, formHook.cliente, formHook.isSubmitting, formHook.handleSubmit, canEditContratosFinanceiro, activeTab, isMobile, handleClose, t, hasModuloEquipamentos, hasModuloRpki]);
+  }, [formHook, canEditContratosFinanceiro, activeTab, isMobile, handleClose, t, hasModuloEquipamentos, hasModuloRpki]);
 
 
   const renderModalContent = () => {

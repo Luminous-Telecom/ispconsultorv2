@@ -5,6 +5,7 @@ import { useModalSelect } from 'hooks/useModalSelect';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { Plano, PlanoFilters } from 'types';
 import { useI18n } from 'contexts/I18nContext';
+import { useBulkBtn } from 'components/ui';
 import { formatDateTime } from 'utils/formatters';
 import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
@@ -33,6 +34,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
   initialFilters
 }) => {
   const { t } = useI18n();
+  const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -268,28 +270,28 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
   // Bulk actions memoizados
   const bulkActions = useMemo(() => onSelectPlano ? [
     {
-      label: t('actions.cancel'),
-      variant: 'primary' as const,
+      label: bulkBtn.cancelar.label,
+      variant: bulkBtn.cancelar.variant,
       action: () => {
         clearSelection();
         onClose();
       }
     },
     {
-      label: t('buttons.select'),
-        variant: 'primary' as const,
+      label: bulkBtn.selecionar.label,
+        variant: bulkBtn.selecionar.variant,
         disabled: (selectedItems: Plano[]) => selectedItems.length === 0 && !selectedItem,
         action: (selectedItems: Plano[]) => handleSelect(selectedItems)
       }
     ] : [
       {
-        label: t('actions.create'),
-        variant: 'primary' as const,
+        label: bulkBtn.novo.label,
+        variant: bulkBtn.novo.variant,
         action: () => setShowCreateModal(true)
       },
       {
-        label: t('actions.edit'),
-        variant: 'primary' as const,
+        label: bulkBtn.editar.label,
+        variant: bulkBtn.editar.variant,
         disabled: (selectedItems: Plano[]) => selectedItems.length === 0 && !selectedItem,
         action: (selectedItems: Plano[]) => {
           const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
@@ -300,19 +302,31 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
         }
       },
       {
-        label: t('actions.delete'),
+        label: bulkBtn.deletar.label,
+        variant: bulkBtn.deletar.variant,
         disabled: (selectedItems: Plano[]) => selectedItems.length === 0 && !selectedItem,
         action: async (selectedItems: Plano[]) => {
           const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
           if (!item) return;
-          
+
           const confirmed = window.confirm(t('messages.confirmDelete'));
-        if (confirmed) {
-          handleDelete(item.id);
-        }
-      }
-    }
-  ], [onSelectPlano, selectedItem, clearSelection, onClose, handleSelect, handleDelete, t]);
+          if (confirmed) {
+            handleDelete(item.id);
+          }
+        },
+      },
+    ],
+    [
+      onSelectPlano,
+      selectedItem,
+      clearSelection,
+      onClose,
+      handleSelect,
+      handleDelete,
+      t,
+      bulkBtn,
+    ]
+  );
 
   const modalData = useMemo(() => planosData?.data || [], [planosData?.data]);
 

@@ -5,7 +5,24 @@ import { CentralAssinanteService, DadosCentralAssinante, LoginCentralAssinanteRe
 import { DadosEmpresaService } from 'services/dadosEmpresaService';
 import { ParametrosService } from 'services/parametrosService';
 import { formatCurrency, formatDate } from 'utils/formatters';
-import { Spinner, Button, Badge, Card, Input } from 'components/ui';
+import {
+  Spinner,
+  Badge,
+  Card,
+  Input,
+  EntrarButton,
+  EnviarSenhaButton,
+  CancelarButton,
+  VoltarButton,
+  VisualizarButton,
+  ImprimirButton,
+  BaixarButton,
+  ReciboButton,
+  CopiarCodigoBarrasButton,
+  CopiarPixButton,
+  AlterarSenhaButton,
+  SairButton,
+} from 'components/ui';
 import { useNotificationContext, NotificationContainer } from 'components/notifications';
 import 'styles/CentralAssinante.scss';
 
@@ -418,27 +435,21 @@ const CentralAssinante: React.FC = () => {
                   </div>
 
                   <div className="d-grid gap-2">
-                    <Button
+                    <EnviarSenhaButton
                       type="submit"
-                      variant="primary"
                       className="w-100"
                       disabled={recuperarSenhaMutation.isPending}
-                      isLoading={recuperarSenhaMutation.isPending}
-                    >
-                      Enviar Senha
-                    </Button>
-                    <Button
+                      isPending={recuperarSenhaMutation.isPending}
+                    />
+                    <VoltarButton
                       type="button"
-                      variant="secondary"
                       className="w-100"
                       onClick={() => {
                         setShowRecuperarSenha(false);
                         setRecuperarSenhaForm({ cnpj: '', email: '' });
                       }}
                       disabled={recuperarSenhaMutation.isPending}
-                    >
-                      Voltar ao Login
-                    </Button>
+                    />
                   </div>
                 </form>
               </div>
@@ -510,16 +521,11 @@ const CentralAssinante: React.FC = () => {
                 </div>
 
                 <div className="d-grid mt-2 mb-1">
-                  <button
+                  <EntrarButton
                     type="submit"
-                    className="btn btn-primary"
                     disabled={loginMutation.isPending}
-                  >
-                    {loginMutation.isPending ? (
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
-                    ) : null}
-                    Entrar
-                  </button>
+                    isPending={loginMutation.isPending}
+                  />
                 </div>
                 <div className="text-center mt-3">
                   <button
@@ -584,8 +590,7 @@ const CentralAssinante: React.FC = () => {
             onResume={resumeNotification}
             onActionClick={() => {}}
           />
-          <Button
-            variant="primary"
+          <VoltarButton
             size="sm"
             onClick={() => {
               CentralAssinanteService.clearCentralToken();
@@ -593,9 +598,7 @@ const CentralAssinante: React.FC = () => {
               setIsAuthenticated(false);
               navigate(`/central-assinante/${slug}`, { replace: true });
             }}
-          >
-            Voltar ao Login
-          </Button>
+          />
         </div>
       </div>
     );
@@ -617,27 +620,21 @@ const CentralAssinante: React.FC = () => {
               <p className="mb-0 text-white-50 small">{dados.cliente.razao_social || dados.cliente.nome_fantasia}</p>
             </div>
             <div className="d-flex align-items-center gap-2">
-              <button
+              <AlterarSenhaButton
                 type="button"
-                className="central-assinante-header-button"
+                size="sm"
                 onClick={() => setShowTrocarSenha(true)}
-                title="Trocar Senha"
-              >
-                <i className="bi bi-key"></i>
-              </button>
-              <button
+              />
+              <SairButton
                 type="button"
-                className="central-assinante-header-button"
+                size="sm"
                 onClick={() => {
                   CentralAssinanteService.clearCentralToken();
                   setCentralToken(null);
                   setIsAuthenticated(false);
                   navigate(`/central-assinante/${slug}`, { replace: true });
                 }}
-                title="Sair"
-              >
-                <i className="bi bi-box-arrow-right"></i>
-              </button>
+              />
             </div>
           </div>
         </div>
@@ -909,17 +906,14 @@ const CentralAssinante: React.FC = () => {
                                 <Badge variant={getStatusVariant(contrato.status)} pill>
                                   {getStatusLabel(contrato.status)}
                                 </Badge>
-                                <Button
+                                <ImprimirButton
                                   variant="secondary"
                                   size="sm"
                                   onClick={() => handleImprimirContrato(contrato.id)}
-                                  title="Imprimir"
                                   disabled={baixandoContratoId === contrato.id}
-                                  isLoading={baixandoContratoId === contrato.id}
+                                  isPending={baixandoContratoId === contrato.id}
                                   className="central-assinante-pdf-button"
-                                >
-                                  Imprimir
-                                </Button>
+                                />
                               </div>
                             </div>
                             <div className="d-flex gap-3 flex-wrap">
@@ -1000,26 +994,20 @@ const CentralAssinante: React.FC = () => {
                                     </div>
                                   </div>
                                   <div className="d-flex gap-2 mt-3">
-                                    <Button
+                                    <VisualizarButton
                                       variant="secondary"
                                       size="sm"
                                       onClick={() => handleVisualizarFatura(titulo)}
                                       className="flex-grow-1 central-assinante-item-button"
-                                    >
-                                      <i className="bi bi-eye me-1"></i>
-                                      Visualizar
-                                    </Button>
-                                    <Button
+                                    />
+                                    <BaixarButton
                                       variant="secondary"
                                       size="sm"
                                       onClick={() => handleImprimirFatura(titulo.id)}
                                       className="flex-grow-1 central-assinante-item-button"
                                       disabled={baixandoBoletoId === titulo.id}
-                                      isLoading={baixandoBoletoId === titulo.id}
-                                    >
-                                      <i className="bi bi-file-pdf me-1"></i>
-                                      Baixar
-                                    </Button>
+                                      isPending={baixandoBoletoId === titulo.id}
+                                    />
                                   </div>
                                 </div>
                               </Card>
@@ -1064,26 +1052,20 @@ const CentralAssinante: React.FC = () => {
                                     </div>
                                   </div>
                                   <div className="d-flex gap-2 mt-3">
-                                    <Button
+                                    <VisualizarButton
                                       variant="secondary"
                                       size="sm"
                                       onClick={() => handleVisualizarFatura(titulo)}
                                       className="flex-grow-1 central-assinante-item-button"
-                                    >
-                                      <i className="bi bi-eye me-1"></i>
-                                      Visualizar
-                                    </Button>
-                                    <Button
+                                    />
+                                    <BaixarButton
                                       variant="secondary"
                                       size="sm"
                                       onClick={() => handleImprimirFatura(titulo.id)}
                                       className="flex-grow-1 central-assinante-item-button"
                                       disabled={baixandoBoletoId === titulo.id}
-                                      isLoading={baixandoBoletoId === titulo.id}
-                                    >
-                                      <i className="bi bi-file-pdf me-1"></i>
-                                      Baixar
-                                    </Button>
+                                      isPending={baixandoBoletoId === titulo.id}
+                                    />
                                   </div>
                                 </div>
                               </Card>
@@ -1145,37 +1127,29 @@ const CentralAssinante: React.FC = () => {
                                     )}
                                   </div>
                                   <div className="d-flex gap-2 mt-3">
-                                    <Button
+                                    <VisualizarButton
                                       variant="secondary"
                                       size="sm"
                                       onClick={() => handleVisualizarFatura(titulo)}
                                       className="flex-grow-1 central-assinante-item-button"
-                                    >
-                                      <i className="bi bi-eye me-1"></i>
-                                      Visualizar
-                                    </Button>
-                                    <Button
+                                    />
+                                    <ReciboButton
                                       variant="secondary"
                                       size="sm"
                                       onClick={() => handleImprimirRecibo(titulo.id)}
                                       className="flex-grow-1 central-assinante-item-button"
                                       disabled={baixandoReciboId === titulo.id}
-                                      isLoading={baixandoReciboId === titulo.id}
-                                    >
-                                      <i className="bi bi-receipt me-1"></i>
-                                      Recibo
-                                    </Button>
-                                    <Button
+                                      isPending={baixandoReciboId === titulo.id}
+                                    />
+                                    <BaixarButton
                                       variant="secondary"
                                       size="sm"
+                                      label="Boleto"
                                       onClick={() => handleImprimirFatura(titulo.id)}
                                       className="flex-grow-1 central-assinante-item-button"
                                       disabled={baixandoBoletoId === titulo.id}
-                                      isLoading={baixandoBoletoId === titulo.id}
-                                    >
-                                      <i className="bi bi-file-pdf me-1"></i>
-                                      Boleto
-                                    </Button>
+                                      isPending={baixandoBoletoId === titulo.id}
+                                    />
                                   </div>
                                 </div>
                               </Card>
@@ -1209,17 +1183,14 @@ const CentralAssinante: React.FC = () => {
                                 <Badge variant={termo.assinado === 'SIM' ? 'success' : 'warning'} pill>
                                   {termo.assinado === 'SIM' ? 'Assinado' : 'Pendente'}
                                 </Badge>
-                                <Button
+                                <ImprimirButton
                                   variant="secondary"
                                   size="sm"
                                   onClick={() => handleImprimirTermo(termo.id)}
-                                  title="Imprimir"
                                   disabled={baixandoTermoId === termo.id}
-                                  isLoading={baixandoTermoId === termo.id}
+                                  isPending={baixandoTermoId === termo.id}
                                   className="central-assinante-pdf-button"
-                                >
-                                  Imprimir
-                                </Button>
+                                />
                               </div>
                             </div>
                             <div className="d-flex gap-3 flex-wrap">
@@ -1340,13 +1311,11 @@ const CentralAssinante: React.FC = () => {
               {/* Header */}
               <div className="border-bottom border-secondary central-assinante-modal-header">
                 <div className="d-flex align-items-center justify-content-center position-relative w-100">
-                  <button 
-                    type="button" 
+                  <VoltarButton
+                    type="button"
                     className="btn btn-link text-white text-decoration-none p-0 position-absolute start-0 central-assinante-modal-close"
                     onClick={() => setFaturaVisualizar(null)}
-                  >
-                    <i className="bi bi-arrow-left"></i>
-                  </button>
+                  />
                   <h6 className="mb-0 text-white fw-bold central-assinante-modal-title">
                     Fatura {faturaVisualizar.numero_titulo}
                   </h6>
@@ -1380,15 +1349,13 @@ const CentralAssinante: React.FC = () => {
                         ))}
                       </div>
                     </div>
-                    <Button
+                    <CopiarCodigoBarrasButton
                       variant="secondary"
                       size="sm"
                       className="w-100"
+                      label={copiedField === 'linha' ? 'Copiado!' : undefined}
                       onClick={() => copiarCodigo(faturaVisualizar.linha_digitavel!, 'linha')}
-                    >
-                      <i className="bi bi-clipboard me-1"></i>
-                      {copiedField === 'linha' ? 'Copiado!' : 'Copiar Código de Barras'}
-                    </Button>
+                    />
                   </div>
                 )}
 
@@ -1401,30 +1368,25 @@ const CentralAssinante: React.FC = () => {
                         className="img-fluid central-assinante-modal-qr-img"
                       />
                     </div>
-                    <Button
+                    <CopiarPixButton
                       variant="secondary"
                       size="sm"
                       className="w-100"
+                      label={copiedField === 'pix' ? 'Copiado!' : undefined}
                       onClick={() => copiarCodigo(faturaVisualizar.qrcode!, 'pix')}
-                    >
-                      <i className="bi bi-clipboard me-1"></i>
-                      {copiedField === 'pix' ? 'Copiado!' : 'Copiar Código PIX'}
-                    </Button>
+                    />
                   </div>
                 )}
 
                 <div className="d-grid gap-2 mt-2">
-                  <Button
+                  <BaixarButton
                     variant="secondary"
                     size="sm"
                     className="w-100"
                     onClick={() => handleImprimirFatura(faturaVisualizar.id)}
                     disabled={baixandoBoletoId === faturaVisualizar.id}
-                    isLoading={baixandoBoletoId === faturaVisualizar.id}
-                  >
-                    <i className="bi bi-download me-1"></i>
-                    Baixar Boleto
-                  </Button>
+                    isPending={baixandoBoletoId === faturaVisualizar.id}
+                  />
                 </div>
               </div>
             </div>
@@ -1515,18 +1477,14 @@ const CentralAssinante: React.FC = () => {
                     </div>
 
                     <div className="d-grid gap-2">
-                      <Button
+                      <AlterarSenhaButton
                         type="submit"
-                        variant="primary"
                         className="w-100"
                         disabled={trocarSenhaMutation.isPending}
-                        isLoading={trocarSenhaMutation.isPending}
-                      >
-                        Alterar Senha
-                      </Button>
-                      <Button
+                        isPending={trocarSenhaMutation.isPending}
+                      />
+                      <CancelarButton
                         type="button"
-                        variant="secondary"
                         className="w-100"
                         onClick={() => {
                           setShowTrocarSenha(false);
@@ -1534,9 +1492,7 @@ const CentralAssinante: React.FC = () => {
                           setTrocarSenhaForm({ senhaAtual: '', novaSenha: '', confirmarNovaSenha: '' });
                         }}
                         disabled={trocarSenhaMutation.isPending}
-                      >
-                        Cancelar
-                      </Button>
+                      />
                     </div>
                   </form>
                 </div>

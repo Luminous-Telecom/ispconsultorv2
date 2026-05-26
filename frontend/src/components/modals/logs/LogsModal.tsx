@@ -12,7 +12,7 @@ import { formatAuditoriaListId, formatDateTime } from 'utils/formatters';
 import { auditoriaService, AuditoriaLog, AuditoriaFilters } from 'services/auditoriaService';
 import { useAuditoriaDetalheEs } from 'hooks/useAuditoriaDetalheEs';
 import { getMensagemHistoricoService } from 'services/mensagemHistoricoService';
-import { Badge } from 'components/ui';
+import { Badge, LimparButton } from 'components/ui';
 import Table from 'components/tables/Table';
 import { DateRangeFilter } from 'components/ui';
 import { TableConfig } from 'components/tables/types';
@@ -598,7 +598,7 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
   const equipamentosAgentesDateControls = isEquipamentosOuAgentes && (
     <div className="d-flex flex-nowrap align-items-center justify-content-center small filter-compact" style={{ gap: 2 }}>
       <DateRangeFilter startDate={filterStartDate} endDate={filterEndDate} onStartDateChange={(v) => { setFilterStartDate(v); tableFilters.setPage(1); }} onEndDateChange={(v) => { setFilterEndDate(v); tableFilters.setPage(1); }} />
-      <button type="button" className="btn btn-sm btn-outline-primary" style={{ fontSize: '0.65rem', height: '1.25rem' }} onClick={handleClearFilters}>{t('buttons.clear')}</button>
+      <LimparButton type="button" size="sm" className="table-toolbar-btn" style={{ fontSize: '0.65rem', height: '1.25rem' }} onClick={handleClearFilters} />
     </div>
   );
 

@@ -1,7 +1,17 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
+import {
+  AplicarSelecaoButton,
+  BulkActionButton,
+  CopiarButton,
+  ExtrairDominiosPdfButton,
+  ExtrairPlanilhaUrlButton,
+  ExtrairSeiAnatelButton,
+  GerarButton,
+  LimparButton,
+  SelecionarButton,
+} from 'components/ui';
 import { isValidIPv4, isValidIPv6 } from 'utils/validators';
 import { sanitizeDominio } from 'utils/stringUtils';
 import PdfExtractService, { type PdfExtractPollProgress } from 'services/pdfExtract';
@@ -652,9 +662,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
           <span className="text-muted small me-2">
             {t('blockdomi.versao')} atual: <strong>{versaoAtual || '-'}</strong>
           </span>
-          <Button variant="secondary" size="sm" onClick={handleGerarVersao} disabled={isGerandoVersao}>
-            {t('blockdomi.gerarVersao')}
-          </Button>
+          <GerarButton variant="secondary" onClick={handleGerarVersao} disabled={isGerandoVersao} isPending={isGerandoVersao} />
         </div>
 
         <div className="row g-3 mb-3">
@@ -710,35 +718,26 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
               </div>
               <div className="pt-3 mt-3 border-top border-secondary pb-3 mb-3 border-bottom border-secondary">
               <div className="ilb-actions mb-2">
-                <Button
+                <ExtrairSeiAnatelButton
                   type="button"
-                  variant="primary"
-                  size="sm"
                   onClick={handleExtractSeiAnatel}
                   disabled={isExtractingSei || !pdfOficioAnatel}
+                  isPending={isExtractingSei}
                   title={t('blockdomi.seiAnatelHelp')}
-                >
-                  {isExtractingSei ? '…' : t('blockdomi.extractSeiFromAnatelPdf')}
-                </Button>
-                <Button
+                />
+                <ExtrairDominiosPdfButton
                   type="button"
-                  variant="primary"
-                  size="sm"
                   onClick={handleExtractFromPdf}
                   disabled={isExtractingPdf || !pdfFile}
-                >
-                  {t('blockdomi.extractDomainsFromPdf')}
-                </Button>
+                  isPending={isExtractingPdf}
+                />
                 {hasPdfUrl && (
-                  <Button
+                  <ExtrairPlanilhaUrlButton
                     type="button"
-                    variant="secondary"
-                    size="sm"
                     onClick={handleExtractFromPdfUrl}
                     disabled={isExtractingPdf}
-                  >
-                    {t('blockdomi.extractFromPlanilhaUrl')}
-                  </Button>
+                    isPending={isExtractingPdf}
+                  />
                 )}
                 {isExtractingPdf && (
                   <span className="d-inline-flex align-items-center gap-1 small text-muted">
@@ -894,15 +893,26 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
             <div className="d-flex align-items-center justify-content-between px-2 pt-2 pb-1">
               <span className="small fw-semibold">{t('blockdomi.colunasDetectadas')}</span>
               <div className="d-flex gap-2 align-items-center">
-                <button type="button" className="btn btn-link btn-sm p-0 text-muted" style={{ fontSize: '0.75rem' }} onClick={handleColunasSelectAll}>
-                  {t('blockdomi.colunasSelecAll')}
-                </button>
-                <button type="button" className="btn btn-link btn-sm p-0 text-muted" style={{ fontSize: '0.75rem' }} onClick={handleColunasSelectNone}>
-                  {t('blockdomi.colunasSelecNone')}
-                </button>
-                <button type="button" className="btn btn-primary btn-sm py-0 px-2" style={{ fontSize: '0.75rem' }} onClick={handleColunasAplicar}>
-                  {t('blockdomi.colunasAplicar')}
-                </button>
+                <SelecionarButton
+                  type="button"
+                  label={t('blockdomi.colunasSelecAll')}
+                  className="btn btn-link btn-sm p-0 text-muted"
+                  style={{ fontSize: '0.75rem' }}
+                  onClick={handleColunasSelectAll}
+                />
+                <LimparButton
+                  type="button"
+                  label={t('blockdomi.colunasSelecNone')}
+                  className="btn btn-link btn-sm p-0 text-muted"
+                  style={{ fontSize: '0.75rem' }}
+                  onClick={handleColunasSelectNone}
+                />
+                <AplicarSelecaoButton
+                  type="button"
+                  className="py-0 px-2"
+                  style={{ fontSize: '0.75rem' }}
+                  onClick={handleColunasAplicar}
+                />
               </div>
             </div>
             <div className="d-flex flex-wrap gap-2 p-2">
@@ -1006,61 +1016,51 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
           </div>
 
           <div className="ilb-actions">
-            <Button
+            <BulkActionButton
               type="button"
+              label={t('blockdomi.paste')}
               variant="secondary"
-              size="sm"
               onClick={handlePaste}
-            >
-              {t('blockdomi.paste')}
-            </Button>
-            <Button
+            />
+            <LimparButton
               type="button"
-              variant="outline-secondary"
-              size="sm"
               onClick={handleClear}
               disabled={!rawText.trim()}
-            >
-              {t('ui.clear')}
-            </Button>
-            <Button
+            />
+            <BulkActionButton
               type="button"
+              label={t('blockdomi.analyze')}
               variant="primary"
-              size="sm"
               onClick={handleAnalisar}
               disabled={!rawText.trim() || isAnalyzing}
-            >
-              {t('blockdomi.analyze')}
-            </Button>
+              isPending={isAnalyzing}
+            />
             {classified && (
               <>
                 <div className="btn-group btn-group-sm" role="group" aria-label={t('blockdomi.modoListaBloqueio')}>
-                  <Button
+                  <BulkActionButton
                     type="button"
-                    variant={listaModo === 'bloqueio' ? 'primary' : 'outline-primary'}
-                    size="sm"
+                    label={t('blockdomi.modoListaBloqueio')}
+                    variant={listaModo === 'bloqueio' ? 'primary' : 'secondary'}
+                    className={listaModo === 'bloqueio' ? '' : 'btn-outline-primary'}
                     onClick={() => setListaModo('bloqueio')}
-                  >
-                    {t('blockdomi.modoListaBloqueio')}
-                  </Button>
-                  <Button
+                  />
+                  <BulkActionButton
                     type="button"
-                    variant={listaModo === 'desbloqueio' ? 'danger' : 'outline-danger'}
-                    size="sm"
+                    label={t('blockdomi.modoListaDesbloqueio')}
+                    variant={listaModo === 'desbloqueio' ? 'danger' : 'secondary'}
+                    className={listaModo === 'desbloqueio' ? '' : 'btn-outline-danger'}
                     onClick={() => setListaModo('desbloqueio')}
-                  >
-                    {t('blockdomi.modoListaDesbloqueio')}
-                  </Button>
+                  />
                 </div>
-                <Button
+                <BulkActionButton
                   type="button"
+                  label={listaModo === 'desbloqueio' ? t('blockdomi.registerRemover') : t('blockdomi.register')}
                   variant={listaModo === 'desbloqueio' ? 'danger' : 'primary'}
-                  size="sm"
                   onClick={handleCadastrar}
                   disabled={totalValid === 0 || isCadastrando}
-                >
-                  {listaModo === 'desbloqueio' ? t('blockdomi.registerRemover') : t('blockdomi.register')}
-                </Button>
+                  isPending={isCadastrando}
+                />
               </>
             )}
           </div>
@@ -1081,15 +1081,11 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                     )}
                   </div>
                   <div className="card-footer py-2">
-                    <Button
+                    <CopiarButton
                       type="button"
-                      variant="outline-secondary"
-                      size="sm"
                       onClick={() => handleCopy(dominiosBruto)}
                       disabled={dominiosBruto.length === 0}
-                    >
-                      {t('buttons.copy')}
-                    </Button>
+                    />
                   </div>
                 </div>
               </div>
@@ -1113,15 +1109,12 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                     )}
                   </div>
                   <div className="card-footer py-2">
-                    <Button
+                    <CopiarButton
                       type="button"
                       variant="outline-dark"
-                      size="sm"
                       onClick={() => handleCopy(dominiosFiltrados.map((x) => x.fixed))}
                       disabled={dominiosFiltrados.length === 0}
-                    >
-                      {t('buttons.copy')}
-                    </Button>
+                    />
                   </div>
                 </div>
               </div>
@@ -1139,15 +1132,12 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                     )}
                   </div>
                   <div className="card-footer py-2">
-                    <Button
+                    <CopiarButton
                       type="button"
                       variant="outline-light"
-                      size="sm"
                       onClick={() => handleCopy(dominiosValidos)}
                       disabled={dominiosValidos.length === 0}
-                    >
-                      {t('buttons.copy')}
-                    </Button>
+                    />
                   </div>
                 </div>
               </div>

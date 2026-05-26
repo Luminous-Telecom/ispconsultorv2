@@ -12,7 +12,7 @@ import { ApiError } from 'services/core/ErrorHandler';
 import { useFormReset } from 'hooks/useFormReset';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
+import { CancelarButton, NovoButton, SalvarButton } from 'components/ui';
 import { DadosEmpresaForm, DadosEmpresaModalProps } from './types';
 import DadosBasicosTab from './abas/DadosBasicosTab';
 import EnderecoTab from './abas/EnderecoTab';
@@ -354,12 +354,12 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
           </div>
         )}
         <div className="empresa-header-buttons modal-header-actions">
-          <Button type="button" variant="primary" size="sm" onClick={handleCancel} disabled={isPending}>
-            Cancelar
-          </Button>
-          <Button type="submit" form="empresa-form" variant="primary" size="sm" isLoading={isPending}>
-            Salvar
-          </Button>
+          <CancelarButton type="button" onClick={handleCancel} isPending={isPending} />
+          {isSaasCreate ? (
+            <NovoButton type="submit" form="empresa-form" entity="Empresa" isPending={isPending} />
+          ) : (
+            <SalvarButton type="submit" form="empresa-form" isPending={isPending} />
+          )}
         </div>
         <div className="empresa-header-tabs">
           <ul className={`nav nav-tabs empresa-tabs-unified ${isMobile ? 'empresa-tabs-mobile' : ''}`} id="empresaTab" role="tablist" style={{ margin: 0, padding: 0, borderBottom: 'none', backgroundColor: 'transparent' }}>
@@ -401,7 +401,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
         </div>
       </div>
     ),
-    [activeTab, isMobile, isPending, handleCancel, companyOptions, selectedCompanyId, onCompanyChange, isSaas, t]
+    [activeTab, isMobile, isPending, handleCancel, companyOptions, selectedCompanyId, onCompanyChange, isSaas, isSaasCreate, t]
   );
 
   useLayoutEffect(() => {

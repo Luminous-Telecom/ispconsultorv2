@@ -6,7 +6,7 @@ import { useCreateContratoPlanoAdicional, useUpdateContratoPlanoAdicional } from
 import { usePlanos } from 'hooks/usePlanos';
 import { Plano } from 'types/entities';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
+import { ModalFormActions } from 'components/ui';
 import FormField from 'components/ui/FormField';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import PlanoListModal from 'components/modals/planos/PlanoListModal';
@@ -143,27 +143,14 @@ const ServicoAdicionalModal: React.FC<ServicoAdicionalModalProps> = ({
     }
   };
 
+  const isPending = createMutation.isPending || updateMutation.isPending;
+
   const headerActions = (
-    <div className="d-flex gap-2 modal-header-actions">
-      <Button
-        type="button"
-        variant="primary"
-        size="sm"
-        onClick={onClose}
-        disabled={createMutation.isPending || updateMutation.isPending}
-      >
-        Cancelar
-      </Button>
-      <Button
-        type="submit"
-        form="servico-adicional-form"
-        variant="primary"
-        size="sm"
-        isLoading={createMutation.isPending || updateMutation.isPending}
-      >
-        Salvar
-      </Button>
-    </div>
+    <ModalFormActions
+      onCancel={onClose}
+      formId="servico-adicional-form"
+      isPending={isPending}
+    />
   );
 
   return (

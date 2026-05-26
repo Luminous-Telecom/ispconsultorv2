@@ -29,7 +29,7 @@ export interface TermoFormData {
 export interface BulkAction<T = Record<string, unknown>> {
   label: string;
   action?: (selectedItems: T[]) => void;
-  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info';
+  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info' | 'light' | 'dark';
   disabled?: boolean | ((selectedItems: T[]) => boolean);
   requiresSelection?: boolean;
   dropdown?: {

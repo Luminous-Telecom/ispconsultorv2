@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
+import { CancelarButton, ConfirmarCancelamentoButton } from 'components/ui';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { NotaFiscal } from 'types';
 import { NotaFiscalService } from 'services/notaFiscalService';
@@ -104,27 +104,15 @@ const CancelarNotaFiscalModal: React.FC<CancelarNotaFiscalModalProps> = ({
   // Header actions com botões padronizados
   const headerActionsContent = useMemo(() => (
     <div className="d-flex gap-2 modal-header-actions">
-      <Button
-        type="button"
-        variant="primary"
-        size="sm"
-        onClick={handleClose}
-        disabled={isSubmitting}
-      >
-        {t('buttons.cancel')}
-      </Button>
-      <Button
+      <CancelarButton type="button" onClick={handleClose} isPending={isSubmitting} />
+      <ConfirmarCancelamentoButton
         type="submit"
         form="cancelar-nf-form"
-        variant="primary"
-        size="sm"
         disabled={!isFormValid || isSubmitting}
-        isLoading={isSubmitting}
-      >
-        {isSubmitting ? t('buttons.canceling') : t('buttons.confirmCancellation')}
-      </Button>
+        isPending={isSubmitting}
+      />
     </div>
-  ), [isFormValid, isSubmitting, handleClose, t]);
+  ), [isFormValid, isSubmitting, handleClose]);
 
   if (!notaFiscal) return null;
 

@@ -11,6 +11,7 @@ import { ClienteService } from 'services/clienteService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { formatCNPJ, formatCEP } from 'utils/formatters';
 import { isValidCNPJ } from 'utils/validators';
+import { CancelarButton, NovoButton, SalvarButton } from 'components/ui';
 
 interface EmpresasModalProps {
   show: boolean;
@@ -306,9 +307,7 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
   const content = (
     <div>
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <button className="btn btn-primary btn-sm" onClick={handleOpenCreate}>
-          Criar Empresa
-        </button>
+        <NovoButton entity="Empresa" onClick={handleOpenCreate} />
       </div>
 
       <Table
@@ -384,12 +383,12 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
             </div>
 
             <div className="d-flex gap-2 justify-content-end mt-3">
-              <button className="btn btn-secondary btn-sm" onClick={handleCloseForm} disabled={isPending}>
-                Cancelar
-              </button>
-              <button className="btn btn-primary btn-sm" onClick={handleSubmit} disabled={isPending}>
-                {editingId ? 'Salvar' : 'Criar Empresa'}
-              </button>
+              <CancelarButton type="button" onClick={handleCloseForm} isPending={isPending} />
+              {editingId ? (
+                <SalvarButton type="button" onClick={handleSubmit} isPending={isPending} />
+              ) : (
+                <NovoButton entity="Empresa" type="button" onClick={handleSubmit} isPending={isPending} />
+              )}
             </div>
           </div>
         </DraggableModal>

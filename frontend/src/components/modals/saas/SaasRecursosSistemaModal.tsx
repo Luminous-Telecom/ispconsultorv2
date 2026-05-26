@@ -9,7 +9,7 @@ import { useIsMobile } from 'hooks/useMediaQuery';
 import { SaasParametrosService } from 'services/saas/saasParametrosService';
 import { useFormReset } from 'hooks/useFormReset';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
+import { ModalFormActions } from 'components/ui';
 
 interface Props {
   show: boolean;
@@ -119,14 +119,11 @@ const SaasRecursosSistemaModal: React.FC<Props> = ({ show, onClose, skipWrapper 
 
   const headerActions = useMemo(
     () => (
-      <div className="d-flex gap-2 modal-header-actions">
-        <Button type="button" variant="primary" size="sm" onClick={onClose} disabled={updateMutation.isPending}>
-          Cancelar
-        </Button>
-        <Button type="submit" form="saas-recursos-sistema-form" variant="primary" size="sm" disabled={updateMutation.isPending}>
-          Salvar
-        </Button>
-      </div>
+      <ModalFormActions
+        onCancel={onClose}
+        formId="saas-recursos-sistema-form"
+        isPending={updateMutation.isPending}
+      />
     ),
     [onClose, updateMutation.isPending]
   );

@@ -3,7 +3,16 @@ import { useQuery } from '@tanstack/react-query';
 import { Agent } from 'types';
 import { useCreateAgent, useUpdateAgent, useRegenerateAgentToken } from 'hooks/useAgents';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
+import {
+  CancelarButton,
+  CopiarButton,
+  FecharButton,
+  GerarButton,
+  GerarTokenButton,
+  InstalarAgenteButton,
+  NovoButton,
+  SalvarButton,
+} from 'components/ui';
 import FormField from 'components/ui/FormField';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import ClienteListModal from 'components/modals/clientes/ClienteListModal';
@@ -356,32 +365,34 @@ const AgentModal: React.FC<AgentModalProps> = ({ show, onClose, onSuccess, agent
       <div className="banco-header-buttons modal-header-actions d-flex align-items-center gap-2 flex-wrap">
         {activeTab === 'config' && (
           <>
-            <Button type="button" variant="secondary" size="sm" onClick={handleClose} disabled={isSubmitting}>Cancelar</Button>
-            <Button type="button" variant="primary"   size="sm" onClick={handleSubmit} disabled={isSubmitting}>
-              {isEditing ? 'Salvar' : 'Criar Agente'}
-            </Button>
+            <CancelarButton type="button" onClick={handleClose} isPending={isSubmitting} />
+            {isEditing ? (
+              <SalvarButton type="button" onClick={handleSubmit} isPending={isSubmitting} />
+            ) : (
+              <NovoButton entity="Agente" type="button" onClick={handleSubmit} isPending={isSubmitting} />
+            )}
           </>
         )}
         {activeTab === 'install-auto' && installStatus === 'idle' && (
           <>
-            <Button type="button" variant="secondary" size="sm" onClick={handleClose}>Cancelar</Button>
-            <Button type="button" variant="primary"   size="sm" onClick={handleInstall}>Instalar Agente</Button>
+            <CancelarButton type="button" onClick={handleClose} />
+            <InstalarAgenteButton type="button" onClick={handleInstall} />
           </>
         )}
         {activeTab === 'install-auto' && isRunning && (
-          <Button type="button" variant="danger" size="sm" onClick={handleClose}>Cancelar</Button>
+          <CancelarButton type="button" variant="danger" onClick={handleClose} />
         )}
         {activeTab === 'install-auto' && isDone && (
-          <Button type="button" variant="secondary" size="sm" onClick={handleClose}>Fechar</Button>
+          <FecharButton type="button" onClick={handleClose} />
         )}
         {activeTab === 'install-manual' && !generatedCmd && !generating && (
           <>
-            <Button type="button" variant="secondary" size="sm" onClick={handleClose}>Cancelar</Button>
-            <Button type="button" variant="primary"   size="sm" onClick={handleGenerateCmd}>Gerar Comando</Button>
+            <CancelarButton type="button" onClick={handleClose} />
+            <GerarButton type="button" onClick={handleGenerateCmd} />
           </>
         )}
         {activeTab === 'install-manual' && (generatedCmd || generating) && (
-          <Button type="button" variant="secondary" size="sm" onClick={handleClose}>Fechar</Button>
+          <FecharButton type="button" onClick={handleClose} />
         )}
       </div>
 
@@ -510,10 +521,13 @@ const AgentModal: React.FC<AgentModalProps> = ({ show, onClose, onSuccess, agent
                         <div className="small fw-semibold">Token atual</div>
                         <div className="text-muted small">{agentData?.token_hint ?? '(gerado na criação)'}</div>
                       </div>
-                      <Button type="button" variant="outline-danger" size="sm"
-                        onClick={handleRegenerate} disabled={regenerateMutation.isPending}>
-                        Regenerar Token
-                      </Button>
+                      <GerarTokenButton
+                        type="button"
+                        variant="outline-danger"
+                        onClick={handleRegenerate}
+                        disabled={regenerateMutation.isPending}
+                        isPending={regenerateMutation.isPending}
+                      />
                     </div>
                   </div>
                 )}
@@ -631,10 +645,11 @@ const AgentModal: React.FC<AgentModalProps> = ({ show, onClose, onSuccess, agent
                     <span style={{ fontFamily: '"JetBrains Mono", "Fira Code", monospace', fontSize: '12px', color: 'var(--text-primary)', wordBreak: 'break-all', flex: 1 }}>
                       {generatedCmd}
                     </span>
-                    <button type="button" title={cmdCopied ? 'Copiado!' : 'Copiar'} onClick={handleCopy}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: cmdCopied ? 'var(--bs-success)' : 'var(--text-secondary)', padding: '2px 4px', flexShrink: 0, fontSize: '15px', lineHeight: 1, transition: 'color 0.2s' }}>
-                      <i className={cmdCopied ? 'bi bi-check-lg' : 'bi bi-copy'} />
-                    </button>
+                    <CopiarButton
+                      iconOnly
+                      onClick={handleCopy}
+                      label={cmdCopied ? t('blockdomi.copiedToClipboard') : undefined}
+                    />
                   </div>
                   <p className="small text-muted mt-2 mb-1">Sem Docker instalado? Use a aba <strong>Instalar Automático</strong> para instalar via SSH.</p>
                   <div className="alert alert-warning small py-2 mb-0" style={{ fontSize: '11px' }}>

@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button, FormField } from 'components/ui';
+import { CancelarButton, CopiarButton, FormField, NovoButton } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
-import { useI18n } from 'contexts/I18nContext';
 import { RpkiCaService } from 'services/rpkiCaService';
 
 interface RpkiCaParentCreateModalProps {
@@ -19,7 +18,6 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
   initialCaId,
   allowedCaIds,
 }) => {
-  const { t } = useI18n();
   const [caId, setCaId] = useState('');
   const [parentName, setParentName] = useState('');
   const [childRequestXml, setChildRequestXml] = useState('');
@@ -133,14 +131,10 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
                 onChange={() => undefined}
                 disabled
               />
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
+              <CopiarButton
+                iconOnly
                 style={{ position: 'absolute', top: 30, right: 18, zIndex: 2, minWidth: 36, padding: '4px 8px' }}
                 disabled={!childRequestXml.trim()}
-                title="Copiar"
-                aria-label="Copiar requisição da CA-filha"
                 onClick={async () => {
                   if (!childRequestXml.trim()) return;
                   try {
@@ -150,7 +144,7 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
                     error('Não foi possível copiar a Requisição da CA-filha');
                   }
                 }}
-              ><i className="bi bi-clipboard"></i></Button>
+              />
             </div>
           </div>
           <div className="col-12">
@@ -166,14 +160,11 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
           </div>
         </div>
         <div className="d-flex justify-content-end gap-2 mt-3">
-          <Button type="button" variant="secondary" size="sm" onClick={onClose} disabled={createMutation.isPending}>
-            Cancelar
-          </Button>
-          <Button
+          <CancelarButton type="button" onClick={onClose} isPending={createMutation.isPending} />
+          <NovoButton
             type="button"
-            variant="primary"
-            size="sm"
             disabled={createMutation.isPending || !caId.trim() || !parentName.trim() || !responseXml.trim()}
+            isPending={createMutation.isPending}
             onClick={() =>
               createMutation.mutate({
                 caId: Number(caId),
@@ -181,9 +172,7 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
                 responseXml: responseXml.trim(),
               })
             }
-          >
-            {t('buttons.new')}
-          </Button>
+          />
         </div>
       </div>
     </DraggableModal>

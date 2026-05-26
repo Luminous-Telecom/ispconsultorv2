@@ -5,6 +5,7 @@ import { useModalSelect } from 'hooks/useModalSelect';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { IPv4 } from 'types';
 import { useI18n } from 'contexts/I18nContext';
+import {useBulkBtn} from 'components/ui';
 import { formatDateTime, formatDate } from 'utils/formatters';
 import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
@@ -33,6 +34,7 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
   skipWrapper = false
 }) => {
   const { t } = useI18n();
+  const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -269,28 +271,28 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
 
   const bulkActions = useMemo(() => onSelectIPv4 ? [
     {
-      label: t('actions.cancel'),
-      variant: 'primary' as const,
+      label: bulkBtn.cancelar.label,
+      variant: bulkBtn.cancelar.variant,
       action: () => {
         clearSelection();
         onClose();
       }
     },
     {
-      label: t('buttons.select'),
-      variant: 'primary' as const,
+      label: bulkBtn.selecionar.label,
+      variant: bulkBtn.selecionar.variant,
       disabled: (selectedItems: IPv4[]) => selectedItems.length === 0 && !selectedItem,
       action: (selectedItems: IPv4[]) => handleSelect(selectedItems)
     }
   ] : [
     {
-      label: t('actions.create'),
-      variant: 'primary' as const,
+      label: bulkBtn.novo.label,
+      variant: bulkBtn.novo.variant,
       action: () => setShowCreateModal(true)
     },
     {
-      label: t('actions.edit'),
-      variant: 'primary' as const,
+      label: bulkBtn.editar.label,
+      variant: bulkBtn.editar.variant,
       disabled: (selectedItems: IPv4[]) => selectedItems.length === 0 && !selectedItem,
       action: (selectedItems: IPv4[]) => {
         const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
@@ -301,7 +303,8 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
       }
     },
     {
-      label: t('actions.delete'),
+      label: bulkBtn.deletar.label,
+      variant: bulkBtn.deletar.variant,
       disabled: (selectedItems: IPv4[]) => selectedItems.length === 0 && !selectedItem,
       action: async (selectedItems: IPv4[]) => {
         const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
@@ -361,8 +364,7 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
         items.filter((i) => i.link_planilha_dominios?.trim()).forEach((i) => window.open(i.link_planilha_dominios!, '_blank', 'noopener,noreferrer'));
       }
     }
-  ], [onSelectIPv4, selectedItem, clearSelection, onClose, handleSelect, handleDelete, handleBulkDelete, t]);
-
+  ], [onSelectIPv4, selectedItem, clearSelection, onClose, handleSelect, handleDelete, handleBulkDelete, t, bulkBtn]);
   const modalData = useMemo(() => ipv4sData?.data || [], [ipv4sData?.data]);
 
   const handleSearchChange = useCallback((search: string, field?: string) => {

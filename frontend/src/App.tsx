@@ -10,6 +10,7 @@ import { ModalProvider } from './contexts/ModalContext';
 import { LoadingProvider } from './contexts/LoadingContext';
 import { SaasAuthProvider } from './contexts/SaasAuthContext';
 import Loading from './components/common/Loading';
+import { RecarregarButton } from './components/ui';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import ProtectionLayer from './components/common/ProtectionLayer';
 import Layout from './components/layout/Layout';
@@ -75,12 +76,11 @@ function AppContent() {
             <i className="bi bi-exclamation-triangle text-danger app-error-icon"></i>
             <h2 className="mt-3 text-danger">{t('ui.appError')}</h2>
             <p className="text-muted">{t('ui.criticalError')}</p>
-            <button
-              className="btn btn-primary mt-3"
+            <RecarregarButton
+              type="button"
+              className="mt-3"
               onClick={() => window.location.reload()}
-            >
-              {t('ui.reloadPage')}
-            </button>
+            />
           </div>
         </div>
       }

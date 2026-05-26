@@ -5,6 +5,7 @@ import { useTableFilters } from 'hooks/useTableFilters';
 import { useModalSelect } from 'hooks/useModalSelect';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useI18n } from 'contexts/I18nContext';
+import { getSystemButtonBulkPropsByKey } from 'components/ui';
 import { SshDevice } from 'types';
 import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
@@ -34,6 +35,14 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
   show, onClose, skipWrapper = false, clienteIdFilter, tableTitle,
 }) => {
   const { t } = useI18n();
+  const bulkBtn = useMemo(
+    () => ({
+      novo: getSystemButtonBulkPropsByKey('actions.create', t),
+      editar: getSystemButtonBulkPropsByKey('actions.edit', t),
+      deletar: getSystemButtonBulkPropsByKey('actions.delete', t),
+    }),
+    [t]
+  );
   const queryClient = useQueryClient();
   const { success } = useNotificationContext();
   const auditoria = useAuditoria();
@@ -234,13 +243,13 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
 
   const bulkActions = useMemo(() => [
     {
-      label: t('actions.create'),
-      variant: 'primary' as const,
+      label: bulkBtn.novo.label,
+      variant: bulkBtn.novo.variant,
       action: () => setShowCreateModal(true),
     },
     {
-      label: t('actions.edit'),
-      variant: 'primary' as const,
+      label: bulkBtn.editar.label,
+      variant: bulkBtn.editar.variant,
       disabled: (selectedItems: SshDevice[]) => selectedItems.length !== 1,
       action: (selectedItems: SshDevice[]) => {
         if (selectedItems.length !== 1) return;
@@ -249,8 +258,8 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
       },
     },
     {
-      label: t('actions.delete'),
-      variant: 'primary' as const,
+      label: bulkBtn.deletar.label,
+      variant: bulkBtn.deletar.variant,
       disabled: (selectedItems: SshDevice[]) => selectedItems.length === 0,
       action: async (selectedItems: SshDevice[]) => {
         if (selectedItems.length === 0) return;
@@ -296,7 +305,7 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
         }
       },
     },
-  ], [t, handleTest, handleDelete, queryClient, canQueueManualBackup, queueManualBackupMutation, isSwos]);
+  ], [bulkBtn, t, handleTest, handleDelete, queryClient, canQueueManualBackup, queueManualBackupMutation, isSwos]);
 
   const modalContent = (
     <Table
