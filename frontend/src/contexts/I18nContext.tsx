@@ -6404,9 +6404,3 @@ export const useI18n = (): I18nContextType => {
   }
   return context;
 };
-
-// Hook simplificado para traduções comuns
-export const useTranslation = () => {
-  const { t } = useI18n();
-  return { t };
-};

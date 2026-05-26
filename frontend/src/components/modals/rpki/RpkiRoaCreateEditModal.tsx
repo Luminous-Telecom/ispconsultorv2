@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import DraggableModal from 'components/common/DraggableModal';
 import { FormField } from 'components/ui';
-import { CancelarButton, NovoButton, SalvarButton } from 'components/ui/buttons/buttons';
+import { CancelarButton, NovoButton, SalvarButton } from 'components/ui';
 import { RpkiCaService } from 'services/rpkiCaService';
 import { normalizeDateOnlyForInput } from 'utils/formatters';
 

@@ -14,7 +14,7 @@ import { TableConfig, BulkAction } from 'components/tables/types';
 import { TituloModal } from 'components/modals/titulos';
 import ReceberModal from 'components/modals/pagamentos/ReceberModal';
 import { useI18n } from 'contexts/I18nContext';
-import { getSystemButtonBulkPropsByKey } from 'components/ui';
+import { useBulkBtn } from 'components/ui';
 import ImprimirModal from 'components/common/ImprimirModal';
 import GerarNFeModal from 'components/modals/notas-fiscais/GerarNFeModal';
 import { useIsMobile } from 'hooks/useMediaQuery';
@@ -46,18 +46,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
 }) => {
   const isSaas = variant === 'saas';
   const { t } = useI18n();
-  const bulkBtn = useMemo(
-    () => ({
-      editar: getSystemButtonBulkPropsByKey('actions.edit', t),
-      deletar: getSystemButtonBulkPropsByKey('actions.delete', t),
-      receber: getSystemButtonBulkPropsByKey('actions.receive', t),
-      cancelar: getSystemButtonBulkPropsByKey('actions.cancel', t),
-      estornar: getSystemButtonBulkPropsByKey('actions.reverse', t),
-      imprimir: getSystemButtonBulkPropsByKey('buttons.print', t),
-      nfse: getSystemButtonBulkPropsByKey('actions.nfse', t),
-    }),
-    [t]
-  );
+  const bulkBtn = useBulkBtn();
   const isMobile = useIsMobile();
   const tableFilters = useTableFilters({
     initialSearch: '',

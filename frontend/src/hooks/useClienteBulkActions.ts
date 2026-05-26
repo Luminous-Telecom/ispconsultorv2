@@ -10,7 +10,7 @@ import { formatCurrency } from '../utils/formatters';
 import { BulkAction } from '../components/modals/clientes/cliente/types';
 import { useConfirmModal } from './useConfirmModal';
 import { useI18n } from '../contexts/I18nContext';
-import { getSystemButtonBulkPropsByKey } from '../components/ui';
+import { useBulkBtn } from '../components/ui';
 
 interface UseClienteBulkActionsParams {
   clienteId: number | null;
@@ -111,27 +111,7 @@ export const useClienteBulkActions = ({
     return getItemsCompletos.some(item => item.nfse_status === 'emitida' && item.nfse_numero);
   }, [getItemsCompletos]);
 
-  const bulkBtn = useMemo(
-    () => ({
-      editar: getSystemButtonBulkPropsByKey('actions.edit', t),
-      deletar: getSystemButtonBulkPropsByKey('actions.delete', t),
-      receber: getSystemButtonBulkPropsByKey('actions.receive', t),
-      cancelar: getSystemButtonBulkPropsByKey('actions.cancel', t),
-      estornar: getSystemButtonBulkPropsByKey('actions.reverse', t),
-      imprimir: getSystemButtonBulkPropsByKey('actions.print', t),
-      enviar: getSystemButtonBulkPropsByKey('actions.send', t),
-      nfse: getSystemButtonBulkPropsByKey('actions.nfse', t),
-      novo: getSystemButtonBulkPropsByKey('buttons.new', t),
-      selecionados: getSystemButtonBulkPropsByKey('buttons.selected', t),
-      abertos: getSystemButtonBulkPropsByKey('buttons.open', t),
-      recibo: getSystemButtonBulkPropsByKey('buttons.receipt', t),
-      imprimirNF: getSystemButtonBulkPropsByKey('buttons.printNF', t),
-      viaWhatsApp: getSystemButtonBulkPropsByKey('buttons.viaWhatsApp', t),
-      viaEmail: getSystemButtonBulkPropsByKey('buttons.viaEmail', t),
-      gerarNFSeAvulsa: getSystemButtonBulkPropsByKey('buttons.generateNFSeAvulsa', t),
-    }),
-    [t]
-  );
+  const bulkBtn = useBulkBtn();
 
   const handleCancelarTitulos = useCallback(async (items: CarneParcela[]) => {
     if (items.length === 0) return;

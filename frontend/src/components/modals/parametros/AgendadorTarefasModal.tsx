@@ -13,7 +13,7 @@ import ImprimirModal from 'components/common/ImprimirModal';
 import { useConfirmModal } from 'hooks/useConfirmModal';
 import ConfirmModal from 'components/modals/ConfirmModal';
 import { useI18n } from 'contexts/I18nContext';
-import { getSystemButtonBulkPropsByKey } from 'components/ui';
+import { useBulkBtn } from 'components/ui';
 import { extractApiErrorMessageSync } from 'utils/apiErrorHelper';
 import { getCronDisplayFromRotina } from 'utils/schedulerCronDisplay';
 import { formatDateTime } from 'utils/formatters';
@@ -36,14 +36,7 @@ interface AgendadorTarefasModalProps {
 
 const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onClose }) => {
   const { t } = useI18n();
-  const bulkBtn = useMemo(
-    () => ({
-      novo: getSystemButtonBulkPropsByKey('actions.new', t),
-      editar: getSystemButtonBulkPropsByKey('actions.edit', t),
-      deletar: getSystemButtonBulkPropsByKey('actions.delete', t),
-    }),
-    [t]
-  );
+  const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
   const { success, error: showError } = useNotificationContext();
   const auditoria = useAuditoria();

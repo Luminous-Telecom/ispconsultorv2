@@ -2,7 +2,7 @@ import React from 'react';
 import SystemButton from './SystemButton';
 import type { SystemActionButtonProps } from './types';
 import type { SystemButtonAction } from './config';
-import { SYSTEM_BUTTON_CONFIG, SYSTEM_BUTTON_EXPORT_NAMES } from './config';
+import { SYSTEM_BUTTON_EXPORT_NAMES } from './config';
 
 type ActionButtonProps = SystemActionButtonProps;
 
@@ -12,8 +12,6 @@ function createButton(action: SystemButtonAction): React.FC<ActionButtonProps> {
   Component.displayName = displayName;
   return Component;
 }
-
-const actions = Object.keys(SYSTEM_BUTTON_CONFIG) as SystemButtonAction[];
 
 /** Todos os botões do sistema — gerados a partir de `SYSTEM_BUTTON_CONFIG`. */
 export const NovoButton = createButton('novo');
@@ -83,5 +81,3 @@ export const OcultarFiltrosButton = createButton('ocultarFiltros');
 export const MostrarFiltrosButton = createButton('mostrarFiltros');
 export const SairButton = createButton('sair');
 export const GerarRequisicaoCaFilhaButton = createButton('gerarRequisicaoCaFilha');
-
-void actions;

@@ -91,18 +91,3 @@ export const CONTEXT_ERROR_MESSAGES = {
   SERVICOS_ADICIONAIS_DELETE_ERROR: 'Erro ao deletar serviço(s) adicional(is)',
 } as const;
 
-/**
- * Mensagens de sucesso (opcional, mas útil para manter consistência)
- */
-export const SUCCESS_MESSAGES = {
-  SAVED: 'Salvo com sucesso!',
-  DELETED: 'Deletado com sucesso!',
-  UPDATED: 'Atualizado com sucesso!',
-  CREATED: 'Criado com sucesso!',
-} as const;
-
-/**
- * Tipo para todas as mensagens de erro
- */
-export type ErrorMessage = typeof ERROR_MESSAGES[keyof typeof ERROR_MESSAGES] | typeof CONTEXT_ERROR_MESSAGES[keyof typeof CONTEXT_ERROR_MESSAGES];
-

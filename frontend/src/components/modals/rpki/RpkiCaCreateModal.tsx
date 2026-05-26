@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from 'components/common/DraggableModal';
 import { FormField } from 'components/ui';
-import { CancelarButton, LimparButton, NovoButton } from 'components/ui/buttons/buttons';
+import { CancelarButton, LimparButton, NovoButton } from 'components/ui';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { RpkiCaService } from 'services/rpkiCaService';

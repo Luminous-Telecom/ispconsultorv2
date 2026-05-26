@@ -6,7 +6,7 @@ import { useModalSelect } from 'hooks/useModalSelect';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { Dominio } from 'types';
 import { useI18n } from 'contexts/I18nContext';
-import { getSystemButtonBulkPropsByKey } from 'components/ui';
+import { useBulkBtn } from 'components/ui';
 import { formatDateTime, formatDate } from 'utils/formatters';
 import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
@@ -35,17 +35,7 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
   skipWrapper = false
 }) => {
   const { t } = useI18n();
-  const bulkBtn = useMemo(
-    () => ({
-      cancelar: getSystemButtonBulkPropsByKey('actions.cancel', t),
-      selecionar: getSystemButtonBulkPropsByKey('buttons.select', t),
-      novo: getSystemButtonBulkPropsByKey('buttons.new', t),
-      editar: getSystemButtonBulkPropsByKey('actions.edit', t),
-      deletar: getSystemButtonBulkPropsByKey('actions.delete', t),
-      sincronizar: getSystemButtonBulkPropsByKey('buttons.sync', t),
-    }),
-    [t]
-  );
+  const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);

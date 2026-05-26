@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
-import { ModalFormActions, getSystemButtonBulkPropsByKey } from 'components/ui';
+import { ModalFormActions, useBulkBtn } from 'components/ui';
 import FormField from 'components/ui/FormField';
 import AddressFields from 'components/forms/AddressFields';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
@@ -62,18 +62,7 @@ type TabId = 'dados-basicos' | 'endereco' | 'contato' | 'contratos' | 'usuarios'
 
 const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId }) => {
   const { t } = useI18n();
-  const bulkBtn = useMemo(
-    () => ({
-      novo: getSystemButtonBulkPropsByKey('actions.create', t),
-      editar: getSystemButtonBulkPropsByKey('actions.edit', t),
-      deletar: getSystemButtonBulkPropsByKey('actions.delete', t),
-      receber: getSystemButtonBulkPropsByKey('actions.receive', t),
-      cancelar: getSystemButtonBulkPropsByKey('buttons.cancel', t),
-      estornar: getSystemButtonBulkPropsByKey('buttons.reverse', t),
-      imprimir: getSystemButtonBulkPropsByKey('buttons.print', t),
-    }),
-    [t]
-  );
+  const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
   const { success, error, info } = useNotificationContext();
   const lastCnpjConsulted = useRef<string>('');

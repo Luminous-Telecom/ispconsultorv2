@@ -35,7 +35,7 @@ import { useIsMobile } from 'hooks/useMediaQuery';
 import { useAuditoria } from 'hooks/useAuditoria';
 import { useI18n } from 'contexts/I18nContext';
 import ModeloContratoSelectModal from 'components/modals/parametros/ModeloContratoSelectModal';
-import { ImprimirButton, ModalFormActions, Spinner, getSystemButtonBulkPropsByKey } from 'components/ui';
+import { ImprimirButton, ModalFormActions, Spinner, useBulkBtn } from 'components/ui';
 import { useConfirmModal } from 'hooks/useConfirmModal';
 import ConfirmModal from 'components/modals/ConfirmModal';
 import ContratoTab from './abas/ContratoTab';
@@ -63,19 +63,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   clienteId
 }) => {
   const { t } = useI18n();
-  const bulkBtn = useMemo(
-    () => ({
-      editar: getSystemButtonBulkPropsByKey('actions.edit', t),
-      deletar: getSystemButtonBulkPropsByKey('actions.delete', t),
-      receber: getSystemButtonBulkPropsByKey('actions.receive', t),
-      cancelar: getSystemButtonBulkPropsByKey('actions.cancel', t),
-      estornar: getSystemButtonBulkPropsByKey('actions.reverse', t),
-      imprimir: getSystemButtonBulkPropsByKey('buttons.print', t),
-      enviar: getSystemButtonBulkPropsByKey('buttons.send', t),
-      novo: getSystemButtonBulkPropsByKey('actions.create', t),
-    }),
-    [t]
-  );
+  const bulkBtn = useBulkBtn();
   const isMobile = useIsMobile();
   const auditoria = useAuditoria();
   // Estado interno para controlar o contratoId após criação

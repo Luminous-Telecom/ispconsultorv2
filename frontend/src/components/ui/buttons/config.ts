@@ -88,8 +88,8 @@ export const SYSTEM_BUTTON_CONFIG: Record<SystemButtonAction, SystemButtonStyleC
   editar: { variant: 'primary', defaultSize: 'sm', i18nKey: 'buttons.edit' },
   deletar: { variant: 'danger', defaultSize: 'sm', i18nKey: 'buttons.delete' },
   salvar: { variant: 'primary', defaultSize: 'sm', defaultType: 'submit', i18nKey: 'buttons.save' },
-  cancelar: { variant: 'secondary', defaultSize: 'sm', i18nKey: 'buttons.cancel' },
-  fechar: { variant: 'secondary', defaultSize: 'sm', i18nKey: 'buttons.close' },
+  cancelar: { variant: 'primary', defaultSize: 'sm', i18nKey: 'buttons.cancel' },
+  fechar: { variant: 'primary', defaultSize: 'sm', i18nKey: 'buttons.close' },
   confirmar: { variant: 'primary', defaultSize: 'sm', i18nKey: 'buttons.confirm' },
   confirmarPagamento: { variant: 'primary', defaultSize: 'sm', i18nKey: 'buttons.confirmPayment' },
   confirmarCancelamento: { variant: 'danger', defaultSize: 'sm', i18nKey: 'buttons.confirmCancellation' },
@@ -153,78 +153,6 @@ export const SYSTEM_BUTTON_CONFIG: Record<SystemButtonAction, SystemButtonStyleC
   gerarRequisicaoCaFilha: { variant: 'primary', defaultSize: 'sm', i18nKey: 'rpki.generateChildCaRequest' },
 };
 
-export const I18N_KEY_TO_ACTION: Partial<Record<keyof TranslationKeys, SystemButtonAction>> = {
-  'buttons.new': 'novo',
-  'actions.new': 'novo',
-  'actions.create': 'novo',
-  'titulo.createTitle': 'criarTitulo',
-  'buttons.edit': 'editar',
-  'actions.edit': 'editar',
-  'buttons.delete': 'deletar',
-  'actions.delete': 'deletar',
-  'buttons.save': 'salvar',
-  'actions.save': 'salvar',
-  'buttons.cancel': 'cancelar',
-  'actions.cancel': 'cancelar',
-  'buttons.close': 'fechar',
-  'buttons.confirm': 'confirmar',
-  'buttons.print': 'imprimir',
-  'actions.print': 'imprimir',
-  'buttons.send': 'enviar',
-  'actions.send': 'enviar',
-  'buttons.receive': 'receber',
-  'actions.receive': 'receber',
-  'buttons.reverse': 'estornar',
-  'actions.reverse': 'estornar',
-  'buttons.export': 'exportar',
-  'actions.export': 'exportar',
-  'buttons.import': 'importar',
-  'actions.import': 'importar',
-  'buttons.filter': 'filtrar',
-  'actions.filter': 'filtrar',
-  'buttons.selected': 'selecionados',
-  'buttons.open': 'abertos',
-  'buttons.receipt': 'recibo',
-  'buttons.printNF': 'imprimirNF',
-  'buttons.viaWhatsApp': 'viaWhatsApp',
-  'buttons.viaEmail': 'viaEmail',
-  'buttons.generateNFSeAvulsa': 'gerarNFSeAvulsa',
-  'buttons.view': 'visualizar',
-  'buttons.download': 'baixar',
-  'buttons.select': 'selecionar',
-  'buttons.add': 'adicionar',
-  'buttons.remove': 'remover',
-  'buttons.sync': 'sincronizar',
-  'buttons.audit': 'auditar',
-  'buttons.reload': 'recarregar',
-  'buttons.apply': 'aplicar',
-  'buttons.validate': 'validar',
-  'actions.pay': 'pagar',
-  'actions.duplicate': 'duplicar',
-  'actions.insert': 'inserir',
-  'actions.nfse': 'nfse',
-  'updates.updateSystem': 'atualizarSistema',
-  'agent.install': 'instalarAgente',
-  'messages.tryAgain': 'tentarNovamente',
-  'central.openPortal': 'abrirCentralAssinante',
-  'login.enter': 'entrar',
-  'central.sendPassword': 'enviarSenha',
-  'central.changePassword': 'alterarSenha',
-  'central.copyBarcode': 'copiarCodigoBarras',
-  'central.copyPix': 'copiarPix',
-  'central.logout': 'sair',
-  'blockdomi.colunasAplicar': 'aplicarSelecao',
-  'blockdomi.extractSeiFromAnatelPdf': 'extrairSeiAnatel',
-  'blockdomi.extractDomainsFromPdf': 'extrairDominiosPdf',
-  'blockdomi.extractFromPlanilhaUrl': 'extrairPlanilhaUrl',
-  'params.validateCpfCnpj': 'validarCnpj',
-  'params.validateCep': 'validarCep',
-  'ui.hideFilters': 'ocultarFiltros',
-  'ui.showFilters': 'mostrarFiltros',
-  'params.subscriberCenter': 'abrirCentralAssinante',
-  'rpki.generateChildCaRequest': 'gerarRequisicaoCaFilha',
-};
-
 type TranslateFn = (key: keyof TranslationKeys, params?: Record<string, unknown>) => string;
 
 export function getSystemButtonBulkProps(action: SystemButtonAction, t: TranslateFn, entity?: string) {
@@ -234,39 +162,38 @@ export function getSystemButtonBulkProps(action: SystemButtonAction, t: Translat
   return { label, variant: getBulkActionVariant(action) };
 }
 
-export function getSystemButtonBulkPropsByKey(
-  i18nKey: keyof TranslationKeys,
-  t: TranslateFn,
-  entity?: string
-) {
-  const action = I18N_KEY_TO_ACTION[i18nKey];
-  if (action) {
-    return getSystemButtonBulkProps(action, t, entity);
+export type BulkBtnVariant =
+  | 'primary'
+  | 'secondary'
+  | 'success'
+  | 'danger'
+  | 'warning'
+  | 'info'
+  | 'light'
+  | 'dark';
+
+const BULK_VARIANTS = new Set<BulkBtnVariant>([
+  'primary',
+  'secondary',
+  'success',
+  'danger',
+  'warning',
+  'info',
+  'light',
+  'dark',
+]);
+
+export function toBulkVariant(variant: ButtonVariant): BulkBtnVariant {
+  if (variant === 'ghost') return 'primary';
+  if (variant.startsWith('outline-')) {
+    const base = variant.slice('outline-'.length);
+    return BULK_VARIANTS.has(base as BulkBtnVariant) ? (base as BulkBtnVariant) : 'primary';
   }
-  return { label: t(i18nKey), variant: 'primary' as const };
+  return BULK_VARIANTS.has(variant as BulkBtnVariant) ? (variant as BulkBtnVariant) : 'primary';
 }
 
-export function getBulkActionVariant(
-  action: SystemButtonAction
-): 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark' {
-  const variant = SYSTEM_BUTTON_CONFIG[action].variant;
-  if (variant === 'outline-primary' || variant === 'ghost') return 'primary';
-  if (variant.startsWith('outline-')) {
-    return variant.replace('outline-', '') as 'primary' | 'secondary' | 'success' | 'danger';
-  }
-  if (
-    variant === 'primary' ||
-    variant === 'secondary' ||
-    variant === 'success' ||
-    variant === 'danger' ||
-    variant === 'warning' ||
-    variant === 'info' ||
-    variant === 'light' ||
-    variant === 'dark'
-  ) {
-    return variant;
-  }
-  return 'primary';
+export function getBulkActionVariant(action: SystemButtonAction): BulkBtnVariant {
+  return toBulkVariant(SYSTEM_BUTTON_CONFIG[action].variant);
 }
 
 /** Nome do componente exportado (PascalCase + Button). */

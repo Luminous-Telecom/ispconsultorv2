@@ -6,7 +6,7 @@ import { useTableFilters } from 'hooks/useTableFilters';
 import { useAuditoria } from 'hooks/useAuditoria';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useI18n } from 'contexts/I18nContext';
-import { getSystemButtonBulkPropsByKey } from 'components/ui';
+import { useBulkBtn } from 'components/ui';
 import { formatDateTime, formatDate, formatCurrency } from 'utils/formatters';
 import { ContaPagar, ContaPagarFilters } from 'types';
 import Table from 'components/tables/Table';
@@ -35,18 +35,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   initialFilters
 }) => {
   const { t } = useI18n();
-  const bulkBtn = useMemo(
-    () => ({
-      cancelar: getSystemButtonBulkPropsByKey('actions.cancel', t),
-      novo: getSystemButtonBulkPropsByKey('buttons.new', t),
-      editar: getSystemButtonBulkPropsByKey('actions.edit', t),
-      deletar: getSystemButtonBulkPropsByKey('actions.delete', t),
-      inserir: getSystemButtonBulkPropsByKey('actions.insert', t),
-      pagar: getSystemButtonBulkPropsByKey('actions.pay', t),
-      duplicar: getSystemButtonBulkPropsByKey('actions.duplicate', t),
-    }),
-    [t]
-  );
+  const bulkBtn = useBulkBtn();
   const defaultTitle = title || t('financial.accountsPayable');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);

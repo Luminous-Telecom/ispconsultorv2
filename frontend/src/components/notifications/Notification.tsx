@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { NotificationState, NotificationAction } from './types';
-import { BulkActionButton } from '../ui';
+import { BulkActionButton, toBulkVariant } from '../ui';
+import type { ButtonVariant } from '../ui';
 import { usePrefersRealHover } from '../../hooks/usePrefersRealHover';
 
 interface NotificationProps {
@@ -78,10 +79,7 @@ const Notification: React.FC<NotificationProps> = ({
     config.onActionClick?.(action);
   };
 
-  // Garantir que o tipo seja sempre o correto (forçar se necessário)
-  // Se o config.type não existir ou for diferente do esperado, usar 'info' como padrão
-  // Mas SEMPRE respeitar o config.type se ele existir
-  const notificationType = (config.type || 'info') as 'success' | 'error' | 'warning' | 'info' | 'loading';
+  const notificationType = config.type || 'info';
   
   // Obter ícone baseado no tipo
   const getIcon = () => {
@@ -165,14 +163,11 @@ const Notification: React.FC<NotificationProps> = ({
 
     return (
       <div className="notification-actions">
-        {config.actions.map(action => (
+        {config.actions.map((action) => (
           <BulkActionButton
             key={action.key}
             label={action.label}
-            variant={
-              action.variant === 'outline-primary' ? 'primary' :
-              (action.variant as 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark') || 'primary'
-            }
+            variant={toBulkVariant((action.variant as ButtonVariant) || 'primary')}
             size={action.size || 'sm'}
             onClick={() => handleActionClick(action)}
           />
@@ -216,20 +211,9 @@ const Notification: React.FC<NotificationProps> = ({
     );
   };
 
-  const notificationClasses = getNotificationClasses();
-  
-  // Verificar se a classe está correta baseada no tipo
-  const expectedClass = `notification-${notificationType}`;
-  const hasCorrectClass = notificationClasses.includes(expectedClass);
-  
-  // Se não tiver a classe correta, adicionar
-  const finalClasses = hasCorrectClass 
-    ? notificationClasses 
-    : notificationClasses.filter((c: string) => !c.startsWith('notification-')).concat(expectedClass);
-
   return (
     <div
-      className={finalClasses.join(' ')}
+      className={getNotificationClasses().join(' ')}
       style={getNotificationStyles()}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}

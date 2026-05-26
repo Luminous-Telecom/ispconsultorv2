@@ -5,7 +5,7 @@ import { useTableFilters } from 'hooks/useTableFilters';
 import { useModalSelect } from 'hooks/useModalSelect';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useI18n } from 'contexts/I18nContext';
-import { getSystemButtonBulkPropsByKey } from 'components/ui';
+import { useBulkBtn } from 'components/ui';
 import { SshDevice } from 'types';
 import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
@@ -35,14 +35,7 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
   show, onClose, skipWrapper = false, clienteIdFilter, tableTitle,
 }) => {
   const { t } = useI18n();
-  const bulkBtn = useMemo(
-    () => ({
-      novo: getSystemButtonBulkPropsByKey('actions.create', t),
-      editar: getSystemButtonBulkPropsByKey('actions.edit', t),
-      deletar: getSystemButtonBulkPropsByKey('actions.delete', t),
-    }),
-    [t]
-  );
+  const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
   const { success } = useNotificationContext();
   const auditoria = useAuditoria();

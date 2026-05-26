@@ -7,7 +7,7 @@ import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
 import { useI18n } from 'contexts/I18nContext';
-import { getSystemButtonBulkPropsByKey } from 'components/ui';
+import { useBulkBtn } from 'components/ui';
 
 interface TemplateSelectModalProps {
   show: boolean;
@@ -23,13 +23,7 @@ const TemplateSelectModal: React.FC<TemplateSelectModalProps> = ({
   title
 }) => {
   const { t } = useI18n();
-  const bulkBtn = useMemo(
-    () => ({
-      cancelar: getSystemButtonBulkPropsByKey('actions.cancel', t),
-      inserir: getSystemButtonBulkPropsByKey('actions.insert', t),
-    }),
-    [t]
-  );
+  const bulkBtn = useBulkBtn();
 
   const tableFilters = useTableFilters({
     initialSearch: '',
