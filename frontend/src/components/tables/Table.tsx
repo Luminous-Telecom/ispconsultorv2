@@ -574,40 +574,39 @@ function Table<T extends { id: number | string }>({
 
   // Cálculo dinâmico de linhas por página baseado no espaço disponível
   useEffect(() => {
-    // Em modais/abas (syncWithHeader=false) a paginação é controlada pelo contexto.
-    // O scroll da tabela ocorre naturalmente quando as linhas excedem a altura do table-responsive.
-    if (!syncWithHeader) {
-      return;
-    }
-
-    if (!normalizedPagination || !onPageSizeChange || autoRowsAppliedRef.current) {
-      return;
-    }
+    if (!normalizedPagination || !onPageSizeChange || autoRowsAppliedRef.current) return;
 
     const calculateAndApply = () => {
       const container = tableContainerRef.current;
       if (!container) return;
 
-      const scrollContainer = container.closest('[style*="flex: 1"]') || 
+      if (!syncWithHeader) {
+        // Modal/aba: mede a altura real do table-responsive (toolbar já renderizado)
+        const responsive = container.querySelector('.table-responsive-custom') as HTMLElement | null;
+        if (!responsive || responsive.offsetHeight < 100) return;
+        const headH = (container.querySelector('thead') as HTMLElement | null)?.offsetHeight ?? 32;
+        const optimalRows = Math.max(5, Math.min(50, Math.floor((responsive.offsetHeight - headH) / 32)));
+        if (normalizedPagination.perPage !== optimalRows) {
+          onPageSizeChange(optimalRows);
+          autoRowsAppliedRef.current = true;
+        }
+        return;
+      }
+
+      // Página (syncWithHeader=true): usa o scroll container pai
+      const scrollContainer = container.closest('[style*="flex: 1"]') ||
                              container.closest('[style*="overflow: auto"]');
       if (!scrollContainer) return;
-
-      const containerHeight = scrollContainer.getBoundingClientRect().height;
-      const optimalRows = Math.max(5, Math.min(30, 
-        Math.floor((containerHeight - 120) / 35)
-      ));
-
+      const availableHeight = scrollContainer.getBoundingClientRect().height;
+      const optimalRows = Math.max(5, Math.min(30, Math.floor((availableHeight - 120) / 35)));
       if (normalizedPagination.perPage !== optimalRows) {
         onPageSizeChange(optimalRows);
         autoRowsAppliedRef.current = true;
       }
     };
 
-    calculateAndApply();
-    const timer = setTimeout(() => {
-      if (!autoRowsAppliedRef.current) calculateAndApply();
-    }, 200);
-
+    // Aguarda o toolbar (headerReady) e o layout do modal estarem estáveis
+    const timer = setTimeout(calculateAndApply, 50);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [normalizedPagination ? 'ready' : 'waiting']);
@@ -1500,12 +1499,11 @@ function Table<T extends { id: number | string }>({
       {/* Header com botões de ação e filtros - Oculto no mobile */}
           {headerReady && !isMobile && showToolbar && (bulkActions.length > 0 || searchable || normalizedPagination || (!normalizedPagination && data.length > 0)) && (
         <div className="border-bottom table-header-custom">
-          {/* Primeira linha: Botões de ação */}
+          {/* Linha 1: Botões de ação */}
           {(bulkActions.length > 0 || customControlsAfterActions) && (
-            <div className="d-flex align-items-center justify-content-between mb-2 table-header-content">
+            <div className="d-flex align-items-center justify-content-between table-header-content">
               <div className="d-flex table-header-flex">
                 {bulkActions.map((bulkAction, index) => {
-              // Novo/Executar sempre habilitados (ou requiresSelection: false), outros só quando há seleção
               const isNewButton = bulkAction.label.toLowerCase().includes('nova') || bulkAction.label.toLowerCase().includes('novo');
               const isEditarButton = bulkAction.label.toLowerCase().includes('editar');
               const isExcluirButton = bulkAction.label.toLowerCase().includes('deletar');
@@ -1516,18 +1514,15 @@ function Table<T extends { id: number | string }>({
                 ? bulkAction.disabled(state.selectedItems)
                 : Boolean(bulkAction.disabled);
               const isDisabled = isDisabledBySelection || isDisabledByCondition;
-              
-              // No mobile, remover "Editar" da barra superior e esconder "Novo" e "Deletar" (serão renderizados no rodapé)
+
               if (isMobile) {
                 if (isEditarButton || isNewButton || isExcluirButton) {
                   return null;
                 }
               }
-              
-              // Se tem dropdown, renderizar dropdown Bootstrap
+
               if (bulkAction.dropdown) {
                 const isOpen = openDropdown === index;
-                
                 return (
                   <div key={index} className="dropdown table-dropdown-relative">
                     <button
@@ -1549,7 +1544,6 @@ function Table<T extends { id: number | string }>({
                           const isItemDisabled = typeof item.disabled === 'function'
                             ? item.disabled(state.selectedItems)
                             : item.disabled || false;
-
                           return (
                             <li key={itemIndex}>
                               <button
@@ -1575,8 +1569,7 @@ function Table<T extends { id: number | string }>({
                   </div>
                 );
               }
-              
-              // Botão normal
+
               return (
                 <button
                   type="button"
@@ -1602,7 +1595,7 @@ function Table<T extends { id: number | string }>({
             </div>
           )}
 
-        {/* Segunda linha: filtros (customControls) + paginação + refresh */}
+        {/* Linha 2: filtros + paginação + refresh */}
         <div className="d-flex align-items-center justify-content-between flex-nowrap table-pagination-header">
           {/* Filtros/customControls à esquerda */}
           <div className="d-flex align-items-center gap-3 flex-nowrap flex-shrink-0">

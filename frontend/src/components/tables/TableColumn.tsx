@@ -112,7 +112,7 @@ const TableColumn = <T extends { id: number | string }>({
   const columnStyles = useMemo(() => {
     const styles: React.CSSProperties = {
       textTransform: 'none',
-      padding: '0.5rem',
+      padding: '0.25rem 0.5rem',
       fontSize: '0.75rem',
     };
 
