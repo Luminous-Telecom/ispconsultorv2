@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NotificationState, NotificationAction } from './types';
-import { BulkActionButton, FecharButton } from '../ui';
+import { BulkActionButton } from '../ui';
 import { usePrefersRealHover } from '../../hooks/usePrefersRealHover';
 
 interface NotificationProps {
@@ -279,13 +279,16 @@ const Notification: React.FC<NotificationProps> = ({
         {/* Imagem */}
         {renderImage()}
 
-        {/* Botão de fechar */}
         {config.dismissible !== false && (
           <div className="notification-close">
-            <FecharButton
-              size="sm"
+            <button
+              type="button"
+              className="notification-close-btn"
               onClick={handleClose}
-            />
+              aria-label="Fechar"
+            >
+              <i className="bi bi-x-lg" aria-hidden="true" />
+            </button>
           </div>
         )}
       </div>
