@@ -1311,7 +1311,8 @@ button,
   align-items: stretch !important;
   width: 100% !important;
   gap: 0.5rem !important;
-  padding: 0.5rem 8px 0 8px !important;
+  /* Horizontal vem do .draggable-modal-header-custom (8px) — evita duplicar inset */
+  padding: 0.5rem 0 0 0 !important;
   margin: 0 !important;
   box-sizing: border-box !important;
 }
@@ -3708,6 +3709,15 @@ textarea:focus {
   flex: 1;
   overflow: auto;
   min-height: 0;
+}
+
+/* Toolbar de tabela alinhada com botões/abas do header do modal (inset 8px) */
+.draggable-modal-body-custom [class*="-tab-content-scrollable"] .table-header-content {
+  padding: 0.5rem 8px 0 8px !important;
+}
+
+.draggable-modal-body-custom [class*="-tab-content-scrollable"] .table-pagination-header {
+  padding: 0 8px 0.5rem 8px !important;
 }
 
 .cliente-tab-disabled {

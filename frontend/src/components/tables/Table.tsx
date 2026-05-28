@@ -1503,7 +1503,7 @@ function Table<T extends { id: number | string }>({
           {/* Linha 1: Botões de ação */}
           {(bulkActions.length > 0 || customControlsAfterActions) && (
             <div className="d-flex align-items-center justify-content-between table-header-content">
-              <div className="d-flex table-header-flex">
+              <div className="d-flex align-items-center flex-wrap gap-2 table-header-flex">
                 {bulkActions.map((bulkAction, index) => {
               const isNewButton = bulkAction.label.toLowerCase().includes('nova') || bulkAction.label.toLowerCase().includes('novo');
               const isEditarButton = bulkAction.label.toLowerCase().includes('editar');
