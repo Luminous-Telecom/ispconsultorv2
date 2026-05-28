@@ -230,12 +230,14 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   }, [show, modalId, onClose, isMobile]);
 
   // Calcular z-index baseado na pilha de modais (apenas desktop)
+  // Base 1100: acima da sidebar (1050) para não ficar por baixo ao arrastar
+  const MODAL_BASE_Z_INDEX = 1100;
   const zIndex = useMemo(() => {
-    if (isMobile) return 1050;
-    
+    if (isMobile) return MODAL_BASE_Z_INDEX;
+
     const stack = modalStack.getStack();
     const index = stack.indexOf(modalId);
-    return 1050 + (index * 10);
+    return MODAL_BASE_Z_INDEX + (index * 10);
   }, [modalId, isMobile]);
 
   // Em mobile, usar ResponsiveDialog diretamente

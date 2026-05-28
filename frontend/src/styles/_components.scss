@@ -99,6 +99,7 @@
   display: flex !important;
   flex-direction: column !important;
   min-height: 0 !important;
+  overflow: hidden !important;
   transform: translateZ(0) !important; /* Hardware acceleration */
   will-change: transform !important;
 }
@@ -1333,9 +1334,107 @@ button,
   justify-content: flex-start !important;
   align-items: center !important;
   min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
   padding-left: 0 !important;
   margin-left: 0 !important;
   padding-top: 0 !important;
+}
+
+/* Abas com overflow (⋯) no header unificado */
+.modal-tabs-overflow-container {
+  display: flex !important;
+  align-items: flex-end !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  position: relative !important;
+}
+
+.modal-tabs-overflow-container > .nav-tabs {
+  width: auto !important;
+  min-width: 0 !important;
+  flex: 0 1 auto !important;
+  flex-wrap: nowrap !important;
+  overflow: hidden !important;
+}
+
+.modal-tabs-overflow-measure {
+  position: absolute !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  width: max-content !important;
+}
+
+.modal-tabs-overflow-menu {
+  flex: 0 0 auto !important;
+  position: relative !important;
+}
+
+.modal-tabs-overflow-trigger {
+  min-width: 2.25rem !important;
+  padding: 0.5rem 0.75rem !important;
+  margin-right: 0 !important;
+  text-align: center !important;
+  line-height: 1 !important;
+  font-size: 1.1rem !important;
+  letter-spacing: 0 !important;
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0 !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+}
+
+.modal-tabs-overflow-trigger.open,
+.modal-tabs-overflow-trigger.active {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border-bottom-color: var(--bg-primary) !important;
+}
+
+.modal-tabs-overflow-dropdown {
+  min-width: 180px !important;
+  max-width: 280px !important;
+  max-height: 280px !important;
+  overflow-y: auto !important;
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--border-radius) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25) !important;
+  padding: 0.35rem 0 !important;
+}
+
+.modal-tabs-overflow-dropdown-item {
+  display: block !important;
+  width: 100% !important;
+  padding: 0.5rem 0.875rem !important;
+  border: none !important;
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  text-align: left !important;
+  font-size: var(--font-size-sm) !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.modal-tabs-overflow-dropdown-item:hover:not(:disabled) {
+  background: var(--bg-tertiary) !important;
+}
+
+.modal-tabs-overflow-dropdown-item.active {
+  background: var(--bg-tertiary) !important;
+  font-weight: 600 !important;
+}
+
+.modal-tabs-overflow-dropdown-item:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
 }
 
 /* Loading component */

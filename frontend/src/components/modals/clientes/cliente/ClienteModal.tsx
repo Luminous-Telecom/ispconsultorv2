@@ -15,6 +15,7 @@ import { formatCurrency, formatDate, formatDateTime } from 'utils/formatters';
 import { CarneParcela } from 'types';
 import { TituloItem } from 'types/cliente';
 import DraggableModal from 'components/common/DraggableModal';
+import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
 import ImprimirModal from 'components/common/ImprimirModal';
 import { TituloModal } from 'components/modals/titulos/titulo';
 import ReceberModal from 'components/modals/pagamentos/ReceberModal';
@@ -590,6 +591,50 @@ const ClienteModal = ({
   };
 
   // Construir headerActions
+  const clienteTabs = useMemo((): ModalTabItem[] => {
+    const tabs: ModalTabItem[] = [
+      { id: 'dados-basicos', label: t('tabs.basicData') },
+      { id: 'contato', label: t('tabs.contact') },
+      { id: 'endereco', label: t('tabs.address') },
+      {
+        id: 'contratos',
+        label: t('tabs.contracts'),
+        disabled: !canEditContratosFinanceiro,
+      },
+      {
+        id: 'financeiro',
+        label: t('tabs.financial'),
+        disabled: !canEditContratosFinanceiro,
+      },
+      { id: 'observacoes', label: t('tabs.observations') },
+      {
+        id: 'arquivos',
+        label: t('tabs.files'),
+        disabled: !canEditContratosFinanceiro,
+      },
+    ];
+
+    if (hasModuloRpki) {
+      tabs.push(
+        { id: 'rpki-cas', label: t('tabs.rpkiCas'), disabled: !canEditContratosFinanceiro },
+        { id: 'rpki-cas-pai', label: t('tabs.rpkiCaPai'), disabled: !canEditContratosFinanceiro },
+        { id: 'rpki-repositorios', label: t('tabs.rpkiRepositorios'), disabled: !canEditContratosFinanceiro },
+        { id: 'rpki-roas', label: t('tabs.rpkiRoas'), disabled: !canEditContratosFinanceiro },
+        { id: 'rpki-aspas', label: t('tabs.rpkiAspas'), disabled: !canEditContratosFinanceiro },
+      );
+    }
+
+    if (hasModuloEquipamentos) {
+      tabs.push(
+        { id: 'tunel', label: t('tabs.tunnelAgents'), disabled: !canEditContratosFinanceiro },
+        { id: 'ssh-devices', label: t('tabs.sshDevicesSection'), disabled: !canEditContratosFinanceiro },
+        { id: 'ssh-backups', label: t('tabs.sshDeviceBackups'), disabled: !canEditContratosFinanceiro },
+      );
+    }
+
+    return tabs;
+  }, [canEditContratosFinanceiro, hasModuloEquipamentos, hasModuloRpki, t]);
+
   const headerActionsContent = useMemo(() => {
     const shouldRender =
       !(formHook.isLoadingCliente && formHook.isEditing) &&
@@ -610,176 +655,19 @@ const ClienteModal = ({
 
               {/* Abas na parte inferior do header */}
               <div className="cliente-header-tabs">
-                <ul
-                  className={`nav nav-tabs cliente-tabs-unified ${isMobile ? 'cliente-tabs-mobile' : ''}`}
+                <ModalTabsOverflow
+                  tabs={clienteTabs}
+                  activeTab={activeTab}
+                  onTabChange={setActiveTab}
+                  tabsClassName={`cliente-tabs-unified ${isMobile ? 'cliente-tabs-mobile' : ''}`}
+                  disabledClassName="cliente-tab-disabled"
+                  isMobile={isMobile}
                   id="clienteTabs"
-                  role="tablist"
-                  style={{
-                    margin: 0,
-                    padding: 0,
-                    borderBottom: 'none',
-                    backgroundColor: 'transparent'
-                  }}
-                >
-                  <li className="nav-item" role="presentation">
-                    <button
-                      className={`nav-link modal-tab-hover ${activeTab === 'dados-basicos' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('dados-basicos')}
-                      type="button"
-                    >
-                      {t('tabs.basicData')}
-                    </button>
-                  </li>
-                  <li className="nav-item" role="presentation">
-                    <button
-                      className={`nav-link modal-tab-hover ${activeTab === 'contato' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('contato')}
-                      type="button"
-                    >
-                      {t('tabs.contact')}
-                    </button>
-                  </li>
-                  <li className="nav-item" role="presentation">
-                    <button
-                      className={`nav-link modal-tab-hover ${activeTab === 'endereco' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('endereco')}
-                      type="button"
-                    >
-                      {t('tabs.address')}
-                    </button>
-                  </li>
-                  <li className="nav-item" role="presentation">
-                    <button
-                      className={`nav-link modal-tab-hover ${activeTab === 'contratos' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('contratos')}
-                      type="button"
-                      disabled={!canEditContratosFinanceiro}
-                    >
-                      {t('tabs.contracts')}
-                    </button>
-                  </li>
-                  <li className="nav-item" role="presentation">
-                    <button
-                      className={`nav-link modal-tab-hover ${activeTab === 'financeiro' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('financeiro')}
-                      type="button"
-                      disabled={!canEditContratosFinanceiro}
-                    >
-                      {t('tabs.financial')}
-                    </button>
-                  </li>
-                  <li className="nav-item" role="presentation">
-                    <button
-                      className={`nav-link modal-tab-hover ${activeTab === 'observacoes' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('observacoes')}
-                      type="button"
-                    >
-                      {t('tabs.observations')}
-                    </button>
-                  </li>
-                  <li className="nav-item" role="presentation">
-                    <button
-                      className={`nav-link modal-tab-hover ${activeTab === 'arquivos' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('arquivos')}
-                      type="button"
-                      disabled={!canEditContratosFinanceiro}
-                    >
-                      {t('tabs.files')}
-                    </button>
-                  </li>
-                  {hasModuloRpki && (
-                    <>
-                      <li className="nav-item" role="presentation">
-                        <button
-                          className={`nav-link modal-tab-hover ${activeTab === 'rpki-cas' ? 'active' : ''}`}
-                          onClick={() => setActiveTab('rpki-cas')}
-                          type="button"
-                          disabled={!canEditContratosFinanceiro}
-                        >
-                          {t('tabs.rpkiCas')}
-                        </button>
-                      </li>
-                      <li className="nav-item" role="presentation">
-                        <button
-                          className={`nav-link modal-tab-hover ${activeTab === 'rpki-cas-pai' ? 'active' : ''}`}
-                          onClick={() => setActiveTab('rpki-cas-pai')}
-                          type="button"
-                          disabled={!canEditContratosFinanceiro}
-                        >
-                          {t('tabs.rpkiCaPai')}
-                        </button>
-                      </li>
-                      <li className="nav-item" role="presentation">
-                        <button
-                          className={`nav-link modal-tab-hover ${activeTab === 'rpki-repositorios' ? 'active' : ''}`}
-                          onClick={() => setActiveTab('rpki-repositorios')}
-                          type="button"
-                          disabled={!canEditContratosFinanceiro}
-                        >
-                          {t('tabs.rpkiRepositorios')}
-                        </button>
-                      </li>
-                      <li className="nav-item" role="presentation">
-                        <button
-                          className={`nav-link modal-tab-hover ${activeTab === 'rpki-roas' ? 'active' : ''}`}
-                          onClick={() => setActiveTab('rpki-roas')}
-                          type="button"
-                          disabled={!canEditContratosFinanceiro}
-                        >
-                          {t('tabs.rpkiRoas')}
-                        </button>
-                      </li>
-                      <li className="nav-item" role="presentation">
-                        <button
-                          className={`nav-link modal-tab-hover ${activeTab === 'rpki-aspas' ? 'active' : ''}`}
-                          onClick={() => setActiveTab('rpki-aspas')}
-                          type="button"
-                          disabled={!canEditContratosFinanceiro}
-                        >
-                          {t('tabs.rpkiAspas')}
-                        </button>
-                      </li>
-                    </>
-                  )}
-                  {hasModuloEquipamentos && (
-                    <>
-                      <li className="nav-item" role="presentation">
-                        <button
-                          className={`nav-link modal-tab-hover ${activeTab === 'tunel' ? 'active' : ''}`}
-                          onClick={() => setActiveTab('tunel')}
-                          type="button"
-                          disabled={!canEditContratosFinanceiro}
-                        >
-                          {t('tabs.tunnelAgents')}
-                        </button>
-                      </li>
-                      <li className="nav-item" role="presentation">
-                        <button
-                          className={`nav-link modal-tab-hover ${activeTab === 'ssh-devices' ? 'active' : ''}`}
-                          onClick={() => setActiveTab('ssh-devices')}
-                          type="button"
-                          disabled={!canEditContratosFinanceiro}
-                        >
-                          {t('tabs.sshDevicesSection')}
-                        </button>
-                      </li>
-                      <li className="nav-item" role="presentation">
-                        <button
-                          className={`nav-link modal-tab-hover ${activeTab === 'ssh-backups' ? 'active' : ''}`}
-                          onClick={() => setActiveTab('ssh-backups')}
-                          type="button"
-                          disabled={!canEditContratosFinanceiro}
-                        >
-                          {t('tabs.sshDeviceBackups')}
-                        </button>
-                      </li>
-                    </>
-                  )}
-                </ul>
+                />
               </div>
             </div>
     );
-  }, [formHook, canEditContratosFinanceiro, activeTab, isMobile, handleClose, t, hasModuloEquipamentos, hasModuloRpki]);
+  }, [formHook, clienteTabs, activeTab, isMobile, handleClose]);
 
 
   const renderModalContent = () => {
