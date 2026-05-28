@@ -97,7 +97,7 @@ export class AtualizacoesController {
         else if (descLower.includes('security') || descLower.includes('segurança')) tipo = 'security';
         else if (descLower.includes('melhoria') || descLower.includes('update') || descLower.includes('melhor')) tipo = 'melhoria';
 
-        let descricao = (release.body ? release.body.split('\n')[0].trim() : release.name)
+        const descricao = (release.body ? release.body.split('\n')[0].trim() : release.name)
           .replace(/\*\*Full Changelog\*\*:.*/g, '')
           .replace(/https?:\/\/[^\s]+/g, '')
           .replace(/\*\*/g, '')

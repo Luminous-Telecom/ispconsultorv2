@@ -15,9 +15,7 @@ import DominioModal from './DominioModal';
 import DominioBulkEditModal from './DominioBulkEditModal';
 import { useAuditoria } from 'hooks/useAuditoria';
 import ImprimirModal from 'components/common/ImprimirModal';
-import { useConfirmModal } from 'hooks/useConfirmModal';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
-import ConfirmModal from 'components/modals/ConfirmModal';
 
 interface DominioListModalProps {
   show: boolean;
@@ -45,7 +43,6 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
   const [isSyncingSei, setIsSyncingSei] = useState(false);
 
   const auditoria = useAuditoria();
-  const { modalProps } = useConfirmModal();
   
   const tableFilters = useTableFilters({
     initialSearch: '',
@@ -545,7 +542,6 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
           title={t('financial.executionLogs')}
           modalId="auditoria-dominio-modal"
         />
-        {modalProps && <ConfirmModal {...modalProps} />}
       </>
     );
   }
@@ -607,7 +603,6 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
         modalId="auditoria-dominio-modal"
       />
 
-      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 };

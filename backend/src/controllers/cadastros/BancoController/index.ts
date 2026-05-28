@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import { Banco } from '../../../models/cadastros/Banco';
 import { BancoApiService } from '../../../services/bancos/BancoApiService';
 import { BancoService } from '../../../services/cadastros/BancoService';
 import { logger } from '../../../utils/logger';

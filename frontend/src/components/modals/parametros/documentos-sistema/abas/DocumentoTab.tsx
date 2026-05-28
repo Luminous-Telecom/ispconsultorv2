@@ -13,8 +13,6 @@ import { DocumentoUnion } from '../types';
 import { DocumentoTabProps } from '../types';
 import { useAuditoria } from 'hooks/useAuditoria';
 import ImprimirModal from 'components/common/ImprimirModal';
-import { useConfirmModal } from 'hooks/useConfirmModal';
-import ConfirmModal from 'components/modals/ConfirmModal';
 
 const DocumentoTab: React.FC<DocumentoTabProps> = ({
   tipo,
@@ -28,8 +26,6 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
   const { success, error: showError } = useNotificationContext();
   const [, setSelectedItems] = useState<DocumentoUnion[]>([]);
   const auditoria = useAuditoria();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- só modalProps é usado (ConfirmModal); confirm não usado
-  const { modalProps } = useConfirmModal();
   const onDocumentosLoadedRef = useRef(onDocumentosLoaded);
   
   // Atualizar ref quando a função mudar
@@ -286,9 +282,6 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
           modalId={`auditoria-modelo-documento-${tipo}-modal`}
         />
       )}
-
-      {/* ConfirmModal */}
-      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 };

@@ -13,10 +13,8 @@ import { TableConfig } from 'components/tables/types';
 import { IPv6Modal } from './index';
 import { useAuditoria } from 'hooks/useAuditoria';
 import ImprimirModal from 'components/common/ImprimirModal';
-import { useConfirmModal } from 'hooks/useConfirmModal';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { IPv6Service } from 'services/ipv6Service';
-import ConfirmModal from 'components/modals/ConfirmModal';
 
 interface IPv6ListModalProps {
   show: boolean;
@@ -41,7 +39,6 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
   const [selectedIPv6Id, setSelectedIPv6Id] = useState<number | null>(null);
   
   const auditoria = useAuditoria();
-  const { modalProps } = useConfirmModal();
   
   const tableFilters = useTableFilters({
     initialSearch: '',
@@ -483,7 +480,6 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
           title={t('financial.executionLogs')}
           modalId="auditoria-ipv6-modal"
         />
-        {modalProps && <ConfirmModal {...modalProps} />}
       </>
     );
   }
@@ -530,7 +526,6 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
         modalId="auditoria-ipv6-modal"
       />
 
-      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 };

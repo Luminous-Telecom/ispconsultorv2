@@ -12,8 +12,6 @@ import { TableConfig } from 'components/tables/types';
 import ClienteModal from './cliente/ClienteModal';
 import ImprimirModal from 'components/common/ImprimirModal';
 import { Cliente, ClienteFilters } from 'types';
-import { useConfirmModal } from 'hooks/useConfirmModal';
-import ConfirmModal from 'components/modals/ConfirmModal';
 
 interface ClienteListModalProps {
   show: boolean;
@@ -39,7 +37,6 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   const [selectedClienteId, setSelectedClienteId] = useState<number | null>(null);
   
   const auditoria = useAuditoria();
-  const { modalProps } = useConfirmModal();
 
   const handleAudit = useCallback((cliente: Cliente) => {
     auditoria.handleAudit('Cliente', cliente.id);
@@ -449,9 +446,6 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
         title={t('financial.executionLogs')}
         modalId="auditoria-cliente-modal"
       />
-
-      {/* ConfirmModal */}
-      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 

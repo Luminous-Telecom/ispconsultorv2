@@ -12,8 +12,6 @@ import { TableConfig } from 'components/tables/types';
 import FornecedorModal from './FornecedorModal';
 import ImprimirModal from 'components/common/ImprimirModal';
 import { useAuditoria } from 'hooks/useAuditoria';
-import { useConfirmModal } from 'hooks/useConfirmModal';
-import ConfirmModal from 'components/modals/ConfirmModal';
 
 interface FornecedorListModalProps {
   show: boolean;
@@ -39,7 +37,6 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
   
   // Hook de auditoria
   const auditoria = useAuditoria();
-  const { modalProps } = useConfirmModal();
   
   // Hook unificado para filtros, busca e paginação
   const tableFilters = useTableFilters({
@@ -428,9 +425,6 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
         title={t('financial.executionLogs')}
         modalId="auditoria-fornecedor-modal"
       />
-
-      {/* ConfirmModal */}
-      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 

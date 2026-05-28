@@ -9,9 +9,7 @@ import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
 import IpsPermitidoModal from './IpsPermitidoModal';
 import { useAuditoria } from 'hooks/useAuditoria';
-import { useConfirmModal } from 'hooks/useConfirmModal';
 import ImprimirModal from 'components/common/ImprimirModal';
-import ConfirmModal from 'components/modals/ConfirmModal';
 import { DeletarButton, EditarButton, NovoButton } from 'components/ui';
 import type { IpPermitido } from 'services/ipsPermitidosService';
 
@@ -39,7 +37,6 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
   const selectedItemsRef = useRef<IpPermitido[]>([]);
   selectedItemsRef.current = selectedItems;
   const auditoria = useAuditoria();
-  const { modalProps } = useConfirmModal();
 
   const tableFilters = useTableFilters({
     initialSearch: '',
@@ -298,7 +295,6 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
           title={t('financial.executionLogs')}
           modalId="auditoria-ips-permitidos-modal"
         />
-        {modalProps && <ConfirmModal {...modalProps} />}
       </>
     );
   }
@@ -334,7 +330,6 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
         title={t('financial.executionLogs')}
         modalId="auditoria-ips-permitidos-modal"
       />
-      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 };

@@ -13,10 +13,8 @@ import { TableConfig } from 'components/tables/types';
 import IPv4Modal from './IPv4Modal';
 import { useAuditoria } from 'hooks/useAuditoria';
 import ImprimirModal from 'components/common/ImprimirModal';
-import { useConfirmModal } from 'hooks/useConfirmModal';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { IPv4Service } from 'services/ipv4Service';
-import ConfirmModal from 'components/modals/ConfirmModal';
 
 interface IPv4ListModalProps {
   show: boolean;
@@ -41,7 +39,6 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
   const [selectedIPv4Id, setSelectedIPv4Id] = useState<number | null>(null);
   
   const auditoria = useAuditoria();
-  const { modalProps } = useConfirmModal();
   
   const tableFilters = useTableFilters({
     initialSearch: '',
@@ -483,7 +480,6 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
           title={t('financial.executionLogs')}
           modalId="auditoria-ipv4-modal"
         />
-        {modalProps && <ConfirmModal {...modalProps} />}
       </>
     );
   }
@@ -530,7 +526,6 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
         modalId="auditoria-ipv4-modal"
       />
 
-      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 };

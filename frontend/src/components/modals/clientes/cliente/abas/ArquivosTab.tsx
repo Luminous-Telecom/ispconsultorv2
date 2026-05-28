@@ -8,8 +8,6 @@ import Table from 'components/tables/Table';
 import ImprimirModal from 'components/common/ImprimirModal';
 import ImageViewerModal from 'components/common/ImageViewerModal';
 import AdicionarArquivoModal from './AdicionarArquivoModal';
-import { useConfirmModal } from 'hooks/useConfirmModal';
-import ConfirmModal from 'components/modals/ConfirmModal';
 import { useTableFilters } from 'hooks/useTableFilters';
 
 interface ArquivosTabProps {
@@ -54,7 +52,6 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({
       sortDirection: finalSortDirection
     }
   });
-  const { modalProps } = useConfirmModal();
 
   const isImageFile = useCallback((arquivo: ClienteArquivo): boolean => {
     const mimeType = (arquivo.mime_type || '').toLowerCase();
@@ -293,9 +290,6 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({
         title={previewTitle}
         modalId="image-viewer-modal"
       />
-
-      {/* ConfirmModal */}
-      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 };

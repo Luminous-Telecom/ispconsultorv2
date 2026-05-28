@@ -1,7 +1,5 @@
 import { Request, Response } from 'express';
-import { Usuario } from '../../../models/cadastros/Usuario';
 import { UsuarioService } from '../../../services/cadastros/UsuarioService';
-import { Op, WhereOptions } from 'sequelize';
 import * as Joi from 'joi';
 import { randomBytes } from 'crypto';
 import { logger } from '../../../utils/logger';

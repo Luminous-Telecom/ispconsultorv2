@@ -7,8 +7,6 @@ import { useNotificationContext } from 'components/notifications/NotificationPro
 import { AtualizarSistemaButton, FecharButton } from 'components/ui';
 import { ApiResponse } from 'types/api';
 import { API_CONFIG } from 'config/api';
-import { useConfirmModal } from 'hooks/useConfirmModal';
-import ConfirmModal from 'components/modals/ConfirmModal';
 import { useI18n } from 'contexts/I18nContext';
 import { waitForBackendHealth } from 'utils/healthCheck';
 
@@ -36,7 +34,6 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
   const { t } = useI18n();
   const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
-  const { modalProps } = useConfirmModal();
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateProgress, setUpdateProgress] = useState<string>('');
   const [updateProgressPercent, setUpdateProgressPercent] = useState<number>(0);
@@ -422,9 +419,6 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
           </div>
         )}
       </div>
-
-      {/* ConfirmModal */}
-      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 

@@ -1,6 +1,4 @@
 import { Request, Response } from 'express';
-import { logger } from '../../../utils/logger';
-import AssinaturaDigitalProvider from '../../../models/assinatura-digital/AssinaturaDigitalProvider';
 import { AssinaturaDigitalProviderService, AssinaturaDigitalProviderType } from '../../../services/assinatura-digital/AssinaturaDigitalProviderService';
 import Joi from 'joi';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';

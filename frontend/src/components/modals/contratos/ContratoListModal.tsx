@@ -15,8 +15,6 @@ import ImprimirModal from 'components/common/ImprimirModal';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useI18n } from 'contexts/I18nContext';
 import { useAuditoria } from 'hooks/useAuditoria';
-import { useConfirmModal } from 'hooks/useConfirmModal';
-import ConfirmModal from 'components/modals/ConfirmModal';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { ContratoFilters } from 'services/contratoService';
 
@@ -50,7 +48,6 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   
   const { success, error } = useNotificationContext();
   const auditoria = useAuditoria();
-  const { confirm: _confirm, modalProps } = useConfirmModal();
 
   const displayTitle = useMemo(() => {
     const tipoServicoLabels: Record<string, string> = {
@@ -756,9 +753,6 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
         title="Relatórios de logs"
         modalId="auditoria-contrato-modal"
       />
-
-      {/* ConfirmModal */}
-      {modalProps && <ConfirmModal {...modalProps} />}
     </div>
   );
 

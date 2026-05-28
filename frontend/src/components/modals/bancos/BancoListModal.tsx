@@ -12,8 +12,6 @@ import { TableConfig } from 'components/tables/types';
 import BancoModal from './BancoModal';
 import { useAuditoria } from 'hooks/useAuditoria';
 import ImprimirModal from 'components/common/ImprimirModal';
-import { useConfirmModal } from 'hooks/useConfirmModal';
-import ConfirmModal from 'components/modals/ConfirmModal';
 interface BancoListModalProps {
   show: boolean;
   onClose: () => void;
@@ -36,7 +34,6 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
   const [selectedBancoId, setSelectedBancoId] = useState<number | null>(null);
   
   const auditoria = useAuditoria();
-  const { modalProps } = useConfirmModal();
   
   // Hook unificado para filtros, busca e paginação
   const tableFilters = useTableFilters({
@@ -365,9 +362,6 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         title={t('financial.executionLogs')}
         modalId="auditoria-banco-modal"
       />
-
-      {/* ConfirmModal */}
-      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 

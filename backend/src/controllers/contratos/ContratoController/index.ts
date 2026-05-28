@@ -1,10 +1,5 @@
 import { Request, Response } from 'express';
 import { Contrato } from '../../../models/contratos/Contrato';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Plano } from '../../../models/cadastros/Plano';
-import { Banco } from '../../../models/cadastros/Banco';
-import { ModeloDocumento } from '../../../models/documentos/ModeloDocumento';
-import { ContratoPlanoAdicional } from '../../../models/contratos/ContratoPlanoAdicional';
 import { ContratoService } from '../../../services/contratos/ContratoService';
 import { ClienteService } from '../../../services/clientes/ClienteService';
 import { BancoService } from '../../../services/cadastros/BancoService';

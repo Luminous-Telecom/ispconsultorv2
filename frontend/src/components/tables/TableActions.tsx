@@ -1,8 +1,6 @@
 import React, { useMemo, useCallback } from 'react';
 import { TableAction, BulkAction } from './types';
 import { BulkActionButton } from '../ui';
-import { useConfirmModal } from 'hooks/useConfirmModal';
-import ConfirmModal from 'components/modals/ConfirmModal';
 
 interface TableActionsProps<T = Record<string, unknown>> {
   item?: T;
@@ -25,8 +23,6 @@ const TableActions = <T extends { id: number | string }>({
   onBulkActionClick,
   className = '',
 }: TableActionsProps<T>) => {
-  const { modalProps } = useConfirmModal();
-  
   // Memoizar ações visíveis para evitar recálculo desnecessário
   const visibleActions = useMemo(() => {
     if (!item || actions.length === 0) return [];
@@ -146,15 +142,10 @@ const TableActions = <T extends { id: number | string }>({
   }
 
   return (
-    <>
-      <div className={`table-actions-container ${className}`}>
-        {renderItemActions()}
-        {renderBulkActions()}
-      </div>
-
-      {/* ConfirmModal */}
-      {modalProps && <ConfirmModal {...modalProps} />}
-    </>
+    <div className={`table-actions-container ${className}`}>
+      {renderItemActions()}
+      {renderBulkActions()}
+    </div>
   );
 };
 

@@ -118,7 +118,7 @@ export class SortHelper {
         };
       }
       // Substituir referência à tabela principal na subquery para usar o nome correto
-      let sql = virtConfig.sql;
+      const sql = virtConfig.sql;
       // Se a SQL contém referência a tableName, pode precisar ajuste, mas deixar como está primeiro
       order = [[sequelize.literal(sql), upperDirection]];
     }

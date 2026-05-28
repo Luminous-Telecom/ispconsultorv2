@@ -14,8 +14,6 @@ import { TableConfig } from 'components/tables/types';
 import ImprimirModal from 'components/common/ImprimirModal';
 import DraggableModal from 'components/common/DraggableModal';
 import ContaPagarModal from './ContaPagarModal';
-import { useConfirmModal } from 'hooks/useConfirmModal';
-import ConfirmModal from 'components/modals/ConfirmModal';
 
 interface ContasPagarListModalProps {
   show: boolean;
@@ -58,7 +56,6 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   
   // Hook de auditoria
   const auditoria = useAuditoria();
-  const { modalProps } = useConfirmModal();
 
   // Hook unificado para filtros, busca e paginação
   const tableFilters = useTableFilters<ContaPagarFilters>({
@@ -775,9 +772,6 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
         title={t('financial.executionLogs')}
         modalId="auditoria-conta-pagar-modal"
       />
-
-      {/* ConfirmModal */}
-      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 };

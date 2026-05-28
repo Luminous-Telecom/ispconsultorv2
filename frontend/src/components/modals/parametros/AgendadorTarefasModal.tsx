@@ -10,8 +10,6 @@ import { TableConfig } from 'components/tables/types';
 import RotinaAgendadaModal from './RotinaAgendadaModal';
 import { useAuditoria } from 'hooks/useAuditoria';
 import ImprimirModal from 'components/common/ImprimirModal';
-import { useConfirmModal } from 'hooks/useConfirmModal';
-import ConfirmModal from 'components/modals/ConfirmModal';
 import { useI18n } from 'contexts/I18nContext';
 import { useBulkBtn } from 'components/ui';
 import { extractApiErrorMessageSync } from 'utils/apiErrorHelper';
@@ -40,7 +38,6 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
   const queryClient = useQueryClient();
   const { success, error: showError } = useNotificationContext();
   const auditoria = useAuditoria();
-  const { modalProps } = useConfirmModal();
 
   const tableFilters = useTableFilters({
     initialSearch: '',
@@ -448,7 +445,6 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
         modalId={AUDITORIA_MODAL_ID}
       />
 
-      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 };

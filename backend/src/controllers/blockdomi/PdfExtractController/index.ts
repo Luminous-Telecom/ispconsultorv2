@@ -46,34 +46,6 @@ function getPdfExtractPython(): string {
   return v || 'python3';
 }
 
-function runPythonScript(scriptPath: string, pdfPath: string, timeoutMs: number): Promise<{ stdout: string; stderr: string; code: number | null }> {
-  return new Promise((resolve, reject) => {
-    const proc = spawn(getPdfExtractPython(), [scriptPath, pdfPath]);
-    let stdout = '';
-    let stderr = '';
-    proc.stdout.on('data', (d) => { stdout += d.toString(); });
-    proc.stderr.on('data', (d) => { stderr += d.toString(); });
-    const t = setTimeout(() => {
-      proc.kill('SIGTERM');
-      reject(Object.assign(new Error('Timeout'), { stdout, stderr, code: null, killed: true }));
-    }, timeoutMs);
-    proc.on('close', (code, signal) => {
-      clearTimeout(t);
-      if (signal) {
-        reject(Object.assign(new Error(`Processo finalizado por signal: ${signal}`), { stdout, stderr, code, killed: true }));
-      } else if (code !== 0) {
-        reject(Object.assign(new Error(`Python exit code ${code}`), { stdout, stderr, code }));
-      } else {
-        resolve({ stdout, stderr, code });
-      }
-    });
-    proc.on('error', (err) => {
-      clearTimeout(t);
-      reject(err);
-    });
-  });
-}
-
 /** Detecta se está rodando do dist (produção) ou src (desenvolvimento) */
 const isDist = __dirname.includes(`${path.sep}dist${path.sep}`);
 // dist: 3 níveis até backend/dist/ | src: 4 níveis até backend/

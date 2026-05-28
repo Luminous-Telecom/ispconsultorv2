@@ -1,24 +1,11 @@
 import { Request, Response } from 'express';
 import { logger } from '../../../utils/logger';
-import { AssinaturaDigital } from '../../../models/assinatura-digital/AssinaturaDigital';
 import { AssinaturaDigitalService } from '../../../services/assinatura-digital/AssinaturaDigitalService';
-import { AssinaturaDigitalProviderService } from '../../../services/assinatura-digital/AssinaturaDigitalProviderService';
 import { TermoContratoService } from '../../../services/contratos/TermoContratoService';
-import { ClienteService } from '../../../services/clientes/ClienteService';
-import { ModeloDocumentoService } from '../../../services/documentos/ModeloDocumentoService';
-import { TermoContrato } from '../../../models/contratos/TermoContrato';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Contrato } from '../../../models/contratos/Contrato';
-import { ClienteArquivo } from '../../../models/clientes/ClienteArquivo';
 import { AssinafyService } from '../../../services/assinatura-digital/AssinafyService';
-import { ZapsignService } from '../../../services/assinatura-digital/ZapsignService';
-import { AssinaturaWebhookService } from '../../../services/assinatura-digital/AssinaturaWebhookService';
 import { AssinaturaEnvioService } from '../../../services/assinatura-digital/AssinaturaEnvioService';
-import { AssinaturaConsultaService } from '../../../services/assinatura-digital/AssinaturaConsultaService';
 import { AssinaturaWebhookProcessorService } from '../../../services/assinatura-digital/AssinaturaWebhookProcessorService';
-import { ClienteArquivoService } from '../../../services/cadastros';
-import { registrarCriacao, registrarExclusao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
-import { registrarAtualizacaoElasticsearch, registrarCriacaoElasticsearch } from '../../../services/elasticsearch/ElasticsearchAuditService';
+import { registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { getCurrentTimestamp } from '../../../utils/timezoneUtils';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
@@ -32,9 +19,6 @@ interface ISignatureService {
   baixarPdfAssinado(documentId: string, url?: string): Promise<Buffer | null>;
   cancelarAssinatura(documentId: string): Promise<{ success: boolean; error?: string }>;
 }
-
-// Tipo para serviços de assinatura digital
-type SignatureService = AssinafyService | ZapsignService;
 
 export class AssinaturaDigitalController {
 

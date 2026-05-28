@@ -9,8 +9,6 @@ import { TableConfig } from 'components/tables/types';
 import { useAuditoria } from 'hooks/useAuditoria';
 import ImprimirModal from 'components/common/ImprimirModal';
 import DocumentoModal from 'components/modals/parametros/documento/DocumentoModal';
-import { useConfirmModal } from 'hooks/useConfirmModal';
-import ConfirmModal from 'components/modals/ConfirmModal';
 
 interface CartaCobrancaTabProps {
   contratoId?: number | null;
@@ -21,7 +19,6 @@ const CartaCobrancaTab: React.FC<CartaCobrancaTabProps> = ({ contratoId: _contra
   const { success, error: showError } = useNotificationContext();
   const [_selectedItems, setSelectedItems] = useState<ModeloCarta[]>([]);
   const auditoria = useAuditoria();
-  const { confirm, modalProps } = useConfirmModal();
   const [showDocumentoModal, setShowDocumentoModal] = useState(false);
   const [documentoModalMode, setDocumentoModalMode] = useState<'create' | 'edit'>('create');
   const [selectedDocumentoId, setSelectedDocumentoId] = useState<number | null>(null);
@@ -257,9 +254,6 @@ const CartaCobrancaTab: React.FC<CartaCobrancaTabProps> = ({ contratoId: _contra
         title="Relatórios de logs"
         modalId="auditoria-modelo-carta-modal"
       />
-
-      {/* ConfirmModal */}
-      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 };

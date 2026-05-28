@@ -19,8 +19,6 @@ import ImprimirModal from 'components/common/ImprimirModal';
 import GerarNFeModal from 'components/modals/notas-fiscais/GerarNFeModal';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useAuditoria } from 'hooks/useAuditoria';
-import { useConfirmModal } from 'hooks/useConfirmModal';
-import ConfirmModal from 'components/modals/ConfirmModal';
 
 type TituloItemUnion = Titulo | SaasTitulo;
 
@@ -106,7 +104,6 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
   const auditoria = useAuditoria();
-  const { confirm: _confirm, modalProps } = useConfirmModal();
 
   const handleAudit = (item: TituloItemUnion) => {
     auditoria.handleAudit(isSaas ? 'SaasTitulo' : 'Titulo', item.id);
@@ -1314,9 +1311,6 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
           await handleRefreshData();
         }}
       />)}
-
-      {/* ConfirmModal */}
-      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 };

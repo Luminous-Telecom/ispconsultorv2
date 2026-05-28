@@ -22,7 +22,6 @@ import ReceberModal from 'components/modals/pagamentos/ReceberModal';
 import ContratoModal from '../contrato/ContratoModal';
 import GerarNFeModal from 'components/modals/notas-fiscais/GerarNFeModal';
 import { ModalFormActions, Spinner } from 'components/ui';
-import ConfirmModal, { ConfirmModalProps } from 'components/modals/ConfirmModal';
 // import './ClienteModal.css'; // Estilos movidos para _components.scss
 // Componentes de abas
 import DadosBasicosTab from './abas/DadosBasicosTab';
@@ -766,11 +765,6 @@ const ClienteModal = ({
               refetchParcelas();
             }}
           />
-
-          {/* ConfirmModal */}
-          {bulkActionsHook.modalProps && (
-            <ConfirmModal {...(bulkActionsHook.modalProps as Omit<ConfirmModalProps, 'show'> & { show: boolean })} />
-          )}
     </>
     );
   };

@@ -413,7 +413,7 @@ export class AuditoriaController {
       }
 
       const boolQuery = { bool: { must: mustBase } };
-      let hits = await AuditoriaQueryService.fetchAuditSourcesWithPit({
+      const hits = await AuditoriaQueryService.fetchAuditSourcesWithPit({
         client,
         boolQuery,
         sortDirection: 'desc',

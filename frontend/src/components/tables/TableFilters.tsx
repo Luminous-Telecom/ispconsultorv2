@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { TableFilter } from './types';
 import { FilterValue } from 'types/common';
-import { useI18n } from 'contexts/I18nContext';
 import FormField from '../ui/FormField';
 import { AplicarButton, LimparButton, MostrarFiltrosButton, OcultarFiltrosButton } from '../ui';
 
@@ -28,7 +27,6 @@ const TableFilters: React.FC<TableFiltersProps> = ({
   showClearButton = true,
   showApplyButton = false,
 }) => {
-  const { t } = useI18n();
   const [isExpanded, setIsExpanded] = useState(!collapsible);
   const [pendingFilters, setPendingFilters] = useState<Record<string, FilterValue>>(values);
 

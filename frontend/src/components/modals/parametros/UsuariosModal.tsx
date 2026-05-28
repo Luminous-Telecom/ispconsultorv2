@@ -12,8 +12,6 @@ import { TableConfig } from 'components/tables/types';
 import UsuarioFormModal from './UsuarioFormModal';
 import { useAuditoria } from 'hooks/useAuditoria';
 import ImprimirModal from 'components/common/ImprimirModal';
-import { useConfirmModal } from 'hooks/useConfirmModal';
-import ConfirmModal from 'components/modals/ConfirmModal';
 
 interface UsuariosModalProps {
   show: boolean;
@@ -34,7 +32,6 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
   
   const { success, error: _error } = useNotificationContext();
   const auditoria = useAuditoria();
-  const { modalProps } = useConfirmModal();
   
   // Hook unificado para filtros, busca, ordenação e paginação
   const tableFilters = useTableFilters({
@@ -309,9 +306,6 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
         title="Relatórios de logs"
         modalId="auditoria-usuario-modal"
       />
-
-      {/* ConfirmModal */}
-      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 

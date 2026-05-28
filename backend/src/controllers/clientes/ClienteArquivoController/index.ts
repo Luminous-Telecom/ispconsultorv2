@@ -1,11 +1,9 @@
 import { Request, Response } from 'express';
 import { ClienteArquivoService, CreateClienteArquivoData, UpdateClienteArquivoData } from '../../../services/cadastros';
-import { logger } from '../../../utils/logger';
 import Joi from 'joi';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../../../types/auth';
-import { ClienteArquivo } from '../../../models/clientes/ClienteArquivo';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { ClienteService } from '../../../services/clientes/ClienteService';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';

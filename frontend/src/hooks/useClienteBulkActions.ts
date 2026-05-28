@@ -8,7 +8,6 @@ import { TituloItem } from '../types/cliente';
 import { CarneParcela, PaginatedResponse } from '../types';
 import { formatCurrency } from '../utils/formatters';
 import { BulkAction } from '../components/modals/clientes/cliente/types';
-import { useConfirmModal } from './useConfirmModal';
 import { useI18n } from '../contexts/I18nContext';
 import { useBulkBtn } from '../components/ui';
 
@@ -54,19 +53,6 @@ interface UseClienteBulkActionsReturn {
   handleEnviarEmail: (selectedItems: CarneParcela[]) => Promise<void>;
   handleDeletarContratos: (selectedItems: Contrato[]) => Promise<void>;
   
-  // Props do ConfirmModal (deve ser renderizado no componente que usa o hook)
-  modalProps: {
-    show: boolean;
-    onClose: () => void;
-    onConfirm: () => void;
-    title?: string;
-    message: string;
-    confirmText?: string;
-    cancelText?: string;
-    variant?: 'danger' | 'warning' | 'info' | 'success';
-    centered?: boolean;
-    isLoading: boolean;
-  } | null;
 }
 
 export const useClienteBulkActions = ({
@@ -94,7 +80,6 @@ export const useClienteBulkActions = ({
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const deleteContratoMutation = useDeleteContrato();
-  const { modalProps } = useConfirmModal();
 
   const [selectedItems, setSelectedItems] = useState<TituloItem[]>([]);
   const [selectedContratosItems, setSelectedContratosItems] = useState<Contrato[]>([]);
@@ -593,8 +578,7 @@ export const useClienteBulkActions = ({
     handleEstornarTitulo,
     handleEnviarWhatsApp,
     handleEnviarEmail,
-    handleDeletarContratos,
-    modalProps
+    handleDeletarContratos
   };
 };
 

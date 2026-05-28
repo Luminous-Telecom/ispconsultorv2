@@ -1,7 +1,5 @@
 import { Request, Response } from 'express';
-import { Fornecedor } from '../../../models/financeiro/Fornecedor';
 import { FornecedorService } from '../../../services/financeiro/FornecedorService';
-import { logger } from '../../../utils/logger';
 import { fornecedorCreateSchema, fornecedorUpdateSchema } from '../../../validators/fornecedor.validator';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
