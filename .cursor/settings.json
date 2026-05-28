@@ -1,4 +1,15 @@
 {
+  "remote.autoForwardPorts": true,
+  "remote.portsAttributes": {
+    "3000": {
+      "label": "Frontend",
+      "onAutoForward": "notify"
+    },
+    "3001": {
+      "label": "Backend",
+      "onAutoForward": "notify"
+    }
+  },
   "terminal.integrated.enablePersistentSessions": false,
   "terminal.integrated.autoReveal": false,
   "workbench.editor.enablePreview": false,
