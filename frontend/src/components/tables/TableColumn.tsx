@@ -147,7 +147,7 @@ const TableColumn = <T extends { id: number | string }>({
   return (
     <th
       ref={columnRef}
-      className={`${columnClasses} ${isSortable ? 'sortable' : ''} ${isResizing ? 'resizing' : ''}`}
+      className={`${columnClasses} ${isSortable ? 'sortable' : ''}`}
       style={columnStyles}
       onClick={handleSort}
       title={column.tooltip}

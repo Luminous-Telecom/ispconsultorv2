@@ -192,7 +192,24 @@ function Table<T extends { id: number | string }>({
   });
 
   const tableRef = useRef<HTMLTableElement>(null);
+  const tableScrollRef = useRef<HTMLDivElement>(null);
   const hasCustomWidths = Object.keys(columnWidths).length > 0;
+  const [resizeGuideStyle, setResizeGuideStyle] = useState<{ left: number; top: number; height: number } | null>(null);
+
+  useLayoutEffect(() => {
+    if (resizeGuideX == null || !tableScrollRef.current || !tableRef.current) {
+      setResizeGuideStyle(null);
+      return;
+    }
+    const container = tableScrollRef.current;
+    const table = tableRef.current;
+    const containerRect = container.getBoundingClientRect();
+    setResizeGuideStyle({
+      left: resizeGuideX - containerRect.left + container.scrollLeft,
+      top: table.offsetTop,
+      height: table.offsetHeight,
+    });
+  }, [resizeGuideX]);
 
   // Table header context (para botões no header do Layout)
   const {
@@ -1814,7 +1831,18 @@ function Table<T extends { id: number | string }>({
           {renderTableBody()}
         </div>
       ) : (
-        <div className="table-responsive table-responsive-custom">
+        <div ref={tableScrollRef} className="table-responsive table-responsive-custom">
+          {resizeGuideStyle != null && (
+            <div
+              className="table-resize-guide"
+              style={{
+                left: `${resizeGuideStyle.left}px`,
+                top: `${resizeGuideStyle.top}px`,
+                height: `${resizeGuideStyle.height}px`,
+              }}
+              aria-hidden
+            />
+          )}
           <table
             ref={tableRef}
             className={`table table-striped table-sm table-custom table-resizable table-resizable-enabled ${isResizing ? 'resizing' : ''} ${hasCustomWidths ? 'table-columns-locked' : ''}`}
@@ -1826,16 +1854,6 @@ function Table<T extends { id: number | string }>({
           </table>
         </div>
       )}
-
-      {!isMobile && resizeGuideX != null && createPortal(
-        <div
-          className="table-resize-guide"
-          style={{ left: `${resizeGuideX}px` }}
-          aria-hidden
-        />,
-        document.body
-      )}
-
 
       {/* Paginação fixa na parte inferior (mobile) */}
       {isMobile && showToolbar && (normalizedPagination || (!normalizedPagination && data.length > 0)) && (

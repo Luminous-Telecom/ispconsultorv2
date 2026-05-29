@@ -96,12 +96,10 @@
   margin-right: -5px;
 }
 
-/* Indicador visual durante redimensionamento */
+/* Durante arraste: só a guia (.table-resize-guide) — handles das outras colunas ficam ocultos */
 .table-resizable.resizing .resize-handle {
-  opacity: 1;
-  background-color: var(--btn-primary-color);
-  border-right-color: var(--btn-primary-color);
-  box-shadow: 0 0 12px rgba(var(--btn-primary-color-rgb, 13, 110, 253), 0.6);
+  opacity: 0 !important;
+  pointer-events: none;
 }
 
 /* Cursor global durante redimensionamento */
@@ -114,17 +112,15 @@ body.resizing-columns * {
   cursor: col-resize !important;
 }
 
-/* Guia vertical durante arraste (largura só aplica no mouseup) */
+/* Guia vertical durante arraste — altura = tabela (thead + linhas) */
 .table-resize-guide {
-  position: fixed;
-  top: 0;
-  bottom: 0;
+  position: absolute;
   width: 2px;
   margin-left: -1px;
   background-color: var(--btn-primary-color, #0d6efd);
   opacity: 0.85;
   pointer-events: none;
-  z-index: 10000;
+  z-index: 5;
 }
 
 /* Cursor pointer para elementos interativos */
@@ -1410,6 +1406,7 @@ colgroup col.col-checkbox {
 
 /* Table responsive container */
 .table-responsive-custom {
+  position: relative !important;
   flex: 1 1 0 !important;
   /* NÃO usar height: 100% — flex: 1 1 0 com min-height: 0 já limita corretamente */
   min-height: 0 !important;
