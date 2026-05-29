@@ -5,6 +5,7 @@ import { FilterValue } from 'types/common';
 import { useTable } from './useTable';
 import { useColumnResizing } from 'hooks/useColumnResizing';
 import TableColumn from './TableColumn';
+import { measureColumnWidths } from './columnResizeUtils';
 import TableLayoutWrapper from './TableLayoutWrapper';
 import Spinner from '../ui/Spinner';
 import SearchBar from '../ui/SearchBar';
@@ -26,9 +27,36 @@ function getTitleMinWidth(label?: string): number {
   return Math.max(40, label.length * 7 + 28);
 }
 
-/** Largura fixa da coluna de seleção (checkbox) — alinhada com `.col-checkbox` em `_tables.scss` */
+const DEFAULT_COLUMN_WIDTH_PX = 120;
 const CHECKBOX_COLUMN_WIDTH_PX = 35;
 const ACTIONS_COLUMN_WIDTH_PX = 120;
+
+function parseColumnWidthPx(width: string | number | undefined): number | undefined {
+  if (width == null) return undefined;
+  const px = typeof width === 'number' ? width : parseInt(String(width).replace('px', ''), 10);
+  return Number.isNaN(px) ? undefined : px;
+}
+
+function resolveColumnWidthPx(
+  column: { key: string; width?: string | number },
+  columnWidths: Record<string, number>,
+  hasCustomWidths: boolean
+): number | undefined {
+  if (columnWidths[column.key] != null) {
+    return columnWidths[column.key];
+  }
+  const configured = parseColumnWidthPx(column.width);
+  if (configured != null) return configured;
+  return hasCustomWidths ? DEFAULT_COLUMN_WIDTH_PX : undefined;
+}
+
+function fixedWidthStyle(widthPx: number): React.CSSProperties {
+  return {
+    width: `${widthPx}px`,
+    minWidth: `${widthPx}px`,
+    maxWidth: `${widthPx}px`,
+  };
+}
 
 function getColumnMinWidth(column: { badgeLabels?: string[]; minWidth?: string | number; label?: string }): number | undefined {
   const titleMin = getTitleMinWidth(column.label);
@@ -145,7 +173,8 @@ function Table<T extends { id: number | string }>({
   const {
     columnWidths,
     handleResizeStart,
-    isResizing
+    isResizing,
+    resizeGuideX,
   } = useColumnResizing({
     tableId: uniqueTableId,
     columns: config.columns,
@@ -160,11 +189,10 @@ function Table<T extends { id: number | string }>({
       if (!column.label) return 40;
       return Math.max(40, column.label.length * 6 + 24);
     },
-    onResizeEnd: () => {
-      // Quando o redimensionamento termina, não fazer nada aqui
-      // A limpeza da flag é feita no componente TableColumn
-    }
   });
+
+  const tableRef = useRef<HTMLTableElement>(null);
+  const hasCustomWidths = Object.keys(columnWidths).length > 0;
 
   // Table header context (para botões no header do Layout)
   const {
@@ -463,26 +491,17 @@ function Table<T extends { id: number | string }>({
   // Normalizar paginação
   const normalizedPagination = useMemo(() => normalizePagination(configPagination), [configPagination]);
 
-  // Largura mínima da tabela = soma das colunas (permite scroll horizontal quando não cabe)
+  // Largura da tabela = soma das colunas (permite scroll horizontal quando não cabe)
   const tableMinWidth = useMemo(() => {
-    const visibleColumns = columns.filter(col => !col.hidden);
+    const cols = columns.filter((col) => !col.hidden);
     let total = 0;
-    visibleColumns.forEach(col => {
-      const w = columnWidths[col.key];
-      const colMin = getColumnMinWidth(col);
-      if (w !== undefined) {
-        total += colMin != null ? Math.max(w, colMin) : w;
-      } else if (col.width !== undefined) {
-        const px = typeof col.width === 'string' ? parseInt(col.width.replace('px', ''), 10) : col.width;
-        total += Math.max(Number.isNaN(px) ? 120 : px, colMin ?? 0);
-      } else {
-        total += colMin ?? 120;
-      }
+    cols.forEach((col) => {
+      total += resolveColumnWidthPx(col, columnWidths, hasCustomWidths) ?? DEFAULT_COLUMN_WIDTH_PX;
     });
     if (selectable) total += CHECKBOX_COLUMN_WIDTH_PX;
     if (_actions.length > 0) total += ACTIONS_COLUMN_WIDTH_PX;
     return total;
-  }, [columns, columnWidths, selectable, _actions.length]);
+  }, [columns, columnWidths, hasCustomWidths, selectable, _actions.length]);
 
   // Memoizar dados filtrados para evitar loops infinitos
   const filteredData = useMemo(() => {
@@ -921,20 +940,17 @@ function Table<T extends { id: number | string }>({
     [columns]
   );
 
-  const getColumnWidthPx = useCallback((column: (typeof columns)[number]): number | undefined => {
-    const rawWidth = columnWidths[column.key];
-    const colMinWidth = getColumnMinWidth(column);
-    if (rawWidth !== undefined) {
-      return colMinWidth != null ? Math.max(rawWidth, colMinWidth) : rawWidth;
-    }
-    if (column.width !== undefined) {
-      const px = typeof column.width === 'string'
-        ? parseInt(column.width.replace('px', ''), 10)
-        : column.width;
-      return Number.isNaN(px) ? undefined : px;
-    }
-    return colMinWidth;
-  }, [columnWidths]);
+  const getColumnWidthPx = useCallback((column: (typeof columns)[number]) => {
+    return resolveColumnWidthPx(column, columnWidths, hasCustomWidths);
+  }, [columnWidths, hasCustomWidths]);
+
+  const handleColumnResizeStart = useCallback((columnKey: string, startX: number, currentWidth: number) => {
+    const snapshot = !hasCustomWidths && tableRef.current
+      ? measureColumnWidths(tableRef.current, visibleColumns, selectable)
+      : undefined;
+
+    handleResizeStart(columnKey, startX, currentWidth, snapshot);
+  }, [hasCustomWidths, handleResizeStart, visibleColumns, selectable]);
 
   const renderTableColGroup = () => (
     <colgroup>
@@ -983,12 +999,11 @@ function Table<T extends { id: number | string }>({
           
           {/* Colunas */}
           {visibleColumns
-            .map((column, index) => {
+            .map((column) => {
               const rawWidth = columnWidths[column.key];
-              const colMinWidth = getColumnMinWidth(column);
               const effectiveHeaderWidth = rawWidth !== undefined
-                ? (colMinWidth != null ? Math.max(rawWidth, colMinWidth) : rawWidth)
-                : (colMinWidth ?? undefined);
+                ? rawWidth
+                : parseColumnWidthPx(column.width);
               return (
               <TableColumn
                 key={column.key}
@@ -997,17 +1012,8 @@ function Table<T extends { id: number | string }>({
                 sortDirection={state.sortDirection}
                 onSort={tableActions.setSort}
                 columnWidth={effectiveHeaderWidth}
-                onResizeStart={handleResizeStart}
-                onResizeEnd={() => {
-                  // Callback chamado quando redimensionamento termina
-                }}
-                getMinWidthForColumn={(columnKey: string) => {
-                  const col = config.columns.find(c => c.key === columnKey);
-                  if (!col?.label) return 30;
-                  return Math.max(30, col.label.length * 7 + 20);
-                }}
+                onResizeStart={handleColumnResizeStart}
                 isResizing={isResizing}
-                isLastColumn={index === visibleColumns.length - 1}
               />
             );
             })}
@@ -1380,27 +1386,28 @@ function Table<T extends { id: number | string }>({
               {/* Células de dados: largura fixa por coluna; minWidth = width para não encolher ao arrastar outra */}
               {visibleColumns
                 .map(column => {
-                  const resizedWidth = columnWidths[column.key];
-                  const colMinWidth = getColumnMinWidth(column);
-                  let widthStyle: React.CSSProperties;
-                  if (resizedWidth !== undefined) {
-                    const effectiveWidth = colMinWidth != null ? Math.max(resizedWidth, colMinWidth) : resizedWidth;
-                    widthStyle = { width: `${effectiveWidth}px`, minWidth: `${effectiveWidth}px`, maxWidth: `${effectiveWidth}px` };
+                  const widthPx = resolveColumnWidthPx(column, columnWidths, hasCustomWidths);
+                  let widthStyle: React.CSSProperties | undefined;
+
+                  if (hasCustomWidths && widthPx != null) {
+                    widthStyle = fixedWidthStyle(widthPx);
+                  } else if (columnWidths[column.key] != null) {
+                    widthStyle = fixedWidthStyle(columnWidths[column.key]);
                   } else {
-                    const w = column.width;
-                    const widthVal = w != null ? (typeof w === 'number' ? `${w}px` : w) : undefined;
-                    const minVal = colMinWidth != null ? `${colMinWidth}px` : widthVal;
-                    const derivedWidth = widthVal ?? (colMinWidth != null ? `${colMinWidth}px` : undefined);
-                    // Colunas de badge sem width explícito: limitar maxWidth ao valor calculado para não crescer além do necessário
+                    const colMinWidth = getColumnMinWidth(column);
+                    const widthCss = parseColumnWidthPx(column.width);
+                    const widthVal = widthCss != null ? `${widthCss}px` : undefined;
+                    const minCss = colMinWidth != null ? `${colMinWidth}px` : widthVal;
                     const maxVal = column.maxWidth != null
                       ? (typeof column.maxWidth === 'number' ? `${column.maxWidth}px` : column.maxWidth)
-                      : (column.badgeLabels?.length && !w ? derivedWidth : undefined);
+                      : (column.badgeLabels?.length && widthVal ? widthVal : undefined);
                     widthStyle = {
-                      width: derivedWidth,
-                      minWidth: minVal ?? undefined,
+                      width: widthVal,
+                      minWidth: minCss,
                       maxWidth: maxVal,
                     };
                   }
+
                   return (
                     <td
                       key={column.key}
@@ -1809,7 +1816,8 @@ function Table<T extends { id: number | string }>({
       ) : (
         <div className="table-responsive table-responsive-custom">
           <table
-            className={`table table-striped table-sm table-custom table-resizable table-resizable-enabled ${isResizing ? 'resizing' : ''}`}
+            ref={tableRef}
+            className={`table table-striped table-sm table-custom table-resizable table-resizable-enabled ${isResizing ? 'resizing' : ''} ${hasCustomWidths ? 'table-columns-locked' : ''}`}
             style={{ ['--table-min-width' as string]: `${tableMinWidth}px` }}
           >
             {renderTableColGroup()}
@@ -1817,6 +1825,15 @@ function Table<T extends { id: number | string }>({
             {renderTableBody()}
           </table>
         </div>
+      )}
+
+      {!isMobile && resizeGuideX != null && createPortal(
+        <div
+          className="table-resize-guide"
+          style={{ left: `${resizeGuideX}px` }}
+          aria-hidden
+        />,
+        document.body
       )}
 
 

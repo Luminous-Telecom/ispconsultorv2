@@ -10,10 +10,7 @@ interface TableColumnProps<T = Record<string, unknown>> {
   className?: string;
   columnWidth?: number;
   onResizeStart?: (columnKey: string, startX: number, currentWidth: number) => void;
-  onResizeEnd?: () => void;
   isResizing?: boolean;
-  isLastColumn?: boolean;
-  getMinWidthForColumn?: (columnKey: string) => number;
 }
 
 const TableColumn = <T extends { id: number | string }>({
@@ -24,49 +21,36 @@ const TableColumn = <T extends { id: number | string }>({
   className = '',
   columnWidth,
   onResizeStart,
-  onResizeEnd,
   isResizing = false,
-  isLastColumn = false,
-  getMinWidthForColumn: _getMinWidthForColumn,
 }: TableColumnProps<T>) => {
   const { t } = useI18n();
   const isSorted = sortColumn === column.key;
   const isSortable = column.sortable !== false && onSort && column.key !== 'acoes' && column.key !== 'actions';
-
-  // Flag para controlar se estava redimensionando (evita ordenação acidental)
   const wasResizingRef = useRef(false);
-
   const columnRef = useRef<HTMLTableHeaderCellElement>(null);
 
   const handleSort = useCallback(() => {
-    // Se estava redimensionando, não executar ordenação
     if (wasResizingRef.current) {
       wasResizingRef.current = false;
       return;
     }
-
     if (!isSortable || !onSort) return;
 
     let direction: SortDirection = 'asc';
     if (isSorted && sortDirection === 'asc') {
       direction = 'desc';
     }
-
     onSort(column.key, direction);
   }, [isSortable, isSorted, sortDirection, onSort, column.key]);
 
   const handleResizeMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
-    // Marcar que está redimensionando para evitar ordenação acidental
     wasResizingRef.current = true;
 
-    if (!columnRef.current || !onResizeStart) {
-      return;
-    }
+    if (!columnRef.current || !onResizeStart) return;
 
-    const currentWidth = columnRef.current.offsetWidth;
+    const currentWidth = Math.round(columnRef.current.getBoundingClientRect().width);
     onResizeStart(column.key, e.clientX, currentWidth);
   }, [column.key, onResizeStart]);
 
@@ -98,15 +82,9 @@ const TableColumn = <T extends { id: number | string }>({
     );
   };
 
-  // Calcular largura mínima baseada no título da coluna (nunca ocultar o título + ícone)
   const minWidthFromTitle = useMemo(() => {
-    if (!column.label) return 40; // Largura mínima padrão com espaço para ícone
-
-    // Estimativa mais precisa: ~7px por caractere + 40px para padding, ícone de ordenação (16px) e espaçamento
-    const titleWidth = column.label.length * 7;
-    const iconAndPaddingWidth = 40; // 16px ícone + 16px padding esquerdo + 8px margem direita
-
-    return Math.max(40, titleWidth + iconAndPaddingWidth);
+    if (!column.label) return 40;
+    return Math.max(40, column.label.length * 7 + 40);
   }, [column.label]);
 
   const columnStyles = useMemo(() => {
@@ -116,22 +94,13 @@ const TableColumn = <T extends { id: number | string }>({
       fontSize: '0.75rem',
     };
 
-    // Sistema tabela-centrado: Prioriza larguras definidas explicitamente
-    let effectiveWidth;
-
-    // 1ª prioridade: Largura redimensionada pelo usuário (persistida)
+    let effectiveWidth: number | string | undefined;
     if (columnWidth !== undefined) {
       effectiveWidth = columnWidth;
-    }
-    // 2ª prioridade: Largura definida explicitamente na tabela
-    else if (column.width !== undefined) {
+    } else if (column.width !== undefined) {
       effectiveWidth = typeof column.width === 'string'
         ? parseInt(column.width.replace('px', ''), 10)
         : column.width;
-    }
-    // 3ª prioridade: Fallback automático (apenas título + ícone visíveis)
-    else {
-      effectiveWidth = minWidthFromTitle;
     }
 
     if (effectiveWidth) {
@@ -139,68 +108,41 @@ const TableColumn = <T extends { id: number | string }>({
       styles.width = widthValue;
       styles.minWidth = widthValue;
       styles.maxWidth = widthValue;
+    } else {
+      styles.minWidth = `${minWidthFromTitle}px`;
     }
 
     if (column.minWidth) {
       styles.minWidth = typeof column.minWidth === 'number' ? `${column.minWidth}px` : column.minWidth;
     }
-
     if (column.maxWidth) {
       styles.maxWidth = typeof column.maxWidth === 'number' ? `${column.maxWidth}px` : column.maxWidth;
     }
-
 
     return styles;
   }, [column.width, column.minWidth, column.maxWidth, columnWidth, minWidthFromTitle]);
 
   const columnClasses = useMemo(() => {
-    const classes = [];
-
-    if (column.className) {
-      classes.push(column.className);
-    }
-
+    const classes: string[] = [];
+    if (column.className) classes.push(column.className);
     if (column.align || column.headerAlign) {
-      const align = column.headerAlign || column.align;
-      classes.push(`text-${align}`);
+      classes.push(`text-${column.headerAlign || column.align}`);
     }
-
-    if (className) {
-      classes.push(className);
-    }
-
-    // Adicionar classe para indicar que a coluna tem largura customizada
-    if (columnWidth) {
-      classes.push('column-has-custom-width');
-    }
-
+    if (className) classes.push(className);
+    if (columnWidth) classes.push('column-has-custom-width');
     return classes.join(' ');
   }, [column.className, column.align, column.headerAlign, className, columnWidth]);
 
-  // Por padrão, todas as colunas são redimensionáveis exceto ações e última coluna
-  const isResizable = (column.resizable ?? true) && column.key !== 'acoes' && column.key !== 'actions' && !isLastColumn;
+  const isResizable = (column.resizable ?? true) && column.key !== 'acoes' && column.key !== 'actions';
 
-  // Aplicar largura diretamente no elemento DOM para garantir prioridade
   useEffect(() => {
-    if (columnRef.current && columnWidth) {
-      const widthValue = `${columnWidth}px`;
-      columnRef.current.style.setProperty('width', widthValue, 'important');
-      columnRef.current.style.setProperty('min-width', widthValue, 'important');
-      columnRef.current.style.setProperty('max-width', widthValue, 'important');
-    }
-  }, [columnWidth]);
-
-  // Limpar flag de redimensionamento quando o redimensionamento terminar
-  useEffect(() => {
-    if (!isResizing && onResizeEnd) {
-      // Pequeno delay para garantir que o evento de clique não seja executado
+    if (!isResizing) {
       const timeoutId = setTimeout(() => {
         wasResizingRef.current = false;
-        onResizeEnd();
       }, 10);
       return () => clearTimeout(timeoutId);
     }
-  }, [isResizing, onResizeEnd]);
+  }, [isResizing]);
 
   return (
     <th
@@ -219,7 +161,6 @@ const TableColumn = <T extends { id: number | string }>({
         <span>{column.label}</span>
         {getSortIcon()}
       </div>
-      {/* Handle para redimensionamento - só mostrar se a coluna for redimensionável */}
       {isResizable && (
         <div
           className="resize-handle"

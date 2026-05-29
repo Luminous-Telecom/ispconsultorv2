@@ -4,143 +4,116 @@ import { TableColumn } from 'components/tables/types';
 interface UseColumnResizingOptions<T = Record<string, unknown>> {
   tableId: string;
   columns: TableColumn<T>[];
-  defaultColumnWidth?: number;
   minColumnWidth?: number;
   maxColumnWidth?: number;
   getMinWidthForColumn?: (columnKey: string) => number;
-  onResizeEnd?: () => void;
 }
 
 interface UseColumnResizingReturn {
   columnWidths: { [columnKey: string]: number };
-  handleResizeStart: (columnKey: string, startX: number, currentWidth: number) => void;
-  handleResizeEnd: () => void;
+  handleResizeStart: (columnKey: string, startX: number, currentWidth: number, snapshot?: Record<string, number>) => void;
   isResizing: boolean;
-  resetColumnWidths: () => void;
+  resizeGuideX: number | null;
 }
 
 export function useColumnResizing<T = Record<string, unknown>>({
   tableId,
   columns,
-  defaultColumnWidth = 120,
-  minColumnWidth = 40, // Largura mínima padrão com espaço para ícone de ordenação
-  maxColumnWidth = 400,
-  getMinWidthForColumn: _getMinWidthForColumn,
-  onResizeEnd
+  minColumnWidth = 40,
+  maxColumnWidth = 2000,
+  getMinWidthForColumn,
 }: UseColumnResizingOptions<T>): UseColumnResizingReturn {
   const storageKey = `table-column-widths-${tableId}`;
   const [columnWidths, setColumnWidths] = useState<{ [columnKey: string]: number }>({});
   const [isResizing, setIsResizing] = useState(false);
-  const currentResizeRef = useRef<{
+  const [resizeGuideX, setResizeGuideX] = useState<number | null>(null);
+  const activeResizeRef = useRef<{
     columnKey: string;
     startX: number;
     startWidth: number;
+    pendingWidth: number;
+    snapshot: Record<string, number> | null;
+    maxWidth: number;
   } | null>(null);
 
-  // Carregar larguras salvas do localStorage
   useEffect(() => {
     try {
-      const savedWidths = localStorage.getItem(storageKey);
-      if (savedWidths) {
-        const parsedWidths = JSON.parse(savedWidths);
-        // Filtrar apenas as colunas que ainda existem
-        const validWidths: { [columnKey: string]: number } = {};
-        columns.forEach(column => {
-          if (parsedWidths[column.key]) {
-            validWidths[column.key] = Math.max(
-              minColumnWidth,
-              Math.min(maxColumnWidth, parsedWidths[column.key])
-            );
-          }
-        });
-        setColumnWidths(validWidths);
-      }
-    } catch (error) {
-      // Silently handle localStorage errors
+      const saved = localStorage.getItem(storageKey);
+      if (!saved) return;
+      const parsed = JSON.parse(saved) as Record<string, number>;
+      const validWidths: Record<string, number> = {};
+      columns.forEach((column) => {
+        const w = parsed[column.key];
+        if (w) {
+          validWidths[column.key] = Math.max(minColumnWidth, Math.min(maxColumnWidth, w));
+        }
+      });
+      setColumnWidths(validWidths);
+    } catch {
+      // ignore
     }
   }, [tableId, columns, minColumnWidth, maxColumnWidth, storageKey]);
 
-  // Salvar larguras no localStorage quando mudarem
   useEffect(() => {
     try {
       localStorage.setItem(storageKey, JSON.stringify(columnWidths));
-    } catch (error) {
-      // Silently handle localStorage errors
+    } catch {
+      // ignore
     }
   }, [columnWidths, storageKey]);
 
-  const handleResizeStart = useCallback((columnKey: string, startX: number, currentWidth: number) => {
+  const handleResizeStart = useCallback((columnKey: string, startX: number, currentWidth: number, snapshot?: Record<string, number>) => {
+    const startWidth = Math.round(currentWidth);
+    activeResizeRef.current = {
+      columnKey,
+      startX,
+      startWidth,
+      pendingWidth: startWidth,
+      snapshot: snapshot ?? null,
+      maxWidth: Math.max(maxColumnWidth, startWidth),
+    };
     setIsResizing(true);
-    currentResizeRef.current = { columnKey, startX, startWidth: currentWidth };
+    setResizeGuideX(startX);
 
-    // Adicionar listeners globais
     const handleMouseMove = (e: MouseEvent) => {
-      if (!currentResizeRef.current) return;
+      const active = activeResizeRef.current;
+      if (!active) return;
 
-      const { columnKey, startX, startWidth } = currentResizeRef.current;
-      const diff = e.clientX - startX;
-      // Usar largura mínima específica da coluna se disponível, senão usar a padrão
-      const columnMinWidth = _getMinWidthForColumn ? _getMinWidthForColumn(columnKey) : minColumnWidth;
-      const newWidth = Math.max(columnMinWidth, Math.min(maxColumnWidth, startWidth + diff));
-
-      setColumnWidths(prev => ({
-        ...prev,
-        [columnKey]: newWidth
-      }));
+      const diff = e.clientX - active.startX;
+      const colMin = getMinWidthForColumn ? getMinWidthForColumn(active.columnKey) : minColumnWidth;
+      active.pendingWidth = Math.max(colMin, Math.min(active.maxWidth, active.startWidth + diff));
+      setResizeGuideX(e.clientX);
     };
 
     const handleMouseUp = () => {
-      setIsResizing(false);
-      currentResizeRef.current = null;
+      const active = activeResizeRef.current;
+      if (active) {
+        const { columnKey: key, pendingWidth, snapshot: snap } = active;
+        setColumnWidths((prev) => ({
+          ...(snap ?? prev),
+          [key]: pendingWidth,
+        }));
+      }
 
-      // Remover listeners
+      activeResizeRef.current = null;
+      setIsResizing(false);
+      setResizeGuideX(null);
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
-
-      // Resetar cursor
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
-
-      // Chamar callback de fim do redimensionamento
-      if (onResizeEnd) {
-        onResizeEnd();
-      }
     };
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-
-    // Mudar cursor
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
-  }, [minColumnWidth, maxColumnWidth, _getMinWidthForColumn, onResizeEnd]);
-
-  const handleResizeEnd = useCallback(() => {
-    setIsResizing(false);
-    currentResizeRef.current = null;
-    document.body.style.cursor = '';
-    document.body.style.userSelect = '';
-  }, []);
-
-  const resetColumnWidths = useCallback(() => {
-    setColumnWidths({});
-    try {
-      localStorage.removeItem(storageKey);
-    } catch (error) {
-      // Silently handle localStorage errors
-    }
-  }, [storageKey]);
-
-  // Função helper para obter largura de uma coluna (usa defaultColumnWidth)
-  const _getColumnWidth = useCallback((columnKey: string): number => {
-    return columnWidths[columnKey] || defaultColumnWidth;
-  }, [columnWidths, defaultColumnWidth]);
+  }, [minColumnWidth, maxColumnWidth, getMinWidthForColumn]);
 
   return {
     columnWidths,
     handleResizeStart,
-    handleResizeEnd,
     isResizing,
-    resetColumnWidths
+    resizeGuideX,
   };
 }

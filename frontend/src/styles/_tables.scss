@@ -29,7 +29,6 @@
 .table-resizable-enabled th {
   position: relative;
   min-width: 80px;
-  max-width: 400px;
   box-sizing: border-box;
   user-select: none;
 }
@@ -46,7 +45,6 @@
 .table-resizable th {
   position: relative;
   min-width: 30px; /* Muito reduzido para permitir colunas minúsculas */
-  max-width: 400px;
   box-sizing: border-box;
   user-select: none;
 }
@@ -114,6 +112,19 @@ body.resizing-columns {
 
 body.resizing-columns * {
   cursor: col-resize !important;
+}
+
+/* Guia vertical durante arraste (largura só aplica no mouseup) */
+.table-resize-guide {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background-color: var(--btn-primary-color, #0d6efd);
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 10000;
 }
 
 /* Cursor pointer para elementos interativos */
@@ -1438,14 +1449,21 @@ colgroup col.col-checkbox {
   margin: 0 !important;
 }
 
-/* Redimensionamento: auto para que ao alargar uma coluna a tabela cresça e as outras não encolham (scroll horizontal) */
-.table-resizable-enabled.table-custom,
-.table-resizable.table-custom {
+/* Com colunas customizadas: largura = soma das colunas */
+.table-resizable-enabled.table-custom.table-columns-locked {
+  table-layout: fixed !important;
+}
+
+.table-responsive-custom .table.table-resizable-enabled.table-columns-locked {
+  width: var(--table-min-width, 100%) !important;
+  min-width: var(--table-min-width, 0px) !important;
+}
+
+.table-resizable-enabled.table-custom:not(.table-columns-locked) {
   table-layout: auto !important;
 }
 
-/* Largura da tabela = soma das colunas; ao alargar uma coluna só cresce e arrasta, scroll permite */
-.table-responsive-custom .table.table-resizable-enabled {
+.table-responsive-custom .table.table-resizable-enabled:not(.table-columns-locked) {
   width: max(100%, var(--table-min-width, 0px)) !important;
   min-width: var(--table-min-width, 0px) !important;
 }
