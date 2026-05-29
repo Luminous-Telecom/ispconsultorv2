@@ -70,6 +70,7 @@ Use como base antes de criar componentes novos.
 | `BlockdomiIpListModalCore` | `modals/blockdomi/` | `4` \| `6` (IPv4 / IPv6) |
 | `BlockdomiDominioListModalCore` | `modals/blockdomi/` | domínios (+ bulk edit, sync SEI) |
 | `BlockdomiIpFormModalCore` | `modals/blockdomi/` | `4` \| `6` (form IPv4 / IPv6) |
+| `BlockdomiOficioFormFields` | `modals/blockdomi/` | campos de ofício (domínio, IP, bulk) |
 | `blockdomiListCommonColumns` / `buildBlockdomiOficioBulkActions` | `modals/blockdomi/` | colunas e bulk ofícios compartilhados |
 
 **27 modais de listagem** usam `ListModal`; a maioria compõe `useEntityListModal` (RPKI e casos especiais usam `useTableFilters` + bulk próprio).
@@ -249,8 +250,8 @@ Duplicação quase 1:1. Modelo de referência: `logsModalRegistry.ts` + `modals/
 |---------|---------------|
 | `IPv4Modal.tsx` / `IPv6Modal.tsx` | → `BlockdomiIpFormModalCore` (`version={4\|6}`) |
 | `DominioListModal.tsx` | → `BlockdomiDominioListModalCore` (bulk edit + sync SEI) |
-| `DominioModal.tsx` | |
-| `DominioBulkEditModal.tsx` | |
+| `DominioModal.tsx` | → `BlockdomiOficioFormFields` + utils |
+| `DominioBulkEditModal.tsx` | → `BlockdomiOficioFormFields` + utils |
 | `IpsPermitidosListModal.tsx` | ListModal |
 | `IpsPermitidoModal.tsx` | |
 | `ImportarListaBlockdomiModal.tsx` | Específico — manter |
