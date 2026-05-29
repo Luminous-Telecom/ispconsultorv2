@@ -51,6 +51,16 @@ Use como base antes de criar componentes novos.
 | `normalizeListPagination` | `utils/pagination.ts` | Paginação ERP/SaaS → formato `Table` |
 | `ListModal` | `components/common/ListModal.tsx` | Table + DraggableModal; `onRowClick`, `modalId`, `modalSize`, `wrapperTitle`, `onSelectAllPages`, `customControlsAfterActions` |
 
+### Novidades (Fase 2 — em andamento)
+
+| Recurso | Caminho | Variantes |
+|---------|---------|-----------|
+| `NFSeConfigSectionCore` | `modals/nfse/` | `erp` \| `saas` |
+| `NFSeModalCore` | `modals/nfse/` | `erp` \| `saas` |
+| `RecursosSistemaModalCore` | `modals/recursos/` | `erp` \| `saas` |
+| `ReceberModalCore` | `modals/receber/` | `erp` \| `saas` |
+| `SaasServidorListModalCore` | `modals/servidor/` | `email` \| `whatsapp` |
+
 **27 modais de listagem** usam `ListModal`; a maioria compõe `useEntityListModal` (RPKI e casos especiais usam `useTableFilters` + bulk próprio).
 
 | Recurso | Caminho | Uso atual |
@@ -118,7 +128,7 @@ Modais RPKI usam `skipWrapper` (wrapper no `SingleModalWrapper`). Modais complex
 | ✅ | Blockdomi: `IPv4`, `IPv6`, `Dominio`, `IpsPermitidos` |
 | ✅ | RPKI: `RpkiCa`, `RpkiAspa`, `RpkiRoa`, `RpkiCaParent`, `RpkiRepository` |
 | ✅ | SaaS listas: `SaasBancos`, `SaasClientes`, `SaasPlanoList`, `SaasTipoCobranca`, `SaasUsuarios` |
-| ⏳ Fase 2 | `SaasServidorEmailModal`, `SaasServidorWhatsappModal` (abas, não listagem pura) |
+| ✅ | `SaasServidorEmailModal`, `SaasServidorWhatsappModal` → `SaasServidorListModalCore` (listagem SaaS) |
 
 ### Modais SaaS com padrão de listagem (sem sufixo ListModal)
 
@@ -425,8 +435,8 @@ Formulários que ainda repetem campos de endereço/contato manualmente devem mig
 ```
 Fase 1 — ListModal + useEntityListModal ✅ (concluída)
 
-Fase 2 — Pares ERP/SaaS
-  └── NFSeConfigSection + modais NFS-e
+Fase 2 — Pares ERP/SaaS (em andamento)
+  └── NFSeConfigSection + modais NFS-e ✅
   └── RecursosSistemaModal
   └── ServidorTab + MensagensTab (email/whatsapp)
 
@@ -476,8 +486,8 @@ Legenda: `[ ]` pendente · `[~]` parcial · `[x]` já centralizado
 - [x] `SaasClientesModal.tsx`
 - [x] `SaasTipoCobrancaModal.tsx`
 - [x] `SaasUsuariosModal.tsx`
-- [ ] `SaasServidorEmailModal.tsx` (Fase 2 — abas)
-- [ ] `SaasServidorWhatsappModal.tsx` (Fase 2 — abas)
+- [x] `SaasServidorEmailModal.tsx` → `SaasServidorListModalCore`
+- [x] `SaasServidorWhatsappModal.tsx` → `SaasServidorListModalCore`
 
 ### Infraestrutura de listagem
 
@@ -488,14 +498,14 @@ Legenda: `[ ]` pendente · `[~]` parcial · `[x]` já centralizado
 
 ### ERP × SaaS
 
-- [ ] `NFSeConfigSection` / `SaasNFSeConfigSection`
-- [ ] `NFSeModal` / `SaasNfseModal`
-- [ ] `RecursosSistemaModal` / `SaasRecursosSistemaModal`
-- [ ] `ServidorTab` email / whatsapp
-- [ ] `MensagensTab` email / whatsapp
-- [ ] `ReceberModal` / `SaasReceberModal`
-- [ ] `AgendadorTarefasModal` / `SaasAgendadorTarefasModal`
-- [ ] `RotinaAgendadaModal` / `SaasRotinaAgendadaModal`
+- [x] `NFSeConfigSection` / `SaasNFSeConfigSection` → `modals/nfse/NFSeConfigSectionCore` + `nfseConfigVariants`
+- [x] `NFSeModal` / `SaasNfseModal` → `modals/nfse/NFSeModalCore`
+- [x] `RecursosSistemaModal` / `SaasRecursosSistemaModal` → `RecursosSistemaModalCore`
+- [ ] `ServidorTab` email / whatsapp (ERP — abas de configuração única)
+- [ ] `MensagensTab` email / whatsapp (ERP)
+- [x] `ReceberModal` / `SaasReceberModal` → `ReceberModalCore`
+- [x] `AgendadorTarefasModal` / `SaasAgendadorTarefasModal` (wrapper fino — já SaaS)
+- [x] `RotinaAgendadaModal` / `SaasRotinaAgendadaModal` (wrapper fino)
 - [ ] Forms SaaS ↔ ERP (ver tabela seção 2)
 
 ### Logs
