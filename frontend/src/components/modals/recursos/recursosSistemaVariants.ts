@@ -1,5 +1,8 @@
 import { ParametrosService } from 'services/parametrosService';
-import { SaasParametrosService } from 'services/saas/saasParametrosService';
+import {
+  SaasParametrosService,
+  type SaasParametros,
+} from 'services/saas/saasParametrosService';
 
 export type RecursosSistemaVariant = 'erp' | 'saas';
 
@@ -56,3 +59,17 @@ export const RECURSOS_SAAS_INITIAL: RecursosSistemaFormSaas = {
   dias_atraso_bloqueio: null,
   dias_desbloqueio_manual: null,
 };
+
+export function mapSaasParametrosToForm(
+  d: SaasParametros,
+  base: RecursosSistemaFormBase
+): RecursosSistemaFormSaas {
+  const qtd = d.quantidade_titulos_manter ?? 12;
+  return {
+    ...base,
+    manter_numeros_titulos: d.manter_numeros_titulos ?? false,
+    quantidade_titulos_manter: Math.min(24, Math.max(1, qtd)),
+    dias_atraso_bloqueio: d.dias_atraso_bloqueio ?? null,
+    dias_desbloqueio_manual: d.dias_desbloqueio_manual ?? null,
+  };
+}

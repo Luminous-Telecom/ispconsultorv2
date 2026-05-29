@@ -7,11 +7,11 @@ import { useIsMobile } from 'hooks/useMediaQuery';
 import { useFormReset } from 'hooks/useFormReset';
 import DraggableModal from 'components/common/DraggableModal';
 import { ModalFormActions } from 'components/ui';
-import type { SaasParametros } from 'services/saas/saasParametrosService';
 import {
   RECURSOS_SISTEMA_BY_VARIANT,
   RECURSOS_ERP_INITIAL,
   RECURSOS_SAAS_INITIAL,
+  mapSaasParametrosToForm,
   type RecursosSistemaVariant,
   type RecursosSistemaFormBase,
   type RecursosSistemaFormSaas,
@@ -62,15 +62,7 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
       central_assinante_metodo_login: d.central_assinante_metodo_login ?? 'cnpj',
     };
     if (!isSaas) return { ...RECURSOS_SAAS_INITIAL, ...base };
-    const saas = d as SaasParametros;
-    const qtd = saas.quantidade_titulos_manter ?? 12;
-    return {
-      ...base,
-      manter_numeros_titulos: saas.manter_numeros_titulos ?? false,
-      quantidade_titulos_manter: Math.min(24, Math.max(1, qtd)),
-      dias_atraso_bloqueio: saas.dias_atraso_bloqueio ?? null,
-      dias_desbloqueio_manual: saas.dias_desbloqueio_manual ?? null,
-    };
+    return mapSaasParametrosToForm(d, base);
   }, [parametros?.data, isSaas]);
 
   useFormReset({
