@@ -1,7 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import { FormField } from 'components/ui';
 import EntitySelectField from 'components/ui/EntitySelectField';
-import { MensagemTypeSelect, MensagemTipoEnvioRadio } from 'components/modals/parametros/servidor-shared';
+import {
+  MensagemTypeSelect,
+  MensagemTipoEnvioRadio,
+  MensagemVariavelCopyButton,
+} from 'components/modals/parametros/servidor-shared';
 import { MensagensTabProps } from '../types';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -289,15 +293,11 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                                     </span>
                                     <small className="text-muted">{variavel.descricao}</small>
                                     {onCopyVariable && (
-                                      <button
-                                        type="button"
-                                        className="btn btn-sm btn-link p-0 text-muted ms-auto"
-                                        onClick={() => onCopyVariable(variavel.variavel)}
+                                      <MensagemVariavelCopyButton
+                                        variable={variavel.variavel}
+                                        onCopy={onCopyVariable}
                                         title={t('settings.messages.copyVariable')}
-                                        style={{ fontSize: '0.75rem' }}
-                                      >
-                                        <i className="bi bi-clipboard"></i>
-                                      </button>
+                                      />
                                     )}
                                   </div>
                                 ))}

@@ -228,7 +228,7 @@ Duplicação quase 1:1. Modelo de referência: `logsModalRegistry.ts` + `modals/
 | `SaasTenantUsuarioFormModal.tsx` | `UsuarioFormModal` |
 | `SaasTipoCobrancaFormModal.tsx` | → `TipoCobrancaFormFields` + `tipoCobrancaPeriodicity` (com `TipoCobrancaContratoModal`) |
 | `SaasTipoCobrancaModal.tsx` | `TipoCobrancaContratoListModal` |
-| `SaasTituloFormModal.tsx` | `TituloModal` (parcial) |
+| `SaasTituloFormModal.tsx` | → `SaasTituloFormFields` (parcial vs `TituloModal`) |
 | `SaasUsuarioFormModal.tsx` | → `SaasUsuarioFormFields` + `UsuarioAccountFormFields` (com `UsuarioFormModal`) |
 | `SaasUsuariosModal.tsx` | `UsuariosModal` |
 | `saasTenantListTableConfig.tsx` | Config de tabela — manter como config |
@@ -374,12 +374,12 @@ Formulários que ainda repetem campos de endereço/contato manualmente devem mig
 | `pages/CentralAssinante.tsx` | Links estilizados |
 | `layout/Layout.tsx` | Botão voltar sidebar |
 | `pages/saas/SaasLayout.tsx` | Idem |
-| `common/ResponsiveDialog.tsx` | Voltar / menu |
+| `common/ResponsiveDialog.tsx` | ✅ migrado para `Button` / `VoltarButton` ghost |
 | `modals/blockdomi/ImportarListaBlockdomiModal.tsx` | Remover PDF, links |
 | `modals/titulos/titulo/TituloModal.tsx` | Dropdown |
 | `modals/parametros/AssinaturaDigitalModal.tsx` | Outline primary |
-| `modals/parametros/servidor-email/abas/MensagensTab.tsx` | Radio labels como btn |
-| `modals/parametros/servidor-whatsapp/abas/MensagensTab.tsx` | Idem |
+| `modals/parametros/servidor-email/abas/MensagensTab.tsx` | Radio labels Bootstrap (`MensagemTipoEnvioRadio`) — intencional |
+| `modals/parametros/servidor-whatsapp/abas/MensagensTab.tsx` | Idem; copiar variável → `MensagemVariavelCopyButton` ✅ |
 
 ### Regras do projeto (não quebrar na centralização)
 
@@ -525,7 +525,10 @@ Legenda: `[ ]` pendente · `[~]` parcial · `[x]` já centralizado
 - [x] `AgendadorTarefasModal` / `SaasAgendadorTarefasModal` (wrapper fino — já SaaS)
 - [x] `RotinaAgendadaModal` / `SaasRotinaAgendadaModal` (wrapper fino)
 - [x] Forms SaaS ↔ ERP (trechos) — `SaasServidorFormModalCore`, `TipoCobrancaFormFields`, `UsuarioAccountFormFields`, `SaasTenantUsuarioFormFields`, `DominioModal` + `BlockdomiOficioFormFields`
-- [~] Forms SaaS ↔ ERP (complexos) — `SaasPlanoFormModal`, `SaasContratoFormModal`, `SaasBancoFormModal` (hooks próprios), `SaasTituloFormModal` — ver seção «O que não centralizar»
+- [x] `SaasDadosEmpresaModal` → wrapper sobre `DadosEmpresaModal`
+- [x] `SaasBancoFormModal` → abas compartilhadas `bancos/banco` + `useSaasBancoForm`
+- [x] `SaasTituloFormModal` → `SaasTituloFormFields`
+- [~] Forms SaaS ↔ ERP (complexos) — `SaasPlanoFormModal`, `SaasContratoFormModal` — ver seção «O que não centralizar»
 
 ### Logs
 

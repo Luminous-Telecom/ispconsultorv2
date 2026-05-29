@@ -57,7 +57,8 @@ const buildParams = (f: Record<string, unknown>) => {
 export const saasDadosEmpresaService = {
   list: (f: { page?: number; limit?: number; search?: string; sortColumn?: string; sortDirection?: 'asc' | 'desc' } = {}) =>
     defaultApiClient.get<SaasDadosEmpresaListResponse>(`/saas/saas-dados-empresa?${buildParams(f)}`),
-  getById: (id: number) => defaultApiClient.get<ApiResponse<SaasDadosEmpresaItem>>(`/saas/saas-dados-empresa/${id}`),
+  getById: (id: number): Promise<ApiResponse<SaasDadosEmpresaItem>> =>
+    defaultApiClient.get<SaasDadosEmpresaItem>(`/saas/saas-dados-empresa/${id}`),
   create: (d: Partial<SaasDadosEmpresaItem>) => defaultApiClient.post('/saas/saas-dados-empresa', d),
   update: (id: number, d: Partial<SaasDadosEmpresaItem>) => defaultApiClient.put(`/saas/saas-dados-empresa/${id}`, d),
   delete: (id: number) => defaultApiClient.delete(`/saas/saas-dados-empresa/${id}`),

@@ -1,9 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
 import { ModalFormActions } from 'components/ui';
-import FormField from 'components/ui/FormField';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
@@ -11,18 +10,22 @@ import { useFormReset } from 'hooks/useFormReset';
 import { saasTituloService, type SaasTitulo } from 'services/saas/saasCrudService';
 import { saasPlanoService } from 'services/saas/saasPlanoService';
 import { saasBancoService } from 'services/saas/saasConfigService';
+import SaasTituloFormFields, { type SaasTituloFormData } from './SaasTituloFormFields';
 
-interface Props { show: boolean; onClose: () => void; onSuccess?: () => void; empresaId: number; }
-
-interface Form {
-  plano_id: number | '';
-  banco_id: number | '';
-  valor: number | '';
-  data_vencimento: string;
-  descricao: string;
+interface Props {
+  show: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
+  empresaId: number;
 }
 
-const INITIAL: Form = { plano_id: '', banco_id: '', valor: '', data_vencimento: '', descricao: '' };
+const INITIAL: SaasTituloFormData = {
+  plano_id: '',
+  banco_id: '',
+  valor: '',
+  data_vencimento: '',
+  descricao: '',
+};
 
 const gerarNumeroTitulo = () => `TIT-SAAS-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
@@ -31,8 +34,8 @@ const SaasTituloFormModal: React.FC<Props> = ({ show, onClose, onSuccess, empres
   const queryClient = useQueryClient();
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
-  const [form, setForm] = useState<Form>(INITIAL);
-  const [errors, setErrors] = useState<Partial<Record<keyof Form, string>>>({});
+  const [form, setForm] = useState<SaasTituloFormData>(INITIAL);
+  const [errors, setErrors] = useState<Partial<Record<keyof SaasTituloFormData, string>>>({});
 
   const { data: planosRes } = useQuery({
     queryKey: ['saas-planos-select'],
@@ -46,10 +49,18 @@ const SaasTituloFormModal: React.FC<Props> = ({ show, onClose, onSuccess, empres
     enabled: show && !!empresaId,
   });
 
-  const planos = useMemo(() => (Array.isArray((planosRes as { data?: unknown[] })?.data) ? (planosRes as { data: unknown[] }).data : []) as { id: number; nome: string; valor_mensal?: number }[], [planosRes]);
+  const planos = useMemo(
+    () =>
+      (Array.isArray((planosRes as { data?: unknown[] })?.data)
+        ? (planosRes as { data: unknown[] }).data
+        : []) as { id: number; nome: string; valor_mensal?: number }[],
+    [planosRes]
+  );
 
   const bancosAtivos = useMemo(() => {
-    const raw = bancosRes?.data as { data?: { id: number; nome?: string; banco: string; ativo?: boolean }[] } | undefined;
+    const raw = bancosRes?.data as
+      | { data?: { id: number; nome?: string; banco: string; ativo?: boolean }[] }
+      | undefined;
     const list = raw?.data ?? [];
     return list.filter((b) => b.ativo !== false) as { id: number; nome?: string; banco: string }[];
   }, [bancosRes]);
@@ -59,7 +70,13 @@ const SaasTituloFormModal: React.FC<Props> = ({ show, onClose, onSuccess, empres
     d.setMonth(d.getMonth() + 1);
     return d.toISOString().slice(0, 10);
   }, []);
-  useFormReset({ show, initialData: { ...INITIAL, data_vencimento: defaultDataVencimento }, setFormData: setForm, setErrors });
+
+  useFormReset({
+    show,
+    initialData: { ...INITIAL, data_vencimento: defaultDataVencimento },
+    setFormData: setForm,
+    setErrors,
+  });
 
   const createMutation = useMutation({
     mutationFn: (d: Partial<SaasTitulo>) => saasTituloService.create(d),
@@ -74,14 +91,31 @@ const SaasTituloFormModal: React.FC<Props> = ({ show, onClose, onSuccess, empres
 
   const isPending = createMutation.isPending;
 
+  const handleChange = useCallback(
+    <K extends keyof SaasTituloFormData>(field: K, value: SaasTituloFormData[K]) => {
+      setForm((prev) => ({ ...prev, [field]: value }));
+      if (errors[field]) {
+        setErrors((prev) => {
+          const next = { ...prev };
+          delete next[field];
+          return next;
+        });
+      }
+    },
+    [errors]
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const errs: Partial<Record<keyof Form, string>> = {};
+    const errs: Partial<Record<keyof SaasTituloFormData, string>> = {};
     if (form.plano_id === '') errs.plano_id = t('form.required');
     if (form.banco_id === '') errs.banco_id = t('form.required');
     if (form.valor === '' || Number(form.valor) < 0.01) errs.valor = t('form.required');
     if (!form.data_vencimento.trim()) errs.data_vencimento = t('form.required');
-    if (Object.keys(errs).length) { setErrors(errs); return; }
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      return;
+    }
     setErrors({});
     try {
       const payload: Partial<SaasTitulo> = {
@@ -96,44 +130,37 @@ const SaasTituloFormModal: React.FC<Props> = ({ show, onClose, onSuccess, empres
         is_avulso: true,
       };
       await createMutation.mutateAsync(payload);
-    } catch { /* tratado no mutation */ }
+    } catch {
+      // tratado no mutation
+    }
   };
 
-  const planoOptions = (planos as { id: number; nome: string }[]).map((p) => ({ value: String(p.id), label: p.nome }));
-  const bancoOptions = bancosAtivos.map((b) => ({ value: String(b.id), label: b.nome || b.banco }));
+  const planoOptions = planos.map((p) => ({ value: String(p.id), label: p.nome }));
+  const bancoOptions = bancosAtivos.map((b) => ({
+    value: String(b.id),
+    label: b.nome || b.banco,
+  }));
 
   return (
-    <DraggableModal show={show} onClose={onClose} title={t('modal.createTitle')} size="md" modalId="saas-titulo-form"
+    <DraggableModal
+      show={show}
+      onClose={onClose}
+      title={t('modal.createTitle')}
+      size="md"
+      modalId="saas-titulo-form"
       headerActions={
         <ModalFormActions onCancel={onClose} formId="saas-titulo-form-id" isPending={isPending} />
       }
     >
       <form id="saas-titulo-form-id" onSubmit={handleSubmit} style={{ padding: '16px' }}>
-        <div className="row g-2">
-          <div className="col-md-12">
-            <FormField name="plano_id" type="select" label={t('form.plan')} value={String(form.plano_id)}
-              onChange={(v) => { setForm((p) => ({ ...p, plano_id: v ? Number(v) : '' })); if (errors.plano_id) setErrors((e) => ({ ...e, plano_id: undefined })); }}
-              options={[{ value: '', label: '—' }, ...planoOptions]} required size="md" error={errors.plano_id} />
-          </div>
-          <div className="col-md-12">
-            <FormField name="banco_id" type="select" label={t('menu.banks')} value={String(form.banco_id)}
-              onChange={(v) => { setForm((p) => ({ ...p, banco_id: v ? Number(v) : '' })); if (errors.banco_id) setErrors((e) => ({ ...e, banco_id: undefined })); }}
-              options={[{ value: '', label: '—' }, ...bancoOptions]} required size="md" error={errors.banco_id} />
-          </div>
-          <div className="col-md-6">
-            <FormField name="valor" type="number" label={t('form.value')} value={form.valor === '' ? '' : form.valor}
-              onChange={(v) => setForm((p) => ({ ...p, valor: v !== '' && v != null ? Number(v) : '' }))}
-              min={0.01} step={0.01} required size="md" error={errors.valor} />
-          </div>
-          <div className="col-md-6">
-            <FormField name="data_vencimento" type="date" label={t('form.dueDate')} value={form.data_vencimento}
-              onChange={(v) => setForm((p) => ({ ...p, data_vencimento: String(v ?? '') }))} required size="md" error={errors.data_vencimento} />
-          </div>
-          <div className="col-md-12">
-            <FormField name="descricao" type="text" label={t('table.description')} value={form.descricao}
-              onChange={(v) => setForm((p) => ({ ...p, descricao: String(v ?? '') }))} size="md" />
-          </div>
-        </div>
+        <SaasTituloFormFields
+          form={form}
+          errors={errors}
+          onChange={handleChange}
+          planoOptions={planoOptions}
+          bancoOptions={bancoOptions}
+          disabled={isPending}
+        />
       </form>
     </DraggableModal>
   );

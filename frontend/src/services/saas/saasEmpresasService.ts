@@ -38,7 +38,8 @@ const buildParams = (f: Record<string, unknown>) => {
 export const saasEmpresasService = {
   list: (f: { page?: number; limit?: number; search?: string; searchField?: string; sortColumn?: string; sortDirection?: 'asc' | 'desc'; created_at_inicio?: string; created_at_fim?: string; plano_id?: number } = {}) =>
     defaultApiClient.get<SaasConfigListResponse<SaasEmpresa>>(`/saas/empresas?${buildParams(f)}`),
-  getById: (id: number) => defaultApiClient.get<ApiResponse<SaasEmpresa>>(`/saas/empresas/${id}`),
+  getById: (id: number): Promise<ApiResponse<SaasEmpresa>> =>
+    defaultApiClient.get<SaasEmpresa>(`/saas/empresas/${id}`),
   create: (d: Partial<SaasEmpresa>) => defaultApiClient.post('/saas/empresas', d),
   update: (id: number, d: Partial<SaasEmpresa>) => defaultApiClient.put(`/saas/empresas/${id}`, d),
   delete: (id: number) => defaultApiClient.delete(`/saas/empresas/${id}`),

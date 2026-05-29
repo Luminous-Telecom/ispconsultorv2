@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { useTableHeader } from 'contexts/TableHeaderContext';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { RecarregarButton, Spinner, VoltarButton } from 'components/ui';
+import Button from 'components/ui/Button';
 import SearchBar from 'components/ui/SearchBar';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -102,7 +103,8 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
         {/* Botão voltar */}
         <VoltarButton
           type="button"
-          className="btn btn-link p-0 me-3 responsive-dialog-back-btn responsive-dialog-btn-auto"
+          variant="ghost"
+          className="p-0 me-3 responsive-dialog-back-btn responsive-dialog-btn-auto"
           onClick={onClose}
         />
 
@@ -119,13 +121,15 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
             className="d-flex align-items-center flex-shrink-0 position-relative responsive-dialog-menu-container"
             ref={menuRef}
           >
-            <button
+            <Button
               type="button"
-              className="btn btn-link p-0 responsive-dialog-menu-btn responsive-dialog-btn-auto"
+              variant="ghost"
+              className="p-0 responsive-dialog-menu-btn responsive-dialog-btn-auto"
               onClick={() => setShowMenu(!showMenu)}
+              aria-label={t('layout.openMenu')}
             >
-              <i className="bi bi-three-dots-vertical"></i>
-            </button>
+              <i className="bi bi-three-dots-vertical" aria-hidden />
+            </Button>
 
             {/* Dropdown Menu */}
             {showMenu && (
@@ -334,13 +338,16 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
             searchFields={tableHeader.availableSearchFields}
             className="flex-grow-1"
           />
-          <button
+          <Button
             type="button"
-            className="btn btn-sm btn-link text-primary p-1 responsive-dialog-btn-auto"
+            variant="ghost"
+            size="sm"
+            className="text-primary p-1 responsive-dialog-btn-auto"
             onClick={() => tableHeader.setShowMobileSearch(false)}
+            aria-label={t('actions.cancel')}
           >
-            <i className="bi bi-x-lg"></i>
-          </button>
+            <i className="bi bi-x-lg" aria-hidden />
+          </Button>
         </div>
       )}
 
