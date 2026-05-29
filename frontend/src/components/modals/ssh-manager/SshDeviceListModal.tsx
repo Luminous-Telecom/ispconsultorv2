@@ -247,7 +247,6 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
         key: 'description',
         label: 'Descrição',
         sortable: true,
-        width: '180px',
         render: (item) => item.description ?? '-',
       },
     ],

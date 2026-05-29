@@ -12,6 +12,31 @@
   background-color: var(--bg-tertiary) !important;
 }
 
+/* Cabeçalho sortable: truncar rótulo, ícone sempre visível */
+.table thead th.sortable .table-column-header-content {
+  min-width: 0;
+  gap: 0.125rem;
+}
+
+.table thead th.sortable .text-truncate {
+  min-width: 0;
+}
+
+.table-resizable-enabled th[data-resizable="true"] {
+  padding-right: 0.75rem !important;
+}
+
+.table-sort-icon {
+  flex-shrink: 0;
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
+}
+
+.table thead th.sortable[data-sorted="true"] .table-sort-icon,
+.table thead th.sortable:hover .table-sort-icon {
+  color: var(--text-primary);
+}
+
 /* Redimensionamento Bootstrap-style */
 .table-resizable {
   table-layout: fixed;
@@ -323,12 +348,29 @@ label {
   color: var(--text-primary) !important;
 }
 
-/* Larguras específicas para colunas (ajustadas para serem ultra compactas) */
+/* Coluna ID: conteúdo completo, título sem "..." */
+.table th.col-id,
+.table td.col-id,
+colgroup col.col-id {
+  width: 1% !important;
+  min-width: 52px !important;
+  max-width: none !important;
+  white-space: nowrap !important;
+}
+
 .table th.col-id,
 .table td.col-id {
-  width: 42px !important;
-  min-width: 42px !important;
-  max-width: 42px !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+.table tbody td.col-id {
+  max-width: none !important;
+}
+
+.table thead th.col-id .text-truncate {
+  overflow: visible;
+  text-overflow: clip;
 }
 
 .table th.col-checkbox,

@@ -26,6 +26,7 @@ const TableColumn = <T extends { id: number | string }>({
   const { t } = useI18n();
   const isSorted = sortColumn === column.key;
   const isSortable = column.sortable !== false && onSort && column.key !== 'acoes' && column.key !== 'actions';
+  const isResizable = (column.resizable ?? true) && column.key !== 'acoes' && column.key !== 'actions';
   const wasResizingRef = useRef(false);
   const columnRef = useRef<HTMLTableHeaderCellElement>(null);
 
@@ -53,34 +54,6 @@ const TableColumn = <T extends { id: number | string }>({
     const currentWidth = Math.round(columnRef.current.getBoundingClientRect().width);
     onResizeStart(column.key, e.clientX, currentWidth);
   }, [column.key, onResizeStart]);
-
-  const getSortIcon = () => {
-    if (!isSortable) return null;
-
-    let iconClass = 'bi bi-chevron-expand';
-    let iconColor = '#6c757d';
-
-    if (isSorted) {
-      if (sortDirection === 'asc') {
-        iconClass = 'bi bi-chevron-up';
-        iconColor = '#495057';
-      } else {
-        iconClass = 'bi bi-chevron-down';
-        iconColor = '#495057';
-      }
-    }
-
-    return (
-      <i
-        className={iconClass}
-        style={{
-          fontSize: '0.625rem',
-          color: iconColor,
-          marginLeft: '0.125rem'
-        }}
-      />
-    );
-  };
 
   const minWidthFromTitle = useMemo(() => {
     if (!column.label) return 40;
@@ -124,6 +97,7 @@ const TableColumn = <T extends { id: number | string }>({
 
   const columnClasses = useMemo(() => {
     const classes: string[] = [];
+    if (column.key === 'id') classes.push('col-id');
     if (column.className) classes.push(column.className);
     if (column.align || column.headerAlign) {
       classes.push(`text-${column.headerAlign || column.align}`);
@@ -131,9 +105,13 @@ const TableColumn = <T extends { id: number | string }>({
     if (className) classes.push(className);
     if (columnWidth) classes.push('column-has-custom-width');
     return classes.join(' ');
-  }, [column.className, column.align, column.headerAlign, className, columnWidth]);
+  }, [column.key, column.className, column.align, column.headerAlign, className, columnWidth]);
 
-  const isResizable = (column.resizable ?? true) && column.key !== 'acoes' && column.key !== 'actions';
+  const sortIconClass = useMemo(() => {
+    if (!isSortable) return '';
+    if (!isSorted) return 'bi bi-chevron-expand';
+    return sortDirection === 'asc' ? 'bi bi-chevron-up' : 'bi bi-chevron-down';
+  }, [isSortable, isSorted, sortDirection]);
 
   useEffect(() => {
     if (!isResizing) {
@@ -157,9 +135,9 @@ const TableColumn = <T extends { id: number | string }>({
       data-resizable={isResizable ? 'true' : 'false'}
       data-column-width={columnWidth || ''}
     >
-      <div className="d-flex align-items-center">
-        <span>{column.label}</span>
-        {getSortIcon()}
+      <div className="d-flex align-items-center table-column-header-content">
+        <span className="text-truncate">{column.label}</span>
+        {isSortable && <i className={`${sortIconClass} table-sort-icon`} aria-hidden />}
       </div>
       {isResizable && (
         <div

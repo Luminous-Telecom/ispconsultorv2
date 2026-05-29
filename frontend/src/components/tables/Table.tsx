@@ -975,10 +975,11 @@ function Table<T extends { id: number | string }>({
         <col className="col-checkbox" style={{ width: CHECKBOX_COLUMN_WIDTH_PX }} />
       )}
       {visibleColumns.map(column => {
-        const widthPx = getColumnWidthPx(column);
+        const widthPx = column.key === 'id' ? undefined : getColumnWidthPx(column);
         return (
           <col
             key={column.key}
+            className={column.key === 'id' ? 'col-id' : undefined}
             style={widthPx != null ? { width: widthPx } : undefined}
           />
         );
@@ -1428,7 +1429,11 @@ function Table<T extends { id: number | string }>({
                   return (
                     <td
                       key={column.key}
-                      className={[column.align ? `text-${column.align}` : '', column.className].filter(Boolean).join(' ')}
+                      className={[
+                        column.key === 'id' ? 'col-id' : '',
+                        column.align ? `text-${column.align}` : '',
+                        column.className,
+                      ].filter(Boolean).join(' ')}
                       style={widthStyle}
                     >
                       {column.render ? column.render(item, index) : String(item[column.key as keyof T] || '')}
