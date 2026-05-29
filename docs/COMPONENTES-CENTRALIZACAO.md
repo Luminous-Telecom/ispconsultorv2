@@ -68,6 +68,9 @@ Use como base antes de criar componentes novos.
 | Recurso | Caminho | Variantes |
 |---------|---------|-----------|
 | `BlockdomiIpListModalCore` | `modals/blockdomi/` | `4` \| `6` (IPv4 / IPv6) |
+| `BlockdomiDominioListModalCore` | `modals/blockdomi/` | domínios (+ bulk edit, sync SEI) |
+| `BlockdomiIpFormModalCore` | `modals/blockdomi/` | `4` \| `6` (form IPv4 / IPv6) |
+| `blockdomiListCommonColumns` / `buildBlockdomiOficioBulkActions` | `modals/blockdomi/` | colunas e bulk ofícios compartilhados |
 
 **27 modais de listagem** usam `ListModal`; a maioria compõe `useEntityListModal` (RPKI e casos especiais usam `useTableFilters` + bulk próprio).
 
@@ -244,8 +247,8 @@ Duplicação quase 1:1. Modelo de referência: `logsModalRegistry.ts` + `modals/
 
 | Arquivo | Centralização |
 |---------|---------------|
-| `IPv4Modal.tsx` / `IPv6Modal.tsx` | Form compartilhado com validação por versão |
-| `DominioListModal.tsx` | Mesmo padrão de listagem; bulk edit separado |
+| `IPv4Modal.tsx` / `IPv6Modal.tsx` | → `BlockdomiIpFormModalCore` (`version={4\|6}`) |
+| `DominioListModal.tsx` | → `BlockdomiDominioListModalCore` (bulk edit + sync SEI) |
 | `DominioModal.tsx` | |
 | `DominioBulkEditModal.tsx` | |
 | `IpsPermitidosListModal.tsx` | ListModal |
@@ -475,7 +478,7 @@ Legenda: `[ ]` pendente · `[~]` parcial · `[x]` já centralizado
 - [x] `TipoCobrancaContratoListModal.tsx`
 - [x] `IPv4ListModal.tsx` → `BlockdomiIpListModalCore` (`version={4}`)
 - [x] `IPv6ListModal.tsx` → `BlockdomiIpListModalCore` (`version={6}`)
-- [x] `DominioListModal.tsx`
+- [x] `DominioListModal.tsx` → `BlockdomiDominioListModalCore`
 - [x] `IpsPermitidosListModal.tsx`
 - [x] `SshDeviceListModal.tsx`
 - [x] `NotaFiscalListModal.tsx`
