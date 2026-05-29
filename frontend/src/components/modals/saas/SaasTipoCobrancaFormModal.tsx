@@ -89,7 +89,7 @@ const SaasTipoCobrancaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, 
       <form id="saas-tipo-cobranca-form-id" onSubmit={handleSubmit} style={{ padding: '16px' }}>
         <div className="row g-1">
           <div className="col-md-12">
-            <FormField name="nome" type="text" label="Nome *" value={form.nome}
+            <FormField name="nome" type="text" label="Nome" value={form.nome}
               onChange={v => { setForm(p => ({ ...p, nome: String(v ?? '') })); if (errors.nome) setErrors(e => ({ ...e, nome: undefined })); }}
               required size="sm" error={errors.nome} />
           </div>

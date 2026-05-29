@@ -215,7 +215,7 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
 
         <div className="row">
           <div className="col-md-6 mb-3">
-            <label className="form-label">{t('form.operationNature')} *</label>
+            <label className="form-label">{t('form.operationNature')} <span className="text-danger ms-1">*</span></label>
             <input
               type="text"
               className={`form-control ${formErrors.natureza_operacao ? 'is-invalid' : ''}`}
@@ -264,7 +264,7 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
 
         <div className="row">
           <div className="col-md-6 mb-3">
-            <label className="form-label">{t('form.totalValue')} *</label>
+            <label className="form-label">{t('form.totalValue')} <span className="text-danger ms-1">*</span></label>
             <input
               type="text"
               className={`form-control ${formErrors.valor_total ? 'is-invalid' : ''}`}

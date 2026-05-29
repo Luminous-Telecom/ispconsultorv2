@@ -108,16 +108,16 @@ const SaasTenantUsuarioFormModal: React.FC<Props> = ({ show, onClose, onSuccess,
       <form id="saas-tenant-usuario-form-id" onSubmit={handleSubmit} className="p-3">
         <div className="row g-2">
           <div className="col-12">
-            <FormField name="nome" type="text" label={`${t('form.name')} *`} value={form.nome} onChange={(v) => { setForm(p => ({ ...p, nome: String(v ?? '') })); if (errors.nome) setErrors(e => ({ ...e, nome: undefined })); }} required size="sm" error={errors.nome} />
+            <FormField name="nome" type="text" label={t('form.name')} value={form.nome} onChange={(v) => { setForm(p => ({ ...p, nome: String(v ?? '') })); if (errors.nome) setErrors(e => ({ ...e, nome: undefined })); }} required size="sm" error={errors.nome} />
           </div>
           <div className="col-12">
-            <FormField name="email" type="email" label={`${t('form.email')} *`} value={form.email} onChange={(v) => { setForm(p => ({ ...p, email: String(v ?? '') })); if (errors.email) setErrors(e => ({ ...e, email: undefined })); }} required size="sm" error={errors.email} />
+            <FormField name="email" type="email" label={t('form.email')} value={form.email} onChange={(v) => { setForm(p => ({ ...p, email: String(v ?? '') })); if (errors.email) setErrors(e => ({ ...e, email: undefined })); }} required size="sm" error={errors.email} />
           </div>
           <div className="col-12">
             <FormField
               name="password"
               type="password"
-              label={isEditing ? t('user.newPassword') : `${t('form.password')} *`}
+              label={isEditing ? t('user.newPassword') : t('form.password')}
               value={form.password}
               onChange={(v) => { setForm(p => ({ ...p, password: String(v ?? '') })); if (errors.password) setErrors(e => ({ ...e, password: undefined })); }}
               required={!isEditing}

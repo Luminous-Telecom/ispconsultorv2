@@ -68,7 +68,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
               <FormField
                 name="senha"
                 type="password"
-                label={`${t('form.password')} ${!servidorAtivo?.data ? '*' : ''}`}
+                label={t('form.password')}
                 placeholder={servidorAtivo?.data ? t('emailServer.passwordHelp') : t('emailServer.passwordPlaceholder')}
                 required={!servidorAtivo?.data}
                 size="sm"

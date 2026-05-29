@@ -135,7 +135,7 @@ const SaasUsuarioFormModal: React.FC<Props> = ({ show, onClose, onSuccess, usuar
             <FormField
               name="nome"
               type="text"
-              label="Nome *"
+              label="Nome"
               value={form.nome}
               onChange={(v) => { setForm(p => ({ ...p, nome: String(v ?? '') })); if (errors.nome) setErrors(p => ({ ...p, nome: undefined })); }}
               required
@@ -147,7 +147,7 @@ const SaasUsuarioFormModal: React.FC<Props> = ({ show, onClose, onSuccess, usuar
             <FormField
               name="email"
               type="email"
-              label="Email *"
+              label="Email"
               value={form.email}
               onChange={(v) => { setForm(p => ({ ...p, email: String(v ?? '') })); if (errors.email) setErrors(p => ({ ...p, email: undefined })); }}
               required
@@ -159,7 +159,7 @@ const SaasUsuarioFormModal: React.FC<Props> = ({ show, onClose, onSuccess, usuar
             <FormField
               name="senha"
               type="password"
-              label={isEditing ? 'Nova Senha (deixe em branco para manter)' : 'Senha *'}
+              label={isEditing ? 'Nova Senha (deixe em branco para manter)' : 'Senha'}
               value={form.senha}
               onChange={(v) => { setForm(p => ({ ...p, senha: String(v ?? '') })); if (errors.senha) setErrors(p => ({ ...p, senha: undefined })); }}
               required={!isEditing}

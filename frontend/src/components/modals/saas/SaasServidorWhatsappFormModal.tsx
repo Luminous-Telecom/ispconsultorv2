@@ -83,12 +83,12 @@ const SaasServidorWhatsappFormModal: React.FC<Props> = ({ show, onClose, onSucce
       <form id="saas-servidor-whatsapp-form-id" onSubmit={handleSubmit} style={{ padding: '16px' }}>
         <div className="row g-1">
           <div className="col-md-12">
-            <FormField name="nome" type="text" label="Nome *" value={form.nome}
+            <FormField name="nome" type="text" label="Nome" value={form.nome}
               onChange={v => { setForm(p => ({ ...p, nome: String(v ?? '') })); if (errors.nome) setErrors(p => ({ ...p, nome: undefined })); }}
               required size="sm" error={errors.nome} />
           </div>
           <div className="col-12">
-            <FormField name="url_api" type="text" label="URL da API *" value={form.url_api}
+            <FormField name="url_api" type="text" label="URL da API" value={form.url_api}
               onChange={v => { setForm(p => ({ ...p, url_api: String(v ?? '') })); if (errors.url_api) setErrors(p => ({ ...p, url_api: undefined })); }}
               required size="sm" error={errors.url_api} />
           </div>

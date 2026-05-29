@@ -122,7 +122,7 @@ const SaasPlanos: React.FC = () => {
             <form onSubmit={handleSave}>
               <div className="row g-3">
                 <div className="col-md-6">
-                  <label className="form-label">Nome *</label>
+                  <label className="form-label">Nome <span className="text-danger ms-1">*</span></label>
                   <input
                     type="text"
                     className="form-control"
@@ -132,7 +132,7 @@ const SaasPlanos: React.FC = () => {
                   />
                 </div>
                 <div className="col-md-3">
-                  <label className="form-label">Valor Mensal (R$) *</label>
+                  <label className="form-label">Valor Mensal (R$) <span className="text-danger ms-1">*</span></label>
                   <input
                     type="number"
                     className="form-control"

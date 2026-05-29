@@ -108,22 +108,22 @@ const SaasTituloFormModal: React.FC<Props> = ({ show, onClose, onSuccess, empres
       <form id="saas-titulo-form-id" onSubmit={handleSubmit} style={{ padding: '16px' }}>
         <div className="row g-2">
           <div className="col-md-12">
-            <FormField name="plano_id" type="select" label={`${t('form.plan')} *`} value={String(form.plano_id)}
+            <FormField name="plano_id" type="select" label={t('form.plan')} value={String(form.plano_id)}
               onChange={(v) => { setForm((p) => ({ ...p, plano_id: v ? Number(v) : '' })); if (errors.plano_id) setErrors((e) => ({ ...e, plano_id: undefined })); }}
               options={[{ value: '', label: '—' }, ...planoOptions]} required size="md" error={errors.plano_id} />
           </div>
           <div className="col-md-12">
-            <FormField name="banco_id" type="select" label={`${t('menu.banks')} *`} value={String(form.banco_id)}
+            <FormField name="banco_id" type="select" label={t('menu.banks')} value={String(form.banco_id)}
               onChange={(v) => { setForm((p) => ({ ...p, banco_id: v ? Number(v) : '' })); if (errors.banco_id) setErrors((e) => ({ ...e, banco_id: undefined })); }}
               options={[{ value: '', label: '—' }, ...bancoOptions]} required size="md" error={errors.banco_id} />
           </div>
           <div className="col-md-6">
-            <FormField name="valor" type="number" label={`${t('form.value')} *`} value={form.valor === '' ? '' : form.valor}
+            <FormField name="valor" type="number" label={t('form.value')} value={form.valor === '' ? '' : form.valor}
               onChange={(v) => setForm((p) => ({ ...p, valor: v !== '' && v != null ? Number(v) : '' }))}
               min={0.01} step={0.01} required size="md" error={errors.valor} />
           </div>
           <div className="col-md-6">
-            <FormField name="data_vencimento" type="date" label={`${t('form.dueDate')} *`} value={form.data_vencimento}
+            <FormField name="data_vencimento" type="date" label={t('form.dueDate')} value={form.data_vencimento}
               onChange={(v) => setForm((p) => ({ ...p, data_vencimento: String(v ?? '') }))} required size="md" error={errors.data_vencimento} />
           </div>
           <div className="col-md-12">

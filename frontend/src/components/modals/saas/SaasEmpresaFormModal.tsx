@@ -653,7 +653,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
           {activeTab === 'dados-basicos' && (
             <div className="row g-2">
               <div className="col-md-6">
-                <FormField name="razao_social" type="text" label={`${t('company.razaoSocial')} *`} value={form.razao_social}
+                <FormField name="razao_social" type="text" label={t('company.razaoSocial')} value={form.razao_social}
                   onChange={v => handleInputChange('razao_social', String(v ?? ''))} required size="md" error={errors.razao_social} />
               </div>
               <div className="col-md-6">
@@ -661,11 +661,11 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                   onChange={v => setForm(p => ({ ...p, nome_fantasia: String(v ?? '') }))} size="md" />
               </div>
               <div className="col-md-4">
-                <FormField name="cnpj" type="text" label={`${t('form.cnpj')} *`} value={form.cnpj}
+                <FormField name="cnpj" type="text" label={t('form.cnpj')} value={form.cnpj}
                   onChange={v => handleInputChange('cnpj', String(v ?? ''))} required size="md" error={errors.cnpj} readOnly={isEditing} />
               </div>
               <div className="col-md-4">
-                <FormField name="responsavel_nome" type="text" label={`${t('tabs.responsible')} *`} value={form.responsavel_nome}
+                <FormField name="responsavel_nome" type="text" label={t('tabs.responsible')} value={form.responsavel_nome}
                   onChange={v => handleInputChange('responsavel_nome', String(v ?? ''))} required size="md" error={errors.responsavel_nome} />
               </div>
               <div className="col-md-4">
@@ -695,7 +695,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
           {activeTab === 'contato' && (
             <div className="row g-2">
               <div className="col-md-4">
-                <FormField name="email" type="email" label={`${t('form.email')} *`} value={form.email}
+                <FormField name="email" type="email" label={t('form.email')} value={form.email}
                   onChange={v => handleInputChange('email', String(v ?? ''))} required size="md" error={errors.email} />
               </div>
               <div className="col-md-4">

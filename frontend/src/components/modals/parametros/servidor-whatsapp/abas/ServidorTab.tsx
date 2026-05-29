@@ -86,7 +86,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                   <FormField
                     name="evolution_api_key"
                     type="password"
-                    label={`Token da Instância ${!servidorAtivo?.data ? '*' : ''}`}
+                    label="Token da Instância"
                     placeholder={servidorAtivo?.data ? "Deixe em branco para manter o token atual" : "Digite o token da instância"}
                     required={isEvolution && !servidorAtivo?.data}
                     size="sm"
@@ -108,7 +108,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                   <FormField
                     name="whatsapp_cloud_token"
                     type="password"
-                    label={`Token de Acesso ${!servidorAtivo?.data ? '*' : ''}`}
+                    label="Token de Acesso"
                     placeholder={servidorAtivo?.data ? "Deixe em branco para manter o token atual" : "Digite o token de acesso do WhatsApp Cloud API"}
                     required={isWhatsAppCloud && !servidorAtivo?.data}
                     size="sm"
@@ -125,7 +125,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                   <FormField
                     name="whatsapp_cloud_phone_number_id"
                     type="text"
-                    label="Phone Number ID *"
+                    label="Phone Number ID"
                     placeholder="123456789012345"
                     required={isWhatsAppCloud}
                     size="sm"

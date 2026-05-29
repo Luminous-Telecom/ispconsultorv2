@@ -257,7 +257,7 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
                     <FormField
                       name="nome"
                       type="text"
-                      label={`${t('table.planName')} *`}
+                      label={t('table.planName')}
                       value={form.nome}
                       onChange={(v) => { setForm(p => ({ ...p, nome: String(v ?? '') })); if (errors.nome) setErrors(p => ({ ...p, nome: undefined })); }}
                       required
@@ -281,7 +281,7 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
                     <FormField
                       name="valor_mensal"
                       type="number"
-                      label="Valor Mensal (R$) *"
+                      label="Valor Mensal (R$)"
                       value={form.valor_mensal}
                       onChange={(v) => { setForm(p => ({ ...p, valor_mensal: Number(v ?? 0) })); if (errors.valor_mensal) setErrors(p => ({ ...p, valor_mensal: undefined })); }}
                       min={0}
