@@ -60,6 +60,8 @@ Use como base antes de criar componentes novos.
 | `RecursosSistemaModalCore` | `modals/recursos/` | `erp` \| `saas` |
 | `ReceberModalCore` | `modals/receber/` | `erp` \| `saas` |
 | `SaasServidorListModalCore` | `modals/servidor/` | `email` \| `whatsapp` |
+| `RpkiLogsTableCore` | `modals/logs/rpki/` | `validation` \| `ca-pai` \| `repositorios` \| `roas` \| `aspas` |
+| `RotinaLogsModal` | `components/common/` | logs de rotina do agendador |
 
 **27 modais de listagem** usam `ListModal`; a maioria compõe `useEntityListModal` (RPKI e casos especiais usam `useTableFilters` + bulk próprio).
 
@@ -437,12 +439,12 @@ Fase 1 — ListModal + useEntityListModal ✅ (concluída)
 
 Fase 2 — Pares ERP/SaaS (em andamento)
   └── NFSeConfigSection + modais NFS-e ✅
-  └── RecursosSistemaModal
+  └── RecursosSistemaModal ✅
   └── ServidorTab + MensagensTab (email/whatsapp)
 
-Fase 4 — Logs
-  └── RPKI → logsModalRegistry
-  └── Renomear common/LogsModal → RotinaLogsModal
+Fase 4 — Logs (parcial)
+  └── RPKI → `RpkiLogsTableCore` + `rpkiLogsConfig` ✅
+  └── Renomear common/LogsModal → RotinaLogsModal ✅
 
 Fase 5 — Forms
   └── useEntityFormModal
@@ -511,12 +513,12 @@ Legenda: `[ ]` pendente · `[~]` parcial · `[x]` já centralizado
 ### Logs
 
 - [x] `modals/logs/LogsModal.tsx` + `logsModalRegistry.ts`
-- [ ] `RpkiRoaLogsModal.tsx` → merge
-- [ ] `RpkiAspaLogsModal.tsx` → merge
-- [ ] `RpkiValidationLogsModal.tsx` → merge
-- [ ] `RpkiRepositorioLogsModal.tsx` → merge
-- [ ] `RpkiCaPaiLogsModal.tsx` → merge
-- [ ] Renomear `common/LogsModal.tsx` → `RotinaLogsModal.tsx`
+- [x] `RpkiRoaLogsModal.tsx` → `RpkiLogsTableCore`
+- [x] `RpkiAspaLogsModal.tsx` → `RpkiLogsTableCore`
+- [x] `RpkiValidationLogsModal.tsx` → `RpkiLogsTableCore`
+- [x] `RpkiRepositorioLogsModal.tsx` → `RpkiLogsTableCore`
+- [x] `RpkiCaPaiLogsModal.tsx` → `RpkiLogsTableCore`
+- [x] Renomear `common/LogsModal.tsx` → `RotinaLogsModal.tsx` (re-export legado)
 
 ### Forms
 
