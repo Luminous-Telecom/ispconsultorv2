@@ -63,6 +63,12 @@ Use como base antes de criar componentes novos.
 | `RpkiLogsTableCore` | `modals/logs/rpki/` | `validation` \| `ca-pai` \| `repositorios` \| `roas` \| `aspas` |
 | `RotinaLogsModal` | `components/common/` | logs de rotina do agendador |
 
+### Novidades (Fase 3 — em andamento)
+
+| Recurso | Caminho | Variantes |
+|---------|---------|-----------|
+| `BlockdomiIpListModalCore` | `modals/blockdomi/` | `4` \| `6` (IPv4 / IPv6) |
+
 **27 modais de listagem** usam `ListModal`; a maioria compõe `useEntityListModal` (RPKI e casos especiais usam `useTableFilters` + bulk próprio).
 
 | Recurso | Caminho | Uso atual |
@@ -225,16 +231,14 @@ Duplicação quase 1:1. Modelo de referência: `logsModalRegistry.ts` + `modals/
 
 ### Duplicação forte
 
-| Arquivo | Linhas ~ | Diferença principal |
-|---------|----------|---------------------|
-| `IPv4ListModal.tsx` | 535 | `useIPv4s`, `IPv4Service`, `IPv4Modal` |
-| `IPv6ListModal.tsx` | 535 | `useIPv6s`, `IPv6Service`, `IPv6Modal` |
+### Listagem IPv4 / IPv6 — concluída
 
-**Proposta:** `BlockdomiIpListModal` genérico ou factory:
-
-```ts
-createBlockdomiIpListModal({ version: 4 | 6 })
-```
+| Arquivo | Papel |
+|---------|--------|
+| `BlockdomiIpListModalCore.tsx` | Lógica compartilhada (listagem, bulk, ofícios) |
+| `blockdomiIpListVariants.tsx` | Config por versão (`4` \| `6`) |
+| `blockdomiIpListColumns.tsx` | Colunas da tabela |
+| `IPv4ListModal.tsx` / `IPv6ListModal.tsx` | Wrappers finos (`version={4\|6}`) |
 
 ### Relacionados
 
@@ -469,8 +473,8 @@ Legenda: `[ ]` pendente · `[~]` parcial · `[x]` já centralizado
 - [x] `ClienteListModal.tsx`
 - [x] `AgentListModal.tsx`
 - [x] `TipoCobrancaContratoListModal.tsx`
-- [x] `IPv4ListModal.tsx`
-- [x] `IPv6ListModal.tsx`
+- [x] `IPv4ListModal.tsx` → `BlockdomiIpListModalCore` (`version={4}`)
+- [x] `IPv6ListModal.tsx` → `BlockdomiIpListModalCore` (`version={6}`)
 - [x] `DominioListModal.tsx`
 - [x] `IpsPermitidosListModal.tsx`
 - [x] `SshDeviceListModal.tsx`
