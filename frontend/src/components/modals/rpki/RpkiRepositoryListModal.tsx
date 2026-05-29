@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import Table from 'components/tables/Table';
-import { TableConfig } from 'components/tables/types';
+import ListModal from 'components/common/ListModal';
+import { ListModalConfig } from 'types/modal';
 import { useI18n } from 'contexts/I18nContext';
 import { useBulkBtn } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
@@ -57,6 +57,9 @@ function formatLastExchange(value: string | null): string {
 }
 
 const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = ({
+  show,
+  onClose,
+  skipWrapper = false,
   clienteIdFilter,
   tableTitle = 'Repositórios RPKI',
 }) => {
@@ -84,6 +87,16 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = ({
     searchDebounceMs: 250,
     resetPageOnFilterChange: true,
   });
+
+  const handleSearchChange = useCallback(
+    (search: string, field?: string) => {
+      tableFilters.setSearch(search);
+      if (field) {
+        tableFilters.setSearchField(field);
+      }
+    },
+    [tableFilters]
+  );
 
   const { cas, caIdsKey } = useRpkiCas(clienteIdFilter);
   const { data: clientes = [] } = useQuery({
@@ -179,8 +192,8 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = ({
   const to = total === 0 ? 0 : Math.min(safePage * perPage, total);
   const pagedRows = filtered.slice(from > 0 ? from - 1 : 0, to);
 
-  const columns: TableConfig<RepositoryRow>['columns'] = useMemo(() => {
-    const cols: TableConfig<RepositoryRow>['columns'] = [
+  const columns: ListModalConfig<RepositoryRow>['columns'] = useMemo(() => {
+    const cols: ListModalConfig<RepositoryRow>['columns'] = [
       { key: 'id', label: 'ID', sortable: true, width: '50px', render: (item) => item.id },
       { key: 'ca_nome', label: 'CA', sortable: true, width: '180px', render: (item) => item.ca_nome || '-' },
     ];
@@ -218,84 +231,82 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = ({
     return cols;
   }, [clienteIdFilter]);
 
+  const bulkActions = useMemo(
+    () => [
+      {
+        label: bulkBtn.novo.label,
+        variant: bulkBtn.novo.variant,
+        requiresSelection: false,
+        action: () => setShowCreateModal(true),
+      },
+      {
+        label: bulkBtn.deletar.label,
+        variant: bulkBtn.deletar.variant,
+        disabled: (selectedItems: RepositoryRow[]) => selectedItems.length === 0 && !selectedRow,
+        action: (selectedItems: RepositoryRow[]) => {
+          const target = selectedItems[0] || selectedRow;
+          if (!target) return;
+          if (!window.confirm(t('messages.confirmDelete'))) return;
+          deleteMutation.mutate({ caId: target.ca_id, repositoryId: target.id });
+        },
+      },
+      {
+        label: 'Atualizar',
+        disabled: (selectedItems: RepositoryRow[]) => selectedItems.length === 0 && !selectedRow,
+        action: (selectedItems: RepositoryRow[]) => {
+          const target = selectedItems[0] || selectedRow;
+          if (!target) return;
+          syncRepositoryMutation.mutate({ caId: target.ca_id, repositoryId: target.id });
+        },
+      },
+    ],
+    [bulkBtn, deleteMutation, selectedRow, syncRepositoryMutation, t]
+  );
+
   return (
     <>
-      <Table
-            title={tableTitle}
-            config={{
-              columns,
-              data: pagedRows,
-              loading: isLoading || deleteMutation.isPending || syncRepositoryMutation.isPending,
-              searchable: true,
-              searchPlaceholder: 'Buscar...',
-              searchFields: [
-                { key: 'id', label: 'ID' },
-                { key: 'ca_nome', label: 'CA' },
-                { key: 'cliente_nome', label: 'Cliente' },
-                { key: 'repository_name', label: 'Publisher Handle' },
-                { key: 'publication_status', label: 'Status' },
-              ],
-              sortable: true,
-              sortColumn: tableFilters.sortColumn,
-              sortDirection: tableFilters.sortDirection,
-              striped: true,
-              hover: true,
-              responsive: true,
-              selectable: true,
-              multiSelect: false,
-              emptyMessage: 'Nenhum repositório encontrado',
-              pagination: {
-                current_page: safePage,
-                last_page: lastPage,
-                per_page: perPage,
-                total,
-                from,
-                to,
-              },
-              bulkActions: [
-                {
-                  key: 'novo-repositorio',
-                  label: bulkBtn.novo.label,
-                  variant: bulkBtn.novo.variant,
-                  requiresSelection: false,
-                  onClick: () => setShowCreateModal(true),
-                },
-                {
-                  key: 'deletar-repositorio',
-                  label: bulkBtn.deletar.label,
-                  variant: bulkBtn.deletar.variant,
-                  disabled: (selectedItems: RepositoryRow[]) => selectedItems.length === 0 && !selectedRow,
-                  onClick: (selectedItems: RepositoryRow[]) => {
-                    const target = selectedItems[0] || selectedRow;
-                    if (!target) return;
-                    if (!window.confirm(t('messages.confirmDelete'))) return;
-                    deleteMutation.mutate({ caId: target.ca_id, repositoryId: target.id });
-                  },
-                },
-                {
-                  key: 'atualizar-repositorio',
-                  label: 'Atualizar',
-                  disabled: (selectedItems: RepositoryRow[]) => selectedItems.length === 0 && !selectedRow,
-                  onClick: (selectedItems: RepositoryRow[]) => {
-                    const target = selectedItems[0] || selectedRow;
-                    if (!target) return;
-                    syncRepositoryMutation.mutate({ caId: target.ca_id, repositoryId: target.id });
-                  },
-                },
-              ],
-            }}
-            tableId="rpki-repositories-list-modal"
-            syncWithHeader={false}
-            onSelectionChange={(items) => setSelectedRow(items[0] ?? null)}
-            onRefresh={refetch}
-            onAudit={handleAuditRepository}
-            auditEntity="RpkiRepository"
-            onPageChange={tableFilters.setPage}
-            onPageSizeChange={tableFilters.setLimit}
-            onSort={(column, direction) => tableFilters.setSort(column, direction)}
-            onSearch={(search) => tableFilters.setSearch(search)}
-            search={tableFilters.search}
-          />
+      <ListModal<RepositoryRow>
+        show={show}
+        onClose={onClose}
+        skipWrapper={skipWrapper}
+        config={{
+          title: tableTitle,
+          columns,
+          searchPlaceholder: 'Buscar...',
+          searchFields: [
+            { key: 'id', label: 'ID' },
+            { key: 'ca_nome', label: 'CA' },
+            { key: 'cliente_nome', label: 'Cliente' },
+            { key: 'repository_name', label: 'Publisher Handle' },
+            { key: 'publication_status', label: 'Status' },
+          ],
+          emptyMessage: 'Nenhum repositório encontrado',
+          multiSelect: false,
+        }}
+        data={pagedRows}
+        loading={isLoading || deleteMutation.isPending || syncRepositoryMutation.isPending}
+        search={tableFilters.search}
+        onSearchChange={handleSearchChange}
+        sortColumn={tableFilters.sortColumn}
+        sortDirection={tableFilters.sortDirection}
+        onSortChange={tableFilters.setSort}
+        pagination={{
+          current_page: safePage,
+          last_page: lastPage,
+          per_page: perPage,
+          total,
+          from,
+          to,
+        }}
+        onPageChange={tableFilters.setPage}
+        onLimitChange={tableFilters.setLimit}
+        onRefresh={refetch}
+        bulkActions={bulkActions}
+        onSelectionChange={(items) => setSelectedRow(items[0] ?? null)}
+        onAudit={handleAuditRepository}
+        auditEntity="RpkiRepository"
+        tableId="rpki-repositories-list-modal"
+      />
 
       <RpkiRepositoryCreateModal
         show={showCreateModal}
@@ -317,4 +328,3 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = ({
 };
 
 export default RpkiRepositoryListModal;
-

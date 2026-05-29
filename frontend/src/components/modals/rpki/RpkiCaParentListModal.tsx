@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import Table from 'components/tables/Table';
-import { TableConfig } from 'components/tables/types';
+import ListModal from 'components/common/ListModal';
+import { ListModalConfig } from 'types/modal';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { RpkiCaParent, RpkiCaResource, RpkiCaService } from 'services/rpkiCaService';
 import { ClienteService } from 'services/clienteService';
@@ -43,6 +43,9 @@ function getSortableValue(row: RpkiCaParent, sortKey: string): string {
 }
 
 const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
+  show,
+  onClose,
+  skipWrapper = false,
   clienteIdFilter,
   tableTitle = 'CAs-pai',
 }) => {
@@ -70,6 +73,16 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
     searchDebounceMs: 250,
     resetPageOnFilterChange: true,
   });
+
+  const handleSearchChange = useCallback(
+    (search: string, field?: string) => {
+      tableFilters.setSearch(search);
+      if (field) {
+        tableFilters.setSearchField(field);
+      }
+    },
+    [tableFilters]
+  );
 
   const { cas, caIdsKey } = useRpkiCas(clienteIdFilter);
   const { data: clientes = [] } = useQuery({
@@ -178,8 +191,8 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
   const to = total === 0 ? 0 : Math.min(safePage * perPage, total);
   const pagedRows = filtered.slice(from > 0 ? from - 1 : 0, to);
 
-  const columns: TableConfig<RpkiCaParent>['columns'] = useMemo(() => {
-    const cols: TableConfig<RpkiCaParent>['columns'] = [
+  const columns: ListModalConfig<RpkiCaParent>['columns'] = useMemo(() => {
+    const cols: ListModalConfig<RpkiCaParent>['columns'] = [
       { key: 'id', label: 'ID', sortable: true, width: '50px', render: (item) => item.id },
       {
         key: 'ca_id',
@@ -270,86 +283,84 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
     return cols;
   }, [caById, clienteIdFilter, clienteNomeById, resourcesByCa]);
 
+  const bulkActions = useMemo(
+    () => [
+      {
+        label: bulkBtn.novo.label,
+        variant: bulkBtn.novo.variant,
+        requiresSelection: false,
+        action: () => setShowCreateModal(true),
+      },
+      {
+        label: bulkBtn.deletar.label,
+        variant: bulkBtn.deletar.variant,
+        disabled: (selectedItems: RpkiCaParent[]) =>
+          selectedItems.length === 0 && !selectedParent,
+        action: (selectedItems: RpkiCaParent[]) => {
+          const target = selectedItems[0] || selectedParent;
+          if (!target) return;
+          if (!window.confirm(t('messages.confirmDelete'))) return;
+          deleteMutation.mutate({ caId: target.ca_id, parentId: target.id });
+        },
+      },
+      {
+        label: 'Sincronizar',
+        disabled: (selectedItems: RpkiCaParent[]) =>
+          selectedItems.length === 0 && !selectedParent,
+        action: (selectedItems: RpkiCaParent[]) => {
+          const target = selectedItems[0] || selectedParent;
+          if (!target) return;
+          syncResourcesMutation.mutate({ caId: target.ca_id, parentId: target.id });
+        },
+      },
+    ],
+    [bulkBtn, deleteMutation, selectedParent, syncResourcesMutation, t]
+  );
+
   return (
     <>
-      <Table
-            title={tableTitle}
-            config={{
-              columns,
-              data: pagedRows,
-              loading: isLoading || deleteMutation.isPending || syncResourcesMutation.isPending,
-              searchable: true,
-              searchPlaceholder: 'Buscar...',
-              searchFields: [
-                { key: 'id', label: 'ID' },
-                { key: 'parent_name', label: 'Nome da CA-pai' },
-                { key: 'parent_handle', label: 'Parent Handle' },
-                { key: 'child_handle', label: 'Child Handle' },
-                { key: 'provisioning_status', label: 'Status' },
-              ],
-              sortable: true,
-              sortColumn: tableFilters.sortColumn,
-              sortDirection: tableFilters.sortDirection,
-              striped: true,
-              hover: true,
-              responsive: true,
-              selectable: true,
-              multiSelect: false,
-              emptyMessage: 'Nenhuma CA-pai encontrada',
-              pagination: {
-                current_page: safePage,
-                last_page: lastPage,
-                per_page: perPage,
-                total,
-                from,
-                to,
-              },
-              bulkActions: [
-                {
-                  key: 'novo-ca-pai',
-                  label: bulkBtn.novo.label,
-                  variant: bulkBtn.novo.variant,
-                  requiresSelection: false,
-                  onClick: () => setShowCreateModal(true),
-                },
-                {
-                  key: 'deletar-ca-pai',
-                  label: bulkBtn.deletar.label,
-                  variant: bulkBtn.deletar.variant,
-                  disabled: (selectedItems: RpkiCaParent[]) =>
-                    selectedItems.length === 0 && !selectedParent,
-                  onClick: (selectedItems: RpkiCaParent[]) => {
-                    const target = selectedItems[0] || selectedParent;
-                    if (!target) return;
-                    if (!window.confirm(t('messages.confirmDelete'))) return;
-                    deleteMutation.mutate({ caId: target.ca_id, parentId: target.id });
-                  },
-                },
-                {
-                  key: 'sincronizar-recursos-ca-pai',
-                  label: 'Sincronizar',
-                  disabled: (selectedItems: RpkiCaParent[]) =>
-                    selectedItems.length === 0 && !selectedParent,
-                  onClick: (selectedItems: RpkiCaParent[]) => {
-                    const target = selectedItems[0] || selectedParent;
-                    if (!target) return;
-                    syncResourcesMutation.mutate({ caId: target.ca_id, parentId: target.id });
-                  },
-                },
-              ],
-            }}
-            tableId="rpki-ca-parents-list-modal"
-            syncWithHeader={false}
-            onSelectionChange={(items) => setSelectedParent(items[0] ?? null)}
-            onRefresh={refetch}
-            onAudit={handleAuditParent}
-            auditEntity="RpkiCaParent"
-            onPageChange={tableFilters.setPage}
-            onPageSizeChange={tableFilters.setLimit}
-            onSort={(column, direction) => tableFilters.setSort(column, direction)}
-            onSearch={(search) => tableFilters.setSearch(search)}
-            search={tableFilters.search}
-          />
+      <ListModal<RpkiCaParent>
+        show={show}
+        onClose={onClose}
+        skipWrapper={skipWrapper}
+        config={{
+          title: tableTitle,
+          columns,
+          searchPlaceholder: 'Buscar...',
+          searchFields: [
+            { key: 'id', label: 'ID' },
+            { key: 'parent_name', label: 'Nome da CA-pai' },
+            { key: 'parent_handle', label: 'Parent Handle' },
+            { key: 'child_handle', label: 'Child Handle' },
+            { key: 'provisioning_status', label: 'Status' },
+          ],
+          emptyMessage: 'Nenhuma CA-pai encontrada',
+          multiSelect: false,
+        }}
+        data={pagedRows}
+        loading={isLoading || deleteMutation.isPending || syncResourcesMutation.isPending}
+        search={tableFilters.search}
+        onSearchChange={handleSearchChange}
+        sortColumn={tableFilters.sortColumn}
+        sortDirection={tableFilters.sortDirection}
+        onSortChange={tableFilters.setSort}
+        pagination={{
+          current_page: safePage,
+          last_page: lastPage,
+          per_page: perPage,
+          total,
+          from,
+          to,
+        }}
+        onPageChange={tableFilters.setPage}
+        onLimitChange={tableFilters.setLimit}
+        onRefresh={refetch}
+        bulkActions={bulkActions}
+        onSelectionChange={(items) => setSelectedParent(items[0] ?? null)}
+        onAudit={handleAuditParent}
+        auditEntity="RpkiCaParent"
+        tableId="rpki-ca-parents-list-modal"
+      />
 
       <RpkiCaParentCreateModal
         show={showCreateModal}

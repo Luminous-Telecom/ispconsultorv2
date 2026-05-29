@@ -6,13 +6,13 @@ import { TituloItem } from 'types/cliente';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
-import { useTableFilters } from 'hooks/useTableFilters';
+import { useEntityListModal } from 'hooks/useEntityListModal';
 import { TituloService } from 'services/tituloService';
 import { saasTituloService, type SaasTitulo } from 'services/saas/saasCrudService';
 import { formatDate, formatDateTime } from 'utils/formatters';
-import DraggableModal from 'components/common/DraggableModal';
-import Table from 'components/tables/Table';
-import { TableConfig, BulkAction } from 'components/tables/types';
+import ListModal from 'components/common/ListModal';
+import { ListModalConfig } from 'types/modal';
+import { BulkAction } from 'components/tables/types';
 import { TituloModal } from 'components/modals/titulos';
 import ReceberModal from 'components/modals/pagamentos/ReceberModal';
 import { useI18n } from 'contexts/I18nContext';
@@ -20,7 +20,6 @@ import { useBulkBtn } from 'components/ui';
 import ImprimirModal from 'components/common/ImprimirModal';
 import GerarNFeModal from 'components/modals/notas-fiscais/GerarNFeModal';
 import { useIsMobile } from 'hooks/useMediaQuery';
-import { useAuditoria } from 'hooks/useAuditoria';
 
 type TituloItemUnion = Titulo | SaasTitulo;
 
@@ -48,16 +47,11 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
   const { t } = useI18n();
   const bulkBtn = useBulkBtn();
   const isMobile = useIsMobile();
-  const tableFilters = useTableFilters({
-    initialSearch: '',
-    initialPage: 1,
-    initialLimit: 15,
-    initialSortColumn: 'id',
-    initialSortDirection: 'desc',
-    searchDebounceMs: 300,
-    resetPageOnFilterChange: true,
+  const list = useEntityListModal<TituloItemUnion>({
+    onClose,
+    onSelect: onSelectTitulo,
   });
-  const { setPage, clearSearch } = tableFilters;
+  const { setPage, clearSearch } = list.tableFilters;
   
   const [selectedItems, setSelectedItems] = useState<TituloItemUnion[]>([]);
   const [showCancelados, setShowCancelados] = useState(false);
@@ -106,11 +100,12 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
   const queryClient = useQueryClient();
-  const auditoria = useAuditoria();
-
-  const handleAudit = (item: TituloItemUnion) => {
-    auditoria.handleAudit(isSaas ? 'SaasTitulo' : 'Titulo', item.id);
-  };
+  const handleAudit = useCallback(
+    (item: TituloItemUnion) => {
+      list.auditoria.handleAudit(isSaas ? 'SaasTitulo' : 'Titulo', item.id);
+    },
+    [list.auditoria, isSaas]
+  );
   
   // Resetar página quando filtros específicos mudarem
   useEffect(() => {
@@ -139,10 +134,10 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
   const vencimentoFim = dataVencimentoFim || initialFilters?.data_vencimento_fim || '';
 
   const filters: TituloFilters = {
-    page: tableFilters.page,
-    limit: tableFilters.limit,
-    search: tableFilters.debouncedSearch || undefined,
-    searchField: tableFilters.searchField || undefined,
+    page: list.tableFilters.page,
+    limit: list.tableFilters.limit,
+    search: list.tableFilters.debouncedSearch || undefined,
+    searchField: list.tableFilters.searchField || undefined,
     ...(statusFilter && { status: statusFilter }),
     ...(filterByPaymentDate
       ? {
@@ -153,19 +148,19 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
           ...(vencimentoInicio ? { data_vencimento_inicio: vencimentoInicio } : {}),
           ...(vencimentoFim ? { data_vencimento_fim: vencimentoFim } : {})
         }),
-    sortColumn: tableFilters.apiParams.sortColumn,
-    sortDirection: tableFilters.apiParams.sortDirection
+    sortColumn: list.tableFilters.apiParams.sortColumn,
+    sortDirection: list.tableFilters.apiParams.sortDirection
   };
 
   const { data: titulosData, isLoading, refetch } = useTitulosFinanceiro(filters, !isSaas);
   const { data: saasData, isLoading: saasLoading, refetch: saasRefetch } = useQuery({
-    queryKey: ['saas-titulos', tableFilters.page, tableFilters.limit, tableFilters.debouncedSearch, tableFilters.sortColumn, tableFilters.sortDirection, showCancelados, pagamentoInicio, pagamentoFim, vencimentoInicio, vencimentoFim, statusFilter, filterByPaymentDate],
+    queryKey: ['saas-titulos', list.tableFilters.page, list.tableFilters.limit, list.tableFilters.debouncedSearch, list.tableFilters.sortColumn, list.tableFilters.sortDirection, showCancelados, pagamentoInicio, pagamentoFim, vencimentoInicio, vencimentoFim, statusFilter, filterByPaymentDate],
     queryFn: () => saasTituloService.list({
-      page: tableFilters.page,
-      limit: tableFilters.limit,
-      search: tableFilters.debouncedSearch || undefined,
-      sortColumn: tableFilters.sortColumn,
-      sortDirection: tableFilters.sortDirection,
+      page: list.tableFilters.page,
+      limit: list.tableFilters.limit,
+      search: list.tableFilters.debouncedSearch || undefined,
+      sortColumn: list.tableFilters.sortColumn,
+      sortDirection: list.tableFilters.sortDirection,
       ...(statusFilter && { status: statusFilter }),
       ...(filterByPaymentDate
         ? {
@@ -240,14 +235,14 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
     }
     if (!titulosData || !titulosData.pagination) return undefined;
     const pag = titulosData.pagination;
-    const currentPage = typeof pag.current_page === 'number' ? pag.current_page : tableFilters.page;
-    const perPage = tableFilters.limit;
+    const currentPage = typeof pag.current_page === 'number' ? pag.current_page : list.tableFilters.page;
+    const perPage = list.tableFilters.limit;
     const total = typeof pag.total === 'number' ? pag.total : 0;
     const lastPage = total > 0 ? Math.ceil(total / perPage) : 1;
     const from = total > 0 ? ((currentPage - 1) * perPage) + 1 : 0;
     const to = total > 0 ? Math.min(currentPage * perPage, total) : 0;
     return { current_page: currentPage, last_page: lastPage, per_page: perPage, total, from, to };
-  }, [isSaas, saasData?.data, titulosData, tableFilters.limit, tableFilters.page]);
+  }, [isSaas, saasData?.data, titulosData, list.tableFilters.limit, list.tableFilters.page]);
 
 
   // Limpar filtros quando o modal fechar (inclui data inicial/final e busca)
@@ -443,7 +438,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
     }
   }, [titulos, showApiError, success, openPrintModal, t]);
 
-  const columns: TableConfig<TituloItemUnion>['columns'] = useMemo(() => [
+  const columns = useMemo((): ListModalConfig<TituloItemUnion>['columns'] => [
     {
       key: 'id',
       label: t('table.id'),
@@ -928,25 +923,6 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
     return actions;
   }, [isSaas, selectedItems, gerandoBoletoId, handleGerarBoletoSaas, handleDeleteSaas, handleCancelarSaas, handleEstornarSaas, handleImprimirSelecionadosSaas, handleImprimirTodosEmAbertoSaas, success, showApiError, handleRefreshData, handleImprimirSelecionados, handleImprimirTodosEmAberto, handleImprimirRecibos, hasNFSeEmitida, handleImprimirNFSe, getItensComNFSe, bulkBtn, t]);
 
-  const handleSearch = useCallback((term: string, field?: string) => {
-    // Usar setTimeout para evitar atualização durante render cycle
-    setTimeout(() => {
-      tableFilters.setSearch(term);
-      if (field) {
-        tableFilters.setSearchField(field);
-      }
-    }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setSearch, tableFilters.setSearchField]);
-
-  const handleSearchFieldChange = useCallback((field: string) => {
-    // Usar setTimeout para evitar atualização durante render cycle
-    setTimeout(() => {
-      tableFilters.setSearchField(field);
-    }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setSearchField]);
-
   const handleShowCanceladosChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setShowCancelados(e.target.checked);
   }, []);
@@ -959,191 +935,246 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
     setDataVencimentoFim(e.target.value);
   }, []);
 
-  const customControls = useMemo(() => (
-    <div className="form-check form-switch">
-      <input
-        className="form-check-input"
-        type="checkbox"
-        role="switch"
-        id="showCanceladosFinanceiro"
-        checked={showCancelados}
-        onChange={handleShowCanceladosChange}
-        style={{ cursor: 'pointer' }}
-      />
-      <label className="form-check-label" htmlFor="showCanceladosFinanceiro" style={{ cursor: 'pointer' }}>
-        {t('filter.showCanceled')}
-      </label>
-    </div>
-  ), [showCancelados, handleShowCanceladosChange, t]);
-
-  const customControlsAfterActions = useMemo(() => (
-    <div className="d-flex align-items-center gap-2">
-      <label htmlFor="dataVencimentoInicio" className="form-label mb-0 small">{t('filter.startDate')}</label>
-      <input
-        type="date"
-        id="dataVencimentoInicio"
-        className="form-control form-control-sm table-pagination-filter"
-        value={dataVencimentoInicio}
-        onChange={handleDataVencimentoInicioChange}
-      />
-      <label htmlFor="dataVencimentoFim" className="form-label mb-0 small">{t('filter.endDate')}</label>
-      <input
-        type="date"
-        id="dataVencimentoFim"
-        className="form-control form-control-sm table-pagination-filter"
-        value={dataVencimentoFim}
-        onChange={handleDataVencimentoFimChange}
-      />
-    </div>
-  ), [dataVencimentoInicio, dataVencimentoFim, handleDataVencimentoInicioChange, handleDataVencimentoFimChange, t]);
-
-  const tableConfig = useMemo(() => ({
-    columns: columnsToUse,
-    data: titulos,
-    loading: isLoadingData,
-    searchable: true,
-    searchPlaceholder: '',
-    searchField: 'id',
-    searchFields: isSaas
-      ? [{ key: 'numero_titulo', label: t('table.titleNumber') }, { key: 'id', label: t('table.id') }]
-      : [
-          { key: 'id', label: t('table.id') },
-          { key: 'numero_titulo', label: t('table.titleNumber') },
-          { key: 'cliente', label: t('table.client') },
-          { key: 'plano_nome', label: t('table.plan') },
-          { key: 'contrato_id', label: t('table.contract') },
-          { key: 'status', label: t('table.status') },
-          { key: 'valor', label: t('table.value') },
-          { key: 'valor_pago', label: t('table.paidValue') },
-          { key: 'charge_id', label: t('table.chargeId') },
-          { key: 'nosso_numero', label: t('table.ourNumber') },
-        ],
-    sortable: true,
-    sortColumn: tableFilters.sortColumn,
-    sortDirection: tableFilters.sortDirection,
-    striped: true,
-    hover: true,
-    responsive: true,
-    selectable: true,
-    multiSelect: !onSelectTitulo,
-    bulkActions: memoizedBulkActions.map((action: BulkAction<Titulo>) => {
-      let disabledFunc: ((selectedItems: Titulo[]) => boolean) | undefined;
-      if (action.disabled !== undefined) {
-        if (typeof action.disabled === 'function') {
-          disabledFunc = action.disabled;
-        } else if (typeof action.disabled === 'boolean') {
-          const disabledValue = action.disabled;
-          disabledFunc = () => disabledValue;
-        }
-      }
-      
-      return {
-        key: action.key,
-        label: action.label,
-        variant: action.variant,
-        onClick: action.onClick,
-        disabled: disabledFunc,
-        dropdown: action.dropdown
-      };
-    }),
-    emptyMessage: t('empty.noTitles'),
-    pagination: pagination ? {
-      current_page: pagination.current_page,
-      last_page: pagination.last_page,
-      per_page: pagination.per_page,
-      total: pagination.total,
-      from: pagination.from,
-      to: pagination.to
-    } : undefined,
-    customControls,
-    customControlsAfterActions
-  }), [
-    isSaas,
-    columnsToUse,
-    titulos,
-    isLoadingData,
-    onSelectTitulo,
-    memoizedBulkActions,
-    pagination,
-    customControls,
-    customControlsAfterActions,
-    tableFilters.sortColumn,
-    tableFilters.sortDirection,
-    t
-  ]);
-
-  const modalContent = (
-    <>
-    <Table<TituloItemUnion>
-            title={t('menu.accountsReceivable')}
-            config={tableConfig as TableConfig<TituloItemUnion>}
-            tableId="financeiro-modal"
-            onSelectionChange={setSelectedItems}
-            onSort={(column: string, direction: string) => {
-            // Atualizar os filtros do tableFilters
-            tableFilters.setSort(column, direction as 'asc' | 'desc');
-          }}
-            onSearch={handleSearch}
-            onSearchFieldChange={handleSearchFieldChange}
-            onPageChange={tableFilters.setPage}
-            onPageSizeChange={tableFilters.setLimit}
-            onRefresh={refetchData}
-            onAudit={handleAudit}
-            auditEntity={isSaas ? 'SaasTitulo' : 'Titulo'}
-            syncWithHeader={false}
-          />
-
-      {/* Resumo Financeiro - Fixo no final do modal */}
-      {filteredData.length > 0 && (
-        <div className={`d-flex justify-content-end align-items-center p-3 bg-light financeiro-resumo ${isMobile ? 'financeiro-resumo-container-mobile' : 'financeiro-resumo-container'}`} style={{ flexShrink: 0, marginTop: isMobile ? '0.25rem' : '0.5rem', marginBottom: 0, marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
-          <div className="d-flex flex-wrap gap-2 gap-md-4 justify-content-end">
-            <div className="text-end">
-              <div className="small text-muted">{t('summary.value')}</div>
-              <strong>{formatCurrency((filteredData as TituloItemUnion[]).reduce((sum: number, item: TituloItemUnion) => {
-                const v = 'valor' in item ? Number(item.valor) : Number((item as Titulo).valor_final || (item as Titulo).valor || 0);
-                return sum + v;
-              }, 0))}</strong>
-            </div>
-            <div className="text-end">
-              <div className="small text-muted">{t('summary.paidValue')}</div>
-              <strong>{formatCurrency((filteredData as TituloItemUnion[]).reduce((sum: number, item: TituloItemUnion) => {
-                if ('pago' in item && item.pago) return sum + Number(item.valor);
-                const vp = (item as Titulo).valor_pago;
-                if (vp != null && Number(vp) > 0) return sum + Number(vp);
-                return sum;
-              }, 0))}</strong>
-            </div>
-            <div className="text-end">
-              <div className="small text-muted">{t('summary.openValue')}</div>
-              <strong>{formatCurrency((filteredData as TituloItemUnion[]).reduce((sum: number, item: TituloItemUnion) => {
-                if (item.status === 'pago' || item.status === 'cancelado') return sum;
-                if ('pago' in item && (item as SaasTitulo).pago) return sum;
-                const v = Number((item as { valor?: number }).valor ?? (item as Titulo).valor_final ?? (item as Titulo).valor ?? 0);
-                const vp = (item as Titulo).valor_pago;
-                const valorAberto = vp != null ? v - Number(vp) : v;
-                return sum + (valorAberto > 0 ? valorAberto : v);
-              }, 0))}</strong>
-            </div>
-            {showCancelados && (
-              <div className="text-end">
-                <div className="small text-muted">{t('summary.canceledValue')}</div>
-                <strong>{formatCurrency((filteredData as TituloItemUnion[]).reduce((sum: number, item: TituloItemUnion) => {
-                  if (item.status !== 'cancelado') return sum;
-                  const v = 'valor' in item ? Number(item.valor) : Number((item as Titulo).valor_final || (item as Titulo).valor || 0);
-                  return sum + v;
-                }, 0))}</strong>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </>
+  const searchFields = useMemo(
+    () =>
+      isSaas
+        ? [
+            { key: 'numero_titulo', label: t('table.titleNumber') },
+            { key: 'id', label: t('table.id') },
+          ]
+        : [
+            { key: 'id', label: t('table.id') },
+            { key: 'numero_titulo', label: t('table.titleNumber') },
+            { key: 'cliente', label: t('table.client') },
+            { key: 'plano_nome', label: t('table.plan') },
+            { key: 'contrato_id', label: t('table.contract') },
+            { key: 'status', label: t('table.status') },
+            { key: 'valor', label: t('table.value') },
+            { key: 'valor_pago', label: t('table.paidValue') },
+            { key: 'charge_id', label: t('table.chargeId') },
+            { key: 'nosso_numero', label: t('table.ourNumber') },
+          ],
+    [isSaas, t]
   );
 
-  if (skipWrapper) {
-    return (
-      <>
-        {modalContent}
+  const bulkActions = useMemo(
+    () =>
+      memoizedBulkActions.map((action) => ({
+        label: action.label,
+        variant: action.variant,
+        action: (selectedItems: TituloItemUnion[]) => {
+          if (action.onClick) {
+            action.onClick(selectedItems);
+          }
+        },
+        disabled: action.disabled,
+        dropdown: action.dropdown?.map((item) => ({
+          label: item.label,
+          action: (selectedItems?: TituloItemUnion[]) => {
+            if (typeof item.action === 'function') {
+              item.action(selectedItems);
+            }
+          },
+          disabled: item.disabled,
+        })),
+      })),
+    [memoizedBulkActions]
+  );
+
+  const listPagination = useMemo(
+    () => list.buildPagination(pagination ?? undefined),
+    [list, pagination]
+  );
+
+  const handleModalClose = useCallback(() => {
+    list.clearSelection();
+    setSelectedItems([]);
+    onClose();
+  }, [list, onClose]);
+
+  const handleRowSelect = useCallback(
+    (item: TituloItemUnion) => {
+      onSelectTitulo?.(item as Titulo);
+      onClose();
+    },
+    [onSelectTitulo, onClose]
+  );
+
+  const customControlsAfterActions = useMemo(
+    () => (
+      <div className="d-flex align-items-center flex-wrap gap-2">
+        <div className="form-check form-switch mb-0">
+          <input
+            className="form-check-input"
+            type="checkbox"
+            role="switch"
+            id="showCanceladosFinanceiro"
+            checked={showCancelados}
+            onChange={handleShowCanceladosChange}
+            style={{ cursor: 'pointer' }}
+          />
+          <label
+            className="form-check-label"
+            htmlFor="showCanceladosFinanceiro"
+            style={{ cursor: 'pointer' }}
+          >
+            {t('filter.showCanceled')}
+          </label>
+        </div>
+        <label htmlFor="dataVencimentoInicio" className="form-label mb-0 small">
+          {t('filter.startDate')}
+        </label>
+        <input
+          type="date"
+          id="dataVencimentoInicio"
+          className="form-control form-control-sm table-pagination-filter"
+          value={dataVencimentoInicio}
+          onChange={handleDataVencimentoInicioChange}
+        />
+        <label htmlFor="dataVencimentoFim" className="form-label mb-0 small">
+          {t('filter.endDate')}
+        </label>
+        <input
+          type="date"
+          id="dataVencimentoFim"
+          className="form-control form-control-sm table-pagination-filter"
+          value={dataVencimentoFim}
+          onChange={handleDataVencimentoFimChange}
+        />
+      </div>
+    ),
+    [
+      showCancelados,
+      handleShowCanceladosChange,
+      dataVencimentoInicio,
+      dataVencimentoFim,
+      handleDataVencimentoInicioChange,
+      handleDataVencimentoFimChange,
+      t,
+    ]
+  );
+
+  const listModal = (
+    <ListModal<TituloItemUnion>
+      show={show}
+      onClose={handleModalClose}
+      skipWrapper={skipWrapper}
+      modalSize="xl"
+      config={{
+        title: t('menu.accountsReceivable'),
+        columns: columnsToUse,
+        searchPlaceholder: '',
+        searchFields,
+        emptyMessage: t('empty.noTitles'),
+        multiSelect: !onSelectTitulo,
+      }}
+      data={titulos}
+      loading={isLoadingData}
+      search={list.tableFilters.search}
+      onSearchChange={list.handleSearchChange}
+      onSearchFieldChange={list.tableFilters.setSearchField}
+      sortColumn={list.tableFilters.sortColumn}
+      sortDirection={list.tableFilters.sortDirection}
+      onSortChange={list.tableFilters.setSort}
+      pagination={listPagination}
+      onPageChange={list.tableFilters.setPage}
+      onLimitChange={list.tableFilters.setLimit}
+      onRefresh={refetchData}
+      bulkActions={bulkActions}
+      onSelectionChange={onSelectTitulo ? list.handleSelectionChange : setSelectedItems}
+      onRowClick={onSelectTitulo ? handleRowSelect : undefined}
+      onRowDoubleClick={onSelectTitulo ? handleRowSelect : undefined}
+      onAudit={handleAudit}
+      auditEntity={isSaas ? 'SaasTitulo' : 'Titulo'}
+      customControlsAfterActions={customControlsAfterActions}
+      tableId="financeiro-modal"
+      modalId="financeiro-modal"
+    />
+  );
+
+  const resumo =
+    filteredData.length > 0 ? (
+      <div
+        className={`d-flex justify-content-end align-items-center p-3 bg-light financeiro-resumo ${isMobile ? 'financeiro-resumo-container-mobile' : 'financeiro-resumo-container'}`}
+        style={{
+          flexShrink: 0,
+          marginTop: isMobile ? '0.25rem' : '0.5rem',
+          marginBottom: 0,
+          marginLeft: isMobile ? '0.5rem' : '1rem',
+          marginRight: isMobile ? '0.5rem' : '1rem',
+        }}
+      >
+        <div className="d-flex flex-wrap gap-2 gap-md-4 justify-content-end">
+          <div className="text-end">
+            <div className="small text-muted">{t('summary.value')}</div>
+            <strong>
+              {formatCurrency(
+                (filteredData as TituloItemUnion[]).reduce((sum: number, item: TituloItemUnion) => {
+                  const v =
+                    'valor' in item
+                      ? Number(item.valor)
+                      : Number((item as Titulo).valor_final || (item as Titulo).valor || 0);
+                  return sum + v;
+                }, 0)
+              )}
+            </strong>
+          </div>
+          <div className="text-end">
+            <div className="small text-muted">{t('summary.paidValue')}</div>
+            <strong>
+              {formatCurrency(
+                (filteredData as TituloItemUnion[]).reduce((sum: number, item: TituloItemUnion) => {
+                  if ('pago' in item && item.pago) return sum + Number(item.valor);
+                  const vp = (item as Titulo).valor_pago;
+                  if (vp != null && Number(vp) > 0) return sum + Number(vp);
+                  return sum;
+                }, 0)
+              )}
+            </strong>
+          </div>
+          <div className="text-end">
+            <div className="small text-muted">{t('summary.openValue')}</div>
+            <strong>
+              {formatCurrency(
+                (filteredData as TituloItemUnion[]).reduce((sum: number, item: TituloItemUnion) => {
+                  if (item.status === 'pago' || item.status === 'cancelado') return sum;
+                  if ('pago' in item && (item as SaasTitulo).pago) return sum;
+                  const v = Number(
+                    (item as { valor?: number }).valor ??
+                      (item as Titulo).valor_final ??
+                      (item as Titulo).valor ??
+                      0
+                  );
+                  const vp = (item as Titulo).valor_pago;
+                  const valorAberto = vp != null ? v - Number(vp) : v;
+                  return sum + (valorAberto > 0 ? valorAberto : v);
+                }, 0)
+              )}
+            </strong>
+          </div>
+          {showCancelados && (
+            <div className="text-end">
+              <div className="small text-muted">{t('summary.canceledValue')}</div>
+              <strong>
+                {formatCurrency(
+                  (filteredData as TituloItemUnion[]).reduce((sum: number, item: TituloItemUnion) => {
+                    if (item.status !== 'cancelado') return sum;
+                    const v =
+                      'valor' in item
+                        ? Number(item.valor)
+                        : Number((item as Titulo).valor_final || (item as Titulo).valor || 0);
+                    return sum + v;
+                  }, 0)
+                )}
+              </strong>
+            </div>
+          )}
+        </div>
+      </div>
+    ) : null;
+
+  const auxiliaryModals = (
+    <>
         {!isSaas && showTituloEditModal && (
           <TituloModal
             show={showTituloEditModal}
@@ -1185,16 +1216,16 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
         />
 
         {/* Modal de Visualização de PDF de Auditoria */}
-        <ImprimirModal
-          show={auditoria.showPreview}
-          onClose={auditoria.handleClosePreview}
-          pdfUrl={auditoria.pdfUrl}
-          isGenerating={auditoria.isGeneratingPdf}
-          title={t('financial.executionLogs')}
-          modalId="auditoria-titulo-modal"
-        />
+      <ImprimirModal
+        show={list.auditoria.showPreview}
+        onClose={list.auditoria.handleClosePreview}
+        pdfUrl={list.auditoria.pdfUrl}
+        isGenerating={list.auditoria.isGeneratingPdf}
+        title={t('financial.executionLogs')}
+        modalId="auditoria-titulo-modal"
+      />
 
-        {!isSaas && (
+      {!isSaas && (
         <GerarNFeModal
           show={showGerarNFeModal}
           onClose={() => {
@@ -1202,117 +1233,36 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
             setSelectedTituloForNFe(null);
           }}
           cliente={selectedTituloForNFe?.cliente || undefined}
-          titulo={selectedTituloForNFe ? {
-            id: selectedTituloForNFe.id,
-            numero_titulo: selectedTituloForNFe.numero_titulo,
-            status: selectedTituloForNFe.status,
-            valor: selectedTituloForNFe.valor,
-            valor_parcela: selectedTituloForNFe.valor_final || selectedTituloForNFe.valor,
-            valor_pago: selectedTituloForNFe.valor_pago || null,
-            data_vencimento: selectedTituloForNFe.data_vencimento,
-            data_pagamento: selectedTituloForNFe.data_pagamento || null,
-            charge_id: selectedTituloForNFe.charge_id || null,
-            descricao: selectedTituloForNFe.descricao,
-            observacoes: selectedTituloForNFe.observacoes
-          } as TituloItem & { descricao?: string; observacoes?: string } : undefined}
+          titulo={
+            selectedTituloForNFe
+              ? ({
+                  id: selectedTituloForNFe.id,
+                  numero_titulo: selectedTituloForNFe.numero_titulo,
+                  status: selectedTituloForNFe.status,
+                  valor: selectedTituloForNFe.valor,
+                  valor_parcela: selectedTituloForNFe.valor_final || selectedTituloForNFe.valor,
+                  valor_pago: selectedTituloForNFe.valor_pago || null,
+                  data_vencimento: selectedTituloForNFe.data_vencimento,
+                  data_pagamento: selectedTituloForNFe.data_pagamento || null,
+                  charge_id: selectedTituloForNFe.charge_id || null,
+                  descricao: selectedTituloForNFe.descricao,
+                  observacoes: selectedTituloForNFe.observacoes,
+                } as TituloItem & { descricao?: string; observacoes?: string })
+              : undefined
+          }
           onSuccess={async () => {
             await handleRefreshData();
           }}
-        />)}
-
-
-      </>
-    );
-  }
+        />
+      )}
+    </>
+  );
 
   return (
     <>
-      <DraggableModal
-        show={show}
-        onClose={onClose}
-        title={t('menu.accountsReceivable')}
-        size="xl"
-        modalId="financeiro-modal"
-        className="no-padding"
-      >
-        {modalContent}
-      </DraggableModal>
-
-      {!isSaas && showTituloEditModal && (
-        <TituloModal
-          show={showTituloEditModal}
-          onClose={() => {
-            setShowTituloEditModal(false);
-            setSelectedTituloId(null);
-          }}
-          onSuccess={async () => {
-            await handleRefreshData();
-          }}
-          tituloId={selectedTituloId}
-        />
-      )}
-
-      {!isSaas && showReceberModal && selectedParcela && (
-        <ReceberModal
-          isOpen={showReceberModal}
-          onClose={() => {
-            setShowReceberModal(false);
-            setSelectedParcela(null);
-          }}
-          onSuccess={async () => {
-            await handleRefreshData();
-          }}
-          parcela={selectedParcela}
-        />
-      )}
-
-      <ImprimirModal
-        show={showImprimirModal}
-        onClose={() => {
-          setShowImprimirModal(false);
-          clearPdfUrl();
-        }}
-        pdfUrl={pdfUrl}
-        isGenerating={isGeneratingPdf}
-        title={t('document.viewDocument')}
-        modalId="financeiro-imprimir-modal"
-      />
-
-      {/* Modal de Visualização de PDF de Auditoria */}
-      <ImprimirModal
-        show={auditoria.showPreview}
-        onClose={auditoria.handleClosePreview}
-        pdfUrl={auditoria.pdfUrl}
-        isGenerating={auditoria.isGeneratingPdf}
-        title={t('financial.executionLogs')}
-        modalId="auditoria-titulo-modal"
-      />
-
-      {!isSaas && (
-      <GerarNFeModal
-        show={showGerarNFeModal}
-        onClose={() => {
-          setShowGerarNFeModal(false);
-          setSelectedTituloForNFe(null);
-        }}
-        cliente={selectedTituloForNFe?.cliente || undefined}
-        titulo={selectedTituloForNFe ? {
-          id: selectedTituloForNFe.id,
-          numero_titulo: selectedTituloForNFe.numero_titulo,
-          status: selectedTituloForNFe.status,
-          valor: selectedTituloForNFe.valor,
-          valor_parcela: selectedTituloForNFe.valor_final || selectedTituloForNFe.valor,
-          valor_pago: selectedTituloForNFe.valor_pago || null,
-          data_vencimento: selectedTituloForNFe.data_vencimento,
-          data_pagamento: selectedTituloForNFe.data_pagamento || null,
-          charge_id: selectedTituloForNFe.charge_id || null,
-          descricao: selectedTituloForNFe.descricao,
-          observacoes: selectedTituloForNFe.observacoes
-        } as TituloItem & { descricao?: string; observacoes?: string } : undefined}
-        onSuccess={async () => {
-          await handleRefreshData();
-        }}
-      />)}
+      {listModal}
+      {resumo}
+      {auxiliaryModals}
     </>
   );
 };

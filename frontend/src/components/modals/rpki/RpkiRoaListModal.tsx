@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import Table from 'components/tables/Table';
-import { TableConfig } from 'components/tables/types';
+import ListModal from 'components/common/ListModal';
+import { ListModalConfig } from 'types/modal';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
@@ -43,6 +43,8 @@ interface RpkiRoaListModalProps {
 
 const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({
   show,
+  onClose,
+  skipWrapper = false,
   clienteIdFilter,
   tableTitle = 'ROAs',
 }) => {
@@ -160,8 +162,8 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({
     };
   }, [show, cas, showApiError]);
 
-  const tableColumns: TableConfig<RpkiRoaRow>['columns'] = useMemo(() => {
-    const cols: TableConfig<RpkiRoaRow>['columns'] = [
+  const tableColumns: ListModalConfig<RpkiRoaRow>['columns'] = useMemo(() => {
+    const cols: ListModalConfig<RpkiRoaRow>['columns'] = [
       { key: 'id', label: 'ID', sortable: true, width: '42px', render: (item) => String(item.id ?? '-') },
       { key: 'ca_nome', label: 'CA', sortable: true, width: '180px', render: (item) => String(item.ca_nome ?? '-') },
     ];
@@ -396,37 +398,26 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({
 
   return (
     <>
-      <Table
-            title={tableTitle}
-            config={{
-              columns: tableColumns,
-              data: roasForTable,
-              loading: false,
-              searchable: true,
-              searchPlaceholder: 'Buscar...',
-              searchFields,
-              sortable: true,
-              striped: true,
-              hover: true,
-              responsive: true,
-              selectable: true,
-              multiSelect: false,
-              bulkActions: bulkActions.map((action) => ({
-                key: action.label.toLowerCase().replace(/\s+/g, '-'),
-                label: action.label,
-                requiresSelection: action.requiresSelection,
-                onClick: action.action,
-                disabled: action.disabled,
-                variant: action.variant,
-              })),
-              emptyMessage: 'Nenhum ROA encontrado',
-            }}
-            tableId="rpki-roas-list-modal"
-            syncWithHeader={false}
-            onRefresh={() => {}}
-            onAudit={handleAuditRoa}
-            auditEntity="RpkiRoa"
-          />
+      <ListModal<RpkiRoaRow>
+        show={show}
+        onClose={onClose}
+        skipWrapper={skipWrapper}
+        config={{
+          title: tableTitle,
+          columns: tableColumns,
+          searchPlaceholder: 'Buscar...',
+          searchFields,
+          emptyMessage: 'Nenhum ROA encontrado',
+          multiSelect: false,
+        }}
+        data={roasForTable}
+        loading={false}
+        bulkActions={bulkActions}
+        onRefresh={() => {}}
+        onAudit={handleAuditRoa}
+        auditEntity="RpkiRoa"
+        tableId="rpki-roas-list-modal"
+      />
 
       <RpkiRoaCreateEditModal
         show={showFormModal}

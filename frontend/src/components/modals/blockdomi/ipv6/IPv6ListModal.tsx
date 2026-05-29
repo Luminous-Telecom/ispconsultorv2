@@ -1,17 +1,13 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useIPv6s, useDeleteIPv6 } from 'hooks/useIPv6';
-import { useModalSelect } from 'hooks/useModalSelect';
-import { useTableFilters } from 'hooks/useTableFilters';
+import { useEntityListModal } from 'hooks/useEntityListModal';
 import { IPv6 } from 'types';
 import { useI18n } from 'contexts/I18nContext';
-import {useBulkBtn} from 'components/ui';
 import { formatDateTime, formatDate } from 'utils/formatters';
-import DraggableModal from 'components/common/DraggableModal';
-import Table from 'components/tables/Table';
-import { TableConfig } from 'components/tables/types';
+import ListModal from 'components/common/ListModal';
+import { ListModalConfig } from 'types/modal';
 import { IPv6Modal } from './index';
-import { useAuditoria } from 'hooks/useAuditoria';
 import ImprimirModal from 'components/common/ImprimirModal';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
@@ -26,482 +22,373 @@ interface IPv6ListModalProps {
   skipWrapper?: boolean;
 }
 
-const IPv6ListModal: React.FC<IPv6ListModalProps> = ({ 
-  show, 
-  onClose, 
+const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
+  show,
+  onClose,
   onSelectIPv6,
   title,
-  skipWrapper = false
+  skipWrapper = false,
 }) => {
   const { t } = useI18n();
-  const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedIPv6Id, setSelectedIPv6Id] = useState<number | null>(null);
-  
-  const auditoria = useAuditoria();
+
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
 
-  const tableFilters = useTableFilters({
-    initialSearch: '',
-    initialPage: 1,
-    initialLimit: 15,
-    searchDebounceMs: 300,
-    resetPageOnFilterChange: true,
+  const list = useEntityListModal<IPv6>({
+    onClose,
+    onSelect: onSelectIPv6,
   });
-  
-  const {
-    selectedItem,
-    handleSelectionChange,
-    clearSelection
-  } = useModalSelect<IPv6>(
-    onSelectIPv6 ? (ipv6) => {
-      onSelectIPv6(ipv6);
-      onClose();
-    } : undefined
-  );
-
-  const tableColumns: TableConfig<IPv6 & { created_at?: string; created_at_formatada?: string | null; updated_at?: string }>['columns'] = useMemo(() => [
-    {
-      key: 'id',
-      label: t('table.id'),
-      sortable: true,
-      width: '42px',
-      render: (item: IPv6) => <span>{item.id}</span>
-    },
-    {
-      key: 'ip',
-      label: 'IPv6',
-      sortable: true,
-      width: '200px',
-      render: (item: IPv6) => item.ip
-    },
-    {
-      key: 'versao',
-      label: t('blockdomi.versao'),
-      sortable: true,
-      width: '100px',
-      render: (item: IPv6) => item.versao || '-'
-    },
-    {
-      key: 'numero_sei_anatel',
-      label: t('blockdomi.numeroSeiAnatel'),
-      sortable: true,
-      width: '110px',
-      render: (item: IPv6) => item.numero_sei_anatel?.trim() || '-'
-    },
-    {
-      key: 'nome_oficio',
-      label: t('blockdomi.nomeOficio'),
-      sortable: true,
-      width: '220px',
-      render: (item: IPv6) => item.nome_oficio || '-'
-    },
-    {
-      key: 'data_inicio_bloqueio',
-      label: t('blockdomi.dataInicioBloqueio'),
-      sortable: true,
-      width: '130px',
-      render: (item: IPv6) => formatDate(item.data_inicio_bloqueio)
-    },
-    {
-      key: 'data_fim_bloqueio',
-      label: t('blockdomi.dataFimBloqueio'),
-      sortable: true,
-      width: '130px',
-      render: (item: IPv6) => formatDate(item.data_fim_bloqueio)
-    },
-    {
-      key: 'oficio_anatel',
-      label: t('blockdomi.oficioAnatel'),
-      sortable: true,
-      width: '100px',
-      sortValue: (item: IPv6) => (item.link_oficio_anatel?.trim() ? 1 : 0),
-      render: (item: IPv6) => item.link_oficio_anatel?.trim() ? t('ui.yes') : t('ui.no')
-    },
-    {
-      key: 'oficio_justica',
-      label: t('blockdomi.oficioJustica'),
-      sortable: true,
-      width: '100px',
-      sortValue: (item: IPv6) => (item.link_oficio_justica?.trim() ? 1 : 0),
-      render: (item: IPv6) => item.link_oficio_justica?.trim() ? t('ui.yes') : t('ui.no')
-    },
-    {
-      key: 'planilha_dominios',
-      label: t('blockdomi.planilhaDominios'),
-      sortable: true,
-      width: '100px',
-      sortValue: (item: IPv6) => (item.link_planilha_dominios?.trim() ? 1 : 0),
-      render: (item: IPv6) => item.link_planilha_dominios?.trim() ? t('ui.yes') : t('ui.no')
-    },
-    {
-      key: 'ativo',
-      label: t('table.status'),
-      sortable: true,
-      width: '80px',
-      badgeLabels: [t('status.active'), t('status.inactive')],
-      render: (item: IPv6) => (
-        <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
-          {item.ativo ? t('status.active') : t('status.inactive')}
-        </span>
-      )
-    },
-    {
-      key: 'descricao',
-      label: t('form.description'),
-      sortable: true,
-      width: '250px',
-      render: (item: IPv6) => item.descricao || '-'
-    },
-    {
-      key: 'created_at',
-      label: t('table.createdAt'),
-      sortable: true,
-      width: '130px',
-      render: (item: IPv6 & { created_at?: string; created_at_formatada?: string | null }) => {
-        if (item.created_at_formatada) {
-          return item.created_at_formatada;
-        }
-        return item.created_at ? formatDateTime(item.created_at) : '-';
-      }
-    },
-    {
-      key: 'updated_at',
-      label: t('table.updatedAt'),
-      sortable: true,
-      width: '130px',
-      render: (item: IPv6) => (item.updated_at ? formatDateTime(item.updated_at) : '-')
-    }
-  ], [t]);
 
   const defaultTitle = title || (onSelectIPv6 ? t('blockdomi.selectIPv6') : 'IPv6');
-  
-  const searchFields = [
-    { key: 'id', label: t('table.id') },
-    { key: 'ip', label: 'IPv6' },
-    { key: 'descricao', label: t('form.description') },
-    { key: 'nome_oficio', label: t('blockdomi.nomeOficio') },
-    { key: 'numero_sei_anatel', label: t('blockdomi.numeroSeiAnatel') }
-  ];
+
+  const resolveItems = useCallback(
+    (selectedItems: IPv6[]) => {
+      if (selectedItems.length > 0) return selectedItems;
+      return list.selectedItem ? [list.selectedItem] : [];
+    },
+    [list.selectedItem]
+  );
+
+  const columns = useMemo(
+    (): ListModalConfig<IPv6>['columns'] => [
+      {
+        key: 'id',
+        label: t('table.id'),
+        sortable: true,
+        width: '42px',
+        render: (item) => <span>{item.id}</span>,
+      },
+      {
+        key: 'ip',
+        label: 'IPv6',
+        sortable: true,
+        width: '200px',
+        render: (item) => item.ip,
+      },
+      {
+        key: 'versao',
+        label: t('blockdomi.versao'),
+        sortable: true,
+        width: '100px',
+        render: (item) => item.versao || '-',
+      },
+      {
+        key: 'numero_sei_anatel',
+        label: t('blockdomi.numeroSeiAnatel'),
+        sortable: true,
+        width: '110px',
+        render: (item) => item.numero_sei_anatel?.trim() || '-',
+      },
+      {
+        key: 'nome_oficio',
+        label: t('blockdomi.nomeOficio'),
+        sortable: true,
+        width: '220px',
+        render: (item) => item.nome_oficio || '-',
+      },
+      {
+        key: 'data_inicio_bloqueio',
+        label: t('blockdomi.dataInicioBloqueio'),
+        sortable: true,
+        width: '130px',
+        render: (item) => formatDate(item.data_inicio_bloqueio),
+      },
+      {
+        key: 'data_fim_bloqueio',
+        label: t('blockdomi.dataFimBloqueio'),
+        sortable: true,
+        width: '130px',
+        render: (item) => formatDate(item.data_fim_bloqueio),
+      },
+      {
+        key: 'oficio_anatel',
+        label: t('blockdomi.oficioAnatel'),
+        sortable: true,
+        width: '100px',
+        sortValue: (item) => (item.link_oficio_anatel?.trim() ? 1 : 0),
+        render: (item) => (item.link_oficio_anatel?.trim() ? t('ui.yes') : t('ui.no')),
+      },
+      {
+        key: 'oficio_justica',
+        label: t('blockdomi.oficioJustica'),
+        sortable: true,
+        width: '100px',
+        sortValue: (item) => (item.link_oficio_justica?.trim() ? 1 : 0),
+        render: (item) => (item.link_oficio_justica?.trim() ? t('ui.yes') : t('ui.no')),
+      },
+      {
+        key: 'planilha_dominios',
+        label: t('blockdomi.planilhaDominios'),
+        sortable: true,
+        width: '100px',
+        sortValue: (item) => (item.link_planilha_dominios?.trim() ? 1 : 0),
+        render: (item) => (item.link_planilha_dominios?.trim() ? t('ui.yes') : t('ui.no')),
+      },
+      {
+        key: 'ativo',
+        label: t('table.status'),
+        sortable: true,
+        width: '80px',
+        badgeLabels: [t('status.active'), t('status.inactive')],
+        render: (item) => (
+          <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
+            {item.ativo ? t('status.active') : t('status.inactive')}
+          </span>
+        ),
+      },
+      {
+        key: 'descricao',
+        label: t('form.description'),
+        sortable: true,
+        width: '250px',
+        render: (item) => item.descricao || '-',
+      },
+      {
+        key: 'created_at',
+        label: t('table.createdAt'),
+        sortable: true,
+        width: '130px',
+        render: (item) => {
+          const row = item as IPv6 & { created_at_formatada?: string | null; created_at?: string };
+          if (row.created_at_formatada) return row.created_at_formatada;
+          return row.created_at ? formatDateTime(row.created_at) : '-';
+        },
+      },
+      {
+        key: 'updated_at',
+        label: t('table.updatedAt'),
+        sortable: true,
+        width: '130px',
+        render: (item) => (item.updated_at ? formatDateTime(item.updated_at) : '-'),
+      },
+    ],
+    [t]
+  );
+
+  const searchFields = useMemo(
+    () => [
+      { key: 'id', label: t('table.id') },
+      { key: 'ip', label: 'IPv6' },
+      { key: 'descricao', label: t('form.description') },
+      { key: 'nome_oficio', label: t('blockdomi.nomeOficio') },
+      { key: 'numero_sei_anatel', label: t('blockdomi.numeroSeiAnatel') },
+    ],
+    [t]
+  );
 
   const { data: ipv6sData, isLoading, refetch } = useIPv6s({
-    search: tableFilters.debouncedSearch || undefined,
-    searchField: tableFilters.searchField || undefined,
-    page: tableFilters.page,
-    limit: tableFilters.limit,
-    sortColumn: tableFilters.sortColumn,
-    sortDirection: tableFilters.sortDirection
+    search: list.tableFilters.debouncedSearch || undefined,
+    searchField: list.tableFilters.searchField || undefined,
+    page: list.tableFilters.page,
+    limit: list.tableFilters.limit,
+    sortColumn: list.tableFilters.sortColumn,
+    sortDirection: list.tableFilters.sortDirection,
   });
 
   const deleteIPv6Mutation = useDeleteIPv6();
 
-  const pagination = useMemo(() => {
-    if (ipv6sData?.pagination && typeof ipv6sData.pagination === 'object') {
-      const pag = ipv6sData.pagination;
-      const total = pag.total ?? 0;
-      const perPage = pag.per_page ?? tableFilters.limit;
-      const currentPage = pag.current_page ?? tableFilters.page;
-      
-      let lastPage = pag.last_page;
-      if (!lastPage && total > 0) {
-        lastPage = Math.max(1, Math.ceil(total / perPage));
-      } else if (!lastPage) {
-        lastPage = 1;
-      }
-      
-      return {
-        current_page: currentPage,
-        last_page: lastPage,
-        per_page: perPage,
-        total: total,
-        from: pag.from ?? ((currentPage - 1) * perPage) + 1,
-        to: pag.to ?? Math.min(currentPage * perPage, total)
-      };
-    }
-    return {
-      current_page: tableFilters.page,
-      last_page: 1,
-      per_page: tableFilters.limit,
-      total: 0,
-      from: 0,
-      to: 0
-    };
-  }, [ipv6sData?.pagination, tableFilters.page, tableFilters.limit]);
-
-  const handleSelect = useCallback((selectedItems?: IPv6[]) => {
-    const item = selectedItems && selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-    if (item) {
-      clearSelection();
-      if (onSelectIPv6) {
-        onSelectIPv6(item);
-        onClose();
-      }
-    }
-  }, [selectedItem, clearSelection, onSelectIPv6, onClose]);
-
-  const handleDelete = useCallback(async (ipv6Id: number) => {
-    try {
-      await deleteIPv6Mutation.mutateAsync(ipv6Id);
-      clearSelection();
-      refetch();
-    } catch {
-      // Erro tratado pelo useNotificationContext
-    }
-  }, [deleteIPv6Mutation, clearSelection, refetch]);
-
-  const handleBulkDelete = useCallback(async (ids: number[]) => {
-    try {
-      const { deleted, versao } = await IPv6Service.bulkDelete(ids);
-      clearSelection();
-      refetch();
-      queryClient.invalidateQueries({ queryKey: ['ipv6'] });
-      success(`Excluído(s) ${deleted} IPv6. Versão da operação: ${versao}.`);
-    } catch (err: unknown) {
-      showApiError(err, CONTEXT_ERROR_MESSAGES.BLOCKDOMI_IPV6_DELETE_ERROR);
-    }
-  }, [clearSelection, refetch, queryClient, success, showApiError]);
-
-  const handleAudit = useCallback((ipv6: IPv6) => {
-    auditoria.handleAudit('IPv6', ipv6.id);
-  }, [auditoria]);
-
-  const bulkActions = useMemo(() => onSelectIPv6 ? [
-    {
-      label: bulkBtn.cancelar.label,
-      variant: bulkBtn.cancelar.variant,
-      action: () => {
-        clearSelection();
-        onClose();
+  const handleDelete = useCallback(
+    async (ipv6Id: number) => {
+      try {
+        await deleteIPv6Mutation.mutateAsync(ipv6Id);
+        list.clearSelection();
+        refetch();
+      } catch {
+        // Erro tratado pelo useNotificationContext
       }
     },
-    {
-      label: bulkBtn.selecionar.label,
-      variant: bulkBtn.selecionar.variant,
-      disabled: (selectedItems: IPv6[]) => selectedItems.length === 0 && !selectedItem,
-      action: (selectedItems: IPv6[]) => handleSelect(selectedItems)
-    }
-  ] : [
-    {
-      label: bulkBtn.novo.label,
-      variant: bulkBtn.novo.variant,
-      action: () => setShowCreateModal(true)
-    },
-    {
-      label: bulkBtn.editar.label,
-      variant: bulkBtn.editar.variant,
-      disabled: (selectedItems: IPv6[]) => selectedItems.length === 0 && !selectedItem,
-      action: (selectedItems: IPv6[]) => {
-        const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-        if (item) {
-          setSelectedIPv6Id(item.id);
-          setShowEditModal(true);
-        }
+    [deleteIPv6Mutation, list, refetch]
+  );
+
+  const handleBulkDelete = useCallback(
+    async (ids: number[]) => {
+      try {
+        const { deleted, versao } = await IPv6Service.bulkDelete(ids);
+        list.clearSelection();
+        refetch();
+        queryClient.invalidateQueries({ queryKey: ['ipv6'] });
+        success(`Excluído(s) ${deleted} IPv6. Versão da operação: ${versao}.`);
+      } catch (err: unknown) {
+        showApiError(err, CONTEXT_ERROR_MESSAGES.BLOCKDOMI_IPV6_DELETE_ERROR);
       }
     },
-    {
-      label: bulkBtn.deletar.label,
-      variant: bulkBtn.deletar.variant,
-      disabled: (selectedItems: IPv6[]) => selectedItems.length === 0 && !selectedItem,
-      action: async (selectedItems: IPv6[]) => {
-        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
-        if (items.length === 0) return;
+    [list, refetch, queryClient, success, showApiError]
+  );
 
-        const msg = items.length === 1
-          ? t('messages.confirmDelete')
-          : `Tem certeza que deseja excluir ${items.length} IPv6?`;
-        const confirmed = window.confirm(msg);
-        if (confirmed) {
-          if (items.length === 1) {
-            handleDelete(items[0].id);
-          } else {
-            handleBulkDelete(items.map((i) => i.id));
+  const handleAudit = useCallback(
+    (ipv6: IPv6) => {
+      list.auditoria.handleAudit('IPv6', ipv6.id);
+    },
+    [list.auditoria]
+  );
+
+  const bulkActions = useMemo(() => {
+    if (onSelectIPv6) {
+      return list.buildSelectBulkActions();
+    }
+    return [
+      {
+        label: list.bulkBtn.novo.label,
+        variant: list.bulkBtn.novo.variant,
+        action: () => setShowCreateModal(true),
+      },
+      {
+        label: list.bulkBtn.editar.label,
+        variant: list.bulkBtn.editar.variant,
+        disabled: (selectedItems: IPv6[]) => list.isNothingSelected(selectedItems),
+        action: (selectedItems: IPv6[]) => {
+          const item = list.resolveItem(selectedItems);
+          if (item) {
+            setSelectedIPv6Id(item.id);
+            setShowEditModal(true);
           }
-        }
-      }
-    },
-    {
-      label: t('blockdomi.anatel'),
-      variant: 'primary' as const,
-      disabled: (selectedItems: IPv6[]) => {
-        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
-        return items.length === 0 || !items.some((i) => i.link_oficio_anatel?.trim());
+        },
       },
-      action: (selectedItems: IPv6[]) => {
-        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
-        items.filter((i) => i.link_oficio_anatel?.trim()).forEach((i) => window.open(i.link_oficio_anatel!, '_blank', 'noopener,noreferrer'));
-      }
-    },
-    {
-      label: t('blockdomi.justica'),
-      variant: 'primary' as const,
-      disabled: (selectedItems: IPv6[]) => {
-        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
-        return items.length === 0 || !items.some((i) => i.link_oficio_justica?.trim());
-      },
-      action: (selectedItems: IPv6[]) => {
-        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
-        items.filter((i) => i.link_oficio_justica?.trim()).forEach((i) => {
-          const urls = i.link_oficio_justica!.split(',').map(url => url.trim()).filter(url => url);
-          urls.forEach((url, index) => {
-            setTimeout(() => window.open(url, '_blank', 'noopener,noreferrer'), index * 150);
-          });
-        });
-      }
-    },
-    {
-      label: t('blockdomi.planilhaDominios'),
-      variant: 'primary' as const,
-      disabled: (selectedItems: IPv6[]) => {
-        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
-        return items.length === 0 || !items.some((i) => i.link_planilha_dominios?.trim());
-      },
-      action: (selectedItems: IPv6[]) => {
-        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
-        items.filter((i) => i.link_planilha_dominios?.trim()).forEach((i) => window.open(i.link_planilha_dominios!, '_blank', 'noopener,noreferrer'));
-      }
-    }
-  ], [onSelectIPv6, selectedItem, clearSelection, onClose, handleSelect, handleDelete, handleBulkDelete, t, bulkBtn]);
-  const modalData = useMemo(() => ipv6sData?.data || [], [ipv6sData?.data]);
+      {
+        label: list.bulkBtn.deletar.label,
+        variant: list.bulkBtn.deletar.variant,
+        disabled: (selectedItems: IPv6[]) => list.isNothingSelected(selectedItems),
+        action: async (selectedItems: IPv6[]) => {
+          const items = resolveItems(selectedItems);
+          if (items.length === 0) return;
 
-  const handleSearchChange = useCallback((search: string, field?: string) => {
-    setTimeout(() => {
-      tableFilters.setSearch(search);
-      if (field) tableFilters.setSearchField(field);
-    }, 0);
-  }, [tableFilters]);
+          const msg =
+            items.length === 1
+              ? t('messages.confirmDelete')
+              : `Tem certeza que deseja excluir ${items.length} IPv6?`;
+          if (!window.confirm(msg)) return;
+
+          if (items.length === 1) {
+            await handleDelete(items[0].id);
+          } else {
+            await handleBulkDelete(items.map((i) => i.id));
+          }
+        },
+      },
+      {
+        label: t('blockdomi.anatel'),
+        variant: 'primary' as const,
+        disabled: (selectedItems: IPv6[]) => {
+          const items = resolveItems(selectedItems);
+          return items.length === 0 || !items.some((i) => i.link_oficio_anatel?.trim());
+        },
+        action: (selectedItems: IPv6[]) => {
+          resolveItems(selectedItems)
+            .filter((i) => i.link_oficio_anatel?.trim())
+            .forEach((i) => window.open(i.link_oficio_anatel!, '_blank', 'noopener,noreferrer'));
+        },
+      },
+      {
+        label: t('blockdomi.justica'),
+        variant: 'primary' as const,
+        disabled: (selectedItems: IPv6[]) => {
+          const items = resolveItems(selectedItems);
+          return items.length === 0 || !items.some((i) => i.link_oficio_justica?.trim());
+        },
+        action: (selectedItems: IPv6[]) => {
+          resolveItems(selectedItems)
+            .filter((i) => i.link_oficio_justica?.trim())
+            .forEach((i) => {
+              const urls = i
+                .link_oficio_justica!.split(',')
+                .map((url) => url.trim())
+                .filter((url) => url);
+              urls.forEach((url, index) => {
+                setTimeout(() => window.open(url, '_blank', 'noopener,noreferrer'), index * 150);
+              });
+            });
+        },
+      },
+      {
+        label: t('blockdomi.planilhaDominios'),
+        variant: 'primary' as const,
+        disabled: (selectedItems: IPv6[]) => {
+          const items = resolveItems(selectedItems);
+          return items.length === 0 || !items.some((i) => i.link_planilha_dominios?.trim());
+        },
+        action: (selectedItems: IPv6[]) => {
+          resolveItems(selectedItems)
+            .filter((i) => i.link_planilha_dominios?.trim())
+            .forEach((i) => window.open(i.link_planilha_dominios!, '_blank', 'noopener,noreferrer'));
+        },
+      },
+    ];
+  }, [onSelectIPv6, list, resolveItems, handleDelete, handleBulkDelete, t]);
+
+  const pagination = useMemo(
+    () => list.buildPagination(ipv6sData?.pagination),
+    [list, ipv6sData?.pagination]
+  );
+
+  const modalData = useMemo(() => ipv6sData?.data || [], [ipv6sData?.data]);
 
   const handleSelectAllPages = useCallback(async (): Promise<IPv6[]> => {
     const res = await IPv6Service.list({
-      search: tableFilters.debouncedSearch || undefined,
-      searchField: tableFilters.searchField || undefined,
+      search: list.tableFilters.debouncedSearch || undefined,
+      searchField: list.tableFilters.searchField || undefined,
       page: 1,
       limit: 99999,
-      sortColumn: tableFilters.sortColumn,
-      sortDirection: tableFilters.sortDirection
+      sortColumn: list.tableFilters.sortColumn,
+      sortDirection: list.tableFilters.sortDirection,
     });
     return res?.data ?? [];
-  }, [tableFilters.debouncedSearch, tableFilters.searchField, tableFilters.sortColumn, tableFilters.sortDirection]);
+  }, [
+    list.tableFilters.debouncedSearch,
+    list.tableFilters.searchField,
+    list.tableFilters.sortColumn,
+    list.tableFilters.sortDirection,
+  ]);
 
-  const modalContent = (
-    <>
-      <Table
-            title={defaultTitle}
-            config={{
-              columns: tableColumns,
-              data: modalData,
-              loading: isLoading,
-              searchable: true,
-              searchPlaceholder: t('layout.searchPlaceholder'),
-              searchFields,
-              sortable: true,
-              sortColumn: tableFilters.sortColumn,
-              sortDirection: tableFilters.sortDirection,
-              striped: true,
-              hover: true,
-              responsive: true,
-              selectable: true,
-              multiSelect: true,
-              bulkActions: bulkActions.map(action => ({
-                key: action.label.toLowerCase().replace(/\s+/g, '-'),
-                label: action.label,
-                onClick: action.action,
-                disabled: action.disabled,
-                variant: action.variant
-              })),
-              emptyMessage: 'Nenhum IPv6 encontrado',
-              pagination: pagination
-            }}
-            tableId="ipv6-list-modal"
-            syncWithHeader={false}
-            onSelectionChange={(items) => {
-              handleSelectionChange(items);
-            }}
-            onRowClick={onSelectIPv6 ? (item) => {
-              onSelectIPv6(item);
-              onClose();
-            } : undefined}
-            onRowDoubleClick={(ipv6) => {
-              if (onSelectIPv6) {
-                onSelectIPv6(ipv6);
-                onClose();
-              }
-            }}
-            onRefresh={refetch}
-            onAudit={handleAudit}
-            auditEntity="IPv6"
-            onPageChange={(page) => {
-              setTimeout(() => {
-                tableFilters.setPage(page);
-              }, 0);
-            }}
-            onPageSizeChange={(limit) => {
-              setTimeout(() => {
-                tableFilters.setLimit(limit);
-              }, 0);
-            }}
-            onSort={(column, direction) => {
-              setTimeout(() => {
-                tableFilters.setSort(column, direction);
-              }, 0);
-            }}
-            onSearch={(search, field) => handleSearchChange(search, field)}
-            search={tableFilters.search}
-            onSelectAllPages={handleSelectAllPages}
-          />
-    </>
+  const handleRowSelect = useCallback(
+    (item: IPv6) => {
+      onSelectIPv6?.(item);
+      onClose();
+    },
+    [onSelectIPv6, onClose]
   );
 
-  if (skipWrapper) {
-    return (
-      <>
-        {modalContent}
-        <IPv6Modal
-          show={showCreateModal || showEditModal}
-          onClose={() => {
-            setShowCreateModal(false);
-            setShowEditModal(false);
-            setSelectedIPv6Id(null);
-          }}
-          ipv6Id={showEditModal ? selectedIPv6Id : null}
-          onSuccess={() => {
-            refetch();
-            queryClient.invalidateQueries({ queryKey: ['ipv6'] });
-            setShowCreateModal(false);
-            setShowEditModal(false);
-            setSelectedIPv6Id(null);
-          }}
-        />
-        <ImprimirModal
-          show={auditoria.showPreview}
-          onClose={auditoria.handleClosePreview}
-          pdfUrl={auditoria.pdfUrl}
-          isGenerating={auditoria.isGeneratingPdf}
-          title={t('financial.executionLogs')}
-          modalId="auditoria-ipv6-modal"
-        />
-      </>
-    );
-  }
+  const listModal = (
+    <ListModal<IPv6>
+      show={show}
+      onClose={list.handleModalClose}
+      skipWrapper={skipWrapper}
+      config={{
+        title: defaultTitle,
+        columns,
+        searchPlaceholder: t('layout.searchPlaceholder'),
+        searchFields,
+        emptyMessage: 'Nenhum IPv6 encontrado',
+        multiSelect: true,
+      }}
+      data={modalData}
+      loading={isLoading}
+      search={list.tableFilters.search}
+      onSearchChange={list.handleSearchChange}
+      sortColumn={list.tableFilters.sortColumn}
+      sortDirection={list.tableFilters.sortDirection}
+      onSortChange={list.tableFilters.setSort}
+      pagination={pagination}
+      onPageChange={list.tableFilters.setPage}
+      onLimitChange={list.tableFilters.setLimit}
+      onRefresh={refetch}
+      bulkActions={bulkActions}
+      onSelectionChange={list.handleSelectionChange}
+      onRowClick={onSelectIPv6 ? handleRowSelect : undefined}
+      onRowDoubleClick={onSelectIPv6 ? handleRowSelect : undefined}
+      onAudit={handleAudit}
+      auditEntity="IPv6"
+      onSelectAllPages={handleSelectAllPages}
+      tableId="ipv6-list-modal"
+      modalId="ipv6-list-modal"
+    />
+  );
 
-  return (
+  const auxiliaryModals = (
     <>
-      <DraggableModal
-        show={show}
-        onClose={() => {
-          clearSelection();
-          onClose();
-        }}
-        title={defaultTitle}
-        size="lg"
-        modalId="ipv6-list-modal"
-        className="no-padding"
-      >
-        {modalContent}
-      </DraggableModal>
-
       <IPv6Modal
         show={showCreateModal || showEditModal}
         onClose={() => {
@@ -520,14 +407,20 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
       />
 
       <ImprimirModal
-        show={auditoria.showPreview}
-        onClose={auditoria.handleClosePreview}
-        pdfUrl={auditoria.pdfUrl}
-        isGenerating={auditoria.isGeneratingPdf}
+        show={list.auditoria.showPreview}
+        onClose={list.auditoria.handleClosePreview}
+        pdfUrl={list.auditoria.pdfUrl}
+        isGenerating={list.auditoria.isGeneratingPdf}
         title={t('financial.executionLogs')}
         modalId="auditoria-ipv6-modal"
       />
+    </>
+  );
 
+  return (
+    <>
+      {listModal}
+      {auxiliaryModals}
     </>
   );
 };

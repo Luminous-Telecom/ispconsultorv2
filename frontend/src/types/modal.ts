@@ -1,9 +1,13 @@
+import type { ButtonVariant } from 'components/ui/Button';
+
 export interface ListModalColumn<T> {
   key: string;
   label: string;
   sortable?: boolean;
   searchable?: boolean;
   width?: string;
+  sortValue?: (row: T) => unknown;
+  badgeLabels?: string[];
   render: (item: T) => React.ReactNode;
 }
 
@@ -24,8 +28,6 @@ export interface ListModalConfig<T> {
     placeholder?: string;
   }>;
 }
-
-import type { ButtonVariant } from 'components/ui/Button';
 
 export interface ListModalProps<T> {
   show: boolean;
@@ -60,11 +62,13 @@ export interface ListModalProps<T> {
   bulkActions?: Array<{
     label: string;
     variant?: ButtonVariant;
+    requiresSelection?: boolean;
     disabled?: (() => boolean) | ((selectedItems: T[]) => boolean);
     action?: (() => void) | ((selectedItems: T[]) => void);
     dropdown?: {
       label: string;
       action: (selectedItems?: T[]) => void;
+      disabled?: boolean | ((selectedItems: T[]) => boolean);
     }[];
   }>;
   onAudit?: (item: T) => void | Promise<void>;
@@ -80,4 +84,8 @@ export interface ListModalProps<T> {
   striped?: boolean;
   hover?: boolean;
   responsive?: boolean;
+  modalSize?: 'sm' | 'md' | 'lg' | 'xl';
+  /** Título do DraggableModal; se omitido, usa `config.title`. */
+  wrapperTitle?: string;
+  onSelectAllPages?: () => T[] | Promise<T[]>;
 }

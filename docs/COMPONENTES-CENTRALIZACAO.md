@@ -32,9 +32,9 @@ O projeto já possui camadas compartilhadas (`components/ui`, `components/common
 | Métrica | Valor aproximado |
 |--------|------------------|
 | Arquivos `.tsx` em `components/` | ~248 |
-| Modais `*ListModal` com padrão repetido | ~21 |
+| Modais `*ListModal` migrados (Fase 1) | **27** |
 | Modais SaaS espelhando ERP | ~23 |
-| `ListModal` genérico em uso | **0 imports** |
+| `ListModal` genérico em uso | **27 modais** |
 | Pares ERP/SaaS duplicados | ~12 |
 
 ---
@@ -43,19 +43,19 @@ O projeto já possui camadas compartilhadas (`components/ui`, `components/common
 
 Use como base antes de criar componentes novos.
 
-### Novidades (Fase 1 — em andamento)
+### Novidades (Fase 1 — concluída)
 
 | Recurso | Caminho | Descrição |
 |---------|---------|-----------|
 | `useEntityListModal` | `hooks/useEntityListModal.ts` | Filtros, seleção, bulk CRUD/seleção, paginação, auditoria |
 | `normalizeListPagination` | `utils/pagination.ts` | Paginação ERP/SaaS → formato `Table` |
-| `ListModal` (corrigido) | `components/common/ListModal.tsx` | `useMemo` fora do JSX; props `onRowClick`, `modalId`, etc. |
+| `ListModal` | `components/common/ListModal.tsx` | Table + DraggableModal; `onRowClick`, `modalId`, `modalSize`, `wrapperTitle`, `onSelectAllPages`, `customControlsAfterActions` |
 
-**Modais já migrados:** `BancoListModal`, `FornecedorListModal`.
+**27 modais de listagem** usam `ListModal`; a maioria compõe `useEntityListModal` (RPKI e casos especiais usam `useTableFilters` + bulk próprio).
 
 | Recurso | Caminho | Uso atual |
 |---------|---------|-----------|
-| `ListModal` | `components/common/ListModal.tsx` | Existe, **não importado** por nenhum modal |
+| `ListModal` | `components/common/ListModal.tsx` | **Adotado** por todos os `*ListModal` e listas SaaS/RPKI migrados |
 | `useListModal` | `hooks/useListModal.ts` | Estado open/close/config; pouco adotado |
 | `DraggableModal` | `components/common/DraggableModal.tsx` | Padrão obrigatório para modais |
 | `Table` | `components/tables/Table.tsx` | Listagens principais |
@@ -85,43 +85,40 @@ Cada `*ListModal` repete:
 - `handleSearchChange` com `setTimeout(() => { tableFilters.setSearch... })`
 - Sub-modais de create/edit (`showCreateModal`, `selectedId`)
 
-O componente `ListModal` em `components/common/ListModal.tsx` já encapsula Table + DraggableModal + bulk + filtros, mas **nenhum modal do projeto o importa**.
+O componente `ListModal` encapsula Table + DraggableModal + bulk + filtros. A Fase 1 migrou todos os modais de listagem identificados.
 
-### Proposta
+### Padrão de uso
 
-1. Evoluir `ListModal` ou criar hook `useEntityListModal({ queryKey, listFn, columns, entityName, ... })`.
-2. Cada entidade mantém apenas: colunas, service/hook de dados, bulk actions específicas, sub-modal de formulário.
-3. Migrar modais simples primeiro; deixar os complexos por último.
+```tsx
+const list = useEntityListModal<T>({ onClose, onSelect: optional });
+// data hook com list.tableFilters.*
+const listModal = (
+  <ListModal<T>
+    show={show}
+    onClose={list.handleModalClose}
+    skipWrapper={skipWrapper}
+    config={{ title, columns, searchFields, emptyMessage, multiSelect?: true }}
+    data={rows}
+    bulkActions={onSelect ? list.buildSelectBulkActions() : list.buildCrudBulkActions({ onNew, onEdit, onDelete })}
+    pagination={list.buildPagination(api?.pagination)}
+    onSelectAllPages={optional}
+    ...
+  />
+);
+return <>{listModal}{auxiliaryModals}</>;
+```
 
-### Prioridade de migração
+Modais RPKI usam `skipWrapper` (wrapper no `SingleModalWrapper`). Modais complexos podem manter JSX extra (resumo, filtros) fora do `ListModal`.
 
-| Prioridade | Arquivo | Caminho | Observação |
-|:----------:|---------|---------|------------|
-| Alta | `BancoListModal` | `modals/bancos/BancoListModal.tsx` | Cadastro simples, bom piloto |
-| Alta | `FornecedorListModal` | `modals/fornecedores/FornecedorListModal.tsx` | Idem |
-| Alta | `PlanoListModal` | `modals/planos/PlanoListModal.tsx` | Idem |
-| Alta | `ClienteListModal` | `modals/clientes/ClienteListModal.tsx` | Idem |
-| Alta | `AgentListModal` | `modals/agent/AgentListModal.tsx` | Idem |
-| Alta | `TipoCobrancaContratoListModal` | `modals/tipoCobrancaContrato/` | Idem |
-| Alta | `SaasPlanoListModal` | `modals/saas/SaasPlanoListModal.tsx` | Espelho SaaS |
-| Alta | `SaasBancosModal` | `modals/saas/SaasBancosModal.tsx` | Espelho de bancos |
-| Alta | `SaasClientesModal` | `modals/saas/SaasClientesModal.tsx` | |
-| Alta | `SaasTipoCobrancaModal` | `modals/saas/SaasTipoCobrancaModal.tsx` | |
-| Alta | `SaasUsuariosModal` | `modals/saas/SaasUsuariosModal.tsx` | |
-| Média | `IPv4ListModal` | `modals/blockdomi/ipv4/` | Ver seção Blockdomi |
-| Média | `IPv6ListModal` | `modals/blockdomi/ipv6/` | Par com IPv4 |
-| Média | `DominioListModal` | `modals/blockdomi/dominios/` | Bulk extra |
-| Média | `IpsPermitidosListModal` | `modals/blockdomi/ips-permitidos/` | |
-| Média | `SshDeviceListModal` | `modals/ssh-manager/` | |
-| Média | `NotaFiscalListModal` | `modals/notas-fiscais/` | Filtros extras |
-| Média | `ContasPagarListModal` | `modals/contas-pagar/` | Resumo financeiro |
-| Baixa | `RpkiRoaListModal` | `modals/rpki/` | Regras RPKI |
-| Baixa | `RpkiAspaListModal` | `modals/rpki/` | |
-| Baixa | `RpkiCaListModal` | `modals/rpki/` | |
-| Baixa | `RpkiCaParentListModal` | `modals/rpki/` | |
-| Baixa | `RpkiRepositoryListModal` | `modals/rpki/` | |
-| Baixa | `ContratoListModal` | `modals/contratos/` | Muitas colunas e bulk |
-| Baixa | `ContasReceberListModal` | `modals/contas-receber/` | ~1300 linhas, muitas regras |
+### Status da migração (Fase 1)
+
+| Status | Arquivos |
+|:------:|----------|
+| ✅ | ERP: `Banco`, `Fornecedor`, `Plano`, `Cliente`, `Agent`, `TipoCobranca`, `Contrato`, `ContasPagar`, `ContasReceber`, `NotaFiscal` |
+| ✅ | Blockdomi: `IPv4`, `IPv6`, `Dominio`, `IpsPermitidos` |
+| ✅ | RPKI: `RpkiCa`, `RpkiAspa`, `RpkiRoa`, `RpkiCaParent`, `RpkiRepository` |
+| ✅ | SaaS listas: `SaasBancos`, `SaasClientes`, `SaasPlanoList`, `SaasTipoCobranca`, `SaasUsuarios` |
+| ⏳ Fase 2 | `SaasServidorEmailModal`, `SaasServidorWhatsappModal` (abas, não listagem pura) |
 
 ### Modais SaaS com padrão de listagem (sem sufixo ListModal)
 
@@ -426,18 +423,12 @@ Formulários que ainda repetem campos de endereço/contato manualmente devem mig
 ## Prioridade sugerida
 
 ```
-Fase 1 — ListModal + useEntityListModal
-  └── Cadastros simples (Banco, Fornecedor, Plano, Cliente, Agent, TipoCobranca)
-  └── SaasBancos, SaasClientes, SaasPlanoList, SaasUsuarios, SaasTipoCobranca
+Fase 1 — ListModal + useEntityListModal ✅ (concluída)
 
 Fase 2 — Pares ERP/SaaS
   └── NFSeConfigSection + modais NFS-e
   └── RecursosSistemaModal
   └── ServidorTab + MensagensTab (email/whatsapp)
-
-Fase 3 — Blockdomi
-  └── IPv4/IPv6 factory
-  └── DominioListModal
 
 Fase 4 — Logs
   └── RPKI → logsModalRegistry
@@ -458,39 +449,39 @@ Fase 6 — UI e estrutura
 
 Legenda: `[ ]` pendente · `[~]` parcial · `[x]` já centralizado
 
-### Listagem
+### Listagem (Fase 1)
 
-- [x] `BancoListModal.tsx` — migrado para `ListModal` + `useEntityListModal`
-- [x] `FornecedorListModal.tsx` — migrado para `ListModal` + `useEntityListModal`
-- [ ] `PlanoListModal.tsx`
-- [ ] `ClienteListModal.tsx`
-- [ ] `AgentListModal.tsx`
-- [ ] `TipoCobrancaContratoListModal.tsx`
-- [ ] `IPv4ListModal.tsx`
-- [ ] `IPv6ListModal.tsx`
-- [ ] `DominioListModal.tsx`
-- [ ] `IpsPermitidosListModal.tsx`
-- [ ] `SshDeviceListModal.tsx`
-- [ ] `NotaFiscalListModal.tsx`
-- [ ] `ContasPagarListModal.tsx`
-- [ ] `ContratoListModal.tsx`
-- [ ] `ContasReceberListModal.tsx`
-- [ ] `RpkiRoaListModal.tsx`
-- [ ] `RpkiAspaListModal.tsx`
-- [ ] `RpkiCaListModal.tsx`
-- [ ] `RpkiCaParentListModal.tsx`
-- [ ] `RpkiRepositoryListModal.tsx`
-- [ ] `SaasPlanoListModal.tsx`
-- [ ] `SaasBancosModal.tsx`
-- [ ] `SaasClientesModal.tsx`
-- [ ] `SaasTipoCobrancaModal.tsx`
-- [ ] `SaasUsuariosModal.tsx`
-- [ ] `SaasServidorEmailModal.tsx`
-- [ ] `SaasServidorWhatsappModal.tsx`
+- [x] `BancoListModal.tsx`
+- [x] `FornecedorListModal.tsx`
+- [x] `PlanoListModal.tsx`
+- [x] `ClienteListModal.tsx`
+- [x] `AgentListModal.tsx`
+- [x] `TipoCobrancaContratoListModal.tsx`
+- [x] `IPv4ListModal.tsx`
+- [x] `IPv6ListModal.tsx`
+- [x] `DominioListModal.tsx`
+- [x] `IpsPermitidosListModal.tsx`
+- [x] `SshDeviceListModal.tsx`
+- [x] `NotaFiscalListModal.tsx`
+- [x] `ContasPagarListModal.tsx`
+- [x] `ContratoListModal.tsx`
+- [x] `ContasReceberListModal.tsx`
+- [x] `RpkiRoaListModal.tsx`
+- [x] `RpkiAspaListModal.tsx`
+- [x] `RpkiCaListModal.tsx`
+- [x] `RpkiCaParentListModal.tsx`
+- [x] `RpkiRepositoryListModal.tsx`
+- [x] `SaasPlanoListModal.tsx`
+- [x] `SaasBancosModal.tsx`
+- [x] `SaasClientesModal.tsx`
+- [x] `SaasTipoCobrancaModal.tsx`
+- [x] `SaasUsuariosModal.tsx`
+- [ ] `SaasServidorEmailModal.tsx` (Fase 2 — abas)
+- [ ] `SaasServidorWhatsappModal.tsx` (Fase 2 — abas)
 
 ### Infraestrutura de listagem
 
-- [x] Adotar `components/common/ListModal.tsx` (piloto: Banco, Fornecedor)
+- [x] Adotar `components/common/ListModal.tsx` (todos os list modals)
 - [x] Criar `useEntityListModal` — `hooks/useEntityListModal.ts`
 - [x] `normalizeListPagination` — `utils/pagination.ts`
 - [x] Remover `setTimeout` em buscas nos modais migrados (via hook)

@@ -42,6 +42,9 @@ function ListModal<T extends { id: number | string }>({
   striped = true,
   hover = true,
   responsive = true,
+  modalSize = 'lg',
+  wrapperTitle,
+  onSelectAllPages,
 }: ListModalProps<T> & {
   filters?: Array<{
     key: string;
@@ -72,6 +75,8 @@ function ListModal<T extends { id: number | string }>({
         sortable: col.sortable,
         searchable: col.searchable !== false,
         width: col.width,
+        sortValue: col.sortValue,
+        badgeLabels: col.badgeLabels,
         render: col.render,
       })),
     [columns]
@@ -96,6 +101,7 @@ function ListModal<T extends { id: number | string }>({
           return false;
         },
         variant: action.variant,
+        requiresSelection: action.requiresSelection,
         dropdown: action.dropdown
           ? action.dropdown.map((item) => ({
               label: item.label,
@@ -104,6 +110,7 @@ function ListModal<T extends { id: number | string }>({
                   item.action(selectedItems || []);
                 }
               },
+              disabled: item.disabled,
             }))
           : undefined,
       })),
@@ -153,6 +160,7 @@ function ListModal<T extends { id: number | string }>({
       auditEntity={auditEntity}
       onRowClick={onRowClick}
       onRowDoubleClick={onRowDoubleClick}
+      onSelectAllPages={onSelectAllPages}
       tableId={tableId}
     />
   );
@@ -165,8 +173,8 @@ function ListModal<T extends { id: number | string }>({
     <DraggableModal
       show={show}
       onClose={onClose}
-      title={title}
-      size="lg"
+      title={wrapperTitle ?? title}
+      size={modalSize}
       modalId={modalId ?? tableId}
       className="no-padding list-modal-no-body-scroll"
     >

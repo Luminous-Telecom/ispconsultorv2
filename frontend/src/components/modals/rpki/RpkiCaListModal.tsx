@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import Table from 'components/tables/Table';
-import { TableConfig } from 'components/tables/types';
+import ListModal from 'components/common/ListModal';
+import { ListModalConfig } from 'types/modal';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
@@ -43,6 +43,9 @@ function getSortableValue(row: RpkiCa, sortKey: string): string {
 }
 
 const RpkiCaListModal: React.FC<RpkiCaListModalProps> = ({
+  show,
+  onClose,
+  skipWrapper = false,
   clienteIdFilter,
   tableTitle = 'CAs RPKI',
 }) => {
@@ -70,6 +73,16 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = ({
     searchDebounceMs: 250,
     resetPageOnFilterChange: true,
   });
+
+  const handleSearchChange = useCallback(
+    (search: string, field?: string) => {
+      tableFilters.setSearch(search);
+      if (field) {
+        tableFilters.setSearchField(field);
+      }
+    },
+    [tableFilters]
+  );
 
   const { cas, isLoading, refetch } = useRpkiCas(clienteIdFilter);
   const { data: clientes = [] } = useQuery({
@@ -144,8 +157,8 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = ({
     return map;
   }, [clientes]);
 
-  const columns: TableConfig<RpkiCa>['columns'] = useMemo(() => {
-    const base: TableConfig<RpkiCa>['columns'] = [
+  const columns: ListModalConfig<RpkiCa>['columns'] = useMemo(() => {
+    const base: ListModalConfig<RpkiCa>['columns'] = [
       { key: 'id', label: 'ID', sortable: true, width: '50px', render: (item) => item.id },
       { key: 'nome', label: 'Nome', sortable: true, width: '220px', render: (item) => item.nome },
     ];
@@ -176,84 +189,82 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = ({
     return base;
   }, [clienteIdFilter, clienteNomeById]);
 
+  const bulkActions = useMemo(
+    () => [
+      {
+        label: bulkBtn.novo.label,
+        variant: bulkBtn.novo.variant,
+        requiresSelection: false,
+        action: () => setShowCreateModal(true),
+      },
+      {
+        label: bulkBtn.deletar.label,
+        variant: bulkBtn.deletar.variant,
+        disabled: (selectedItems: RpkiCa[]) => selectedItems.length === 0 && !selectedCa,
+        action: (selectedItems: RpkiCa[]) => {
+          const target = selectedItems[0] || selectedCa;
+          if (!target) return;
+          if (!window.confirm(t('messages.confirmDelete'))) return;
+          deleteMutation.mutate(target.id);
+        },
+      },
+      {
+        label: 'Remover',
+        disabled: (selectedItems: RpkiCa[]) => selectedItems.length === 0 && !selectedCa,
+        action: (selectedItems: RpkiCa[]) => {
+          const target = selectedItems[0] || selectedCa;
+          if (!target) return;
+          if (!window.confirm('Tem certeza que deseja remover os recursos desta CA?')) return;
+          clearResourcesMutation.mutate(target.id);
+        },
+      },
+    ],
+    [bulkBtn, clearResourcesMutation, deleteMutation, selectedCa, t]
+  );
+
   return (
     <>
-      <Table
-            title={tableTitle}
-            config={{
-              columns,
-              data: pagedRows,
-              loading: isLoading || deleteMutation.isPending || clearResourcesMutation.isPending,
-              searchable: true,
-              searchPlaceholder: 'Buscar...',
-              searchFields: [
-                { key: 'id', label: 'ID' },
-                { key: 'nome', label: 'Nome' },
-                { key: 'handle', label: 'Handle' },
-                { key: 'status', label: 'Status' },
-              ],
-              sortable: true,
-              sortColumn: tableFilters.sortColumn,
-              sortDirection: tableFilters.sortDirection,
-              striped: true,
-              hover: true,
-              responsive: true,
-              selectable: true,
-              multiSelect: false,
-              emptyMessage: 'Nenhuma CA encontrada',
-              pagination: {
-                current_page: safePage,
-                last_page: lastPage,
-                per_page: perPage,
-                total,
-                from,
-                to,
-              },
-              bulkActions: [
-                {
-                  key: 'novo-ca',
-                  label: bulkBtn.novo.label,
-                  variant: bulkBtn.novo.variant,
-                  requiresSelection: false,
-                  onClick: () => setShowCreateModal(true),
-                },
-                {
-                  key: 'deletar-ca',
-                  label: bulkBtn.deletar.label,
-                  variant: bulkBtn.deletar.variant,
-                  disabled: (selectedItems: RpkiCa[]) => selectedItems.length === 0 && !selectedCa,
-                  onClick: (selectedItems: RpkiCa[]) => {
-                    const target = selectedItems[0] || selectedCa;
-                    if (!target) return;
-                    if (!window.confirm(t('messages.confirmDelete'))) return;
-                    deleteMutation.mutate(target.id);
-                  },
-                },
-                {
-                  key: 'remover-recursos-ca',
-                  label: 'Remover',
-                  disabled: (selectedItems: RpkiCa[]) => selectedItems.length === 0 && !selectedCa,
-                  onClick: (selectedItems: RpkiCa[]) => {
-                    const target = selectedItems[0] || selectedCa;
-                    if (!target) return;
-                    if (!window.confirm('Tem certeza que deseja remover os recursos desta CA?')) return;
-                    clearResourcesMutation.mutate(target.id);
-                  },
-                },
-              ],
-            }}
-            tableId="rpki-cas-list-modal"
-            syncWithHeader={false}
-            onSelectionChange={(items) => setSelectedCa(items[0] ?? null)}
-            onRefresh={refetch}
-            onAudit={handleAuditCa}
-            auditEntity="RpkiCa"
-            onPageChange={tableFilters.setPage}
-            onPageSizeChange={tableFilters.setLimit}
-            onSort={(column, direction) => tableFilters.setSort(column, direction)}
-            onSearch={(search) => tableFilters.setSearch(search)}
-            search={tableFilters.search}
-          />
+      <ListModal<RpkiCa>
+        show={show}
+        onClose={onClose}
+        skipWrapper={skipWrapper}
+        config={{
+          title: tableTitle,
+          columns,
+          searchPlaceholder: 'Buscar...',
+          searchFields: [
+            { key: 'id', label: 'ID' },
+            { key: 'nome', label: 'Nome' },
+            { key: 'handle', label: 'Handle' },
+            { key: 'status', label: 'Status' },
+          ],
+          emptyMessage: 'Nenhuma CA encontrada',
+          multiSelect: false,
+        }}
+        data={pagedRows}
+        loading={isLoading || deleteMutation.isPending || clearResourcesMutation.isPending}
+        search={tableFilters.search}
+        onSearchChange={handleSearchChange}
+        sortColumn={tableFilters.sortColumn}
+        sortDirection={tableFilters.sortDirection}
+        onSortChange={tableFilters.setSort}
+        pagination={{
+          current_page: safePage,
+          last_page: lastPage,
+          per_page: perPage,
+          total,
+          from,
+          to,
+        }}
+        onPageChange={tableFilters.setPage}
+        onLimitChange={tableFilters.setLimit}
+        onRefresh={refetch}
+        bulkActions={bulkActions}
+        onSelectionChange={(items) => setSelectedCa(items[0] ?? null)}
+        onAudit={handleAuditCa}
+        auditEntity="RpkiCa"
+        tableId="rpki-cas-list-modal"
+      />
 
       <RpkiCaCreateModal
         show={showCreateModal}

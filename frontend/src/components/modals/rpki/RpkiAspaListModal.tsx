@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import Table from 'components/tables/Table';
-import { TableConfig } from 'components/tables/types';
+import ListModal from 'components/common/ListModal';
+import { ListModalConfig } from 'types/modal';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
@@ -25,6 +25,9 @@ interface RpkiAspaListModalProps {
 const statusLabels: Record<string, string> = { active: 'Ativo', revoked: 'Revogado', expired: 'Expirado' };
 
 const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = ({
+  show,
+  onClose,
+  skipWrapper = false,
   clienteIdFilter,
   tableTitle = 'ASPAs',
 }) => {
@@ -51,6 +54,16 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = ({
     searchDebounceMs: 250,
     resetPageOnFilterChange: true,
   });
+
+  const handleSearchChange = useCallback(
+    (search: string, field?: string) => {
+      tableFilters.setSearch(search);
+      if (field) {
+        tableFilters.setSearchField(field);
+      }
+    },
+    [tableFilters]
+  );
 
   const { cas, caIdsKey } = useRpkiCas(clienteIdFilter);
 
@@ -101,7 +114,7 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = ({
   const to = total === 0 ? 0 : Math.min(safePage * perPage, total);
   const pagedRows = filtered.slice(from > 0 ? from - 1 : 0, to);
 
-  const columns: TableConfig<RpkiAspa>['columns'] = [
+  const columns: ListModalConfig<RpkiAspa>['columns'] = [
     { key: 'id', label: 'ID', sortable: true, width: '60px', render: (item) => item.id },
     { key: 'ca_id', label: 'CA', sortable: true, width: '180px', render: (item) => caNomeById.get(item.ca_id) ?? `#${item.ca_id}` },
     { key: 'customer_asn', label: 'Customer ASN', sortable: true, width: '150px', render: (item) => `AS${item.customer_asn}` },
@@ -115,86 +128,82 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = ({
     },
   ];
 
-  const bulkActions = [
-    {
-      key: 'novo-aspa',
-      label: bulkBtn.novo.label,
-      variant: bulkBtn.novo.variant,
-      requiresSelection: false,
-      onClick: () => setShowCreateModal(true),
-    },
-    {
-      key: 'revogar',
-      label: 'Revogar',
-      variant: 'primary' as const,
-      onClick: (selectedItems: RpkiAspa[]) => {
-        const selected = selectedItems[0];
-        if (!selected) return;
-        if (!window.confirm('Tem certeza que deseja revogar este ASPA?')) return;
-        RpkiCaService.revokeAspa(selected.ca_id, selected.id)
-          .then(() => {
-            setAspas((prev) => prev.map((a) => a.id === selected.id ? { ...a, status: 'revoked' as const, revoked_at: new Date().toISOString() } : a));
-            success('ASPA revogado com sucesso');
-          })
-          .catch((err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_ASPA_REVOKE_ERROR));
+  const bulkActions = useMemo(
+    () => [
+      {
+        label: bulkBtn.novo.label,
+        variant: bulkBtn.novo.variant,
+        requiresSelection: false,
+        action: () => setShowCreateModal(true),
       },
-    },
-    {
-      key: 'excluir',
-      label: 'Excluir',
-      variant: 'primary' as const,
-      onClick: (selectedItems: RpkiAspa[]) => {
-        const selected = selectedItems[0];
-        if (!selected) return;
-        if (!window.confirm('Deseja excluir este ASPA permanentemente?')) return;
-        RpkiCaService.deleteAspa(selected.ca_id, selected.id)
-          .then(() => {
-            setAspas((prev) => prev.filter((a) => a.id !== selected.id));
-            success('ASPA excluído com sucesso');
-          })
-          .catch((err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_ASPA_DELETE_ERROR));
+      {
+        label: 'Revogar',
+        variant: 'primary' as const,
+        action: (selectedItems: RpkiAspa[]) => {
+          const selected = selectedItems[0];
+          if (!selected) return;
+          if (!window.confirm('Tem certeza que deseja revogar este ASPA?')) return;
+          RpkiCaService.revokeAspa(selected.ca_id, selected.id)
+            .then(() => {
+              setAspas((prev) => prev.map((a) => a.id === selected.id ? { ...a, status: 'revoked' as const, revoked_at: new Date().toISOString() } : a));
+              success('ASPA revogado com sucesso');
+            })
+            .catch((err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_ASPA_REVOKE_ERROR));
+        },
       },
-    },
-  ];
+      {
+        label: 'Excluir',
+        variant: 'primary' as const,
+        action: (selectedItems: RpkiAspa[]) => {
+          const selected = selectedItems[0];
+          if (!selected) return;
+          if (!window.confirm('Deseja excluir este ASPA permanentemente?')) return;
+          RpkiCaService.deleteAspa(selected.ca_id, selected.id)
+            .then(() => {
+              setAspas((prev) => prev.filter((a) => a.id !== selected.id));
+              success('ASPA excluído com sucesso');
+            })
+            .catch((err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_ASPA_DELETE_ERROR));
+        },
+      },
+    ],
+    [bulkBtn, showApiError, success]
+  );
 
   return (
     <>
-      <Table
-            title={tableTitle}
-            config={{
-              columns,
-              data: pagedRows,
-              loading: isLoading,
-              searchable: true,
-              searchPlaceholder: 'Buscar...',
-              searchFields: [
-                { key: 'id', label: 'ID' },
-                { key: 'customer_asn', label: 'Customer ASN' },
-                { key: 'providers_json', label: 'Providers' },
-              ],
-              sortable: true,
-              sortColumn: tableFilters.sortColumn,
-              sortDirection: tableFilters.sortDirection,
-              striped: true,
-              hover: true,
-              responsive: true,
-              selectable: true,
-              multiSelect: false,
-              emptyMessage: 'Nenhum ASPA encontrado',
-              pagination: { current_page: safePage, last_page: lastPage, per_page: perPage, total, from, to },
-              bulkActions,
-            }}
-            tableId="rpki-aspas-list-modal"
-            syncWithHeader={false}
-            onRefresh={() => refetch()}
-            onAudit={handleAuditAspa}
-            auditEntity="RpkiAspa"
-            onPageChange={tableFilters.setPage}
-            onPageSizeChange={tableFilters.setLimit}
-            onSort={(column, direction) => tableFilters.setSort(column, direction)}
-            onSearch={(search) => tableFilters.setSearch(search)}
-            search={tableFilters.search}
-          />
+      <ListModal<RpkiAspa>
+        show={show}
+        onClose={onClose}
+        skipWrapper={skipWrapper}
+        config={{
+          title: tableTitle,
+          columns,
+          searchPlaceholder: 'Buscar...',
+          searchFields: [
+            { key: 'id', label: 'ID' },
+            { key: 'customer_asn', label: 'Customer ASN' },
+            { key: 'providers_json', label: 'Providers' },
+          ],
+          emptyMessage: 'Nenhum ASPA encontrado',
+          multiSelect: false,
+        }}
+        data={pagedRows}
+        loading={isLoading}
+        search={tableFilters.search}
+        onSearchChange={handleSearchChange}
+        sortColumn={tableFilters.sortColumn}
+        sortDirection={tableFilters.sortDirection}
+        onSortChange={tableFilters.setSort}
+        pagination={{ current_page: safePage, last_page: lastPage, per_page: perPage, total, from, to }}
+        onPageChange={tableFilters.setPage}
+        onLimitChange={tableFilters.setLimit}
+        onRefresh={() => refetch()}
+        bulkActions={bulkActions}
+        onAudit={handleAuditAspa}
+        auditEntity="RpkiAspa"
+        tableId="rpki-aspas-list-modal"
+      />
 
       <RpkiAspaCreateModal
         show={showCreateModal}

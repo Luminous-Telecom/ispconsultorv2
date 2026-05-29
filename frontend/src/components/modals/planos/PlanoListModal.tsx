@@ -1,17 +1,13 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { usePlanos, useDeletePlano } from 'hooks/usePlanos';
-import { useModalSelect } from 'hooks/useModalSelect';
-import { useTableFilters } from 'hooks/useTableFilters';
+import { useEntityListModal } from 'hooks/useEntityListModal';
 import { Plano, PlanoFilters } from 'types';
 import { useI18n } from 'contexts/I18nContext';
-import { useBulkBtn } from 'components/ui';
 import { formatDateTime } from 'utils/formatters';
-import DraggableModal from 'components/common/DraggableModal';
-import Table from 'components/tables/Table';
-import { TableConfig } from 'components/tables/types';
+import ListModal from 'components/common/ListModal';
+import { ListModalConfig } from 'types/modal';
 import PlanoModal from './PlanoModal';
-import { useAuditoria } from 'hooks/useAuditoria';
 import ImprimirModal from 'components/common/ImprimirModal';
 
 interface PlanoListModalProps {
@@ -29,394 +25,275 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
   onSelectPlano,
   title,
   skipWrapper = false,
-  initialFilters
+  initialFilters,
 }) => {
   const { t } = useI18n();
-  const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedPlanoId, setSelectedPlanoId] = useState<number | null>(null);
-  
-  const auditoria = useAuditoria();
-  
-  // Hook unificado para filtros, busca e paginação
-  const tableFilters = useTableFilters({
-    initialSearch: '',
-    initialPage: 1,
-    initialLimit: 15,
-    searchDebounceMs: 300,
-    resetPageOnFilterChange: true,
+  const [showPlanoModal, setShowPlanoModal] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  const list = useEntityListModal<Plano>({
+    onClose,
+    onSelect: onSelectPlano,
   });
-  
-  // Usar hook customizado para gerenciar seleção
-  const {
-    selectedItem,
-    handleSelectionChange,
-    clearSelection
-  } = useModalSelect<Plano>(
-    onSelectPlano ? (plano) => {
-      onSelectPlano(plano);
-      onClose();
-    } : undefined
-  );
 
   const getStatusBadgeClass = useCallback((status: string) => {
     switch (status) {
-      case 'ativo': return 'bg-success';
-      case 'inativo': return 'bg-warning';
-      default: return 'bg-secondary';
+      case 'ativo':
+        return 'bg-success';
+      case 'inativo':
+        return 'bg-warning';
+      default:
+        return 'bg-secondary';
     }
   }, []);
 
-  const getTipoServicoLabel = useCallback((tipo: string) => {
-    const tipos: { [key: string]: string } = {
-      infraestrutura: t('form.serviceTypeInfrastructure'),
-      consultoria: t('form.serviceTypeConsulting'),
-      blockdomi: t('form.serviceTypeBlockdomi')
-    };
-    return tipos[tipo] || tipo;
-  }, [t]);
-
-  // Configurar colunas memoizadas para Table
-  const tableColumns: TableConfig<Plano & { created_at?: string; created_at_formatada?: string | null }>['columns'] = useMemo(() => [
-    {
-      key: 'id',
-      label: t('table.id'),
-      sortable: true,
-      width: '42px',
-      render: (item: Plano) => <span>{item.id}</span>
+  const getTipoServicoLabel = useCallback(
+    (tipo: string) => {
+      const tipos: Record<string, string> = {
+        infraestrutura: t('form.serviceTypeInfrastructure'),
+        consultoria: t('form.serviceTypeConsulting'),
+        blockdomi: t('form.serviceTypeBlockdomi'),
+      };
+      return tipos[tipo] || tipo;
     },
-    {
-      key: 'nome_plano',
-      label: t('table.planName'),
-      sortable: true,
-      width: '180px',
-      render: (item: Plano) => item.nome_plano
-    },
-    {
-      key: 'descricao',
-      label: t('form.description'),
-      sortable: true,
-      width: '200px',
-      render: (item: Plano) => item.descricao || '-'
-    },
-    {
-      key: 'tipo_servico',
-      label: t('table.serviceType'),
-      sortable: true,
-      badgeLabels: [t('form.serviceTypeInfrastructure'), t('form.serviceTypeConsulting'), t('form.serviceTypeBlockdomi')],
-      render: (item: Plano) => (
-        <span className="badge bg-info">
-          {getTipoServicoLabel(item.tipo_servico)}
-        </span>
-      )
-    },
-    {
-      key: 'valor_mensal',
-      label: t('table.monthlyValue'),
-      sortable: true,
-      width: '120px',
-      render: (item: Plano) => (
-        <span className="text-success">
-          R$ {Number(item.valor_mensal || 0).toFixed(2).replace('.', ',')}
-        </span>
-      )
-    },
-    {
-      key: 'quantidade_usuarios',
-      label: t('form.usersQuantity'),
-      sortable: true,
-      width: '100px',
-      render: (item: Plano) => (
-        <span>{item.quantidade_usuarios || '-'}</span>
-      )
-    },
-    {
-      key: 'quantidade_clientes',
-      label: t('table.clients'),
-      sortable: true,
-      badgeLabels: ['9999'],
-      render: (item: Plano) => (
-        <span className="badge bg-primary">
-          {item.quantidade_clientes ?? (item.clientes ? item.clientes.length : 0)}
-        </span>
-      )
-    },
-    {
-      key: 'status',
-      label: t('table.status'),
-      sortable: true,
-      badgeLabels: [t('status.active'), t('status.inactive')],
-      render: (item: Plano) => {
-        const statusMap: { [key: string]: string } = {
-          'ativo': t('status.active'),
-          'inativo': t('status.inactive')
-        };
-        return (
-          <span className={`badge ${getStatusBadgeClass(item.status)}`}>
-            {statusMap[item.status] || item.status}
-          </span>
-        );
-      }
-    },
-    {
-      key: 'created_at',
-      label: t('table.createdAt'),
-      sortable: true,
-      width: '145px',
-      render: (item: Plano & { created_at?: string; created_at_formatada?: string | null }) => {
-        // Usar created_at_formatada se disponível (vem do backend já formatada)
-        if (item.created_at_formatada) {
-          return item.created_at_formatada;
-        }
-        // Fallback para formatDateTime se não tiver formato do backend
-        return item.created_at ? formatDateTime(item.created_at) : '-';
-      }
-    }
-  ], [getTipoServicoLabel, getStatusBadgeClass, t]);
+    [t]
+  );
 
   const filterTitleSuffix = initialFilters?.status
     ? ` - ${initialFilters.status === 'ativo' ? t('status.active') : t('status.inactive')}`
     : initialFilters?.tipo_servico
       ? ` - ${getTipoServicoLabel(initialFilters.tipo_servico)}`
       : '';
-  const defaultTitle = (title || (onSelectPlano ? t('ui.selectPlan') : t('menu.plans'))) + filterTitleSuffix;
-  
-  const searchFields = [
-    { key: 'id', label: t('table.id') },
-    { key: 'nome_plano', label: t('table.planName') },
-    { key: 'descricao', label: t('form.description') },
-    { key: 'tipo_servico', label: t('table.serviceType') },
-    { key: 'valor_mensal', label: t('table.monthlyValue') },
-    { key: 'quantidade_usuarios', label: t('form.usersQuantity') },
-    { key: 'status', label: t('table.status') }
-  ];
+  const defaultTitle =
+    (title || (onSelectPlano ? t('ui.selectPlan') : t('menu.plans'))) + filterTitleSuffix;
 
   const { data: planosData, isLoading, refetch } = usePlanos({
-    search: tableFilters.debouncedSearch || undefined,
-    searchField: tableFilters.searchField || undefined,
-    page: tableFilters.page,
-    limit: tableFilters.limit,
-    sortColumn: tableFilters.sortColumn,
-    sortDirection: tableFilters.sortDirection,
-    ...(initialFilters && Object.keys(initialFilters).length > 0 ? initialFilters : {})
+    search: list.tableFilters.debouncedSearch || undefined,
+    searchField: list.tableFilters.searchField || undefined,
+    page: list.tableFilters.page,
+    limit: list.tableFilters.limit,
+    sortColumn: list.tableFilters.sortColumn,
+    sortDirection: list.tableFilters.sortDirection,
+    ...(initialFilters && Object.keys(initialFilters).length > 0 ? initialFilters : {}),
   });
 
   const deletePlanoMutation = useDeletePlano();
 
-  // Paginação do backend - usar valores do backend quando disponíveis
-  const pagination = useMemo(() => {
-    if (planosData?.pagination && typeof planosData.pagination === 'object') {
-      const pag = planosData.pagination;
-      const total = pag.total ?? 0;
-      const perPage = pag.per_page ?? tableFilters.limit;
-      const currentPage = pag.current_page ?? tableFilters.page;
-      
-      // Calcular last_page se não estiver definido
-      let lastPage = pag.last_page;
-      if (!lastPage && total > 0) {
-        lastPage = Math.max(1, Math.ceil(total / perPage));
-      } else if (!lastPage) {
-        lastPage = 1;
-      }
-      
-      return {
-        current_page: currentPage,
-        last_page: lastPage,
-        per_page: perPage,
-        total: total,
-        from: pag.from ?? ((currentPage - 1) * perPage) + 1,
-        to: pag.to ?? Math.min(currentPage * perPage, total)
-      };
-    }
-    return {
-      current_page: tableFilters.page,
-      last_page: 1,
-      per_page: tableFilters.limit,
-      total: 0,
-      from: 0,
-      to: 0
-    };
-  }, [planosData?.pagination, tableFilters.page, tableFilters.limit]);
-
-  const handleSelect = useCallback((selectedItems?: Plano[]) => {
-    const item = selectedItems && selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-    if (item) {
-      clearSelection();
-      if (onSelectPlano) {
-        onSelectPlano(item);
-        onClose();
-      }
-    }
-  }, [selectedItem, clearSelection, onSelectPlano, onClose]);
-
-  const handleDelete = useCallback(async (planoId: number) => {
-    try {
-      await deletePlanoMutation.mutateAsync(planoId);
-      refetch();
-    } catch (error: unknown) {
-      // Erro tratado pelo useNotificationContext
-    }
-  }, [deletePlanoMutation, refetch]);
-
-  const handleAudit = useCallback((plano: Plano) => {
-    auditoria.handleAudit('Plano', plano.id);
-  }, [auditoria]);
-
-  // Bulk actions memoizados
-  const bulkActions = useMemo(() => onSelectPlano ? [
-    {
-      label: bulkBtn.cancelar.label,
-      variant: bulkBtn.cancelar.variant,
-      action: () => {
-        clearSelection();
-        onClose();
+  const handleDelete = useCallback(
+    async (planoId: number) => {
+      try {
+        await deletePlanoMutation.mutateAsync(planoId);
+        refetch();
+      } catch {
+        // Erro tratado pelo useNotificationContext
       }
     },
-    {
-      label: bulkBtn.selecionar.label,
-        variant: bulkBtn.selecionar.variant,
-        disabled: (selectedItems: Plano[]) => selectedItems.length === 0 && !selectedItem,
-        action: (selectedItems: Plano[]) => handleSelect(selectedItems)
-      }
-    ] : [
-      {
-        label: bulkBtn.novo.label,
-        variant: bulkBtn.novo.variant,
-        action: () => setShowCreateModal(true)
-      },
-      {
-        label: bulkBtn.editar.label,
-        variant: bulkBtn.editar.variant,
-        disabled: (selectedItems: Plano[]) => selectedItems.length === 0 && !selectedItem,
-        action: (selectedItems: Plano[]) => {
-          const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-          if (item) {
-            setSelectedPlanoId(item.id);
-            setShowEditModal(true);
-          }
-        }
-      },
-      {
-        label: bulkBtn.deletar.label,
-        variant: bulkBtn.deletar.variant,
-        disabled: (selectedItems: Plano[]) => selectedItems.length === 0 && !selectedItem,
-        action: async (selectedItems: Plano[]) => {
-          const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-          if (!item) return;
+    [deletePlanoMutation, refetch]
+  );
 
-          const confirmed = window.confirm(t('messages.confirmDelete'));
-          if (confirmed) {
-            handleDelete(item.id);
-          }
+  const handleAudit = useCallback(
+    (plano: Plano) => {
+      list.auditoria.handleAudit('Plano', plano.id);
+    },
+    [list.auditoria]
+  );
+
+  const columns = useMemo(
+    (): ListModalConfig<Plano>['columns'] => [
+      {
+        key: 'id',
+        label: t('table.id'),
+        sortable: true,
+        width: '42px',
+        render: (item) => <span>{item.id}</span>,
+      },
+      {
+        key: 'nome_plano',
+        label: t('table.planName'),
+        sortable: true,
+        width: '180px',
+        render: (item) => item.nome_plano,
+      },
+      {
+        key: 'descricao',
+        label: t('form.description'),
+        sortable: true,
+        width: '200px',
+        render: (item) => item.descricao || '-',
+      },
+      {
+        key: 'tipo_servico',
+        label: t('table.serviceType'),
+        sortable: true,
+        render: (item) => (
+          <span className="badge bg-info">{getTipoServicoLabel(item.tipo_servico)}</span>
+        ),
+      },
+      {
+        key: 'valor_mensal',
+        label: t('table.monthlyValue'),
+        sortable: true,
+        width: '120px',
+        render: (item) => (
+          <span className="text-success">
+            R$ {Number(item.valor_mensal || 0).toFixed(2).replace('.', ',')}
+          </span>
+        ),
+      },
+      {
+        key: 'quantidade_usuarios',
+        label: t('form.usersQuantity'),
+        sortable: true,
+        width: '100px',
+        render: (item) => <span>{item.quantidade_usuarios || '-'}</span>,
+      },
+      {
+        key: 'quantidade_clientes',
+        label: t('table.clients'),
+        sortable: true,
+        render: (item) => (
+          <span className="badge bg-primary">
+            {item.quantidade_clientes ?? (item.clientes ? item.clientes.length : 0)}
+          </span>
+        ),
+      },
+      {
+        key: 'status',
+        label: t('table.status'),
+        sortable: true,
+        render: (item) => {
+          const statusMap: Record<string, string> = {
+            ativo: t('status.active'),
+            inativo: t('status.inactive'),
+          };
+          return (
+            <span className={`badge ${getStatusBadgeClass(item.status)}`}>
+              {statusMap[item.status] || item.status}
+            </span>
+          );
+        },
+      },
+      {
+        key: 'created_at',
+        label: t('table.createdAt'),
+        sortable: true,
+        width: '145px',
+        render: (item) => {
+          const row = item as Plano & { created_at_formatada?: string | null; created_at?: string };
+          if (row.created_at_formatada) return row.created_at_formatada;
+          return row.created_at ? formatDateTime(row.created_at) : '-';
         },
       },
     ],
-    [
-      onSelectPlano,
-      selectedItem,
-      clearSelection,
-      onClose,
-      handleSelect,
-      handleDelete,
-      t,
-      bulkBtn,
-    ]
+    [getStatusBadgeClass, getTipoServicoLabel, t]
+  );
+
+  const searchFields = useMemo(
+    () => [
+      { key: 'id', label: t('table.id') },
+      { key: 'nome_plano', label: t('table.planName') },
+      { key: 'descricao', label: t('form.description') },
+      { key: 'tipo_servico', label: t('table.serviceType') },
+      { key: 'valor_mensal', label: t('table.monthlyValue') },
+      { key: 'quantidade_usuarios', label: t('form.usersQuantity') },
+      { key: 'status', label: t('table.status') },
+    ],
+    [t]
+  );
+
+  const bulkActions = useMemo(() => {
+    if (onSelectPlano) {
+      return list.buildSelectBulkActions();
+    }
+    return list.buildCrudBulkActions({
+      onNew: () => {
+        list.setSelectedEntityId(null);
+        setIsEditMode(false);
+        setShowPlanoModal(true);
+      },
+      onEdit: (item) => {
+        list.setSelectedEntityId(item.id);
+        setIsEditMode(true);
+        setShowPlanoModal(true);
+      },
+      onDelete: handleDelete,
+    });
+  }, [onSelectPlano, list, handleDelete]);
+
+  const pagination = useMemo(
+    () => list.buildPagination(planosData?.pagination),
+    [list, planosData?.pagination]
   );
 
   const modalData = useMemo(() => planosData?.data || [], [planosData?.data]);
 
-  const handleSearchChange = useCallback((search: string, field?: string) => {
-    setTimeout(() => {
-      tableFilters.setSearch(search);
-      if (field) tableFilters.setSearchField(field);
-    }, 0);
-  }, [tableFilters]);
-
-  const modalContent = (
-    <>
-      <Table
-            title={defaultTitle}
-            config={{
-              columns: tableColumns,
-              data: modalData,
-              loading: isLoading,
-              searchable: true,
-              searchPlaceholder: t('layout.searchPlaceholder'),
-              searchFields,
-              sortable: true,
-              sortColumn: tableFilters.sortColumn,
-              sortDirection: tableFilters.sortDirection,
-              striped: true,
-              hover: true,
-              responsive: true,
-              selectable: true,
-              multiSelect: false,
-              bulkActions: bulkActions.map(action => ({
-                key: action.label.toLowerCase().replace(/\s+/g, '-'),
-                label: action.label,
-                onClick: action.action,
-                disabled: action.disabled,
-                variant: action.variant
-              })),
-              emptyMessage: 'Nenhum plano encontrado',
-              pagination: pagination
-            }}
-            tableId="planos-list-modal"
-            syncWithHeader={false}
-            onSelectionChange={(items) => {
-              handleSelectionChange(items);
-            }}
-            onRowClick={onSelectPlano ? (item) => {
-              onSelectPlano(item);
-              onClose();
-            } : undefined}
-            onRowDoubleClick={(plano) => {
-              if (onSelectPlano) {
-                onSelectPlano(plano);
-                onClose();
-              }
-            }}
-            onRefresh={refetch}
-            onAudit={handleAudit}
-            auditEntity="Plano"
-            onPageChange={tableFilters.setPage}
-            onPageSizeChange={tableFilters.setLimit}
-            onSort={(column, direction) => tableFilters.setSort(column, direction)}
-            onSearch={(search, field) => handleSearchChange(search, field)}
-            search={tableFilters.search}
-          />
-    </>
+  const handleRowSelect = useCallback(
+    (item: Plano) => {
+      onSelectPlano?.(item);
+      onClose();
+    },
+    [onSelectPlano, onClose]
   );
 
-  // Modais auxiliares (sempre renderizados, independente de skipWrapper)
+  const listModal = (
+    <ListModal<Plano>
+      show={show}
+      onClose={list.handleModalClose}
+      skipWrapper={skipWrapper}
+      config={{
+        title: defaultTitle,
+        columns,
+        searchPlaceholder: t('layout.searchPlaceholder'),
+        searchFields,
+        emptyMessage: 'Nenhum plano encontrado',
+      }}
+      data={modalData}
+      loading={isLoading}
+      search={list.tableFilters.search}
+      onSearchChange={list.handleSearchChange}
+      sortColumn={list.tableFilters.sortColumn}
+      sortDirection={list.tableFilters.sortDirection}
+      onSortChange={list.tableFilters.setSort}
+      pagination={pagination}
+      onPageChange={list.tableFilters.setPage}
+      onLimitChange={list.tableFilters.setLimit}
+      onRefresh={refetch}
+      bulkActions={bulkActions}
+      onSelectionChange={list.handleSelectionChange}
+      onRowClick={onSelectPlano ? handleRowSelect : undefined}
+      onRowDoubleClick={onSelectPlano ? handleRowSelect : undefined}
+      onAudit={handleAudit}
+      auditEntity="Plano"
+      tableId="planos-list-modal"
+      modalId="planos-list-modal"
+    />
+  );
+
   const auxiliaryModals = (
     <>
-      {/* Modal de Criação/Edição unificado */}
       <PlanoModal
-        show={showCreateModal || showEditModal}
+        show={showPlanoModal}
         onClose={() => {
-          setShowCreateModal(false);
-          setShowEditModal(false);
-          setSelectedPlanoId(null);
+          setShowPlanoModal(false);
+          setIsEditMode(false);
+          list.setSelectedEntityId(null);
         }}
-        planoId={showEditModal ? selectedPlanoId : null}
+        planoId={isEditMode ? list.selectedEntityId : null}
         onSuccess={() => {
           refetch();
           queryClient.invalidateQueries({ queryKey: ['planos'] });
-          setShowCreateModal(false);
-          setShowEditModal(false);
-          setSelectedPlanoId(null);
+          setShowPlanoModal(false);
+          setIsEditMode(false);
+          list.setSelectedEntityId(null);
         }}
       />
 
-      {/* Modal de Visualização de PDF de Auditoria */}
       <ImprimirModal
-        show={auditoria.showPreview}
-        onClose={auditoria.handleClosePreview}
-        pdfUrl={auditoria.pdfUrl}
-        isGenerating={auditoria.isGeneratingPdf}
+        show={list.auditoria.showPreview}
+        onClose={list.auditoria.handleClosePreview}
+        pdfUrl={list.auditoria.pdfUrl}
+        isGenerating={list.auditoria.isGeneratingPdf}
         title={t('financial.executionLogs')}
         modalId="auditoria-plano-modal"
       />
@@ -426,7 +303,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
   if (skipWrapper) {
     return (
       <>
-        {modalContent}
+        {listModal}
         {auxiliaryModals}
       </>
     );
@@ -434,19 +311,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
 
   return (
     <>
-      <DraggableModal
-        show={show}
-        onClose={() => {
-          clearSelection();
-          onClose();
-        }}
-        title={defaultTitle}
-        size="lg"
-        modalId="planos-list-modal"
-        className="no-padding"
-      >
-        {modalContent}
-      </DraggableModal>
+      {listModal}
       {auxiliaryModals}
     </>
   );
