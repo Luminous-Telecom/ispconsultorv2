@@ -12,7 +12,7 @@ import { useI18n } from 'contexts/I18nContext';
 import { SshDevice } from 'types';
 import ListModal from 'components/common/ListModal';
 import { ListModalConfig } from 'types/modal';
-import SshDeviceModal from './SshDeviceModal';
+import SshDeviceModal from './sshDeviceModal';
 import SshTerminalModal from './SshTerminalModal';
 import ImprimirModal from 'components/common/ImprimirModal';
 

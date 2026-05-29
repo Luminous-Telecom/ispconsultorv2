@@ -1,6 +1,6 @@
 import type { ModalType } from 'contexts/ModalContext';
 import type { TranslationKeys } from 'contexts/I18nContext';
-import type { LogsModalType } from './LogsModal';
+import type { LogsModalType } from './logsModal/types';
 
 export interface ResolvedLogsModal {
   titleKey: keyof TranslationKeys;

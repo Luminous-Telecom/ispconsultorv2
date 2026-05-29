@@ -1,0 +1,158 @@
+import React from 'react';
+import FormField from 'components/ui/FormField';
+import EntitySelectField from 'components/ui/EntitySelectField';
+import { useI18n } from 'contexts/I18nContext';
+import ContratoTab from '../abas/ContratoTab';
+import AdesaoTab from '../abas/AdesaoTab';
+import PermanenciaTab from '../abas/PermanenciaTab';
+import ReciboTab from '../abas/ReciboTab';
+import CartaTab from '../abas/CartaTab';
+import ConteudoTab from '../abas/ConteudoTab';
+import { DocumentoForm, DocumentoModalProps, DocumentoUnion } from '../types';
+import { DocumentoActiveTab } from './constants';
+
+interface ClienteOption {
+  id: number;
+  razao_social: string;
+}
+
+interface DocumentoModalBodyProps {
+  isMobile: boolean;
+  tipo: DocumentoModalProps['tipo'];
+  formData: DocumentoForm;
+  setFormData: React.Dispatch<React.SetStateAction<DocumentoForm>>;
+  isEditing: boolean;
+  currentDocumento: DocumentoUnion | null;
+  activeTab: DocumentoActiveTab;
+  tipoLabel: string;
+  contentPlaceholder: string;
+  clientesDisponiveis: ClienteOption[];
+  clienteTesteId: number;
+  setClienteTesteId: (id: number) => void;
+  onShowClienteModal: () => void;
+  onSubmit: (e: React.FormEvent) => void;
+}
+
+function DocumentoModalBody({
+  isMobile,
+  tipo,
+  formData,
+  setFormData,
+  isEditing,
+  currentDocumento,
+  activeTab,
+  tipoLabel,
+  contentPlaceholder,
+  clientesDisponiveis,
+  clienteTesteId,
+  setClienteTesteId,
+  onShowClienteModal,
+  onSubmit,
+}: DocumentoModalBodyProps) {
+  const { t } = useI18n();
+  const editorKeyPrefix = `${isEditing ? currentDocumento?.id : 'create'}`;
+
+  return (
+    <div style={{ padding: isMobile ? '0' : '16px' }}>
+      <form onSubmit={onSubmit}>
+        <div className="row g-2 mb-0">
+          <div className="col-md-6">
+            <FormField
+              name="nome"
+              type="text"
+              label={t('document.name')}
+              value={formData.nome}
+              onChange={(value) => setFormData((prev) => ({ ...prev, nome: String(value ?? '') }))}
+              placeholder={isEditing ? undefined : `Ex: ${tipoLabel} Padrão`}
+              required
+              size="sm"
+            />
+          </div>
+          <div className="col-md-6">
+            <FormField
+              name="descricao"
+              type="text"
+              label={t('document.description')}
+              value={formData.descricao}
+              onChange={(value) => setFormData((prev) => ({ ...prev, descricao: String(value ?? '') }))}
+              placeholder={t('placeholder.description')}
+              size="sm"
+            />
+          </div>
+          <div className="col-md-12">
+            <EntitySelectField
+              value={clienteTesteId || 0}
+              onChange={(value) => setClienteTesteId(value)}
+              onShowModal={onShowClienteModal}
+              entities={clientesDisponiveis.map((c) => ({
+                id: c.id,
+                nome: c.razao_social,
+              }))}
+              label={t('document.testClient')}
+              idFieldTitle={t('document.idPlaceholder')}
+              helpText={t('document.testClientHelp')}
+            />
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 180px)' }}>
+          <div className="d-flex justify-content-between align-items-center mb-1">
+            <span id="conteudo-label" className="form-label small mb-0">
+              {tipo === 'contrato' ? t('document.contractContent') : t('document.content')}{' '}
+              <span className="text-danger">*</span>
+            </span>
+          </div>
+
+          {tipo === 'contrato' ? (
+            <>
+              {activeTab === 'contrato' && (
+                <ContratoTab
+                  value={formData.conteudo_contrato}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, conteudo_contrato: value }))}
+                  editorKey={`${editorKeyPrefix}-contrato`}
+                />
+              )}
+              {activeTab === 'adesao' && (
+                <AdesaoTab
+                  value={formData.conteudo_adesao}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, conteudo_adesao: value }))}
+                  editorKey={`${editorKeyPrefix}-adesao`}
+                />
+              )}
+              {activeTab === 'permanencia' && (
+                <PermanenciaTab
+                  value={formData.conteudo_permanencia}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, conteudo_permanencia: value }))}
+                  editorKey={`${editorKeyPrefix}-permanencia`}
+                />
+              )}
+              {activeTab === 'recibo' && (
+                <ReciboTab
+                  value={formData.conteudo_recibo}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, conteudo_recibo: value }))}
+                  editorKey={`${editorKeyPrefix}-recibo`}
+                />
+              )}
+              {activeTab === 'carta' && (
+                <CartaTab
+                  value={formData.conteudo_carta}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, conteudo_carta: value }))}
+                  editorKey={`${editorKeyPrefix}-carta`}
+                />
+              )}
+            </>
+          ) : (
+            <ConteudoTab
+              value={formData.conteudo}
+              onChange={(value) => setFormData((prev) => ({ ...prev, conteudo: value }))}
+              editorKey={`${editorKeyPrefix}-conteudo`}
+              placeholder={contentPlaceholder}
+            />
+          )}
+        </div>
+      </form>
+    </div>
+  );
+}
+
+export default DocumentoModalBody;

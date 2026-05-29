@@ -1,3 +1,3 @@
-export { default as TituloModal } from './TituloModal';
+export { default as TituloModal } from './tituloModal';
 export * from './types';
 

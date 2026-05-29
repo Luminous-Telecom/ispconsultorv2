@@ -1,5 +1,6 @@
 import { ClienteFormData, ClienteFormErrors, TituloItem, CarneParcela } from 'types';
 import { Contrato } from 'hooks/useContratos';
+import type { TableColumn } from 'components/tables/types';
 
 export interface BulkAction<T = Record<string, unknown>> {
   key: string;
@@ -80,12 +81,7 @@ export interface FinanceiroTabProps {
   setShowCancelados: (show: boolean) => void;
   onRefresh: () => void;
   isGeneratingPdf: boolean;
-  columns: Array<{
-    key: string;
-    label: string;
-    sortable?: boolean;
-    render?: (item: CarneParcela) => React.ReactNode;
-  }>;
+  columns: TableColumn<CarneParcela>[];
   onAudit?: (titulo: CarneParcela) => void;
   auditEntity?: string;
   sortColumn?: string;

@@ -1,0 +1,101 @@
+import { useEffect, useRef, useState } from 'react';
+
+export const useLayoutMenus = () => {
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showTableMenu, setShowTableMenu] = useState(false);
+  const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+  const [languageDropdownPosition, setLanguageDropdownPosition] = useState({ top: 0, left: 0 });
+
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  const tableMenuRef = useRef<HTMLDivElement>(null);
+  const languageTriggerRef = useRef<HTMLButtonElement>(null);
+  const languageDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+
+      if (userMenuRef.current?.contains(target)) {
+        return;
+      }
+
+      const languageDropdown = document.querySelector('[data-language-dropdown]');
+      if (languageDropdown?.contains(target)) {
+        return;
+      }
+
+      setShowUserMenu(false);
+      setShowLanguageDropdown(false);
+    };
+
+    if (showUserMenu) {
+      const timeoutId = setTimeout(() => {
+        document.addEventListener('click', handleClickOutside);
+      }, 0);
+
+      return () => {
+        clearTimeout(timeoutId);
+        document.removeEventListener('click', handleClickOutside);
+      };
+    }
+  }, [showUserMenu, showLanguageDropdown]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (tableMenuRef.current && !tableMenuRef.current.contains(event.target as Node)) {
+        setShowTableMenu(false);
+      }
+    };
+
+    if (showTableMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showTableMenu]);
+
+  useEffect(() => {
+    if (showLanguageDropdown && languageTriggerRef.current) {
+      const triggerRect = languageTriggerRef.current.getBoundingClientRect();
+      setLanguageDropdownPosition({
+        top: triggerRect.bottom + 2,
+        left: triggerRect.left,
+      });
+    }
+  }, [showLanguageDropdown]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (languageTriggerRef.current?.contains(target)) {
+        return;
+      }
+      if (languageDropdownRef.current?.contains(target)) {
+        return;
+      }
+      setShowLanguageDropdown(false);
+    };
+
+    if (showLanguageDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showLanguageDropdown]);
+
+  return {
+    showUserMenu,
+    setShowUserMenu,
+    showTableMenu,
+    setShowTableMenu,
+    showLanguageDropdown,
+    setShowLanguageDropdown,
+    languageDropdownPosition,
+    userMenuRef,
+    tableMenuRef,
+    languageTriggerRef,
+    languageDropdownRef,
+  };
+};

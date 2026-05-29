@@ -17,7 +17,7 @@ const DadosEmpresaModal = lazy(() => import('../modals/empresa/empresa').then(m 
 const ServidorEmailModal = lazy(() => import('../modals/parametros/servidor-email').then(m => ({ default: m.ServidorEmailModal })));
 const ServidorWhatsappModal = lazy(() => import('../modals/parametros/servidor-whatsapp').then(m => ({ default: m.ServidorWhatsappModal })));
 const NFSeModal = lazy(() => import('../modals/parametros/NFSeModal'));
-const ContratoListModal = lazy(() => import('../modals/contratos/ContratoListModal'));
+const ContratoListModal = lazy(() => import('../modals/contratos').then(m => ({ default: m.ContratoListModal })));
 const ContasReceberListModal = lazy(() => import('../modals/contas-receber').then(m => ({ default: m.ContasReceberListModal })));
 const FornecedorListModal = lazy(() => import('../modals/fornecedores').then(m => ({ default: m.FornecedorListModal })));
 const ContasPagarListModal = lazy(() => import('../modals/contas-pagar').then(m => ({ default: m.ContasPagarListModal })));
