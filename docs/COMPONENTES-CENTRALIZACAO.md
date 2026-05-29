@@ -60,6 +60,7 @@ Use como base antes de criar componentes novos.
 | `RecursosSistemaModalCore` | `modals/recursos/` | `erp` \| `saas` |
 | `ReceberModalCore` | `modals/receber/` | `erp` \| `saas` |
 | `SaasServidorListModalCore` | `modals/servidor/` | `email` \| `whatsapp` |
+| `SaasServidorFormModalCore` | `modals/servidor/` | `email` \| `whatsapp` (forms SaaS) |
 | `servidor-shared` (`MensagemTypeSelect`, `MensagemTipoEnvioRadio`, `ServidorSettingsCard`) | `parametros/servidor-shared/` | abas ERP email / whatsapp |
 | `RpkiLogsTableCore` | `modals/logs/rpki/` | `validation` \| `ca-pai` \| `repositorios` \| `roas` \| `aspas` |
 | `RotinaLogsModal` | `components/common/` | logs de rotina do agendador |
@@ -171,8 +172,8 @@ Duplicação quase 1:1. Modelo de referência: `logsModalRegistry.ts` + `modals/
 |-----|------|-----------------|
 | `ServidorEmailModal` | `SaasServidorEmailModal` | `servidor-email/abas/ServidorTab` vs `servidor-whatsapp/abas/ServidorTab` (estrutura similar) |
 | `ServidorWhatsappModal` | `SaasServidorWhatsappModal` | Idem |
-| — | `SaasServidorEmailFormModal` | Form isolado SaaS |
-| — | `SaasServidorWhatsappFormModal` | Form isolado SaaS |
+| — | `SaasServidorEmailFormModal` | → `SaasServidorFormModalCore` (`channel="email"`) |
+| — | `SaasServidorWhatsappFormModal` | → `SaasServidorFormModalCore` (`channel="whatsapp"`) |
 
 **Abas candidatas a unificação:**
 
@@ -517,7 +518,7 @@ Legenda: `[ ]` pendente · `[~]` parcial · `[x]` já centralizado
 - [x] `ReceberModal` / `SaasReceberModal` → `ReceberModalCore`
 - [x] `AgendadorTarefasModal` / `SaasAgendadorTarefasModal` (wrapper fino — já SaaS)
 - [x] `RotinaAgendadaModal` / `SaasRotinaAgendadaModal` (wrapper fino)
-- [ ] Forms SaaS ↔ ERP (ver tabela seção 2)
+- [~] Forms SaaS ↔ ERP — servidores SaaS email/whatsapp → `SaasServidorFormModalCore` ✅; demais pares na tabela seção 2
 
 ### Logs
 
