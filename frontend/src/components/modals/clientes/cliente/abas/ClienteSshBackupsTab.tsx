@@ -150,7 +150,6 @@ const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }
         label: t('sshDevice.backupFileColumn'),
         sortable: true,
         searchable: true,
-        className: 'text-wrap',
         render: (row) => row.fileName,
       },
       {

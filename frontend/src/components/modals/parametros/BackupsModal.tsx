@@ -171,8 +171,7 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
       key: 'nome',
       label: t('backup.columnName'),
       sortable: true,
-      className: 'text-wrap',
-      render: (item) => item.nome
+      render: (item) => item.nome,
     },
     {
       key: 'tamanhoFormatado',

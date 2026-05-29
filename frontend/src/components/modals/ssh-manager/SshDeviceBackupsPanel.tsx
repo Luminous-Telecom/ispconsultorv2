@@ -145,7 +145,6 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
         label: t('sshDevice.backupFileColumn'),
         sortable: true,
         searchable: true,
-        className: 'text-wrap',
         render: (row) => row.fileName,
       },
       {

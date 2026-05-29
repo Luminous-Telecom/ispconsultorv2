@@ -169,7 +169,6 @@ const DashboardBackupEquipamentosModal: React.FC<DashboardBackupEquipamentosModa
         label: t('sshDevice.backupFileColumn'),
         sortable: true,
         searchable: true,
-        className: 'text-wrap',
         render: (row) => (row.fileName?.trim() ? row.fileName : '—'),
       },
       {

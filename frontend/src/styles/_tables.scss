@@ -241,13 +241,6 @@ label {
   padding-right: 0.25rem;
 }
 
-/* Para células que precisam de quebra de linha (como descrições longas) */
-.table tbody td.text-wrap {
-  white-space: normal;
-  word-wrap: break-word;
-  text-overflow: clip;
-}
-
 /* Estilos específicos para células de dados */
 .table-data-cell {
   overflow: hidden;
