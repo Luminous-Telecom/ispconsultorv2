@@ -9,6 +9,7 @@ import { useFormReset } from 'hooks/useFormReset';
 import { useUsuario, useGerarWebhookSecret } from 'hooks/useUsuarios';
 import DraggableModal from 'components/common/DraggableModal';
 import { CopiarButton, FormField, AtivoInativoField, GerarTokenButton, ModalFormActions } from 'components/ui';
+import UsuarioAccountFormFields from 'components/forms/UsuarioAccountFormFields';
 import { useI18n } from 'contexts/I18nContext';
 
 interface UsuarioForm {
@@ -176,54 +177,29 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
     <form id="usuario-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
       <div>
         <div className="row g-1 mb-0">
-          <div className="col-md-12">
-            <FormField
-              name="nome"
-              type="text"
-              label={t('form.name')}
-              value={formData.nome}
-              onChange={(value: unknown) => {
-                setFormData(prev => ({ ...prev, nome: String(value ?? '') }));
-                if (errors.nome) setErrors(prev => ({ ...prev, nome: undefined }));
-              }}
-              placeholder={t('placeholder.enterName')}
-              required
-              size="sm"
-              error={errors.nome}
-            />
-          </div>
-          <div className="col-md-12">
-            <FormField
-              name="email"
-              type="email"
-              label={t('form.email')}
-              value={formData.email}
-              onChange={(value: unknown) => {
-                setFormData(prev => ({ ...prev, email: String(value ?? '') }));
-                if (errors.email) setErrors(prev => ({ ...prev, email: undefined }));
-              }}
-              placeholder={t('placeholder.enterEmail')}
-              required
-              size="sm"
-              error={errors.email}
-            />
-          </div>
-          <div className="col-md-12">
-            <FormField
-              name="password"
-              type="password"
-              label={isEditing ? t('user.newPassword') : t('form.password')}
-              value={formData.password}
-              onChange={(value: unknown) => {
-                setFormData(prev => ({ ...prev, password: String(value ?? '') }));
-                if (errors.password) setErrors(prev => ({ ...prev, password: undefined }));
-              }}
-              placeholder={isEditing ? t('user.newPasswordPlaceholder') : t('user.passwordPlaceholder')}
-              required={!isEditing}
-              size="sm"
-              error={errors.password}
-            />
-          </div>
+          <UsuarioAccountFormFields
+            form={{
+              nome: formData.nome,
+              email: formData.email,
+              password: formData.password,
+            }}
+            errors={{
+              nome: errors.nome,
+              email: errors.email,
+              password: errors.password,
+            }}
+            onChange={(field, value) => {
+              setFormData((prev) => ({ ...prev, [field]: value }));
+              if (errors[field]) {
+                setErrors((prev) => {
+                  const next = { ...prev };
+                  delete next[field];
+                  return next;
+                });
+              }
+            }}
+            isEditing={isEditing}
+          />
           <div className="col-md-6">
             <AtivoInativoField
               value={formData.ativo}

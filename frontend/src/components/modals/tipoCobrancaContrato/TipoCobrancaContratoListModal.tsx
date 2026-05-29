@@ -3,22 +3,12 @@ import { useTipoCobrancaContratos, useDeleteTipoCobrancaContrato } from 'hooks/u
 import { useEntityListModal } from 'hooks/useEntityListModal';
 import { TipoCobrancaContrato } from 'services/tipoCobrancaContratoService';
 import { useI18n } from 'contexts/I18nContext';
-import { TranslationKeys } from 'contexts/I18nContext';
 import { formatDateTime } from 'utils/formatters';
+import { formatTipoCobrancaPeriodicity } from 'constants/tipoCobrancaPeriodicity';
 import ListModal from 'components/common/ListModal';
 import { ListModalConfig } from 'types/modal';
 import TipoCobrancaContratoModal from './TipoCobrancaContratoModal';
 import ImprimirModal from 'components/common/ImprimirModal';
-
-const PERIODICIDADE_LABELS: Record<string, string> = {
-  mensal: 'form.periodicityMonthly',
-  bimestral: 'form.periodicityBimonthly',
-  trimestral: 'form.periodicityQuarterly',
-  semestral: 'form.periodicitySemiannual',
-  anual: 'form.periodicityAnnual',
-  quinzenal: 'form.periodicityBiweekly',
-  semanal: 'form.periodicityWeekly',
-};
 
 interface TipoCobrancaContratoListModalProps {
   show: boolean;
@@ -74,6 +64,11 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
     [list.auditoria]
   );
 
+  const formatPeriodicity = useCallback(
+    (periodicidade: string) => formatTipoCobrancaPeriodicity(periodicidade, t),
+    [t]
+  );
+
   const columns = useMemo(
     (): ListModalConfig<TipoCobrancaContrato>['columns'] => [
       {
@@ -94,11 +89,7 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
         key: 'periodicidade',
         label: t('table.periodicity'),
         sortable: true,
-        render: (item) =>
-          t(
-            (PERIODICIDADE_LABELS[item.periodicidade] ||
-              'form.periodicityMonthly') as keyof TranslationKeys
-          ),
+        render: (item) => <span>{formatPeriodicity(item.periodicidade)}</span>,
       },
       {
         key: 'ativo',
@@ -117,7 +108,7 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
         render: (item) => (item.created_at ? formatDateTime(item.created_at) : '-'),
       },
     ],
-    [t]
+    [t, formatPeriodicity]
   );
 
   const searchFields = useMemo(

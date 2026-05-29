@@ -1,119 +1,99 @@
-import React, { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import React from 'react';
 import DraggableModal from 'components/common/DraggableModal';
-import { FormField, AtivoInativoField, ModalFormActions } from 'components/ui';
-import { useNotificationContext } from 'components/notifications/NotificationProvider';
-import { useApiError } from 'hooks/useApiError';
+import { ModalFormActions } from 'components/ui';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
-import { useFormReset } from 'hooks/useFormReset';
+import { useEntityFormModal } from 'hooks/useEntityFormModal';
 import { saasTipoCobrancaService, type SaasTipoCobranca } from 'services/saas/saasCrudService';
+import TipoCobrancaFormFields, {
+  type TipoCobrancaFormData,
+} from 'components/modals/tipoCobrancaContrato/TipoCobrancaFormFields';
+import { validateTipoCobrancaForm } from 'utils/tipoCobrancaFormValidation';
 
-interface Props { show: boolean; onClose: () => void; onSuccess?: () => void; itemId?: number | null; }
-
-const PERIODICIDADES = [
-  { value: 'mensal', label: 'Mensal' },
-  { value: 'bimestral', label: 'Bimestral' },
-  { value: 'trimestral', label: 'Trimestral' },
-  { value: 'semestral', label: 'Semestral' },
-  { value: 'anual', label: 'Anual' },
-  { value: 'quinzenal', label: 'Quinzenal' },
-  { value: 'semanal', label: 'Semanal' },
-];
-
-interface Form {
-  nome: string;
-  quantidade_titulos: number;
-  periodicidade: string;
-  ativo: boolean;
+interface SaasTipoCobrancaFormModalProps {
+  show: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
+  itemId?: number | null;
 }
 
-const INITIAL: Form = { nome: '', quantidade_titulos: 1, periodicidade: 'mensal', ativo: true };
+const INITIAL: TipoCobrancaFormData = {
+  nome: '',
+  quantidade_titulos: 1,
+  periodicidade: 'mensal',
+  ativo: true,
+};
 
-const SaasTipoCobrancaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId }) => {
-  const queryClient = useQueryClient();
-  const { success } = useNotificationContext();
-  const { showApiError } = useApiError();
-  const isEditing = !!itemId;
-  const [form, setForm] = useState<Form>(INITIAL);
-  const [errors, setErrors] = useState<Partial<Record<keyof Form, string>>>({});
-
-  const { data } = useQuery({
-    queryKey: ['saas-tipo-cobranca', itemId],
-    queryFn: () => saasTipoCobrancaService.getById(itemId!),
-    enabled: show && !!itemId,
-  });
-
-  useFormReset({ show: show && !isEditing, initialData: INITIAL, setFormData: setForm, setErrors });
-  useFormReset({
-    show: show && isEditing, initialData: INITIAL, setFormData: setForm, setErrors,
-    customData: data?.data ? (() => {
-      const d = data.data as unknown as SaasTipoCobranca;
-      return { nome: d.nome, quantidade_titulos: d.quantidade_titulos ?? 1, periodicidade: d.periodicidade ?? 'mensal', ativo: d.ativo ?? true };
-    })() : undefined,
-  });
-
-  const createMutation = useMutation({
-    mutationFn: (d: Partial<SaasTipoCobranca>) => saasTipoCobrancaService.create(d),
-    onSuccess: () => { success('Tipo de cobrança criado'); queryClient.invalidateQueries({ queryKey: ['saas-tipos-cobranca'] }); onSuccess?.(); },
-    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TIPO_COBRANCA_CREATE_ERROR),
-  });
-  const updateMutation = useMutation({
-    mutationFn: (d: Partial<SaasTipoCobranca>) => saasTipoCobrancaService.update(itemId!, d),
-    onSuccess: () => { success('Tipo de cobrança atualizado'); queryClient.invalidateQueries({ queryKey: ['saas-tipos-cobranca'] }); onSuccess?.(); },
-    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TIPO_COBRANCA_UPDATE_ERROR),
-  });
-  const isPending = createMutation.isPending || updateMutation.isPending;
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const errs: Partial<Record<keyof Form, string>> = {};
-    if (!form.nome.trim()) errs.nome = 'Nome é obrigatório';
-    if (form.quantidade_titulos < 1) errs.quantidade_titulos = 'Quantidade mínima é 1';
-    if (Object.keys(errs).length) { setErrors(errs); return; }
-    setErrors({});
-    try {
-      const payload: Partial<SaasTipoCobranca> = {
-        nome: form.nome,
-        quantidade_titulos: form.quantidade_titulos,
-        periodicidade: form.periodicidade as SaasTipoCobranca['periodicidade'],
-        ativo: form.ativo,
+const SaasTipoCobrancaFormModal: React.FC<SaasTipoCobrancaFormModalProps> = ({
+  show,
+  onClose,
+  onSuccess,
+  itemId,
+}) => {
+  const { form, errors, isPending, handleChange, handleSubmit } = useEntityFormModal<
+    TipoCobrancaFormData,
+    Partial<SaasTipoCobranca>
+  >({
+    show,
+    entityId: itemId,
+    initialForm: INITIAL,
+    queryKey: 'saas-tipo-cobranca',
+    loadById: (id) => saasTipoCobrancaService.getById(id),
+    mapEntityToForm: (entity) => {
+      const tipo = entity as SaasTipoCobranca;
+      return {
+        nome: tipo.nome,
+        quantidade_titulos: tipo.quantidade_titulos ?? 1,
+        periodicidade: tipo.periodicidade ?? 'mensal',
+        ativo: tipo.ativo ?? true,
       };
-      if (isEditing) await updateMutation.mutateAsync(payload);
-      else await createMutation.mutateAsync(payload);
-    } catch { /* tratado no mutation */ }
-  };
+    },
+    validate: (f) =>
+      validateTipoCobrancaForm(f, {
+        nomeRequired: 'Nome é obrigatório',
+        quantidadeRange: 'Quantidade deve ser entre 1 e 999',
+      }),
+    toPayload: (f) => ({
+      nome: f.nome,
+      quantidade_titulos: f.quantidade_titulos,
+      periodicidade: f.periodicidade as SaasTipoCobranca['periodicidade'],
+      ativo: f.ativo,
+    }),
+    create: (payload) => saasTipoCobrancaService.create(payload),
+    update: (id, payload) => saasTipoCobrancaService.update(id, payload),
+    invalidateQueryKeys: ['saas-tipos-cobranca'],
+    messages: {
+      createSuccess: 'Tipo de cobrança criado',
+      updateSuccess: 'Tipo de cobrança atualizado',
+      createError: CONTEXT_ERROR_MESSAGES.TIPO_COBRANCA_CREATE_ERROR,
+      updateError: CONTEXT_ERROR_MESSAGES.TIPO_COBRANCA_UPDATE_ERROR,
+    },
+    onSuccess,
+    onClose,
+  });
 
   return (
-    <DraggableModal show={show} onClose={onClose} title="Tipo de Cobrança" size="md" modalId="saas-tipo-cobranca-form"
+    <DraggableModal
+      show={show}
+      onClose={onClose}
+      title="Tipo de Cobrança"
+      size="md"
+      modalId="saas-tipo-cobranca-form"
       headerActions={
-        <ModalFormActions onCancel={onClose} formId="saas-tipo-cobranca-form-id" isPending={isPending} />
+        <ModalFormActions
+          onCancel={onClose}
+          formId="saas-tipo-cobranca-form-id"
+          isPending={isPending}
+        />
       }
     >
       <form id="saas-tipo-cobranca-form-id" onSubmit={handleSubmit} style={{ padding: '16px' }}>
-        <div className="row g-1">
-          <div className="col-md-12">
-            <FormField name="nome" type="text" label="Nome" value={form.nome}
-              onChange={v => { setForm(p => ({ ...p, nome: String(v ?? '') })); if (errors.nome) setErrors(e => ({ ...e, nome: undefined })); }}
-              required size="sm" error={errors.nome} />
-          </div>
-          <div className="col-md-6">
-            <FormField name="quantidade_titulos" type="number" label="Quantidade de títulos" value={form.quantidade_titulos}
-              onChange={v => setForm(p => ({ ...p, quantidade_titulos: v !== '' && v != null ? Number(v) : 1 }))}
-              min={1} size="sm" error={errors.quantidade_titulos} />
-          </div>
-          <div className="col-md-6">
-            <FormField name="periodicidade" type="select" label="Periodicidade" value={form.periodicidade}
-              onChange={v => setForm(p => ({ ...p, periodicidade: String(v ?? 'mensal') }))}
-              options={PERIODICIDADES} size="sm" />
-          </div>
-          <div className="col-md-4">
-            <AtivoInativoField
-              value={form.ativo}
-              onChange={(v) => setForm(p => ({ ...p, ativo: v }))}
-              name="saas-tipo-cobranca-ativo"
-            />
-          </div>
-        </div>
+        <TipoCobrancaFormFields
+          form={form}
+          errors={errors}
+          onChange={handleChange}
+          disabled={isPending}
+          ativoFieldName="saas-tipo-cobranca-ativo"
+        />
       </form>
     </DraggableModal>
   );

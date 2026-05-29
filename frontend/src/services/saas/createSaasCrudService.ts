@@ -32,7 +32,8 @@ export function createSaasCrudService<T>(endpoint: string) {
   return {
     list: (f: SaasCrudFilters = {}) =>
       defaultApiClient.get<SaasConfigListResponse<T>>(`${endpoint}?${buildParams(f)}`),
-    getById: (id: number) => defaultApiClient.get<ApiResponse<T>>(`${endpoint}/${id}`),
+    getById: (id: number): Promise<ApiResponse<T>> =>
+      defaultApiClient.get<T>(`${endpoint}/${id}`),
     create: (d: Partial<T>) => defaultApiClient.post(endpoint, d),
     update: (id: number, d: Partial<T>) => defaultApiClient.put(`${endpoint}/${id}`, d),
     delete: (id: number) => defaultApiClient.delete(`${endpoint}/${id}`),

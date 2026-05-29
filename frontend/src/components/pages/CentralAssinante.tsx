@@ -23,6 +23,7 @@ import {
   AlterarSenhaButton,
   SairButton,
 } from 'components/ui';
+import Button from 'components/ui/Button';
 import { useNotificationContext, NotificationContainer } from 'components/notifications';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES, ERROR_MESSAGES } from 'constants/ErrorMessages';
@@ -522,14 +523,15 @@ const CentralAssinante: React.FC = () => {
                   />
                 </div>
                 <div className="text-center mt-3">
-                  <button
+                  <Button
                     type="button"
-                    className="btn btn-link text-white-50 text-decoration-none p-0 small"
+                    variant="ghost"
+                    className="text-white-50 text-decoration-none p-0 small"
                     onClick={() => setShowRecuperarSenha(true)}
                     style={{ fontSize: '0.85rem' }}
                   >
                     Esqueci minha senha
-                  </button>
+                  </Button>
                 </div>
               </form>
             </div>
@@ -1307,7 +1309,8 @@ const CentralAssinante: React.FC = () => {
                 <div className="d-flex align-items-center justify-content-center position-relative w-100">
                   <VoltarButton
                     type="button"
-                    className="btn btn-link text-white text-decoration-none p-0 position-absolute start-0 central-assinante-modal-close"
+                    variant="ghost"
+                    className="text-white text-decoration-none p-0 position-absolute start-0 central-assinante-modal-close"
                     onClick={() => setFaturaVisualizar(null)}
                   />
                   <h6 className="mb-0 text-white fw-bold central-assinante-modal-title">

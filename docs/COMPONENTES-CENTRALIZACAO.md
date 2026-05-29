@@ -62,6 +62,8 @@ Use como base antes de criar componentes novos.
 | `SaasServidorListModalCore` | `modals/servidor/` | `email` \| `whatsapp` |
 | `SaasServidorFormModalCore` | `modals/servidor/` | `email` \| `whatsapp` (forms SaaS) |
 | `servidor-shared` (`MensagemTypeSelect`, `MensagemTipoEnvioRadio`, `ServidorSettingsCard`) | `parametros/servidor-shared/` | abas ERP email / whatsapp |
+| `TipoCobrancaFormFields` + `tipoCobrancaPeriodicity` | `tipoCobrancaContrato/` + `constants/` | form ERP + SaaS tipo de cobrança |
+| `UsuarioAccountFormFields` + `SaasUsuarioFormFields` | `forms/` + `saas/` | conta usuário ERP + SaaS |
 | `RpkiLogsTableCore` | `modals/logs/rpki/` | `validation` \| `ca-pai` \| `repositorios` \| `roas` \| `aspas` |
 | `RotinaLogsModal` | `components/common/` | logs de rotina do agendador |
 
@@ -224,10 +226,10 @@ Duplicação quase 1:1. Modelo de referência: `logsModalRegistry.ts` + `modals/
 | `SaasServidorWhatsappFormModal.tsx` | `ServidorWhatsappModal` |
 | `SaasServidorWhatsappModal.tsx` | `ServidorWhatsappModal` |
 | `SaasTenantUsuarioFormModal.tsx` | `UsuarioFormModal` |
-| `SaasTipoCobrancaFormModal.tsx` | `TipoCobrancaContratoModal` |
+| `SaasTipoCobrancaFormModal.tsx` | → `TipoCobrancaFormFields` + `tipoCobrancaPeriodicity` (com `TipoCobrancaContratoModal`) |
 | `SaasTipoCobrancaModal.tsx` | `TipoCobrancaContratoListModal` |
 | `SaasTituloFormModal.tsx` | `TituloModal` (parcial) |
-| `SaasUsuarioFormModal.tsx` | `UsuarioFormModal` |
+| `SaasUsuarioFormModal.tsx` | → `SaasUsuarioFormFields` + `UsuarioAccountFormFields` (com `UsuarioFormModal`) |
 | `SaasUsuariosModal.tsx` | `UsuariosModal` |
 | `saasTenantListTableConfig.tsx` | Config de tabela — manter como config |
 
@@ -456,13 +458,17 @@ Fase 4 — Logs (parcial)
   └── RPKI → `RpkiLogsTableCore` + `rpkiLogsConfig` ✅
   └── Renomear common/LogsModal → RotinaLogsModal ✅
 
-Fase 5 — Forms
-  └── useEntityFormModal
-  └── Expandir AddressFields / ContactFields
+Fase 5 — Forms ✅ (núcleo)
+  └── `useEntityFormModal` — `hooks/useEntityFormModal.ts`
+  └── `TipoCobrancaFormFields` + `validateTipoCobrancaForm` (ERP × SaaS)
+  └── `UsuarioAccountFormFields` + `SaasTenantUsuarioFormFields`
+  └── Expandir AddressFields / ContactFields — `SaasEmpresaFormModal` já usa `AddressFields`
 
-Fase 6 — UI e estrutura
-  └── Migrar btn cru → components/ui
-  └── Fatiar I18nContext, Layout, CentralAssinante
+Fase 6 — UI e estrutura (parcial)
+  └── Migrar `btn btn-*` nos arquivos da seção 6 (exc. dropdown Bootstrap em `TituloModal`)
+  └── `I18nContext` → `i18n/translationKeys.ts` + `i18n/translations.ts`
+  └── `SidebarMobileCloseButton` (Layout + SaasLayout)
+  └── `CentralAssinante` — botões link migrados; fatiar seções: pendente
 ```
 
 ---
@@ -518,7 +524,8 @@ Legenda: `[ ]` pendente · `[~]` parcial · `[x]` já centralizado
 - [x] `ReceberModal` / `SaasReceberModal` → `ReceberModalCore`
 - [x] `AgendadorTarefasModal` / `SaasAgendadorTarefasModal` (wrapper fino — já SaaS)
 - [x] `RotinaAgendadaModal` / `SaasRotinaAgendadaModal` (wrapper fino)
-- [~] Forms SaaS ↔ ERP — servidores SaaS email/whatsapp → `SaasServidorFormModalCore` ✅; demais pares na tabela seção 2
+- [x] Forms SaaS ↔ ERP (trechos) — `SaasServidorFormModalCore`, `TipoCobrancaFormFields`, `UsuarioAccountFormFields`, `SaasTenantUsuarioFormFields`, `DominioModal` + `BlockdomiOficioFormFields`
+- [~] Forms SaaS ↔ ERP (complexos) — `SaasPlanoFormModal`, `SaasContratoFormModal`, `SaasBancoFormModal` (hooks próprios), `SaasTituloFormModal` — ver seção «O que não centralizar»
 
 ### Logs
 
@@ -532,20 +539,26 @@ Legenda: `[ ]` pendente · `[~]` parcial · `[x]` já centralizado
 
 ### Forms
 
-- [~] `ModalFormActions` (adotado)
-- [~] `AddressFields` / `ContactFields` (poucos usos)
-- [ ] `useEntityFormModal` (proposto)
+- [x] `ModalFormActions` (adotado)
+- [x] `AddressFields` / `ContactFields` (abas empresa/cliente + `SaasEmpresaFormModal`)
+- [x] `useEntityFormModal` — `hooks/useEntityFormModal.ts` (piloto: `SaasTipoCobrancaFormModal`)
+- [x] `validateTipoCobrancaForm` — ERP + SaaS tipo cobrança
 
 ### UI
 
-- [~] `components/ui/buttons/*` (adotado na maioria)
-- [ ] Migrar `btn btn-*` restantes (ver seção 6)
+- [x] `components/ui/buttons/*` (adotado na maioria)
+- [x] Migrar `btn btn-*` da seção 6 (Layout, SaasLayout, CentralAssinante, AssinaturaDigital, ImportarListaBlockdomi; `TituloModal` dropdown mantém Bootstrap)
+- [x] `SidebarMobileCloseButton` — `components/layout/SidebarMobileCloseButton.tsx`
 
 ### Páginas / context
 
-- [ ] `I18nContext.tsx` → arquivos por domínio
-- [ ] `Layout.tsx` → subcomponentes
-- [ ] `CentralAssinante.tsx` → seções
+- [x] `I18nContext.tsx` → `i18n/translationKeys.ts` + `i18n/translations.ts` (provider enxuto em `contexts/I18nContext.tsx`)
+- [~] `Layout.tsx` → subcomponentes (só botão mobile extraído; sidebar/modais: futuro)
+- [~] `CentralAssinante.tsx` → seções (botões UI migrados; hooks por domínio: futuro)
+
+### Logs em tempo real
+
+- [x] `BlockdomiLogsRealModal` — integrado em `LogsModal.tsx` (Socket.IO; fora do `logsModalRegistry` por ser UI dedicada)
 
 ---
 

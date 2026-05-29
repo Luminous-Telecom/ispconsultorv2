@@ -10,6 +10,10 @@ import ListModal from 'components/common/ListModal';
 import { ListModalConfig } from 'types/modal';
 import ImprimirModal from 'components/common/ImprimirModal';
 import ConfirmModal from 'components/modals/ConfirmModal';
+import {
+  formatSaasUsuarioNivel,
+  getSaasUsuarioNivelBadgeColor,
+} from 'constants/saasUsuarioAccess';
 import { saasUsuariosService, type SaasUsuarioSuper, type SaasUsuarioListResponse } from 'services/saas/saasUsuariosService';
 import SaasUsuarioFormModal from './SaasUsuarioFormModal';
 
@@ -18,9 +22,6 @@ interface Props {
   onClose: () => void;
   skipWrapper?: boolean;
 }
-
-const NIVEL_LABEL: Record<string, string> = { super: 'Super', admin: 'Admin', suporte: 'Suporte' };
-const NIVEL_COLOR: Record<string, string> = { super: 'danger', admin: 'primary', suporte: 'secondary' };
 
 const SaasUsuariosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false }) => {
   const queryClient = useQueryClient();
@@ -104,8 +105,8 @@ const SaasUsuariosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false
         sortable: true,
         width: '90px',
         render: (item) => (
-          <span className={`badge bg-${NIVEL_COLOR[item.nivel_acesso] || 'secondary'}`}>
-            {NIVEL_LABEL[item.nivel_acesso] || item.nivel_acesso}
+          <span className={`badge bg-${getSaasUsuarioNivelBadgeColor(item.nivel_acesso)}`}>
+            {formatSaasUsuarioNivel(item.nivel_acesso)}
           </span>
         ),
       },

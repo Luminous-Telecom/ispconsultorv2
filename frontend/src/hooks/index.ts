@@ -20,6 +20,7 @@ export { useFormPrefix } from './useFormId';
 export * from './useModalSelect';
 export * from './useListModal';
 export * from './useEntityListModal';
+export * from './useEntityFormModal';
 export * from './useSelectModal';
 export * from './useEntitySelectField';
 export * from './useSelectedEntity';

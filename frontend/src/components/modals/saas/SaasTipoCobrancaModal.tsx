@@ -9,16 +9,7 @@ import { ListModalConfig } from 'types/modal';
 import ImprimirModal from 'components/common/ImprimirModal';
 import { saasTipoCobrancaService, type SaasTipoCobranca, type SaasConfigListResponse } from 'services/saas/saasCrudService';
 import SaasTipoCobrancaFormModal from './SaasTipoCobrancaFormModal';
-
-const PERIODICIDADE_LABEL: Record<string, string> = {
-  mensal: 'Mensal',
-  bimestral: 'Bimestral',
-  trimestral: 'Trimestral',
-  semestral: 'Semestral',
-  anual: 'Anual',
-  quinzenal: 'Quinzenal',
-  semanal: 'Semanal',
-};
+import { formatTipoCobrancaPeriodicity } from 'constants/tipoCobrancaPeriodicity';
 
 interface Props {
   show: boolean;
@@ -76,7 +67,9 @@ const SaasTipoCobrancaModal: React.FC<Props> = ({ show, onClose, skipWrapper = f
         label: t('table.periodicity'),
         sortable: true,
         width: '120px',
-        render: (i) => <span>{PERIODICIDADE_LABEL[i.periodicidade] || i.periodicidade}</span>,
+        render: (i) => (
+          <span>{formatTipoCobrancaPeriodicity(i.periodicidade, t)}</span>
+        ),
       },
       {
         key: 'ativo',

@@ -4,24 +4,10 @@ import { useCreateTipoCobrancaContrato, useUpdateTipoCobrancaContrato, useTipoCo
 import { useFormReset } from 'hooks/useFormReset';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
-import { AtivoInativoField, ModalFormActions, Spinner } from 'components/ui';
-
-const PERIODICIDADES = [
-  { value: 'mensal', key: 'form.periodicityMonthly' },
-  { value: 'bimestral', key: 'form.periodicityBimonthly' },
-  { value: 'trimestral', key: 'form.periodicityQuarterly' },
-  { value: 'semestral', key: 'form.periodicitySemiannual' },
-  { value: 'anual', key: 'form.periodicityAnnual' },
-  { value: 'quinzenal', key: 'form.periodicityBiweekly' },
-  { value: 'semanal', key: 'form.periodicityWeekly' },
-] as const;
-
-interface FormData {
-  nome: string;
-  quantidade_titulos: number;
-  periodicidade: string;
-  ativo: boolean;
-}
+import { ModalFormActions, Spinner } from 'components/ui';
+import type { TipoCobrancaContrato } from 'services/tipoCobrancaContratoService';
+import TipoCobrancaFormFields, { type TipoCobrancaFormData } from './TipoCobrancaFormFields';
+import { validateTipoCobrancaForm } from 'utils/tipoCobrancaFormValidation';
 
 interface TipoCobrancaContratoModalProps {
   show: boolean;
@@ -30,25 +16,25 @@ interface TipoCobrancaContratoModalProps {
   onSuccess?: () => void;
 }
 
+const initialForm: TipoCobrancaFormData = {
+  nome: '',
+  quantidade_titulos: 12,
+  periodicidade: 'mensal',
+  ativo: true,
+};
+
 const TipoCobrancaContratoModal: React.FC<TipoCobrancaContratoModalProps> = ({
   show,
   onClose,
   tipoId,
-  onSuccess
+  onSuccess,
 }) => {
   const { t } = useI18n();
   const isMobile = useIsMobile();
   const isEdit = !!tipoId;
 
-  const initialForm: FormData = {
-    nome: '',
-    quantidade_titulos: 12,
-    periodicidade: 'mensal',
-    ativo: true
-  };
-
-  const [formData, setFormData] = useState<FormData>(initialForm);
-  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+  const [formData, setFormData] = useState<TipoCobrancaFormData>(initialForm);
+  const [errors, setErrors] = useState<Partial<Record<keyof TipoCobrancaFormData, string>>>({});
 
   const { data: tipoData, isLoading: isLoadingTipo } = useTipoCobrancaContrato(tipoId ?? null);
   const createMutation = useCreateTipoCobrancaContrato();
@@ -60,18 +46,23 @@ const TipoCobrancaContratoModal: React.FC<TipoCobrancaContratoModalProps> = ({
     show,
     initialData: initialForm,
     setFormData,
-    customData: tipoData ? {
-      nome: tipoData.nome,
-      quantidade_titulos: tipoData.quantidade_titulos,
-      periodicidade: tipoData.periodicidade,
-      ativo: tipoData.ativo
-    } : undefined
+    customData: tipoData
+      ? {
+          nome: tipoData.nome,
+          quantidade_titulos: tipoData.quantidade_titulos,
+          periodicidade: tipoData.periodicidade,
+          ativo: tipoData.ativo,
+        }
+      : undefined,
   });
 
-  const handleInputChange = (field: keyof FormData, value: string | number | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleChange = (
+    field: keyof TipoCobrancaFormData,
+    value: string | number | boolean
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors(prev => {
+      setErrors((prev) => {
         const next = { ...prev };
         delete next[field];
         return next;
@@ -80,13 +71,10 @@ const TipoCobrancaContratoModal: React.FC<TipoCobrancaContratoModalProps> = ({
   };
 
   const validate = (): boolean => {
-    const newErrors: Partial<Record<keyof FormData, string>> = {};
-    if (!formData.nome?.trim()) {
-      newErrors.nome = t('messages.nameRequired');
-    }
-    if (formData.quantidade_titulos < 1 || formData.quantidade_titulos > 999) {
-      newErrors.quantidade_titulos = 'Quantidade deve ser entre 1 e 999';
-    }
+    const newErrors = validateTipoCobrancaForm(formData, {
+      nomeRequired: t('messages.nameRequired'),
+      quantidadeRange: 'Quantidade deve ser entre 1 e 999',
+    });
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -95,14 +83,13 @@ const TipoCobrancaContratoModal: React.FC<TipoCobrancaContratoModalProps> = ({
     e.preventDefault();
     if (!validate()) return;
 
+    const payload = formData as Partial<TipoCobrancaContrato>;
+
     try {
       if (isEdit && tipoId) {
-        await updateMutation.mutateAsync({
-          id: tipoId,
-          data: formData as Partial<import('services/tipoCobrancaContratoService').TipoCobrancaContrato>
-        });
+        await updateMutation.mutateAsync({ id: tipoId, data: payload });
       } else {
-        await createMutation.mutateAsync(formData as Partial<import('services/tipoCobrancaContratoService').TipoCobrancaContrato>);
+        await createMutation.mutateAsync(payload);
       }
       onSuccess?.();
     } catch {
@@ -137,60 +124,10 @@ const TipoCobrancaContratoModal: React.FC<TipoCobrancaContratoModalProps> = ({
           onSubmit={handleSubmit}
           style={{ padding: isMobile ? '0' : '16px' }}
         >
-          <div className="mb-3">
-            <label htmlFor="nome" className="form-label">
-              {t('form.name')}
-            </label>
-            <input
-              type="text"
-              className={`form-control ${errors.nome ? 'is-invalid' : ''}`}
-              id="nome"
-              value={formData.nome}
-              onChange={e => handleInputChange('nome', e.target.value)}
-              placeholder="Ex: 12 parcelas mensais"
-            />
-            {errors.nome && <div className="invalid-feedback">{errors.nome}</div>}
-          </div>
-
-          <div className="mb-3">
-            <label htmlFor="quantidade_titulos" className="form-label">
-              {t('form.quantityTitles')}
-            </label>
-            <input
-              type="number"
-              className={`form-control ${errors.quantidade_titulos ? 'is-invalid' : ''}`}
-              id="quantidade_titulos"
-              min={1}
-              max={999}
-              value={formData.quantidade_titulos}
-              onChange={e => handleInputChange('quantidade_titulos', parseInt(e.target.value, 10) || 0)}
-            />
-            {errors.quantidade_titulos && (
-              <div className="invalid-feedback">{errors.quantidade_titulos}</div>
-            )}
-          </div>
-
-          <div className="mb-3">
-            <label htmlFor="periodicidade" className="form-label">
-              {t('table.periodicity')}
-            </label>
-            <select
-              className="form-select"
-              id="periodicidade"
-              value={formData.periodicidade}
-              onChange={e => handleInputChange('periodicidade', e.target.value)}
-            >
-              {PERIODICIDADES.map(p => (
-                <option key={p.value} value={p.value}>
-                  {t(p.key as keyof import('contexts/I18nContext').TranslationKeys)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <AtivoInativoField
-            value={formData.ativo}
-            onChange={v => handleInputChange('ativo', v)}
+          <TipoCobrancaFormFields
+            form={formData}
+            errors={errors}
+            onChange={handleChange}
             disabled={isPending}
           />
         </form>

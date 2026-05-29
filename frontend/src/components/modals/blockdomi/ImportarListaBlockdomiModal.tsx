@@ -12,6 +12,7 @@ import {
   LimparButton,
   SelecionarButton,
 } from 'components/ui';
+import Button from 'components/ui/Button';
 import { isValidIPv4, isValidIPv6 } from 'utils/validators';
 import { sanitizeDominio } from 'utils/stringUtils';
 import PdfExtractService, { type PdfExtractPollProgress } from 'services/pdfExtract';
@@ -770,16 +771,18 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                         pendingPdfFilesRef.current = { ...pendingPdfFilesRef.current, anatel: null };
                       }}
                     />
-                    <button
+                    <Button
                       type="button"
-                      className="btn btn-sm btn-outline-danger ilb-pdf-remove-btn"
+                      size="sm"
+                      variant="outline-danger"
+                      className="ilb-pdf-remove-btn"
                       onClick={clearPdfAnatel}
                       disabled={!pdfOficioAnatel || isExtractingSei}
                       title={t('blockdomi.removePdfFile')}
                       aria-label={t('blockdomi.removePdfFile')}
                     >
-                      <i className="bi bi-trash" aria-hidden="true" />
-                    </button>
+                      <i className="bi bi-trash" aria-hidden />
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -811,16 +814,18 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                         pendingPdfFilesRef.current = { ...pendingPdfFilesRef.current, justica: null };
                       }}
                     />
-                    <button
+                    <Button
                       type="button"
-                      className="btn btn-sm btn-outline-danger ilb-pdf-remove-btn"
+                      size="sm"
+                      variant="outline-danger"
+                      className="ilb-pdf-remove-btn"
                       onClick={clearPdfJustica}
                       disabled={!pdfOficioJustica}
                       title={t('blockdomi.removePdfFile')}
                       aria-label={t('blockdomi.removePdfFile')}
                     >
-                      <i className="bi bi-trash" aria-hidden="true" />
-                    </button>
+                      <i className="bi bi-trash" aria-hidden />
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -845,16 +850,18 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                         pendingPdfFilesRef.current = { ...pendingPdfFilesRef.current, main: null };
                       }}
                     />
-                    <button
+                    <Button
                       type="button"
-                      className="btn btn-sm btn-outline-danger ilb-pdf-remove-btn"
+                      size="sm"
+                      variant="outline-danger"
+                      className="ilb-pdf-remove-btn"
                       onClick={clearPdfMain}
                       disabled={!pdfFile || isExtractingPdf}
                       title={t('blockdomi.removePdfFile')}
                       aria-label={t('blockdomi.removePdfFile')}
                     >
-                      <i className="bi bi-trash" aria-hidden="true" />
-                    </button>
+                      <i className="bi bi-trash" aria-hidden />
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -899,14 +906,18 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                 <SelecionarButton
                   type="button"
                   label={t('blockdomi.colunasSelecAll')}
-                  className="btn btn-link btn-sm p-0 text-muted"
+                  variant="ghost"
+                  size="sm"
+                  className="p-0 text-muted"
                   style={{ fontSize: '0.75rem' }}
                   onClick={handleColunasSelectAll}
                 />
                 <LimparButton
                   type="button"
                   label={t('blockdomi.colunasSelecNone')}
-                  className="btn btn-link btn-sm p-0 text-muted"
+                  variant="ghost"
+                  size="sm"
+                  className="p-0 text-muted"
                   style={{ fontSize: '0.75rem' }}
                   onClick={handleColunasSelectNone}
                 />

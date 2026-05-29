@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
-import { FormField, ModalFormActions } from 'components/ui';
-import AtivoInativoField from 'components/ui/AtivoInativoField';
+import { ModalFormActions } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useFormReset } from 'hooks/useFormReset';
-import { saasTenantUsuariosService, type SaasTenantUsuario } from 'services/saas/saasTenantUsuariosService';
+import { saasTenantUsuariosService } from 'services/saas/saasTenantUsuariosService';
+import SaasTenantUsuarioFormFields, {
+  type SaasTenantUsuarioFormData,
+} from './SaasTenantUsuarioFormFields';
 
 interface Props {
   show: boolean;
@@ -18,44 +20,69 @@ interface Props {
   empresaId: number;
 }
 
-interface Form {
-  nome: string;
-  email: string;
-  password: string;
-  role: 'admin' | 'user';
-  ativo: boolean;
-}
+const INITIAL: SaasTenantUsuarioFormData = {
+  nome: '',
+  email: '',
+  password: '',
+  role: 'admin',
+  ativo: true,
+};
 
-const INITIAL: Form = { nome: '', email: '', password: '', role: 'admin', ativo: true };
-
-const SaasTenantUsuarioFormModal: React.FC<Props> = ({ show, onClose, onSuccess, usuarioId, empresaId }) => {
+const SaasTenantUsuarioFormModal: React.FC<Props> = ({
+  show,
+  onClose,
+  onSuccess,
+  usuarioId,
+  empresaId,
+}) => {
   const { t } = useI18n();
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
   const isEditing = !!usuarioId;
-  const [form, setForm] = useState<Form>(INITIAL);
-  const [errors, setErrors] = useState<Partial<Record<keyof Form, string>>>({});
+  const [form, setForm] = useState<SaasTenantUsuarioFormData>(INITIAL);
+  const [errors, setErrors] = useState<Partial<Record<keyof SaasTenantUsuarioFormData, string>>>({});
 
-  const { data } = useQuery({
+  const clearErrors = useCallback(
+    (next: Record<string, string> | Record<string, unknown>) => {
+      setErrors(next as Partial<Record<keyof SaasTenantUsuarioFormData, string>>);
+    },
+    []
+  );
+
+  const { data: usuarioResponse } = useQuery({
     queryKey: ['saas-tenant-usuario', usuarioId],
     queryFn: () => saasTenantUsuariosService.getById(usuarioId!),
     enabled: show && !!usuarioId,
   });
 
-  useFormReset({ show: show && !isEditing, initialData: INITIAL, setFormData: setForm, setErrors });
+  const usuarioEntity = usuarioResponse?.data;
+
   useFormReset({
-    show: show && isEditing,
+    show: show && !isEditing,
     initialData: INITIAL,
     setFormData: setForm,
-    setErrors,
-    customData: data?.data ? (() => {
-      const d = data.data as unknown as SaasTenantUsuario;
-      return { nome: d.nome ?? '', email: d.email ?? '', password: '', role: (d.role || 'admin') as 'admin' | 'user', ativo: d.ativo !== false };
-    })() : undefined,
+    setErrors: clearErrors,
+  });
+
+  useFormReset({
+    show: show && isEditing && !!usuarioEntity,
+    initialData: INITIAL,
+    setFormData: setForm,
+    setErrors: clearErrors,
+    customData: usuarioEntity
+      ? {
+          nome: usuarioEntity.nome ?? '',
+          email: usuarioEntity.email ?? '',
+          password: '',
+          role: (usuarioEntity.role || 'admin') as 'admin' | 'user',
+          ativo: usuarioEntity.ativo !== false,
+        }
+      : undefined,
   });
 
   const createMutation = useMutation({
-    mutationFn: (d: Form) => saasTenantUsuariosService.create({ empresa_id: empresaId, ...d }),
+    mutationFn: (d: SaasTenantUsuarioFormData) =>
+      saasTenantUsuariosService.create({ empresa_id: empresaId, ...d }),
     onSuccess: () => {
       success('Usuário criado com sucesso');
       onSuccess?.();
@@ -65,7 +92,8 @@ const SaasTenantUsuarioFormModal: React.FC<Props> = ({ show, onClose, onSuccess,
   });
 
   const updateMutation = useMutation({
-    mutationFn: (d: Partial<Form>) => saasTenantUsuariosService.update(usuarioId!, d),
+    mutationFn: (d: Partial<SaasTenantUsuarioFormData>) =>
+      saasTenantUsuariosService.update(usuarioId!, d),
     onSuccess: () => {
       success('Usuário atualizado com sucesso');
       onSuccess?.();
@@ -74,9 +102,23 @@ const SaasTenantUsuarioFormModal: React.FC<Props> = ({ show, onClose, onSuccess,
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.USER_UPDATE_ERROR),
   });
 
+  const handleChange = <K extends keyof SaasTenantUsuarioFormData>(
+    field: K,
+    value: SaasTenantUsuarioFormData[K]
+  ) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const errs: Partial<Record<keyof Form, string>> = {};
+    const errs: Partial<Record<keyof SaasTenantUsuarioFormData, string>> = {};
     if (!form.nome.trim()) errs.nome = t('form.required');
     if (!form.email.trim()) errs.email = t('form.required');
     if (!isEditing && !form.password.trim()) errs.password = t('form.required');
@@ -87,7 +129,12 @@ const SaasTenantUsuarioFormModal: React.FC<Props> = ({ show, onClose, onSuccess,
     }
     setErrors({});
     if (isEditing) {
-      const payload: Partial<Form> = { nome: form.nome, email: form.email, role: form.role, ativo: form.ativo };
+      const payload: Partial<SaasTenantUsuarioFormData> = {
+        nome: form.nome,
+        email: form.email,
+        role: form.role,
+        ativo: form.ativo,
+      };
       if (form.password) payload.password = form.password;
       updateMutation.mutate(payload);
     } else {
@@ -105,50 +152,20 @@ const SaasTenantUsuarioFormModal: React.FC<Props> = ({ show, onClose, onSuccess,
       size="md"
       modalId="saas-tenant-usuario-form"
       headerActions={
-        <ModalFormActions onCancel={onClose} formId="saas-tenant-usuario-form-id" isPending={isPending} />
+        <ModalFormActions
+          onCancel={onClose}
+          formId="saas-tenant-usuario-form-id"
+          isPending={isPending}
+        />
       }
     >
       <form id="saas-tenant-usuario-form-id" onSubmit={handleSubmit} className="p-3">
-        <div className="row g-2">
-          <div className="col-12">
-            <FormField name="nome" type="text" label={t('form.name')} value={form.nome} onChange={(v) => { setForm(p => ({ ...p, nome: String(v ?? '') })); if (errors.nome) setErrors(e => ({ ...e, nome: undefined })); }} required size="sm" error={errors.nome} />
-          </div>
-          <div className="col-12">
-            <FormField name="email" type="email" label={t('form.email')} value={form.email} onChange={(v) => { setForm(p => ({ ...p, email: String(v ?? '') })); if (errors.email) setErrors(e => ({ ...e, email: undefined })); }} required size="sm" error={errors.email} />
-          </div>
-          <div className="col-12">
-            <FormField
-              name="password"
-              type="password"
-              label={isEditing ? t('user.newPassword') : t('form.password')}
-              value={form.password}
-              onChange={(v) => { setForm(p => ({ ...p, password: String(v ?? '') })); if (errors.password) setErrors(e => ({ ...e, password: undefined })); }}
-              required={!isEditing}
-              size="sm"
-              error={errors.password}
-            />
-          </div>
-          <div className="col-6">
-            <FormField
-              name="role"
-              type="select"
-              label={t('user.profile')}
-              value={form.role}
-              onChange={(v) => setForm(p => ({ ...p, role: (v as 'admin' | 'user') ?? 'admin' }))}
-              options={[
-                { value: 'admin', label: t('user.admin') },
-              ]}
-              size="sm"
-            />
-          </div>
-          <div className="col-6">
-            <AtivoInativoField
-              value={form.ativo}
-              onChange={(v) => setForm(p => ({ ...p, ativo: v }))}
-              name="saas-tenant-usuario-ativo"
-            />
-          </div>
-        </div>
+        <SaasTenantUsuarioFormFields
+          form={form}
+          errors={errors}
+          onChange={handleChange}
+          isEditing={isEditing}
+        />
       </form>
     </DraggableModal>
   );
