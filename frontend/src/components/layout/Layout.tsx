@@ -21,7 +21,7 @@ import { DadosEmpresaService } from 'services/dadosEmpresaService';
 import { usePlanoModulos } from 'hooks/usePlanoModulos';
 import { MODAL_MODULO_MAP } from 'constants/planoModulos';
 import SidebarFolderItemBullet from './SidebarFolderItemBullet';
-import SidebarMobileCloseButton from './SidebarMobileCloseButton';
+import Button from '../ui/Button';
 
 const Layout: React.FC = () => {
   const location = useLocation();
@@ -383,7 +383,17 @@ const Layout: React.FC = () => {
           </div>
           {/* Botão Voltar - Recolher menu (apenas mobile) */}
           {isMobile && (
-            <SidebarMobileCloseButton onClose={() => setSidebarOpen(false)} />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="p-0 position-absolute top-0 end-0 m-2 sidebar-header-back-btn"
+              onClick={() => setSidebarOpen(false)}
+              title={t('layout.closeMenu')}
+              aria-label={t('layout.closeMenu')}
+            >
+              <i className="bi bi-arrow-left fs-4" aria-hidden />
+            </Button>
           )}
         </div>
 

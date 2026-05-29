@@ -14,7 +14,7 @@ import { useModal, type ModalType } from 'contexts/ModalContext';
 import { useI18n } from 'contexts/I18nContext';
 import { useTableHeader } from 'contexts/TableHeaderContext';
 import SidebarFolderItemBullet from 'components/layout/SidebarFolderItemBullet';
-import SidebarMobileCloseButton from 'components/layout/SidebarMobileCloseButton';
+import Button from 'components/ui/Button';
 
 const SaasLayout: React.FC = () => {
   const { t } = useI18n();
@@ -221,9 +221,19 @@ const SaasLayout: React.FC = () => {
               </div>
             </div>
           </div>
-          {isMobile && (
-            <SidebarMobileCloseButton onClose={() => setSidebarOpen(false)} />
-          )}
+          {isMobile ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="p-0 position-absolute top-0 end-0 m-2 sidebar-header-back-btn"
+              onClick={() => setSidebarOpen(false)}
+              title={t('layout.closeMenu')}
+              aria-label={t('layout.closeMenu')}
+            >
+              <i className="bi bi-arrow-left fs-4" aria-hidden />
+            </Button>
+          ) : null}
         </div>
 
         <div className="sidebar-nav-scrollable flex-grow-1">

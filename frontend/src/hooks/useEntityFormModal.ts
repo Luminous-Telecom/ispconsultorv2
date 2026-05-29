@@ -3,13 +3,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from './useApiError';
 import { useFormReset } from './useFormReset';
+import type { ApiResponse } from 'types';
 
 export interface UseEntityFormModalConfig<TForm extends object, TPayload = Partial<TForm>> {
   show: boolean;
   entityId?: number | null;
   initialForm: TForm;
   queryKey: string | readonly unknown[];
-  loadById?: (id: number) => Promise<{ data: unknown }>;
+  loadById?: (id: number) => Promise<ApiResponse<unknown>>;
   mapEntityToForm?: (entity: unknown) => TForm;
   validate: (form: TForm) => Partial<Record<keyof TForm, string>>;
   toPayload: (form: TForm, ctx: { isEditing: boolean }) => TPayload;

@@ -33,7 +33,8 @@ export const saasTenantUsuariosService = {
     defaultApiClient.get<{ success: boolean; data: SaasTenantUsuario[]; pagination?: object }>(
       `/saas/tenant-usuarios?${buildParams(f)}`
     ),
-  getById: (id: number) => defaultApiClient.get<ApiResponse<SaasTenantUsuario>>(`/saas/tenant-usuarios/${id}`),
+  getById: (id: number): Promise<ApiResponse<SaasTenantUsuario>> =>
+    defaultApiClient.get<SaasTenantUsuario>(`/saas/tenant-usuarios/${id}`),
   create: (d: { empresa_id: number; nome: string; email: string; password: string; role?: 'admin' | 'user'; ativo?: boolean }) =>
     defaultApiClient.post<ApiResponse<SaasTenantUsuario>>('/saas/tenant-usuarios', d),
   update: (id: number, d: Partial<{ nome: string; email: string; password: string; role: 'admin' | 'user'; ativo: boolean }>) =>

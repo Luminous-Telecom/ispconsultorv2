@@ -467,7 +467,7 @@ Fase 5 — Forms ✅ (núcleo)
 Fase 6 — UI e estrutura (parcial)
   └── Migrar `btn btn-*` nos arquivos da seção 6 (exc. dropdown Bootstrap em `TituloModal`)
   └── `I18nContext` → `i18n/translationKeys.ts` + `i18n/translations.ts`
-  └── `SidebarMobileCloseButton` (Layout + SaasLayout)
+  └── Botão fechar sidebar mobile com `Button` ghost (Layout + SaasLayout)
   └── `CentralAssinante` — botões link migrados; fatiar seções: pendente
 ```
 
@@ -548,7 +548,7 @@ Legenda: `[ ]` pendente · `[~]` parcial · `[x]` já centralizado
 
 - [x] `components/ui/buttons/*` (adotado na maioria)
 - [x] Migrar `btn btn-*` da seção 6 (Layout, SaasLayout, CentralAssinante, AssinaturaDigital, ImportarListaBlockdomi; `TituloModal` dropdown mantém Bootstrap)
-- [x] `SidebarMobileCloseButton` — `components/layout/SidebarMobileCloseButton.tsx`
+- [x] Botão fechar sidebar mobile — `Button` ghost em `Layout.tsx` / `SaasLayout.tsx`
 
 ### Páginas / context
 
