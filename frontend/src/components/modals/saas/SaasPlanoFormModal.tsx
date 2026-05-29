@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useI18n } from 'contexts/I18nContext';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
+import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
 import { FormField, AtivoInativoField, ModalFormActions } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useFormReset } from 'hooks/useFormReset';
@@ -209,6 +210,14 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
     }
   };
 
+  const planoTabs = useMemo((): ModalTabItem<'geral' | 'equipamentos'>[] => {
+    const tabs: ModalTabItem<'geral' | 'equipamentos'>[] = [{ id: 'geral', label: 'Geral' }];
+    if (hasEquipamentos) {
+      tabs.push({ id: 'equipamentos', label: 'Equipamentos' });
+    }
+    return tabs;
+  }, [hasEquipamentos]);
+
   return (
     <DraggableModal
       show={show}
@@ -225,32 +234,14 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
             isPending={isPending}
           />
           <div className="plano-header-tabs">
-            <ul
-              className={`nav nav-tabs plano-tabs-unified ${isMobile ? 'plano-tabs-mobile' : ''}`}
-              role="tablist"
-              style={{ margin: 0, padding: 0, borderBottom: 'none', backgroundColor: 'transparent' }}
-            >
-              <li className="nav-item" role="presentation">
-                <button
-                  className={`nav-link modal-tab-hover ${activeTab === 'geral' ? 'active' : ''}`}
-                  type="button"
-                  onClick={() => setActiveTab('geral')}
-                >
-                  Geral
-                </button>
-              </li>
-              {hasEquipamentos && (
-                <li className="nav-item" role="presentation">
-                  <button
-                    className={`nav-link modal-tab-hover ${activeTab === 'equipamentos' ? 'active' : ''}`}
-                    type="button"
-                    onClick={() => setActiveTab('equipamentos')}
-                  >
-                    Equipamentos
-                  </button>
-                </li>
-              )}
-            </ul>
+            <ModalTabsOverflow
+              tabs={planoTabs}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              tabsClassName={`plano-tabs-unified ${isMobile ? 'plano-tabs-mobile' : ''}`}
+              isMobile={isMobile}
+              id="saas-plano-tabs"
+            />
           </div>
         </div>
       }

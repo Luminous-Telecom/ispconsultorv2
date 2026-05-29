@@ -1,16 +1,16 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-export interface ModalTabItem {
-  id: string;
+export interface ModalTabItem<T extends string = string> {
+  id: T;
   label: string;
   disabled?: boolean;
 }
 
-interface ModalTabsOverflowProps {
-  tabs: ModalTabItem[];
-  activeTab: string;
-  onTabChange: (tabId: string) => void;
+interface ModalTabsOverflowProps<T extends string = string> {
+  tabs: ModalTabItem<T>[];
+  activeTab: T;
+  onTabChange: (tabId: T) => void;
   tabsClassName?: string;
   disabledClassName?: string;
   isMobile?: boolean;
@@ -20,7 +20,7 @@ interface ModalTabsOverflowProps {
 const OVERFLOW_BUTTON_WIDTH = 44;
 const DROPDOWN_Z_INDEX = 100001;
 
-const ModalTabsOverflow: React.FC<ModalTabsOverflowProps> = ({
+function ModalTabsOverflow<T extends string = string>({
   tabs,
   activeTab,
   onTabChange,
@@ -28,7 +28,7 @@ const ModalTabsOverflow: React.FC<ModalTabsOverflowProps> = ({
   disabledClassName = '',
   isMobile = false,
   id,
-}) => {
+}: ModalTabsOverflowProps<T>) {
   const containerRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLUListElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -103,7 +103,7 @@ const ModalTabsOverflow: React.FC<ModalTabsOverflowProps> = ({
 
   const { visibleTabs, overflowTabs } = useMemo(() => {
     if (isMobile || visibleCount >= tabs.length) {
-      return { visibleTabs: tabs, overflowTabs: [] as ModalTabItem[] };
+      return { visibleTabs: tabs, overflowTabs: [] as ModalTabItem<T>[] };
     }
 
     let visible = tabs.slice(0, visibleCount);
@@ -176,13 +176,13 @@ const ModalTabsOverflow: React.FC<ModalTabsOverflowProps> = ({
     };
   }, [calculateDropdownPosition, showDropdown]);
 
-  const handleTabClick = (tab: ModalTabItem) => {
+  const handleTabClick = (tab: ModalTabItem<T>) => {
     if (tab.disabled) return;
     onTabChange(tab.id);
     setShowDropdown(false);
   };
 
-  const renderTabButton = (tab: ModalTabItem) => (
+  const renderTabButton = (tab: ModalTabItem<T>) => (
     <button
       className={`nav-link modal-tab-hover ${activeTab === tab.id ? 'active' : ''} ${tab.disabled && disabledClassName ? disabledClassName : ''}`}
       type="button"
@@ -193,7 +193,7 @@ const ModalTabsOverflow: React.FC<ModalTabsOverflowProps> = ({
     </button>
   );
 
-  const renderMeasureTab = (tab: ModalTabItem) => (
+  const renderMeasureTab = (tab: ModalTabItem<T>) => (
     <li key={tab.id} className="nav-item" role="presentation" data-tab-measure>
       <button type="button" className="nav-link" tabIndex={-1}>
         {tab.label}
@@ -277,6 +277,6 @@ const ModalTabsOverflow: React.FC<ModalTabsOverflowProps> = ({
       )}
     </div>
   );
-};
+}
 
 export default ModalTabsOverflow;

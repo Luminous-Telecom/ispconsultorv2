@@ -12,6 +12,7 @@ import { ApiError } from 'services/core/ErrorHandler';
 import { useFormReset } from 'hooks/useFormReset';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
+import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
 import { CancelarButton, NovoButton, SalvarButton } from 'components/ui';
 import { DadosEmpresaForm, DadosEmpresaModalProps } from './types';
 import DadosBasicosTab from './abas/DadosBasicosTab';
@@ -334,6 +335,26 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
     [isSaas, isSaasEdit, itemId, success, error, queryClient]
   );
 
+  type EmpresaTabId = 'basico' | 'endereco' | 'contato' | 'responsavel' | 'faturas-abertas' | 'faturas-pagas';
+
+  const empresaTabs = useMemo((): ModalTabItem<EmpresaTabId>[] => {
+    const tabs: ModalTabItem<EmpresaTabId>[] = [
+      { id: 'basico', label: 'Empresa' },
+      { id: 'endereco', label: 'Endereço' },
+      { id: 'contato', label: 'Contato' },
+      { id: 'responsavel', label: 'Responsável' },
+    ];
+
+    if (!isSaas) {
+      tabs.push(
+        { id: 'faturas-abertas', label: t('tabs.faturasAbertas') },
+        { id: 'faturas-pagas', label: t('tabs.faturasPagas') },
+      );
+    }
+
+    return tabs;
+  }, [isSaas, t]);
+
   const headerActionsContent = useMemo(
     () => (
       <div className="empresa-header-unified">
@@ -362,46 +383,18 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
           )}
         </div>
         <div className="empresa-header-tabs">
-          <ul className={`nav nav-tabs empresa-tabs-unified ${isMobile ? 'empresa-tabs-mobile' : ''}`} id="empresaTab" role="tablist" style={{ margin: 0, padding: 0, borderBottom: 'none', backgroundColor: 'transparent' }}>
-            <li className="nav-item" role="presentation">
-              <button className={`nav-link modal-tab-hover ${activeTab === 'basico' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('basico')}>
-                Empresa
-              </button>
-            </li>
-            <li className="nav-item" role="presentation">
-              <button className={`nav-link modal-tab-hover ${activeTab === 'endereco' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('endereco')}>
-                Endereço
-              </button>
-            </li>
-            <li className="nav-item" role="presentation">
-              <button className={`nav-link modal-tab-hover ${activeTab === 'contato' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('contato')}>
-                Contato
-              </button>
-            </li>
-            <li className="nav-item" role="presentation">
-              <button className={`nav-link modal-tab-hover ${activeTab === 'responsavel' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('responsavel')}>
-                Responsável
-              </button>
-            </li>
-            {!isSaas && (
-              <>
-                <li className="nav-item" role="presentation">
-                  <button className={`nav-link modal-tab-hover ${activeTab === 'faturas-abertas' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('faturas-abertas')}>
-                    {t('tabs.faturasAbertas')}
-                  </button>
-                </li>
-                <li className="nav-item" role="presentation">
-                  <button className={`nav-link modal-tab-hover ${activeTab === 'faturas-pagas' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('faturas-pagas')}>
-                    {t('tabs.faturasPagas')}
-                  </button>
-                </li>
-              </>
-            )}
-          </ul>
+          <ModalTabsOverflow
+            tabs={empresaTabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            tabsClassName={`empresa-tabs-unified ${isMobile ? 'empresa-tabs-mobile' : ''}`}
+            isMobile={isMobile}
+            id="empresaTab"
+          />
         </div>
       </div>
     ),
-    [activeTab, isMobile, isPending, handleCancel, companyOptions, selectedCompanyId, onCompanyChange, isSaas, isSaasCreate, t]
+    [activeTab, empresaTabs, isMobile, isPending, handleCancel, companyOptions, selectedCompanyId, onCompanyChange, isSaasCreate]
   );
 
   useLayoutEffect(() => {

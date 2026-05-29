@@ -3720,6 +3720,17 @@ textarea:focus {
   padding: 0 8px 0.5rem 8px !important;
 }
 
+/* Modais de listagem (no-padding): alinhar toolbar com inset do header */
+.draggable-modal-body-custom.no-scroll > .table-container-custom .table-header-content,
+.list-modal-table-wrapper .table-header-content {
+  padding: 0.5rem 8px 0 8px !important;
+}
+
+.draggable-modal-body-custom.no-scroll > .table-container-custom .table-pagination-header,
+.list-modal-table-wrapper .table-pagination-header {
+  padding: 0 8px 0.5rem 8px !important;
+}
+
 .cliente-tab-disabled {
   cursor: not-allowed !important;
   opacity: 0.6 !important;

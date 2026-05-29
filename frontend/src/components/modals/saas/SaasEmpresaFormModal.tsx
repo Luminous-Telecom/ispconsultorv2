@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
+import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
 import { ModalFormActions, useBulkBtn } from 'components/ui';
 import FormField from 'components/ui/FormField';
 import AddressFields from 'components/forms/AddressFields';
@@ -613,6 +614,16 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
     ] },
   ], [selectedTitulos, handleCancelarTitulo, handleDeleteTitulo, handleEstornarTitulo, handleImprimirSelecionados, handleImprimirTodosEmAberto, bulkBtn, t]);
 
+  const empresaTabs = useMemo((): ModalTabItem<TabId>[] => [
+    { id: 'dados-basicos', label: t('tabs.basicData') },
+    { id: 'endereco', label: t('tabs.address') },
+    { id: 'contato', label: t('tabs.contact') },
+    { id: 'contratos', label: t('form.plan'), disabled: !empresaId },
+    { id: 'usuarios', label: 'Usuários', disabled: !empresaId },
+    { id: 'financeiro', label: t('tabs.financial'), disabled: !empresaId },
+    { id: 'logs', label: 'Logs', disabled: !empresaId },
+  ], [empresaId, t]);
+
   const headerActionsContent = useMemo(() => (
     <div className="cliente-header-unified">
       <ModalFormActions
@@ -622,36 +633,17 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
         isPending={isPending}
       />
       <div className="cliente-header-tabs">
-        <ul
-          className={`nav nav-tabs cliente-tabs-unified ${isMobile ? 'cliente-tabs-mobile' : ''}`}
-          role="tablist"
-          style={{ margin: 0, padding: 0, borderBottom: 'none', backgroundColor: 'transparent' }}
-        >
-          <li className="nav-item" role="presentation">
-            <button className={`nav-link modal-tab-hover ${activeTab === 'dados-basicos' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('dados-basicos')}>{t('tabs.basicData')}</button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button className={`nav-link modal-tab-hover ${activeTab === 'endereco' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('endereco')}>{t('tabs.address')}</button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button className={`nav-link modal-tab-hover ${activeTab === 'contato' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('contato')}>{t('tabs.contact')}</button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button className={`nav-link modal-tab-hover ${activeTab === 'contratos' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('contratos')} disabled={!empresaId}>{t('form.plan')}</button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button className={`nav-link modal-tab-hover ${activeTab === 'usuarios' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('usuarios')} disabled={!empresaId}>Usuários</button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button className={`nav-link modal-tab-hover ${activeTab === 'financeiro' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('financeiro')} disabled={!empresaId}>{t('tabs.financial')}</button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button className={`nav-link modal-tab-hover ${activeTab === 'logs' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('logs')} disabled={!empresaId}>Logs</button>
-          </li>
-        </ul>
+        <ModalTabsOverflow
+          tabs={empresaTabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          tabsClassName={`cliente-tabs-unified ${isMobile ? 'cliente-tabs-mobile' : ''}`}
+          isMobile={isMobile}
+          id="saas-empresa-tabs"
+        />
       </div>
     </div>
-  ), [activeTab, isMobile, isPending, empresaId, onClose, t]);
+  ), [empresaTabs, activeTab, isMobile, isPending, onClose]);
 
   return (
     <DraggableModal show={show} onClose={onClose} title={t('modal.clientsTenants')} size="xl" modalId="saas-empresa-form" headerActions={headerActionsContent}>

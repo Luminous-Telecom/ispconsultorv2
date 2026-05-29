@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { AxiosError } from 'axios';
 import { useQueryClient } from '@tanstack/react-query';
 import { useI18n } from 'contexts/I18nContext';
@@ -6,6 +6,7 @@ import { useFormPrefix } from 'hooks/useFormId';
 import { useSaasBancoForm } from 'hooks/useSaasBancoForm';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
+import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
 import { ModalFormActions, Spinner, TestarConexaoButton } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { InformacoesBasicasTab, ConfiguracoesApiTab } from '../bancos/banco';
@@ -131,6 +132,11 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
 
   const modalTitle = isEdit ? t('modal.editBank') : t('modal.createBank');
 
+  const bancoTabs = useMemo((): ModalTabItem[] => [
+    { id: 'informacoes-basicas', label: t('tabs.basicInfo') },
+    { id: 'configuracoes-api', label: t('tabs.apiConfig') },
+  ], [t]);
+
   return (
     <DraggableModal
       show={show}
@@ -157,18 +163,14 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
               )}
             </div>
             <div className="banco-header-tabs">
-              <ul className={`nav nav-tabs banco-tabs-unified ${isMobile ? 'banco-tabs-mobile' : ''}`} role="tablist" style={{ margin: 0, padding: 0, borderBottom: 'none', backgroundColor: 'transparent' }}>
-                <li className="nav-item" role="presentation">
-                  <button className={`nav-link modal-tab-hover ${activeTab === 'informacoes-basicas' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('informacoes-basicas')}>
-                    {t('tabs.basicInfo')}
-                  </button>
-                </li>
-                <li className="nav-item" role="presentation">
-                  <button className={`nav-link modal-tab-hover ${activeTab === 'configuracoes-api' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('configuracoes-api')}>
-                    {t('tabs.apiConfig')}
-                  </button>
-                </li>
-              </ul>
+              <ModalTabsOverflow
+                tabs={bancoTabs}
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                tabsClassName={`banco-tabs-unified ${isMobile ? 'banco-tabs-mobile' : ''}`}
+                isMobile={isMobile}
+                id="saas-banco-tabs"
+              />
             </div>
           </div>
         ) : undefined
