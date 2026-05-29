@@ -34,7 +34,24 @@ export interface TableAction<T = Record<string, unknown>> {
   key: string;
   label: string;
   icon?: string;
-  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark';
+  variant?:
+    | 'primary'
+    | 'secondary'
+    | 'success'
+    | 'danger'
+    | 'warning'
+    | 'info'
+    | 'light'
+    | 'dark'
+    | 'ghost'
+    | 'outline-primary'
+    | 'outline-secondary'
+    | 'outline-success'
+    | 'outline-danger'
+    | 'outline-warning'
+    | 'outline-info'
+    | 'outline-light'
+    | 'outline-dark';
   size?: 'sm' | 'md' | 'lg';
   disabled?: boolean | ((item: T) => boolean);
   hidden?: boolean | ((item: T) => boolean);
@@ -52,7 +69,24 @@ export interface BulkAction<T = Record<string, unknown>> {
   key?: string;
   label: string;
   icon?: string;
-  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark';
+  variant?:
+    | 'primary'
+    | 'secondary'
+    | 'success'
+    | 'danger'
+    | 'warning'
+    | 'info'
+    | 'light'
+    | 'dark'
+    | 'ghost'
+    | 'outline-primary'
+    | 'outline-secondary'
+    | 'outline-success'
+    | 'outline-danger'
+    | 'outline-warning'
+    | 'outline-info'
+    | 'outline-light'
+    | 'outline-dark';
   /** Se false, o botão permanece ativo mesmo sem itens selecionados (ex: Backup Manual, Novo) */
   requiresSelection?: boolean;
   disabled?: boolean | ((selectedItems: T[]) => boolean);

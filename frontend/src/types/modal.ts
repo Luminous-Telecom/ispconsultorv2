@@ -25,6 +25,8 @@ export interface ListModalConfig<T> {
   }>;
 }
 
+import type { ButtonVariant } from 'components/ui/Button';
+
 export interface ListModalProps<T> {
   show: boolean;
   onClose: () => void;
@@ -57,7 +59,7 @@ export interface ListModalProps<T> {
   refreshQueryFn?: () => void;
   bulkActions?: Array<{
     label: string;
-    variant?: 'primary' | 'secondary' | 'danger';
+    variant?: ButtonVariant;
     disabled?: (() => boolean) | ((selectedItems: T[]) => boolean);
     action?: (() => void) | ((selectedItems: T[]) => void);
     dropdown?: {
@@ -71,4 +73,11 @@ export interface ListModalProps<T> {
   customControlsAfterActions?: React.ReactNode;
   /** ID estável da tabela para persistir larguras de colunas no localStorage (redimensionamento) */
   tableId?: string;
+  /** ID do DraggableModal (quando não usa skipWrapper) */
+  modalId?: string;
+  onRowClick?: (item: T) => void;
+  sortable?: boolean;
+  striped?: boolean;
+  hover?: boolean;
+  responsive?: boolean;
 }

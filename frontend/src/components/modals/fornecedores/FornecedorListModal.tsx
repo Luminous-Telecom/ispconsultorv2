@@ -1,17 +1,13 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useFornecedores, useDeleteFornecedor } from 'hooks/useFornecedores';
-import { useModalSelect } from 'hooks/useModalSelect';
-import { useTableFilters } from 'hooks/useTableFilters';
+import { useEntityListModal } from 'hooks/useEntityListModal';
 import { useI18n } from 'contexts/I18nContext';
-import {useBulkBtn} from 'components/ui';
 import { formatDateTime } from 'utils/formatters';
 import { Fornecedor } from 'types';
-import DraggableModal from 'components/common/DraggableModal';
-import Table from 'components/tables/Table';
-import { TableConfig } from 'components/tables/types';
+import ListModal from 'components/common/ListModal';
+import { ListModalConfig } from 'types/modal';
 import FornecedorModal from './FornecedorModal';
 import ImprimirModal from 'components/common/ImprimirModal';
-import { useAuditoria } from 'hooks/useAuditoria';
 
 interface FornecedorListModalProps {
   show: boolean;
@@ -21,373 +17,246 @@ interface FornecedorListModalProps {
   skipWrapper?: boolean;
 }
 
-const FornecedorListModal: React.FC<FornecedorListModalProps> = ({ 
-  show, 
-  onClose, 
+const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
+  show,
+  onClose,
   onSelectFornecedor,
   title,
-  skipWrapper = false 
+  skipWrapper = false,
 }) => {
   const { t } = useI18n();
-  const bulkBtn = useBulkBtn();
   const defaultTitle = title || t('menu.suppliers');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedFornecedorId, setSelectedFornecedorId] = useState<number | null>(null);
-  
-  // Hook de auditoria
-  const auditoria = useAuditoria();
-  
-  // Hook unificado para filtros, busca e paginação
-  const tableFilters = useTableFilters({
-    initialSearch: '',
-    initialPage: 1,
-    initialLimit: 15,
-    searchDebounceMs: 300,
-    resetPageOnFilterChange: true,
+
+  const list = useEntityListModal<Fornecedor>({
+    onClose,
+    onSelect: onSelectFornecedor,
   });
-  
-  // Usar hook customizado para gerenciar seleção
-  const {
-    selectedItem,
-    handleSelectionChange,
-    clearSelection
-  } = useModalSelect<Fornecedor>(
-    onSelectFornecedor ? (fornecedor) => {
-      onSelectFornecedor(fornecedor);
-      onClose();
-    } : undefined
-  );
-
-  // Configurar colunas memoizadas para Table
-  const tableColumns: TableConfig<Fornecedor & { created_at?: string; created_at_formatada?: string | null }>['columns'] = useMemo(() => [
-    {
-      key: 'id',
-      label: t('table.id'),
-      sortable: true,
-      width: '42px',
-      render: (item: Fornecedor) => <span className="text-nowrap">{item.id ?? '-'}</span>
-    },
-    {
-      key: 'tipo_pessoa',
-      label: t('table.personTypeShort'),
-      sortable: true,
-      width: '90px',
-      badgeLabels: [t('table.personTypeLegalShort'), t('table.personTypePhysicalShort')],
-      render: (item: Fornecedor) => (
-        <span className={`badge ${item.tipo_pessoa === 'JURIDICA' ? 'bg-info' : 'bg-primary'}`}>
-          {item.tipo_pessoa === 'JURIDICA' ? t('table.personTypeLegalShort') : t('table.personTypePhysicalShort')}
-        </span>
-      )
-    },
-    {
-      key: 'nome_razao_social',
-      label: t('table.nameCompanyNameShort'),
-      sortable: true,
-      width: '200px',
-      render: (item: Fornecedor) => (
-        item.nome_razao_social
-      )
-    },
-    {
-      key: 'nome_fantasia',
-      label: t('table.tradeNameShort'),
-      width: '180px',
-      sortable: true,
-      render: (item: Fornecedor) => (
-        <span className="text-muted">{item.nome_fantasia || '-'}</span>
-      )
-    },
-    {
-      key: 'cpf_cnpj',
-      label: t('table.cpfCnpj'),
-      sortable: true,
-      width: '150px',
-      render: (item: Fornecedor) => (
-        <span className="text-nowrap">{item.cpf_cnpj}</span>
-      )
-    },
-    {
-      key: 'cep',
-      label: t('table.zipCodeShort'),
-      sortable: true,
-      width: '120px',
-      render: (item: Fornecedor) => (
-        <span className="text-nowrap">{item.cep || '-'}</span>
-      )
-    },
-    {
-      key: 'logradouro',
-      label: t('table.streetShort'),
-      sortable: true,
-      render: (item: Fornecedor) => (
-        <span>{item.logradouro || '-'}</span>
-      )
-    },
-    {
-      key: 'numero',
-      label: t('table.number'),
-      sortable: true,
-      width: '100px',
-      render: (item: Fornecedor) => (
-        <span>{item.numero || '-'}</span>
-      )
-    },
-    {
-      key: 'complemento',
-      label: t('table.complement'),
-      sortable: true,
-      render: (item: Fornecedor) => (
-        <span>{item.complemento || '-'}</span>
-      )
-    },
-    {
-      key: 'bairro',
-      label: t('table.neighborhood'),
-      sortable: true,
-      render: (item: Fornecedor) => (
-        <span>{item.bairro || '-'}</span>
-      )
-    },
-    {
-      key: 'cidade',
-      label: t('table.city'),
-      sortable: true,
-      render: (item: Fornecedor) => (
-        <span>{item.cidade || '-'}</span>
-      )
-    },
-    {
-      key: 'estado',
-      label: t('table.state'),
-      sortable: true,
-      width: '80px',
-      render: (item: Fornecedor) => (
-        <span>{item.estado || '-'}</span>
-      )
-    },
-    {
-      key: 'pais',
-      label: t('table.country'),
-      sortable: true,
-      width: '100px',
-      render: (item: Fornecedor) => (
-        <span>{item.pais || '-'}</span>
-      )
-    },
-    {
-      key: 'created_at',
-      label: t('table.createdAt'),
-      sortable: true,
-      render: (item: Fornecedor & { created_at?: string; created_at_formatada?: string | null }) => {
-        if (item.created_at_formatada) {
-          return item.created_at_formatada;
-        }
-        return item.created_at ? formatDateTime(item.created_at) : '-';
-      }
-    }
-  ], [t]);
-
-  const searchFields = [
-    { key: 'id', label: t('table.id') },
-    { key: 'nome_razao_social', label: t('table.nameCompanyNameShort') },
-    { key: 'nome_fantasia', label: t('table.tradeNameShort') },
-    { key: 'cpf_cnpj', label: t('table.cpfCnpj') },
-    { key: 'cep', label: t('table.zipCodeShort') },
-    { key: 'logradouro', label: t('table.streetShort') },
-    { key: 'bairro', label: t('table.neighborhood') },
-    { key: 'cidade', label: t('table.city') },
-    { key: 'estado', label: t('table.state') },
-    { key: 'pais', label: t('table.country') }
-  ];
 
   const { data: fornecedoresData, isLoading, refetch } = useFornecedores({
-    search: tableFilters.debouncedSearch || undefined,
-    searchField: tableFilters.searchField || undefined,
-    page: tableFilters.page,
-    limit: tableFilters.limit,
-    sortColumn: tableFilters.sortColumn,
-    sortDirection: tableFilters.sortDirection
+    search: list.tableFilters.debouncedSearch || undefined,
+    searchField: list.tableFilters.searchField || undefined,
+    page: list.tableFilters.page,
+    limit: list.tableFilters.limit,
+    sortColumn: list.tableFilters.sortColumn,
+    sortDirection: list.tableFilters.sortDirection,
   });
 
   const deleteFornecedorMutation = useDeleteFornecedor();
 
-  const handleSelect = useCallback((selectedItems?: Fornecedor[]) => {
-    const item = selectedItems && selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-    if (item) {
-      clearSelection();
-      if (onSelectFornecedor) {
-        onSelectFornecedor(item);
-        onClose();
+  const handleDelete = useCallback(
+    async (fornecedorId: number) => {
+      try {
+        await deleteFornecedorMutation.mutateAsync(fornecedorId);
+        refetch();
+      } catch {
+        // Erro já tratado pelo hook
       }
-    }
-  }, [selectedItem, clearSelection, onSelectFornecedor, onClose]);
+    },
+    [deleteFornecedorMutation, refetch]
+  );
 
-  const handleDelete = useCallback(async (fornecedorId: number) => {
-    try {
-      await deleteFornecedorMutation.mutateAsync(fornecedorId);
-      refetch();
-    } catch (error) {
-      // Erro já tratado pelo hook
-    }
-  }, [deleteFornecedorMutation, refetch]);
+  const handleAudit = useCallback(
+    (fornecedor: Fornecedor) => {
+      list.auditoria.handleAudit('Fornecedor', fornecedor.id);
+    },
+    [list.auditoria]
+  );
 
-  const handleAudit = useCallback((fornecedor: Fornecedor) => {
-    auditoria.handleAudit('Fornecedor', fornecedor.id);
-  }, [auditoria]);
-
-  // Paginação do backend
-  const pagination = useMemo(() => {
-    if (fornecedoresData?.pagination && typeof fornecedoresData.pagination === 'object') {
-      const pag = fornecedoresData.pagination;
-      const total = pag.total ?? 0;
-      const perPage = pag.per_page ?? tableFilters.limit;
-      const currentPage = pag.current_page ?? tableFilters.page;
-      
-      // Calcular last_page se não estiver definido
-      let lastPage = pag.last_page;
-      if (!lastPage && total > 0) {
-        lastPage = Math.max(1, Math.ceil(total / perPage));
-      } else if (!lastPage) {
-        lastPage = 1;
-      }
-      
-      return {
-        current_page: currentPage,
-        last_page: lastPage,
-        per_page: perPage,
-        total: total,
-        from: pag.from ?? ((currentPage - 1) * perPage) + 1,
-        to: pag.to ?? Math.min(currentPage * perPage, total)
-      };
-    }
-    return {
-      current_page: tableFilters.page,
-      last_page: 1,
-      per_page: tableFilters.limit,
-      total: 0,
-      from: 0,
-      to: 0
-    };
-  }, [fornecedoresData?.pagination, tableFilters.page, tableFilters.limit]);
-
-  // Bulk actions memoizados
-  const bulkActions = useMemo(() => onSelectFornecedor ? [
-    {
-        label: bulkBtn.cancelar.label,
-        variant: bulkBtn.cancelar.variant,
-        action: () => {
-          clearSelection();
-          onClose();
-        }
+  const columns = useMemo(
+    (): ListModalConfig<Fornecedor>['columns'] => [
+      {
+        key: 'id',
+        label: t('table.id'),
+        sortable: true,
+        width: '42px',
+        render: (item) => <span className="text-nowrap">{item.id ?? '-'}</span>,
       },
       {
-        label: bulkBtn.selecionar.label,
-        variant: bulkBtn.selecionar.variant,
-        disabled: (selectedItems: Fornecedor[]) => selectedItems.length === 0 && !selectedItem,
-        action: (selectedItems: Fornecedor[]) => handleSelect(selectedItems)
-      }
-    ] : [
-      {
-        label: bulkBtn.novo.label,
-        variant: bulkBtn.novo.variant,
-        action: () => setShowCreateModal(true)
+        key: 'tipo_pessoa',
+        label: t('table.personTypeShort'),
+        sortable: true,
+        width: '90px',
+        render: (item) => (
+          <span className={`badge ${item.tipo_pessoa === 'JURIDICA' ? 'bg-info' : 'bg-primary'}`}>
+            {item.tipo_pessoa === 'JURIDICA'
+              ? t('table.personTypeLegalShort')
+              : t('table.personTypePhysicalShort')}
+          </span>
+        ),
       },
       {
-        label: bulkBtn.editar.label,
-        variant: bulkBtn.editar.variant,
-        disabled: (selectedItems: Fornecedor[]) => selectedItems.length === 0,
-        action: (selectedItems: Fornecedor[]) => {
-          const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-          if (item) {
-            setSelectedFornecedorId(item.id);
-            setShowEditModal(true);
-          }
-        }
+        key: 'nome_razao_social',
+        label: t('table.nameCompanyNameShort'),
+        sortable: true,
+        width: '200px',
+        render: (item) => item.nome_razao_social,
       },
       {
-        label: bulkBtn.deletar.label,
-        variant: bulkBtn.deletar.variant,
-        disabled: (selectedItems: Fornecedor[]) => selectedItems.length === 0,
-        action: async (selectedItems: Fornecedor[]) => {
-          const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-          if (!item) return;
-          
-          const confirmed = window.confirm(t('messages.confirmDelete'));
-        if (confirmed) {
-          handleDelete(item.id);
-        }
+        key: 'nome_fantasia',
+        label: t('table.tradeNameShort'),
+        width: '180px',
+        sortable: true,
+        render: (item) => <span className="text-muted">{item.nome_fantasia || '-'}</span>,
+      },
+      {
+        key: 'cpf_cnpj',
+        label: t('table.cpfCnpj'),
+        sortable: true,
+        width: '150px',
+        render: (item) => <span className="text-nowrap">{item.cpf_cnpj}</span>,
+      },
+      {
+        key: 'cep',
+        label: t('table.zipCodeShort'),
+        sortable: true,
+        width: '120px',
+        render: (item) => <span className="text-nowrap">{item.cep || '-'}</span>,
+      },
+      {
+        key: 'logradouro',
+        label: t('table.streetShort'),
+        sortable: true,
+        render: (item) => <span>{item.logradouro || '-'}</span>,
+      },
+      {
+        key: 'numero',
+        label: t('table.number'),
+        sortable: true,
+        width: '100px',
+        render: (item) => <span>{item.numero || '-'}</span>,
+      },
+      {
+        key: 'complemento',
+        label: t('table.complement'),
+        sortable: true,
+        render: (item) => <span>{item.complemento || '-'}</span>,
+      },
+      {
+        key: 'bairro',
+        label: t('table.neighborhood'),
+        sortable: true,
+        render: (item) => <span>{item.bairro || '-'}</span>,
+      },
+      {
+        key: 'cidade',
+        label: t('table.city'),
+        sortable: true,
+        render: (item) => <span>{item.cidade || '-'}</span>,
+      },
+      {
+        key: 'estado',
+        label: t('table.state'),
+        sortable: true,
+        width: '80px',
+        render: (item) => <span>{item.estado || '-'}</span>,
+      },
+      {
+        key: 'pais',
+        label: t('table.country'),
+        sortable: true,
+        width: '100px',
+        render: (item) => <span>{item.pais || '-'}</span>,
+      },
+      {
+        key: 'created_at',
+        label: t('table.createdAt'),
+        sortable: true,
+        width: '130px',
+        render: (item) => {
+          const row = item as Fornecedor & { created_at_formatada?: string | null; created_at?: string };
+          if (row.created_at_formatada) return row.created_at_formatada;
+          return row.created_at ? formatDateTime(row.created_at) : '-';
         },
       },
     ],
-    [onSelectFornecedor, selectedItem, clearSelection, onClose, handleSelect, handleDelete, t, bulkBtn]
-  );
-  const modalData = useMemo(() => (fornecedoresData?.data || []).filter(item => item.id != null), [fornecedoresData?.data]);
-
-  const handleSearchChange = useCallback((search: string, field?: string) => {
-    setTimeout(() => {
-      tableFilters.setSearch(search);
-      if (field) tableFilters.setSearchField(field);
-    }, 0);
-  }, [tableFilters]);
-
-  const modalContent = (
-    <>
-      <Table
-            title={defaultTitle}
-            config={{
-              columns: tableColumns,
-              data: modalData,
-              loading: isLoading,
-              searchable: true,
-              searchPlaceholder: t('layout.searchPlaceholder'),
-              searchFields,
-              sortable: true,
-              sortColumn: tableFilters.sortColumn,
-              sortDirection: tableFilters.sortDirection,
-              striped: true,
-              hover: true,
-              responsive: true,
-              selectable: true,
-              multiSelect: false,
-              bulkActions: bulkActions.map(action => ({
-                key: action.label.toLowerCase().replace(/\s+/g, '-'),
-                label: action.label,
-                onClick: action.action,
-                disabled: action.disabled,
-                variant: action.variant
-              })),
-              emptyMessage: 'Nenhum fornecedor encontrado',
-              pagination: pagination
-            }}
-            tableId="fornecedores-list-modal"
-            syncWithHeader={false}
-            onSelectionChange={(items) => {
-              handleSelectionChange(items);
-            }}
-            onRowClick={onSelectFornecedor ? (item) => {
-              onSelectFornecedor(item);
-              onClose();
-            } : undefined}
-            onRowDoubleClick={(fornecedor) => {
-              if (onSelectFornecedor) {
-                onSelectFornecedor(fornecedor);
-                onClose();
-              }
-            }}
-            onRefresh={refetch}
-            onAudit={handleAudit}
-            auditEntity="Fornecedor"
-            onPageChange={tableFilters.setPage}
-            onPageSizeChange={tableFilters.setLimit}
-            onSort={(column, direction) => tableFilters.setSort(column, direction)}
-            onSearch={(search, field) => handleSearchChange(search, field)}
-            search={tableFilters.search}
-          />
-    </>
+    [t]
   );
 
-  // Modais auxiliares (sempre renderizados, independente de skipWrapper)
+  const searchFields = useMemo(
+    () => [
+      { key: 'id', label: t('table.id') },
+      { key: 'nome_razao_social', label: t('table.nameCompanyNameShort') },
+      { key: 'nome_fantasia', label: t('table.tradeNameShort') },
+      { key: 'cpf_cnpj', label: t('table.cpfCnpj') },
+      { key: 'cep', label: t('table.zipCodeShort') },
+      { key: 'logradouro', label: t('table.streetShort') },
+      { key: 'bairro', label: t('table.neighborhood') },
+      { key: 'cidade', label: t('table.city') },
+      { key: 'estado', label: t('table.state') },
+      { key: 'pais', label: t('table.country') },
+    ],
+    [t]
+  );
+
+  const bulkActions = useMemo(() => {
+    if (onSelectFornecedor) {
+      return list.buildSelectBulkActions();
+    }
+    return list.buildCrudBulkActions({
+      onNew: () => setShowCreateModal(true),
+      onEdit: (item) => {
+        setSelectedFornecedorId(item.id);
+        setShowEditModal(true);
+      },
+      onDelete: handleDelete,
+    });
+  }, [onSelectFornecedor, list, handleDelete]);
+
+  const pagination = useMemo(
+    () => list.buildPagination(fornecedoresData?.pagination),
+    [list, fornecedoresData?.pagination]
+  );
+
+  const modalData = useMemo(
+    () => (fornecedoresData?.data || []).filter((item) => item.id != null),
+    [fornecedoresData?.data]
+  );
+
+  const handleRowSelect = useCallback(
+    (item: Fornecedor) => {
+      onSelectFornecedor?.(item);
+      onClose();
+    },
+    [onSelectFornecedor, onClose]
+  );
+
+  const listModal = (
+    <ListModal<Fornecedor>
+      show={show}
+      onClose={list.handleModalClose}
+      skipWrapper={skipWrapper}
+      config={{
+        title: defaultTitle,
+        columns,
+        searchPlaceholder: t('layout.searchPlaceholder'),
+        searchFields,
+        emptyMessage: 'Nenhum fornecedor encontrado',
+      }}
+      data={modalData}
+      loading={isLoading}
+      search={list.tableFilters.search}
+      onSearchChange={list.handleSearchChange}
+      sortColumn={list.tableFilters.sortColumn}
+      sortDirection={list.tableFilters.sortDirection}
+      onSortChange={list.tableFilters.setSort}
+      pagination={pagination}
+      onPageChange={list.tableFilters.setPage}
+      onLimitChange={list.tableFilters.setLimit}
+      onRefresh={refetch}
+      bulkActions={bulkActions}
+      onSelectionChange={list.handleSelectionChange}
+      onRowClick={onSelectFornecedor ? handleRowSelect : undefined}
+      onRowDoubleClick={onSelectFornecedor ? handleRowSelect : undefined}
+      onAudit={handleAudit}
+      auditEntity="Fornecedor"
+      tableId="fornecedores-list-modal"
+      modalId="fornecedores-list-modal"
+    />
+  );
+
   const auxiliaryModals = (
     <>
       {showCreateModal && (
@@ -396,7 +265,6 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
           onClose={() => setShowCreateModal(false)}
           onSuccess={() => {
             refetch();
-            // Não fechar o modal automaticamente - permitir múltiplas edições
           }}
         />
       )}
@@ -411,17 +279,15 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
           fornecedorId={selectedFornecedorId}
           onSuccess={() => {
             refetch();
-            // Não fechar o modal automaticamente - permitir múltiplas edições
           }}
         />
       )}
 
-      {/* Modal de Visualização de PDF de Auditoria */}
       <ImprimirModal
-        show={auditoria.showPreview}
-        onClose={auditoria.handleClosePreview}
-        pdfUrl={auditoria.pdfUrl}
-        isGenerating={auditoria.isGeneratingPdf}
+        show={list.auditoria.showPreview}
+        onClose={list.auditoria.handleClosePreview}
+        pdfUrl={list.auditoria.pdfUrl}
+        isGenerating={list.auditoria.isGeneratingPdf}
         title={t('financial.executionLogs')}
         modalId="auditoria-fornecedor-modal"
       />
@@ -431,7 +297,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
   if (skipWrapper) {
     return (
       <>
-        {modalContent}
+        {listModal}
         {auxiliaryModals}
       </>
     );
@@ -439,19 +305,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
 
   return (
     <>
-      <DraggableModal
-        show={show}
-        onClose={() => {
-          clearSelection();
-          onClose();
-        }}
-        title={defaultTitle}
-        size="lg"
-        modalId="fornecedores-list-modal"
-        className="no-padding"
-      >
-        {modalContent}
-      </DraggableModal>
+      {listModal}
       {auxiliaryModals}
     </>
   );

@@ -12,6 +12,7 @@ function ListModal<T extends { id: number | string }>({
   loading = false,
   selectedItems: _selectedItems = [],
   onSelectionChange,
+  onRowClick,
   onRowDoubleClick,
   search: _search = '',
   onSearchChange,
@@ -35,7 +36,12 @@ function ListModal<T extends { id: number | string }>({
   onFiltersChange,
   onClearFilters: _onClearFilters,
   customControlsAfterActions,
-  tableId
+  tableId,
+  modalId,
+  sortable = true,
+  striped = true,
+  hover = true,
+  responsive = true,
 }: ListModalProps<T> & {
   filters?: Array<{
     key: string;
@@ -55,87 +61,100 @@ function ListModal<T extends { id: number | string }>({
     searchPlaceholder = 'Buscar...',
     searchFields,
     emptyMessage = 'Nenhum item encontrado',
-    multiSelect = false
+    multiSelect = false,
   } = config;
 
-  const tableColumns = useMemo(() => {
-    return columns.map(col => ({
-      key: col.key,
-      label: col.label,
-      sortable: col.sortable,
-      searchable: col.searchable !== false,
-      width: col.width,
-      render: col.render
-    }));
-  }, [columns]);
+  const tableColumns = useMemo(
+    () =>
+      columns.map((col) => ({
+        key: col.key,
+        label: col.label,
+        sortable: col.sortable,
+        searchable: col.searchable !== false,
+        width: col.width,
+        render: col.render,
+      })),
+    [columns]
+  );
+
+  const mappedBulkActions = useMemo(
+    () =>
+      bulkActions.map((action) => ({
+        key: action.label.toLowerCase().replace(/\s+/g, '-'),
+        label: action.label,
+        onClick: action.action
+          ? (selectedItems: T[]) => {
+              if (typeof action.action === 'function') {
+                action.action(selectedItems);
+              }
+            }
+          : () => {},
+        disabled: (selectedItems: T[]) => {
+          if (typeof action.disabled === 'function') {
+            return action.disabled(selectedItems);
+          }
+          return false;
+        },
+        variant: action.variant,
+        dropdown: action.dropdown
+          ? action.dropdown.map((item) => ({
+              label: item.label,
+              action: (selectedItems?: T[]) => {
+                if (typeof item.action === 'function') {
+                  item.action(selectedItems || []);
+                }
+              },
+            }))
+          : undefined,
+      })),
+    [bulkActions]
+  );
 
   const tableContent = (
-        <Table
-        syncWithHeader={false}
-        title={title}
-        config={{
-          columns: tableColumns,
-          data,
-          loading,
-          pagination,
-          selectable: true,
-          multiSelect,
-          searchable: !!onSearchChange,
-          searchPlaceholder,
-          searchFields,
-          sortColumn,
-          sortDirection,
-          emptyMessage,
-          className: 'no-padding',
-          filters: filters || [],
-          bulkActions: useMemo(() => {
-            return bulkActions.map(action => ({
-              key: action.label.toLowerCase().replace(/\s+/g, '-'),
-              label: action.label,
-              onClick: action.action ? (selectedItems: T[]) => {
-                // Sempre passar selectedItems - funções que não usam parâmetros podem ignorá-los
-                if (typeof action.action === 'function') {
-                  action.action(selectedItems);
-                }
-              } : () => {},
-              disabled: (selectedItems: T[]) => {
-                if (typeof action.disabled === 'function') {
-                  return action.disabled(selectedItems);
-                }
-                return false;
-              },
-              dropdown: action.dropdown ? action.dropdown.map(item => ({
-                label: item.label,
-                action: (selectedItems?: T[]) => {
-                  if (typeof item.action === 'function') {
-                    item.action(selectedItems || []);
-                  }
-                }
-              })) : undefined
-            }));
-          }, [bulkActions]),
-          customControlsAfterActions
-        }}
-        search={_search}
-        onSelectionChange={onSelectionChange}
-        onSort={onSortChange}
-        onSearch={(search, field) => {
-          onSearchChange?.(search, field);
-        }}
-        onSearchFieldChange={onSearchFieldChange}
-        onFilter={(filters) => {
-          if (onFiltersChange) {
-            onFiltersChange(filters);
-          }
-        }}
-        onPageChange={onPageChange}
-        onPageSizeChange={onLimitChange}
-        onRefresh={onRefresh || refreshQueryFn}
-        onAudit={onAudit}
-        auditEntity={auditEntity}
-        onRowDoubleClick={onRowDoubleClick}
-        tableId={tableId}
-      />
+    <Table
+      syncWithHeader={false}
+      title={title}
+      config={{
+        columns: tableColumns,
+        data,
+        loading,
+        pagination,
+        selectable: true,
+        multiSelect,
+        searchable: !!onSearchChange,
+        searchPlaceholder,
+        searchFields,
+        sortColumn,
+        sortDirection,
+        sortable,
+        striped,
+        hover,
+        responsive,
+        emptyMessage,
+        className: 'no-padding',
+        filters: filters || [],
+        bulkActions: mappedBulkActions,
+        customControlsAfterActions,
+      }}
+      search={_search}
+      onSelectionChange={onSelectionChange}
+      onSort={onSortChange}
+      onSearch={(search, field) => {
+        onSearchChange?.(search, field ?? '');
+      }}
+      onSearchFieldChange={onSearchFieldChange}
+      onFilter={(filterValues) => {
+        onFiltersChange?.(filterValues);
+      }}
+      onPageChange={onPageChange}
+      onPageSizeChange={onLimitChange}
+      onRefresh={onRefresh || refreshQueryFn}
+      onAudit={onAudit}
+      auditEntity={auditEntity}
+      onRowClick={onRowClick}
+      onRowDoubleClick={onRowDoubleClick}
+      tableId={tableId}
+    />
   );
 
   if (skipWrapper) {
@@ -148,6 +167,7 @@ function ListModal<T extends { id: number | string }>({
       onClose={onClose}
       title={title}
       size="lg"
+      modalId={modalId ?? tableId}
       className="no-padding list-modal-no-body-scroll"
     >
       {tableContent}
