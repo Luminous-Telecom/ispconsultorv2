@@ -9,7 +9,7 @@ interface TableColumnProps<T = Record<string, unknown>> {
   onSort?: (column: string, direction: SortDirection) => void;
   className?: string;
   columnWidth?: number;
-  onResizeStart?: (columnKey: string, startX: number, currentWidth: number) => void;
+  onResizeStart?: (columnKey: string, startEdgeX: number, currentWidth: number) => void;
   isResizing?: boolean;
 }
 
@@ -51,8 +51,9 @@ const TableColumn = <T extends { id: number | string }>({
 
     if (!columnRef.current || !onResizeStart) return;
 
-    const currentWidth = Math.round(columnRef.current.getBoundingClientRect().width);
-    onResizeStart(column.key, e.clientX, currentWidth);
+    const rect = columnRef.current.getBoundingClientRect();
+    const currentWidth = Math.round(rect.width);
+    onResizeStart(column.key, rect.right, currentWidth);
   }, [column.key, onResizeStart]);
 
   const minWidthFromTitle = useMemo(() => {

@@ -11,7 +11,7 @@ interface UseColumnResizingOptions<T = Record<string, unknown>> {
 
 interface UseColumnResizingReturn {
   columnWidths: { [columnKey: string]: number };
-  handleResizeStart: (columnKey: string, startX: number, currentWidth: number, snapshot?: Record<string, number>) => void;
+  handleResizeStart: (columnKey: string, startEdgeX: number, currentWidth: number, snapshot?: Record<string, number>) => void;
   isResizing: boolean;
   resizeGuideX: number | null;
 }
@@ -62,18 +62,18 @@ export function useColumnResizing<T = Record<string, unknown>>({
     }
   }, [columnWidths, storageKey]);
 
-  const handleResizeStart = useCallback((columnKey: string, startX: number, currentWidth: number, snapshot?: Record<string, number>) => {
+  const handleResizeStart = useCallback((columnKey: string, startEdgeX: number, currentWidth: number, snapshot?: Record<string, number>) => {
     const startWidth = Math.round(currentWidth);
     activeResizeRef.current = {
       columnKey,
-      startX,
+      startX: startEdgeX,
       startWidth,
       pendingWidth: startWidth,
       snapshot: snapshot ?? null,
       maxWidth: Math.max(maxColumnWidth, startWidth),
     };
     setIsResizing(true);
-    setResizeGuideX(startX);
+    setResizeGuideX(startEdgeX);
 
     const handleMouseMove = (e: MouseEvent) => {
       const active = activeResizeRef.current;
