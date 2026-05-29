@@ -1,50 +1,27 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useI18n } from 'contexts/I18nContext';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
 import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
-import { FormField, AtivoInativoField, ModalFormActions } from 'components/ui';
+import { ModalFormActions } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useFormReset } from 'hooks/useFormReset';
 import { saasPlanoService, type SaasPlano } from 'services/saas/saasPlanoService';
-import { PLANO_MODULOS } from 'constants/planoModulos';
-import type { PlanoModuloId } from 'services/planoModulosService';
-
-function getRecursosObj(recursos: unknown): Record<string, unknown> | null {
-  if (recursos && typeof recursos === 'object' && !Array.isArray(recursos)) {
-    return recursos as Record<string, unknown>;
-  }
-  if (typeof recursos === 'string') {
-    try {
-      const parsed = JSON.parse(recursos);
-      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : null;
-    } catch {
-      return null;
-    }
-  }
-  return null;
-}
-
-function extractModulosFromRecursos(recursos: unknown): PlanoModuloId[] {
-  const obj = getRecursosObj(recursos);
-  const modulos = obj?.modulos;
-  return Array.isArray(modulos) ? modulos.filter((m): m is PlanoModuloId => typeof m === 'string') : [];
-}
-
-function extractEquipamentosFromRecursos(recursos: unknown): ConfigEquipamentos {
-  const obj = getRecursosObj(recursos);
-  if (!obj) return INITIAL_EQUIPAMENTOS;
-  const def = (key: keyof ConfigEquipamentos, val: unknown) =>
-    val != null ? (typeof val === 'number' && !Number.isNaN(val) && val >= 0 ? val : INITIAL_EQUIPAMENTOS[key]) : INITIAL_EQUIPAMENTOS[key];
-  return {
-    limite_equipamentos: def('limite_equipamentos', obj.equipamentos_limite_equipamentos),
-    limite_tuneis: def('limite_tuneis', obj.equipamentos_limite_tuneis),
-    limite_backups: def('limite_backups', obj.equipamentos_limite_backups),
-  };
-}
+import {
+  SAAS_PLANO_EQUIPAMENTOS_INITIAL,
+  buildSaasPlanoRecursosPayload,
+  extractEquipamentosFromSaasPlanoRecursos,
+  extractModulosFromSaasPlanoRecursos,
+  getSaasPlanoRecursosObj,
+} from 'utils/saasPlanoRecursos';
+import {
+  SaasPlanoEquipamentosFormFields,
+  SaasPlanoGeralFormFields,
+  type SaasPlanoFormData,
+} from './SaasPlanoFormFields';
 
 interface Props {
   show: boolean;
@@ -53,30 +30,7 @@ interface Props {
   planoId?: number | null;
 }
 
-type ConfigEquipamentos = {
-  limite_equipamentos: number;
-  limite_tuneis: number;
-  limite_backups: number;
-};
-
-interface PlanoForm {
-  nome: string;
-  descricao: string;
-  valor_mensal: number;
-  valor_anual: number | '';
-  limite_usuarios: number;
-  ativo: boolean;
-  modulos: PlanoModuloId[];
-  equipamentos: ConfigEquipamentos;
-}
-
-const INITIAL_EQUIPAMENTOS: ConfigEquipamentos = {
-  limite_equipamentos: 0,
-  limite_tuneis: 0,
-  limite_backups: 0,
-};
-
-const INITIAL: PlanoForm = {
+const INITIAL: SaasPlanoFormData = {
   nome: '',
   descricao: '',
   valor_mensal: 0,
@@ -84,7 +38,7 @@ const INITIAL: PlanoForm = {
   limite_usuarios: 5,
   ativo: true,
   modulos: [],
-  equipamentos: INITIAL_EQUIPAMENTOS,
+  equipamentos: SAAS_PLANO_EQUIPAMENTOS_INITIAL,
 };
 
 const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId }) => {
@@ -94,8 +48,8 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
   const isEditing = !!planoId;
-  const [form, setForm] = useState<PlanoForm>(INITIAL);
-  const [errors, setErrors] = useState<Partial<Record<keyof PlanoForm, string>>>({});
+  const [form, setForm] = useState<SaasPlanoFormData>(INITIAL);
+  const [errors, setErrors] = useState<Partial<Record<keyof SaasPlanoFormData, string>>>({});
   const [activeTab, setActiveTab] = useState<'geral' | 'equipamentos'>('geral');
   const hasEquipamentos = form.modulos.includes('equipamentos');
 
@@ -123,21 +77,18 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
     setErrors,
     customData: planoData?.data
       ? (() => {
-          const p = planoData.data as SaasPlano;
-          const modulos = extractModulosFromRecursos(p.recursos);
-          const equipamentos = extractEquipamentosFromRecursos(p.recursos);
+          const p = planoData.data;
           const valorAnual: number | '' = p.valor_anual == null ? '' : Number(p.valor_anual);
-          const formData = {
+          return {
             nome: p.nome,
             descricao: p.descricao || '',
             valor_mensal: p.valor_mensal,
             valor_anual: valorAnual,
             limite_usuarios: p.limite_usuarios,
             ativo: p.ativo,
-            modulos,
-            equipamentos,
-          } as PlanoForm;
-          return formData;
+            modulos: extractModulosFromSaasPlanoRecursos(p.recursos),
+            equipamentos: extractEquipamentosFromSaasPlanoRecursos(p.recursos),
+          };
         })()
       : undefined,
   });
@@ -165,27 +116,39 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
 
   const isPending = createMutation.isPending || updateMutation.isPending;
 
+  const handleFieldChange = useCallback(
+    <K extends keyof SaasPlanoFormData>(field: K, value: SaasPlanoFormData[K]) => {
+      setForm((prev) => ({ ...prev, [field]: value }));
+    },
+    []
+  );
+
+  const handleClearError = useCallback((field: keyof SaasPlanoFormData) => {
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newErrors: Partial<Record<keyof PlanoForm, string>> = {};
+    const newErrors: Partial<Record<keyof SaasPlanoFormData, string>> = {};
     if (!form.nome.trim()) newErrors.nome = 'Nome é obrigatório';
     if (form.valor_mensal < 0) newErrors.valor_mensal = 'Valor mensal inválido';
-    if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
     setErrors({});
 
-    const baseRecursos = (isEditing && planoData?.data?.recursos && typeof planoData.data.recursos === 'object')
-      ? { ...(planoData.data.recursos as Record<string, unknown>) }
-      : {};
-    const recursos: Record<string, unknown> = { ...baseRecursos, modulos: form.modulos };
-    if (form.modulos.includes('equipamentos')) {
-      recursos.equipamentos_limite_equipamentos = form.equipamentos.limite_equipamentos;
-      recursos.equipamentos_limite_tuneis = form.equipamentos.limite_tuneis;
-      recursos.equipamentos_limite_backups = form.equipamentos.limite_backups;
-    } else {
-      delete recursos.equipamentos_limite_equipamentos;
-      delete recursos.equipamentos_limite_tuneis;
-      delete recursos.equipamentos_limite_backups;
-    }
+    const baseRecursos =
+      isEditing && planoData?.data?.recursos
+        ? getSaasPlanoRecursosObj(planoData.data.recursos) ?? {}
+        : {};
+    const recursos = buildSaasPlanoRecursosPayload(form.modulos, form.equipamentos, baseRecursos);
+
     const payload: Partial<SaasPlano> = {
       nome: form.nome,
       descricao: form.descricao,
@@ -246,174 +209,20 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
       <form id="saas-plano-form" onSubmit={handleSubmit}>
         <div className="plano-modal-content">
           <div className="tab-content plano-tab-content plano-tab-content-padded">
-          {activeTab === 'geral' && (
-            <>
-              <div className="row g-2">
-                <div className="col-md-8">
-                  <div className="mb-0">
-                    <FormField
-                      name="nome"
-                      type="text"
-                      label={t('table.planName')}
-                      value={form.nome}
-                      onChange={(v) => { setForm(p => ({ ...p, nome: String(v ?? '') })); if (errors.nome) setErrors(p => ({ ...p, nome: undefined })); }}
-                      required
-                      size="sm"
-                      error={errors.nome}
-                    />
-                  </div>
-                </div>
-                <div className="col-md-4">
-                  <div className="mb-0">
-                    <AtivoInativoField
-                      value={form.ativo}
-                      onChange={(v) => setForm(p => ({ ...p, ativo: v }))}
-                      name="saas-plano-ativo"
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="col-md-4">
-                  <div className="mb-0">
-                    <FormField
-                      name="valor_mensal"
-                      type="number"
-                      label="Valor Mensal (R$)"
-                      value={form.valor_mensal}
-                      onChange={(v) => { setForm(p => ({ ...p, valor_mensal: Number(v ?? 0) })); if (errors.valor_mensal) setErrors(p => ({ ...p, valor_mensal: undefined })); }}
-                      min={0}
-                      step={0.01}
-                      required
-                      size="sm"
-                      error={errors.valor_mensal}
-                    />
-                  </div>
-                </div>
-                <div className="col-md-4">
-                  <div className="mb-0">
-                    <FormField
-                      name="valor_anual"
-                      type="number"
-                      label="Valor Anual (R$)"
-                      value={form.valor_anual === '' ? '' : form.valor_anual}
-                      onChange={(v) => setForm(p => ({ ...p, valor_anual: v !== '' && v !== null && v !== undefined ? Number(v) : '' }))}
-                      min={0}
-                      step={0.01}
-                      size="sm"
-                    />
-                  </div>
-                </div>
-                <div className="col-md-4">
-                  <div className="mb-0">
-                    <FormField
-                      name="limite_usuarios"
-                      type="number"
-                      label="Limite de Usuários"
-                      value={form.limite_usuarios}
-                      onChange={(v) => setForm(p => ({ ...p, limite_usuarios: Number(v ?? 5) }))}
-                      min={1}
-                      size="sm"
-                    />
-                  </div>
-                </div>
-                <div className="col-12">
-                  <div className="mb-0">
-                    <FormField
-                      name="descricao"
-                      type="textarea"
-                      label={t('form.description')}
-                      value={form.descricao}
-                      onChange={(v) => setForm(p => ({ ...p, descricao: String(v ?? '') }))}
-                      rows={3}
-                      size="sm"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="mb-2">
-                <label className="form-label small">
-                  {t('saas.planModules')}
-                  <i className="bi bi-info-circle text-muted ms-1" style={{ cursor: 'help', fontSize: '0.85rem' }} title={t('saas.planModulesHelp')} />
-                </label>
-                <div className="d-flex flex-wrap gap-3">
-                  {PLANO_MODULOS.map((mod) => (
-                    <label key={mod.id} className="d-flex align-items-center gap-2 small">
-                      <input
-                        type="checkbox"
-                        checked={form.modulos.includes(mod.id)}
-                        onChange={(e) => {
-                          setForm((p) => ({
-                            ...p,
-                            modulos: e.target.checked
-                              ? [...p.modulos, mod.id]
-                              : p.modulos.filter((m) => m !== mod.id),
-                          }));
-                        }}
-                      />
-                      <span>{mod.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-          {activeTab === 'equipamentos' && hasEquipamentos && (
-            <>
-              <div className="mb-2">
-                <i className="bi bi-info-circle text-muted" style={{ cursor: 'help', fontSize: '0.85rem' }} title="0 = sem limite" />
-              </div>
-              <div className="row g-2">
-                <div className="col-md-4">
-                  <div className="mb-0">
-                    <FormField
-                      name="equipamentos_limite_equipamentos"
-                      type="number"
-                      label="Limite de equipamentos"
-                      value={form.equipamentos.limite_equipamentos}
-                      onChange={(v) => setForm(p => ({
-                        ...p,
-                        equipamentos: { ...p.equipamentos, limite_equipamentos: Number(v ?? 0) },
-                      }))}
-                      min={0}
-                      size="sm"
-                    />
-                  </div>
-                </div>
-                <div className="col-md-4">
-                  <div className="mb-0">
-                    <FormField
-                      name="equipamentos_limite_tuneis"
-                      type="number"
-                      label="Limite de túneis"
-                      value={form.equipamentos.limite_tuneis}
-                      onChange={(v) => setForm(p => ({
-                        ...p,
-                        equipamentos: { ...p.equipamentos, limite_tuneis: Number(v ?? 0) },
-                      }))}
-                      min={0}
-                      size="sm"
-                    />
-                  </div>
-                </div>
-                <div className="col-md-4">
-                  <div className="mb-0">
-                    <FormField
-                      name="equipamentos_limite_backups"
-                      type="number"
-                      label="Limite de backups"
-                      value={form.equipamentos.limite_backups}
-                      onChange={(v) => setForm(p => ({
-                        ...p,
-                        equipamentos: { ...p.equipamentos, limite_backups: Number(v ?? 0) },
-                      }))}
-                      min={0}
-                      size="sm"
-                    />
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
+            {activeTab === 'geral' && (
+              <SaasPlanoGeralFormFields
+                form={form}
+                errors={errors}
+                onFieldChange={handleFieldChange}
+                onClearError={handleClearError}
+              />
+            )}
+            {activeTab === 'equipamentos' && hasEquipamentos && (
+              <SaasPlanoEquipamentosFormFields
+                equipamentos={form.equipamentos}
+                onEquipamentosChange={(equipamentos) => handleFieldChange('equipamentos', equipamentos)}
+              />
+            )}
           </div>
         </div>
       </form>

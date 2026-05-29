@@ -144,8 +144,6 @@ Coluna configurável da tabela.
 
 Listagens em modal devem usar `components/common/ListModal` + `hooks/useEntityListModal`.
 
-Ver inventário e roadmap: [`docs/COMPONENTES-CENTRALIZACAO.md`](../../docs/COMPONENTES-CENTRALIZACAO.md).
-
 ## 🔧 Componentes Comuns
 
 ### ErrorBoundary

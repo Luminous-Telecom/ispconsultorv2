@@ -19,7 +19,7 @@ export const saasPlanoService = {
   },
 
   async getById(id: number): Promise<ApiResponse<SaasPlano>> {
-    return defaultApiClient.get(`/saas/planos/${id}`);
+    return defaultApiClient.get<SaasPlano>(`/saas/planos/${id}`);
   },
 
   async create(data: Partial<SaasPlano>): Promise<ApiResponse<SaasPlano>> {

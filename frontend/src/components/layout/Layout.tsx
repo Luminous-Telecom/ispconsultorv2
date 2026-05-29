@@ -14,14 +14,14 @@ import { useApiLoading } from 'hooks/useApiLoading';
 import LoadingDots from '../common/LoadingDots';
 import SingleModalWrapper from '../common/SingleModalWrapper';
 import SearchBar from '../ui/SearchBar';
-import BackNetLogo from '../common/BackNetLogo';
+import LayoutSidebarHeader from './LayoutSidebarHeader';
 import BloqueioAtrasoOverlayComponent from '../common/BloqueioAtrasoOverlay';
 import { RecarregarButton } from '../ui';
 import { DadosEmpresaService } from 'services/dadosEmpresaService';
 import { usePlanoModulos } from 'hooks/usePlanoModulos';
 import { MODAL_MODULO_MAP } from 'constants/planoModulos';
 import SidebarFolderItemBullet from './SidebarFolderItemBullet';
-import Button from '../ui/Button';
+import { handleSidebarAccordionFolderIconClick } from './sidebar/toggleAccordionFolderIcon';
 
 const Layout: React.FC = () => {
   const location = useLocation();
@@ -369,33 +369,11 @@ const Layout: React.FC = () => {
         className={`d-flex flex-column flex-shrink-0 sidebar ${sidebarOpen ? 'open' : ''}`}
       >
         {/* Header fixo no topo */}
-        <div className="sidebar-header-fixed d-flex flex-column align-items-center justify-content-center p-3 mb-0 position-relative">
-          <div className="sidebar-logo-wrapper w-100 d-flex flex-column align-items-center">
-            <BackNetLogo width={200} height={65} />
-            {companyName && (
-              <div className="sidebar-title-wrapper overflow-hidden w-100 d-flex justify-content-center">
-                <div className="sidebar-company-name text-truncate d-flex align-items-center justify-content-center gap-1">
-                  <i className="bi bi-building"></i>
-                  <span>{companyName}</span>
-                </div>
-              </div>
-            )}
-          </div>
-          {/* Botão Voltar - Recolher menu (apenas mobile) */}
-          {isMobile && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="p-0 position-absolute top-0 end-0 m-2 sidebar-header-back-btn"
-              onClick={() => setSidebarOpen(false)}
-              title={t('layout.closeMenu')}
-              aria-label={t('layout.closeMenu')}
-            >
-              <i className="bi bi-arrow-left fs-4" aria-hidden />
-            </Button>
-          )}
-        </div>
+        <LayoutSidebarHeader
+          companyName={companyName}
+          isMobile={isMobile}
+          onCloseSidebar={() => setSidebarOpen(false)}
+        />
 
         {/* Área rolável com a navegação */}
         <div className="sidebar-nav-scrollable flex-grow-1">
@@ -412,17 +390,7 @@ const Layout: React.FC = () => {
                     data-bs-target="#cadastrosCollapse"
                     aria-expanded="false"
                     aria-controls="cadastrosCollapse"
-                    onClick={(e) => {
-                      const button = e.currentTarget;
-                      const folderIcon = button.querySelector('.folder-icon');
-                      setTimeout(() => {
-                        if (folderIcon && button.classList.contains('collapsed')) {
-                          folderIcon.className = 'bi bi-folder folder-icon me-2';
-                        } else if (folderIcon) {
-                          folderIcon.className = 'bi bi-folder2-open folder-icon me-2';
-                        }
-                      }, 10);
-                    }}
+                    onClick={handleSidebarAccordionFolderIconClick}
                   >
                     <i className="bi bi-folder folder-icon me-2"></i>
                     <span>{t('layout.folderCadastros')}</span>
@@ -467,17 +435,7 @@ const Layout: React.FC = () => {
                     data-bs-target="#financeiroCollapse"
                     aria-expanded="false"
                     aria-controls="financeiroCollapse"
-                    onClick={(e) => {
-                      const button = e.currentTarget;
-                      const folderIcon = button.querySelector('.folder-icon');
-                      setTimeout(() => {
-                        if (folderIcon && button.classList.contains('collapsed')) {
-                          folderIcon.className = 'bi bi-folder folder-icon me-2';
-                        } else if (folderIcon) {
-                          folderIcon.className = 'bi bi-folder2-open folder-icon me-2';
-                        }
-                      }, 10);
-                    }}
+                    onClick={handleSidebarAccordionFolderIconClick}
                   >
                     <i className="bi bi-folder folder-icon me-2"></i>
                     <span>{t('layout.folderFinanceiro')}</span>
@@ -522,17 +480,7 @@ const Layout: React.FC = () => {
                     data-bs-target="#sshManagerCollapse"
                     aria-expanded="false"
                     aria-controls="sshManagerCollapse"
-                    onClick={(e) => {
-                      const button = e.currentTarget;
-                      const folderIcon = button.querySelector('.folder-icon');
-                      setTimeout(() => {
-                        if (folderIcon && button.classList.contains('collapsed')) {
-                          folderIcon.className = 'bi bi-folder folder-icon me-2';
-                        } else if (folderIcon) {
-                          folderIcon.className = 'bi bi-folder2-open folder-icon me-2';
-                        }
-                      }, 10);
-                    }}
+                    onClick={handleSidebarAccordionFolderIconClick}
                   >
                     <i className="bi bi-folder folder-icon me-2"></i>
                     <span>Equipamentos</span>
@@ -577,17 +525,7 @@ const Layout: React.FC = () => {
                     data-bs-target="#blockdomiCollapse"
                     aria-expanded="false"
                     aria-controls="blockdomiCollapse"
-                    onClick={(e) => {
-                      const button = e.currentTarget;
-                      const folderIcon = button.querySelector('.folder-icon');
-                      setTimeout(() => {
-                        if (folderIcon && button.classList.contains('collapsed')) {
-                          folderIcon.className = 'bi bi-folder folder-icon me-2';
-                        } else if (folderIcon) {
-                          folderIcon.className = 'bi bi-folder2-open folder-icon me-2';
-                        }
-                      }, 10);
-                    }}
+                    onClick={handleSidebarAccordionFolderIconClick}
                   >
                     <i className="bi bi-folder folder-icon me-2"></i>
                     <span>{t('blockdomi.menuTitle')}</span>
@@ -632,17 +570,7 @@ const Layout: React.FC = () => {
                     data-bs-target="#rpkiCollapse"
                     aria-expanded="false"
                     aria-controls="rpkiCollapse"
-                    onClick={(e) => {
-                      const button = e.currentTarget;
-                      const folderIcon = button.querySelector('.folder-icon');
-                      setTimeout(() => {
-                        if (folderIcon && button.classList.contains('collapsed')) {
-                          folderIcon.className = 'bi bi-folder folder-icon me-2';
-                        } else if (folderIcon) {
-                          folderIcon.className = 'bi bi-folder2-open folder-icon me-2';
-                        }
-                      }, 10);
-                    }}
+                    onClick={handleSidebarAccordionFolderIconClick}
                   >
                     <i className="bi bi-folder folder-icon me-2"></i>
                     <span>RPKI</span>
@@ -686,17 +614,7 @@ const Layout: React.FC = () => {
                     data-bs-target="#logsCollapse"
                     aria-expanded="false"
                     aria-controls="logsCollapse"
-                    onClick={(e) => {
-                      const button = e.currentTarget;
-                      const folderIcon = button.querySelector('.folder-icon');
-                      setTimeout(() => {
-                        if (folderIcon && button.classList.contains('collapsed')) {
-                          folderIcon.className = 'bi bi-folder folder-icon me-2';
-                        } else if (folderIcon) {
-                          folderIcon.className = 'bi bi-folder2-open folder-icon me-2';
-                        }
-                      }, 10);
-                    }}
+                    onClick={handleSidebarAccordionFolderIconClick}
                   >
                     <i className="bi bi-folder folder-icon me-2"></i>
                     <span>{t('layout.folderLogs')}</span>
@@ -734,17 +652,7 @@ const Layout: React.FC = () => {
                               data-bs-target="#logsComunicacaoCollapse"
                               aria-expanded="false"
                               aria-controls="logsComunicacaoCollapse"
-                              onClick={(e) => {
-                                const button = e.currentTarget;
-                                const folderIcon = button.querySelector('.folder-icon');
-                                setTimeout(() => {
-                                  if (folderIcon && button.classList.contains('collapsed')) {
-                                    folderIcon.className = 'bi bi-folder folder-icon me-2';
-                                  } else if (folderIcon) {
-                                    folderIcon.className = 'bi bi-folder2-open folder-icon me-2';
-                                  }
-                                }, 10);
-                              }}
+                              onClick={handleSidebarAccordionFolderIconClick}
                             >
                               <i className="bi bi-folder folder-icon me-2"></i>
                               <span>{t('layout.folderLogsComunicacao')}</span>
@@ -787,17 +695,7 @@ const Layout: React.FC = () => {
                               data-bs-target="#logsEquipamentosCollapse"
                               aria-expanded="false"
                               aria-controls="logsEquipamentosCollapse"
-                              onClick={(e) => {
-                                const button = e.currentTarget;
-                                const folderIcon = button.querySelector('.folder-icon');
-                                setTimeout(() => {
-                                  if (folderIcon && button.classList.contains('collapsed')) {
-                                    folderIcon.className = 'bi bi-folder folder-icon me-2';
-                                  } else if (folderIcon) {
-                                    folderIcon.className = 'bi bi-folder2-open folder-icon me-2';
-                                  }
-                                }, 10);
-                              }}
+                              onClick={handleSidebarAccordionFolderIconClick}
                             >
                               <i className="bi bi-folder folder-icon me-2"></i>
                               <span>{t('layout.folderLogsEquipamentos')}</span>
@@ -840,17 +738,7 @@ const Layout: React.FC = () => {
                               data-bs-target="#logsRpkiCollapse"
                               aria-expanded="false"
                               aria-controls="logsRpkiCollapse"
-                              onClick={(e) => {
-                                const button = e.currentTarget;
-                                const folderIcon = button.querySelector('.folder-icon');
-                                setTimeout(() => {
-                                  if (folderIcon && button.classList.contains('collapsed')) {
-                                    folderIcon.className = 'bi bi-folder folder-icon me-2';
-                                  } else if (folderIcon) {
-                                    folderIcon.className = 'bi bi-folder2-open folder-icon me-2';
-                                  }
-                                }, 10);
-                              }}
+                              onClick={handleSidebarAccordionFolderIconClick}
                             >
                               <i className="bi bi-folder folder-icon me-2"></i>
                               <span>{t('layout.folderLogsRpki')}</span>
@@ -898,17 +786,7 @@ const Layout: React.FC = () => {
                     data-bs-target="#parametrosCollapse"
                     aria-expanded="false"
                     aria-controls="parametrosCollapse"
-                    onClick={(e) => {
-                      const button = e.currentTarget;
-                      const folderIcon = button.querySelector('.folder-icon');
-                      setTimeout(() => {
-                        if (folderIcon && button.classList.contains('collapsed')) {
-                          folderIcon.className = 'bi bi-folder folder-icon me-2';
-                        } else if (folderIcon) {
-                          folderIcon.className = 'bi bi-folder2-open folder-icon me-2';
-                        }
-                      }, 10);
-                    }}
+                    onClick={handleSidebarAccordionFolderIconClick}
                   >
                     <i className="bi bi-folder folder-icon me-2"></i>
                     <span>{t('layout.parameters')}</span>

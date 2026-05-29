@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import Button from './Button';
 
 export interface SearchFieldOption {
   key?: string;
@@ -111,9 +112,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         ? 'navbar-inline-search-input'
         : 'form-control form-control-sm table-search-input';
 
-  const iconClass = isNavbar
-    ? 'navbar-search-icon'
-    : 'table-search-icon btn btn-link p-0 border-0';
+  const iconClass = isNavbar ? 'navbar-search-icon' : 'table-search-icon p-0 border-0';
 
   const inputEl = (
     <input
@@ -219,14 +218,26 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       )}
       <div className="position-relative" style={{ flex: 1, minWidth: 0 }}>
         {inputEl}
-        <button
-          type="button"
-          className={iconClass}
-          onClick={() => onSearch(value)}
-          aria-label={placeholder}
-        >
-          <i className="bi bi-search text-muted" aria-hidden />
-        </button>
+        {isNavbar ? (
+          <button
+            type="button"
+            className={iconClass}
+            onClick={() => onSearch(value)}
+            aria-label={placeholder}
+          >
+            <i className="bi bi-search text-muted" aria-hidden />
+          </button>
+        ) : (
+          <Button
+            type="button"
+            variant="ghost"
+            className={iconClass}
+            onClick={() => onSearch(value)}
+            aria-label={placeholder}
+          >
+            <i className="bi bi-search text-muted" aria-hidden />
+          </Button>
+        )}
       </div>
     </div>
   );

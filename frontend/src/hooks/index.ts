@@ -31,4 +31,5 @@ export * from './useDashboard';
 export * from './useMediaQuery';
 export * from './useAuditoria';
 export * from './useApiError';
+export * from './useCentralAssinanteAuth';
 

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { CentralAssinanteService, DadosCentralAssinante, LoginCentralAssinanteRequest, RecuperarSenhaRequest, TrocarSenhaRequest } from 'services/centralAssinanteService';
+import { useQuery } from '@tanstack/react-query';
+import { CentralAssinanteService, DadosCentralAssinante } from 'services/centralAssinanteService';
+import { useCentralAssinanteAuth } from 'hooks/useCentralAssinanteAuth';
 import { DadosEmpresaService } from 'services/dadosEmpresaService';
 import { ParametrosService } from 'services/parametrosService';
 import { formatCurrency, formatDate } from 'utils/formatters';
@@ -10,8 +11,6 @@ import {
   Badge,
   Card,
   Input,
-  EntrarButton,
-  EnviarSenhaButton,
   CancelarButton,
   VoltarButton,
   VisualizarButton,
@@ -23,7 +22,8 @@ import {
   AlterarSenhaButton,
   SairButton,
 } from 'components/ui';
-import Button from 'components/ui/Button';
+import CentralAssinanteLoginView from './centralAssinante/CentralAssinanteLoginView';
+import CentralAssinanteRecuperarSenhaView from './centralAssinante/CentralAssinanteRecuperarSenhaView';
 import { useNotificationContext, NotificationContainer } from 'components/notifications';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES, ERROR_MESSAGES } from 'constants/ErrorMessages';
@@ -35,18 +35,29 @@ const CentralAssinante: React.FC = () => {
   const { success: showSuccess, notifications, removeNotification, pauseNotification, resumeNotification } = useNotificationContext();
   const { showApiError } = useApiError();
   const [activeTab, setActiveTab] = useState<'resumo' | 'contratos' | 'financeiro' | 'financeiro_pago' | 'termos'>('resumo');
-  const [loginForm, setLoginForm] = useState<LoginCentralAssinanteRequest>({ login: '', senha: '' });
-  const [showRecuperarSenha, setShowRecuperarSenha] = useState(false);
-  const [recuperarSenhaForm, setRecuperarSenhaForm] = useState<RecuperarSenhaRequest>({ cnpj: '', email: '' });
-  // Tipo local para o formulário de trocar senha (inclui confirmação)
-  type TrocarSenhaForm = TrocarSenhaRequest & { confirmarNovaSenha: string };
-  
-  const [showTrocarSenha, setShowTrocarSenha] = useState(false);
-  const [mostrarNovaSenha, setMostrarNovaSenha] = useState(false);
-  const [trocarSenhaForm, setTrocarSenhaForm] = useState<TrocarSenhaForm>({ senhaAtual: '', novaSenha: '', confirmarNovaSenha: '' });
-  
-  const [centralToken, setCentralToken] = useState<string | null>(() => CentralAssinanteService.getCentralToken());
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => !!CentralAssinanteService.getCentralToken());
+  const {
+    loginForm,
+    setLoginForm,
+    showRecuperarSenha,
+    setShowRecuperarSenha,
+    recuperarSenhaForm,
+    setRecuperarSenhaForm,
+    showTrocarSenha,
+    setShowTrocarSenha,
+    mostrarNovaSenha,
+    setMostrarNovaSenha,
+    trocarSenhaForm,
+    setTrocarSenhaForm,
+    centralToken,
+    isAuthenticated,
+    loginMutation,
+    recuperarSenhaMutation,
+    trocarSenhaMutation,
+    handleLogin,
+    handleRecuperarSenha,
+    handleTrocarSenha,
+    handleLogout,
+  } = useCentralAssinanteAuth(slug);
   const [faturaVisualizar, setFaturaVisualizar] = useState<{
     id: number;
     numero_titulo: string;
@@ -67,28 +78,6 @@ const CentralAssinante: React.FC = () => {
   const [baixandoContratoId, setBaixandoContratoId] = useState<number | null>(null);
   const [baixandoTermoId, setBaixandoTermoId] = useState<number | null>(null);
   const [baixandoReciboId, setBaixandoReciboId] = useState<number | null>(null);
-
-  // Mutation para login
-  const loginMutation = useMutation({
-    mutationFn: (data: LoginCentralAssinanteRequest) => CentralAssinanteService.login(slug, data),
-    onSuccess: (response) => {
-      if (response.success && response.data) {
-        const newToken = response.data.token;
-
-        // Validar que token existe antes de navegar
-        if (!newToken) {
-          showApiError('Dados de autenticação inválidos. Tente novamente.');
-          return;
-        }
-
-        CentralAssinanteService.setCentralToken(newToken);
-        setCentralToken(newToken);
-        setIsAuthenticated(true);
-        showSuccess('Login realizado com sucesso!');
-      }
-    },
-    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.SUBSCRIBER_LOGIN_ERROR),
-  });
 
   // Query para buscar dados (só executa se autenticado)
   const { data: dados, isLoading, error } = useQuery<DadosCentralAssinante>({
@@ -172,66 +161,6 @@ const CentralAssinante: React.FC = () => {
       }
     };
   }, [empresaData]);
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!loginForm.login || !loginForm.senha) {
-      showApiError('Preencha todos os campos');
-      return;
-    }
-    loginMutation.mutate(loginForm);
-  };
-
-  // Mutation para recuperar senha
-  const recuperarSenhaMutation = useMutation({
-    mutationFn: (data: RecuperarSenhaRequest) => CentralAssinanteService.recuperarSenha(slug, data),
-    onSuccess: () => {
-      showSuccess('Instruções para recuperação de senha foram enviadas para seu email');
-      setShowRecuperarSenha(false);
-      setRecuperarSenhaForm({ cnpj: '', email: '' });
-    },
-    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.SUBSCRIBER_PASSWORD_RECOVER_ERROR),
-  });
-
-  const handleRecuperarSenha = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!recuperarSenhaForm.cnpj || !recuperarSenhaForm.email) {
-      showApiError('Preencha todos os campos');
-      return;
-    }
-    recuperarSenhaMutation.mutate(recuperarSenhaForm);
-  };
-
-  // Mutation para trocar senha
-  const trocarSenhaMutation = useMutation({
-    mutationFn: (data: TrocarSenhaRequest) => {
-      return CentralAssinanteService.trocarSenhaMe(slug, data);
-    },
-    onSuccess: () => {
-      showSuccess('Senha alterada com sucesso');
-      setShowTrocarSenha(false);
-      setMostrarNovaSenha(false);
-      setTrocarSenhaForm({ senhaAtual: '', novaSenha: '', confirmarNovaSenha: '' });
-    },
-    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.SUBSCRIBER_PASSWORD_CHANGE_ERROR),
-  });
-
-  const handleTrocarSenha = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!trocarSenhaForm.senhaAtual || !trocarSenhaForm.novaSenha || !trocarSenhaForm.confirmarNovaSenha) {
-      showApiError('Preencha todos os campos');
-      return;
-    }
-    if (trocarSenhaForm.novaSenha.length < 6) {
-      showApiError('A nova senha deve ter no mínimo 6 caracteres');
-      return;
-    }
-    if (trocarSenhaForm.novaSenha !== trocarSenhaForm.confirmarNovaSenha) {
-      showApiError('As senhas não coincidem');
-      return;
-    }
-    trocarSenhaMutation.mutate({ senhaAtual: trocarSenhaForm.senhaAtual, novaSenha: trocarSenhaForm.novaSenha });
-  };
 
   const handleImprimirContrato = async (contratoId: number) => {
     setBaixandoContratoId(contratoId);
@@ -387,167 +316,43 @@ const CentralAssinante: React.FC = () => {
     return dados.termos.some(termo => termo.assinado === 'NAO');
   };
 
-  // Modal de Recuperar Senha (verificar antes do login)
+  const notificationProps = {
+    notifications,
+    removeNotification,
+    pauseNotification,
+    resumeNotification,
+  };
+
   if (showRecuperarSenha) {
     return (
-      <div className="min-vh-100 d-flex align-items-center justify-content-center py-2 px-2 central-assinante-container central-assinante-login-container">
-        <div className="central-assinante-login-card">
-          <div className="central-assinante-card-bg">
-            <Card className="border-0">
-              <div className="card-header text-center border-0 border-bottom border-secondary pb-2 pt-3 central-assinante-login-header">
-                <h2 className="h6 mb-1 fw-bold text-white">
-                  <i className="bi bi-key text-white-50 me-2"></i>
-                  Recuperar Senha
-                </h2>
-                <p className="text-white-50 mb-0 small">Informe seu CNPJ e Email para recuperar sua senha</p>
-              </div>
-              <div className="card-body pt-2 px-3 pb-3 central-assinante-login-body">
-                <form onSubmit={handleRecuperarSenha}>
-                  <div className="mb-2">
-                    <label htmlFor="recuperar-cnpj" className="form-label small text-white-50">CNPJ</label>
-                    <Input
-                      type="text"
-                      id="recuperar-cnpj"
-                      value={recuperarSenhaForm.cnpj}
-                      onChange={(e) => setRecuperarSenhaForm({ ...recuperarSenhaForm, cnpj: String(e.value) })}
-                      placeholder="Digite seu CNPJ"
-                      required
-                      disabled={recuperarSenhaMutation.isPending}
-                    />
-                  </div>
-
-                  <div className="mb-3">
-                    <label htmlFor="recuperar-email" className="form-label small text-white-50">Email</label>
-                    <Input
-                      type="email"
-                      id="recuperar-email"
-                      value={recuperarSenhaForm.email}
-                      onChange={(e) => setRecuperarSenhaForm({ ...recuperarSenhaForm, email: String(e.value) })}
-                      placeholder="Digite seu Email"
-                      required
-                      disabled={recuperarSenhaMutation.isPending}
-                    />
-                  </div>
-
-                  <div className="d-grid gap-2">
-                    <EnviarSenhaButton
-                      type="submit"
-                      className="w-100"
-                      disabled={recuperarSenhaMutation.isPending}
-                      isPending={recuperarSenhaMutation.isPending}
-                    />
-                    <VoltarButton
-                      type="button"
-                      className="w-100"
-                      onClick={() => {
-                        setShowRecuperarSenha(false);
-                        setRecuperarSenhaForm({ cnpj: '', email: '' });
-                      }}
-                      disabled={recuperarSenhaMutation.isPending}
-                    />
-                  </div>
-                </form>
-              </div>
-            </Card>
-          </div>
-        </div>
-        {/* Notification Container */}
-        <NotificationContainer
-          position="bottom-right"
-          notifications={notifications}
-          onRemove={removeNotification}
-          onPause={pauseNotification}
-          onResume={resumeNotification}
-          onActionClick={() => {}}
-        />
-      </div>
+      <CentralAssinanteRecuperarSenhaView
+        {...notificationProps}
+        form={recuperarSenhaForm}
+        onFormChange={setRecuperarSenhaForm}
+        onSubmit={handleRecuperarSenha}
+        onBack={() => {
+          setShowRecuperarSenha(false);
+          setRecuperarSenhaForm({ cnpj: '', email: '' });
+        }}
+        isPending={recuperarSenhaMutation.isPending}
+      />
     );
   }
 
-  // Tela de Login
   if (!isAuthenticated) {
     return (
-      <div className="min-vh-100 d-flex align-items-center justify-content-center py-2 px-2 central-assinante-container central-assinante-login-container">
-        <div className="central-assinante-login-card">
-          <div className="central-assinante-card-bg">
-            <Card className="border-0">
-              <div className="card-header text-center border-0 border-bottom border-secondary pb-2 pt-3 central-assinante-login-header">
-              {empresaData?.logo && (
-                <div className="mb-3 central-assinante-login-logo-wrapper">
-                  <img 
-                    src={empresaData.logo} 
-                    alt="Logo da Empresa" 
-                    className="central-assinante-login-logo"
-                  />
-                </div>
-              )}
-              <h2 className="h6 mb-1 fw-bold text-white">
-                <i className="bi bi-person-circle text-white-50 me-2"></i>
-                Central do Assinante
-              </h2>
-              <p className="text-white-50 mb-0 small">Faça login para acessar seus dados</p>
-            </div>
-            <div className="card-body pt-2 px-3 pb-3 central-assinante-login-body">
-              <form onSubmit={handleLogin}>
-                <div className="mb-2">
-                  <label htmlFor="login" className="form-label small text-white-50">{loginFieldConfig.label}</label>
-                  <Input
-                    type={loginFieldConfig.label === 'Email' ? 'email' : 'text'}
-                    id="login"
-                    value={loginForm.login}
-                    onChange={(e) => setLoginForm({ ...loginForm, login: String(e.value) })}
-                    placeholder={loginFieldConfig.placeholder}
-                    required
-                    disabled={loginMutation.isPending}
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <label htmlFor="senha" className="form-label small text-white-50">Senha</label>
-                  <Input
-                    type="password"
-                    id="senha"
-                    value={loginForm.senha}
-                    onChange={(e) => setLoginForm({ ...loginForm, senha: String(e.value) })}
-                    placeholder="Digite sua senha"
-                    required
-                    disabled={loginMutation.isPending}
-                  />
-                </div>
-
-                <div className="d-grid mt-2 mb-1">
-                  <EntrarButton
-                    type="submit"
-                    disabled={loginMutation.isPending}
-                    isPending={loginMutation.isPending}
-                  />
-                </div>
-                <div className="text-center mt-3">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="text-white-50 text-decoration-none p-0 small"
-                    onClick={() => setShowRecuperarSenha(true)}
-                    style={{ fontSize: '0.85rem' }}
-                  >
-                    Esqueci minha senha
-                  </Button>
-                </div>
-              </form>
-            </div>
-            </Card>
-          </div>
-        </div>
-        {/* Notification Container */}
-        <NotificationContainer
-          position="bottom-right"
-          notifications={notifications}
-          onRemove={removeNotification}
-          onPause={pauseNotification}
-          onResume={resumeNotification}
-          onActionClick={() => {}}
-        />
-      </div>
+      <CentralAssinanteLoginView
+        {...notificationProps}
+        empresaLogo={empresaData?.logo}
+        loginForm={loginForm}
+        onLoginFormChange={setLoginForm}
+        onSubmit={handleLogin}
+        onForgotPassword={() => setShowRecuperarSenha(true)}
+        loginFieldLabel={loginFieldConfig.label}
+        loginFieldPlaceholder={loginFieldConfig.placeholder}
+        loginInputType={loginFieldConfig.label === 'Email' ? 'email' : 'text'}
+        isPending={loginMutation.isPending}
+      />
     );
   }
 
@@ -589,9 +394,7 @@ const CentralAssinante: React.FC = () => {
           <VoltarButton
             size="sm"
             onClick={() => {
-              CentralAssinanteService.clearCentralToken();
-              setCentralToken(null);
-              setIsAuthenticated(false);
+              handleLogout();
               navigate(`/central-assinante/${slug}`, { replace: true });
             }}
           />
@@ -625,9 +428,7 @@ const CentralAssinante: React.FC = () => {
                 type="button"
                 size="sm"
                 onClick={() => {
-                  CentralAssinanteService.clearCentralToken();
-                  setCentralToken(null);
-                  setIsAuthenticated(false);
+                  handleLogout();
                   navigate(`/central-assinante/${slug}`, { replace: true });
                 }}
               />
