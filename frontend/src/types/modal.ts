@@ -5,7 +5,10 @@ export interface ListModalColumn<T> {
   label: string;
   sortable?: boolean;
   searchable?: boolean;
-  width?: string;
+  width?: string | number;
+  minWidth?: string | number;
+  maxWidth?: string | number;
+  resizable?: boolean;
   sortValue?: (row: T) => unknown;
   badgeLabels?: string[];
   render: (item: T) => React.ReactNode;
@@ -63,7 +66,7 @@ export interface ListModalProps<T> {
     label: string;
     variant?: ButtonVariant;
     requiresSelection?: boolean;
-    disabled?: (() => boolean) | ((selectedItems: T[]) => boolean);
+    disabled?: boolean | (() => boolean) | ((selectedItems: T[]) => boolean);
     action?: (() => void) | ((selectedItems: T[]) => void);
     dropdown?: {
       label: string;

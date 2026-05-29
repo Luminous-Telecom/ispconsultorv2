@@ -6,6 +6,7 @@ import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { formatDateTime } from 'utils/formatters';
 import ListModal from 'components/common/ListModal';
+import type { ListModalColumn } from 'types/modal';
 import ImprimirModal from 'components/common/ImprimirModal';
 import { saasEmpresasService, type SaasEmpresa, type SaasConfigListResponse } from 'services/saas/saasEmpresasService';
 import SaasEmpresaFormModal from './SaasEmpresaFormModal';
@@ -31,7 +32,7 @@ const SaasClientesModal: React.FC<Props> = ({ show, onClose, skipWrapper = false
   const [showEdit, setShowEdit] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  const list = useEntityListModal<SaasEmpresa>({ onClose });
+  const list = useEntityListModal<SaasEmpresaRow>({ onClose });
 
   useEffect(() => {
     if (show && empresaId) {
@@ -85,7 +86,10 @@ const SaasClientesModal: React.FC<Props> = ({ show, onClose, skipWrapper = false
     [queryClient, refetch, showApiError]
   );
 
-  const columns = useMemo(() => getSaasTenantListColumns(t, formatDateTime), [t]);
+  const columns = useMemo(
+    () => getSaasTenantListColumns(t, formatDateTime) as ListModalColumn<SaasEmpresaRow>[],
+    [t]
+  );
   const searchFields = useMemo(() => getSaasTenantListSearchFields(t), [t]);
 
   const bulkActions = useMemo(
@@ -102,7 +106,7 @@ const SaasClientesModal: React.FC<Props> = ({ show, onClose, skipWrapper = false
   );
 
   const listModal = (
-    <ListModal<SaasEmpresa>
+    <ListModal<SaasEmpresaRow>
       show={show}
       onClose={list.handleModalClose}
       skipWrapper={skipWrapper}

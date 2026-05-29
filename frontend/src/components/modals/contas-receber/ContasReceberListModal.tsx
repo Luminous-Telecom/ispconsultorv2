@@ -49,7 +49,9 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
   const isMobile = useIsMobile();
   const list = useEntityListModal<TituloItemUnion>({
     onClose,
-    onSelect: onSelectTitulo,
+    onSelect: onSelectTitulo
+      ? (item) => onSelectTitulo(item as Titulo)
+      : undefined,
   });
   const { setPage, clearSearch } = list.tableFilters;
   

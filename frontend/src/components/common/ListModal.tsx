@@ -75,6 +75,9 @@ function ListModal<T extends { id: number | string }>({
         sortable: col.sortable,
         searchable: col.searchable !== false,
         width: col.width,
+        minWidth: col.minWidth,
+        maxWidth: col.maxWidth,
+        resizable: col.resizable,
         sortValue: col.sortValue,
         badgeLabels: col.badgeLabels,
         render: col.render,
@@ -96,7 +99,12 @@ function ListModal<T extends { id: number | string }>({
           : () => {},
         disabled: (selectedItems: T[]) => {
           if (typeof action.disabled === 'function') {
-            return action.disabled(selectedItems);
+            return action.disabled.length > 0
+              ? (action.disabled as (items: T[]) => boolean)(selectedItems)
+              : (action.disabled as () => boolean)();
+          }
+          if (typeof action.disabled === 'boolean') {
+            return action.disabled;
           }
           return false;
         },
