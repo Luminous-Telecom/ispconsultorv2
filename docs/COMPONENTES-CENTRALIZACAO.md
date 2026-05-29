@@ -60,6 +60,7 @@ Use como base antes de criar componentes novos.
 | `RecursosSistemaModalCore` | `modals/recursos/` | `erp` \| `saas` |
 | `ReceberModalCore` | `modals/receber/` | `erp` \| `saas` |
 | `SaasServidorListModalCore` | `modals/servidor/` | `email` \| `whatsapp` |
+| `servidor-shared` (`MensagemTypeSelect`, `MensagemTipoEnvioRadio`, `ServidorSettingsCard`) | `parametros/servidor-shared/` | abas ERP email / whatsapp |
 | `RpkiLogsTableCore` | `modals/logs/rpki/` | `validation` \| `ca-pai` \| `repositorios` \| `roas` \| `aspas` |
 | `RotinaLogsModal` | `components/common/` | logs de rotina do agendador |
 
@@ -177,8 +178,8 @@ Duplicação quase 1:1. Modelo de referência: `logsModalRegistry.ts` + `modals/
 
 | Aba | ERP Email | ERP WhatsApp | Proposta |
 |-----|-----------|--------------|----------|
-| `ServidorTab` | `parametros/servidor-email/abas/ServidorTab.tsx` | `parametros/servidor-whatsapp/abas/ServidorTab.tsx` | `ServidorConnectionTab` com props `channel: 'email' \| 'whatsapp'` |
-| `MensagensTab` | `servidor-email/abas/MensagensTab.tsx` | `servidor-whatsapp/abas/MensagensTab.tsx` | `MensagensConfigTab` compartilhado |
+| `ServidorTab` | `servidor-email/abas/ServidorTab.tsx` | `servidor-whatsapp/abas/ServidorTab.tsx` | `ServidorSettingsCard` em `parametros/servidor-shared/` |
+| `MensagensTab` | `servidor-email/abas/MensagensTab.tsx` | `servidor-whatsapp/abas/MensagensTab.tsx` | `MensagemTypeSelect` + `MensagemTipoEnvioRadio` em `servidor-shared/` |
 | `TemplatesTab` | WhatsApp only | — | Manter específico |
 | `TemplatesMetaTab` | WhatsApp only | — | Manter específico |
 
@@ -448,7 +449,7 @@ Fase 1 — ListModal + useEntityListModal ✅ (concluída)
 Fase 2 — Pares ERP/SaaS (em andamento)
   └── NFSeConfigSection + modais NFS-e ✅
   └── RecursosSistemaModal ✅
-  └── ServidorTab + MensagensTab (email/whatsapp)
+  └── ServidorTab + MensagensTab (email/whatsapp) ✅ parcial (`servidor-shared`)
 
 Fase 4 — Logs (parcial)
   └── RPKI → `RpkiLogsTableCore` + `rpkiLogsConfig` ✅
@@ -511,8 +512,8 @@ Legenda: `[ ]` pendente · `[~]` parcial · `[x]` já centralizado
 - [x] `NFSeConfigSection` / `SaasNFSeConfigSection` → `modals/nfse/NFSeConfigSectionCore` + `nfseConfigVariants`
 - [x] `NFSeModal` / `SaasNfseModal` → `modals/nfse/NFSeModalCore`
 - [x] `RecursosSistemaModal` / `SaasRecursosSistemaModal` → `RecursosSistemaModalCore`
-- [ ] `ServidorTab` email / whatsapp (ERP — abas de configuração única)
-- [ ] `MensagensTab` email / whatsapp (ERP)
+- [x] `ServidorTab` email / whatsapp → `ServidorSettingsCard` (`parametros/servidor-shared/`)
+- [x] `MensagensTab` email / whatsapp → `MensagemTypeSelect`, `MensagemTipoEnvioRadio`, `getMensagemCobrancaTypeOptions`
 - [x] `ReceberModal` / `SaasReceberModal` → `ReceberModalCore`
 - [x] `AgendadorTarefasModal` / `SaasAgendadorTarefasModal` (wrapper fino — já SaaS)
 - [x] `RotinaAgendadaModal` / `SaasRotinaAgendadaModal` (wrapper fino)

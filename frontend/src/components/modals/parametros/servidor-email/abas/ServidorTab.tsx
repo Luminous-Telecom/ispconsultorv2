@@ -1,5 +1,6 @@
 import React from 'react';
 import { FormField, Checkbox, EnviarButton } from 'components/ui';
+import { ServidorSettingsCard } from 'components/modals/parametros/servidor-shared';
 import { ServidorTabProps } from '../types';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -16,13 +17,11 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
   const { t } = useI18n();
   return (
     <>
-      <div className="card">
-        <div className="card-header py-1 px-2">
-          <small className="fw-bold mb-0">
-            {servidorAtivo?.data ? t('emailServer.serverSettings') : t('emailServer.configureServer')}
-          </small>
-        </div>
-        <div className="card-body p-2">
+      <ServidorSettingsCard
+        title={
+          servidorAtivo?.data ? t('emailServer.serverSettings') : t('emailServer.configureServer')
+        }
+      >
           <div className="row g-2">
             <div className="col-md-6">
               <FormField
@@ -168,8 +167,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
               </div>
             </div>
           )}
-        </div>
-      </div>
+      </ServidorSettingsCard>
     </>
   );
 };

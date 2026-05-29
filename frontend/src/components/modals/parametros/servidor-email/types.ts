@@ -1,3 +1,5 @@
+import type { MensagemTipoEnvio } from 'components/modals/parametros/servidor-shared';
+
 export interface ServidorEmailForm {
   host: string;
   porta: number;
@@ -34,12 +36,12 @@ export interface ServidorTabProps {
 
 export interface MensagensTabProps {
   mensagemType: string;
-  tipoEnvio: 'desativado' | 'pdf';
+  tipoEnvio: MensagemTipoEnvio;
   mensagemTexto: string;
   mensagemManual?: string;
   editorKey?: number;
   onMensagemTypeChange: (value: string) => void;
-  onTipoEnvioChange: (value: 'desativado' | 'pdf') => void;
+  onTipoEnvioChange: (value: MensagemTipoEnvio) => void;
   onMensagemTextoChange: (value: string) => void;
   onMensagemManualChange?: (value: string) => void;
   onSaveMensagem: () => void;

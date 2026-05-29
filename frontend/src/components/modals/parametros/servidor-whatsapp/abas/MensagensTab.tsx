@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { FormField } from 'components/ui';
 import EntitySelectField from 'components/ui/EntitySelectField';
+import { MensagemTypeSelect, MensagemTipoEnvioRadio } from 'components/modals/parametros/servidor-shared';
 import { MensagensTabProps } from '../types';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -80,26 +81,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
     <div className="whatsapp-messages-container" ref={containerRef}>
       <div className="row g-0">
         <div className="col-12">
-              <FormField
-                name="mensagemType"
-                type="select"
-                label={t('settings.messages.type')}
-                required={true}
-                size="sm"
-                value={mensagemType}
-                onChange={(value) => onMensagemTypeChange(String(value ?? ''))}
-                options={[
-                  { value: '10_dias_antes_vencimento', label: t('messages.types.10daysBefore') },
-                  { value: '05_dias_antes_vencimento', label: t('messages.types.05daysBefore') },
-                  { value: 'mesmo_dia_vencimento', label: t('messages.types.sameDay') },
-                  { value: '05_dias_depois_vencimento', label: t('messages.types.05daysAfter') },
-                  { value: '10_dias_depois_vencimento', label: t('messages.types.10daysAfter') },
-                  { value: '15_dias_depois_vencimento', label: t('messages.types.15daysAfter') },
-                  { value: 'corte_cliente', label: t('messages.types.clientCut') },
-                  { value: 'envio_manual', label: t('messages.types.manualSend') },
-                  { value: 'recibo_pagamento', label: t('messages.types.paymentReceipt') }
-                ]}
-              />
+          <MensagemTypeSelect value={mensagemType} onChange={onMensagemTypeChange} />
         </div>
       </div>
 
@@ -122,42 +104,14 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                 </div>
               ) : (
                 <>
-                  {/* Tipo de Envio - Apenas para Evolution API */}
                   <div className="row g-0 mt-3">
                     <div className="col-12">
-                      <label className="form-label mb-2">
-                        <i className="bi bi-send me-2"></i>
-                        {t('settings.messages.sendType')}
-                      </label>
-                      <div className="btn-group w-100" role="group">
-                        <input
-                          type="radio"
-                          className="btn-check"
-                          name="tipoEnvio"
-                          id="envio-desativado"
-                          value="desativado"
-                          checked={tipoEnvio === 'desativado'}
-                          onChange={(e) => onTipoEnvioChange(e.target.value as 'desativado' | 'pdf')}
-                        />
-                        <label className="btn btn-outline-primary" htmlFor="envio-desativado">
-                          <i className="bi bi-x-circle me-1"></i>
-                          {t('messages.sendTypes.disabled')}
-                        </label>
-
-                        <input
-                          type="radio"
-                          className="btn-check"
-                          name="tipoEnvio"
-                          id="envio-pdf"
-                          value="pdf"
-                          checked={tipoEnvio === 'pdf'}
-                          onChange={(e) => onTipoEnvioChange(e.target.value as 'desativado' | 'pdf')}
-                        />
-                        <label className="btn btn-outline-primary" htmlFor="envio-pdf">
-                          <i className="bi bi-file-pdf me-1"></i>
-                          {t('messages.sendTypes.pdf')}
-                        </label>
-                      </div>
+                      <MensagemTipoEnvioRadio
+                        idPrefix="whatsapp"
+                        value={tipoEnvio}
+                        onChange={onTipoEnvioChange}
+                        variant="full"
+                      />
                     </div>
                   </div>
 

@@ -1,3 +1,5 @@
+import type { MensagemTipoEnvio } from 'components/modals/parametros/servidor-shared';
+
 export interface ServidorWhatsAppForm {
   tipo_api: 'evolution' | 'whatsapp_cloud';
   evolution_api_url: string;
@@ -33,7 +35,7 @@ export interface ServidorTabProps {
 
 export interface MensagensTabProps {
   mensagemType: string;
-  tipoEnvio: 'desativado' | 'pdf';
+  tipoEnvio: MensagemTipoEnvio;
   mensagemPadrao: string;
   mensagemManual?: string;
   templateId?: number | null;
@@ -43,7 +45,7 @@ export interface MensagensTabProps {
   interacao3: string;
   isWhatsAppCloud?: boolean;
   onMensagemTypeChange: (value: string) => void;
-  onTipoEnvioChange: (value: 'desativado' | 'pdf') => void;
+  onTipoEnvioChange: (value: MensagemTipoEnvio) => void;
   onMensagemPadraoChange: (value: string) => void;
   onMensagemManualChange?: (value: string) => void;
   onTemplateIdChange?: (value: number | null) => void;

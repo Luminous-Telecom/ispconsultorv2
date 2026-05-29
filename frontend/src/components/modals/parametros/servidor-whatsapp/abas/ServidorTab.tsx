@@ -1,5 +1,6 @@
 import React from 'react';
 import { EnviarButton, FormField } from 'components/ui';
+import { ServidorSettingsCard } from 'components/modals/parametros/servidor-shared';
 import { ServidorTabProps } from '../types';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -21,13 +22,9 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
 
   return (
     <>
-      <div className="card">
-        <div className="card-header py-1 px-2">
-          <small className="fw-bold mb-0">
-            {servidorAtivo?.data ? t('settings.server.config') : t('settings.server.configure')}
-          </small>
-        </div>
-        <div className="card-body p-2">
+      <ServidorSettingsCard
+        title={servidorAtivo?.data ? t('settings.server.config') : t('settings.server.configure')}
+      >
           {/* Seleção do Tipo de API */}
           <div className="row g-0 mb-0">
             <div className="col-12">
@@ -154,8 +151,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
 
             </>
           )}
-        </div>
-      </div>
+      </ServidorSettingsCard>
 
       {/* Seção de Teste de Mensagem */}
       {servidorAtivo?.data && (
