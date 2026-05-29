@@ -6,6 +6,8 @@ import { useIsMobile } from 'hooks/useMediaQuery';
 import { NotaFiscal } from 'types';
 import { NotaFiscalService } from 'services/notaFiscalService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 
 interface CancelarNotaFiscalModalProps {
   show: boolean;
@@ -22,7 +24,8 @@ const CancelarNotaFiscalModal: React.FC<CancelarNotaFiscalModalProps> = ({
 }) => {
   const { t } = useI18n();
   const isMobile = useIsMobile();
-  const { error, success } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [justificativa, setJustificativa] = useState('');
   const [justificativaError, setJustificativaError] = useState('');
@@ -81,11 +84,10 @@ const CancelarNotaFiscalModal: React.FC<CancelarNotaFiscalModalProps> = ({
         onSuccess?.();
         onClose();
       } else {
-        error(response.message || t('messages.errorCancelingInvoice'));
+        showApiError(response.message || CONTEXT_ERROR_MESSAGES.NFSE_CANCEL_ERROR);
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : t('messages.errorCancelingInvoice');
-      error(errorMessage);
+      showApiError(err, CONTEXT_ERROR_MESSAGES.NFSE_CANCEL_ERROR);
     } finally {
       setIsSubmitting(false);
     }

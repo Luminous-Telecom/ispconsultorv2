@@ -5,7 +5,8 @@ import { useModalSelect } from 'hooks/useModalSelect';
 import { useAuditoria } from 'hooks/useAuditoria';
 import { useI18n } from 'contexts/I18nContext';
 import {useBulkBtn} from 'components/ui';
-import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
 import ImprimirModal from 'components/common/ImprimirModal';
@@ -19,7 +20,7 @@ const SaasBancosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false, 
   const { t } = useI18n();
   const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
-  const { error } = useNotificationContext();
+  const { showApiError } = useApiError();
   const auditoria = useAuditoria();
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -54,8 +55,8 @@ const SaasBancosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false, 
     if (!item) return;
     if (!window.confirm(t('messages.confirmDelete'))) return;
     try { await saasBancoService.delete(item.id); queryClient.invalidateQueries({ queryKey: ['saas-bancos'] }); refetch(); }
-    catch { error(t('messages.error')); }
-  }, [selectedItem, queryClient, refetch, error, t]);
+    catch (err) { showApiError(err, CONTEXT_ERROR_MESSAGES.BANCO_DELETE_ERROR); }
+  }, [selectedItem, queryClient, refetch, showApiError, t]);
 
   const handleSelect = useCallback((sel?: SaasBanco[]) => {
     const item = sel?.length ? sel[0] : selectedItem;

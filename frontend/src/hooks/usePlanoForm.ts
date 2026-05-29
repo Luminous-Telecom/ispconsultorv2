@@ -9,9 +9,10 @@ import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { PlanoService } from '../services/planoService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
+import { useApiError } from './useApiError';
+import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 import { Plano } from '../types';
 import { PlanoForm } from '../components/modals/planos/plano/types';
 import { planoSchema } from '../schemas/plano.schema';
@@ -80,7 +81,8 @@ export const usePlanoForm = ({
   onSuccess
 }: UsePlanoFormParams): UsePlanoFormReturn => {
   const isEditing = !!planoId;
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const queryClient = useQueryClient();
 
   // React Hook Form com Zod
@@ -168,10 +170,7 @@ export const usePlanoForm = ({
       queryClient.invalidateQueries({ queryKey: ['plano', planoId] });
       onSuccess?.();
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao atualizar plano');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.PLANO_UPDATE_ERROR),
   });
 
   // Mutation para criar plano
@@ -182,10 +181,7 @@ export const usePlanoForm = ({
       queryClient.invalidateQueries({ queryKey: ['planos'] });
       onSuccess?.();
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao criar plano');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.PLANO_CREATE_ERROR),
   });
 
   const isSubmitting = updatePlanoMutation.isPending || createPlanoMutation.isPending;

@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { EmpresaService, EmpresaFilters } from '../services/empresaService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { CreateEmpresa, UpdateEmpresa } from '../types';
+import { useApiError } from './useApiError';
+import { CONTEXT_ERROR_MESSAGES, ERROR_MESSAGES } from '../constants/ErrorMessages';
 
 export const useEmpresas = (filters: EmpresaFilters = {}) => {
   return useQuery({
@@ -16,7 +17,8 @@ export const useEmpresas = (filters: EmpresaFilters = {}) => {
 
 export const useCreateEmpresa = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: (data: CreateEmpresa) => EmpresaService.create(data),
@@ -24,16 +26,14 @@ export const useCreateEmpresa = () => {
       queryClient.invalidateQueries({ queryKey: ['empresas'] });
       success('Empresa criada com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao criar empresa');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.EMPRESA_CREATE_ERROR),
   });
 };
 
 export const useUpdateEmpresa = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateEmpresa }) =>
@@ -42,16 +42,14 @@ export const useUpdateEmpresa = () => {
       queryClient.invalidateQueries({ queryKey: ['empresas'] });
       success('Empresa atualizada com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao atualizar empresa');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.EMPRESA_UPDATE_ERROR),
   });
 };
 
 export const useDeleteEmpresa = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: (id: number) => EmpresaService.delete(id),
@@ -59,9 +57,6 @@ export const useDeleteEmpresa = () => {
       queryClient.invalidateQueries({ queryKey: ['empresas'] });
       success('Empresa excluída com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao excluir empresa');
-    },
+    onError: (err) => showApiError(err, ERROR_MESSAGES.DELETE_ERROR),
   });
 };

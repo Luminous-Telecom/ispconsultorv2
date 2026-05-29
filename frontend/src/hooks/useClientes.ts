@@ -3,7 +3,8 @@ import { ClienteService } from '../services/clienteService';
 import { UpdateCliente, ClienteFilters } from '../types';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { CACHE_CONFIG } from '../config/api';
-import { AxiosError } from 'axios';
+import { useApiError } from './useApiError';
+import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 
 // Para React Query v5, use gcTime ao invés de cacheTime
 const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;
@@ -44,7 +45,8 @@ export const useClientesAtivos = () => {
 // Hook para criar cliente
 export const useCreateCliente = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: ClienteService.create,
@@ -53,17 +55,15 @@ export const useCreateCliente = () => {
       queryClient.invalidateQueries({ queryKey: ['clientes-ativos'] });
       success('Cliente criado com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao criar cliente');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CLIENT_CREATE_ERROR),
   });
 };
 
 // Hook para atualizar cliente
 export const useUpdateCliente = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateCliente }) =>
@@ -74,17 +74,15 @@ export const useUpdateCliente = () => {
       queryClient.invalidateQueries({ queryKey: ['clientes-ativos'] });
       success('Cliente atualizado com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao atualizar cliente');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CLIENT_UPDATE_ERROR),
   });
 };
 
 // Hook para excluir cliente
 export const useDeleteCliente = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: ClienteService.delete,
@@ -93,9 +91,6 @@ export const useDeleteCliente = () => {
       queryClient.invalidateQueries({ queryKey: ['clientes-ativos'] });
       success('Cliente excluído com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao excluir cliente');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CLIENT_DELETE_ERROR),
   });
 };

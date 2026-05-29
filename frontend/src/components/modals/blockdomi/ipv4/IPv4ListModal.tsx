@@ -14,6 +14,8 @@ import IPv4Modal from './IPv4Modal';
 import { useAuditoria } from 'hooks/useAuditoria';
 import ImprimirModal from 'components/common/ImprimirModal';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { IPv4Service } from 'services/ipv4Service';
 
 interface IPv4ListModalProps {
@@ -39,7 +41,9 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
   const [selectedIPv4Id, setSelectedIPv4Id] = useState<number | null>(null);
   
   const auditoria = useAuditoria();
-  
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
+
   const tableFilters = useTableFilters({
     initialSearch: '',
     initialPage: 1,
@@ -238,8 +242,6 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
     }
   }, [selectedItem, clearSelection, onSelectIPv4, onClose]);
 
-  const { success, error } = useNotificationContext();
-
   const handleDelete = useCallback(async (ipv4Id: number) => {
     try {
       await deleteIPv4Mutation.mutateAsync(ipv4Id);
@@ -258,9 +260,9 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ['ipv4'] });
       success(`Excluído(s) ${deleted} IPv4. Versão da operação: ${versao}.`);
     } catch (err: unknown) {
-      error((err as Error)?.message ?? 'Erro ao excluir IPv4.');
+      showApiError(err, CONTEXT_ERROR_MESSAGES.BLOCKDOMI_IPV4_DELETE_ERROR);
     }
-  }, [clearSelection, refetch, queryClient, success, error]);
+  }, [clearSelection, refetch, queryClient, success, showApiError]);
 
   const handleAudit = useCallback((ipv4: IPv4) => {
     auditoria.handleAudit('IPv4', ipv4.id);

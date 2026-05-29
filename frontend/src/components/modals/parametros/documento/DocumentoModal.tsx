@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import DocumentoSistemaService from 'services/documentoSistemaService';
 import ModeloReciboService from 'services/modeloReciboService';
 import ModeloCartaService from 'services/modeloCartaService';
 import ModeloTermoService from 'services/modeloTermoService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
 import ImprimirModal from 'components/common/ImprimirModal';
@@ -49,7 +50,8 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
   const [showImprimirDropdown, setShowImprimirDropdown] = useState(false);
 
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const { t } = useI18n();
 
   const { data: clienteTeste } = useCliente(clienteTesteId || 0);
@@ -217,11 +219,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema', tipo] });
       onSuccess?.(createdDocumento);
     },
-    onError: (err: unknown) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      const message = axiosError?.response?.data?.message || t('document.errorCreate');
-      error(message);
-    }
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.DOCUMENT_CREATE_ERROR),
   });
 
   const updateDocumentoMutation = useMutation({
@@ -271,23 +269,19 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema', tipo] });
       onSuccess?.(updatedDocumento);
     },
-    onError: (err: unknown) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      const message = axiosError?.response?.data?.message || t('document.errorUpdate');
-      error(message);
-    }
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.DOCUMENT_UPDATE_ERROR),
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.nome) {
-      error(t('messages.nameRequired'));
+      showApiError(t('messages.nameRequired'));
       return;
     }
 
     if (tipo !== 'contrato' && !formData.conteudo) {
-      error(t('messages.contentRequired'));
+      showApiError(t('messages.contentRequired'));
       return;
     }
 
@@ -302,8 +296,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
         await createDocumentoMutation.mutateAsync(data);
       }
     } catch (err: unknown) {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError?.response?.data?.message || t('document.errorUpdate'));
+      showApiError(err, CONTEXT_ERROR_MESSAGES.DOCUMENT_UPDATE_ERROR);
     }
   };
 
@@ -369,7 +362,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       setPdfUrl(url);
       setIsGeneratingPdf(false);
     } catch (err) {
-      error(err instanceof Error ? err.message : t('document.errorGeneratePdf'));
+      showApiError(err, CONTEXT_ERROR_MESSAGES.PDF_GENERATE_ERROR);
       setShowPreview(false);
       setIsGeneratingPdf(false);
     }

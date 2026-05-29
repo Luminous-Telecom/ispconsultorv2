@@ -1,7 +1,6 @@
 import { apiService } from './api';
 import type { ApiResponse } from '../types';
-import { extractApiErrorMessage } from '../utils/apiErrorHelper';
-import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
+import { extractApiErrorMessage, resolveServiceErrorMessage, CONTEXT_ERROR_MESSAGES, ERROR_MESSAGES } from '../utils/apiErrorHelper';
 
 export interface DocumentoSistema {
   id: number;
@@ -163,7 +162,7 @@ class DocumentoSistemaService {
           const text = await blob.text();
           // Se conseguir fazer parse como JSON, é um erro
           const errorData = JSON.parse(text);
-          throw new Error(errorData.message || 'Erro ao gerar PDF de teste');
+          throw new Error(resolveServiceErrorMessage(errorData.message, CONTEXT_ERROR_MESSAGES.PDF_TEST_ERROR));
         } catch (parseError) {
           // Se não for JSON, verificar se é um PDF válido
           if (blob.type && !blob.type.includes('application/pdf')) {
@@ -238,19 +237,19 @@ class DocumentoSistemaService {
         // Se for um ApiError do ErrorHandler, extrair mensagem
         if (err && typeof err === 'object' && 'message' in err) {
           const apiError = err as { message?: string; type?: string };
-          throw new Error(apiError.message || 'Erro ao gerar PDF de teste com conteúdo');
+          throw new Error(resolveServiceErrorMessage(apiError.message, CONTEXT_ERROR_MESSAGES.PDF_TEST_CONTENT_ERROR));
         }
         // Se for um Error, relançar
         if (err instanceof Error) {
           throw err;
         }
-        throw new Error('Erro desconhecido ao gerar PDF');
+        throw new Error(ERROR_MESSAGES.UNKNOWN_ERROR);
       }
 
       // Verificar se é um erro (ApiError do ErrorHandler)
       if (response && typeof response === 'object' && 'type' in response && 'message' in response) {
         const apiError = response as { type?: string; message?: string };
-        throw new Error(apiError.message || 'Erro ao gerar PDF de teste com conteúdo');
+        throw new Error(resolveServiceErrorMessage(apiError.message, CONTEXT_ERROR_MESSAGES.PDF_TEST_CONTENT_ERROR));
       }
 
       // O interceptador retorna o blob diretamente quando responseType é 'blob'
@@ -264,7 +263,7 @@ class DocumentoSistemaService {
         
         // Se for um ApiResponse com success: false, é um erro
         if (responseObj.success === false) {
-          throw new Error(responseObj.message || 'Erro ao gerar PDF de teste com conteúdo');
+          throw new Error(resolveServiceErrorMessage(responseObj.message, CONTEXT_ERROR_MESSAGES.PDF_TEST_CONTENT_ERROR));
         }
         
         const responseData = responseObj.data;
@@ -300,7 +299,7 @@ class DocumentoSistemaService {
           const text = await blob.text();
           // Se conseguir fazer parse como JSON, é um erro
           const errorData = JSON.parse(text);
-          throw new Error(errorData.message || 'Erro ao gerar PDF de teste com conteúdo');
+          throw new Error(resolveServiceErrorMessage(errorData.message, CONTEXT_ERROR_MESSAGES.PDF_TEST_CONTENT_ERROR));
         } catch (parseError) {
           // Se não for JSON, verificar se é um PDF válido
           if (blob.type && !blob.type.includes('application/pdf')) {

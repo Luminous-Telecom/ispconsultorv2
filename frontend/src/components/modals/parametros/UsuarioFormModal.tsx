@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { UsuarioService } from 'services/usuarioService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useFormReset } from 'hooks/useFormReset';
 import { useUsuario, useGerarWebhookSecret } from 'hooks/useUsuarios';
@@ -45,7 +47,8 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
   const [errors, setErrors] = useState<Partial<UsuarioForm>>({});
   const [webhookSecret, setWebhookSecret] = useState<string>('');
   const [isGeneratingSecret, setIsGeneratingSecret] = useState(false);
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const queryClient = useQueryClient();
 
   const { data: usuarioData } = useUsuario(usuarioId || 0);
@@ -79,10 +82,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ['usuarios'] });
       onSuccess?.();
     },
-    onError: (err: unknown) => {
-      const errorMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || t('user.errorCreate');
-      error(errorMessage);
-    }
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.USER_CREATE_ERROR),
   });
 
   const updateUsuarioMutation = useMutation({
@@ -93,10 +93,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ['usuario', usuarioId] });
       onSuccess?.();
     },
-    onError: (err: unknown) => {
-      const errorMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || t('user.errorUpdate');
-      error(errorMessage);
-    }
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.USER_UPDATE_ERROR),
   });
 
   const handleSubmit = async (e: React.FormEvent) => {

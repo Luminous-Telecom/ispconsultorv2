@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { auditoriaService, type AuditoriaLog } from 'services/auditoriaService';
 import { enrichAuditoriaLogFromOperacionalPayload } from 'utils/auditoriaOperacionalDetalhe';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 
 type UseAuditoriaDetalheEsOptions = {
   selected: AuditoriaLog | null;
@@ -24,7 +25,7 @@ export function useAuditoriaDetalheEs({
     queryFn: async () => {
       const r = await auditoriaService.getById(esAuditDetailId!, { saas });
       if (!r.success) {
-        throw new Error(r.message || 'Erro ao carregar detalhe no Elasticsearch');
+        throw new Error(r.message || CONTEXT_ERROR_MESSAGES.AUDIT_DETAIL_ERROR);
       }
       const raw = r.data as unknown;
       if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {

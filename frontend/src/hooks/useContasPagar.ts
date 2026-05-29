@@ -3,7 +3,8 @@ import { ContaPagarService } from '../services/contaPagarService';
 import { UpdateContaPagar, ContaPagarFilters } from '../types';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { CACHE_CONFIG } from '../config/api';
-import { AxiosError } from 'axios';
+import { useApiError } from './useApiError';
+import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 
 const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;
 
@@ -34,7 +35,8 @@ export const useContaPagar = (id: number | null) => {
 // Hook para criar conta a pagar
 export const useCreateContaPagar = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: ContaPagarService.create,
@@ -42,17 +44,15 @@ export const useCreateContaPagar = () => {
       queryClient.invalidateQueries({ queryKey: ['contas-pagar'] });
       success('Conta a pagar criada com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao criar conta a pagar');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CONTA_PAGAR_CREATE_ERROR),
   });
 };
 
 // Hook para atualizar conta a pagar
 export const useUpdateContaPagar = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateContaPagar }) =>
@@ -62,17 +62,15 @@ export const useUpdateContaPagar = () => {
       queryClient.invalidateQueries({ queryKey: ['conta-pagar', id] });
       success('Conta a pagar atualizada com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao atualizar conta a pagar');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CONTA_PAGAR_UPDATE_ERROR),
   });
 };
 
 // Hook para excluir conta a pagar
 export const useDeleteContaPagar = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: ContaPagarService.delete,
@@ -80,17 +78,15 @@ export const useDeleteContaPagar = () => {
       queryClient.invalidateQueries({ queryKey: ['contas-pagar'] });
       success('Conta a pagar excluída com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao excluir conta a pagar');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CONTA_PAGAR_DELETE_ERROR),
   });
 };
 
 // Hook para pagar conta a pagar
 export const usePagarContaPagar = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: { data?: string; valor: number; tipo_pagamento: string; observacao?: string } }) =>
@@ -100,17 +96,15 @@ export const usePagarContaPagar = () => {
       queryClient.invalidateQueries({ queryKey: ['conta-pagar', id] });
       success('Pagamento registrado com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao registrar pagamento');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CONTA_PAGAR_UPDATE_ERROR),
   });
 };
 
 // Hook para duplicar conta a pagar
 export const useDuplicarContaPagar = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: ContaPagarService.duplicar,
@@ -118,11 +112,6 @@ export const useDuplicarContaPagar = () => {
       queryClient.invalidateQueries({ queryKey: ['contas-pagar'] });
       success('Conta a pagar duplicada com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao duplicar conta a pagar');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CONTA_PAGAR_CREATE_ERROR),
   });
 };
-
-

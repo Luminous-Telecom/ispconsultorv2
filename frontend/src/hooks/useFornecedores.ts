@@ -3,7 +3,8 @@ import { FornecedorService } from '../services/fornecedorService';
 import { UpdateFornecedor, FornecedorFilters } from '../types';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { CACHE_CONFIG } from '../config/api';
-import { AxiosError } from 'axios';
+import { useApiError } from './useApiError';
+import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 
 const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;
 
@@ -33,7 +34,8 @@ export const useFornecedor = (id: number | null) => {
 // Hook para criar fornecedor
 export const useCreateFornecedor = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: FornecedorService.create,
@@ -41,17 +43,15 @@ export const useCreateFornecedor = () => {
       queryClient.invalidateQueries({ queryKey: ['fornecedores'] });
       success('Fornecedor criado com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao criar fornecedor');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.FORNECEDOR_CREATE_ERROR),
   });
 };
 
 // Hook para atualizar fornecedor
 export const useUpdateFornecedor = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateFornecedor }) =>
@@ -61,17 +61,15 @@ export const useUpdateFornecedor = () => {
       queryClient.invalidateQueries({ queryKey: ['fornecedor', id] });
       success('Fornecedor atualizado com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao atualizar fornecedor');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.FORNECEDOR_UPDATE_ERROR),
   });
 };
 
 // Hook para excluir fornecedor
 export const useDeleteFornecedor = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: FornecedorService.delete,
@@ -79,10 +77,6 @@ export const useDeleteFornecedor = () => {
       queryClient.invalidateQueries({ queryKey: ['fornecedores'] });
       success('Fornecedor excluído com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao excluir fornecedor');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.FORNECEDOR_DELETE_ERROR),
   });
 };
-

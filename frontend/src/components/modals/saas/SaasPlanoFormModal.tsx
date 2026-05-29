@@ -6,6 +6,8 @@ import DraggableModal from 'components/common/DraggableModal';
 import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
 import { FormField, AtivoInativoField, ModalFormActions } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useFormReset } from 'hooks/useFormReset';
 import { saasPlanoService, type SaasPlano } from 'services/saas/saasPlanoService';
 import { PLANO_MODULOS } from 'constants/planoModulos';
@@ -89,7 +91,8 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
   const { t } = useI18n();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const isEditing = !!planoId;
   const [form, setForm] = useState<PlanoForm>(INITIAL);
   const [errors, setErrors] = useState<Partial<Record<keyof PlanoForm, string>>>({});
@@ -146,10 +149,7 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
       queryClient.invalidateQueries({ queryKey: ['saas-planos'] });
       onSuccess?.();
     },
-    onError: (err: unknown) => {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao criar plano';
-      error(msg);
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.PLANO_CREATE_ERROR),
   });
 
   const updateMutation = useMutation({
@@ -160,10 +160,7 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
       queryClient.invalidateQueries({ queryKey: ['saas-plano', planoId] });
       onSuccess?.();
     },
-    onError: (err: unknown) => {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao atualizar plano';
-      error(msg);
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.PLANO_UPDATE_ERROR),
   });
 
   const isPending = createMutation.isPending || updateMutation.isPending;

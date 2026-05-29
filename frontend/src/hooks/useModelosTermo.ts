@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ModeloTermoService, { CreateModeloTermoData, UpdateModeloTermoData } from '../services/modeloTermoService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
-import { AxiosError } from 'axios';
+import { useApiError } from './useApiError';
+import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 
 export const useModelosTermo = () => {
   return useQuery({
@@ -37,7 +38,8 @@ export const useModeloTermo = (id: number) => {
 
 export const useCreateModeloTermo = () => {
   const queryClient = useQueryClient();
-  const { success, error: showError } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: async (data: CreateModeloTermoData) => {
@@ -48,16 +50,14 @@ export const useCreateModeloTermo = () => {
       queryClient.invalidateQueries({ queryKey: ['modelos-termo'] });
       success('Modelo de termo criado com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      showError(axiosError.response?.data?.message || 'Erro ao criar modelo de termo');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.DOCUMENT_CREATE_ERROR),
   });
 };
 
 export const useUpdateModeloTermo = () => {
   const queryClient = useQueryClient();
-  const { success, error: showError } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: number; data: UpdateModeloTermoData }) => {
@@ -68,16 +68,14 @@ export const useUpdateModeloTermo = () => {
       queryClient.invalidateQueries({ queryKey: ['modelos-termo'] });
       success('Modelo de termo atualizado com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      showError(axiosError.response?.data?.message || 'Erro ao atualizar modelo de termo');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.DOCUMENT_UPDATE_ERROR),
   });
 };
 
 export const useDeleteModeloTermo = () => {
   const queryClient = useQueryClient();
-  const { success, error: showError } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: (id: number) => ModeloTermoService.delete(id),
@@ -85,9 +83,6 @@ export const useDeleteModeloTermo = () => {
       queryClient.invalidateQueries({ queryKey: ['modelos-termo'] });
       success('Modelo de termo excluído com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      showError(axiosError.response?.data?.message || 'Erro ao excluir modelo de termo');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.DOCUMENT_DELETE_ERROR),
   });
 };

@@ -2,6 +2,7 @@
  * BlockdomiService - Importação unificada com controle de versão
  */
 import { defaultApiClient } from './core';
+import { resolveServiceErrorMessage, CONTEXT_ERROR_MESSAGES } from '../utils/apiErrorHelper';
 
 export interface ImportarListaPayload {
   dominios: string[];
@@ -108,7 +109,7 @@ export class BlockdomiService {
     );
     const sei = response.data?.sei;
     if (!response.success || !sei) {
-      throw new Error(response.message || 'Não foi possível extrair o SEI deste PDF.');
+      throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.BLOCKDOMI_SEI_EXTRACT_ERROR));
     }
     return { sei };
   }

@@ -9,10 +9,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { BancoService } from '../services/bancoService';
 import { DadosEmpresaService } from '../services/dadosEmpresaService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
+import { useApiError } from './useApiError';
+import { CONTEXT_ERROR_MESSAGES, ERROR_MESSAGES } from '../constants/ErrorMessages';
 import { Banco } from '../types';
 import { BancoForm } from '../components/modals/bancos/banco/types';
 import { bancoSchema } from '../schemas/banco.schema';
@@ -146,6 +147,7 @@ export const useBancoForm = ({
   const effectiveBancoId = bancoId ?? lastCreatedBancoId ?? lastCreatedBancoIdRef.current;
   const isEditing = !!effectiveBancoId;
   const { success, error } = useNotificationContext();
+  const { showApiError } = useApiError();
   const queryClient = useQueryClient();
 
   // React Hook Form com Zod
@@ -242,10 +244,7 @@ export const useBancoForm = ({
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       onSuccess?.(updatedBanco);
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao atualizar banco');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.BANCO_UPDATE_ERROR),
   });
 
   // Mutation para criar banco
@@ -261,10 +260,7 @@ export const useBancoForm = ({
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       onSuccess?.(createdBanco);
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao criar banco');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.BANCO_CREATE_ERROR),
   });
 
   const isSubmitting = updateBancoMutation.isPending || createBancoMutation.isPending;
@@ -386,7 +382,7 @@ export const useBancoForm = ({
         createBancoMutation.mutate(dataToSend);
       }
     } catch (err) {
-      error('Erro ao processar formulário');
+      error(ERROR_MESSAGES.FORM_PROCESS_ERROR);
     }
   };
 

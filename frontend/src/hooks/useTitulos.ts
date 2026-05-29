@@ -2,8 +2,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { TituloService } from '../services/tituloService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { CACHE_CONFIG } from '../config/api';
-import { AxiosError } from 'axios';
 import { CarneParcelaFilters, CarneParcela } from '../types';
+import { useApiError } from './useApiError';
+import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 
 const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;
 
@@ -55,7 +56,8 @@ export const useCarneParcelasVencidas = () => {
 // Hook para marcar parcela como paga
 export const useMarcarTituloPago = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: ({ 
@@ -80,17 +82,15 @@ export const useMarcarTituloPago = () => {
       
       success(response.message);
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao marcar parcela como paga');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TITULO_PAY_ERROR),
   });
 };
 
 // Hook para desmarcar pagamento da parcela
 export const useDesmarcarParcelaPago = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: (id: number) => TituloService.desmarcarPago(id),
@@ -101,17 +101,15 @@ export const useDesmarcarParcelaPago = () => {
       queryClient.invalidateQueries({ queryKey: ['carne-parcelas-vencidas'] });
       success('Pagamento desmarcado com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao desmarcar pagamento da parcela');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TITULO_UNPAY_ERROR),
   });
 };
 
 // Hook para atualizar parcela
 export const useUpdateCarneParcela = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<CarneParcela> }) =>
@@ -122,9 +120,6 @@ export const useUpdateCarneParcela = () => {
       queryClient.invalidateQueries({ queryKey: ['carne-parcelas-carne'] });
       success(response.message);
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao atualizar parcela');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TITULO_UPDATE_ERROR),
   });
 };

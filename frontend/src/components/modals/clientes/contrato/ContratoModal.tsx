@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
 import { usePlanos } from 'hooks/usePlanos';
 import { useBancos } from 'hooks/useBancos';
 import { useTipoCobrancaContratosAtivos } from 'hooks/useTipoCobrancaContratos';
@@ -182,7 +183,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   
   const [showCancelados, setShowCancelados] = useState(false);
   const [showCanceladosAvulsos, setShowCanceladosAvulsos] = useState(false);
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const queryClient = useQueryClient();
 
   const { data: planosData } = usePlanos();
@@ -450,7 +452,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       
       success(t('messages.successPrintSelected'));
     } catch (err) {
-      error(t('messages.errorPrintSelected'));
+      showApiError(t('messages.errorPrintSelected'));
       setShowPreview(false);
       setIsGeneratingPdfLocal(false);
     }
@@ -458,7 +460,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
 
   const handleImprimirContrato = async () => {
     if (!contratoData?.cliente_id) {
-      error(t('messages.clientNotFound'));
+      showApiError(t('messages.clientNotFound'));
       return;
     }
     
@@ -500,7 +502,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       
       success(t('messages.successPrintOpen'));
     } catch (err) {
-      error(t('messages.errorPrintOpen'));
+      showApiError(t('messages.errorPrintOpen'));
       setShowPreview(false);
       setIsGeneratingPdfLocal(false);
     }
@@ -529,7 +531,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       
       success(t('messages.successPrintSelected'));
     } catch (err) {
-      error(t('messages.errorPrintSelected'));
+      showApiError(t('messages.errorPrintSelected'));
       setShowPreview(false);
       setIsGeneratingPdfLocal(false);
     }
@@ -567,7 +569,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       
       success(t('messages.successPrintOpen'));
     } catch (err) {
-      error(t('messages.errorPrintOpen'));
+      showApiError(t('messages.errorPrintOpen'));
       setShowPreview(false);
       setIsGeneratingPdfLocal(false);
     }
@@ -589,8 +591,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
           await queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId] });
           refetchTitulos();
         } catch (err) {
-          const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-          error(msg || 'Erro ao gerar financeiro do contrato');
+          showApiError(err, CONTEXT_ERROR_MESSAGES.CONTRACT_FINANCIAL_ERROR);
         } finally {
           setIsGerandoFinanceiro(false);
         }
@@ -665,10 +666,10 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
               const message = errorCount === 1 
                 ? t('messages.errorCancelTitle')
                 : t('messages.errorCancelTitles', { count: errorCount });
-              error(message);
+              showApiError(message);
             }
           } catch (err) {
-            error(t('messages.errorCancelTitlesGeneral'));
+            showApiError(t('messages.errorCancelTitlesGeneral'));
           }
         }
       },
@@ -685,7 +686,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         
         const item = selectedItems[0];
         if (item.status !== 'pago') {
-          error(t('financial.canOnlyReversePaid'));
+          showApiError(t('financial.canOnlyReversePaid'));
           return;
         }
         
@@ -698,7 +699,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId] });
           } catch (err) {
             const errorMessage = err instanceof Error ? err.message : t('messages.errorReverseTitle');
-            error(errorMessage);
+            showApiError(errorMessage);
           }
         }
       },
@@ -775,10 +776,10 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   const message = firstErrorMessage || (errorCount === 1 
                     ? t('messages.errorSendMessage')
                     : t('messages.errorSendMessages', { count: errorCount }));
-                  error(message);
+                  showApiError(message);
                 }
               } catch (err) {
-                error(t('messages.errorSendMessagesGeneral'));
+                showApiError(t('messages.errorSendMessagesGeneral'));
               }
             }
           }
@@ -828,10 +829,10 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   const message = firstErrorMessage || (errorCount === 1 
                     ? t('messages.errorSendEmail')
                     : t('messages.errorSendEmails', { count: errorCount }));
-                  error(message);
+                  showApiError(message);
                 }
               } catch (err) {
-                error(t('messages.errorSendEmailsGeneral'));
+                showApiError(t('messages.errorSendEmailsGeneral'));
               }
             }
           }
@@ -918,10 +919,10 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
               const message = errorCount === 1 
                 ? t('messages.errorCancelTitle')
                 : t('messages.errorCancelTitles', { count: errorCount });
-              error(message);
+              showApiError(message);
             }
           } catch (err) {
-            error(t('messages.errorCancelTitlesGeneral'));
+            showApiError(t('messages.errorCancelTitlesGeneral'));
           }
         }
       },
@@ -938,7 +939,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         
         const item = selectedItems[0];
         if (item.status !== 'pago') {
-          error(t('financial.canOnlyReversePaid'));
+          showApiError(t('financial.canOnlyReversePaid'));
           return;
         }
         
@@ -951,7 +952,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId, 'avulsos'] });
           } catch (err) {
             const errorMessage = err instanceof Error ? err.message : t('messages.errorReverseTitle');
-            error(errorMessage);
+            showApiError(errorMessage);
           }
         }
       },
@@ -1028,10 +1029,10 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   const message = firstErrorMessage || (errorCount === 1 
                     ? t('messages.errorSendMessage')
                     : t('messages.errorSendMessages', { count: errorCount }));
-                  error(message);
+                  showApiError(message);
                 }
               } catch (err) {
-                error(t('messages.errorSendMessagesGeneral'));
+                showApiError(t('messages.errorSendMessagesGeneral'));
               }
             }
           }
@@ -1081,10 +1082,10 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   const message = firstErrorMessage || (errorCount === 1 
                     ? t('messages.errorSendEmail')
                     : t('messages.errorSendEmails', { count: errorCount }));
-                  error(message);
+                  showApiError(message);
                 }
               } catch (err) {
-                error(t('messages.errorSendEmailsGeneral'));
+                showApiError(t('messages.errorSendEmailsGeneral'));
               }
             }
           }
@@ -1149,9 +1150,9 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             queryClient.invalidateQueries({ queryKey: ['termos-contrato', internalContratoId] });
           } catch (err) {
             if (items.length === 1) {
-              error(t('messages.errorDeleteTerm'));
+              showApiError(t('messages.errorDeleteTerm'));
             } else {
-              error(t('messages.errorDeleteTerms'));
+              showApiError(t('messages.errorDeleteTerms'));
             }
           }
         }
@@ -1182,7 +1183,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
               setPdfUrlLocal(url);
               setIsGeneratingPdfLocal(false);
             } catch (err) {
-              error(err instanceof Error ? err.message : 'Erro ao gerar documento para impressão');
+              showApiError(err, CONTEXT_ERROR_MESSAGES.CONTRACT_PRINT_ERROR);
               setShowPreview(false);
               setIsGeneratingPdfLocal(false);
             }
@@ -1254,7 +1255,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   defaultMessage: CONTEXT_ERROR_MESSAGES.SERVICO_ADICIONAL_DELETE_ERROR
                 });
                 if (selectedItems.length === 1) {
-                  error(errorMessage);
+                  showApiError(errorMessage);
                 }
               }
             }
@@ -1267,7 +1268,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             }
             
             if (errorCount > 0 && selectedItems.length > 1) {
-              error(t('messages.errorDeleteAdditionalServices', { count: errorCount }));
+              showApiError(t('messages.errorDeleteAdditionalServices', { count: errorCount }));
             }
             
             queryClient.invalidateQueries({ queryKey: ['contrato-planos-adicionais', internalContratoId] });
@@ -1275,7 +1276,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             const errorMessage = extractApiErrorMessageSync(err, {
               defaultMessage: CONTEXT_ERROR_MESSAGES.SERVICOS_ADICIONAIS_DELETE_ERROR
             });
-            error(errorMessage);
+            showApiError(errorMessage);
           }
         }
       },

@@ -9,6 +9,8 @@ import { TableConfig } from 'components/tables/types';
 import { useI18n } from 'contexts/I18nContext';
 import { useBulkBtn } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import ImprimirModal from 'components/common/ImprimirModal';
 
 export interface TemplatesTabProps {
@@ -20,7 +22,8 @@ const TemplatesTab: React.FC<TemplatesTabProps> = () => {
   const { t } = useI18n();
   const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
-  const { success, error: showError } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const auditoria = useAuditoria();
 
   const tableFilters = useTableFilters({
@@ -46,12 +49,7 @@ const TemplatesTab: React.FC<TemplatesTabProps> = () => {
       success('Template removido com sucesso');
       queryClient.invalidateQueries({ queryKey: ['templates-whatsapp'] });
     },
-    onError: (err: unknown) => {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? (err as Error).message
-        ?? 'Erro ao remover template';
-      showError(msg);
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TEMPLATE_DELETE_ERROR),
   });
 
   const handleRemover = useCallback((selectedItems: TemplateWhatsApp[]) => {

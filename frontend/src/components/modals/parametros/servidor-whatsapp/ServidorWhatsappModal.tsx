@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef, useLayoutEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { ServidorWhatsAppService, MensagemWhatsApp } from 'services/servidorWhatsAppService';
 import { defaultApiClient } from 'services/core';
@@ -24,7 +25,8 @@ interface GrupoVariaveis {
 const ServidorWhatsappModalAdm: React.FC<Omit<ServidorWhatsappModalProps, 'variant'>> = ({ show, onClose, skipWrapper = false, onHeaderActionsReady }) => {
   const { t } = useI18n();
   const isMobile = useIsMobile();
-  const { success, error: showError } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const queryClient = useQueryClient();
   
   const initialFormData: ServidorWhatsAppForm = useMemo(() => ({
@@ -69,8 +71,8 @@ const ServidorWhatsappModalAdm: React.FC<Omit<ServidorWhatsappModalProps, 'varia
       try {
         return await ServidorWhatsAppService.getByTipo(mensagemType);
       } catch (err: unknown) {
-        const error = err as AxiosError<{ message?: string }>;
-        if (error?.response?.status === 404) {
+        const axiosErr = err as { response?: { status?: number } };
+        if (axiosErr?.response?.status === 404) {
           return null;
         }
         throw err;
@@ -157,24 +159,7 @@ const saveServidorMutation = useMutation({
     queryClient.invalidateQueries({ queryKey: ['servidor-whatsapp-ativo'] });
     await refetchServidorAtivo();
   },
-  onError: (err: unknown) => {
-    const error = err as AxiosError<{ message?: string; errors?: string[] }>;
-    let errorMessage = t('whatsappServer.errorSave');
-    
-    if (error?.response?.data) {
-      if (error.response.data.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.response.data.errors && Array.isArray(error.response.data.errors)) {
-        errorMessage = error.response.data.errors.join(', ');
-      } else if (error.response.data.errors && typeof error.response.data.errors === 'object') {
-        errorMessage = Object.values(error.response.data.errors).flat().join(', ');
-      }
-    } else if (error?.message) {
-      errorMessage = error.message;
-    }
-    
-    showError(errorMessage);
-  }
+  onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.SERVER_WHATSAPP_SAVE_ERROR),
 });
 
 // Mutation para enviar mensagem de teste
@@ -185,10 +170,7 @@ const sendTestMessageMutation = useMutation({
   onSuccess: (response: { message: string }) => {
     success(response.message);
   },
-  onError: (_err: unknown) => {
-    // Sempre mostrar mensagem genérica, ignorando qualquer erro técnico
-    showError(t('whatsappServer.errorSendTest'));
-  }
+  onError: () => showApiError(t('whatsappServer.errorSendTest')),
 });
 
 // Mutation para salvar mensagem
@@ -199,10 +181,7 @@ const saveMensagemMutation = useMutation({
   onSuccess: () => {
     success(t('whatsappServer.successMessageSave'));
   },
-  onError: (err: unknown) => {
-    const error = err as AxiosError<{ message: string }>;
-    showError(error?.response?.data?.message || t('whatsappServer.errorMessageSave'));
-  }
+  onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.SERVER_SEND_ERROR),
 });
 
   // Carregar dados do servidor existente
@@ -252,7 +231,7 @@ const saveMensagemMutation = useMutation({
     const currentInteracao3 = interacao3Ref.current;
 
     if (!currentMensagemType) {
-      showError(t('whatsappServer.selectMessageType'));
+      showApiError(t('whatsappServer.selectMessageType'));
       return;
     }
 
@@ -263,7 +242,7 @@ const saveMensagemMutation = useMutation({
     if (currentMensagemType === 'envio_manual' && !temTemplate && currentMensagemManual) {
       mensagemPadraoFinal = currentMensagemManual;
     } else if (currentMensagemType !== 'envio_manual' && !mensagemPadraoFinal && !temTemplate && !isWhatsAppCloud) {
-      showError(t('whatsappServer.messageRequired'));
+      showApiError(t('whatsappServer.messageRequired'));
       return;
     }
 
@@ -278,7 +257,7 @@ const saveMensagemMutation = useMutation({
       interacao3: currentInteracao3 || undefined,
       ativo: true
     });
-  }, [mensagemType, servidorAtivo?.data?.tipo_api, saveMensagemMutation, showError, t]);
+  }, [mensagemType, servidorAtivo?.data?.tipo_api, saveMensagemMutation, showApiError, t]);
 
   const handleReset = useCallback(async () => {
     if (servidorAtivo?.data?.id) {
@@ -287,12 +266,11 @@ const saveMensagemMutation = useMutation({
         success(t('whatsappServer.successRemove'));
         queryClient.invalidateQueries({ queryKey: ['servidor-whatsapp-ativo'] });
       } catch (err: unknown) {
-        const error = err as AxiosError<{ message: string }>;
-        showError(error?.response?.data?.message || t('whatsappServer.errorRemove'));
+        showApiError(err, CONTEXT_ERROR_MESSAGES.SERVER_WHATSAPP_DELETE_ERROR);
       }
     }
     setFormData(initialFormData);
-  }, [servidorAtivo?.data?.id, success, queryClient, showError, initialFormData, t]);
+  }, [servidorAtivo?.data?.id, success, queryClient, showApiError, initialFormData, t]);
 
   const handleClose = useCallback(() => {
     setFormData(initialFormData);
@@ -301,17 +279,17 @@ const saveMensagemMutation = useMutation({
 
   const handleSendTestMessage = async () => {
     if (!testPhone.trim()) {
-      showError(t('whatsappServer.testPhoneRequired'));
+      showApiError(t('whatsappServer.testPhoneRequired'));
       return;
     }
 
     if (!testMessage.trim()) {
-      showError(t('whatsappServer.testMessageRequired'));
+      showApiError(t('whatsappServer.testMessageRequired'));
       return;
     }
 
     if (!servidorAtivo?.data?.id) {
-      showError(t('whatsappServer.configureFirst'));
+      showApiError(t('whatsappServer.configureFirst'));
       return;
     }
 

@@ -4,6 +4,8 @@ import { useModalSelect } from 'hooks/useModalSelect';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { SaasSchedulerService, type RotinaAgendada } from 'services/saas/saasSchedulerService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
@@ -12,7 +14,6 @@ import { useAuditoria } from 'hooks/useAuditoria';
 import ImprimirModal from 'components/common/ImprimirModal';
 import { useI18n } from 'contexts/I18nContext';
 import { useBulkBtn } from 'components/ui';
-import { extractApiErrorMessageSync } from 'utils/apiErrorHelper';
 import { getCronDisplayFromRotina } from 'utils/schedulerCronDisplay';
 import { formatDateTime } from 'utils/formatters';
 
@@ -36,7 +37,8 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
   const { t } = useI18n();
   const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
-  const { success, error: showError } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const auditoria = useAuditoria();
 
   const tableFilters = useTableFilters({
@@ -219,11 +221,11 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
         await SaasSchedulerService.executeRotina?.(rotina.id);
         success(t('scheduler.routineStarted'));
         queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
-      } catch (error: unknown) {
-        showError(`${t('messages.error')}: ${extractApiErrorMessageSync(error)}`);
+      } catch (err: unknown) {
+        showApiError(err, CONTEXT_ERROR_MESSAGES.ROTINA_EXECUTE_ERROR);
       }
     },
-    [t, success, queryClient, showError]
+    [t, success, queryClient, showApiError]
   );
 
   const toggleAtivoMutation = useMutation({
@@ -232,9 +234,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
       success(vars.ativo ? t('scheduler.routineActivatedSuccess') : t('scheduler.routineDeactivatedSuccess'));
       void queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
-    onError: (error: unknown) => {
-      showError(`${t('messages.error')}: ${extractApiErrorMessageSync(error)}`);
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.ROTINA_UPDATE_ERROR),
   });
 
   const handleDelete = useCallback(
@@ -245,11 +245,11 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
         await SaasSchedulerService.deleteRotina(rotina.id);
         success(t('scheduler.successDelete'));
         queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
-      } catch (error: unknown) {
-        showError(`${t('messages.error')}: ${extractApiErrorMessageSync(error)}`);
+      } catch (err: unknown) {
+        showApiError(err, CONTEXT_ERROR_MESSAGES.ROTINA_DELETE_ERROR);
       }
     },
-    [t, success, queryClient, showError]
+    [t, success, queryClient, showApiError]
   );
 
   const [showCreateModal, setShowCreateModal] = useState(false);

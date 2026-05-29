@@ -1,4 +1,5 @@
 import { defaultApiClient } from '../core';
+import { resolveServiceErrorMessage, CONTEXT_ERROR_MESSAGES } from '../../utils/apiErrorHelper';
 
 export interface ServerRamStats {
   total: number;
@@ -27,6 +28,6 @@ export class SaasServerStatsService {
     if (response.success && response.data) {
       return response.data;
     }
-    throw new Error(response.message || 'Erro ao carregar estatísticas do servidor');
+    throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.SERVER_STATS_LOAD_ERROR));
   }
 }

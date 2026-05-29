@@ -3,7 +3,8 @@ import { PlanoService } from '../services/planoService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { CACHE_CONFIG } from '../config/api';
 import { PlanoFilters, UpdatePlano } from '../types';
-import { AxiosError } from 'axios';
+import { useApiError } from './useApiError';
+import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 
 const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;
 
@@ -43,7 +44,8 @@ export const usePlanosAtivos = () => {
 // Hook para criar plano
 export const useCreatePlano = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: PlanoService.create,
@@ -52,17 +54,15 @@ export const useCreatePlano = () => {
       queryClient.invalidateQueries({ queryKey: ['planos-ativos'] });
       success('Plano criado com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao criar plano');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.PLANO_CREATE_ERROR),
   });
 };
 
 // Hook para atualizar plano
 export const useUpdatePlano = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdatePlano }) =>
@@ -73,17 +73,15 @@ export const useUpdatePlano = () => {
       queryClient.invalidateQueries({ queryKey: ['planos-ativos'] });
       success('Plano atualizado com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao atualizar plano');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.PLANO_UPDATE_ERROR),
   });
 };
 
 // Hook para excluir plano
 export const useDeletePlano = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: PlanoService.delete,
@@ -92,17 +90,15 @@ export const useDeletePlano = () => {
       queryClient.invalidateQueries({ queryKey: ['planos-ativos'] });
       success('Plano excluído com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao excluir plano');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.PLANO_DELETE_ERROR),
   });
 };
 
 // Hook para alterar status do plano
 export const useTogglePlanoStatus = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: ({ id, status }: { id: number; status: 'ativo' | 'inativo' }) => 
@@ -114,9 +110,6 @@ export const useTogglePlanoStatus = () => {
                         data.status === 'inativo' ? 'desativado' : 'ativado';
       success(`Plano ${statusText} com sucesso!`);
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao alterar status do plano');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.PLANO_STATUS_ERROR),
   });
 };

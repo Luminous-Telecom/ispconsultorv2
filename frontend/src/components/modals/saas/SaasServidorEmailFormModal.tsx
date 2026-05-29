@@ -4,6 +4,8 @@ import DraggableModal from 'components/common/DraggableModal';
 import { ModalFormActions } from 'components/ui';
 import FormField from 'components/ui/FormField';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useFormReset } from 'hooks/useFormReset';
 import { saasServidorEmailService, type SaasServidorEmail } from 'services/saas/saasConfigService';
 
@@ -23,7 +25,8 @@ const INITIAL: Form = { nome: '', host_smtp: '', porta: 587, usuario: '', senha_
 
 const SaasServidorEmailFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId }) => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const isEditing = !!itemId;
   const [form, setForm] = useState<Form>(INITIAL);
   const [errors, setErrors] = useState<Partial<Record<keyof Form, string>>>({});
@@ -51,12 +54,12 @@ const SaasServidorEmailFormModal: React.FC<Props> = ({ show, onClose, onSuccess,
   const createMutation = useMutation({
     mutationFn: (d: Partial<SaasServidorEmail>) => saasServidorEmailService.create(d),
     onSuccess: () => { success('Servidor criado'); queryClient.invalidateQueries({ queryKey: ['saas-servidores-email'] }); onSuccess?.(); },
-    onError: (e: unknown) => error((e as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao criar'),
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.SERVER_EMAIL_SAVE_ERROR),
   });
   const updateMutation = useMutation({
     mutationFn: (d: Partial<SaasServidorEmail>) => saasServidorEmailService.update(itemId!, d),
     onSuccess: () => { success('Servidor atualizado'); queryClient.invalidateQueries({ queryKey: ['saas-servidores-email'] }); onSuccess?.(); },
-    onError: (e: unknown) => error((e as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao atualizar'),
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.SERVER_EMAIL_SAVE_ERROR),
   });
   const isPending = createMutation.isPending || updateMutation.isPending;
 

@@ -3,7 +3,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { useI18n } from 'contexts/I18nContext';
 import { useBulkBtn } from 'components/ui';
-import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { SshDeviceBackupService } from 'services/sshDeviceBackupService';
 import Table from 'components/tables/Table';
 import TextPreviewModal from 'components/common/TextPreviewModal';
@@ -38,19 +39,10 @@ interface ClienteSshBackupsTabProps {
   clienteId?: number;
 }
 
-function getErrorMessage(err: unknown, fallback: string): string {
-  const ax = err as { response?: { data?: { message?: string } }; message?: string };
-  if (typeof ax?.response?.data?.message === 'string' && ax.response.data.message.trim()) {
-    return ax.response.data.message;
-  }
-  if (typeof ax?.message === 'string' && ax.message.trim()) return ax.message;
-  return fallback;
-}
-
 const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }) => {
   const { t } = useI18n();
   const bulkBtn = useBulkBtn();
-      const { error: showError } = useNotificationContext();
+  const { showApiError } = useApiError();
   const tableFilters = useTableFilters({
     initialSortColumn: 'modifiedAt',
     initialSortDirection: 'desc',
@@ -134,13 +126,13 @@ const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }
           await SshDeviceBackupService.delete(row.device_id, row.fileName);
           await queryClient.invalidateQueries({ queryKey: ['ssh-device-backups', 'cliente', clienteId] });
         } catch (err) {
-          showError(getErrorMessage(err, 'Erro ao excluir backup'));
+          showApiError(err, CONTEXT_ERROR_MESSAGES.SSH_BACKUP_DELETE_ERROR);
         } finally {
           setDeletingKey(null);
         }
       }
     },
-    [clienteId, queryClient, showError]
+    [clienteId, queryClient, showApiError]
   );
 
   const tableColumns: TableConfig<ClienteBackupRow>['columns'] = useMemo(

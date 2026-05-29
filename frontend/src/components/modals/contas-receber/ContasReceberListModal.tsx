@@ -4,6 +4,8 @@ import { useTitulosFinanceiro } from 'hooks/useTitulosFinanceiro';
 import { Titulo, TituloFilters } from 'types';
 import { TituloItem } from 'types/cliente';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { TituloService } from 'services/tituloService';
 import { saasTituloService, type SaasTitulo } from 'services/saas/saasCrudService';
@@ -101,7 +103,8 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
   const [selectedTituloForNFe, setSelectedTituloForNFe] = useState<Titulo | null>(null);
   const [gerandoBoletoId, setGerandoBoletoId] = useState<number | null>(null);
 
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const queryClient = useQueryClient();
   const auditoria = useAuditoria();
 
@@ -306,7 +309,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
   // Funções para impressão
   const handleImprimirSelecionados = useCallback(async () => {
     if (selectedItems.length === 0) {
-      error(t('messages.noTitleSelected'));
+      showApiError(t('messages.noTitleSelected'));
       return;
     }
     openPrintModal();
@@ -321,15 +324,15 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
       
       success(t('messages.successPrintSelected'));
     } catch (err) {
-      error(t('messages.errorPrintSelected'));
+      showApiError(t('messages.errorPrintSelected'));
       setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
-  }, [selectedItems, error, success, openPrintModal, t]);
+  }, [selectedItems, showApiError, success, openPrintModal, t]);
 
   const handleImprimirRecibos = useCallback(async () => {
     if (selectedItems.length === 0) {
-      error(t('messages.noTitleSelected'));
+      showApiError(t('messages.noTitleSelected'));
       return;
     }
 
@@ -337,7 +340,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
     const itensPagos = selectedItems.filter(item => item.status === 'pago' || item.status === 'pago_atraso');
     
     if (itensPagos.length === 0) {
-      error(t('messages.noPaidTitleSelected'));
+      showApiError(t('messages.noPaidTitleSelected'));
       return;
     }
 
@@ -358,22 +361,22 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
       setIsGeneratingPdf(false);
       success(t('messages.receiptsGenerated', { count: itensPagos.length }));
     } catch (err) {
-      error(t('messages.errorGeneratingReceipts'));
+      showApiError(t('messages.errorGeneratingReceipts'));
       setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
-  }, [selectedItems, error, success, openPrintModal, t]);
+  }, [selectedItems, showApiError, success, openPrintModal, t]);
 
   const handleImprimirTodosEmAberto = useCallback(async () => {
     if (!titulos || titulos.length === 0) {
-      error(t('messages.noTitlesFound'));
+      showApiError(t('messages.noTitlesFound'));
       return;
     }
     const titulosEmAberto = (titulos as TituloItemUnion[]).filter((titulo) =>
       titulo.status === 'pendente' || titulo.status === 'vencido'
     );
     if (titulosEmAberto.length === 0) {
-      error(t('messages.noOpenTitlesFound'));
+      showApiError(t('messages.noOpenTitlesFound'));
       return;
     }
     openPrintModal();
@@ -388,20 +391,20 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
       
       success(t('messages.successPrintOpen'));
     } catch (err) {
-      error(t('messages.errorPrintOpen'));
+      showApiError(t('messages.errorPrintOpen'));
       setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
-  }, [titulos, error, success, openPrintModal, t]);
+  }, [titulos, showApiError, success, openPrintModal, t]);
 
   const handleImprimirSelecionadosSaas = useCallback(async () => {
     if (selectedItems.length === 0) {
-      error(t('messages.noTitleSelected'));
+      showApiError(t('messages.noTitleSelected'));
       return;
     }
     const emAberto = (selectedItems as SaasTitulo[]).filter(t => t.status === 'pendente' || t.status === 'vencido');
     if (emAberto.length === 0) {
-      error(t('messages.noOpenTitlesFound'));
+      showApiError(t('messages.noOpenTitlesFound'));
       return;
     }
     openPrintModal();
@@ -413,16 +416,16 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
       setIsGeneratingPdf(false);
       success(t('messages.successPrintSelected'));
     } catch {
-      error(t('messages.errorPrintSelected'));
+      showApiError(t('messages.errorPrintSelected'));
       setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
-  }, [selectedItems, error, success, openPrintModal, t]);
+  }, [selectedItems, showApiError, success, openPrintModal, t]);
 
   const handleImprimirTodosEmAbertoSaas = useCallback(async () => {
     const emAberto = (titulos as SaasTitulo[]).filter(t => t.status === 'pendente' || t.status === 'vencido');
     if (emAberto.length === 0) {
-      error(t('messages.noOpenTitlesFound'));
+      showApiError(t('messages.noOpenTitlesFound'));
       return;
     }
     openPrintModal();
@@ -434,11 +437,11 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
       setIsGeneratingPdf(false);
       success(t('messages.successPrintOpen'));
     } catch {
-      error(t('messages.errorPrintOpen'));
+      showApiError(t('messages.errorPrintOpen'));
       setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
-  }, [titulos, error, success, openPrintModal, t]);
+  }, [titulos, showApiError, success, openPrintModal, t]);
 
   const columns: TableConfig<TituloItemUnion>['columns'] = useMemo(() => [
     {
@@ -625,12 +628,12 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
   // Função para gerar PDF de NFS-e
   const handleImprimirNFSe = useCallback(async (selectedItems: Titulo[]) => {
     if (!selectedItems || selectedItems.length === 0) {
-      error(t('messages.noNFSeTitlesSelected'));
+      showApiError(t('messages.noNFSeTitlesSelected'));
       return;
     }
     const itensComNFSe = getItensComNFSe(selectedItems);
     if (itensComNFSe.length === 0) {
-      error(t('messages.noNFSeTitlesSelected'));
+      showApiError(t('messages.noNFSeTitlesSelected'));
       return;
     }
     
@@ -653,12 +656,11 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
         throw new Error(t('messages.error'));
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : t('messages.errorGeneratingNFSe');
-      error(errorMessage);
+      showApiError(err, CONTEXT_ERROR_MESSAGES.NFSE_GENERATE_ERROR);
       setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
-  }, [error, success, getItensComNFSe, openPrintModal, t]);
+  }, [showApiError, success, getItensComNFSe, openPrintModal, t]);
 
   const handleGerarBoletoSaas = useCallback(async (sel: SaasTitulo[]) => {
     const item = sel?.length ? sel[0] : (selectedItems[0] as SaasTitulo | undefined);
@@ -675,11 +677,11 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
         success('Boleto gerado');
       }
     } catch (e) {
-      error((e as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao gerar boleto');
+      showApiError(e, CONTEXT_ERROR_MESSAGES.TITULO_BOLETO_ERROR);
     } finally {
       setGerandoBoletoId(null);
     }
-  }, [selectedItems, handleRefreshData, success, error]);
+  }, [selectedItems, handleRefreshData, success, showApiError]);
 
   const handleDeleteSaas = useCallback(async (sel: SaasTitulo[]) => {
     const item = sel?.length ? sel[0] : (selectedItems[0] as SaasTitulo | undefined);
@@ -692,9 +694,9 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
       setSelectedItems([]);
       success(t('financial.successDeleteTitle'));
     } catch {
-      error(t('financial.errorDeleteTitle'));
+      showApiError(t('financial.errorDeleteTitle'));
     }
-  }, [selectedItems, handleRefreshData, success, error, t]);
+  }, [selectedItems, handleRefreshData, success, showApiError, t]);
 
   const handleCancelarSaas = useCallback(async (sel: SaasTitulo[]) => {
     const items = sel?.length ? sel : (selectedItems as SaasTitulo[]);
@@ -715,16 +717,16 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
       setSelectedItems([]);
       if (okCount > 0) success(okCount === 1 ? t('financial.titleCanceled') : `${okCount} ${t('financial.titlesCanceled')}`);
     } catch {
-      error(t('financial.errorCanceling'));
+      showApiError(t('financial.errorCanceling'));
     }
-  }, [selectedItems, handleRefreshData, success, error, t]);
+  }, [selectedItems, handleRefreshData, success, showApiError, t]);
 
   const handleEstornarSaas = useCallback(async (sel: SaasTitulo[]) => {
     const item = sel?.length ? sel[0] : (selectedItems[0] as SaasTitulo | undefined);
     if (!item) return;
     const statusPago = item.status === 'pago' || item.status === 'pago_atraso' || item.status === 'parcial';
     if (!statusPago) {
-      error(t('financial.canOnlyReversePaid'));
+      showApiError(t('financial.canOnlyReversePaid'));
       return;
     }
     const msg = `${t('financial.titleWillReturnPending')}\n\n${t('document.title')} ${item.numero_titulo || item.id}\n${t('summary.value')} ${formatCurrency(Number(item.valor))}`;
@@ -735,9 +737,9 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
       setSelectedItems([]);
       success(t('financial.titleReversed'));
     } catch (err) {
-      error((err as { response?: { data?: { message?: string } } })?.response?.data?.message || t('financial.errorReversing'));
+      showApiError(err, CONTEXT_ERROR_MESSAGES.TITULO_REVERSE_ERROR);
     }
-  }, [selectedItems, handleRefreshData, success, error, t]);
+  }, [selectedItems, handleRefreshData, success, showApiError, t]);
 
   // Memoizar bulkActions - mesma ordem para ADM e SaaS
   const memoizedBulkActions = useMemo(() => {
@@ -777,7 +779,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
           await handleRefreshData();
           setSelectedItems([]);
           if (okCount > 0) success(okCount === 1 ? t('financial.successDeleteTitle') : t('financial.successDeleteTitles', { count: okCount }));
-          if (errCount > 0) error(errCount === 1 ? t('financial.errorDeleteTitle') : t('financial.errorDeleteTitles', { count: errCount }));
+          if (errCount > 0) showApiError(errCount === 1 ? t('financial.errorDeleteTitle') : t('financial.errorDeleteTitles', { count: errCount }));
         })();
       },
       disabled: (s: TituloItemUnion[]): boolean => {
@@ -842,7 +844,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
           await handleRefreshData();
           setSelectedItems([]);
           if (okCount > 0) success(okCount === 1 ? t('financial.titleCanceled') : `${okCount} ${t('financial.titlesCanceled')}`);
-          if (errCount > 0) error(errCount === 1 ? t('financial.titleNotCanceled') : `${errCount} ${t('financial.titlesNotCanceled')}`);
+          if (errCount > 0) showApiError(errCount === 1 ? t('financial.titleNotCanceled') : `${errCount} ${t('financial.titlesNotCanceled')}`);
         })();
       },
       disabled: (s: TituloItemUnion[]): boolean => {
@@ -861,7 +863,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
           if (s.length === 0) return;
           const item = s[0] as Titulo;
           const statusPago = item.status === 'pago' || item.status === 'pago_atraso' || item.status === 'parcial';
-          if (!statusPago) { error(t('financial.canOnlyReversePaid')); return; }
+          if (!statusPago) { showApiError(t('financial.canOnlyReversePaid')); return; }
           const msg = `${t('financial.titleWillReturnPending')}\n\n${t('document.title')} ${item.numero_titulo || item.id}\n${t('summary.value')} ${formatCurrency(item.valor_pago || item.valor || 0)}`;
           if (!window.confirm(msg)) return;
           try {
@@ -869,7 +871,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
             success(t('financial.titleReversed'));
             handleRefreshData();
           } catch (err) {
-            error(err instanceof Error ? err.message : t('financial.errorReversing'));
+            showApiError(err, CONTEXT_ERROR_MESSAGES.TITULO_REVERSE_ERROR);
           }
         })();
       },
@@ -914,7 +916,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
         dropdown: [{
           label: t('other.generateNFSeStandalone'),
           action: () => {
-            if (selectedItems.length === 0) { error(t('messages.noTitleSelected')); return; }
+            if (selectedItems.length === 0) { showApiError(t('messages.noTitleSelected')); return; }
             setSelectedTituloForNFe(selectedItems[0] as Titulo);
             setShowGerarNFeModal(true);
           },
@@ -924,7 +926,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
     }
 
     return actions;
-  }, [isSaas, selectedItems, gerandoBoletoId, handleGerarBoletoSaas, handleDeleteSaas, handleCancelarSaas, handleEstornarSaas, handleImprimirSelecionadosSaas, handleImprimirTodosEmAbertoSaas, success, error, handleRefreshData, handleImprimirSelecionados, handleImprimirTodosEmAberto, handleImprimirRecibos, hasNFSeEmitida, handleImprimirNFSe, getItensComNFSe, bulkBtn, t]);
+  }, [isSaas, selectedItems, gerandoBoletoId, handleGerarBoletoSaas, handleDeleteSaas, handleCancelarSaas, handleEstornarSaas, handleImprimirSelecionadosSaas, handleImprimirTodosEmAbertoSaas, success, showApiError, handleRefreshData, handleImprimirSelecionados, handleImprimirTodosEmAberto, handleImprimirRecibos, hasNFSeEmitida, handleImprimirNFSe, getItensComNFSe, bulkBtn, t]);
 
   const handleSearch = useCallback((term: string, field?: string) => {
     // Usar setTimeout para evitar atualização durante render cycle

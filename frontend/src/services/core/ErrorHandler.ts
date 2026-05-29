@@ -1,5 +1,6 @@
 // Tratamento de erros centralizado para serviços de API
 import { AxiosError } from 'axios';
+import { ERROR_MESSAGES } from '../../constants/ErrorMessages';
 
 /**
  * Tipos de erro da API
@@ -55,7 +56,7 @@ export class ErrorHandler {
     if (!(error instanceof AxiosError)) {
       throw new ApiErrorException({
         type: ErrorType.UNKNOWN_ERROR,
-        message: error.message || 'Erro desconhecido',
+        message: error.message || ERROR_MESSAGES.UNKNOWN_ERROR,
         originalError: error as AxiosError,
       });
     }
@@ -67,26 +68,26 @@ export class ErrorHandler {
 
     // Determinar tipo de erro baseado no status code
     let errorType: ErrorType;
-    let message = 'Erro desconhecido';
+    let message: string = ERROR_MESSAGES.UNKNOWN_ERROR;
 
     if (!statusCode) {
       // Erro de rede (sem resposta do servidor)
       if (axiosError.code === 'ECONNABORTED') {
         errorType = ErrorType.TIMEOUT_ERROR;
-        message = 'Tempo de requisição expirado. Tente novamente.';
+        message = ERROR_MESSAGES.TIMEOUT_ERROR;
       } else {
         errorType = ErrorType.NETWORK_ERROR;
-        message = 'Erro de conexão. Verifique sua internet e tente novamente.';
+        message = ERROR_MESSAGES.CONNECTION_ERROR;
       }
     } else {
       switch (statusCode) {
         case 400:
           errorType = ErrorType.VALIDATION_ERROR;
-          message = responseData?.message || responseData?.error || 'Dados inválidos';
+          message = responseData?.message || responseData?.error || ERROR_MESSAGES.VALIDATION_ERROR;
           break;
         case 401:
           errorType = ErrorType.AUTHENTICATION_ERROR;
-          message = responseData?.message || responseData?.error || 'Não autenticado';
+          message = responseData?.message || responseData?.error || ERROR_MESSAGES.NOT_AUTHENTICATED;
           const currentPath401 = window.location.pathname;
           const lastLoginTime401 = sessionStorage.getItem('last_login_time');
           const timeSinceLogin401 = lastLoginTime401 ? Date.now() - parseInt(lastLoginTime401, 10) : Infinity;
@@ -109,7 +110,7 @@ export class ErrorHandler {
             window.dispatchEvent(new CustomEvent('empresa_bloqueada_atraso', { detail: data403 }));
           }
           errorType = ErrorType.AUTHORIZATION_ERROR;
-          message = responseData?.message || responseData?.error || 'Sem permissão para esta ação';
+          message = responseData?.message || responseData?.error || ERROR_MESSAGES.FORBIDDEN;
           break;
         }
         case 404:
@@ -132,7 +133,7 @@ export class ErrorHandler {
           
           if (isOptionalRoute) {
             errorType = ErrorType.NOT_FOUND_ERROR;
-            message = responseData?.message || responseData?.error || 'Recurso não encontrado';
+            message = responseData?.message || responseData?.error || ERROR_MESSAGES.NOT_FOUND;
             break;
           }
           
@@ -145,7 +146,7 @@ export class ErrorHandler {
             
             if (timeSinceLogin > 2000) {
               errorType = ErrorType.AUTHENTICATION_ERROR;
-              message = 'Sessão expirada. Faça login novamente.';
+              message = ERROR_MESSAGES.SESSION_EXPIRED;
               sessionStorage.removeItem('auth_session');
               setTimeout(() => {
                 if (window.location.pathname !== '/login' && window.location.pathname !== '/') {
@@ -157,13 +158,13 @@ export class ErrorHandler {
           }
           
           errorType = ErrorType.NOT_FOUND_ERROR;
-          message = responseData?.message || responseData?.error || 'Recurso não encontrado';
+          message = responseData?.message || responseData?.error || ERROR_MESSAGES.NOT_FOUND;
           break;
         case 500:
         case 502:
         case 503:
           errorType = ErrorType.SERVER_ERROR;
-          message = responseData?.message || responseData?.error || 'Erro interno do servidor';
+          message = responseData?.message || responseData?.error || ERROR_MESSAGES.SERVER_ERROR;
           break;
         default:
           errorType = ErrorType.UNKNOWN_ERROR;

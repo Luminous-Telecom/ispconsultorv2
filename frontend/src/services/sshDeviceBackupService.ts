@@ -1,5 +1,6 @@
 import { defaultApiClient } from './core';
 import { API_CONFIG } from '../config/api';
+import { resolveServiceErrorMessage, CONTEXT_ERROR_MESSAGES } from '../utils/apiErrorHelper';
 
 export interface SshDeviceBackupFile {
   fileName: string;
@@ -34,7 +35,7 @@ export class SshDeviceBackupService {
     const res = await fetch(url, { credentials: 'include' });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error((err as { message?: string }).message || 'Falha ao carregar conteúdo');
+      throw new Error(resolveServiceErrorMessage((err as { message?: string }).message, CONTEXT_ERROR_MESSAGES.SSH_BACKUP_CONTENT_ERROR));
     }
     return res.text();
   }
@@ -50,7 +51,7 @@ export class SshDeviceBackupService {
     const res = await fetch(url, { credentials: 'include' });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error((err as { message?: string }).message || 'Falha ao baixar');
+      throw new Error(resolveServiceErrorMessage((err as { message?: string }).message, CONTEXT_ERROR_MESSAGES.SSH_BACKUP_DOWNLOAD_ERROR));
     }
     const blob = await res.blob();
     const a = document.createElement('a');

@@ -1,6 +1,7 @@
 import { apiService } from './api';
 import axios from 'axios';
 import { API_CONFIG } from '../config/api';
+import { resolveServiceErrorMessage, CONTEXT_ERROR_MESSAGES } from '../utils/apiErrorHelper';
 
 // Cliente axios específico para rotas públicas (sem autenticação)
 const publicApiClient = axios.create({
@@ -79,7 +80,7 @@ export class DadosEmpresaService {
       const response = await apiService.get<DadosEmpresa>('/dados-empresa');
       
       if (!response.success || !response.data) {
-        throw new Error(response.message || 'Erro ao buscar dados da empresa');
+        throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.EMPRESA_LOAD_ERROR));
       }
       
       const data = response.data;
@@ -167,7 +168,7 @@ export class DadosEmpresaService {
     );
     const res = response as { success?: boolean; data?: { data?: unknown[]; pagination?: unknown } | unknown[] };
     if (res.success === false) {
-      throw new Error((res as { message?: string }).message || 'Erro ao buscar títulos');
+      throw new Error(resolveServiceErrorMessage((res as { message?: string }).message, CONTEXT_ERROR_MESSAGES.TITULO_FETCH_ERROR));
     }
     const inner = res.data;
     if (Array.isArray(inner)) return { data: inner, pagination: undefined };
@@ -183,7 +184,7 @@ export class DadosEmpresaService {
       return response.data;
     }
 
-    throw new Error(response.message || 'Erro ao atualizar dados da empresa');
+    throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.EMPRESA_DATA_UPDATE_ERROR));
   }
 
   static async uploadLogo(file: File): Promise<{ success: boolean; logo: string }> {
@@ -197,7 +198,7 @@ export class DadosEmpresaService {
     
     // Se resposta já tem success: false, lançar erro
     if (response.success === false) {
-      throw new Error(response.message || 'Falha no upload da logo');
+      throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.EMPRESA_LOGO_ERROR));
     }
     
     // Tentar extrair logo de diferentes formatos de resposta
@@ -223,7 +224,7 @@ export class DadosEmpresaService {
       return { success: true, logo };
     }
     
-    throw new Error(response.message || 'Falha no upload da logo');
+    throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.EMPRESA_LOGO_ERROR));
   }
 
   static async uploadAssinatura(file: File): Promise<{ success: boolean; responsavel_assinatura: string }> {
@@ -237,7 +238,7 @@ export class DadosEmpresaService {
     
     // Se resposta já tem success: false, lançar erro
     if (response.success === false) {
-      throw new Error(response.message || 'Falha no upload da assinatura');
+      throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.EMPRESA_SIGNATURE_ERROR));
     }
     
     // Tentar extrair assinatura de diferentes formatos de resposta
@@ -272,6 +273,6 @@ export class DadosEmpresaService {
       return { success: true, responsavel_assinatura: assinatura };
     }
     
-    throw new Error(response.message || 'Falha no upload da assinatura');
+    throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.EMPRESA_SIGNATURE_ERROR));
   }
 }

@@ -1,5 +1,6 @@
 import { defaultApiClient } from './core';
 import { ApiResponse } from '../types';
+import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 
 export interface DadosCentralAssinante {
   cliente: {
@@ -178,7 +179,7 @@ export class CentralAssinanteService {
   static async getDadosMe(slug: string): Promise<ApiResponse<DadosCentralAssinante>> {
     const token = CentralAssinanteService.getCentralToken();
     if (!token) {
-      throw new Error('Token da central do assinante não encontrado');
+      throw new Error(CONTEXT_ERROR_MESSAGES.ASSINATURA_TOKEN_ERROR);
     }
     return defaultApiClient.get<DadosCentralAssinante>(`/central-assinante/${slug}/me`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -194,11 +195,11 @@ export class CentralAssinanteService {
         headers: CentralAssinanteService.getCentralAuthHeaders(),
       });
       if (!response.ok) {
-        throw new Error('Erro ao baixar contrato');
+        throw new Error(CONTEXT_ERROR_MESSAGES.CONTRACT_DOWNLOAD_ERROR);
       }
       return await response.blob();
     } catch (error) {
-      throw new Error('Erro ao baixar contrato');
+      throw new Error(CONTEXT_ERROR_MESSAGES.CONTRACT_DOWNLOAD_ERROR);
     }
   }
 
@@ -211,11 +212,11 @@ export class CentralAssinanteService {
         headers: CentralAssinanteService.getCentralAuthHeaders(),
       });
       if (!response.ok) {
-        throw new Error('Erro ao baixar termo');
+        throw new Error(CONTEXT_ERROR_MESSAGES.TERM_DOWNLOAD_ERROR);
       }
       return await response.blob();
     } catch (error) {
-      throw new Error('Erro ao baixar termo');
+      throw new Error(CONTEXT_ERROR_MESSAGES.TERM_DOWNLOAD_ERROR);
     }
   }
 
@@ -228,11 +229,11 @@ export class CentralAssinanteService {
         headers: CentralAssinanteService.getCentralAuthHeaders(),
       });
       if (!response.ok) {
-        throw new Error('Erro ao baixar fatura');
+        throw new Error(CONTEXT_ERROR_MESSAGES.TITULO_FATURA_DOWNLOAD_ERROR);
       }
       return await response.blob();
     } catch (error) {
-      throw new Error('Erro ao baixar fatura');
+      throw new Error(CONTEXT_ERROR_MESSAGES.TITULO_FATURA_DOWNLOAD_ERROR);
     }
   }
 
@@ -245,11 +246,11 @@ export class CentralAssinanteService {
         headers: CentralAssinanteService.getCentralAuthHeaders(),
       });
       if (!response.ok) {
-        throw new Error('Erro ao baixar recibo');
+        throw new Error(CONTEXT_ERROR_MESSAGES.RECIBO_DOWNLOAD_ERROR);
       }
       return await response.blob();
     } catch (error) {
-      throw new Error('Erro ao baixar recibo');
+      throw new Error(CONTEXT_ERROR_MESSAGES.RECIBO_DOWNLOAD_ERROR);
     }
   }
 
@@ -266,7 +267,7 @@ export class CentralAssinanteService {
   static async trocarSenhaMe(slug: string, data: TrocarSenhaRequest): Promise<ApiResponse<void>> {
     const token = CentralAssinanteService.getCentralToken();
     if (!token) {
-      throw new Error('Token da central do assinante não encontrado');
+      throw new Error(CONTEXT_ERROR_MESSAGES.ASSINATURA_TOKEN_ERROR);
     }
     return defaultApiClient.post<void>(`/central-assinante/${slug}/me/trocar-senha`, data, {
       headers: { Authorization: `Bearer ${token}` },

@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useI18n } from 'contexts/I18nContext';
 import { useBulkBtn } from 'components/ui';
 import DraggableModal from 'components/common/DraggableModal';
@@ -34,7 +35,8 @@ const BACKUP_MANUAL_OPTIONS: { tipo: BackupManualTipo; labelKey: string; icon: s
 const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper = false }) => {
   const { t } = useI18n();
   const bulkBtn = useBulkBtn();
-    const { success, error: showError } = useNotificationContext();
+    const { success } = useNotificationContext();
+    const { showApiError } = useApiError();
   const queryClient = useQueryClient();
   const [actionLoading, setActionLoading] = useState<{ delete?: string; download?: string; restore?: string; upload?: boolean }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -57,10 +59,7 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
       queryClient.invalidateQueries({ queryKey: ['backups'] });
       refetch();
     },
-    onError: (error: unknown) => {
-      const msg = (error as AxiosError<{ message?: string }>)?.response?.data?.message ?? (error as Error)?.message ?? t('messages.error');
-      showError(msg);
-    }
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.BACKUP_CREATE_ERROR),
   });
 
   const handleDelete = useCallback(async (item: BackupWithId) => {
@@ -73,12 +72,11 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
       queryClient.invalidateQueries({ queryKey: ['backups'] });
       refetch();
     } catch (err) {
-      const msg = (err as AxiosError<{ message?: string }>)?.response?.data?.message ?? (err as Error)?.message ?? t('messages.error');
-      showError(msg);
+      showApiError(err, CONTEXT_ERROR_MESSAGES.BACKUP_DELETE_ERROR);
     } finally {
       setActionLoading(prev => ({ ...prev, delete: undefined }));
     }
-  }, [queryClient, refetch, success, showError, t]);
+  }, [queryClient, refetch, success, showApiError, t]);
 
   const handleDownload = useCallback((item: BackupWithId) => {
     setActionLoading(prev => ({ ...prev, download: item.nome }));
@@ -86,12 +84,11 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
       BackupService.startBackupDownload(item.nome);
       success(t('backup.downloadStarted'));
     } catch (err) {
-      const msg = (err as AxiosError<{ message?: string }>)?.response?.data?.message ?? (err as Error)?.message ?? t('messages.error');
-      showError(msg);
+      showApiError(err, CONTEXT_ERROR_MESSAGES.BACKUP_CREATE_ERROR);
     } finally {
       setActionLoading(prev => ({ ...prev, download: undefined }));
     }
-  }, [success, showError, t]);
+  }, [success, showApiError, t]);
 
   const handleImportClick = useCallback(() => {
     fileInputRef.current?.click();
@@ -108,12 +105,11 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
       queryClient.invalidateQueries({ queryKey: ['backups'] });
       refetch();
     } catch (err) {
-      const msg = (err as AxiosError<{ message?: string }>)?.response?.data?.message ?? (err as Error)?.message ?? t('messages.error');
-      showError(msg);
+      showApiError(err, CONTEXT_ERROR_MESSAGES.BACKUP_IMPORT_ERROR);
     } finally {
       setActionLoading(prev => ({ ...prev, upload: false }));
     }
-  }, [queryClient, refetch, success, showError, t]);
+  }, [queryClient, refetch, success, showApiError, t]);
 
   const handleRestore = useCallback(async (item: BackupWithId) => {
     const confirmed = window.confirm(t('backup.confirmRestoreCritical'));
@@ -126,12 +122,11 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
       queryClient.clear();
       refetch();
     } catch (err) {
-      const msg = (err as AxiosError<{ message?: string }>)?.response?.data?.message ?? (err as Error)?.message ?? t('messages.error');
-      showError(msg);
+      showApiError(err, CONTEXT_ERROR_MESSAGES.BACKUP_RESTORE_ERROR);
     } finally {
       setActionLoading(prev => ({ ...prev, restore: undefined }));
     }
-  }, [queryClient, refetch, success, showError, t]);
+  }, [queryClient, refetch, success, showApiError, t]);
 
   const modalData = useMemo<BackupWithId[]>(() =>
     backups.map(b => ({ ...b, id: b.nome })),

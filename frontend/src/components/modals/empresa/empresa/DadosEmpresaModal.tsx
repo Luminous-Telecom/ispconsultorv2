@@ -1,14 +1,14 @@
 import React, { useState, useMemo, useLayoutEffect, useCallback, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { DadosEmpresaService, DadosEmpresa as DadosEmpresaType } from 'services/dadosEmpresaService';
 import { saasDadosEmpresaService, type SaasDadosEmpresaItem } from 'services/saas/saasDadosEmpresaService';
 import { ParametrosService } from 'services/parametrosService';
 import { SaasParametrosService } from 'services/saas/saasParametrosService';
 import { ClienteService } from 'services/clienteService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useI18n } from 'contexts/I18nContext';
-import { ApiError } from 'services/core/ErrorHandler';
 import { useFormReset } from 'hooks/useFormReset';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
@@ -95,7 +95,8 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   const isSaasEdit = isSaas && itemId != null;
 
   const [activeTab, setActiveTab] = useState<'basico' | 'endereco' | 'contato' | 'responsavel' | 'faturas-abertas' | 'faturas-pagas'>('basico');
-  const { success, error, info } = useNotificationContext();
+  const { success, info } = useNotificationContext();
+  const { showApiError } = useApiError();
   const queryClient = useQueryClient();
 
   const initialFormData: DadosEmpresaForm = {
@@ -205,10 +206,10 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
         if (err?.response?.status === 404) {
           info('CNPJ não encontrado na base da Receita Federal. Você pode preencher os dados manualmente.');
         } else {
-          error(err?.response?.data?.message || 'Erro ao consultar CNPJ. Tente novamente ou preencha manualmente.');
+          showApiError(err, CONTEXT_ERROR_MESSAGES.EMPRESA_CNPJ_ERROR);
         }
       });
-  }, [dados.cnpj, dados.razao_social, dados.nome_fantasia, dados.endereco, show, parametros?.data?.validar_cpf_cnpj, success, info, error]);
+  }, [dados.cnpj, dados.razao_social, dados.nome_fantasia, dados.endereco, show, parametros?.data?.validar_cpf_cnpj, success, info, showApiError]);
 
   const updateAdminMutation = useMutation({
     mutationFn: (data: DadosEmpresaType) => DadosEmpresaService.update(data),
@@ -216,10 +217,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
       success('Dados da empresa atualizados com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['dados-empresa'] });
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message?: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao atualizar dados da empresa');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.EMPRESA_DATA_UPDATE_ERROR),
   });
 
   const createSaasMutation = useMutation({
@@ -229,10 +227,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ['saas-dados-empresa-list'] });
       onSuccess?.();
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message?: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao cadastrar empresa');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.EMPRESA_CREATE_ERROR),
   });
 
   const updateSaasMutation = useMutation({
@@ -243,10 +238,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ['saas-dados-empresa', itemId] });
       onSuccess?.();
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message?: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao atualizar empresa');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.EMPRESA_UPDATE_ERROR),
   });
 
   const isPending = updateAdminMutation.isPending || createSaasMutation.isPending || updateSaasMutation.isPending;
@@ -259,18 +251,18 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
     (e: React.FormEvent) => {
       e.preventDefault();
       if (isSaas && !dados.razao_social?.trim() && !dados.nome_fantasia?.trim()) {
-        error('Razão social ou nome fantasia é obrigatório');
+        showApiError('Razão social ou nome fantasia é obrigatório');
         return;
       }
       if (!dados.email?.trim()) {
-        error('E-mail é obrigatório');
+        showApiError('E-mail é obrigatório');
         return;
       }
       if (isSaasCreate) createSaasMutation.mutate(dados);
       else if (isSaasEdit) updateSaasMutation.mutate(dados);
       else updateAdminMutation.mutate(dados);
     },
-    [dados, error, isSaas, isSaasCreate, isSaasEdit, createSaasMutation, updateSaasMutation, updateAdminMutation]
+    [dados, showApiError, isSaas, isSaasCreate, isSaasEdit, createSaasMutation, updateSaasMutation, updateAdminMutation]
   );
 
   const handleCancel = useCallback(() => {
@@ -296,14 +288,13 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
           success('Logo atualizada com sucesso!');
           queryClient.invalidateQueries({ queryKey: ['dados-empresa'] });
         } else {
-          error('Salve a empresa primeiro para enviar a logo');
+          showApiError('Salve a empresa primeiro para enviar a logo');
         }
       } catch (err) {
-        const apiError = err as ApiError;
-        error(apiError.message || 'Erro ao enviar a logo');
+        showApiError(err, CONTEXT_ERROR_MESSAGES.EMPRESA_LOGO_ERROR);
       }
     },
-    [isSaas, isSaasEdit, itemId, success, error, queryClient]
+    [isSaas, isSaasEdit, itemId, success, showApiError, queryClient]
   );
 
   const onAssinaturaChange = useCallback(
@@ -325,14 +316,13 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
           success('Assinatura atualizada com sucesso!');
           queryClient.invalidateQueries({ queryKey: ['dados-empresa'] });
         } else {
-          error('Salve a empresa primeiro para enviar a assinatura');
+          showApiError('Salve a empresa primeiro para enviar a assinatura');
         }
       } catch (err) {
-        const apiError = err as ApiError;
-        error(apiError.message || 'Erro ao enviar a assinatura');
+        showApiError(err, CONTEXT_ERROR_MESSAGES.EMPRESA_SIGNATURE_ERROR);
       }
     },
-    [isSaas, isSaasEdit, itemId, success, error, queryClient]
+    [isSaas, isSaasEdit, itemId, success, showApiError, queryClient]
   );
 
   type EmpresaTabId = 'basico' | 'endereco' | 'contato' | 'responsavel' | 'faturas-abertas' | 'faturas-pagas';

@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import DocumentoSistemaService from 'services/documentoSistemaService';
 import ModeloReciboService from 'services/modeloReciboService';
 import ModeloCartaService from 'services/modeloCartaService';
@@ -23,7 +24,8 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
   onDocumentosLoaded
 }) => {
   const queryClient = useQueryClient();
-  const { success, error: showError } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const [, setSelectedItems] = useState<DocumentoUnion[]>([]);
   const auditoria = useAuditoria();
   const onDocumentosLoadedRef = useRef(onDocumentosLoaded);
@@ -122,10 +124,7 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
       success( 'Documento excluído com sucesso');
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema', tipo] });
     },
-    onError: (error: unknown) => {
-      const axiosError = error as AxiosError<{ message?: string }>;
-      showError( axiosError?.response?.data?.message || 'Erro ao deletar documento');
-    }
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.DOCUMENT_DELETE_ERROR),
   });
 
   // Definir colunas da tabela

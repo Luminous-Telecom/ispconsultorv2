@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from 'components/common/DraggableModal';
 import { CancelarButton, CopiarButton, FormField, NovoButton } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES, ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { RpkiCaService } from 'services/rpkiCaService';
 
 interface RpkiCaParentCreateModalProps {
@@ -23,7 +25,8 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
   const [childRequestXml, setChildRequestXml] = useState('');
   const [responseXml, setResponseXml] = useState('');
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   const { data: cas = [] } = useQuery({
     queryKey: ['rpki-cas'],
@@ -65,14 +68,13 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
       .catch((err: unknown) => {
         if (cancelled) return;
         setChildRequestXml('');
-        const withMessage = err as { message?: string };
-        error(withMessage.message || 'Erro ao gerar Requisição da CA-filha');
+        showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_CA_CHILD_REQUEST_ALT_ERROR);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [show, caId, error]);
+  }, [show, caId, showApiError]);
 
   const createMutation = useMutation({
     mutationFn: (payload: {
@@ -89,10 +91,7 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
       success('CA-pai vinculada com sucesso');
       onClose();
     },
-    onError: (err: unknown) => {
-      const withMessage = err as { message?: string };
-      error(withMessage.message || 'Erro ao vincular CA-pai');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_CA_PARENT_LINK_ERROR),
   });
 
   return (
@@ -141,7 +140,7 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
                     await navigator.clipboard.writeText(childRequestXml);
                     success('Requisição da CA-filha copiada');
                   } catch {
-                    error('Não foi possível copiar a Requisição da CA-filha');
+                    showApiError(ERROR_MESSAGES.COPY_ERROR);
                   }
                 }}
               />

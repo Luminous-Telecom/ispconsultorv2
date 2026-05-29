@@ -1,5 +1,6 @@
 import { apiService } from './api';
 import { AssinaturaDigital } from '../types/entities';
+import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 
 export interface EnviarAssinaturaRequest {
   termo_contrato_id?: number;
@@ -84,7 +85,7 @@ export class AssinaturaDigitalService {
       });
 
       if (!response.ok) {
-        throw new Error('Erro ao baixar PDF assinado');
+        throw new Error(CONTEXT_ERROR_MESSAGES.ASSINATURA_PDF_DOWNLOAD_ERROR);
       }
 
       const blob = await response.blob();
@@ -97,7 +98,7 @@ export class AssinaturaDigitalService {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(downloadUrl);
     } catch (err) {
-      throw new Error('Erro ao baixar PDF assinado');
+      throw new Error(CONTEXT_ERROR_MESSAGES.ASSINATURA_PDF_DOWNLOAD_ERROR);
     }
   }
 

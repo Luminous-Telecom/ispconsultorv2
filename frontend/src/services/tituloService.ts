@@ -8,6 +8,7 @@ import { API_ENDPOINTS } from '../config/api';
 import { ResponseTransformer } from './core/ResponseTransformer';
 import { ErrorHandler } from './core/ErrorHandler';
 import { AxiosError } from 'axios';
+import { resolveServiceErrorMessage, CONTEXT_ERROR_MESSAGES } from '../utils/apiErrorHelper';
 
 /**
  * Classe de serviço para operações relacionadas a Títulos (CarneParcela)
@@ -432,10 +433,9 @@ export class TituloService {
         message: response.message || response.data?.message || 'Mensagem enviada com sucesso'
       };
     } catch (error) {
-      // Se for um ApiError, extrair a mensagem
       if (error && typeof error === 'object' && 'message' in error) {
         const apiError = error as { message: string; statusCode?: number };
-        throw new Error(apiError.message || 'Erro ao enviar mensagem');
+        throw new Error(resolveServiceErrorMessage(apiError.message, CONTEXT_ERROR_MESSAGES.TITULO_SEND_WHATSAPP_ERROR));
       }
       throw error;
     }
@@ -452,10 +452,9 @@ export class TituloService {
         message: response.message || response.data?.message || 'Email enviado com sucesso'
       };
     } catch (error) {
-      // Se for um ApiError, extrair a mensagem
       if (error && typeof error === 'object' && 'message' in error) {
         const apiError = error as { message: string; statusCode?: number };
-        throw new Error(apiError.message || 'Erro ao enviar email');
+        throw new Error(resolveServiceErrorMessage(apiError.message, CONTEXT_ERROR_MESSAGES.TITULO_SEND_EMAIL_ERROR));
       }
       throw error;
     }

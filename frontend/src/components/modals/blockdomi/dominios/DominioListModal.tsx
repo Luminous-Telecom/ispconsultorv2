@@ -16,6 +16,8 @@ import DominioBulkEditModal from './DominioBulkEditModal';
 import { useAuditoria } from 'hooks/useAuditoria';
 import ImprimirModal from 'components/common/ImprimirModal';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 
 interface DominioListModalProps {
   show: boolean;
@@ -43,7 +45,9 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
   const [isSyncingSei, setIsSyncingSei] = useState(false);
 
   const auditoria = useAuditoria();
-  
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
+
   const tableFilters = useTableFilters({
     initialSearch: '',
     initialPage: 1,
@@ -242,8 +246,6 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
     }
   }, [selectedItem, clearSelection, onSelectDominio, onClose]);
 
-  const { success, error } = useNotificationContext();
-
   const handleDelete = useCallback(async (dominioId: number) => {
     try {
       await deleteDominioMutation.mutateAsync(dominioId);
@@ -262,9 +264,9 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ['dominios'] });
       success(`Excluído(s) ${deleted} domínio(s). Versão da operação: ${versao}.`);
     } catch (err: unknown) {
-      error((err as Error)?.message ?? 'Erro ao excluir domínios.');
+      showApiError(err, CONTEXT_ERROR_MESSAGES.BLOCKDOMI_DOMAIN_DELETE_ERROR);
     }
-  }, [clearSelection, refetch, queryClient, success, error]);
+  }, [clearSelection, refetch, queryClient, success, showApiError]);
 
   const handleAudit = useCallback((dominio: Dominio) => {
     auditoria.handleAudit('Dominio', dominio.id);
@@ -291,11 +293,11 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
       refetch();
       queryClient.invalidateQueries({ queryKey: ['dominios'] });
     } catch (e) {
-      error((e as Error)?.message ?? t('blockdomi.syncSeiAnatelError'));
+      showApiError(e, CONTEXT_ERROR_MESSAGES.BLOCKDOMI_SEI_SYNC_ERROR);
     } finally {
       setIsSyncingSei(false);
     }
-  }, [t, success, error, refetch, queryClient]);
+  }, [t, success, showApiError, refetch, queryClient]);
 
   const bulkActions = useMemo(() => onSelectDominio ? [
     {

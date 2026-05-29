@@ -6,6 +6,8 @@ import { ModalFormActions } from 'components/ui';
 import FormField from 'components/ui/FormField';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useFormReset } from 'hooks/useFormReset';
 import { saasContratoService, saasDiasVencimentoService, type SaasContrato } from 'services/saas/saasCrudService';
 import { saasEmpresasService } from 'services/saas/saasEmpresasService';
@@ -37,7 +39,8 @@ const INITIAL: Form = { banco_id: '', dia_vencimento: '', plano_id: '', data_ini
 const SaasContratoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId, empresaId, dataFimDesbloqueioManual }) => {
   const { t } = useI18n();
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const isEditing = !!itemId;
   const [form, setForm] = useState<Form>(INITIAL);
   const [errors, setErrors] = useState<Partial<Record<keyof Form, string>>>({});
@@ -200,18 +203,18 @@ const SaasContratoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, item
   const createMutation = useMutation({
     mutationFn: (d: Partial<SaasContrato>) => saasContratoService.create(d),
     onSuccess: () => { success(t('messages.success')); queryClient.invalidateQueries({ queryKey: ['saas-contratos'] }); onSuccess?.(); },
-    onError: (e: unknown) => error((e as { response?: { data?: { message?: string } } })?.response?.data?.message || t('messages.error')),
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CONTRACT_CREATE_ERROR),
   });
   const updateMutation = useMutation({
     mutationFn: (d: Partial<SaasContrato>) => saasContratoService.update(itemId!, d),
     onSuccess: () => { success(t('messages.success')); queryClient.invalidateQueries({ queryKey: ['saas-contratos'] }); onSuccess?.(); },
-    onError: (e: unknown) => error((e as { response?: { data?: { message?: string } } })?.response?.data?.message || t('messages.error')),
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CONTRACT_UPDATE_ERROR),
   });
   const updateDataFimMutation = useMutation({
     mutationFn: (payload: { empresaId: number; data_fim_desbloqueio_manual: string | null }) =>
       saasEmpresasService.updateDataFimDesbloqueioManual(payload.empresaId, payload.data_fim_desbloqueio_manual),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['saas-contratos'] }); onSuccess?.(); },
-    onError: (e: unknown) => error((e as { response?: { data?: { message?: string } } })?.response?.data?.message || t('messages.error')),
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.EMPRESA_UPDATE_ERROR),
   });
   const isPending = createMutation.isPending || updateMutation.isPending || updateDataFimMutation.isPending;
 

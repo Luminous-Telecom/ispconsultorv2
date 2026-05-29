@@ -5,6 +5,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useI18n } from 'contexts/I18nContext';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { formatDate } from 'utils/formatters';
 import { receberSchema, ReceberFormData } from 'schemas/receber.schema';
 import DraggableModal from 'components/common/DraggableModal';
@@ -29,7 +31,8 @@ const SaasReceberModal: React.FC<SaasReceberModalProps> = ({
 }) => {
   const { t } = useI18n();
   const isMobile = useIsMobile();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const queryClient = useQueryClient();
 
   const marcarPagoMutation = useMutation({
@@ -40,10 +43,7 @@ const SaasReceberModal: React.FC<SaasReceberModalProps> = ({
       success((res as { message?: string }).message || 'Título marcado como pago');
       onSuccess?.();
     },
-    onError: (err: unknown) => {
-      const axiosError = err as { response?: { data?: { message?: string } } };
-      error(axiosError.response?.data?.message || 'Erro ao marcar título como pago');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TITULO_MARK_PAID_ERROR),
   });
 
   const {

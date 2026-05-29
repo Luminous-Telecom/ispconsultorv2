@@ -7,7 +7,9 @@ import { useState } from 'react';
 import { TituloService } from '../services/tituloService';
 import DocumentoSistemaService from '../services/documentoSistemaService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
+import { useApiError } from './useApiError';
 import { extractApiErrorMessage } from '../utils/apiErrorHelper';
+import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 import { TituloItem } from '../types/cliente';
 import { CarneParcela, PaginatedResponse } from '../types';
 import { useImpressaoContrato } from './useImpressaoContrato';
@@ -48,6 +50,7 @@ export const useClienteImpressao = ({
   parcelasData
 }: UseClienteImpressaoParams): UseClienteImpressaoReturn => {
   const { success, error } = useNotificationContext();
+  const { showApiError } = useApiError();
   const [showImprimirModal, setShowImprimirModal] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -90,7 +93,7 @@ export const useClienteImpressao = ({
         
         success('Boletos selecionados gerados com sucesso!');
       } catch (err) {
-        error('Erro ao gerar boletos selecionados');
+        showApiError(err, CONTEXT_ERROR_MESSAGES.TITULO_BOLETO_PRINT_SELECTED_ERROR);
         setShowImprimirModal(false);
         setIsGeneratingPdf(false);
       }
@@ -126,7 +129,7 @@ export const useClienteImpressao = ({
         
         success('Boletos em aberto gerados com sucesso!');
       } catch (err) {
-        error('Erro ao gerar boletos em aberto');
+        showApiError(err, CONTEXT_ERROR_MESSAGES.TITULO_BOLETO_PRINT_OPEN_ERROR);
         setShowImprimirModal(false);
         setIsGeneratingPdf(false);
       }
@@ -193,14 +196,13 @@ export const useClienteImpressao = ({
         setIsGeneratingPdf(false);
       }
     } catch (err) {
-      const errorMessage = await extractApiErrorMessage(err, {
-        defaultMessage: 'Erro ao gerar termo de adesão',
-        handleBlobResponse: true,
-        customStatusMessages: {
-          404: 'Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.'
-        }
-      });
-      error(errorMessage);
+      error(
+        await extractApiErrorMessage(err, {
+          defaultMessage: CONTEXT_ERROR_MESSAGES.CONTRACT_TERM_ADESAO_ERROR,
+          handleBlobResponse: true,
+          customStatusMessages: { 404: CONTEXT_ERROR_MESSAGES.CONTRACT_MODEL_NOT_FOUND },
+        })
+      );
       setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
@@ -253,14 +255,13 @@ export const useClienteImpressao = ({
         setIsGeneratingPdf(false);
       }
     } catch (err) {
-      const errorMessage = await extractApiErrorMessage(err, {
-        defaultMessage: 'Erro ao gerar contrato de permanência',
-        handleBlobResponse: true,
-        customStatusMessages: {
-          404: 'Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.'
-        }
-      });
-      error(errorMessage);
+      error(
+        await extractApiErrorMessage(err, {
+          defaultMessage: CONTEXT_ERROR_MESSAGES.CONTRACT_PERMANENCE_ERROR,
+          handleBlobResponse: true,
+          customStatusMessages: { 404: CONTEXT_ERROR_MESSAGES.CONTRACT_MODEL_NOT_FOUND },
+        })
+      );
       setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
@@ -305,7 +306,7 @@ export const useClienteImpressao = ({
       setIsGeneratingPdf(false);
       success(`${itensPagos.length} recibo(s) gerado(s) com sucesso!`);
     } catch (err) {
-      error('Erro ao gerar recibos');
+      showApiError(err, CONTEXT_ERROR_MESSAGES.TITULO_RECEIPT_GENERATE_ERROR);
       setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
@@ -343,8 +344,7 @@ export const useClienteImpressao = ({
         throw new Error('Resposta inválida do servidor');
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao gerar PDF da NFS-e';
-      error(errorMessage);
+      showApiError(err, CONTEXT_ERROR_MESSAGES.NFSE_PDF_ERROR);
       setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }

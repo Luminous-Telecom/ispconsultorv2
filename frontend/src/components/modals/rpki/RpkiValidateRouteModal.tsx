@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Input, Badge, ValidarButton, type ChangeEvent } from 'components/ui';
-import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { RpkiCaService, type RpkiValidateRouteResult, type RpkiValidatingRoa } from 'services/rpkiCaService';
 
 interface RpkiValidateRouteModalProps {
@@ -76,14 +77,14 @@ const RpkiValidateRouteModal: React.FC<RpkiValidateRouteModalProps> = ({
   initialPrefix,
   initialAsn,
 }) => {
-  const { error: showError } = useNotificationContext();
+  const { showApiError } = useApiError();
   const [prefix, setPrefix] = useState('');
   const [asn, setAsn] = useState('');
   const [result, setResult] = useState<RpkiValidateRouteResult | null>(null);
   const [isPending, setIsPending] = useState(false);
   const validateSeqRef = useRef(0);
-  const showErrorRef = useRef(showError);
-  showErrorRef.current = showError;
+  const showApiErrorRef = useRef(showApiError);
+  showApiErrorRef.current = showApiError;
 
   const runValidate = useCallback((prefixValue: string, asnValue: string): void => {
     const trimmedPrefix = prefixValue.trim();
@@ -101,7 +102,7 @@ const RpkiValidateRouteModal: React.FC<RpkiValidateRouteModalProps> = ({
       })
       .catch((err) => {
         if (validateSeqRef.current === seq) {
-          showErrorRef.current(err instanceof Error ? err.message : 'Erro ao validar rota');
+          showApiErrorRef.current(err, CONTEXT_ERROR_MESSAGES.RPKI_ROUTE_VALIDATE_ERROR);
         }
       })
       .finally(() => {

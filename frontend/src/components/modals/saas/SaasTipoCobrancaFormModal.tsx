@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from 'components/common/DraggableModal';
 import { FormField, AtivoInativoField, ModalFormActions } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useFormReset } from 'hooks/useFormReset';
 import { saasTipoCobrancaService, type SaasTipoCobranca } from 'services/saas/saasCrudService';
 
@@ -29,7 +31,8 @@ const INITIAL: Form = { nome: '', quantidade_titulos: 1, periodicidade: 'mensal'
 
 const SaasTipoCobrancaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId }) => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const isEditing = !!itemId;
   const [form, setForm] = useState<Form>(INITIAL);
   const [errors, setErrors] = useState<Partial<Record<keyof Form, string>>>({});
@@ -52,12 +55,12 @@ const SaasTipoCobrancaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, 
   const createMutation = useMutation({
     mutationFn: (d: Partial<SaasTipoCobranca>) => saasTipoCobrancaService.create(d),
     onSuccess: () => { success('Tipo de cobrança criado'); queryClient.invalidateQueries({ queryKey: ['saas-tipos-cobranca'] }); onSuccess?.(); },
-    onError: (e: unknown) => error((e as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao criar'),
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TIPO_COBRANCA_CREATE_ERROR),
   });
   const updateMutation = useMutation({
     mutationFn: (d: Partial<SaasTipoCobranca>) => saasTipoCobrancaService.update(itemId!, d),
     onSuccess: () => { success('Tipo de cobrança atualizado'); queryClient.invalidateQueries({ queryKey: ['saas-tipos-cobranca'] }); onSuccess?.(); },
-    onError: (e: unknown) => error((e as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao atualizar'),
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TIPO_COBRANCA_UPDATE_ERROR),
   });
   const isPending = createMutation.isPending || updateMutation.isPending;
 

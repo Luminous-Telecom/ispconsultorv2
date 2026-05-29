@@ -24,12 +24,15 @@ import {
   SairButton,
 } from 'components/ui';
 import { useNotificationContext, NotificationContainer } from 'components/notifications';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES, ERROR_MESSAGES } from 'constants/ErrorMessages';
 import 'styles/CentralAssinante.scss';
 
 const CentralAssinante: React.FC = () => {
   const { slug = '' } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { success: showSuccess, error: showError, notifications, removeNotification, pauseNotification, resumeNotification } = useNotificationContext();
+  const { success: showSuccess, notifications, removeNotification, pauseNotification, resumeNotification } = useNotificationContext();
+  const { showApiError } = useApiError();
   const [activeTab, setActiveTab] = useState<'resumo' | 'contratos' | 'financeiro' | 'financeiro_pago' | 'termos'>('resumo');
   const [loginForm, setLoginForm] = useState<LoginCentralAssinanteRequest>({ login: '', senha: '' });
   const [showRecuperarSenha, setShowRecuperarSenha] = useState(false);
@@ -73,7 +76,7 @@ const CentralAssinante: React.FC = () => {
 
         // Validar que token existe antes de navegar
         if (!newToken) {
-          showError('Dados de autenticação inválidos. Tente novamente.');
+          showApiError('Dados de autenticação inválidos. Tente novamente.');
           return;
         }
 
@@ -83,10 +86,7 @@ const CentralAssinante: React.FC = () => {
         showSuccess('Login realizado com sucesso!');
       }
     },
-    onError: (error: unknown) => {
-      const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao realizar login';
-      showError(message);
-    }
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.SUBSCRIBER_LOGIN_ERROR),
   });
 
   // Query para buscar dados (só executa se autenticado)
@@ -95,7 +95,7 @@ const CentralAssinante: React.FC = () => {
     queryFn: async () => {
       const response = await CentralAssinanteService.getDadosMe(slug);
       if (!response.success || !response.data) {
-        throw new Error(response.message || 'Erro ao buscar dados');
+        throw new Error(response.message || CONTEXT_ERROR_MESSAGES.SUBSCRIBER_FETCH_ERROR);
       }
       return response.data;
     },
@@ -175,7 +175,7 @@ const CentralAssinante: React.FC = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!loginForm.login || !loginForm.senha) {
-      showError('Preencha todos os campos');
+      showApiError('Preencha todos os campos');
       return;
     }
     loginMutation.mutate(loginForm);
@@ -189,16 +189,13 @@ const CentralAssinante: React.FC = () => {
       setShowRecuperarSenha(false);
       setRecuperarSenhaForm({ cnpj: '', email: '' });
     },
-    onError: (error: unknown) => {
-      const message = (error as { message?: string })?.message || 'Erro ao recuperar senha';
-      showError(message);
-    }
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.SUBSCRIBER_PASSWORD_RECOVER_ERROR),
   });
 
   const handleRecuperarSenha = (e: React.FormEvent) => {
     e.preventDefault();
     if (!recuperarSenhaForm.cnpj || !recuperarSenhaForm.email) {
-      showError('Preencha todos os campos');
+      showApiError('Preencha todos os campos');
       return;
     }
     recuperarSenhaMutation.mutate(recuperarSenhaForm);
@@ -215,24 +212,21 @@ const CentralAssinante: React.FC = () => {
       setMostrarNovaSenha(false);
       setTrocarSenhaForm({ senhaAtual: '', novaSenha: '', confirmarNovaSenha: '' });
     },
-    onError: (error: unknown) => {
-      const message = (error as { message?: string })?.message || 'Erro ao alterar senha';
-      showError(message);
-    }
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.SUBSCRIBER_PASSWORD_CHANGE_ERROR),
   });
 
   const handleTrocarSenha = (e: React.FormEvent) => {
     e.preventDefault();
     if (!trocarSenhaForm.senhaAtual || !trocarSenhaForm.novaSenha || !trocarSenhaForm.confirmarNovaSenha) {
-      showError('Preencha todos os campos');
+      showApiError('Preencha todos os campos');
       return;
     }
     if (trocarSenhaForm.novaSenha.length < 6) {
-      showError('A nova senha deve ter no mínimo 6 caracteres');
+      showApiError('A nova senha deve ter no mínimo 6 caracteres');
       return;
     }
     if (trocarSenhaForm.novaSenha !== trocarSenhaForm.confirmarNovaSenha) {
-      showError('As senhas não coincidem');
+      showApiError('As senhas não coincidem');
       return;
     }
     trocarSenhaMutation.mutate({ senhaAtual: trocarSenhaForm.senhaAtual, novaSenha: trocarSenhaForm.novaSenha });
@@ -243,8 +237,8 @@ const CentralAssinante: React.FC = () => {
     try {
       const blob = await CentralAssinanteService.baixarContrato(slug, contratoId);
       CentralAssinanteService.abrirPdf(blob, `contrato-${contratoId}.pdf`);
-    } catch (error) {
-      showError('Erro ao baixar contrato');
+    } catch (err) {
+      showApiError(err, CONTEXT_ERROR_MESSAGES.CONTRACT_DOWNLOAD_ERROR);
     } finally {
       setBaixandoContratoId(null);
     }
@@ -255,8 +249,8 @@ const CentralAssinante: React.FC = () => {
     try {
       const blob = await CentralAssinanteService.baixarTermo(slug, termoId);
       CentralAssinanteService.abrirPdf(blob, `termo-${termoId}.pdf`);
-    } catch (error) {
-      showError('Erro ao baixar termo');
+    } catch (err) {
+      showApiError(err, CONTEXT_ERROR_MESSAGES.TERM_DOWNLOAD_ERROR);
     } finally {
       setBaixandoTermoId(null);
     }
@@ -267,8 +261,8 @@ const CentralAssinante: React.FC = () => {
     try {
       const blob = await CentralAssinanteService.baixarFatura(slug, tituloId);
       CentralAssinanteService.abrirPdf(blob, `boleto-${tituloId}.pdf`);
-    } catch (error) {
-      showError('Erro ao baixar boleto');
+    } catch (err) {
+      showApiError(err, CONTEXT_ERROR_MESSAGES.TITULO_BOLETO_DOWNLOAD_ERROR);
     } finally {
       setBaixandoBoletoId(null);
     }
@@ -279,8 +273,8 @@ const CentralAssinante: React.FC = () => {
     try {
       const blob = await CentralAssinanteService.baixarRecibo(slug, tituloId);
       CentralAssinanteService.abrirPdf(blob, `recibo-${tituloId}.pdf`);
-    } catch (error) {
-      showError('Erro ao baixar recibo');
+    } catch (err) {
+      showApiError(err, CONTEXT_ERROR_MESSAGES.RECIBO_DOWNLOAD_ERROR);
     } finally {
       setBaixandoReciboId(null);
     }
@@ -323,7 +317,7 @@ const CentralAssinante: React.FC = () => {
         showSuccess('Código copiado!');
         setTimeout(() => setCopiedField(null), 2000);
       } catch (err) {
-        showError('Erro ao copiar. Por favor, selecione o texto manualmente.');
+        showApiError(ERROR_MESSAGES.COPY_ERROR);
       }
       document.body.removeChild(textArea);
     }

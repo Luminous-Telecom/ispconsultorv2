@@ -5,6 +5,8 @@ import { PlanoService } from 'services/planoService';
 import { ClienteService } from 'services/clienteService';
 import { ContratoService } from 'services/contratoService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { Contrato, Plano, CarneParcela } from 'types';
 import { FormValue } from 'types/common';
@@ -63,7 +65,8 @@ const TituloModal: React.FC<TituloModalProps> = ({
   // Usar dados do hook
   const formData = formHook.formData;
   const errors = formHook.errors;
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   
   // Hook para gerenciar seleção de plano
   const planoSelect = useEntitySelectField<{ id: number }>();
@@ -274,10 +277,10 @@ const TituloModal: React.FC<TituloModalProps> = ({
                           if (response.success) {
                             success(response.message || t('titulo.messages.sendSuccess'));
                           } else {
-                            error(response.message || t('titulo.messages.sendError'));
+                            showApiError(response.message || CONTEXT_ERROR_MESSAGES.TITULO_SEND_WHATSAPP_ERROR);
                           }
                         } catch (err) {
-                          error(t('titulo.messages.whatsappError'));
+                          showApiError(err, CONTEXT_ERROR_MESSAGES.TITULO_SEND_WHATSAPP_ERROR);
                         }
                       }
                     }}
@@ -296,10 +299,10 @@ const TituloModal: React.FC<TituloModalProps> = ({
                           if (response.success) {
                             success(response.message || t('titulo.messages.sendSuccess'));
                           } else {
-                            error(response.message || t('titulo.messages.sendError'));
+                            showApiError(response.message || CONTEXT_ERROR_MESSAGES.TITULO_SEND_EMAIL_ERROR);
                           }
                         } catch (err) {
-                          error(t('titulo.messages.sendError'));
+                          showApiError(err, CONTEXT_ERROR_MESSAGES.TITULO_SEND_EMAIL_ERROR);
                         }
                       }
                     }}

@@ -4,6 +4,8 @@ import { CancelarButton, GerarNFSeAvulsaButton } from 'components/ui';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useI18n } from 'contexts/I18nContext';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { NotaFiscalService } from 'services/notaFiscalService';
 import { NFSeConfigService } from 'services/nfseConfigService';
 import { CreateNotaFiscal, Cliente, CarneParcela } from 'types';
@@ -28,7 +30,8 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
 }) => {
   const { t } = useI18n();
   const isMobile = useIsMobile();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -134,18 +137,10 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
         onSuccess?.();
         onClose();
       } else {
-        error(response.message || t('messages.errorGeneratingInvoice'));
+        showApiError(response.message || CONTEXT_ERROR_MESSAGES.NFSE_GENERATE_ERROR);
       }
-    } catch (err: unknown) {
-      let errorMessage = t('messages.errorGeneratingInvoice');
-      
-      if (err && typeof err === 'object' && 'message' in err && typeof err.message === 'string') {
-        errorMessage = err.message;
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
-      }
-      
-      error(errorMessage);
+    } catch (err) {
+      showApiError(err, CONTEXT_ERROR_MESSAGES.NFSE_GENERATE_ERROR);
     } finally {
       setIsSubmitting(false);
     }

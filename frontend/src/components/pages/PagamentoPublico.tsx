@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { defaultApiClient } from 'services/core';
 import { formatDate } from 'utils/formatters';
-import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { Spinner } from 'components/ui';
 import './PagamentoPublico.css';
 
@@ -33,7 +34,7 @@ const PagamentoPublico: React.FC = () => {
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [sessionReady, setSessionReady] = useState<boolean>(!token);
   const sessionInitRef = useRef(false);
-  const { error: showError } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   // Quando tem token na URL: trocar por cookie e remover token da URL (evita token em logs/histórico)
   useEffect(() => {
@@ -82,7 +83,7 @@ const PagamentoPublico: React.FC = () => {
         setCopiedField(fieldName);
         setTimeout(() => setCopiedField(null), 2000);
       } catch (err) {
-        showError('Erro ao copiar. Por favor, selecione o texto manualmente.');
+        showApiError(ERROR_MESSAGES.COPY_ERROR);
       }
       document.body.removeChild(textArea);
     }

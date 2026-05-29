@@ -1,5 +1,6 @@
 import { defaultApiClient } from './core';
 import axios from 'axios';
+import { extractApiErrorMessageSync, resolveServiceErrorMessage, CONTEXT_ERROR_MESSAGES } from '../utils/apiErrorHelper';
 
 export interface ModeloTermo {
   id: number;
@@ -90,12 +91,12 @@ class ModeloTermoService {
           try {
             const text = await error.response.data.text();
             const errorData = JSON.parse(text);
-            throw new Error(errorData.message || 'Erro ao gerar PDF');
+            throw new Error(resolveServiceErrorMessage(errorData.message, CONTEXT_ERROR_MESSAGES.PDF_GENERATE_ERROR));
           } catch {
-            throw new Error('Erro ao gerar PDF');
+            throw new Error(CONTEXT_ERROR_MESSAGES.PDF_GENERATE_ERROR);
           }
         }
-        throw new Error(error.response?.data?.message || error.message || 'Erro ao gerar PDF');
+        throw new Error(extractApiErrorMessageSync(error, { defaultMessage: CONTEXT_ERROR_MESSAGES.PDF_GENERATE_ERROR }));
       }
       throw error;
     }
@@ -125,12 +126,12 @@ class ModeloTermoService {
           try {
             const text = await error.response.data.text();
             const errorData = JSON.parse(text);
-            throw new Error(errorData.message || 'Erro ao gerar PDF');
+            throw new Error(resolveServiceErrorMessage(errorData.message, CONTEXT_ERROR_MESSAGES.PDF_GENERATE_ERROR));
           } catch {
-            throw new Error('Erro ao gerar PDF');
+            throw new Error(CONTEXT_ERROR_MESSAGES.PDF_GENERATE_ERROR);
           }
         }
-        throw new Error(error.response?.data?.message || error.message || 'Erro ao gerar PDF');
+        throw new Error(extractApiErrorMessageSync(error, { defaultMessage: CONTEXT_ERROR_MESSAGES.PDF_GENERATE_ERROR }));
       }
       throw error;
     }

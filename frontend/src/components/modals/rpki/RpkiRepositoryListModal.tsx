@@ -5,6 +5,8 @@ import { TableConfig } from 'components/tables/types';
 import { useI18n } from 'contexts/I18nContext';
 import { useBulkBtn } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { ClienteService } from 'services/clienteService';
 import { RpkiCaRepository, RpkiCaService } from 'services/rpkiCaService';
@@ -61,7 +63,8 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = ({
   const { t } = useI18n();
   const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const auditoria = useAuditoria();
   const handleAuditRepository = useCallback(
     (item: RepositoryRow) => {
@@ -132,10 +135,7 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ['rpki-repositories-all'] });
       refetch();
     },
-    onError: (err: unknown) => {
-      const withMessage = err as { message?: string };
-      error(withMessage.message || 'Erro ao remover repositório');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_REPOSITORY_DELETE_ERROR),
   });
   const syncRepositoryMutation = useMutation({
     mutationFn: (payload: { caId: number; repositoryId: number }) => RpkiCaService.syncRepository(payload),
@@ -144,10 +144,7 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ['rpki-repositories-all'] });
       refetch();
     },
-    onError: (err: unknown) => {
-      const withMessage = err as { message?: string };
-      error(withMessage.message || 'Erro ao atualizar repositório');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_REPOSITORY_UPDATE_ERROR),
   });
 
   const filtered = useMemo(() => {

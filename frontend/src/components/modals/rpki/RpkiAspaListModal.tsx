@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useI18n } from 'contexts/I18nContext';
 import { useBulkBtn } from 'components/ui';
 import { useTableFilters } from 'hooks/useTableFilters';
@@ -28,7 +30,8 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = ({
 }) => {
   const { t } = useI18n();
   const bulkBtn = useBulkBtn();
-  const { error: showError, success } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const auditoria = useAuditoria();
   const handleAuditAspa = useCallback(
     (item: RpkiAspa) => {
@@ -133,7 +136,7 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = ({
             setAspas((prev) => prev.map((a) => a.id === selected.id ? { ...a, status: 'revoked' as const, revoked_at: new Date().toISOString() } : a));
             success('ASPA revogado com sucesso');
           })
-          .catch((err) => showError(err instanceof Error ? err.message : 'Erro ao revogar ASPA'));
+          .catch((err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_ASPA_REVOKE_ERROR));
       },
     },
     {
@@ -149,7 +152,7 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = ({
             setAspas((prev) => prev.filter((a) => a.id !== selected.id));
             success('ASPA excluído com sucesso');
           })
-          .catch((err) => showError(err instanceof Error ? err.message : 'Erro ao excluir ASPA'));
+          .catch((err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_ASPA_DELETE_ERROR));
       },
     },
   ];
@@ -205,7 +208,7 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = ({
               setShowCreateModal(false);
               success('ASPA criado com sucesso');
             })
-            .catch((err) => showError(err instanceof Error ? err.message : 'Erro ao criar ASPA'));
+            .catch((err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_ASPA_CREATE_ERROR));
         }}
       />
 

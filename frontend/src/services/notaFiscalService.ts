@@ -3,7 +3,7 @@
  */
 import { BaseService, defaultApiClient } from './core';
 import { NotaFiscal, CreateNotaFiscal, NotaFiscalFilters, PaginatedResponse, ApiResponse } from '../types';
-import { extractApiErrorMessage } from '../utils/apiErrorHelper';
+import { extractApiErrorMessage, resolveServiceErrorMessage, CONTEXT_ERROR_MESSAGES } from '../utils/apiErrorHelper';
 
 /**
  * Classe de serviço para operações relacionadas a Notas Fiscais
@@ -73,7 +73,7 @@ class NotaFiscalServiceClass extends BaseService<NotaFiscal, CreateNotaFiscal, P
         try {
           const text = await blob.text();
           const errorData = JSON.parse(text);
-          throw new Error(errorData.message || 'Erro ao gerar PDF da nota fiscal');
+          throw new Error(resolveServiceErrorMessage(errorData.message, CONTEXT_ERROR_MESSAGES.NFSE_PDF_ERROR));
         } catch (parseError) {
           // Se não for JSON, continuar com o blob
           if (blob.size < 100) {
@@ -89,7 +89,7 @@ class NotaFiscalServiceClass extends BaseService<NotaFiscal, CreateNotaFiscal, P
       }
       
       const errorMessage = await extractApiErrorMessage(error, {
-        defaultMessage: 'Erro ao gerar PDF da nota fiscal',
+        defaultMessage: CONTEXT_ERROR_MESSAGES.NFSE_PDF_ERROR,
         handleBlobResponse: true,
         customStatusMessages: {
           404: 'PDF da nota fiscal não encontrado'

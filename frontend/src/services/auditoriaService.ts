@@ -1,6 +1,6 @@
 import { defaultApiClient } from './core';
 import { ApiResponse, PaginatedResponse } from '../types';
-import { extractApiErrorMessage } from '../utils/apiErrorHelper';
+import { extractApiErrorMessage, resolveServiceErrorMessage, CONTEXT_ERROR_MESSAGES } from '../utils/apiErrorHelper';
 
 export interface AuditoriaLog {
   id: string;
@@ -229,7 +229,7 @@ class AuditoriaService {
       
       return {
         success: false,
-        message: response.message || 'Erro ao carregar logs de auditoria',
+        message: resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.AUDIT_LOAD_ERROR),
         data: {
           success: true,
           data: [],
@@ -252,7 +252,7 @@ class AuditoriaService {
       
       return {
         success: false,
-        message: error instanceof Error ? error.message : 'Erro ao carregar logs de auditoria',
+        message: error instanceof Error ? error.message : CONTEXT_ERROR_MESSAGES.AUDIT_LOAD_ERROR,
         data: {
           success: true,
           data: [],
@@ -411,7 +411,7 @@ class AuditoriaService {
       }
       
       const errorMessage = await extractApiErrorMessage(error, {
-        defaultMessage: 'Erro ao gerar PDF de auditoria',
+        defaultMessage: CONTEXT_ERROR_MESSAGES.PDF_GENERATE_ERROR,
         handleBlobResponse: true,
         customStatusMessages: {
           404: 'Nenhum log de auditoria encontrado para este registro'

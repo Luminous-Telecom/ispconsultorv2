@@ -4,6 +4,8 @@ import DraggableModal from 'components/common/DraggableModal';
 import { ModalFormActions } from 'components/ui';
 import FormField from 'components/ui/FormField';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useFormReset } from 'hooks/useFormReset';
 import { saasServidorWhatsappService, type SaasServidorWhatsapp } from 'services/saas/saasConfigService';
 
@@ -22,7 +24,8 @@ const INITIAL: Form = { nome: '', url_api: '', token: '', numero: '', status: 'a
 
 const SaasServidorWhatsappFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId }) => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const isEditing = !!itemId;
   const [form, setForm] = useState<Form>(INITIAL);
   const [errors, setErrors] = useState<Partial<Record<keyof Form, string>>>({});
@@ -49,12 +52,12 @@ const SaasServidorWhatsappFormModal: React.FC<Props> = ({ show, onClose, onSucce
   const createMutation = useMutation({
     mutationFn: (d: Partial<SaasServidorWhatsapp>) => saasServidorWhatsappService.create(d),
     onSuccess: () => { success('Servidor criado'); queryClient.invalidateQueries({ queryKey: ['saas-servidores-whatsapp'] }); onSuccess?.(); },
-    onError: (e: unknown) => error((e as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao criar'),
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.SERVER_WHATSAPP_SAVE_ERROR),
   });
   const updateMutation = useMutation({
     mutationFn: (d: Partial<SaasServidorWhatsapp>) => saasServidorWhatsappService.update(itemId!, d),
     onSuccess: () => { success('Servidor atualizado'); queryClient.invalidateQueries({ queryKey: ['saas-servidores-whatsapp'] }); onSuccess?.(); },
-    onError: (e: unknown) => error((e as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao atualizar'),
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.SERVER_WHATSAPP_SAVE_ERROR),
   });
   const isPending = createMutation.isPending || updateMutation.isPending;
 

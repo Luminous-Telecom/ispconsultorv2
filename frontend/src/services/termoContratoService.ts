@@ -1,5 +1,6 @@
 import { apiService } from './api';
 import { Contrato } from '../types';
+import { resolveServiceErrorMessage, CONTEXT_ERROR_MESSAGES, ERROR_MESSAGES } from '../utils/apiErrorHelper';
 
 export interface TermoContrato {
   id: number;
@@ -57,7 +58,7 @@ export class TermoContratoService {
     if (response.data) {
       return response.data;
     }
-    throw new Error(response.message || 'Termo de contrato não encontrado');
+    throw new Error(resolveServiceErrorMessage(response.message, ERROR_MESSAGES.NOT_FOUND));
   }
 
   static async create(contratoId: number, data: CreateTermoContratoData): Promise<TermoContrato> {
@@ -65,7 +66,7 @@ export class TermoContratoService {
     if (response.data) {
       return response.data;
     }
-    throw new Error(response.message || 'Não foi possível criar o termo de contrato');
+    throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.TERM_CREATE_SERVICE_ERROR));
   }
 
   static async update(id: number, data: UpdateTermoContratoData): Promise<TermoContrato> {
@@ -73,7 +74,7 @@ export class TermoContratoService {
     if (response.data) {
       return response.data;
     }
-    throw new Error(response.message || 'Não foi possível atualizar o termo de contrato');
+    throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.TERM_UPDATE_SERVICE_ERROR));
   }
 
   static async marcarComoAceito(id: number, aceitoPor: string): Promise<TermoContrato> {
@@ -81,7 +82,7 @@ export class TermoContratoService {
     if (response.data) {
       return response.data;
     }
-    throw new Error(response.message || 'Não foi possível marcar o termo como aceito');
+    throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.TERM_ACCEPT_SERVICE_ERROR));
   }
 
   static async deactivate(id: number): Promise<void> {

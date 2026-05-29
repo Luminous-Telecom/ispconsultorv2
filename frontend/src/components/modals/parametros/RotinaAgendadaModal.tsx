@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
-import { SaasSchedulerService, type CreateRotinaData, type UpdateRotinaData } from 'services/saas/saasSchedulerService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
+import { SaasSchedulerService, type CreateRotinaData, type UpdateRotinaData } from 'services/saas/saasSchedulerService';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { usePlanoModulos } from 'hooks/usePlanoModulos';
 import DraggableModal from 'components/common/DraggableModal';
@@ -75,7 +76,8 @@ const emptyForm = (): CreateRotinaData => ({
 const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose, rotinaId = null, onSuccess }) => {
   const { t } = useI18n();
   const isMobile = useIsMobile();
-  const { success, error: showError } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const queryClient = useQueryClient();
   const isEditMode = !!rotinaId;
 
@@ -142,10 +144,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
       resetForm();
       onSuccess?.();
     },
-    onError: (error: unknown) => {
-      const axiosError = error as AxiosError<{ message?: string }>;
-      showError(axiosError?.response?.data?.message || 'Erro ao criar rotina');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.ROTINA_CREATE_ERROR),
   });
 
   const updateMutation = useMutation({
@@ -156,10 +155,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
       queryClient.invalidateQueries({ queryKey: ['saas-rotina', rotinaId] });
       onSuccess?.();
     },
-    onError: (error: unknown) => {
-      const axiosError = error as AxiosError<{ message?: string }>;
-      showError(axiosError?.response?.data?.message || 'Erro ao atualizar rotina');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.ROTINA_UPDATE_ERROR),
   });
 
   const deleteMutation = useMutation({
@@ -171,10 +167,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
       onClose();
       onSuccess?.();
     },
-    onError: (error: unknown) => {
-      const axiosError = error as AxiosError<{ message?: string }>;
-      showError(axiosError?.response?.data?.message || 'Erro ao deletar rotina');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.ROTINA_DELETE_ERROR),
   });
 
   const isSaving =
@@ -196,7 +189,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
 
     const err = validateCronPartsForSubmit(cronParts);
     if (err) {
-      showError(err);
+      showApiError(err);
       return;
     }
 

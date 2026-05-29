@@ -1,4 +1,5 @@
 import { apiService } from './api';
+import { resolveServiceErrorMessage, CONTEXT_ERROR_MESSAGES } from '../utils/apiErrorHelper';
 import { Titulo, Cliente, Plano, Contrato } from '../types/entities';
 
 export interface DashboardStats {
@@ -147,7 +148,7 @@ export class DashboardService {
       if (response.success && response.data) {
         return response.data;
       }
-      throw new Error(response.message || 'Erro ao carregar dados do dashboard');
+      throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.DASHBOARD_LOAD_ERROR));
     } catch (error) {
       throw error;
     }

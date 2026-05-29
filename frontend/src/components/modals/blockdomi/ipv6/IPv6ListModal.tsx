@@ -14,6 +14,8 @@ import { IPv6Modal } from './index';
 import { useAuditoria } from 'hooks/useAuditoria';
 import ImprimirModal from 'components/common/ImprimirModal';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { IPv6Service } from 'services/ipv6Service';
 
 interface IPv6ListModalProps {
@@ -39,7 +41,9 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
   const [selectedIPv6Id, setSelectedIPv6Id] = useState<number | null>(null);
   
   const auditoria = useAuditoria();
-  
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
+
   const tableFilters = useTableFilters({
     initialSearch: '',
     initialPage: 1,
@@ -238,8 +242,6 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
     }
   }, [selectedItem, clearSelection, onSelectIPv6, onClose]);
 
-  const { success, error } = useNotificationContext();
-
   const handleDelete = useCallback(async (ipv6Id: number) => {
     try {
       await deleteIPv6Mutation.mutateAsync(ipv6Id);
@@ -258,9 +260,9 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ['ipv6'] });
       success(`Excluído(s) ${deleted} IPv6. Versão da operação: ${versao}.`);
     } catch (err: unknown) {
-      error((err as Error)?.message ?? 'Erro ao excluir IPv6.');
+      showApiError(err, CONTEXT_ERROR_MESSAGES.BLOCKDOMI_IPV6_DELETE_ERROR);
     }
-  }, [clearSelection, refetch, queryClient, success, error]);
+  }, [clearSelection, refetch, queryClient, success, showApiError]);
 
   const handleAudit = useCallback((ipv6: IPv6) => {
     auditoria.handleAudit('IPv6', ipv6.id);

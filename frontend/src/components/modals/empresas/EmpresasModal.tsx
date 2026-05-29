@@ -9,6 +9,8 @@ import DraggableModal from 'components/common/DraggableModal';
 import { ParametrosService } from 'services/parametrosService';
 import { ClienteService } from 'services/clienteService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { formatCNPJ, formatCEP } from 'utils/formatters';
 import { isValidCNPJ } from 'utils/validators';
 import { CancelarButton, NovoButton, SalvarButton } from 'components/ui';
@@ -43,7 +45,8 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<CreateEmpresa>(INITIAL_FORM);
   const [errors, setErrors] = useState<Partial<Record<keyof CreateEmpresa, string>>>({});
-  const { success, error, info } = useNotificationContext();
+  const { success, info } = useNotificationContext();
+  const { showApiError } = useApiError();
   const lastCnpjConsulted = useRef<string>('');
   const lastCepConsulted = useRef<string>('');
 
@@ -172,10 +175,10 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
         if (err?.response?.status === 404) {
           info('CNPJ não encontrado na base da Receita Federal. Você pode preencher os dados manualmente.');
         } else {
-          error(err?.response?.data?.message || 'Erro ao consultar CNPJ. Tente novamente ou preencha manualmente.');
+          showApiError(err, CONTEXT_ERROR_MESSAGES.EMPRESA_CNPJ_ERROR);
         }
       });
-  }, [form.cnpj, form.razao_social, form.nome_fantasia, form.endereco, showForm, editingId, parametros?.data?.validar_cpf_cnpj, success, info, error]);
+  }, [form.cnpj, form.razao_social, form.nome_fantasia, form.endereco, showForm, editingId, parametros?.data?.validar_cpf_cnpj, success, info, showApiError]);
 
   // Buscar CEP ao digitar 8 dígitos
   useEffect(() => {

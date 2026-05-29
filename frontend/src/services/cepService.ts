@@ -1,4 +1,5 @@
 import { apiService } from './api';
+import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 
 export interface CepData {
   cep: string;
@@ -22,20 +23,20 @@ export class CepService {
       
       // Validar formato do CEP
       if (cepLimpo.length !== 8) {
-        throw new Error('CEP deve ter 8 dígitos');
+        throw new Error(CONTEXT_ERROR_MESSAGES.CEP_INVALID_FORMAT);
       }
 
       const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
       
       if (!response.ok) {
-        throw new Error('Erro ao buscar CEP');
+        throw new Error(CONTEXT_ERROR_MESSAGES.CEP_FETCH_ERROR);
       }
 
       const data = await response.json();
 
       // Verificar se CEP foi encontrado
       if (data.erro) {
-        throw new Error('CEP não encontrado');
+        throw new Error(CONTEXT_ERROR_MESSAGES.CEP_NOT_FOUND);
       }
 
       return {
@@ -61,7 +62,7 @@ export class CepService {
       const cepLimpo = cep.replace(/\D/g, '');
       
       if (cepLimpo.length !== 8) {
-        throw new Error('CEP deve ter 8 dígitos');
+        throw new Error(CONTEXT_ERROR_MESSAGES.CEP_INVALID_FORMAT);
       }
 
       const response = await apiService.get<CepData>(`/clientes/buscar-cep/${cepLimpo}`);
@@ -70,10 +71,10 @@ export class CepService {
       }
 
       // Criar um erro que não cause logout - apenas erro de CEP não encontrado
-      throw new Error(response.message || 'CEP não encontrado');
+      throw new Error(response.message || CONTEXT_ERROR_MESSAGES.CEP_NOT_FOUND);
     } catch (error) {
       // Se for qualquer erro, tratar como CEP não encontrado para evitar logout
-      throw new Error('CEP não encontrado');
+      throw new Error(CONTEXT_ERROR_MESSAGES.CEP_NOT_FOUND);
     }
   }
 

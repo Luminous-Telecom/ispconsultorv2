@@ -9,10 +9,11 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { ClienteService } from '../services/clienteService';
 import { ParametrosService } from '../services/parametrosService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
+import { useApiError } from './useApiError';
+import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 import { Cliente, CreateCliente, UpdateCliente } from '../types';
 import { ClienteFormData, ClienteFormErrors } from '../types';
 import { FormValue } from '../types/common';
@@ -82,7 +83,8 @@ export const useClienteForm = ({
   onSuccess
 }: UseClienteFormParams): UseClienteFormReturn => {
   const isEditing = !!clienteId;
-  const { success, error, info } = useNotificationContext();
+  const { success, info } = useNotificationContext();
+  const { showApiError } = useApiError();
   const queryClient = useQueryClient();
   
   const [isConsultingCnpj, setIsConsultingCnpj] = useState(false);
@@ -210,10 +212,7 @@ export const useClienteForm = ({
       queryClient.invalidateQueries({ queryKey: ['cliente', clienteId] });
       onSuccess?.();
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao atualizar cliente');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CLIENT_UPDATE_ERROR),
   });
 
   // Mutation para criar cliente
@@ -225,10 +224,7 @@ export const useClienteForm = ({
       setCreatedClienteId(createdCliente.id);
       onSuccess?.();
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao criar cliente');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CLIENT_CREATE_ERROR),
   });
 
   const isSubmitting = updateClienteMutation.isPending || createClienteMutation.isPending;
@@ -295,16 +291,12 @@ export const useClienteForm = ({
                 success('Dados do CNPJ preenchidos automaticamente!');
               }
             } catch (err) {
-              const axiosError = err as AxiosError<{ message?: string; error?: string }>;
-              const status = axiosError?.response?.status;
-              
+              const status = (err as { response?: { status?: number } })?.response?.status;
+
               if (status === 404) {
                 info('CNPJ não encontrado na base da Receita Federal. Você pode preencher os dados manualmente.');
               } else {
-                const errorMessage = axiosError?.response?.data?.message || 
-                                   axiosError?.response?.data?.error || 
-                                   'Erro ao consultar CNPJ. Tente novamente ou preencha os dados manualmente.';
-                error(errorMessage);
+                showApiError(err, CONTEXT_ERROR_MESSAGES.EMPRESA_CNPJ_ERROR);
               }
             } finally {
               setIsConsultingCnpj(false);
@@ -348,12 +340,11 @@ export const useClienteForm = ({
                 success('Dados do CEP preenchidos automaticamente!');
               }
             } catch (err) {
-              const axiosError = err as AxiosError<{ message?: string }>;
-              const errorMessage = axiosError?.response?.data?.message || 'Erro ao consultar CEP';
-              
+              const status = (err as { response?: { status?: number } })?.response?.status;
+
               // Só mostrar erro se não for "não encontrado" (pode ser CEP válido mas não na base)
-              if (axiosError?.response?.status !== 404) {
-                error(errorMessage);
+              if (status !== 404) {
+                showApiError(err, CONTEXT_ERROR_MESSAGES.CEP_CONSULT_ERROR);
               }
             } finally {
               setIsConsultingCep(false);

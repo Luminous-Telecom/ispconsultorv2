@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { useI18n } from 'contexts/I18nContext';
 import { BancoService } from 'services/bancoService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useFormPrefix } from 'hooks/useFormId';
 import { useBancoForm } from 'hooks/useBancoForm';
 import { useIsMobile } from 'hooks/useMediaQuery';
@@ -48,7 +49,8 @@ const BancoModal: React.FC<BancoModalProps> = ({
   // Estados locais para funcionalidades específicas do modal
   const [activeTab, setActiveTab] = useState('informacoes-basicas');
   const [isGeneratingSecret, setIsGeneratingSecret] = useState(false);
-  const { success, error, warning } = useNotificationContext();
+  const { success, warning } = useNotificationContext();
+  const { showApiError } = useApiError();
   const queryClient = useQueryClient();
 
   const handleCancel = () => {
@@ -59,7 +61,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
   const handleTestConnection = async () => {
     const idToUse = formHook.effectiveBancoId ?? bancoId ?? null;
     if (!idToUse) {
-      error(t('messages.saveBankBeforeTest'));
+      showApiError(t('messages.saveBankBeforeTest'));
       return;
     }
 
@@ -107,26 +109,16 @@ const BancoModal: React.FC<BancoModalProps> = ({
             : t('messages.credentialsNotConfiguredEfi');
         }
         
-        error(mensagemErro);
+        showApiError(mensagemErro);
       }
     } catch (err) {
-      const axiosError = err as AxiosError<{ message: string }>;
-      let errorMessage = axiosError?.response?.data?.message || axiosError?.message || t('messages.error');
-      
-      // Melhorar mensagem se for erro de credenciais
-      if (errorMessage.includes('Credenciais do banco não configuradas')) {
-        errorMessage = formData.tipo_banco === 'asaas'
-          ? t('messages.credentialsNotConfiguredAsaas')
-          : t('messages.credentialsNotConfiguredEfi');
-      }
-      
-      error(errorMessage);
+      showApiError(err, CONTEXT_ERROR_MESSAGES.BANCO_TEST_ERROR);
     }
   };
 
   const handleGenerateWebhookSecret = async () => {
     if (!bancoId) {
-      error(t('messages.saveBankBeforeWebhook'));
+      showApiError(t('messages.saveBankBeforeWebhook'));
       return;
     }
 
@@ -143,8 +135,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
         warning(t('messages.webhookTokenNotReturned'));
       }
     } catch (err) {
-      const axiosError = err as AxiosError<{ message?: string }>;
-      error(axiosError.response?.data?.message || axiosError.message || t('messages.error'));
+      showApiError(err, CONTEXT_ERROR_MESSAGES.BANCO_WEBHOOK_ERROR);
     } finally {
       setIsGeneratingSecret(false);
     }

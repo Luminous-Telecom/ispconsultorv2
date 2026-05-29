@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import ModeloReciboService, { ModeloRecibo } from 'services/modeloReciboService';
 import { formatDateTime } from 'utils/formatters';
 import Table from 'components/tables/Table';
@@ -16,7 +17,8 @@ interface RecibosTabProps {
 
 const RecibosTab: React.FC<RecibosTabProps> = ({ contratoId: _contratoId }) => {
   const queryClient = useQueryClient();
-  const { success, error: showError } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const [_selectedItems, setSelectedItems] = useState<ModeloRecibo[]>([]);
   const auditoria = useAuditoria();
   const [showDocumentoModal, setShowDocumentoModal] = useState(false);
@@ -63,11 +65,11 @@ const RecibosTab: React.FC<RecibosTabProps> = ({ contratoId: _contratoId }) => {
             setSelectedDocumento(response.data as ModeloRecibo);
           }
         })
-        .catch(() => {
-          showError('Erro ao carregar documento');
+        .catch((err) => {
+          showApiError(err, CONTEXT_ERROR_MESSAGES.DOCUMENT_LOAD_ERROR);
         });
     }
-  }, [showDocumentoModal, documentoModalMode, selectedDocumentoId, showError]);
+  }, [showDocumentoModal, documentoModalMode, selectedDocumentoId, showApiError]);
 
   // Mutation para deletar recibo
   const deleteDocumentoMutation = useMutation({
@@ -78,10 +80,7 @@ const RecibosTab: React.FC<RecibosTabProps> = ({ contratoId: _contratoId }) => {
       success('Recibo excluído com sucesso');
       queryClient.invalidateQueries({ queryKey: ['modelos-recibo'] });
     },
-    onError: (error: unknown) => {
-      const axiosError = error as AxiosError<{ message?: string }>;
-      showError(axiosError?.response?.data?.message || 'Erro ao deletar recibo');
-    }
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RECIBO_DELETE_ERROR),
   });
 
   // Definir colunas da tabela

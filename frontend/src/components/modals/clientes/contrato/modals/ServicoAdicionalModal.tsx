@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { ContratoPlanoAdicional, CreateContratoPlanoAdicional, UpdateContratoPlanoAdicional } from 'services/contratoPlanoAdicionalService';
 import { useCreateContratoPlanoAdicional, useUpdateContratoPlanoAdicional } from 'hooks/useContratoPlanosAdicionais';
@@ -29,7 +31,8 @@ const ServicoAdicionalModal: React.FC<ServicoAdicionalModalProps> = ({
   onShowPlanoModal
 }) => {
   const isMobile = useIsMobile();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const createMutation = useCreateContratoPlanoAdicional();
   const updateMutation = useUpdateContratoPlanoAdicional();
   const { data: planosData } = usePlanos({ page: 1, limit: 1000 });
@@ -99,7 +102,7 @@ const ServicoAdicionalModal: React.FC<ServicoAdicionalModalProps> = ({
     e.preventDefault();
 
     if (!planoId || planoId === 0) {
-      error('Selecione um plano');
+      showApiError('Selecione um plano');
       return;
     }
 
@@ -138,8 +141,7 @@ const ServicoAdicionalModal: React.FC<ServicoAdicionalModalProps> = ({
         onSuccess();
       }
     } catch (err: unknown) {
-      const errorMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao salvar serviço adicional';
-      error(errorMessage);
+      showApiError(err, CONTEXT_ERROR_MESSAGES.SERVICO_ADICIONAL_SAVE_ERROR);
     }
   };
 

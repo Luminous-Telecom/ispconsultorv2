@@ -5,7 +5,8 @@ import { useModalSelect } from 'hooks/useModalSelect';
 import { useAuditoria } from 'hooks/useAuditoria';
 import { useI18n } from 'contexts/I18nContext';
 import { useBulkBtn } from 'components/ui';
-import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { formatDateTime } from 'utils/formatters';
 import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
@@ -25,7 +26,7 @@ const SaasClientesModal: React.FC<Props> = ({ show, onClose, skipWrapper = false
   const { t } = useI18n();
   const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
-  const { error } = useNotificationContext();
+  const { showApiError } = useApiError();
   const auditoria = useAuditoria();
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -74,8 +75,8 @@ const SaasClientesModal: React.FC<Props> = ({ show, onClose, skipWrapper = false
     if (!item) return;
     if (!window.confirm(t('messages.confirmDelete'))) return;
     try { await saasEmpresasService.delete(item.id); queryClient.invalidateQueries({ queryKey: ['saas-empresas'] }); refetch(); }
-    catch { error(t('messages.error')); }
-  }, [selectedItem, queryClient, refetch, error, t]);
+    catch (err) { showApiError(err, CONTEXT_ERROR_MESSAGES.SAAS_EMPRESA_DELETE_ERROR); }
+  }, [selectedItem, queryClient, refetch, showApiError, t]);
 
   const searchFields = useMemo(() => getSaasTenantListSearchFields(t), [t]);
 

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import ModeloCartaService, { ModeloCarta } from 'services/modeloCartaService';
 import { formatDateTime } from 'utils/formatters';
 import Table from 'components/tables/Table';
@@ -16,7 +17,8 @@ interface CartaCobrancaTabProps {
 
 const CartaCobrancaTab: React.FC<CartaCobrancaTabProps> = ({ contratoId: _contratoId }) => {
   const queryClient = useQueryClient();
-  const { success, error: showError } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const [_selectedItems, setSelectedItems] = useState<ModeloCarta[]>([]);
   const auditoria = useAuditoria();
   const [showDocumentoModal, setShowDocumentoModal] = useState(false);
@@ -63,11 +65,11 @@ const CartaCobrancaTab: React.FC<CartaCobrancaTabProps> = ({ contratoId: _contra
             setSelectedDocumento(response.data as ModeloCarta);
           }
         })
-        .catch(() => {
-          showError('Erro ao carregar documento');
+        .catch((err) => {
+          showApiError(err, CONTEXT_ERROR_MESSAGES.DOCUMENT_LOAD_ERROR);
         });
     }
-  }, [showDocumentoModal, documentoModalMode, selectedDocumentoId, showError]);
+  }, [showDocumentoModal, documentoModalMode, selectedDocumentoId, showApiError]);
 
   // Mutation para deletar carta
   const deleteDocumentoMutation = useMutation({
@@ -78,10 +80,7 @@ const CartaCobrancaTab: React.FC<CartaCobrancaTabProps> = ({ contratoId: _contra
       success('Carta de cobrança excluída com sucesso');
       queryClient.invalidateQueries({ queryKey: ['modelos-carta'] });
     },
-    onError: (error: unknown) => {
-      const axiosError = error as AxiosError<{ message?: string }>;
-      showError(axiosError?.response?.data?.message || 'Erro ao deletar carta de cobrança');
-    }
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CARTA_COBRANCA_DELETE_ERROR),
   });
 
   // Definir colunas da tabela

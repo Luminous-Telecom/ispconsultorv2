@@ -3,7 +3,8 @@ import { BancoService } from '../services/bancoService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { CACHE_CONFIG } from '../config/api';
 import { BancoFilters, UpdateBanco } from '../types';
-import { AxiosError } from 'axios';
+import { useApiError } from './useApiError';
+import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 
 const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;
 
@@ -43,7 +44,8 @@ export const useBancosAtivos = () => {
 // Hook para criar banco
 export const useCreateBanco = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: BancoService.create,
@@ -52,17 +54,15 @@ export const useCreateBanco = () => {
       queryClient.invalidateQueries({ queryKey: ['bancos-ativos'] });
       success('Banco criado com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao criar banco');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.BANCO_CREATE_ERROR),
   });
 };
 
 // Hook para atualizar banco
 export const useUpdateBanco = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateBanco }) =>
@@ -73,17 +73,15 @@ export const useUpdateBanco = () => {
       queryClient.invalidateQueries({ queryKey: ['bancos-ativos'] });
       success('Banco atualizado com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao atualizar banco');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.BANCO_UPDATE_ERROR),
   });
 };
 
 // Hook para excluir banco
 export const useDeleteBanco = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: BancoService.delete,
@@ -92,9 +90,6 @@ export const useDeleteBanco = () => {
       queryClient.invalidateQueries({ queryKey: ['bancos-ativos'] });
       success('Banco excluído com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao excluir banco');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.BANCO_DELETE_ERROR),
   });
 };

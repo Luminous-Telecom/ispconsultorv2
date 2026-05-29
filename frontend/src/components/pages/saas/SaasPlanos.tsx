@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { saasPlanoService, type SaasPlano } from 'services/saas/saasPlanoService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import AtivoInativoField from 'components/ui/AtivoInativoField';
 import {
   RecarregarButton,
@@ -25,7 +27,8 @@ const EMPTY_FORM: Partial<SaasPlano> = {
 const SaasPlanos: React.FC = () => {
   const { t } = useI18n();
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<Partial<SaasPlano>>(EMPTY_FORM);
@@ -45,7 +48,7 @@ const SaasPlanos: React.FC = () => {
       success('Plano removido com sucesso');
       queryClient.invalidateQueries({ queryKey: ['saas-planos'] });
     },
-    onError: () => error('Erro ao remover plano'),
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.PLANO_DELETE_ERROR),
   });
 
   const handleDelete = (id: number, nome: string) => {
@@ -77,7 +80,7 @@ const SaasPlanos: React.FC = () => {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.nome) { error('Nome é obrigatório'); return; }
+    if (!form.nome) { showApiError('Nome é obrigatório'); return; }
     setIsPending(true);
     try {
       if (editingId) {
@@ -89,8 +92,7 @@ const SaasPlanos: React.FC = () => {
       }
       queryClient.invalidateQueries({ queryKey: ['saas-planos'] });
     } catch (err) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao salvar plano';
-      error(msg);
+      showApiError(err, CONTEXT_ERROR_MESSAGES.PLANO_SAVE_ERROR);
     } finally {
       setIsPending(false);
     }

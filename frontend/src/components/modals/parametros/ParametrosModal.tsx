@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useI18n } from 'contexts/I18nContext';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { ParametrosService } from 'services/parametrosService';
 import { useFormReset } from 'hooks/useFormReset';
@@ -24,7 +25,8 @@ interface ParametrosForm {
 const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
   const { t } = useI18n();
   const isMobile = useIsMobile();
-  const { success, error: showError } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const queryClient = useQueryClient();
 
   // Dados iniciais do formulário
@@ -73,11 +75,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
       queryClient.invalidateQueries({ queryKey: ['parametros'] });
       // Não fecha o modal para permitir múltiplas edições
     },
-    onError: (error: unknown) => {
-      const axiosError = error as AxiosError<{ message?: string }>;
-      const message = axiosError?.response?.data?.message || t('params.errorUpdate');
-      showError(message);
-    }
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.PARAMS_UPDATE_ERROR),
   });
 
   const handleCheckboxChange = (field: keyof ParametrosForm) => {

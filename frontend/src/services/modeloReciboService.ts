@@ -1,5 +1,6 @@
 import { apiService } from './api';
 import type { ApiResponse } from '../types';
+import { extractApiErrorMessageSync, CONTEXT_ERROR_MESSAGES } from '../utils/apiErrorHelper';
 
 export interface ModeloRecibo {
   id: number;
@@ -76,8 +77,7 @@ class ModeloReciboService {
 
       return blob;
     } catch (error) {
-      const axiosError = error as { response?: { data?: { message?: string } }; message?: string };
-      throw new Error(axiosError.response?.data?.message || axiosError.message || 'Erro ao gerar PDF');
+      throw new Error(extractApiErrorMessageSync(error, { defaultMessage: CONTEXT_ERROR_MESSAGES.PDF_GENERATE_ERROR }));
     }
   }
 
@@ -92,8 +92,7 @@ class ModeloReciboService {
 
       return blob;
     } catch (error) {
-      const axiosError = error as { response?: { data?: { message?: string } }; message?: string };
-      throw new Error(axiosError.response?.data?.message || axiosError.message || 'Erro ao gerar PDF de teste');
+      throw new Error(extractApiErrorMessageSync(error, { defaultMessage: CONTEXT_ERROR_MESSAGES.PDF_TEST_ERROR }));
     }
   }
 }

@@ -2,7 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { TipoCobrancaContratoService, TipoCobrancaContrato, TipoCobrancaContratoFilters } from '../services/tipoCobrancaContratoService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { CACHE_CONFIG } from '../config/api';
-import { AxiosError } from 'axios';
+import { useApiError } from './useApiError';
+import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 
 const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;
 
@@ -38,7 +39,8 @@ export const useTipoCobrancaContratosAtivos = () => {
 
 export const useCreateTipoCobrancaContrato = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: TipoCobrancaContratoService.create,
@@ -47,16 +49,14 @@ export const useCreateTipoCobrancaContrato = () => {
       queryClient.invalidateQueries({ queryKey: ['tipos-cobranca-contrato-ativos'] });
       success('Tipo de cobrança criado com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message?: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao criar tipo de cobrança');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TIPO_COBRANCA_CREATE_ERROR),
   });
 };
 
 export const useUpdateTipoCobrancaContrato = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<TipoCobrancaContrato> }) =>
@@ -68,16 +68,14 @@ export const useUpdateTipoCobrancaContrato = () => {
       queryClient.invalidateQueries({ queryKey: ['contratos'] });
       success('Tipo de cobrança atualizado com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message?: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao atualizar tipo de cobrança');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TIPO_COBRANCA_UPDATE_ERROR),
   });
 };
 
 export const useDeleteTipoCobrancaContrato = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: TipoCobrancaContratoService.delete,
@@ -87,9 +85,6 @@ export const useDeleteTipoCobrancaContrato = () => {
       queryClient.invalidateQueries({ queryKey: ['contratos'] });
       success('Tipo de cobrança excluído com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message?: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao excluir tipo de cobrança');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TIPO_COBRANCA_DELETE_ERROR),
   });
 };

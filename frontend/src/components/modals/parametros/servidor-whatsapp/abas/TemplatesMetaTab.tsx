@@ -2,6 +2,8 @@ import React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { defaultApiClient } from 'services/core';
 import { TemplateWhatsAppService } from 'services/templateWhatsAppService';
 import { RecarregarButton, Spinner, SystemButton } from 'components/ui';
@@ -79,7 +81,8 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
-  const { success, error: showError } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const expandedCardRef = React.useRef<HTMLDivElement>(null);
   const [expandedKey, setExpandedKey] = React.useState<string | null>(null);
   const [variaveisSelecionadas, setVariaveisSelecionadas] = React.useState<Record<string, string[]>>({});
@@ -100,7 +103,7 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
     queryFn: async () => {
       const response = await defaultApiClient.get<TemplatesResponse>('/servidores-whatsapp/templates');
       if (!response.success) {
-        throw new Error(response.message || 'Erro ao buscar templates');
+        throw new Error(response.message || CONTEXT_ERROR_MESSAGES.TEMPLATE_LOAD_ERROR);
       }
       if (response.data && 'total' in response.data && 'aprovados' in response.data && 'templates' in response.data) {
         return response.data as TemplatesResponse['data'];
@@ -126,15 +129,10 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
         success('Template criado com sucesso');
         queryClient.invalidateQueries({ queryKey: ['templates-whatsapp'] });
       } else {
-        showError(res.message || 'Erro ao criar template');
+        showApiError(res.message || CONTEXT_ERROR_MESSAGES.TEMPLATE_CREATE_ERROR);
       }
     },
-    onError: (err: unknown) => {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? (err as Error).message
-        ?? 'Erro ao criar template';
-      showError(msg);
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TEMPLATE_CREATE_ERROR),
   });
 
   const handleCriarTemplate = async (template: Template, key: string) => {
@@ -145,7 +143,7 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
       (t) => t.nome === nome && (t.idioma || 'pt_BR') === idioma
     );
     if (jaExiste) {
-      showError(`Já existe um template com o nome "${nome}" e idioma "${idioma}"`);
+      showApiError(`Já existe um template com o nome "${nome}" e idioma "${idioma}"`);
       return;
     }
     await createTemplateMutation.mutateAsync({ template, key });
@@ -189,7 +187,7 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
       header_document: mapping.header_document,
     });
     if (!res.success || !res.data?.id) {
-      throw new Error(res.message || 'Erro ao criar template');
+      throw new Error(res.message || CONTEXT_ERROR_MESSAGES.TEMPLATE_CREATE_ERROR);
     }
     await onSalvarVincular({ template_id: res.data.id });
     onClose?.();

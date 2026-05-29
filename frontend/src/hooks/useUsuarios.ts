@@ -1,9 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { UsuarioService } from '../services/usuarioService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { CACHE_CONFIG } from '../config/api';
 import { UsuarioFilters, UpdateUsuario } from '../types';
+import { useApiError } from './useApiError';
+import { CONTEXT_ERROR_MESSAGES, ERROR_MESSAGES } from '../constants/ErrorMessages';
 
 export type { Usuario } from '../types';
 
@@ -32,7 +33,8 @@ export const useUsuario = (id: number) => {
 
 export const useCreateUsuario = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: UsuarioService.create,
@@ -40,16 +42,14 @@ export const useCreateUsuario = () => {
       queryClient.invalidateQueries({ queryKey: ['usuarios'] });
       success('Usuário criado com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao criar usuário');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.USER_CREATE_ERROR),
   });
 };
 
 export const useUpdateUsuario = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateUsuario }) =>
@@ -59,16 +59,14 @@ export const useUpdateUsuario = () => {
       queryClient.invalidateQueries({ queryKey: ['usuario', id] });
       success('Usuário atualizado com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao atualizar usuário');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.USER_UPDATE_ERROR),
   });
 };
 
 export const useDeleteUsuario = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: UsuarioService.delete,
@@ -76,16 +74,14 @@ export const useDeleteUsuario = () => {
       queryClient.invalidateQueries({ queryKey: ['usuarios'] });
       success('Usuário excluído com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao excluir usuário');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.USER_DELETE_ERROR),
   });
 };
 
 export const useGerarWebhookSecret = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: UsuarioService.gerarWebhookSecret,
@@ -94,10 +90,6 @@ export const useGerarWebhookSecret = () => {
       queryClient.invalidateQueries({ queryKey: ['usuario', id] });
       success('Webhook secret gerado com sucesso!');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao gerar webhook secret');
-    },
+    onError: (err) => showApiError(err, ERROR_MESSAGES.OPERATION_FAILED),
   });
 };
-

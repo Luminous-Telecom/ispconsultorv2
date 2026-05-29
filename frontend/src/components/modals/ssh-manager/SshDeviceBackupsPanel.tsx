@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { useI18n } from 'contexts/I18nContext';
 import { useBulkBtn } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useModalSelect } from 'hooks/useModalSelect';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { SshDeviceBackupService, type SshDeviceBackupFile } from 'services/sshDeviceBackupService';
@@ -45,7 +46,8 @@ type PendingBackupAction = { kind: 'download' | 'delete'; fileName: string };
 const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId, variant = 'section' }) => {
   const { t } = useI18n();
   const bulkBtn = useBulkBtn();
-      const { success, error: showError } = useNotificationContext();
+      const { success } = useNotificationContext();
+      const { showApiError } = useApiError();
   const tableFilters = useTableFilters({
     initialSortColumn: 'modifiedAt',
     initialSortDirection: 'desc',
@@ -102,16 +104,12 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
         success(t('backup.deleted'));
         await queryClient.invalidateQueries({ queryKey: ['ssh-device-backups'] });
       } catch (err) {
-        const msg =
-          (err as AxiosError<{ message?: string }>)?.response?.data?.message ??
-          (err as Error)?.message ??
-          t('messages.error');
-        showError(msg);
+        showApiError(err, CONTEXT_ERROR_MESSAGES.SSH_BACKUP_DELETE_ERROR);
       } finally {
         setPendingAction(null);
       }
     },
-    [deviceId, queryClient, showError, success, t]
+    [deviceId, queryClient, showApiError, success, t]
   );
 
   const handleView = useCallback(

@@ -3,6 +3,8 @@ import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
 import Spinner from 'components/ui/Spinner';
 import { BlockdomiWhoisService, type WhoisResult } from 'services/blockdomiWhoisService';
+import { extractApiErrorMessageSync } from 'utils/apiErrorHelper';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 
 interface WhoisModalProps {
   show: boolean;
@@ -86,17 +88,19 @@ function getRecordLabel(
 const WhoisModal: React.FC<WhoisModalProps> = ({ show, onClose, ip }) => {
   const { t } = useI18n();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [whoisError, setWhoisError] = useState<string | null>(null);
   const [data, setData] = useState<WhoisResult | null>(null);
 
   useEffect(() => {
     if (!show || !ip?.trim()) return;
     setLoading(true);
-    setError(null);
+    setWhoisError(null);
     setData(null);
     BlockdomiWhoisService.consultar(ip)
       .then(setData)
-      .catch((err) => setError(err?.message || 'Erro ao consultar Whois'))
+      .catch((err) =>
+        setWhoisError(extractApiErrorMessageSync(err, { defaultMessage: CONTEXT_ERROR_MESSAGES.BLOCKDOMI_WHOIS_ERROR }))
+      )
       .finally(() => setLoading(false));
   }, [show, ip]);
 
@@ -153,10 +157,10 @@ const WhoisModal: React.FC<WhoisModalProps> = ({ show, onClose, ip }) => {
         </div>
       );
     }
-    if (error) {
+    if (whoisError) {
       return (
         <div className="p-3">
-          <div className="alert alert-danger mb-0">{error}</div>
+          <div className="alert alert-danger mb-0">{whoisError}</div>
         </div>
       );
     }

@@ -4,6 +4,8 @@ import { extractApiErrorMessage } from 'utils/apiErrorHelper';
 import { useDeleteContrato, Contrato } from 'hooks/useContratos';
 import { ContratoService } from 'services/contratoService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import DocumentoSistemaService from 'services/documentoSistemaService';
 import { formatDate, formatDateTime } from 'utils/formatters';
 import { useImpressaoContrato } from 'hooks/useImpressaoContrato';
@@ -46,7 +48,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   const [pdfUrlLocal, setPdfUrlLocal] = useState<string | null>(null);
   const [isGeneratingPdfLocal, setIsGeneratingPdfLocal] = useState(false);
   
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const auditoria = useAuditoria();
 
   const displayTitle = useMemo(() => {
@@ -127,11 +130,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       success('Contrato excluído com sucesso!');
       refetch();
     } catch (err: unknown) {
-      const errorMessage = await extractApiErrorMessage(err, {
-        defaultMessage: 'Erro ao deletar contrato',
-        handleBlobResponse: false
-      });
-      error(errorMessage);
+      showApiError(err, CONTEXT_ERROR_MESSAGES.CONTRACT_DELETE_ERROR);
     }
   };
 
@@ -465,7 +464,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
             if (items.length > 0) {
               const contrato = items[0];
               if (!contrato.cliente_id) {
-                error('Contrato sem cliente associado');
+                showApiError('Contrato sem cliente associado');
                 return;
               }
               
@@ -484,7 +483,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
               const contrato = items[0];
               
               if (!contrato.cliente_id) {
-                error('Contrato sem cliente associado');
+                showApiError('Contrato sem cliente associado');
                 return;
               }
               
@@ -506,7 +505,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
                   const conteudoAdesao = modelosData.data?.modelo_termo_adesao || modeloAdesao.data.conteudo;
                   
                   if (!conteudoAdesao || conteudoAdesao.trim() === '') {
-                    error('Conteúdo do termo de adesão não encontrado. Verifique se o modelo possui conteúdo cadastrado.');
+                    showApiError('Conteúdo do termo de adesão não encontrado. Verifique se o modelo possui conteúdo cadastrado.');
                     setShowImprimirModal(false);
                     setIsGeneratingPdfLocal(false);
                     return;
@@ -524,20 +523,20 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
                   
                   success('Termo de Adesão gerado com sucesso!');
                 } else {
-                  error('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.');
+                  showApiError('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.');
                   setShowImprimirModal(false);
                   setIsGeneratingPdfLocal(false);
                 }
               } catch (err) {
-                const errorMessage = await extractApiErrorMessage(err, {
-                  defaultMessage: 'Erro ao gerar termo de adesão',
+                const showApiErrorMessage = await extractApiErrorMessage(err, {
+                  defaultMessage: CONTEXT_ERROR_MESSAGES.CONTRACT_TERM_ADESAO_ERROR,
                   handleBlobResponse: true,
                   customStatusMessages: {
-                    404: 'Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.',
-                    500: 'Erro interno do servidor ao gerar termo de adesão. Tente novamente.'
+                    404: CONTEXT_ERROR_MESSAGES.CONTRACT_MODEL_NOT_FOUND,
+                    500: CONTEXT_ERROR_MESSAGES.CONTRACT_TERM_ADESAO_SERVER_ERROR,
                   }
                 });
-                error(errorMessage);
+                showApiError(showApiErrorMessage);
                 setShowImprimirModal(false);
                 setIsGeneratingPdfLocal(false);
               }
@@ -552,7 +551,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
               const contrato = items[0];
               
               if (!contrato.cliente_id) {
-                error('Contrato sem cliente associado');
+                showApiError('Contrato sem cliente associado');
                 return;
               }
               
@@ -574,7 +573,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
                   const conteudoPermanencia = modelosData.data?.modelo_contrato_permanencia || modeloPermanencia.data.conteudo;
                   
                   if (!conteudoPermanencia || conteudoPermanencia.trim() === '') {
-                    error('Conteúdo do contrato de permanência não encontrado. Verifique se o modelo possui conteúdo cadastrado.');
+                    showApiError('Conteúdo do contrato de permanência não encontrado. Verifique se o modelo possui conteúdo cadastrado.');
                     setShowImprimirModal(false);
                     setIsGeneratingPdfLocal(false);
                     return;
@@ -592,20 +591,20 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
                   
                   success('Contrato de Permanência gerado com sucesso!');
                 } else {
-                  error('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.');
+                  showApiError('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.');
                   setShowImprimirModal(false);
                   setIsGeneratingPdfLocal(false);
                 }
               } catch (err) {
-                const errorMessage = await extractApiErrorMessage(err, {
-                  defaultMessage: 'Erro ao gerar contrato de permanência',
+                const showApiErrorMessage = await extractApiErrorMessage(err, {
+                  defaultMessage: CONTEXT_ERROR_MESSAGES.CONTRACT_PERMANENCE_ERROR,
                   handleBlobResponse: true,
                   customStatusMessages: {
-                    404: 'Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.',
-                    500: 'Erro interno do servidor ao gerar contrato de permanência. Tente novamente.'
+                    404: CONTEXT_ERROR_MESSAGES.CONTRACT_MODEL_NOT_FOUND,
+                    500: CONTEXT_ERROR_MESSAGES.CONTRACT_PERMANENCE_SERVER_ERROR,
                   }
                 });
-                error(errorMessage);
+                showApiError(showApiErrorMessage);
                 setShowImprimirModal(false);
                 setIsGeneratingPdfLocal(false);
               }

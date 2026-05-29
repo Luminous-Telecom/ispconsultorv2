@@ -4,6 +4,8 @@ import DraggableModal from 'components/common/DraggableModal';
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 import { FormField, AtivoInativoField, ModalFormActions } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useFormReset } from 'hooks/useFormReset';
 import { saasUsuariosService, type SaasUsuarioSuper, type SaasNivelAcesso } from 'services/saas/saasUsuariosService';
 
@@ -32,7 +34,8 @@ const INITIAL: UsuarioForm = {
 
 const SaasUsuarioFormModal: React.FC<Props> = ({ show, onClose, onSuccess, usuarioId }) => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const isEditing = !!usuarioId;
   const [form, setForm] = useState<UsuarioForm>(INITIAL);
   const [errors, setErrors] = useState<Partial<Record<keyof UsuarioForm, string>>>({});
@@ -73,10 +76,7 @@ const SaasUsuarioFormModal: React.FC<Props> = ({ show, onClose, onSuccess, usuar
       queryClient.invalidateQueries({ queryKey: ['saas-usuarios'] });
       onSuccess?.();
     },
-    onError: (err: unknown) => {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao criar usuário';
-      error(msg);
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.USER_CREATE_ERROR),
   });
 
   const updateMutation = useMutation({
@@ -87,10 +87,7 @@ const SaasUsuarioFormModal: React.FC<Props> = ({ show, onClose, onSuccess, usuar
       queryClient.invalidateQueries({ queryKey: ['saas-usuario', usuarioId] });
       onSuccess?.();
     },
-    onError: (err: unknown) => {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao atualizar usuário';
-      error(msg);
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.USER_UPDATE_ERROR),
   });
 
   const isPending = createMutation.isPending || updateMutation.isPending;

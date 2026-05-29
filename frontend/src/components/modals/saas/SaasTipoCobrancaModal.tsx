@@ -5,7 +5,8 @@ import { useModalSelect } from 'hooks/useModalSelect';
 import { useAuditoria } from 'hooks/useAuditoria';
 import { useI18n } from 'contexts/I18nContext';
 import { useBulkBtn } from 'components/ui';
-import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
 import ImprimirModal from 'components/common/ImprimirModal';
@@ -24,7 +25,7 @@ const SaasTipoCobrancaModal: React.FC<Props> = ({ show, onClose, skipWrapper = f
   const { t } = useI18n();
   const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
-  const { error } = useNotificationContext();
+  const { showApiError } = useApiError();
   const auditoria = useAuditoria();
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -57,8 +58,8 @@ const SaasTipoCobrancaModal: React.FC<Props> = ({ show, onClose, skipWrapper = f
     if (!item) return;
     if (!window.confirm(t('messages.confirmDelete'))) return;
     try { await saasTipoCobrancaService.delete(item.id); queryClient.invalidateQueries({ queryKey: ['saas-tipos-cobranca'] }); refetch(); }
-    catch { error(t('messages.error')); }
-  }, [selectedItem, queryClient, refetch, error, t]);
+    catch (err) { showApiError(err, CONTEXT_ERROR_MESSAGES.TIPO_COBRANCA_DELETE_ERROR); }
+  }, [selectedItem, queryClient, refetch, showApiError, t]);
 
   const columns: TableConfig<SaasTipoCobranca>['columns'] = useMemo(() => [
     { key: 'id', label: t('table.id'), sortable: true, width: '42px', render: i => <span>{i.id}</span> },

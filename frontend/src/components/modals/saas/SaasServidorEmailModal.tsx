@@ -4,7 +4,8 @@ import { useTableFilters } from 'hooks/useTableFilters';
 import { useModalSelect } from 'hooks/useModalSelect';
 import { useAuditoria } from 'hooks/useAuditoria';
 import { useConfirmModal } from 'hooks/useConfirmModal';
-import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
 import ImprimirModal from 'components/common/ImprimirModal';
@@ -19,7 +20,7 @@ const STATUS_COLOR: Record<string, string> = { ativo: 'success', inativo: 'secon
 
 const SaasServidorEmailModal: React.FC<Props> = ({ show, onClose, skipWrapper = false }) => {
   const queryClient = useQueryClient();
-  const { error } = useNotificationContext();
+  const { showApiError } = useApiError();
   const auditoria = useAuditoria();
   const { confirm, modalProps: confirmProps } = useConfirmModal();
   const [showCreate, setShowCreate] = useState(false);
@@ -54,8 +55,8 @@ const SaasServidorEmailModal: React.FC<Props> = ({ show, onClose, skipWrapper = 
     const ok = await confirm({ message: `Remover o servidor "${item.nome}"?`, variant: 'danger' });
     if (!ok) return;
     try { await saasServidorEmailService.delete(item.id); queryClient.invalidateQueries({ queryKey: ['saas-servidores-email'] }); refetch(); }
-    catch { error('Erro ao remover servidor'); }
-  }, [selectedItem, confirm, queryClient, refetch, error]);
+    catch (err) { showApiError(err, CONTEXT_ERROR_MESSAGES.SAAS_SERVER_DELETE_ERROR); }
+  }, [selectedItem, confirm, queryClient, refetch, showApiError]);
 
   const columns: TableConfig<SaasServidorEmail>['columns'] = useMemo(() => [
     { key: 'id', label: 'ID', sortable: true, width: '50px', render: i => <span>{i.id}</span> },

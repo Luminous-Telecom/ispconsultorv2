@@ -3,8 +3,9 @@
  */
 import React, { useState, useMemo, useLayoutEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { SaasParametrosService } from 'services/saas/saasParametrosService';
 import { useFormReset } from 'hooks/useFormReset';
@@ -44,7 +45,8 @@ const INITIAL: ParametrosForm = {
 
 const SaasRecursosSistemaModal: React.FC<Props> = ({ show, onClose, skipWrapper = false, onHeaderActionsReady }) => {
   const isMobile = useIsMobile();
-  const { success, error: showError } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<ParametrosForm>(INITIAL);
 
@@ -84,10 +86,7 @@ const SaasRecursosSistemaModal: React.FC<Props> = ({ show, onClose, skipWrapper 
       success('Parâmetros atualizados com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['saas-parametros'] });
     },
-    onError: (error: unknown) => {
-      const axiosError = error as AxiosError<{ message?: string }>;
-      showError(axiosError?.response?.data?.message || 'Erro ao atualizar parâmetros');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.PARAMS_UPDATE_ERROR),
   });
 
   const handleSubmit = (e: React.FormEvent) => {

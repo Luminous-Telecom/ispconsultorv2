@@ -1,8 +1,10 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { TituloService } from '../services/tituloService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
+import { useApiError } from './useApiError';
+import { extractApiErrorMessageSync } from '../utils/apiErrorHelper';
+import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 import { useDeleteContrato, Contrato } from './useContratos';
 import { TituloItem } from '../types/cliente';
 import { CarneParcela, PaginatedResponse } from '../types';
@@ -77,6 +79,7 @@ export const useClienteBulkActions = ({
   handleImprimirNF
 }: UseClienteBulkActionsParams): UseClienteBulkActionsReturn => {
   const { success, error, info } = useNotificationContext();
+  const { showApiError } = useApiError();
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const deleteContratoMutation = useDeleteContrato();
@@ -162,11 +165,10 @@ export const useClienteBulkActions = ({
           queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', effectiveClienteId] });
           onRefreshParcelas();
         } catch (err) {
-          const errorObj = err as Error;
-          error(errorObj.message || t('messages.errorReverseTitle'));
+          showApiError(err, CONTEXT_ERROR_MESSAGES.TITULO_REVERSE_ERROR);
         }
       }
-  }, [t, effectiveClienteId, queryClient, onRefreshParcelas, info, success, error]);
+  }, [t, effectiveClienteId, queryClient, onRefreshParcelas, info, success, showApiError]);
 
   const handleEnviarWhatsApp = useCallback(async (items: CarneParcela[]) => {
     if (items.length > 0) {
@@ -190,11 +192,9 @@ export const useClienteBulkActions = ({
           } catch (err) {
             errorCount++;
             if (!firstErrorMessage) {
-              if (err && typeof err === 'object' && 'message' in err) {
-                firstErrorMessage = (err as { message: string }).message;
-              } else if (err instanceof Error) {
-                firstErrorMessage = err.message;
-              }
+              firstErrorMessage = extractApiErrorMessageSync(err, {
+                defaultMessage: CONTEXT_ERROR_MESSAGES.TITULO_SEND_WHATSAPP_ERROR,
+              });
             }
           }
         }
@@ -240,11 +240,9 @@ export const useClienteBulkActions = ({
           } catch (err) {
             errorCount++;
             if (!firstErrorMessage) {
-              if (err && typeof err === 'object' && 'message' in err) {
-                firstErrorMessage = (err as { message: string }).message;
-              } else if (err instanceof Error) {
-                firstErrorMessage = err.message;
-              }
+              firstErrorMessage = extractApiErrorMessageSync(err, {
+                defaultMessage: CONTEXT_ERROR_MESSAGES.TITULO_SEND_EMAIL_ERROR,
+              });
             }
           }
         }
@@ -283,22 +281,17 @@ export const useClienteBulkActions = ({
             try {
               await deleteContratoMutation.mutateAsync(item.id);
             } catch (err) {
-              const axiosError = err as AxiosError<{ message: string; error?: string }>;
-              const errorMessage =
-                axiosError?.response?.data?.message ||
-                axiosError?.response?.data?.error ||
-                `${t('contracts.messages.deleteError')} ${item.id}`;
-              error(errorMessage);
+              showApiError(err, CONTEXT_ERROR_MESSAGES.CONTRACT_DELETE_ERROR);
             }
           }
           onRefreshContratos();
           setSelectedContratosItems([]);
         } catch {
-          error(t('contracts.messages.deleteError'));
+          showApiError(t('contracts.messages.deleteError'));
         }
       }
     },
-    [t, deleteContratoMutation, onRefreshContratos, error]
+    [t, deleteContratoMutation, onRefreshContratos, showApiError]
   );
 
   const handleImprimirRecibosWrapper = useCallback(

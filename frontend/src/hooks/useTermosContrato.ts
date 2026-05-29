@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { TermoContratoService, CreateTermoContratoData, UpdateTermoContratoData, GetByContratoOptions } from '../services/termoContratoService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
-import { AxiosError } from 'axios';
+import { useApiError } from './useApiError';
+import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 
 export const useTermosContrato = (contratoId?: number, options?: GetByContratoOptions) => {
   return useQuery({
@@ -13,7 +14,8 @@ export const useTermosContrato = (contratoId?: number, options?: GetByContratoOp
 
 export const useCreateTermoContrato = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: ({ contratoId, data }: { contratoId: number; data: CreateTermoContratoData }) =>
@@ -23,16 +25,14 @@ export const useCreateTermoContrato = () => {
       queryClient.invalidateQueries({ queryKey: ['termos-contrato'] });
       success( 'Termo criado com sucesso');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error( axiosError.response?.data?.message || 'Erro ao criar termo');
-    }
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TERM_CREATE_ERROR),
   });
 };
 
 export const useUpdateTermoContrato = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateTermoContratoData }) =>
@@ -42,16 +42,14 @@ export const useUpdateTermoContrato = () => {
       queryClient.invalidateQueries({ queryKey: ['termos-contrato'] });
       success( 'Termo atualizado com sucesso');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error( axiosError.response?.data?.message || 'Erro ao atualizar termo');
-    }
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TERM_UPDATE_ERROR),
   });
 };
 
 export const useMarcarTermoComoAceito = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: ({ id, aceitoPor }: { id: number; aceitoPor: string }) =>
@@ -61,16 +59,14 @@ export const useMarcarTermoComoAceito = () => {
       queryClient.invalidateQueries({ queryKey: ['termos-contrato'] });
       success( 'Termo marcado como aceito');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error( axiosError.response?.data?.message || 'Erro ao marcar termo como aceito');
-    }
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TERM_ACCEPT_ERROR),
   });
 };
 
 export const useDeactivateTermoContrato = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: (id: number) => TermoContratoService.deactivate(id),
@@ -78,23 +74,19 @@ export const useDeactivateTermoContrato = () => {
       queryClient.invalidateQueries({ queryKey: ['termos-contrato'] });
       success( 'Termo desativado com sucesso');
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error( axiosError.response?.data?.message || 'Erro ao desativar termo');
-    }
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TERM_DEACTIVATE_ERROR),
   });
 };
 
 export const useDeleteTermoContrato = () => {
   const queryClient = useQueryClient();
+  const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: (id: number) => TermoContratoService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['termos-contrato'] });
     },
-    onError: () => {
-      // Erro tratado pelo useNotificationContext
-    }
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TERM_DELETE_ERROR),
   });
 };

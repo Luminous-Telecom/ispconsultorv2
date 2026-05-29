@@ -5,6 +5,8 @@ import { FormField } from 'components/ui';
 import { CancelarButton, LimparButton, NovoButton } from 'components/ui';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { RpkiCaService } from 'services/rpkiCaService';
 import { Cliente } from 'types';
 import ClienteListModal from 'components/modals/clientes/ClienteListModal';
@@ -21,7 +23,8 @@ const RpkiCaCreateModal: React.FC<RpkiCaCreateModalProps> = ({ show, onClose, de
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
   const [showClienteSelector, setShowClienteSelector] = useState(false);
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   const { data: defaultCliente } = useQuery({
     queryKey: ['cliente', defaultClienteId],
@@ -46,10 +49,7 @@ const RpkiCaCreateModal: React.FC<RpkiCaCreateModalProps> = ({ show, onClose, de
       success('CA criada com sucesso');
       onClose();
     },
-    onError: (err: unknown) => {
-      const withMessage = err as { message?: string };
-      error(withMessage.message || 'Erro ao criar CA');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_CA_CREATE_ERROR),
   });
 
   return (

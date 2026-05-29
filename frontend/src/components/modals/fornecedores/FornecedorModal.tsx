@@ -12,7 +12,8 @@ import FormField from 'components/ui/FormField';
 import { CreateFornecedor } from 'types';
 import { FornecedorService } from 'services/fornecedorService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
-import { AxiosError } from 'axios';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 
 interface FornecedorModalProps {
   show: boolean;
@@ -74,7 +75,8 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
   const lastCnpjConsultedRef = useRef<string>('');
 
   const { buscarCep } = useCep();
-  const { success, error, info } = useNotificationContext();
+  const { success, info } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   // Resetar formulário quando modal fechar
   useEffect(() => {
@@ -172,16 +174,12 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                 success(t('messages.cnpjDataAutoFilled'));
               }
             } catch (err) {
-              const axiosError = err as AxiosError<{ message?: string; error?: string }>;
-              const status = axiosError?.response?.status;
+              const status = (err as { response?: { status?: number } })?.response?.status;
               
               if (status === 404) {
                 info(t('messages.cnpjNotFound'));
               } else {
-                const errorMessage = axiosError?.response?.data?.message || 
-                                   axiosError?.response?.data?.error || 
-                                   t('messages.errorConsultingCnpj');
-                error(errorMessage);
+                showApiError(err, CONTEXT_ERROR_MESSAGES.EMPRESA_CNPJ_ERROR);
               }
             }
           }

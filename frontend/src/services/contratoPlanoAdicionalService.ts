@@ -1,4 +1,5 @@
 import { defaultApiClient } from './core';
+import { resolveServiceErrorMessage, CONTEXT_ERROR_MESSAGES } from '../utils/apiErrorHelper';
 import { Plano } from '../types/entities';
 
 export interface ContratoPlanoAdicional {
@@ -56,7 +57,7 @@ export class ContratoPlanoAdicionalService {
     if (response.success && response.data) {
       return response.data as { success: boolean; message: string; data: ContratoPlanoAdicional };
     }
-    throw new Error(response.message || 'Erro ao criar serviço adicional');
+    throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.SERVICO_ADICIONAL_CREATE_ERROR));
   }
 
   static async update(id: number, data: UpdateContratoPlanoAdicional): Promise<{ success: boolean; message: string; data: ContratoPlanoAdicional }> {
@@ -64,7 +65,7 @@ export class ContratoPlanoAdicionalService {
     if (response.success && response.data) {
       return response.data as { success: boolean; message: string; data: ContratoPlanoAdicional };
     }
-    throw new Error(response.message || 'Erro ao atualizar serviço adicional');
+    throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.SERVICO_ADICIONAL_UPDATE_ERROR));
   }
 
   static async delete(id: number): Promise<{ success: boolean; message: string }> {
@@ -75,7 +76,7 @@ export class ContratoPlanoAdicionalService {
       return { success: true, message };
     }
     
-    throw new Error(response.message || 'Erro ao remover serviço adicional');
+    throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.SERVICO_ADICIONAL_DELETE_ERROR));
   }
 }
 

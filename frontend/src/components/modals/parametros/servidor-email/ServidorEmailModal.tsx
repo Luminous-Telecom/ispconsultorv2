@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef, useLayoutEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useI18n } from 'contexts/I18nContext';
 import { ServidorEmailService, MensagemEmail } from 'services/servidorEmailService';
@@ -28,7 +30,8 @@ const INITIAL_FORM_DATA: ServidorEmailForm = {
 const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> = ({ show, onClose, skipWrapper = false, onHeaderActionsReady }) => {
   const { t } = useI18n();
   const isMobile = useIsMobile();
-  const { success, error: showError } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'servidor' | 'mensagens'>('servidor');
   const [emailTeste, setEmailTeste] = useState<string>('');
@@ -104,7 +107,7 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
       success('Configurações salvas!');
       queryClient.invalidateQueries({ queryKey: ['servidor-email-ativo'] });
     },
-    onError: () => showError('Erro ao salvar')
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.SERVER_EMAIL_SAVE_ERROR)
   });
 
   const saveMensagemMutation = useMutation({
@@ -119,18 +122,16 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
           queryClient.setQueryData(['mensagem-email', currentMensagemType], response.data);
         }
       } else {
-        showError(response.message || 'Erro ao salvar');
+        showApiError(response.message || CONTEXT_ERROR_MESSAGES.SERVER_EMAIL_SAVE_ERROR);
       }
     },
-    onError: () => {
-      showError('Erro ao salvar');
-    }
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.SERVER_EMAIL_SAVE_ERROR),
   });
 
   const sendTestEmailMutation = useMutation({
     mutationFn: (data: { id: number; email: string }) => ServidorEmailService.sendTestEmail(data.id, data.email),
     onSuccess: () => success('Email enviado!'),
-    onError: () => showError('Erro ao enviar')
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.SERVER_EMAIL_SEND_ERROR)
   });
 
   useEffect(() => {
@@ -183,17 +184,17 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
     const currentTipoEnvio = tipoEnvioRef.current;
 
     if (!currentMensagemType) {
-      showError('Selecione um tipo');
+      showApiError('Selecione um tipo');
       return;
     }
 
     if (currentTipoEnvio === 'pdf' && !currentMensagemTexto?.trim() && currentMensagemType !== 'envio_manual') {
-      showError('Preencha a mensagem');
+      showApiError('Preencha a mensagem');
       return;
     }
 
     if (currentMensagemType === 'envio_manual' && !currentMensagemManual?.trim() && !currentMensagemTexto?.trim()) {
-      showError('Preencha a mensagem manual ou padrão');
+      showApiError('Preencha a mensagem manual ou padrão');
       return;
     }
     
@@ -206,7 +207,7 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
     };
     
     saveMensagemMutation.mutate(dataToSave);
-  }, [saveMensagemMutation, showError]);
+  }, [saveMensagemMutation, showApiError]);
 
   const resetForm = useCallback(() => {
     setFormData(INITIAL_FORM_DATA);
@@ -241,8 +242,8 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
   }, [show, resetForm]);
 
   const handleSendTestEmail = () => {
-    if (!emailTeste.trim()) return showError('Digite um e-mail');
-    if (!servidorAtivo?.data?.id) return showError('Configure o servidor');
+    if (!emailTeste.trim()) return showApiError('Digite um e-mail');
+    if (!servidorAtivo?.data?.id) return showApiError('Configure o servidor');
     sendTestEmailMutation.mutate({ id: servidorAtivo.data.id, email: emailTeste.trim() });
   };
 

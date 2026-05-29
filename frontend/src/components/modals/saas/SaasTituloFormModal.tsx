@@ -5,6 +5,8 @@ import DraggableModal from 'components/common/DraggableModal';
 import { ModalFormActions } from 'components/ui';
 import FormField from 'components/ui/FormField';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useFormReset } from 'hooks/useFormReset';
 import { saasTituloService, type SaasTitulo } from 'services/saas/saasCrudService';
 import { saasPlanoService } from 'services/saas/saasPlanoService';
@@ -27,7 +29,8 @@ const gerarNumeroTitulo = () => `TIT-SAAS-${Date.now()}-${Math.floor(Math.random
 const SaasTituloFormModal: React.FC<Props> = ({ show, onClose, onSuccess, empresaId }) => {
   const { t } = useI18n();
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const [form, setForm] = useState<Form>(INITIAL);
   const [errors, setErrors] = useState<Partial<Record<keyof Form, string>>>({});
 
@@ -66,7 +69,7 @@ const SaasTituloFormModal: React.FC<Props> = ({ show, onClose, onSuccess, empres
       onSuccess?.();
       onClose();
     },
-    onError: (e: unknown) => error((e as { response?: { data?: { message?: string } } })?.response?.data?.message || t('messages.error')),
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TITULO_CREATE_ERROR),
   });
 
   const isPending = createMutation.isPending;

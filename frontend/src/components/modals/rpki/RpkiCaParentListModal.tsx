@@ -9,6 +9,8 @@ import { useRpkiCas } from 'hooks/useRpkiCas';
 import { useI18n } from 'contexts/I18nContext';
 import { useBulkBtn } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import RpkiCaParentCreateModal from './RpkiCaParentCreateModal';
 import { useAuditoria } from 'hooks/useAuditoria';
 import ImprimirModal from 'components/common/ImprimirModal';
@@ -47,7 +49,8 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
   const { t } = useI18n();
   const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const auditoria = useAuditoria();
   const handleAuditParent = useCallback(
     (item: RpkiCaParent) => {
@@ -110,10 +113,7 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ['rpki-ca-parents-all'] });
       refetch();
     },
-    onError: (err: unknown) => {
-      const withMessage = err as { message?: string };
-      error(withMessage.message || 'Erro ao remover CA-pai');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_CA_PARENT_DELETE_ERROR),
   });
   const syncResourcesMutation = useMutation({
     mutationFn: (payload: { caId: number; parentId: number }) => RpkiCaService.syncParentResources(payload),
@@ -124,10 +124,7 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ['rpki-ca-parents-all'] });
       refetch();
     },
-    onError: (err: unknown) => {
-      const withMessage = err as { message?: string };
-      error(withMessage.message || 'Erro ao sincronizar recursos');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_CA_PARENT_SYNC_ALT_ERROR),
   });
 
   const caById = useMemo(() => {

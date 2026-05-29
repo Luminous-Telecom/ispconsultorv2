@@ -9,9 +9,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { ContratoService } from '../services/contratoService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
+import { useApiError } from './useApiError';
+import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 import { Contrato } from '../hooks/useContratos';
 import { ContratoForm } from '../components/modals/clientes/contrato/types';
 import { contratoSchema } from '../schemas/contrato.schema';
@@ -95,7 +96,8 @@ export const useContratoForm = ({
   onSuccess
 }: UseContratoFormParams): UseContratoFormReturn => {
   const isEditing = !!contratoId;
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const queryClient = useQueryClient();
   const [createdContratoId, setCreatedContratoId] = useState<number | null>(null);
 
@@ -200,10 +202,7 @@ export const useContratoForm = ({
       queryClient.invalidateQueries({ queryKey: ['contrato', contratoId] });
       onSuccess?.();
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao atualizar contrato');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CONTRACT_UPDATE_ERROR),
   });
 
   // Mutation para criar contrato
@@ -221,10 +220,7 @@ export const useContratoForm = ({
       queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', novoContrato.id] });
       onSuccess?.();
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao criar contrato');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CONTRACT_CREATE_ERROR),
   });
 
   const isSubmitting = updateContratoMutation.isPending || createContratoMutation.isPending;

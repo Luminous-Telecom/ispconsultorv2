@@ -4,7 +4,8 @@ import { useTableFilters } from 'hooks/useTableFilters';
 import { useModalSelect } from 'hooks/useModalSelect';
 import { useAuditoria } from 'hooks/useAuditoria';
 import { useConfirmModal } from 'hooks/useConfirmModal';
-import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { formatDateTime } from 'utils/formatters';
 import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
@@ -26,7 +27,7 @@ const NIVEL_COLOR: Record<string, string> = { super: 'danger', admin: 'primary',
 
 const SaasUsuariosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false }) => {
   const queryClient = useQueryClient();
-  const { error } = useNotificationContext();
+  const { showApiError } = useApiError();
   const auditoria = useAuditoria();
   const { confirm, modalProps: confirmProps } = useConfirmModal();
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -95,10 +96,10 @@ const SaasUsuariosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false
       await saasUsuariosService.delete(item.id);
       queryClient.invalidateQueries({ queryKey: ['saas-usuarios'] });
       refetch();
-    } catch {
-      error('Erro ao remover usuário');
+    } catch (err) {
+      showApiError(err, CONTEXT_ERROR_MESSAGES.SAAS_USUARIO_DELETE_ERROR);
     }
-  }, [selectedItem, confirm, queryClient, refetch, error]);
+  }, [selectedItem, confirm, queryClient, refetch, showApiError]);
 
   const columns: TableConfig<SaasUsuarioSuper>['columns'] = useMemo(() => [
     { key: 'id', label: 'ID', sortable: true, width: '50px', render: (item) => <span>{item.id}</span> },

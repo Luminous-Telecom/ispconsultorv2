@@ -1,5 +1,6 @@
 import { BaseService, defaultApiClient } from './core';
 import { unwrapResponse } from './core/unwrapResponse';
+import { resolveServiceErrorMessage, CONTEXT_ERROR_MESSAGES } from '../utils/apiErrorHelper';
 import {
   SshDevice,
   CreateSshDevice,
@@ -83,7 +84,7 @@ export class SshDeviceService {
   static async queueManualBackup(id: string): Promise<{ message: string }> {
     const response = await defaultApiClient.post<{ message: string }>(`/ssh-manager/devices/${id}/backup`, {}, { timeout: 120000 });
     if (response.success === false) {
-      throw new Error(response.message || response.error || 'Erro ao enfileirar backup');
+      throw new Error(resolveServiceErrorMessage(response.message || response.error, CONTEXT_ERROR_MESSAGES.SSH_BACKUP_QUEUE_ERROR));
     }
     const msg = response.data && typeof response.data === 'object' && 'message' in response.data
       ? String((response.data as { message: string }).message)

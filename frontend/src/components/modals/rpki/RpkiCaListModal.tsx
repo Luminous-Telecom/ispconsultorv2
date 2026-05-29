@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { useI18n } from 'contexts/I18nContext';
 import { useBulkBtn } from 'components/ui';
@@ -49,7 +51,8 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = ({
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedCa, setSelectedCa] = useState<RpkiCa | null>(null);
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const auditoria = useAuditoria();
   const handleAuditCa = useCallback(
     (item: RpkiCa) => {
@@ -84,10 +87,7 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = ({
       setSelectedCa(null);
       queryClient.invalidateQueries({ queryKey: ['rpki-cas'] });
     },
-    onError: (err: unknown) => {
-      const withMessage = err as { message?: string };
-      error(withMessage.message || 'Erro ao remover CA');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_CA_DELETE_ERROR),
   });
 
   const clearResourcesMutation = useMutation({
@@ -95,10 +95,7 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = ({
     onSuccess: () => {
       success('Recursos da CA removidos com sucesso');
     },
-    onError: (err: unknown) => {
-      const withMessage = err as { message?: string };
-      error(withMessage.message || 'Erro ao remover recursos da CA');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_CA_RESOURCES_DELETE_ERROR),
   });
 
   const filtered = useMemo(() => {

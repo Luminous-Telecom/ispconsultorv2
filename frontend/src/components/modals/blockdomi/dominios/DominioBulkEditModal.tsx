@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useI18n } from 'contexts/I18nContext';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import DraggableModal from 'components/common/DraggableModal';
 import { FormField, AtivoInativoField, ModalFormActions } from 'components/ui';
 import { Dominio } from 'types';
@@ -20,7 +22,8 @@ const DominioBulkEditModal: React.FC<DominioBulkEditModalProps> = ({
   dominios
 }) => {
   const { t } = useI18n();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   const [formData, setFormData] = useState({
     nome_oficio: '',
@@ -79,8 +82,7 @@ const DominioBulkEditModal: React.FC<DominioBulkEditModalProps> = ({
       success(t('blockdomi.bulkEditSuccess').replace('{count}', String(dominios.length)));
       onSuccess?.();
     } catch (err) {
-      const msg = (err as Error)?.message ?? 'Erro ao atualizar domínios';
-      error(msg);
+      showApiError(err, CONTEXT_ERROR_MESSAGES.BLOCKDOMI_BULK_EDIT_ERROR);
     } finally {
       setIsSubmitting(false);
     }

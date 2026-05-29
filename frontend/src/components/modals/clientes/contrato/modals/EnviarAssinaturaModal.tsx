@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { TermoContrato } from 'services/termoContratoService';
 import { Cliente } from 'types';
 import { AssinaturaDigitalService, EnviarAssinaturaRequest } from 'services/assinaturaDigitalService';
@@ -24,7 +26,8 @@ const EnviarAssinaturaModal: React.FC<EnviarAssinaturaModalProps> = ({
   onSuccess
 }) => {
   const isMobile = useIsMobile();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<EnviarAssinaturaRequest>({
@@ -58,12 +61,12 @@ const EnviarAssinaturaModal: React.FC<EnviarAssinaturaModalProps> = ({
     e.preventDefault();
     
     if (!termo) {
-      error('Termo não selecionado');
+      showApiError('Termo não selecionado');
       return;
     }
 
     if (!formData.email_assinante || !formData.nome_assinante) {
-      error('Email e nome do assinante são obrigatórios');
+      showApiError('Email e nome do assinante são obrigatórios');
       return;
     }
 
@@ -83,7 +86,7 @@ const EnviarAssinaturaModal: React.FC<EnviarAssinaturaModalProps> = ({
       const resultado = await AssinaturaDigitalService.enviarParaAssinatura(requestData);
       
       if (!resultado.success) {
-        error(resultado.message || 'Erro ao enviar documento para assinatura');
+        showApiError(resultado.message || CONTEXT_ERROR_MESSAGES.DOCUMENT_SEND_SIGNATURE_ERROR);
         return;
       }
       
@@ -97,8 +100,7 @@ const EnviarAssinaturaModal: React.FC<EnviarAssinaturaModalProps> = ({
         onSuccess();
       }
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao enviar documento para assinatura';
-      error(errorMessage);
+      showApiError(err, CONTEXT_ERROR_MESSAGES.DOCUMENT_SEND_SIGNATURE_ERROR);
     } finally {
       setIsSubmitting(false);
     }

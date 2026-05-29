@@ -20,6 +20,8 @@ import { IPv4Service } from 'services/ipv4Service';
 import { IPv6Service } from 'services/ipv6Service';
 import { BlockdomiService } from 'services/blockdomiService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useI18n } from 'contexts/I18nContext';
 import { useLoading } from 'contexts/LoadingContext';
 
@@ -128,7 +130,8 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
 }) => {
   const { t } = useI18n();
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const { setExtractionLoading } = useLoading();
   const [rawText, setRawText] = useState('');
   const [nomeOficio, setNomeOficio] = useState('');
@@ -235,11 +238,11 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       setClassified({ ...result, jaCadastrados, seraoCadastrados });
     } catch (e) {
       setClassified(null);
-      error((e as Error)?.message ?? 'Erro ao analisar.');
+      showApiError(e, CONTEXT_ERROR_MESSAGES.BLOCKDOMI_ANALYZE_ERROR);
     } finally {
       setIsAnalyzing(false);
     }
-  }, [rawText, fetchExisting, error]);
+  }, [rawText, fetchExisting, showApiError]);
 
   const buildTextFromColunas = useCallback(
     (colunas: Record<string, string[]>, selecionadas: Set<string>): string => {
@@ -282,7 +285,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   const handleExtractSeiAnatel = useCallback(async () => {
     const file = pdfOficioAnatel;
     if (!file) {
-      error(t('blockdomi.seiExtractNoPdf'));
+      showApiError(t('blockdomi.seiExtractNoPdf'));
       return;
     }
     setIsExtractingSei(true);
@@ -291,11 +294,11 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       setNumeroSeiAnatel(sei);
       success(t('blockdomi.seiExtractSuccess'));
     } catch (e) {
-      error((e as Error)?.message ?? t('blockdomi.seiExtractError'));
+      showApiError(e, CONTEXT_ERROR_MESSAGES.BLOCKDOMI_SEI_EXTRACT_ERROR);
     } finally {
       setIsExtractingSei(false);
     }
-  }, [pdfOficioAnatel, error, success, t]);
+  }, [pdfOficioAnatel, showApiError, success, t]);
 
   const clearPdfAnatel = useCallback(() => {
     setPdfOficioAnatel(null);
@@ -317,7 +320,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
 
   const handleExtractFromPdf = useCallback(async () => {
     if (!pdfFile) {
-      error(t('blockdomi.importFromPdfIntro'));
+      showApiError(t('blockdomi.importFromPdfIntro'));
       return;
     }
 
@@ -359,22 +362,22 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
         };
         success(t('blockdomi.pdfExtractSuccess'));
       } else {
-        error(t('blockdomi.pdfExtractError'));
+        showApiError(t('blockdomi.pdfExtractError'));
       }
     } catch (e) {
       const msg = (e as Error)?.message ?? 'Erro ao extrair PDF.';
-      error(msg);
+      showApiError(msg);
     } finally {
       setIsExtractingPdf(false);
       setExtractionLoading(false);
       setPdfExtractProgress(null);
     }
-  }, [pdfFile, pdfOficioAnatel, pdfOficioJustica, success, error, t, setExtractionLoading, dataInicioBloqueio, dataFimBloqueio, handlePdfPollProgress, buildTextFromColunas]);
+  }, [pdfFile, pdfOficioAnatel, pdfOficioJustica, success, showApiError, t, setExtractionLoading, dataInicioBloqueio, dataFimBloqueio, handlePdfPollProgress, buildTextFromColunas]);
 
   const handleExtractFromPdfUrl = useCallback(async () => {
     const urlResolved = (linkPlanilhaDominios.trim() || pdfUrlToExtract?.trim() || '').trim();
     if (!urlResolved) {
-      error(t('blockdomi.pdfUrlOrLinkRequired'));
+      showApiError(t('blockdomi.pdfUrlOrLinkRequired'));
       return;
     }
     setIsExtractingPdf(true);
@@ -407,16 +410,16 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
         pendingPdfFilesRef.current = { ...pendingPdfFilesRef.current, main: null };
         success(t('blockdomi.pdfExtractSuccess'));
       } else {
-        error(t('blockdomi.pdfExtractError'));
+        showApiError(t('blockdomi.pdfExtractError'));
       }
     } catch (e) {
-      error((e as Error)?.message ?? 'Erro ao extrair PDF da URL.');
+      showApiError(e, CONTEXT_ERROR_MESSAGES.BLOCKDOMI_PDF_EXTRACT_ERROR);
     } finally {
       setIsExtractingPdf(false);
       setExtractionLoading(false);
       setPdfExtractProgress(null);
     }
-  }, [linkPlanilhaDominios, pdfUrlToExtract, success, error, t, setExtractionLoading, dataInicioBloqueio, dataFimBloqueio, handlePdfPollProgress, buildTextFromColunas]);
+  }, [linkPlanilhaDominios, pdfUrlToExtract, success, showApiError, t, setExtractionLoading, dataInicioBloqueio, dataFimBloqueio, handlePdfPollProgress, buildTextFromColunas]);
 
   const hasPdfUrl = Boolean(linkPlanilhaDominios.trim() || pdfUrlToExtract?.trim());
 
@@ -530,7 +533,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       if (classified.invalidos.length > 0) parts.push(`Inválidos: ${classified.invalidos.length}`);
       success(parts.length > 0 ? parts.join('. ') + '.' : 'Importação concluída.');
       if (errs.length > 0) {
-        error(errs.slice(0, 3).join('; ') + (errs.length > 3 ? ` e mais ${errs.length - 3} erro(s).` : ''));
+        showApiError(errs.slice(0, 3).join('; ') + (errs.length > 3 ? ` e mais ${errs.length - 3} erro(s).` : ''));
       }
       queryClient.invalidateQueries({ queryKey: ['dominios'] });
       queryClient.invalidateQueries({ queryKey: ['ipv4'] });
@@ -556,11 +559,11 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       setColunasSeleccionadas(new Set());
       setPdfExtractProgress(null);
     } catch (e) {
-      error((e as Error)?.message ?? 'Erro ao cadastrar.');
+      showApiError(e, CONTEXT_ERROR_MESSAGES.BLOCKDOMI_REGISTER_ERROR);
     } finally {
       setIsCadastrando(false);
     }
-  }, [classified, totalValid, listaModo, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, linkPlanilhaDominios, numeroSeiAnatel, pdfOficioAnatel, pdfOficioJustica, pdfFile, success, error, onSuccess, queryClient, t]);
+  }, [classified, totalValid, listaModo, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, linkPlanilhaDominios, numeroSeiAnatel, pdfOficioAnatel, pdfOficioJustica, pdfFile, success, showApiError, onSuccess, queryClient, t]);
 
   const domainCount = useMemo(() => {
     return parseListItems(rawText).length;
@@ -572,9 +575,9 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       setRawText((prev) => (prev ? `${prev}\n${text}` : text));
       setClassified(null);
     } catch {
-      error(t('blockdomi.copyFailed'));
+      showApiError(CONTEXT_ERROR_MESSAGES.BLOCKDOMI_COPY_ERROR);
     }
-  }, [error, t]);
+  }, [showApiError]);
 
   const handleClear = useCallback(() => {
     setRawText('');
@@ -587,10 +590,10 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       const texto = items.join('\n');
       navigator.clipboard.writeText(texto).then(
         () => success(t('blockdomi.copiedToClipboard')),
-        () => error(t('blockdomi.copyFailed'))
+        () => showApiError(CONTEXT_ERROR_MESSAGES.BLOCKDOMI_COPY_ERROR)
       );
     },
-    [success, error, t]
+    [success, showApiError, t]
   );
 
   const dominiosBruto = useMemo(() => {
@@ -650,11 +653,11 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       success(`${t('blockdomi.versao')} ${result.numero} ${t('blockdomi.versaoGerada')}`);
       queryClient.invalidateQueries({ queryKey: ['blockdomi', 'versao-atual'] });
     } catch (e) {
-      error((e as Error)?.message ?? 'Erro ao gerar versão.');
+      showApiError(e, CONTEXT_ERROR_MESSAGES.BLOCKDOMI_GENERATE_VERSION_ERROR);
     } finally {
       setIsGerandoVersao(false);
     }
-  }, [success, error, t, queryClient]);
+  }, [success, showApiError, t, queryClient]);
 
   const content = (
     <div className="p-4 importar-lista-blockdomi">

@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { NFSeConfigService, type NFSeConfigUpdate } from 'services/nfseConfigService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useI18n } from 'contexts/I18nContext';
 
 interface NFSeConfigSectionProps {
@@ -16,7 +18,8 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
   onTestReady
 }) => {
   const { t } = useI18n();
-  const { success, error: showError } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const queryClient = useQueryClient();
 
   // Estado dos campos
@@ -129,10 +132,7 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
         ? t('nfse.messages.testSuccessAsaas')
         : t('nfse.messages.testSuccessPortal'));
     },
-    onError: (error: Error) => {
-      const errorMessage = error?.message || t('nfse.messages.testError');
-      showError(errorMessage);
-    }
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.NFSE_TEST_ERROR),
   });
 
   // Mutation para salvar configuração
@@ -168,10 +168,7 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
       await queryClient.invalidateQueries({ queryKey: ['nfse-config'] });
       await refetch();
     },
-    onError: (error: Error) => {
-      const errorMessage = error?.message || t('nfse.messages.saveError');
-      showError(errorMessage);
-    }
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.NFSE_SAVE_ERROR),
   });
 
   const handleInputChange = (field: keyof typeof formData, value: string | boolean) => {

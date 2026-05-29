@@ -5,6 +5,8 @@ import DraggableModal from 'components/common/DraggableModal';
 import { FormField, ModalFormActions } from 'components/ui';
 import AtivoInativoField from 'components/ui/AtivoInativoField';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useFormReset } from 'hooks/useFormReset';
 import { saasTenantUsuariosService, type SaasTenantUsuario } from 'services/saas/saasTenantUsuariosService';
 
@@ -28,7 +30,8 @@ const INITIAL: Form = { nome: '', email: '', password: '', role: 'admin', ativo:
 
 const SaasTenantUsuarioFormModal: React.FC<Props> = ({ show, onClose, onSuccess, usuarioId, empresaId }) => {
   const { t } = useI18n();
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const isEditing = !!usuarioId;
   const [form, setForm] = useState<Form>(INITIAL);
   const [errors, setErrors] = useState<Partial<Record<keyof Form, string>>>({});
@@ -58,7 +61,7 @@ const SaasTenantUsuarioFormModal: React.FC<Props> = ({ show, onClose, onSuccess,
       onSuccess?.();
       onClose();
     },
-    onError: (e: unknown) => error((e as { response?: { data?: { message?: string } } })?.response?.data?.message || t('messages.error')),
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.USER_CREATE_ERROR),
   });
 
   const updateMutation = useMutation({
@@ -68,7 +71,7 @@ const SaasTenantUsuarioFormModal: React.FC<Props> = ({ show, onClose, onSuccess,
       onSuccess?.();
       onClose();
     },
-    onError: (e: unknown) => error((e as { response?: { data?: { message?: string } } })?.response?.data?.message || t('messages.error')),
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.USER_UPDATE_ERROR),
   });
 
   const handleSubmit = (e: React.FormEvent) => {

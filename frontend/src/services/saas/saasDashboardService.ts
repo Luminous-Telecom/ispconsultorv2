@@ -1,4 +1,5 @@
 import { defaultApiClient } from '../core';
+import { resolveServiceErrorMessage, CONTEXT_ERROR_MESSAGES } from '../../utils/apiErrorHelper';
 import type { DashboardData } from '../dashboardService';
 
 export interface SaasDashboardFilters {
@@ -14,6 +15,6 @@ export class SaasDashboardService {
     if (response.success && response.data) {
       return response.data;
     }
-    throw new Error(response.message || 'Erro ao carregar dados do dashboard SaaS');
+    throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.SAAS_DASHBOARD_LOAD_ERROR));
   }
 }

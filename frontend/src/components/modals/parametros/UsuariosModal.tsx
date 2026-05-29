@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useI18n } from 'contexts/I18nContext';
-import { AxiosError } from 'axios';
 import { useUsuarios, useDeleteUsuario } from 'hooks/useUsuarios';
 import { Usuario } from 'types';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { formatDateTime } from 'utils/formatters';
 import DraggableModal from 'components/common/DraggableModal';
@@ -30,7 +31,8 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
   const [selectedUsuarioId, setSelectedUsuarioId] = useState<number | null>(null);
   const [, setSelectedItems] = useState<Usuario[]>([]);
   
-  const { success, error: _error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const auditoria = useAuditoria();
   
   // Hook unificado para filtros, busca, ordenação e paginação
@@ -106,16 +108,8 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
       await deleteUsuarioMutation.mutateAsync(id);
       success('Usuário excluído com sucesso!');
       refetch();
-    } catch (err: unknown) {
-      if (err instanceof Error && 'response' in err) {
-        const axiosError = err as AxiosError<{ message?: string; error?: string }>;
-        const errorMessage = axiosError.response?.data?.message || 
-                            axiosError.response?.data?.error ||
-                            'Erro ao deletar usuário';
-        _error(errorMessage);
-      } else {
-        _error('Erro ao deletar usuário');
-      }
+    } catch (err) {
+      showApiError(err, CONTEXT_ERROR_MESSAGES.USER_DELETE_ERROR);
     }
   };
 

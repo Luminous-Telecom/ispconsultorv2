@@ -8,6 +8,7 @@ import { LimparButton } from 'components/ui';
 import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
 import { auditoriaService, AuditoriaLog, AuditoriaFilters } from 'services/auditoriaService';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useAuditoriaDetalheEs } from 'hooks/useAuditoriaDetalheEs';
 import AuditoriaDetalhesModal from 'components/modals/auditoria/AuditoriaDetalhesModal';
 import { formatAuditoriaListId, formatDateTime } from 'utils/formatters';
@@ -73,7 +74,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
         ? await auditoriaService.listOperacionalSaas(filters)
         : await auditoriaService.listOperacional(filters);
       if (!response.success) {
-        throw new Error(response.message || 'Erro ao carregar logs de auditoria');
+        throw new Error(response.message || CONTEXT_ERROR_MESSAGES.AUDIT_LOAD_ERROR);
       }
       return response.data;
     },

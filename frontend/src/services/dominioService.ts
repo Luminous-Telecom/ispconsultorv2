@@ -2,6 +2,7 @@
  * DominioService - Serviço usando BaseService
  */
 import { BaseService, defaultApiClient } from './core';
+import { resolveServiceErrorMessage, CONTEXT_ERROR_MESSAGES } from '../utils/apiErrorHelper';
 import { type ApiResponse, Dominio, CreateDominio, UpdateDominio, DominioFilters, PaginatedResponse } from '../types';
 
 export type SincronizarSeiAnatelDominiosResponse = {
@@ -93,7 +94,7 @@ export class DominioService {
       { timeout: 600000 }
     );
     if (!response.success || response.data == null) {
-      throw new Error(response.message || 'Erro ao sincronizar SEI.');
+      throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.BLOCKDOMI_SEI_SYNC_ERROR));
     }
     return response.data;
   }

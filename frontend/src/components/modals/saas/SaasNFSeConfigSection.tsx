@@ -9,6 +9,8 @@ import {
   type SaasNFSeConfigTestAuth,
 } from 'services/saas/saasNfseConfigService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useI18n } from 'contexts/I18nContext';
 
 interface SaasNFSeConfigSectionProps {
@@ -23,7 +25,8 @@ const SaasNFSeConfigSection: React.FC<SaasNFSeConfigSectionProps> = ({
   onTestReady,
 }) => {
   const { t } = useI18n();
-  const { success, error: showError } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
@@ -126,8 +129,8 @@ const SaasNFSeConfigSection: React.FC<SaasNFSeConfigSectionProps> = ({
           : t('nfse.messages.testSuccessPortal')
       );
     },
-    onError: (error: Error) => {
-      showError(error?.message || t('nfse.messages.testError'));
+    onError: (err) => {
+      showApiError(err, CONTEXT_ERROR_MESSAGES.NFSE_TEST_ERROR);
     },
   });
 
@@ -163,8 +166,8 @@ const SaasNFSeConfigSection: React.FC<SaasNFSeConfigSectionProps> = ({
       await queryClient.invalidateQueries({ queryKey: ['saas-nfse-config'] });
       await refetch();
     },
-    onError: (error: Error) => {
-      showError(error?.message || t('nfse.messages.saveError'));
+    onError: (err) => {
+      showApiError(err, CONTEXT_ERROR_MESSAGES.NFSE_SAVE_ERROR);
     },
   });
 

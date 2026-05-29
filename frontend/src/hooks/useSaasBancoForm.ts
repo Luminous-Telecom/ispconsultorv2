@@ -7,10 +7,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { saasBancoService, type SaasBanco } from '../services/saas/saasConfigService';
 import { buildWebhookUrlSaas } from '../utils/webhookUtils';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
+import { useApiError } from './useApiError';
+import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 import { BancoForm } from '../components/modals/bancos/banco/types';
 import { bancoSchema } from '../schemas/banco.schema';
 import type { BancoFormData as ZodBancoFormData } from '../schemas/banco.schema';
@@ -69,6 +70,7 @@ export const useSaasBancoForm = ({ bancoId, show, onSuccess }: UseSaasBancoFormP
   const effectiveBancoId = bancoId ?? lastCreatedBancoId ?? lastCreatedBancoIdRef.current;
   const isEditing = !!effectiveBancoId;
   const { success, error } = useNotificationContext();
+  const { showApiError } = useApiError();
   const queryClient = useQueryClient();
   const submittingRef = useRef(false);
 
@@ -121,10 +123,7 @@ export const useSaasBancoForm = ({ bancoId, show, onSuccess }: UseSaasBancoFormP
       queryClient.invalidateQueries({ queryKey: ['saas-banco', id] });
       onSuccess?.();
     },
-    onError: (err) => {
-      const e = err as AxiosError;
-      error((e.response?.data as { message?: string } | undefined)?.message || 'Erro ao atualizar banco');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.BANCO_UPDATE_ERROR),
   });
 
   const createMutation = useMutation({
@@ -139,10 +138,7 @@ export const useSaasBancoForm = ({ bancoId, show, onSuccess }: UseSaasBancoFormP
       queryClient.invalidateQueries({ queryKey: ['saas-bancos'] });
       onSuccess?.();
     },
-    onError: (err) => {
-      const e = err as AxiosError;
-      error((e.response?.data as { message?: string } | undefined)?.message || 'Erro ao criar banco');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.BANCO_CREATE_ERROR),
   });
 
   const isSubmitting = updateMutation.isPending || createMutation.isPending;

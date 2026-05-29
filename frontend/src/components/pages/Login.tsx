@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { authService } from 'services/authService';
 import { removeAuthToken } from 'services/core';
 import { EntrarButton } from 'components/ui';
@@ -13,7 +15,8 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [clientIp, setClientIp] = useState<string>('');
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
 
   useEffect(() => {
     const fetchClientIp = async () => {
@@ -52,7 +55,7 @@ const Login: React.FC = () => {
     try {
       // Revalidar email e senha ao submeter
       if (!email || !password) {
-        error(t('login.infoRequired'));
+        showApiError(t('login.infoRequired'));
         setIsLoading(false);
         return;
       }
@@ -66,12 +69,11 @@ const Login: React.FC = () => {
         window.location.href = '/adm';
       } else {
         removeAuthToken();
-        error(response.message || t('login.errorCredentials'));
+        showApiError(response.message || ERROR_MESSAGES.UNAUTHORIZED);
       }
     } catch (err) {
       removeAuthToken();
-      const errorMessage = err instanceof Error ? err.message : t('login.errorGeneral');
-      error(errorMessage);
+      showApiError(err, ERROR_MESSAGES.GENERIC_ERROR);
     } finally {
       setIsLoading(false);
     }

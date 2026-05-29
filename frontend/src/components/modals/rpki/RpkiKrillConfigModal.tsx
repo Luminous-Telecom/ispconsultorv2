@@ -9,6 +9,8 @@ import {
   SincronizarButton,
 } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RpkiCaService, type RpkiCaRepository } from 'services/rpkiCaService';
 
@@ -34,7 +36,8 @@ interface AspaItem {
 
 const RpkiKrillConfigModal: React.FC<RpkiKrillConfigModalProps> = ({ initialSection }) => {
   const [aspas, setAspas] = useState<AspaItem[]>([]);
-  const { success, error, warning: showWarning } = useNotificationContext();
+  const { success, warning: showWarning } = useNotificationContext();
+  const { showApiError } = useApiError();
   const queryClient = useQueryClient();
   const casCardRef = useRef<HTMLDivElement>(null);
   const casPaiCardRef = useRef<HTMLDivElement>(null);
@@ -102,10 +105,7 @@ const RpkiKrillConfigModal: React.FC<RpkiKrillConfigModalProps> = ({ initialSect
       success('CA criada com sucesso');
       setCaNome('');
     },
-    onError: (err: unknown) => {
-      const withMessage = err as { message?: string };
-      error(withMessage.message || 'Erro ao criar CA');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_CA_CREATE_ERROR),
   });
 
   const generateChildRequestMutation = useMutation({
@@ -114,10 +114,7 @@ const RpkiKrillConfigModal: React.FC<RpkiKrillConfigModalProps> = ({ initialSect
       setParentChildRequestXml(result.xml);
       success('Requisição da CA-filha gerada com sucesso');
     },
-    onError: (err: unknown) => {
-      const withMessage = err as { message?: string };
-      error(withMessage.message || 'Erro ao gerar requisição da CA-filha');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_CA_CHILD_REQUEST_ERROR),
   });
 
   const importParentResponseMutation = useMutation({
@@ -129,10 +126,7 @@ const RpkiKrillConfigModal: React.FC<RpkiKrillConfigModalProps> = ({ initialSect
         queryClient.invalidateQueries({ queryKey: ['rpki-ca-parents', effectiveParentCaId] });
       }
     },
-    onError: (err: unknown) => {
-      const withMessage = err as { message?: string };
-      error(withMessage.message || 'Erro ao vincular CA-pai');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_CA_PARENT_LINK_ERROR),
   });
 
   const syncParentResourcesMutation = useMutation({
@@ -144,10 +138,7 @@ const RpkiKrillConfigModal: React.FC<RpkiKrillConfigModalProps> = ({ initialSect
         queryClient.invalidateQueries({ queryKey: ['rpki-ca-resources', effectiveParentCaId] });
       }
     },
-    onError: (err: unknown) => {
-      const withMessage = err as { message?: string };
-      error(withMessage.message || 'Erro ao sincronizar recursos da CA-pai');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_CA_PARENT_SYNC_ERROR),
   });
 
   const selectedRepoCaId = Number(repositoryCaId || 0);
@@ -177,10 +168,7 @@ const RpkiKrillConfigModal: React.FC<RpkiKrillConfigModalProps> = ({ initialSect
         showWarning(result.warning.trim());
       }
     },
-    onError: (err: unknown) => {
-      const withMessage = err as { message?: string };
-      error(withMessage.message || 'Erro ao gerar publisher_request');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_REPOSITORY_PUBLISHER_ERROR),
   });
 
   const importRepositoryResponseMutation = useMutation({
@@ -203,10 +191,7 @@ const RpkiKrillConfigModal: React.FC<RpkiKrillConfigModalProps> = ({ initialSect
       setRepositoryRequestXml('');
       setRepositoryReferralParentId('');
     },
-    onError: (err: unknown) => {
-      const withMessage = err as { message?: string };
-      error(withMessage.message || 'Erro ao importar repository_response');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_REPOSITORY_IMPORT_ERROR),
   });
 
   const repositoryReferralParentOptions = [

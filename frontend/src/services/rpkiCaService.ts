@@ -1,4 +1,5 @@
 import { defaultApiClient } from './core';
+import { resolveServiceErrorMessage, CONTEXT_ERROR_MESSAGES } from '../utils/apiErrorHelper';
 
 export interface RpkiCa {
   id: number;
@@ -115,7 +116,7 @@ export class RpkiCaService {
   static async create(payload: { nome: string; clienteId?: number | null }): Promise<RpkiCa> {
     const response = await defaultApiClient.post<RpkiCa>('/rpki/cas', payload);
     if (!response.data) {
-      throw new Error(response.message || 'Resposta inválida ao criar CA');
+      throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.RPKI_CA_CREATE_ERROR));
     }
     return response.data;
   }
@@ -123,7 +124,7 @@ export class RpkiCaService {
   static async delete(caId: number): Promise<void> {
     const response = await defaultApiClient.delete(`/rpki/cas/${caId}`);
     if (!response.success) {
-      throw new Error(response.message || 'Falha ao remover CA');
+      throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.RPKI_CA_DELETE_ERROR));
     }
   }
 
@@ -133,7 +134,7 @@ export class RpkiCaService {
       {}
     );
     if (!response.data) {
-      throw new Error(response.message || 'Resposta inválida ao gerar requisição da CA-filha');
+      throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.RPKI_CA_CHILD_REQUEST_ERROR));
     }
     return response.data;
   }
@@ -151,7 +152,7 @@ export class RpkiCaService {
       }
     );
     if (!response.success) {
-      throw new Error(response.message || 'Falha ao importar resposta da CA-pai');
+      throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.RPKI_CA_PARENT_RESPONSE_ERROR));
     }
   }
 
@@ -163,7 +164,7 @@ export class RpkiCaService {
   static async deleteParent(payload: { caId: number; parentId: number }): Promise<void> {
     const response = await defaultApiClient.delete(`/rpki/cas/${payload.caId}/parents/${payload.parentId}`);
     if (!response.success) {
-      throw new Error(response.message || 'Falha ao remover CA-pai');
+      throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.RPKI_CA_PARENT_DELETE_ERROR));
     }
   }
 
@@ -175,7 +176,7 @@ export class RpkiCaService {
   static async clearResources(caId: number): Promise<void> {
     const response = await defaultApiClient.delete(`/rpki/cas/${caId}/resources`);
     if (!response.success) {
-      throw new Error(response.message || 'Falha ao remover recursos da CA');
+      throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.RPKI_CA_RESOURCES_DELETE_ERROR));
     }
   }
 
@@ -185,7 +186,7 @@ export class RpkiCaService {
       {}
     );
     if (!response.success) {
-      throw new Error(response.message || 'Falha ao sincronizar recursos da CA-pai');
+      throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.RPKI_CA_PARENT_SYNC_ERROR));
     }
   }
 
@@ -199,7 +200,7 @@ export class RpkiCaService {
       `/rpki/cas/${payload.caId}/repositories/${payload.repositoryId}`
     );
     if (!response.success) {
-      throw new Error(response.message || 'Falha ao remover repositório');
+      throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.RPKI_REPOSITORY_DELETE_ERROR));
     }
   }
 
@@ -209,7 +210,7 @@ export class RpkiCaService {
       {}
     );
     if (!response.success) {
-      throw new Error(response.message || 'Falha ao atualizar repositório');
+      throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.RPKI_REPOSITORY_UPDATE_ERROR));
     }
   }
 
@@ -236,7 +237,7 @@ export class RpkiCaService {
       warning?: string;
     }>(`/rpki/cas/${payload.caId}/publisher-request`, body);
     if (!response.data) {
-      throw new Error(response.message || 'Resposta inválida ao gerar publisher_request');
+      throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.RPKI_REPOSITORY_PUBLISHER_ERROR));
     }
     return response.data;
   }
@@ -250,7 +251,7 @@ export class RpkiCaService {
       { responseXml: payload.responseXml }
     );
     if (!response.data) {
-      throw new Error(response.message || 'Falha ao importar repository_response');
+      throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.RPKI_REPOSITORY_IMPORT_ERROR));
     }
     return response.data;
   }
@@ -275,7 +276,7 @@ export class RpkiCaService {
       not_before: payload.not_before,
       not_after: payload.not_after,
     });
-    if (!response.data) throw new Error(response.message || 'Falha ao criar ROA');
+    if (!response.data) throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.RPKI_ROA_CREATE_ERROR));
     return response.data;
   }
 
@@ -298,7 +299,7 @@ export class RpkiCaService {
         not_after: payload.not_after,
       }
     );
-    if (!response.data) throw new Error(response.message || 'Falha ao atualizar ROA');
+    if (!response.data) throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.RPKI_ROA_UPDATE_ERROR));
     return response.data;
   }
 
@@ -307,13 +308,13 @@ export class RpkiCaService {
       `/rpki/cas/${payload.caId}/roas/${payload.roaId}/revoke`,
       {}
     );
-    if (!response.data) throw new Error(response.message || 'Falha ao revogar ROA');
+    if (!response.data) throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.RPKI_ROA_REVOKE_ERROR));
     return response.data;
   }
 
   static async deleteRoa(payload: { caId: number; roaId: number }): Promise<void> {
     const response = await defaultApiClient.delete(`/rpki/cas/${payload.caId}/roas/${payload.roaId}`);
-    if (!response.success) throw new Error(response.message || 'Falha ao remover ROA');
+    if (!response.success) throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.RPKI_ROA_DELETE_ERROR));
   }
 
   static async analyzeRoas(caId: number): Promise<{
@@ -352,7 +353,7 @@ export class RpkiCaService {
       }>;
       details: Array<{ roa_id: number; prefix: string; asn: string; reason: string }>;
     }>(`/rpki/cas/${caId}/roas/analyze`, { timeout: 600_000 });
-    if (!response.data) throw new Error(response.message || 'Falha ao analisar ROAs');
+    if (!response.data) throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.RPKI_ROA_ANALYZE_ERROR));
     return response.data;
   }
 
@@ -364,7 +365,7 @@ export class RpkiCaService {
       `/rpki/cas/${payload.caId}/roas/analyze/apply`,
       { suggestions: payload.suggestions }
     );
-    if (!response.data) throw new Error(response.message || 'Falha ao aplicar sugestões de ROA');
+    if (!response.data) throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.RPKI_ROA_SUGGEST_ERROR));
     return response.data;
   }
 
@@ -384,18 +385,18 @@ export class RpkiCaService {
       `/rpki/cas/${payload.caId}/aspas`,
       { customerAsn: payload.customerAsn, providers: payload.providers }
     );
-    if (!response.data) throw new Error(response.message || 'Falha ao criar ASPA');
+    if (!response.data) throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.RPKI_ASPA_CREATE_ERROR));
     return response.data;
   }
 
   static async revokeAspa(caId: number, aspaId: number): Promise<void> {
     const response = await defaultApiClient.post(`/rpki/cas/${caId}/aspas/${aspaId}/revoke`, {});
-    if (!response.success) throw new Error(response.message || 'Falha ao revogar ASPA');
+    if (!response.success) throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.RPKI_ASPA_REVOKE_ERROR));
   }
 
   static async deleteAspa(caId: number, aspaId: number): Promise<void> {
     const response = await defaultApiClient.delete(`/rpki/cas/${caId}/aspas/${aspaId}`);
-    if (!response.success) throw new Error(response.message || 'Falha ao excluir ASPA');
+    if (!response.success) throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.RPKI_ASPA_DELETE_ERROR));
   }
 
   static async validateRoute(payload: {
@@ -403,7 +404,7 @@ export class RpkiCaService {
     asn?: string;
   }): Promise<RpkiValidateRouteResult> {
     const response = await defaultApiClient.post<RpkiValidateRouteResult>('/rpki/validate-route', payload);
-    if (!response.data) throw new Error(response.message || 'Falha ao validar rota');
+    if (!response.data) throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.RPKI_ROUTE_VALIDATE_ERROR));
     return response.data;
   }
 }

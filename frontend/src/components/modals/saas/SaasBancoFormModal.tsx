@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import { AxiosError } from 'axios';
 import { useQueryClient } from '@tanstack/react-query';
 import { useI18n } from 'contexts/I18nContext';
 import { useFormPrefix } from 'hooks/useFormId';
@@ -9,6 +8,8 @@ import DraggableModal from 'components/common/DraggableModal';
 import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
 import { ModalFormActions, Spinner, TestarConexaoButton } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { InformacoesBasicasTab, ConfiguracoesApiTab } from '../bancos/banco';
 import { BancoForm } from '../bancos/banco/types';
 import AsaasForm from '../bancos/banco/especificos/AsaasForm';
@@ -30,7 +31,8 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
 
   const [activeTab, setActiveTab] = useState('informacoes-basicas');
   const [isGeneratingSecret, setIsGeneratingSecret] = useState(false);
-  const { success, error, warning } = useNotificationContext();
+  const { success, warning } = useNotificationContext();
+  const { showApiError } = useApiError();
   const queryClient = useQueryClient();
 
   const handleCancel = () => {
@@ -41,7 +43,7 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
   const handleTestConnection = async () => {
     const idToUse = formHook.effectiveBancoId ?? itemId ?? null;
     if (!idToUse) {
-      error(t('messages.saveBankBeforeTest'));
+      showApiError(t('messages.saveBankBeforeTest'));
       return;
     }
     try {
@@ -60,19 +62,17 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
       if (ok) {
         success(msg);
       } else {
-        error(msg);
+        showApiError(msg);
       }
     } catch (err) {
-      const axiosError = err as AxiosError;
-      const msg = (axiosError?.response?.data as { message?: string } | undefined)?.message || axiosError?.message || t('messages.error');
-      error(msg);
+      showApiError(err, CONTEXT_ERROR_MESSAGES.BANCO_TEST_ERROR);
     }
   };
 
   const handleGenerateWebhookSecret = async () => {
     const idToUse = formHook.effectiveBancoId ?? itemId ?? null;
     if (!idToUse) {
-      error(t('messages.saveBankBeforeWebhook'));
+      showApiError(t('messages.saveBankBeforeWebhook'));
       return;
     }
     try {
@@ -88,8 +88,7 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
         warning(t('messages.webhookTokenNotReturned'));
       }
     } catch (err) {
-      const axiosError = err as AxiosError;
-      error((axiosError.response?.data as { message?: string } | undefined)?.message || axiosError.message || t('messages.error'));
+      showApiError(err, CONTEXT_ERROR_MESSAGES.BANCO_WEBHOOK_ERROR);
     } finally {
       setIsGeneratingSecret(false);
     }

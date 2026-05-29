@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from 'components/common/DraggableModal';
 import { CancelarButton, CopiarButton, FormField, NovoButton } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES, ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { RpkiCaService } from 'services/rpkiCaService';
 
 interface RpkiRepositoryCreateModalProps {
@@ -23,8 +25,9 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
   const [publisherRequestXml, setPublisherRequestXml] = useState('');
   const [repositoryResponseXml, setRepositoryResponseXml] = useState('');
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
-  const errorRef = useRef(error);
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
+  const showApiErrorRef = useRef(showApiError);
 
   const { data: cas = [] } = useQuery({
     queryKey: ['rpki-cas'],
@@ -57,8 +60,8 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
   }, [show, selectableCas, initialCaId]);
 
   useEffect(() => {
-    errorRef.current = error;
-  }, [error]);
+    showApiErrorRef.current = showApiError;
+  }, [showApiError]);
 
   useEffect(() => {
     if (!show || !caId.trim()) {
@@ -81,8 +84,7 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        const withMessage = err as { message?: string };
-        errorRef.current(withMessage.message || 'Erro ao gerar publisher_request');
+        showApiErrorRef.current(err, CONTEXT_ERROR_MESSAGES.RPKI_REPOSITORY_PUBLISHER_ERROR);
       });
 
     return () => {
@@ -111,10 +113,7 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ['rpki-ca-repositories', vars.caId] });
       onClose();
     },
-    onError: (err: unknown) => {
-      const withMessage = err as { message?: string };
-      error(withMessage.message || 'Erro ao importar repository_response');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_REPOSITORY_IMPORT_ERROR),
   });
 
   return (
@@ -167,7 +166,7 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
                     await navigator.clipboard.writeText(publisherRequestXml);
                     success('publisher_request copiado');
                   } catch {
-                    error('Não foi possível copiar o publisher_request');
+                    showApiError(ERROR_MESSAGES.COPY_ERROR);
                   }
                 }}
               />

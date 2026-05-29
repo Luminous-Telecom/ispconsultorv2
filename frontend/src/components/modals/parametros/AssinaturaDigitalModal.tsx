@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect, useLayoutEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { AssinaturaDigitalProviderService, AssinaturaDigitalProviderType } from 'services/assinaturaDigitalProviderService';
 import DraggableModal from 'components/common/DraggableModal';
@@ -34,7 +35,8 @@ const initialFormData: AssinaturaDigitalForm = {
 const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, onClose, skipWrapper = false, onHeaderActionsReady }) => {
   const { t } = useI18n();
   const isMobile = useIsMobile();
-  const { success, error: showError } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState<AssinaturaDigitalForm>(initialFormData);
@@ -145,10 +147,7 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
       success(t('digitalSignature.successUpdate'));
       queryClient.invalidateQueries({ queryKey: ['assinatura-digital-provider'] });
     },
-    onError: (error: unknown) => {
-      const axiosError = error as AxiosError<{ message?: string }>;
-      showError(axiosError?.response?.data?.message || t('digitalSignature.errorUpdate'));
-    }
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.ASSINATURA_DIGITAL_UPDATE_ERROR),
   });
 
   const handleSubmit = (e: React.FormEvent) => {

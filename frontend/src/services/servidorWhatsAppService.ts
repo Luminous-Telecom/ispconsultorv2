@@ -1,6 +1,7 @@
 import { apiService } from './api';
 import { AxiosError } from 'axios';
 import type { ApiResponse } from '../types';
+import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 
 export interface ServidorWhatsApp {
   id: number;
@@ -172,7 +173,7 @@ export class ServidorWhatsAppService {
         data: response.data,
       };
     } catch {
-      throw new Error('Não foi possível enviar a mensagem de teste. Verifique as configurações do servidor e tente novamente.');
+      throw new Error(CONTEXT_ERROR_MESSAGES.WHATSAPP_TEST_SEND_ERROR);
     }
   }
 }

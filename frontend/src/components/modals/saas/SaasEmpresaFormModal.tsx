@@ -8,6 +8,8 @@ import { ModalFormActions, useBulkBtn } from 'components/ui';
 import FormField from 'components/ui/FormField';
 import AddressFields from 'components/forms/AddressFields';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useFormReset } from 'hooks/useFormReset';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { useAuditoria } from 'hooks/useAuditoria';
@@ -65,7 +67,8 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
   const { t } = useI18n();
   const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
-  const { success, error, info } = useNotificationContext();
+  const { success, info } = useNotificationContext();
+  const { showApiError } = useApiError();
   const lastCnpjConsulted = useRef<string>('');
   const lastCepConsulted = useRef<string>('');
   const isMobile = useIsMobile();
@@ -161,7 +164,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
       queryClient.invalidateQueries({ queryKey: ['saas-empresas'] });
       onSuccess?.();
     },
-    onError: (e: unknown) => error((e as { response?: { data?: { message?: string } } })?.response?.data?.message || t('messages.error')),
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.EMPRESA_CREATE_ERROR),
   });
   const updateMutation = useMutation({
     mutationFn: (d: Partial<SaasEmpresa>) => saasEmpresasService.update(effectiveId!, d),
@@ -171,7 +174,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
       if (effectiveId) queryClient.invalidateQueries({ queryKey: ['saas-empresa', effectiveId] });
       onSuccess?.();
     },
-    onError: (e: unknown) => error((e as { response?: { data?: { message?: string } } })?.response?.data?.message || t('messages.error')),
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.EMPRESA_UPDATE_ERROR),
   });
   const isPending = createMutation.isPending || updateMutation.isPending;
 
@@ -225,10 +228,10 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
         if (err?.response?.status === 404) {
           info('CNPJ não encontrado na base da Receita Federal. Você pode preencher os dados manualmente.');
         } else {
-          error(err?.response?.data?.message || 'Erro ao consultar CNPJ. Tente novamente ou preencha manualmente.');
+          showApiError(err, CONTEXT_ERROR_MESSAGES.EMPRESA_CNPJ_ERROR);
         }
       });
-  }, [form.cnpj, form.razao_social, form.nome_fantasia, form.endereco, show, isEditing, parametros?.data?.validar_cpf_cnpj, success, info, error]);
+  }, [form.cnpj, form.razao_social, form.nome_fantasia, form.endereco, show, isEditing, parametros?.data?.validar_cpf_cnpj, success, info, showApiError]);
 
   // Buscar CEP ao digitar 8 dígitos
   useEffect(() => {
@@ -323,7 +326,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
     queryKey: ['auditoria-operacional', 'tenant', empresaId, logsFilters],
     queryFn: async () => {
       const res = await auditoriaService.listOperacionalByTenant({ ...logsFilters, empresa_id: empresaId! });
-      if (!res.success) throw new Error(res.message || 'Erro ao carregar logs');
+      if (!res.success) throw new Error(res.message || CONTEXT_ERROR_MESSAGES.AUDIT_LOAD_ERROR);
       return res.data;
     },
     enabled: !!empresaId && (activeTab === 'logs'),
@@ -415,9 +418,9 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
       refetchUsuarios();
       success(t('messages.success'));
     } catch {
-      error(t('messages.error'));
+      showApiError(t('messages.error'));
     }
-  }, [refetchUsuarios, success, error, t]);
+  }, [refetchUsuarios, success, showApiError, t]);
 
   const usuariosBulkActions = useMemo(() => [
     { key: 'novo', label: bulkBtn.novo.label, variant: bulkBtn.novo.variant, requiresSelection: false, onClick: () => setShowUsuarioCreate(true) },
@@ -437,9 +440,9 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
       await saasContratoService.delete(c.id);
       refetchContratos();
     } catch {
-      error(t('messages.error'));
+      showApiError(t('messages.error'));
     }
-  }, [refetchContratos, error, t]);
+  }, [refetchContratos, showApiError, t]);
 
   const handleDesbloquearManual = useCallback(async () => {
     if (!empresaId) return;
@@ -450,9 +453,9 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
       success(msg);
       refetchContratos();
     } catch (e) {
-      error((e as { response?: { data?: { message?: string } } })?.response?.data?.message || t('messages.error'));
+      showApiError(e, CONTEXT_ERROR_MESSAGES.SAAS_EMPRESA_SAVE_ERROR);
     }
-  }, [empresaId, refetchContratos, success, error, t]);
+  }, [empresaId, refetchContratos, success, showApiError, t]);
 
   const contratosBulkActions = useMemo(() => {
     const base = [
@@ -475,9 +478,9 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
       refetchTitulos();
       success(t('messages.success'));
     } catch {
-      error(t('messages.error'));
+      showApiError(t('messages.error'));
     }
-  }, [queryClient, empresaId, refetchTitulos, success, error, t]);
+  }, [queryClient, empresaId, refetchTitulos, success, showApiError, t]);
 
   const clearPdfUrl = useCallback(() => {
     if (pdfUrl) {
@@ -512,16 +515,16 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
       setSelectedTitulos([]);
       if (okCount > 0) success(okCount === 1 ? t('financial.titleCanceled') : `${okCount} ${t('financial.titlesCanceled')}`);
     } catch {
-      error(t('financial.errorCanceling'));
+      showApiError(t('financial.errorCanceling'));
     }
-  }, [selectedTitulos, queryClient, empresaId, refetchTitulos, success, error, t]);
+  }, [selectedTitulos, queryClient, empresaId, refetchTitulos, success, showApiError, t]);
 
   const handleEstornarTitulo = useCallback(async (sel: SaasTitulo[]) => {
     const item = sel?.length ? sel[0] : selectedTitulos[0];
     if (!item) return;
     const statusPago = item.status === 'pago' || item.status === 'pago_atraso' || item.status === 'parcial';
     if (!statusPago) {
-      error(t('financial.canOnlyReversePaid'));
+      showApiError(t('financial.canOnlyReversePaid'));
       return;
     }
     const msg = `${t('financial.titleWillReturnPending')}\n\n${t('document.title')} ${item.numero_titulo || item.id}\n${t('summary.value')} ${formatCurrency(Number(item.valor))}`;
@@ -533,19 +536,19 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
       setSelectedTitulos([]);
       success(t('financial.titleReversed'));
     } catch (err) {
-      error((err as { response?: { data?: { message?: string } } })?.response?.data?.message || t('financial.errorReversing'));
+      showApiError(err, CONTEXT_ERROR_MESSAGES.TITULO_REVERSE_ERROR);
     }
-  }, [selectedTitulos, queryClient, empresaId, refetchTitulos, success, error, t]);
+  }, [selectedTitulos, queryClient, empresaId, refetchTitulos, success, showApiError, t]);
 
   const handleImprimirSelecionados = useCallback(async (sel?: SaasTitulo[]) => {
     const items = sel?.length ? sel : selectedTitulos;
     if (items.length === 0) {
-      error(t('messages.noTitleSelected'));
+      showApiError(t('messages.noTitleSelected'));
       return;
     }
     const emAberto = items.filter(t => t.status === 'pendente' || t.status === 'vencido');
     if (emAberto.length === 0) {
-      error(t('messages.noOpenTitlesFound'));
+      showApiError(t('messages.noOpenTitlesFound'));
       return;
     }
     openPrintModal();
@@ -557,16 +560,16 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
       setIsGeneratingPdf(false);
       success(t('messages.successPrintSelected'));
     } catch {
-      error(t('messages.errorPrintSelected'));
+      showApiError(t('messages.errorPrintSelected'));
       setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
-  }, [selectedTitulos, error, success, openPrintModal, t]);
+  }, [selectedTitulos, showApiError, success, openPrintModal, t]);
 
   const handleImprimirTodosEmAberto = useCallback(async () => {
     const emAberto = titulosParaFiltro.filter(t => t.status === 'pendente' || t.status === 'vencido');
     if (emAberto.length === 0) {
-      error(t('messages.noOpenTitlesFound'));
+      showApiError(t('messages.noOpenTitlesFound'));
       return;
     }
     openPrintModal();
@@ -578,11 +581,11 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
       setIsGeneratingPdf(false);
       success(t('messages.successPrintOpen'));
     } catch {
-      error(t('messages.errorPrintOpen'));
+      showApiError(t('messages.errorPrintOpen'));
       setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
-  }, [titulosParaFiltro, error, success, openPrintModal, t]);
+  }, [titulosParaFiltro, showApiError, success, openPrintModal, t]);
 
   const titulosBulkActions = useMemo(() => [
     { key: 'novo', label: bulkBtn.novo.label, variant: bulkBtn.novo.variant, requiresSelection: false, onClick: () => setShowTituloCreate(true) },

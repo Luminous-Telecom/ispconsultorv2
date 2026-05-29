@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { RpkiCaService } from 'services/rpkiCaService';
 import { ClienteService } from 'services/clienteService';
 import { useRpkiCas } from 'hooks/useRpkiCas';
@@ -47,7 +49,8 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({
   const { t } = useI18n();
   const bulkBtn = useBulkBtn();
       const { openModal } = useModal();
-  const { error: showError, success } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const auditoria = useAuditoria();
   const handleAuditRoa = useCallback(
     (item: RpkiRoaRow) => {
@@ -148,15 +151,14 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({
         }
       } catch (err) {
         if (!cancelled) {
-          const msg = err instanceof Error ? err.message : 'Erro ao carregar ROAs';
-          showError(msg);
+          showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_ROA_LOAD_ERROR);
         }
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [show, cas, showError]);
+  }, [show, cas, showApiError]);
 
   const tableColumns: TableConfig<RpkiRoaRow>['columns'] = useMemo(() => {
     const cols: TableConfig<RpkiRoaRow>['columns'] = [
@@ -273,8 +275,7 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({
             success('ROA excluído com sucesso');
           })
           .catch((err) => {
-            const msg = err instanceof Error ? err.message : 'Erro ao excluir ROA';
-            showError(msg);
+            showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_ROA_DELETE_ERROR);
           });
       },
     },
@@ -300,8 +301,7 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({
             success('ROA revogada com sucesso');
           })
           .catch((err) => {
-            const msg = err instanceof Error ? err.message : 'Erro ao revogar ROA';
-            showError(msg);
+            showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_ROA_REVOKE_ERROR);
           });
       },
     },
@@ -363,8 +363,7 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({
             setShowAnalysisModal(true);
           })
           .catch((err) => {
-            const msg = err instanceof Error ? err.message : 'Erro ao analisar ROAs';
-            showError(msg);
+            showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_ROA_ANALYZE_ERROR);
           });
       },
     },
@@ -386,7 +385,7 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({
         openModal('rpki-validar-rota', { initialPrefix: pref, initialAsn: asn });
       },
     },
-  ], [cas, openModal, roas, showError, success, bulkBtn]);
+  ], [cas, openModal, roas, showApiError, success, bulkBtn]);
 
   useEffect(() => {
     if (!show) {
@@ -524,8 +523,7 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({
               setShowAnalysisModal(false);
             })
             .catch((err) => {
-              const msg = err instanceof Error ? err.message : 'Erro ao aplicar sugestões de ROA';
-              showError(msg);
+              showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_ROA_SUGGEST_ERROR);
             });
         }}
       />

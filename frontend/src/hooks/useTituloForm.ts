@@ -9,10 +9,11 @@ import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { z } from 'zod';
 import { TituloService } from '../services/tituloService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
+import { useApiError } from './useApiError';
+import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 import { CarneParcela, CreateCarneParcela } from '../types';
 import { TituloForm, TituloFormErrors } from '../components/modals/titulos/titulo/types';
 import { tituloSchema } from '../schemas/titulo.schema';
@@ -73,7 +74,8 @@ export const useTituloForm = ({
   isAvulso = false
 }: UseTituloFormParams): UseTituloFormReturn => {
   const isEditing = !!tituloId;
-  const { success, error } = useNotificationContext();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
   const queryClient = useQueryClient();
 
   // Criar schema sem cliente_id para o formulário (cliente_id será adicionado no submit)
@@ -214,10 +216,7 @@ export const useTituloForm = ({
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
       onSuccess?.();
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao atualizar título');
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TITULO_UPDATE_ERROR),
   });
 
   // Mutation para criar título
@@ -233,19 +232,7 @@ export const useTituloForm = ({
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       onSuccess?.();
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message?: string; error?: string; errors?: string[] }>;
-      const responseData = axiosError.response?.data;
-      let errorMessage = 'Erro ao criar título';
-      if (responseData?.message) {
-        errorMessage = responseData.message;
-      } else if (responseData?.error) {
-        errorMessage = responseData.error;
-      } else if (responseData?.errors && Array.isArray(responseData.errors) && responseData.errors.length > 0) {
-        errorMessage = responseData.errors.join(', ');
-      }
-      error(errorMessage);
-    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TITULO_CREATE_ERROR),
   });
 
   const isSubmitting = updateTituloMutation.isPending || createTituloMutation.isPending;
