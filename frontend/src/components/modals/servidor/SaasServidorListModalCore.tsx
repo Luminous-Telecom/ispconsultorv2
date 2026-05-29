@@ -10,6 +10,8 @@ import {
   type SaasServidorChannel,
 } from './saasServidorListVariants';
 import type { SaasConfigListResponse } from 'services/saas/saasConfigService';
+import type { ApiResponse } from 'types';
+import type { ListModalColumn } from 'types/modal';
 
 interface SaasServidorListModalCoreProps {
   channel: SaasServidorChannel;
@@ -46,7 +48,7 @@ const SaasServidorListModalCore: React.FC<SaasServidorListModalCoreProps> = ({
       list.tableFilters.sortColumn,
       list.tableFilters.sortDirection,
     ],
-    queryFn: () =>
+    queryFn: (): Promise<ApiResponse<SaasConfigListResponse<ServidorRow>>> =>
       config.list({
         page: list.tableFilters.page,
         limit: list.tableFilters.limit,
@@ -54,12 +56,12 @@ const SaasServidorListModalCore: React.FC<SaasServidorListModalCoreProps> = ({
         searchField: list.tableFilters.searchField || undefined,
         sortColumn: list.tableFilters.sortColumn,
         sortDirection: list.tableFilters.sortDirection,
-      }),
+      }) as Promise<ApiResponse<SaasConfigListResponse<ServidorRow>>>,
     enabled: show,
     staleTime: 0,
   });
 
-  const listData = data?.data as SaasConfigListResponse<ServidorRow> | undefined;
+  const listData = data?.data;
   const items = useMemo(() => listData?.data || [], [listData?.data]);
 
   const handleDelete = useCallback(
@@ -79,8 +81,11 @@ const SaasServidorListModalCore: React.FC<SaasServidorListModalCoreProps> = ({
     [items, config, queryClient, list, refetch, showApiError]
   );
 
-  const columns = useMemo(() => config.getColumns() as ReturnType<typeof config.getColumns>, [config]);
-  const searchFields = useMemo(() => config.searchFields, [config.searchFields]);
+  const columns = useMemo(
+    () => config.getColumns() as ListModalColumn<ServidorRow>[],
+    [config]
+  );
+  const searchFields = useMemo(() => [...config.searchFields], [config.searchFields]);
 
   const bulkActions = useMemo(
     () =>

@@ -7,6 +7,7 @@ import { useIsMobile } from 'hooks/useMediaQuery';
 import { useFormReset } from 'hooks/useFormReset';
 import DraggableModal from 'components/common/DraggableModal';
 import { ModalFormActions } from 'components/ui';
+import type { SaasParametros } from 'services/saas/saasParametrosService';
 import {
   RECURSOS_SISTEMA_BY_VARIANT,
   RECURSOS_ERP_INITIAL,
@@ -61,13 +62,14 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
       central_assinante_metodo_login: d.central_assinante_metodo_login ?? 'cnpj',
     };
     if (!isSaas) return { ...RECURSOS_SAAS_INITIAL, ...base };
-    const qtd = (d as RecursosSistemaFormSaas).quantidade_titulos_manter ?? 12;
+    const saas = d as SaasParametros;
+    const qtd = saas.quantidade_titulos_manter ?? 12;
     return {
       ...base,
-      manter_numeros_titulos: (d as RecursosSistemaFormSaas).manter_numeros_titulos ?? false,
+      manter_numeros_titulos: saas.manter_numeros_titulos ?? false,
       quantidade_titulos_manter: Math.min(24, Math.max(1, qtd)),
-      dias_atraso_bloqueio: (d as RecursosSistemaFormSaas).dias_atraso_bloqueio ?? null,
-      dias_desbloqueio_manual: (d as RecursosSistemaFormSaas).dias_desbloqueio_manual ?? null,
+      dias_atraso_bloqueio: saas.dias_atraso_bloqueio ?? null,
+      dias_desbloqueio_manual: saas.dias_desbloqueio_manual ?? null,
     };
   }, [parametros?.data, isSaas]);
 

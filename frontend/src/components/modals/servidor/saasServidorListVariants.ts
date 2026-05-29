@@ -1,20 +1,26 @@
-import React from 'react';
+import type React from 'react';
 import {
   saasServidorEmailService,
   saasServidorWhatsappService,
   type SaasServidorEmail,
   type SaasServidorWhatsapp,
+  type SaasConfigListResponse,
 } from 'services/saas/saasConfigService';
+import type { ApiResponse } from 'types';
 import type { ListModalColumn } from 'types/modal';
 import SaasServidorEmailFormModal from 'components/modals/saas/SaasServidorEmailFormModal';
 import SaasServidorWhatsappFormModal from 'components/modals/saas/SaasServidorWhatsappFormModal';
+import { getSaasServidorEmailColumns, getSaasServidorWhatsappColumns } from './saasServidorListColumns';
 
 export type SaasServidorChannel = 'email' | 'whatsapp';
 
-const STATUS_COLOR: Record<string, string> = {
-  ativo: 'success',
-  inativo: 'secondary',
-  erro: 'danger',
+type ListParams = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  searchField?: string;
+  sortColumn?: string;
+  sortDirection?: 'asc' | 'desc';
 };
 
 export interface SaasServidorListVariantConfig<T extends { id: number; nome: string; status: string }> {
@@ -28,7 +34,7 @@ export interface SaasServidorListVariantConfig<T extends { id: number; nome: str
   emptyMessage: string;
   searchFields: Array<{ key: string; label: string }>;
   getColumns: () => ListModalColumn<T>[];
-  list: (params: Record<string, unknown>) => ReturnType<typeof saasServidorEmailService.list>;
+  list: (params: ListParams) => Promise<ApiResponse<SaasConfigListResponse<T>>>;
   delete: (id: number) => Promise<unknown>;
   FormModal: React.ComponentType<{
     show: boolean;
@@ -38,7 +44,10 @@ export interface SaasServidorListVariantConfig<T extends { id: number; nome: str
   }>;
 }
 
-export const SAAS_SERVIDOR_LIST_BY_CHANNEL = {
+export const SAAS_SERVIDOR_LIST_BY_CHANNEL: {
+  email: SaasServidorListVariantConfig<SaasServidorEmail>;
+  whatsapp: SaasServidorListVariantConfig<SaasServidorWhatsapp>;
+} = {
   email: {
     queryKey: 'saas-servidores-email',
     tableId: 'saas-servidores-email-list',
@@ -54,30 +63,7 @@ export const SAAS_SERVIDOR_LIST_BY_CHANNEL = {
       { key: 'host_smtp', label: 'Host SMTP' },
       { key: 'status', label: 'Status' },
     ],
-    getColumns: (): ListModalColumn<SaasServidorEmail>[] => [
-      { key: 'id', label: 'ID', sortable: true, width: '50px', render: (i) => <span>{i.id}</span> },
-      { key: 'nome', label: 'Nome', sortable: true, render: (i) => <span>{i.nome}</span> },
-      {
-        key: 'host_smtp',
-        label: 'Host SMTP',
-        sortable: true,
-        render: (i) => (
-          <span>
-            {i.host_smtp}:{i.porta}
-          </span>
-        ),
-      },
-      { key: 'usuario', label: 'Usuário', sortable: true, render: (i) => <span>{i.usuario}</span> },
-      {
-        key: 'status',
-        label: 'Status',
-        sortable: true,
-        width: '90px',
-        render: (i) => (
-          <span className={`badge bg-${STATUS_COLOR[i.status] || 'secondary'}`}>{i.status}</span>
-        ),
-      },
-    ],
+    getColumns: getSaasServidorEmailColumns,
     list: saasServidorEmailService.list,
     delete: saasServidorEmailService.delete,
     FormModal: SaasServidorEmailFormModal,
@@ -97,38 +83,9 @@ export const SAAS_SERVIDOR_LIST_BY_CHANNEL = {
       { key: 'numero', label: 'Número' },
       { key: 'status', label: 'Status' },
     ],
-    getColumns: (): ListModalColumn<SaasServidorWhatsapp>[] => [
-      { key: 'id', label: 'ID', sortable: true, width: '50px', render: (i) => <span>{i.id}</span> },
-      { key: 'nome', label: 'Nome', sortable: true, render: (i) => <span>{i.nome}</span> },
-      {
-        key: 'url_api',
-        label: 'URL API',
-        sortable: true,
-        render: (i) => (
-          <span className="text-truncate" style={{ maxWidth: 200, display: 'block' }}>
-            {i.url_api}
-          </span>
-        ),
-      },
-      {
-        key: 'numero',
-        label: 'Número',
-        sortable: true,
-        width: '130px',
-        render: (i) => <span>{i.numero || '—'}</span>,
-      },
-      {
-        key: 'status',
-        label: 'Status',
-        sortable: true,
-        width: '90px',
-        render: (i) => (
-          <span className={`badge bg-${STATUS_COLOR[i.status] || 'secondary'}`}>{i.status}</span>
-        ),
-      },
-    ],
+    getColumns: getSaasServidorWhatsappColumns,
     list: saasServidorWhatsappService.list,
     delete: saasServidorWhatsappService.delete,
     FormModal: SaasServidorWhatsappFormModal,
   },
-} as const;
+};
