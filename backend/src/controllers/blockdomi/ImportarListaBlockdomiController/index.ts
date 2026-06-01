@@ -130,6 +130,35 @@ export class ImportarListaBlockdomiController {
     }
   }
 
+  static async analisarLista(req: Request, res: Response): Promise<void> {
+    try {
+      const { dominios = [], ipv4 = [], ipv6 = [] } = req.body;
+      const dominiosArr = Array.isArray(dominios) ? dominios : [];
+      const ipv4Arr = Array.isArray(ipv4) ? ipv4 : [];
+      const ipv6Arr = Array.isArray(ipv6) ? ipv6 : [];
+
+      const total = dominiosArr.length + ipv4Arr.length + ipv6Arr.length;
+      if (total === 0) {
+        sendValidationError(res, 'Informe ao menos um item em dominios, ipv4 ou ipv6.');
+        return;
+      }
+
+      const result = await ImportarListaBlockdomiService.analisarLista({
+        dominios: dominiosArr.map((d: unknown) => String(d)),
+        ipv4: ipv4Arr.map((d: unknown) => String(d)),
+        ipv6: ipv6Arr.map((d: unknown) => String(d)),
+      });
+
+      sendSuccess(res, result);
+    } catch (error) {
+      sendError(res, error, 'Erro ao analisar lista blockdomi', 500, true, {
+        context: 'ImportarListaBlockdomiController',
+        action: 'analisarLista',
+        body: req.body
+      });
+    }
+  }
+
   static async removerLista(req: Request, res: Response): Promise<void> {
     try {
       const { dominios = [], ipv4 = [], ipv6 = [] } = req.body;

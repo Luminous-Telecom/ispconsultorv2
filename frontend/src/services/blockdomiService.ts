@@ -41,6 +41,18 @@ export interface GerarVersaoResult {
   numero: string;
 }
 
+export interface AnalisarListaPayload {
+  dominios: string[];
+  ipv4: string[];
+  ipv6: string[];
+}
+
+export interface AnalisarListaResult {
+  dominios: string[];
+  ipv4: string[];
+  ipv6: string[];
+}
+
 export class BlockdomiService {
   static async getVersaoAtual(): Promise<string> {
     const response = await defaultApiClient.get<string>('/blockdomi/versao-atual', { responseType: 'text' });
@@ -51,6 +63,19 @@ export class BlockdomiService {
   static async gerarVersao(): Promise<GerarVersaoResult> {
     const response = await defaultApiClient.post<GerarVersaoResult>('/blockdomi/gerar-versao', {});
     const data = (response as { data?: GerarVersaoResult }).data;
+    if (!data) {
+      throw new Error('Resposta inválida do servidor');
+    }
+    return data;
+  }
+
+  static async analisarLista(payload: AnalisarListaPayload): Promise<AnalisarListaResult> {
+    const response = await defaultApiClient.post<AnalisarListaResult>(
+      '/blockdomi/analisar-lista',
+      payload,
+      { timeout: 120000, forceLoading: true }
+    );
+    const data = (response as { data?: AnalisarListaResult }).data;
     if (!data) {
       throw new Error('Resposta inválida do servidor');
     }

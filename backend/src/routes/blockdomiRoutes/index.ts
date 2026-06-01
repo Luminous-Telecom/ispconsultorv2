@@ -85,6 +85,7 @@ router.post(
   ImportarListaBlockdomiController.extractSeiAnatelFromPdf
 );
 router.post('/importar-lista', ImportarListaBlockdomiController.importar);
+router.post('/analisar-lista', ImportarListaBlockdomiController.analisarLista);
 router.post('/remover-lista', ImportarListaBlockdomiController.removerLista);
 router.post('/gerar-versao', ImportarListaBlockdomiController.gerarVersao);
 

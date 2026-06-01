@@ -42,6 +42,104 @@ export interface RemoverListaResult {
   ipv6: { deleted: number; notFound: number; versao?: string };
 }
 
+export interface AnalisarListaPayload {
+  dominios: string[];
+  ipv4: string[];
+  ipv6: string[];
+}
+
+export interface AnalisarListaResult {
+  dominios: string[];
+  ipv4: string[];
+  ipv6: string[];
+}
+
+const ANALISAR_LISTA_BATCH_SIZE = 2000;
+
+function uniqDominios(raw: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const item of raw ?? []) {
+    const d = sanitizeDominio(String(item));
+    if (!d || seen.has(d)) continue;
+    seen.add(d);
+    out.push(d);
+  }
+  return out;
+}
+
+function uniqIps(raw: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const item of raw ?? []) {
+    const ip = String(item).trim();
+    if (!ip || seen.has(ip)) continue;
+    seen.add(ip);
+    out.push(ip);
+  }
+  return out;
+}
+
+async function findExistingDominios(values: string[]): Promise<string[]> {
+  if (values.length === 0) return [];
+
+  const found = new Set<string>();
+  for (let i = 0; i < values.length; i += ANALISAR_LISTA_BATCH_SIZE) {
+    const chunk = values.slice(i, i + ANALISAR_LISTA_BATCH_SIZE);
+    const rows = await Dominio.findAll({
+      where: { dominio: { [Op.in]: chunk } },
+      attributes: ['dominio'],
+    });
+    for (const row of rows) {
+      if (row.dominio?.trim()) {
+        found.add(row.dominio);
+      }
+    }
+  }
+
+  return values.filter((value) => found.has(value));
+}
+
+async function findExistingIpv4(values: string[]): Promise<string[]> {
+  if (values.length === 0) return [];
+
+  const found = new Set<string>();
+  for (let i = 0; i < values.length; i += ANALISAR_LISTA_BATCH_SIZE) {
+    const chunk = values.slice(i, i + ANALISAR_LISTA_BATCH_SIZE);
+    const rows = await IPv4.findAll({
+      where: { ip: { [Op.in]: chunk } },
+      attributes: ['ip'],
+    });
+    for (const row of rows) {
+      if (row.ip?.trim()) {
+        found.add(row.ip);
+      }
+    }
+  }
+
+  return values.filter((value) => found.has(value));
+}
+
+async function findExistingIpv6(values: string[]): Promise<string[]> {
+  if (values.length === 0) return [];
+
+  const found = new Set<string>();
+  for (let i = 0; i < values.length; i += ANALISAR_LISTA_BATCH_SIZE) {
+    const chunk = values.slice(i, i + ANALISAR_LISTA_BATCH_SIZE);
+    const rows = await IPv6.findAll({
+      where: { ip: { [Op.in]: chunk } },
+      attributes: ['ip'],
+    });
+    for (const row of rows) {
+      if (row.ip?.trim()) {
+        found.add(row.ip);
+      }
+    }
+  }
+
+  return values.filter((value) => found.has(value));
+}
+
 /**
  * Importa uma lista blockdomi com controle de versão.
  * Uma única versão para toda a lista (todos os domínios/IPv4/IPv6 da importação compartilham a mesma versão).
@@ -160,5 +258,20 @@ export class ImportarListaBlockdomiService {
     }
 
     return { dominios: domRes, ipv4: ipv4Res, ipv6: ipv6Res };
+  }
+
+  /** Verifica quais itens da lista informada já existem no cadastro (consulta pontual, sem paginar tudo). */
+  static async analisarLista(payload: AnalisarListaPayload): Promise<AnalisarListaResult> {
+    const dominiosUniq = uniqDominios(payload.dominios);
+    const ipv4Uniq = uniqIps(payload.ipv4);
+    const ipv6Uniq = uniqIps(payload.ipv6);
+
+    const [dominios, ipv4, ipv6] = await Promise.all([
+      findExistingDominios(dominiosUniq),
+      findExistingIpv4(ipv4Uniq),
+      findExistingIpv6(ipv6Uniq),
+    ]);
+
+    return { dominios, ipv4, ipv6 };
   }
 }
