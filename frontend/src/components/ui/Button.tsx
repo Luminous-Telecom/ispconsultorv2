@@ -45,7 +45,7 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
   type?: 'button' | 'submit' | 'reset';
   
   /**
-   * Mostra um spinner e desabilita o botão
+   * Desabilita o botão durante operação (loading global fica na barra superior).
    * @default false
    */
   isLoading?: boolean;
@@ -162,58 +162,6 @@ const Button: React.FC<ButtonProps> = ({
   
   // Renderizar conteúdo do botão
   const renderContent = (): React.ReactNode => {
-    // Se estiver carregando, mostrar spinner
-    if (isLoading) {
-      // Determinar cor do spinner baseado na variante
-      let spinnerStyle: React.CSSProperties | undefined;
-      let spinnerClassName = 'spinner-border spinner-border-sm me-2';
-      
-      if (variant.includes('outline')) {
-        const colorName = variant.replace('outline-', '');
-        // Cores específicas para garantir visibilidade
-        const colorMap: Record<string, { color: string; borderColor: string }> = {
-          'info': { color: '#0dcaf0', borderColor: '#0dcaf0' },
-          'primary': { color: '#0d6efd', borderColor: '#0d6efd' },
-          'success': { color: '#198754', borderColor: '#198754' },
-          'danger': { color: '#dc3545', borderColor: '#dc3545' },
-          'warning': { color: '#ffc107', borderColor: '#ffc107' },
-          'secondary': { color: '#6c757d', borderColor: '#6c757d' },
-        };
-        
-        if (colorMap[colorName]) {
-          spinnerStyle = {
-            color: colorMap[colorName].color,
-            borderColor: colorMap[colorName].borderColor,
-            borderRightColor: 'transparent'
-          };
-        } else {
-          spinnerClassName += ` text-${colorName}`;
-        }
-      } else {
-        spinnerClassName += ' text-light';
-      }
-      
-      // Garantir que a animação esteja presente
-      const finalSpinnerStyle: React.CSSProperties = {
-        ...spinnerStyle,
-        animation: 'spinner-border 0.75s linear infinite',
-        display: 'inline-block',
-        verticalAlign: 'text-bottom'
-      };
-      
-      return (
-        <>
-          <span 
-            className={spinnerClassName}
-            role="status" 
-            aria-hidden="true"
-            style={finalSpinnerStyle}
-          />
-          {!shouldShowIconOnly && <span>{children}</span>}
-        </>
-      );
-    }
-    
     // Se for mobile e iconOnlyOnMobile, mostrar apenas ícone
     if (shouldShowIconOnly) {
       return resolvedLeftIcon || rightIcon;
@@ -273,7 +221,6 @@ const Button: React.FC<ButtonProps> = ({
   if (isLoading && shouldShowIconOnly && !resolvedAriaLabel) {
     ariaProps['aria-label'] = typeof children === 'string' ? children : t('messages.loading');
   }
-  
   return (
     <button
       type={type}
