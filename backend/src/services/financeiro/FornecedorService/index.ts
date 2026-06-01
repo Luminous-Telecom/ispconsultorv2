@@ -5,6 +5,7 @@ import { sequelize } from '../../../config/database';
 import { logger } from '../../../utils/logger';
 import { SortHelper } from '../../../utils/sortHelper';
 import { FORNECEDOR_SORT_CONFIG } from '../../../config/sortConfigs';
+import { buildPagination } from '../../../utils/pagination';
 
 export interface ListFornecedoresFilters {
   page?: number;
@@ -126,22 +127,10 @@ export class FornecedorService {
       offset
     });
 
-    const totalPages = Math.ceil(count / limitNum);
-
-    const from = count > 0 ? offset + 1 : 0;
-    const to = count > 0 ? Math.min(offset + limitNum, count) : 0;
-
     return {
       success: true,
       data: fornecedores,
-      pagination: {
-        current_page: pageNum,
-        per_page: limitNum,
-        total: count,
-        last_page: totalPages,
-        from,
-        to
-      }
+      pagination: buildPagination(pageNum, limitNum, count),
     };
   }
 

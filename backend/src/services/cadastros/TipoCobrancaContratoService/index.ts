@@ -2,6 +2,7 @@ import { TipoCobrancaContrato } from '../../../models/cadastros/TipoCobrancaCont
 import { Op, WhereOptions } from 'sequelize';
 import { SortHelper } from '../../../utils/sortHelper';
 import { TIPO_COBRANCA_CONTRATO_SORT_CONFIG } from '../../../config/sortConfigs';
+import { buildPagination } from '../../../utils/pagination';
 
 export interface ListTipoCobrancaContratoFilters {
   search?: string;
@@ -95,20 +96,10 @@ export class TipoCobrancaContratoService {
     });
 
     const limitNum = Number(limit);
-    const from = count > 0 ? offset + 1 : 0;
-    const to = count > 0 ? Math.min(offset + limitNum, count) : 0;
-
     return {
       success: true,
       data,
-      pagination: {
-        current_page: Number(page),
-        per_page: limitNum,
-        total: count,
-        last_page: Math.ceil(count / limitNum),
-        from,
-        to
-      }
+      pagination: buildPagination(Number(page), limitNum, count),
     };
   }
 

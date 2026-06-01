@@ -13,6 +13,7 @@ import { registrarCriacao } from '../../../services/sistema/AuditoriaService/ind
 import { FinancialCalculationsService } from '../../../services/FinancialCalculationsService';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendValidationError } from '../../../utils/responseUtils';
+import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class TituloBulkController {
@@ -26,15 +27,7 @@ export class TituloBulkController {
 
       if (error) {
         // Converter para Record<string, string[]> esperado pelo sendValidationError
-        const errorsByField: Record<string, string[]> = error.details.reduce((acc, detail) => {
-          const field = detail.path.join('.') || 'general';
-          if (!acc[field]) {
-            acc[field] = [];
-          }
-          acc[field].push(detail.message);
-          return acc;
-        }, {} as Record<string, string[]>);
-        sendValidationError(res, 'Dados inválidos', errorsByField);
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
         return;
       }
 

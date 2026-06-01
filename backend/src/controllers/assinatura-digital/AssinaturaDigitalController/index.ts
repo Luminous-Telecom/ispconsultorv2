@@ -10,6 +10,8 @@ import { getCurrentTimestamp } from '../../../utils/timezoneUtils';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { assignWebhookClientIp } from '../../../utils/requestUtils';
+import { parseOptionalQueryInt, queryString } from '../../../utils/listQuery';
 
 // Interface comum para serviços de assinatura digital
 interface ISignatureService {
@@ -38,13 +40,15 @@ export class AssinaturaDigitalController {
    */
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const { status, cliente_id, termo_contrato_id } = req.query;
+      const status = queryString(req.query.status);
+      const cliente_id = parseOptionalQueryInt(req.query.cliente_id);
+      const termo_contrato_id = parseOptionalQueryInt(req.query.termo_contrato_id);
       const empresaId = getEmpresaIdOrNull(req);
 
       const assinaturas = await AssinaturaDigitalService.list({
-        status: status as string,
-        cliente_id: cliente_id as string | number,
-        termo_contrato_id: termo_contrato_id as string | number,
+        status,
+        cliente_id,
+        termo_contrato_id,
         empresa_id: empresaId ?? undefined
       });
 
@@ -325,7 +329,7 @@ export class AssinaturaDigitalController {
    */
   static async webhookAssinafy(req: Request, res: Response): Promise<void> {
     const timestamp = getCurrentTimestamp();
-    (req as Request & { webhookClientIp?: string }).webhookClientIp = req.ip || req.socket.remoteAddress || 'unknown';
+    assignWebhookClientIp(req);
 
     try {
       sendSuccess(res, { timestamp }, 'Webhook Assinafy recebido', 200);
@@ -373,7 +377,7 @@ export class AssinaturaDigitalController {
    * Webhook específico para ZAPSIGN
    */
   static async webhookZapsign(req: Request, res: Response): Promise<void> {
-    (req as Request & { webhookClientIp?: string }).webhookClientIp = req.ip || req.socket.remoteAddress || 'unknown';
+    assignWebhookClientIp(req);
 
     try {
       sendSuccess(res, undefined, 'Webhook ZAPSIGN recebido', 200);
@@ -419,7 +423,7 @@ export class AssinaturaDigitalController {
    */
   static async webhook(req: Request, res: Response): Promise<void> {
     const timestamp = getCurrentTimestamp();
-    (req as Request & { webhookClientIp?: string }).webhookClientIp = req.ip || req.socket.remoteAddress || 'unknown';
+    assignWebhookClientIp(req);
 
     try {
       sendSuccess(res, { timestamp }, 'Webhook recebido', 200);

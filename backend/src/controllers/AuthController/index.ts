@@ -7,6 +7,7 @@ import { registrarLogin, registrarLogout } from '../../services/sistema/Auditori
 import type { AuthenticatedRequest as AuthRequest } from '../../types/auth';
 import { sendSuccess, sendError, sendValidationError, sendUnauthorized, sendNotFound } from '../../utils/responseUtils';
 import { isProduction } from '../../utils/envUtils';
+import { joiErrorsToFieldMap } from '../../utils/validationUtils';
 
 /**
  * Converte string de duração JWT (ex: '24h', '7d', '30m') para milissegundos.
@@ -70,12 +71,7 @@ export class AuthController {
       const { error, value } = loginSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
 
       if (error) {
-        sendValidationError(res, 'Dados inválidos', error.details.reduce<Record<string, string[]>>((acc, detail) => {
-          const field = detail.path.join('.') || 'general';
-          acc[field] = acc[field] || [];
-          acc[field].push(detail.message);
-          return acc;
-        }, {}));
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
         return;
       }
 

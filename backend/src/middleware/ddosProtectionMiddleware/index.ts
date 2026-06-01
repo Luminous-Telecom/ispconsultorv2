@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { logger } from '../../utils/logger';
+import { getClientIpOrDefault } from '../../utils/requestUtils';
 
 /**
  * Configurações do middleware de proteção DDoS
@@ -62,12 +63,13 @@ export const ddosProtectionMiddleware = (config?: Partial<DDoSProtectionConfig>)
 
     // Verificar limite de requisições concorrentes
     if (activeRequestsCount >= maxConcurrentRequests) {
+      const ip = getClientIpOrDefault(req, 'unknown');
       logger.warn('Limite de requisições concorrentes atingido', {
         activeRequests: activeRequestsCount,
         maxConcurrent: maxConcurrentRequests,
         path: req.path,
         method: req.method,
-        ip: req.ip || req.socket.remoteAddress
+        ip,
       });
 
       res.status(503).json({
@@ -98,12 +100,13 @@ export const ddosProtectionMiddleware = (config?: Partial<DDoSProtectionConfig>)
     const timeoutId = setTimeout(() => {
       // Verificar se a resposta ainda não foi enviada
       if (!res.headersSent && !isDecremented) {
+        const ip = getClientIpOrDefault(req, 'unknown');
         logger.warn('Timeout de processamento excedido', {
           effectiveMaxProcessingTime,
           path: req.path,
           originalUrl: req.originalUrl,
           method: req.method,
-          ip: req.ip || req.socket.remoteAddress,
+          ip,
           activeRequests: activeRequestsCount
         });
 

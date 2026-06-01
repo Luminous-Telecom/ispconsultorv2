@@ -16,6 +16,7 @@ import { logger } from '../../../utils/logger';
 import { parseDateFromDb, formatDate } from '../../../utils/dateUtils';
 import { formatDateISOForAPI } from '../../../utils/timezoneUtils';
 import { sendSuccess, sendError } from '../../../utils/responseUtils';
+import { parseListQuery, queryString } from '../../../utils/listQuery';
 import { buildErpDashboardStatsGraficos } from '../../../services/sistema/dashboardGraficosStats';
 
 interface TituloWithCliente extends Titulo {
@@ -51,7 +52,8 @@ export class DashboardController {
   static async getDashboardData(req: Request, res: Response): Promise<void> {
     try {
       const empresaId = getEmpresaIdOrNull(req);
-      const { startDate, endDate } = req.query;
+      const startDate = queryString(req.query.startDate);
+      const endDate = queryString(req.query.endDate);
 
       const parsedStart = DashboardController.parseStartDate(startDate as string | undefined);
       const parsedEnd = DashboardController.parseEndDate(endDate as string | undefined, parsedStart);
@@ -174,7 +176,8 @@ export class DashboardController {
   static async getBackupStatusDetalhe(req: Request, res: Response): Promise<void> {
     try {
       const empresaId = getEmpresaIdOrNull(req);
-      const { data, status } = req.query;
+      const data = queryString(req.query.data);
+      const status = queryString(req.query.status);
       const dataStr = typeof data === 'string' ? data : '';
       const statusStr = typeof status === 'string' ? status : '';
       const items = await DashboardService.getBackupStatusDetalhe(dataStr, statusStr, empresaId);
@@ -263,7 +266,7 @@ export class DashboardController {
   // Obter títulos recentes
   static async getTitulosRecentes(req: Request, res: Response): Promise<void> {
     try {
-      const limit = parseInt(req.query.limit as string) || 15;
+      const { limit } = parseListQuery(req.query);
 
       const titulos = await TituloService.findAllWithFilters(undefined, {
         include: [
@@ -429,7 +432,8 @@ export class DashboardController {
   // Obter resumo mensal
   static async getResumoMensal(req: Request, res: Response): Promise<void> {
     try {
-      const { ano, mes } = req.query;
+      const ano = queryString(req.query.ano);
+      const mes = queryString(req.query.mes);
       const anoAtual = ano ? parseInt(ano as string) : new Date().getFullYear();
       const mesAtual = mes ? parseInt(mes as string) : new Date().getMonth() + 1;
 

@@ -20,6 +20,9 @@ import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../..
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { parseListQuery, parseOptionalQueryInt } from '../../../utils/listQuery';
+import { parseEmpresaIdQuery } from '../../../utils/tenantUtils';
+import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
 
 export class TituloCRUDController {
   
@@ -29,8 +32,24 @@ export class TituloCRUDController {
   public static async list(req: Request, res: Response): Promise<void> {
     try {
       const {
-        page = 1,
-        limit = 10,
+        page,
+        limit,
+        status,
+        search,
+        searchField,
+        sortColumn,
+        sortDirection,
+        data_vencimento_inicio,
+        data_vencimento_fim,
+        data_pagamento_inicio,
+        data_pagamento_fim,
+      } = parseListQuery(req.query, { defaultLimit: 10 });
+      const cliente_id = parseOptionalQueryInt(req.query.cliente_id);
+      const empresaId = parseEmpresaIdQuery(req.query.empresa_id) ?? getEmpresaIdOrNull(req);
+
+      const result = await TituloService.list({
+        page,
+        limit,
         status,
         cliente_id,
         data_vencimento_inicio,
@@ -41,28 +60,6 @@ export class TituloCRUDController {
         searchField,
         sortColumn,
         sortDirection,
-        empresa_id: empresaIdQuery
-      } = req.query;
-
-      const limitNum = Number(limit);
-      const pageNum = Number(page);
-      const parsedEmpresa = empresaIdQuery != null && empresaIdQuery !== '' ? Number(empresaIdQuery) : NaN;
-      const empresaId = !Number.isNaN(parsedEmpresa) && parsedEmpresa > 0 ? parsedEmpresa : getEmpresaIdOrNull(req);
-
-      // Passar parâmetros diretamente para o service (que já constrói os filtros internamente usando helpers)
-      const result = await TituloService.list({
-        page: pageNum,
-        limit: limitNum,
-        status: status as string,
-        cliente_id: cliente_id as string | number,
-        data_vencimento_inicio: data_vencimento_inicio as string,
-        data_vencimento_fim: data_vencimento_fim as string,
-        data_pagamento_inicio: data_pagamento_inicio as string,
-        data_pagamento_fim: data_pagamento_fim as string,
-        search: search as string,
-        searchField: searchField as string,
-        sortColumn: sortColumn as string,
-        sortDirection: sortDirection as string,
         empresa_id: empresaId ?? undefined,
       });
 
@@ -161,16 +158,7 @@ export class TituloCRUDController {
           errors: errorDetails,
           body: JSON.stringify(req.body) 
         });
-        // Converter para Record<string, string[]> esperado pelo sendValidationError
-        const errorsByField: Record<string, string[]> = error.details.reduce((acc, detail) => {
-          const field = detail.path.join('.') || 'general';
-          if (!acc[field]) {
-            acc[field] = [];
-          }
-          acc[field].push(detail.message);
-          return acc;
-        }, {} as Record<string, string[]>);
-        sendValidationError(res, 'Dados inválidos', errorsByField);
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
         return;
       }
 
@@ -544,7 +532,7 @@ export class TituloCRUDController {
   public static async getByContrato(req: Request, res: Response): Promise<void> {
     try {
       const { contratoId } = req.params;
-      const { sortColumn, sortDirection } = req.query;
+      const { sortColumn, sortDirection } = parseListQuery(req.query);
       const empresaId = getEmpresaIdOrNull(req);
 
       const contrato = await ContratoService.getById(contratoId);
@@ -558,18 +546,14 @@ export class TituloCRUDController {
         return;
       }
 
-      const finalSortColumn = (sortColumn as string) || 'id';
-      const finalSortDirection = (sortDirection as string) || 'desc';
-
-      // Usar TituloService.list com filtro de contrato_id, sem filtro de data - todos os títulos do contrato
       const result = await TituloService.list({
         page: 1,
         limit: 5000,
         cliente_id: undefined,
         search: String(contratoId),
         searchField: 'contrato_id',
-        sortColumn: finalSortColumn,
-        sortDirection: finalSortDirection,
+        sortColumn: sortColumn || 'id',
+        sortDirection: sortDirection || 'desc',
         empresa_id: empresaId ?? undefined,
       });
 
@@ -594,7 +578,7 @@ export class TituloCRUDController {
   public static async getAvulsosByContrato(req: Request, res: Response): Promise<void> {
     try {
       const { contratoId } = req.params;
-      const { sortColumn, sortDirection } = req.query;
+      const { sortColumn, sortDirection } = parseListQuery(req.query);
       const empresaId = getEmpresaIdOrNull(req);
 
       const contrato = await ContratoService.getById(contratoId);
@@ -608,18 +592,14 @@ export class TituloCRUDController {
         return;
       }
 
-      const finalSortColumn = (sortColumn as string) || 'id';
-      const finalSortDirection = (sortDirection as string) || 'desc';
-
-      // Usar TituloService.list com filtro de contrato_id, sem filtro de data - todos os títulos avulsos do contrato
       const result = await TituloService.list({
         page: 1,
         limit: 5000,
         cliente_id: undefined,
         search: String(contratoId),
         searchField: 'contrato_id',
-        sortColumn: finalSortColumn,
-        sortDirection: finalSortDirection,
+        sortColumn: sortColumn || 'id',
+        sortDirection: sortDirection || 'desc',
         empresa_id: empresaId ?? undefined,
       });
 
@@ -643,7 +623,7 @@ export class TituloCRUDController {
    */
   public static async getStats(req: Request, res: Response): Promise<void> {
     try {
-      const { cliente_id } = req.query;
+      const cliente_id = parseOptionalQueryInt(req.query.cliente_id);
       const empresaId = getEmpresaIdOrNull(req);
 
       const where: WhereOptions = {};

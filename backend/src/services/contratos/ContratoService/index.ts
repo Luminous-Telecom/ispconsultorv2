@@ -8,6 +8,7 @@ import { sequelize } from '../../../config/database';
 import { logger } from '../../../utils/logger';
 import { SortHelper } from '../../../utils/sortHelper';
 import { CONTRATO_SORT_CONFIG } from '../../../config/sortConfigs';
+import { buildPagination } from '../../../utils/pagination';
 
 export interface ListContratosFilters {
   page?: number;
@@ -286,20 +287,9 @@ export class ContratoService {
       throw queryError;
     }
 
-    const totalPages = Math.ceil(count / limitNum);
-    const from = count > 0 ? offset + 1 : 0;
-    const to = count > 0 ? Math.min(offset + limitNum, count) : 0;
-
     return {
       data: rows,
-      pagination: {
-        current_page: pageNum,
-        per_page: limitNum,
-        total: count,
-        last_page: totalPages,
-        from,
-        to
-      }
+      pagination: buildPagination(pageNum, limitNum, count),
     };
   }
 

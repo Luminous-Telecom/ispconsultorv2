@@ -5,6 +5,8 @@ import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../..
 import { calculateNextExecution } from '../../../utils/SchedulerUtils';
 import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../../../utils/responseUtils';
 import { saasRoutineBodyFromRequest, syntheticHoraExecucaoFromSaasBody } from '../../../utils/saasScheduledRoutineCronPayload';
+import { getClientIp } from '../../../utils/requestUtils';
+import { parseSchedulerListQuery } from '../../../utils/listQuery';
 
 const TIPOS_ALVO_SAAS = ['geracao_titulos', 'envio_boletos', 'remessa_bancaria', 'bloquear_saas_atraso'] as const;
 const TIPOS_ALVO_ERP_GLOBAL = [
@@ -53,15 +55,17 @@ function mensagemValidacaoAlvoTipo(body: { tipo?: string; alvo?: string }): stri
 export class SaasSchedulerController {
   async index(req: Request, res: Response): Promise<void> {
     try {
-      const { page = 1, limit = 15, search, searchField, sort = 'created_at', direction = 'desc' } = req.query;
+      const { page, limit, search, searchField, sortColumn, sortDirection } = parseSchedulerListQuery(
+        req.query
+      );
 
       const result = await SaasScheduledRoutineService.list({
-        page: Number(page),
-        limit: Number(limit),
-        search: search as string,
-        searchField: typeof searchField === 'string' ? searchField : undefined,
-        sort: sort as string,
-        direction: direction as 'asc' | 'desc'
+        page,
+        limit,
+        search,
+        searchField,
+        sort: sortColumn ?? 'created_at',
+        direction: sortDirection ?? 'desc',
       });
 
       res.json(result);
@@ -190,10 +194,7 @@ export class SaasSchedulerController {
       const usuario = payload
         ? { id: parseInt(String(payload.sub ?? 0), 10), nome: payload.nome ?? null, email: payload.email ?? null }
         : undefined;
-      const ipAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim()
-        || (req.headers['x-real-ip'] as string)
-        || req.socket?.remoteAddress
-        || null;
+      const ipAddress = getClientIp(req);
       await SchedulerService.getInstance().executeSaasRoutineManually(routineId, usuario, ipAddress);
       if (routine) {
         const dados = routine.toJSON ? routine.toJSON() as Record<string, unknown> : routine as unknown as Record<string, unknown>;

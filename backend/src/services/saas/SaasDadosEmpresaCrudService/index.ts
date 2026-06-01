@@ -4,6 +4,7 @@
 
 import { Op, WhereOptions } from 'sequelize';
 import { SaasDadosEmpresa } from '../../../models/saas/SaasDadosEmpresa';
+import { buildSaasPagination } from '../../../utils/pagination';
 
 interface ListFilters {
   page?: number;
@@ -53,12 +54,7 @@ export class SaasDadosEmpresaCrudService {
 
     return {
       data,
-      pagination: {
-        total: count as number,
-        page,
-        limit,
-        totalPages: Math.ceil((count as number) / limit),
-      },
+      pagination: buildSaasPagination(page, limit, count as number),
     };
   }
 

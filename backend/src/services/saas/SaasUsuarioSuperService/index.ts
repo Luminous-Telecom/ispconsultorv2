@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { Op } from 'sequelize';
 import { SaasUsuarioSuper, type SaasNivelAcesso } from '../../../models/saas/SaasUsuarioSuper';
+import { buildSaasPagination } from '../../../utils/pagination';
 
 interface ListFilters {
   page?: number;
@@ -51,7 +52,7 @@ export class SaasUsuarioSuperService {
 
     return {
       data: rows,
-      pagination: { total: count as number, page, limit, totalPages: Math.ceil((count as number) / limit) },
+      pagination: buildSaasPagination(page, limit, count as number),
     };
   }
 

@@ -9,21 +9,8 @@ import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../..
 import { sanitizeDominio } from '../../../utils/sanitize';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { BlockdomiLogAcessoService } from '../../../services/blockdomi/BlockdomiLogAcessoService';
-
-function getClientIpBlockdomi(req: Request): string | null {
-  const cf = req.headers['cf-connecting-ip'] as string | undefined;
-  if (cf?.trim()) return cf.trim();
-  const xff = req.headers['x-forwarded-for'] as string | undefined;
-  if (xff) {
-    const first = xff.split(',')[0]?.trim();
-    if (first) return first;
-  }
-  const xReal = req.headers['x-real-ip'] as string | undefined;
-  if (xReal?.trim()) return xReal.trim();
-  const addr = req.socket?.remoteAddress;
-  if (addr) return addr.replace(/^::ffff:/, '');
-  return null;
-}
+import { getClientIp } from '../../../utils/requestUtils';
+import { parseListQuery } from '../../../utils/listQuery';
 
 /** Linha de observação/log: Ofício · Serial · link (N dom.) — erro */
 function formatObservacaoLinhaFalhaSei(f: SincronizarSeiAnatelDominiosRow): string {
@@ -39,13 +26,7 @@ function formatObservacaoLinhaFalhaSei(f: SincronizarSeiAnatelDominiosRow): stri
 export class DominioController {
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 15;
-      const search = req.query.search as string;
-      const searchField = req.query.searchField as string;
-      const ativo = req.query.ativo !== undefined ? req.query.ativo === 'true' : undefined;
-      const sortColumn = req.query.sortColumn as string;
-      const sortDirection = req.query.sortDirection as string;
+      const { page, limit, search, searchField, ativo, sortColumn, sortDirection } = parseListQuery(req.query);
 
       const result = await DominioService.list({
         page,
@@ -54,7 +35,7 @@ export class DominioController {
         searchField,
         ativo,
         sortColumn,
-        sortDirection
+        sortDirection,
       });
 
       sendSuccess(res, result);
@@ -458,7 +439,7 @@ export class DominioController {
           '\n'
         );
         void BlockdomiLogAcessoService.registrar({
-          ip: getClientIpBlockdomi(req),
+          ip: getClientIp(req),
           rota: '/api/dominios/sincronizar-sei-anatel',
           metodo: 'POST',
           status_http: 200,

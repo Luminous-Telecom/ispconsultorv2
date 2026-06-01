@@ -8,6 +8,7 @@ import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../..
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { parseListQuery, queryString } from '../../../utils/listQuery';
 
 export class BancoController {
   /**
@@ -36,19 +37,20 @@ export class BancoController {
 
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const { search, searchField, status, tipo_banco, page = 1, limit = 15, sortColumn, sortDirection } = req.query;
-      
+      const { page, limit, search, searchField, status, sortColumn, sortDirection } = parseListQuery(req.query);
+      const tipo_banco = queryString(req.query.tipo_banco);
+
       const empresaId = getEmpresaIdOrNull(req);
 
       const result = await BancoService.list({
-        search: search as string | undefined,
-        searchField: searchField as string | undefined,
-        status: status as string | undefined,
-        tipo_banco: tipo_banco as string | undefined,
-        page: Number(page),
-        limit: Number(limit),
-        sortColumn: sortColumn as string | undefined,
-        sortDirection: sortDirection as string | undefined,
+        search,
+        searchField,
+        status,
+        tipo_banco,
+        page,
+        limit,
+        sortColumn,
+        sortDirection,
         empresa_id: empresaId ?? undefined,
       });
       

@@ -6,28 +6,10 @@ import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../..
 import { BancoApiService } from '../../../services/bancos/BancoApiService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
+import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
+import { parseListQuery } from '../../../utils/listQuery';
 
-const toErrors = (details: Joi.ValidationErrorItem[]) =>
-  details.reduce<Record<string, string[]>>((acc, d) => {
-    const f = d.path.join('.') || 'general';
-    acc[f] = acc[f] || [];
-    acc[f].push(d.message);
-    return acc;
-  }, {});
-
-const listParams = (req: SaasAuthenticatedRequest) => {
-  const { page, limit, search, searchField, empresa_id, ativo, sortColumn, sortDirection } = req.query as Record<string, string>;
-  return {
-    page: page ? parseInt(page) : 1,
-    limit: limit ? parseInt(limit) : 20,
-    search,
-    searchField,
-    empresa_id: empresa_id ? parseInt(empresa_id) : undefined,
-    ativo: ativo === 'true' ? true : ativo === 'false' ? false : undefined,
-    sortColumn,
-    sortDirection: sortDirection as 'asc' | 'desc',
-  };
-};
+const listParams = (req: SaasAuthenticatedRequest) => parseListQuery(req.query, { defaultLimit: 20 });
 
 // ─── Servidor Email ──────────────────────────────────────────────────────────
 
@@ -58,7 +40,7 @@ export class SaasServidorEmailController {
   static async create(req: SaasAuthenticatedRequest, res: Response) {
     try {
       const { error, value } = emailSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
-      if (error) { sendValidationError(res, 'Dados inválidos', toErrors(error.details)); return; }
+      if (error) { sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details)); return; }
       const item = await SaasServidorEmailService.create(value);
       await registrarCriacao(req as any, 'SaasServidorEmail', item.id, item.toJSON() as Record<string, unknown>);
       res.status(201).json({ success: true, message: 'Servidor criado com sucesso', data: item });
@@ -67,7 +49,7 @@ export class SaasServidorEmailController {
   static async update(req: SaasAuthenticatedRequest, res: Response) {
     try {
       const { error, value } = emailUpdateSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
-      if (error) { sendValidationError(res, 'Dados inválidos', toErrors(error.details)); return; }
+      if (error) { sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details)); return; }
       const antigo = await SaasServidorEmailService.getById(Number(req.params.id));
       await SaasServidorEmailService.update(Number(req.params.id), value);
       if (antigo) {
@@ -117,7 +99,7 @@ export class SaasServidorWhatsappController {
   static async create(req: SaasAuthenticatedRequest, res: Response) {
     try {
       const { error, value } = whatsappSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
-      if (error) { sendValidationError(res, 'Dados inválidos', toErrors(error.details)); return; }
+      if (error) { sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details)); return; }
       const item = await SaasServidorWhatsappService.create(value);
       await registrarCriacao(req as any, 'SaasServidorWhatsapp', item.id, item.toJSON() as Record<string, unknown>);
       res.status(201).json({ success: true, message: 'Servidor criado com sucesso', data: item });
@@ -126,7 +108,7 @@ export class SaasServidorWhatsappController {
   static async update(req: SaasAuthenticatedRequest, res: Response) {
     try {
       const { error, value } = whatsappUpdateSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
-      if (error) { sendValidationError(res, 'Dados inválidos', toErrors(error.details)); return; }
+      if (error) { sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details)); return; }
       const antigo = await SaasServidorWhatsappService.getById(Number(req.params.id));
       await SaasServidorWhatsappService.update(Number(req.params.id), value);
       if (antigo) {
@@ -212,7 +194,7 @@ export class SaasBancoController {
   static async create(req: SaasAuthenticatedRequest, res: Response) {
     try {
       const { error, value } = bancoSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
-      if (error) { sendValidationError(res, 'Dados inválidos', toErrors(error.details)); return; }
+      if (error) { sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details)); return; }
       const item = await SaasBancoService.create(value);
       await registrarCriacao(req as any, 'SaasBanco', item.id, item.toJSON() as Record<string, unknown>);
       res.status(201).json({ success: true, message: 'Banco criado com sucesso', data: item });
@@ -221,7 +203,7 @@ export class SaasBancoController {
   static async update(req: SaasAuthenticatedRequest, res: Response) {
     try {
       const { error, value } = bancoUpdateSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
-      if (error) { sendValidationError(res, 'Dados inválidos', toErrors(error.details)); return; }
+      if (error) { sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details)); return; }
       const antigo = await SaasBancoService.getById(Number(req.params.id));
       await SaasBancoService.update(Number(req.params.id), value);
       if (antigo) {

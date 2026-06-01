@@ -7,7 +7,12 @@ import { AuditoriaOperacionalMysqlService } from '../../../services/auditoria/Au
 import { AuditoriaPDFService } from '../../../services/auditoria/AuditoriaPDFService';
 import { logger } from '../../../utils/logger';
 import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../../../utils/responseUtils';
+import { parseListQuery } from '../../../utils/listQuery';
+import { buildPagination, getElasticsearchMaxLastPage } from '../../../utils/pagination';
 import { SaasUsuarioSuper } from '../../../models/saas/SaasUsuarioSuper';
+import { parseEmpresaIdQuery } from '../../../utils/tenantUtils';
+import { parseAuditoriaListFilters } from '../../../utils/auditoriaQuery';
+import { queryString } from '../../../utils/listQuery';
 
 export class SaasAuditoriaController {
   /**
@@ -15,10 +20,7 @@ export class SaasAuditoriaController {
    */
   static async listByTenant(req: SaasAuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const queryEmpresaId = req.query.empresa_id as string | undefined;
-      const empresaId = queryEmpresaId && !isNaN(parseInt(queryEmpresaId, 10))
-        ? parseInt(queryEmpresaId, 10)
-        : undefined;
+      const empresaId = parseEmpresaIdQuery(req.query.empresa_id) ?? undefined;
 
       const elasticsearchService = getElasticsearchService();
       const client = elasticsearchService.getClient();
@@ -34,27 +36,22 @@ export class SaasAuditoriaController {
         return;
       }
 
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 20;
-      const search = req.query.search as string;
-      const searchField = req.query.searchField as string;
-      const acao = req.query.acao as string;
-      const entidade = req.query.entidade as string;
-      const usuario_id = req.query.usuario_id ? parseInt(req.query.usuario_id as string) : undefined;
-      const dataInicio = req.query.data_inicio as string;
-      const dataFim = req.query.data_fim as string;
-      const sortColumn = req.query.sortColumn as string;
-      const sortDirection = req.query.sortDirection as string;
-      const comUsuarioObrigatorio =
-        req.query.com_usuario_obrigatorio === 'true' || req.query.comUsuarioObrigatorio === 'true';
-      const semUsuarioObrigatorio =
-        req.query.sem_usuario_obrigatorio === 'true' || req.query.semUsuarioObrigatorio === 'true';
-      const origemAuditoria = req.query.origem_auditoria as string | undefined;
-      const moduloBlockdomi =
-        req.query.modulo_blockdomi === 'true' || req.query.moduloBlockdomi === 'true';
+      const { page, limit, search, searchField, sortColumn, sortDirection } = parseListQuery(req.query, {
+        defaultLimit: 20,
+      });
+      const {
+        acao,
+        entidade,
+        usuario_id,
+        dataInicio,
+        dataFim,
+        comUsuarioObrigatorio,
+        semUsuarioObrigatorio,
+        origemAuditoria,
+        moduloBlockdomi,
+      } = parseAuditoriaListFilters(req.query);
 
-      const maxResultWindow = 10000;
-      const maxLastPage = Math.max(1, Math.floor(maxResultWindow / limit));
+      const maxLastPage = getElasticsearchMaxLastPage(limit);
       const effectivePage = Math.min(page, maxLastPage);
 
       const { logs, total } = await AuditoriaQueryService.searchFromElasticsearch({
@@ -78,22 +75,13 @@ export class SaasAuditoriaController {
         origemAuditoria
       });
 
-      const lastPage = Math.min(Math.ceil(total / limit), maxLastPage);
-
       const rawLogs = logs as Record<string, unknown>[];
       await AuditoriaQueryService.enrichLogsWithEmpresaNome(rawLogs, true, true);
       await AuditoriaQueryService.enrichLogsWithClienteNome(rawLogs);
 
       sendSuccess(res, {
         data: logs,
-        pagination: {
-          current_page: effectivePage,
-          last_page: lastPage,
-          per_page: limit,
-          total,
-          from: total > 0 ? (effectivePage - 1) * limit + 1 : 0,
-          to: Math.min(effectivePage * limit, total)
-        }
+        pagination: buildPagination(page, limit, total, { maxLastPage, currentPage: effectivePage }),
       });
     } catch (error) {
       sendError(res, error, 'Erro ao buscar logs de auditoria', 500, true, {
@@ -109,35 +97,24 @@ export class SaasAuditoriaController {
    */
   static async listOperacional(req: SaasAuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const queryEmpresaId = req.query.empresa_id as string | undefined;
-      const empresaId = queryEmpresaId && !isNaN(parseInt(queryEmpresaId, 10))
-        ? parseInt(queryEmpresaId, 10)
-        : undefined;
+      const empresaId = parseEmpresaIdQuery(req.query.empresa_id) ?? undefined;
 
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 20;
-      const search = req.query.search as string;
-      const searchField = req.query.searchField as string;
-      const acao = req.query.acao as string;
-      const entidade = req.query.entidade as string;
-      const usuario_id = req.query.usuario_id ? parseInt(req.query.usuario_id as string) : undefined;
-      const dataInicio = req.query.data_inicio as string;
-      const dataFim = req.query.data_fim as string;
-      const sortColumn = req.query.sortColumn as string;
-      const sortDirection = req.query.sortDirection as string;
-      const comUsuarioObrigatorio =
-        req.query.com_usuario_obrigatorio === 'true' || req.query.comUsuarioObrigatorio === 'true';
-      const semUsuarioObrigatorio =
-        req.query.sem_usuario_obrigatorio === 'true' || req.query.semUsuarioObrigatorio === 'true';
-      const origemAuditoria = req.query.origem_auditoria as string | undefined;
-      const moduloBlockdomi =
-        req.query.modulo_blockdomi === 'true' || req.query.moduloBlockdomi === 'true';
-      const painelSaasLogs =
-        req.query.painel_saas === 'true' ||
-        req.query.painelSaas === 'true';
-      const acessoPainelSaas =
-        req.query.acesso_painel_saas === 'true' ||
-        req.query.acessoPainelSaas === 'true';
+      const { page, limit, search, searchField, sortColumn, sortDirection } = parseListQuery(req.query, {
+        defaultLimit: 20,
+      });
+      const {
+        acao,
+        entidade,
+        usuario_id,
+        dataInicio,
+        dataFim,
+        comUsuarioObrigatorio,
+        semUsuarioObrigatorio,
+        origemAuditoria,
+        moduloBlockdomi,
+        painelSaasLogs,
+        acessoPainelSaas,
+      } = parseAuditoriaListFilters(req.query, true);
 
       const painelAggregate = empresaId == null || empresaId <= 0;
 
@@ -169,7 +146,6 @@ export class SaasAuditoriaController {
         origemAuditoria,
       });
 
-      const lastPage = Math.max(1, Math.ceil(total / limit));
       const rawLogs = logs as Record<string, unknown>[];
       if (acessoPainelSaas && painelSaasLogs && painelAggregate && rawLogs.length > 0) {
         const uids = [
@@ -201,14 +177,7 @@ export class SaasAuditoriaController {
 
       sendSuccess(res, {
         data: logs,
-        pagination: {
-          current_page: page,
-          last_page: lastPage,
-          per_page: limit,
-          total,
-          from: total > 0 ? (page - 1) * limit + 1 : 0,
-          to: Math.min(page * limit, total),
-        },
+        pagination: buildPagination(page, limit, total, { minLastPageWhenEmpty: 1, minLastPage: 1 }),
       });
     } catch (error) {
       sendError(res, error, 'Erro ao buscar logs operacionais', 500, true, {
@@ -259,7 +228,8 @@ export class SaasAuditoriaController {
    * Gerar PDF de auditoria para entidade SaaS (usa saas_auth_token)
    */
   static async generatePdf(req: SaasAuthenticatedRequest, res: Response): Promise<void> {
-    const { entidade, entidade_id } = req.query;
+    const entidade = queryString(req.query.entidade);
+    const entidade_id = queryString(req.query.entidade_id);
 
     try {
       if (!entidade || !entidade_id) {

@@ -10,6 +10,7 @@ import { logger } from '../../../utils/logger';
 import { sendSuccess, sendError, sendValidationError, sendUnauthorized, sendForbidden, sendNotFound } from '../../../utils/responseUtils';
 import { CentralAssinanteController } from '../CentralAssinanteController';
 import { DadosEmpresaService } from '../../../services/sistema/DadosEmpresaService';
+import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
 import nodemailer from 'nodemailer';
 
 const loginSchema = Joi.object({
@@ -32,12 +33,7 @@ export class CentralAssinanteAuthController {
       const { error, value } = loginSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
 
       if (error) {
-        sendValidationError(res, 'Dados inválidos', error.details.reduce<Record<string, string[]>>((acc, detail) => {
-          const field = detail.path.join('.') || 'general';
-          acc[field] = acc[field] || [];
-          acc[field].push(detail.message);
-          return acc;
-        }, {}));
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
         return;
       }
 
@@ -147,12 +143,7 @@ export class CentralAssinanteAuthController {
           errors: error.details,
           body: req.body
         });
-        sendValidationError(res, 'Dados inválidos', error.details.reduce<Record<string, string[]>>((acc, detail) => {
-          const field = detail.path.join('.') || 'general';
-          acc[field] = acc[field] || [];
-          acc[field].push(detail.message);
-          return acc;
-        }, {}));
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
         return;
       }
 
@@ -343,12 +334,7 @@ export class CentralAssinanteAuthController {
       const { error, value } = trocarSenhaSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
 
       if (error) {
-        sendValidationError(res, 'Dados inválidos', error.details.reduce<Record<string, string[]>>((acc, detail) => {
-          const field = detail.path.join('.') || 'general';
-          acc[field] = acc[field] || [];
-          acc[field].push(detail.message);
-          return acc;
-        }, {}));
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
         return;
       }
 

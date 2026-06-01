@@ -22,6 +22,7 @@ import { collectRelatedEntityIds } from '../relatedEntityIds';
 import { logger } from '../../../utils/logger';
 import { normalizarSnapshotAuditoria } from '../../auditoria/normalizarSnapshotAuditoria';
 import { SistemaLogOperacionalService, houveAlteracaoEfetivaEmUpdate } from '../../sistema/SistemaLogOperacionalService';
+import { getClientIp } from '../../../utils/requestUtils';
 
 export type AcaoAuditoria = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'export' | 'import' | 'executar';
 
@@ -43,25 +44,6 @@ interface DadosAuditoria {
   origem_auditoria?: OrigemAuditoria;
   /** Override para IP (ex.: webhook - capturar antes do processamento em background) */
   ip_address?: string | null;
-}
-
-/**
- * Obter IP do cliente da requisição
- */
-function getClientIp(req: Request): string | null {
-  const reqAny = req as Request & { ip?: string; webhookClientIp?: string };
-  const headers = req.headers;
-  return (
-    (typeof reqAny.webhookClientIp === 'string' && reqAny.webhookClientIp.trim()) ||
-    (headers['cf-connecting-ip'] as string)?.trim() ||
-    (headers['x-client-ip'] as string)?.trim() ||
-    (headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
-    (headers['x-real-ip'] as string)?.trim() ||
-    (headers['true-client-ip'] as string)?.trim() ||
-    (typeof reqAny.ip === 'string' && reqAny.ip.trim()) ||
-    req.socket?.remoteAddress?.trim() ||
-    null
-  );
 }
 
 /**

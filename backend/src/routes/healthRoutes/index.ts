@@ -7,69 +7,9 @@ import { sequelize } from '../../config/database';
 import { logger } from '../../utils/logger';
 import { getMetrics, isMetricsEnabled } from '../../utils/metrics';
 import { getCurrentTimestamp } from '../../utils/timezoneUtils';
+import { getClientIp } from '../../utils/requestUtils';
 
 const router = Router();
-
-/**
- * Função para obter IP do cliente
- * Considera vários headers comuns de proxy reverso e load balancers
- */
-function getClientIp(req: Request): string | null {
-  // Headers comuns em ordem de prioridade:
-  // 1. Cloudflare
-  const cfConnectingIp = req.headers['cf-connecting-ip'] as string;
-  if (cfConnectingIp) return cfConnectingIp.trim();
-
-  // 2. X-Forwarded-For (pode conter múltiplos IPs, pegar o primeiro que é o cliente original)
-  const xForwardedFor = req.headers['x-forwarded-for'] as string;
-  if (xForwardedFor) {
-    const firstIp = xForwardedFor.split(',')[0]?.trim();
-    if (firstIp) return firstIp;
-  }
-
-  // 3. X-Real-IP (nginx)
-  const xRealIp = req.headers['x-real-ip'] as string;
-  if (xRealIp) return xRealIp.trim();
-
-  // 4. True-Client-IP (Cloudflare Enterprise, Akamai)
-  const trueClientIp = req.headers['true-client-ip'] as string;
-  if (trueClientIp) return trueClientIp.trim();
-
-  // 5. X-Client-IP
-  const xClientIp = req.headers['x-client-ip'] as string;
-  if (xClientIp) return xClientIp.trim();
-
-  // 6. X-Forwarded
-  const xForwarded = req.headers['x-forwarded'] as string;
-  if (xForwarded) {
-    const firstIp = xForwarded.split(',')[0]?.trim();
-    if (firstIp) return firstIp;
-  }
-
-  // 7. Forwarded-For
-  const forwardedFor = req.headers['forwarded-for'] as string;
-  if (forwardedFor) return forwardedFor.trim();
-
-  // 8. Forwarded (RFC 7239)
-  const forwarded = req.headers['forwarded'] as string;
-  if (forwarded) {
-    // Formato: "for=192.0.2.60;proto=http;by=203.0.113.43"
-    const forMatch = forwarded.match(/for=([^;,\s]+)/i);
-    if (forMatch && forMatch[1]) {
-      // Remover aspas e colchetes se presentes
-      return forMatch[1].replace(/^["\[\]]|["\[\]]$/g, '').trim();
-    }
-  }
-
-  // 9. IP direto da conexão (último recurso)
-  const remoteAddress = req.socket.remoteAddress;
-  if (remoteAddress) {
-    // Remover prefixo IPv6 se presente
-    return remoteAddress.replace(/^::ffff:/, '');
-  }
-
-  return null;
-}
 
 /**
  * Health check básico

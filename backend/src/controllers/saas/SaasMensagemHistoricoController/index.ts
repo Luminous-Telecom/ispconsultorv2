@@ -8,6 +8,8 @@ import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { logger } from '../../../utils/logger';
 import { sendSuccess, sendError } from '../../../utils/responseUtils';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
+import { buildListPagination } from '../../../utils/pagination';
+import { isQueryFlagTrue, parseListQuery, parseOptionalQueryInt, queryString } from '../../../utils/listQuery';
 
 /** Evita colisão de `id` na UI ao mesclar duas tabelas com auto increment independente (resposta JSON apenas). */
 const ERP_HISTORICO_ID_BIAS = 5_000_000_000;
@@ -18,8 +20,7 @@ export class SaasMensagemHistoricoController {
    * Com `incluir_erp=true`: mescla com `MensagemHistorico` (visão agregada SuperAdmin / pasta Logs ERP).
    */
   static async list(req: SaasAuthenticatedRequest, res: ExpressResponse): Promise<void> {
-    const incluirErp =
-      req.query.incluir_erp === 'true' || req.query.incluirErp === 'true';
+    const incluirErp = isQueryFlagTrue(req.query, 'incluir_erp', 'incluirErp');
     if (incluirErp) {
       await SaasMensagemHistoricoController.listMergedSaasErp(req, res);
       return;
@@ -27,23 +28,23 @@ export class SaasMensagemHistoricoController {
 
     try {
       const {
-        page = 1,
-        limit = 20,
-        tipo,
-        status,
-        destinatario,
+        page,
+        limit,
         search,
         searchField,
-        entidade_tipo,
-        entidade_id,
-        empresa_id,
-        data_inicio,
-        data_fim,
         sortColumn = 'created_at',
         sortDirection = 'desc',
-      } = req.query;
+        data_inicio,
+        data_fim,
+        empresa_id,
+      } = parseListQuery(req.query, { defaultLimit: 20 });
+      const tipo = queryString(req.query.tipo);
+      const status = queryString(req.query.status);
+      const destinatario = queryString(req.query.destinatario);
+      const entidade_tipo = queryString(req.query.entidade_tipo);
+      const entidade_id = parseOptionalQueryInt(req.query.entidade_id);
 
-      const offset = (Number(page) - 1) * Number(limit);
+      const offset = (page - 1) * limit;
 
       const where: Record<string, unknown> = {};
 
@@ -85,10 +86,10 @@ export class SaasMensagemHistoricoController {
         where.entidade_tipo = entidade_tipo;
       }
       if (entidade_id) {
-        where.entidade_id = Number(entidade_id);
+        where.entidade_id = entidade_id;
       }
       if (empresa_id) {
-        where.empresa_id = Number(empresa_id);
+        where.empresa_id = empresa_id;
       }
       if (data_inicio || data_fim) {
         const createdAt: { [key: symbol]: Date } = {};
@@ -100,11 +101,6 @@ export class SaasMensagemHistoricoController {
         }
         where.created_at = createdAt;
       }
-
-      const sortDirectionStr = Array.isArray(sortDirection) ? sortDirection[0] : sortDirection;
-      const sortDirectionValue = typeof sortDirectionStr === 'string' ? sortDirectionStr : 'desc';
-      const sortAsc = String(sortDirectionValue).toLowerCase() === 'asc';
-      const dir = sortAsc ? 'ASC' : 'DESC';
 
       const validSortColumns = [
         'id',
@@ -118,8 +114,8 @@ export class SaasMensagemHistoricoController {
         'cliente_nome',
         'mensagem',
       ];
-      const col = typeof sortColumn === 'string' && validSortColumns.includes(sortColumn) ? sortColumn : 'created_at';
-      const order: [string, string][] = [[col, dir]];
+      const col = sortColumn && validSortColumns.includes(sortColumn) ? sortColumn : 'created_at';
+      const order: [string, string][] = [[col, (sortDirection ?? 'desc') === 'asc' ? 'ASC' : 'DESC']];
 
       const { count, rows } = await SaasMensagemHistorico.findAndCountAll({
         where,
@@ -131,17 +127,11 @@ export class SaasMensagemHistoricoController {
             required: false,
           },
         ],
-        limit: Number(limit),
+        limit,
         offset,
         order,
         distinct: true,
       });
-
-      const limitNum = Number(limit);
-      const totalPages = Math.ceil(count / limitNum);
-      const pageNum = Number(page);
-      const from = count > 0 ? offset + 1 : 0;
-      const to = count > 0 ? Math.min(offset + limitNum, count) : 0;
 
       const data = rows.map((row) => {
         const plain = row.get({ plain: true }) as unknown as Record<string, unknown>;
@@ -151,19 +141,7 @@ export class SaasMensagemHistoricoController {
 
       const result = {
         data,
-        pagination: {
-          page: pageNum,
-          limit: limitNum,
-          total: count,
-          totalPages,
-          hasNext: pageNum < totalPages,
-          hasPrev: pageNum > 1,
-          current_page: pageNum,
-          per_page: limitNum,
-          last_page: totalPages,
-          from,
-          to,
-        },
+        pagination: buildListPagination(page, limit, count),
         filters: { tipo, status, destinatario, entidade_tipo, entidade_id, empresa_id, data_inicio, data_fim },
         sort: { column: sortColumn, direction: sortDirection },
       };
@@ -181,23 +159,23 @@ export class SaasMensagemHistoricoController {
   ): Promise<void> {
     try {
       const {
-        page = 1,
-        limit = 20,
-        tipo,
-        status,
-        destinatario,
+        page,
+        limit,
         search,
         searchField,
-        entidade_tipo,
-        entidade_id,
-        empresa_id,
-        data_inicio,
-        data_fim,
         sortColumn = 'created_at',
         sortDirection = 'desc',
-      } = req.query;
+        data_inicio,
+        data_fim,
+        empresa_id,
+      } = parseListQuery(req.query, { defaultLimit: 20 });
+      const tipo = queryString(req.query.tipo);
+      const status = queryString(req.query.status);
+      const destinatario = queryString(req.query.destinatario);
+      const entidade_tipo = queryString(req.query.entidade_tipo);
+      const entidade_id = parseOptionalQueryInt(req.query.entidade_id);
 
-      const offset = (Number(page) - 1) * Number(limit);
+      const offset = (page - 1) * limit;
 
       const where: Record<string, unknown> = {};
 
@@ -236,10 +214,10 @@ export class SaasMensagemHistoricoController {
         where.entidade_tipo = entidade_tipo;
       }
       if (entidade_id) {
-        where.entidade_id = Number(entidade_id);
+        where.entidade_id = entidade_id;
       }
       if (empresa_id) {
-        where.empresa_id = Number(empresa_id);
+        where.empresa_id = empresa_id;
       }
       if (data_inicio || data_fim) {
         const createdAt: { [key: symbol]: Date } = {};
@@ -252,9 +230,7 @@ export class SaasMensagemHistoricoController {
         where.created_at = createdAt;
       }
 
-      const sortDirectionStr = Array.isArray(sortDirection) ? sortDirection[0] : sortDirection;
-      const sortDirectionValue = typeof sortDirectionStr === 'string' ? sortDirectionStr : 'desc';
-      const sortAsc = String(sortDirectionValue).toLowerCase() === 'asc';
+      const sortAsc = (sortDirection ?? 'desc') === 'asc';
 
       const [miniSaas, miniErp] = await Promise.all([
         SaasMensagemHistorico.findAll({
@@ -280,7 +256,7 @@ export class SaasMensagemHistoricoController {
       });
 
       const total = mergedMini.length;
-      const pageSlice = mergedMini.slice(offset, offset + Number(limit));
+      const pageSlice = mergedMini.slice(offset, offset + limit);
 
       const saasIds = pageSlice.filter((x) => x.src === 'saas').map((x) => x.id);
       const erpIds = pageSlice.filter((x) => x.src === 'erp').map((x) => x.id);
@@ -359,27 +335,9 @@ export class SaasMensagemHistoricoController {
         })
         .filter(Boolean) as Record<string, unknown>[];
 
-      const limitNum = Number(limit);
-      const totalPages = Math.ceil(total / limitNum);
-      const pageNum = Number(page);
-      const from = total > 0 ? offset + 1 : 0;
-      const to = total > 0 ? Math.min(offset + limitNum, total) : 0;
-
       const result = {
         data: rowsPlain,
-        pagination: {
-          page: pageNum,
-          limit: limitNum,
-          total,
-          totalPages,
-          hasNext: pageNum < totalPages,
-          hasPrev: pageNum > 1,
-          current_page: pageNum,
-          per_page: limitNum,
-          last_page: totalPages,
-          from,
-          to,
-        },
+        pagination: buildListPagination(page, limit, total),
         filters: { tipo, status, destinatario, entidade_tipo, entidade_id, empresa_id, data_inicio, data_fim },
         sort: { column: sortColumn, direction: sortDirection },
       };
@@ -464,9 +422,9 @@ export class SaasMensagemHistoricoController {
   static async getByEntity(req: SaasAuthenticatedRequest, res: ExpressResponse): Promise<void> {
     try {
       const { entidade_tipo, entidade_id } = req.params;
-      const { page = 1, limit = 10, empresa_id } = req.query;
+      const { page, limit, empresa_id } = parseListQuery(req.query, { defaultLimit: 10 });
 
-      const offset = (Number(page) - 1) * Number(limit);
+      const offset = (page - 1) * limit;
       const where: Record<string, unknown> = {
         entidade_tipo,
         entidade_id: Number(entidade_id),
@@ -485,32 +443,14 @@ export class SaasMensagemHistoricoController {
             required: false,
           },
         ],
-        limit: Number(limit),
+        limit,
         offset,
         order: [['created_at', 'DESC']],
       });
 
-      const totalPages = Math.ceil(count / Number(limit));
-      const pageNum = Number(page);
-      const limitNum = Number(limit);
-      const from = count > 0 ? offset + 1 : 0;
-      const to = count > 0 ? Math.min(offset + limitNum, count) : 0;
-
       const result = {
         data: rows,
-        pagination: {
-          page: pageNum,
-          limit: limitNum,
-          total: count,
-          totalPages,
-          hasNext: pageNum < totalPages,
-          hasPrev: pageNum > 1,
-          current_page: pageNum,
-          per_page: limitNum,
-          last_page: totalPages,
-          from,
-          to,
-        },
+        pagination: buildListPagination(page, limit, count),
       };
 
       sendSuccess(res, result, 'Mensagens da entidade listadas com sucesso');

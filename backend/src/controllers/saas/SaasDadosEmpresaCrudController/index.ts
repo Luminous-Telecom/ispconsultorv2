@@ -4,6 +4,8 @@ import { SaasDadosEmpresaCrudService } from '../../../services/saas/SaasDadosEmp
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
+import { parseListQuery } from '../../../utils/listQuery';
+import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
 
 const createSchema = Joi.object({
   nome_empresa: Joi.string().max(200).optional(),
@@ -41,13 +43,15 @@ const updateSchema = createSchema.fork(['email'], (s) => s.optional());
 export class SaasDadosEmpresaCrudController {
   static async list(req: SaasAuthenticatedRequest, res: Response) {
     try {
-      const { page, limit, search, sortColumn, sortDirection } = req.query as Record<string, string>;
+      const { page, limit, search, sortColumn, sortDirection } = parseListQuery(req.query, {
+        defaultLimit: 20,
+      });
       const result = await SaasDadosEmpresaCrudService.list({
-        page: page ? parseInt(page) : 1,
-        limit: limit ? parseInt(limit) : 20,
+        page,
+        limit,
         search,
         sortColumn,
-        sortDirection: sortDirection as 'asc' | 'desc',
+        sortDirection,
       });
       sendSuccess(res, result);
     } catch (err) {
@@ -72,12 +76,7 @@ export class SaasDadosEmpresaCrudController {
     try {
       const { error, value } = createSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) {
-        sendValidationError(res, 'Dados inválidos', error.details.reduce<Record<string, string[]>>((acc, d) => {
-          const f = d.path.join('.') || 'general';
-          acc[f] = acc[f] || [];
-          acc[f].push(d.message);
-          return acc;
-        }, {}));
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
         return;
       }
       const empresa = await SaasDadosEmpresaCrudService.create(value);
@@ -92,12 +91,7 @@ export class SaasDadosEmpresaCrudController {
     try {
       const { error, value } = updateSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) {
-        sendValidationError(res, 'Dados inválidos', error.details.reduce<Record<string, string[]>>((acc, d) => {
-          const f = d.path.join('.') || 'general';
-          acc[f] = acc[f] || [];
-          acc[f].push(d.message);
-          return acc;
-        }, {}));
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
         return;
       }
       const empresaAntiga = await SaasDadosEmpresaCrudService.getById(Number(req.params.id));

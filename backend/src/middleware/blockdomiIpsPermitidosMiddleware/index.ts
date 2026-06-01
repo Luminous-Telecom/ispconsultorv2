@@ -8,6 +8,7 @@ import { IpPermitidoService } from '../../services/blockdomi/IpPermitidoService'
 import { DadosEmpresaService } from '../../services/sistema/DadosEmpresaService';
 import { BlockdomiLogAcessoService } from '../../services/blockdomi/BlockdomiLogAcessoService';
 import { emitBlockdomiLog } from '../../socket/socketServer';
+import { getClientIp } from '../../utils/requestUtils';
 
 const BLOCKDOMI_TXT_PATHS = [
   /^\/domain\/version\/?$/i,
@@ -15,30 +16,6 @@ const BLOCKDOMI_TXT_PATHS = [
   /^\/v4\/all\/?$/i,
   /^\/v6\/all\/?$/i,
 ];
-
-function getClientIp(req: Request): string | null {
-  const cfConnectingIp = req.headers['cf-connecting-ip'] as string;
-  if (cfConnectingIp) return cfConnectingIp.trim();
-
-  const xForwardedFor = req.headers['x-forwarded-for'] as string;
-  if (xForwardedFor) {
-    const firstIp = xForwardedFor.split(',')[0]?.trim();
-    if (firstIp) return firstIp;
-  }
-
-  const xRealIp = req.headers['x-real-ip'] as string;
-  if (xRealIp) return xRealIp.trim();
-
-  const trueClientIp = req.headers['true-client-ip'] as string;
-  if (trueClientIp) return trueClientIp.trim();
-
-  const remoteAddress = req.socket.remoteAddress;
-  if (remoteAddress) {
-    return remoteAddress.replace(/^::ffff:/, '');
-  }
-
-  return null;
-}
 
 function isBlockdomiTxtRoute(path: string): boolean {
   return BLOCKDOMI_TXT_PATHS.some((re) => re.test(path));

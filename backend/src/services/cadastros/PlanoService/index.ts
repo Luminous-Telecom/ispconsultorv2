@@ -6,6 +6,7 @@ import { cache } from '../../../utils/cache';
 import { logger } from '../../../utils/logger';
 import { SortHelper } from '../../../utils/sortHelper';
 import { PLANO_SORT_CONFIG } from '../../../config/sortConfigs';
+import { buildPagination } from '../../../utils/pagination';
 
 export interface ListPlanosFilters {
   page?: number;
@@ -226,19 +227,9 @@ export class PlanoService {
       return planoData;
     });
 
-    const from = count > 0 ? offset + 1 : 0;
-    const to = count > 0 ? Math.min(offset + limit, count) : 0;
-
     const response = {
       data: planosProcessados,
-      pagination: {
-        current_page: page,
-        per_page: limit,
-        total: count,
-        last_page: Math.ceil(count / limit),
-        from,
-        to
-      }
+      pagination: buildPagination(page, limit, count),
     };
 
     // Cachear apenas se não tiver busca ou ordenação

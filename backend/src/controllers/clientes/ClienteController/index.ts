@@ -10,6 +10,8 @@ import { setAuditData } from '../../../middleware/auditMiddleware';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { parseListQuery, queryString } from '../../../utils/listQuery';
+import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
 
 export class ClienteController {
   // Schema de validação para criação
@@ -109,17 +111,12 @@ export class ClienteController {
   // Listar todos os clientes
   static async index(req: Request, res: Response): Promise<void> {
     try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 15;
-      const search = req.query.search as string;
-      const searchField = req.query.searchField as string;
-      const ativo = req.query.ativo as string;
-      const cidade = req.query.cidade as string;
-      const estado = req.query.estado as string;
-      const created_at_inicio = req.query.created_at_inicio as string;
-      const created_at_fim = req.query.created_at_fim as string;
-      const sortColumn = req.query.sortColumn as string;
-      const sortDirection = req.query.sortDirection as string;
+      const { page, limit, search, searchField, sortColumn, sortDirection } = parseListQuery(req.query);
+      const ativo = queryString(req.query.ativo);
+      const cidade = queryString(req.query.cidade);
+      const estado = queryString(req.query.estado);
+      const created_at_inicio = queryString(req.query.created_at_inicio);
+      const created_at_fim = queryString(req.query.created_at_fim);
 
       const empresaId = getEmpresaIdOrNull(req);
 
@@ -210,16 +207,7 @@ export class ClienteController {
       const { error, value } = ClienteController.createSchema.validate(bodyNormalizado);
       
       if (error) {
-        // Converter para Record<string, string[]> esperado pelo sendValidationError
-        const errorsByField: Record<string, string[]> = error.details.reduce((acc, detail) => {
-          const field = detail.path.join('.') || 'general';
-          if (!acc[field]) {
-            acc[field] = [];
-          }
-          acc[field].push(detail.message);
-          return acc;
-        }, {} as Record<string, string[]>);
-        sendValidationError(res, 'Dados inválidos', errorsByField);
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
         return;
       }
 

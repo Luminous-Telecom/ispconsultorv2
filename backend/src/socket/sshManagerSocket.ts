@@ -14,6 +14,7 @@ import { logSshAudit } from '../services/ssh-manager/SshAuditService';
 import { registrarExecucaoParaSocket } from '../services/sistema/AuditoriaService';
 import { logger } from '../utils/logger';
 import { isSshTerminalLatencyDebugEnabled } from '../utils/terminalLatencyDebug';
+import { getClientIpFromHandshake } from '../utils/requestUtils';
 
 function verifySocketToken(token: string): JwtPayload | null {
   const secret = process.env.JWT_SECRET;
@@ -26,11 +27,7 @@ function verifySocketToken(token: string): JwtPayload | null {
 }
 
 function getSocketIp(socket: Socket): string {
-  return (
-    (socket.handshake.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
-    socket.handshake.address ||
-    '0.0.0.0'
-  );
+  return getClientIpFromHandshake(socket.handshake) ?? socket.handshake.address ?? '0.0.0.0';
 }
 
 /**

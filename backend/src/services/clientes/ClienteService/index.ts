@@ -2,6 +2,7 @@ import { Cliente } from '../../../models/clientes/Cliente';
 import { Titulo } from '../../../models/financeiro/Titulo';
 import { Op, WhereOptions } from 'sequelize';
 import { buildDateFilter } from '../../../utils/queryFilters';
+import { buildPagination } from '../../../utils/pagination';
 import { logger } from '../../../utils/logger';
 import { SortHelper } from '../../../utils/sortHelper';
 import { CLIENTE_SORT_CONFIG } from '../../../config/sortConfigs';
@@ -180,22 +181,10 @@ export class ClienteService {
       throw queryError;
     }
 
-    const totalPages = Math.ceil(count / limit);
-
-    const from = count > 0 ? offset + 1 : 0;
-    const to = count > 0 ? Math.min(offset + limit, count) : 0;
-
     return {
       success: true,
       data: clientes,
-      pagination: {
-        current_page: page,
-        per_page: limit,
-        total: count,
-        last_page: totalPages,
-        from,
-        to
-      }
+      pagination: buildPagination(page, limit, count),
     };
   }
 

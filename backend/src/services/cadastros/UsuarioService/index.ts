@@ -5,6 +5,7 @@ import * as bcrypt from 'bcryptjs';
 import { logger } from '../../../utils/logger';
 import { SortHelper } from '../../../utils/sortHelper';
 import { USUARIO_SORT_CONFIG } from '../../../config/sortConfigs';
+import { buildPagination } from '../../../utils/pagination';
 
 export interface ListUsuariosFilters {
   page?: number;
@@ -114,20 +115,10 @@ export class UsuarioService {
       throw queryError;
     }
 
-    const from = count > 0 ? offset + 1 : 0;
-    const to = count > 0 ? Math.min(offset + limitNum, count) : 0;
-
     return {
       success: true,
       data: rows,
-      pagination: {
-        current_page: pageNum,
-        per_page: limitNum,
-        total: count,
-        last_page: Math.ceil(count / limitNum),
-        from,
-        to
-      }
+      pagination: buildPagination(pageNum, limitNum, count),
     };
   }
 

@@ -8,6 +8,8 @@ import { logger } from '../../../utils/logger';
 import { registrarLogAcessoSaasElasticsearch } from '../../../services/elasticsearch/SaasLogAcessoElasticsearchService';
 import { registrarLogin, registrarLogout, registrarAtualizacao } from '../../../services/sistema/AuditoriaService';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
+import { getClientIp } from '../../../utils/requestUtils';
+import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
 
 const loginSchema = Joi.object({
   email: Joi.string().email().required().messages({
@@ -51,12 +53,7 @@ export class SaasAuthController {
       const { error, value } = loginSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
 
       if (error) {
-        sendValidationError(res, 'Dados inválidos', error.details.reduce<Record<string, string[]>>((acc, d) => {
-          const field = d.path.join('.') || 'general';
-          acc[field] = acc[field] || [];
-          acc[field].push(d.message);
-          return acc;
-        }, {}));
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
         return;
       }
 
@@ -94,7 +91,7 @@ export class SaasAuthController {
       registrarLogAcessoSaasElasticsearch({
         usuario_id: usuario.id,
         acao: 'login',
-        ip: (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || null,
+        ip: getClientIp(req),
         user_agent: req.headers['user-agent'] || null
       });
 
@@ -183,12 +180,7 @@ export class SaasAuthController {
       const { error, value } = trocarSenhaSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
 
       if (error) {
-        sendValidationError(res, 'Dados inválidos', error.details.reduce<Record<string, string[]>>((acc, d) => {
-          const field = d.path.join('.') || 'general';
-          acc[field] = acc[field] || [];
-          acc[field].push(d.message);
-          return acc;
-        }, {}));
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
         return;
       }
 

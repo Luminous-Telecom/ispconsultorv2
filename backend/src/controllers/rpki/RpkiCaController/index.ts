@@ -25,6 +25,8 @@ import {
 } from '../../../utils/tenantUtils';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { registrarAuditoriaElasticsearch } from '../../../services/elasticsearch/ElasticsearchAuditService';
+import { parseListQuery, queryString } from '../../../utils/listQuery';
+import { buildPagination } from '../../../utils/pagination';
 
 function empresaIdAuditoria(req: Request, fallback: number | null): number | null {
   return getEmpresaIdOrNull(req) ?? fallback ?? null;
@@ -1197,19 +1199,21 @@ export class RpkiCaController {
   ): Promise<void> {
     try {
       const empresaId = resolveListEmpresaId(req);
-      const page = Math.max(1, parseInt(String(req.query.page ?? '1'), 10) || 1);
-      const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit ?? '20'), 10) || 20));
+      const { page, limit, search: searchRaw } = parseListQuery(req.query, {
+        defaultLimit: 20,
+        maxLimit: 100,
+      });
       if (empresaId === false) {
         sendSuccess(res, {
           data: [],
-          pagination: { total: 0, per_page: limit, current_page: page, last_page: 1, from: 0, to: 0 },
+          pagination: buildPagination(page, limit, 0, { minLastPageWhenEmpty: 1 }),
         });
         return;
       }
 
       const offset = (page - 1) * limit;
-      const search = String(req.query.search ?? '').trim();
-      const status = String(req.query.status ?? '').trim();
+      const search = searchRaw?.trim() ?? '';
+      const status = queryString(req.query.status) ?? '';
       const where: Record<string, unknown> = { ...baseWhere };
       if (empresaId != null) where.empresa_id = empresaId;
       if (status && ['success', 'failed'].includes(status)) where.status = status;
@@ -1229,14 +1233,7 @@ export class RpkiCaController {
 
       sendSuccess(res, {
         data: await enrichRpkiSyncLogsWithEmpresaSaas(rows),
-        pagination: {
-          total: count,
-          per_page: limit,
-          current_page: page,
-          last_page: Math.max(1, Math.ceil(count / limit)),
-          from: offset + 1,
-          to: Math.min(offset + limit, count),
-        },
+        pagination: buildPagination(page, limit, count, { minLastPageWhenEmpty: 1, minLastPage: 1 }),
       });
     } catch (error) {
       sendError(res, error, errorLabel, 500, true, { context: 'RpkiCaController', action });

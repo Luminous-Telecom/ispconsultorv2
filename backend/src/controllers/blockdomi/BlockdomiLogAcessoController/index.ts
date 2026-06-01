@@ -2,18 +2,15 @@ import { Request, Response } from 'express';
 import { BlockdomiLogAcessoService } from '../../../services/blockdomi/BlockdomiLogAcessoService';
 import { sendSuccess, sendError } from '../../../utils/responseUtils';
 import { resolveListEmpresaId } from '../../../utils/tenantUtils';
+import { parseListQuery, parseTriStateBoolean, queryString } from '../../../utils/listQuery';
+import { buildPagination } from '../../../utils/pagination';
 
 export class BlockdomiLogAcessoController {
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 15;
-      const search = req.query.search as string;
-      const sortColumn = req.query.sortColumn as string;
-      const sortDirection = req.query.sortDirection as string;
-      const sucessoParam = req.query.sucesso as string;
-      const sucesso = sucessoParam === 'true' ? true : sucessoParam === 'false' ? false : undefined;
-      const origemRaw = req.query.origem as string | undefined;
+      const { page, limit, search, sortColumn, sortDirection } = parseListQuery(req.query);
+      const sucesso = parseTriStateBoolean(req.query.sucesso);
+      const origemRaw = queryString(req.query.origem);
       const origem =
         origemRaw === 'api_txt' || origemRaw === 'sistema' ? (origemRaw as 'api_txt' | 'sistema') : undefined;
 
@@ -21,7 +18,7 @@ export class BlockdomiLogAcessoController {
       if (listEmpresaId === false) {
         sendSuccess(res, {
           data: [],
-          pagination: { current_page: page, per_page: limit, total: 0, last_page: 1, from: 0, to: 0 },
+          pagination: buildPagination(page, limit, 0, { minLastPageWhenEmpty: 1 }),
         });
         return;
       }

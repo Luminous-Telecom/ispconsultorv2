@@ -7,6 +7,9 @@ import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { getModulosDoPlano, tenantTemModulo } from '../../../services/saas/PlanoModulosService';
+import { getClientIp } from '../../../utils/requestUtils';
+import { parseSchedulerListQuery } from '../../../utils/listQuery';
+import { buildPagination } from '../../../utils/pagination';
 
 /** Boletos, títulos, remessa e backup SSH ficam no agendador SaaS. No ERP só rotinas por tenant (ex.: outros). */
 const TIPOS_AGENDADOR_PERMITIDOS_NO_ERP = ['outros'] as const;
@@ -21,26 +24,34 @@ export class SchedulerController {
   // Listar todas as rotinas
   public async index(req: Request, res: Response): Promise<void> {
     try {
-      const { page = 1, limit = 15, search, searchField, sort = 'created_at', direction = 'desc' } = req.query;
+      const { page, limit, search, searchField, sortColumn, sortDirection } = parseSchedulerListQuery(
+        req.query
+      );
       const empresaId = getEmpresaIdOrNull(req);
 
       if (empresaId === null || empresaId === undefined) {
-        res.json({
+        sendSuccess(res, {
           success: true,
           data: [],
-          pagination: { total: 0, page: Number(page), limit: Number(limit), pages: 0, current_page: Number(page), per_page: Number(limit), last_page: 0, from: 0, to: 0 }
+          pagination: {
+            ...buildPagination(page, limit, 0),
+            total: 0,
+            page,
+            limit,
+            pages: 0,
+          },
         });
         return;
       }
 
       const result = await ScheduledRoutineService.list({
-        page: Number(page),
-        limit: Number(limit),
-        search: search as string,
-        searchField: typeof searchField === 'string' ? searchField : undefined,
-        sort: sort as string,
-        direction: direction as 'asc' | 'desc',
-        empresa_id: empresaId ?? undefined
+        page,
+        limit,
+        search,
+        searchField,
+        sort: sortColumn ?? 'created_at',
+        direction: sortDirection ?? 'desc',
+        empresa_id: empresaId ?? undefined,
       });
       res.json(result);
     } catch (error: unknown) {
@@ -334,10 +345,7 @@ export class SchedulerController {
       const usuario = payload
         ? { id: parseInt(String(payload.sub ?? 0), 10), nome: payload.nome ?? null, email: payload.email ?? null }
         : undefined;
-      const ipAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim()
-        || (req.headers['x-real-ip'] as string)
-        || req.socket?.remoteAddress
-        || null;
+      const ipAddress = getClientIp(req);
 
       const resultado = await this.schedulerService.executeRoutineManually(Number(id), usuario, ipAddress);
 

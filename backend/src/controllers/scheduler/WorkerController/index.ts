@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { SchedulerService } from '../../../services/scheduler/SchedulerService';
 import { logger } from '../../../utils/logger';
 import { sendSuccess, sendError, sendValidationError } from '../../../utils/responseUtils';
+import { parseBoundedPositiveInt } from '../../../utils/listQuery';
 
 export class WorkerController {
   /**
@@ -43,13 +44,11 @@ export class WorkerController {
    */
   static async getStats(req: Request, res: Response): Promise<void> {
     try {
-      const { days = '7' } = req.query;
-      const daysNumber = parseInt(days as string, 10);
-
-      if (isNaN(daysNumber) || daysNumber < 1 || daysNumber > 365) {
-        sendValidationError(res, 'Parâmetro days deve ser um número entre 1 e 365');
-        return;
-      }
+      const daysNumber = parseBoundedPositiveInt(req.query.days, {
+        defaultValue: 7,
+        min: 1,
+        max: 365,
+      });
 
       const schedulerService = SchedulerService.getInstance();
       const stats = await schedulerService.getDetailedStats();
@@ -96,18 +95,15 @@ export class WorkerController {
   static async getExecutionLogs(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const { limit = '50' } = req.query;
-      
       const routineId = parseInt(id, 10);
-      const limitNumber = parseInt(limit as string, 10);
+      const limitNumber = parseBoundedPositiveInt(req.query.limit, {
+        defaultValue: 50,
+        min: 1,
+        max: 1000,
+      });
 
       if (isNaN(routineId)) {
         sendValidationError(res, 'ID da rotina inválido');
-        return;
-      }
-
-      if (isNaN(limitNumber) || limitNumber < 1 || limitNumber > 1000) {
-        sendValidationError(res, 'Parâmetro limit deve ser um número entre 1 e 1000');
         return;
       }
 
@@ -130,13 +126,11 @@ export class WorkerController {
    */
   static async getRecentLogs(req: Request, res: Response): Promise<void> {
     try {
-      const { limit = '100' } = req.query;
-      const limitNumber = parseInt(limit as string, 10);
-
-      if (isNaN(limitNumber) || limitNumber < 1 || limitNumber > 1000) {
-        sendValidationError(res, 'Parâmetro limit deve ser um número entre 1 e 1000');
-        return;
-      }
+      const limitNumber = parseBoundedPositiveInt(req.query.limit, {
+        defaultValue: 100,
+        min: 1,
+        max: 1000,
+      });
 
       const schedulerService = SchedulerService.getInstance();
       const logs = await schedulerService.getRecentExecutionLogs(limitNumber);

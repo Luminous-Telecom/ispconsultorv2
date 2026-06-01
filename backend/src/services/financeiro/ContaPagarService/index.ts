@@ -9,6 +9,7 @@ import { buildDateFilter, buildNumericSearchFilter, buildDateSearchFilter, combi
 import { logger } from '../../../utils/logger';
 import { SortHelper } from '../../../utils/sortHelper';
 import { CONTA_PAGAR_SORT_CONFIG } from '../../../config/sortConfigs';
+import { buildPagination } from '../../../utils/pagination';
 
 export interface ListContasPagarFilters {
   page?: number;
@@ -214,20 +215,10 @@ export class ContaPagarService {
       offset
     });
 
-    const from = count > 0 ? offset + 1 : 0;
-    const to = count > 0 ? Math.min(offset + limit, count) : 0;
-
     return {
       success: true,
       data: contasPagar,
-      pagination: {
-        current_page: page,
-        per_page: limit,
-        total: count,
-        last_page: Math.ceil(count / limit),
-        from,
-        to
-      }
+      pagination: buildPagination(page, limit, count),
     };
   }
 

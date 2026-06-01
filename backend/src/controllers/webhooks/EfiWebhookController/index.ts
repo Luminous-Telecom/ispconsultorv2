@@ -8,6 +8,7 @@ import {
   WebhookResponse
 } from '../../../types/webhooks';
 import { sendSuccess, sendError, sendValidationError } from '../../../utils/responseUtils';
+import { assignWebhookClientIp } from '../../../utils/requestUtils';
 
 /**
  * Controller para webhooks da EFI (Efí/Gerencianet)
@@ -21,8 +22,7 @@ export class EfiWebhookController {
   static async handle(req: Request, res: Response): Promise<void> {
     try {
       (req as import('../../../types/webhooks').WebhookRequest).webhookEmpresaIdentifier = req.params?.empresaIdentifier;
-      const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
-      (req as Request & { webhookClientIp?: string }).webhookClientIp = clientIp;
+      assignWebhookClientIp(req);
       const payload = req.body as Record<string, JsonValue> | undefined;
 
       // Extrair secret/token de headers ou payload

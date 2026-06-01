@@ -7,6 +7,8 @@ import { logger } from '../../../utils/logger';
 import { sendSuccess, sendError } from '../../../utils/responseUtils';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { getEmpresaIdOrNull, resolveListEmpresaId } from '../../../utils/tenantUtils';
+import { buildListPagination } from '../../../utils/pagination';
+import { parseListQuery, parseOptionalQueryInt, queryString } from '../../../utils/listQuery';
 
 interface MensagemHistoricoFilters {
   tipo?: 'email' | 'whatsapp';
@@ -26,26 +28,29 @@ export class MensagemHistoricoController {
   static async list(req: AuthenticatedRequest, res: ExpressResponse): Promise<void> {
     try {
       const {
-        page = 1,
-        limit = 20,
-        tipo,
-        status,
-        destinatario,
+        page,
+        limit,
         search,
         searchField,
-        entidade_tipo,
-        entidade_id,
-        usuario_id,
+        sortColumn = 'created_at',
+        sortDirection = 'desc',
         data_inicio,
         data_fim,
-        sortColumn = 'created_at',
-        sortDirection = 'desc'
-      } = req.query;
+      } = parseListQuery(req.query, { defaultLimit: 20 });
+      const tipo = queryString(req.query.tipo);
+      const status = queryString(req.query.status);
+      const destinatario = queryString(req.query.destinatario);
+      const entidade_tipo = queryString(req.query.entidade_tipo);
+      const entidade_id = parseOptionalQueryInt(req.query.entidade_id);
+      const usuario_id = parseOptionalQueryInt(req.query.usuario_id);
 
-      const offset = (Number(page) - 1) * Number(limit);
+      const offset = (page - 1) * limit;
       const listEmpresaId = resolveListEmpresaId(req);
       if (listEmpresaId === false) {
-        sendSuccess(res, { data: [], pagination: { page: Number(page), limit: Number(limit), total: 0, totalPages: 0 } });
+        sendSuccess(res, {
+          data: [],
+          pagination: buildListPagination(page, limit, 0),
+        });
         return;
       }
 
@@ -103,19 +108,9 @@ export class MensagemHistoricoController {
         };
       }
 
-      // Construir ordenação
-      const order: any[] = [];
       const validSortColumns = ['id', 'tipo', 'destinatario', 'titulo', 'status', 'created_at', 'updated_at', 'cliente_nome', 'mensagem'];
-      const validSortDirections = ['asc', 'desc'];
-
-      const sortDirectionStr = Array.isArray(sortDirection) ? sortDirection[0] : sortDirection;
-      const sortDirectionValue = typeof sortDirectionStr === 'string' ? sortDirectionStr : 'desc';
-
-      if (validSortColumns.includes(sortColumn as string) && validSortDirections.includes(sortDirectionValue)) {
-        order.push([sortColumn, sortDirectionValue.toUpperCase()]);
-      } else {
-        order.push(['created_at', 'DESC']);
-      }
+      const col = sortColumn && validSortColumns.includes(sortColumn) ? sortColumn : 'created_at';
+      const order: [string, string][] = [[col, (sortDirection ?? 'desc') === 'asc' ? 'ASC' : 'DESC']];
 
       // Buscar mensagens
       const { count, rows } = await MensagemHistorico.findAndCountAll({
@@ -128,33 +123,15 @@ export class MensagemHistoricoController {
             required: false
           }
         ],
-        limit: Number(limit),
+        limit,
         offset,
         order,
         distinct: true
       });
 
-      const totalPages = Math.ceil(count / Number(limit));
-      const pageNum = Number(page);
-      const limitNum = Number(limit);
-      const from = count > 0 ? offset + 1 : 0;
-      const to = count > 0 ? Math.min(offset + limitNum, count) : 0;
-
       const result = {
         data: rows,
-        pagination: {
-          page: pageNum,
-          limit: limitNum,
-          total: count,
-          totalPages,
-          hasNext: pageNum < totalPages,
-          hasPrev: pageNum > 1,
-          current_page: pageNum,
-          per_page: limitNum,
-          last_page: totalPages,
-          from,
-          to
-        },
+        pagination: buildListPagination(page, limit, count),
         filters: {
           tipo,
           status,
@@ -223,10 +200,10 @@ export class MensagemHistoricoController {
   static async getByEntity(req: AuthenticatedRequest, res: ExpressResponse): Promise<void> {
     try {
       const { entidade_tipo, entidade_id } = req.params;
-      const { page = 1, limit = 10 } = req.query;
+      const { page, limit } = parseListQuery(req.query, { defaultLimit: 10 });
       const empresaId = req.user && typeof req.user === 'object' && req.user?.empresa_id ? Number(req.user.empresa_id) : undefined;
 
-      const offset = (Number(page) - 1) * Number(limit);
+      const offset = (page - 1) * limit;
 
       const where: Record<string, unknown> = { entidade_tipo, entidade_id: Number(entidade_id) };
       if (empresaId != null) {
@@ -243,32 +220,14 @@ export class MensagemHistoricoController {
             required: false
           }
         ],
-        limit: Number(limit),
+        limit,
         offset,
         order: [['created_at', 'DESC']]
       });
 
-      const totalPages = Math.ceil(count / Number(limit));
-      const pageNum = Number(page);
-      const limitNum = Number(limit);
-      const from = count > 0 ? offset + 1 : 0;
-      const to = count > 0 ? Math.min(offset + limitNum, count) : 0;
-
       const result = {
         data: rows,
-        pagination: {
-          page: pageNum,
-          limit: limitNum,
-          total: count,
-          totalPages,
-          hasNext: pageNum < totalPages,
-          hasPrev: pageNum > 1,
-          current_page: pageNum,
-          per_page: limitNum,
-          last_page: totalPages,
-          from,
-          to
-        }
+        pagination: buildListPagination(page, limit, count),
       };
 
       sendSuccess(res, result, 'Mensagens da entidade listadas com sucesso');

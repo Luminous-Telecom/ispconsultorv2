@@ -1,4 +1,5 @@
 import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
+import { buildPagination } from '../../../utils/pagination';
 import { Usuario } from '../../../models/cadastros/Usuario';
 import { Op, WhereOptions } from 'sequelize';
 
@@ -77,14 +78,7 @@ export class EmpresaService {
     return {
       success: true,
       data: rows,
-      pagination: {
-        current_page: page,
-        per_page: limit,
-        total: count as number,
-        last_page: Math.ceil((count as number) / limit),
-        from: count > 0 ? offset + 1 : 0,
-        to: count > 0 ? Math.min(offset + limit, count as number) : 0,
-      },
+      pagination: buildPagination(page, limit, count as number),
     };
   }
 

@@ -26,17 +26,14 @@ import {
   logAgentTerminalShellDataFromAgent,
   markAgentTerminalBackendInput,
 } from '../utils/terminalLatencyDebug';
+import { getClientIpFromHandshake } from '../utils/requestUtils';
 
 function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
 
 function getAgentIp(socket: Socket): string {
-  return (
-    (socket.handshake.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
-    socket.handshake.address ||
-    '0.0.0.0'
-  );
+  return getClientIpFromHandshake(socket.handshake) ?? socket.handshake.address ?? '0.0.0.0';
 }
 
 export function registerAgentNamespace(io: SocketIOServer): void {
@@ -267,11 +264,7 @@ function verifyJwt(token: string): JwtPayload | null {
 }
 
 function getFrontendIp(socket: Socket): string {
-  return (
-    (socket.handshake.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
-    socket.handshake.address ||
-    '0.0.0.0'
-  );
+  return getClientIpFromHandshake(socket.handshake) ?? socket.handshake.address ?? '0.0.0.0';
 }
 
 function canAccessAgent(agent: Agent, userEmpresaId: number | null | undefined): boolean {

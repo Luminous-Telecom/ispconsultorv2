@@ -2,6 +2,7 @@ import { Op, type OrderItem } from 'sequelize';
 import { BlockdomiLogAcesso } from '../../../models/blockdomi/BlockdomiLogAcesso';
 import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { formatCreatedAt } from '../../../utils/dateUtils';
+import { buildPagination } from '../../../utils/pagination';
 
 /** Rotas das listas TXT públicas (mesmo critério do blockdomiIpsPermitidosMiddleware). */
 const ROTAS_API_TXT: readonly string[] = [
@@ -163,14 +164,7 @@ export class BlockdomiLogAcessoService {
 
     return {
       data,
-      pagination: {
-        current_page: page,
-        per_page: limit,
-        total,
-        last_page: total > 0 ? Math.ceil(total / limit) : 0,
-        from: total > 0 ? offset + 1 : 0,
-        to: total > 0 ? Math.min(offset + limit, total) : 0,
-      },
+      pagination: buildPagination(page, limit, total),
     };
   }
 }

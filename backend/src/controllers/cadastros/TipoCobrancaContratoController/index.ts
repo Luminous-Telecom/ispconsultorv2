@@ -3,21 +3,23 @@ import { TipoCobrancaContratoService } from '../../../services/cadastros/TipoCob
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { parseListQuery, queryString } from '../../../utils/listQuery';
 
 export class TipoCobrancaContratoController {
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const { search, searchField, ativo, page, limit, sortColumn, sortDirection } = req.query;
+      const { page, limit, search, searchField, sortColumn, sortDirection } = parseListQuery(req.query);
+      const ativo = queryString(req.query.ativo);
       const empresaId = getEmpresaIdOrNull(req);
       const result = await TipoCobrancaContratoService.list({
-        search: search as string | undefined,
-        searchField: searchField as string | undefined,
-        ativo: ativo as string | undefined,
-        page: page ? Number(page) : 1,
-        limit: limit ? Number(limit) : 15,
-        sortColumn: sortColumn as string | undefined,
-        sortDirection: sortDirection as string | undefined,
-        empresa_id: empresaId
+        search,
+        searchField,
+        ativo,
+        page,
+        limit,
+        sortColumn,
+        sortDirection,
+        empresa_id: empresaId,
       });
       sendSuccess(res, result);
     } catch (error: unknown) {

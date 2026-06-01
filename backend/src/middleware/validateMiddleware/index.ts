@@ -4,7 +4,9 @@
 import { Request, Response, NextFunction } from 'express';
 import Joi from 'joi';
 import { logger } from '../../utils/logger';
-import { isJoiError, getErrorMessage } from '../../utils/errorUtils';
+import { getErrorMessage } from '../../utils/errorUtils';
+import { joiErrorsToFieldMap } from '../../utils/validationUtils';
+import { sendValidationError } from '../../utils/responseUtils';
 
 /**
  * Middleware de validação genérico
@@ -35,15 +37,7 @@ export const validate = (
           }))
         });
 
-        res.status(400).json({
-          success: false,
-          message: 'Dados inválidos',
-          error: 'VALIDATION_ERROR',
-          details: error.details.map(d => ({
-            field: d.path.join('.'),
-            message: d.message
-          }))
-        });
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
         return;
       }
 

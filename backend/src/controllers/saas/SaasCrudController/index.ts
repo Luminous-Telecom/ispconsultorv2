@@ -21,29 +21,23 @@ import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../..
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
 import { logger } from '../../../utils/logger';
-
-const toErrors = (details: Joi.ValidationErrorItem[]) =>
-  details.reduce<Record<string, string[]>>((acc, d) => {
-    const f = d.path.join('.') || 'general';
-    acc[f] = acc[f] || [];
-    acc[f].push(d.message);
-    return acc;
-  }, {});
+import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
+import { parseIdsFromQueryParam, parseListQuery } from '../../../utils/listQuery';
 
 const listParams = (req: SaasAuthenticatedRequest) => {
-  const { page, limit, search, empresa_id, sortColumn, sortDirection, status, data_vencimento_inicio, data_vencimento_fim, data_pagamento_inicio, data_pagamento_fim } = req.query as Record<string, string>;
+  const parsed = parseListQuery(req.query, { defaultLimit: 20 });
   return {
-    page: page ? parseInt(page) : 1,
-    limit: limit ? parseInt(limit) : 20,
-    search,
-    empresa_id: empresa_id ? parseInt(empresa_id) : undefined,
-    sortColumn,
-    sortDirection: sortDirection as 'asc' | 'desc' | undefined,
-    status,
-    data_vencimento_inicio: data_vencimento_inicio || undefined,
-    data_vencimento_fim: data_vencimento_fim || undefined,
-    data_pagamento_inicio: data_pagamento_inicio || undefined,
-    data_pagamento_fim: data_pagamento_fim || undefined,
+    page: parsed.page,
+    limit: parsed.limit,
+    search: parsed.search,
+    empresa_id: parsed.empresa_id,
+    sortColumn: parsed.sortColumn,
+    sortDirection: parsed.sortDirection,
+    status: parsed.status,
+    data_vencimento_inicio: parsed.data_vencimento_inicio,
+    data_vencimento_fim: parsed.data_vencimento_fim,
+    data_pagamento_inicio: parsed.data_pagamento_inicio,
+    data_pagamento_fim: parsed.data_pagamento_fim,
   };
 };
 
@@ -73,7 +67,7 @@ export class SaasTipoCobrancaController {
   static async create(req: SaasAuthenticatedRequest, res: Response) {
     try {
       const { error, value } = tipoCobrancaSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
-      if (error) { sendValidationError(res, 'Dados inválidos', toErrors(error.details)); return; }
+      if (error) { sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details)); return; }
       const item = await SaasTipoCobrancaService.create(value);
       await registrarCriacao(req as any, 'SaasTipoCobranca', item.id, item.toJSON() as Record<string, unknown>, undefined, null);
       res.status(201).json({ success: true, message: 'Tipo de cobrança criado com sucesso', data: item });
@@ -82,7 +76,7 @@ export class SaasTipoCobrancaController {
   static async update(req: SaasAuthenticatedRequest, res: Response) {
     try {
       const { error, value } = tipoCobrancaSchema.fork(['nome'], (s) => s.optional()).validate(req.body, { abortEarly: false, stripUnknown: true });
-      if (error) { sendValidationError(res, 'Dados inválidos', toErrors(error.details)); return; }
+      if (error) { sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details)); return; }
       const antigo = await SaasTipoCobrancaService.getById(Number(req.params.id));
       await SaasTipoCobrancaService.update(Number(req.params.id), value);
       if (antigo) {
@@ -158,7 +152,7 @@ export class SaasDiasVencimentoController {
   static async create(req: SaasAuthenticatedRequest, res: Response) {
     try {
       const { error, value } = diasVencimentoSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
-      if (error) { sendValidationError(res, 'Dados inválidos', toErrors(error.details)); return; }
+      if (error) { sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details)); return; }
       const item = await SaasDiasVencimentoService.create(value);
       await registrarCriacao(req as any, 'SaasDiasVencimento', item.id, item.toJSON() as Record<string, unknown>, undefined, null);
       res.status(201).json({ success: true, message: 'Dia de vencimento criado com sucesso', data: item });
@@ -167,7 +161,7 @@ export class SaasDiasVencimentoController {
   static async update(req: SaasAuthenticatedRequest, res: Response) {
     try {
       const { error, value } = diasVencimentoSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
-      if (error) { sendValidationError(res, 'Dados inválidos', toErrors(error.details)); return; }
+      if (error) { sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details)); return; }
       const antigo = await SaasDiasVencimentoService.getById(Number(req.params.id));
       await SaasDiasVencimentoService.update(Number(req.params.id), value);
       if (antigo) {
@@ -237,7 +231,7 @@ export class SaasTituloController {
   static async create(req: SaasAuthenticatedRequest, res: Response) {
     try {
       const { error, value } = tituloSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
-      if (error) { sendValidationError(res, 'Dados inválidos', toErrors(error.details)); return; }
+      if (error) { sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details)); return; }
       const item = await SaasTituloService.create(value);
       await registrarCriacao(req as any, 'SaasTitulo', item.id, item.toJSON() as Record<string, unknown>, undefined, null);
       res.status(201).json({ success: true, message: 'Título criado com sucesso', data: item });
@@ -250,7 +244,7 @@ export class SaasTituloController {
         (s) => s.optional()
       );
       const { error, value } = tituloUpdateSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
-      if (error) { sendValidationError(res, 'Dados inválidos', toErrors(error.details)); return; }
+      if (error) { sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details)); return; }
       const antigo = await SaasTituloService.getById(Number(req.params.id));
       if (!antigo) { sendNotFound(res, 'Título não encontrado'); return; }
 
@@ -372,18 +366,9 @@ export class SaasTituloController {
 
   /** Gera PDF de múltiplos boletos - reaproveita template do ADM (TituloPDFService). */
   static async gerarPdfBoletosMultiplos(req: SaasAuthenticatedRequest, res: Response): Promise<void> {
-    let ids: number[] = [];
     try {
-      const idsParam = req.query.ids as string;
-      if (idsParam) {
-        try {
-          const parsed = JSON.parse(idsParam);
-          ids = Array.isArray(parsed) ? parsed : [parsed];
-        } catch {
-          ids = idsParam.split(',').map((id: string) => parseInt(id.trim(), 10)).filter((id: number) => !isNaN(id));
-        }
-      }
-      if (!ids || ids.length === 0) {
+      const ids = parseIdsFromQueryParam(req.query.ids);
+      if (ids.length === 0) {
         sendValidationError(res, 'IDs dos títulos não fornecidos');
         return;
       }
@@ -481,7 +466,7 @@ export class SaasContratoController {
   static async create(req: SaasAuthenticatedRequest, res: Response) {
     try {
       const { error, value } = contratoSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
-      if (error) { sendValidationError(res, 'Dados inválidos', toErrors(error.details)); return; }
+      if (error) { sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details)); return; }
       const item = await SaasContratoService.create(value);
       await registrarCriacao(req as any, 'SaasContrato', item.id, item.toJSON() as Record<string, unknown>, undefined, null);
       res.status(201).json({ success: true, message: 'Contrato criado com sucesso', data: item });
@@ -490,7 +475,7 @@ export class SaasContratoController {
   static async update(req: SaasAuthenticatedRequest, res: Response) {
     try {
       const { error, value } = contratoSchema.fork(['empresa_id', 'banco_id'], (s) => s.optional()).validate(req.body, { abortEarly: false, stripUnknown: true });
-      if (error) { sendValidationError(res, 'Dados inválidos', toErrors(error.details)); return; }
+      if (error) { sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details)); return; }
       const antigo = await SaasContratoService.getById(Number(req.params.id));
       await SaasContratoService.update(Number(req.params.id), value);
       if (antigo) {

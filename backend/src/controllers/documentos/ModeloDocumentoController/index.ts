@@ -13,6 +13,7 @@ import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { logger } from '../../../utils/logger';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { parseOptionalQueryInt, queryString } from '../../../utils/listQuery';
 
 function pertenceEmpresa(doc: { empresa_id?: number | null }, empresaId: number | null): boolean {
   const eid = doc.empresa_id;
@@ -26,11 +27,11 @@ export class ModeloDocumentoController {
    */
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const { tipo } = req.query;
+      const tipo = queryString(req.query.tipo);
       const empresaId = getEmpresaIdOrNull(req);
 
       const result = await ModeloDocumentoService.list({
-        tipo: tipo as string,
+        tipo,
         empresa_id: empresaId ?? undefined
       });
 
@@ -281,11 +282,12 @@ export class ModeloDocumentoController {
         sendNotFound(res, 'Documento não encontrado');
         return;
       }
-      const { cliente_id, contrato_id } = req.query;
+      const cliente_id = queryString(req.query.cliente_id);
+      const contrato_id = queryString(req.query.contrato_id);
       await ModeloDocumentoPdfService.gerarTestPdf(
         Number(id),
-        cliente_id as string | undefined,
-        contrato_id as string | undefined,
+        cliente_id,
+        contrato_id,
         req,
         res
       );

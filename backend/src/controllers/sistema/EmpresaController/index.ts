@@ -3,8 +3,10 @@ import Joi from 'joi';
 import { EmpresaService } from '../../../services/sistema/EmpresaService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
+import { parseListQuery } from '../../../utils/listQuery';
 import { AuthTokenPayload, AuthenticatedRequest } from '../../../types/auth';
 import { getEmpresaId, getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
 
 const canManageEmpresas = (req: Request): boolean => {
   const user = (req as AuthenticatedRequest).user;
@@ -53,10 +55,7 @@ export class EmpresaController {
   static async index(req: Request, res: Response): Promise<void> {
     try {
       if (!canManageEmpresas(req)) { sendForbidden(res, 'Acesso restrito a administradores'); return; }
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 15;
-      const search = req.query.search as string;
-      const searchField = req.query.searchField as string;
+      const { page, limit, search, searchField } = parseListQuery(req.query);
       const result = await EmpresaService.list({ page, limit, search, searchField });
       sendSuccess(res, result);
     } catch (error) {
@@ -80,12 +79,7 @@ export class EmpresaController {
       if (!canManageEmpresas(req)) { sendForbidden(res, 'Acesso restrito a administradores'); return; }
       const { error, value } = createSchema.validate(req.body, { abortEarly: false });
       if (error) {
-        const errors = error.details.reduce<Record<string, string[]>>((acc, d) => {
-          const field = d.path.join('.') || 'general';
-          (acc[field] = acc[field] || []).push(d.message);
-          return acc;
-        }, {});
-        sendValidationError(res, 'Dados inválidos', errors);
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
         return;
       }
       const cnpjExiste = await EmpresaService.existsByCnpj(value.cnpj);
@@ -109,12 +103,7 @@ export class EmpresaController {
       const id = parseInt(req.params.id);
       const { error, value } = updateSchema.validate(req.body, { abortEarly: false });
       if (error) {
-        const errors = error.details.reduce<Record<string, string[]>>((acc, d) => {
-          const field = d.path.join('.') || 'general';
-          (acc[field] = acc[field] || []).push(d.message);
-          return acc;
-        }, {});
-        sendValidationError(res, 'Dados inválidos', errors);
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
         return;
       }
       if (value.cnpj) {

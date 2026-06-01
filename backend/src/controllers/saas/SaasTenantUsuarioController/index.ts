@@ -4,6 +4,8 @@ import { UsuarioService } from '../../../services/cadastros/UsuarioService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
+import { ativoFilterForService, parseListQuery } from '../../../utils/listQuery';
+import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
 
 const createSchema = Joi.object({
   empresa_id: Joi.number().integer().required(),
@@ -25,21 +27,23 @@ const updateSchema = Joi.object({
 export class SaasTenantUsuarioController {
   static async list(req: SaasAuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { page, limit, search, searchField, ativo, sortColumn, sortDirection, empresa_id } = req.query as Record<string, string>;
-      const empresaId = empresa_id ? parseInt(empresa_id, 10) : undefined;
-      if (!empresaId || isNaN(empresaId)) {
+      const { page, limit, search, searchField, ativo, sortColumn, sortDirection, empresa_id } = parseListQuery(
+        req.query,
+        { defaultLimit: 500 }
+      );
+      if (!empresa_id) {
         sendValidationError(res, 'empresa_id é obrigatório na listagem');
         return;
       }
       const result = await UsuarioService.list({
-        page: page ? parseInt(page) : 1,
-        limit: limit ? parseInt(limit) : 500,
+        page,
+        limit,
         search: search || '',
         searchField,
-        ativo,
+        ativo: ativoFilterForService(ativo),
         sortColumn,
-        sortDirection: sortDirection as 'asc' | 'desc' | undefined,
-        empresa_id: empresaId,
+        sortDirection,
+        empresa_id,
       });
       sendSuccess(res, result);
     } catch (err) {
@@ -64,12 +68,7 @@ export class SaasTenantUsuarioController {
     try {
       const { error, value } = createSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) {
-        const errs = error.details.reduce<Record<string, string[]>>((acc, d) => {
-          const f = d.path.join('.') || 'general';
-          (acc[f] = acc[f] || []).push(d.message);
-          return acc;
-        }, {});
-        sendValidationError(res, 'Dados inválidos', errs);
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
         return;
       }
       const existente = await UsuarioService.existsByEmail(value.email);
@@ -106,12 +105,7 @@ export class SaasTenantUsuarioController {
       const id = Number(req.params.id);
       const { error, value } = updateSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) {
-        const errs = error.details.reduce<Record<string, string[]>>((acc, d) => {
-          const f = d.path.join('.') || 'general';
-          (acc[f] = acc[f] || []).push(d.message);
-          return acc;
-        }, {});
-        sendValidationError(res, 'Dados inválidos', errs);
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
         return;
       }
       const usuario = await UsuarioService.getById(id);

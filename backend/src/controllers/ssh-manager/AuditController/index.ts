@@ -3,6 +3,8 @@ import { Op } from 'sequelize';
 import { searchSshAuditLogs, SshAuditAction } from '../../../services/ssh-manager/SshAuditService';
 import { sendSuccess, sendError } from '../../../utils/responseUtils';
 import { resolveListEmpresaId } from '../../../utils/tenantUtils';
+import { parseListQuery } from '../../../utils/listQuery';
+import { buildPagination } from '../../../utils/pagination';
 import { Agent } from '../../../models/agent/Agent';
 import { SshDevice } from '../../../models/ssh-manager/SshDevice';
 import { Cliente } from '../../../models/clientes/Cliente';
@@ -269,21 +271,16 @@ export class SshAuditController {
       const sortDir: 'asc' | 'desc' = sortDirection === 'asc' ? 'asc' : 'desc';
       const postEnrichSortCols = new Set(['clienteName', 'command', 'errorMessage']);
 
-      const pageNum = Math.max(1, parseInt(page ?? '1', 10));
-      const limitNum = Math.min(100, Math.max(1, parseInt(limit ?? '20', 10)));
+      const { page: pageNum, limit: limitNum } = parseListQuery(
+        { page, limit, search, searchField, sortColumn, sortDirection },
+        { defaultLimit: 20, maxLimit: 100 }
+      );
 
       const listEmpresaId = resolveListEmpresaId(req);
       if (listEmpresaId === false) {
         sendSuccess(res, {
           data: [],
-          pagination: {
-            current_page: pageNum,
-            last_page: 1,
-            per_page: limitNum,
-            total: 0,
-            from: 0,
-            to: 0,
-          },
+          pagination: buildPagination(pageNum, limitNum, 0, { minLastPageWhenEmpty: 1 }),
         });
         return;
       }
@@ -336,18 +333,9 @@ export class SshAuditController {
         });
       }
 
-      const lastPage = Math.ceil(total / limitNum);
-
       sendSuccess(res, {
         data: enrichedLogs,
-        pagination: {
-          current_page: pageNum,
-          last_page: lastPage || 1,
-          per_page: limitNum,
-          total,
-          from: total > 0 ? (pageNum - 1) * limitNum + 1 : 0,
-          to: Math.min(pageNum * limitNum, total),
-        },
+        pagination: buildPagination(pageNum, limitNum, total, { minLastPageWhenEmpty: 1, minLastPage: 1 }),
       });
     } catch (error) {
       sendError(res, error, 'Erro ao buscar logs de auditoria SSH', 500, true, {

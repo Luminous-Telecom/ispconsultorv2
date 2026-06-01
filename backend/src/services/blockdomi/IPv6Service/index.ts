@@ -6,23 +6,14 @@ import { Op, WhereOptions, Order } from 'sequelize';
 import { isValidIPv6 } from '../../../utils/sanitize';
 import { VersaoBlockdomiService } from '../VersaoBlockdomiService';
 import { logger } from '../../../utils/logger';
-import { SortHelper } from '../../../utils/sortHelper';
 import { IPV6_SORT_CONFIG } from '../../../config/sortConfigs';
+import {
+  BLOCKDOMI_LIST_INCLUDES,
+  listBlockdomiPaginated,
+  type BlockdomiListFilters,
+} from '../../../utils/blockdomiListHelper';
 
-const IPV6_LIST_INCLUDES = [
-  { model: VersaoBlockdomi, as: 'versaoRef' as const, attributes: ['numero'], required: false },
-  { model: NumeroSeiAnatelBlockdomi, as: 'numeroSeiRef' as const, attributes: ['numero'], required: false }
-];
-
-export interface ListIPv6Filters {
-  page?: number;
-  limit?: number;
-  search?: string;
-  searchField?: string;
-  ativo?: boolean;
-  sortColumn?: string;
-  sortDirection?: string;
-}
+export type ListIPv6Filters = BlockdomiListFilters;
 
 export interface ListIPv6Response {
   data: Array<Record<string, unknown>>;
@@ -41,109 +32,20 @@ export class IPv6Service {
    * Listar IPv6 com filtros e paginação
    */
   static async list(filters: ListIPv6Filters): Promise<ListIPv6Response> {
-    const { page = 1, limit = 15, search, searchField, ativo, sortColumn, sortDirection } = filters;
-    const offset = (page - 1) * limit;
-
-    // Construir filtros
-    const whereConditions: Array<WhereOptions<IPv6>> = [];
-    
-    if (search) {
-      const searchPattern = `%${search}%`;
-      const numExact = /^\d+$/.test(search) ? parseInt(search, 10) : null;
-      const textFields = ['ip', 'descricao', 'nome_oficio', 'link_oficio_anatel', 'link_oficio_justica', 'link_planilha_dominios'];
-      let orConditions: Array<WhereOptions<IPv6>> = [];
-      if (searchField === 'id') {
-        orConditions = numExact !== null ? [{ id: numExact } as WhereOptions<IPv6>] : [{ id: { [Op.lt]: 0 } } as WhereOptions<IPv6>];
-      } else if (searchField === 'numero_sei_anatel') {
-        orConditions = [{ '$numeroSeiRef.numero$': { [Op.like]: searchPattern } } as WhereOptions<IPv6>];
-      } else if (textFields.includes(searchField || '')) {
-        orConditions = [{ [searchField!]: { [Op.like]: searchPattern } } as WhereOptions<IPv6>];
-      } else {
-        orConditions = [
-          { ip: { [Op.like]: searchPattern } },
-          { descricao: { [Op.like]: searchPattern } },
-          { nome_oficio: { [Op.like]: searchPattern } },
-          { link_oficio_anatel: { [Op.like]: searchPattern } },
-          { link_oficio_justica: { [Op.like]: searchPattern } },
-          { link_planilha_dominios: { [Op.like]: searchPattern } },
-          { '$numeroSeiRef.numero$': { [Op.like]: searchPattern } } as WhereOptions<IPv6>
-        ] as Array<WhereOptions<IPv6>>;
-        if (numExact !== null) {
-          orConditions.unshift({ id: numExact } as WhereOptions<IPv6>);
-        } else {
-          orConditions.unshift({ id: { [Op.like]: searchPattern } } as WhereOptions<IPv6>);
-        }
-      }
-      whereConditions.push({ [Op.or]: orConditions } as WhereOptions<IPv6>);
-    }
-
-    if (ativo !== undefined) {
-      whereConditions.push({ ativo });
-    }
-
-    const where: WhereOptions<IPv6> = whereConditions.length > 0
-      ? { [Op.and]: whereConditions } as WhereOptions<IPv6>
-      : {};
-
-    // Construir ordenação
-    let order: Order = [['id', 'DESC']]; // Padrão
-    
-    if (sortColumn && sortDirection) {
-      const sortResult = SortHelper.buildOrder(
-        IPV6_SORT_CONFIG,
-        sortColumn,
-        sortDirection.toUpperCase() as 'ASC' | 'DESC'
-      );
-
-      if (sortResult.isValid) {
-        order = sortResult.order;
-      } else {
-        logger.warn('IPv6Service.list - Coluna de ordenação inválida', {
-          column: sortColumn,
-          error: sortResult.error
-        });
-      }
-    }
-
-    const count = await IPv6.count({
-      where,
-      include: IPV6_LIST_INCLUDES,
-      distinct: true,
-      col: 'id'
+    return listBlockdomiPaginated({
+      model: IPv6,
+      filters,
+      sortConfig: IPV6_SORT_CONFIG,
+      primarySearchField: 'ip',
+      logContext: 'IPv6Service.list',
     });
-
-    const ipv6s = await IPv6.findAll({
-      where,
-      order,
-      limit,
-      offset,
-      include: IPV6_LIST_INCLUDES,
-      raw: false
-    });
-
-    const ipv6sProcessados = ipv6s.map(ipv6 => ipv6.toJSON());
-
-    const from = count > 0 ? offset + 1 : 0;
-    const to = count > 0 ? Math.min(offset + limit, count) : 0;
-
-    return {
-      data: ipv6sProcessados,
-      pagination: {
-        current_page: page,
-        per_page: limit,
-        total: count,
-        last_page: Math.ceil(count / limit),
-        from,
-        to
-      }
-    };
   }
 
   /**
    * Buscar IPv6 por ID
    */
   static async getById(id: string | number): Promise<IPv6 | null> {
-    return await IPv6.findByPk(id, { include: IPV6_LIST_INCLUDES });
+    return await IPv6.findByPk(id, { include: BLOCKDOMI_LIST_INCLUDES });
   }
 
   /**
@@ -367,7 +269,7 @@ export class IPv6Service {
       );
     }
     const row = await IPv6.create(dados as never);
-    await row.reload({ include: IPV6_LIST_INCLUDES });
+    await row.reload({ include: BLOCKDOMI_LIST_INCLUDES });
     return row;
   }
 
@@ -413,7 +315,7 @@ export class IPv6Service {
     updateData.versao_id = versaoId;
     
     await existingIPv6.update(updateData);
-    await existingIPv6.reload({ include: IPV6_LIST_INCLUDES });
+    await existingIPv6.reload({ include: BLOCKDOMI_LIST_INCLUDES });
 
     return existingIPv6;
   }

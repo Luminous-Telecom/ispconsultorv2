@@ -13,11 +13,6 @@ import {
   pingAgent,
 } from '../../../services/agent/AgentService';
 
-function parseClienteIdQuery(raw: unknown): number | null {
-  if (raw === undefined || raw === null || raw === '') return null;
-  const n = parseInt(String(raw), 10);
-  return Number.isFinite(n) && n > 0 ? n : null;
-}
 import {
   formatAgentInstallSshError,
   getAgentContainerName,
@@ -33,6 +28,7 @@ import {
   resolveEmpresaScopeForList,
   resolveEmpresaIdForScopedCreate,
 } from '../../../utils/tenantUtils';
+import { queryString } from '../../../utils/listQuery';
 
 const AGENT_DIR = path.resolve(__dirname, '../../../../..', 'agent');
 const ALLOWED_FILES = new Set(['index.js', 'package.json']);
@@ -73,7 +69,7 @@ export class AgentController {
   static async index(req: Request, res: Response): Promise<void> {
     try {
       const scopeEmpresaId = resolveEmpresaScopeForList(req, parseEmpresaIdQuery(req.query.empresa_id));
-      const clienteId = parseClienteIdQuery(req.query.cliente_id);
+      const clienteId = parseEmpresaIdQuery(req.query.cliente_id);
       const parts: WhereOptions<Agent>[] = [];
       if (scopeEmpresaId != null) {
         parts.push({ [Op.or]: [{ empresa_id: scopeEmpresaId }, { empresa_id: null }] });
@@ -379,7 +375,7 @@ export class AgentController {
    * Rota pública — autenticada pelo token do agente na query string (?token=...).
    */
   static async installScript(req: Request, res: Response): Promise<void> {
-    const { token } = req.query as { token?: string };
+    const token = queryString(req.query.token);
     if (!token) {
       res.status(401).send('Token obrigatório');
       return;

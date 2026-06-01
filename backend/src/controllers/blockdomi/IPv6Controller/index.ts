@@ -7,17 +7,12 @@ import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { isValidIPv6 } from '../../../utils/sanitize';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { parseListQuery } from '../../../utils/listQuery';
 
 export class IPv6Controller {
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 15;
-      const search = req.query.search as string;
-      const searchField = req.query.searchField as string;
-      const ativo = req.query.ativo !== undefined ? req.query.ativo === 'true' : undefined;
-      const sortColumn = req.query.sortColumn as string;
-      const sortDirection = req.query.sortDirection as string;
+      const { page, limit, search, searchField, ativo, sortColumn, sortDirection } = parseListQuery(req.query);
 
       const result = await IPv6Service.list({
         page,
@@ -26,7 +21,7 @@ export class IPv6Controller {
         searchField,
         ativo,
         sortColumn,
-        sortDirection
+        sortDirection,
       });
 
       sendSuccess(res, result);

@@ -3,6 +3,7 @@ import { Cliente } from '../../../models/clientes/Cliente';
 import { Op, WhereOptions } from 'sequelize';
 import { sequelize } from '../../../config/database';
 import { buildDateFilter, buildNumericSearchFilter, combineFilters } from '../../../utils/queryFilters';
+import { buildListPagination } from '../../../utils/pagination';
 import { logger } from '../../../utils/logger';
 import { SortHelper } from '../../../utils/sortHelper';
 import { NOTA_FISCAL_SORT_CONFIG } from '../../../config/sortConfigs';
@@ -56,8 +57,8 @@ export class NotaFiscalService {
       empresa_id
     } = filters;
 
-    const pageNumber = parseInt(String(page), 10);
-    const limitNumber = parseInt(String(limit), 10);
+    const pageNumber = Math.max(1, Number(page) || 1);
+    const limitNumber = Math.max(1, Number(limit) || 15);
     const offset = (pageNumber - 1) * limitNumber;
 
     // Include customizado para busca por cliente (INNER JOIN + where)
@@ -220,24 +221,10 @@ export class NotaFiscalService {
       throw queryError;
     }
 
-    const totalPages = Math.ceil(count / limitNumber);
-    const from = count > 0 ? offset + 1 : 0;
-    const to = count > 0 ? Math.min(offset + limitNumber, count) : 0;
-
     return {
       success: true,
       data: rows,
-      pagination: {
-        page: pageNumber,
-        limit: limitNumber,
-        total: count,
-        totalPages,
-        current_page: pageNumber,
-        per_page: limitNumber,
-        last_page: totalPages,
-        from,
-        to
-      }
+      pagination: buildListPagination(pageNumber, limitNumber, count),
     };
   }
 
@@ -260,8 +247,8 @@ export class NotaFiscalService {
    * Buscar notas fiscais por cliente com paginação (filtra por empresa_id quando informado)
    */
   static async findByCliente(cliente_id: number, page = 1, limit = 15, empresaId?: number | null): Promise<ListNotasFiscaisResponse> {
-    const pageNumber = parseInt(String(page), 10);
-    const limitNumber = parseInt(String(limit), 10);
+    const pageNumber = Math.max(1, Number(page) || 1);
+    const limitNumber = Math.max(1, Number(limit) || 15);
     const offset = (pageNumber - 1) * limitNumber;
 
     const where: WhereOptions = { cliente_id };
@@ -276,24 +263,10 @@ export class NotaFiscalService {
       offset
     });
 
-    const totalPages = Math.ceil(count / limitNumber);
-    const from = count > 0 ? offset + 1 : 0;
-    const to = count > 0 ? Math.min(offset + limitNumber, count) : 0;
-
     return {
       success: true,
       data: rows,
-      pagination: {
-        page: pageNumber,
-        limit: limitNumber,
-        total: count,
-        totalPages,
-        current_page: pageNumber,
-        per_page: limitNumber,
-        last_page: totalPages,
-        from,
-        to
-      }
+      pagination: buildListPagination(pageNumber, limitNumber, count),
     };
   }
 }

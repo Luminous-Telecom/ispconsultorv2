@@ -9,6 +9,8 @@ import { registrarCriacao, registrarAtualizacao } from '../../../services/sistem
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { parseIdsFromQueryParam, parseListQuery, parseOptionalQueryInt, queryString } from '../../../utils/listQuery';
+import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
 
 export class NotaFiscalController {
   // Schema de validação para criação
@@ -45,34 +47,31 @@ export class NotaFiscalController {
   static async index(req: Request, res: Response): Promise<void> {
     try {
       const {
-        page = '1',
-        limit = '15',
-        search = '',
+        page,
+        limit,
+        search,
+        searchField,
+        status,
+        sortColumn,
+        sortDirection,
+      } = parseListQuery(req.query);
+      const cliente_id = parseOptionalQueryInt(req.query.cliente_id);
+      const data_inicio = queryString(req.query.data_inicio);
+      const data_fim = queryString(req.query.data_fim);
+
+      const empresaId = getEmpresaIdOrNull(req);
+      const result = await NotaFiscalService.list({
+        page,
+        limit,
+        search: search ?? '',
         searchField,
         status,
         cliente_id,
         data_inicio,
         data_fim,
         sortColumn,
-        sortDirection
-      } = req.query;
-
-      const pageNumber = parseInt(page as string, 10);
-      const limitNumber = parseInt(limit as string, 10);
-
-      const empresaId = getEmpresaIdOrNull(req);
-      const result = await NotaFiscalService.list({
-        page: pageNumber,
-        limit: limitNumber,
-        search: search as string,
-        searchField: searchField as string,
-        status: status as string,
-        cliente_id: cliente_id ? parseInt(String(cliente_id), 10) : undefined,
-        data_inicio: data_inicio as string,
-        data_fim: data_fim as string,
-        sortColumn: sortColumn as string,
-        sortDirection: sortDirection as string,
-        empresa_id: empresaId ?? undefined
+        sortDirection,
+        empresa_id: empresaId ?? undefined,
       });
 
       sendSuccess(res, result);
@@ -116,16 +115,7 @@ export class NotaFiscalController {
       const { error, value } = NotaFiscalController.createSchema.validate(req.body);
 
       if (error) {
-        // Converter para Record<string, string[]> esperado pelo sendValidationError
-        const errorsByField: Record<string, string[]> = error.details.reduce((acc, detail) => {
-          const field = detail.path.join('.') || 'general';
-          if (!acc[field]) {
-            acc[field] = [];
-          }
-          acc[field].push(detail.message);
-          return acc;
-        }, {} as Record<string, string[]>);
-        sendValidationError(res, 'Dados inválidos', errorsByField);
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
         return;
       }
 
@@ -264,19 +254,13 @@ export class NotaFiscalController {
   static async listarPorCliente(req: Request, res: Response): Promise<void> {
     try {
       const { cliente_id } = req.params;
-      const {
-        page = '1',
-        limit = '15'
-      } = req.query;
-
-      const pageNumber = parseInt(page as string, 10);
-      const limitNumber = parseInt(limit as string, 10);
+      const { page, limit } = parseListQuery(req.query);
 
       const empresaId = getEmpresaIdOrNull(req);
       const result = await NotaFiscalService.findByCliente(
         parseInt(cliente_id, 10),
-        pageNumber,
-        limitNumber,
+        page,
+        limit,
         empresaId
       );
 
@@ -333,14 +317,7 @@ export class NotaFiscalController {
    */
   static async imprimirMultiplas(req: Request, res: Response): Promise<void> {
     try {
-      const { ids } = req.query;
-
-      if (!ids || typeof ids !== 'string') {
-        sendValidationError(res, 'IDs das NFS-e não fornecidos');
-        return;
-      }
-
-      const idsArray = ids.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
+      const idsArray = parseIdsFromQueryParam(req.query.ids);
 
       if (idsArray.length === 0) {
         sendValidationError(res, 'Nenhum ID válido fornecido');

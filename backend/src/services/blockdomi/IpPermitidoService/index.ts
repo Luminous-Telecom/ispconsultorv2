@@ -1,5 +1,6 @@
 import { IpPermitidoBlockdomi } from '../../../models/blockdomi/IpPermitidoBlockdomi';
 import { Op, WhereOptions } from 'sequelize';
+import { buildPagination } from '../../../utils/pagination';
 
 export interface ListIpPermitidoFilters {
   page?: number;
@@ -85,9 +86,6 @@ export class IpPermitidoService {
       distinct: true
     });
 
-    const from = count > 0 ? offset + 1 : 0;
-    const to = count > 0 ? Math.min(offset + limit, count) : 0;
-
     const data = rows.map((r) => {
       const json = r.toJSON() as Record<string, unknown>;
       const cliente = json.cliente as Record<string, unknown> | undefined;
@@ -97,14 +95,7 @@ export class IpPermitidoService {
 
     return {
       data,
-      pagination: {
-        current_page: page,
-        per_page: limit,
-        total: count,
-        last_page: Math.ceil(count / limit),
-        from,
-        to
-      }
+      pagination: buildPagination(page, limit, count),
     };
   }
 

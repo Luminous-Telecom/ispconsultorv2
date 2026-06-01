@@ -7,8 +7,12 @@ import path from 'path';
 import { Op, WhereOptions, Order } from 'sequelize';
 import { sanitizeDominio } from '../../../utils/sanitize';
 import { logger } from '../../../utils/logger';
-import { SortHelper } from '../../../utils/sortHelper';
 import { DOMINIO_SORT_CONFIG } from '../../../config/sortConfigs';
+import {
+  BLOCKDOMI_LIST_INCLUDES,
+  listBlockdomiPaginated,
+  type BlockdomiListFilters,
+} from '../../../utils/blockdomiListHelper';
 import { VersaoBlockdomiService } from '../VersaoBlockdomiService';
 import { SeiAnatelExtractService } from '../SeiAnatelExtractService';
 
@@ -18,20 +22,7 @@ function emptyToNull<T>(v: T): T | null {
   return v;
 }
 
-const DOMINIO_LIST_INCLUDES = [
-  { model: VersaoBlockdomi, as: 'versaoRef' as const, attributes: ['numero'], required: false },
-  { model: NumeroSeiAnatelBlockdomi, as: 'numeroSeiRef' as const, attributes: ['numero'], required: false }
-];
-
-export interface ListDominiosFilters {
-  page?: number;
-  limit?: number;
-  search?: string;
-  searchField?: string;
-  ativo?: boolean;
-  sortColumn?: string;
-  sortDirection?: string;
-}
+export type ListDominiosFilters = BlockdomiListFilters;
 
 export interface ListDominiosResponse {
   data: Array<Record<string, unknown>>;
@@ -128,109 +119,20 @@ export class DominioService {
    * Listar domínios com filtros e paginação
    */
   static async list(filters: ListDominiosFilters): Promise<ListDominiosResponse> {
-    const { page = 1, limit = 15, search, searchField, ativo, sortColumn, sortDirection } = filters;
-    const offset = (page - 1) * limit;
-
-    // Construir filtros
-    const whereConditions: Array<WhereOptions<Dominio>> = [];
-    
-    if (search) {
-      const searchPattern = `%${search}%`;
-      const numExact = /^\d+$/.test(search) ? parseInt(search, 10) : null;
-      const textFields = ['dominio', 'descricao', 'nome_oficio', 'link_oficio_anatel', 'link_oficio_justica', 'link_planilha_dominios'];
-      let orConditions: Array<WhereOptions<Dominio>> = [];
-      if (searchField === 'id') {
-        orConditions = numExact !== null ? [{ id: numExact } as WhereOptions<Dominio>] : [{ id: { [Op.lt]: 0 } } as WhereOptions<Dominio>];
-      } else if (searchField === 'numero_sei_anatel') {
-        orConditions = [{ '$numeroSeiRef.numero$': { [Op.like]: searchPattern } } as WhereOptions<Dominio>];
-      } else if (textFields.includes(searchField || '')) {
-        orConditions = [{ [searchField!]: { [Op.like]: searchPattern } } as WhereOptions<Dominio>];
-      } else {
-        orConditions = [
-          { dominio: { [Op.like]: searchPattern } },
-          { descricao: { [Op.like]: searchPattern } },
-          { nome_oficio: { [Op.like]: searchPattern } },
-          { link_oficio_anatel: { [Op.like]: searchPattern } },
-          { link_oficio_justica: { [Op.like]: searchPattern } },
-          { link_planilha_dominios: { [Op.like]: searchPattern } },
-          { '$numeroSeiRef.numero$': { [Op.like]: searchPattern } } as WhereOptions<Dominio>
-        ] as Array<WhereOptions<Dominio>>;
-        if (numExact !== null) {
-          orConditions.unshift({ id: numExact } as WhereOptions<Dominio>);
-        } else {
-          orConditions.unshift({ id: { [Op.like]: searchPattern } } as WhereOptions<Dominio>);
-        }
-      }
-      whereConditions.push({ [Op.or]: orConditions } as WhereOptions<Dominio>);
-    }
-
-    if (ativo !== undefined) {
-      whereConditions.push({ ativo });
-    }
-
-    const where: WhereOptions<Dominio> = whereConditions.length > 0
-      ? { [Op.and]: whereConditions } as WhereOptions<Dominio>
-      : {};
-
-    // Construir ordenação
-    let order: Order = [['id', 'DESC']]; // Padrão
-    
-    if (sortColumn && sortDirection) {
-      const sortResult = SortHelper.buildOrder(
-        DOMINIO_SORT_CONFIG,
-        sortColumn,
-        sortDirection.toUpperCase() as 'ASC' | 'DESC'
-      );
-
-      if (sortResult.isValid) {
-        order = sortResult.order;
-      } else {
-        logger.warn('DominioService.list - Coluna de ordenação inválida', {
-          column: sortColumn,
-          error: sortResult.error
-        });
-      }
-    }
-
-    const count = await Dominio.count({
-      where,
-      include: DOMINIO_LIST_INCLUDES,
-      distinct: true,
-      col: 'id'
+    return listBlockdomiPaginated({
+      model: Dominio,
+      filters,
+      sortConfig: DOMINIO_SORT_CONFIG,
+      primarySearchField: 'dominio',
+      logContext: 'DominioService.list',
     });
-
-    const dominios = await Dominio.findAll({
-      where,
-      order,
-      limit,
-      offset,
-      include: DOMINIO_LIST_INCLUDES,
-      raw: false
-    });
-
-    const dominiosProcessados = dominios.map(dominio => dominio.toJSON());
-
-    const from = count > 0 ? offset + 1 : 0;
-    const to = count > 0 ? Math.min(offset + limit, count) : 0;
-
-    return {
-      data: dominiosProcessados,
-      pagination: {
-        current_page: page,
-        per_page: limit,
-        total: count,
-        last_page: Math.ceil(count / limit),
-        from,
-        to
-      }
-    };
   }
 
   /**
    * Buscar domínio por ID
    */
   static async getById(id: string | number): Promise<Dominio | null> {
-    return await Dominio.findByPk(id, { include: DOMINIO_LIST_INCLUDES });
+    return await Dominio.findByPk(id, { include: BLOCKDOMI_LIST_INCLUDES });
   }
 
   /**
@@ -258,7 +160,7 @@ export class DominioService {
       );
     }
     const row = await Dominio.create(dados as never);
-    await row.reload({ include: DOMINIO_LIST_INCLUDES });
+    await row.reload({ include: BLOCKDOMI_LIST_INCLUDES });
     return row;
   }
 
@@ -306,7 +208,7 @@ export class DominioService {
     updateData.versao_id = versaoId;
 
     await existingDominio.update(updateData);
-    await existingDominio.reload({ include: DOMINIO_LIST_INCLUDES });
+    await existingDominio.reload({ include: BLOCKDOMI_LIST_INCLUDES });
 
     return existingDominio;
   }

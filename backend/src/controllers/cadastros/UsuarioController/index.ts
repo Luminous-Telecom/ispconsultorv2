@@ -7,6 +7,8 @@ import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../..
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { buildPagination } from '../../../utils/pagination';
+import { ativoFilterForService, parseListQuery } from '../../../utils/listQuery';
 
 export class UsuarioController {
   private static createSchema = Joi.object({
@@ -27,24 +29,25 @@ export class UsuarioController {
 
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const { page = 1, limit = 10, search = '', searchField, ativo, sortColumn, sortDirection } = req.query;
-      const pageNum = Number(page);
-      const limitNum = Number(limit);
+      const { page, limit, search, searchField, ativo, sortColumn, sortDirection } = parseListQuery(
+        req.query,
+        { defaultLimit: 10 }
+      );
       const empresaId = getEmpresaIdOrNull(req);
 
       if (empresaId === null || empresaId === undefined) {
-        sendSuccess(res, { success: true, data: [], pagination: { current_page: pageNum, per_page: limitNum, total: 0, last_page: 0, from: 0, to: 0 } });
+        sendSuccess(res, { success: true, data: [], pagination: buildPagination(page, limit, 0) });
         return;
       }
 
       const result = await UsuarioService.list({
-        page: pageNum,
-        limit: limitNum,
-        search: search as string,
-        searchField: searchField as string,
-        ativo: ativo as string,
-        sortColumn: sortColumn as string,
-        sortDirection: sortDirection as string,
+        page,
+        limit,
+        search: search ?? '',
+        searchField,
+        ativo: ativoFilterForService(ativo),
+        sortColumn,
+        sortDirection,
         empresa_id: empresaId ?? undefined,
       });
 

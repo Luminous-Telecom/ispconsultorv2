@@ -9,22 +9,23 @@ import { setAuditData } from '../../../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { parseListQuery, toSqlSortDirection } from '../../../utils/listQuery';
 
 export class TermoContratoController {
   // Listar termos de um contrato específico
   static async getByContrato(req: Request, res: Response): Promise<void> {
     try {
       const { contratoId } = req.params;
-      const { sortColumn, sortDirection } = req.query;
-      
+      const { sortColumn, sortDirection } = parseListQuery(req.query);
+
       if (!contratoId) {
         sendValidationError(res, 'ID do contrato é obrigatório');
         return;
       }
 
       const termos = await TermoContratoService.getByContrato(parseInt(contratoId), {
-        sortColumn: sortColumn as string | undefined,
-        sortDirection: (sortDirection as 'ASC' | 'DESC') || undefined
+        sortColumn,
+        sortDirection: sortDirection ? toSqlSortDirection(sortDirection) : undefined,
       });
       
       sendSuccess(res, termos);

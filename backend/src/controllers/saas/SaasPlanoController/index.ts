@@ -4,6 +4,7 @@ import { SaasPlanoService } from '../../../services/saas/SaasPlanoService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../../../utils/responseUtils';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
+import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
 
 const schema = Joi.object({
   nome: Joi.string().max(100).required(),
@@ -39,12 +40,7 @@ export class SaasPlanoController {
     try {
       const { error, value } = schema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) {
-        sendValidationError(res, 'Dados inválidos', error.details.reduce<Record<string, string[]>>((acc, d) => {
-          const f = d.path.join('.') || 'general';
-          acc[f] = acc[f] || [];
-          acc[f].push(d.message);
-          return acc;
-        }, {}));
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
         return;
       }
       const plano = await SaasPlanoService.create(value);
@@ -59,12 +55,7 @@ export class SaasPlanoController {
     try {
       const { error, value } = schema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) {
-        sendValidationError(res, 'Dados inválidos', error.details.reduce<Record<string, string[]>>((acc, d) => {
-          const f = d.path.join('.') || 'general';
-          acc[f] = acc[f] || [];
-          acc[f].push(d.message);
-          return acc;
-        }, {}));
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
         return;
       }
       const planoAntigo = await SaasPlanoService.getById(Number(req.params.id));

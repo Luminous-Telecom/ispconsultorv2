@@ -2,11 +2,13 @@ import { Response } from 'express';
 import { SaasDashboardService } from '../../../services/saas/SaasDashboardService';
 import { sendSuccess, sendError } from '../../../utils/responseUtils';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
+import { queryString } from '../../../utils/listQuery';
 
 export class SaasDashboardController {
   static async getDashboardData(req: SaasAuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { startDate, endDate } = req.query as { startDate?: string; endDate?: string };
+      const startDate = queryString(req.query.startDate);
+      const endDate = queryString(req.query.endDate);
       const data = await SaasDashboardService.getDashboardData(startDate, endDate);
       sendSuccess(res, data);
     } catch (error) {

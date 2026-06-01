@@ -5,6 +5,7 @@ import { cache } from '../../../utils/cache';
 import { logger } from '../../../utils/logger';
 import { SortHelper } from '../../../utils/sortHelper';
 import { BANCO_SORT_CONFIG } from '../../../config/sortConfigs';
+import { buildPagination } from '../../../utils/pagination';
 
 export interface ListBancosFilters {
   search?: string;
@@ -159,20 +160,10 @@ export class BancoService {
     }
     
     const limitNum = Number(limit);
-    const from = count > 0 ? offset + 1 : 0;
-    const to = count > 0 ? Math.min(offset + limitNum, count) : 0;
-
     return {
       success: true,
       data: bancos,
-      pagination: {
-        current_page: Number(page),
-        per_page: limitNum,
-        total: count,
-        last_page: Math.ceil(count / limitNum),
-        from,
-        to
-      }
+      pagination: buildPagination(Number(page), limitNum, count),
     };
   }
 

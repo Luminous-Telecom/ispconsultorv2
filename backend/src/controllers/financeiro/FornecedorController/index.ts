@@ -7,18 +7,14 @@ import { formatCEP } from '../../../utils/dateUtils';
 import axios from 'axios';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { parseListQuery, queryString } from '../../../utils/listQuery';
 
 export class FornecedorController {
   // Listar todos os fornecedores
   static async index(req: Request, res: Response): Promise<void> {
     try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 15;
-      const search = req.query.search as string;
-      const searchField = req.query.searchField as string;
-      const tipoPessoa = req.query.tipo_pessoa as string;
-      const sortColumn = req.query.sortColumn as string;
-      const sortDirection = req.query.sortDirection as string;
+      const { page, limit, search, searchField, sortColumn, sortDirection } = parseListQuery(req.query);
+      const tipoPessoa = queryString(req.query.tipo_pessoa);
 
       const empresaId = getEmpresaIdOrNull(req);
 
@@ -28,7 +24,7 @@ export class FornecedorController {
         search,
         searchField,
         tipo_pessoa: tipoPessoa,
-        ativo: req.query.ativo as string,
+        ativo: queryString(req.query.ativo),
         sortColumn,
         sortDirection,
         empresa_id: empresaId ?? undefined,

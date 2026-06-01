@@ -1,6 +1,7 @@
 import rateLimit from 'express-rate-limit';
 import { Request, Response } from 'express';
 import { logger } from '../../utils/logger';
+import { getClientIpOrDefault } from '../../utils/requestUtils';
 
 /**
  * Configuração do Rate Limiting via variáveis de ambiente
@@ -26,9 +27,10 @@ const generalLimiter = rateLimit({
   standardHeaders: true, // Retorna info de rate limit nos headers `RateLimit-*`
   legacyHeaders: false, // Desabilita headers `X-RateLimit-*`
   handler: (req: Request, res: Response) => {
+    const ip = getClientIpOrDefault(req, 'unknown');
     logger.warn('Rate limit excedido', {
       context: 'rateLimitMiddleware',
-      ip: req.ip || req.socket.remoteAddress,
+      ip,
       path: req.path,
       method: req.method,
       userAgent: req.get('user-agent')
@@ -74,10 +76,11 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req: Request, res: Response) => {
+    const ip = getClientIpOrDefault(req, 'unknown');
     logger.warn('Rate limit excedido em rota de autenticação', {
       context: 'rateLimitMiddleware',
       type: 'auth',
-      ip: req.ip || req.socket.remoteAddress,
+      ip,
       path: req.path,
       method: req.method
     });
@@ -106,10 +109,11 @@ const publicEndpointLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req: Request, res: Response) => {
+    const ip = getClientIpOrDefault(req, 'unknown');
     logger.warn('Rate limit excedido em endpoint público', {
       context: 'rateLimitMiddleware',
       type: 'public',
-      ip: req.ip || req.socket.remoteAddress,
+      ip,
       path: req.path,
     });
     res.status(429).json({

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { ListasBlockdomiService } from '../../../services/blockdomi/ListasBlockdomiService';
 import { sendError } from '../../../utils/responseUtils';
+import { parseTriStateBoolean, queryString } from '../../../utils/listQuery';
 
 export class ListasBlockdomiController {
   /**
@@ -9,8 +10,8 @@ export class ListasBlockdomiController {
    */
   static async dominiosTxt(req: Request, res: Response): Promise<void> {
     try {
-      const versao = req.query.versao as string | undefined;
-      const ativo = req.query.ativo !== undefined ? req.query.ativo === 'true' : true;
+      const versao = queryString(req.query.versao);
+      const ativo = parseTriStateBoolean(req.query.ativo) ?? true;
 
       const txt = await ListasBlockdomiService.listarDominiosTxt({
         versao: versao ?? undefined,
@@ -32,8 +33,8 @@ export class ListasBlockdomiController {
    */
   static async ipv4Txt(req: Request, res: Response): Promise<void> {
     try {
-      const versao = req.query.versao as string | undefined;
-      const ativo = req.query.ativo !== undefined ? req.query.ativo === 'true' : true;
+      const versao = queryString(req.query.versao);
+      const ativo = parseTriStateBoolean(req.query.ativo) ?? true;
 
       const txt = await ListasBlockdomiService.listarIpv4Txt({
         versao: versao ?? undefined,
@@ -55,8 +56,8 @@ export class ListasBlockdomiController {
    */
   static async ipv6Txt(req: Request, res: Response): Promise<void> {
     try {
-      const versao = req.query.versao as string | undefined;
-      const ativo = req.query.ativo !== undefined ? req.query.ativo === 'true' : true;
+      const versao = queryString(req.query.versao);
+      const ativo = parseTriStateBoolean(req.query.ativo) ?? true;
 
       const txt = await ListasBlockdomiService.listarIpv6Txt({
         versao: versao ?? undefined,

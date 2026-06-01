@@ -7,6 +7,7 @@ import { SaasPlano } from '../../../models/saas/SaasPlano';
 import { SaasBanco } from '../../../models/saas/SaasBanco';
 import { SaasContrato } from '../../../models/saas/SaasContrato';
 import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
+import { buildSaasPagination } from '../../../utils/pagination';
 
 interface ListFilters {
   page?: number;
@@ -33,7 +34,7 @@ export class SaasTipoCobrancaService {
       limit,
       offset,
     });
-    return { data: rows, pagination: { total: count as number, page, limit, totalPages: Math.ceil((count as number) / limit) } };
+    return { data: rows, pagination: buildSaasPagination(page, limit, count as number) };
   }
 
   static async getById(id: number) {
@@ -72,7 +73,7 @@ export class SaasDiasVencimentoService {
       limit,
       offset,
     });
-    return { data: rows, pagination: { total: count as number, page, limit, totalPages: Math.ceil((count as number) / limit) } };
+    return { data: rows, pagination: buildSaasPagination(page, limit, count as number) };
   }
 
   static async getById(id: number) {
@@ -178,7 +179,7 @@ export class SaasTituloService {
         limit,
         offset,
       });
-      return { data: rows, pagination: { total: count as number, page, limit, totalPages: Math.ceil((count as number) / limit) } };
+      return { data: rows, pagination: buildSaasPagination(page, limit, count as number) };
     } catch (err) {
       logger.error('SaasTituloService.list - Erro ao listar títulos', {
         context: 'SaasTituloService',
@@ -288,7 +289,7 @@ export class SaasContratoService {
     });
     const result: { data: typeof rows; pagination: { total: number; page: number; limit: number; totalPages: number }; status_empresa?: { bloqueado_por_atraso: boolean; em_atraso: boolean } } = {
       data: rows,
-      pagination: { total: count as number, page, limit, totalPages: Math.ceil((count as number) / limit) },
+      pagination: buildSaasPagination(page, limit, count as number),
     };
     if (empresa_id) {
       result.status_empresa = await getStatusEmpresa(empresa_id);

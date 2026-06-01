@@ -4,6 +4,7 @@ import { logger } from '../../../utils/logger';
 import { JsonValue } from '../../../types/index';
 import { AsaasPaymentPayload } from '../../../types/webhooks';
 import { sendSuccess, sendError, sendValidationError, sendUnauthorized } from '../../../utils/responseUtils';
+import { assignWebhookClientIp } from '../../../utils/requestUtils';
 
 /**
  * Controller para webhooks do Asaas
@@ -17,8 +18,7 @@ export class AsaasWebhookController {
   static async handle(req: Request, res: Response): Promise<void> {
     (req as import('../../../types/webhooks').WebhookRequest).webhookEmpresaIdentifier = req.params?.empresaIdentifier;
     const startTime = Date.now();
-    const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
-    (req as Request & { webhookClientIp?: string }).webhookClientIp = clientIp;
+    const clientIp = assignWebhookClientIp(req);
     const userAgent = req.get('user-agent') || 'unknown';
     
     try {

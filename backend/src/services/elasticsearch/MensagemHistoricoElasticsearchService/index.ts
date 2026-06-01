@@ -11,6 +11,7 @@ import { getElasticsearchService } from '../ElasticsearchService';
 import { ES_DATA_STREAM } from '../dataStreams';
 import { elasticsearchEventTimestamps } from '../elasticsearchTimestamps';
 import { logger } from '../../../utils/logger';
+import { getClientIp } from '../../../utils/requestUtils';
 
 interface DadosMensagemElasticsearch {
   tipo: 'email' | 'whatsapp';
@@ -22,19 +23,6 @@ interface DadosMensagemElasticsearch {
   entidade_tipo?: string;
   entidade_id?: number;
   servidor_id?: number;
-}
-
-/**
- * Obter IP do cliente da requisição
- */
-function getClientIp(req: Request | null): string | null {
-  if (!req || !req.headers) return null;
-  return (
-    (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
-    (req.headers['x-real-ip'] as string) ||
-    req.socket?.remoteAddress ||
-    null
-  );
 }
 
 /**
@@ -135,7 +123,7 @@ export async function registrarMensagemElasticsearch(
         usuario_id: userData.id,
         usuario_nome: userData.nome,
         usuario_email: userData.email,
-        ip_address: getClientIp(req || null),
+        ip_address: req ? getClientIp(req) : null,
         user_agent: getUserAgent(req || null),
         ...elasticsearchEventTimestamps(new Date())
       };

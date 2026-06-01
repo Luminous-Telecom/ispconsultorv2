@@ -9,6 +9,7 @@ import { logger } from '../../../utils/logger';
 import { buildDateFilter, buildNumericSearchFilter, combineFilters } from '../../../utils/queryFilters';
 import { SortHelper } from '../../../utils/sortHelper';
 import { TITULO_SORT_CONFIG } from '../../../config/sortConfigs';
+import { buildPagination } from '../../../utils/pagination';
 
 export interface ListTitulosFilters {
   page?: number;
@@ -295,20 +296,10 @@ export class TituloService {
     }
 
 
-    const from = count > 0 ? offset + 1 : 0;
-    const to = count > 0 ? Math.min(offset + limitNum, count) : 0;
-
     return {
       success: true,
       data: rows,
-      pagination: {
-        current_page: pageNum,
-        per_page: limitNum,
-        total: count,
-        last_page: Math.ceil(count / limitNum),
-        from,
-        to
-      }
+      pagination: buildPagination(pageNum, limitNum, count),
     };
   }
 

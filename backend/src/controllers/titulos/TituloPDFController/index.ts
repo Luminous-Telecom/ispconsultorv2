@@ -7,6 +7,7 @@ import { BancoApiService } from '../../../services/bancos/BancoApiService';
 import { logger } from '../../../utils/logger';
 import { TituloComRelacoes } from '../TituloHelpers/types';
 import { sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
+import { isQueryFlagTrue, parseIdsFromQueryParam } from '../../../utils/listQuery';
 
 export class TituloPDFController {
   
@@ -94,18 +95,9 @@ export class TituloPDFController {
    */
   public static async imprimirBoletosMultiplos(req: Request, res: Response): Promise<void> {
     try {
-      let ids = req.body.ids || req.query.ids;
-      
-      if (typeof ids === 'string') {
-        try {
-          ids = JSON.parse(ids);
-        } catch {
-          ids = ids.split(',').map((id: string) => parseInt(id.trim())).filter((id: number) => !isNaN(id));
-        }
-      }
-      if (typeof ids === 'number') ids = [ids];
+      const ids = parseIdsFromQueryParam(req.body.ids ?? req.query.ids);
 
-      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      if (ids.length === 0) {
         sendValidationError(res, 'IDs dos títulos não fornecidos');
         return;
       }
@@ -180,7 +172,7 @@ export class TituloPDFController {
         }
       }
 
-      const autoPrint = req.query.print === 'true';
+      const autoPrint = isQueryFlagTrue(req.query, 'print');
       const template = `
         <!DOCTYPE html>
         <html>
@@ -211,20 +203,10 @@ export class TituloPDFController {
    * Gera PDF de múltiplos boletos
    */
   public static async gerarPdfBoletosMultiplos(req: Request, res: Response): Promise<void> {
-    let ids: number[] = [];
     try {
-      const idsParam = req.query.ids as string;
-      
-      if (idsParam) {
-        try {
-          const parsed = JSON.parse(idsParam);
-          ids = Array.isArray(parsed) ? parsed : [parsed];
-        } catch {
-          ids = idsParam.split(',').map((id: string) => parseInt(id.trim())).filter((id: number) => !isNaN(id));
-        }
-      }
+      const ids = parseIdsFromQueryParam(req.query.ids);
 
-      if (!ids || ids.length === 0) {
+      if (ids.length === 0) {
         sendValidationError(res, 'IDs dos títulos não fornecidos');
         return;
       }
@@ -501,7 +483,7 @@ export class TituloPDFController {
         sendError(res, error, 'Erro interno do servidor ao gerar PDF de múltiplos boletos', 500, true, {
           context: 'TituloPDFController',
           action: 'imprimirBoletosMultiplos',
-          ids: ids
+          ids: req.query.ids,
         });
       }
     }

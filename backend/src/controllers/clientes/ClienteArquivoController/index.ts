@@ -7,6 +7,7 @@ import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { ClienteService } from '../../../services/clientes/ClienteService';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { isQueryFlagTrue, parseListQuery, queryString } from '../../../utils/listQuery';
 
 export class ClienteArquivoController {
   private static createSchema = Joi.object({
@@ -30,7 +31,9 @@ export class ClienteArquivoController {
   static async list(req: Request, res: Response): Promise<void> {
     try {
       const { cliente_id } = req.params;
-      const { tipo, origem, sortColumn, sortDirection } = req.query;
+      const { sortColumn, sortDirection } = parseListQuery(req.query);
+      const tipo = queryString(req.query.tipo);
+      const origem = queryString(req.query.origem);
 
       if (!cliente_id) {
         sendValidationError(res, 'cliente_id é obrigatório');
@@ -38,10 +41,10 @@ export class ClienteArquivoController {
       }
 
       const arquivos = await ClienteArquivoService.list(Number(cliente_id), {
-        tipo: tipo as string | undefined,
-        origem: origem as string | undefined,
-        sortColumn: sortColumn as string | undefined,
-        sortDirection: sortDirection as string | undefined
+        tipo,
+        origem,
+        sortColumn,
+        sortDirection,
       });
 
       sendSuccess(res, arquivos);
@@ -220,7 +223,7 @@ export class ClienteArquivoController {
       }
 
       const buffer = await ClienteArquivoService.getFileContent(Number(id));
-      const isView = req.query.view === 'true';
+      const isView = isQueryFlagTrue(req.query, 'view');
 
       res.setHeader('Content-Type', arquivo.mime_type || 'application/octet-stream');
       res.setHeader('Content-Disposition', isView 

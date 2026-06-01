@@ -1,6 +1,7 @@
 import { Op, WhereOptions } from 'sequelize';
 import type { ModelStatic, Model } from 'sequelize';
 import { buildSearchFilter } from './queryFilters';
+import { buildPagination } from './pagination';
 import { resolveScheduledRoutineOrder } from './scheduledRoutineSortOrder';
 
 export interface ListScheduledRoutinesFilters {
@@ -84,26 +85,20 @@ export function createScheduledRoutineService<T extends Model>(
       const count = result.count;
       const rows = result.rows;
 
-      const totalPages = Math.ceil(count / Number(limit));
       const pageNum = Number(page);
       const limitNum = Number(limit);
-      const from = count > 0 ? offset + 1 : 0;
-      const to = count > 0 ? Math.min(offset + limitNum, count) : 0;
+      const standard = buildPagination(pageNum, limitNum, count);
 
       return {
         success: true,
         data: rows,
         pagination: {
+          ...standard,
           total: count,
           page: pageNum,
           limit: limitNum,
-          pages: totalPages,
-          current_page: pageNum,
-          per_page: limitNum,
-          last_page: totalPages,
-          from,
-          to
-        }
+          pages: standard.last_page,
+        },
       };
     },
 

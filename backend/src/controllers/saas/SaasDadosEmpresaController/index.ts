@@ -7,6 +7,8 @@ import { DesbloqueioManualService } from '../../../services/saas/DesbloqueioManu
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
+import { parseListQuery, parseOptionalQueryInt, queryString } from '../../../utils/listQuery';
+import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
 
 const empresaSchema = Joi.object({
   razao_social: Joi.string().max(200).required(),
@@ -35,18 +37,22 @@ const empresaSchema = Joi.object({
 export class SaasDadosEmpresaController {
   static async list(req: SaasAuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { page, limit, search, searchField, sortColumn, sortDirection, created_at_inicio, created_at_fim, plano_id } = req.query as Record<string, string>;
-      const parsedPlano = plano_id ? parseInt(plano_id, 10) : undefined;
+      const { page, limit, search, searchField, sortColumn, sortDirection } = parseListQuery(req.query, {
+        defaultLimit: 20,
+      });
+      const created_at_inicio = queryString(req.query.created_at_inicio);
+      const created_at_fim = queryString(req.query.created_at_fim);
+      const plano_id = parseOptionalQueryInt(req.query.plano_id);
       const result = await SaasDadosEmpresaService.list({
-        page: page ? parseInt(page) : 1,
-        limit: limit ? parseInt(limit) : 20,
+        page,
+        limit,
         search,
         searchField,
         sortColumn,
-        sortDirection: sortDirection as 'asc' | 'desc',
-        created_at_inicio: created_at_inicio || undefined,
-        created_at_fim: created_at_fim || undefined,
-        plano_id: parsedPlano !== undefined && !Number.isNaN(parsedPlano) ? parsedPlano : undefined,
+        sortDirection,
+        created_at_inicio,
+        created_at_fim,
+        plano_id,
       });
       sendSuccess(res, result);
     } catch (err) {
@@ -68,12 +74,7 @@ export class SaasDadosEmpresaController {
     try {
       const { error, value } = empresaSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) {
-        sendValidationError(res, 'Dados inválidos', error.details.reduce<Record<string, string[]>>((acc, d) => {
-          const f = d.path.join('.') || 'general';
-          acc[f] = acc[f] || [];
-          acc[f].push(d.message);
-          return acc;
-        }, {}));
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
         return;
       }
       const empresa = await SaasDadosEmpresaService.create(value);
@@ -88,12 +89,7 @@ export class SaasDadosEmpresaController {
     try {
       const { error, value } = empresaSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) {
-        sendValidationError(res, 'Dados inválidos', error.details.reduce<Record<string, string[]>>((acc, d) => {
-          const f = d.path.join('.') || 'general';
-          acc[f] = acc[f] || [];
-          acc[f].push(d.message);
-          return acc;
-        }, {}));
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
         return;
       }
       const id = Number(req.params.id);

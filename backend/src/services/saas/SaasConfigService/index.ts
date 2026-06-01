@@ -2,6 +2,7 @@ import { Op } from 'sequelize';
 import { SaasServidorEmail } from '../../../models/saas/SaasServidorEmail';
 import { SaasServidorWhatsapp } from '../../../models/saas/SaasServidorWhatsapp';
 import { SaasBanco } from '../../../models/saas/SaasBanco';
+import { buildSaasPagination } from '../../../utils/pagination';
 
 interface ListFilters {
   page?: number;
@@ -43,7 +44,7 @@ export class SaasServidorEmailService {
     const { count, rows } = await SaasServidorEmail.findAndCountAll({
       where, order: [[col, sortDirection.toUpperCase()]], limit, offset,
     });
-    return { data: rows, pagination: { total: count as number, page, limit, totalPages: Math.ceil((count as number) / limit) } };
+    return { data: rows, pagination: buildSaasPagination(page, limit, count as number) };
   }
 
   static async getById(id: number) { return SaasServidorEmail.findByPk(id); }
@@ -88,7 +89,7 @@ export class SaasServidorWhatsappService {
     const { count, rows } = await SaasServidorWhatsapp.findAndCountAll({
       where, order: [[col, sortDirection.toUpperCase()]], limit, offset,
     });
-    return { data: rows, pagination: { total: count as number, page, limit, totalPages: Math.ceil((count as number) / limit) } };
+    return { data: rows, pagination: buildSaasPagination(page, limit, count as number) };
   }
 
   static async getById(id: number) { return SaasServidorWhatsapp.findByPk(id); }
@@ -123,7 +124,7 @@ export class SaasBancoService {
     const { count, rows } = await SaasBanco.findAndCountAll({
       where, order: [[col, sortDirection.toUpperCase()]], limit, offset,
     });
-    return { data: rows, pagination: { total: count as number, page, limit, totalPages: Math.ceil((count as number) / limit) } };
+    return { data: rows, pagination: buildSaasPagination(page, limit, count as number) };
   }
 
   static async getById(id: number) { return SaasBanco.findByPk(id); }

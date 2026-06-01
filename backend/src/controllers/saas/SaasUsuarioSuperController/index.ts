@@ -4,6 +4,8 @@ import { SaasUsuarioSuperService } from '../../../services/saas/SaasUsuarioSuper
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
+import { parseListQuery } from '../../../utils/listQuery';
+import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
 
 const createSchema = Joi.object({
   nome: Joi.string().max(150).required(),
@@ -21,24 +23,18 @@ const updateSchema = Joi.object({
   ativo: Joi.boolean().optional(),
 });
 
-const toValidationErrors = (details: Joi.ValidationErrorItem[]) =>
-  details.reduce<Record<string, string[]>>((acc, d) => {
-    const f = d.path.join('.') || 'general';
-    acc[f] = acc[f] || [];
-    acc[f].push(d.message);
-    return acc;
-  }, {});
-
 export class SaasUsuarioSuperController {
   static async list(req: SaasAuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { page, limit, search, sortColumn, sortDirection } = req.query as Record<string, string>;
+      const { page, limit, search, sortColumn, sortDirection } = parseListQuery(req.query, {
+        defaultLimit: 20,
+      });
       const result = await SaasUsuarioSuperService.list({
-        page: page ? parseInt(page) : 1,
-        limit: limit ? parseInt(limit) : 20,
+        page,
+        limit,
         search,
         sortColumn,
-        sortDirection: sortDirection as 'asc' | 'desc',
+        sortDirection,
       });
       sendSuccess(res, result);
     } catch (err) {
@@ -59,7 +55,7 @@ export class SaasUsuarioSuperController {
   static async create(req: SaasAuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { error, value } = createSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
-      if (error) { sendValidationError(res, 'Dados inválidos', toValidationErrors(error.details)); return; }
+      if (error) { sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details)); return; }
       const usuario = await SaasUsuarioSuperService.create(value);
       await registrarCriacao(req as any, 'SaasUsuarioSuper', usuario.id, usuario.toJSON() as Record<string, unknown>);
       res.status(201).json({ success: true, message: 'Usuário criado com sucesso', data: usuario });
@@ -71,7 +67,7 @@ export class SaasUsuarioSuperController {
   static async update(req: SaasAuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { error, value } = updateSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
-      if (error) { sendValidationError(res, 'Dados inválidos', toValidationErrors(error.details)); return; }
+      if (error) { sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details)); return; }
       const usuarioAntigo = await SaasUsuarioSuperService.getById(Number(req.params.id));
       await SaasUsuarioSuperService.update(Number(req.params.id), value);
       if (usuarioAntigo) {

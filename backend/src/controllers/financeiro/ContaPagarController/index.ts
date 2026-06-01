@@ -13,21 +13,16 @@ import { sequelize } from '../../../config/database';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { parseListQuery, queryString } from '../../../utils/listQuery';
 
 export class ContaPagarController {
   static async index(req: Request, res: Response): Promise<void> {
     try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 15;
-      const search = req.query.search as string;
-      const searchField = req.query.searchField as string;
-      const status = req.query.status as string;
-      const tipoPagamento = req.query.tipo_pagamento as string;
-      const fornecedorId = req.query.fornecedor_id as string;
-      const dataInicio = req.query.data_inicio as string;
-      const dataFim = req.query.data_fim as string;
-      const sortColumn = req.query.sortColumn as string;
-      const sortDirection = req.query.sortDirection as string;
+      const { page, limit, search, searchField, status, sortColumn, sortDirection } = parseListQuery(req.query);
+      const tipoPagamento = queryString(req.query.tipo_pagamento);
+      const fornecedorId = queryString(req.query.fornecedor_id);
+      const dataInicio = queryString(req.query.data_inicio);
+      const dataFim = queryString(req.query.data_fim);
 
       const empresaId = getEmpresaIdOrNull(req);
 

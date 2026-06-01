@@ -11,11 +11,12 @@ import { TituloPDFService } from '../../../services/titulos/TituloPDFService';
 import { SaasTituloBoletoService } from '../../../services/saas/SaasTituloBoletoService';
 import { logger } from '../../../utils/logger';
 import type { AuthenticatedRequest } from '../../../types/auth';
-import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { getEmpresaIdOrNull, parseEmpresaIdQuery } from '../../../utils/tenantUtils';
 import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import path from 'path';
 import { resolveArquivosPath } from '../../../utils/pathUtils';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
+import { parseIdsFromQueryParam, queryString } from '../../../utils/listQuery';
 
 export class DadosEmpresaController {
   // Dados padrão para criação de empresa
@@ -100,12 +101,12 @@ export class DadosEmpresaController {
    */
   static async getTitulosSaas(req: Request, res: Response): Promise<void> {
     try {
-      const empresaId = req.query.empresa_id != null ? Number(req.query.empresa_id) : NaN;
-      if (Number.isNaN(empresaId) || empresaId <= 0) {
+      const empresaId = parseEmpresaIdQuery(req.query.empresa_id);
+      if (empresaId == null) {
         sendError(res, new Error('empresa_id inválido'), 'empresa_id obrigatório e deve ser maior que zero', 400);
         return;
       }
-      const tipo = (req.query.tipo as string) || 'abertas';
+      const tipo = queryString(req.query.tipo) || 'abertas';
       const statusFilter = tipo === 'pagas' ? 'pago,pago_atraso,parcial' : 'pendente,vencido';
       const result = await SaasTituloService.list({
         empresa_id: empresaId,
@@ -128,23 +129,14 @@ export class DadosEmpresaController {
    * Requer ids e empresa_id para validar que os títulos pertencem à empresa.
    */
   static async getTitulosSaasBoletosPdf(req: Request, res: Response): Promise<void> {
-    let ids: number[] = [];
     try {
-      const empresaId = req.query.empresa_id != null ? Number(req.query.empresa_id) : NaN;
-      if (Number.isNaN(empresaId) || empresaId <= 0) {
+      const empresaId = parseEmpresaIdQuery(req.query.empresa_id);
+      if (empresaId == null) {
         sendValidationError(res, 'empresa_id obrigatório e deve ser maior que zero');
         return;
       }
-      const idsParam = req.query.ids as string;
-      if (idsParam) {
-        try {
-          const parsed = JSON.parse(idsParam);
-          ids = Array.isArray(parsed) ? parsed : [parsed];
-        } catch {
-          ids = idsParam.split(',').map((id: string) => parseInt(id.trim(), 10)).filter((id: number) => !isNaN(id));
-        }
-      }
-      if (!ids || ids.length === 0) {
+      const ids = parseIdsFromQueryParam(req.query.ids);
+      if (ids.length === 0) {
         sendValidationError(res, 'IDs dos títulos não fornecidos');
         return;
       }

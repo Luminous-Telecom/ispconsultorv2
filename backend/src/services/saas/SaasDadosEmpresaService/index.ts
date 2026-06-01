@@ -3,6 +3,7 @@ import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { SaasContrato } from '../../../models/saas/SaasContrato';
 import { sequelize } from '../../../config/database';
 import { cache } from '../../../utils/cache';
+import { buildSaasPagination } from '../../../utils/pagination';
 
 /** Campos textuais da busca "todos" / LIKE por coluna na listagem de tenants SaaS */
 const TENANT_LIKE_FIELDS = [
@@ -76,12 +77,7 @@ export class SaasDadosEmpresaService {
       if (idsPlano.length === 0) {
         return {
           data: [],
-          pagination: {
-            total: 0,
-            page,
-            limit,
-            totalPages: 0,
-          },
+          pagination: buildSaasPagination(page, limit, 0),
         };
       }
       where.id = { [Op.in]: idsPlano };
@@ -149,12 +145,7 @@ export class SaasDadosEmpresaService {
 
     return {
       data,
-      pagination: {
-        total: count as number,
-        page,
-        limit,
-        totalPages: Math.ceil((count as number) / limit),
-      },
+      pagination: buildSaasPagination(page, limit, count as number),
     };
   }
 

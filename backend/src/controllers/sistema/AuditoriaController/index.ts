@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../../../types/auth';
-import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { getEmpresaIdOrNull, parseEmpresaIdQuery } from '../../../utils/tenantUtils';
 import { getElasticsearchService } from '../../../services/elasticsearch/ElasticsearchService';
 import { ES_DATA_STREAM } from '../../../services/elasticsearch/dataStreams';
 import { AuditoriaQueryService } from '../../../services/auditoria/AuditoriaQueryService';
@@ -8,6 +8,9 @@ import { AuditoriaOperacionalMysqlService } from '../../../services/auditoria/Au
 import { AuditoriaPDFService } from '../../../services/auditoria/AuditoriaPDFService';
 import { logger } from '../../../utils/logger';
 import { sendSuccess, sendError, sendValidationError, sendNotFound, sendForbidden } from '../../../utils/responseUtils';
+import { parseListQuery, queryString } from '../../../utils/listQuery';
+import { buildPagination, getElasticsearchMaxLastPage } from '../../../utils/pagination';
+import { parseAuditoriaListFilters } from '../../../utils/auditoriaQuery';
 
 export class AuditoriaController {
   /**
@@ -29,24 +32,20 @@ export class AuditoriaController {
         return;
       }
 
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 15;
-      const search = req.query.search as string;
-      const searchField = req.query.searchField as string;
-      const acao = req.query.acao as string;
-      const entidade = req.query.entidade as string;
-      const usuario_id = req.query.usuario_id ? parseInt(req.query.usuario_id as string) : undefined;
-      const dataInicio = req.query.data_inicio as string;
-      const dataFim = req.query.data_fim as string;
-      const sortColumn = req.query.sortColumn as string;
-      const sortDirection = req.query.sortDirection as string;
-      const comUsuarioObrigatorio = req.query.com_usuario_obrigatorio === 'true' || req.query.comUsuarioObrigatorio === 'true';
-      const semUsuarioObrigatorio = req.query.sem_usuario_obrigatorio === 'true' || req.query.semUsuarioObrigatorio === 'true';
-      const origemAuditoria = req.query.origem_auditoria as string | undefined;
-      const moduloBlockdomi =
-        req.query.modulo_blockdomi === 'true' || req.query.moduloBlockdomi === 'true';
+      const { page, limit, search, searchField, sortColumn, sortDirection } = parseListQuery(req.query);
+      const {
+        acao,
+        entidade,
+        usuario_id,
+        dataInicio,
+        dataFim,
+        comUsuarioObrigatorio,
+        semUsuarioObrigatorio,
+        origemAuditoria,
+        moduloBlockdomi,
+      } = parseAuditoriaListFilters(req.query);
       const authEmpresaId = getEmpresaIdOrNull(req);
-      const queryEmpresaId = req.query.empresa_id ? parseInt(req.query.empresa_id as string) : undefined;
+      const queryEmpresaId = parseEmpresaIdQuery(req.query.empresa_id);
       // Usuários só podem ver auditoria da própria empresa
       if (queryEmpresaId != null && authEmpresaId != null) {
         sendForbidden(res, 'Acesso negado: não é permitido filtrar por outra empresa');
@@ -54,8 +53,7 @@ export class AuditoriaController {
       }
       const empresaId = queryEmpresaId ?? authEmpresaId;
 
-      const maxResultWindow = 10000;
-      const maxLastPage = Math.max(1, Math.floor(maxResultWindow / limit));
+      const maxLastPage = getElasticsearchMaxLastPage(limit);
       const effectivePage = Math.min(page, maxLastPage);
 
       const { logs, total } = await AuditoriaQueryService.searchFromElasticsearch({
@@ -78,20 +76,11 @@ export class AuditoriaController {
         origemAuditoria
       });
 
-      const lastPage = Math.min(Math.ceil(total / limit), maxLastPage);
-
       await AuditoriaQueryService.enrichLogsWithEmpresaNome(logs, false, empresaId == null);
 
       sendSuccess(res, {
         data: logs,
-        pagination: {
-          current_page: effectivePage,
-          last_page: lastPage,
-          per_page: limit,
-          total,
-          from: total > 0 ? (effectivePage - 1) * limit + 1 : 0,
-          to: Math.min(effectivePage * limit, total)
-        }
+        pagination: buildPagination(page, limit, total, { maxLastPage, currentPage: effectivePage }),
       });
     } catch (error) {
       sendError(res, error, 'Erro ao buscar logs de auditoria', 500, true, {
@@ -108,24 +97,20 @@ export class AuditoriaController {
    */
   static async listOperacional(req: Request, res: Response): Promise<void> {
     try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 15;
-      const search = req.query.search as string;
-      const searchField = req.query.searchField as string;
-      const acao = req.query.acao as string;
-      const entidade = req.query.entidade as string;
-      const usuario_id = req.query.usuario_id ? parseInt(req.query.usuario_id as string) : undefined;
-      const dataInicio = req.query.data_inicio as string;
-      const dataFim = req.query.data_fim as string;
-      const sortColumn = req.query.sortColumn as string;
-      const sortDirection = req.query.sortDirection as string;
-      const comUsuarioObrigatorio = req.query.com_usuario_obrigatorio === 'true' || req.query.comUsuarioObrigatorio === 'true';
-      const semUsuarioObrigatorio = req.query.sem_usuario_obrigatorio === 'true' || req.query.semUsuarioObrigatorio === 'true';
-      const origemAuditoria = req.query.origem_auditoria as string | undefined;
-      const moduloBlockdomi =
-        req.query.modulo_blockdomi === 'true' || req.query.moduloBlockdomi === 'true';
+      const { page, limit, search, searchField, sortColumn, sortDirection } = parseListQuery(req.query);
+      const {
+        acao,
+        entidade,
+        usuario_id,
+        dataInicio,
+        dataFim,
+        comUsuarioObrigatorio,
+        semUsuarioObrigatorio,
+        origemAuditoria,
+        moduloBlockdomi,
+      } = parseAuditoriaListFilters(req.query);
       const authEmpresaId = getEmpresaIdOrNull(req);
-      const queryEmpresaId = req.query.empresa_id ? parseInt(req.query.empresa_id as string) : undefined;
+      const queryEmpresaId = parseEmpresaIdQuery(req.query.empresa_id);
       if (queryEmpresaId != null && authEmpresaId != null) {
         sendForbidden(res, 'Acesso negado: não é permitido filtrar por outra empresa');
         return;
@@ -153,21 +138,12 @@ export class AuditoriaController {
         origemAuditoria,
       });
 
-      const lastPage = Math.max(1, Math.ceil(total / limit));
-
       await AuditoriaQueryService.enrichLogsWithEmpresaNome(logs, false, empresaId == null);
       await AuditoriaQueryService.enrichLogsWithClienteNome(logs);
 
       sendSuccess(res, {
         data: logs,
-        pagination: {
-          current_page: page,
-          last_page: lastPage,
-          per_page: limit,
-          total,
-          from: total > 0 ? (page - 1) * limit + 1 : 0,
-          to: Math.min(page * limit, total),
-        },
+        pagination: buildPagination(page, limit, total, { minLastPageWhenEmpty: 1, minLastPage: 1 }),
       });
     } catch (error) {
       sendError(res, error, 'Erro ao buscar logs operacionais', 500, true, {
@@ -279,8 +255,9 @@ export class AuditoriaController {
    */
   static async getByEntity(req: Request, res: Response): Promise<void> {
     try {
-      const { entidade, entidade_id } = req.query;
-      
+      const entidade = queryString(req.query.entidade);
+      const entidade_id = queryString(req.query.entidade_id);
+
       if (!entidade || !entidade_id) {
         sendValidationError(res, 'Parâmetros entidade e entidade_id são obrigatórios');
         return;
@@ -371,8 +348,9 @@ export class AuditoriaController {
    * Gerar PDF de auditoria para uma entidade específica
    */
   static async generatePdf(req: Request, res: Response): Promise<void> {
-    const { entidade, entidade_id } = req.query as { entidade?: string; entidade_id?: string };
-    
+    const entidade = queryString(req.query.entidade);
+    const entidade_id = queryString(req.query.entidade_id);
+
     try {
       if (!entidade || !entidade_id) {
         sendValidationError(res, 'Parâmetros entidade e entidade_id são obrigatórios');

@@ -10,18 +10,7 @@ import {
   registrarLogoutElasticsearch,
   registrarAuditoriaElasticsearch,
 } from '../../elasticsearch/ElasticsearchAuditService';
-
-/**
- * Obter IP do cliente da requisição
- */
-function getClientIp(req: Request): string | null {
-  return (
-    (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
-    (req.headers['x-real-ip'] as string) ||
-    req.socket.remoteAddress ||
-    null
-  );
-}
+import { getClientIp } from '../../../utils/requestUtils';
 
 /**
  * Obter User Agent da requisição

@@ -14,6 +14,14 @@ import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../..
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import {
+  isQueryFlagTrue,
+  parseListQuery,
+  parseOptionalQueryInt,
+  parseTriStateBoolean,
+  queryString,
+} from '../../../utils/listQuery';
+import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
 import { ContratoDataLoader } from '../../../services/scheduler/RoutineExecutionService/helpers/ContratoDataLoader';
 import { ContratoTituloProcessor } from '../../../services/scheduler/RoutineExecutionService/helpers/ContratoTituloProcessor';
 import { TituloGenerationHelper } from '../../../services/scheduler/RoutineExecutionService/helpers/TituloGenerationHelper';
@@ -112,34 +120,29 @@ export class ContratoController {
   static async list(req: Request, res: Response): Promise<void> {
     try {
       const {
-        page = 1,
-        limit = 10,
-        search = '',
+        page,
+        limit,
+        search,
         status,
         searchField,
         sortColumn,
         sortDirection,
-        isento_mensalidade,
-        plano_id,
-        tipo_servico,
-        em_atraso,
-        excluir_em_atraso,
-      } = req.query;
+      } = parseListQuery(req.query, { defaultLimit: 10 });
+      const emAtrasoFlag = isQueryFlagTrue(req.query, 'em_atraso');
       const empresaId = getEmpresaIdOrNull(req);
-      const emAtrasoFlag = em_atraso === 'true';
       const result = await ContratoService.list({
-        page: Number(page),
-        limit: Number(limit),
-        search: search as string,
-        status: emAtrasoFlag ? undefined : (status as string),
-        searchField: searchField as string,
-        sortColumn: sortColumn as string,
-        sortDirection: sortDirection as string,
-        isento_mensalidade: isento_mensalidade === 'true' ? true : isento_mensalidade === 'false' ? false : undefined,
-        plano_id: plano_id ? Number(plano_id) : undefined,
-        tipo_servico: tipo_servico as string | undefined,
+        page,
+        limit,
+        search: search ?? '',
+        status: emAtrasoFlag ? undefined : status,
+        searchField,
+        sortColumn,
+        sortDirection,
+        isento_mensalidade: parseTriStateBoolean(req.query.isento_mensalidade),
+        plano_id: parseOptionalQueryInt(req.query.plano_id),
+        tipo_servico: queryString(req.query.tipo_servico),
         em_atraso: emAtrasoFlag,
-        excluir_em_atraso: excluir_em_atraso === 'true' && !emAtrasoFlag,
+        excluir_em_atraso: isQueryFlagTrue(req.query, 'excluir_em_atraso') && !emAtrasoFlag,
         empresa_id: empresaId ?? undefined,
       });
 
@@ -157,16 +160,16 @@ export class ContratoController {
   static async getByCliente(req: Request, res: Response): Promise<void> {
     try {
       const { clienteId } = req.params;
-      const { sortColumn, sortDirection } = req.query;
+      const { sortColumn, sortDirection } = parseListQuery(req.query);
       const empresaId = getEmpresaIdOrNull(req);
-      
+
       const result = await ContratoService.list({
         page: 1,
         limit: 1000,
         search: clienteId,
         searchField: 'cliente_id',
-        sortColumn: sortColumn as string | undefined,
-        sortDirection: (sortDirection as 'asc' | 'desc') || undefined,
+        sortColumn,
+        sortDirection,
         empresa_id: empresaId ?? undefined,
       });
 
@@ -214,16 +217,7 @@ export class ContratoController {
       const { error, value } = ContratoController.createSchema.validate(req.body);
       
       if (error) {
-        // Converter para Record<string, string[]> esperado pelo sendValidationError
-        const errorsByField: Record<string, string[]> = error.details.reduce((acc, detail) => {
-          const field = detail.path.join('.') || 'general';
-          if (!acc[field]) {
-            acc[field] = [];
-          }
-          acc[field].push(detail.message);
-          return acc;
-        }, {} as Record<string, string[]>);
-        sendValidationError(res, 'Dados inválidos', errorsByField);
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
         return;
       }
 
@@ -425,16 +419,7 @@ export class ContratoController {
           action: 'update',
           details: error.details
         });
-        // Converter para Record<string, string[]> esperado pelo sendValidationError
-        const errorsByField: Record<string, string[]> = error.details.reduce((acc, detail) => {
-          const field = detail.path.join('.') || 'general';
-          if (!acc[field]) {
-            acc[field] = [];
-          }
-          acc[field].push(detail.message);
-          return acc;
-        }, {} as Record<string, string[]>);
-        sendValidationError(res, 'Dados inválidos', errorsByField);
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
         return;
       }
 

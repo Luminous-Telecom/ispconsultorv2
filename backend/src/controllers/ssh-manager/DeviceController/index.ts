@@ -36,12 +36,8 @@ import { getEquipamentosLimites } from '../../../services/saas/PlanoModulosServi
 import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import SaasScheduledRoutine from '../../../models/saas/SaasScheduledRoutine';
-
-function parseClienteIdQuery(raw: unknown): number | null {
-  if (raw === undefined || raw === null || raw === '') return null;
-  const n = parseInt(String(raw), 10);
-  return Number.isFinite(n) && n > 0 ? n : null;
-}
+import { getClientIpOrDefault } from '../../../utils/requestUtils';
+import { queryString } from '../../../utils/listQuery';
 
 function normalizeOptionalAgentId(raw: unknown): number | null {
   if (raw == null || raw === '') return null;
@@ -50,14 +46,6 @@ function normalizeOptionalAgentId(raw: unknown): number | null {
 }
 
 const optionalAgentId = Joi.number().integer().positive().allow(null).optional();
-
-function getClientIp(req: Request): string {
-  return (
-    (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
-    req.socket?.remoteAddress ||
-    '0.0.0.0'
-  );
-}
 
 function getUserId(req: Request): string {
   const user = (req as AuthenticatedRequest).user as JwtPayload | undefined;
@@ -107,7 +95,7 @@ export class DeviceController {
   static async index(req: Request, res: Response): Promise<void> {
     try {
       const scopeEmpresaId = resolveEmpresaScopeForList(req, parseEmpresaIdQuery(req.query.empresa_id));
-      const clienteId = parseClienteIdQuery(req.query.cliente_id);
+      const clienteId = parseEmpresaIdQuery(req.query.cliente_id);
       const parts: WhereOptions<SshDevice>[] = [];
       if (scopeEmpresaId != null) {
         parts.push({ [Op.or]: [{ empresa_id: scopeEmpresaId }, { empresa_id: null }] });
@@ -407,7 +395,7 @@ export class DeviceController {
         viaAgent: Boolean(device.agent_id),
         agentId: device.agent_id ?? null,
         userId: getUserId(req),
-        ip: getClientIp(req),
+        ip: getClientIpOrDefault(req, '0.0.0.0'),
       });
 
       if (device.agent_id) {
@@ -423,7 +411,7 @@ export class DeviceController {
             deviceName,
             success: false,
             errorMessage: msg,
-            ip: getClientIp(req),
+            ip: getClientIpOrDefault(req, '0.0.0.0'),
           });
           try {
             await registrarAtualizacao(req as AuthenticatedRequest, 'SshDevice', 0, { entity_id_str: deviceId, name: deviceName }, { entity_id_str: deviceId, name: deviceName }, `Teste de conexão no equipamento (falha: ${msg})`, getEmpresaIdOrNull(req) ?? undefined);
@@ -448,7 +436,7 @@ export class DeviceController {
             deviceName,
             success: false,
             errorMessage: msg,
-            ip: getClientIp(req),
+            ip: getClientIpOrDefault(req, '0.0.0.0'),
           });
           try {
             await registrarAtualizacao(req as AuthenticatedRequest, 'SshDevice', 0, { entity_id_str: deviceId, name: deviceName }, { entity_id_str: deviceId, name: deviceName }, `Teste de conexão no equipamento (falha: ${msg})`, getEmpresaIdOrNull(req) ?? undefined);
@@ -475,7 +463,7 @@ export class DeviceController {
             deviceName,
             success: false,
             errorMessage: msg,
-            ip: getClientIp(req),
+            ip: getClientIpOrDefault(req, '0.0.0.0'),
           });
           try {
             await registrarAtualizacao(req as AuthenticatedRequest, 'SshDevice', 0, { entity_id_str: deviceId, name: deviceName }, { entity_id_str: deviceId, name: deviceName }, `Teste de conexão no equipamento (falha: ${msg})`, getEmpresaIdOrNull(req) ?? undefined);
@@ -503,7 +491,7 @@ export class DeviceController {
               deviceName,
               success: false,
               errorMessage: msg,
-              ip: getClientIp(req),
+              ip: getClientIpOrDefault(req, '0.0.0.0'),
             });
             try {
               await registrarAtualizacao(req as AuthenticatedRequest, 'SshDevice', 0, { entity_id_str: deviceId, name: deviceName }, { entity_id_str: deviceId, name: deviceName }, `Teste de conexão no equipamento (falha: ${msg})`, getEmpresaIdOrNull(req) ?? undefined);
@@ -536,7 +524,7 @@ export class DeviceController {
             deviceId,
             deviceName,
             success: true,
-            ip: getClientIp(req),
+            ip: getClientIpOrDefault(req, '0.0.0.0'),
             duration: viaAgent.latency ?? undefined,
           });
           try {
@@ -567,7 +555,7 @@ export class DeviceController {
           deviceName,
           success: false,
           errorMessage: errorMsg,
-          ip: getClientIp(req),
+          ip: getClientIpOrDefault(req, '0.0.0.0'),
         });
         try {
           await registrarAtualizacao(req as AuthenticatedRequest, 'SshDevice', 0, { entity_id_str: deviceId, name: deviceName }, { entity_id_str: deviceId, name: deviceName }, `Teste de conexão no equipamento (falha: ${errorMsg})`, getEmpresaIdOrNull(req) ?? undefined);
@@ -590,7 +578,7 @@ export class DeviceController {
         deviceId,
         deviceName,
         success: true,
-        ip: getClientIp(req),
+        ip: getClientIpOrDefault(req, '0.0.0.0'),
         duration: latency,
       });
 
@@ -618,7 +606,7 @@ export class DeviceController {
         deviceName,
         success: false,
         errorMessage: errorMsg,
-        ip: getClientIp(req),
+        ip: getClientIpOrDefault(req, '0.0.0.0'),
       });
 
       try {
@@ -664,7 +652,7 @@ export class DeviceController {
         command: command.trim(),
         output,
         success: true,
-        ip: getClientIp(req),
+        ip: getClientIpOrDefault(req, '0.0.0.0'),
         duration,
       });
 
@@ -682,7 +670,7 @@ export class DeviceController {
         command: (req.body as { command?: string }).command ?? null,
         success: false,
         errorMessage: errorMsg,
-        ip: getClientIp(req),
+        ip: getClientIpOrDefault(req, '0.0.0.0'),
       });
 
       sendError(res, err, errorMsg, 500, true, { context: 'DeviceController.executeCommand' });
@@ -728,7 +716,7 @@ export class DeviceController {
       }
 
       const userId = getUserId(req);
-      const ip = getClientIp(req);
+      const ip = getClientIpOrDefault(req, '0.0.0.0');
       logger.info('Backup SSH manual: executando', {
         context: 'DeviceController.queueManualBackup',
         deviceId: device.id,
@@ -802,7 +790,7 @@ export class DeviceController {
         sendNotFound(res, 'Device SSH não encontrado');
         return;
       }
-      const nome = typeof req.query.nome === 'string' ? req.query.nome : '';
+      const nome = queryString(req.query.nome) ?? '';
       if (!nome.trim()) {
         sendValidationError(res, 'Parâmetro "nome" é obrigatório');
         return;
@@ -833,7 +821,7 @@ export class DeviceController {
         sendNotFound(res, 'Device SSH não encontrado');
         return;
       }
-      const nome = typeof req.query.nome === 'string' ? req.query.nome : '';
+      const nome = queryString(req.query.nome) ?? '';
       if (!nome.trim()) {
         sendValidationError(res, 'Parâmetro "nome" é obrigatório');
         return;
@@ -861,7 +849,7 @@ export class DeviceController {
   /** Lista backups de todos os devices SSH do cliente (flat, com device_id / device_name). */
   static async listBackupsByCliente(req: Request, res: Response): Promise<void> {
     try {
-      const clienteId = parseClienteIdQuery(req.query.cliente_id);
+      const clienteId = parseEmpresaIdQuery(req.query.cliente_id);
       if (clienteId == null) {
         sendValidationError(res, 'Parâmetro cliente_id é obrigatório');
         return;
