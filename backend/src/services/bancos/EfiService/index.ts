@@ -19,19 +19,25 @@ export class EfiService implements IBancoService {
         const baseUrl = banco.sandbox ? efiConfig.sandbox_url : efiConfig.api_url;
         const endpoint = baseUrl + efiConfig.api_endpoints.auth;
 
-        const bancoWithIdentificador = banco as Banco & { identificador_conta?: string | null };
-        const identificadorConta = bancoWithIdentificador.identificador_conta?.trim();
-        const authData: Record<string, string | null> = {
-          [efiConfig.client_id_field]: banco.client_id_producao || null,
-          [efiConfig.client_secret_field]: banco.client_secret_producao || null,
-          grant_type: 'client_credentials'
-        };
-        if (identificadorConta) {
-          authData.identificador_conta = identificadorConta;
+        const clientId = banco.client_id_producao?.trim();
+        const clientSecret = banco.client_secret_producao?.trim();
+
+        if (!clientId || !clientSecret) {
+          logger.error('Credenciais EFI não configuradas', {
+            banco_id: banco.id,
+            banco_nome: banco.nome
+          });
+          return null;
         }
 
+        const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+        const authData = { grant_type: 'client_credentials' };
+
         const response = await axios.post(endpoint, authData, {
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Basic ${credentials}`
+          },
           timeout: 30000
         });
 

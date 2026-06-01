@@ -51,10 +51,18 @@ export class BancoApiAuthService {
       return cached.token;
     }
 
+    if (banco.tipo_banco === 'efi' && !this.hasEfiCredentials(banco)) {
+      logger.error('Credenciais EFI não configuradas', {
+        banco_id: banco.id,
+        banco_nome: banco.nome
+      });
+      return null;
+    }
+
     try {
       const authData = this.buildAuthData(banco, config);
       const authUrl = this.getAuthUrl(banco, config);
-      const authHeaders = this.buildAuthHeaders(banco.tipo_banco, config);
+      const authHeaders = this.buildAuthHeaders(banco, config);
 
       logger.info('Obtendo token de autenticação', {
         banco_id: banco.id,
@@ -63,7 +71,7 @@ export class BancoApiAuthService {
         sandbox: banco.sandbox
       });
 
-      const response = await axios.post(authUrl, authData, { headers: authHeaders });
+      const response = await axios.post(authUrl, authData, { headers: authHeaders, timeout: 30000 });
 
       const token = this.extractToken(response.data, banco.tipo_banco);
       
@@ -79,10 +87,13 @@ export class BancoApiAuthService {
       });
       return null;
     } catch (error: unknown) {
+      const axiosError = error as Error & { response?: { status?: number; data?: JsonValue } };
       logger.error('Erro ao obter token de autenticação', {
         banco_id: banco.id,
         banco_tipo: banco.tipo_banco,
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        status: axiosError.response?.status,
+        response_data: axiosError.response?.data
       });
       return null;
     }
@@ -102,24 +113,17 @@ export class BancoApiAuthService {
   /**
    * Constrói dados de autenticação
    */
-  private static buildAuthData(banco: Banco, config: BancoConfig): Record<string, string | null> {
-    const authData: Record<string, string | null> = {};
-
+  private static buildAuthData(banco: Banco, _config: BancoConfig): Record<string, string> {
     if (banco.tipo_banco === 'efi') {
-      const bancoLike = banco as Banco & { client_id_producao?: string | null; client_secret_producao?: string | null; identificador_conta?: string | null };
-      authData.grant_type = 'client_credentials';
-      authData[config.client_id_field] = bancoLike.client_id_producao || null;
-      authData[config.client_secret_field] = bancoLike.client_secret_producao || null;
-      const identificadorConta = bancoLike.identificador_conta?.trim();
-      if (identificadorConta) {
-        authData.identificador_conta = identificadorConta;
-      }
-    } else if (banco.tipo_banco === 'asaas') {
-      // Asaas não usa autenticação OAuth, usa API key diretamente
-      return {};
+      return { grant_type: 'client_credentials' };
     }
 
-    return authData;
+    return {};
+  }
+
+  private static hasEfiCredentials(banco: Banco): boolean {
+    const bancoLike = banco as Banco & { client_id_producao?: string | null; client_secret_producao?: string | null };
+    return !!(bancoLike.client_id_producao?.trim() && bancoLike.client_secret_producao?.trim());
   }
 
   /**
@@ -133,10 +137,20 @@ export class BancoApiAuthService {
   /**
    * Constrói headers de autenticação
    */
-  private static buildAuthHeaders(_tipoBanco: string, _config: BancoConfig): Record<string, string> {
-    return {
+  private static buildAuthHeaders(banco: Banco, _config: BancoConfig): Record<string, string> {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json'
     };
+
+    if (banco.tipo_banco === 'efi') {
+      const bancoLike = banco as Banco & { client_id_producao?: string | null; client_secret_producao?: string | null };
+      const clientId = bancoLike.client_id_producao?.trim() ?? '';
+      const clientSecret = bancoLike.client_secret_producao?.trim() ?? '';
+      const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+      headers.Authorization = `Basic ${credentials}`;
+    }
+
+    return headers;
   }
 
   /**

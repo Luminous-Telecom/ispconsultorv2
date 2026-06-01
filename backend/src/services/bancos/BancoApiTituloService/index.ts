@@ -40,6 +40,61 @@ export class BancoApiTituloService {
   private static asaasService = new AsaasService();
   private static efiService = new EfiService();
 
+  private static readonly BANCO_CREDENCIAIS_ATTRS = [
+    'id',
+    'nome',
+    'tipo_banco',
+    'api_key',
+    'client_id_producao',
+    'client_secret_producao',
+    'identificador_conta',
+    'sandbox',
+    'url_retorno',
+    'webhook_secret'
+  ] as const;
+
+  private static hasCredenciaisCarregadas(banco: Banco): boolean {
+    const bancoLike = banco as Banco & {
+      api_key?: string | null;
+      client_id_producao?: string | null;
+      client_secret_producao?: string | null;
+    };
+
+    if (banco.tipo_banco === 'asaas') {
+      return !!bancoLike.api_key?.trim();
+    }
+
+    if (banco.tipo_banco === 'efi') {
+      return !!(bancoLike.client_id_producao?.trim() && bancoLike.client_secret_producao?.trim());
+    }
+
+    return false;
+  }
+
+  private static async reloadBancoCredenciais(banco: Banco): Promise<Banco | null> {
+    if (this.hasCredenciaisCarregadas(banco)) {
+      return banco;
+    }
+
+    const instance = await Banco.findByPk(banco.id, {
+      attributes: [...this.BANCO_CREDENCIAIS_ATTRS]
+    });
+
+    return instance ? (instance.get({ plain: true }) as Banco) : null;
+  }
+
+  private static async obterToken(banco: Banco, config: typeof efiConfig | typeof asaasConfig): Promise<string | null> {
+    if (banco.tipo_banco === 'asaas') {
+      return this.asaasService.obterToken(banco);
+    }
+
+    if (banco.tipo_banco === 'efi') {
+      return this.efiService.obterToken(banco);
+    }
+
+    return BancoApiAuthService.obterToken(banco, config);
+  }
+
   /**
    * Consulta status do título
    */
@@ -69,7 +124,15 @@ export class BancoApiTituloService {
         };
       }
 
-      const token = await BancoApiAuthService.obterToken(banco, config);
+      const bancoComCredenciais = await this.reloadBancoCredenciais(banco);
+      if (!bancoComCredenciais) {
+        return {
+          success: false,
+          message: 'Banco não encontrado'
+        };
+      }
+
+      const token = await this.obterToken(bancoComCredenciais, config);
       if (!token) {
         return {
           success: false,
@@ -78,12 +141,12 @@ export class BancoApiTituloService {
       }
 
       // Delegar para serviço específico do banco
-      if (banco.tipo_banco === 'asaas') {
-        return await this.asaasService.consultarStatus(titulo as unknown as Titulo, banco, token);
+      if (bancoComCredenciais.tipo_banco === 'asaas') {
+        return await this.asaasService.consultarStatus(titulo as unknown as Titulo, bancoComCredenciais, token);
       }
 
-      if (banco.tipo_banco === 'efi') {
-        return await this.efiService.consultarStatus(titulo as unknown as Titulo, banco, token);
+      if (bancoComCredenciais.tipo_banco === 'efi') {
+        return await this.efiService.consultarStatus(titulo as unknown as Titulo, bancoComCredenciais, token);
       }
 
       // Implementação genérica para outros bancos
@@ -202,7 +265,15 @@ export class BancoApiTituloService {
         };
       }
 
-      const token = await BancoApiAuthService.obterToken(banco, config);
+      const bancoComCredenciais = await this.reloadBancoCredenciais(banco);
+      if (!bancoComCredenciais) {
+        return {
+          success: false,
+          message: 'Banco não encontrado'
+        };
+      }
+
+      const token = await this.obterToken(bancoComCredenciais, config);
       if (!token) {
         return {
           success: false,
@@ -211,8 +282,12 @@ export class BancoApiTituloService {
       }
 
       // Delegar para serviço específico do banco
-      if (banco.tipo_banco === 'asaas') {
-        return await this.asaasService.cancelarTitulo(titulo as unknown as Titulo, banco, token);
+      if (bancoComCredenciais.tipo_banco === 'asaas') {
+        return await this.asaasService.cancelarTitulo(titulo as unknown as Titulo, bancoComCredenciais, token);
+      }
+
+      if (bancoComCredenciais.tipo_banco === 'efi') {
+        return await this.efiService.cancelarTitulo(titulo as unknown as Titulo, bancoComCredenciais, token);
       }
 
       const baseUrlCobranca = banco.sandbox 
@@ -335,7 +410,15 @@ export class BancoApiTituloService {
         };
       }
 
-      const token = await BancoApiAuthService.obterToken(banco, config);
+      const bancoComCredenciais = await this.reloadBancoCredenciais(banco);
+      if (!bancoComCredenciais) {
+        return {
+          success: false,
+          message: 'Banco não encontrado'
+        };
+      }
+
+      const token = await this.obterToken(bancoComCredenciais, config);
       if (!token) {
         return {
           success: false,
@@ -344,8 +427,8 @@ export class BancoApiTituloService {
       }
 
       // Delegar para serviço específico do banco
-      if (banco.tipo_banco === 'asaas') {
-        return await this.asaasService.liquidarTitulo(titulo as unknown as Titulo, banco, token);
+      if (bancoComCredenciais.tipo_banco === 'asaas') {
+        return await this.asaasService.liquidarTitulo(titulo as unknown as Titulo, bancoComCredenciais, token);
       }
 
       const baseUrlCobranca = banco.sandbox 
