@@ -113,7 +113,6 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
       dataVencimentoFim,
       handleDataVencimentoInicioChange,
       handleDataVencimentoFimChange,
-      t,
     ]
   );
 
