@@ -226,13 +226,12 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
           type="button"
           onClick={handleUpdate}
           disabled={isUpdating || updateMutation.isPending}
-          isPending={isUpdating || updateMutation.isPending}
         />
       )}
       <FecharButton
         type="button"
         onClick={onClose}
-        isPending={isUpdating || updateMutation.isPending}
+        disabled={isUpdating || updateMutation.isPending}
       />
     </div>
   );
@@ -316,9 +315,6 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
                 }}
               >
                 <div className="d-flex align-items-center mb-2">
-                  <div className="spinner-border spinner-border-sm text-primary me-2" role="status">
-                    <span className="visually-hidden">{t('messages.loading')}</span>
-                  </div>
                   <div className="flex-grow-1">
                     <strong className="small" style={{ color: 'var(--info-color)' }}>{t('updates.updating')}</strong>
                     <p className="mb-0 small mt-1" style={{ color: 'var(--text-secondary)' }}>{updateProgress}</p>
