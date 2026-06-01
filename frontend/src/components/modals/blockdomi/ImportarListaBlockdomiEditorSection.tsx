@@ -1,5 +1,5 @@
 import React from 'react';
-import { BulkActionButton, LimparButton } from 'components/ui';
+import { BulkActionButton } from 'components/ui';
 import type { BlockdomiImportTranslateFn } from './importarListaBlockdomiTypes';
 import type { ClassifiedList } from './importarListaBlockdomiTypes';
 
@@ -74,10 +74,14 @@ const ImportarListaBlockdomiEditorSection: React.FC<ImportarListaBlockdomiEditor
         type="button"
         label={t('blockdomi.paste')}
         variant="secondary"
+        size="sm"
         onClick={onPaste}
       />
-      <LimparButton
+      <BulkActionButton
         type="button"
+        label={t('buttons.clear')}
+        variant="outline-secondary"
+        size="sm"
         onClick={onClear}
         disabled={!rawText.trim()}
       />
@@ -85,25 +89,26 @@ const ImportarListaBlockdomiEditorSection: React.FC<ImportarListaBlockdomiEditor
         type="button"
         label={t('blockdomi.analyze')}
         variant="primary"
+        size="sm"
         onClick={onAnalisar}
         disabled={!rawText.trim() || isAnalyzing}
         isPending={isAnalyzing}
       />
       {classified && (
         <>
-          <div className="btn-group btn-group-sm" role="group" aria-label={t('blockdomi.modoListaBloqueio')}>
+          <div className="ilb-mode-toggle" role="group" aria-label={t('blockdomi.modoListaBloqueio')}>
             <BulkActionButton
               type="button"
               label={t('blockdomi.modoListaBloqueio')}
-              variant={listaModo === 'bloqueio' ? 'primary' : 'secondary'}
-              className={listaModo === 'bloqueio' ? '' : 'btn-outline-primary'}
+              variant={listaModo === 'bloqueio' ? 'primary' : 'outline-primary'}
+              size="sm"
               onClick={() => onListaModoChange('bloqueio')}
             />
             <BulkActionButton
               type="button"
               label={t('blockdomi.modoListaDesbloqueio')}
-              variant={listaModo === 'desbloqueio' ? 'danger' : 'secondary'}
-              className={listaModo === 'desbloqueio' ? '' : 'btn-outline-danger'}
+              variant={listaModo === 'desbloqueio' ? 'danger' : 'outline-danger'}
+              size="sm"
               onClick={() => onListaModoChange('desbloqueio')}
             />
           </div>
@@ -111,6 +116,7 @@ const ImportarListaBlockdomiEditorSection: React.FC<ImportarListaBlockdomiEditor
             type="button"
             label={listaModo === 'desbloqueio' ? t('blockdomi.registerRemover') : t('blockdomi.register')}
             variant={listaModo === 'desbloqueio' ? 'danger' : 'primary'}
+            size="sm"
             onClick={onCadastrar}
             disabled={totalValid === 0 || isCadastrando}
             isPending={isCadastrando}

@@ -2,21 +2,15 @@ import React from 'react';
 import { renderSystemButton } from './renderButton';
 import type { ButtonSize, ButtonVariant } from '../Button';
 
-type BulkVariant = 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark';
-
 export interface BulkActionButtonProps
   extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'children'> {
   label: string;
-  variant?: BulkVariant;
+  variant?: ButtonVariant;
   size?: ButtonSize;
   isPending?: boolean;
   isLoading?: boolean;
   dropdown?: boolean;
   className?: string;
-}
-
-function toButtonVariant(variant: BulkVariant): ButtonVariant {
-  return variant;
 }
 
 /** Botão de ação em lote (Table / TableActions) — estilo centralizado. */
@@ -40,7 +34,7 @@ const BulkActionButton: React.FC<BulkActionButtonProps> = ({
 
   return renderSystemButton({
     label,
-    variant: toButtonVariant(variant),
+    variant,
     size,
     isPending,
     isLoading,
