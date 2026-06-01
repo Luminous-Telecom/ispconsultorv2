@@ -6,25 +6,14 @@ import { useBulkBtn } from 'components/ui';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { SshDeviceBackupService } from 'services/sshDeviceBackupService';
-import Table from 'components/tables/Table';
+import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import TextPreviewModal from 'components/common/TextPreviewModal';
+import {
+  formatSshBackupBytes,
+  isSshBackupTextPreviewSupported,
+} from 'components/common/sshBackups/sshBackupsUtils';
+import { useSshBackupPreview } from 'hooks/useSshBackupPreview';
 import type { TableConfig } from 'components/tables/types';
-
-const TEXT_PREVIEW_EXTENSIONS = ['.rsc', '.txt', '.cfg', '.conf', '.log'];
-
-function isTextPreviewSupported(fileName: string): boolean {
-  const lower = fileName.toLowerCase();
-  return TEXT_PREVIEW_EXTENSIONS.some((ext) => lower.endsWith(ext));
-}
-
-function formatBytes(bytes: number): string {
-  if (!Number.isFinite(bytes) || bytes < 0) return '—';
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
-  return `${parseFloat((bytes / k ** i).toFixed(i === 0 ? 0 : 1))} ${sizes[i]}`;
-}
 
 interface ClienteBackupRow {
   id: string;
@@ -52,11 +41,7 @@ const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }
   const [downloadingKey, setDownloadingKey] = useState<string | null>(null);
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
   const [, setSelectedItems] = useState<ClienteBackupRow[]>([]);
-  const [showPreview, setShowPreview] = useState(false);
-  const [previewContent, setPreviewContent] = useState<string | null>(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
-  const [previewError, setPreviewError] = useState<string | null>(null);
-  const [previewTitle, setPreviewTitle] = useState('');
+  const preview = useSshBackupPreview();
 
   const { data: files = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['ssh-device-backups', 'cliente', clienteId],
@@ -89,27 +74,9 @@ const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }
   }, []);
 
   const handleView = useCallback(async (row: ClienteBackupRow) => {
-    if (!row.device_id || !isTextPreviewSupported(row.fileName)) return;
-    setShowPreview(true);
-    setPreviewContent(null);
-    setPreviewError(null);
-    setPreviewTitle(`${row.device_name} — ${row.fileName}`);
-    setPreviewLoading(true);
-    try {
-      const text = await SshDeviceBackupService.fetchAsText(row.device_id, row.fileName);
-      setPreviewContent(text);
-    } catch (err) {
-      setPreviewError(err instanceof Error ? err.message : 'Erro ao carregar');
-    } finally {
-      setPreviewLoading(false);
-    }
-  }, []);
-
-  const closePreview = useCallback(() => {
-    setShowPreview(false);
-    setPreviewContent(null);
-    setPreviewError(null);
-  }, []);
+    if (!row.device_id || !isSshBackupTextPreviewSupported(row.fileName)) return;
+    await preview.openPreview(row.device_id, row.fileName, `${row.device_name} — ${row.fileName}`);
+  }, [preview]);
 
   const handleDelete = useCallback(
     async (items: ClienteBackupRow[]) => {
@@ -160,7 +127,7 @@ const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }
         align: 'right',
         headerAlign: 'right',
         width: '88px',
-        render: (row) => <span className="small">{formatBytes(row.size)}</span>,
+        render: (row) => <span className="small">{formatSshBackupBytes(row.size)}</span>,
       },
       {
         key: 'modifiedAt',
@@ -192,8 +159,8 @@ const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }
         disabled: (items: ClienteBackupRow[]) =>
           items.length !== 1 ||
           !items[0].device_id ||
-          !isTextPreviewSupported(items[0].fileName) ||
-          previewLoading,
+          !isSshBackupTextPreviewSupported(items[0].fileName) ||
+          preview.previewLoading,
         onClick: async (items: ClienteBackupRow[]) => {
           if (items.length !== 1) return;
           await handleView(items[0]);
@@ -222,7 +189,7 @@ const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }
         onClick: handleDelete,
       },
     ],
-    [bulkBtn, downloadingKey, deletingKey, handleDownloadOne, handleDelete, previewLoading, handleView]
+    [bulkBtn, downloadingKey, deletingKey, handleDownloadOne, handleDelete, preview.previewLoading, handleView]
   );
 
   if (!clienteId) {
@@ -235,7 +202,7 @@ const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }
 
   return (
     <>
-          <Table<ClienteBackupRow>
+          <EmbeddedTablePanel<ClienteBackupRow>
               key="cliente-ssh-backups-tab-table"
               title={t('tabs.sshDeviceBackups')}
               className="no-padding"
@@ -269,18 +236,17 @@ const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }
                 })),
               }}
               tableId="cliente-ssh-backups"
-              syncWithHeader={false}
               onRefresh={refetch}
               onSelectionChange={setSelectedItems}
               onSort={(col, dir) => tableFilters.setSort(col, dir)}
           />
     <TextPreviewModal
-      show={showPreview}
-      onClose={closePreview}
-      title={previewTitle}
-      content={previewContent}
-      isLoading={previewLoading}
-      error={previewError}
+      show={preview.showPreview}
+      onClose={preview.closePreview}
+      title={preview.previewTitle}
+      content={preview.previewContent}
+      isLoading={preview.previewLoading}
+      error={preview.previewError}
       modalId="cliente-ssh-backup-text-preview"
     />
     </>

@@ -1,6 +1,6 @@
 import React from 'react';
 import LayoutSidebarHeader from '../LayoutSidebarHeader';
-import SidebarAccordionFolder from './SidebarAccordionFolder';
+import AppSidebar from '../appLayout/AppSidebar';
 import type { SidebarFolderConfig, SidebarMenuItem, TranslateFn } from './types';
 
 interface SidebarProps {
@@ -24,11 +24,6 @@ const Sidebar: React.FC<SidebarProps> = ({
   t,
   onCloseSidebar,
 }) => {
-  const handleItemClick = (item: SidebarMenuItem) => {
-    item.onClick();
-    onCloseSidebar();
-  };
-
   const shouldRenderFolder = (folder: SidebarFolderConfig): boolean => {
     if (folder.requireModulosLoaded) {
       return !isLoadingModulos && folder.items.length > 0;
@@ -40,37 +35,24 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <aside
-      ref={sidebarRef}
-      className={`d-flex flex-column flex-shrink-0 sidebar ${sidebarOpen ? 'open' : ''}`}
-    >
-      <LayoutSidebarHeader
-        companyName={companyName}
-        isMobile={isMobile}
-        onCloseSidebar={onCloseSidebar}
-      />
-
-      <div className="sidebar-nav-scrollable flex-grow-1">
-        <nav className="sidebar-nav nav nav-pills flex-column mb-auto px-2">
-          {folders.map((folder) =>
-            shouldRenderFolder(folder) ? (
-              <SidebarAccordionFolder
-                key={folder.accordionId}
-                accordionId={folder.accordionId}
-                collapseId={folder.collapseId}
-                headingId={folder.headingId}
-                title={folder.title}
-                items={folder.items}
-                nestedFolders={folder.nestedFolders}
-                t={t}
-                onItemClick={handleItemClick}
-              />
-            ) : null
-          )}
-        </nav>
-      </div>
-    </aside>
+    <AppSidebar
+      sidebarRef={sidebarRef}
+      sidebarOpen={sidebarOpen}
+      folders={folders}
+      t={t}
+      onCloseSidebar={onCloseSidebar}
+      shouldRenderFolder={shouldRenderFolder}
+      header={
+        <LayoutSidebarHeader
+          companyName={companyName}
+          isMobile={isMobile}
+          onCloseSidebar={onCloseSidebar}
+        />
+      }
+    />
   );
 };
+
+export type { SidebarMenuItem };
 
 export default Sidebar;

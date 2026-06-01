@@ -8,7 +8,7 @@ import { useBulkBtn } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import Spinner from 'components/ui/Spinner';
 import SearchBar from 'components/ui/SearchBar';
-import Table from 'components/tables/Table';
+import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import { TableConfig, BulkAction, SortDirection } from 'components/tables/types';
 import ImprimirModal from 'components/common/ImprimirModal';
 
@@ -248,9 +248,8 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({ empresaId, tipo }) => {
 
   return (
     <div className="empresa-financeiro-tab-full" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Table
+      <EmbeddedTablePanel
           key={`dados-empresa-faturas-tab-${tipo}`}
-          syncWithHeader={false}
           title={tipo === 'abertas' ? t('tabs.faturasAbertas') : t('tabs.faturasPagas')}
           config={{
             columns,

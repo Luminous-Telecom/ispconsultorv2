@@ -5,6 +5,7 @@ import { useEntityListModal } from 'hooks/useEntityListModal';
 import { Plano, PlanoFilters } from 'types';
 import { useI18n } from 'contexts/I18nContext';
 import { formatDateTime } from 'utils/formatters';
+import { getPlanoStatusBadgeClass } from 'utils/tableStatusBadges';
 import ListModal from 'components/common/ListModal';
 import { ListModalConfig } from 'types/modal';
 import PlanoModal from './PlanoModal';
@@ -37,16 +38,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     onSelect: onSelectPlano,
   });
 
-  const getStatusBadgeClass = useCallback((status: string) => {
-    switch (status) {
-      case 'ativo':
-        return 'bg-success';
-      case 'inativo':
-        return 'bg-warning';
-      default:
-        return 'bg-secondary';
-    }
-  }, []);
+  const getStatusBadgeClass = useCallback((status: string) => getPlanoStatusBadgeClass(status), []);
 
   const getTipoServicoLabel = useCallback(
     (tipo: string) => {

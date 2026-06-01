@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import DraggableModal from 'components/common/DraggableModal';
 import { CancelarButton, ConfirmarButton } from 'components/ui';
-import Table from 'components/tables/Table';
+import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import { TableConfig } from 'components/tables/types';
 
 interface AnalysisRow {
@@ -38,29 +38,17 @@ const RpkiRoaAnalysisModal: React.FC<RpkiRoaAnalysisModalProps> = ({
     setSelectedIds([]);
   }, [show, rows]);
 
-  const selectedRows = useMemo(
-    () => rows.filter((row) => selectedIds.includes(row.analysis_id)),
-    [rows, selectedIds]
+  const selectedRows = rows.filter((row) => selectedIds.includes(row.analysis_id));
+  const hasApplicableSelection = selectedRows.some(
+    (row) =>
+      (row.selectable && row.roa_id === 0) ||
+      (row.selectable &&
+        row.roa_id > 0 &&
+        (row.status === 'not_found' ||
+          row.status === 'inconsistent' ||
+          row.status === 'expired'))
   );
-
-  /** Confirmação só faz sentido com linhas que geram criar ROA ou revogação (alinhado ao handler no pai). */
-  const hasApplicableSelection = useMemo(
-    () =>
-      selectedRows.some(
-        (row) =>
-          (row.selectable && row.roa_id === 0) ||
-          (row.selectable &&
-            row.roa_id > 0 &&
-            (row.status === 'not_found' ||
-              row.status === 'inconsistent' ||
-              row.status === 'expired'))
-      ),
-    [selectedRows]
-  );
-  const rowsWithId = useMemo(
-    () => rows.map((row) => ({ ...row, id: row.analysis_id })),
-    [rows]
-  );
+  const rowsWithId = rows.map((row) => ({ ...row, id: row.analysis_id }));
 
   const columns: TableConfig<AnalysisTableRow>['columns'] = [
     {
@@ -119,7 +107,7 @@ const RpkiRoaAnalysisModal: React.FC<RpkiRoaAnalysisModalProps> = ({
           </span>
         </div>
         <div className="list-modal-scroll-wrapper">
-          <Table<AnalysisTableRow>
+          <EmbeddedTablePanel<AnalysisTableRow>
             layoutWrapper={false}
             className="no-padding"
             title="Análise de ROAs"
@@ -137,7 +125,6 @@ const RpkiRoaAnalysisModal: React.FC<RpkiRoaAnalysisModalProps> = ({
               emptyMessage: 'Nenhuma ROA encontrada na análise',
             }}
             tableId="rpki-roa-analysis-modal"
-            syncWithHeader={false}
             onRefresh={() => {}}
             onSelectionChange={(items) => {
               setSelectedIds(items.map((row) => row.analysis_id));

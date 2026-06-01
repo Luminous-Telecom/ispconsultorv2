@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useI18n } from 'contexts/I18nContext';
 import { BancoService } from 'services/bancoService';
@@ -8,8 +8,10 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useFormPrefix } from 'hooks/useFormId';
 import { useBancoForm } from 'hooks/useBancoForm';
 import { useIsMobile } from 'hooks/useMediaQuery';
+import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
 import { Banco } from 'types';
 import DraggableModal from 'components/common/DraggableModal';
+import ModalTabsOverflow from 'components/common/ModalTabsOverflow';
 import { ModalFormActions, Spinner, TestarConexaoButton } from 'components/ui';
 import { InformacoesBasicasTab, ConfiguracoesApiTab } from './banco';
 import { BancoForm } from './banco/types';
@@ -48,9 +50,18 @@ const BancoModal: React.FC<BancoModalProps> = ({
 
   // Estados locais para funcionalidades específicas do modal
   const [activeTab, setActiveTab] = useState('informacoes-basicas');
+
+  const bancoTabs = useMemo(
+    () => [
+      { id: 'informacoes-basicas', label: t('tabs.basicInfo') },
+      { id: 'configuracoes-api', label: t('tabs.apiConfig') },
+    ],
+    [t]
+  );
   const [isGeneratingSecret, setIsGeneratingSecret] = useState(false);
   const { success, warning } = useNotificationContext();
   const { showApiError } = useApiError();
+  const { copy: copyToClipboard } = useCopyToClipboard();
   const queryClient = useQueryClient();
 
   const handleCancel = () => {
@@ -146,11 +157,10 @@ const BancoModal: React.FC<BancoModalProps> = ({
       warning(t('messages.noTokenToCopy'));
       return;
     }
-
-    try {
-      await navigator.clipboard.writeText(formData.webhook_secret);
+    const ok = await copyToClipboard(formData.webhook_secret);
+    if (ok) {
       success(t('messages.webhookTokenCopied'));
-    } catch {
+    } else {
       warning(t('messages.copyManual'));
     }
   };
@@ -266,36 +276,14 @@ const BancoModal: React.FC<BancoModalProps> = ({
 
             {/* Abas na parte inferior do header */}
             <div className="banco-header-tabs">
-              <ul
-                className={`nav nav-tabs banco-tabs-unified ${isMobile ? 'banco-tabs-mobile' : ''}`}
+              <ModalTabsOverflow
+                tabs={bancoTabs}
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                tabsClassName={`banco-tabs-unified ${isMobile ? 'banco-tabs-mobile' : ''}`}
+                isMobile={isMobile}
                 id="bancoTab"
-                role="tablist"
-                style={{
-                  margin: 0,
-                  padding: 0,
-                  borderBottom: 'none',
-                  backgroundColor: 'transparent'
-                }}
-              >
-                <li className="nav-item" role="presentation">
-                  <button
-                    className={`nav-link modal-tab-hover ${activeTab === 'informacoes-basicas' ? 'active' : ''}`}
-                    type="button"
-                    onClick={() => setActiveTab('informacoes-basicas')}
-                  >
-                    {t('tabs.basicInfo')}
-                  </button>
-                </li>
-                <li className="nav-item" role="presentation">
-                  <button
-                    className={`nav-link modal-tab-hover ${activeTab === 'configuracoes-api' ? 'active' : ''}`}
-                    type="button"
-                    onClick={() => setActiveTab('configuracoes-api')}
-                  >
-                    {t('tabs.apiConfig')}
-                  </button>
-                </li>
-              </ul>
+              />
             </div>
           </div>
         ) : undefined

@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useI18n } from 'contexts/I18nContext';
 import { ImprimirButton, ModalFormActions } from 'components/ui';
+import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
 
 interface ContratoModalHeaderProps {
   isEditMode: boolean;
@@ -23,7 +24,20 @@ function ContratoModalHeader({
 }: ContratoModalHeaderProps) {
   const { t } = useI18n();
 
-  const handleTabClick = (tab: string, requiresEdit = false) => {
+  const tabs = useMemo(
+    (): ModalTabItem[] => [
+      { id: 'contrato', label: t('tabs.contractData') },
+      { id: 'endereco', label: t('tabs.address') },
+      { id: 'termos', label: t('tabs.terms'), disabled: !isEditMode },
+      { id: 'financeiro', label: t('tabs.financial'), disabled: !isEditMode },
+      { id: 'financeiro-avulso', label: t('tabs.financialMisc'), disabled: !isEditMode },
+      { id: 'servicos-adicionais', label: t('tabs.additionalServices'), disabled: !isEditMode },
+    ],
+    [isEditMode, t]
+  );
+
+  const handleTabChange = (tab: string) => {
+    const requiresEdit = tab !== 'contrato' && tab !== 'endereco';
     if (requiresEdit && !isEditMode) return;
     onTabChange(tab);
   };
@@ -49,76 +63,15 @@ function ContratoModalHeader({
         />
       </div>
       <div className="contrato-header-tabs">
-        <ul
-          className={`nav nav-tabs contrato-tabs-unified ${isMobile ? 'contrato-tabs-mobile' : ''}`}
+        <ModalTabsOverflow
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          tabsClassName={`contrato-tabs-unified ${isMobile ? 'contrato-tabs-mobile' : ''}`}
+          disabledClassName="contrato-tab-disabled"
+          isMobile={isMobile}
           id="contratoTab"
-          role="tablist"
-          style={{
-            margin: 0,
-            padding: 0,
-            borderBottom: 'none',
-            backgroundColor: 'transparent',
-          }}
-        >
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link modal-tab-hover ${activeTab === 'contrato' ? 'active' : ''}`}
-              type="button"
-              onClick={() => handleTabClick('contrato')}
-            >
-              {t('tabs.contractData')}
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link modal-tab-hover ${activeTab === 'endereco' ? 'active' : ''}`}
-              type="button"
-              onClick={() => handleTabClick('endereco')}
-            >
-              {t('tabs.address')}
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link modal-tab-hover ${activeTab === 'termos' ? 'active' : ''} ${!isEditMode ? 'contrato-tab-disabled' : ''}`}
-              type="button"
-              onClick={() => handleTabClick('termos', true)}
-              disabled={!isEditMode}
-            >
-              {t('tabs.terms')}
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link modal-tab-hover ${activeTab === 'financeiro' ? 'active' : ''} ${!isEditMode ? 'contrato-tab-disabled' : ''}`}
-              type="button"
-              onClick={() => handleTabClick('financeiro', true)}
-              disabled={!isEditMode}
-            >
-              {t('tabs.financial')}
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link modal-tab-hover ${activeTab === 'financeiro-avulso' ? 'active' : ''} ${!isEditMode ? 'contrato-tab-disabled' : ''}`}
-              type="button"
-              onClick={() => handleTabClick('financeiro-avulso', true)}
-              disabled={!isEditMode}
-            >
-              {t('tabs.financialMisc')}
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link modal-tab-hover ${activeTab === 'servicos-adicionais' ? 'active' : ''} ${!isEditMode ? 'contrato-tab-disabled' : ''}`}
-              type="button"
-              onClick={() => handleTabClick('servicos-adicionais', true)}
-              disabled={!isEditMode}
-            >
-              {t('tabs.additionalServices')}
-            </button>
-          </li>
-        </ul>
+        />
       </div>
     </div>
   );

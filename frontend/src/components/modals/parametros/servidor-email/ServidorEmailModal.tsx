@@ -7,6 +7,7 @@ import { useIsMobile } from 'hooks/useMediaQuery';
 import { useI18n } from 'contexts/I18nContext';
 import { ServidorEmailService, MensagemEmail } from 'services/servidorEmailService';
 import DraggableModal from 'components/common/DraggableModal';
+import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
 import { FecharButton, LimparButton, RemoverButton, SalvarButton, Spinner } from 'components/ui';
 import { ServidorEmailForm, ServidorEmailModalProps } from './types';
 import ServidorTab from './abas/ServidorTab';
@@ -260,6 +261,14 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
     }
   }, [activeTab, handleSaveMensagem]);
 
+  const emailTabs = useMemo(
+    (): ModalTabItem<'servidor' | 'mensagens'>[] => [
+      { id: 'servidor', label: t('whatsappServer.server') },
+      { id: 'mensagens', label: t('whatsappServer.messages') },
+    ],
+    [t]
+  );
+
   const headerActionsContent = useMemo(() => (
     <div className="email-header-unified">
       {/* Botões à direita - ordem padrão: Cancelar/Fechar, Salvar, Remover */}
@@ -287,39 +296,17 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
 
       {/* Abas na parte inferior do header */}
       <div className="email-header-tabs">
-        <ul
-          className={`nav nav-tabs email-tabs-unified ${isMobile ? 'email-tabs-mobile' : ''}`}
+        <ModalTabsOverflow
+          tabs={emailTabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          tabsClassName={`email-tabs-unified ${isMobile ? 'email-tabs-mobile' : ''}`}
+          isMobile={isMobile}
           id="emailTab"
-          role="tablist"
-          style={{
-            margin: 0,
-            padding: 0,
-            borderBottom: 'none',
-            backgroundColor: 'transparent'
-          }}
-        >
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link modal-tab-hover ${activeTab === 'servidor' ? 'active' : ''}`}
-              onClick={() => setActiveTab('servidor')}
-              type="button"
-            >
-              {t('whatsappServer.server')}
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link modal-tab-hover ${activeTab === 'mensagens' ? 'active' : ''}`}
-              onClick={() => setActiveTab('mensagens')}
-              type="button"
-            >
-              {t('whatsappServer.messages')}
-            </button>
-          </li>
-        </ul>
+        />
       </div>
     </div>
-  ), [handleSaveClick, saveServidorMutation.isPending, saveMensagemMutation.isPending, show, servidorAtivo?.data, handleReset, handleClose, activeTab, isMobile, t]);
+  ), [handleSaveClick, saveServidorMutation.isPending, saveMensagemMutation.isPending, show, servidorAtivo?.data, handleReset, handleClose, activeTab, isMobile, emailTabs]);
 
   const headerActionsContentRef = useRef(headerActionsContent);
   headerActionsContentRef.current = headerActionsContent;

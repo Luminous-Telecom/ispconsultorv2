@@ -6,6 +6,7 @@ import { defaultApiClient } from 'services/core';
 import { AgentService } from 'services/agentService';
 import { authService } from 'services/authService';
 import { DadosEmpresaService } from 'services/dadosEmpresaService';
+import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
 import { buildDockerRunCommand } from './agentModalUtils';
 import { DEFAULT_SSH_FORM, EMPTY_FORM } from './constants';
 import { ActiveTab, AgentModalProps, InstallStatus } from './types';
@@ -55,8 +56,10 @@ export function useAgentModal({
   const abortRef = useRef<AbortController | null>(null);
 
   const [generatedCmd, setGeneratedCmd] = useState('');
-  const [cmdCopied, setCmdCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const { copy: copyToClipboard, isCopied: isCmdCopied, clearCopied } = useCopyToClipboard({
+    resetAfterMs: 2500,
+  });
 
   const [installAgent, setInstallAgent] = useState<Agent | null>(agentData ?? null);
 
@@ -64,7 +67,7 @@ export function useAgentModal({
     if (!show) {
       setActiveTab('config');
       setGeneratedCmd('');
-      setCmdCopied(false);
+      clearCopied();
       setGenerating(false);
       setInstallAgent(null);
       setInstallStatus('idle');
@@ -90,13 +93,12 @@ export function useAgentModal({
     setInstallStatus('idle');
     setLogs([]);
     setGeneratedCmd('');
-    setCmdCopied(false);
+    clearCopied();
     setInstallAgent(agentData ?? null);
 
     return () => { abortRef.current?.abort(); };
-    // agentData omitido de propósito: mesma ref em refetch não pode resetar abas; lemos agentData ao abrir/trocar id.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- deps intencionais: show + agentData?.id
-  }, [show, agentData?.id]);
+  }, [show, agentData?.id, clearCopied]);
 
   useEffect(() => {
     logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -119,10 +121,9 @@ export function useAgentModal({
   useEffect(() => {
     if (!show) return;
     if (activeTab === 'install-manual' && !generatedCmd && (installAgent || agentData)) {
-      handleGenerateCmd();
+      void handleGenerateCmd();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, show]);
+  }, [activeTab, show, generatedCmd, installAgent, agentData, handleGenerateCmd]);
 
   const set = (field: string) => (value: unknown) =>
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -281,11 +282,8 @@ export function useAgentModal({
 
   const handleCopy = useCallback(() => {
     if (!generatedCmd) return;
-    navigator.clipboard.writeText(generatedCmd).then(() => {
-      setCmdCopied(true);
-      setTimeout(() => setCmdCopied(false), 2500);
-    });
-  }, [generatedCmd]);
+    void copyToClipboard(generatedCmd, 'cmd');
+  }, [copyToClipboard, generatedCmd]);
 
   const handleClose = () => {
     abortRef.current?.abort();
@@ -329,7 +327,7 @@ export function useAgentModal({
     logs,
     logEndRef,
     generatedCmd,
-    cmdCopied,
+    cmdCopied: isCmdCopied('cmd'),
     generating,
     clienteEdicaoLabel,
     isSubmitting,

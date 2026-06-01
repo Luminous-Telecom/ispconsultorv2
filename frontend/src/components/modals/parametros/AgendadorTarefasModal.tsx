@@ -1,19 +1,16 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { useModalSelect } from 'hooks/useModalSelect';
-import { useTableFilters } from 'hooks/useTableFilters';
 import { SaasSchedulerService, type RotinaAgendada } from 'services/saas/saasSchedulerService';
+import { useEntityListModal } from 'hooks/useEntityListModal';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
-import DraggableModal from 'components/common/DraggableModal';
-import Table from 'components/tables/Table';
-import { TableConfig } from 'components/tables/types';
+import ListModal from 'components/common/ListModal';
+import { ListModalConfig } from 'types/modal';
 import RotinaAgendadaModal from './RotinaAgendadaModal';
-import { useAuditoria } from 'hooks/useAuditoria';
 import ImprimirModal from 'components/common/ImprimirModal';
-import { useI18n } from 'contexts/I18nContext';
-import { useBulkBtn } from 'components/ui';
+import { renderStatusBadge } from 'components/ui/StatusBadge';
+import { getAtivoBadgeConfig } from 'utils/tableStatusBadges';
 import { getCronDisplayFromRotina } from 'utils/schedulerCronDisplay';
 import { formatDateTime } from 'utils/formatters';
 
@@ -34,113 +31,106 @@ interface AgendadorTarefasModalProps {
 }
 
 const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onClose }) => {
-  const { t } = useI18n();
-  const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
-  const auditoria = useAuditoria();
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedRotinaId, setSelectedRotinaId] = useState<number | null>(null);
 
-  const tableFilters = useTableFilters({
-    initialSearch: '',
-    initialPage: 1,
-    initialLimit: 15,
-    searchDebounceMs: 300,
-    resetPageOnFilterChange: true,
+  const list = useEntityListModal<RotinaAgendada>({ onClose });
+
+  const { data: rotinasData, isLoading, refetch } = useQuery({
+    queryKey: [
+      QUERY_KEY,
+      list.tableFilters.page,
+      list.tableFilters.limit,
+      list.tableFilters.debouncedSearch,
+      list.tableFilters.searchField,
+      list.tableFilters.sortColumn,
+      list.tableFilters.sortDirection,
+    ],
+    queryFn: () =>
+      SaasSchedulerService.getRotinas({
+        page: list.tableFilters.page,
+        limit: list.tableFilters.limit,
+        search: list.tableFilters.debouncedSearch,
+        searchField: list.tableFilters.searchField || undefined,
+        sort: list.tableFilters.sortColumn,
+        direction: list.tableFilters.sortDirection,
+      }),
+    enabled: show,
   });
 
-  const handleAudit = (rotina: RotinaAgendada) => {
-    auditoria.handleAudit('SaasScheduledRoutine', rotina.id);
-  };
-
-  const { selectedItem, handleSelectionChange, clearSelection } = useModalSelect<RotinaAgendada>();
-
-  const tableColumns: TableConfig<RotinaAgendada>['columns'] = useMemo(
-    () => [
+  const columns = useMemo(
+    (): ListModalConfig<RotinaAgendada>['columns'] => [
       {
         key: 'nome',
-        label: t('scheduler.task'),
+        label: list.t('scheduler.task'),
         sortable: true,
-        minWidth: 220,
-        render: (item: RotinaAgendada) => <span title={item.nome}>{item.nome}</span>,
+        render: (item) => <span title={item.nome}>{item.nome}</span>,
       },
       {
         key: 'cron_minuto',
-        label: t('scheduler.cronMinute'),
+        label: list.t('scheduler.cronMinute'),
         sortable: true,
-        minWidth: 96,
-        render: (item: RotinaAgendada) => getCronDisplayFromRotina(item).minuto,
+        render: (item) => getCronDisplayFromRotina(item).minuto,
       },
       {
         key: 'cron_hora',
-        label: t('scheduler.cronHour'),
+        label: list.t('scheduler.cronHour'),
         sortable: true,
-        minWidth: 88,
-        render: (item: RotinaAgendada) => getCronDisplayFromRotina(item).hora,
+        render: (item) => getCronDisplayFromRotina(item).hora,
       },
       {
         key: 'cron_dia_mes',
-        label: t('scheduler.cronDayOfMonth'),
+        label: list.t('scheduler.cronDayOfMonth'),
         sortable: true,
-        minWidth: 100,
-        render: (item: RotinaAgendada) => getCronDisplayFromRotina(item).diaMes,
+        render: (item) => getCronDisplayFromRotina(item).diaMes,
       },
       {
         key: 'cron_mes',
-        label: t('scheduler.cronMonth'),
+        label: list.t('scheduler.cronMonth'),
         sortable: true,
-        minWidth: 88,
-        render: (item: RotinaAgendada) => getCronDisplayFromRotina(item).mes,
+        render: (item) => getCronDisplayFromRotina(item).mes,
       },
       {
         key: 'cron_dia_semana',
-        label: t('scheduler.cronDayOfWeek'),
+        label: list.t('scheduler.cronDayOfWeek'),
         sortable: true,
-        minWidth: 112,
-        render: (item: RotinaAgendada) => getCronDisplayFromRotina(item).diaSemana,
+        render: (item) => getCronDisplayFromRotina(item).diaSemana,
       },
       {
         key: 'execucoes_com_erro',
-        label: t('scheduler.execWithError'),
+        label: list.t('scheduler.execWithError'),
         sortable: true,
-        minWidth: 112,
-        render: (item: RotinaAgendada) => (
-          <span className="text-nowrap">{item.execucoes_com_erro ?? '—'}</span>
-        ),
+        render: (item) => <span className="text-nowrap">{item.execucoes_com_erro ?? '—'}</span>,
       },
       {
         key: 'total_execucoes',
-        label: t('scheduler.execTotal'),
+        label: list.t('scheduler.execTotal'),
         sortable: true,
-        minWidth: 72,
-        render: (item: RotinaAgendada) => (
-          <span className="text-nowrap">{item.total_execucoes ?? '—'}</span>
-        ),
+        render: (item) => <span className="text-nowrap">{item.total_execucoes ?? '—'}</span>,
       },
       {
         key: 'execucoes_com_sucesso',
-        label: t('scheduler.execSuccess'),
+        label: list.t('scheduler.execSuccess'),
         sortable: true,
-        minWidth: 96,
-        render: (item: RotinaAgendada) => (
-          <span className="text-nowrap">{item.execucoes_com_sucesso ?? '—'}</span>
-        ),
+        render: (item) => <span className="text-nowrap">{item.execucoes_com_sucesso ?? '—'}</span>,
       },
       {
         key: 'proxima_execucao',
-        label: t('scheduler.nextRun'),
+        label: list.t('scheduler.nextRun'),
         sortable: true,
-        minWidth: 152,
-        render: (item: RotinaAgendada) => (
+        render: (item) => (
           <span className="text-nowrap">{displayProximaUltima(item.proxima_execucao)}</span>
         ),
       },
       {
         key: 'ultima_execucao',
-        label: t('scheduler.lastRun'),
+        label: list.t('scheduler.lastRun'),
         sortable: true,
-        minWidth: 152,
-        render: (item: RotinaAgendada) => (
+        render: (item) => (
           <span className="text-nowrap">
             {item.ultima_execucao_formatada ?? displayProximaUltima(item.ultima_execucao)}
           </span>
@@ -148,127 +138,159 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
       },
       {
         key: 'ativo',
-        label: t('table.status'),
+        label: list.t('table.status'),
         sortable: true,
-        badgeLabels: [t('status.active'), t('status.inactive')],
-        render: (item: RotinaAgendada) => (
-          <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
-            {item.ativo ? t('status.active') : t('status.inactive')}
-          </span>
-        ),
+        render: (item) => renderStatusBadge(getAtivoBadgeConfig(item.ativo, list.t)),
       },
     ],
-    [t]
+    [list]
   );
 
-  const searchFields = [
-    { key: 'id', label: t('table.id') },
-    { key: 'tipo', label: t('scheduler.type') },
-    { key: 'alvo', label: t('scheduler.scope') },
-    { key: 'minuto', label: t('scheduler.cronMinute') },
-  ];
-
-  const { data: rotinasData, isLoading, refetch } = useQuery({
-    queryKey: [
-      QUERY_KEY,
-      tableFilters.page,
-      tableFilters.limit,
-      tableFilters.debouncedSearch,
-      tableFilters.searchField,
-      tableFilters.sortColumn,
-      tableFilters.sortDirection,
+  const searchFields = useMemo(
+    () => [
+      { key: 'id', label: list.t('table.id') },
+      { key: 'tipo', label: list.t('scheduler.type') },
+      { key: 'alvo', label: list.t('scheduler.scope') },
+      { key: 'minuto', label: list.t('scheduler.cronMinute') },
     ],
-    queryFn: () =>
-      SaasSchedulerService.getRotinas({
-        page: tableFilters.page,
-        limit: tableFilters.limit,
-        search: tableFilters.debouncedSearch,
-        searchField: tableFilters.searchField || undefined,
-        sort: tableFilters.sortColumn,
-        direction: tableFilters.sortDirection,
-      }),
-    enabled: show,
-  });
-
-  const paginatedRotinas = useMemo(() => rotinasData?.data || [], [rotinasData]);
+    [list]
+  );
 
   const pagination = useMemo(() => {
-    if (rotinasData?.pagination) {
+    const pag = rotinasData?.pagination;
+    if (pag) {
       return {
-        from: (rotinasData.pagination.page - 1) * rotinasData.pagination.limit + 1,
-        to: Math.min(rotinasData.pagination.page * rotinasData.pagination.limit, rotinasData.pagination.total),
-        total: rotinasData.pagination.total,
-        current_page: rotinasData.pagination.page,
-        last_page: rotinasData.pagination.pages || Math.ceil(rotinasData.pagination.total / rotinasData.pagination.limit),
-        per_page: rotinasData.pagination.limit,
+        from: (pag.page - 1) * pag.limit + 1,
+        to: Math.min(pag.page * pag.limit, pag.total),
+        total: pag.total,
+        current_page: pag.page,
+        last_page: pag.pages || Math.max(1, Math.ceil(pag.total / pag.limit)),
+        per_page: pag.limit,
       };
     }
-    return {
-      from: 0,
-      to: 0,
-      total: 0,
-      current_page: 1,
-      last_page: 1,
-      per_page: 15,
-    };
-  }, [rotinasData?.pagination]);
-
-  const handleExecute = useCallback(
-    async (rotina: RotinaAgendada) => {
-      const confirmed = window.confirm(t('scheduler.confirmExecute'));
-      if (!confirmed) return;
-      try {
-        await SaasSchedulerService.executeRotina?.(rotina.id);
-        success(t('scheduler.routineStarted'));
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
-      } catch (err: unknown) {
-        showApiError(err, CONTEXT_ERROR_MESSAGES.ROTINA_EXECUTE_ERROR);
-      }
-    },
-    [t, success, queryClient, showApiError]
-  );
+    return list.buildPagination(null);
+  }, [list, rotinasData?.pagination]);
 
   const toggleAtivoMutation = useMutation({
-    mutationFn: ({ id, ativo }: { id: number; ativo: boolean }) => SaasSchedulerService.updateRotina(id, { ativo }),
+    mutationFn: ({ id, ativo }: { id: number; ativo: boolean }) =>
+      SaasSchedulerService.updateRotina(id, { ativo }),
     onSuccess: (_data, vars) => {
-      success(vars.ativo ? t('scheduler.routineActivatedSuccess') : t('scheduler.routineDeactivatedSuccess'));
+      success(
+        vars.ativo
+          ? list.t('scheduler.routineActivatedSuccess')
+          : list.t('scheduler.routineDeactivatedSuccess')
+      );
       void queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.ROTINA_UPDATE_ERROR),
   });
 
+  const handleExecute = useCallback(
+    async (rotina: RotinaAgendada) => {
+      if (!window.confirm(list.t('scheduler.confirmExecute'))) return;
+      try {
+        await SaasSchedulerService.executeRotina?.(rotina.id);
+        success(list.t('scheduler.routineStarted'));
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      } catch (err: unknown) {
+        showApiError(err, CONTEXT_ERROR_MESSAGES.ROTINA_EXECUTE_ERROR);
+      }
+    },
+    [list, success, queryClient, showApiError]
+  );
+
   const handleDelete = useCallback(
     async (rotina: RotinaAgendada) => {
-      const confirmed = window.confirm(t('scheduler.confirmDelete'));
-      if (!confirmed) return;
+      if (!window.confirm(list.t('scheduler.confirmDelete'))) return;
       try {
         await SaasSchedulerService.deleteRotina(rotina.id);
-        success(t('scheduler.successDelete'));
+        success(list.t('scheduler.successDelete'));
         queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
       } catch (err: unknown) {
         showApiError(err, CONTEXT_ERROR_MESSAGES.ROTINA_DELETE_ERROR);
       }
     },
-    [t, success, queryClient, showApiError]
+    [list, success, queryClient, showApiError]
   );
 
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedRotinaId, setSelectedRotinaId] = useState<number | null>(null);
-
-  const handleCreate = useCallback(() => {
-    setShowCreateModal(true);
-  }, []);
-
-  const handleEdit = useCallback(
-    (selectedItems: RotinaAgendada[]) => {
-      const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-      if (item) {
-        setSelectedRotinaId(item.id);
-        setShowEditModal(true);
-      }
+  const handleAudit = useCallback(
+    (rotina: RotinaAgendada) => {
+      list.auditoria.handleAudit('SaasScheduledRoutine', rotina.id);
     },
-    [selectedItem]
+    [list.auditoria]
+  );
+
+  const bulkActions = useMemo(
+    () => [
+      {
+        label: list.bulkBtn.novo.label,
+        variant: list.bulkBtn.novo.variant,
+        action: () => setShowCreateModal(true),
+      },
+      {
+        label: list.bulkBtn.editar.label,
+        variant: list.bulkBtn.editar.variant,
+        disabled: (selectedItems: RotinaAgendada[]) => list.isNothingSelected(selectedItems),
+        action: (selectedItems: RotinaAgendada[]) => {
+          const item = list.resolveItem(selectedItems);
+          if (item) {
+            setSelectedRotinaId(item.id);
+            setShowEditModal(true);
+          }
+        },
+      },
+      {
+        label: list.bulkBtn.deletar.label,
+        variant: list.bulkBtn.deletar.variant,
+        disabled: (selectedItems: RotinaAgendada[]) => list.isNothingSelected(selectedItems),
+        action: (selectedItems: RotinaAgendada[]) => {
+          const item = list.resolveItem(selectedItems);
+          if (item) void handleDelete(item);
+        },
+      },
+      {
+        label: list.t('table.status'),
+        variant: 'primary' as const,
+        disabled: (selectedItems: RotinaAgendada[]) =>
+          toggleAtivoMutation.isPending || list.isNothingSelected(selectedItems),
+        dropdown: [
+          {
+            label: list.t('scheduler.activate'),
+            disabled: (selectedItems: RotinaAgendada[]) => {
+              if (toggleAtivoMutation.isPending) return true;
+              const r = list.resolveItem(selectedItems);
+              return !r || r.ativo;
+            },
+            action: (selectedItems?: RotinaAgendada[]) => {
+              const r = list.resolveItem(selectedItems);
+              if (r && !r.ativo) toggleAtivoMutation.mutate({ id: r.id, ativo: true });
+            },
+          },
+          {
+            label: list.t('scheduler.deactivate'),
+            disabled: (selectedItems: RotinaAgendada[]) => {
+              if (toggleAtivoMutation.isPending) return true;
+              const r = list.resolveItem(selectedItems);
+              return !r || !r.ativo;
+            },
+            action: (selectedItems?: RotinaAgendada[]) => {
+              const r = list.resolveItem(selectedItems);
+              if (r && r.ativo) toggleAtivoMutation.mutate({ id: r.id, ativo: false });
+            },
+          },
+        ],
+      },
+      {
+        label: list.t('scheduler.execute'),
+        variant: 'primary' as const,
+        disabled: (selectedItems: RotinaAgendada[]) => list.isNothingSelected(selectedItems),
+        action: (selectedItems: RotinaAgendada[]) => {
+          const item = list.resolveItem(selectedItems);
+          if (item) void handleExecute(item);
+        },
+      },
+    ],
+    [list, handleDelete, handleExecute, toggleAtivoMutation]
   );
 
   const handleSuccess = async () => {
@@ -276,154 +298,36 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
     await refetch();
   };
 
-  const bulkActions = useMemo(
-    () => [
-      {
-        key: 'new',
-        label: bulkBtn.novo.label,
-        variant: bulkBtn.novo.variant,
-        requiresSelection: false as const,
-        action: handleCreate,
-      },
-      {
-        key: 'edit',
-        label: bulkBtn.editar.label,
-        variant: bulkBtn.editar.variant,
-        disabled: (selectedItems: RotinaAgendada[]) => selectedItems.length === 0 && !selectedItem,
-        action: handleEdit,
-      },
-      {
-        key: 'delete',
-        label: bulkBtn.deletar.label,
-        variant: bulkBtn.deletar.variant,
-        disabled: (selectedItems: RotinaAgendada[]) => selectedItems.length === 0 && !selectedItem,
-        action: (selectedItems: RotinaAgendada[]) => {
-          const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-          if (item) void handleDelete(item);
-        },
-      },
-      {
-        key: 'scheduler-ativo',
-        label: t('table.status'),
-        variant: 'primary' as const,
-        disabled: (selectedItems: RotinaAgendada[]) =>
-          toggleAtivoMutation.isPending || (selectedItems.length === 0 && !selectedItem),
-        dropdown: [
-          {
-            label: t('scheduler.activate'),
-            disabled: (selectedItems: RotinaAgendada[]) => {
-              if (toggleAtivoMutation.isPending) return true;
-              const r = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-              return !r || r.ativo;
-            },
-            action: (selectedItems?: RotinaAgendada[]) => {
-              const r = selectedItems?.length ? selectedItems[0] : selectedItem;
-              if (r && !r.ativo) toggleAtivoMutation.mutate({ id: r.id, ativo: true });
-            },
-          },
-          {
-            label: t('scheduler.deactivate'),
-            disabled: (selectedItems: RotinaAgendada[]) => {
-              if (toggleAtivoMutation.isPending) return true;
-              const r = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-              return !r || !r.ativo;
-            },
-            action: (selectedItems?: RotinaAgendada[]) => {
-              const r = selectedItems?.length ? selectedItems[0] : selectedItem;
-              if (r && r.ativo) toggleAtivoMutation.mutate({ id: r.id, ativo: false });
-            },
-          },
-        ],
-      },
-      {
-        key: 'execute',
-        label: t('scheduler.execute'),
-        variant: 'primary' as const,
-        disabled: (selectedItems: RotinaAgendada[]) => selectedItems.length === 0 && !selectedItem,
-        action: (selectedItems: RotinaAgendada[]) => {
-          const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-          if (item) void handleExecute(item);
-        },
-      },
-    ],
-    [bulkBtn, t, selectedItem, handleCreate, handleEdit, handleExecute, handleDelete, toggleAtivoMutation]
-  );
-
-  const handleSearchChange = useCallback(
-    (search: string, field?: string) => {
-      setTimeout(() => {
-        tableFilters.setSearch(search);
-        if (field) tableFilters.setSearchField(field);
-      }, 0);
-    },
-    [tableFilters]
-  );
-
   return (
     <>
-      <DraggableModal
+      <ListModal<RotinaAgendada>
         show={show}
-        onClose={() => {
-          clearSelection();
-          onClose();
+        onClose={list.handleModalClose}
+        config={{
+          title: list.t('scheduler.title'),
+          columns,
+          searchPlaceholder: list.t('layout.searchPlaceholder'),
+          searchFields,
+          emptyMessage: list.t('messages.noData'),
         }}
-        title={t('scheduler.title')}
-        size="lg"
+        data={rotinasData?.data ?? []}
+        loading={isLoading}
+        search={list.tableFilters.search}
+        onSearchChange={list.handleSearchChange}
+        sortColumn={list.tableFilters.sortColumn}
+        sortDirection={list.tableFilters.sortDirection}
+        onSortChange={list.tableFilters.setSort}
+        pagination={pagination}
+        onPageChange={list.tableFilters.setPage}
+        onLimitChange={list.tableFilters.setLimit}
+        onRefresh={refetch}
+        bulkActions={bulkActions}
+        onSelectionChange={list.handleSelectionChange}
+        onAudit={handleAudit}
+        auditEntity="SaasScheduledRoutine"
+        tableId={TABLE_ID}
         modalId={MODAL_ID}
-        className="no-padding"
-      >
-        <Table
-              syncWithHeader={false}
-              title={t('scheduler.title')}
-              config={{
-                columns: tableColumns,
-                data: paginatedRotinas,
-                loading: isLoading,
-                searchable: true,
-                searchPlaceholder: t('layout.searchPlaceholder'),
-                searchFields,
-                sortable: true,
-                sortColumn: tableFilters.sortColumn,
-                sortDirection: tableFilters.sortDirection,
-                striped: true,
-                hover: true,
-                responsive: true,
-                selectable: true,
-                multiSelect: false,
-                filters: [],
-                bulkActions: bulkActions.map((action) => ({
-                  key: action.key ?? action.label.toLowerCase().replace(/\s+/g, '-'),
-                  label: action.label,
-                  onClick: action.action,
-                  disabled: action.disabled,
-                  variant: action.variant,
-                  ...(action.dropdown ? { dropdown: action.dropdown } : {}),
-                  ...(action.requiresSelection === false ? { requiresSelection: false } : {}),
-                })),
-                emptyMessage: t('messages.noData'),
-                pagination,
-              }}
-              tableId={TABLE_ID}
-              onSelectionChange={(items) => handleSelectionChange(items)}
-              onRefresh={refetch}
-              onAudit={handleAudit}
-              auditEntity="SaasScheduledRoutine"
-              onPageChange={(page) => {
-                setTimeout(() => tableFilters.setPage(page), 0);
-              }}
-              onPageSizeChange={(limit) => {
-                setTimeout(() => tableFilters.setLimit(limit), 0);
-              }}
-              onSort={(column, direction) => {
-                setTimeout(() => tableFilters.setSort(column, direction), 0);
-              }}
-              onSearch={(search, field) => handleSearchChange(search, field)}
-              onSearchFieldChange={(field) => {
-                setTimeout(() => tableFilters.setSearchField(field), 0);
-              }}
-              search={tableFilters.search}
-          />
-      </DraggableModal>
+      />
 
       <RotinaAgendadaModal
         show={showCreateModal || showEditModal}
@@ -437,14 +341,13 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
       />
 
       <ImprimirModal
-        show={auditoria.showPreview}
-        onClose={auditoria.handleClosePreview}
-        pdfUrl={auditoria.pdfUrl}
-        isGenerating={auditoria.isGeneratingPdf}
+        show={list.auditoria.showPreview}
+        onClose={list.auditoria.handleClosePreview}
+        pdfUrl={list.auditoria.pdfUrl}
+        isGenerating={list.auditoria.isGeneratingPdf}
         title="Relatórios de logs"
         modalId={AUDITORIA_MODAL_ID}
       />
-
     </>
   );
 };

@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ModalFormActions } from 'components/ui';
+import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
 import { SshDeviceTab } from './types';
 
 interface SshDeviceModalHeaderProps {
@@ -24,50 +25,40 @@ const SshDeviceModalHeader: React.FC<SshDeviceModalHeaderProps> = ({
   backupsLabel,
   onClose,
   onTabChange,
-}) => (
-  <div className="ssh-device-header-unified">
-    <ModalFormActions
-      className="ssh-device-header-buttons modal-header-actions"
-      onCancel={onClose}
-      formId={formId}
-      isPending={isSubmitting}
-    />
-    <div className="ssh-device-header-tabs">
-      <ul
-        className={`nav nav-tabs plano-tabs-unified ${isMobile ? 'plano-tabs-mobile' : ''}`}
-        id="sshDeviceTab"
-        role="tablist"
-        style={{
-          margin: 0,
-          padding: 0,
-          borderBottom: 'none',
-          backgroundColor: 'transparent',
-        }}
-      >
-        <li className="nav-item" role="presentation">
-          <button
-            type="button"
-            className={`nav-link modal-tab-hover ${activeTab === 'dados' ? 'active' : ''}`}
-            onClick={() => onTabChange('dados')}
-          >
-            {basicDataLabel}
-          </button>
-        </li>
-        <li className="nav-item" role="presentation">
-          <button
-            type="button"
-            className={`nav-link modal-tab-hover ${activeTab === 'backups' ? 'active' : ''}`}
-            disabled={!canOpenBackupsTab}
-            onClick={() => {
-              if (canOpenBackupsTab) onTabChange('backups');
-            }}
-          >
-            {backupsLabel}
-          </button>
-        </li>
-      </ul>
+}) => {
+  const tabs = useMemo(
+    (): ModalTabItem<SshDeviceTab>[] => [
+      { id: 'dados', label: basicDataLabel },
+      { id: 'backups', label: backupsLabel, disabled: !canOpenBackupsTab },
+    ],
+    [basicDataLabel, backupsLabel, canOpenBackupsTab]
+  );
+
+  const handleTabChange = (tab: SshDeviceTab) => {
+    if (tab === 'backups' && !canOpenBackupsTab) return;
+    onTabChange(tab);
+  };
+
+  return (
+    <div className="ssh-device-header-unified">
+      <ModalFormActions
+        className="ssh-device-header-buttons modal-header-actions"
+        onCancel={onClose}
+        formId={formId}
+        isPending={isSubmitting}
+      />
+      <div className="ssh-device-header-tabs">
+        <ModalTabsOverflow
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          tabsClassName={`plano-tabs-unified ${isMobile ? 'plano-tabs-mobile' : ''}`}
+          isMobile={isMobile}
+          id="sshDeviceTab"
+        />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default SshDeviceModalHeader;

@@ -1,11 +1,13 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Agent } from 'types';
 import DraggableModal from 'components/common/DraggableModal';
+import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
 import { CancelarButton, CopiarButton, FecharButton, GerarButton, InstalarAgenteButton } from 'components/ui';
 import { useI18n } from 'contexts/I18nContext';
 import FormField from 'components/ui/FormField';
 import { defaultApiClient } from 'services/core';
 import { AgentService } from 'services/agentService';
+import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
 
 interface AgentInstallModalProps {
   show: boolean;
@@ -44,8 +46,8 @@ const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
   const [agentName, setAgentName]         = useState('');
   const [agentNameError, setAgentNameError] = useState('');
   const [generatedCmd, setGeneratedCmd]   = useState('');
-  const [cmdCopied, setCmdCopied]         = useState(false);
   const [generating, setGenerating]       = useState(false);
+  const { copy: copyToClipboard, isCopied: isCmdCopied, clearCopied } = useCopyToClipboard({ resetAfterMs: 2500 });
 
   useEffect(() => {
     if (show) {
@@ -53,11 +55,11 @@ const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
       setLogs([]);
       setErrors({});
       setGeneratedCmd('');
-      setCmdCopied(false);
+      clearCopied();
       setMode('auto');
     }
     return () => { abortRef.current?.abort(); };
-  }, [show]);
+  }, [show, clearCopied]);
 
   useEffect(() => {
     logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -192,11 +194,8 @@ const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
 
   const handleCopy = useCallback(() => {
     if (!generatedCmd) return;
-    navigator.clipboard.writeText(generatedCmd).then(() => {
-      setCmdCopied(true);
-      setTimeout(() => setCmdCopied(false), 2500);
-    });
-  }, [generatedCmd]);
+    void copyToClipboard(generatedCmd, 'cmd');
+  }, [copyToClipboard, generatedCmd]);
 
   const handleClose = () => {
     abortRef.current?.abort();
@@ -207,6 +206,19 @@ const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
 
   const isRunning = status === 'running';
   const isDone    = status === 'success' || status === 'error';
+
+  const modeTabs = useMemo(
+    (): ModalTabItem<InstallMode>[] => [
+      { id: 'auto', label: 'SSH Automático' },
+      { id: 'manual', label: 'Manual (copiar e colar)' },
+    ],
+    []
+  );
+
+  const handleModeChange = useCallback((tab: InstallMode) => {
+    setMode(tab);
+    if (tab === 'manual') setGeneratedCmd('');
+  }, []);
 
   const headerActions = (
     <div className="banco-header-unified">
@@ -237,30 +249,12 @@ const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
 
       {/* Abas de modo */}
       <div className="banco-header-tabs">
-        <ul
-          className="nav nav-tabs banco-tabs-unified"
-          role="tablist"
-          style={{ margin: 0, padding: 0, borderBottom: 'none', backgroundColor: 'transparent' }}
-        >
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link modal-tab-hover ${mode === 'auto' ? 'active' : ''}`}
-              type="button"
-              onClick={() => setMode('auto')}
-            >
-              SSH Automático
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link modal-tab-hover ${mode === 'manual' ? 'active' : ''}`}
-              type="button"
-              onClick={() => { setMode('manual'); setGeneratedCmd(''); }}
-            >
-              Manual (copiar e colar)
-            </button>
-          </li>
-        </ul>
+        <ModalTabsOverflow
+          tabs={modeTabs}
+          activeTab={mode}
+          onTabChange={handleModeChange}
+          tabsClassName="banco-tabs-unified"
+        />
       </div>
     </div>
   );
@@ -390,7 +384,7 @@ const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
               <CopiarButton
                 iconOnly
                 onClick={handleCopy}
-                label={cmdCopied ? t('blockdomi.copiedToClipboard') : undefined}
+                label={isCmdCopied('cmd') ? t('blockdomi.copiedToClipboard') : undefined}
               />
             </div>
             <div className="alert alert-warning small mt-3 py-2 mb-0" style={{ fontSize: '11px' }}>

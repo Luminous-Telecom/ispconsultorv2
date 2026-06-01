@@ -8,25 +8,14 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useModalSelect } from 'hooks/useModalSelect';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { SshDeviceBackupService, type SshDeviceBackupFile } from 'services/sshDeviceBackupService';
-import Table from 'components/tables/Table';
+import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import TextPreviewModal from 'components/common/TextPreviewModal';
+import {
+  formatSshBackupBytes,
+  isSshBackupTextPreviewSupported,
+} from 'components/common/sshBackups/sshBackupsUtils';
+import { useSshBackupPreview } from 'hooks/useSshBackupPreview';
 import type { TableConfig } from 'components/tables/types';
-
-const TEXT_PREVIEW_EXTENSIONS = ['.rsc', '.txt', '.cfg', '.conf', '.log'];
-
-function isTextPreviewSupported(fileName: string): boolean {
-  const lower = fileName.toLowerCase();
-  return TEXT_PREVIEW_EXTENSIONS.some((ext) => lower.endsWith(ext));
-}
-
-function formatBytes(bytes: number): string {
-  if (!Number.isFinite(bytes) || bytes < 0) return '—';
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
-  return `${parseFloat((bytes / k ** i).toFixed(i === 0 ? 0 : 1))} ${sizes[i]}`;
-}
 
 interface BackupTableRow {
   id: string;
@@ -55,11 +44,7 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
   });
   const queryClient = useQueryClient();
   const [pendingAction, setPendingAction] = useState<PendingBackupAction | null>(null);
-  const [showPreview, setShowPreview] = useState(false);
-  const [previewContent, setPreviewContent] = useState<string | null>(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
-  const [previewError, setPreviewError] = useState<string | null>(null);
-  const [previewTitle, setPreviewTitle] = useState('');
+  const preview = useSshBackupPreview();
 
   const { handleSelectionChange, clearSelection } = useModalSelect<BackupTableRow>();
 
@@ -114,29 +99,11 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
 
   const handleView = useCallback(
     async (row: BackupTableRow) => {
-      if (!isTextPreviewSupported(row.fileName)) return;
-      setShowPreview(true);
-      setPreviewContent(null);
-      setPreviewError(null);
-      setPreviewTitle(row.fileName);
-      setPreviewLoading(true);
-      try {
-        const text = await SshDeviceBackupService.fetchAsText(deviceId, row.fileName);
-        setPreviewContent(text);
-      } catch (err) {
-        setPreviewError(err instanceof Error ? err.message : 'Erro ao carregar');
-      } finally {
-        setPreviewLoading(false);
-      }
+      if (!isSshBackupTextPreviewSupported(row.fileName)) return;
+      await preview.openPreview(deviceId, row.fileName, row.fileName);
     },
-    [deviceId]
+    [deviceId, preview]
   );
-
-  const closePreview = useCallback(() => {
-    setShowPreview(false);
-    setPreviewContent(null);
-    setPreviewError(null);
-  }, []);
 
   const tableColumns: TableConfig<BackupTableRow>['columns'] = useMemo(
     () => [
@@ -155,7 +122,7 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
         align: 'right',
         headerAlign: 'right',
         width: '88px',
-        render: (row) => <span className="small">{formatBytes(row.size)}</span>,
+        render: (row) => <span className="small">{formatSshBackupBytes(row.size)}</span>,
       },
       {
         key: 'modifiedAt',
@@ -187,8 +154,8 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
         variant: bulkBtn.visualizar.variant,
         disabled: (selectedItems: BackupTableRow[]) =>
           selectedItems.length !== 1 ||
-          !isTextPreviewSupported(selectedItems[0].fileName) ||
-          previewLoading ||
+          !isSshBackupTextPreviewSupported(selectedItems[0].fileName) ||
+          preview.previewLoading ||
           isBusy,
         onClick: async (selectedItems: BackupTableRow[]) => {
           if (selectedItems.length !== 1) return;
@@ -216,12 +183,12 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
         },
       },
     ];
-  }, [bulkBtn, pendingAction, handleDownload, handleDeleteBackup, previewLoading, handleView]);
+  }, [bulkBtn, pendingAction, handleDownload, handleDeleteBackup, preview.previewLoading, handleView]);
 
   const rootClass = variant === 'tab' ? '' : 'mt-4 pt-3 border-top';
 
   const inner = (
-    <Table<BackupTableRow>
+    <EmbeddedTablePanel<BackupTableRow>
       key={`ssh-device-backups-table-${deviceId}`}
       title={t('tabs.sshDeviceBackups')}
       className="no-padding"
@@ -254,7 +221,6 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
         })),
       }}
       tableId={`ssh-device-backups-${deviceId}`}
-      syncWithHeader={false}
       onRefresh={refetch}
       onSelectionChange={(items) => handleSelectionChange(items)}
       onSort={(col, dir) => tableFilters.setSort(col, dir)}
@@ -282,12 +248,12 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
           </div>
         </div>
         <TextPreviewModal
-          show={showPreview}
-          onClose={closePreview}
-          title={previewTitle}
-          content={previewContent}
-          isLoading={previewLoading}
-          error={previewError}
+          show={preview.showPreview}
+          onClose={preview.closePreview}
+          title={preview.previewTitle}
+          content={preview.previewContent}
+          isLoading={preview.previewLoading}
+          error={preview.previewError}
           modalId="ssh-backup-text-preview"
         />
       </React.Fragment>
@@ -305,12 +271,12 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
         </div>
       </div>
       <TextPreviewModal
-        show={showPreview}
-        onClose={closePreview}
-        title={previewTitle}
-        content={previewContent}
-        isLoading={previewLoading}
-        error={previewError}
+        show={preview.showPreview}
+        onClose={preview.closePreview}
+        title={preview.previewTitle}
+        content={preview.previewContent}
+        isLoading={preview.previewLoading}
+        error={preview.previewError}
         modalId="ssh-backup-text-preview"
       />
     </React.Fragment>

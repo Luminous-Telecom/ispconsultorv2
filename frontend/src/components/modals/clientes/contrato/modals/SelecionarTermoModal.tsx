@@ -4,7 +4,7 @@ import { useModalSelect } from 'hooks/useModalSelect';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { useModelosTermo } from 'hooks/useModelosTermo';
 import DraggableModal from 'components/common/DraggableModal';
-import Table from 'components/tables/Table';
+import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import { TableConfig } from 'components/tables/types';
 
 interface Termo {
@@ -178,8 +178,7 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
       modalId="selecionar-termo-modal"
       className="no-padding"
     >
-      <Table
-            syncWithHeader={false}
+      <EmbeddedTablePanel
             title="Selecionar Termo Cadastrado"
             config={{
               columns: tableColumns,

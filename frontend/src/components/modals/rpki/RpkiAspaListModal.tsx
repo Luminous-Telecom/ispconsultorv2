@@ -5,13 +5,12 @@ import { ListModalConfig } from 'types/modal';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
-import { useI18n } from 'contexts/I18nContext';
-import { useBulkBtn } from 'components/ui';
-import { useTableFilters } from 'hooks/useTableFilters';
+import { useRpkiListModal } from 'hooks/useRpkiListModal';
 import { RpkiCaService, type RpkiAspa } from 'services/rpkiCaService';
 import { useRpkiCas } from 'hooks/useRpkiCas';
+import { renderStatusBadge } from 'components/ui/StatusBadge';
+import { getRpkiAspaStatusBadgeConfig } from 'utils/tableStatusBadges';
 import RpkiAspaCreateModal from './RpkiAspaCreateModal';
-import { useAuditoria } from 'hooks/useAuditoria';
 import ImprimirModal from 'components/common/ImprimirModal';
 
 interface RpkiAspaListModalProps {
@@ -22,7 +21,20 @@ interface RpkiAspaListModalProps {
   tableTitle?: string;
 }
 
-const statusLabels: Record<string, string> = { active: 'Ativo', revoked: 'Revogado', expired: 'Expirado' };
+function getSortableValue(row: RpkiAspa, sortKey: string): string {
+  switch (sortKey) {
+    case 'id':
+      return String(row.id);
+    case 'ca_id':
+      return String(row.ca_id);
+    case 'customer_asn':
+      return String(row.customer_asn || '');
+    case 'status':
+      return String(row.status || '');
+    default:
+      return '';
+  }
+}
 
 const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = ({
   show,
@@ -31,41 +43,14 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = ({
   clienteIdFilter,
   tableTitle = 'ASPAs',
 }) => {
-  const { t } = useI18n();
-  const bulkBtn = useBulkBtn();
+  const rpki = useRpkiListModal<RpkiAspa>();
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
-  const auditoria = useAuditoria();
-  const handleAuditAspa = useCallback(
-    (item: RpkiAspa) => {
-      void auditoria.handleAudit('RpkiAspa', item.id);
-    },
-    [auditoria]
-  );
   const [aspas, setAspas] = useState<RpkiAspa[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const tableFilters = useTableFilters({
-    initialSearch: '',
-    initialPage: 1,
-    initialLimit: 15,
-    initialSortColumn: 'id',
-    initialSortDirection: 'desc',
-    searchDebounceMs: 250,
-    resetPageOnFilterChange: true,
-  });
-
-  const handleSearchChange = useCallback(
-    (search: string, field?: string) => {
-      tableFilters.setSearch(search);
-      if (field) {
-        tableFilters.setSearchField(field);
-      }
-    },
-    [tableFilters]
-  );
-
   const { cas, caIdsKey } = useRpkiCas(clienteIdFilter);
+  const caNomeById = useMemo(() => new Map(cas.map((ca) => [ca.id, ca.nome])), [cas]);
 
   const { isLoading, refetch } = useQuery({
     queryKey: ['rpki-aspas', caIdsKey],
@@ -81,59 +66,59 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = ({
     enabled: cas.length > 0,
   });
 
-  const caNomeById = useMemo(() => new Map(cas.map((ca) => [ca.id, ca.nome])), [cas]);
+  const { rows: pagedRows, pagination } = rpki.paginateClientSide(
+    aspas,
+    getSortableValue,
+    (row, term) =>
+      String(row.id).includes(term) ||
+      row.customer_asn.toLowerCase().includes(term) ||
+      (row.providers_json ?? []).join(', ').toLowerCase().includes(term) ||
+      (caNomeById.get(row.ca_id) ?? '').toLowerCase().includes(term)
+  );
 
-  const filtered = useMemo(() => {
-    const term = tableFilters.debouncedSearch.trim().toLowerCase();
-    let rows = aspas;
-    if (term) {
-      rows = rows.filter(
-        (row) =>
-          String(row.id).includes(term) ||
-          row.customer_asn.toLowerCase().includes(term) ||
-          (row.providers_json ?? []).join(', ').toLowerCase().includes(term) ||
-          (caNomeById.get(row.ca_id) ?? '').toLowerCase().includes(term)
-      );
-    }
-    const sortKey = tableFilters.sortColumn || 'id';
-    const direction = tableFilters.sortDirection === 'asc' ? 1 : -1;
-    return [...rows].sort((a, b) => {
-      const va = String((a as unknown as Record<string, unknown>)[sortKey] ?? '').toLowerCase();
-      const vb = String((b as unknown as Record<string, unknown>)[sortKey] ?? '').toLowerCase();
-      if (va < vb) return -1 * direction;
-      if (va > vb) return 1 * direction;
-      return 0;
-    });
-  }, [aspas, tableFilters.debouncedSearch, tableFilters.sortColumn, tableFilters.sortDirection, caNomeById]);
-
-  const total = filtered.length;
-  const perPage = tableFilters.limit;
-  const lastPage = Math.max(1, Math.ceil(total / perPage));
-  const safePage = Math.min(tableFilters.page, lastPage);
-  const from = total === 0 ? 0 : (safePage - 1) * perPage + 1;
-  const to = total === 0 ? 0 : Math.min(safePage * perPage, total);
-  const pagedRows = filtered.slice(from > 0 ? from - 1 : 0, to);
+  const handleAuditAspa = useCallback(
+    (item: RpkiAspa) => {
+      void rpki.auditoria.handleAudit('RpkiAspa', item.id);
+    },
+    [rpki.auditoria]
+  );
 
   const columns: ListModalConfig<RpkiAspa>['columns'] = [
     { key: 'id', label: 'ID', sortable: true, width: '60px', render: (item) => item.id },
-    { key: 'ca_id', label: 'CA', sortable: true, width: '180px', render: (item) => caNomeById.get(item.ca_id) ?? `#${item.ca_id}` },
-    { key: 'customer_asn', label: 'Customer ASN', sortable: true, width: '150px', render: (item) => `AS${item.customer_asn}` },
-    { key: 'providers_json', label: 'Providers', sortable: false, render: (item) => (item.providers_json ?? []).map((p) => `AS${p}`).join(', ') || '-' },
     {
-      key: 'status', label: 'Status', sortable: true, width: '110px',
-      render: (item) => {
-        const cor = item.status === 'active' ? 'bg-success' : item.status === 'revoked' ? 'bg-warning' : 'bg-secondary';
-        return <span className={`badge ${cor}`}>{statusLabels[item.status] ?? item.status}</span>;
-      },
+      key: 'ca_id',
+      label: 'CA',
+      sortable: true,
+      width: '180px',
+      render: (item) => caNomeById.get(item.ca_id) ?? `#${item.ca_id}`,
+    },
+    {
+      key: 'customer_asn',
+      label: 'Customer ASN',
+      sortable: true,
+      width: '150px',
+      render: (item) => `AS${item.customer_asn}`,
+    },
+    {
+      key: 'providers_json',
+      label: 'Providers',
+      sortable: false,
+      render: (item) => (item.providers_json ?? []).map((p) => `AS${p}`).join(', ') || '-',
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      sortable: true,
+      width: '110px',
+      render: (item) => renderStatusBadge(getRpkiAspaStatusBadgeConfig(item.status)),
     },
   ];
 
   const bulkActions = useMemo(
     () => [
       {
-        label: bulkBtn.novo.label,
-        variant: bulkBtn.novo.variant,
-        requiresSelection: false,
+        label: rpki.bulkBtn.novo.label,
+        variant: rpki.bulkBtn.novo.variant,
         action: () => setShowCreateModal(true),
       },
       {
@@ -145,7 +130,13 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = ({
           if (!window.confirm('Tem certeza que deseja revogar este ASPA?')) return;
           RpkiCaService.revokeAspa(selected.ca_id, selected.id)
             .then(() => {
-              setAspas((prev) => prev.map((a) => a.id === selected.id ? { ...a, status: 'revoked' as const, revoked_at: new Date().toISOString() } : a));
+              setAspas((prev) =>
+                prev.map((a) =>
+                  a.id === selected.id
+                    ? { ...a, status: 'revoked' as const, revoked_at: new Date().toISOString() }
+                    : a
+                )
+              );
               success('ASPA revogado com sucesso');
             })
             .catch((err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_ASPA_REVOKE_ERROR));
@@ -167,7 +158,7 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = ({
         },
       },
     ],
-    [bulkBtn, showApiError, success]
+    [rpki.bulkBtn, showApiError, success]
   );
 
   return (
@@ -190,14 +181,14 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = ({
         }}
         data={pagedRows}
         loading={isLoading}
-        search={tableFilters.search}
-        onSearchChange={handleSearchChange}
-        sortColumn={tableFilters.sortColumn}
-        sortDirection={tableFilters.sortDirection}
-        onSortChange={tableFilters.setSort}
-        pagination={{ current_page: safePage, last_page: lastPage, per_page: perPage, total, from, to }}
-        onPageChange={tableFilters.setPage}
-        onLimitChange={tableFilters.setLimit}
+        search={rpki.tableFilters.search}
+        onSearchChange={rpki.handleSearchChange}
+        sortColumn={rpki.tableFilters.sortColumn}
+        sortDirection={rpki.tableFilters.sortDirection}
+        onSortChange={rpki.tableFilters.setSort}
+        pagination={pagination}
+        onPageChange={rpki.tableFilters.setPage}
+        onLimitChange={rpki.tableFilters.setLimit}
         onRefresh={() => refetch()}
         bulkActions={bulkActions}
         onAudit={handleAuditAspa}
@@ -222,11 +213,11 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = ({
       />
 
       <ImprimirModal
-        show={auditoria.showPreview}
-        onClose={auditoria.handleClosePreview}
-        pdfUrl={auditoria.pdfUrl}
-        isGenerating={auditoria.isGeneratingPdf}
-        title={t('modal.auditLogs')}
+        show={rpki.auditoria.showPreview}
+        onClose={rpki.auditoria.handleClosePreview}
+        pdfUrl={rpki.auditoria.pdfUrl}
+        isGenerating={rpki.auditoria.isGeneratingPdf}
+        title={rpki.t('modal.auditLogs')}
         modalId="auditoria-rpki-aspa-modal"
       />
     </>

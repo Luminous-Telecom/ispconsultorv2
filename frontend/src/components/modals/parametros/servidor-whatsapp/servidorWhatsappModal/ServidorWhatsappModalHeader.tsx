@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { FecharButton, LimparButton, RemoverButton, SalvarButton } from 'components/ui';
+import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useI18n } from 'contexts/I18nContext';
 import { ServidorWhatsAppForm } from '../types';
@@ -31,6 +32,23 @@ const ServidorWhatsappModalHeader: React.FC<ServidorWhatsappModalHeaderProps> = 
   const { t } = useI18n();
   const isMobile = useIsMobile();
 
+  const showCloudTabs =
+    formData.tipo_api === 'whatsapp_cloud' || servidorAtivo?.data?.tipo_api === 'whatsapp_cloud';
+
+  const tabs = useMemo((): ModalTabItem<WhatsappActiveTab>[] => {
+    const items: ModalTabItem<WhatsappActiveTab>[] = [
+      { id: 'servidor', label: t('whatsappServer.server') },
+      { id: 'mensagens', label: t('whatsappServer.messages') },
+    ];
+    if (showCloudTabs) {
+      items.push(
+        { id: 'templates_meta', label: t('whatsappServer.templatesMeta') },
+        { id: 'templates', label: t('whatsappServer.templates') }
+      );
+    }
+    return items;
+  }, [showCloudTabs, t]);
+
   return (
     <div className="whatsapp-header-unified">
       <div className="whatsapp-header-buttons modal-header-actions">
@@ -57,58 +75,14 @@ const ServidorWhatsappModalHeader: React.FC<ServidorWhatsappModalHeaderProps> = 
       </div>
 
       <div className="whatsapp-header-tabs">
-        <ul
-          className={`nav nav-tabs whatsapp-tabs-unified ${isMobile ? 'whatsapp-tabs-mobile' : ''}`}
+        <ModalTabsOverflow
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          tabsClassName={`whatsapp-tabs-unified ${isMobile ? 'whatsapp-tabs-mobile' : ''}`}
+          isMobile={isMobile}
           id="whatsappTab"
-          role="tablist"
-          style={{
-            margin: 0,
-            padding: 0,
-            borderBottom: 'none',
-            backgroundColor: 'transparent',
-          }}
-        >
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link modal-tab-hover ${activeTab === 'servidor' ? 'active' : ''}`}
-              onClick={() => setActiveTab('servidor')}
-              type="button"
-            >
-              {t('whatsappServer.server')}
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link modal-tab-hover ${activeTab === 'mensagens' ? 'active' : ''}`}
-              onClick={() => setActiveTab('mensagens')}
-              type="button"
-            >
-              {t('whatsappServer.messages')}
-            </button>
-          </li>
-          {(formData.tipo_api === 'whatsapp_cloud' || servidorAtivo?.data?.tipo_api === 'whatsapp_cloud') && (
-            <>
-              <li className="nav-item" role="presentation">
-                <button
-                  className={`nav-link modal-tab-hover ${activeTab === 'templates_meta' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('templates_meta')}
-                  type="button"
-                >
-                  {t('whatsappServer.templatesMeta')}
-                </button>
-              </li>
-              <li className="nav-item" role="presentation">
-                <button
-                  className={`nav-link modal-tab-hover ${activeTab === 'templates' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('templates')}
-                  type="button"
-                >
-                  {t('whatsappServer.templates')}
-                </button>
-              </li>
-            </>
-          )}
-        </ul>
+        />
       </div>
     </div>
   );

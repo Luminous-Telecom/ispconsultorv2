@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { TranslationKeys } from 'contexts/I18nContext';
 import { CancelarButton, ImprimirButton, SalvarButton } from 'components/ui';
+import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
 import { useI18n } from 'contexts/I18nContext';
 import { DocumentoModalProps } from '../types';
 import { DocumentoActiveTab } from './constants';
@@ -56,6 +57,12 @@ function DocumentoModalHeader({
   onClose,
 }: DocumentoModalHeaderProps) {
   const { t } = useI18n();
+
+  const tabs = useMemo(
+    (): ModalTabItem<DocumentoActiveTab>[] =>
+      CONTRATO_TABS.map(({ id, labelKey }) => ({ id, label: t(labelKey) })),
+    [t]
+  );
 
   const handleToggleDropdown = (e: React.MouseEvent) => {
     stopDropdownEvent(e);
@@ -121,29 +128,14 @@ function DocumentoModalHeader({
       <div className="documento-header-unified">
         <div className="documento-header-buttons modal-header-actions">{actionButtons}</div>
         <div className="documento-header-tabs">
-          <ul
-            className={`nav nav-tabs documento-tabs-unified ${isMobile ? 'documento-tabs-mobile' : ''}`}
+          <ModalTabsOverflow
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            tabsClassName={`documento-tabs-unified ${isMobile ? 'documento-tabs-mobile' : ''}`}
+            isMobile={isMobile}
             id="documentoTab"
-            role="tablist"
-            style={{
-              margin: 0,
-              padding: 0,
-              borderBottom: 'none',
-              backgroundColor: 'transparent',
-            }}
-          >
-            {CONTRATO_TABS.map(({ id, labelKey }) => (
-              <li key={id} className="nav-item" role="presentation">
-                <button
-                  className={`nav-link modal-tab-hover ${activeTab === id ? 'active' : ''}`}
-                  type="button"
-                  onClick={() => setActiveTab(id)}
-                >
-                  {t(labelKey)}
-                </button>
-              </li>
-            ))}
-          </ul>
+          />
         </div>
       </div>
     );

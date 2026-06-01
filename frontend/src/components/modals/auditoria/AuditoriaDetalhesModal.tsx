@@ -1,5 +1,6 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import DraggableModal from 'components/common/DraggableModal';
+import DetailFieldGrid, { DetailFieldItem } from 'components/common/DetailFieldGrid';
 import { useI18n } from 'contexts/I18nContext';
 import { formatDateTime } from 'utils/formatters';
 import type { AuditoriaLog } from 'services/auditoriaService';
@@ -57,6 +58,64 @@ const AuditoriaDetalhesModal: React.FC<AuditoriaDetalhesModalProps> = ({
     [t]
   );
 
+  const fields = useMemo((): DetailFieldItem[] => {
+    if (!detalhe) return [];
+
+    const d = detalhe;
+    const empresaLabel = empresaNomeFieldLabel ?? t('company.title');
+    const items: DetailFieldItem[] = [
+      { label: t('table.action'), value: formatAcao(d.acao) },
+      { label: t('audit.entity'), value: d.entidade },
+      { label: t('table.id'), value: String(d.entidade_id ?? '—') },
+      { label: t('audit.timestamp'), value: formatTimestamp(d.timestamp) },
+    ];
+
+    if (showEmpresaColumn) {
+      items.push({
+        label: empresaLabel,
+        value: d.empresa_nome?.trim() || '—',
+      });
+    }
+
+    if (showClienteColumn) {
+      items.push({
+        label: t('table.client'),
+        value: (d.cliente_nome ?? '').trim() || '—',
+      });
+    }
+
+    items.push(
+      { label: t('audit.user'), value: d.usuario_email || 'N/A' },
+      { label: t('table.name'), value: d.usuario_nome || '-' },
+      { label: t('audit.ip'), value: d.ip_address || 'N/A' }
+    );
+
+    if (!showEmpresaColumn && d.empresa_nome) {
+      items.push({
+        label: t('audit.tenants'),
+        value: d.empresa_nome.trim() || '—',
+      });
+    }
+
+    if (d.rota) {
+      items.push({
+        label: t('audit.route'),
+        value: <span className="font-monospace">{`${d.metodo_http || 'N/A'} ${d.rota}`}</span>,
+        colClassName: 'col-12',
+      });
+    }
+
+    return items;
+  }, [
+    detalhe,
+    empresaNomeFieldLabel,
+    formatAcao,
+    formatTimestamp,
+    showClienteColumn,
+    showEmpresaColumn,
+    t,
+  ]);
+
   if (!detalhe) return null;
 
   const d = detalhe;
@@ -80,129 +139,30 @@ const AuditoriaDetalhesModal: React.FC<AuditoriaDetalhesModalProps> = ({
             Este registro não possui vínculo com o Elasticsearch; exibindo apenas dados do banco.
           </div>
         )}
-        <div className="row g-2">
-          <div className="col-md-6">
-            <label className="form-label small text-muted mb-1">{t('table.action')}</label>
-            <input
-              type="text"
-              className="form-control form-control-sm bg-secondary bg-opacity-10"
-              value={formatAcao(d.acao)}
+        <DetailFieldGrid fields={fields} />
+        {d.user_agent && (
+          <div className="mt-3">
+            <label className="form-label small text-muted mb-1">{t('audit.userAgent')}</label>
+            <textarea
+              className="form-control form-control-sm bg-secondary bg-opacity-10 small"
+              value={d.user_agent}
               readOnly
+              rows={2}
             />
           </div>
-          <div className="col-md-6">
-            <label className="form-label small text-muted mb-1">{t('audit.entity')}</label>
-            <input
-              type="text"
-              className="form-control form-control-sm bg-secondary bg-opacity-10"
-              value={d.entidade}
+        )}
+        {d.observacoes && (
+          <div className="mt-3">
+            <label className="form-label small text-muted mb-1">{t('table.observations')}</label>
+            <textarea
+              className="form-control form-control-sm bg-secondary bg-opacity-10 small"
+              value={d.observacoes}
               readOnly
+              rows={Math.min(18, Math.max(4, d.observacoes.split('\n').length + 1))}
+              style={{ resize: 'vertical', minHeight: '5rem' }}
             />
           </div>
-          <div className="col-md-6">
-            <label className="form-label small text-muted mb-1">{t('audit.timestamp')}</label>
-            <input
-              type="text"
-              className="form-control form-control-sm bg-secondary bg-opacity-10"
-              value={formatTimestamp(d.timestamp)}
-              readOnly
-            />
-          </div>
-          {showEmpresaColumn && (
-            <div className="col-md-6">
-              <label className="form-label small text-muted mb-1">{empresaNomeFieldLabel ?? t('company.title')}</label>
-              <input
-                type="text"
-                className="form-control form-control-sm bg-secondary bg-opacity-10"
-                value={d.empresa_nome?.trim() || '—'}
-                readOnly
-              />
-            </div>
-          )}
-          {showClienteColumn && (
-            <div className="col-md-6">
-              <label className="form-label small text-muted mb-1">{t('table.client')}</label>
-              <input
-                type="text"
-                className="form-control form-control-sm bg-secondary bg-opacity-10"
-                value={(d.cliente_nome ?? '').trim() || '—'}
-                readOnly
-              />
-            </div>
-          )}
-          <div className="col-md-6">
-            <label className="form-label small text-muted mb-1">{t('audit.user')}</label>
-            <input
-              type="text"
-              className="form-control form-control-sm bg-secondary bg-opacity-10"
-              value={d.usuario_email || 'N/A'}
-              readOnly
-            />
-          </div>
-          <div className="col-md-6">
-            <label className="form-label small text-muted mb-1">{t('table.name')}</label>
-            <input
-              type="text"
-              className="form-control form-control-sm bg-secondary bg-opacity-10"
-              value={d.usuario_nome || '-'}
-              readOnly
-            />
-          </div>
-          <div className="col-md-6">
-            <label className="form-label small text-muted mb-1">{t('audit.ip')}</label>
-            <input
-              type="text"
-              className="form-control form-control-sm bg-secondary bg-opacity-10"
-              value={d.ip_address || 'N/A'}
-              readOnly
-            />
-          </div>
-          {!showEmpresaColumn && d.empresa_nome && (
-            <div className="col-md-6">
-              <label className="form-label small text-muted mb-1">{t('audit.tenants')}</label>
-              <input
-                type="text"
-                className="form-control form-control-sm bg-secondary bg-opacity-10"
-                value={d.empresa_nome.trim() || '—'}
-                readOnly
-              />
-            </div>
-          )}
-          {d.rota && (
-            <div className="col-12">
-              <label className="form-label small text-muted mb-1">{t('audit.route')}</label>
-              <input
-                type="text"
-                className="form-control form-control-sm bg-secondary bg-opacity-10 font-monospace"
-                value={`${d.metodo_http || 'N/A'} ${d.rota}`}
-                readOnly
-              />
-            </div>
-          )}
-          {d.user_agent && (
-            <div className="col-12">
-              <label className="form-label small text-muted mb-1">{t('audit.userAgent')}</label>
-              <textarea
-                className="form-control form-control-sm bg-secondary bg-opacity-10 small"
-                value={d.user_agent}
-                readOnly
-                rows={2}
-              />
-            </div>
-          )}
-          {d.observacoes && (
-            <div className="col-12">
-              <label className="form-label small text-muted mb-1">{t('table.observations')}</label>
-              <textarea
-                className="form-control form-control-sm bg-secondary bg-opacity-10 small"
-                value={d.observacoes}
-                readOnly
-                rows={Math.min(18, Math.max(4, d.observacoes.split('\n').length + 1))}
-                style={{ resize: 'vertical', minHeight: '5rem' }}
-              />
-            </div>
-          )}
-        </div>
+        )}
         {(d.dados_anteriores || d.dados_novos || esLoading || temVinculoEs) && (
           <div className="mt-3">
             <h6 className="mb-2">{t('audit.data')}</h6>

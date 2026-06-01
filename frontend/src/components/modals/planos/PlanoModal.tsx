@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { usePlanoForm } from 'hooks/usePlanoForm';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
+import ModalTabsOverflow from 'components/common/ModalTabsOverflow';
 import { ModalFormActions, Spinner } from 'components/ui';
 import { InformacoesBasicasTab, ServicosObservacoesTab } from './plano';
 
@@ -22,6 +23,14 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
   const { t } = useI18n();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('informacoes-basicas');
+
+  const planoTabs = useMemo(
+    () => [
+      { id: 'informacoes-basicas', label: t('tabs.salePlan') },
+      { id: 'servicos-observacoes', label: t('tabs.servicesObservations') },
+    ],
+    [t]
+  );
 
   // Hook de formulário com React Hook Form + Zod
   const formHook = usePlanoForm({
@@ -111,36 +120,14 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
 
             {/* Abas na parte inferior do header */}
             <div className="plano-header-tabs">
-              <ul
-                className={`nav nav-tabs plano-tabs-unified ${isMobile ? 'plano-tabs-mobile' : ''}`}
+              <ModalTabsOverflow
+                tabs={planoTabs}
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                tabsClassName={`plano-tabs-unified ${isMobile ? 'plano-tabs-mobile' : ''}`}
+                isMobile={isMobile}
                 id="planoTab"
-                role="tablist"
-                style={{
-                  margin: 0,
-                  padding: 0,
-                  borderBottom: 'none',
-                  backgroundColor: 'transparent'
-                }}
-              >
-                <li className="nav-item" role="presentation">
-                  <button
-                    className={`nav-link modal-tab-hover ${activeTab === 'informacoes-basicas' ? 'active' : ''}`}
-                    type="button"
-                    onClick={() => setActiveTab('informacoes-basicas')}
-                  >
-                    {t('tabs.salePlan')}
-                  </button>
-                </li>
-                <li className="nav-item" role="presentation">
-                  <button
-                    className={`nav-link modal-tab-hover ${activeTab === 'servicos-observacoes' ? 'active' : ''}`}
-                    type="button"
-                    onClick={() => setActiveTab('servicos-observacoes')}
-                  >
-                    {t('tabs.servicesObservations')}
-                  </button>
-                </li>
-              </ul>
+              />
             </div>
           </div>
         ) : undefined

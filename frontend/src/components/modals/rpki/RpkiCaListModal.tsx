@@ -5,14 +5,13 @@ import { ListModalConfig } from 'types/modal';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
-import { useTableFilters } from 'hooks/useTableFilters';
-import { useI18n } from 'contexts/I18nContext';
-import { useBulkBtn } from 'components/ui';
+import { useRpkiListModal } from 'hooks/useRpkiListModal';
 import { RpkiCa, RpkiCaService } from 'services/rpkiCaService';
 import { ClienteService } from 'services/clienteService';
 import { useRpkiCas } from 'hooks/useRpkiCas';
+import { renderStatusBadge } from 'components/ui/StatusBadge';
+import { getRpkiCaStatusBadgeConfig } from 'utils/tableStatusBadges';
 import RpkiCaCreateModal from './RpkiCaCreateModal';
-import { useAuditoria } from 'hooks/useAuditoria';
 import ImprimirModal from 'components/common/ImprimirModal';
 
 interface RpkiCaListModalProps {
@@ -49,40 +48,11 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = ({
   clienteIdFilter,
   tableTitle = 'CAs RPKI',
 }) => {
-  const { t } = useI18n();
-  const bulkBtn = useBulkBtn();
+  const rpki = useRpkiListModal<RpkiCa>();
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedCa, setSelectedCa] = useState<RpkiCa | null>(null);
   const queryClient = useQueryClient();
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
-  const auditoria = useAuditoria();
-  const handleAuditCa = useCallback(
-    (item: RpkiCa) => {
-      void auditoria.handleAudit('RpkiCa', item.id);
-    },
-    [auditoria]
-  );
-
-  const tableFilters = useTableFilters({
-    initialSearch: '',
-    initialPage: 1,
-    initialLimit: 15,
-    initialSortColumn: 'id',
-    initialSortDirection: 'desc',
-    searchDebounceMs: 250,
-    resetPageOnFilterChange: true,
-  });
-
-  const handleSearchChange = useCallback(
-    (search: string, field?: string) => {
-      tableFilters.setSearch(search);
-      if (field) {
-        tableFilters.setSearchField(field);
-      }
-    },
-    [tableFilters]
-  );
 
   const { cas, isLoading, refetch } = useRpkiCas(clienteIdFilter);
   const { data: clientes = [] } = useQuery({
@@ -93,11 +63,12 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = ({
     },
     enabled: clienteIdFilter == null,
   });
+
   const deleteMutation = useMutation({
     mutationFn: (caId: number) => RpkiCaService.delete(caId),
     onSuccess: () => {
       success('CA removida com sucesso');
-      setSelectedCa(null);
+      rpki.setSelectedRow(null);
       queryClient.invalidateQueries({ queryKey: ['rpki-cas'] });
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_CA_DELETE_ERROR),
@@ -111,51 +82,20 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = ({
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_CA_RESOURCES_DELETE_ERROR),
   });
 
-  const filtered = useMemo(() => {
-    const term = tableFilters.debouncedSearch.trim().toLowerCase();
-    let rows = cas;
+  const { rows: pagedRows, pagination } = rpki.paginateClientSide(cas, getSortableValue, (row, term) => {
+    const status = String(row.status || '').toLowerCase();
+    return (
+      String(row.id).includes(term) ||
+      String(row.nome || '').toLowerCase().includes(term) ||
+      String(row.handle || '').toLowerCase().includes(term) ||
+      status.includes(term)
+    );
+  });
 
-    if (term) {
-      rows = rows.filter((row) => {
-        const status = String(row.status || '').toLowerCase();
-        return (
-          String(row.id).includes(term) ||
-          String(row.nome || '').toLowerCase().includes(term) ||
-          String(row.handle || '').toLowerCase().includes(term) ||
-          status.includes(term)
-        );
-      });
-    }
-
-    const sortKey = tableFilters.sortColumn || 'id';
-    const direction = tableFilters.sortDirection === 'asc' ? 1 : -1;
-    rows = [...rows].sort((a, b) => {
-      const va = getSortableValue(a, sortKey).toLowerCase();
-      const vb = getSortableValue(b, sortKey).toLowerCase();
-      if (va < vb) return -1 * direction;
-      if (va > vb) return 1 * direction;
-      return 0;
-    });
-
-    return rows;
-  }, [cas, tableFilters.debouncedSearch, tableFilters.sortColumn, tableFilters.sortDirection]);
-
-  const total = filtered.length;
-  const currentPage = tableFilters.page;
-  const perPage = tableFilters.limit;
-  const lastPage = Math.max(1, Math.ceil(total / perPage));
-  const safePage = Math.min(currentPage, lastPage);
-  const from = total === 0 ? 0 : (safePage - 1) * perPage + 1;
-  const to = total === 0 ? 0 : Math.min(safePage * perPage, total);
-  const pagedRows = filtered.slice(from > 0 ? from - 1 : 0, to);
-
-  const clienteNomeById = useMemo(() => {
-    const map = new Map<number, string>();
-    for (const cliente of clientes) {
-      map.set(cliente.id, cliente.razao_social || cliente.nome_fantasia || '');
-    }
-    return map;
-  }, [clientes]);
+  const clienteNomeById = useMemo(
+    () => new Map(clientes.map((c) => [c.id, c.razao_social || c.nome_fantasia || ''])),
+    [clientes]
+  );
 
   const columns: ListModalConfig<RpkiCa>['columns'] = useMemo(() => {
     const base: ListModalConfig<RpkiCa>['columns'] = [
@@ -173,53 +113,62 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = ({
       });
     }
     base.push(
-      { key: 'handle', label: 'Handle', sortable: true, width: '220px', render: (item) => item.handle || '-' },
+      {
+        key: 'handle',
+        label: 'Handle',
+        sortable: true,
+        width: '220px',
+        render: (item) => item.handle || '-',
+      },
       {
         key: 'status',
         label: 'Status',
         sortable: true,
-        badgeLabels: ['pending', 'active', 'error', 'disabled'],
-        render: (item) => {
-          const labels: Record<string, string> = { pending: 'Pendente', active: 'Ativo', error: 'Erro', disabled: 'Desabilitado' };
-          const cor = item.status === 'active' ? 'bg-success' : item.status === 'error' ? 'bg-danger' : 'bg-secondary';
-          return <span className={`badge ${cor}`}>{labels[item.status] ?? item.status}</span>;
-        },
+        render: (item) => renderStatusBadge(getRpkiCaStatusBadgeConfig(item.status)),
       }
     );
     return base;
   }, [clienteIdFilter, clienteNomeById]);
 
+  const handleAuditCa = useCallback(
+    (item: RpkiCa) => {
+      void rpki.auditoria.handleAudit('RpkiCa', item.id);
+    },
+    [rpki.auditoria]
+  );
+
   const bulkActions = useMemo(
     () => [
       {
-        label: bulkBtn.novo.label,
-        variant: bulkBtn.novo.variant,
-        requiresSelection: false,
+        label: rpki.bulkBtn.novo.label,
+        variant: rpki.bulkBtn.novo.variant,
         action: () => setShowCreateModal(true),
       },
       {
-        label: bulkBtn.deletar.label,
-        variant: bulkBtn.deletar.variant,
-        disabled: (selectedItems: RpkiCa[]) => selectedItems.length === 0 && !selectedCa,
+        label: rpki.bulkBtn.deletar.label,
+        variant: rpki.bulkBtn.deletar.variant,
+        disabled: (selectedItems: RpkiCa[]) =>
+          selectedItems.length === 0 && !rpki.selectedRow,
         action: (selectedItems: RpkiCa[]) => {
-          const target = selectedItems[0] || selectedCa;
+          const target = selectedItems[0] || rpki.selectedRow;
           if (!target) return;
-          if (!window.confirm(t('messages.confirmDelete'))) return;
+          if (!window.confirm(rpki.t('messages.confirmDelete'))) return;
           deleteMutation.mutate(target.id);
         },
       },
       {
         label: 'Remover',
-        disabled: (selectedItems: RpkiCa[]) => selectedItems.length === 0 && !selectedCa,
+        disabled: (selectedItems: RpkiCa[]) =>
+          selectedItems.length === 0 && !rpki.selectedRow,
         action: (selectedItems: RpkiCa[]) => {
-          const target = selectedItems[0] || selectedCa;
+          const target = selectedItems[0] || rpki.selectedRow;
           if (!target) return;
           if (!window.confirm('Tem certeza que deseja remover os recursos desta CA?')) return;
           clearResourcesMutation.mutate(target.id);
         },
       },
     ],
-    [bulkBtn, clearResourcesMutation, deleteMutation, selectedCa, t]
+    [rpki, clearResourcesMutation, deleteMutation]
   );
 
   return (
@@ -243,24 +192,17 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = ({
         }}
         data={pagedRows}
         loading={isLoading || deleteMutation.isPending || clearResourcesMutation.isPending}
-        search={tableFilters.search}
-        onSearchChange={handleSearchChange}
-        sortColumn={tableFilters.sortColumn}
-        sortDirection={tableFilters.sortDirection}
-        onSortChange={tableFilters.setSort}
-        pagination={{
-          current_page: safePage,
-          last_page: lastPage,
-          per_page: perPage,
-          total,
-          from,
-          to,
-        }}
-        onPageChange={tableFilters.setPage}
-        onLimitChange={tableFilters.setLimit}
+        search={rpki.tableFilters.search}
+        onSearchChange={rpki.handleSearchChange}
+        sortColumn={rpki.tableFilters.sortColumn}
+        sortDirection={rpki.tableFilters.sortDirection}
+        onSortChange={rpki.tableFilters.setSort}
+        pagination={pagination}
+        onPageChange={rpki.tableFilters.setPage}
+        onLimitChange={rpki.tableFilters.setLimit}
         onRefresh={refetch}
         bulkActions={bulkActions}
-        onSelectionChange={(items) => setSelectedCa(items[0] ?? null)}
+        onSelectionChange={(items) => rpki.setSelectedRow(items[0] ?? null)}
         onAudit={handleAuditCa}
         auditEntity="RpkiCa"
         tableId="rpki-cas-list-modal"
@@ -273,11 +215,11 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = ({
       />
 
       <ImprimirModal
-        show={auditoria.showPreview}
-        onClose={auditoria.handleClosePreview}
-        pdfUrl={auditoria.pdfUrl}
-        isGenerating={auditoria.isGeneratingPdf}
-        title={t('modal.auditLogs')}
+        show={rpki.auditoria.showPreview}
+        onClose={rpki.auditoria.handleClosePreview}
+        pdfUrl={rpki.auditoria.pdfUrl}
+        isGenerating={rpki.auditoria.isGeneratingPdf}
+        title={rpki.t('modal.auditLogs')}
         modalId="auditoria-rpki-ca-modal"
       />
     </>

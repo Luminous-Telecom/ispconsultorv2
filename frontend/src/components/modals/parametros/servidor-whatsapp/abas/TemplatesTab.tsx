@@ -4,7 +4,7 @@ import { useModalSelect } from 'hooks/useModalSelect';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { useAuditoria } from 'hooks/useAuditoria';
 import { TemplateWhatsAppService, TemplateWhatsApp } from 'services/templateWhatsAppService';
-import Table from 'components/tables/Table';
+import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import { TableConfig } from 'components/tables/types';
 import { useI18n } from 'contexts/I18nContext';
 import { useBulkBtn } from 'components/ui';
@@ -127,8 +127,7 @@ const TemplatesTab: React.FC<TemplatesTabProps> = () => {
 
   return (
     <>
-      <Table
-          syncWithHeader={false}
+      <EmbeddedTablePanel
           title=""
           config={{
             columns: tableColumns,

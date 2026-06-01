@@ -4,7 +4,7 @@ import { useBulkBtn } from 'components/ui';
 import { useClienteArquivos } from 'hooks/useClienteArquivos';
 import { ClienteArquivo } from 'services/clienteArquivoService';
 import { formatDateTime } from 'utils/formatters';
-import Table from 'components/tables/Table';
+import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import ImprimirModal from 'components/common/ImprimirModal';
 import ImageViewerModal from 'components/common/ImageViewerModal';
 import AdicionarArquivoModal from './AdicionarArquivoModal';
@@ -249,9 +249,8 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({
 
   return (
     <>
-        <Table
+        <EmbeddedTablePanel
             key="cliente-arquivos-tab-table"
-            syncWithHeader={false}
             title={t('tabs.files')}
             config={{ ...tableConfig, loading: isLoading }}
             onRefresh={refetch}

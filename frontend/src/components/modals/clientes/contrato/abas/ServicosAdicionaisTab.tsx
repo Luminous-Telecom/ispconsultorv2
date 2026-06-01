@@ -1,6 +1,6 @@
 import React from 'react';
 import { ContratoPlanoAdicional } from 'services/contratoPlanoAdicionalService';
-import Table from 'components/tables/Table';
+import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import { BulkAction } from '../types';
 import { TableColumn } from 'components/tables/types';
 import { useI18n } from 'contexts/I18nContext';
@@ -39,9 +39,8 @@ const ServicosAdicionaisTab: React.FC<ServicosAdicionaisTabProps> = ({
   const { t } = useI18n();
 
   return (
-    <Table
+    <EmbeddedTablePanel
             key="servicos-adicionais-tab-table"
-            syncWithHeader={false}
             title={t('tabs.additionalServices')}
             config={{
             columns: columns,

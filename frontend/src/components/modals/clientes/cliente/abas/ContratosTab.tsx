@@ -2,7 +2,7 @@ import React from 'react';
 import { Contrato } from 'hooks/useContratos';
 import { useI18n } from 'contexts/I18nContext';
 import { formatDate, formatDateTime, formatCurrency } from 'utils/formatters';
-import Table from 'components/tables/Table';
+import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import { ContratosTabProps } from '../types';
 import { useIsMobile } from 'hooks/useMediaQuery';
 
@@ -40,9 +40,8 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
   
   return (
     <>
-    <Table
+    <EmbeddedTablePanel
             key={`cliente-contratos-${clienteId || 'new'}`}
-            syncWithHeader={false}
             title={t('nav.contracts')}
             search=""
             config={{

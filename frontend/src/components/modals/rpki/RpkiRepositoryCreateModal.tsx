@@ -5,6 +5,7 @@ import { CancelarButton, CopiarButton, FormField, NovoButton } from 'components/
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES, ERROR_MESSAGES } from 'constants/ErrorMessages';
+import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
 import { RpkiCaService } from 'services/rpkiCaService';
 
 interface RpkiRepositoryCreateModalProps {
@@ -27,6 +28,10 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
   const queryClient = useQueryClient();
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
+  const { copy: copyToClipboard } = useCopyToClipboard({
+    successMessage: 'publisher_request copiado',
+    errorMessage: ERROR_MESSAGES.COPY_ERROR,
+  });
   const showApiErrorRef = useRef(showApiError);
 
   const { data: cas = [] } = useQuery({
@@ -160,14 +165,9 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
                 iconOnly
                 style={{ position: 'absolute', top: 30, right: 18, zIndex: 2, minWidth: 36, padding: '4px 8px' }}
                 disabled={!publisherRequestXml.trim()}
-                onClick={async () => {
+                onClick={() => {
                   if (!publisherRequestXml.trim()) return;
-                  try {
-                    await navigator.clipboard.writeText(publisherRequestXml);
-                    success('publisher_request copiado');
-                  } catch {
-                    showApiError(ERROR_MESSAGES.COPY_ERROR);
-                  }
+                  void copyToClipboard(publisherRequestXml);
                 }}
               />
             </div>

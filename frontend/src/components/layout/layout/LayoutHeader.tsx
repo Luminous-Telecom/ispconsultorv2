@@ -1,8 +1,8 @@
 import React from 'react';
 import type { CurrentUser } from 'services/authService';
 import type { Language } from 'contexts/I18nContext';
-import LayoutSearchBar, { type SearchFieldOption } from './LayoutSearchBar';
-import UserMenu from './UserMenu';
+import AppLayoutHeader from '../appLayout/AppLayoutHeader';
+import type { SearchFieldOption } from './LayoutSearchBar';
 import type { TranslateFn } from './types';
 
 interface LanguageOption {
@@ -39,103 +39,41 @@ interface LayoutHeaderProps {
   onSearch: (value: string) => void;
 }
 
-const LayoutHeader: React.FC<LayoutHeaderProps> = ({
-  isMobile,
-  currentUser,
-  showUserMenu,
-  showLanguageDropdown,
-  theme,
-  language,
-  availableLanguages,
-  searchValue,
-  setSearchValue,
-  searchPlaceholder,
-  searchField,
-  setSearchField,
-  availableSearchFields,
-  userMenuRef,
-  languageTriggerRef,
-  languageDropdownRef,
-  languageDropdownPosition,
-  t,
-  onToggleSidebar,
-  onToggleUserMenu,
-  onToggleLanguageDropdown,
-  onToggleTheme,
-  onSelectLanguage,
-  onLogout,
-  onSearch,
-}) => (
-  <header className="navbar navbar-expand-md sticky-top main-navbar">
-    <div className="container-fluid">
-      <div className="d-flex flex-wrap align-items-center justify-content-between w-100">
-        <div className="d-flex align-items-center">
-          {isMobile && (
-            <button
-              className="navbar-toggler d-block border-0 p-0"
-              type="button"
-              onClick={onToggleSidebar}
-              aria-label={t('layout.openMenu')}
-            >
-              <span className="navbar-toggler-icon"></span>
-            </button>
-          )}
-        </div>
-
-        <div className="d-flex justify-content-center flex-grow-1">
-          {!isMobile && (
-            <LayoutSearchBar
-              id="desktop-search"
-              variant="navbar"
-              searchValue={searchValue}
-              setSearchValue={setSearchValue}
-              onSearch={onSearch}
-              searchPlaceholder={searchPlaceholder}
-              searchField={searchField}
-              setSearchField={setSearchField}
-              availableSearchFields={availableSearchFields}
-              t={t}
-            />
-          )}
-
-          {isMobile && (
-            <LayoutSearchBar
-              id="mobile-inline-search"
-              variant="inline"
-              searchValue={searchValue}
-              setSearchValue={setSearchValue}
-              onSearch={onSearch}
-              searchPlaceholder={searchPlaceholder}
-              searchField={searchField}
-              setSearchField={setSearchField}
-              availableSearchFields={availableSearchFields}
-              t={t}
-            />
-          )}
-        </div>
-
-        <UserMenu
-          currentUser={currentUser}
-          showUserMenu={showUserMenu}
-          showLanguageDropdown={showLanguageDropdown}
-          isMobile={isMobile}
-          theme={theme}
-          language={language}
-          availableLanguages={availableLanguages}
-          userMenuRef={userMenuRef}
-          languageTriggerRef={languageTriggerRef}
-          languageDropdownRef={languageDropdownRef}
-          languageDropdownPosition={languageDropdownPosition}
-          t={t}
-          onToggleUserMenu={onToggleUserMenu}
-          onToggleLanguageDropdown={onToggleLanguageDropdown}
-          onToggleTheme={onToggleTheme}
-          onSelectLanguage={onSelectLanguage}
-          onLogout={onLogout}
-        />
-      </div>
-    </div>
-  </header>
+const LayoutHeader: React.FC<LayoutHeaderProps> = (props) => (
+  <AppLayoutHeader
+    isMobile={props.isMobile}
+    currentUser={props.currentUser}
+    showUserMenu={props.showUserMenu}
+    theme={props.theme}
+    searchValue={props.searchValue}
+    setSearchValue={props.setSearchValue}
+    searchPlaceholder={props.searchPlaceholder}
+    searchField={props.searchField}
+    setSearchField={props.setSearchField}
+    availableSearchFields={props.availableSearchFields}
+    userMenuRef={props.userMenuRef}
+    t={props.t}
+    onToggleSidebar={props.onToggleSidebar}
+    onToggleUserMenu={props.onToggleUserMenu}
+    onToggleTheme={props.onToggleTheme}
+    onLogout={props.onLogout}
+    onSearch={props.onSearch}
+    searchBarIdPrefix="app"
+    menuAriaLabel={props.t('layout.openMenu')}
+    userTitleFallback={props.t('layout.user')}
+    userMenuProps={{
+      showLanguage: true,
+      showLanguageDropdown: props.showLanguageDropdown,
+      isMobile: props.isMobile,
+      language: props.language,
+      availableLanguages: props.availableLanguages,
+      languageTriggerRef: props.languageTriggerRef,
+      languageDropdownRef: props.languageDropdownRef,
+      languageDropdownPosition: props.languageDropdownPosition,
+      onToggleLanguageDropdown: props.onToggleLanguageDropdown,
+      onSelectLanguage: props.onSelectLanguage,
+    }}
+  />
 );
 
 export default LayoutHeader;

@@ -5,7 +5,7 @@ import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import ModeloCartaService, { ModeloCarta } from 'services/modeloCartaService';
 import { formatDateTime } from 'utils/formatters';
-import Table from 'components/tables/Table';
+import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import { TableConfig } from 'components/tables/types';
 import { useAuditoria } from 'hooks/useAuditoria';
 import ImprimirModal from 'components/common/ImprimirModal';
@@ -186,9 +186,8 @@ const CartaCobrancaTab: React.FC<CartaCobrancaTabProps> = ({ contratoId: _contra
 
   return (
     <>
-      <Table
+      <EmbeddedTablePanel
               key="carta-cobranca-tab-table"
-              syncWithHeader={false}
               title="Cartas de Cobrança"
               config={{
                 columns,

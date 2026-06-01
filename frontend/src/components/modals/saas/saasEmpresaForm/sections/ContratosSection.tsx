@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import Table from 'components/tables/Table';
+import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import type { BulkAction } from 'components/tables/types';
 import { formatCurrency } from 'utils/formatters';
 import type { SaasContrato } from 'services/saas/saasCrudService';
@@ -48,10 +48,9 @@ const ContratosSection: React.FC<ContratosSectionProps> = ({
 
   return (
     <>
-      <Table
+      <EmbeddedTablePanel
         key={`saas-contratos-${empresaId}`}
         title={t('form.plan')}
-        syncWithHeader={false}
         config={{
           columns,
           data: contratos,

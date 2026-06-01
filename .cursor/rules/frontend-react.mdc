@@ -21,41 +21,46 @@ alwaysApply: false
 - Use `DraggableModal` para TODOS os modais (exceto Dashboard `/`)
 - Implemente `onClose` e `onSuccess` callbacks
 - Limpe formulário ao fechar modal
-- Use `ModalHeaderActions` para ações no header
+- Use `ModalFormActions` para ações no header dos formulários
+
+## Listagens em modal
+- Use `ListModal` + `hooks/useEntityListModal` para CRUD padrão
+- Listagens RPKI com paginação client-side: `hooks/useRpkiListModal`
+- Confirmação destrutiva: `window.confirm()` (não use modal custom de confirmação)
 
 ## Formulários
 - Valide campos obrigatórios antes do submit
+- Use `FormField` / blocos em `components/forms/` em vez de `form-control` cru
 - Use estado `errors` para armazenar erros por campo
 - Limpe erros quando usuário começar a digitar
 
-## DataTable - Uso obrigatório
+## Tabelas (`Table` / `ListModal`)
 ```tsx
-<DataTable
-  data={getSortedData()}
-  columns={columns}
-  isLoading={isLoading}
-  pagination={pagination}
-  limit={limit}
-  setLimit={setLimit}
-  setPage={setPage}
-  onSort={handleSort}
-  sortColumn={sortColumn}
-  sortDirection={sortDirection}
-  onSearch={setSearch}
-  searchPlaceholder="Buscar..."
+<ListModal
+  show={show}
+  onClose={list.handleModalClose}
+  config={{ title, columns, searchFields, emptyMessage }}
+  data={modalData}
+  loading={isLoading}
+  search={list.tableFilters.search}
+  onSearchChange={list.handleSearchChange}
+  sortColumn={list.tableFilters.sortColumn}
+  sortDirection={list.tableFilters.sortDirection}
+  onSortChange={list.tableFilters.setSort}
+  pagination={list.buildPagination(data?.pagination)}
+  onPageChange={list.tableFilters.setPage}
+  onLimitChange={list.tableFilters.setLimit}
   onRefresh={refetch}
   bulkActions={bulkActions}
-  onSelectionChange={setSelectedItems}
-  emptyMessage="Nenhum registro encontrado"
-  showHeader={true}
+  onSelectionChange={list.handleSelectionChange}
 />
 ```
 
-## Tabelas
-- Primeira coluna: ID (texto normal)
-- Um dado por linha — nunca mais de um
-- Ordenação em TODAS as colunas (estado inicial: `sortColumn='id'`, `sortDirection='desc'`)
-- NÃO use botões nas linhas da tabela
+## Tabelas embutidas em abas
+- Use `EmbeddedTablePanel` para mini-listagens dentro de modais/abas
+
+## Abas de modais
+- Use `ModalTabsOverflow` em modais com várias abas (overflow em mobile)
 
 ## Bulk Actions
 - Valide se há itens selecionados

@@ -3,6 +3,7 @@ import FormField from 'components/ui/FormField';
 import { CopiarButton, Input } from 'components/ui';
 import { BancoTabProps } from '../types';
 import { useI18n } from 'contexts/I18nContext';
+import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 
 const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
@@ -15,6 +16,7 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
 }) => {
   const { t } = useI18n();
   const { success, warning } = useNotificationContext();
+  const { copy: copyToClipboard } = useCopyToClipboard();
 
   const handleCopyWebhookUrl = useCallback(async () => {
     const url = formData.url_retorno?.trim();
@@ -22,13 +24,13 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
       warning(t('messages.noTokenToCopy'));
       return;
     }
-    try {
-      await navigator.clipboard.writeText(url);
+    const ok = await copyToClipboard(url);
+    if (ok) {
       success(t('blockdomi.copiedToClipboard'));
-    } catch {
+    } else {
       warning(t('messages.copyManual'));
     }
-  }, [formData.url_retorno, success, warning, t]);
+  }, [copyToClipboard, formData.url_retorno, success, warning, t]);
 
   return (
     <>

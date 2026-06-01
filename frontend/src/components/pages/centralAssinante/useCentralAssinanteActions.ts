@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
 import { CentralAssinanteService } from 'services/centralAssinanteService';
 import { CONTEXT_ERROR_MESSAGES, ERROR_MESSAGES } from 'constants/ErrorMessages';
 import {
@@ -17,12 +18,18 @@ interface UseCentralAssinanteActionsParams {
 
 export const useCentralAssinanteActions = ({
   slug,
-  showSuccess,
+  showSuccess: _showSuccess,
   showApiError,
   setActiveTab,
 }: UseCentralAssinanteActionsParams) => {
+  const { copy: copyToClipboard, copiedKey } = useCopyToClipboard({
+    resetAfterMs: 2000,
+    useFallback: true,
+    successMessage: 'Código copiado!',
+    errorMessage: ERROR_MESSAGES.COPY_ERROR,
+  });
   const [faturaVisualizar, setFaturaVisualizar] = useState<FaturaVisualizar | null>(null);
-  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const copiedField = copiedKey;
   const [baixandoBoletoId, setBaixandoBoletoId] = useState<number | null>(null);
   const [baixandoContratoId, setBaixandoContratoId] = useState<number | null>(null);
   const [baixandoTermoId, setBaixandoTermoId] = useState<number | null>(null);
@@ -81,28 +88,7 @@ export const useCentralAssinanteActions = ({
   };
 
   const copiarCodigo = async (text: string, fieldName: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedField(fieldName);
-      showSuccess('Código copiado!');
-      setTimeout(() => setCopiedField(null), 2000);
-    } catch {
-      const textArea = document.createElement('textarea');
-      textArea.value = text;
-      textArea.style.position = 'fixed';
-      textArea.style.left = '-999999px';
-      document.body.appendChild(textArea);
-      textArea.select();
-      try {
-        document.execCommand('copy');
-        setCopiedField(fieldName);
-        showSuccess('Código copiado!');
-        setTimeout(() => setCopiedField(null), 2000);
-      } catch (err) {
-        showApiError(err, ERROR_MESSAGES.COPY_ERROR);
-      }
-      document.body.removeChild(textArea);
-    }
+    await copyToClipboard(text, fieldName);
   };
 
   const handleCardClick = (tipo: CentralAssinanteCardTipo) => {

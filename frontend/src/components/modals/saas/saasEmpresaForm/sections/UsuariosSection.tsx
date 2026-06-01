@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import Table from 'components/tables/Table';
+import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import type { BulkAction } from 'components/tables/types';
 import type { SaasTenantUsuario } from 'services/saas/saasTenantUsuariosService';
 import type { UseTableFiltersReturn } from 'hooks/useTableFilters';
@@ -31,10 +31,9 @@ const UsuariosSection: React.FC<UsuariosSectionProps> = ({
   const searchFields = useMemo(() => buildUsuariosSearchFields(t), [t]);
 
   return (
-    <Table
+    <EmbeddedTablePanel
       key={`saas-usuarios-${empresaId}`}
       title="Usuários"
-      syncWithHeader={false}
       config={{
         columns,
         data: usuarios,

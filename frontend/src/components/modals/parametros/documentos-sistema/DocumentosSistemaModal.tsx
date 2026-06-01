@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef, useLayoutEffe
 import { useSelectedEntity } from 'hooks/useSelectedEntity';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
+import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
 import { CancelarButton } from 'components/ui';
 import { DocumentoModal } from '../documento';
 import { DocumentosSistemaModalProps, TipoDocumento, DocumentoUnion } from './types';
@@ -37,6 +38,14 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
     onClose();
   }, [onClose, setSelectedDocumento]);
 
+  const sistemaTabs = useMemo(
+    (): ModalTabItem<TipoDocumento>[] => [
+      { id: 'contrato', label: 'Contratos' },
+      { id: 'termo', label: 'Termos' },
+    ],
+    []
+  );
+
   // Header actions com botões e abas (padrão dos demais modais)
   const headerActionsContent = useMemo(() => (
     <div className="sistema-header-unified">
@@ -46,41 +55,17 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
       </div>
       {/* Abas na parte inferior do header */}
       <div className="sistema-header-tabs">
-        <ul
-          className={`nav nav-tabs sistema-tabs-unified ${isMobile ? 'sistema-tabs-mobile' : ''}`}
+        <ModalTabsOverflow
+          tabs={sistemaTabs}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          tabsClassName={`sistema-tabs-unified ${isMobile ? 'sistema-tabs-mobile' : ''}`}
+          isMobile={isMobile}
           id="sistemaTab"
-          role="tablist"
-          style={{
-            margin: 0,
-            padding: 0,
-            borderBottom: 'none',
-            backgroundColor: 'transparent'
-          }}
-        >
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link modal-tab-hover ${activeTab === 'contrato' ? 'active' : ''}`}
-              onClick={() => handleTabChange('contrato')}
-              type="button"
-            >
-              <i className="bi bi-file-earmark-text me-2"></i>
-              Contratos
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link modal-tab-hover ${activeTab === 'termo' ? 'active' : ''}`}
-              onClick={() => handleTabChange('termo')}
-              type="button"
-            >
-              <i className="bi bi-file-text me-2"></i>
-              Termos
-            </button>
-          </li>
-        </ul>
+        />
       </div>
     </div>
-  ), [activeTab, handleTabChange, handleClose, isMobile]);
+  ), [activeTab, handleTabChange, handleClose, isMobile, sistemaTabs]);
 
   const headerActionsRef = useRef(headerActionsContent);
   headerActionsRef.current = headerActionsContent;

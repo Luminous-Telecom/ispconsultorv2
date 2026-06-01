@@ -5,6 +5,7 @@ import { CancelarButton, CopiarButton, FormField, NovoButton } from 'components/
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES, ERROR_MESSAGES } from 'constants/ErrorMessages';
+import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
 import { RpkiCaService } from 'services/rpkiCaService';
 
 interface RpkiCaParentCreateModalProps {
@@ -27,6 +28,10 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
   const queryClient = useQueryClient();
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
+  const { copy: copyToClipboard } = useCopyToClipboard({
+    successMessage: 'Requisição da CA-filha copiada',
+    errorMessage: ERROR_MESSAGES.COPY_ERROR,
+  });
 
   const { data: cas = [] } = useQuery({
     queryKey: ['rpki-cas'],
@@ -134,14 +139,9 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
                 iconOnly
                 style={{ position: 'absolute', top: 30, right: 18, zIndex: 2, minWidth: 36, padding: '4px 8px' }}
                 disabled={!childRequestXml.trim()}
-                onClick={async () => {
+                onClick={() => {
                   if (!childRequestXml.trim()) return;
-                  try {
-                    await navigator.clipboard.writeText(childRequestXml);
-                    success('Requisição da CA-filha copiada');
-                  } catch {
-                    showApiError(ERROR_MESSAGES.COPY_ERROR);
-                  }
+                  void copyToClipboard(childRequestXml);
                 }}
               />
             </div>

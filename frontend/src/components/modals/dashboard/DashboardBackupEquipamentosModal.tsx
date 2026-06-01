@@ -3,7 +3,8 @@ import { useI18n } from 'contexts/I18nContext';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { useModalSelect } from 'hooks/useModalSelect';
 import { formatDateTime } from 'utils/formatters';
-import Table from 'components/tables/Table';
+import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
+import DetailFieldGrid, { DetailFieldItem } from 'components/common/DetailFieldGrid';
 import DraggableModal from 'components/common/DraggableModal';
 import type { SortDirection, TableConfig } from 'components/tables/types';
 
@@ -211,12 +212,33 @@ const DashboardBackupEquipamentosModal: React.FC<DashboardBackupEquipamentosModa
 
   if (!show) return null;
 
+  const detailFields: DetailFieldItem[] = detailRow
+    ? [
+        { label: t('sshDevice.backupDeviceColumn'), value: detailRow.deviceName || '—' },
+        {
+          label: t('table.id'),
+          value: <span className="font-monospace small">{detailRow.deviceId}</span>,
+        },
+        {
+          label: t('sshDevice.backupFileColumn'),
+          value: (
+            <span className="font-monospace small">
+              {detailRow.fileName?.trim() ? detailRow.fileName : '—'}
+            </span>
+          ),
+          colClassName: 'col-12',
+        },
+        { label: t('sshDevice.backupSizeColumn'), value: formatBytes(detailRow.sizeBytes) },
+        { label: t('dashboard.backupLogStartAt'), value: formatTs(detailRow.startedAt) },
+        { label: t('dashboard.backupLogEndAt'), value: formatTs(detailRow.finishedAt) },
+      ]
+    : [];
+
   return (
     <>
-          <Table<BackupEquipRow>
+          <EmbeddedTablePanel<BackupEquipRow>
             key={tableResetKey}
             tableId="dashboard-backup-equipamentos"
-            syncWithHeader={false}
             config={{
               columns,
               data: rows,
@@ -272,72 +294,21 @@ const DashboardBackupEquipamentosModal: React.FC<DashboardBackupEquipamentosModa
           modalId="dashboard-backup-log-details"
         >
           <div className="p-3">
-            <div className="row g-2">
-              <div className="col-md-6">
-                <label className="form-label small text-muted mb-1">{t('sshDevice.backupDeviceColumn')}</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm bg-secondary bg-opacity-10"
-                  value={detailRow.deviceName || '—'}
-                  readOnly
-                />
-              </div>
-              <div className="col-md-6">
-                <label className="form-label small text-muted mb-1">{t('table.id')}</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm bg-secondary bg-opacity-10 font-monospace small"
-                  value={detailRow.deviceId}
-                  readOnly
-                />
-              </div>
-              <div className="col-12">
-                <label className="form-label small text-muted mb-1">{t('sshDevice.backupFileColumn')}</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm bg-secondary bg-opacity-10 font-monospace small"
-                  value={detailRow.fileName?.trim() ? detailRow.fileName : '—'}
-                  readOnly
-                />
-              </div>
-              <div className="col-md-6">
-                <label className="form-label small text-muted mb-1">{t('sshDevice.backupSizeColumn')}</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm bg-secondary bg-opacity-10"
-                  value={formatBytes(detailRow.sizeBytes)}
-                  readOnly
-                />
-              </div>
-              <div className="col-md-6">
-                <label className="form-label small text-muted mb-1">{t('dashboard.backupLogStartAt')}</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm bg-secondary bg-opacity-10"
-                  value={formatTs(detailRow.startedAt)}
-                  readOnly
-                />
-              </div>
-              <div className="col-md-6">
-                <label className="form-label small text-muted mb-1">{t('dashboard.backupLogEndAt')}</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm bg-secondary bg-opacity-10"
-                  value={formatTs(detailRow.finishedAt)}
-                  readOnly
-                />
-              </div>
-              <div className="col-12">
-                <label className="form-label small text-muted mb-1">{t('dashboard.backupStatusDetailColumn')}</label>
+            <DetailFieldGrid fields={detailFields} />
+            {detailRow?.detail?.trim() ? (
+              <div className="mt-3">
+                <label className="form-label small text-muted mb-1">
+                  {t('dashboard.backupStatusDetailColumn')}
+                </label>
                 <textarea
                   className="form-control form-control-sm bg-secondary bg-opacity-10 small"
-                  value={detailRow.detail?.trim() ? detailRow.detail : '—'}
+                  value={detailRow.detail}
                   readOnly
-                  rows={Math.min(12, Math.max(3, (detailRow.detail || '').split('\n').length + 2))}
+                  rows={Math.min(12, Math.max(3, detailRow.detail.split('\n').length + 2))}
                   style={{ resize: 'vertical', minHeight: '4.5rem' }}
                 />
               </div>
-            </div>
+            ) : null}
           </div>
         </DraggableModal>
       )}

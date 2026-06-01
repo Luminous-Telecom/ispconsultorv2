@@ -7,6 +7,7 @@ import { removeAuthToken } from 'services/core';
 import { EntrarButton } from 'components/ui';
 import BackNetLogo from 'components/common/BackNetLogo';
 import { useI18n } from 'contexts/I18nContext';
+import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
 import './Login.scss';
 
 const Login: React.FC = () => {
@@ -17,6 +18,9 @@ const Login: React.FC = () => {
   const [clientIp, setClientIp] = useState<string>('');
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
+  const { copy: copyToClipboard } = useCopyToClipboard({
+    successMessage: t('login.ipCopied') || 'IP copiado!',
+  });
 
   useEffect(() => {
     const fetchClientIp = async () => {
@@ -40,12 +44,7 @@ const Login: React.FC = () => {
 
   const handleCopyIp = async () => {
     if (!clientIp) return;
-    try {
-      await navigator.clipboard.writeText(clientIp);
-      success(t('login.ipCopied') || 'IP copiado!');
-    } catch {
-      // Silenciosamente falha se clipboard não disponível
-    }
+    await copyToClipboard(clientIp);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

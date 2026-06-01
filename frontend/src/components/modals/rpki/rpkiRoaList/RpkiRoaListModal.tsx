@@ -1,7 +1,6 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 import ListModal from 'components/common/ListModal';
-import { useI18n } from 'contexts/I18nContext';
-import { useAuditoria } from 'hooks/useAuditoria';
+import { useRpkiListModal } from 'hooks/useRpkiListModal';
 import { useRpkiRoaListColumns, useRpkiRoaListSearchFields } from './rpkiRoaListColumns';
 import { useRpkiRoaListData } from './useRpkiRoaListData';
 import { useRpkiRoaListBulkActions } from './useRpkiRoaListBulkActions';
@@ -10,6 +9,33 @@ import { useRpkiRoaListAnalysisConfirm, useRpkiRoaListAnalysisState } from './us
 import { RpkiRoaListSubModals } from './RpkiRoaListSubModals';
 import type { RpkiRoaListModalProps, RpkiRoaRow } from './types';
 
+function getSortableValue(row: RpkiRoaRow, sortKey: string): string {
+  switch (sortKey) {
+    case 'id':
+      return String(row.id ?? '');
+    case 'ca_nome':
+      return String(row.ca_nome ?? '');
+    case 'clienteNome':
+      return String(row.clienteNome ?? '');
+    case 'prefix':
+      return String(row.prefix ?? '');
+    case 'asn':
+      return String(row.asn ?? '');
+    case 'max_length':
+      return String(row.max_length ?? '');
+    case 'not_before':
+      return String(row.not_before ?? '');
+    case 'not_after':
+      return String(row.not_after ?? '');
+    case 'revoked_at':
+      return String(row.revoked_at ?? '');
+    case 'status':
+      return String(row.status ?? '');
+    default:
+      return '';
+  }
+}
+
 const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({
   show,
   onClose,
@@ -17,9 +43,7 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({
   clienteIdFilter,
   tableTitle = 'ROAs',
 }) => {
-  const { t } = useI18n();
-  const auditoria = useAuditoria();
-  const auditLogsTitle = t('modal.auditLogs');
+  const rpki = useRpkiListModal<RpkiRoaRow>();
 
   const { roas, setRoas, cas, roasForTable, reloadRoas } = useRpkiRoaListData({
     show,
@@ -63,18 +87,27 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({
   const tableColumns = useRpkiRoaListColumns(clienteIdFilter);
   const searchFields = useRpkiRoaListSearchFields(clienteIdFilter);
 
-  const casOptions = useMemo(
-    () => cas.map((ca) => ({ id: ca.id, nome: ca.nome })),
-    [cas]
+  const { rows: pagedRows, pagination } = rpki.paginateClientSide(
+    roasForTable,
+    getSortableValue,
+    (row, term) =>
+      String(row.id ?? '').includes(term) ||
+      String(row.ca_nome ?? '').toLowerCase().includes(term) ||
+      String(row.clienteNome ?? '').toLowerCase().includes(term) ||
+      String(row.prefix ?? '').toLowerCase().includes(term) ||
+      String(row.asn ?? '').toLowerCase().includes(term) ||
+      String(row.status ?? '').toLowerCase().includes(term)
   );
+
+  const casOptions = cas.map((ca) => ({ id: ca.id, nome: ca.nome }));
 
   const handleAuditRoa = useCallback(
     (item: RpkiRoaRow) => {
       const id = Number(item.id);
       if (!Number.isFinite(id)) return;
-      void auditoria.handleAudit('RpkiRoa', id);
+      void rpki.auditoria.handleAudit('RpkiRoa', id);
     },
-    [auditoria]
+    [rpki.auditoria]
   );
 
   return (
@@ -91,10 +124,18 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({
           emptyMessage: 'Nenhum ROA encontrado',
           multiSelect: false,
         }}
-        data={roasForTable}
+        data={pagedRows}
         loading={false}
+        search={rpki.tableFilters.search}
+        onSearchChange={rpki.handleSearchChange}
+        sortColumn={rpki.tableFilters.sortColumn}
+        sortDirection={rpki.tableFilters.sortDirection}
+        onSortChange={rpki.tableFilters.setSort}
+        pagination={pagination}
+        onPageChange={rpki.tableFilters.setPage}
+        onLimitChange={rpki.tableFilters.setLimit}
         bulkActions={bulkActions}
-        onRefresh={() => {}}
+        onRefresh={() => void reloadRoas()}
         onAudit={handleAuditRoa}
         auditEntity="RpkiRoa"
         tableId="rpki-roas-list-modal"
@@ -112,8 +153,8 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({
         analysisRows={analysisRows}
         onAnalysisClose={handleAnalysisClose}
         onAnalysisConfirm={handleAnalysisConfirm}
-        auditoria={auditoria}
-        auditLogsTitle={auditLogsTitle}
+        auditoria={rpki.auditoria}
+        auditLogsTitle={rpki.t('modal.auditLogs')}
       />
     </>
   );

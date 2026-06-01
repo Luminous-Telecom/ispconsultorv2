@@ -4,7 +4,7 @@ import { useModalSelect } from 'hooks/useModalSelect';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { TemplateWhatsAppService, TemplateWhatsApp } from 'services/templateWhatsAppService';
 import DraggableModal from 'components/common/DraggableModal';
-import Table from 'components/tables/Table';
+import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import { TableConfig } from 'components/tables/types';
 import { useI18n } from 'contexts/I18nContext';
 import { useBulkBtn } from 'components/ui';
@@ -141,8 +141,7 @@ const TemplateSelectModal: React.FC<TemplateSelectModalProps> = ({
           </div>
         )}
         {!error && (
-          <Table
-              syncWithHeader={false}
+          <EmbeddedTablePanel
               title={defaultTitle}
               config={{
                 columns: tableColumns,

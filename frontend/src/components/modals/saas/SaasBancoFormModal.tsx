@@ -15,6 +15,7 @@ import { BancoForm } from '../bancos/banco/types';
 import AsaasForm from '../bancos/banco/especificos/AsaasForm';
 import EfiForm from '../bancos/banco/especificos/EfiForm';
 import { saasBancoService } from 'services/saas/saasConfigService';
+import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
 
 interface Props { show: boolean; onClose: () => void; onSuccess?: () => void; itemId?: number | null; }
 
@@ -32,6 +33,7 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
   const [activeTab, setActiveTab] = useState('informacoes-basicas');
   const [isGeneratingSecret, setIsGeneratingSecret] = useState(false);
   const { success, warning } = useNotificationContext();
+  const { copy: copyToClipboard } = useCopyToClipboard();
   const { showApiError } = useApiError();
   const queryClient = useQueryClient();
 
@@ -99,10 +101,10 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
       warning(t('messages.noTokenToCopy'));
       return;
     }
-    try {
-      await navigator.clipboard.writeText(formData.webhook_secret);
+    const ok = await copyToClipboard(formData.webhook_secret);
+    if (ok) {
       success(t('messages.webhookTokenCopied'));
-    } catch {
+    } else {
       warning(t('messages.copyManual'));
     }
   };

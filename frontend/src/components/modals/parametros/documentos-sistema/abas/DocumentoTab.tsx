@@ -8,7 +8,7 @@ import ModeloReciboService from 'services/modeloReciboService';
 import ModeloCartaService from 'services/modeloCartaService';
 import ModeloTermoService from 'services/modeloTermoService';
 import { formatDateTime } from 'utils/formatters';
-import Table from 'components/tables/Table';
+import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import { TableConfig } from 'components/tables/types';
 import { DocumentoUnion } from '../types';
 import { DocumentoTabProps } from '../types';
@@ -234,8 +234,7 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
 
   return (
     <>
-      <Table
-        syncWithHeader={false}
+      <EmbeddedTablePanel
         key={`documentos-table-${tipo}`}
         title={getTipoLabel(tipo)}
         config={{

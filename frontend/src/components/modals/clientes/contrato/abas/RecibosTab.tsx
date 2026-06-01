@@ -5,7 +5,7 @@ import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import ModeloReciboService, { ModeloRecibo } from 'services/modeloReciboService';
 import { formatDateTime } from 'utils/formatters';
-import Table from 'components/tables/Table';
+import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import { TableConfig } from 'components/tables/types';
 import { useAuditoria } from 'hooks/useAuditoria';
 import ImprimirModal from 'components/common/ImprimirModal';
@@ -186,9 +186,8 @@ const RecibosTab: React.FC<RecibosTabProps> = ({ contratoId: _contratoId }) => {
 
   return (
     <>
-      <Table
+      <EmbeddedTablePanel
               key="recibos-tab-table"
-              syncWithHeader={false}
               title="Recibos"
               config={{
                 columns,

@@ -1,6 +1,6 @@
 import React from 'react';
 import { LimparButton } from 'components/ui';
-import Table from 'components/tables/Table';
+import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import { DateRangeFilter } from 'components/ui';
 import { TableConfig } from 'components/tables/types';
 import type { useLogsContent } from './hooks/useLogsContent';
@@ -99,7 +99,7 @@ const LogsModalTable: React.FC<LogsModalTableProps> = ({
   );
 
   return (
-    <Table
+    <EmbeddedTablePanel
       title={title}
       config={{
         columns,
@@ -130,7 +130,6 @@ const LogsModalTable: React.FC<LogsModalTableProps> = ({
         pagination,
       }}
       tableId={`logs-table-${effectiveVariant}-${logType}`}
-      syncWithHeader={false}
       onSelectionChange={(items) => handleSelectionChange(items as { id: number | string }[])}
       onRefresh={() => refetch()}
       onPageChange={(p) => setTimeout(() => tableFilters.setPage(p), 0)}

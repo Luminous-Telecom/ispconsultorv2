@@ -1,33 +1,18 @@
-import React from 'react';
+import { renderStatusBadge } from 'components/ui/StatusBadge';
 import { ContaPagar } from 'types';
+import {
+  getContaPagarStatusBadgeConfig,
+  getContaPagarTipoPagamentoLabel,
+} from 'utils/tableStatusBadges';
 import { ContasPagarResumoFinanceiro, ContasPagarTranslateFn } from './contasPagarListTypes';
 
 export const createGetStatusBadge = (t: ContasPagarTranslateFn) => {
-  return (status: ContaPagar['status']) => {
-    const statusMap = {
-      A_PAGAR: { label: t('financial.toPay'), className: 'bg-warning' },
-      PAGO: { label: t('financial.paid'), className: 'bg-success' },
-      PARCIAL: { label: t('status.pending'), className: 'bg-info' },
-      CANCELADO: { label: t('status.rejected'), className: 'bg-secondary' },
-    };
-    const statusInfo = statusMap[status] || { label: status, className: 'bg-secondary' };
-    return React.createElement('span', { className: `badge ${statusInfo.className}` }, statusInfo.label);
-  };
+  return (status: ContaPagar['status']) =>
+    renderStatusBadge(getContaPagarStatusBadgeConfig(status, t));
 };
 
 export const createGetTipoPagamentoBadge = (t: ContasPagarTranslateFn) => {
-  return (tipo: ContaPagar['tipo_pagamento']) => {
-    const tipoMap: Record<string, string> = {
-      DINHEIRO: t('form.paymentTypeCash'),
-      BOLETO: t('form.paymentTypeBoleto'),
-      CARTAO: t('form.paymentTypeCard'),
-      DEPOSITO: t('form.paymentTypeDeposit'),
-      DEBITO_CONTA: t('form.paymentTypeDebit'),
-      TRANSFERENCIA: t('form.paymentTypeTransfer'),
-      PIX: t('form.paymentTypePix'),
-    };
-    return tipoMap[tipo] || tipo;
-  };
+  return (tipo: ContaPagar['tipo_pagamento']) => getContaPagarTipoPagamentoLabel(tipo, t);
 };
 
 export const calcResumoFinanceiro = (contas: ContaPagar[]): ContasPagarResumoFinanceiro => {

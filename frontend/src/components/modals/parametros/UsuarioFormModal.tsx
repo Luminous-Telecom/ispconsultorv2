@@ -11,6 +11,7 @@ import DraggableModal from 'components/common/DraggableModal';
 import { CopiarButton, FormField, AtivoInativoField, GerarTokenButton, ModalFormActions } from 'components/ui';
 import UsuarioAccountFormFields from 'components/forms/UsuarioAccountFormFields';
 import { useI18n } from 'contexts/I18nContext';
+import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
 
 interface UsuarioForm {
   nome: string;
@@ -49,6 +50,9 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
   const [webhookSecret, setWebhookSecret] = useState<string>('');
   const [isGeneratingSecret, setIsGeneratingSecret] = useState(false);
   const { success } = useNotificationContext();
+  const { copy: copyToClipboard } = useCopyToClipboard({
+    successMessage: t('messages.webhookTokenCopied'),
+  });
   const { showApiError } = useApiError();
   const queryClient = useQueryClient();
 
@@ -156,8 +160,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
 
   const handleCopyWebhookSecret = () => {
     if (webhookSecret) {
-      navigator.clipboard.writeText(webhookSecret);
-      success(t('messages.webhookTokenCopied'));
+      void copyToClipboard(webhookSecret);
     }
   };
 

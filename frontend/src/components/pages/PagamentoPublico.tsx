@@ -3,8 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { defaultApiClient } from 'services/core';
 import { formatDate } from 'utils/formatters';
-import { useApiError } from 'hooks/useApiError';
 import { ERROR_MESSAGES } from 'constants/ErrorMessages';
+import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
 import { Spinner } from 'components/ui';
 import './PagamentoPublico.css';
 
@@ -31,10 +31,14 @@ interface TituloPublico {
 const PagamentoPublico: React.FC = () => {
   const { id, token } = useParams<{ id: string; token?: string }>();
   const navigate = useNavigate();
-  const [copiedField, setCopiedField] = useState<string | null>(null);
   const [sessionReady, setSessionReady] = useState<boolean>(!token);
   const sessionInitRef = useRef(false);
-  const { showApiError } = useApiError();
+  const { copy: copyToClipboard, copiedKey } = useCopyToClipboard({
+    resetAfterMs: 2000,
+    useFallback: true,
+    errorMessage: ERROR_MESSAGES.COPY_ERROR,
+  });
+  const copiedField = copiedKey;
 
   // Quando tem token na URL: trocar por cookie e remover token da URL (evita token em logs/histórico)
   useEffect(() => {
@@ -67,26 +71,7 @@ const PagamentoPublico: React.FC = () => {
   });
 
   const copiarCodigo = async (text: string, fieldName: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedField(fieldName);
-      setTimeout(() => setCopiedField(null), 2000);
-    } catch (err) {
-      const textArea = document.createElement('textarea');
-      textArea.value = text;
-      textArea.style.position = 'fixed';
-      textArea.style.left = '-999999px';
-      document.body.appendChild(textArea);
-      textArea.select();
-      try {
-        document.execCommand('copy');
-        setCopiedField(fieldName);
-        setTimeout(() => setCopiedField(null), 2000);
-      } catch (err) {
-        showApiError(ERROR_MESSAGES.COPY_ERROR);
-      }
-      document.body.removeChild(textArea);
-    }
+    await copyToClipboard(text, fieldName);
   };
 
   const formatarValor = (valor: number) => {

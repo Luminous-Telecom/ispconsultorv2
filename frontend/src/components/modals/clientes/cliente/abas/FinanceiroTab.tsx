@@ -3,7 +3,7 @@ import { CarneParcela } from 'types';
 import { TituloItem } from 'types/cliente';
 import { useI18n } from 'contexts/I18nContext';
 import { formatCurrency } from 'utils/formatters';
-import Table from 'components/tables/Table';
+import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import { FinanceiroTabProps } from '../types';
 import { TableColumn } from 'components/tables/types';
 import { useIsMobile } from 'hooks/useMediaQuery';
@@ -28,9 +28,8 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
 
   return (
     <>
-    <Table
+    <EmbeddedTablePanel
             key="cliente-financeiro-tab-table"
-            syncWithHeader={false}
             title={t('tabs.financial')}
             config={{
             columns: columns as TableColumn<CarneParcela>[],

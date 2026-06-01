@@ -1,12 +1,13 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSaasPortalPath } from 'hooks/useSaasPortalPath';
-import Table from 'components/tables/Table';
+import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import { TableConfig } from 'components/tables/types';
 import { Badge } from 'components/ui';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { useModalSelect } from 'hooks/useModalSelect';
 import DraggableModal from 'components/common/DraggableModal';
+import DetailFieldGrid, { DetailFieldItem } from 'components/common/DetailFieldGrid';
 import { defaultApiClient } from 'services/core';
 import { formatDateTime } from 'utils/formatters';
 import { useI18n } from 'contexts/I18nContext';
@@ -256,9 +257,56 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
     [config.remoteHostSearchLabel]
   );
 
+  const detailFields = useMemo((): DetailFieldItem[] => {
+    if (!selectedLog) return [];
+
+    const fields: DetailFieldItem[] = [
+      { label: 'Data', value: formatDateTime(selectedLog.created_at), colClassName: config.showTypeColumn ? 'col-md-6' : 'col-md-8' },
+    ];
+
+    if (config.showTypeColumn) {
+      fields.push({
+        label: 'Tipo',
+        value: TYPE_LABEL[selectedLog.type] ?? selectedLog.type,
+        colClassName: 'col-md-3',
+      });
+    }
+
+    fields.push({
+      label: 'Status',
+      value: (
+        <span className={selectedLog.status === 'failed' ? 'text-danger' : 'text-success'}>
+          {selectedLog.status === 'success' ? 'Sucesso' : 'Falha'}
+        </span>
+      ),
+      colClassName: config.showTypeColumn ? 'col-md-3' : 'col-md-4',
+    });
+
+    if (isSaasPortal) {
+      fields.push({
+        label: t('audit.tenants'),
+        value: selectedLog.empresa_saas ?? '—',
+        colClassName: 'col-12',
+      });
+    } else {
+      fields.push(
+        { label: 'CA', value: selectedLog.ca_nome ?? '—' },
+        { label: 'Cliente', value: selectedLog.cliente_nome ?? '—' }
+      );
+    }
+
+    fields.push({
+      label: config.remoteHostColumnLabel,
+      value: <span className="font-monospace">{selectedLog.remote_host ?? '—'}</span>,
+      colClassName: 'col-12',
+    });
+
+    return fields;
+  }, [config.remoteHostColumnLabel, config.showTypeColumn, isSaasPortal, selectedLog, t]);
+
   return (
     <>
-      <Table<RpkiSyncLogRow>
+      <EmbeddedTablePanel<RpkiSyncLogRow>
         title={config.tableTitle}
         config={{
           columns,
@@ -288,7 +336,6 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
           pagination,
         }}
         tableId={config.tableId}
-        syncWithHeader={false}
         onSelectionChange={(items) => handleSelectionChange(items as RpkiSyncLogRow[])}
         onRefresh={() => refetch()}
         onPageChange={tableFilters.setPage}
@@ -310,87 +357,16 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
           modalId={config.detailsModalId}
         >
           <div className="p-3">
-            <div className="row g-2">
-              <div className={config.showTypeColumn ? 'col-md-6' : 'col-md-8'}>
-                <label className="form-label small text-muted mb-1">Data</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm bg-secondary bg-opacity-10"
-                  value={formatDateTime(selectedLog.created_at)}
-                  readOnly
-                />
-              </div>
-              {config.showTypeColumn && (
-                <div className="col-md-3">
-                  <label className="form-label small text-muted mb-1">Tipo</label>
-                  <input
-                    type="text"
-                    className="form-control form-control-sm bg-secondary bg-opacity-10"
-                    value={TYPE_LABEL[selectedLog.type] ?? selectedLog.type}
-                    readOnly
-                  />
-                </div>
-              )}
-              <div className={config.showTypeColumn ? 'col-md-3' : 'col-md-4'}>
-                <label className="form-label small text-muted mb-1">Status</label>
-                <input
-                  type="text"
-                  className={`form-control form-control-sm bg-secondary bg-opacity-10 ${selectedLog.status === 'failed' ? 'text-danger' : 'text-success'}`}
-                  value={selectedLog.status === 'success' ? 'Sucesso' : 'Falha'}
-                  readOnly
-                />
-              </div>
-              {isSaasPortal ? (
-                <div className="col-12">
-                  <label className="form-label small text-muted mb-1">{t('audit.tenants')}</label>
-                  <input
-                    type="text"
-                    className="form-control form-control-sm bg-secondary bg-opacity-10"
-                    value={selectedLog.empresa_saas ?? '—'}
-                    readOnly
-                  />
-                </div>
-              ) : (
-                <>
-                  <div className="col-md-6">
-                    <label className="form-label small text-muted mb-1">CA</label>
-                    <input
-                      type="text"
-                      className="form-control form-control-sm bg-secondary bg-opacity-10"
-                      value={selectedLog.ca_nome ?? '—'}
-                      readOnly
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label small text-muted mb-1">Cliente</label>
-                    <input
-                      type="text"
-                      className="form-control form-control-sm bg-secondary bg-opacity-10"
-                      value={selectedLog.cliente_nome ?? '—'}
-                      readOnly
-                    />
-                  </div>
-                </>
-              )}
-              <div className="col-12">
-                <label className="form-label small text-muted mb-1">{config.remoteHostColumnLabel}</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm bg-secondary bg-opacity-10 font-monospace"
-                  value={selectedLog.remote_host ?? '—'}
-                  readOnly
-                />
-              </div>
-              <div className="col-12">
-                <label className="form-label small text-muted mb-1">Mensagem</label>
-                <textarea
-                  className={`form-control form-control-sm bg-secondary bg-opacity-10 small ${selectedLog.status === 'failed' ? 'text-danger' : ''}`}
-                  value={selectedLog.message ?? '—'}
-                  readOnly
-                  rows={Math.min(12, Math.max(3, (selectedLog.message ?? '').split('\n').length + 1))}
-                  style={{ resize: 'vertical', minHeight: '4rem' }}
-                />
-              </div>
+            <DetailFieldGrid fields={detailFields} />
+            <div className="mt-3">
+              <label className="form-label small text-muted mb-1">Mensagem</label>
+              <textarea
+                className={`form-control form-control-sm bg-secondary bg-opacity-10 small ${selectedLog.status === 'failed' ? 'text-danger' : ''}`}
+                value={selectedLog.message ?? '—'}
+                readOnly
+                rows={Math.min(12, Math.max(3, (selectedLog.message ?? '').split('\n').length + 1))}
+                style={{ resize: 'vertical', minHeight: '4rem' }}
+              />
             </div>
           </div>
         </DraggableModal>

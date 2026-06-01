@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
+import DetailFieldGrid from 'components/common/DetailFieldGrid';
 import Spinner from 'components/ui/Spinner';
 import { BlockdomiWhoisService, type WhoisResult } from 'services/blockdomiWhoisService';
 import { extractApiErrorMessageSync } from 'utils/apiErrorHelper';
@@ -177,35 +178,13 @@ const WhoisModal: React.FC<WhoisModalProps> = ({ show, onClose, ip }) => {
 
     return (
       <div className="p-3">
-        <div className="mb-3">
-          <label className="form-label small text-muted mb-1">IP</label>
-          <input
-            type="text"
-            className="form-control form-control-sm bg-secondary bg-opacity-10 font-monospace"
-            value={ip}
-            readOnly
-            autoComplete="off"
-          />
-        </div>
-
-        {infoItems.length > 0 && (
-          <div className="mb-3">
-            <div className="row g-2">
-              {infoItems.map(({ key, label, value }) => (
-                <div key={key} className="col-md-6">
-                  <label className="form-label small text-muted mb-1">{label}</label>
-                  <input
-                    type="text"
-                    className="form-control form-control-sm bg-secondary bg-opacity-10"
-                    value={value}
-                    readOnly
-                    autoComplete="off"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <DetailFieldGrid
+          fields={[
+            { label: 'IP', value: <span className="font-monospace">{ip}</span>, colClassName: 'col-12' },
+            ...infoItems.map(({ key, label, value }) => ({ label, value, key })),
+          ]}
+          className="mb-3"
+        />
 
         {blocos.length > 0 && (
           <div className="mb-3">
@@ -224,20 +203,9 @@ const WhoisModal: React.FC<WhoisModalProps> = ({ show, onClose, ip }) => {
         {contatoItems.length > 0 && (
           <div>
             <h6 className="small text-muted mb-2">{t('blockdomi.whoisContato')}</h6>
-            <div className="row g-2">
-              {contatoItems.map(({ key, label, value }) => (
-                <div key={key} className="col-md-6">
-                  <label className="form-label small text-muted mb-1">{label}</label>
-                  <input
-                    type="text"
-                    className="form-control form-control-sm bg-secondary bg-opacity-10"
-                    value={value}
-                    readOnly
-                    autoComplete="off"
-                  />
-                </div>
-              ))}
-            </div>
+            <DetailFieldGrid
+              fields={contatoItems.map(({ key, label, value }) => ({ label, value, key }))}
+            />
           </div>
         )}
       </div>

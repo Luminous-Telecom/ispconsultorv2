@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import Table from 'components/tables/Table';
+import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import type { AuditoriaLog } from 'services/auditoriaService';
 import type { UseTableFiltersReturn } from 'hooks/useTableFilters';
 import type { SaasEmpresaTabId, SaasEmpresaTranslateFn } from '../types';
@@ -31,10 +31,9 @@ const LogsSection: React.FC<LogsSectionProps> = ({
   const searchFields = useMemo(() => buildLogsSearchFields(t), [t]);
 
   return (
-    <Table
+    <EmbeddedTablePanel
       key={`saas-logs-${empresaId}`}
       title="Logs"
-      syncWithHeader={false}
       config={{
         columns,
         data: (logsData?.data as AuditoriaLog[]) ?? [],

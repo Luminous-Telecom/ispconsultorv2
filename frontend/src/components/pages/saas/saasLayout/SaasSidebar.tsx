@@ -1,6 +1,6 @@
 import React from 'react';
-import SidebarAccordionFolder from 'components/layout/layout/SidebarAccordionFolder';
-import type { SidebarFolderConfig, SidebarMenuItem, TranslateFn } from 'components/layout/layout/types';
+import AppSidebar from 'components/layout/appLayout/AppSidebar';
+import type { SidebarFolderConfig, TranslateFn } from 'components/layout/layout/types';
 import SaasSidebarHeader from './SaasSidebarHeader';
 
 interface SaasSidebarProps {
@@ -19,35 +19,15 @@ const SaasSidebar: React.FC<SaasSidebarProps> = ({
   folders,
   t,
   onCloseSidebar,
-}) => {
-  const handleItemClick = (item: SidebarMenuItem) => {
-    item.onClick();
-    onCloseSidebar();
-  };
-
-  return (
-    <aside ref={sidebarRef} className={`d-flex flex-column flex-shrink-0 sidebar ${sidebarOpen ? 'open' : ''}`}>
-      <SaasSidebarHeader isMobile={isMobile} t={t} onCloseSidebar={onCloseSidebar} />
-
-      <div className="sidebar-nav-scrollable flex-grow-1">
-        <nav className="sidebar-nav nav nav-pills flex-column mb-auto px-2">
-          {folders.map((folder) => (
-            <SidebarAccordionFolder
-              key={folder.accordionId}
-              accordionId={folder.accordionId}
-              collapseId={folder.collapseId}
-              headingId={folder.headingId}
-              title={folder.title}
-              items={folder.items}
-              nestedFolders={folder.nestedFolders}
-              t={t}
-              onItemClick={handleItemClick}
-            />
-          ))}
-        </nav>
-      </div>
-    </aside>
-  );
-};
+}) => (
+  <AppSidebar
+    sidebarRef={sidebarRef}
+    sidebarOpen={sidebarOpen}
+    folders={folders}
+    t={t}
+    onCloseSidebar={onCloseSidebar}
+    header={<SaasSidebarHeader isMobile={isMobile} t={t} onCloseSidebar={onCloseSidebar} />}
+  />
+);
 
 export default SaasSidebar;

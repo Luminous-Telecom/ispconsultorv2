@@ -23,7 +23,7 @@ import { normalizePagination } from './tableUtils';
 import { computeTablePaginationValues } from './tablePaginationUtils';
 import { useTableHeaderSync } from './useTableHeaderSync';
 
-interface TableProps<T = Record<string, unknown>> {
+export interface TableProps<T = Record<string, unknown>> {
   config: TableConfig<T>;
   onActionClick?: (action: TableAction<T>, item: T, index: number) => void;
   onBulkActionClick?: (action: BulkAction<T>, selectedItems: T[]) => void;

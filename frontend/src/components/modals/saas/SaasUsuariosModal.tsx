@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEntityListModal } from 'hooks/useEntityListModal';
-import { useConfirmModal } from 'hooks/useConfirmModal';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { formatDateTime } from 'utils/formatters';
@@ -9,7 +8,6 @@ import { useBulkBtn } from 'components/ui';
 import ListModal from 'components/common/ListModal';
 import { ListModalConfig } from 'types/modal';
 import ImprimirModal from 'components/common/ImprimirModal';
-import ConfirmModal from 'components/modals/ConfirmModal';
 import {
   formatSaasUsuarioNivel,
   getSaasUsuarioNivelBadgeColor,
@@ -27,7 +25,6 @@ const SaasUsuariosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false
   const queryClient = useQueryClient();
   const { showApiError } = useApiError();
   const bulkBtn = useBulkBtn();
-  const { confirm, modalProps: confirmProps } = useConfirmModal();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedUsuarioId, setSelectedUsuarioId] = useState<number | null>(null);
@@ -69,11 +66,13 @@ const SaasUsuariosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false
     async (selectedItems?: SaasUsuarioSuper[]) => {
       const item = list.resolveItem(selectedItems);
       if (!item) return;
-      const confirmed = await confirm({
-        message: `Remover o usuário "${item.nome}"? Esta ação não pode ser desfeita.`,
-        variant: 'danger',
-      });
-      if (!confirmed) return;
+      if (
+        !window.confirm(
+          `Remover o usuário "${item.nome}"? Esta ação não pode ser desfeita.`
+        )
+      ) {
+        return;
+      }
       try {
         await saasUsuariosService.delete(item.id);
         queryClient.invalidateQueries({ queryKey: ['saas-usuarios'] });
@@ -82,7 +81,7 @@ const SaasUsuariosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false
         showApiError(err, CONTEXT_ERROR_MESSAGES.SAAS_USUARIO_DELETE_ERROR);
       }
     },
-    [list, confirm, queryClient, refetch, showApiError]
+    [list, queryClient, refetch, showApiError]
   );
 
   const columns = useMemo(
@@ -232,7 +231,6 @@ const SaasUsuariosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false
         title="Auditoria — Usuário SaaS"
         modalId="auditoria-saas-usuario-modal"
       />
-      {confirmProps && <ConfirmModal {...confirmProps} />}
     </>
   );
 

@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useEffect, useRef } from 'react';
 import { Titulo } from 'types/entities';
-import Table from 'components/tables/Table';
+import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import { BulkAction } from '../types';
 import { TableColumn } from 'components/tables/types';
 import { useIsMobile } from 'hooks/useMediaQuery';
@@ -131,9 +131,8 @@ const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
 
   return (
     <>
-    <Table
+    <EmbeddedTablePanel
             key={`financeiro-avulso-tab-table-${showCancelados}`}
-            syncWithHeader={false}
             title={t('tabs.financialMisc')}
             config={{
               columns: columns,

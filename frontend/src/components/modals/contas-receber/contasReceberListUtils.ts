@@ -1,5 +1,6 @@
-import React from 'react';
+import { renderStatusBadge } from 'components/ui/StatusBadge';
 import { SaasTitulo } from 'services/saas/saasCrudService';
+import { getContasReceberStatusBadgeConfig } from 'utils/tableStatusBadges';
 import { ContasReceberTranslateFn } from './contasReceberListTypes';
 
 export const canGerarBoletoSaas = (t: SaasTitulo) =>
@@ -12,17 +13,5 @@ export const formatContasReceberCurrency = (value: number | string | null | unde
 };
 
 export const createGetStatusBadge = (t: ContasReceberTranslateFn) => {
-  return (status: string) => {
-    const statusConfig: Record<string, { label: string; className: string }> = {
-      pendente: { label: t('status.pending'), className: 'bg-warning' },
-      pago: { label: t('status.paid'), className: 'bg-success' },
-      vencido: { label: t('status.overdue'), className: 'bg-danger' },
-      cancelado: { label: t('status.cancelled'), className: 'bg-secondary' },
-      parcial: { label: t('status.partial'), className: 'bg-info' },
-      pago_atraso: { label: t('status.paidLate'), className: 'bg-primary' },
-    };
-
-    const config = statusConfig[status] || { label: status, className: 'bg-secondary' };
-    return React.createElement('span', { className: `badge ${config.className}` }, config.label);
-  };
+  return (status: string) => renderStatusBadge(getContasReceberStatusBadgeConfig(status, t));
 };

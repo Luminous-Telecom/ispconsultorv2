@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import Table from 'components/tables/Table';
+import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import type { BulkAction } from 'components/tables/types';
 import { formatCurrency } from 'utils/formatters';
 import type { SaasTitulo } from 'services/saas/saasCrudService';
@@ -45,10 +45,9 @@ const FinanceiroSection: React.FC<FinanceiroSectionProps> = ({
 
   return (
     <>
-      <Table
+      <EmbeddedTablePanel
         key={`saas-titulos-${empresaId}`}
         title={t('tabs.financial')}
-        syncWithHeader={false}
         config={{
           columns,
           data: titulos,

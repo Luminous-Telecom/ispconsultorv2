@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useEffect } from 'react';
 import { Titulo } from 'types/entities';
-import Table from 'components/tables/Table';
+import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import { BulkAction } from '../types';
 import { TableColumn } from 'components/tables/types';
 import { SortDirection } from 'components/tables/types';
@@ -123,9 +123,8 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
 
   return (
     <>
-    <Table
+    <EmbeddedTablePanel
             key="financeiro-tab-table"
-            syncWithHeader={false}
             title={t('tabs.financial')}
             config={{
               columns: columns,

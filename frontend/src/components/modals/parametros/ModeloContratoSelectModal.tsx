@@ -5,7 +5,7 @@ import { useTableFilters } from 'hooks/useTableFilters';
 import { formatDate } from 'utils/formatters';
 import DocumentoSistemaService, { DocumentoSistema } from 'services/documentoSistemaService';
 import DraggableModal from 'components/common/DraggableModal';
-import Table from 'components/tables/Table';
+import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import { TableConfig } from 'components/tables/types';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -136,8 +136,7 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
       modalId="modelo-contrato-select-modal"
       className="no-padding"
     >
-      <Table
-            syncWithHeader={false}
+      <EmbeddedTablePanel
             title={defaultTitle}
             config={{
               columns: tableColumns,

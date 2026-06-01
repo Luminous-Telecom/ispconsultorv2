@@ -106,7 +106,6 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
         dataVencimentoFim={dataVencimentoFim}
         onDataVencimentoInicioChange={handleDataVencimentoInicioChange}
         onDataVencimentoFimChange={handleDataVencimentoFimChange}
-        t={t}
       />
     ),
     [

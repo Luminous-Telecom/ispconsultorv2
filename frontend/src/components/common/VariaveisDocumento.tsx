@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Spinner } from 'components/ui';
 import SearchBar from 'components/ui/SearchBar';
 import { useI18n } from 'contexts/I18nContext';
+import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
 
 interface Variavel {
   variavel: string;
@@ -17,6 +18,7 @@ interface VariaveisDocumentoProps {
 
 const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariavel }) => {
   const { t } = useI18n();
+  const { copy: copyToClipboard } = useCopyToClipboard();
   const [grupoExpandido, setGrupoExpandido] = useState<string | null>('cliente');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -38,8 +40,7 @@ const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariav
     if (onInserirVariavel) {
       onInserirVariavel(variavel);
     } else {
-      // Copiar para clipboard
-      navigator.clipboard.writeText(variavel);
+      void copyToClipboard(variavel);
     }
   };
 

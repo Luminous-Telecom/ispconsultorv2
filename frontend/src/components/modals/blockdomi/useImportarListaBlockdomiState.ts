@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef, type MutableRefObject } from 'react';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import type { ClassifiedList } from './importarListaBlockdomiTypes';
-import type { BlockdomiImportTranslateFn } from './importarListaBlockdomiTypes';
+import type { BlockdomiImportTranslateFn, PendingPdfFiles } from './importarListaBlockdomiTypes';
 import {
   buildTextFromColunas,
   classifyLine,
@@ -9,7 +9,7 @@ import {
   emptyPendingPdfFiles,
   parseListItems,
 } from './importarListaBlockdomiUtils';
-import type { PendingPdfFiles } from './importarListaBlockdomiTypes';
+import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
 
 interface UseImportarListaBlockdomiStateParams {
   show: boolean;
@@ -28,6 +28,7 @@ export function useImportarListaBlockdomiState({
   success,
   t,
 }: UseImportarListaBlockdomiStateParams) {
+  const { copy: copyToClipboard, readText } = useCopyToClipboard();
   const [rawText, setRawText] = useState('');
   const [nomeOficio, setNomeOficio] = useState('');
   const [dataInicioBloqueio, setDataInicioBloqueio] = useState('');
@@ -117,14 +118,14 @@ export function useImportarListaBlockdomiState({
   const showFiltrosExtract = rawText.trim().length > 0;
 
   const handlePaste = useCallback(async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      setRawText((prev) => (prev ? `${prev}\n${text}` : text));
-      setClassifiedRef.current(null);
-    } catch {
+    const text = await readText();
+    if (text == null) {
       showApiError(CONTEXT_ERROR_MESSAGES.BLOCKDOMI_COPY_ERROR);
+      return;
     }
-  }, [showApiError, setClassifiedRef]);
+    setRawText((prev) => (prev ? `${prev}\n${text}` : text));
+    setClassifiedRef.current(null);
+  }, [readText, setClassifiedRef, showApiError]);
 
   const handleClear = useCallback(() => {
     setRawText('');
@@ -132,15 +133,17 @@ export function useImportarListaBlockdomiState({
   }, [setClassifiedRef]);
 
   const handleCopy = useCallback(
-    (items: string[]) => {
+    async (items: string[]) => {
       if (items.length === 0) return;
       const texto = items.join('\n');
-      navigator.clipboard.writeText(texto).then(
-        () => success(t('blockdomi.copiedToClipboard')),
-        () => showApiError(CONTEXT_ERROR_MESSAGES.BLOCKDOMI_COPY_ERROR)
-      );
+      const ok = await copyToClipboard(texto);
+      if (ok) {
+        success(t('blockdomi.copiedToClipboard'));
+      } else {
+        showApiError(CONTEXT_ERROR_MESSAGES.BLOCKDOMI_COPY_ERROR);
+      }
     },
-    [success, showApiError, t]
+    [copyToClipboard, success, showApiError, t]
   );
 
   const handleColunaToggle = useCallback((header: string) => {
