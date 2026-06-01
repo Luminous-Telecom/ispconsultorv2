@@ -1,8 +1,8 @@
 import React from 'react';
 import SearchBar, { type SearchFieldOption } from '../../ui/SearchBar';
+import type { TranslateFn } from './types';
 
 export type { SearchFieldOption };
-import type { TranslateFn } from './types';
 
 interface TableHeaderSearchProps {
   id: string;
