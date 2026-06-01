@@ -27,7 +27,6 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({ show, onClose, skipWrappe
   const [selectedUsuarioId, setSelectedUsuarioId] = useState<number | null>(null);
 
   const list = useEntityListModal<Usuario>({ onClose });
-  const { t } = list;
 
   const { data: usuariosData, isLoading, refetch } = useUsuarios({
     page: list.tableFilters.page,
@@ -64,20 +63,20 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({ show, onClose, skipWrappe
     (): ListModalConfig<Usuario>['columns'] => [
       {
         key: 'id',
-        label: t('table.id'),
+        label: list.t('table.id'),
         sortable: true,
         width: '42px',
         render: (item) => <span>{item.id}</span>,
       },
       {
         key: 'nome',
-        label: t('form.name'),
+        label: list.t('form.name'),
         sortable: true,
         render: (item) => item.nome,
       },
       {
         key: 'email',
-        label: t('form.email'),
+        label: list.t('form.email'),
         sortable: true,
         render: (item) => <span className="text-nowrap">{item.email}</span>,
       },
@@ -89,9 +88,9 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({ show, onClose, skipWrappe
       },
       {
         key: 'ativo',
-        label: t('table.status'),
+        label: list.t('table.status'),
         sortable: true,
-        render: (item) => renderStatusBadge(getAtivoBadgeConfig(item.ativo, t)),
+        render: (item) => renderStatusBadge(getAtivoBadgeConfig(item.ativo, list.t)),
       },
       {
         key: 'webhook_secret',
@@ -105,7 +104,7 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({ show, onClose, skipWrappe
       },
       {
         key: 'created_at',
-        label: t('table.createdAt'),
+        label: list.t('table.createdAt'),
         sortable: true,
         render: (item) => {
           const row = item as Usuario & { created_at_formatada?: string | null; created_at?: string };
@@ -114,18 +113,18 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({ show, onClose, skipWrappe
         },
       },
     ],
-    [t]
+    [list]
   );
 
   const searchFields = useMemo(
     () => [
-      { key: 'id', label: t('table.id') },
-      { key: 'nome', label: t('form.name') },
-      { key: 'email', label: t('form.email') },
+      { key: 'id', label: list.t('table.id') },
+      { key: 'nome', label: list.t('form.name') },
+      { key: 'email', label: list.t('form.email') },
       { key: 'role', label: 'Perfil' },
-      { key: 'ativo', label: t('table.status') },
+      { key: 'ativo', label: list.t('table.status') },
     ],
-    [t]
+    [list]
   );
 
   const bulkActions = useMemo(
