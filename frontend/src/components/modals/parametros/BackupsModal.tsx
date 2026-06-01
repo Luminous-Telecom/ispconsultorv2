@@ -256,6 +256,13 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
     to: sortedData.length
   }), [sortedData.length]);
 
+  const isTableBusy =
+    isLoading ||
+    manualMutation.isPending ||
+    !!actionLoading.restore ||
+    !!actionLoading.upload ||
+    !!actionLoading.delete;
+
   const modalContent = (
     <>
       <input
@@ -271,7 +278,7 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
           config={{
             columns: tableColumns,
             data: sortedData,
-            loading: isLoading,
+            loading: isTableBusy,
             sortable: true,
             sortColumn,
             sortDirection,

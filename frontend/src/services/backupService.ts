@@ -63,7 +63,7 @@ export class BackupService {
     const response = await apiService.post<{ success: boolean; message?: string }>(
       `/saas/backups/${encodeURIComponent(nome)}/restore`,
       undefined,
-      { timeout: BACKUP_LONG_OPERATION_TIMEOUT_MS }
+      { timeout: BACKUP_LONG_OPERATION_TIMEOUT_MS, forceLoading: true }
     );
     const data = unwrapResponse<{ success: boolean; message?: string }>(response);
 
@@ -77,7 +77,7 @@ export class BackupService {
     const response = await apiService.post<{ success: boolean; message?: string }>(
       '/saas/backups/manual',
       { tipo },
-      { timeout: BACKUP_LONG_OPERATION_TIMEOUT_MS }
+      { timeout: BACKUP_LONG_OPERATION_TIMEOUT_MS, forceLoading: true }
     );
     const data = unwrapResponse<{ success: boolean; message?: string }>(response);
 
@@ -93,7 +93,7 @@ export class BackupService {
     const response = await apiService.post<{ success: boolean; message?: string; data?: { nome: string } }>(
       '/saas/backups/upload',
       formData,
-      { timeout: BACKUP_LONG_OPERATION_TIMEOUT_MS }
+      { timeout: BACKUP_LONG_OPERATION_TIMEOUT_MS, forceLoading: true }
     );
     const data = unwrapResponse<{ success: boolean; message?: string }>(response);
     return {

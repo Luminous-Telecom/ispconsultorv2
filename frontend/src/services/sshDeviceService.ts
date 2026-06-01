@@ -82,7 +82,11 @@ export class SshDeviceService {
   }
 
   static async queueManualBackup(id: string): Promise<{ message: string }> {
-    const response = await defaultApiClient.post<{ message: string }>(`/ssh-manager/devices/${id}/backup`, {}, { timeout: 120000 });
+    const response = await defaultApiClient.post<{ message: string }>(
+      `/ssh-manager/devices/${id}/backup`,
+      {},
+      { timeout: 120000, forceLoading: true }
+    );
     if (response.success === false) {
       throw new Error(resolveServiceErrorMessage(response.message || response.error, CONTEXT_ERROR_MESSAGES.SSH_BACKUP_QUEUE_ERROR));
     }

@@ -11,10 +11,30 @@ export interface ApiClientConfig {
   withCredentials?: boolean;
 }
 
+export interface ApiRequestConfig extends AxiosRequestConfig {
+  /** Força barra de loading mesmo em rotas SaaS/públicas (operações longas). */
+  forceLoading?: boolean;
+}
+
 // Interface para estender AxiosRequestConfig com propriedade customizada de loading
-interface ExtendedAxiosRequestConfig extends AxiosRequestConfig {
+interface ExtendedAxiosRequestConfig extends ApiRequestConfig {
   __shouldShowLoading?: boolean;
 }
+
+const AUTH_HEADER_SKIP_ROUTES = [
+  '/api/dados-empresa',
+  '/api/dados-empresa/logo',
+  '/api/auth/login',
+  '/api/health',
+  '/api/pagamento/',
+  '/central-assinante/',
+  '/api/saas/',
+  '/saas/',
+];
+
+const LOADING_SKIP_ROUTES = [
+  ...AUTH_HEADER_SKIP_ROUTES,
+];
 
 export class ApiClient {
   private api: AxiosInstance;
@@ -83,45 +103,36 @@ export class ApiClient {
     }
   }
 
+  private static shouldShowLoading(url: string, forceLoading?: boolean): boolean {
+    if (forceLoading) {
+      return true;
+    }
+    return !LOADING_SKIP_ROUTES.some((route) => url.includes(route.toLowerCase()));
+  }
+
   private setupInterceptors(): void {
     this.api.interceptors.request.use(
       (config) => {
-        // Lista de rotas públicas que não precisam de autenticação
-        const publicRoutes = [
-          '/api/dados-empresa',
-          '/api/dados-empresa/logo',
-          '/api/auth/login',
-          '/api/health',
-          '/api/pagamento/',
-          '/central-assinante/',
-          // Rotas SaaS — autenticadas via cookie saas_auth_token (separado do ERP)
-          '/api/saas/',
-          '/saas/',
-        ];
-        
-        // Verificar se a URL é uma rota pública
         const url = (config.url || '').toLowerCase();
-        const isPublicRoute = publicRoutes.some(route => url.includes(route.toLowerCase()));
-        
-        // A autenticação é feita via cookie HttpOnly (enviado automaticamente por withCredentials: true).
-        // Não injetamos Authorization header a partir de storage — o cookie é suficiente.
-        // A Central do Assinante pode passar seu próprio token via header se necessário.
-        if (isPublicRoute) {
+        const extendedConfig = config as ExtendedAxiosRequestConfig;
+        const skipAuthHeader = AUTH_HEADER_SKIP_ROUTES.some((route) => url.includes(route.toLowerCase()));
+
+        // Cookie HttpOnly (ERP ou SaaS) — não enviar Authorization herdado do storage.
+        if (skipAuthHeader) {
           delete config.headers?.Authorization;
         }
-        
+
         // Se for FormData, remover Content-Type para axios definir automaticamente com boundary
         if (config.data instanceof FormData) {
           delete config.headers['Content-Type'];
         }
-        
-        const extendedConfig = config as ExtendedAxiosRequestConfig;
-        extendedConfig.__shouldShowLoading = !isPublicRoute;
-        
-        if (!isPublicRoute) {
+
+        extendedConfig.__shouldShowLoading = ApiClient.shouldShowLoading(url, extendedConfig.forceLoading);
+
+        if (extendedConfig.__shouldShowLoading) {
           ApiClient.incrementActiveRequests();
         }
-        
+
         return config;
       },
       (error) => {
@@ -159,7 +170,7 @@ export class ApiClient {
     );
   }
 
-  async get<T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+  async get<T>(url: string, config?: ApiRequestConfig): Promise<ApiResponse<T>> {
     try {
       const response = await this.api.get<T>(url, config);
       return ResponseTransformer.normalize<T>(response);
@@ -168,7 +179,7 @@ export class ApiClient {
     }
   }
 
-  async post<T>(url: string, data?: AxiosRequestConfig['data'], config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+  async post<T>(url: string, data?: ApiRequestConfig['data'], config?: ApiRequestConfig): Promise<ApiResponse<T>> {
     try {
       const response = await this.api.post<T>(url, data, config);
       return ResponseTransformer.normalize<T>(response);
@@ -177,7 +188,7 @@ export class ApiClient {
     }
   }
 
-  async put<T>(url: string, data?: AxiosRequestConfig['data'], config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+  async put<T>(url: string, data?: ApiRequestConfig['data'], config?: ApiRequestConfig): Promise<ApiResponse<T>> {
     try {
       const response = await this.api.put<T>(url, data, config);
       return ResponseTransformer.normalize<T>(response);
@@ -186,7 +197,7 @@ export class ApiClient {
     }
   }
 
-  async patch<T>(url: string, data?: AxiosRequestConfig['data'], config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+  async patch<T>(url: string, data?: ApiRequestConfig['data'], config?: ApiRequestConfig): Promise<ApiResponse<T>> {
     try {
       const response = await this.api.patch<T>(url, data, config);
       return ResponseTransformer.normalize<T>(response);
@@ -195,7 +206,7 @@ export class ApiClient {
     }
   }
 
-  async delete<T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+  async delete<T>(url: string, config?: ApiRequestConfig): Promise<ApiResponse<T>> {
     try {
       const response = await this.api.delete<T>(url, config);
       return ResponseTransformer.normalize<T>(response);
