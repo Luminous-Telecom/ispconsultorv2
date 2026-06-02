@@ -283,6 +283,16 @@ const SingleModalWrapper: React.FC = () => {
     skipWrapper: true,
   };
 
+  // O ClienteModal já encapsula seu próprio DraggableModal (header/abas/actions),
+  // então aqui não podemos criar um segundo wrapper externo.
+  if (isClienteModal) {
+    return (
+      <Suspense fallback={<Loading message={loadingMessage} />}>
+        <ModalComponent {...modalProps} />
+      </Suspense>
+    );
+  }
+
   return (
     <DraggableModal
       show={true}
