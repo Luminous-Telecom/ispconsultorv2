@@ -33,7 +33,6 @@ export function useColumnResizing<T = Record<string, unknown>>({
     startWidth: number;
     pendingWidth: number;
     snapshot: Record<string, number> | null;
-    maxWidth: number;
   } | null>(null);
 
   useEffect(() => {
@@ -70,7 +69,6 @@ export function useColumnResizing<T = Record<string, unknown>>({
       startWidth,
       pendingWidth: startWidth,
       snapshot: snapshot ?? null,
-      maxWidth: Math.max(maxColumnWidth, startWidth),
     };
     setIsResizing(true);
     setResizeGuideX(startEdgeX);
@@ -81,7 +79,7 @@ export function useColumnResizing<T = Record<string, unknown>>({
 
       const diff = e.clientX - active.startX;
       const colMin = getMinWidthForColumn ? getMinWidthForColumn(active.columnKey) : minColumnWidth;
-      active.pendingWidth = Math.max(colMin, Math.min(active.maxWidth, active.startWidth + diff));
+      active.pendingWidth = Math.max(colMin, Math.min(maxColumnWidth, active.startWidth + diff));
       setResizeGuideX(e.clientX);
     };
 
@@ -100,14 +98,12 @@ export function useColumnResizing<T = Record<string, unknown>>({
       setResizeGuideX(null);
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
+      document.body.classList.remove('resizing-columns');
     };
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
+    document.body.classList.add('resizing-columns');
   }, [minColumnWidth, maxColumnWidth, getMinWidthForColumn]);
 
   return {
