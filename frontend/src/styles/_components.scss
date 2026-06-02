@@ -4629,8 +4629,29 @@ textarea:focus {
   margin-bottom: 0.25rem;
 }
 
-.form-field .form-text {
-  font-size: 0.875rem;
+/* Avisos auxiliares abaixo de campos (ex.: "não pode ser alterado") */
+.form-hint,
+.form-field .form-text:not(.text-danger):not(.text-success),
+.form-control ~ small.text-muted,
+.form-control-sm ~ small.text-muted,
+.form-select ~ small.text-muted,
+textarea.form-control ~ small.text-muted,
+.form-field ~ small.text-muted,
+.form-text.text-muted,
+small.form-text.text-muted,
+form small.text-muted.d-block,
+form p.text-muted.small {
+  font-size: 0.65rem;
+  line-height: 1.25;
+  display: block;
+  margin-top: 0.125rem;
+}
+
+.form-hint.text-danger,
+.form-field .form-text.text-danger {
+  font-size: 0.7rem;
+  line-height: 1.25;
+  margin-top: 0.125rem;
 }
 
 /* Reduzir espaçamento em modais */

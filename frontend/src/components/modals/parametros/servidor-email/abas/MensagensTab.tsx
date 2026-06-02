@@ -51,7 +51,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
               <div className="d-flex justify-content-between align-items-center mb-1">
                 <span id="mensagem-manual-label" className="form-label small mb-0">
                   {t('settings.messages.manualLabel')} <span className="text-danger">*</span>
-                  <small className="text-muted d-block mt-1">
+                  <small className="text-muted form-hint d-block mt-1">
                     {t('settings.messages.manualHelper')}
                   </small>
                 </span>

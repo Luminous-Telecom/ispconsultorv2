@@ -139,7 +139,7 @@ function AgentModalConfigTab({
           <div className="d-flex align-items-center justify-content-between">
             <div>
               <div className="small fw-semibold">Token atual</div>
-              <div className="text-muted small">{agentData?.token_hint ?? '(gerado na criação)'}</div>
+              <div className="text-muted form-hint small">{agentData?.token_hint ?? '(gerado na criação)'}</div>
             </div>
             <GerarTokenButton
               type="button"

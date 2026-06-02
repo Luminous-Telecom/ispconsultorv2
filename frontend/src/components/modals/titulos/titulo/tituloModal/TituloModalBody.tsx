@@ -96,7 +96,7 @@ const TituloModalBody: React.FC<TituloModalBodyProps> = ({
                 readOnly
                 style={{ cursor: 'not-allowed' }}
               />
-              <small className="text-muted">{labels.clientCannotBeChanged}</small>
+              <small className="text-muted form-hint">{labels.clientCannotBeChanged}</small>
             </div>
             <div>
               <label className="form-label">{labels.plan}</label>
@@ -107,7 +107,7 @@ const TituloModalBody: React.FC<TituloModalBodyProps> = ({
                 readOnly
                 style={{ cursor: 'not-allowed' }}
               />
-              <small className="text-muted">{labels.planoCannotBeChanged}</small>
+              <small className="text-muted form-hint">{labels.planoCannotBeChanged}</small>
             </div>
           </>
         )}
@@ -142,7 +142,7 @@ const TituloModalBody: React.FC<TituloModalBodyProps> = ({
                   readOnly
                   style={{ cursor: 'not-allowed' }}
                 />
-                <small className="text-muted">{labels.valorCannotBeChanged}</small>
+                <small className="text-muted form-hint">{labels.valorCannotBeChanged}</small>
               </>
             ) : (
               <FormField
@@ -195,7 +195,7 @@ const TituloModalBody: React.FC<TituloModalBodyProps> = ({
           readOnly={tituloRegistradoNoBanco}
         />
         {tituloRegistradoNoBanco && (
-          <small className="text-muted">{labels.dataVencimentoCannotBeChanged}</small>
+          <small className="text-muted form-hint">{labels.dataVencimentoCannotBeChanged}</small>
         )}
         {!isEditMode && !isAvulso && (
           <FormField

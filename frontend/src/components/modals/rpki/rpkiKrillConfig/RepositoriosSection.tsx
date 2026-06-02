@@ -31,7 +31,7 @@ const RepositoriosSection: React.FC<RepositoriosSectionProps> = ({
   <div ref={cardRef} className="card mb-3">
     <div className="card-header">Repositório (RFC 8183)</div>
     <div className="card-body">
-      <p className="text-muted small mb-2">
+      <p className="text-muted form-hint small mb-2">
         Gere o <code>publisher_request</code> (XML RFC 8183) e envie no fluxo do repositório (ex.: Registro.br). O{' '}
         <code>publisher_bpki_ta</code> deve ser o mesmo certificado BPKI da sua <strong>child_request</strong> já aceita
         pela CA-pai. O <code>publisher_handle</code> é normalizado para o padrão do RFC (apenas letras, dígitos,{' '}

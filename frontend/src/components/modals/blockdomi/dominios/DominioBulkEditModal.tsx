@@ -103,7 +103,7 @@ const DominioBulkEditModal: React.FC<DominioBulkEditModalProps> = ({
       }
     >
       <div style={{ padding: '16px' }}>
-        <p className="text-muted small mb-3">
+        <p className="text-muted form-hint small mb-3">
           {t('blockdomi.bulkEditIntro').replace('{count}', String(count))}
         </p>
         <form onSubmit={handleSubmit}>

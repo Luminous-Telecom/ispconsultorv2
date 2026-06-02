@@ -150,7 +150,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                             <i className="bi bi-send me-2"></i>
                             {t('settings.messages.manualLabel')}
                           </label>
-                          <small className="text-muted d-block">{t('settings.messages.manualHelper')}</small>
+                          <small className="text-muted form-hint d-block">{t('settings.messages.manualHelper')}</small>
                         </div>
                         <FormField
                           name="mensagemManual"
@@ -174,7 +174,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                           <i className="bi bi-chat-left-text me-2"></i>
                           {t('settings.messages.interaction1')}
                         </label>
-                        <small className="text-muted d-block">{t('settings.messages.interaction1Helper')}</small>
+                        <small className="text-muted form-hint d-block">{t('settings.messages.interaction1Helper')}</small>
                       </div>
                       <FormField
                         name="interacao1"
@@ -196,7 +196,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                           <i className="bi bi-chat-left-text me-2"></i>
                           {t('settings.messages.interaction2')}
                         </label>
-                        <small className="text-muted d-block">{t('settings.messages.interaction2Helper')}</small>
+                        <small className="text-muted form-hint d-block">{t('settings.messages.interaction2Helper')}</small>
                       </div>
                       <FormField
                         name="interacao2"
@@ -218,7 +218,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                           <i className="bi bi-chat-left-text me-2"></i>
                           {t('settings.messages.interaction3')}
                         </label>
-                        <small className="text-muted d-block">{t('settings.messages.interaction3Helper')}</small>
+                        <small className="text-muted form-hint d-block">{t('settings.messages.interaction3Helper')}</small>
                       </div>
                       <FormField
                         name="interacao3"
@@ -243,7 +243,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                           <i className="bi bi-code-square me-2"></i>
                           {t('settings.messages.variablesTitle')}
                         </h6>
-                        <small className="text-muted d-block mt-1">
+                        <small className="text-muted form-hint d-block mt-1">
                           {t('settings.messages.variablesHelper')}
                         </small>
                       </div>

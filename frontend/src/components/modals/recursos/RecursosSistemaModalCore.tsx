@@ -347,7 +347,7 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
                     disabled={updateMutation.isPending}
                     style={{ maxWidth: '140px', minWidth: '80px' }}
                   />
-                  <small className="text-muted d-block mt-1">0 ou vazio = desabilitado</small>
+                  <small className="text-muted form-hint d-block mt-1">0 ou vazio = desabilitado</small>
                 </div>
                 <div className="mb-3">
                   <label htmlFor="saas_dias_desbloqueio_manual" className="form-label small mb-1">
@@ -377,7 +377,7 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
                     disabled={updateMutation.isPending}
                     style={{ maxWidth: '140px', minWidth: '80px' }}
                   />
-                  <small className="text-muted d-block mt-1">0 ou vazio = desabilitado</small>
+                  <small className="text-muted form-hint d-block mt-1">0 ou vazio = desabilitado</small>
                 </div>
               </div>
             </div>

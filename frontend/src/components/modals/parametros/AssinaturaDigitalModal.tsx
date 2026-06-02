@@ -298,7 +298,7 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
                 </Button>
               </div>
               {formData.apiProvider === 'assinafy' && (
-                <small className="form-text text-muted">
+                <small className="form-text form-hint text-muted">
                   <a href="https://assinafy.com.br" target="_blank" rel="noopener noreferrer">
                     assinafy.com.br
                   </a>

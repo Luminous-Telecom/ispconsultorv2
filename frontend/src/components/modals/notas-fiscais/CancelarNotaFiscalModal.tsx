@@ -185,7 +185,7 @@ const CancelarNotaFiscalModal: React.FC<CancelarNotaFiscalModalProps> = ({
             {justificativaError && (
               <div className="invalid-feedback">{justificativaError}</div>
             )}
-            <div className="form-text">
+            <div className="form-text form-hint">
               {justificativa.length}/500 {t('other.characters')}
             </div>
           </div>

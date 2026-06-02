@@ -145,7 +145,7 @@ const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
               placeholder="192.168.1.1; 10.0.0.0/24; 2001:db8::1"
               disabled={isSubmitting}
             />
-            <span className="text-muted small">{t('blockdomi.faixaIpsHelp')}</span>
+            <span className="text-muted form-hint small">{t('blockdomi.faixaIpsHelp')}</span>
             {errors.faixa_ips && <div className="text-danger small mt-1">{errors.faixa_ips}</div>}
           </div>
         </form>

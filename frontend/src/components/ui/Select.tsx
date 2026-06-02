@@ -86,7 +86,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(({
   const renderValidationMessage = () => {
     if (!validationMessage) return null;
     
-    const messageClasses = ['form-text'];
+    const messageClasses = ['form-text', 'form-hint'];
     if (isInvalid || validationStatus === 'invalid') {
       messageClasses.push('text-danger');
     } else if (isValid || validationStatus === 'valid') {

@@ -71,7 +71,7 @@ const FornecedorModalDadosBasicosTab: React.FC<FornecedorModalDadosBasicosTabPro
           </label>
         </div>
       </div>
-      {errors.tipo_pessoa && <div className="form-text text-danger">{errors.tipo_pessoa}</div>}
+      {errors.tipo_pessoa && <div className="form-text form-hint text-danger">{errors.tipo_pessoa}</div>}
     </div>
 
     <FormField

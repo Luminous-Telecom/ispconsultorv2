@@ -233,7 +233,7 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
                 disabled={disabled || saveMutation.isPending}
                 placeholder={t('placeholder.serviceCode')}
               />
-              <small className="text-muted d-block mt-1">{t('nfse.municipalServiceCodeHelp')}</small>
+              <small className="text-muted form-hint d-block mt-1">{t('nfse.municipalServiceCodeHelp')}</small>
             </div>
 
             <div className="col-md-6 mb-3">
@@ -252,7 +252,7 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
                 step="0.01"
                 placeholder="0.00"
               />
-              <small className="text-muted d-block mt-1">{t('nfse.issRateHelp')}</small>
+              <small className="text-muted form-hint d-block mt-1">{t('nfse.issRateHelp')}</small>
             </div>
           </div>
 
@@ -269,7 +269,7 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
               disabled={disabled || saveMutation.isPending}
               placeholder="Ex: Prestação de serviços de desenvolvimento de software"
             />
-            <small className="text-muted d-block mt-1">{t('nfse.serviceDescriptionHelp')}</small>
+            <small className="text-muted form-hint d-block mt-1">{t('nfse.serviceDescriptionHelp')}</small>
           </div>
 
           <div className="row">
@@ -287,7 +287,7 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
                 placeholder="80000"
                 maxLength={10}
               />
-              <small className="text-muted d-block mt-1">{t('nfse.nfSerieHelp')}</small>
+              <small className="text-muted form-hint d-block mt-1">{t('nfse.nfSerieHelp')}</small>
             </div>
 
             <div className="col-md-6 mb-3">
@@ -304,7 +304,7 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
                 min="1"
                 placeholder="1"
               />
-              <small className="text-muted d-block mt-1">{t('nfse.dpsNumberHelp')}</small>
+              <small className="text-muted form-hint d-block mt-1">{t('nfse.dpsNumberHelp')}</small>
             </div>
           </div>
 
@@ -324,7 +324,7 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
                 Portal Nacional (em breve)
               </option>
             </select>
-            <small className="text-muted d-block mt-1">{t('nfse.providerHelp')}</small>
+            <small className="text-muted form-hint d-block mt-1">{t('nfse.providerHelp')}</small>
           </div>
 
           {formData.provider === 'ASAAS' && (
@@ -347,7 +347,7 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
                   }
                   autoComplete="off"
                 />
-                <small className="text-muted d-block mt-1">
+                <small className="text-muted form-hint d-block mt-1">
                   {formData.has_asaas_api_key && !formData.asaas_api_key
                     ? 'Chave de API salva. Preencha apenas para alterar.'
                     : t('nfse.asaasApiKeyHelp')}
@@ -370,7 +370,7 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
                     {t('nfse.useSandbox')}
                   </label>
                 </div>
-                <small className="text-muted d-block mt-1">{t('nfse.useSandboxHelp')}</small>
+                <small className="text-muted form-hint d-block mt-1">{t('nfse.useSandboxHelp')}</small>
               </div>
             </>
           )}
