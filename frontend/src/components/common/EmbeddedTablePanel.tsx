@@ -11,6 +11,7 @@ function EmbeddedTablePanel<T extends { id: number | string }>({
   filters,
   toolbarExtra,
   title,
+  syncWithHeader = false,
   ...tableProps
 }: EmbeddedTablePanelProps<T>) {
   return (
@@ -22,7 +23,7 @@ function EmbeddedTablePanel<T extends { id: number | string }>({
           {toolbarExtra}
         </div>
       )}
-      <Table<T> {...tableProps} title={title} />
+      <Table<T> {...tableProps} title={title} syncWithHeader={syncWithHeader} />
     </div>
   );
 }
