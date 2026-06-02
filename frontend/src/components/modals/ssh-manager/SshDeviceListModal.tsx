@@ -348,6 +348,7 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
       show={show}
       onClose={list.handleModalClose}
       skipWrapper={skipWrapper}
+      showEmbeddedTableTitle={skipWrapper && Boolean(tableTitle)}
       modalSize="xl"
       config={{
         title: defaultTitle,

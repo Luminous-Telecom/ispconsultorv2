@@ -177,6 +177,7 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = ({
         show={show}
         onClose={onClose}
         skipWrapper={skipWrapper}
+        showEmbeddedTableTitle={skipWrapper}
         config={{
           title: tableTitle,
           columns,

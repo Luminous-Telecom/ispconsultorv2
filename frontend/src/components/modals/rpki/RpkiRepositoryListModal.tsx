@@ -217,6 +217,7 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = ({
         show={show}
         onClose={onClose}
         skipWrapper={skipWrapper}
+        showEmbeddedTableTitle={skipWrapper}
         config={{
           title: tableTitle,
           columns,

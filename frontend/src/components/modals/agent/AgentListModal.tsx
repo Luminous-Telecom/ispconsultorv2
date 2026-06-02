@@ -278,6 +278,7 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
       show={show}
       onClose={list.handleModalClose}
       skipWrapper={skipWrapper}
+      showEmbeddedTableTitle={skipWrapper && Boolean(tableTitle)}
       modalSize="xl"
       wrapperTitle={modalTitle}
       config={{

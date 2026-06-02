@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import DraggableModal from './DraggableModal';
+import EmbeddedTablePanel from './EmbeddedTablePanel';
 import { Table } from '../tables';
 import { ListModalProps } from 'types/modal';
 import { FilterValue } from 'types/common';
@@ -30,6 +31,7 @@ function ListModal<T extends { id: number | string }>({
   onAudit,
   auditEntity,
   skipWrapper = false,
+  showEmbeddedTableTitle = false,
   filters,
   filterValues: _filterValues,
   onFilterChange: _onFilterChange,
@@ -125,56 +127,80 @@ function ListModal<T extends { id: number | string }>({
     [bulkActions]
   );
 
-  const tableContent = (
-    <Table
-      syncWithHeader={false}
-      title={title}
-      config={{
-        columns: tableColumns,
-        data,
-        loading,
-        pagination,
-        selectable: true,
-        multiSelect,
-        searchable: !!onSearchChange,
-        searchPlaceholder,
-        searchFields,
-        sortColumn,
-        sortDirection,
-        sortable,
-        striped,
-        hover,
-        responsive,
-        emptyMessage,
-        className: 'no-padding',
-        filters: filters || [],
-        bulkActions: mappedBulkActions,
-        customControlsAfterActions,
-      }}
-      search={_search}
-      onSelectionChange={onSelectionChange}
-      onSort={onSortChange}
-      onSearch={(search, field) => {
-        onSearchChange?.(search, field ?? '');
-      }}
-      onSearchFieldChange={onSearchFieldChange}
-      onFilter={(filterValues) => {
-        onFiltersChange?.(filterValues);
-      }}
-      onPageChange={onPageChange}
-      onPageSizeChange={onLimitChange}
-      onRefresh={onRefresh || refreshQueryFn}
-      onAudit={onAudit}
-      auditEntity={auditEntity}
-      onRowClick={onRowClick}
-      onRowDoubleClick={onRowDoubleClick}
-      onSelectAllPages={onSelectAllPages}
-      tableId={tableId}
-    />
+  const tableConfig = useMemo(
+    () => ({
+      columns: tableColumns,
+      data,
+      loading,
+      pagination,
+      selectable: true,
+      multiSelect,
+      searchable: !!onSearchChange,
+      searchPlaceholder,
+      searchFields,
+      sortColumn,
+      sortDirection,
+      sortable,
+      striped,
+      hover,
+      responsive,
+      emptyMessage,
+      className: 'no-padding',
+      filters: filters || [],
+      bulkActions: mappedBulkActions,
+      customControlsAfterActions,
+    }),
+    [
+      tableColumns,
+      data,
+      loading,
+      pagination,
+      multiSelect,
+      onSearchChange,
+      searchPlaceholder,
+      searchFields,
+      sortColumn,
+      sortDirection,
+      sortable,
+      striped,
+      hover,
+      responsive,
+      emptyMessage,
+      filters,
+      mappedBulkActions,
+      customControlsAfterActions,
+    ]
   );
 
+  const tableProps = {
+    syncWithHeader: false as const,
+    config: tableConfig,
+    search: _search,
+    onSelectionChange,
+    onSort: onSortChange,
+    onSearch: (search: string, field?: string) => {
+      onSearchChange?.(search, field ?? '');
+    },
+    onSearchFieldChange,
+    onFilter: (filterValues: Record<string, FilterValue>) => {
+      onFiltersChange?.(filterValues);
+    },
+    onPageChange,
+    onPageSizeChange: onLimitChange,
+    onRefresh: onRefresh || refreshQueryFn,
+    onAudit,
+    auditEntity,
+    onRowClick,
+    onRowDoubleClick,
+    onSelectAllPages,
+    tableId,
+  };
+
   if (skipWrapper) {
-    return tableContent;
+    if (showEmbeddedTableTitle && title) {
+      return <EmbeddedTablePanel title={title} {...tableProps} />;
+    }
+    return <Table {...tableProps} />;
   }
 
   return (
@@ -186,7 +212,7 @@ function ListModal<T extends { id: number | string }>({
       modalId={modalId ?? tableId}
       className="no-padding list-modal-no-body-scroll"
     >
-      {tableContent}
+      <Table title={title} {...tableProps} />
     </DraggableModal>
   );
 }

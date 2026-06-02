@@ -128,7 +128,7 @@ const TemplatesTab: React.FC<TemplatesTabProps> = () => {
   return (
     <>
       <EmbeddedTablePanel
-          title=""
+          title={t('whatsappServer.templates')}
           config={{
             columns: tableColumns,
             data: filteredTemplates,

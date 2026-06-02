@@ -50,7 +50,7 @@ const ContratosSection: React.FC<ContratosSectionProps> = ({
     <>
       <EmbeddedTablePanel
         key={`saas-contratos-${empresaId}`}
-        title={t('form.plan')}
+        title={t('nav.contracts')}
         config={{
           columns,
           data: contratos,

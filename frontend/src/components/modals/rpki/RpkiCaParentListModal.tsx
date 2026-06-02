@@ -262,6 +262,7 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
         show={show}
         onClose={onClose}
         skipWrapper={skipWrapper}
+        showEmbeddedTableTitle={skipWrapper}
         config={{
           title: tableTitle,
           columns,

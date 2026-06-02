@@ -116,6 +116,7 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({
         show={show}
         onClose={onClose}
         skipWrapper={skipWrapper}
+        showEmbeddedTableTitle={skipWrapper}
         config={{
           title: tableTitle,
           columns: tableColumns,

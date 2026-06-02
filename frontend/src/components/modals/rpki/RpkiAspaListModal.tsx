@@ -167,6 +167,7 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = ({
         show={show}
         onClose={onClose}
         skipWrapper={skipWrapper}
+        showEmbeddedTableTitle={skipWrapper}
         config={{
           title: tableTitle,
           columns,
