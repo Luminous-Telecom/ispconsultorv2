@@ -6,7 +6,7 @@ import { useDashboardStats } from 'hooks/useDashboardStats';
 import { useDashboardCharts } from 'hooks/useDashboardCharts';
 import { useChartHiddenItems } from 'hooks/useChartHiddenItems';
 import { useDashboardChartClicks } from 'hooks/useDashboardChartClicks';
-import { Spinner } from 'components/ui';
+import Loading from 'components/common/Loading';
 import { useTableHeader } from 'contexts/TableHeaderContext';
 import { useModal } from 'contexts/ModalContext';
 import { useI18n } from 'contexts/I18nContext';
@@ -46,10 +46,8 @@ const Dashboard: React.FC = () => {
 
   if (loadingDashboard) {
     return (
-      <div className="dashboard-container">
-        <div className="text-center">
-          <Spinner size="md" variant="primary" aria-label={t('messages.loading')} />
-        </div>
+      <div className="dashboard-container dashboard-container--loading">
+        <Loading message={t('ui.loadingDashboard')} variant="page" />
       </div>
     );
   }

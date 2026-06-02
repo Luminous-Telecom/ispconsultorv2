@@ -4,8 +4,8 @@ import { useI18n } from 'contexts/I18nContext';
 interface LoadingProps {
   message?: string;
   size?: 'sm' | 'md' | 'lg';
-  /** Preenche e centraliza no corpo do modal (Suspense/lazy) */
-  variant?: 'default' | 'modal';
+  /** modal: corpo do DraggableModal | page: área principal abaixo do header */
+  variant?: 'default' | 'modal' | 'page';
 }
 
 const Loading: React.FC<LoadingProps> = ({
@@ -18,7 +18,9 @@ const Loading: React.FC<LoadingProps> = ({
   const containerClass =
     variant === 'modal'
       ? 'loading-container loading-container--modal'
-      : 'loading-container';
+      : variant === 'page'
+        ? 'loading-container loading-container--page'
+        : 'loading-container';
 
   return (
     <div

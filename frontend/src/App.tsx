@@ -141,12 +141,12 @@ function AppContent() {
                       </DashboardFiltersProvider>
                     }>
                       <Route index element={
-                        <Suspense fallback={<Loading message={t('ui.loadingDashboard')} />}>
+                        <Suspense fallback={<Loading message={t('ui.loadingDashboard')} variant="page" />}>
                           <Dashboard />
                         </Suspense>
                       } />
                       <Route path="dashboard" element={
-                        <Suspense fallback={<Loading message={t('ui.loadingDashboard')} />}>
+                        <Suspense fallback={<Loading message={t('ui.loadingDashboard')} variant="page" />}>
                           <Dashboard />
                         </Suspense>
                       } />
@@ -171,7 +171,7 @@ function AppContent() {
                       </DashboardFiltersProvider>
                     }>
                       <Route index element={
-                        <Suspense fallback={<Loading message="Carregando..." />}>
+                        <Suspense fallback={<Loading message="Carregando..." variant="page" />}>
                           <SaasDashboard />
                         </Suspense>
                       } />

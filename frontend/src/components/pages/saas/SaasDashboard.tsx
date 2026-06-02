@@ -9,7 +9,7 @@ import { useDashboardCharts } from 'hooks/useDashboardCharts';
 import { useChartHiddenItems } from 'hooks/useChartHiddenItems';
 import { useSaasDashboardChartClicks } from 'hooks/useSaasDashboardChartClicks';
 import { BarChart, ValueChart, ResponsiveLineChart, ResponsivePieChart } from 'components/charts';
-import { Spinner } from 'components/ui';
+import Loading from 'components/common/Loading';
 import { useModal } from 'contexts/ModalContext';
 import { useI18n } from 'contexts/I18nContext';
 import { useTableHeader } from 'contexts/TableHeaderContext';
@@ -131,10 +131,8 @@ const SaasDashboard: React.FC = () => {
 
   if (loadingDashboard) {
     return (
-      <div className="dashboard-container">
-        <div className="text-center">
-          <Spinner size="md" variant="primary" aria-label={t('messages.loading')} />
-        </div>
+      <div className="dashboard-container dashboard-container--loading">
+        <Loading message={t('ui.loadingDashboard')} variant="page" />
       </div>
     );
   }
