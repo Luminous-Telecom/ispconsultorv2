@@ -212,7 +212,7 @@ const SingleModalWrapper: React.FC = () => {
         className="no-padding"
         headerActions={headerActions}
       >
-        <Suspense fallback={<Loading message={loadingMessage} />}>
+        <Suspense fallback={<Loading message={loadingMessage} variant="modal" />}>
           <LogsModal
             show={true}
             onClose={closeModal}
@@ -239,7 +239,7 @@ const SingleModalWrapper: React.FC = () => {
         size={resolvedRpki.size ?? 'lg'}
         className={resolvedRpki.className ?? ''}
       >
-        <Suspense fallback={<Loading message={loadingMessage} />}>
+        <Suspense fallback={<Loading message={loadingMessage} variant="modal" />}>
           <RpkiComponent
             show={true}
             onClose={closeModal}
@@ -302,7 +302,7 @@ const SingleModalWrapper: React.FC = () => {
       className={modalConfig.className || ''}
       headerActions={headerActions}
     >
-      <Suspense fallback={<Loading message={loadingMessage} />}>
+      <Suspense fallback={<Loading message={loadingMessage} variant="modal" />}>
         <ModalComponent {...modalProps} />
       </Suspense>
     </DraggableModal>

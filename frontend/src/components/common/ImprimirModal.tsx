@@ -70,7 +70,7 @@ const ImprimirModal: React.FC<ImprimirModalProps> = ({
       <div style={{ height: '80vh', width: '100%', position: 'relative' }}>
         {isGenerating || !pdfUrl ? (
           <div className="d-flex align-items-center justify-content-center h-100" style={{ minHeight: 0 }}>
-            <Loading message="Carregando documento..." />
+            <Loading message="Carregando documento..." variant="modal" />
           </div>
         ) : (
           <>
@@ -89,7 +89,7 @@ const ImprimirModal: React.FC<ImprimirModalProps> = ({
                   minHeight: 0,
                 }}
               >
-                <Loading message="Carregando documento..." />
+                <Loading message="Carregando documento..." variant="modal" />
               </div>
             )}
             {hasError ? (
