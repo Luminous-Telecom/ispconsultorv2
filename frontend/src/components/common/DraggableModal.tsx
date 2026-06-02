@@ -301,14 +301,11 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           {/* Container flex para título e botão */}
           <div className="d-flex align-items-center justify-content-center position-relative">
             {/* Título centralizado */}
-            <h5
-              className={`modal-title mb-0 draggable-modal-title-custom ${isDragging ? 'dragging' : ''} ${headerActions ? 'with-actions' : ''}`}
-              style={{
-                marginBottom: headerActions ? '8px' : '0'
-              }}
+            <h6
+              className={`modal-title text-center fs-6 ${headerActions ? 'mb-2 with-actions' : 'mb-0'} draggable-modal-title-custom ${isDragging ? 'dragging' : ''}`}
             >
               {title}
-            </h5>
+            </h6>
 
             {/* Botão fechar à extrema direita */}
             <button

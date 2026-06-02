@@ -18,9 +18,17 @@ function EmbeddedTablePanel<T extends { id: number | string }>({
     <div className="embedded-table-panel d-flex flex-column flex-grow-1 min-h-0">
       {(title || filters || toolbarExtra) && (
         <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
-          {title && <h6 className="mb-0">{title}</h6>}
-          {filters}
-          {toolbarExtra}
+          {title && (
+            <div className="flex-grow-1 text-center">
+              <div className="embedded-table-panel-title">{title}</div>
+            </div>
+          )}
+          {(filters || toolbarExtra) && (
+            <div className="d-flex flex-wrap align-items-center gap-2">
+              {filters}
+              {toolbarExtra}
+            </div>
+          )}
         </div>
       )}
       <Table<T> {...tableProps} title={title} syncWithHeader={syncWithHeader} />
