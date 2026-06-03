@@ -391,11 +391,21 @@ jobs:
           {
             echo "Deploy: ${COMMIT_HASH} - ${COMMIT_MSG}"
             echo ""
-            echo "Commits incluídos neste deploy:"
             if [ -n "${ALL_MSGS}" ]; then
               echo "${ALL_MSGS}"
             else
-              echo "• [${COMMIT_HASH}] ${COMMIT_MSG}"
+              node -e "
+                const s = process.argv[1] || '';
+                const m = s.match(/^(\w+)(?:\(([^)]+)\))?:\s*(.+)$/);
+                if (m) {
+                  const cat = (m[2] || 'Geral').split(/[-_/]/).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                  const desc = m[3].charAt(0).toUpperCase() + m[3].slice(1);
+                  console.log('- ' + cat + ': ' + desc);
+                } else {
+                  const text = s.trim();
+                  console.log('- Geral: ' + (text ? text.charAt(0).toUpperCase() + text.slice(1) : 'Atualização do sistema'));
+                }
+              " "${COMMIT_MSG}"
             fi
             echo ""
             echo "Detalhes:"

@@ -77,7 +77,6 @@ function parseReleaseItens(body: string): string[] {
     if (
       line.startsWith('---') ||
       /^\*\*Detalhes\*\*/i.test(line) ||
-      /^\*\*Commits incluídos\*\*/i.test(line) ||
       /^Deploy:/i.test(line)
     ) {
       reachedMeta = true;
