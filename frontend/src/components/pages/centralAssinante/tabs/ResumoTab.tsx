@@ -11,7 +11,7 @@ interface ResumoTabProps {
 
 const ResumoTab: React.FC<ResumoTabProps> = ({ dados, handleCardClick }) => (
   <div>
-    <div className="row central-assinante-resumo-row mb-3">
+    <div className="row central-assinante-resumo-row">
       <div className="col-6 col-sm-4 col-md-3 col-lg-2">
         <div className="central-assinante-card-bg central-assinante-resumo-card">
           <Card className="h-100 border-0" padding="none" clickable onClick={() => handleCardClick('contratos')}>
@@ -79,59 +79,47 @@ const ResumoTab: React.FC<ResumoTabProps> = ({ dados, handleCardClick }) => (
           <h6 className="mb-0 fw-semibold text-white central-assinante-info-title">Informações do cliente</h6>
         </div>
         <div className="central-assinante-info-body">
-          <div className="row g-2">
-            <div className="col-12 col-md-6">
-              <div className="central-assinante-info-field">
-                <small className="d-block central-assinante-info-label">Razão social</small>
-                <p className="mb-0 central-assinante-info-value">{dados.cliente.razao_social}</p>
-              </div>
+          <div className="central-assinante-info-grid">
+            <div className="central-assinante-info-field">
+              <small className="d-block central-assinante-info-label">Razão social</small>
+              <p className="mb-0 central-assinante-info-value">{dados.cliente.razao_social}</p>
             </div>
             {dados.cliente.nome_fantasia && (
-              <div className="col-12 col-md-6">
-                <div className="central-assinante-info-field">
-                  <small className="d-block central-assinante-info-label">Nome fantasia</small>
-                  <p className="mb-0 central-assinante-info-value">{dados.cliente.nome_fantasia}</p>
-                </div>
+              <div className="central-assinante-info-field">
+                <small className="d-block central-assinante-info-label">Nome fantasia</small>
+                <p className="mb-0 central-assinante-info-value">{dados.cliente.nome_fantasia}</p>
               </div>
             )}
             {dados.cliente.cpf_cnpj && (
-              <div className="col-12 col-md-6">
-                <div className="central-assinante-info-field">
-                  <small className="d-block central-assinante-info-label">CPF/CNPJ</small>
-                  <p className="mb-0 central-assinante-info-value">{dados.cliente.cpf_cnpj}</p>
-                </div>
+              <div className="central-assinante-info-field">
+                <small className="d-block central-assinante-info-label">CPF/CNPJ</small>
+                <p className="mb-0 central-assinante-info-value">{dados.cliente.cpf_cnpj}</p>
               </div>
             )}
             {dados.cliente.email && (
-              <div className="col-12 col-md-6">
-                <div className="central-assinante-info-field">
-                  <small className="d-block central-assinante-info-label">Email</small>
-                  <p className="mb-0 central-assinante-info-value">{dados.cliente.email}</p>
-                </div>
+              <div className="central-assinante-info-field">
+                <small className="d-block central-assinante-info-label">Email</small>
+                <p className="mb-0 central-assinante-info-value">{dados.cliente.email}</p>
               </div>
             )}
             {dados.cliente.telefone && (
-              <div className="col-12 col-md-6">
-                <div className="central-assinante-info-field">
-                  <small className="d-block central-assinante-info-label">Telefone</small>
-                  <p className="mb-0 central-assinante-info-value">{dados.cliente.telefone}</p>
-                </div>
+              <div className="central-assinante-info-field">
+                <small className="d-block central-assinante-info-label">Telefone</small>
+                <p className="mb-0 central-assinante-info-value">{dados.cliente.telefone}</p>
               </div>
             )}
             {dados.cliente.endereco && (
-              <div className="col-12">
-                <div className="central-assinante-info-field">
-                  <small className="d-block central-assinante-info-label">Endereço</small>
-                  <p className="mb-0 central-assinante-info-value">
-                    {dados.cliente.endereco}
-                    {dados.cliente.numero && `, ${dados.cliente.numero}`}
-                    {dados.cliente.complemento && ` - ${dados.cliente.complemento}`}
-                    {dados.cliente.bairro && `, ${dados.cliente.bairro}`}
-                    {dados.cliente.cidade && ` - ${dados.cliente.cidade}`}
-                    {dados.cliente.estado && `/${dados.cliente.estado}`}
-                    {dados.cliente.cep && ` - CEP: ${dados.cliente.cep}`}
-                  </p>
-                </div>
+              <div className="central-assinante-info-field central-assinante-info-field-full">
+                <small className="d-block central-assinante-info-label">Endereço</small>
+                <p className="mb-0 central-assinante-info-value">
+                  {dados.cliente.endereco}
+                  {dados.cliente.numero && `, ${dados.cliente.numero}`}
+                  {dados.cliente.complemento && ` - ${dados.cliente.complemento}`}
+                  {dados.cliente.bairro && `, ${dados.cliente.bairro}`}
+                  {dados.cliente.cidade && ` - ${dados.cliente.cidade}`}
+                  {dados.cliente.estado && `/${dados.cliente.estado}`}
+                  {dados.cliente.cep && ` - CEP: ${dados.cliente.cep}`}
+                </p>
               </div>
             )}
           </div>

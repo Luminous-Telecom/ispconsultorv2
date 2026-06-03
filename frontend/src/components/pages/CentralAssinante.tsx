@@ -145,7 +145,7 @@ const CentralAssinante: React.FC = () => {
   }
 
   return (
-    <div className="min-vh-100 central-assinante-container">
+    <div className="central-assinante-container">
       <header className="central-assinante-header">
         <div className="container-fluid central-assinante-header-container">
           <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap central-assinante-header-inner">
@@ -184,7 +184,7 @@ const CentralAssinante: React.FC = () => {
           temTermosComAssinaturaPendente={temTermosComAssinaturaPendente}
         />
 
-        <div className="flex-grow-1 central-assinante-content py-2">
+        <div className="flex-grow-1 central-assinante-content">
           <CentralAssinanteTabContent
             activeTab={activeTab}
             dados={dados}
@@ -212,7 +212,6 @@ const CentralAssinante: React.FC = () => {
         temContratoComAssinaturaPendente={temContratoComAssinaturaPendente}
         temTermosComAssinaturaPendente={temTermosComAssinaturaPendente}
       />
-      <div className="d-md-none central-assinante-mobile-spacer"></div>
 
       {faturaVisualizar ? (
         <CentralAssinanteFaturaModal
