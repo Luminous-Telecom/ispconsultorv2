@@ -1,5 +1,6 @@
 import React from 'react';
 import { useI18n } from 'contexts/I18nContext';
+import { LabelWithHelp } from './LabelWithHelp';
 
 export interface EntityItem {
   id: number;
@@ -58,16 +59,9 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = (props) => {
 
     return (
       <div className="mb-1">
-        <label htmlFor={fieldId} className="form-label small">
-          {label} {required && <span className="text-danger ms-1">*</span>}
-          {helpText && (
-            <i
-              className="bi bi-info-circle text-muted ms-1"
-              style={{ cursor: 'help', fontSize: '0.85rem' }}
-              title={helpText}
-            />
-          )}
-        </label>
+        <LabelWithHelp htmlFor={fieldId} className="form-label small" helpText={helpText} required={required}>
+          {label}
+        </LabelWithHelp>
         <div className="input-group">
           <input
             id={fieldId}
@@ -118,16 +112,9 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = (props) => {
 
   return (
     <div className="mb-1">
-      <label htmlFor={fieldId} className="form-label small">
-        {label} {required && <span className="text-danger ms-1">*</span>}
-        {helpText && (
-          <i
-            className="bi bi-info-circle text-muted ms-1"
-            style={{ cursor: 'help', fontSize: '0.85rem' }}
-            title={helpText}
-          />
-        )}
-      </label>
+      <LabelWithHelp htmlFor={fieldId} className="form-label small" helpText={helpText} required={required}>
+        {label}
+      </LabelWithHelp>
       <div className="input-group">
         <input
           id={fieldId}

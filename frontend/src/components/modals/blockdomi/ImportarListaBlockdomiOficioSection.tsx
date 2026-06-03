@@ -3,6 +3,7 @@ import {
   ExtrairDominiosPdfButton,
   ExtrairPlanilhaUrlButton,
   ExtrairSeiAnatelButton,
+  LabelWithHelp,
 } from 'components/ui';
 import Button from 'components/ui/Button';
 import type { BlockdomiImportTranslateFn } from './importarListaBlockdomiTypes';
@@ -84,14 +85,9 @@ const ImportarListaBlockdomiOficioSection: React.FC<ImportarListaBlockdomiOficio
     <div className="col-12">
       <div className="row g-2 mb-2 w-100 align-items-end">
         <div className="col-12 col-lg-3 col-md-4">
-          <label className="form-label small mb-1 d-flex align-items-center gap-1">
+          <LabelWithHelp className="form-label small mb-1 d-flex align-items-center gap-1" helpText={t('blockdomi.seiAnatelHelp')} helpIconClassName="ms-0">
             {t('blockdomi.numeroSeiAnatelOptional')}
-            <i
-              className="bi bi-info-circle text-muted"
-              style={{ cursor: 'help', fontSize: '0.85rem' }}
-              title={t('blockdomi.seiAnatelHelp')}
-            />
-          </label>
+          </LabelWithHelp>
           <input
             type="text"
             className="form-control form-control-sm"
@@ -194,14 +190,9 @@ const ImportarListaBlockdomiOficioSection: React.FC<ImportarListaBlockdomiOficio
             </div>
           </div>
         </div>
-        <label className="form-label small mb-1 mt-2">
+        <LabelWithHelp className="form-label small mb-1 mt-2" helpText={t('blockdomi.separateLinksHelp')}>
           {t('blockdomi.linkOficioJusticaOptional')}
-          <i
-            className="bi bi-info-circle text-muted ms-1"
-            style={{ cursor: 'help', fontSize: '0.85rem' }}
-            title={t('blockdomi.separateLinksHelp')}
-          />
-        </label>
+        </LabelWithHelp>
         <div className="ilb-pdf-field-group">
           <div className="ilb-pdf-url-file-row">
             <input

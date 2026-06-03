@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { formatCurrency } from 'utils/formatters';
 import { useI18n } from 'contexts/I18nContext';
-import { InfoHelpIcon } from 'components/ui/InfoHelpIcon';
+import { LabelWithHelp } from 'components/ui/LabelWithHelp';
+import { ChartFloatingTooltip, ChartFloatingTooltipData } from './ChartFloatingTooltip';
 
 export interface TicketMedioMes {
   mes: string;
@@ -23,7 +24,7 @@ const DEFAULT_BAR_COLOR = '#534AB7';
 
 const BarChart: React.FC<{ series: TicketMedioMes[]; chartSubtitle: string }> = ({ series, chartSubtitle }) => {
   const max = Math.max(...series.map((s) => s.valor), 1);
-  const [tooltip, setTooltip] = useState<{ x: number; y: number; item: TicketMedioMes } | null>(null);
+  const [tooltip, setTooltip] = useState<ChartFloatingTooltipData | null>(null);
 
   return (
     <div
@@ -69,7 +70,12 @@ const BarChart: React.FC<{ series: TicketMedioMes[]; chartSubtitle: string }> = 
               }}
               onMouseEnter={(e) => {
                 const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
-                setTooltip({ x: rect.left + rect.width / 2, y: rect.top - 8, item });
+                setTooltip({
+                  x: rect.left + rect.width / 2,
+                  y: rect.top - 8,
+                  label: item.mes,
+                  value: formatCurrency(item.valor),
+                });
               }}
               onMouseLeave={() => setTooltip(null)}
             >
@@ -121,30 +127,7 @@ const BarChart: React.FC<{ series: TicketMedioMes[]; chartSubtitle: string }> = 
         })}
       </div>
 
-      {tooltip && (
-        <div
-          style={{
-            position: 'fixed',
-            left: tooltip.x,
-            top: tooltip.y,
-            transform: 'translate(-50%, -100%)',
-            background: 'var(--bg-tertiary, rgba(20,22,28,0.97))',
-            color: 'var(--text-primary, #fff)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: 6,
-            padding: '5px 9px',
-            fontSize: 11,
-            fontWeight: 500,
-            pointerEvents: 'none',
-            zIndex: 9999,
-            whiteSpace: 'nowrap',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-          }}
-        >
-          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', marginBottom: 1 }}>{tooltip.item.mes}</div>
-          <div>{formatCurrency(tooltip.item.valor)}</div>
-        </div>
-      )}
+      <ChartFloatingTooltip data={tooltip} />
     </div>
   );
 };
@@ -167,8 +150,9 @@ const TicketMedioCard: React.FC<TicketMedioCardProps> = ({ data }) => {
           </svg>
         </div>
         <div className="pie-metric-header__title-with-help">
-          <span className="pie-metric-header__title">{t('dashboard.averageTicket')}</span>
-          <InfoHelpIcon text={ticketInfoText} className="ms-1" />
+          <LabelWithHelp as="span" className="pie-metric-header__title" helpText={ticketInfoText}>
+            {t('dashboard.averageTicket')}
+          </LabelWithHelp>
         </div>
         <span className="pie-metric-header__badge">{t('dashboard.averageTicketBadge')}</span>
       </div>

@@ -1,7 +1,8 @@
 import React, { useRef, useLayoutEffect, useEffect, useState, useMemo, memo, useCallback } from 'react';
 import * as d3 from 'd3';
 import { ChartEmptyState } from './ChartEmptyState';
-import { InfoHelpIcon } from 'components/ui/InfoHelpIcon';
+import { LabelWithHelp } from 'components/ui/LabelWithHelp';
+import { clampTooltipNearPoint, createD3ChartTooltip } from './chartTooltip';
 
 export type BackupStatusKey = 'sucesso' | 'somente_local' | 'falha_envio' | 'verificado' | 'falha';
 
@@ -186,21 +187,6 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
       svgSel.selectAll('*').remove();
       svgSel.attr('width', width).attr('height', height);
 
-      const defs = svgSel.append('defs');
-      const tooltipFilterId = `tooltip-shadow-${Math.random().toString(36).slice(2)}`;
-      defs
-        .append('filter')
-        .attr('id', tooltipFilterId)
-        .attr('x', '-20%')
-        .attr('y', '-20%')
-        .attr('width', '140%')
-        .attr('height', '140%')
-        .append('feDropShadow')
-        .attr('dx', 0)
-        .attr('dy', 4)
-        .attr('stdDeviation', 6)
-        .attr('flood-opacity', 0.25);
-
       const g = svgSel.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
       const axisColor = textMuted();
@@ -238,56 +224,19 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
           });
       });
 
-      const tooltipG = svgSel.append('g').attr('class', 'chart-tooltip').style('opacity', 0).style('pointer-events', 'none');
-      const tooltipBg = tooltipG
-        .append('rect')
-        .attr('rx', 6)
-        .attr('ry', 6)
-        .attr('fill', 'var(--bg-tertiary)')
-        .attr('stroke', 'var(--border-color)')
-        .attr('stroke-width', 1)
-        .attr('filter', `url(#${tooltipFilterId})`);
-
-      const tooltipContent = tooltipG.append('g').attr('transform', 'translate(12,12)');
-      tooltipContent
-        .append('text')
-        .attr('class', 'tooltip-label')
-        .attr('font-family', 'system-ui, -apple-system, sans-serif')
-        .attr('font-size', '10px')
-        .attr('font-weight', '500')
-        .attr('fill', 'var(--text-muted)')
-        .attr('y', 0);
-      tooltipContent
-        .append('text')
-        .attr('class', 'tooltip-value')
-        .attr('font-family', 'system-ui, -apple-system, sans-serif')
-        .attr('font-size', '11px')
-        .attr('font-weight', '600')
-        .attr('fill', 'var(--text-primary)')
-        .attr('y', 16);
-
-      const padding = { x: 16, y: 12 };
+      const tooltip = createD3ChartTooltip(svg);
+      if (!tooltip) return;
 
       const placeTooltip = (d: d3.SeriesPoint<(typeof chartData)[0]>, statusKey: BackupStatusKey) => {
         const v = Number(d.data[statusKey]) || 0;
         const nome = legendLabels[statusKey] ?? statusKey;
-        tooltipContent.select('.tooltip-label').text(d.data.label);
-        tooltipContent.select('.tooltip-value').text(`${nome}: ${v.toLocaleString('pt-BR')}`);
-        const bbox = (tooltipContent.node() as SVGGElement | null)?.getBBox();
-        const tw = bbox ? Math.max(bbox.width + padding.x, 100) : 120;
-        const th = bbox ? bbox.height + padding.y : 42;
-        tooltipBg.attr('width', tw).attr('height', th).attr('x', 0).attr('y', 0);
+        tooltip.setLabelValue(d.data.label, `${nome}: ${v.toLocaleString('pt-BR')}`);
+        const { width: tw, height: th } = tooltip.measure();
         const bx = x(d.data.label) ?? 0;
         const pointX = margin.left + bx + x.bandwidth() / 2;
         const pointY = margin.top + y(d[1]);
-        let tx = pointX - tw / 2;
-        let ty = pointY - th - 16;
-        if (tx + tw > width - 8) tx = width - tw - 8;
-        if (tx < 8) tx = 8;
-        if (ty < 8) ty = pointY + 20;
-        if (ty + th > height - 8) ty = height - th - 8;
-        if (ty < 8) ty = 8;
-        tooltipG.attr('transform', `translate(${tx},${ty})`);
+        const { tx, ty } = clampTooltipNearPoint(pointX, pointY, tw, th, { width, height }, 16);
+        tooltip.group.attr('transform', `translate(${tx},${ty})`);
       };
 
       type StackPoint = d3.SeriesPoint<(typeof chartData)[0]>;
@@ -298,10 +247,10 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
           if (h < 0.5) return;
           const statusKey = (this.getAttribute('data-status-key') as BackupStatusKey) || visibleKeys[0] || 'sucesso';
           placeTooltip(d, statusKey);
-          tooltipG.transition().duration(180).ease(d3.easeCubicOut).style('opacity', 1);
+          tooltip.show();
         })
         .on('mouseleave', () => {
-          tooltipG.transition().duration(150).ease(d3.easeCubicOut).style('opacity', 0);
+          tooltip.hide();
         });
     }, [
       chartData,
@@ -345,8 +294,13 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
           </div>
           {headerInfo ? (
             <div className="pie-metric-header__title-with-help">
-              <h6 className="pie-metric-header__title backup-status-card__title">{title}</h6>
-              <InfoHelpIcon text={headerInfo} className="ms-1" />
+              <LabelWithHelp
+                as="span"
+                className="pie-metric-header__title backup-status-card__title mb-0"
+                helpText={headerInfo}
+              >
+                {title}
+              </LabelWithHelp>
             </div>
           ) : (
             <h6 className="pie-metric-header__title backup-status-card__title">{title}</h6>

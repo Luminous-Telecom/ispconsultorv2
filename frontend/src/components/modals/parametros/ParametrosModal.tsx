@@ -8,7 +8,7 @@ import { useIsMobile } from 'hooks/useMediaQuery';
 import { ParametrosService } from 'services/parametrosService';
 import { useFormReset } from 'hooks/useFormReset';
 import DraggableModal from 'components/common/DraggableModal';
-import { ModalFormActions } from 'components/ui';
+import { ModalFormActions, LabelWithHelp } from 'components/ui';
 interface ParametrosModalProps {
   show: boolean;
   onClose: () => void;
@@ -143,14 +143,9 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
                   onChange={() => handleCheckboxChange('validar_cpf_cnpj')}
                   disabled={updateParametrosMutation.isPending}
                 />
-                <label className="form-check-label" htmlFor="validar_cpf_cnpj">
+                <LabelWithHelp htmlFor="validar_cpf_cnpj" className="form-check-label" helpText={t('params.validateCpfCnpjHelp')}>
                   {t('params.validateCpfCnpj')}
-                  <i
-                    className="bi bi-info-circle text-muted ms-1"
-                    style={{ cursor: 'help', fontSize: '0.85rem' }}
-                    title={t('params.validateCpfCnpjHelp')}
-                  />
-                </label>
+                </LabelWithHelp>
               </div>
 
               <div className="form-check mb-3">
@@ -163,14 +158,9 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
                   onChange={() => handleCheckboxChange('validar_cep')}
                   disabled={updateParametrosMutation.isPending}
                 />
-                <label className="form-check-label" htmlFor="validar_cep">
+                <LabelWithHelp htmlFor="validar_cep" className="form-check-label" helpText={t('params.validateCepHelp')}>
                   {t('params.validateCep')}
-                  <i
-                    className="bi bi-info-circle text-muted ms-1"
-                    style={{ cursor: 'help', fontSize: '0.85rem' }}
-                    title={t('params.validateCepHelp')}
-                  />
-                </label>
+                </LabelWithHelp>
               </div>
             </div>
           </div>
@@ -190,14 +180,9 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
                   onChange={() => handleCheckboxChange('titulos_vence_sabado')}
                   disabled={updateParametrosMutation.isPending}
                 />
-                <label className="form-check-label" htmlFor="titulos_vence_sabado">
+                <LabelWithHelp htmlFor="titulos_vence_sabado" className="form-check-label" helpText={t('params.titlesDueSaturdayHelp')}>
                   {t('params.titlesDueSaturday')}
-                  <i
-                    className="bi bi-info-circle text-muted ms-1"
-                    style={{ cursor: 'help', fontSize: '0.85rem' }}
-                    title={t('params.titlesDueSaturdayHelp')}
-                  />
-                </label>
+                </LabelWithHelp>
               </div>
 
               <div className="form-check mb-3">
@@ -210,14 +195,9 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
                   onChange={() => handleCheckboxChange('titulos_vence_domingo')}
                   disabled={updateParametrosMutation.isPending}
                 />
-                <label className="form-check-label" htmlFor="titulos_vence_domingo">
+                <LabelWithHelp htmlFor="titulos_vence_domingo" className="form-check-label" helpText={t('params.titlesDueSundayHelp')}>
                   {t('params.titlesDueSunday')}
-                  <i
-                    className="bi bi-info-circle text-muted ms-1"
-                    style={{ cursor: 'help', fontSize: '0.85rem' }}
-                    title={t('params.titlesDueSundayHelp')}
-                  />
-                </label>
+                </LabelWithHelp>
               </div>
             </div>
           </div>
@@ -228,14 +208,9 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
             </div>
             <div className="card-body">
               <div className="mb-3">
-                <label htmlFor="central_assinante_metodo_login" className="form-label">
+                <LabelWithHelp htmlFor="central_assinante_metodo_login" className="form-label" helpText={t('params.loginMethodHelp')}>
                   {t('params.loginMethod')}
-                  <i
-                    className="bi bi-info-circle text-muted ms-1"
-                    style={{ cursor: 'help', fontSize: '0.85rem' }}
-                    title={t('params.loginMethodHelp')}
-                  />
-                </label>
+                </LabelWithHelp>
                 <select
                   className="form-select"
                   id="central_assinante_metodo_login"

@@ -6,7 +6,8 @@ import { TermoContrato } from 'services/termoContratoService';
 import { Cliente } from 'types';
 import { AssinaturaDigitalService, EnviarAssinaturaRequest } from 'services/assinaturaDigitalService';
 import DraggableModal from 'components/common/DraggableModal';
-import { CancelarButton, EnviarButton } from 'components/ui';
+import { CancelarButton, EnviarButton, LabelWithHelp } from 'components/ui';
+import { useI18n } from 'contexts/I18nContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { useIsMobile } from 'hooks/useMediaQuery';
 
@@ -26,6 +27,7 @@ const EnviarAssinaturaModal: React.FC<EnviarAssinaturaModalProps> = ({
   onSuccess
 }) => {
   const isMobile = useIsMobile();
+  const { t } = useI18n();
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
   const queryClient = useQueryClient();
@@ -202,16 +204,12 @@ const EnviarAssinaturaModal: React.FC<EnviarAssinaturaModalProps> = ({
           </div>
 
           <div>
-            <label className="form-label">
-              Dias para Expiração
-              <i
-                className="bi bi-info-circle text-muted ms-1"
-                style={{ cursor: 'help', fontSize: '0.85rem' }}
-                title="Padrão: 30 dias"
-              />
-            </label>
+            <LabelWithHelp htmlFor="dias_expiracao" className="form-label" helpText={t('contract.signatureExpirationDaysHelp')}>
+              {t('digitalSignature.expirationDays')}
+            </LabelWithHelp>
             <input
               type="number"
+              id="dias_expiracao"
               name="dias_expiracao"
               className="form-control"
               value={formData.dias_expiracao}

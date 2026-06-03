@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 import { LineChartProps } from './types';
 import { ChartEmptyState } from './ChartEmptyState';
 import { ChartTitleWithInfo } from './ChartTitleWithInfo';
+import { clampTooltipNearPoint, createD3ChartTooltip } from './chartTooltip';
 
 const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, titleInfo, format = 'number', onPointClick }) => {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -261,17 +262,9 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, title
         }
       });
 
-    const tooltipFilterId = `tooltip-shadow-${Math.random().toString(36).slice(2)}`;
-    defs.append('filter').attr('id', tooltipFilterId).attr('x', '-20%').attr('y', '-20%').attr('width', '140%').attr('height', '140%').append('feDropShadow').attr('dx', 0).attr('dy', 4).attr('stdDeviation', 6).attr('flood-opacity', 0.25);
+    const tooltip = createD3ChartTooltip(svg);
+    if (!tooltip) return;
 
-    const tooltipG = d3.select(svg).append('g').attr('class', 'chart-tooltip').style('opacity', 0).style('pointer-events', 'none');
-    const tooltipBg = tooltipG.append('rect').attr('rx', 6).attr('ry', 6).attr('fill', 'var(--bg-tertiary)').attr('stroke', 'var(--border-color)').attr('stroke-width', 1).attr('filter', `url(#${tooltipFilterId})`);
-
-    const tooltipContent = tooltipG.append('g').attr('transform', 'translate(12,12)');
-    tooltipContent.append('text').attr('class', 'tooltip-label').attr('font-family', 'system-ui, -apple-system, sans-serif').attr('font-size', '10px').attr('font-weight', '500').attr('fill', 'var(--text-muted)').attr('y', 0);
-    tooltipContent.append('text').attr('class', 'tooltip-value').attr('font-family', 'system-ui, -apple-system, sans-serif').attr('font-size', '11px').attr('font-weight', '600').attr('fill', 'var(--text-primary)').attr('y', 16);
-
-    const padding = { x: 16, y: 12 };
     const container = containerRef.current;
     if (!container) return;
     d3.select(container).on('mousemove.tooltip', function (event: MouseEvent) {
@@ -289,7 +282,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, title
         }
       }
       if (minDistance >= 40) {
-        tooltipG.transition().duration(120).ease(d3.easeCubicOut).style('opacity', 0);
+        tooltip.hide();
         pointsG
           .selectAll('circle')
           .transition()
@@ -305,25 +298,15 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, title
         .ease(d3.easeCubicOut)
         .attr('r', (_, i) => (i === closestIndex ? 6 : 4));
       const point = chartData[closestIndex];
-      tooltipContent.select('.tooltip-label').text(point.name);
-      tooltipContent.select('.tooltip-value').text(formatValue(point.value));
-      const bbox = tooltipContent.node()?.getBBox();
-      const w = bbox ? Math.max(bbox.width + padding.x, 100) : 120;
-      const h = bbox ? bbox.height + padding.y : 42;
-      tooltipBg.attr('width', w).attr('height', h).attr('x', 0).attr('y', 0);
+      tooltip.setLabelValue(point.name, formatValue(point.value));
+      const { width: w, height: h } = tooltip.measure();
       const pointX = margin.left + xScale(closestIndex);
       const pointY = margin.top + yScale(Math.max(yMin, point.value));
-      let tx = pointX - w / 2;
-      let ty = pointY - h - 16;
-      if (tx + w > dimensions.width - 8) tx = dimensions.width - w - 8;
-      if (tx < 8) tx = 8;
-      if (ty < 8) ty = pointY + 20;
-      if (ty + h > dimensions.height - 8) ty = dimensions.height - h - 8;
-      if (ty < 8) ty = 8;
-      tooltipG.attr('transform', `translate(${tx},${ty})`);
-      tooltipG.transition().duration(180).ease(d3.easeCubicOut).style('opacity', 1);
+      const { tx, ty } = clampTooltipNearPoint(pointX, pointY, w, h, dimensions, 16);
+      tooltip.group.attr('transform', `translate(${tx},${ty})`);
+      tooltip.show();
     }).on('mouseleave.tooltip', () => {
-      tooltipG.transition().duration(150).ease(d3.easeCubicOut).style('opacity', 0);
+      tooltip.hide();
       pointsG
         .selectAll('circle')
         .transition()

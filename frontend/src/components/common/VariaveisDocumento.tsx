@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { Spinner } from 'components/ui';
+import { Spinner, LabelWithHelp } from 'components/ui';
 import SearchBar from 'components/ui/SearchBar';
 import { useI18n } from 'contexts/I18nContext';
 import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
@@ -63,14 +63,12 @@ const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariav
   return (
     <div className="variaveis-documento">
       <div className="mb-3">
-        <label className="form-label small fw-bold">
+        <LabelWithHelp
+          className="form-label small fw-bold"
+          helpText={`${t('variables.tip')} ${onInserirVariavel ? t('variables.clickToInsert') : t('variables.clickToCopy')}`}
+        >
           {t('variables.title')}
-          <i
-            className="bi bi-info-circle text-muted ms-1"
-            style={{ cursor: 'help', fontSize: '0.85rem' }}
-            title={`${t('variables.tip')} ${onInserirVariavel ? t('variables.clickToInsert') : t('variables.clickToCopy')}`}
-          />
-        </label>
+        </LabelWithHelp>
         <SearchBar
           id="variaveis-documento-search"
           variant="table"

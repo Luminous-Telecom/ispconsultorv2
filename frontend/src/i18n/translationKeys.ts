@@ -524,16 +524,26 @@ export interface TranslationKeys {
   'params.validations': string;
   'params.validateCpfCnpj': string;
   'params.validateCpfCnpjHelp': string;
+  'params.validateCpfCnpjHelpSaas': string;
   'params.validateCep': string;
   'params.validateCepHelp': string;
+  'params.validateCepHelpSaas': string;
   'params.titleGeneration': string;
   'params.titlesDueSaturday': string;
   'params.titlesDueSaturdayHelp': string;
   'params.titlesDueSunday': string;
   'params.titlesDueSundayHelp': string;
+  'params.keepTitleNumbers': string;
+  'params.keepTitleNumbersHelp': string;
   'params.subscriberCenter': string;
   'params.loginMethod': string;
   'params.loginMethodHelp': string;
+  'params.overdueBlockSection': string;
+  'params.overdueDaysBlock': string;
+  'params.overdueDaysBlockHelp': string;
+  'params.overdueDaysBlockDisabledHint': string;
+  'params.manualUnlockDays': string;
+  'params.manualUnlockDaysHelp': string;
   'params.successUpdate': string;
   'params.errorUpdate': string;
 
@@ -1044,6 +1054,7 @@ export interface TranslationKeys {
   'modal.selectTerm': string;
   'modal.selectContractModel': string;
   'modal.sendSignature': string;
+  'contract.signatureExpirationDaysHelp': string;
   'modal.additionalService': string;
   'modal.list': string;
   'modal.defaultDocument': string;
@@ -1117,6 +1128,7 @@ export interface TranslationKeys {
   'saas.dataNaoBloquearAte': string;
   'saas.planModules': string;
   'saas.planModulesHelp': string;
+  'saas.planLimitZeroHelp': string;
 
   // Placeholders
   'placeholder.cnpj': string;

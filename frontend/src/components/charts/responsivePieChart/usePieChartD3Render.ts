@@ -5,6 +5,11 @@ import * as d3Ease from 'd3-ease';
 import * as d3Interpolate from 'd3-interpolate';
 import { ChartDataItem } from '../types';
 import {
+  hideFloatingChartTooltip,
+  moveFloatingChartTooltip,
+  showFloatingChartTooltip,
+} from '../ChartFloatingTooltip';
+import {
   formatPieValue,
   getItemValue,
   PieDatum,
@@ -138,26 +143,25 @@ export function usePieChartD3Render({
         .on('mouseenter', function (event: MouseEvent) {
           const tooltip = tooltipRef.current;
           if (tooltip) {
-            tooltip.textContent = `${d.data.label}: ${formatPieValue(d.data.value)}`;
-            tooltip.style.left = `${event.clientX + 10}px`;
-            tooltip.style.top = `${event.clientY + 10}px`;
-            tooltip.style.opacity = '1';
-            tooltip.style.visibility = 'visible';
+            showFloatingChartTooltip(
+              tooltip,
+              `${d.data.label}: ${formatPieValue(d.data.value)}`,
+              event.clientX,
+              event.clientY
+            );
           }
           d3Selection.select(this).transition().duration(150).attr('transform', `scale(${HOVER_SCALE})`);
         })
         .on('mousemove', function (event: MouseEvent) {
           const tooltip = tooltipRef.current;
           if (tooltip && event.clientX != null) {
-            tooltip.style.left = `${event.clientX + 10}px`;
-            tooltip.style.top = `${event.clientY + 10}px`;
+            moveFloatingChartTooltip(tooltip, event.clientX, event.clientY);
           }
         })
         .on('mouseleave', function () {
           const tooltip = tooltipRef.current;
           if (tooltip) {
-            tooltip.style.opacity = '0';
-            tooltip.style.visibility = 'hidden';
+            hideFloatingChartTooltip(tooltip);
           }
           d3Selection.select(this).transition().duration(150).attr('transform', 'scale(1)');
         });

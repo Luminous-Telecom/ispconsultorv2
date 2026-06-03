@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormField, Checkbox, EnviarButton } from 'components/ui';
+import { FormField, Checkbox, EnviarButton, LabelWithHelp } from 'components/ui';
 import { ServidorSettingsCard } from 'components/modals/parametros/servidor-shared';
 import { ServidorTabProps } from '../types';
 import { useI18n } from 'contexts/I18nContext';
@@ -141,12 +141,9 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
               <div className="col-12">
                 <small className="fw-bold text-primary mb-3 d-block">
                   <i className="bi bi-envelope-check me-2"></i>
-                  {t('emailServer.sendTestEmail')}
-                  <i
-                    className="bi bi-info-circle text-muted ms-1"
-                    style={{ cursor: 'help', fontSize: '0.85rem' }}
-                    title={t('emailServer.testEmailHelp')}
-                  />
+                  <LabelWithHelp as="span" helpText={t('emailServer.testEmailHelp')}>
+                    {t('emailServer.sendTestEmail')}
+                  </LabelWithHelp>
                 </small>
                 <div className="input-group">
                   <FormField

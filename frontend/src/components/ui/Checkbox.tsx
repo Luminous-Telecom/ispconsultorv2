@@ -1,5 +1,7 @@
 import React, { forwardRef } from 'react';
 import { BaseComponentProps, ValidationProps, TooltipProps, ChangeEvent } from './types';
+import { LabelWithHelp } from './LabelWithHelp';
+import { getBootstrapTooltipProps } from './tooltipProps';
 
 interface CheckboxProps extends BaseComponentProps, ValidationProps, TooltipProps {
   checked?: boolean;
@@ -111,17 +113,9 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(({
     const tooltipContent = tooltip || description;
     
     return (
-      <label className="form-check-label" htmlFor={id}>
+      <LabelWithHelp htmlFor={id} className="form-check-label" helpText={tooltipContent} required={required}>
         {label}
-        {required && <span className="text-danger ms-1">*</span>}
-        {tooltipContent && (
-          <i
-            className="bi bi-info-circle text-muted ms-1"
-            style={{ cursor: 'help', fontSize: '0.85rem' }}
-            title={tooltipContent}
-          />
-        )}
-      </label>
+      </LabelWithHelp>
     );
   };
 
@@ -141,10 +135,7 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(({
       disabled={disabled}
       id={id}
       data-testid={dataTestId}
-      title={tooltip}
-      data-bs-toggle={tooltip ? 'tooltip' : undefined}
-      data-bs-placement={tooltip ? tooltipPosition : undefined}
-      data-bs-title={tooltip}
+      {...getBootstrapTooltipProps(tooltip, tooltipPosition)}
     />
   );
 

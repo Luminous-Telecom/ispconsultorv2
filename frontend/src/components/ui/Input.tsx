@@ -1,5 +1,6 @@
 import React, { forwardRef } from 'react';
 import { BaseComponentProps, ValidationProps, IconProps, TooltipProps, InputType, InputSize, ChangeEvent } from './types';
+import { getBootstrapTooltipProps } from './tooltipProps';
 
 interface InputProps extends BaseComponentProps, ValidationProps, IconProps, TooltipProps {
   type?: InputType;
@@ -173,10 +174,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
           inputMode={inputMode}
           id={id}
           data-testid={dataTestId}
-          title={tooltip}
-          data-bs-toggle={tooltip ? 'tooltip' : undefined}
-          data-bs-placement={tooltip ? tooltipPosition : undefined}
-          data-bs-title={tooltip}
+          {...getBootstrapTooltipProps(tooltip, tooltipPosition)}
         />
         {renderValidationMessage()}
       </div>
@@ -213,10 +211,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         inputMode={inputMode}
         id={id}
         data-testid={dataTestId}
-        title={tooltip}
-        data-bs-toggle={tooltip ? 'tooltip' : undefined}
-        data-bs-placement={tooltip ? tooltipPosition : undefined}
-        data-bs-title={tooltip}
+        {...getBootstrapTooltipProps(tooltip, tooltipPosition)}
       />
       {renderValidationMessage()}
     </>

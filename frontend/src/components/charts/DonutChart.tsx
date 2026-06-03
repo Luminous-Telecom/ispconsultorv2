@@ -16,6 +16,12 @@
 import React, { useRef, useEffect, useState, useLayoutEffect } from 'react';
 import * as d3Selection from 'd3-selection';
 import * as d3Shape from 'd3-shape';
+import {
+  ChartFloatingTooltipHost,
+  hideFloatingChartTooltip,
+  moveFloatingChartTooltip,
+  showFloatingChartTooltip,
+} from './ChartFloatingTooltip';
 
 export interface ChartData {
   name: string;
@@ -149,25 +155,25 @@ export const DonutChart: React.FC<DonutChartProps> = ({
 
       if (showTooltip && tooltipRef.current) {
         path
-          .on('mouseenter', function () {
+          .on('mouseenter', function (event: MouseEvent) {
             d3Selection.select(this).style('opacity', 0.9);
             const tooltip = tooltipRef.current!;
-            tooltip.textContent = `${d.data.name}: ${d.data.value.toLocaleString('pt-BR')} (${d.data.percent.toFixed(1)}%)`;
-            tooltip.style.opacity = '1';
-            tooltip.style.visibility = 'visible';
+            showFloatingChartTooltip(
+              tooltip,
+              `${d.data.name}: ${d.data.value.toLocaleString('pt-BR')} (${d.data.percent.toFixed(1)}%)`,
+              event.clientX,
+              event.clientY
+            );
           })
-          .on('mousemove', function (event: unknown) {
-            const e = event as MouseEvent;
-            if (tooltipRef.current && e.clientX != null) {
-              tooltipRef.current.style.left = `${e.clientX + 10}px`;
-              tooltipRef.current.style.top = `${e.clientY + 10}px`;
+          .on('mousemove', function (event: MouseEvent) {
+            if (tooltipRef.current && event.clientX != null) {
+              moveFloatingChartTooltip(tooltipRef.current, event.clientX, event.clientY);
             }
           })
           .on('mouseleave', function () {
             d3Selection.select(this).style('opacity', 1);
             if (tooltipRef.current) {
-              tooltipRef.current.style.opacity = '0';
-              tooltipRef.current.style.visibility = 'hidden';
+              hideFloatingChartTooltip(tooltipRef.current);
             }
           });
       }
@@ -253,25 +259,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
       }}
     >
       <svg ref={svgRef} style={{ display: 'block', width: '100%', height: '100%' }} />
-      {showTooltip && (
-        <div
-          ref={tooltipRef}
-          style={{
-            position: 'fixed',
-            padding: '8px 12px',
-            background: 'rgba(0,0,0,0.85)',
-            color: '#fff',
-            fontSize: 13,
-            borderRadius: 6,
-            pointerEvents: 'none',
-            zIndex: 9999,
-            opacity: 0,
-            visibility: 'hidden',
-            transition: 'opacity 0.15s',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
-          }}
-        />
-      )}
+      {showTooltip && <ChartFloatingTooltipHost ref={tooltipRef} />}
     </div>
   );
 };

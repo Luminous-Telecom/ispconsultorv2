@@ -1,6 +1,7 @@
 import React, { forwardRef } from 'react';
 import { BaseComponentProps, ValidationProps, TooltipProps, InputSize, ChangeEvent, SelectOption } from './types';
 import { useI18n } from 'contexts/I18nContext';
+import { getBootstrapTooltipProps } from './tooltipProps';
 
 interface SelectProps extends BaseComponentProps, ValidationProps, TooltipProps {
   size?: InputSize;
@@ -192,10 +193,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(({
         tabIndex={tabIndex}
         id={id}
         data-testid={dataTestId}
-        title={tooltip}
-        data-bs-toggle={tooltip ? 'tooltip' : undefined}
-        data-bs-placement={tooltip ? tooltipPosition : undefined}
-        data-bs-title={tooltip}
+        {...getBootstrapTooltipProps(tooltip, tooltipPosition)}
       >
         {!multiple && !value && (
           <option value="" disabled>

@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import FormField from 'components/ui/FormField';
-import { CopiarButton, Input } from 'components/ui';
+import { CopiarButton, Input, LabelWithHelp } from 'components/ui';
 import { BancoTabProps } from '../types';
 import { useI18n } from 'contexts/I18nContext';
 import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
@@ -78,10 +78,13 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
           <div className="row">
             <div className="col-md-12">
               <div className="mb-3">
-                <label className="form-label" htmlFor={formPrefix ? `${formPrefix}-field-url_retorno` : 'field-url_retorno'}>
+                <LabelWithHelp
+                  htmlFor={formPrefix ? `${formPrefix}-field-url_retorno` : 'field-url_retorno'}
+                  className="form-label"
+                  helpText={t('form.webhookUrlHelp')}
+                >
                   {t('form.webhookUrl')}
-                  <i className="bi bi-info-circle text-muted ms-1" style={{ cursor: 'help', fontSize: '0.85rem' }} title={t('form.webhookUrlHelp')} />
-                </label>
+                </LabelWithHelp>
                 <div className="input-group input-group-sm">
                   <Input
                     type="url"
@@ -132,10 +135,13 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
           <div className="row">
             <div className="col-md-12">
               <div className="mb-3">
-                <label className="form-label" htmlFor={formPrefix ? `${formPrefix}-field-url_retorno-asaas` : 'field-url_retorno-asaas'}>
+                <LabelWithHelp
+                  htmlFor={formPrefix ? `${formPrefix}-field-url_retorno-asaas` : 'field-url_retorno-asaas'}
+                  className="form-label"
+                  helpText={t('form.webhookUrlHelp')}
+                >
                   {t('form.webhookUrl')}
-                  <i className="bi bi-info-circle text-muted ms-1" style={{ cursor: 'help', fontSize: '0.85rem' }} title={t('form.webhookUrlHelp')} />
-                </label>
+                </LabelWithHelp>
                 <div className="input-group input-group-sm">
                   <Input
                     type="url"

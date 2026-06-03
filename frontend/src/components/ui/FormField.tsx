@@ -5,6 +5,8 @@ import { useI18n } from 'contexts/I18nContext';
 import Input from './Input';
 import Select from './Select';
 import Checkbox from './Checkbox';
+import { LabelWithHelp } from './LabelWithHelp';
+import { getBootstrapTooltipProps } from './tooltipProps';
 
 type FieldType = 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'datetime-local' | 'time' | 'month' | 'week' | 'select' | 'checkbox' | 'textarea' | 'file';
 
@@ -186,17 +188,9 @@ const FormField: React.FC<FormFieldProps> = ({
     if (!label) return null;
     
     return (
-      <label htmlFor={fieldId} className="form-label">
+      <LabelWithHelp htmlFor={fieldId} className="form-label" helpText={tooltipContent} required={required}>
         {label}
-        {required && <span className="text-danger ms-1">*</span>}
-        {tooltipContent && (
-          <i
-            className="bi bi-info-circle text-muted ms-1"
-            style={{ cursor: 'help', fontSize: '0.85rem' }}
-            title={tooltipContent}
-          />
-        )}
-      </label>
+      </LabelWithHelp>
     );
   };
 
@@ -268,10 +262,7 @@ const FormField: React.FC<FormFieldProps> = ({
             maxLength={maxLength}
             className={`form-control ${size !== 'md' ? `form-control-${size}` : ''} ${className}`}
             data-testid={dataTestId}
-            title={tooltip}
-            data-bs-toggle={tooltip ? 'tooltip' : undefined}
-            data-bs-placement={tooltip ? tooltipPosition : undefined}
-            data-bs-title={tooltip}
+            {...getBootstrapTooltipProps(tooltip, tooltipPosition)}
           />
         );
 

@@ -1,7 +1,8 @@
 import React, { useRef, useMemo, memo, useState, useLayoutEffect, useCallback, useId } from 'react';
 import { PieChartProps } from '../types';
 import { ChartEmptyState } from '../ChartEmptyState';
-import { InfoHelpIcon } from 'components/ui/InfoHelpIcon';
+import { LabelWithHelp } from 'components/ui/LabelWithHelp';
+import { ChartFloatingTooltipHost } from '../ChartFloatingTooltip';
 import { formatPieValue, getItemValue, resolveHighlightItem } from './utils';
 import { MetricPieHeaderIcon } from './MetricPieHeaderIcon';
 import { PieSidebarLegend } from './PieSidebarLegend';
@@ -178,10 +179,9 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(
             </div>
             {metricHeaderInfo ? (
               <div className="pie-metric-header__title-with-help">
-                <span id={titleId} className="pie-metric-header__title">
+                <LabelWithHelp as="span" id={titleId} className="pie-metric-header__title" helpText={metricHeaderInfo}>
                   {title}
-                </span>
-                <InfoHelpIcon text={metricHeaderInfo} className="ms-1" />
+                </LabelWithHelp>
               </div>
             ) : (
               <span id={titleId} className="pie-metric-header__title">
@@ -219,25 +219,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(
               height={dimensions.height}
               style={{ display: 'block', overflow: 'visible', maxWidth: '100%', maxHeight: '100%' }}
             />
-            <div
-              ref={tooltipRef}
-              style={{
-                position: 'fixed',
-                padding: '6px 10px',
-                background: 'var(--bg-tertiary, rgba(30, 32, 38, 0.95))',
-                color: 'var(--text-primary, #fff)',
-                border: '1px solid var(--border-color, rgba(255,255,255,0.12))',
-                borderRadius: '6px',
-                fontSize: '12px',
-                fontWeight: 500,
-                pointerEvents: 'none',
-                zIndex: 9999,
-                opacity: 0,
-                visibility: 'hidden',
-                whiteSpace: 'nowrap',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
-              }}
-            />
+            <ChartFloatingTooltipHost ref={tooltipRef} />
           </div>
         </div>
 

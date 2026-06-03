@@ -6,7 +6,8 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useFormReset } from 'hooks/useFormReset';
 import DraggableModal from 'components/common/DraggableModal';
-import { ModalFormActions } from 'components/ui';
+import { ModalFormActions, LabelWithHelp } from 'components/ui';
+import { useI18n } from 'contexts/I18nContext';
 import type { SaasParametros } from 'services/saas/saasParametrosService';
 import {
   RECURSOS_SISTEMA_BY_VARIANT,
@@ -35,6 +36,7 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
 }) => {
   const isSaas = variant === 'saas';
   const config = RECURSOS_SISTEMA_BY_VARIANT[variant];
+  const { t } = useI18n();
   const isMobile = useIsMobile();
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
@@ -145,7 +147,7 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
         >
           <div className="card mb-3">
             <div className="card-header py-1 px-2">
-              <small className="fw-bold mb-0">Validações</small>
+              <small className="fw-bold mb-0">{t('params.validations')}</small>
             </div>
             <div className={`card-body p-2${isSaas ? ' overflow-visible' : ''}`}>
               <div className="form-check mb-3">
@@ -157,18 +159,13 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
                   onChange={() => handleCheckboxChange('validar_cpf_cnpj')}
                   disabled={updateMutation.isPending}
                 />
-                <label className="form-check-label" htmlFor={`${idPrefix}validar_cpf_cnpj`}>
-                  Validar CNPJ
-                  <i
-                    className="bi bi-info-circle text-muted ms-1"
-                    style={{ cursor: 'help', fontSize: '0.85rem' }}
-                    title={
-                      isSaas
-                        ? 'Valida CNPJ ao cadastrar/editar clientes'
-                        : 'Quando ativado, valida se CNPJ é válido ao cadastrar/editar clientes'
-                    }
-                  />
-                </label>
+                <LabelWithHelp
+                  htmlFor={`${idPrefix}validar_cpf_cnpj`}
+                  className="form-check-label"
+                  helpText={t(isSaas ? 'params.validateCpfCnpjHelpSaas' : 'params.validateCpfCnpjHelp')}
+                >
+                  {t('params.validateCpfCnpj')}
+                </LabelWithHelp>
               </div>
               <div className="form-check mb-3">
                 <input
@@ -179,25 +176,20 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
                   onChange={() => handleCheckboxChange('validar_cep')}
                   disabled={updateMutation.isPending}
                 />
-                <label className="form-check-label" htmlFor={`${idPrefix}validar_cep`}>
-                  Validar CEP
-                  <i
-                    className="bi bi-info-circle text-muted ms-1"
-                    style={{ cursor: 'help', fontSize: '0.85rem' }}
-                    title={
-                      isSaas
-                        ? 'Busca dados do endereço ao digitar CEP'
-                        : 'Quando ativado, busca automaticamente os dados do endereço ao digitar um CEP válido'
-                    }
-                  />
-                </label>
+                <LabelWithHelp
+                  htmlFor={`${idPrefix}validar_cep`}
+                  className="form-check-label"
+                  helpText={t(isSaas ? 'params.validateCepHelpSaas' : 'params.validateCepHelp')}
+                >
+                  {t('params.validateCep')}
+                </LabelWithHelp>
               </div>
             </div>
           </div>
 
           <div className="card mb-3">
             <div className="card-header py-1 px-2">
-              <small className="fw-bold mb-0">Geração de Títulos</small>
+              <small className="fw-bold mb-0">{t('params.titleGeneration')}</small>
             </div>
             <div className={`card-body p-2${isSaas ? ' overflow-visible' : ''}`}>
               <div className="form-check mb-3">
@@ -209,14 +201,13 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
                   onChange={() => handleCheckboxChange('titulos_vence_sabado')}
                   disabled={updateMutation.isPending}
                 />
-                <label className="form-check-label" htmlFor={`${idPrefix}titulos_vence_sabado`}>
-                  Títulos Vencem aos Sábados
-                  <i
-                    className="bi bi-info-circle text-muted ms-1"
-                    style={{ cursor: 'help', fontSize: '0.85rem' }}
-                    title="Permite que títulos tenham vencimento aos sábados"
-                  />
-                </label>
+                <LabelWithHelp
+                  htmlFor={`${idPrefix}titulos_vence_sabado`}
+                  className="form-check-label"
+                  helpText={t('params.titlesDueSaturdayHelp')}
+                >
+                  {t('params.titlesDueSaturday')}
+                </LabelWithHelp>
               </div>
               <div className="form-check mb-3">
                 <input
@@ -227,14 +218,13 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
                   onChange={() => handleCheckboxChange('titulos_vence_domingo')}
                   disabled={updateMutation.isPending}
                 />
-                <label className="form-check-label" htmlFor={`${idPrefix}titulos_vence_domingo`}>
-                  Títulos Vencem aos Domingos
-                  <i
-                    className="bi bi-info-circle text-muted ms-1"
-                    style={{ cursor: 'help', fontSize: '0.85rem' }}
-                    title="Permite que títulos tenham vencimento aos domingos"
-                  />
-                </label>
+                <LabelWithHelp
+                  htmlFor={`${idPrefix}titulos_vence_domingo`}
+                  className="form-check-label"
+                  helpText={t('params.titlesDueSundayHelp')}
+                >
+                  {t('params.titlesDueSunday')}
+                </LabelWithHelp>
               </div>
               {isSaas && (
                 <>
@@ -247,14 +237,13 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
                       onChange={() => handleCheckboxChange('manter_numeros_titulos')}
                       disabled={updateMutation.isPending}
                     />
-                    <label className="form-check-label" htmlFor="saas_manter_numeros_titulos">
-                      Manter Números de Títulos
-                      <i
-                        className="bi bi-info-circle text-muted ms-1"
-                        style={{ cursor: 'help', fontSize: '0.85rem' }}
-                        title="Quando um título é pago, a geração cria um novo para manter a quantidade configurada"
-                      />
-                    </label>
+                    <LabelWithHelp
+                      htmlFor="saas_manter_numeros_titulos"
+                      className="form-check-label"
+                      helpText={t('params.keepTitleNumbersHelp')}
+                    >
+                      {t('params.keepTitleNumbers')}
+                    </LabelWithHelp>
                   </div>
                   {formData.manter_numeros_titulos && (
                     <div className="mb-3">
@@ -289,17 +278,16 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
 
           <div className="card mb-3">
             <div className="card-header py-1 px-2">
-              <small className="fw-bold mb-0">Central do Assinante</small>
+              <small className="fw-bold mb-0">{t('params.subscriberCenter')}</small>
             </div>
             <div className={`card-body p-2${isSaas ? ' overflow-visible' : ''}`}>
-              <label htmlFor={`${idPrefix}central_metodo`} className="form-label small mb-1">
-                Método de Login
-                <i
-                  className="bi bi-info-circle text-muted ms-1"
-                  style={{ cursor: 'help', fontSize: '0.85rem' }}
-                  title="Define se o login na central do assinante será feito por CNPJ ou Email"
-                />
-              </label>
+              <LabelWithHelp
+                htmlFor={`${idPrefix}central_metodo`}
+                className="form-label small mb-1"
+                helpText={t('params.loginMethodHelp')}
+              >
+                {t('params.loginMethod')}
+              </LabelWithHelp>
               <select
                 className={`form-select form-select-sm`}
                 id={`${idPrefix}central_metodo`}
@@ -316,18 +304,17 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
           {isSaas && (
             <div className="card mb-3">
               <div className="card-header py-1 px-2">
-                <small className="fw-bold mb-0">Bloqueio por Atraso</small>
+                <small className="fw-bold mb-0">{t('params.overdueBlockSection')}</small>
               </div>
               <div className="card-body p-2 overflow-visible">
                 <div className="mb-3">
-                  <label htmlFor="saas_dias_atraso_bloqueio" className="form-label small mb-1">
-                    Dias em atraso para bloqueio
-                    <i
-                      className="bi bi-info-circle text-muted ms-1"
-                      style={{ cursor: 'help', fontSize: '0.85rem' }}
-                      title="Número de dias após o vencimento para bloquear o acesso à plataforma. Deixe em branco ou 0 para desabilitar."
-                    />
-                  </label>
+                  <LabelWithHelp
+                    htmlFor="saas_dias_atraso_bloqueio"
+                    className="form-label small mb-1"
+                    helpText={t('params.overdueDaysBlockHelp')}
+                  >
+                    {t('params.overdueDaysBlock')}
+                  </LabelWithHelp>
                   <input
                     type="number"
                     className="form-control form-control-sm"
@@ -347,17 +334,16 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
                     disabled={updateMutation.isPending}
                     style={{ maxWidth: '140px', minWidth: '80px' }}
                   />
-                  <small className="text-muted form-hint d-block mt-1">0 ou vazio = desabilitado</small>
+                  <small className="text-muted form-hint d-block mt-1">{t('params.overdueDaysBlockDisabledHint')}</small>
                 </div>
                 <div className="mb-3">
-                  <label htmlFor="saas_dias_desbloqueio_manual" className="form-label small mb-1">
-                    Dias para desbloqueio manual
-                    <i
-                      className="bi bi-info-circle text-muted ms-1"
-                      style={{ cursor: 'help', fontSize: '0.85rem' }}
-                      title="Ao desbloquear manualmente, a empresa terá esta quantidade de dias para regularizar títulos."
-                    />
-                  </label>
+                  <LabelWithHelp
+                    htmlFor="saas_dias_desbloqueio_manual"
+                    className="form-label small mb-1"
+                    helpText={t('params.manualUnlockDaysHelp')}
+                  >
+                    {t('params.manualUnlockDays')}
+                  </LabelWithHelp>
                   <input
                     type="number"
                     className="form-control form-control-sm"
@@ -377,7 +363,7 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
                     disabled={updateMutation.isPending}
                     style={{ maxWidth: '140px', minWidth: '80px' }}
                   />
-                  <small className="text-muted form-hint d-block mt-1">0 ou vazio = desabilitado</small>
+                  <small className="text-muted form-hint d-block mt-1">{t('params.overdueDaysBlockDisabledHint')}</small>
                 </div>
               </div>
             </div>

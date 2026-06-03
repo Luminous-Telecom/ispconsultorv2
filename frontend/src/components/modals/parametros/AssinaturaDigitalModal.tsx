@@ -6,7 +6,7 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { AssinaturaDigitalProviderService, AssinaturaDigitalProviderType } from 'services/assinaturaDigitalProviderService';
 import DraggableModal from 'components/common/DraggableModal';
-import { CancelarButton, SalvarButton } from 'components/ui';
+import { CancelarButton, SalvarButton, LabelWithHelp } from 'components/ui';
 import Button from 'components/ui/Button';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -204,25 +204,15 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
                 onChange={(e) => setFormData(prev => ({ ...prev, habilitado: e.target.checked }))}
                 disabled={updateMutation.isPending}
               />
-              <label className="form-check-label" htmlFor="habilitado">
+              <LabelWithHelp htmlFor="habilitado" className="form-check-label" helpText={t('digitalSignature.enableHelp')}>
                 {t('digitalSignature.enable')}
-                <i
-                  className="bi bi-info-circle text-muted ms-1"
-                  style={{ cursor: 'help', fontSize: '0.85rem' }}
-                  title={t('digitalSignature.enableHelp')}
-                />
-              </label>
+              </LabelWithHelp>
             </div>
 
             <div className="mb-3">
-              <label htmlFor="apiProvider" className="form-label">
+              <LabelWithHelp htmlFor="apiProvider" className="form-label" helpText={t('digitalSignature.providerHelp')}>
                 {t('digitalSignature.provider')}
-                <i
-                  className="bi bi-info-circle text-muted ms-1"
-                  style={{ cursor: 'help', fontSize: '0.85rem' }}
-                  title={t('digitalSignature.providerHelp')}
-                />
-              </label>
+              </LabelWithHelp>
               <select
                 className="form-select"
                 id="apiProvider"
@@ -240,14 +230,9 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
             </div>
 
             <div className="mb-3">
-              <label htmlFor="diasExpiracaoPadrao" className="form-label">
+              <LabelWithHelp htmlFor="diasExpiracaoPadrao" className="form-label" helpText={t('digitalSignature.expirationDaysHelp')}>
                 {t('digitalSignature.expirationDays')}
-                <i
-                  className="bi bi-info-circle text-muted ms-1"
-                  style={{ cursor: 'help', fontSize: '0.85rem' }}
-                  title={t('digitalSignature.expirationDaysHelp')}
-                />
-              </label>
+              </LabelWithHelp>
               <input
                 type="number"
                 className="form-control"
@@ -268,14 +253,13 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
           </div>
           <div className="card-body">
             <div className="mb-3">
-              <label htmlFor="apiKey" className="form-label">
+              <LabelWithHelp
+                htmlFor="apiKey"
+                className="form-label"
+                helpText={formData.apiProvider === 'assinafy' ? t('digitalSignature.assinafyHelp') : t('digitalSignature.zapsignHelp')}
+              >
                 {t('digitalSignature.apiKey')}
-                <i
-                  className="bi bi-info-circle text-muted ms-1"
-                  style={{ cursor: 'help', fontSize: '0.85rem' }}
-                  title={formData.apiProvider === 'assinafy' ? t('digitalSignature.assinafyHelp') : t('digitalSignature.zapsignHelp')}
-                />
-              </label>
+              </LabelWithHelp>
               <div className="input-group">
                 <input
                   type={showApiKey ? 'text' : 'password'}
@@ -308,14 +292,9 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
 
             {formData.apiProvider === 'assinafy' && (
               <div className="mb-3">
-                <label htmlFor="accountId" className="form-label">
-                  {t('digitalSignature.workspaceId')} <span className="text-danger">*</span>
-                  <i
-                    className="bi bi-info-circle text-muted ms-1"
-                    style={{ cursor: 'help', fontSize: '0.85rem' }}
-                    title={t('digitalSignature.workspaceIdHelp')}
-                  />
-                </label>
+                <LabelWithHelp htmlFor="accountId" className="form-label" helpText={t('digitalSignature.workspaceIdHelp')} required>
+                  {t('digitalSignature.workspaceId')}
+                </LabelWithHelp>
                 <input
                   type="text"
                   className="form-control"

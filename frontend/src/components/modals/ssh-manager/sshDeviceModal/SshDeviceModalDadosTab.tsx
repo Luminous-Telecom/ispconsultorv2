@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormField, AtivoInativoField } from 'components/ui';
+import { FormField, AtivoInativoField, LabelWithHelp } from 'components/ui';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import { useI18n } from 'contexts/I18nContext';
 import { DEVICE_TYPE_OPTIONS } from './constants';
@@ -240,13 +240,7 @@ const SshDeviceModalDadosTab: React.FC<SshDeviceModalDadosTabProps> = ({
               {renderBackupAgendamentoHint(agendamentoBackup, t)}
             </label>
           </div>
-          <i
-            className="bi bi-info-circle text-muted"
-            style={{ cursor: 'help', fontSize: '0.85rem' }}
-            title={t('sshDevice.backupEnabledHint')}
-            aria-label={t('sshDevice.backupEnabledHint')}
-            role="img"
-          />
+          <LabelWithHelp as="span" helpText={t('sshDevice.backupEnabledHint')} helpIconClassName="ms-0" />
         </div>
       </div>
     </div>

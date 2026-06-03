@@ -1,5 +1,5 @@
 import React from 'react';
-import { BulkActionButton } from 'components/ui';
+import { BulkActionButton, LabelWithHelp } from 'components/ui';
 import type { BlockdomiImportTranslateFn } from './importarListaBlockdomiTypes';
 import type { ClassifiedList } from './importarListaBlockdomiTypes';
 
@@ -39,14 +39,9 @@ const ImportarListaBlockdomiEditorSection: React.FC<ImportarListaBlockdomiEditor
   <>
     <div className={`ilb-editor-wrapper mb-3 ${rawText.trim() ? 'has-content' : ''}`}>
       <div className="ilb-editor-header">
-        <span>
+        <LabelWithHelp as="span" helpText={t('blockdomi.importIntro')}>
           {t('blockdomi.inputListLabel')}
-          <i
-            className="bi bi-info-circle text-muted ms-1"
-            style={{ cursor: 'help', fontSize: '0.85rem' }}
-            title={t('blockdomi.importIntro')}
-          />
-        </span>
+        </LabelWithHelp>
         {domainCount > 0 && (
           <span className="ilb-editor-counter">
             {domainCount} {t('blockdomi.domainsDetected')}

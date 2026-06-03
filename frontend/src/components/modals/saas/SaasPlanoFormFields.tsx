@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormField, AtivoInativoField } from 'components/ui';
+import { FormField, AtivoInativoField, LabelWithHelp } from 'components/ui';
 import { useI18n } from 'contexts/I18nContext';
 import { PLANO_MODULOS } from 'constants/planoModulos';
 import type { PlanoModuloId } from 'services/planoModulosService';
@@ -127,14 +127,9 @@ export const SaasPlanoGeralFormFields: React.FC<SaasPlanoGeralFormFieldsProps> =
         </div>
       </div>
       <div className="mb-2">
-        <label className="form-label small">
+        <LabelWithHelp className="form-label small" helpText={t('saas.planModulesHelp')}>
           {t('saas.planModules')}
-          <i
-            className="bi bi-info-circle text-muted ms-1"
-            style={{ cursor: 'help', fontSize: '0.85rem' }}
-            title={t('saas.planModulesHelp')}
-          />
-        </label>
+        </LabelWithHelp>
         <div className="d-flex flex-wrap gap-3">
           {PLANO_MODULOS.map((mod) => (
             <label key={mod.id} className="d-flex align-items-center gap-2 small">
@@ -167,14 +162,13 @@ export interface SaasPlanoEquipamentosFormFieldsProps {
 export const SaasPlanoEquipamentosFormFields: React.FC<SaasPlanoEquipamentosFormFieldsProps> = ({
   equipamentos,
   onEquipamentosChange,
-}) => (
+}) => {
+  const { t } = useI18n();
+
+  return (
   <>
     <div className="mb-2">
-      <i
-        className="bi bi-info-circle text-muted"
-        style={{ cursor: 'help', fontSize: '0.85rem' }}
-        title="0 = sem limite"
-      />
+      <LabelWithHelp as="span" helpText={t('saas.planLimitZeroHelp')} helpIconClassName="ms-0" />
     </div>
     <div className="row g-2">
       <div className="col-md-4">
@@ -233,4 +227,5 @@ export const SaasPlanoEquipamentosFormFields: React.FC<SaasPlanoEquipamentosForm
       </div>
     </div>
   </>
-);
+  );
+};

@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 import { ChartDataItem, ChartFormat } from './types';
 import { ChartEmptyState } from './ChartEmptyState';
 import { ChartTitleWithInfo } from './ChartTitleWithInfo';
+import { createD3ChartTooltip } from './chartTooltip';
 
 interface BarChartProps {
   data: ChartDataItem[];
@@ -164,37 +165,17 @@ const BarChart: React.FC<BarChartProps> = memo(({ data, title, titleInfo, format
     });
 
     // Tooltip
-    const defs = d3.select(svg).append('defs');
-    const tooltipFilterId = `tooltip-shadow-bar-${Math.random().toString(36).slice(2)}`;
-    defs.append('filter').attr('id', tooltipFilterId)
-      .attr('x', '-20%').attr('y', '-20%').attr('width', '140%').attr('height', '140%')
-      .append('feDropShadow').attr('dx', 0).attr('dy', 4).attr('stdDeviation', 6).attr('flood-opacity', 0.25);
+    const tooltip = createD3ChartTooltip(svg, 'tooltip-shadow-bar');
+    if (!tooltip) return;
 
-    const tooltipG = d3.select(svg).append('g').attr('class', 'chart-tooltip').style('opacity', 0).style('pointer-events', 'none');
-    const tooltipBg = tooltipG.append('rect').attr('rx', 6).attr('ry', 6)
-      .attr('fill', 'var(--bg-tertiary)').attr('stroke', 'var(--border-color)')
-      .attr('stroke-width', 1).attr('filter', `url(#${tooltipFilterId})`);
-    const tooltipContent = tooltipG.append('g').attr('transform', 'translate(12,12)');
-    tooltipContent.append('text').attr('class', 'tooltip-label')
-      .attr('font-family', 'system-ui, -apple-system, sans-serif').attr('font-size', '10px')
-      .attr('font-weight', '500').attr('fill', 'var(--text-muted)').attr('y', 0);
-    tooltipContent.append('text').attr('class', 'tooltip-value')
-      .attr('font-family', 'system-ui, -apple-system, sans-serif').attr('font-size', '11px')
-      .attr('font-weight', '600').attr('fill', 'var(--text-primary)').attr('y', 16);
-
-    const padding = { x: 16, y: 12 };
     const container = containerRef.current;
     if (!container) return;
 
     barGroups
       .on('mouseenter', function (event, d) {
         if (!d) return;
-        tooltipContent.select('.tooltip-label').text(d.label);
-        tooltipContent.select('.tooltip-value').text(formatValue(d.value));
-        const bbox = tooltipContent.node()?.getBBox();
-        const w = bbox ? Math.max(bbox.width + padding.x, 100) : 120;
-        const h = bbox ? bbox.height + padding.y : 42;
-        tooltipBg.attr('width', w).attr('height', h).attr('x', 0).attr('y', 0);
+        tooltip.setLabelValue(d.label, formatValue(d.value));
+        const { width: w, height: h } = tooltip.measure();
         const rect = container.getBoundingClientRect();
         let tx = event.clientX - rect.left + 14;
         let ty = event.clientY - rect.top - 10;
@@ -202,11 +183,11 @@ const BarChart: React.FC<BarChartProps> = memo(({ data, title, titleInfo, format
         if (tx < 8) tx = 8;
         if (ty < 8) ty = 8;
         if (ty + h > svgHeight) ty = event.clientY - rect.top - h - 8;
-        tooltipG.attr('transform', `translate(${tx},${ty})`);
-        tooltipG.transition().duration(180).ease(d3.easeCubicOut).style('opacity', 1);
+        tooltip.group.attr('transform', `translate(${tx},${ty})`);
+        tooltip.show();
       })
       .on('mouseleave', () => {
-        tooltipG.transition().duration(150).ease(d3.easeCubicOut).style('opacity', 0);
+        tooltip.hide();
       });
 
     return () => { barGroups.on('mouseenter', null).on('mouseleave', null); };
