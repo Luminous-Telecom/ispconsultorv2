@@ -132,7 +132,7 @@ const AppUserMenu: React.FC<AppUserMenuProps> = ({
           <li>
             <button
               type="button"
-              className="layout-user-dropdown__row layout-user-dropdown__row--danger layout-user-dropdown__row--last"
+              className="layout-user-dropdown__row layout-user-dropdown__row--danger"
               onClick={onLogout}
             >
               <i className="bi bi-box-arrow-right" aria-hidden />
