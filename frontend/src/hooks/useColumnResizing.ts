@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { TableColumn } from 'components/tables/types';
+import { ID_COLUMN_MIN_WIDTH_PX } from 'components/tables/columnWidthUtils';
 
 interface UseColumnResizingOptions<T = Record<string, unknown>> {
   tableId: string;
@@ -44,7 +45,11 @@ export function useColumnResizing<T = Record<string, unknown>>({
       columns.forEach((column) => {
         const w = parsed[column.key];
         if (w) {
-          validWidths[column.key] = Math.max(minColumnWidth, Math.min(maxColumnWidth, w));
+          let clamped = Math.max(minColumnWidth, Math.min(maxColumnWidth, w));
+          if (column.key === 'id') {
+            clamped = Math.max(ID_COLUMN_MIN_WIDTH_PX, clamped);
+          }
+          validWidths[column.key] = clamped;
         }
       });
       setColumnWidths(validWidths);
@@ -79,7 +84,9 @@ export function useColumnResizing<T = Record<string, unknown>>({
 
       const diff = e.clientX - active.startX;
       const colMin = getMinWidthForColumn ? getMinWidthForColumn(active.columnKey) : minColumnWidth;
-      active.pendingWidth = Math.max(colMin, Math.min(maxColumnWidth, active.startWidth + diff));
+      const floor =
+        active.columnKey === 'id' ? Math.max(ID_COLUMN_MIN_WIDTH_PX, colMin) : colMin;
+      active.pendingWidth = Math.max(floor, Math.min(maxColumnWidth, active.startWidth + diff));
       setResizeGuideX(e.clientX);
     };
 

@@ -1,5 +1,6 @@
 import React, { useMemo, useCallback, useRef, useEffect } from 'react';
 import { useI18n } from 'contexts/I18nContext';
+import { getColumnMinWidth, ID_COLUMN_MIN_WIDTH_PX } from './columnWidthUtils';
 import { TableColumn as TableColumnType, SortDirection } from './types';
 
 interface TableColumnProps<T = Record<string, unknown>> {
@@ -77,16 +78,30 @@ const TableColumn = <T extends { id: number | string }>({
         : column.width;
     }
 
-    if (effectiveWidth) {
-      const widthValue = typeof effectiveWidth === 'number' ? `${effectiveWidth}px` : effectiveWidth;
+    if (effectiveWidth !== undefined && effectiveWidth !== '') {
+      const widthPx =
+        typeof effectiveWidth === 'number'
+          ? effectiveWidth
+          : parseInt(String(effectiveWidth).replace('px', ''), 10);
+      const clampedPx =
+        column.key === 'id'
+          ? Math.max(ID_COLUMN_MIN_WIDTH_PX, Number.isNaN(widthPx) ? ID_COLUMN_MIN_WIDTH_PX : widthPx)
+          : widthPx;
+      const widthValue = `${clampedPx}px`;
       styles.width = widthValue;
       styles.minWidth = widthValue;
       styles.maxWidth = widthValue;
     } else {
-      styles.minWidth = `${minWidthFromTitle}px`;
+      const colMin = getColumnMinWidth({
+        key: column.key,
+        label: column.label,
+        minWidth: column.minWidth,
+        badgeLabels: column.badgeLabels,
+      });
+      styles.minWidth = `${colMin ?? minWidthFromTitle}px`;
     }
 
-    if (column.minWidth) {
+    if (column.minWidth && column.key !== 'id') {
       styles.minWidth = typeof column.minWidth === 'number' ? `${column.minWidth}px` : column.minWidth;
     }
     if (column.maxWidth) {
@@ -94,7 +109,7 @@ const TableColumn = <T extends { id: number | string }>({
     }
 
     return styles;
-  }, [column.width, column.minWidth, column.maxWidth, columnWidth, minWidthFromTitle]);
+  }, [column.key, column.label, column.minWidth, column.maxWidth, column.badgeLabels, column.width, columnWidth, minWidthFromTitle]);
 
   const columnClasses = useMemo(() => {
     const classes: string[] = [];

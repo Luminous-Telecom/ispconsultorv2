@@ -102,10 +102,7 @@ function TableDesktopView<T extends { id: number | string }>({
             <col className="col-checkbox" style={{ width: CHECKBOX_COLUMN_WIDTH_PX }} />
           )}
           {visibleColumns.map((column) => {
-            const widthPx =
-              column.key === 'id'
-                ? undefined
-                : resolveColumnWidthPx(column, columnWidths, hasCustomWidths);
+            const widthPx = resolveColumnWidthPx(column, columnWidths, hasCustomWidths);
             return (
               <col
                 key={column.key}

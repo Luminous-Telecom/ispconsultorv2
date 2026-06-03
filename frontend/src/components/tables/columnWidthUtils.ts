@@ -3,6 +3,7 @@ import React from 'react';
 export const DEFAULT_COLUMN_WIDTH_PX = 120;
 export const CHECKBOX_COLUMN_WIDTH_PX = 35;
 export const ACTIONS_COLUMN_WIDTH_PX = 120;
+export const ID_COLUMN_MIN_WIDTH_PX = 52;
 
 export function getMinWidthFromBadgeLabels(labels: string[]): number {
   if (!labels?.length) return 0;
@@ -27,10 +28,20 @@ export function resolveColumnWidthPx(
   hasCustomWidths: boolean
 ): number | undefined {
   if (columnWidths[column.key] != null) {
-    return columnWidths[column.key];
+    const savedWidth = columnWidths[column.key];
+    return column.key === 'id'
+      ? Math.max(ID_COLUMN_MIN_WIDTH_PX, savedWidth)
+      : savedWidth;
   }
   const configured = parseColumnWidthPx(column.width);
-  if (configured != null) return configured;
+  if (configured != null) {
+    return column.key === 'id'
+      ? Math.max(ID_COLUMN_MIN_WIDTH_PX, configured)
+      : configured;
+  }
+  if (column.key === 'id') {
+    return hasCustomWidths ? ID_COLUMN_MIN_WIDTH_PX : undefined;
+  }
   return hasCustomWidths ? DEFAULT_COLUMN_WIDTH_PX : undefined;
 }
 
@@ -43,11 +54,15 @@ export function fixedWidthStyle(widthPx: number): React.CSSProperties {
 }
 
 export function getColumnMinWidth(column: {
+  key?: string;
   badgeLabels?: string[];
   minWidth?: string | number;
   label?: string;
 }): number | undefined {
   const titleMin = getTitleMinWidth(column.label);
+  if (column.key === 'id') {
+    return Math.max(ID_COLUMN_MIN_WIDTH_PX, titleMin);
+  }
   if (column.badgeLabels?.length) {
     const badgeMin = getMinWidthFromBadgeLabels(column.badgeLabels);
     return Math.max(badgeMin, titleMin);
