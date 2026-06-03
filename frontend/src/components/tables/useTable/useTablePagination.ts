@@ -28,11 +28,14 @@ export function useTablePagination<T extends { id: number | string }>({
     }
   }, [normalizedPagination, setState]);
 
-  const isServerPagedSubset = useMemo(
-    () =>
-      !!normalizedPagination && (normalizedPagination.total ?? 0) > sortedData.length,
-    [normalizedPagination, sortedData.length]
-  );
+  const isServerPagedSubset = useMemo(() => {
+    if (!normalizedPagination) return false;
+    const total = normalizedPagination.total ?? 0;
+    const perPage = normalizedPagination.perPage ?? state.pageSize;
+    // Só trata como página do servidor quando data é claramente um subconjunto (evita
+    // desativar slice client-side quando total > length mas todos os itens já estão em data).
+    return total > sortedData.length && sortedData.length <= perPage;
+  }, [normalizedPagination, sortedData.length, state.pageSize]);
 
   const paginatedData = useMemo(() => {
     const perPage = normalizedPagination?.perPage ?? state.pageSize;

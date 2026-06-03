@@ -23,6 +23,46 @@ import { normalizePagination } from './tableUtils';
 import { computeTablePaginationValues } from './tablePaginationUtils';
 import { useTableHeaderSync } from './useTableHeaderSync';
 
+/** Altura aproximada de cada linha do tbody (2rem em _tables.scss). */
+const TABLE_BODY_ROW_HEIGHT_PX = 32;
+const MODAL_AUTO_ROWS_MAX = 50;
+/** Com resumo embaixo o ResizeObserver recalcula; sem resumo, 1 linha a menos evita scroll. */
+const MODAL_AUTO_ROWS_BUFFER_WITH_SUMMARY = 0;
+const MODAL_AUTO_ROWS_BUFFER_DEFAULT = 1;
+/** Tabela principal (header): uma linha a menos para evitar scroll aparente. */
+const HEADER_AUTO_ROWS_BUFFER = 1;
+const HEADER_AUTO_ROWS_MAX = 30;
+
+const TABLE_SUMMARY_SELECTORS = '.financeiro-resumo, .contrato-totais-resumo';
+
+function hasVisibleTableSummary(container: HTMLElement): boolean {
+  const scope =
+    container.closest('.draggable-modal-body-custom') ??
+    container.closest('.tab-content') ??
+    container.closest('.embedded-table-panel')?.parentElement;
+  if (!scope) return false;
+  return Array.from(scope.querySelectorAll(TABLE_SUMMARY_SELECTORS)).some(
+    (el) => (el as HTMLElement).offsetHeight > 0
+  );
+}
+
+function computeModalOptimalRows(container: HTMLElement): number | null {
+  const responsive = container.querySelector('.table-responsive-custom') as HTMLElement | null;
+  if (!responsive || responsive.offsetHeight < 100) return null;
+  const headH =
+    (container.querySelector('thead') as HTMLElement | null)?.offsetHeight ?? TABLE_BODY_ROW_HEIGHT_PX;
+  const rowBuffer = hasVisibleTableSummary(container)
+    ? MODAL_AUTO_ROWS_BUFFER_WITH_SUMMARY
+    : MODAL_AUTO_ROWS_BUFFER_DEFAULT;
+  return Math.max(
+    5,
+    Math.min(
+      MODAL_AUTO_ROWS_MAX,
+      Math.floor((responsive.offsetHeight - headH) / TABLE_BODY_ROW_HEIGHT_PX) - rowBuffer
+    )
+  );
+}
+
 export interface TableProps<T = Record<string, unknown>> {
   config: TableConfig<T>;
   onActionClick?: (action: TableAction<T>, item: T, index: number) => void;
@@ -343,39 +383,71 @@ function Table<T extends { id: number | string }>({
   }, [resizeGuideX]);
 
   useEffect(() => {
-    if (!normalizedPagination || !onPageSizeChange || autoRowsAppliedRef.current) return;
+    if (!normalizedPagination || !onPageSizeChange) return;
+
+    let rafId = 0;
+    let observer: ResizeObserver | null = null;
+    let attachTimer: ReturnType<typeof setTimeout>;
 
     const calculateAndApply = () => {
       const container = tableContainerRef.current;
       if (!container) return;
 
       if (!syncWithHeader) {
-        const responsive = container.querySelector('.table-responsive-custom') as HTMLElement | null;
-        if (!responsive || responsive.offsetHeight < 100) return;
-        const headH = (container.querySelector('thead') as HTMLElement | null)?.offsetHeight ?? 32;
-        const optimalRows = Math.max(5, Math.min(50, Math.floor((responsive.offsetHeight - headH) / 32)));
+        const optimalRows = computeModalOptimalRows(container);
+        if (optimalRows == null) return;
         if (normalizedPagination.perPage !== optimalRows) {
           onPageSizeChange(optimalRows);
-          autoRowsAppliedRef.current = true;
         }
         return;
       }
+
+      if (autoRowsAppliedRef.current) return;
 
       const scrollContainer =
         container.closest('[style*="flex: 1"]') || container.closest('[style*="overflow: auto"]');
       if (!scrollContainer) return;
       const availableHeight = scrollContainer.getBoundingClientRect().height;
-      const optimalRows = Math.max(5, Math.min(30, Math.floor((availableHeight - 120) / 35)));
+      const optimalRows = Math.max(
+        5,
+        Math.min(
+          HEADER_AUTO_ROWS_MAX,
+          Math.floor((availableHeight - 160) / 35) - HEADER_AUTO_ROWS_BUFFER
+        )
+      );
       if (normalizedPagination.perPage !== optimalRows) {
         onPageSizeChange(optimalRows);
-        autoRowsAppliedRef.current = true;
       }
+      autoRowsAppliedRef.current = true;
     };
 
-    const timer = setTimeout(calculateAndApply, 50);
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [normalizedPagination ? 'ready' : 'waiting']);
+    const scheduleCalculate = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(calculateAndApply);
+    };
+
+    const initialTimer = setTimeout(scheduleCalculate, 50);
+
+    if (!syncWithHeader && typeof ResizeObserver !== 'undefined') {
+      attachTimer = setTimeout(() => {
+        const container = tableContainerRef.current;
+        if (!container) return;
+        const watchTarget =
+          (container.querySelector('.table-responsive-custom') as HTMLElement | null) ??
+          container.closest('.list-modal-table-wrapper');
+        if (!watchTarget) return;
+        observer = new ResizeObserver(() => scheduleCalculate());
+        observer.observe(watchTarget);
+      }, 50);
+    }
+
+    return () => {
+      clearTimeout(initialTimer);
+      clearTimeout(attachTimer);
+      cancelAnimationFrame(rafId);
+      observer?.disconnect();
+    };
+  }, [normalizedPagination, onPageSizeChange, syncWithHeader]);
 
   useEffect(() => {
     if (openDropdown === null) return;
@@ -396,7 +468,6 @@ function Table<T extends { id: number | string }>({
     <div
       ref={tableContainerRef}
       className={`${className} table-container-custom`}
-      style={{ ['--table-min-width' as string]: `${tableMinWidth}px` }}
     >
       {!isMobile && showToolbarBlock && (
         <TableToolbar

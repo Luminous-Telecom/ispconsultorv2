@@ -9,6 +9,9 @@ import { useI18n } from 'contexts/I18nContext';
 import { modalStack } from 'utils/modalStack';
 import ResponsiveDialog from './ResponsiveDialog';
 
+const MODAL_EDGE_MARGIN_PX = 8;
+const MODAL_EDGE_MARGIN_RIGHT_MIN_PX = 12;
+
 interface DraggableModalProps {
   show: boolean;
   onClose: () => void;
@@ -70,29 +73,21 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
 
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
-    
-    // Largura do menu lateral (260px)
+
     const sidebarWidth = 260;
-    
-    // Em telas menores, o sidebar pode não estar lá ou ser sobreposto
-    // Mas mantemos a lógica original de descontar 240px se for desktop
-    // Se a tela for muito estreita mas > 768px, isso pode ser um problema
-    // Vamos garantir que availableWidth não seja negativo
+    const scrollbarWidth = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
+    const edgeMarginRight = MODAL_EDGE_MARGIN_PX + Math.max(scrollbarWidth, MODAL_EDGE_MARGIN_RIGHT_MIN_PX);
+
     const availableWidth = Math.max(0, screenWidth - sidebarWidth);
-    
-    // Modal ocupa 95% da largura e 97% da altura para usar mais espaço (tabelas, etc.)
-    const modalWidth = Math.floor(availableWidth * 0.95);
-    const modalHeight = Math.floor(screenHeight * 0.97);
-    
-    // Centralizar na área restante (2.5% lateral, 1.5% topo/base)
-    const centerX = sidebarWidth + Math.floor(availableWidth * 0.025);
-    const centerY = Math.floor(screenHeight * 0.015);
-    
+
+    const modalWidth = Math.max(320, availableWidth - MODAL_EDGE_MARGIN_PX - edgeMarginRight);
+    const modalHeight = Math.max(400, screenHeight - MODAL_EDGE_MARGIN_PX * 2);
+
     setPosition({
-      x: centerX,
-      y: centerY
+      x: sidebarWidth + MODAL_EDGE_MARGIN_PX,
+      y: MODAL_EDGE_MARGIN_PX,
     });
-    
+
     setModalSize({ width: modalWidth, height: modalHeight });
   }, []);
 
@@ -287,7 +282,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           top: `${position.y}px`,
           width: `${modalSize.width}px`,
           height: modalSize.height > 0 ? `${modalSize.height}px` : 'auto',
-          maxHeight: `${window.innerHeight - 32}px`,
+          maxHeight: `${window.innerHeight - MODAL_EDGE_MARGIN_PX * 2}px`,
           zIndex,
           opacity: isVisible ? 1 : 0,
           transform: isVisible ? 'scale(1)' : 'scale(0.95)',
