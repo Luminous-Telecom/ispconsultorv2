@@ -51,9 +51,31 @@ export function useContasReceberListData({
     initialFilters?.data_pagamento_fim,
   ]);
 
+  const dateFiltersRef = useRef({
+    showCancelados,
+    dataVencimentoInicio,
+    dataVencimentoFim,
+  });
+  const setPageRef = useRef(setPage);
+  setPageRef.current = setPage;
+
   useEffect(() => {
-    setPage(1);
-  }, [showCancelados, dataVencimentoInicio, dataVencimentoFim, setPage]);
+    const prev = dateFiltersRef.current;
+    const hasFilterChanged =
+      prev.showCancelados !== showCancelados ||
+      prev.dataVencimentoInicio !== dataVencimentoInicio ||
+      prev.dataVencimentoFim !== dataVencimentoFim;
+
+    dateFiltersRef.current = {
+      showCancelados,
+      dataVencimentoInicio,
+      dataVencimentoFim,
+    };
+
+    if (hasFilterChanged) {
+      setPageRef.current(1);
+    }
+  }, [showCancelados, dataVencimentoInicio, dataVencimentoFim]);
 
   useEffect(() => {
     if (!showCancelados && selectedItems.length > 0) {
@@ -179,8 +201,7 @@ export function useContasReceberListData({
     }
     if (!titulosData || !titulosData.pagination) return undefined;
     const pag = titulosData.pagination;
-    const currentPage =
-      typeof pag.current_page === 'number' ? pag.current_page : list.tableFilters.page;
+    const currentPage = list.tableFilters.page;
     const perPage = list.tableFilters.limit;
     const total = typeof pag.total === 'number' ? pag.total : 0;
     const lastPage = total > 0 ? Math.ceil(total / perPage) : 1;

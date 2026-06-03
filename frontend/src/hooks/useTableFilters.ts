@@ -117,7 +117,7 @@ export interface UseTableFiltersReturn<
   page: number;
   limit: number;
   setPage: (page: number) => void;
-  setLimit: (limit: number) => void;
+  setLimit: (limit: number, options?: { resetPage?: boolean }) => void;
   
   // Campo de busca (field)
   searchField: string;
@@ -258,7 +258,6 @@ export const useTableFilters = <
     }
   }, [sortColumn, sortDirection, onSortChange, resetPageOnFilterChange]);
 
-  // Função para limpar ordenação
   const clearSort = useCallback(() => {
     setSortColumnState(initialSortColumn);
     setSortDirectionState(initialSortDirection);
@@ -272,11 +271,17 @@ export const useTableFilters = <
   }, []);
 
   // Função para definir limite
-  const setLimit = useCallback((newLimit: number) => {
-    setLimitState(newLimit);
-    setPageState(1); // Resetar para primeira página ao mudar limite
-    onLimitChange?.(newLimit);
-    onPageChangeRef.current?.(1);
+  const setLimit = useCallback((newLimit: number, options?: { resetPage?: boolean }) => {
+    const shouldResetPage = options?.resetPage !== false;
+    setLimitState((prevLimit) => {
+      if (prevLimit === newLimit) return prevLimit;
+      if (shouldResetPage) {
+        setPageState(1);
+        onPageChangeRef.current?.(1);
+      }
+      onLimitChange?.(newLimit);
+      return newLimit;
+    });
   }, [onLimitChange]);
 
   // Função para resetar tudo

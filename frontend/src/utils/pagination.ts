@@ -41,7 +41,7 @@ export function normalizeListPagination(
 
   const total = pagination.total ?? 0;
   const perPage = pagination.per_page ?? pagination.limit ?? fallbackLimit;
-  const currentPage = pagination.current_page ?? pagination.page ?? fallbackPage;
+  const currentPage = fallbackPage;
 
   let lastPage = pagination.last_page ?? pagination.totalPages;
   if (!lastPage && total > 0) {
@@ -50,12 +50,14 @@ export function normalizeListPagination(
     lastPage = 1;
   }
 
+  const safePage = Math.min(Math.max(1, currentPage), lastPage);
+
   return {
-    current_page: currentPage,
+    current_page: safePage,
     last_page: lastPage,
     per_page: perPage,
     total,
-    from: pagination.from ?? (currentPage - 1) * perPage + 1,
-    to: pagination.to ?? Math.min(currentPage * perPage, total),
+    from: total > 0 ? (safePage - 1) * perPage + 1 : 0,
+    to: total > 0 ? Math.min(safePage * perPage, total) : 0,
   };
 }
