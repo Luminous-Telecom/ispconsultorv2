@@ -89,3 +89,24 @@ export const temTermosComAssinaturaPendente = (dados: DadosCentralAssinante | un
   if (!dados) return false;
   return dados.termos.some((termo) => termo.assinado === 'NAO');
 };
+
+export const getFinanceiroNavBadgeVariant = (
+  dados: DadosCentralAssinante | undefined
+): 'danger' | 'warning' | 'secondary' => {
+  const atrasados = dados?.resumo.titulos_atrasados ?? 0;
+  const aPagar = dados?.resumo.titulos_a_pagar ?? 0;
+
+  if (atrasados > 0) {
+    return 'danger';
+  }
+  if (aPagar > 0) {
+    return 'warning';
+  }
+  return 'secondary';
+};
+
+export const getFinanceiroPagoNavBadgeVariant = (
+  dados: DadosCentralAssinante | undefined
+): 'success' | 'secondary' => {
+  return (dados?.resumo.titulos_pagos ?? 0) > 0 ? 'success' : 'secondary';
+};

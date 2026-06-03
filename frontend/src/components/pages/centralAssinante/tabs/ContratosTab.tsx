@@ -34,7 +34,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
                   <div className="d-flex justify-content-between align-items-start mb-2">
                     <div className="flex-grow-1">
                       <h6 className="mb-1 fw-bold text-white central-assinante-item-title">
-                        <i className="bi bi-file-earmark-text text-white-50 me-2"></i>
+                        <i className="bi bi-file-earmark-text text-white-50 central-assinante-item-icon me-1"></i>
                         Contrato #{contrato.id}
                       </h6>
                       <p className="mb-0 text-white-50 central-assinante-item-subtitle">{contrato.plano || 'Sem plano'}</p>

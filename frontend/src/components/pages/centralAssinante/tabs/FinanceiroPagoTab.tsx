@@ -30,7 +30,7 @@ const FinanceiroPagoTab: React.FC<FinanceiroPagoTabProps> = ({
   <div>
     {dados.titulos.pagos.length === 0 ? (
       <div className="text-center py-3">
-        <i className="bi bi-check-circle text-white-50" style={{ fontSize: '2rem' }}></i>
+        <i className="bi bi-check-circle text-white-50 central-assinante-empty-icon"></i>
         <p className="text-white-50 mt-2 small">Nenhuma fatura paga encontrada</p>
       </div>
     ) : (
@@ -44,7 +44,7 @@ const FinanceiroPagoTab: React.FC<FinanceiroPagoTabProps> = ({
                     <div className="d-flex justify-content-between align-items-start mb-2">
                       <div className="flex-grow-1">
                         <h6 className="mb-1 fw-bold text-white central-assinante-item-title">
-                          <i className="bi bi-receipt text-white-50 me-2"></i>
+                          <i className="bi bi-receipt text-white-50 central-assinante-item-icon me-1"></i>
                           {titulo.numero_titulo}
                         </h6>
                         {titulo.plano && (

@@ -14,6 +14,9 @@
 /* Estilos base (globais + site/sistema por data-app) */
 @import 'base';
 
+/* Notificações (portal em document.body — usadas também na Central do Assinante) */
+@import 'notifications';
+
 /* Estilos do SISTEMA (Login, /adm, /saas) - isolado do site */
 body[data-app="system"] {
   @import 'sidebar';

@@ -729,43 +729,6 @@ colgroup col.col-checkbox {
   animation: slideIn 0.3s ease;
 }
 
-/* Notificações */
-.notification-container {
-  position: fixed;
-  bottom: 0.75rem;
-  right: 0.75rem;
-  z-index: 9999;
-  max-width: 350px;
-
-  @media (max-width: 767.98px) {
-    // mobile fix: P8 — evita overflow em telas 320px
-    left: 8px;
-    right: 8px;
-    bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
-    max-width: calc(100vw - 16px);
-    width: calc(100vw - 16px);
-  }
-}
-
-.notification {
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: 0.75rem;
-  margin-bottom: 0.5rem;
-  box-shadow: var(--shadow-lg);
-  animation: fadeIn 0.3s ease;
-  font-size: 0.875rem;
-}
-
-.notification-alert {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  box-sizing: border-box;
-}
-
 /* Estilos específicos para alertas */
 .alert-success {
   background: rgba(16, 185, 129, 0.1);

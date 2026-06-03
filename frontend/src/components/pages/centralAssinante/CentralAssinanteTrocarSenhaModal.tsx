@@ -40,7 +40,7 @@ const CentralAssinanteTrocarSenhaModal: React.FC<CentralAssinanteTrocarSenhaModa
         <Card className="border-0">
           <div className="card-header text-center border-0 border-bottom border-secondary pb-2 pt-3 central-assinante-login-header">
             <h2 className="h6 mb-1 fw-bold text-white">
-              <i className="bi bi-key text-white-50 me-2"></i>
+              <i className="bi bi-key text-white-50 central-assinante-item-icon me-1"></i>
               Trocar Senha
             </h2>
             <p className="text-white-50 mb-0 small">Informe sua senha atual e a nova senha</p>

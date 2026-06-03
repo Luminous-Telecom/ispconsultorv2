@@ -8,7 +8,7 @@ import CentralAssinanteNav from './centralAssinante/CentralAssinanteNav';
 import CentralAssinanteTabContent from './centralAssinante/CentralAssinanteTabContent';
 import CentralAssinanteFaturaModal from './centralAssinante/CentralAssinanteFaturaModal';
 import CentralAssinanteTrocarSenhaModal from './centralAssinante/CentralAssinanteTrocarSenhaModal';
-import { useNotificationContext, NotificationContainer } from 'components/notifications';
+import { useNotificationContext } from 'components/notifications';
 import { useApiError } from 'hooks/useApiError';
 import { useCentralAssinantePageData } from './centralAssinante/useCentralAssinantePageData';
 import { useCentralAssinanteActions } from './centralAssinante/useCentralAssinanteActions';
@@ -24,7 +24,7 @@ import 'styles/CentralAssinante.scss';
 const CentralAssinante: React.FC = () => {
   const { slug = '' } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { success: showSuccess, notifications, removeNotification, pauseNotification, resumeNotification } = useNotificationContext();
+  const { success: showSuccess } = useNotificationContext();
   const { showApiError } = useApiError();
   const [activeTab, setActiveTab] = useState<CentralAssinanteTab>('resumo');
 
@@ -80,13 +80,6 @@ const CentralAssinante: React.FC = () => {
     setActiveTab,
   });
 
-  const notificationProps = {
-    notifications,
-    removeNotification,
-    pauseNotification,
-    resumeNotification,
-  };
-
   const handleCloseTrocarSenha = () => {
     setShowTrocarSenha(false);
     setMostrarNovaSenha(false);
@@ -96,7 +89,6 @@ const CentralAssinante: React.FC = () => {
   if (showRecuperarSenha) {
     return (
       <CentralAssinanteRecuperarSenhaView
-        {...notificationProps}
         form={recuperarSenhaForm}
         onFormChange={setRecuperarSenhaForm}
         onSubmit={handleRecuperarSenha}
@@ -112,7 +104,6 @@ const CentralAssinante: React.FC = () => {
   if (!isAuthenticated) {
     return (
       <CentralAssinanteLoginView
-        {...notificationProps}
         empresaLogo={empresaData?.logo}
         loginForm={loginForm}
         onLoginFormChange={setLoginForm}
@@ -128,16 +119,8 @@ const CentralAssinante: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-vh-100 d-flex align-items-center justify-content-center central-assinante-loading">
+      <div className="min-vh-100 d-flex align-items-center justify-content-center central-assinante-container central-assinante-loading">
         <Spinner size="lg" variant="primary" aria-label="Carregando..." />
-        <NotificationContainer
-          position="bottom-right"
-          notifications={notifications}
-          onRemove={removeNotification}
-          onPause={pauseNotification}
-          onResume={resumeNotification}
-          onActionClick={() => {}}
-        />
       </div>
     );
   }
@@ -149,14 +132,6 @@ const CentralAssinante: React.FC = () => {
           <i className="bi bi-exclamation-triangle text-danger central-assinante-error-icon"></i>
           <h6 className="mt-2 mb-1 fw-bold text-white">Erro ao carregar dados</h6>
           <p className="text-white-50 mb-3 small">O link de acesso pode estar inválido ou expirado.</p>
-          <NotificationContainer
-            position="bottom-right"
-            notifications={notifications}
-            onRemove={removeNotification}
-            onPause={pauseNotification}
-            onResume={resumeNotification}
-            onActionClick={() => {}}
-          />
           <VoltarButton
             size="sm"
             onClick={() => {
@@ -170,27 +145,25 @@ const CentralAssinante: React.FC = () => {
   }
 
   return (
-    <div className="bg-dark min-vh-100 central-assinante-container">
-      <div className="text-white py-2 border-bottom border-secondary central-assinante-header">
-        <div className="container-fluid px-2 px-md-3">
-          <div className="d-flex align-items-center justify-content-between">
-            <div className="flex-grow-1 text-center">
-              <h1 className="h6 mb-1 fw-bold text-white">
-                <i className="bi bi-person-circle me-1 me-md-2"></i>
-                <span className="d-none d-md-inline">Central do Assinante</span>
-                <span className="d-md-none">Central</span>
-              </h1>
-              <p className="mb-0 text-white-50 small">{dados.cliente.razao_social || dados.cliente.nome_fantasia}</p>
+    <div className="min-vh-100 central-assinante-container">
+      <header className="central-assinante-header">
+        <div className="container-fluid central-assinante-header-container">
+          <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap central-assinante-header-inner">
+            <div className="central-assinante-header-title">
+              <h1 className="text-truncate">Central do Assinante</h1>
+              <p className="text-truncate">{dados.cliente.razao_social || dados.cliente.nome_fantasia}</p>
             </div>
-            <div className="d-flex align-items-center gap-2">
+            <div className="central-assinante-header-actions">
               <AlterarSenhaButton
                 type="button"
                 size="sm"
+                variant="secondary"
                 onClick={() => setShowTrocarSenha(true)}
               />
               <SairButton
                 type="button"
                 size="sm"
+                variant="secondary"
                 onClick={() => {
                   handleLogout();
                   navigate(`/central-assinante/${slug}`, { replace: true });
@@ -199,7 +172,7 @@ const CentralAssinante: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
       <div className="d-flex central-assinante-main">
         <CentralAssinanteNav
@@ -211,25 +184,23 @@ const CentralAssinante: React.FC = () => {
           temTermosComAssinaturaPendente={temTermosComAssinaturaPendente}
         />
 
-        <div className="flex-grow-1 px-2 px-md-3 py-2">
-          <div>
-            <CentralAssinanteTabContent
-              activeTab={activeTab}
-              dados={dados}
-              getStatusVariant={getStatusVariant}
-              getStatusLabel={getStatusLabel}
-              baixandoBoletoId={baixandoBoletoId}
-              baixandoContratoId={baixandoContratoId}
-              baixandoTermoId={baixandoTermoId}
-              baixandoReciboId={baixandoReciboId}
-              handleVisualizarFatura={handleVisualizarFatura}
-              handleCardClick={handleCardClick}
-              handleImprimirContrato={handleImprimirContrato}
-              handleImprimirTermo={handleImprimirTermo}
-              handleImprimirFatura={handleImprimirFatura}
-              handleImprimirRecibo={handleImprimirRecibo}
-            />
-          </div>
+        <div className="flex-grow-1 central-assinante-content py-2">
+          <CentralAssinanteTabContent
+            activeTab={activeTab}
+            dados={dados}
+            getStatusVariant={getStatusVariant}
+            getStatusLabel={getStatusLabel}
+            baixandoBoletoId={baixandoBoletoId}
+            baixandoContratoId={baixandoContratoId}
+            baixandoTermoId={baixandoTermoId}
+            baixandoReciboId={baixandoReciboId}
+            handleVisualizarFatura={handleVisualizarFatura}
+            handleCardClick={handleCardClick}
+            handleImprimirContrato={handleImprimirContrato}
+            handleImprimirTermo={handleImprimirTermo}
+            handleImprimirFatura={handleImprimirFatura}
+            handleImprimirRecibo={handleImprimirRecibo}
+          />
         </div>
       </div>
 
@@ -265,15 +236,6 @@ const CentralAssinante: React.FC = () => {
           onClose={handleCloseTrocarSenha}
         />
       ) : null}
-
-      <NotificationContainer
-        position="bottom-right"
-        notifications={notifications}
-        onRemove={removeNotification}
-        onPause={pauseNotification}
-        onResume={resumeNotification}
-        onActionClick={() => {}}
-      />
     </div>
   );
 };

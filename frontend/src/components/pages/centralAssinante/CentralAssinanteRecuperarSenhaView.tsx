@@ -1,10 +1,8 @@
 import React from 'react';
 import { Card, Input, EnviarSenhaButton, VoltarButton } from 'components/ui';
 import type { RecuperarSenhaRequest } from 'services/centralAssinanteService';
-import CentralAssinanteNotifications from './CentralAssinanteNotifications';
-import type { CentralAssinanteNotificationsProps } from './CentralAssinanteNotifications';
 
-interface CentralAssinanteRecuperarSenhaViewProps extends CentralAssinanteNotificationsProps {
+interface CentralAssinanteRecuperarSenhaViewProps {
   form: RecuperarSenhaRequest;
   onFormChange: (form: RecuperarSenhaRequest) => void;
   onSubmit: (e: React.FormEvent) => void;
@@ -18,20 +16,13 @@ const CentralAssinanteRecuperarSenhaView: React.FC<CentralAssinanteRecuperarSenh
   onSubmit,
   onBack,
   isPending,
-  notifications,
-  removeNotification,
-  pauseNotification,
-  resumeNotification,
 }) => (
   <div className="min-vh-100 d-flex align-items-center justify-content-center py-2 px-2 central-assinante-container central-assinante-login-container">
     <div className="central-assinante-login-card">
       <div className="central-assinante-card-bg">
         <Card className="border-0">
           <div className="card-header text-center border-0 border-bottom border-secondary pb-2 pt-3 central-assinante-login-header">
-            <h2 className="h6 mb-1 fw-bold text-white">
-              <i className="bi bi-key text-white-50 me-2" />
-              Recuperar Senha
-            </h2>
+            <h2 className="h6 mb-1 fw-semibold text-white">Recuperar senha</h2>
             <p className="text-white-50 mb-0 small">
               Informe seu CNPJ e Email para recuperar sua senha
             </p>
@@ -75,12 +66,6 @@ const CentralAssinanteRecuperarSenhaView: React.FC<CentralAssinanteRecuperarSenh
         </Card>
       </div>
     </div>
-    <CentralAssinanteNotifications
-      notifications={notifications}
-      removeNotification={removeNotification}
-      pauseNotification={pauseNotification}
-      resumeNotification={resumeNotification}
-    />
   </div>
 );
 

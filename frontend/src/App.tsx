@@ -14,6 +14,7 @@ import { RecarregarButton } from './components/ui';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import ProtectionLayer from './components/common/ProtectionLayer';
 import Layout from './components/layout/Layout';
+import CentralAssinanteLoadingFallback from './components/pages/centralAssinante/CentralAssinanteLoadingFallback';
 
 // Pages com lazy loading (code splitting)
 const Home = lazy(() => import('./components/pages/Home'));
@@ -110,7 +111,7 @@ function AppContent() {
                       </Suspense>
                     } />
                     <Route path="/central-assinante/:slug" element={
-                      <Suspense fallback={<Loading message={t('ui.loadingSubscriberCenter')} />}>
+                      <Suspense fallback={<CentralAssinanteLoadingFallback message={t('ui.loadingSubscriberCenter')} />}>
                         <CentralAssinante />
                       </Suspense>
                     } />

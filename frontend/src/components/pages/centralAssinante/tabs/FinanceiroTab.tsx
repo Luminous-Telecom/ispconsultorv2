@@ -37,7 +37,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
         {dados.titulos.atrasados.length > 0 && (
           <div className="mb-3">
             <h6 className="text-white mb-2 small text-center">
-              <i className="bi bi-exclamation-triangle me-1"></i>
+              <i className="bi bi-exclamation-triangle central-assinante-item-icon me-1"></i>
               Faturas Atrasadas ({dados.titulos.atrasados.length})
             </h6>
             <div className="row g-2">
@@ -49,7 +49,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
                         <div className="d-flex justify-content-between align-items-start mb-2">
                           <div className="flex-grow-1">
                             <h6 className="mb-1 fw-bold text-white central-assinante-item-title">
-                              <i className="bi bi-receipt text-white-50 me-2"></i>
+                              <i className="bi bi-receipt text-white-50 central-assinante-item-icon me-1"></i>
                               {titulo.numero_titulo}
                             </h6>
                             {titulo.plano && (
@@ -106,7 +106,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
                         <div className="d-flex justify-content-between align-items-start mb-2">
                           <div className="flex-grow-1">
                             <h6 className="mb-1 fw-bold text-white" style={{ fontSize: '0.9rem' }}>
-                              <i className="bi bi-receipt text-white-50 me-2"></i>
+                              <i className="bi bi-receipt text-white-50 central-assinante-item-icon me-1"></i>
                               {titulo.numero_titulo}
                             </h6>
                             {titulo.plano && (

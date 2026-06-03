@@ -2,10 +2,8 @@ import React from 'react';
 import { Card, Input, EntrarButton } from 'components/ui';
 import Button from 'components/ui/Button';
 import type { LoginCentralAssinanteRequest } from 'services/centralAssinanteService';
-import CentralAssinanteNotifications from './CentralAssinanteNotifications';
-import type { CentralAssinanteNotificationsProps } from './CentralAssinanteNotifications';
 
-interface CentralAssinanteLoginViewProps extends CentralAssinanteNotificationsProps {
+interface CentralAssinanteLoginViewProps {
   empresaLogo?: string | null;
   loginForm: LoginCentralAssinanteRequest;
   onLoginFormChange: (form: LoginCentralAssinanteRequest) => void;
@@ -27,10 +25,6 @@ const CentralAssinanteLoginView: React.FC<CentralAssinanteLoginViewProps> = ({
   loginFieldPlaceholder,
   loginInputType,
   isPending,
-  notifications,
-  removeNotification,
-  pauseNotification,
-  resumeNotification,
 }) => (
   <div className="min-vh-100 d-flex align-items-center justify-content-center py-2 px-2 central-assinante-container central-assinante-login-container">
     <div className="central-assinante-login-card">
@@ -42,10 +36,7 @@ const CentralAssinanteLoginView: React.FC<CentralAssinanteLoginViewProps> = ({
                 <img src={empresaLogo} alt="Logo da Empresa" className="central-assinante-login-logo" />
               </div>
             )}
-            <h2 className="h6 mb-1 fw-bold text-white">
-              <i className="bi bi-person-circle text-white-50 me-2" />
-              Central do Assinante
-            </h2>
+            <h2 className="h6 mb-1 fw-semibold text-white">Central do Assinante</h2>
             <p className="text-white-50 mb-0 small">Faça login para acessar seus dados</p>
           </div>
           <div className="card-body pt-2 px-3 pb-3 central-assinante-login-body">
@@ -97,12 +88,6 @@ const CentralAssinanteLoginView: React.FC<CentralAssinanteLoginViewProps> = ({
         </Card>
       </div>
     </div>
-    <CentralAssinanteNotifications
-      notifications={notifications}
-      removeNotification={removeNotification}
-      pauseNotification={pauseNotification}
-      resumeNotification={resumeNotification}
-    />
   </div>
 );
 

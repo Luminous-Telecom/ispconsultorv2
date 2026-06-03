@@ -139,24 +139,84 @@ export interface TrocarSenhaRequest {
 }
 
 const CENTRAL_ASSINANTE_TOKEN_KEY = 'central_assinante_token';
+const CENTRAL_ASSINANTE_AUTH_HEADER = 'x-central-assinante-token';
+
+/** Fallback em memória quando sessionStorage/localStorage falham (QuotaExceededError). */
+let centralTokenMemory: string | null = null;
+
+function readSessionToken(): string | null {
+  try {
+    return sessionStorage.getItem(CENTRAL_ASSINANTE_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeSessionToken(token: string): boolean {
+  try {
+    sessionStorage.setItem(CENTRAL_ASSINANTE_TOKEN_KEY, token);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function removeLegacyLocalToken(): void {
+  try {
+    localStorage.removeItem(CENTRAL_ASSINANTE_TOKEN_KEY);
+  } catch {
+    // Quota cheio ou storage indisponível
+  }
+}
 
 export class CentralAssinanteService {
   static setCentralToken(token: string): void {
-    localStorage.setItem(CENTRAL_ASSINANTE_TOKEN_KEY, token);
+    centralTokenMemory = token;
+    writeSessionToken(token);
+    removeLegacyLocalToken();
   }
 
   static getCentralToken(): string | null {
-    return localStorage.getItem(CENTRAL_ASSINANTE_TOKEN_KEY);
+    if (centralTokenMemory) {
+      return centralTokenMemory;
+    }
+
+    const fromSession = readSessionToken();
+    if (fromSession) {
+      centralTokenMemory = fromSession;
+      return fromSession;
+    }
+
+    try {
+      const legacy = localStorage.getItem(CENTRAL_ASSINANTE_TOKEN_KEY);
+      if (legacy) {
+        centralTokenMemory = legacy;
+        writeSessionToken(legacy);
+        removeLegacyLocalToken();
+        return legacy;
+      }
+    } catch {
+      // localStorage indisponível ou quota excedida
+    }
+
+    return null;
   }
 
   static clearCentralToken(): void {
-    localStorage.removeItem(CENTRAL_ASSINANTE_TOKEN_KEY);
+    centralTokenMemory = null;
+    try {
+      sessionStorage.removeItem(CENTRAL_ASSINANTE_TOKEN_KEY);
+    } catch {
+      // ignore
+    }
+    removeLegacyLocalToken();
   }
 
-  private static getCentralAuthHeaders(): HeadersInit {
+  private static getCentralAuthHeaders(): Record<string, string> {
     const token = CentralAssinanteService.getCentralToken();
     if (!token) return {};
-    return { Authorization: `Bearer ${token}` };
+    // Header dedicado: ApiClient remove Authorization em rotas /central-assinante/
+    return { [CENTRAL_ASSINANTE_AUTH_HEADER]: token };
   }
 
   /**
@@ -182,7 +242,7 @@ export class CentralAssinanteService {
       throw new Error(CONTEXT_ERROR_MESSAGES.ASSINATURA_TOKEN_ERROR);
     }
     return defaultApiClient.get<DadosCentralAssinante>(`/central-assinante/${slug}/me`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: CentralAssinanteService.getCentralAuthHeaders(),
     });
   }
 
@@ -270,7 +330,7 @@ export class CentralAssinanteService {
       throw new Error(CONTEXT_ERROR_MESSAGES.ASSINATURA_TOKEN_ERROR);
     }
     return defaultApiClient.post<void>(`/central-assinante/${slug}/me/trocar-senha`, data, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: CentralAssinanteService.getCentralAuthHeaders(),
     });
   }
 

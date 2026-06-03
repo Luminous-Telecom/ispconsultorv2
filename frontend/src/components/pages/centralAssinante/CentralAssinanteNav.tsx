@@ -1,7 +1,7 @@
 import React from 'react';
 import { Badge } from 'components/ui';
 import { DadosCentralAssinante } from 'services/centralAssinanteService';
-import { CentralAssinanteTab } from './centralAssinanteUtils';
+import { CentralAssinanteTab, getFinanceiroNavBadgeVariant, getFinanceiroPagoNavBadgeVariant } from './centralAssinanteUtils';
 
 interface CentralAssinanteNavProps {
   section: 'sidebar' | 'mobile';
@@ -30,7 +30,7 @@ const CentralAssinanteNav: React.FC<CentralAssinanteNavProps> = ({
             onTabChange('resumo');
           }}
         >
-          <i className="bi bi-house-door fs-5"></i>
+          <i className="bi bi-house-door central-assinante-nav-icon"></i>
           <small className="small mt-1 central-assinante-nav-text">Resumo</small>
         </button>
         <button
@@ -39,7 +39,7 @@ const CentralAssinanteNav: React.FC<CentralAssinanteNavProps> = ({
             onTabChange('contratos');
           }}
         >
-          <i className="bi bi-file-earmark-text fs-5 position-relative">
+          <i className="bi bi-file-earmark-text central-assinante-nav-icon position-relative">
             <span className="position-absolute top-0 end-0 central-assinante-badge-wrapper">
               <span className="central-assinante-badge-inner">
                 <Badge
@@ -60,10 +60,10 @@ const CentralAssinanteNav: React.FC<CentralAssinanteNavProps> = ({
             onTabChange('financeiro');
           }}
         >
-          <i className="bi bi-wallet fs-5 position-relative">
+          <i className="bi bi-wallet central-assinante-nav-icon position-relative">
             <span className="position-absolute top-0 end-0 central-assinante-badge-wrapper">
               <span className="central-assinante-badge-inner">
-                <Badge variant={dados.resumo.titulos_atrasados > 0 ? 'danger' : 'secondary'} pill className="central-assinante-sidebar-badge">{dados.resumo.titulos_a_pagar + dados.resumo.titulos_atrasados}</Badge>
+                <Badge variant={getFinanceiroNavBadgeVariant(dados)} pill className="central-assinante-sidebar-badge">{dados.resumo.titulos_a_pagar + dados.resumo.titulos_atrasados}</Badge>
               </span>
             </span>
           </i>
@@ -75,10 +75,10 @@ const CentralAssinanteNav: React.FC<CentralAssinanteNavProps> = ({
             onTabChange('financeiro_pago');
           }}
         >
-          <i className="bi bi-check-circle fs-5 position-relative">
+          <i className="bi bi-check-circle central-assinante-nav-icon position-relative">
             <span className="position-absolute top-0 end-0 central-assinante-badge-wrapper">
               <span className="central-assinante-badge-inner">
-                <Badge variant="secondary" pill className="central-assinante-sidebar-badge">{dados.resumo.titulos_pagos}</Badge>
+                <Badge variant={getFinanceiroPagoNavBadgeVariant(dados)} pill className="central-assinante-sidebar-badge">{dados.resumo.titulos_pagos}</Badge>
               </span>
             </span>
           </i>
@@ -90,7 +90,7 @@ const CentralAssinanteNav: React.FC<CentralAssinanteNavProps> = ({
             onTabChange('termos');
           }}
         >
-          <i className="bi bi-file-check fs-5 position-relative">
+          <i className="bi bi-file-check central-assinante-nav-icon position-relative">
             <span className="position-absolute top-0 end-0 central-assinante-badge-wrapper">
               <span className="central-assinante-badge-inner">
                 <Badge variant={temTermosComAssinaturaPendente(dados) ? 'danger' : 'secondary'} pill className="central-assinante-sidebar-badge">{dados.resumo.total_termos}</Badge>
@@ -105,73 +105,85 @@ const CentralAssinanteNav: React.FC<CentralAssinanteNavProps> = ({
   }
 
   return (
-    <div className="d-md-none fixed-bottom border-top border-secondary shadow-lg central-assinante-mobile-nav">
-      <div className="d-flex justify-content-around align-items-center py-2">
+    <div className="d-md-none fixed-bottom central-assinante-mobile-nav">
+      <div className="d-flex justify-content-around align-items-center py-1 central-assinante-mobile-nav-inner">
         <button
-          className={`btn text-decoration-none p-2 central-assinante-mobile-button ${activeTab === 'resumo' ? 'active text-white' : 'text-white-50'}`}
+          className={`btn text-decoration-none central-assinante-mobile-button ${activeTab === 'resumo' ? 'active text-white' : 'text-white-50'}`}
           onClick={() => {
             onTabChange('resumo');
           }}
         >
           <div className="d-flex flex-column align-items-center">
-            <i className={`bi bi-house-door fs-5 ${activeTab === 'resumo' ? 'text-white' : 'text-white-50'}`}></i>
+            <i className={`bi bi-house-door central-assinante-nav-icon ${activeTab === 'resumo' ? 'text-white' : 'text-white-50'}`}></i>
             <small className="small">Resumo</small>
           </div>
         </button>
         <button
-          className={`btn text-decoration-none p-2 position-relative central-assinante-mobile-button ${activeTab === 'contratos' ? 'active text-white' : 'text-white-50'}`}
+          className={`btn text-decoration-none central-assinante-mobile-button ${activeTab === 'contratos' ? 'active text-white' : 'text-white-50'}`}
           onClick={() => {
             onTabChange('contratos');
           }}
         >
-          <div className="d-flex flex-column align-items-center position-relative">
-            <i className={`bi bi-file-earmark-text fs-5 position-relative ${activeTab === 'contratos' ? 'text-white' : 'text-white-50'}`}></i>
+          <div className="d-flex flex-column align-items-center">
+            <i className={`bi bi-file-earmark-text central-assinante-nav-icon position-relative ${activeTab === 'contratos' ? 'text-white' : 'text-white-50'}`}>
+              <span className="position-absolute top-0 end-0 central-assinante-badge-wrapper">
+                <span className="central-assinante-badge-inner">
+                  <Badge variant={temContratoComAssinaturaPendente(dados) ? 'danger' : 'secondary'} pill className="central-assinante-sidebar-badge">{dados?.resumo.contratos_ativos || 0}</Badge>
+                </span>
+              </span>
+            </i>
             <small className="small">Contratos</small>
-            <span className="position-absolute top-0 end-0 central-assinante-mobile-badge">
-              <Badge variant={temContratoComAssinaturaPendente(dados) ? 'danger' : 'secondary'} pill className="central-assinante-sidebar-badge">{dados?.resumo.contratos_ativos || 0}</Badge>
-            </span>
           </div>
         </button>
         <button
-          className={`btn text-decoration-none p-2 position-relative central-assinante-mobile-button ${activeTab === 'financeiro' ? 'active text-white' : 'text-white-50'}`}
+          className={`btn text-decoration-none central-assinante-mobile-button ${activeTab === 'financeiro' ? 'active text-white' : 'text-white-50'}`}
           onClick={() => {
             onTabChange('financeiro');
           }}
         >
           <div className="d-flex flex-column align-items-center">
-            <i className={`bi bi-wallet fs-5 ${activeTab === 'financeiro' ? 'text-white' : 'text-white-50'}`}></i>
+            <i className={`bi bi-wallet central-assinante-nav-icon position-relative ${activeTab === 'financeiro' ? 'text-white' : 'text-white-50'}`}>
+              <span className="position-absolute top-0 end-0 central-assinante-badge-wrapper">
+                <span className="central-assinante-badge-inner">
+                  <Badge variant={getFinanceiroNavBadgeVariant(dados)} pill className="central-assinante-sidebar-badge">{(dados?.resumo.titulos_a_pagar || 0) + (dados?.resumo.titulos_atrasados || 0)}</Badge>
+                </span>
+              </span>
+            </i>
             <small className="small">A Pagar</small>
-            <span className="position-absolute top-0 end-0 central-assinante-mobile-badge">
-              <Badge variant={(dados?.resumo.titulos_atrasados || 0) > 0 ? 'danger' : 'secondary'} pill className="central-assinante-sidebar-badge">{(dados?.resumo.titulos_a_pagar || 0) + (dados?.resumo.titulos_atrasados || 0)}</Badge>
-            </span>
           </div>
         </button>
         <button
-          className={`btn text-decoration-none p-2 position-relative central-assinante-mobile-button ${activeTab === 'financeiro_pago' ? 'active text-white' : 'text-white-50'}`}
+          className={`btn text-decoration-none central-assinante-mobile-button ${activeTab === 'financeiro_pago' ? 'active text-white' : 'text-white-50'}`}
           onClick={() => {
             onTabChange('financeiro_pago');
           }}
         >
           <div className="d-flex flex-column align-items-center">
-            <i className={`bi bi-check-circle fs-5 ${activeTab === 'financeiro_pago' ? 'text-white' : 'text-white-50'}`}></i>
+            <i className={`bi bi-check-circle central-assinante-nav-icon position-relative ${activeTab === 'financeiro_pago' ? 'text-white' : 'text-white-50'}`}>
+              <span className="position-absolute top-0 end-0 central-assinante-badge-wrapper">
+                <span className="central-assinante-badge-inner">
+                  <Badge variant={getFinanceiroPagoNavBadgeVariant(dados)} pill className="central-assinante-sidebar-badge">{dados?.resumo.titulos_pagos || 0}</Badge>
+                </span>
+              </span>
+            </i>
             <small className="small">Pago</small>
-            <span className="position-absolute top-0 end-0 central-assinante-mobile-badge">
-              <Badge variant="secondary" pill className="central-assinante-sidebar-badge">{dados?.resumo.titulos_pagos || 0}</Badge>
-            </span>
           </div>
         </button>
         <button
-          className={`btn text-decoration-none p-2 position-relative central-assinante-mobile-button ${activeTab === 'termos' ? 'active text-white' : 'text-white-50'}`}
+          className={`btn text-decoration-none central-assinante-mobile-button ${activeTab === 'termos' ? 'active text-white' : 'text-white-50'}`}
           onClick={() => {
             onTabChange('termos');
           }}
         >
-          <div className="d-flex flex-column align-items-center position-relative">
-            <i className={`bi bi-file-check fs-5 position-relative ${activeTab === 'termos' ? 'text-white' : 'text-secondary'}`}></i>
+          <div className="d-flex flex-column align-items-center">
+            <i className={`bi bi-file-check central-assinante-nav-icon position-relative ${activeTab === 'termos' ? 'text-white' : 'text-secondary'}`}>
+              <span className="position-absolute top-0 end-0 central-assinante-badge-wrapper">
+                <span className="central-assinante-badge-inner">
+                  <Badge variant={temTermosComAssinaturaPendente(dados) ? 'danger' : 'secondary'} pill className="central-assinante-sidebar-badge">{dados?.resumo.total_termos || 0}</Badge>
+                </span>
+              </span>
+            </i>
             <small className="small">Termos</small>
-            <span className="position-absolute top-0 end-0 central-assinante-mobile-badge">
-              <Badge variant={temTermosComAssinaturaPendente(dados) ? 'danger' : 'secondary'} pill className="central-assinante-sidebar-badge">{dados?.resumo.total_termos || 0}</Badge>
-            </span>
           </div>
         </button>
       </div>
