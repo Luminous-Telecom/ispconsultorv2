@@ -366,6 +366,11 @@ jobs:
       - name: Commit e Push para Produção
         env:
           GITHUB_TOKEN: ${{ secrets.PROD_PAT }}
+          _COMMIT_HASH: ${{ steps.commit_info.outputs.hash }}
+          _COMMIT_MSG: ${{ steps.commit_info.outputs.message }}
+          _ALL_MSGS: ${{ steps.commit_info.outputs.all_messages }}
+          _COMMIT_AUTHOR: ${{ steps.commit_info.outputs.author }}
+          _COMMIT_DATE: ${{ steps.commit_info.outputs.date }}
         run: |
           cd deployment
 
@@ -377,11 +382,11 @@ jobs:
           echo "=== Status antes do commit ==="
           git status --short
 
-          COMMIT_HASH="${{ steps.commit_info.outputs.hash }}"
-          COMMIT_MSG="${{ steps.commit_info.outputs.message }}"
-          ALL_MSGS="${{ steps.commit_info.outputs.all_messages }}"
-          COMMIT_AUTHOR="${{ steps.commit_info.outputs.author }}"
-          COMMIT_DATE="${{ steps.commit_info.outputs.date }}"
+          COMMIT_HASH="${_COMMIT_HASH}"
+          COMMIT_MSG="${_COMMIT_MSG}"
+          ALL_MSGS="${_ALL_MSGS}"
+          COMMIT_AUTHOR="${_COMMIT_AUTHOR}"
+          COMMIT_DATE="${_COMMIT_DATE}"
           [ -z "${COMMIT_HASH}" ]   && COMMIT_HASH="unknown"
           [ -z "${COMMIT_MSG}" ]    && COMMIT_MSG="Deploy automático"
           [ -z "${COMMIT_AUTHOR}" ] && COMMIT_AUTHOR="GitHub Actions"
@@ -486,6 +491,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.PROD_PAT }}
           VERSION_FROM_BUILD: ${{ steps.build_meta.outputs.version }}
+          _COMMIT_HASH: ${{ steps.commit_info.outputs.hash }}
+          _COMMIT_MSG: ${{ steps.commit_info.outputs.message }}
+          _ALL_MSGS: ${{ steps.commit_info.outputs.all_messages }}
+          _COMMIT_AUTHOR: ${{ steps.commit_info.outputs.author }}
+          _COMMIT_DATE: ${{ steps.commit_info.outputs.date }}
         run: |
           cd deployment
 
@@ -500,11 +510,11 @@ jobs:
           fi
 
           TAG_NAME="v${CLEAN_VERSION}"
-          COMMIT_HASH="${{ steps.commit_info.outputs.hash }}"
-          COMMIT_MSG="${{ steps.commit_info.outputs.message }}"
-          ALL_MSGS="${{ steps.commit_info.outputs.all_messages }}"
-          COMMIT_AUTHOR="${{ steps.commit_info.outputs.author }}"
-          COMMIT_DATE="${{ steps.commit_info.outputs.date }}"
+          COMMIT_HASH="${_COMMIT_HASH}"
+          COMMIT_MSG="${_COMMIT_MSG}"
+          ALL_MSGS="${_ALL_MSGS}"
+          COMMIT_AUTHOR="${_COMMIT_AUTHOR}"
+          COMMIT_DATE="${_COMMIT_DATE}"
           COMMIT_HASH="${COMMIT_HASH:-unknown}"
           COMMIT_MSG="${COMMIT_MSG:-Deploy automático}"
 
