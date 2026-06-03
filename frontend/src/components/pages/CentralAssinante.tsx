@@ -8,6 +8,7 @@ import CentralAssinanteNav from './centralAssinante/CentralAssinanteNav';
 import CentralAssinanteTabContent from './centralAssinante/CentralAssinanteTabContent';
 import CentralAssinanteFaturaModal from './centralAssinante/CentralAssinanteFaturaModal';
 import CentralAssinanteTrocarSenhaModal from './centralAssinante/CentralAssinanteTrocarSenhaModal';
+import CentralAssinanteThemeToggle from './centralAssinante/CentralAssinanteThemeToggle';
 import { useNotificationContext } from 'components/notifications';
 import { useApiError } from 'hooks/useApiError';
 import { useCentralAssinantePageData } from './centralAssinante/useCentralAssinantePageData';
@@ -154,6 +155,7 @@ const CentralAssinante: React.FC = () => {
               <p className="text-truncate">{dados.cliente.razao_social || dados.cliente.nome_fantasia}</p>
             </div>
             <div className="central-assinante-header-actions">
+              <CentralAssinanteThemeToggle />
               <AlterarSenhaButton
                 type="button"
                 size="sm"

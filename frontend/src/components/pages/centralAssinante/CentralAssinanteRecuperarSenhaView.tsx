@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, Input, EnviarSenhaButton, VoltarButton } from 'components/ui';
 import type { RecuperarSenhaRequest } from 'services/centralAssinanteService';
+import CentralAssinanteThemeToggle from './CentralAssinanteThemeToggle';
 
 interface CentralAssinanteRecuperarSenhaViewProps {
   form: RecuperarSenhaRequest;
@@ -18,6 +19,9 @@ const CentralAssinanteRecuperarSenhaView: React.FC<CentralAssinanteRecuperarSenh
   isPending,
 }) => (
   <div className="min-vh-100 d-flex align-items-center justify-content-center py-2 px-2 central-assinante-container central-assinante-login-container">
+    <div className="central-assinante-login-theme">
+      <CentralAssinanteThemeToggle />
+    </div>
     <div className="central-assinante-login-card">
       <div className="central-assinante-card-bg">
         <Card className="border-0">

@@ -3,6 +3,8 @@ import { Card, Input, EntrarButton } from 'components/ui';
 import Button from 'components/ui/Button';
 import type { LoginCentralAssinanteRequest } from 'services/centralAssinanteService';
 
+import CentralAssinanteThemeToggle from './CentralAssinanteThemeToggle';
+
 interface CentralAssinanteLoginViewProps {
   empresaLogo?: string | null;
   loginForm: LoginCentralAssinanteRequest;
@@ -27,6 +29,9 @@ const CentralAssinanteLoginView: React.FC<CentralAssinanteLoginViewProps> = ({
   isPending,
 }) => (
   <div className="min-vh-100 d-flex align-items-center justify-content-center py-2 px-2 central-assinante-container central-assinante-login-container">
+    <div className="central-assinante-login-theme">
+      <CentralAssinanteThemeToggle />
+    </div>
     <div className="central-assinante-login-card">
       <div className="central-assinante-card-bg">
         <Card className="border-0">

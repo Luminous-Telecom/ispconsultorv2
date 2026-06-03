@@ -1,14 +1,35 @@
-// Central do Assinante — visual minimalista, isolado do tema do ERP
-@use "sass:color";
+// Central do Assinante — temas claro/escuro via CSS variables
+@mixin ca-theme-dark {
+  --ca-bg-primary: #111318;
+  --ca-bg-secondary: #181b22;
+  --ca-bg-card: #1e222a;
+  --ca-bg-hover: #262b35;
+  --ca-border: #2e3440;
+  --ca-border-focus: #3b4250;
+  --ca-border-hover: #363d4a;
+  --ca-text: #f3f4f6;
+  --ca-text-secondary: rgba(243, 244, 246, 0.65);
+  --ca-text-muted: rgba(243, 244, 246, 0.45);
+  --ca-btn-primary: #374151;
+  --ca-btn-primary-hover: #4b5563;
+  --ca-modal-backdrop: rgba(0, 0, 0, 0.6);
+}
 
-$bg-primary: #111318;
-$bg-secondary: #181b22;
-$bg-card: #1e222a;
-$bg-hover: #262b35;
-$border-color: #2e3440;
-$text-primary: #f3f4f6;
-$text-secondary: rgba(243, 244, 246, 0.65);
-$text-muted: rgba(243, 244, 246, 0.45);
+@mixin ca-theme-light {
+  --ca-bg-primary: #f3f4f6;
+  --ca-bg-secondary: #ffffff;
+  --ca-bg-card: #ffffff;
+  --ca-bg-hover: #e5e7eb;
+  --ca-border: #d1d5db;
+  --ca-border-focus: #9ca3af;
+  --ca-border-hover: #cbd5e1;
+  --ca-text: #111827;
+  --ca-text-secondary: rgba(17, 24, 39, 0.65);
+  --ca-text-muted: rgba(17, 24, 39, 0.45);
+  --ca-btn-primary: #374151;
+  --ca-btn-primary-hover: #4b5563;
+  --ca-modal-backdrop: rgba(15, 23, 42, 0.45);
+}
 
 @mixin ca-scope {
   .central-assinante-container,
@@ -23,12 +44,14 @@ $text-muted: rgba(243, 244, 246, 0.45);
 }
 
 @include ca-scope {
-  background-color: $bg-primary !important;
+  @include ca-theme-dark;
+
+  background-color: var(--ca-bg-primary) !important;
   min-height: 100vh;
   width: 100%;
   max-width: 100%;
   overflow-x: clip;
-  color: $text-primary !important;
+  color: var(--ca-text) !important;
   --central-assinante-mobile-nav-height: 52px;
 
   &:has(.central-assinante-main) {
@@ -43,10 +66,10 @@ $text-muted: rgba(243, 244, 246, 0.45);
     }
   }
 
-  .text-white { color: $text-primary !important; }
+  .text-white { color: var(--ca-text) !important; }
   .text-white-50,
-  .text-muted { color: $text-muted !important; }
-  .text-secondary { color: $text-secondary !important; }
+  .text-muted { color: var(--ca-text-muted) !important; }
+  .text-secondary { color: var(--ca-text-secondary) !important; }
 
   h1, h2, h3, h4, h5, h6,
   p, span, small, label, div,
@@ -56,7 +79,7 @@ $text-muted: rgba(243, 244, 246, 0.45);
 
   .form-label,
   label {
-    color: $text-secondary !important;
+    color: var(--ca-text-secondary) !important;
     font-size: 0.8125rem !important;
     font-weight: 500 !important;
     text-transform: none !important;
@@ -71,17 +94,17 @@ $text-muted: rgba(243, 244, 246, 0.45);
   input[type="number"],
   textarea,
   select {
-    background-color: $bg-secondary !important;
-    border: 1px solid $border-color !important;
-    color: $text-primary !important;
+    background-color: var(--ca-bg-secondary) !important;
+    border: 1px solid var(--ca-border) !important;
+    color: var(--ca-text) !important;
     border-radius: var(--bs-border-radius) !important;
     box-sizing: border-box !important;
 
-    &::placeholder { color: $text-muted !important; }
+    &::placeholder { color: var(--ca-text-muted) !important; }
 
     &:focus {
-      background-color: $bg-secondary !important;
-      border-color: color.adjust($border-color, $lightness: 12%) !important;
+      background-color: var(--ca-bg-secondary) !important;
+      border-color: var(--ca-border-focus) !important;
       box-shadow: none !important;
       outline: none !important;
     }
@@ -90,18 +113,18 @@ $text-muted: rgba(243, 244, 246, 0.45);
   .btn,
   button.btn,
   button[class*="btn-"] {
-    background-color: $bg-secondary !important;
-    border: 1px solid $border-color !important;
-    color: $text-primary !important;
+    background-color: var(--ca-bg-secondary) !important;
+    border: 1px solid var(--ca-border) !important;
+    color: var(--ca-text) !important;
     box-shadow: none !important;
     font-weight: 500 !important;
     letter-spacing: normal !important;
     text-transform: none !important;
 
     &:hover:not(:disabled) {
-      background-color: $bg-hover !important;
-      border-color: color.adjust($border-color, $lightness: 8%) !important;
-      color: $text-primary !important;
+      background-color: var(--ca-bg-hover) !important;
+      border-color: var(--ca-border-hover) !important;
+      color: var(--ca-text) !important;
       transform: none !important;
     }
 
@@ -114,25 +137,25 @@ $text-muted: rgba(243, 244, 246, 0.45);
 
   .btn-primary,
   button.btn-primary {
-    background-color: #374151 !important;
-    border-color: #374151 !important;
-    color: $text-primary !important;
+    background-color: var(--ca-btn-primary) !important;
+    border-color: var(--ca-btn-primary) !important;
+    color: var(--ca-text) !important;
 
     &:hover:not(:disabled) {
-      background-color: #4b5563 !important;
-      border-color: #4b5563 !important;
+      background-color: var(--ca-btn-primary-hover) !important;
+      border-color: var(--ca-btn-primary-hover) !important;
     }
   }
 
   .btn-secondary,
   button.btn-secondary {
     background-color: transparent !important;
-    border-color: $border-color !important;
-    color: $text-secondary !important;
+    border-color: var(--ca-border) !important;
+    color: var(--ca-text-secondary) !important;
 
     &:hover:not(:disabled) {
-      background-color: $bg-hover !important;
-      color: $text-primary !important;
+      background-color: var(--ca-bg-hover) !important;
+      color: var(--ca-text) !important;
     }
   }
 
@@ -140,25 +163,29 @@ $text-muted: rgba(243, 244, 246, 0.45);
   button.btn-link {
     background: transparent !important;
     border: none !important;
-    color: $text-secondary !important;
+    color: var(--ca-text-secondary) !important;
     text-decoration: none !important;
 
     &:hover:not(:disabled) {
-      color: $text-primary !important;
+      color: var(--ca-text) !important;
       text-decoration: underline !important;
     }
   }
 
   .card,
   .card-header {
-    background-color: $bg-card !important;
-    border-color: $border-color !important;
-    color: $text-primary !important;
+    background-color: var(--ca-bg-card) !important;
+    border-color: var(--ca-border) !important;
+    color: var(--ca-text) !important;
   }
 
   .card-body:not(.central-assinante-card-body-compact):not(.central-assinante-login-body):not(.central-assinante-modal-body) {
-    background-color: $bg-card !important;
+    background-color: var(--ca-bg-card) !important;
     padding: 0 !important;
+  }
+
+  .border-secondary {
+    border-color: var(--ca-border) !important;
   }
 
   .badge {
@@ -168,10 +195,10 @@ $text-muted: rgba(243, 244, 246, 0.45);
 
 // Header
 .central-assinante-header {
-  background-color: $bg-secondary !important;
-  border-bottom: 1px solid $border-color !important;
+  background-color: var(--ca-bg-secondary) !important;
+  border-bottom: 1px solid var(--ca-border) !important;
   padding: 0.625rem 0 !important;
-  color: $text-primary !important;
+  color: var(--ca-text) !important;
   width: 100%;
   max-width: 100%;
   overflow-x: clip;
@@ -200,7 +227,7 @@ $text-muted: rgba(243, 244, 246, 0.45);
 
   p {
     font-size: 0.75rem !important;
-    color: $text-muted !important;
+    color: var(--ca-text-muted) !important;
     margin: 0 !important;
   }
 }
@@ -263,8 +290,8 @@ $text-muted: rgba(243, 244, 246, 0.45);
 
 .central-assinante-sidebar {
   width: 72px !important;
-  background-color: $bg-secondary !important;
-  border-right: 1px solid $border-color !important;
+  background-color: var(--ca-bg-secondary) !important;
+  border-right: 1px solid var(--ca-border) !important;
   flex-shrink: 0;
 }
 
@@ -276,7 +303,7 @@ $text-muted: rgba(243, 244, 246, 0.45);
   background: transparent !important;
   border: none !important;
   border-radius: var(--bs-border-radius) !important;
-  color: $text-muted !important;
+  color: var(--ca-text-muted) !important;
   padding: 0.5rem 0.35rem !important;
 
   i {
@@ -285,8 +312,8 @@ $text-muted: rgba(243, 244, 246, 0.45);
   }
 
   &.active {
-    background-color: $bg-hover !important;
-    color: $text-primary !important;
+    background-color: var(--ca-bg-hover) !important;
+    color: var(--ca-text) !important;
   }
 }
 
@@ -351,7 +378,8 @@ $text-muted: rgba(243, 244, 246, 0.45);
 
 // Login
 .central-assinante-login-container {
-  background-color: $bg-primary !important;
+  position: relative;
+  background-color: var(--ca-bg-primary) !important;
 }
 
 .central-assinante-login-card {
@@ -361,7 +389,7 @@ $text-muted: rgba(243, 244, 246, 0.45);
 
 .central-assinante-login-header {
   background: transparent !important;
-  border-bottom: 1px solid $border-color !important;
+  border-bottom: 1px solid var(--ca-border) !important;
   padding: 1rem 1rem 0.75rem !important;
 
   h2 {
@@ -372,7 +400,7 @@ $text-muted: rgba(243, 244, 246, 0.45);
 
   p {
     font-size: 0.8125rem !important;
-    color: $text-muted !important;
+    color: var(--ca-text-muted) !important;
   }
 }
 
@@ -400,8 +428,8 @@ $text-muted: rgba(243, 244, 246, 0.45);
 
 // Cards
 .central-assinante-card-bg {
-  background-color: $bg-card !important;
-  border: 1px solid $border-color !important;
+  background-color: var(--ca-bg-card) !important;
+  border: 1px solid var(--ca-border) !important;
   border-radius: var(--bs-border-radius) !important;
 
   .card {
@@ -468,7 +496,7 @@ $text-muted: rgba(243, 244, 246, 0.45);
   cursor: pointer !important;
 
   &:hover {
-    border-color: color.adjust($border-color, $lightness: 10%) !important;
+    border-color: var(--ca-border-hover) !important;
   }
 }
 
@@ -494,7 +522,7 @@ $text-muted: rgba(243, 244, 246, 0.45);
 
 .central-assinante-card-subtitle {
   font-size: 0.6875rem !important;
-  color: $text-muted !important;
+  color: var(--ca-text-muted) !important;
 }
 
 .central-assinante-card-icon-wrapper {
@@ -504,7 +532,7 @@ $text-muted: rgba(243, 244, 246, 0.45);
 // Info cliente
 .central-assinante-info-header {
   padding: 0.625rem 0.875rem !important;
-  border-bottom: 1px solid $border-color !important;
+  border-bottom: 1px solid var(--ca-border) !important;
   background: transparent !important;
 }
 
@@ -536,7 +564,7 @@ $text-muted: rgba(243, 244, 246, 0.45);
 .central-assinante-info-label {
   font-size: 0.6875rem !important;
   font-weight: 500 !important;
-  color: $text-muted !important;
+  color: var(--ca-text-muted) !important;
   text-transform: none !important;
   letter-spacing: normal !important;
   margin-bottom: 0.125rem !important;
@@ -554,8 +582,8 @@ $text-muted: rgba(243, 244, 246, 0.45);
 
 // Listagens
 .central-assinante-item {
-  background-color: $bg-card !important;
-  border: 1px solid $border-color !important;
+  background-color: var(--ca-bg-card) !important;
+  border: 1px solid var(--ca-border) !important;
   border-radius: var(--bs-border-radius) !important;
 }
 
@@ -572,12 +600,12 @@ $text-muted: rgba(243, 244, 246, 0.45);
 
 .central-assinante-item-subtitle {
   font-size: 0.75rem !important;
-  color: $text-muted !important;
+  color: var(--ca-text-muted) !important;
 }
 
 .central-assinante-item-label {
   font-size: 0.6875rem !important;
-  color: $text-muted !important;
+  color: var(--ca-text-muted) !important;
 }
 
 .central-assinante-item-value,
@@ -596,7 +624,7 @@ $text-muted: rgba(243, 244, 246, 0.45);
 
 .central-assinante-empty-icon {
   font-size: 1.125rem !important;
-  color: $text-muted !important;
+  color: var(--ca-text-muted) !important;
   opacity: 0.5;
   line-height: 1 !important;
 
@@ -626,8 +654,8 @@ $text-muted: rgba(243, 244, 246, 0.45);
   max-width: 100% !important;
   box-sizing: border-box !important;
   overflow: hidden !important;
-  background-color: $bg-secondary !important;
-  border-top: 1px solid $border-color !important;
+  background-color: var(--ca-bg-secondary) !important;
+  border-top: 1px solid var(--ca-border) !important;
   box-shadow: none !important;
   min-height: var(--central-assinante-mobile-nav-height);
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -646,7 +674,7 @@ $text-muted: rgba(243, 244, 246, 0.45);
   max-width: 20%;
   background: transparent !important;
   border: none !important;
-  color: $text-muted !important;
+  color: var(--ca-text-muted) !important;
   padding: 0.375rem 0.125rem !important;
   overflow: hidden;
 
@@ -680,8 +708,8 @@ $text-muted: rgba(243, 244, 246, 0.45);
 
   &.active {
     background-color: transparent !important;
-    color: $text-primary !important;
-    border-top: 2px solid $text-secondary !important;
+    color: var(--ca-text) !important;
+    border-top: 2px solid var(--ca-text-secondary) !important;
   }
 }
 
@@ -689,7 +717,7 @@ $text-muted: rgba(243, 244, 246, 0.45);
 .central-assinante-modal-backdrop {
   position: fixed !important;
   inset: 0 !important;
-  background-color: rgba(0, 0, 0, 0.6) !important;
+  background-color: var(--ca-modal-backdrop) !important;
   z-index: 1050 !important;
   display: flex !important;
   align-items: center !important;
@@ -706,15 +734,15 @@ $text-muted: rgba(243, 244, 246, 0.45);
 }
 
 .central-assinante-modal-content {
-  background-color: $bg-card !important;
-  border: 1px solid $border-color !important;
-  color: $text-primary !important;
+  background-color: var(--ca-bg-card) !important;
+  border: 1px solid var(--ca-border) !important;
+  color: var(--ca-text) !important;
 }
 
 .central-assinante-modal-header {
   padding: 0.625rem 0.875rem !important;
-  background-color: $bg-secondary !important;
-  border-bottom: 1px solid $border-color !important;
+  background-color: var(--ca-bg-secondary) !important;
+  border-bottom: 1px solid var(--ca-border) !important;
 }
 
 .central-assinante-modal-title {
@@ -723,7 +751,7 @@ $text-muted: rgba(243, 244, 246, 0.45);
 }
 
 .central-assinante-modal-close {
-  color: $text-muted !important;
+  color: var(--ca-text-muted) !important;
   background: transparent !important;
   border: none !important;
 }
@@ -735,7 +763,7 @@ $text-muted: rgba(243, 244, 246, 0.45);
 .central-assinante-modal-description,
 .central-assinante-modal-date {
   font-size: 0.75rem !important;
-  color: $text-muted !important;
+  color: var(--ca-text-muted) !important;
 }
 
 .central-assinante-modal-value {
@@ -745,8 +773,8 @@ $text-muted: rgba(243, 244, 246, 0.45);
 
 .central-assinante-modal-code-wrapper,
 .central-assinante-modal-qr-wrapper {
-  background-color: $bg-secondary !important;
-  border: 1px solid $border-color !important;
+  background-color: var(--ca-bg-secondary) !important;
+  border: 1px solid var(--ca-border) !important;
   border-radius: var(--bs-border-radius) !important;
   padding: 0.5rem !important;
 }
@@ -762,20 +790,20 @@ $text-muted: rgba(243, 244, 246, 0.45);
   transform: translateY(-50%) !important;
   border: none !important;
   background: transparent !important;
-  color: $text-muted !important;
+  color: var(--ca-text-muted) !important;
   font-size: 0.75rem !important;
   padding: 0.25rem 0.5rem !important;
   cursor: pointer !important;
 
   &:hover:not(:disabled) {
-    color: $text-primary !important;
+    color: var(--ca-text) !important;
   }
 }
 
 // Loading / erro
 .central-assinante-loading,
 .central-assinante-error {
-  background-color: $bg-primary !important;
+  background-color: var(--ca-bg-primary) !important;
   width: 100%;
   max-width: 100%;
   min-height: 100vh;
@@ -787,7 +815,7 @@ $text-muted: rgba(243, 244, 246, 0.45);
   padding: 0 1rem;
   font-size: 0.8125rem !important;
   font-weight: 500 !important;
-  color: $text-muted !important;
+  color: var(--ca-text-muted) !important;
   text-align: center !important;
   line-height: 1.4 !important;
   max-width: 20rem;
@@ -881,9 +909,51 @@ $text-muted: rgba(243, 244, 246, 0.45);
 
 }
 
+[data-theme="light"] .central-assinante-container,
+body[data-theme="light"] .central-assinante-container {
+  @include ca-theme-light;
+}
+
+.central-assinante-login-theme {
+  position: absolute;
+  top: 0.375rem;
+  right: 0.375rem;
+  z-index: 2;
+}
+
+.central-assinante-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid var(--ca-border);
+  border-radius: var(--bs-border-radius);
+  background: transparent;
+  color: var(--ca-text-secondary);
+  cursor: pointer;
+
+  i {
+    font-size: 0.9375rem;
+    line-height: 1;
+  }
+
+  &:hover:not(:disabled) {
+    background-color: var(--ca-bg-hover);
+    color: var(--ca-text);
+    border-color: var(--ca-border-hover);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--ca-border-focus);
+  }
+}
+
 body:has(.central-assinante-container) {
   overflow-x: clip;
-  background-color: $bg-primary;
+  background-color: var(--ca-bg-primary);
 }
 
 html:has(.central-assinante-container) {
