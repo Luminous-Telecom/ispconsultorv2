@@ -217,7 +217,8 @@ body .draggable-modal-container-custom .modal-body.draggable-modal-body-custom:h
   display: block !important;
 }
 
-.draggable-modal-body-custom > form > .cliente-modal-content {
+.draggable-modal-body-custom > form > .cliente-modal-content,
+.draggable-modal-body-custom > form > .contrato-modal-content {
   flex: 1 1 0 !important;
   min-height: 0 !important;
   overflow: hidden !important;
@@ -244,7 +245,8 @@ body .draggable-modal-container-custom .modal-body.draggable-modal-body-custom:h
   min-height: 0 !important;
   display: flex !important;
   flex-direction: column !important;
-  overflow: hidden !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
   padding: 16px;
 
   .row > * {

@@ -306,8 +306,10 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         <form id="contrato-form" onSubmit={handleSubmit}>
           <div className="contrato-modal-content">
             <div
-              className={`tab-content contrato-tab-content contrato-tab-content-scrollable ${
-                isScrollableTab ? '' : 'contrato-tab-content-padded'
+              className={`tab-content contrato-tab-content ${
+                isScrollableTab
+                  ? 'contrato-tab-content-scrollable'
+                  : 'contrato-tab-content-padded'
               }`}
             >
               <ContratoModalTabPanels
