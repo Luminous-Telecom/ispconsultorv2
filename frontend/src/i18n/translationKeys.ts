@@ -179,6 +179,9 @@ export interface TranslationKeys {
   'dashboard.averageTicket': string;
   'dashboard.averageTicketInfo': string;
   'dashboard.averageTicketInfoSingle': string;
+  'dashboard.averageTicketByPlanType': string;
+  'dashboard.averageTicketBadge': string;
+  'dashboard.averageTicketMainCaption': string;
   'dashboard.monthlyRevenueTitle': string;
   'dashboard.months12': string;
   'dashboard.chartCurrentMonth': string;

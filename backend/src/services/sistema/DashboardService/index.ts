@@ -7,6 +7,7 @@ import { Op, QueryTypes } from 'sequelize';
 import { sequelize } from '../../../config/database';
 import { formatDateISOForAPI, formatDateOnly } from '../../../utils/timezoneUtils';
 import { logger } from '../../../utils/logger';
+import { FinancialCalculationsService } from '../../FinancialCalculationsService';
 export type BackupStatusGraficoDia = {
   label: string;
   dataISO: string;
@@ -47,6 +48,31 @@ type TituloDashJson = {
 };
 
 export class DashboardService {
+  /** Mensalidade efetiva do contrato (valor_final ou plano com desconto). */
+  static calcValorMensalidadeContrato(fields: {
+    valor_final?: number | string | null;
+    desconto_valor?: number | string | null;
+    desconto_percentual?: number | string | null;
+    valor_mensal?: number | string | null;
+  }): number {
+    const vf = fields.valor_final != null ? parseFloat(String(fields.valor_final)) : 0;
+    if (vf > 0) return vf;
+    const vm = fields.valor_mensal != null ? parseFloat(String(fields.valor_mensal)) : 0;
+    if (vm <= 0) return 0;
+    const descontoValor =
+      fields.desconto_valor != null && fields.desconto_valor !== ''
+        ? parseFloat(String(fields.desconto_valor))
+        : null;
+    const descontoPercentual =
+      fields.desconto_percentual != null && fields.desconto_percentual !== ''
+        ? parseFloat(String(fields.desconto_percentual))
+        : null;
+    return FinancialCalculationsService.calcularDesconto(vm, {
+      desconto_valor: descontoValor,
+      desconto_percentual: descontoPercentual,
+    }).valorFinal;
+  }
+
   /**
    * Buscar contratos do período
    */
@@ -88,26 +114,38 @@ export class DashboardService {
       where.empresa_id = empresaId;
     }
     return await Contrato.findAll({
-      attributes: ['id', 'status', 'plano_id', 'cliente_id', 'valor_final', 'isento_mensalidade'],
+      attributes: [
+        'id',
+        'status',
+        'plano_id',
+        'cliente_id',
+        'valor_final',
+        'desconto_valor',
+        'desconto_percentual',
+        'isento_mensalidade',
+      ],
       where,
       include: [
         {
           association: 'cliente',
-          attributes: ['id', 'ativo']
+          attributes: ['id', 'ativo'],
+          where: { ativo: true },
+          required: true,
         },
         {
           association: 'plano',
-          attributes: ['id', 'nome_plano', 'valor_mensal', 'tipo_servico']
-        }
-      ]
+          attributes: ['id', 'nome_plano', 'valor_mensal', 'tipo_servico'],
+          where: { status: 'ativo' },
+          required: true,
+        },
+      ],
     });
   }
 
   /**
-   * Quantidade de clientes (distintos) por tipo de plano - para gráfico "Distribuição por Tipo de Plano"
+   * Quantidade de clientes (distintos) por tipo de serviço do plano — gráfico "Distribuição por Tipo de Plano".
    */
   static async getClientesPorTipoPlano(empresaId?: number | null): Promise<Array<{ tipo_servico: string; quantidade: number }>> {
-    const { QueryTypes } = await import('sequelize');
     const empresaFilter = empresaId != null ? ' AND c.empresa_id = :empresaId' : '';
     const replacements: Record<string, number> = {};
     if (empresaId != null) {
@@ -117,16 +155,82 @@ export class DashboardService {
       `SELECT tipo_servico, COUNT(*) as quantidade FROM (
         SELECT DISTINCT c.cliente_id, p.tipo_servico FROM adm_contratos_contratos c
         INNER JOIN adm_cadastros_planos p ON c.plano_id = p.id
-        WHERE c.status = 'ativo' AND c.cliente_id IS NOT NULL${empresaFilter}
+        INNER JOIN adm_clientes_clientes cl ON c.cliente_id = cl.id
+        WHERE c.status = 'ativo' AND c.cliente_id IS NOT NULL AND cl.ativo = 1 AND p.status = 'ativo'${empresaFilter}
         UNION
         SELECT DISTINCT c.cliente_id, p.tipo_servico FROM adm_contratos_contrato_planos_adicionais cpa
         INNER JOIN adm_contratos_contratos c ON cpa.contrato_id = c.id
         INNER JOIN adm_cadastros_planos p ON cpa.plano_id = p.id
-        WHERE c.status = 'ativo' AND cpa.status = 'ativo'${empresaFilter}
+        INNER JOIN adm_clientes_clientes cl ON c.cliente_id = cl.id
+        WHERE c.status = 'ativo' AND cpa.status = 'ativo' AND cl.ativo = 1 AND p.status = 'ativo'${empresaFilter}
       ) AS sub GROUP BY tipo_servico`,
       { type: QueryTypes.SELECT, replacements: Object.keys(replacements).length ? replacements : undefined }
     );
     return rows.map((r) => ({ tipo_servico: r.tipo_servico, quantidade: parseInt(r.quantidade, 10) || 0 }));
+  }
+
+  /** Valor mensal efetivo do contrato (valor_final ou plano com desconto). */
+  private static sqlValorMensalidadeContrato(contratoAlias: string, planoAlias: string): string {
+    const c = contratoAlias;
+    const p = planoAlias;
+    return `CASE
+      WHEN ${c}.valor_final IS NOT NULL AND ${c}.valor_final > 0 THEN ${c}.valor_final
+      WHEN ${c}.desconto_valor IS NOT NULL AND ${c}.desconto_valor > 0
+        THEN GREATEST(0, ${p}.valor_mensal - ${c}.desconto_valor)
+      WHEN ${c}.desconto_percentual IS NOT NULL AND ${c}.desconto_percentual > 0
+        THEN GREATEST(0, ${p}.valor_mensal * (1 - ${c}.desconto_percentual / 100))
+      ELSE COALESCE(${p}.valor_mensal, 0)
+    END`;
+  }
+
+  /**
+   * Ticket médio por tipo de serviço: soma das mensalidades efetivas ÷ clientes distintos do tipo.
+   */
+  static async getTicketMedioPorTipoServico(empresaId?: number | null): Promise<
+    Array<{ tipo_servico: string; quantidade: number; ticket_medio: number }>
+  > {
+    const empresaFilterC = empresaId != null ? ' AND c.empresa_id = :empresaId' : '';
+    const empresaFilterCpa = empresaId != null ? ' AND cpa.empresa_id = :empresaId' : '';
+    const replacements: Record<string, number> = {};
+    if (empresaId != null) {
+      replacements.empresaId = empresaId;
+    }
+    const valorC = this.sqlValorMensalidadeContrato('c', 'p');
+    const valorCpa = this.sqlValorMensalidadeContrato('cpa', 'p');
+    const rows = await sequelize.query<{ tipo_servico: string; quantidade: string; soma_valor: string }>(
+      `SELECT tipo_servico,
+        COUNT(DISTINCT cliente_id) AS quantidade,
+        COALESCE(SUM(valor_contrato), 0) AS soma_valor
+      FROM (
+        SELECT c.cliente_id, p.tipo_servico, ${valorC} AS valor_contrato
+        FROM adm_contratos_contratos c
+        INNER JOIN adm_cadastros_planos p ON c.plano_id = p.id
+        INNER JOIN adm_clientes_clientes cl ON c.cliente_id = cl.id
+        WHERE c.status = 'ativo' AND c.cliente_id IS NOT NULL
+          AND c.isento_mensalidade = 0 AND cl.ativo = 1 AND p.status = 'ativo'${empresaFilterC}
+        UNION ALL
+        SELECT c.cliente_id, p.tipo_servico, ${valorCpa} AS valor_contrato
+        FROM adm_contratos_contrato_planos_adicionais cpa
+        INNER JOIN adm_contratos_contratos c ON cpa.contrato_id = c.id
+        INNER JOIN adm_cadastros_planos p ON cpa.plano_id = p.id
+        INNER JOIN adm_clientes_clientes cl ON c.cliente_id = cl.id
+        WHERE c.status = 'ativo' AND cpa.status = 'ativo' AND c.cliente_id IS NOT NULL
+          AND c.isento_mensalidade = 0 AND cl.ativo = 1 AND p.status = 'ativo'${empresaFilterCpa}
+      ) AS sub
+      GROUP BY tipo_servico
+      HAVING COUNT(DISTINCT cliente_id) > 0
+      ORDER BY soma_valor DESC`,
+      { type: QueryTypes.SELECT, replacements: Object.keys(replacements).length ? replacements : undefined }
+    );
+    return rows.map((r) => {
+      const quantidade = parseInt(r.quantidade, 10) || 0;
+      const soma = parseFloat(r.soma_valor) || 0;
+      return {
+        tipo_servico: r.tipo_servico,
+        quantidade,
+        ticket_medio: quantidade > 0 ? soma / quantidade : 0,
+      };
+    });
   }
 
   /**
@@ -379,9 +483,21 @@ export class DashboardService {
     }
 
     const contratos = await this.getContratosAtivos(empresaId);
-    const totalValorContratos = contratos.reduce((acumulado, contrato) => {
-      return acumulado + parseFloat(String(contrato.valor_final || 0));
-    }, 0);
+    let totalValorContratos = 0;
+    for (const contrato of contratos) {
+      if (contrato.isento_mensalidade) continue;
+      const row = contrato.toJSON() as {
+        plano?: { valor_mensal?: number | string };
+        desconto_valor?: number | string | null;
+        desconto_percentual?: number | string | null;
+      };
+      totalValorContratos += this.calcValorMensalidadeContrato({
+        valor_final: contrato.valor_final,
+        desconto_valor: row.desconto_valor,
+        desconto_percentual: row.desconto_percentual,
+        valor_mensal: row.plano?.valor_mensal,
+      });
+    }
 
     const hoje = new Date();
     hoje.setHours(23, 59, 59, 999);
@@ -694,36 +810,75 @@ export class DashboardService {
     }
 
     const contratosAtivos = await this.getContratosAtivos(empresaId);
+    const { ContratoPlanoAdicional } = await import('../../../models/contratos/ContratoPlanoAdicional');
+    const adicionaisWhere: Record<string, unknown> = { status: 'ativo' };
+    if (empresaId != null) {
+      adicionaisWhere.empresa_id = empresaId;
+    }
+    const planosAdicionais = await ContratoPlanoAdicional.findAll({
+      where: adicionaisWhere,
+      attributes: ['valor_final', 'desconto_valor', 'desconto_percentual'],
+      include: [
+        {
+          association: 'contrato',
+          attributes: ['cliente_id', 'isento_mensalidade'],
+          where: { status: 'ativo' },
+          required: true,
+          include: [
+            { association: 'cliente', attributes: ['id'], where: { ativo: true }, required: true },
+          ],
+        },
+        {
+          association: 'plano',
+          attributes: ['valor_mensal'],
+          where: { status: 'ativo' },
+          required: true,
+        },
+      ],
+    });
 
     let valorTotalPlanos = 0;
     const clientesComPlanos = new Set<number>();
 
     for (const contrato of contratosAtivos) {
-      if (contrato.isento_mensalidade) continue;
-
+      if (contrato.isento_mensalidade || !contrato.cliente_id) continue;
       const row = contrato.toJSON() as {
-        cliente?: { ativo?: boolean };
         plano?: { valor_mensal?: number | string };
+        desconto_valor?: number | string | null;
+        desconto_percentual?: number | string | null;
       };
-      if (!row.cliente?.ativo || !contrato.cliente_id) continue;
-
+      const valor = this.calcValorMensalidadeContrato({
+        valor_final: contrato.valor_final,
+        desconto_valor: row.desconto_valor,
+        desconto_percentual: row.desconto_percentual,
+        valor_mensal: row.plano?.valor_mensal,
+      });
+      if (valor <= 0) continue;
       clientesComPlanos.add(contrato.cliente_id);
-
-      const vf = contrato.valor_final != null ? parseFloat(String(contrato.valor_final)) : 0;
-      if (vf > 0) {
-        valorTotalPlanos += vf;
-        continue;
-      }
-
-      const vm = row.plano?.valor_mensal;
-      if (vm != null && vm !== '') {
-        valorTotalPlanos += typeof vm === 'string' ? parseFloat(vm) : vm;
-      }
+      valorTotalPlanos += valor;
     }
 
-    const ticketMedio = clientesComPlanos.size > 0 
-      ? valorTotalPlanos / clientesComPlanos.size 
-      : 0;
+    for (const adicional of planosAdicionais) {
+      const row = adicional.toJSON() as {
+        valor_final?: number | string | null;
+        desconto_valor?: number | string | null;
+        desconto_percentual?: number | string | null;
+        contrato?: { cliente_id?: number; isento_mensalidade?: boolean };
+        plano?: { valor_mensal?: number | string };
+      };
+      if (row.contrato?.isento_mensalidade || !row.contrato?.cliente_id) continue;
+      const valor = this.calcValorMensalidadeContrato({
+        valor_final: row.valor_final,
+        desconto_valor: row.desconto_valor,
+        desconto_percentual: row.desconto_percentual,
+        valor_mensal: row.plano?.valor_mensal,
+      });
+      if (valor <= 0) continue;
+      clientesComPlanos.add(row.contrato.cliente_id);
+      valorTotalPlanos += valor;
+    }
+
+    const ticketMedio = clientesComPlanos.size > 0 ? valorTotalPlanos / clientesComPlanos.size : 0;
 
     return {
       totalPrevisto,

@@ -178,9 +178,12 @@ const esES: TranslationKeys = {
     'dashboard.chargesCancellationMetric': 'Tasa de cancelación',
     'dashboard.averageTicket': 'Ticket Promedio',
     'dashboard.averageTicketInfo':
-      'Valor destacado: promedio de la mensualidad de contratos activos por cliente con plan. Gráfico (últimos meses): en cada mes, promedio por título con vencimiento en ese mes. Por eso los importes pueden diferir.',
+      'Valor destacado: promedio general de la mensualidad de contratos activos por cliente (no exentos). Gráfico: ticket promedio por tipo de servicio del plan — suma de mensualidades (valor final) de ese tipo dividida por los clientes distintos con contrato activo en el tipo.',
+    'dashboard.averageTicketByPlanType': 'POR TIPO',
+    'dashboard.averageTicketBadge': 'Contratos activos',
+    'dashboard.averageTicketMainCaption': 'Promedio general por cliente',
     'dashboard.averageTicketInfoSingle':
-      'Promedio de la mensualidad de contratos activos por cliente con plan, según el resumen del período.',
+      'Promedio de la mensualidad de contratos activos por cliente con plan (no exentos), según los contratos vigentes.',
     'dashboard.months12': '12 meses',
     'dashboard.chartCurrentMonth': 'mes actual',
     'dashboard.newClients': 'Nuevos Clientes',

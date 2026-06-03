@@ -40,7 +40,6 @@ const Dashboard: React.FC = () => {
     stats,
     charts,
     dashboardData,
-    startDate,
     t,
   });
 

@@ -79,7 +79,12 @@ export interface DashboardData {
   contratos: Contrato[]; // Contratos do período
   contratosTodos?: Contrato[]; // TODOS os contratos para gráficos
   contratosAtivosTodos?: Contrato[]; // Todos os contratos ativos para gráfico "Clientes por Plano"
-  clientesPorTipoPlano?: Array<{ tipo_servico: string; quantidade: number }>; // Qtd clientes (distintos) por tipo de plano
+  clientesPorTipoPlano?: Array<{ tipo_servico: string; quantidade: number }>;
+  ticketMedioPorTipoServico?: Array<{
+    tipo_servico: string;
+    quantidade: number;
+    ticket_medio: number;
+  }>;
   contratosBloqueados?: number; // SaaS: empresas bloqueadas por atraso
   contratosEmAtraso?: number; // SaaS: em atraso | ERP: calculado no backend (período do filtro)
   /** ERP: ativos para o gráfico, já descontando “em atraso” no período */

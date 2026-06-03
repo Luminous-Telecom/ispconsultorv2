@@ -178,9 +178,12 @@ const enUS: TranslationKeys = {
     'dashboard.chargesCancellationMetric': 'Cancellation rate',
     'dashboard.averageTicket': 'Average Ticket',
     'dashboard.averageTicketInfo':
-      'Highlighted value: average active-contract monthly fee per client with a plan. Chart (recent months): each bar is the average amount per billing title due in that month. Values may therefore differ.',
+      'Highlighted value: overall average monthly fee of active contracts per client (non-exempt). Chart: average ticket per plan service type — sum of monthly fees (final value) for that type divided by distinct clients with an active contract in that type.',
+    'dashboard.averageTicketByPlanType': 'BY TYPE',
+    'dashboard.averageTicketBadge': 'Active contracts',
+    'dashboard.averageTicketMainCaption': 'Overall average per client',
     'dashboard.averageTicketInfoSingle':
-      'Average active-contract monthly fee per client with a plan, from the period summary.',
+      'Average monthly fee of active contracts per client with a plan (non-exempt), based on current contracts.',
     'dashboard.months12': '12 months',
     'dashboard.chartCurrentMonth': 'current month',
     'dashboard.newClients': 'New Clients',

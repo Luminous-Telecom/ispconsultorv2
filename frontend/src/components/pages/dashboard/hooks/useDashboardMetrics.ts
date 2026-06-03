@@ -4,13 +4,17 @@ import type { DashboardData } from 'services/dashboardService';
 import type { useDashboardStats } from 'hooks/useDashboardStats';
 import type { useDashboardCharts } from 'hooks/useDashboardCharts';
 import type { TranslationKeys } from 'contexts/I18nContext';
-import { calcVariacao, MES_ABREV, ticketMedioNoMes } from '../utils';
+
+const TIPO_CORES_FALLBACK: Record<string, string> = {
+  infraestrutura: '#3b82f6',
+  consultoria: '#10b981',
+  blockdomi: '#8b5cf6',
+};
 
 interface UseDashboardMetricsParams {
   stats: ReturnType<typeof useDashboardStats>;
   charts: ReturnType<typeof useDashboardCharts>;
   dashboardData: DashboardData | undefined;
-  startDate: string | null;
   t: (key: keyof TranslationKeys, params?: Record<string, unknown>) => string;
 }
 
@@ -18,37 +22,35 @@ export function useDashboardMetrics({
   stats,
   charts,
   dashboardData,
-  startDate,
   t,
 }: UseDashboardMetricsParams) {
   const ticketMedioCardData: TicketMedioData = useMemo(() => {
-    const receitaSeries = charts.receitaMensalChartData;
-    const titulos = dashboardData?.titulosTodos;
+    const tipoLabels: Record<string, string> = {
+      infraestrutura: t('form.serviceTypeInfrastructure'),
+      consultoria: t('form.serviceTypeConsulting'),
+      blockdomi: t('form.serviceTypeBlockdomi'),
+    };
 
-    const ticketMensalSeries = receitaSeries.map((item) => ({
-      mes: String(item.mes ?? ''),
-      valor: ticketMedioNoMes(
-        titulos,
-        typeof item.data_inicio === 'string' ? item.data_inicio : undefined,
-        typeof item.data_fim === 'string' ? item.data_fim : undefined,
-        String(item.mes ?? '')
-      ),
-    }));
+    const colorByTipo = Object.fromEntries(
+      charts.distribuicaoPlanos
+        .filter((row) => row.filterValue != null && row.color)
+        .map((row) => [String(row.filterValue), row.color as string])
+    );
 
-    const last6 = ticketMensalSeries.slice(-6);
-    const d = startDate ? new Date(startDate + 'T00:00:00') : new Date();
-    const periodo = `${MES_ABREV[d.getMonth()]} ${d.getFullYear()}`;
+    const seriesPorTipo = (dashboardData?.ticketMedioPorTipoServico ?? [])
+      .filter((row) => row.ticket_medio > 0)
+      .map((row) => ({
+        mes: tipoLabels[row.tipo_servico] || row.tipo_servico,
+        valor: row.ticket_medio,
+        color: colorByTipo[row.tipo_servico] || TIPO_CORES_FALLBACK[row.tipo_servico],
+      }))
+      .sort((a, b) => b.valor - a.valor);
 
     return {
       ticketMedio: stats.ticketMedio,
-      variacaoTicket: calcVariacao(ticketMensalSeries),
-      pedidos: stats.clientesComTitulosPeriodo,
-      receitaTotal: stats.receitaPagaPeriodo,
-      variacaoReceita: calcVariacao(receitaSeries),
-      periodo,
-      seriesMensal: last6,
+      seriesMensal: seriesPorTipo,
     };
-  }, [stats, charts.receitaMensalChartData, startDate, dashboardData?.titulosTodos]);
+  }, [stats.ticketMedio, charts.distribuicaoPlanos, dashboardData?.ticketMedioPorTipoServico, t]);
 
   const clientesMetricFooter = useMemo(() => {
     const ativos = stats.clientesAtivos;

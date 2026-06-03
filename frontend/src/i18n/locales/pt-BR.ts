@@ -178,9 +178,12 @@ const ptBR: TranslationKeys = {
     'dashboard.chargesCancellationMetric': 'Taxa de cancelamento',
     'dashboard.averageTicket': 'Ticket Médio',
     'dashboard.averageTicketInfo':
-      'Valor em destaque: média da mensalidade dos contratos ativos por cliente com plano. Gráfico (últimos meses): em cada mês, média do valor por título com vencimento naquele mês. Por isso os valores podem ser diferentes.',
+      'Valor em destaque: média geral por cliente com contrato ativo (não isento). Em cada contrato usa o valor final com desconto (campo valor final ou plano menos desconto), nunca o valor cheio do plano. Gráfico: mesma regra por tipo de serviço.',
+    'dashboard.averageTicketByPlanType': 'POR TIPO',
+    'dashboard.averageTicketBadge': 'Contratos ativos',
+    'dashboard.averageTicketMainCaption': 'Média geral por cliente',
     'dashboard.averageTicketInfoSingle':
-      'Média da mensalidade dos contratos ativos por cliente com plano, conforme o resumo do período.',
+      'Média da mensalidade dos contratos ativos por cliente com plano (não isentos), com base nos contratos vigentes.',
     'dashboard.months12': '12 meses',
     'dashboard.chartCurrentMonth': 'mês atual',
     'dashboard.newClients': 'Novos Clientes',

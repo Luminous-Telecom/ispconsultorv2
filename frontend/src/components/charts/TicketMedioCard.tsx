@@ -6,16 +6,11 @@ import { InfoHelpIcon } from 'components/ui/InfoHelpIcon';
 export interface TicketMedioMes {
   mes: string;
   valor: number;
+  color?: string;
 }
 
 export interface TicketMedioData {
   ticketMedio: number;
-  variacaoTicket?: string;
-  pedidos: number;
-  variacaoPedidos?: string;
-  receitaTotal: number;
-  variacaoReceita?: string;
-  periodo: string;
   seriesMensal: TicketMedioMes[];
 }
 
@@ -23,49 +18,11 @@ export interface TicketMedioCardProps {
   data: TicketMedioData;
 }
 
-function parseVariacao(v?: string): { sinal: 1 | -1 | 0; texto: string } {
-  if (!v) return { sinal: 0, texto: '' };
-  const neg = v.startsWith('-');
-  return { sinal: neg ? -1 : 1, texto: v };
-}
-
-const VariacaoBadge: React.FC<{ variacao?: string; sufixo?: string }> = ({ variacao, sufixo }) => {
-  const { sinal, texto } = parseVariacao(variacao);
-  if (!texto) return null;
-  const cor = sinal >= 0 ? '#10b981' : '#ef4444';
-  const bg = sinal >= 0 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)';
-  return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 4,
-        padding: '2px 8px',
-        borderRadius: 20,
-        background: bg,
-        color: cor,
-        fontSize: 11,
-        fontWeight: 600,
-        whiteSpace: 'nowrap',
-      }}
-    >
-      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-        {sinal >= 0
-          ? <path d="M5 8V2M2 5l3-3 3 3" stroke={cor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          : <path d="M5 2v6M2 5l3 3 3-3" stroke={cor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        }
-      </svg>
-      {texto}{sufixo ? ` ${sufixo}` : ''}
-    </span>
-  );
-};
-
-/** Altura mínima da área das barras — evita colapso a 0 quando o pai está em altura indefinida (resize / flex wrap). */
 const BAR_ZONE_MIN_HEIGHT_PX = 80;
+const DEFAULT_BAR_COLOR = '#534AB7';
 
-const BarChart: React.FC<{ series: TicketMedioMes[] }> = ({ series }) => {
+const BarChart: React.FC<{ series: TicketMedioMes[]; chartSubtitle: string }> = ({ series, chartSubtitle }) => {
   const max = Math.max(...series.map((s) => s.valor), 1);
-  const last = series.length - 1;
   const [tooltip, setTooltip] = useState<{ x: number; y: number; item: TicketMedioMes } | null>(null);
 
   return (
@@ -83,7 +40,7 @@ const BarChart: React.FC<{ series: TicketMedioMes[] }> = ({ series }) => {
       }}
     >
       <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--text-secondary, rgba(255,255,255,0.4))', letterSpacing: '0.06em', marginBottom: 4, flexShrink: 0 }}>
-        ÚLTIMOS {series.length} MESES
+        {chartSubtitle}
       </div>
       <div
         style={{
@@ -97,7 +54,7 @@ const BarChart: React.FC<{ series: TicketMedioMes[] }> = ({ series }) => {
         {series.map((item, i) => {
           const heightPct = max > 0 ? (item.valor / max) * 100 : 12;
           const barHeightPct = Math.max(heightPct, 12);
-          const isLast = i === last;
+          const barColor = item.color || DEFAULT_BAR_COLOR;
           return (
             <div
               key={i}
@@ -119,8 +76,8 @@ const BarChart: React.FC<{ series: TicketMedioMes[] }> = ({ series }) => {
               <span
                 style={{
                   fontSize: 8,
-                  fontWeight: isLast ? 700 : 600,
-                  color: isLast ? 'var(--text-primary)' : 'var(--text-secondary, rgba(255,255,255,0.55))',
+                  fontWeight: 600,
+                  color: 'var(--text-secondary, rgba(255,255,255,0.55))',
                   textAlign: 'center',
                   lineHeight: 1.15,
                   width: '100%',
@@ -130,14 +87,7 @@ const BarChart: React.FC<{ series: TicketMedioMes[] }> = ({ series }) => {
               >
                 {formatCurrency(item.valor)}
               </span>
-              <div
-                style={{
-                  flex: 1,
-                  minHeight: 36,
-                  width: '100%',
-                  position: 'relative',
-                }}
-              >
+              <div style={{ flex: 1, minHeight: 36, width: '100%', position: 'relative' }}>
                 <div
                   style={{
                     position: 'absolute',
@@ -145,21 +95,21 @@ const BarChart: React.FC<{ series: TicketMedioMes[] }> = ({ series }) => {
                     right: 0,
                     bottom: 0,
                     height: `${barHeightPct}%`,
-                    background: isLast ? '#a89fe8' : '#534AB7',
+                    background: barColor,
                     borderRadius: '3px 3px 2px 2px',
-                    opacity: isLast ? 1 : 0.7,
+                    opacity: 0.85,
                     transition: 'opacity 0.15s',
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
-                  onMouseLeave={(e) => (e.currentTarget.style.opacity = isLast ? '1' : '0.7')}
+                  onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.85')}
                 />
               </div>
               <span
                 style={{
                   fontSize: 9,
                   marginTop: 4,
-                  color: isLast ? 'var(--text-primary)' : 'var(--text-secondary, rgba(255,255,255,0.4))',
-                  fontWeight: isLast ? 700 : 400,
+                  color: barColor,
+                  fontWeight: 600,
                   whiteSpace: 'nowrap',
                   flexShrink: 0,
                 }}
@@ -201,8 +151,8 @@ const BarChart: React.FC<{ series: TicketMedioMes[] }> = ({ series }) => {
 
 const TicketMedioCard: React.FC<TicketMedioCardProps> = ({ data }) => {
   const { t } = useI18n();
-  const { sinal: sinalTicket } = parseVariacao(data.variacaoTicket);
   const ticketInfoText = t('dashboard.averageTicketInfo');
+  const chartSubtitle = t('dashboard.averageTicketByPlanType');
 
   return (
     <div
@@ -220,11 +170,19 @@ const TicketMedioCard: React.FC<TicketMedioCardProps> = ({ data }) => {
           <span className="pie-metric-header__title">{t('dashboard.averageTicket')}</span>
           <InfoHelpIcon text={ticketInfoText} className="ms-1" />
         </div>
-        <span className="pie-metric-header__badge">{data.periodo}</span>
+        <span className="pie-metric-header__badge">{t('dashboard.averageTicketBadge')}</span>
       </div>
 
-      {/* Valor principal */}
       <div style={{ marginBottom: 3 }}>
+        <div
+          style={{
+            fontSize: 10,
+            color: 'var(--text-secondary, rgba(255,255,255,0.5))',
+            marginBottom: 2,
+          }}
+        >
+          {t('dashboard.averageTicketMainCaption')}
+        </div>
         <div
           style={{
             fontSize: 20,
@@ -232,26 +190,15 @@ const TicketMedioCard: React.FC<TicketMedioCardProps> = ({ data }) => {
             color: 'var(--text-primary)',
             letterSpacing: '-0.03em',
             lineHeight: 1.1,
-            marginBottom: 3,
           }}
         >
           {formatCurrency(data.ticketMedio)}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <VariacaoBadge variacao={data.variacaoTicket} />
-          {data.variacaoTicket && (
-            <span style={{ fontSize: 10, color: 'var(--text-secondary, rgba(255,255,255,0.5))' }}>
-              vs mês anterior
-            </span>
-          )}
-        </div>
-        {sinalTicket !== 0 && <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '4px 0 0' }} />}
       </div>
 
-      {/* Gráfico de barras — ocupa o espaço restante do card */}
       {data.seriesMensal.length > 0 && (
         <div style={{ flex: '1 1 auto', minHeight: BAR_ZONE_MIN_HEIGHT_PX, display: 'flex', flexDirection: 'column' }}>
-          <BarChart series={data.seriesMensal} />
+          <BarChart series={data.seriesMensal} chartSubtitle={chartSubtitle} />
         </div>
       )}
     </div>
