@@ -225,16 +225,32 @@ jobs:
           FIRST_MESSAGE=$(git log -1 --pretty=%B | head -1)
           echo "message=${FIRST_MESSAGE}" >> $GITHUB_OUTPUT
 
+          format_commit_line() {
+            node -e "
+              const s = process.argv[1] || '';
+              const m = s.match(/^(\w+)(?:\(([^)]+)\))?:\s*(.+)$/);
+              if (m) {
+                const cat = (m[2] || 'Geral').split(/[-_/]/).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                const desc = m[3].charAt(0).toUpperCase() + m[3].slice(1);
+                console.log('- ' + cat + ': ' + desc);
+              } else {
+                const text = s.trim();
+                console.log('- Geral: ' + (text ? text.charAt(0).toUpperCase() + text.slice(1) : 'Atualização do sistema'));
+              }
+            " "$1"
+          }
+
           TEMP_FILE=$(mktemp)
           COMMIT_COUNT=0
           while IFS= read -r hash; do
             [ -n "${hash}" ] || continue
             COMMIT_COUNT=$((COMMIT_COUNT + 1))
-            echo "• [$(echo ${hash} | cut -c1-7)] $(git log -1 "${hash}" --pretty=%B | head -1)" >> "${TEMP_FILE}"
+            SUBJECT=$(git log -1 "${hash}" --pretty=%s)
+            format_commit_line "${SUBJECT}" >> "${TEMP_FILE}"
           done <<< "${COMMIT_LIST}"
 
           if [ "${COMMIT_COUNT}" -eq 0 ]; then
-            echo "• [$(git rev-parse --short HEAD)] ${FIRST_MESSAGE}" > "${TEMP_FILE}"
+            format_commit_line "${FIRST_MESSAGE}" > "${TEMP_FILE}"
           fi
 
           echo "all_messages<<EOF" >> $GITHUB_OUTPUT
@@ -497,16 +513,25 @@ jobs:
 
           BODY_FILE=$(mktemp)
           {
-            echo "${COMMIT_MSG}"
+            if [ -n "${ALL_MSGS}" ]; then
+              echo "${ALL_MSGS}"
+            else
+              node -e "
+                const s = process.argv[1] || '';
+                const m = s.match(/^(\w+)(?:\(([^)]+)\))?:\s*(.+)$/);
+                if (m) {
+                  const cat = (m[2] || 'Geral').split(/[-_/]/).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                  const desc = m[3].charAt(0).toUpperCase() + m[3].slice(1);
+                  console.log('- ' + cat + ': ' + desc);
+                } else {
+                  const text = s.trim();
+                  console.log('- Geral: ' + (text ? text.charAt(0).toUpperCase() + text.slice(1) : 'Atualização do sistema'));
+                }
+              " "${COMMIT_MSG}"
+            fi
             echo ""
-            echo "**Commits incluídos:**"
-            echo "${ALL_MSGS:-• [${COMMIT_HASH}] ${COMMIT_MSG}}"
-            echo ""
-            echo "**Detalhes:**"
-            echo "- Commit: ${COMMIT_HASH}"
-            echo "- Autor: ${COMMIT_AUTHOR}"
-            echo "- Data: ${COMMIT_DATE}"
-            echo "- Workflow: ${{ github.workflow }}"
+            echo "---"
+            echo "Commit: ${COMMIT_HASH} | Autor: ${COMMIT_AUTHOR} | Data: ${COMMIT_DATE}"
           } >> "${BODY_FILE}"
 
           node -e "

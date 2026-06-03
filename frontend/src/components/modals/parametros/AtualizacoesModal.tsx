@@ -14,6 +14,7 @@ interface Atualizacao {
   versao: string;
   data: string;
   descricao: string;
+  itens?: string[];
   tipo: 'feature' | 'bugfix' | 'security' | 'melhoria';
 }
 
@@ -403,9 +404,16 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
                             {badge.label}
                           </span>
                         </div>
-                        <p className="mb-0 text-secondary" style={{ fontSize: '0.8rem', lineHeight: '1.4' }}>
-                          {atualizacao.descricao}
-                        </p>
+                        <ul
+                          className="mb-0 text-secondary ps-3"
+                          style={{ fontSize: '0.8rem', lineHeight: '1.5' }}
+                        >
+                          {(atualizacao.itens?.length ? atualizacao.itens : [atualizacao.descricao]).map((item) => (
+                            <li key={`${atualizacao.versao}-${item}`} className="mb-1">
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     </div>
                   </div>

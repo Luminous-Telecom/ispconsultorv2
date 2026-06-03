@@ -39,6 +39,74 @@ interface GitHubRelease {
   name: string;
 }
 
+function capitalize(text: string): string {
+  if (!text) return text;
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+function formatCommitSubject(subject: string): string {
+  const trimmed = subject.trim();
+  if (!trimmed) return 'Geral: Atualização do sistema';
+
+  const conventional = trimmed.match(/^(\w+)(?:\(([^)]+)\))?:\s*(.+)$/);
+  if (conventional) {
+    const category = (conventional[2] || 'Geral')
+      .split(/[-_/]/)
+      .map((part) => capitalize(part))
+      .join(' ');
+    return `${category}: ${capitalize(conventional[3])}`;
+  }
+
+  if (/^[^:]+:\s*.+/.test(trimmed)) {
+    return trimmed.replace(/\*\*/g, '').trim();
+  }
+
+  return `Geral: ${capitalize(trimmed)}`;
+}
+
+function parseReleaseItens(body: string): string[] {
+  if (!body?.trim()) return [];
+
+  const itens: string[] = [];
+  let reachedMeta = false;
+
+  for (const rawLine of body.split('\n')) {
+    const line = rawLine.trim();
+    if (!line) continue;
+
+    if (
+      line.startsWith('---') ||
+      /^\*\*Detalhes\*\*/i.test(line) ||
+      /^\*\*Commits incluídos\*\*/i.test(line) ||
+      /^Deploy:/i.test(line)
+    ) {
+      reachedMeta = true;
+      continue;
+    }
+
+    const bulletMatch = line.match(/^[-•*]\s+(.+)$/);
+    if (bulletMatch) {
+      let text = bulletMatch[1].replace(/\*\*/g, '').trim();
+      text = text.replace(/^\[[a-f0-9]+\]\s*/i, '').trim();
+      if (text && !/^(Commit|Autor|Data|Workflow|Run):/i.test(text)) {
+        itens.push(formatCommitSubject(text));
+      }
+      continue;
+    }
+
+    if (reachedMeta) continue;
+
+    if (/^[^:]+:\s*.+/.test(line) && !/^https?:\/\//i.test(line)) {
+      const text = line.replace(/\*\*/g, '').trim();
+      if (!/^(Commit|Autor|Data|Workflow|Run):/i.test(text)) {
+        itens.push(formatCommitSubject(text));
+      }
+    }
+  }
+
+  return [...new Set(itens)];
+}
+
 export class AtualizacoesController {
   /**
    * Verifica se o usuário pode acessar (admin ERP ou super_admin SaaS)
@@ -97,17 +165,20 @@ export class AtualizacoesController {
         else if (descLower.includes('security') || descLower.includes('segurança')) tipo = 'security';
         else if (descLower.includes('melhoria') || descLower.includes('update') || descLower.includes('melhor')) tipo = 'melhoria';
 
-        const descricao = (release.body ? release.body.split('\n')[0].trim() : release.name)
+        const itens = parseReleaseItens(release.body || '');
+        const descricaoFallback = (release.body ? release.body.split('\n')[0].trim() : release.name)
           .replace(/\*\*Full Changelog\*\*:.*/g, '')
           .replace(/https?:\/\/[^\s]+/g, '')
           .replace(/\*\*/g, '')
           .trim();
+        const descricao = itens[0] || descricaoFallback || release.name || `Versão ${tagVersion}`;
 
         return {
           id: index + 1,
           versao: tagVersion,
           data: new Date(release.published_at).toISOString().split('T')[0],
-          descricao: descricao || release.name || `Versão ${tagVersion}`,
+          descricao,
+          itens: itens.length > 0 ? itens : [descricao],
           tipo,
         };
       });
