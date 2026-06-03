@@ -30,6 +30,7 @@ export function useContasReceberListData({
   const prevShowRef = useRef(false);
   useEffect(() => {
     if (show && !prevShowRef.current) {
+      setPage(1);
       if (initialFilters?.data_pagamento_inicio || initialFilters?.data_pagamento_fim) {
         setDataVencimentoInicio(initialFilters.data_pagamento_inicio ?? '');
         setDataVencimentoFim(initialFilters.data_pagamento_fim ?? '');
@@ -42,6 +43,7 @@ export function useContasReceberListData({
       }
     }
     prevShowRef.current = show;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- setPage estável; só reset na abertura do modal
   }, [
     show,
     initialFilters?.status,
@@ -50,32 +52,6 @@ export function useContasReceberListData({
     initialFilters?.data_pagamento_inicio,
     initialFilters?.data_pagamento_fim,
   ]);
-
-  const dateFiltersRef = useRef({
-    showCancelados,
-    dataVencimentoInicio,
-    dataVencimentoFim,
-  });
-  const setPageRef = useRef(setPage);
-  setPageRef.current = setPage;
-
-  useEffect(() => {
-    const prev = dateFiltersRef.current;
-    const hasFilterChanged =
-      prev.showCancelados !== showCancelados ||
-      prev.dataVencimentoInicio !== dataVencimentoInicio ||
-      prev.dataVencimentoFim !== dataVencimentoFim;
-
-    dateFiltersRef.current = {
-      showCancelados,
-      dataVencimentoInicio,
-      dataVencimentoFim,
-    };
-
-    if (hasFilterChanged) {
-      setPageRef.current(1);
-    }
-  }, [showCancelados, dataVencimentoInicio, dataVencimentoFim]);
 
   useEffect(() => {
     if (!showCancelados && selectedItems.length > 0) {
@@ -186,29 +162,13 @@ export function useContasReceberListData({
 
   const pagination = useMemo(() => {
     if (isSaas) {
-      const listRes = saasData?.data as
-        | { pagination?: { total: number; page: number; limit: number; totalPages: number } }
-        | undefined;
-      const p = listRes?.pagination;
+      const p = (saasData?.data as { pagination?: { total: number; page: number; limit: number; totalPages: number } } | undefined)
+        ?.pagination;
       if (!p) return undefined;
-      const currentPage = p.page;
-      const perPage = p.limit;
-      const total = p.total;
-      const lastPage = p.totalPages;
-      const from = total > 0 ? (currentPage - 1) * perPage + 1 : 0;
-      const to = total > 0 ? Math.min(currentPage * perPage, total) : 0;
-      return { current_page: currentPage, last_page: lastPage, per_page: perPage, total, from, to };
+      return { total: p.total, page: p.page, limit: p.limit, totalPages: p.totalPages };
     }
-    if (!titulosData || !titulosData.pagination) return undefined;
-    const pag = titulosData.pagination;
-    const currentPage = list.tableFilters.page;
-    const perPage = list.tableFilters.limit;
-    const total = typeof pag.total === 'number' ? pag.total : 0;
-    const lastPage = total > 0 ? Math.ceil(total / perPage) : 1;
-    const from = total > 0 ? (currentPage - 1) * perPage + 1 : 0;
-    const to = total > 0 ? Math.min(currentPage * perPage, total) : 0;
-    return { current_page: currentPage, last_page: lastPage, per_page: perPage, total, from, to };
-  }, [isSaas, saasData?.data, titulosData, list.tableFilters.limit, list.tableFilters.page]);
+    return titulosData?.pagination;
+  }, [isSaas, saasData?.data, titulosData?.pagination]);
 
   useEffect(() => {
     if (!show) {
@@ -235,17 +195,29 @@ export function useContasReceberListData({
 
   const filteredData = titulos;
 
-  const handleShowCanceladosChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setShowCancelados(e.target.checked);
-  }, []);
+  const handleShowCanceladosChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setShowCancelados(e.target.checked);
+      setPage(1);
+    },
+    [setPage]
+  );
 
-  const handleDataVencimentoInicioChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setDataVencimentoInicio(e.target.value);
-  }, []);
+  const handleDataVencimentoInicioChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setDataVencimentoInicio(e.target.value);
+      setPage(1);
+    },
+    [setPage]
+  );
 
-  const handleDataVencimentoFimChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setDataVencimentoFim(e.target.value);
-  }, []);
+  const handleDataVencimentoFimChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setDataVencimentoFim(e.target.value);
+      setPage(1);
+    },
+    [setPage]
+  );
 
   return {
     selectedItems,

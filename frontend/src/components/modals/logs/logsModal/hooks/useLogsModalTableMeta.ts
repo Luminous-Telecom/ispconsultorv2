@@ -1,5 +1,6 @@
 import { useMemo, useCallback } from 'react';
 import { useI18n } from 'contexts/I18nContext';
+import { normalizeListPagination } from 'utils/pagination';
 import type { BlockdomiLogAcessoItem } from 'services/blockdomiLogAcessoService';
 import type { useLogsContent } from './useLogsContent';
 
@@ -56,37 +57,15 @@ export function useLogsModalTableMeta({
     }, 0);
   }, [tableFilters, setFilterStartDate, setFilterEndDate]);
 
-  const pagination = useMemo(() => {
-    const pag = (
-      data as {
-        pagination?: {
-          total?: number;
-          per_page?: number;
-          current_page?: number;
-          last_page?: number;
-          from?: number;
-          to?: number;
-        };
-      }
-    )?.pagination;
-    if (!pag || typeof pag !== 'object') {
-      return { current_page: 1, last_page: 1, per_page: tableFilters.limit, total: 0, from: 0, to: 0 };
-    }
-    const total = pag.total ?? 0;
-    const perPage = pag.per_page ?? tableFilters.limit;
-    const currentPage = pag.current_page ?? 1;
-    let lastPage = pag.last_page;
-    if (!lastPage && total > 0) lastPage = Math.max(1, Math.ceil(total / perPage));
-    else if (!lastPage) lastPage = 1;
-    return {
-      current_page: currentPage,
-      last_page: lastPage,
-      per_page: perPage,
-      total,
-      from: pag.from ?? (currentPage - 1) * perPage + 1,
-      to: pag.to ?? Math.min(currentPage * perPage, total),
-    };
-  }, [data, tableFilters.limit]);
+  const pagination = useMemo(
+    () =>
+      normalizeListPagination(
+        (data as { pagination?: Record<string, unknown> })?.pagination,
+        tableFilters.page,
+        tableFilters.limit
+      ),
+    [data, tableFilters.page, tableFilters.limit]
+  );
 
   const modalData = useMemo((): { id: number | string }[] => {
     const d = (data as { data?: unknown[] })?.data ?? [];

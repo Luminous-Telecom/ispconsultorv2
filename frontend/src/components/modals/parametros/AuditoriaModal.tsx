@@ -13,6 +13,7 @@ import { useAuditoriaDetalheEs } from 'hooks/useAuditoriaDetalheEs';
 import AuditoriaDetalhesModal from 'components/modals/auditoria/AuditoriaDetalhesModal';
 import { formatAuditoriaListId, formatDateTime } from 'utils/formatters';
 import { useI18n } from 'contexts/I18nContext';
+import { normalizeListPagination } from 'utils/pagination';
 
 interface AuditoriaModalProps {
   show: boolean;
@@ -242,39 +243,15 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
     setShowDetailsModal(true);
   }, []);
 
-  const pagination = useMemo(() => {
-    if (data?.pagination && typeof data.pagination === 'object') {
-      const pag = data.pagination;
-      const total = pag.total ?? 0;
-      const perPage = pag.per_page ?? tableFilters.limit;
-      const currentPage = pag.current_page ?? 1;
-      
-      // Calcular last_page se não estiver definido
-      let lastPage = pag.last_page;
-      if (!lastPage && total > 0) {
-        lastPage = Math.max(1, Math.ceil(total / perPage));
-      } else if (!lastPage) {
-        lastPage = 1;
-      }
-      
-      return {
-        current_page: currentPage,
-        last_page: lastPage,
-        per_page: perPage,
-        total: total,
-        from: pag.from ?? ((currentPage - 1) * perPage) + 1,
-        to: pag.to ?? Math.min(currentPage * perPage, total)
-      };
-    }
-    return {
-      current_page: 1,
-      last_page: 1,
-      per_page: tableFilters.limit,
-      total: 0,
-      from: 0,
-      to: 0
-    };
-  }, [data?.pagination, tableFilters.limit]);
+  const pagination = useMemo(
+    () =>
+      normalizeListPagination(
+        data?.pagination && typeof data.pagination === 'object' ? data.pagination : undefined,
+        tableFilters.page,
+        tableFilters.limit
+      ),
+    [data?.pagination, tableFilters.page, tableFilters.limit]
+  );
 
   // Bulk actions
   const bulkActions = useMemo(() => [

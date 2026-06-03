@@ -14,6 +14,7 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { formatCNPJ, formatCEP } from 'utils/formatters';
 import { isValidCNPJ } from 'utils/validators';
 import { CancelarButton, NovoButton, SalvarButton } from 'components/ui';
+import { normalizeListPagination } from 'utils/pagination';
 
 interface EmpresasModalProps {
   show: boolean;
@@ -79,20 +80,15 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
 
   const empresas = useMemo(() => empresasData?.data || [], [empresasData]);
 
-  const pagination = useMemo(() => {
-    const pag = (empresasData as { pagination?: { total?: number; per_page?: number; current_page?: number; last_page?: number; from?: number; to?: number } })?.pagination;
-    if (pag) {
-      return {
-        current_page: pag.current_page ?? 1,
-        last_page: pag.last_page ?? 1,
-        per_page: pag.per_page ?? 15,
-        total: pag.total ?? 0,
-        from: pag.from ?? 0,
-        to: pag.to ?? 0,
-      };
-    }
-    return { current_page: 1, last_page: 1, per_page: 15, total: 0, from: 0, to: 0 };
-  }, [empresasData]);
+  const pagination = useMemo(
+    () =>
+      normalizeListPagination(
+        (empresasData as { pagination?: Record<string, unknown> })?.pagination,
+        tableFilters.page,
+        tableFilters.limit
+      ),
+    [empresasData, tableFilters.page, tableFilters.limit]
+  );
 
   const handleOpenCreate = useCallback(() => {
     setForm(INITIAL_FORM);

@@ -40,7 +40,7 @@ export function normalizeListPagination(
   }
 
   const total = pagination.total ?? 0;
-  const perPage = pagination.per_page ?? pagination.limit ?? fallbackLimit;
+  const perPage = fallbackLimit;
   const currentPage = fallbackPage;
 
   let lastPage = pagination.last_page ?? pagination.totalPages;

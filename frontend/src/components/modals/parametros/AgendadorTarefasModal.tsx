@@ -158,17 +158,13 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
 
   const pagination = useMemo(() => {
     const pag = rotinasData?.pagination;
-    if (pag) {
-      return {
-        from: (pag.page - 1) * pag.limit + 1,
-        to: Math.min(pag.page * pag.limit, pag.total),
-        total: pag.total,
-        current_page: pag.page,
-        last_page: pag.pages || Math.max(1, Math.ceil(pag.total / pag.limit)),
-        per_page: pag.limit,
-      };
-    }
-    return list.buildPagination(null);
+    if (!pag) return list.buildPagination(null);
+    return list.buildPagination({
+      total: pag.total,
+      page: pag.page,
+      limit: pag.limit,
+      totalPages: pag.pages,
+    });
   }, [list, rotinasData?.pagination]);
 
   const toggleAtivoMutation = useMutation({

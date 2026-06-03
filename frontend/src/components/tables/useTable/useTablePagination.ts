@@ -97,9 +97,11 @@ export function useTablePagination<T extends { id: number | string }>({
   useEffect(() => {
     if (lastPageSize.current !== state.pageSize) {
       lastPageSize.current = state.pageSize;
-      onPageSizeChangeRef.current?.(state.pageSize);
+      if (!pagination) {
+        onPageSizeChangeRef.current?.(state.pageSize);
+      }
     }
-  }, [state.pageSize, onPageSizeChangeRef]);
+  }, [state.pageSize, pagination, onPageSizeChangeRef]);
 
   return {
     paginatedData,

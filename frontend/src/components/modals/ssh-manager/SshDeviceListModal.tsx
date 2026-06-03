@@ -87,13 +87,10 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
   const pagination = useMemo(() => {
     const pag = data?.pagination;
     if (!pag) return list.buildPagination(null);
-    const perPage = pag.per_page ?? list.tableFilters.limit;
+    const perPage = list.tableFilters.limit;
     const total = modalData.length;
     const lastPage = Math.max(1, Math.ceil(total / perPage));
-    const currentPage = Math.min(
-      Math.max(1, pag.current_page ?? list.tableFilters.page),
-      lastPage
-    );
+    const currentPage = Math.min(Math.max(1, list.tableFilters.page), lastPage);
     return {
       ...pag,
       current_page: currentPage,

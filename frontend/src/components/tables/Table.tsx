@@ -186,6 +186,7 @@ function Table<T extends { id: number | string }>({
   const onRefreshRef = useRef(onRefresh);
   const tableActionsRef = useRef<TableActions<T> | null>(null);
   const autoRowsAppliedRef = useRef(false);
+  const modalAutoRowsAppliedRef = useRef(false);
   const hasCustomWidths = Object.keys(columnWidths).length > 0;
   const [resizeGuideStyle, setResizeGuideStyle] = useState<{ left: number; top: number; height: number } | null>(null);
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
@@ -237,6 +238,9 @@ function Table<T extends { id: number | string }>({
     () => normalizePagination(configPagination),
     [configPagination]
   );
+  const paginationPerPage = normalizedPagination?.perPage;
+  const paginationPerPageRef = useRef(paginationPerPage);
+  paginationPerPageRef.current = paginationPerPage;
 
   const paginationValues = useMemo(
     () =>
@@ -383,7 +387,11 @@ function Table<T extends { id: number | string }>({
   }, [resizeGuideX]);
 
   useEffect(() => {
-    if (!normalizedPagination || !onPageSizeChange) return;
+    modalAutoRowsAppliedRef.current = false;
+  }, [uniqueTableId]);
+
+  useEffect(() => {
+    if (paginationPerPage == null || !onPageSizeChange) return;
 
     let rafId = 0;
     let observer: ResizeObserver | null = null;
@@ -394,11 +402,13 @@ function Table<T extends { id: number | string }>({
       if (!container) return;
 
       if (!syncWithHeader) {
+        if (modalAutoRowsAppliedRef.current) return;
         const optimalRows = computeModalOptimalRows(container);
         if (optimalRows == null) return;
-        if (normalizedPagination.perPage !== optimalRows) {
+        if (paginationPerPageRef.current !== optimalRows) {
           onPageSizeChange(optimalRows);
         }
+        modalAutoRowsAppliedRef.current = true;
         return;
       }
 
@@ -415,7 +425,7 @@ function Table<T extends { id: number | string }>({
           Math.floor((availableHeight - 160) / 35) - HEADER_AUTO_ROWS_BUFFER
         )
       );
-      if (normalizedPagination.perPage !== optimalRows) {
+      if (paginationPerPageRef.current !== optimalRows) {
         onPageSizeChange(optimalRows);
       }
       autoRowsAppliedRef.current = true;
@@ -428,7 +438,7 @@ function Table<T extends { id: number | string }>({
 
     const initialTimer = setTimeout(scheduleCalculate, 50);
 
-    if (!syncWithHeader && typeof ResizeObserver !== 'undefined') {
+    if (!syncWithHeader && typeof ResizeObserver !== 'undefined' && !modalAutoRowsAppliedRef.current) {
       attachTimer = setTimeout(() => {
         const container = tableContainerRef.current;
         if (!container) return;
@@ -447,7 +457,7 @@ function Table<T extends { id: number | string }>({
       cancelAnimationFrame(rafId);
       observer?.disconnect();
     };
-  }, [normalizedPagination, onPageSizeChange, syncWithHeader]);
+  }, [paginationPerPage, onPageSizeChange, syncWithHeader]);
 
   useEffect(() => {
     if (openDropdown === null) return;

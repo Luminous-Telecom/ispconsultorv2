@@ -123,15 +123,6 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
     [isSaas, t]
   );
 
-  const listPagination = useMemo(
-    () => ({
-      ...list.buildPagination(pagination ?? undefined),
-      current_page: list.tableFilters.page,
-      per_page: list.tableFilters.limit,
-    }),
-    [list, pagination]
-  );
-
   const handleLimitChange = useCallback(
     (size: number) => {
       if (size !== list.tableFilters.limit) {
@@ -221,7 +212,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
         sortColumn={list.tableFilters.sortColumn}
         sortDirection={list.tableFilters.sortDirection}
         onSortChange={list.tableFilters.setSort}
-        pagination={listPagination}
+        pagination={list.buildPagination(pagination ?? undefined)}
         onPageChange={list.tableFilters.setPage}
         onLimitChange={handleLimitChange}
         onRefresh={refetchData}

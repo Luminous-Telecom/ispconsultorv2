@@ -52,11 +52,6 @@ const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
   const isMobile = useIsMobile();
   const { t } = useI18n();
 
-  // Resetar página quando o filtro mudar
-  useEffect(() => {
-    setPage(1);
-  }, [showCancelados, setPage]);
-
   // Limpar seleção de itens cancelados quando o filtro de ocultar cancelados for desativado
   const prevShowCanceladosRef = useRef(showCancelados);
   useEffect(() => {
@@ -176,6 +171,7 @@ const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
                     checked={showCancelados}
                     onChange={(e) => {
                       setShowCancelados(e.target.checked);
+                      setPage(1);
                     }}
                     style={{ cursor: 'pointer' }}
                   />

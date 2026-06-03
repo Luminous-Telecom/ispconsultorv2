@@ -36,10 +36,7 @@ export function useContasPagarListData({ show, initialFilters, list }: UseContas
     }));
   }, [fornecedoresData]);
 
-  useEffect(() => {
-    list.tableFilters.setPage(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataVencimentoInicio, dataVencimentoFim]);
+  const { setPage } = list.tableFilters;
 
   const apiFilters = useMemo(() => {
     const filters: ContaPagarFilters = {
@@ -119,13 +116,21 @@ export function useContasPagarListData({ show, initialFilters, list }: UseContas
     [list.tableFilters]
   );
 
-  const handleDataVencimentoInicioChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setDataVencimentoInicio(e.target.value);
-  }, []);
+  const handleDataVencimentoInicioChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setDataVencimentoInicio(e.target.value);
+      setPage(1);
+    },
+    [setPage]
+  );
 
-  const handleDataVencimentoFimChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setDataVencimentoFim(e.target.value);
-  }, []);
+  const handleDataVencimentoFimChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setDataVencimentoFim(e.target.value);
+      setPage(1);
+    },
+    [setPage]
+  );
 
   const pagination = useMemo(
     () => list.buildPagination(contasPagarData?.pagination),
