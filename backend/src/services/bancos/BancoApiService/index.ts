@@ -291,7 +291,11 @@ export class BancoApiService {
         'client_secret_producao',
         'sandbox',
         'url_retorno',
-        'webhook_secret'
+        'webhook_secret',
+        'percentual_multa',
+        'percentual_juros',
+        'desconto_tipo',
+        'desconto_valor'
       ];
       const bancoInstanceCredenciais =
         options?.bancoTable === 'saas_saas_bancos'
