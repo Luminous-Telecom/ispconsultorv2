@@ -119,13 +119,24 @@ export class RpkiSchedulerRoutineService {
         sucesso++;
       } catch (err) {
         erro++;
-        logger.error('RpkiSchedulerRoutineService: erro ao sincronizar repositório via Krill', {
+        const mensagemErro = err instanceof Error ? err.message : String(err);
+        // "ROA delta rejected" (prefixos não presentes nos certificados) é condição
+        // recorrente e benigna do Krill — não polui os logs como erro.
+        const isRoaDeltaBenigno =
+          mensagemErro.includes('ROA delta rejected') ||
+          mensagemErro.includes('not on any of your certificates');
+        const logMeta = {
           context: 'RpkiSchedulerRoutineService',
           action: 'syncAllRepositories',
           caId: ca.id,
           repositoryId: repo.id,
-          error: err instanceof Error ? err.message : String(err),
-        });
+          error: mensagemErro,
+        };
+        if (isRoaDeltaBenigno) {
+          logger.debug('RpkiSchedulerRoutineService: repositório ignorado (ROA delta rejeitado pelo Krill)', logMeta);
+        } else {
+          logger.error('RpkiSchedulerRoutineService: erro ao sincronizar repositório via Krill', logMeta);
+        }
       }
     }
 
