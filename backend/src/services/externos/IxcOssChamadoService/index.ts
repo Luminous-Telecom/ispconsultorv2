@@ -16,22 +16,16 @@ const IXC_EVENTO_OBSERVACAO = '12';
 export type OssChamadoAcao =
   | 'agendar'
   | 'encaminhar'
-  | 'assumir'
   | 'executar'
-  | 'reagendar'
   | 'finalizar'
-  | 'analisar'
   | 'reabrir'
   | 'registrar_mensagem';
 
 export const OSS_CHAMADO_ACOES: OssChamadoAcao[] = [
   'agendar',
   'encaminhar',
-  'assumir',
   'executar',
-  'reagendar',
   'finalizar',
-  'analisar',
   'reabrir',
   'registrar_mensagem',
 ];
@@ -378,6 +372,7 @@ function buildActionBody(
     if (sanitized.id_tecnico) {
       body.id_tecnico = sanitized.id_tecnico;
     }
+    body.status = 'AG';
   }
 
   if (acao === 'finalizar' && sanitized.mensagem_resposta) {
@@ -423,6 +418,122 @@ async function executarEncaminharOs(
   }
 
   return response.data;
+}
+
+/**
+ * Agendar OS: POST su_oss_chamado_alterar_setor (status AG) + PUT agendar (datas).
+ * O PUT ixcsoft:agendar sozinho grava data_agenda mas não altera o status.
+ */
+async function executarAgendarOs(
+  id: string | number,
+  payload: OssChamadoInput,
+  atual: IxcOssChamado
+): Promise<IxcActionResponse> {
+  const mensagem = String(payload.mensagem ?? '').trim();
+  if (!mensagem) {
+    throw new Error('Mensagem é obrigatória');
+  }
+
+  const sanitized = sanitizeInput(payload);
+  const dataAgenda = sanitized.data_agenda?.trim();
+  if (!dataAgenda) {
+    throw new Error('Data de agendamento é obrigatória');
+  }
+
+  const idTecnico = sanitized.id_tecnico?.trim();
+  if (!idTecnico) {
+    throw new Error('Técnico é obrigatório');
+  }
+
+  const statusResponse = await createIxcClient().request<IxcActionResponse>({
+    method: 'POST',
+    url: `/${IXC_ALTERAR_SETOR_RESOURCE}`,
+    data: {
+      id_chamado: String(id),
+      id_setor: sanitized.setor || String(atual.setor ?? ''),
+      id_tecnico: idTecnico,
+      id_assunto: sanitized.id_assunto || String(atual.id_assunto ?? ''),
+      mensagem,
+      status: 'AG',
+    },
+  });
+
+  if (statusResponse.data?.type === 'error') {
+    throw new Error(actionErrorMessage(statusResponse.data, 'Erro ao agendar ordem de serviço no IXC'));
+  }
+
+  const body = buildActionBody('agendar', atual, payload);
+
+  try {
+    const response = await createIxcClient().request<IxcActionResponse>({
+      method: 'PUT',
+      url: `/${IXC_RESOURCE}/${id}`,
+      headers: { ixcsoft: 'agendar' },
+      data: body,
+    });
+
+    if (response.data?.type === 'error') {
+      throw new Error(actionErrorMessage(response.data, 'Erro ao registrar datas do agendamento no IXC'));
+    }
+
+    return response.data;
+  } catch (error) {
+    throw wrapIxcError(error, 'Erro ao registrar datas do agendamento no IXC');
+  }
+}
+
+/**
+ * Finalizar OS: PUT finalizar (mensagem_resposta) + POST alterar_setor (status F).
+ * Uma única conclusão — o PUT sozinho não altera o status para finalizada.
+ */
+async function executarFinalizarOs(
+  id: string | number,
+  payload: OssChamadoInput,
+  atual: IxcOssChamado
+): Promise<IxcActionResponse> {
+  const conclusao = String(payload.mensagem_resposta ?? payload.mensagem ?? '').trim();
+  if (!conclusao) {
+    throw new Error('Resposta é obrigatória');
+  }
+
+  const body = buildActionBody('finalizar', atual, {
+    ...payload,
+    mensagem_resposta: conclusao,
+  });
+
+  try {
+    const putResponse = await createIxcClient().request<IxcActionResponse>({
+      method: 'PUT',
+      url: `/${IXC_RESOURCE}/${id}`,
+      headers: { ixcsoft: 'finalizar' },
+      data: body,
+    });
+
+    if (putResponse.data?.type === 'error') {
+      throw new Error(actionErrorMessage(putResponse.data, 'Erro ao finalizar ordem de serviço no IXC'));
+    }
+
+    const statusResponse = await createIxcClient().request<IxcActionResponse>({
+      method: 'POST',
+      url: `/${IXC_ALTERAR_SETOR_RESOURCE}`,
+      data: {
+        id_chamado: String(id),
+        id_setor: String(atual.setor ?? ''),
+        id_tecnico: String(payload.id_tecnico ?? atual.id_tecnico ?? ''),
+        id_assunto: String(atual.id_assunto ?? ''),
+        mensagem: conclusao,
+        status: 'F',
+      },
+    });
+
+    if (statusResponse.data?.type === 'error') {
+      throw new Error(actionErrorMessage(statusResponse.data, 'Erro ao finalizar ordem de serviço no IXC'));
+    }
+
+    return statusResponse.data;
+  } catch (error) {
+    throw wrapIxcError(error, 'Erro ao finalizar ordem de serviço no IXC');
+  }
 }
 
 async function registrarMensagemOs(
@@ -781,6 +892,14 @@ export class IxcOssChamadoService {
 
     if (acao === 'encaminhar') {
       return executarEncaminharOs(id, payload, atual);
+    }
+
+    if (acao === 'agendar') {
+      return executarAgendarOs(id, payload, atual);
+    }
+
+    if (acao === 'finalizar') {
+      return executarFinalizarOs(id, payload, atual);
     }
 
     const mensagemAcao = String(payload.mensagem ?? '').trim();

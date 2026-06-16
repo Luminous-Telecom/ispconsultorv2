@@ -118,11 +118,12 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
     if (!acao) return false;
     const next: Partial<Record<keyof AcaoFormData, string>> = {};
 
-    if (!form.mensagem.trim()) {
+    if (acao === 'finalizar') {
+      if (!form.mensagem_resposta.trim()) {
+        next.mensagem_resposta = 'Resposta é obrigatória';
+      }
+    } else if (!form.mensagem.trim()) {
       next.mensagem = 'Mensagem é obrigatória';
-    }
-    if (acao === 'finalizar' && !form.mensagem_resposta.trim()) {
-      next.mensagem_resposta = 'Resposta é obrigatória';
     }
     if (acao === 'agendar') {
       if (!form.data_agenda.trim()) next.data_agenda = 'Data de agendamento é obrigatória';
@@ -144,8 +145,8 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
     if (!validate()) return;
 
     const payload = {
-      mensagem: form.mensagem.trim(),
-      mensagem_resposta: form.mensagem_resposta.trim() || undefined,
+      mensagem: acao === 'finalizar' ? undefined : form.mensagem.trim(),
+      mensagem_resposta: acao === 'finalizar' ? form.mensagem_resposta.trim() : form.mensagem_resposta.trim() || undefined,
       data_agenda: form.data_agenda ? datetimeLocalToIxc(form.data_agenda) : undefined,
       data_agenda_final: form.data_agenda_final ? datetimeLocalToIxc(form.data_agenda_final) : undefined,
       id_tecnico: form.id_tecnico || undefined,
@@ -357,7 +358,7 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
               </div>
             )}
 
-            {acao !== 'encaminhar' && (
+            {acao !== 'encaminhar' && acao !== 'finalizar' && (
               <div className="col-12">
                 <FormField
                   name="mensagem"

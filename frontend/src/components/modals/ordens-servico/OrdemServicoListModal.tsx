@@ -2,7 +2,6 @@ import React, { useCallback, useMemo, useState } from 'react';
 import {
   useOrdensServico,
   useDeleteOrdemServico,
-  useExecutarAcaoOrdemServico,
 } from 'hooks/useOrdensServico';
 import { useEntityListModal } from 'hooks/useEntityListModal';
 import ListModal from 'components/common/ListModal';
@@ -71,32 +70,14 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
   );
 
   const deleteMutation = useDeleteOrdemServico();
-  const executarAcaoMutation = useExecutarAcaoOrdemServico();
 
   const handleAcao = useCallback(
-    async (ordem: OrdemServico, acao: OrdemServicoAcao) => {
+    (ordem: OrdemServico, acao: OrdemServicoAcao) => {
       const config = ORDEM_SERVICO_ACOES.find((a) => a.key === acao);
-      if (!config) return;
-
-      if (config.confirmOnly) {
-        if (!window.confirm('Deseja assumir esta ordem de serviço?')) return;
-        try {
-          await executarAcaoMutation.mutateAsync({
-            id: ordem.id,
-            acao,
-            data: { mensagem: 'Assumido via BackNet' },
-          });
-        } catch {
-          // Erro tratado pelo hook
-        }
-        return;
-      }
-
-      if (config.needsForm) {
-        setAcaoModal({ acao, ordem });
-      }
+      if (!config?.needsForm) return;
+      setAcaoModal({ acao, ordem });
     },
-    [executarAcaoMutation]
+    []
   );
 
   const handleDelete = useCallback(

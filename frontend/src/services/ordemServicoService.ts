@@ -46,11 +46,8 @@ export type UpdateOrdemServico = Partial<OrdemServico>;
 export type OrdemServicoAcao =
   | 'agendar'
   | 'encaminhar'
-  | 'assumir'
   | 'executar'
-  | 'reagendar'
   | 'finalizar'
-  | 'analisar'
   | 'reabrir'
   | 'registrar_mensagem';
 
