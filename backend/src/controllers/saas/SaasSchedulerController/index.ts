@@ -18,6 +18,8 @@ const TIPOS_ALVO_ERP_GLOBAL = [
   'backup_equipamentos_ssh',
   'rpki_sync_parent_resources',
   'rpki_sync_repositories',
+  'consulta_titulos_asaas',
+  'consulta_titulos_efi',
   'outros'
 ] as const;
 
@@ -47,7 +49,7 @@ function mensagemValidacaoAlvoTipo(body: { tipo?: string; alvo?: string }): stri
       return 'No alvo Cobrança SaaS, use geração/envio/remessa do produto ou bloquear por atraso.';
     }
   } else if (!(TIPOS_ALVO_ERP_GLOBAL as readonly string[]).includes(tipo)) {
-    return 'No alvo ERP (todos os clientes), use faturamento ERP, verificar vencimentos, desbloquear domínios ou rotinas RPKI.';
+    return 'No alvo ERP (todos os clientes), use faturamento ERP, verificar vencimentos, consulta de títulos, desbloquear domínios ou rotinas RPKI.';
   }
   return null;
 }

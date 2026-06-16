@@ -333,7 +333,8 @@ export class EfiTituloService {
       return {
         success: true,
         message: 'Status consultado com sucesso',
-        status: typeof status === 'string' ? status : undefined
+        status: typeof status === 'string' ? status : undefined,
+        data: dados
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';

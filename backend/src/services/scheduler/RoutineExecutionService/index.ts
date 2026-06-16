@@ -118,6 +118,8 @@ export class RoutineExecutionService {
         'backup_equipamentos_ssh',
         'rpki_sync_parent_resources',
         'rpki_sync_repositories',
+        'consulta_titulos_asaas',
+        'consulta_titulos_efi',
         'outros'
       ] as const;
       const ok =
@@ -212,6 +214,18 @@ export class RoutineExecutionService {
           return { success: false, message: 'Sincronização de repositórios RPKI deve usar alvo ERP (todos os clientes).' };
         }
         return await this.executeRpkiSyncRepositories();
+
+      case 'consulta_titulos_asaas':
+        if (saas && saasAlvo(routine as SaasScheduledRoutine) !== 'erp_global') {
+          return { success: false, message: 'Consulta de títulos Asaas deve usar alvo ERP (todos os clientes).' };
+        }
+        return await this.executeConsultaTitulosAsaas();
+
+      case 'consulta_titulos_efi':
+        if (saas && saasAlvo(routine as SaasScheduledRoutine) !== 'erp_global') {
+          return { success: false, message: 'Consulta de títulos Efi deve usar alvo ERP (todos os clientes).' };
+        }
+        return await this.executeConsultaTitulosEfi();
 
       default:
         logger.warn('RoutineExecutionService.executeRoutine - Tipo de rotina não implementado', {
@@ -1019,6 +1033,48 @@ export class RoutineExecutionService {
         sucesso: 0,
         erro: 0,
       };
+    }
+  }
+
+  public async executeConsultaTitulosAsaas(): Promise<RoutineExecutionResult> {
+    try {
+      const { ConsultarTitulosAsaasRoutine } = await import('../routines/ConsultarTitulosAsaasRoutine');
+      const routine = new ConsultarTitulosAsaasRoutine();
+      const resultado = await routine.execute({});
+      return {
+        success: resultado.success,
+        message: resultado.message,
+        ...(resultado.data ?? {}),
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao executar consulta de títulos Asaas', {
+        context: 'RoutineExecutionService',
+        action: 'executeConsultaTitulosAsaas',
+        error: errorMessage,
+      });
+      return { success: false, message: `Erro na consulta de títulos Asaas: ${errorMessage}` };
+    }
+  }
+
+  public async executeConsultaTitulosEfi(): Promise<RoutineExecutionResult> {
+    try {
+      const { ConsultarTitulosEfiRoutine } = await import('../routines/ConsultarTitulosEfiRoutine');
+      const routine = new ConsultarTitulosEfiRoutine();
+      const resultado = await routine.execute({});
+      return {
+        success: resultado.success,
+        message: resultado.message,
+        ...(resultado.data ?? {}),
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao executar consulta de títulos Efi', {
+        context: 'RoutineExecutionService',
+        action: 'executeConsultaTitulosEfi',
+        error: errorMessage,
+      });
+      return { success: false, message: `Erro na consulta de títulos Efi: ${errorMessage}` };
     }
   }
 }

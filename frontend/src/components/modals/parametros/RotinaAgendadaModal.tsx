@@ -28,6 +28,8 @@ const NOMES_POR_TIPO: Record<string, string> = {
   backup_equipamentos_ssh: 'Backup equipamentos SSH',
   rpki_sync_parent_resources: 'RPKI: sincronizar recursos da CA-pai',
   rpki_sync_repositories: 'RPKI: sincronizar repositórios',
+  consulta_titulos_asaas: 'Consulta títulos Asaas',
+  consulta_titulos_efi: 'Consulta títulos Efi',
   outros: 'Outros',
 };
 
@@ -49,6 +51,8 @@ function buildTipoOptionsSaaS(alvo: 'saas' | 'erp_global', hasBlockdomi: boolean
     { value: 'backup_equipamentos_ssh', label: 'Backup equipamentos SSH (ERP — todos)' },
     { value: 'rpki_sync_parent_resources', label: 'RPKI: sincronizar recursos da CA-pai' },
     { value: 'rpki_sync_repositories', label: 'RPKI: sincronizar repositórios' },
+    { value: 'consulta_titulos_asaas', label: 'Consulta títulos Asaas (ERP + SaaS)' },
+    { value: 'consulta_titulos_efi', label: 'Consulta títulos Efi (ERP + SaaS)' },
     { value: 'outros', label: 'Outros' },
   ];
   if (!hasBlockdomi) return opts.filter((o) => o.value !== 'desbloquear_blockdomi');
