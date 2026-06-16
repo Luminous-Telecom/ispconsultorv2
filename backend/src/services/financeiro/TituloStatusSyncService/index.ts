@@ -107,11 +107,6 @@ export class TituloStatusSyncService {
     let erros = 0;
     let semAlteracao = 0;
 
-    logger.info('TituloStatusSyncService - Iniciando consulta de títulos', {
-      tipo_banco: tipoBanco,
-      total: titulos.length,
-    });
-
     for (const item of titulos) {
       try {
         const statusAntes = item.titulo.status;
@@ -146,14 +141,6 @@ export class TituloStatusSyncService {
     }
 
     const message = `Consulta ${tipoBanco}: ${consultados} título(s), ${atualizados} atualizado(s), ${semAlteracao} sem alteração, ${erros} erro(s)`;
-
-    logger.info('TituloStatusSyncService - Consulta concluída', {
-      tipo_banco: tipoBanco,
-      consultados,
-      atualizados,
-      sem_alteracao: semAlteracao,
-      erros,
-    });
 
     return {
       success: erros === 0 || consultados > erros,
