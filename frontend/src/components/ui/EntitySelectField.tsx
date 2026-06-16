@@ -21,6 +21,7 @@ interface EntitySelectFieldBaseProps {
   idFieldTitle?: string;
   searchButtonTitle?: string;
   helpText?: string;
+  idPlaceholder?: string;
 }
 
 export type EntitySelectFieldProps =
@@ -53,6 +54,7 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = (props) => {
       idFieldTitle = 'UUID',
       searchButtonTitle = 'Abrir listagem de registros',
       helpText,
+      idPlaceholder = 'UUID',
     } = props;
     const selectedEntity = entities.find((e) => String(e.id) === String(value));
     const fieldId = `${label.toLowerCase().replace(/\s+/g, '_')}_id_field`;
@@ -69,7 +71,7 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = (props) => {
             autoComplete="off"
             type="text"
             className="form-control text-center id-field"
-            placeholder="UUID"
+            placeholder={idPlaceholder}
             name={fieldId}
             onChange={(e) => onChange(e.target.value.trim())}
             value={value ? String(value) : ''}

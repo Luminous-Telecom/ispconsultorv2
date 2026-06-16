@@ -76,6 +76,8 @@ export type ModalType =
   | 'dashboard-backup-equipamentos'
   // Agents / Tunnels
   | 'agents'
+  // Suporte (IXC Provedor)
+  | 'ordens-servico'
   | null;
 
 interface ModalContextType {

@@ -1507,6 +1507,110 @@ colgroup col.col-checkbox {
   box-sizing: border-box !important;
 }
 
+/* Ordens de serviço (IXC) — cores de status */
+.os-status-badge {
+  font-weight: 500;
+  font-size: 0.75rem;
+  padding: 0.35em 0.6em;
+  border-radius: 0.25rem;
+  color: #fff !important;
+}
+
+.os-status--aberta {
+  background-color: #9a8b3d !important;
+}
+
+.os-status--agendada {
+  background-color: #3a7ca5 !important;
+}
+
+.os-status--encaminhada {
+  background-color: #a65a32 !important;
+}
+
+.os-status--assumida {
+  background-color: #3bb54a !important;
+}
+
+.os-status--finalizada {
+  background-color: #3d6b4f !important;
+}
+
+.os-status--analise {
+  background-color: #5c6bc0 !important;
+}
+
+.os-status--deslocamento {
+  background-color: #17a2b8 !important;
+}
+
+.os-status--execucao {
+  background-color: #e07b39 !important;
+}
+
+.os-status--reagendar {
+  background-color: #7d8a96 !important;
+}
+
+.os-status--default {
+  background-color: #6c757d !important;
+}
+
+/* Prioridade (IXC) */
+.os-prioridade-badge {
+  font-weight: 500;
+  font-size: 0.75rem;
+  padding: 0.35em 0.6em;
+  border-radius: 0.25rem;
+  color: #fff !important;
+}
+
+.os-prioridade--baixa {
+  background-color: #7d8a96 !important;
+}
+
+.os-prioridade--normal {
+  background-color: #3a7ca5 !important;
+}
+
+.os-prioridade--alta {
+  background-color: #e07b39 !important;
+}
+
+.os-prioridade--critica {
+  background-color: #c0392b !important;
+}
+
+.os-prioridade--default {
+  background-color: #6c757d !important;
+}
+
+/* SLA (IXC) */
+.os-sla-badge {
+  font-weight: 500;
+  font-size: 0.75rem;
+  padding: 0.35em 0.6em;
+  border-radius: 0.25rem;
+  color: #fff !important;
+}
+
+.os-sla--ok {
+  background-color: #3bb54a !important;
+}
+
+.os-sla--alerta {
+  background-color: #7b68c4 !important;
+}
+
+.os-sla--atrasado {
+  background-color: #8e44ad !important;
+}
+
+.os-sla--vazio,
+.os-sla--default {
+  background-color: #6c757d !important;
+}
+
 /* Filtros compactos - padding simétrico */
 .table-pagination-header .filter-compact .form-control,
 .table-pagination-header .filter-compact .form-select {

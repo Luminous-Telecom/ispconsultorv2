@@ -65,6 +65,9 @@ const RpkiAspaListModal = lazy(() => import('../modals/rpki/RpkiAspaListModal'))
 const RpkiRoaListModal = lazy(() => import('../modals/rpki/RpkiRoaListModal'));
 const RpkiValidateRouteModal = lazy(() => import('../modals/rpki/RpkiValidateRouteModal'));
 const RpkiValidationLogsModal = lazy(() => import('../modals/logs/RpkiValidationLogsModal'));
+
+// Suporte (IXC Provedor)
+const OrdemServicoListModal = lazy(() => import('../modals/ordens-servico').then(m => ({ default: m.OrdemServicoListModal })));
 const RpkiCaPaiLogsModal = lazy(() => import('../modals/logs/rpki/RpkiCaPaiLogsModal'));
 const RpkiRepositorioLogsModal = lazy(() => import('../modals/logs/rpki/RpkiRepositorioLogsModal'));
 
@@ -97,6 +100,20 @@ const resolveRpkiModal = (active: ModalType): ResolvedRpkiModal | null => {
       return { titleKey: 'logs.rpkiCaPai', component: RpkiCaPaiLogsModal, size: 'xl', className: 'no-padding' };
     case 'rpki-logs-repositorios':
       return { titleKey: 'logs.rpkiRepositorios', component: RpkiRepositorioLogsModal, size: 'xl', className: 'no-padding' };
+    default:
+      return null;
+  }
+};
+
+const resolveSuporteModal = (active: ModalType): ResolvedRpkiModal | null => {
+  switch (active) {
+    case 'ordens-servico':
+      return {
+        title: 'Ordens de Serviço',
+        component: OrdemServicoListModal,
+        size: 'xl',
+        className: 'no-padding list-modal-no-body-scroll',
+      };
     default:
       return null;
   }
@@ -241,6 +258,32 @@ const SingleModalWrapper: React.FC = () => {
       >
         <Suspense fallback={<Loading message={loadingMessage} variant="modal" />}>
           <RpkiComponent
+            show={true}
+            onClose={closeModal}
+            skipWrapper={true}
+            {...(modalData ?? {})}
+          />
+        </Suspense>
+      </DraggableModal>
+    );
+  }
+
+  const resolvedSuporte = resolveSuporteModal(activeModal);
+  if (resolvedSuporte) {
+    const loadingMessage = t('ui.loadingPage');
+    const SuporteComponent = resolvedSuporte.component;
+    const suporteTitle = resolvedSuporte.titleKey != null ? t(resolvedSuporte.titleKey) : (resolvedSuporte.title ?? '');
+    return (
+      <DraggableModal
+        show={true}
+        onClose={closeModal}
+        title={suporteTitle}
+        size={resolvedSuporte.size ?? 'lg'}
+        className={resolvedSuporte.className ?? ''}
+        headerActions={headerActions}
+      >
+        <Suspense fallback={<Loading message={loadingMessage} variant="modal" />}>
+          <SuporteComponent
             show={true}
             onClose={closeModal}
             skipWrapper={true}

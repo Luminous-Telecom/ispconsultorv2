@@ -97,6 +97,14 @@ export const useMenuItems = ({ t, openModal, hasModulo }: UseMenuItemsParams) =>
     [handleOpenModal, filterItem]
   );
 
+  const suporteFolderItems = useMemo(
+    () =>
+      [
+        { id: 'ordens-servico', modalId: 'ordens-servico', label: 'Ordens de Serviço', icon: 'bi-headset', onClick: () => handleOpenModal('ordens-servico') },
+      ].filter(filterItem),
+    [handleOpenModal, filterItem]
+  );
+
   const logsFolderItems = useMemo(
     () =>
       [
@@ -178,6 +186,13 @@ export const useMenuItems = ({ t, openModal, hasModulo }: UseMenuItemsParams) =>
         items: rpkiFolderItems,
       },
       {
+        accordionId: 'suporteAccordion',
+        collapseId: 'suporteCollapse',
+        headingId: 'suporteHeading',
+        title: 'Suporte',
+        items: suporteFolderItems,
+      },
+      {
         accordionId: 'logsAccordion',
         collapseId: 'logsCollapse',
         headingId: 'logsHeading',
@@ -222,6 +237,7 @@ export const useMenuItems = ({ t, openModal, hasModulo }: UseMenuItemsParams) =>
       sshManagerFolderItems,
       blockdomiFolderItems,
       rpkiFolderItems,
+      suporteFolderItems,
       logsFolderItems,
       logsComunicacaoFolderItems,
       logsEquipamentosFolderItems,
