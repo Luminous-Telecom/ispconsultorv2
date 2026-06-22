@@ -27,16 +27,10 @@ export interface BuildPaginationOptions {
   minLastPageWhenEmpty?: number;
   /** Garante last_page >= este valor quando total > 0. */
   minLastPage?: number;
-  /** Limita last_page (ex.: janela máxima do Elasticsearch). */
+  /** Limita last_page quando a API impõe teto de páginas. */
   maxLastPage?: number;
   /** Substitui current_page (ex.: página efetiva após cap). */
   currentPage?: number;
-}
-
-/** Última página permitida dentro da janela do Elasticsearch (from + size). */
-export function getElasticsearchMaxLastPage(limit: number, maxResultWindow = 10_000): number {
-  const safeLimit = Math.max(1, limit);
-  return Math.max(1, Math.floor(maxResultWindow / safeLimit));
 }
 
 /**

@@ -214,7 +214,7 @@ export const CONTEXT_ERROR_MESSAGES = {
 
   // Auditoria
   AUDIT_LOAD_ERROR: 'Erro ao carregar logs de auditoria',
-  AUDIT_DETAIL_ERROR: 'Erro ao carregar detalhe no Elasticsearch',
+  AUDIT_DETAIL_ERROR: 'Erro ao carregar detalhe da auditoria',
 
   // Dashboard
   DASHBOARD_LOAD_ERROR: 'Erro ao carregar dados do dashboard',

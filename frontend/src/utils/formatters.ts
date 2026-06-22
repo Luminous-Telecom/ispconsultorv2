@@ -281,7 +281,7 @@ export const formatLinhaDigitavel = (linha: string): string => {
          `${digitos.substring(33)}`;
 };
 
-/** ID exibido na listagem de logs de auditoria (MySQL operacional ou Elasticsearch). */
+/** ID exibido na listagem de logs de auditoria (MySQL operacional). */
 export function formatAuditoriaListId(log: {
   id: string | number;
   operacional_id?: string | null;

@@ -8,7 +8,7 @@ import { applyPagoWebhook, enviarReciboSeAdmin, registrarAuditoriaWebhook, refet
 import { logger } from '../../../utils/logger';
 import { JsonValue } from '../../../types/index';
 import { AsaasPaymentPayload } from '../../../types/webhooks';
-import { registrarAtualizacaoElasticsearch } from '../../elasticsearch/ElasticsearchAuditService';
+import { registrarAtualizacao } from '../../sistema/AuditoriaRegistroService';
 
 /**
  * Serviço para processamento de webhooks do Asaas
@@ -419,7 +419,7 @@ export class AsaasWebhookService {
             // Registrar auditoria no Elasticsearch se req foi fornecido
             if (req && dadosAnteriores && dadosNovos) {
               try {
-                await registrarAtualizacaoElasticsearch(
+                await registrarAtualizacao(
                   req,
                   'NotaFiscal',
                   notaFiscalVinculada.id,

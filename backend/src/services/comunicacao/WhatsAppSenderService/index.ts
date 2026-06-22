@@ -2,7 +2,6 @@ import { ServidorWhatsApp } from '../../../models/comunicacao/ServidorWhatsApp';
 import { registrarMensagemHistorico, type ContextoHistorico } from '../RegistroMensagemHistoricoService';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { logger } from '../../../utils/logger';
-import { registrarMensagemElasticsearch } from '../../elasticsearch/MensagemHistoricoElasticsearchService';
 import { WhatsAppCloudService } from '../WhatsAppCloudService';
 
 const INTERACTION_DELAY_MS = 2000;
@@ -141,17 +140,6 @@ export class WhatsAppSenderService {
               },
               contextoSaas
             );
-
-            // Registrar no Elasticsearch
-            await registrarMensagemElasticsearch(null, {
-              tipo: 'whatsapp',
-              destinatario: telefone,
-              mensagem: mensagem,
-              status: 'enviada',
-              entidade_tipo: entidadeTipo,
-              entidade_id: entidadeId,
-              servidor_id: servidor.id
-            });
           } catch (registroError) {
             logger.error('Erro ao registrar WhatsApp enviado no histórico:', registroError);
             // Não falha o envio por erro no registro
@@ -197,18 +185,6 @@ export class WhatsAppSenderService {
               },
               contextoSaas
             );
-
-            // Registrar erro no Elasticsearch
-            await registrarMensagemElasticsearch({} as any, {
-              tipo: 'whatsapp',
-              destinatario: telefone,
-              mensagem: mensagem,
-              status: 'erro',
-              erro_mensagem: `Erro HTTP ${response.status}: ${JSON.stringify(responseData)}`,
-              entidade_tipo: entidadeTipo,
-              entidade_id: entidadeId,
-              servidor_id: servidor.id
-            });
           } catch (registroError) {
             logger.error('Erro ao registrar erro de WhatsApp no histórico:', registroError);
             // Não falha o envio por erro no registro

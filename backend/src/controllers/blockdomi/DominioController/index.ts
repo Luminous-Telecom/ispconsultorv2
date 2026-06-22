@@ -3,7 +3,7 @@ import { Op } from 'sequelize';
 import { DominioService, type SincronizarSeiAnatelDominiosRow } from '../../../services/blockdomi/DominioService';
 import { Dominio } from '../../../models/blockdomi/Dominio';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
-import { registrarAuditoriaElasticsearch } from '../../../services/elasticsearch/ElasticsearchAuditService';
+import { registrarAuditoria } from '../../../services/sistema/AuditoriaRegistroService';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { sanitizeDominio } from '../../../utils/sanitize';
@@ -449,7 +449,7 @@ export class DominioController {
           ...(empresaIdAudit != null && empresaIdAudit > 0 ? { empresa_id: empresaIdAudit } : {}),
         });
         const obsFalha = `[Falha] ${mensagemErro}`;
-        void registrarAuditoriaElasticsearch(req, {
+        void registrarAuditoria(req, {
           acao: 'executar',
           entidade: 'Dominio',
           observacoes: obsFalha.slice(0, 32000),
@@ -465,7 +465,7 @@ export class DominioController {
         });
       } else {
         const msgOk = `[Sucesso] Sincronização SEI concluída sem falha de PDF. ${result.dominiosAtualizados} domínio(s) atualizado(s), ${result.pdfsDistintos} PDF(s) distinto(s) processado(s), ${result.dominiosCandidatos} domínio(s) elegíveis (sem SEI e com link Anatel).`;
-        void registrarAuditoriaElasticsearch(req, {
+        void registrarAuditoria(req, {
           acao: 'executar',
           entidade: 'Dominio',
           observacoes: msgOk.slice(0, 32000),

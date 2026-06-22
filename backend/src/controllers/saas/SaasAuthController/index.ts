@@ -5,7 +5,6 @@ import { SaasAuthService } from '../../../services/saas/SaasAuthService';
 import { sendSuccess, sendError, sendValidationError, sendUnauthorized } from '../../../utils/responseUtils';
 import { isProduction } from '../../../utils/envUtils';
 import { logger } from '../../../utils/logger';
-import { registrarLogAcessoSaasElasticsearch } from '../../../services/elasticsearch/SaasLogAcessoElasticsearchService';
 import { registrarLogin, registrarLogout, registrarAtualizacao } from '../../../services/sistema/AuditoriaService';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
 import { getClientIp } from '../../../utils/requestUtils';
@@ -87,14 +86,6 @@ export class SaasAuthController {
         nome: usuario.nome ?? undefined
       };
       await registrarLogin(req as unknown as SaasAuthenticatedRequest, usuario.id, 'Login SaaS');
-
-      registrarLogAcessoSaasElasticsearch({
-        usuario_id: usuario.id,
-        acao: 'login',
-        ip: getClientIp(req),
-        user_agent: req.headers['user-agent'] || null
-      });
-
       const jwtExpiresIn = process.env.JWT_EXPIRES_IN || '24h';
 
       res.cookie('saas_auth_token', token, {

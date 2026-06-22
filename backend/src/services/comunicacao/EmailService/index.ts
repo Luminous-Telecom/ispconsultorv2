@@ -9,7 +9,6 @@ import { Banco } from '../../../models/cadastros/Banco';
 import { Contrato } from '../../../models/contratos/Contrato';
 import { logger } from '../../../utils/logger';
 import { VariaveisDocumentoService } from '../../documentos/VariaveisDocumentoService';
-import { registrarMensagemElasticsearch } from '../../elasticsearch/MensagemHistoricoElasticsearchService';
 import nodemailer, { SendMailOptions } from 'nodemailer';
 import { TituloPDFController } from '../../../controllers/titulos/TituloPDFController';
 import type { TituloComRelacoes } from '../../../controllers/titulos/TituloHelpers/types';
@@ -366,18 +365,6 @@ export class EmailService {
           },
           contextoSaas
         );
-
-        // Registrar no Elasticsearch (sem request, então dados de usuário serão null)
-        await registrarMensagemElasticsearch(null, {
-          tipo: 'email',
-          destinatario: emailDestino,
-          titulo: titulo || `${servidor.nome_remetente} - Boleto de Pagamento`,
-          mensagem: mensagem,
-          status: 'enviada',
-          entidade_tipo: entidadeTipo,
-          entidade_id: entidadeId,
-          servidor_id: servidor.id
-        });
       } catch (registroError) {
         logger.error('Erro ao registrar email enviado no histórico:', registroError);
         // Não falha o envio por erro no registro
@@ -413,19 +400,6 @@ export class EmailService {
           },
           contextoSaas
         );
-
-        // Registrar erro no Elasticsearch
-        await registrarMensagemElasticsearch({} as any, {
-          tipo: 'email',
-          destinatario: emailDestino,
-          titulo: titulo || `${servidor.nome_remetente} - Boleto de Pagamento`,
-          mensagem: mensagem,
-          status: 'erro',
-          erro_mensagem: error instanceof Error ? error.message : 'Erro desconhecido',
-          entidade_tipo: entidadeTipo,
-          entidade_id: entidadeId,
-          servidor_id: servidor.id
-        });
       } catch (registroError) {
         logger.error('Erro ao registrar erro de email no histórico:', registroError);
         // Não falha o envio por erro no registro

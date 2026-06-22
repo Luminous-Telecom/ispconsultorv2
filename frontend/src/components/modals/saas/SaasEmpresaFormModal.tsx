@@ -216,9 +216,6 @@ const SaasEmpresaFormModal: React.FC<SaasEmpresaFormModalProps> = ({ show, onClo
         showLogDetailsModal={logsState.showLogDetailsModal}
         closeLogDetailsModal={logsState.closeLogDetailsModal}
         logExibirDetalhe={logsState.logExibirDetalhe}
-        auditoriaDetalheEsLoading={logsState.auditoriaDetalheEsLoading}
-        auditoriaEsIndisponivel={logsState.auditoriaEsIndisponivel}
-        auditoriaTemVinculoEs={logsState.auditoriaTemVinculoEs}
       />
     </DraggableModal>
   );

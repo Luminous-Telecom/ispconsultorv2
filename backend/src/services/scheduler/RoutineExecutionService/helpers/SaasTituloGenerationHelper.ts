@@ -2,7 +2,7 @@ import type { Transaction } from 'sequelize';
 import type { Request } from 'express';
 import { logger } from '../../../../utils/logger';
 import { normalizeDateForDb, formatDate } from '../../../../utils/dateUtils';
-import { registrarCriacaoElasticsearch } from '../../../elasticsearch/ElasticsearchAuditService';
+import { registrarCriacao } from '../../../sistema/AuditoriaRegistroService';
 
 interface SaasContratoWithPlano {
   id: number;
@@ -69,7 +69,7 @@ export class SaasTituloGenerationHelper {
     for (const titulo of titulos) {
       try {
         const tituloData = titulo.toJSON() as Record<string, unknown>;
-        await registrarCriacaoElasticsearch(
+        await registrarCriacao(
           reqSimulado,
           'SaasTitulo',
           titulo.id,

@@ -1,6 +1,6 @@
 import { ReciboPagamentoService } from '../../comunicacao/ReciboPagamentoService';
 import { logger } from '../../../utils/logger';
-import { registrarAtualizacaoElasticsearch } from '../../elasticsearch/ElasticsearchAuditService';
+import { registrarAtualizacao } from '../../sistema/AuditoriaRegistroService';
 import { desbloquearSeSemAtraso } from '../../saas/BloqueioAtrasoService';
 import type { Request } from 'express';
 import type { ResolvedTitulo } from '../TituloWebhookResolver';
@@ -80,7 +80,7 @@ export async function registrarAuditoriaWebhook(
   const nomeEntidade = resolved.saas ? 'SaasTitulo' : 'Titulo';
   const empresaId = (resolved.titulo as { empresa_id?: number | null }).empresa_id ?? null;
   try {
-    await registrarAtualizacaoElasticsearch(
+    await registrarAtualizacao(
       req,
       nomeEntidade,
       (resolved.titulo as { id: number }).id,

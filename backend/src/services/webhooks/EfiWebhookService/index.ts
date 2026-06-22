@@ -4,7 +4,7 @@ import { Titulo } from '../../../models/financeiro/Titulo';
 import { BancoApiService } from '../../bancos/BancoApiService';
 import { PaymentCommonService } from '../PaymentCommonService';
 import { logger } from '../../../utils/logger';
-import { registrarAtualizacaoElasticsearch } from '../../elasticsearch/ElasticsearchAuditService';
+import { registrarAtualizacao } from '../../sistema/AuditoriaRegistroService';
 import {
   WebhookResponse,
   NotificationData,

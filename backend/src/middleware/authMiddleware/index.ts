@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { logger } from '../../utils/logger';
 import { UsuarioService } from '../../services/cadastros/UsuarioService';
-import { registrarAuditoriaElasticsearch } from '../../services/elasticsearch/ElasticsearchAuditService';
+import { registrarAuditoria } from '../../services/sistema/AuditoriaRegistroService';
 import { getBloqueioAtrasoInfo } from '../../services/saas/BloqueioAtrasoService';
 
 interface AuthenticatedRequest extends Request {
@@ -141,7 +141,7 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
       }
       req.user = { empresa_id: usuario.empresa_id, api_token: true } as jwt.JwtPayload;
 
-      registrarAuditoriaElasticsearch(req, {
+      registrarAuditoria(req, {
         acao: 'login',
         entidade: 'Usuario',
         entidade_id: usuario.id,

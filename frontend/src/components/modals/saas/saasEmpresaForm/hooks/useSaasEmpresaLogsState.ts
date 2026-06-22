@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react';
-import { useAuditoriaDetalheEs } from 'hooks/useAuditoriaDetalheEs';
+import { useCallback, useMemo, useState } from 'react';
+import { getAuditoriaDetalheExibir } from 'utils/auditoriaOperacionalDetalhe';
 import type { AuditoriaLog } from 'services/auditoriaService';
 
 export function useSaasEmpresaLogsState() {
@@ -11,17 +11,10 @@ export function useSaasEmpresaLogsState() {
     setShowLogDetailsModal(true);
   }, []);
 
-  const {
-    exibirDetalhe: logExibirDetalhe,
-    showEsLoading: auditoriaDetalheEsLoading,
-    esIndisponivel: auditoriaEsIndisponivel,
-    temVinculoEs: auditoriaTemVinculoEs,
-  } = useAuditoriaDetalheEs({
-    selected: selectedLog,
-    showDetails: showLogDetailsModal,
-    saas: true,
-    queryKeyPrefix: 'saas-empresa-log-detalhe-es',
-  });
+  const logExibirDetalhe = useMemo(
+    () => getAuditoriaDetalheExibir(selectedLog, showLogDetailsModal),
+    [selectedLog, showLogDetailsModal]
+  );
 
   const closeLogDetailsModal = useCallback(() => {
     setShowLogDetailsModal(false);
@@ -33,9 +26,6 @@ export function useSaasEmpresaLogsState() {
     showLogDetailsModal,
     handleViewLog,
     logExibirDetalhe,
-    auditoriaDetalheEsLoading,
-    auditoriaEsIndisponivel,
-    auditoriaTemVinculoEs,
     closeLogDetailsModal,
   };
 }

@@ -3,6 +3,7 @@ import type { AuditoriaLog } from 'services/auditoriaService';
 const PAYLOAD_META_KEYS = new Set([
   'elasticsearch_audit_id',
   'elasticsearch_log_id',
+  'rotina_execucao_id',
   'acao_auditoria',
   'origem_auditoria',
   'request',
@@ -46,7 +47,7 @@ export function parseAuditoriaPayload(
   return null;
 }
 
-/** Preenche dados_anteriores/dados_novos a partir do payload MySQL quando o ES ainda não carregou. */
+/** Preenche dados_anteriores/dados_novos a partir do payload MySQL. */
 export function enrichAuditoriaLogFromOperacionalPayload(log: AuditoriaLog): AuditoriaLog {
   if (log.dados_anteriores || log.dados_novos) return log;
 
@@ -80,4 +81,12 @@ export function enrichAuditoriaLogFromOperacionalPayload(log: AuditoriaLog): Aud
     return { ...log, dados_anteriores: body };
   }
   return { ...log, dados_novos: body };
+}
+
+export function getAuditoriaDetalheExibir(
+  selected: AuditoriaLog | null,
+  showDetails: boolean
+): AuditoriaLog | null {
+  if (!showDetails || !selected) return null;
+  return enrichAuditoriaLogFromOperacionalPayload(selected);
 }

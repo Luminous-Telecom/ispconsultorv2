@@ -4,7 +4,7 @@ import { AssinaturaDigitalService } from '../AssinaturaDigitalService';
 import { TermoContratoService } from '../../contratos/TermoContratoService';
 import { ClienteArquivoService } from '../../cadastros';
 import { AssinaturaEnvioService } from '../AssinaturaEnvioService';
-import { registrarAtualizacaoElasticsearch, registrarCriacaoElasticsearch } from '../../elasticsearch/ElasticsearchAuditService';
+import { registrarAtualizacao, registrarCriacao } from '../../sistema/AuditoriaRegistroService';
 
 interface ISignatureService {
   baixarPdfAssinado(documentId: string, url?: string): Promise<Buffer | null>;
@@ -40,7 +40,7 @@ export class AssinaturaWebhookProcessorService {
       if (req) {
         try {
           const empresaId = (assinatura as { empresa_id?: number | null }).empresa_id ?? null;
-          await registrarAtualizacaoElasticsearch(
+          await registrarAtualizacao(
             req,
             'AssinaturaDigital',
             assinatura.id,
@@ -105,7 +105,7 @@ export class AssinaturaWebhookProcessorService {
     if (req) {
       try {
         const empresaId = (assinatura as { empresa_id?: number | null }).empresa_id ?? null;
-        await registrarAtualizacaoElasticsearch(
+        await registrarAtualizacao(
           req,
           'AssinaturaDigital',
           assinatura.id,
@@ -193,7 +193,7 @@ export class AssinaturaWebhookProcessorService {
     if (req) {
       try {
         const empresaId = (assinatura as { empresa_id?: number | null }).empresa_id ?? null;
-        await registrarAtualizacaoElasticsearch(
+        await registrarAtualizacao(
           req,
           'AssinaturaDigital',
           assinatura.id,
@@ -257,7 +257,7 @@ export class AssinaturaWebhookProcessorService {
               ? arquivoCriado.toJSON() as Record<string, unknown> 
               : (arquivoCriado as unknown as Record<string, unknown>);
             const empresaId = (assinatura as { empresa_id?: number | null }).empresa_id ?? null;
-            await registrarCriacaoElasticsearch(
+            await registrarCriacao(
               req,
               'ClienteArquivo',
               typeof arquivoCriado.id === 'number' ? arquivoCriado.id : parseInt(String(arquivoCriado.id), 10),
@@ -307,7 +307,7 @@ export class AssinaturaWebhookProcessorService {
       if (req) {
         try {
           const empresaId = (assinatura as { empresa_id?: number | null }).empresa_id ?? null;
-          await registrarAtualizacaoElasticsearch(
+          await registrarAtualizacao(
             req,
             'TermoContrato',
             termoAtualizado.id,

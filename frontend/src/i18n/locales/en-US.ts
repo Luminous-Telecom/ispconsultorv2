@@ -192,7 +192,6 @@ const enUS: TranslationKeys = {
     'dashboard.deviceBackups': 'Device backups',
     'dashboard.deviceBackupsSuccessSlice': 'Success',
     'dashboard.deviceBackupsFailureSlice': 'Failure',
-    'dashboard.deviceBackupsElasticsearchOff': 'Elasticsearch unavailable — configure the service to see backup statistics.',
     'dashboard.deviceBackupsNoEvents': 'No device backups in the period',
     'dashboard.deviceBackupsPeriod': 'Period',
     'dashboard.deviceBackupsOccurrences': 'Runs',

@@ -6,9 +6,6 @@ import { createWriteStream, createReadStream } from 'fs';
 import { createInterface } from 'readline';
 import { resolveArquivosPath } from '../../../utils/pathUtils';
 import { logger } from '../../../utils/logger';
-import type { Client } from '@elastic/elasticsearch';
-import { getElasticsearchService } from '../../elasticsearch';
-import { ES_ALL_DATA_STREAMS, ES_DATA_STREAMS_PATTERN, resolveDataStreamFromSource } from '../../elasticsearch/dataStreams';
 import { cache } from '../../../utils/cache';
 
 export interface BackupItem {
@@ -35,85 +32,11 @@ function formatBytes(bytes: number): string {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 }
 
-function normalizeElasticsearchBackupDoc(source: Record<string, unknown>): Record<string, unknown> {
-  const s = { ...source };
-  const ts =
-    (typeof s['@timestamp'] === 'string' && s['@timestamp']) ||
-    (typeof s.timestamp === 'string' && s.timestamp) ||
-    new Date().toISOString();
-  s['@timestamp'] = ts;
-  s.timestamp = ts;
-  return s;
-}
-
-async function deleteAllBacknetDataStreams(client: Client): Promise<void> {
-  for (const name of ES_ALL_DATA_STREAMS) {
-    try {
-      const exists = await client.indices.exists({ index: name });
-      if (exists) {
-        await client.indices.deleteDataStream({ name });
-        logger.info('Data stream Elasticsearch removido para restauração', { name });
-      }
-    } catch (e) {
-      logger.warn('Não foi possível remover data stream Elasticsearch', {
-        name,
-        error: e instanceof Error ? e.message : String(e)
-      });
-    }
-  }
-}
-
-async function recreateBacknetDataStreams(client: Client): Promise<void> {
-  for (const name of ES_ALL_DATA_STREAMS) {
-    try {
-      await client.indices.createDataStream({ name });
-    } catch (e: unknown) {
-      const meta = e as { meta?: { body?: { error?: { type?: string } } } };
-      if (meta?.meta?.body?.error?.type === 'resource_already_exists_exception') {
-        continue;
-      }
-      throw e;
-    }
-  }
-}
-
-async function bulkRestoreElasticsearchNdjson(client: Client, ndjsonPath: string): Promise<number> {
-  await deleteAllBacknetDataStreams(client);
-  await recreateBacknetDataStreams(client);
-  const rl = createInterface({ input: createReadStream(ndjsonPath), crlfDelay: Infinity });
-  const BATCH = 500;
-  let batch: Array<{ index: { _index: string; _id?: string } } | Record<string, unknown>> = [];
-  let total = 0;
-  for await (const line of rl) {
-    if (!line.trim()) continue;
-    try {
-      const hit = JSON.parse(line) as { _id?: string; _source?: Record<string, unknown> };
-      if (hit._id && hit._source) {
-        const norm = normalizeElasticsearchBackupDoc({ ...hit._source });
-        const target = resolveDataStreamFromSource(norm);
-        batch.push({ index: { _index: target, _id: hit._id } });
-        batch.push(norm);
-        total++;
-        if (batch.length >= BATCH * 2) {
-          await client.bulk({ refresh: false, operations: batch });
-          batch = [];
-        }
-      }
-    } catch {
-      // linha inválida, ignorar
-    }
-  }
-  if (batch.length > 0) {
-    await client.bulk({ refresh: true, operations: batch });
-  }
-  return total;
-}
-
 function inferTipo(nome: string): string {
   const lower = nome.toLowerCase();
   if (lower.includes('completo')) return 'Completo';
   if (lower.includes('mariadb') || lower.includes('database') || lower.includes('bd') || lower.endsWith('.sql')) return 'MariaDB';
-  if (lower.includes('elastic') || lower.includes('elasticsearch')) return 'Elastic Search';
+  if (lower.includes('elastic') || lower.includes('elasticsearch') || lower.endsWith('.ndjson')) return 'Logs (legado)';
   if (lower.includes('config') || lower.includes('configuracoes')) return 'Configurações';
   if (lower.includes('log')) return 'Logs';
   return 'Arquivos';
@@ -217,8 +140,6 @@ export class BackupService {
           await run('tar', ['-xzf', fullPath, '-C', tempDir]);
           const dumpPath = path.join(tempDir, 'dump.sql');
           const arquivosPath = path.join(tempDir, 'arquivos.tar.gz');
-          const esNdjsonPath = path.join(tempDir, 'elasticsearch.ndjson');
-
           const host = process.env.DB_HOST || 'localhost';
           const port = process.env.DB_PORT || '3306';
           const db = process.env.DB_NAME || 'backnet';
@@ -249,15 +170,6 @@ export class BackupService {
             const parent = path.dirname(arquivosBase);
             await run('tar', ['-xzf', arquivosPath, '-C', parent]);
             logger.info('Restauração de arquivos do backup completo concluída');
-          }
-
-          if (await fs.access(esNdjsonPath).then(() => true).catch(() => false)) {
-            const elasticService = getElasticsearchService();
-            const client = elasticService.getClient();
-            if (client) {
-              const total = await bulkRestoreElasticsearchNdjson(client, esNdjsonPath);
-              logger.info('Restauração Elasticsearch do backup completo concluída', { documentos: total });
-            }
           }
 
           cache.clear();
@@ -301,18 +213,11 @@ export class BackupService {
         return { success: true, message: 'Arquivos restaurados com sucesso.' };
       }
 
-      if (lower.includes('elasticsearch') && lower.endsWith('.txt')) {
-        return { success: false, message: 'Este arquivo é um placeholder (Elasticsearch indisponível no backup). Nenhum dado para restaurar.' };
-      }
       if (lower.includes('elasticsearch') || lower.endsWith('.ndjson')) {
-        const elasticService = getElasticsearchService();
-        const client = elasticService.getClient();
-        if (!client) {
-          throw new Error('Elasticsearch não configurado. Não é possível restaurar.');
-        }
-        const total = await bulkRestoreElasticsearchNdjson(client, fullPath);
-        logger.info('Restauração Elasticsearch concluída', { arquivo: nomeArquivo, documentos: total });
-        return { success: true, message: `Elasticsearch restaurado com sucesso (${total} documentos).` };
+        return {
+          success: false,
+          message: 'Backups Elasticsearch não são mais suportados. Os logs operacionais estão no backup MariaDB.',
+        };
       }
 
       return {
@@ -388,49 +293,13 @@ export class BackupService {
     };
 
     const doBackupLogs = async (outDir: string): Promise<void> => {
-      const outFile = path.join(outDir, 'elasticsearch.ndjson');
-      const elasticService = getElasticsearchService();
-      const client = elasticService.getClient();
-      if (!client) {
-        await fs.writeFile(path.join(outDir, 'elasticsearch.txt'), `Backup Elasticsearch em ${new Date().toISOString()}\nElasticsearch não configurado ou indisponível.\n`);
-        logger.info('Elasticsearch não disponível, criado placeholder');
-      } else {
-        const writeStream = createWriteStream(outFile, { flags: 'a' });
-        let total = 0;
-        const response = await client.search({
-          index: ES_DATA_STREAMS_PATTERN,
-          allow_no_indices: true,
-          scroll: '1m',
-          size: 500,
-          query: { match_all: {} },
-          // Para varredura com scroll, usar _doc evita fielddata em _id e é mais eficiente.
-          sort: [{ _doc: { order: 'asc' } }]
-        }) as { _scroll_id?: string; hits: { hits: Array<{ _id: string; _source: unknown }> } };
-        let scrollId = (response as { _scroll_id?: string })._scroll_id;
-        let hits = ((response as { hits?: { hits?: unknown[] } }).hits?.hits ?? []) as Array<{ _id: string; _source: unknown }>;
-        for (const hit of hits) {
-          writeStream.write(JSON.stringify(hit) + '\n');
-          total++;
-        }
-        while (hits.length > 0) {
-          const scrollResponse = await client.scroll({
-            scroll_id: scrollId as string,
-            scroll: '1m'
-          }) as { _scroll_id?: string; hits?: { hits?: unknown[] } };
-          scrollId = scrollResponse._scroll_id;
-          hits = (scrollResponse.hits?.hits ?? []) as Array<{ _id: string; _source: unknown }>;
-          for (const hit of hits) {
-            writeStream.write(JSON.stringify(hit) + '\n');
-            total++;
-          }
-        }
-        writeStream.end();
-        await new Promise<void>((resolve, reject) => {
-          writeStream.on('finish', resolve);
-          writeStream.on('error', reject);
-        });
-        logger.info('Backup do Elasticsearch concluído', { documentos: total });
-      }
+      const outFile = path.join(outDir, 'logs-operacionais.txt');
+      await fs.writeFile(
+        outFile,
+        `Backup de logs operacionais em ${new Date().toISOString()}\n` +
+          'Os logs (auditoria, rotinas, SSH) estão nas tabelas MySQL incluídas no dump MariaDB.\n'
+      );
+      logger.info('Informação de logs operacionais gravada no backup');
     };
 
     try {
@@ -461,13 +330,8 @@ export class BackupService {
         }
         if (tipo === 'logs') {
           await doBackupLogs(dir);
-          const ndjsonPath = path.join(dir, 'elasticsearch.ndjson');
-          const txtPath = path.join(dir, 'elasticsearch.txt');
-          if (await fs.access(ndjsonPath).then(() => true).catch(() => false)) {
-            await fs.rename(ndjsonPath, path.join(dir, `BKP_elasticsearch_${timestamp}.ndjson`));
-          } else {
-            await fs.rename(txtPath, path.join(dir, `BKP_elasticsearch_${timestamp}.txt`));
-          }
+          const txtPath = path.join(dir, 'logs-operacionais.txt');
+          await fs.rename(txtPath, path.join(dir, `BKP_logs_operacionais_${timestamp}.txt`));
         }
       }
 

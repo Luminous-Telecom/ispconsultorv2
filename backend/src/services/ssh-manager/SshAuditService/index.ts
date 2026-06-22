@@ -1,8 +1,6 @@
-import { getElasticsearchService } from '../../elasticsearch/ElasticsearchService';
+import { Op, literal, type WhereOptions } from 'sequelize';
+import { SshAuditLog } from '../../../models/ssh-manager/SshAuditLog';
 import { logger } from '../../../utils/logger';
-import { safeFormatDateISOLocal } from '../../../utils/timezoneUtils';
-
-const SSH_AUDIT_INDEX = 'backnet-ssh-audit';
 
 export type SshAuditAction =
   | 'CONNECT'
@@ -20,7 +18,6 @@ export interface SshAuditData {
   userId: string;
   deviceId?: number | null;
   deviceName?: string | null;
-  /** Tenant (DadosEmpresa); obrigatório para isolamento na listagem */
   empresaId?: number | null;
   command?: string | null;
   output?: string | null;
@@ -30,68 +27,24 @@ export interface SshAuditData {
   duration?: number | null;
 }
 
-async function ensureSshIndex(): Promise<void> {
-  const svc = getElasticsearchService();
-  const client = svc.getClient();
-  if (!client) return;
-
-  const exists = await client.indices.exists({ index: SSH_AUDIT_INDEX });
-  if (!exists) {
-    await client.indices.create({
-      index: SSH_AUDIT_INDEX,
-      mappings: {
-        properties: {
-          timestamp: { type: 'date' },
-          action: { type: 'keyword' },
-          userId: { type: 'keyword' },
-          deviceId: { type: 'keyword' },
-          deviceName: { type: 'keyword' },
-          command: { type: 'text' },
-          output: { type: 'text', index: false },
-          success: { type: 'boolean' },
-          errorMessage: { type: 'text' },
-          ip: { type: 'ip' },
-          duration: { type: 'long' },
-          empresa_id: { type: 'long' },
-        },
-      },
-    });
-  }
-}
-
-/**
- * Indexa um evento de auditoria SSH de forma assíncrona e não-bloqueante.
- */
 export function logSshAudit(data: SshAuditData): void {
   setImmediate(async () => {
     try {
-      const svc = getElasticsearchService();
-      const client = svc.getClient();
-      if (!client) return;
-
-      const isConnected = await svc.checkConnection();
-      if (!isConnected) return;
-
-      await ensureSshIndex();
-
-      const document = {
-        timestamp: safeFormatDateISOLocal(new Date()) || new Date().toISOString(),
-        action: data.action,
-        userId: data.userId,
+      await SshAuditLog.create({
         empresa_id: data.empresaId != null && data.empresaId > 0 ? data.empresaId : null,
-        deviceId: data.deviceId != null ? String(data.deviceId) : null,
-        deviceName: data.deviceName ?? null,
+        action: data.action,
+        user_id: data.userId,
+        device_id: data.deviceId != null ? String(data.deviceId) : null,
+        device_name: data.deviceName ?? null,
         command: data.command ?? null,
         output: data.output ? data.output.slice(0, 5000) : null,
         success: data.success,
-        errorMessage: data.errorMessage ?? null,
+        error_message: data.errorMessage ?? null,
         ip: data.ip,
         duration: data.duration ?? null,
-      };
-
-      await client.index({ index: SSH_AUDIT_INDEX, document });
+      });
     } catch (err) {
-      logger.warn('Falha ao registrar auditoria SSH no Elasticsearch (não crítico)', {
+      logger.warn('Falha ao registrar auditoria SSH (não crítico)', {
         context: 'SshAuditService',
         action: data.action,
         error: err instanceof Error ? err.message : 'Erro desconhecido',
@@ -100,157 +53,130 @@ export function logSshAudit(data: SshAuditData): void {
   });
 }
 
-function escapeWildcard(s: string): string {
-  return s.replace(/\\/g, '\\\\').replace(/\*/g, '\\*').replace(/\?/g, '\\?');
-}
-
-/**
- * Busca logs SSH paginados do Elasticsearch.
- */
 export type SshAuditLogType = 'equipamentos' | 'agentes';
 
 const POST_ENRICH_SORT_COLUMNS = new Set(['clienteName', 'command', 'errorMessage']);
 
-const ES_SORTABLE = new Set([
-  'timestamp',
-  'action',
-  'deviceName',
-  'userId',
-  'success',
-  'duration',
-  'ip',
-]);
+const SORT_COLUMN_MAP: Record<string, string> = {
+  timestamp: 'created_at',
+  action: 'action',
+  deviceName: 'device_name',
+  userId: 'user_id',
+  success: 'success',
+  duration: 'duration',
+  ip: 'ip',
+};
+
+function rowToLog(row: SshAuditLog): Record<string, unknown> {
+  return {
+    id: String(row.id),
+    timestamp: row.created_at.toISOString(),
+    action: row.action,
+    userId: row.user_id,
+    empresa_id: row.empresa_id,
+    deviceId: row.device_id,
+    deviceName: row.device_name,
+    command: row.command,
+    output: row.output,
+    success: row.success,
+    errorMessage: row.error_message,
+    ip: row.ip,
+    duration: row.duration,
+  };
+}
 
 export async function searchSshAuditLogs(params: {
   deviceId?: string;
   userId?: string;
   action?: SshAuditAction;
-  /** Filtra por tipo: equipamentos (exclui agentes) ou agentes (só connect/disconnect) */
   logType?: SshAuditLogType;
   startDate?: string;
   endDate?: string;
   search?: string;
   searchField?: string;
-  /** IDs de usuário resolvidos por nome (quando searchField=userId e busca é por nome) */
   searchUserIds?: string[];
   page?: number;
   limit?: number;
   sortColumn?: string;
   sortDirection?: 'asc' | 'desc';
-  /** Quando informado, restringe aos eventos da empresa (listagem multi-tenant) */
   empresaId?: number;
 }): Promise<{ logs: Record<string, unknown>[]; total: number }> {
-  const svc = getElasticsearchService();
-  const client = svc.getClient();
-
-  if (!client) {
-    throw new Error('Elasticsearch não está configurado');
-  }
-
-  const isConnected = await svc.checkConnection();
-  if (!isConnected) {
-    throw new Error('Elasticsearch não está disponível');
-  }
-
-  await ensureSshIndex();
-
   const { page = 1, limit = 20 } = params;
-  const from = (page - 1) * limit;
-
-  const must: Record<string, unknown>[] = [];
-  const mustNot: Record<string, unknown>[] = [];
+  const and: WhereOptions[] = [];
 
   if (params.logType === 'equipamentos') {
-    mustNot.push({ terms: { action: ['AGENT_CONNECT', 'AGENT_DISCONNECT'] } });
+    and.push({ action: { [Op.notIn]: ['AGENT_CONNECT', 'AGENT_DISCONNECT'] } });
   } else if (params.logType === 'agentes') {
-    must.push({ terms: { action: ['AGENT_CONNECT', 'AGENT_DISCONNECT'] } });
+    and.push({ action: { [Op.in]: ['AGENT_CONNECT', 'AGENT_DISCONNECT'] } });
   }
 
   if (params.empresaId != null && params.empresaId > 0) {
-    must.push({ term: { empresa_id: params.empresaId } });
+    and.push({ empresa_id: params.empresaId });
   }
-
-  if (params.deviceId) must.push({ term: { deviceId: params.deviceId } });
-  if (params.userId) must.push({ term: { userId: params.userId } });
-  if (params.action) must.push({ term: { action: params.action } });
+  if (params.deviceId) and.push({ device_id: params.deviceId });
+  if (params.userId) and.push({ user_id: params.userId });
+  if (params.action) and.push({ action: params.action });
 
   if (params.startDate || params.endDate) {
-    const range: Record<string, string> = {};
-    if (params.startDate) range['gte'] = params.startDate;
-    if (params.endDate) range['lte'] = params.endDate;
-    must.push({ range: { timestamp: range } });
+    const range: { [Op.gte]?: Date; [Op.lte]?: Date } = {};
+    if (params.startDate) range[Op.gte] = new Date(params.startDate);
+    if (params.endDate) range[Op.lte] = new Date(params.endDate);
+    and.push({ created_at: range });
   }
 
-  if (params.search && params.search.trim()) {
-    const term = params.search.trim();
-    const safe = escapeWildcard(term);
+  const search = params.search?.trim();
+  if (search) {
+    const like = `%${search.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_')}%`;
     const field = params.searchField?.trim();
 
-    const buildFieldClause = (esField: string, useWildcard: boolean) => {
-      if (useWildcard) {
-        return { wildcard: { [esField]: `*${safe}*` } };
-      }
-      return { match: { [esField]: { query: term, operator: 'or' } } };
-    };
-
     if (field === 'id') {
-      must.push({ wildcard: { _id: `*${safe}*` } });
+      const n = parseInt(search, 10);
+      if (Number.isFinite(n)) and.push({ id: n });
     } else if (field === 'command') {
-      must.push(buildFieldClause('command', false));
+      and.push({ command: { [Op.like]: like } });
     } else if (field === 'deviceName') {
-      must.push(buildFieldClause('deviceName', true));
+      and.push({ device_name: { [Op.like]: like } });
     } else if (field === 'userId') {
       if (params.searchUserIds && params.searchUserIds.length > 0) {
-        must.push({ terms: { userId: params.searchUserIds } });
+        and.push({ user_id: { [Op.in]: params.searchUserIds } });
       } else {
-        must.push(buildFieldClause('userId', true));
+        and.push({ user_id: { [Op.like]: like } });
       }
     } else if (field === 'errorMessage') {
-      must.push(buildFieldClause('errorMessage', false));
+      and.push({ error_message: { [Op.like]: like } });
     } else {
-      must.push({
-        bool: {
-          should: [
-            { match: { command: { query: term, operator: 'or' } } },
-            { match: { errorMessage: { query: term, operator: 'or' } } },
-            { wildcard: { deviceName: `*${safe}*` } },
-            { wildcard: { userId: `*${safe}*` } },
-          ],
-          minimum_should_match: 1,
-        },
+      and.push({
+        [Op.or]: [
+          { command: { [Op.like]: like } },
+          { error_message: { [Op.like]: like } },
+          { device_name: { [Op.like]: like } },
+          { user_id: { [Op.like]: like } },
+        ],
       });
     }
   }
 
-  const boolQuery: Record<string, unknown> = {};
-  if (must.length > 0) boolQuery.must = must;
-  if (mustNot.length > 0) boolQuery.must_not = mustNot;
-  const query = Object.keys(boolQuery).length > 0 ? { bool: boolQuery } : { match_all: {} };
+  const where: WhereOptions = and.length > 0 ? { [Op.and]: and } : {};
 
   const reqCol = params.sortColumn?.trim();
-  const reqDir = params.sortDirection === 'asc' ? 'asc' : 'desc';
+  const reqDir = params.sortDirection === 'asc' ? 'ASC' : 'DESC';
   const usePostEnrichSort = reqCol && POST_ENRICH_SORT_COLUMNS.has(reqCol);
-  const esField =
-    !usePostEnrichSort && reqCol && ES_SORTABLE.has(reqCol) ? reqCol : 'timestamp';
-  const esOrder = usePostEnrichSort ? 'desc' : reqDir;
+  const sortCol =
+    !usePostEnrichSort && reqCol && SORT_COLUMN_MAP[reqCol]
+      ? SORT_COLUMN_MAP[reqCol]
+      : 'created_at';
 
-  const response = await client.search({
-    index: SSH_AUDIT_INDEX,
-    from,
-    size: limit,
-    sort: [{ [esField]: { order: esOrder } }],
-    query,
+  const offset = (page - 1) * limit;
+
+  const { rows, count } = await SshAuditLog.findAndCountAll({
+    where,
+    order: [[sortCol, usePostEnrichSort ? 'DESC' : reqDir]],
+    limit,
+    offset,
   });
 
-  const total =
-    typeof response.hits.total === 'number'
-      ? response.hits.total
-      : (response.hits.total?.value ?? 0);
-
-  const logs = response.hits.hits.map((hit) => ({
-    id: hit._id,
-    ...(hit._source as Record<string, unknown>),
-  }));
-
-  return { logs, total };
+  return {
+    logs: rows.map(rowToLog),
+    total: count,
+  };
 }

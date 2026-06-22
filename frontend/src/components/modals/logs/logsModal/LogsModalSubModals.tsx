@@ -20,9 +20,6 @@ interface LogsModalSubModalsProps {
   selectedMensagem: MensagemItem | null;
   auditoriaExibirDetalhe: AuditoriaLog | null;
   showEmpresaColumn: boolean;
-  auditoriaDetalheEsLoading: boolean;
-  auditoriaEsIndisponivel: boolean;
-  auditoriaTemVinculoEs: boolean;
 }
 
 const LogsModalSubModals: React.FC<LogsModalSubModalsProps> = ({
@@ -38,9 +35,6 @@ const LogsModalSubModals: React.FC<LogsModalSubModalsProps> = ({
   selectedMensagem,
   auditoriaExibirDetalhe,
   showEmpresaColumn,
-  auditoriaDetalheEsLoading,
-  auditoriaEsIndisponivel,
-  auditoriaTemVinculoEs,
 }) => {
   const { t } = useI18n();
 
@@ -58,9 +52,6 @@ const LogsModalSubModals: React.FC<LogsModalSubModalsProps> = ({
           showEmpresaColumn={showEmpresaColumn}
           empresaNomeFieldLabel={t('audit.tenants')}
           showClienteColumn={showEmpresaColumn}
-          esLoading={auditoriaDetalheEsLoading}
-          esIndisponivel={auditoriaEsIndisponivel}
-          temVinculoEs={auditoriaTemVinculoEs}
         />
       );
     }

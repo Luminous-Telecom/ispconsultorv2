@@ -1,6 +1,6 @@
 import { Worker, isMainThread, parentPort, workerData } from 'worker_threads';
 import ScheduledRoutine from '../../models/sistema/ScheduledRoutine';
-import { criarLogExecucaoElasticsearch, atualizarLogExecucaoElasticsearch } from '../../services/elasticsearch/RoutineLogElasticsearchService';
+import { criarLogExecucaoMysql, atualizarLogExecucaoMysql } from '../../services/scheduler/RotinaExecucaoLogService';
 import { SistemaLogOperacionalService } from '../../services/sistema/SistemaLogOperacionalService';
 import { EnvioBoletosRoutine } from '../../services/scheduler/routines/EnvioBoletosRoutine';
 import { RemessaBancariaRoutine } from '../../services/scheduler/routines/RemessaBancariaRoutine';
@@ -71,11 +71,13 @@ class SchedulerWorker {
     }
 
     const startTime = new Date();
-    const { id: executionId } = await criarLogExecucaoElasticsearch(
+    const { id: executionId } = await criarLogExecucaoMysql(
       routine.id,
       routine.nome ?? 'Rotina',
       routine.tipo ?? 'unknown',
-      startTime
+      startTime,
+      'erp',
+      routine.empresa_id ?? null
     );
 
     SchedulerWorker.executionMeta.set(executionId, {
@@ -183,7 +185,7 @@ class SchedulerWorker {
       routineTipo: meta.tipo,
       status,
       duracaoMs: extras.duracaoMs,
-      elasticsearchLogId: executionId,
+      rotinaExecucaoId: executionId,
       resultado: extras.resultado ?? null,
       erro: extras.erro,
     });
@@ -199,7 +201,7 @@ class SchedulerWorker {
     switch (message.type) {
       case 'status':
         try {
-          await atualizarLogExecucaoElasticsearch(executionId, {
+          await atualizarLogExecucaoMysql(executionId, {
             status: 'executando',
             data_fim: endTime,
             duracao_ms: duration,
@@ -212,7 +214,7 @@ class SchedulerWorker {
 
       case 'complete': {
         const completeData = message.data as CompleteMessageData;
-        await atualizarLogExecucaoElasticsearch(executionId, {
+        await atualizarLogExecucaoMysql(executionId, {
           status: 'sucesso',
           data_fim: endTime,
           duracao_ms: completeData?.duration || 0,
@@ -228,7 +230,7 @@ class SchedulerWorker {
 
       case 'error': {
         const errorData = message.data as ErrorMessageData;
-        await atualizarLogExecucaoElasticsearch(executionId, {
+        await atualizarLogExecucaoMysql(executionId, {
           status: 'erro',
           data_fim: endTime,
           duracao_ms: errorData?.duration || 0,
@@ -254,7 +256,7 @@ class SchedulerWorker {
    */
   private static async logExecutionError(executionId: string, error: string): Promise<void> {
     try {
-      await atualizarLogExecucaoElasticsearch(executionId, {
+      await atualizarLogExecucaoMysql(executionId, {
         status: 'erro',
         data_fim: new Date(),
         duracao_ms: 0,

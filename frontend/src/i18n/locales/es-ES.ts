@@ -192,7 +192,6 @@ const esES: TranslationKeys = {
     'dashboard.deviceBackups': 'Copias de equipos',
     'dashboard.deviceBackupsSuccessSlice': 'Éxito',
     'dashboard.deviceBackupsFailureSlice': 'Fallo',
-    'dashboard.deviceBackupsElasticsearchOff': 'Elasticsearch no disponible — configure el servicio para ver estadísticas de copia.',
     'dashboard.deviceBackupsNoEvents': 'Sin copias de equipos en el período',
     'dashboard.deviceBackupsPeriod': 'Período',
     'dashboard.deviceBackupsOccurrences': 'Ejecuciones',

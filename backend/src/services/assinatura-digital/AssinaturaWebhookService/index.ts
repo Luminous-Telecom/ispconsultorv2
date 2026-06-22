@@ -5,7 +5,6 @@ import { AssinafyService } from '../AssinafyService';
 import { ZapsignService } from '../ZapsignService';
 import { TermoContratoService } from '../../contratos/TermoContratoService';
 import { registrarAtualizacao } from '../../sistema/AuditoriaService';
-import { registrarAtualizacaoElasticsearch } from '../../elasticsearch/ElasticsearchAuditService';
 
 export class AssinaturaWebhookService {
   /**
@@ -57,7 +56,7 @@ export class AssinaturaWebhookService {
         );
 
         const empresaId = (assinatura as { empresa_id?: number | null }).empresa_id ?? null;
-        await registrarAtualizacaoElasticsearch(
+        await registrarAtualizacao(
           reqSimulado,
           'AssinaturaDigital',
           assinatura.id,
@@ -128,7 +127,7 @@ export class AssinaturaWebhookService {
         );
 
         const empresaId = (assinatura as { empresa_id?: number | null }).empresa_id ?? null;
-        await registrarAtualizacaoElasticsearch(
+        await registrarAtualizacao(
           reqSimulado,
           'AssinaturaDigital',
           assinatura.id,

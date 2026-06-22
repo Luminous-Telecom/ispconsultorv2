@@ -5,7 +5,7 @@ import { calculateNextExecution } from '../../../utils/SchedulerUtils';
 import { RoutineScheduleService } from '../RoutineScheduleService';
 import { RoutineExecutionService } from '../RoutineExecutionService';
 import { RoutineLogService } from '../RoutineLogService';
-import { registrarExecucaoRotinaAuditoria } from '../../elasticsearch/ElasticsearchAuditService';
+import { registrarExecucaoRotinaAuditoria } from '../../sistema/AuditoriaRegistroService';
 import type { JsonValue } from '../../../types/index';
 import type {
   SchedulerStatus,

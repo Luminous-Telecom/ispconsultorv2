@@ -2,12 +2,12 @@
  * Modal único reutilizável para todos os tipos de logs.
  * Conteúdo e dados variam conforme logType.
  */
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useModalSelect } from 'hooks/useModalSelect';
-import { useAuditoriaDetalheEs } from 'hooks/useAuditoriaDetalheEs';
 import { AuditoriaLog } from 'services/auditoriaService';
 import { TableConfig } from 'components/tables/types';
+import { getAuditoriaDetalheExibir } from 'utils/auditoriaOperacionalDetalhe';
 import { useLogsContent } from './hooks/useLogsContent';
 import { useLogsAuditoriaFormatters } from './hooks/useLogsAuditoriaFormatters';
 import { useLogsModalColumns } from './hooks/useLogsModalColumns';
@@ -51,17 +51,10 @@ const LogsModal: React.FC<LogsModalProps> = ({
 
   const { formatTimestamp, formatAcao, getAcaoBadgeClass } = useLogsAuditoriaFormatters();
 
-  const {
-    exibirDetalhe: auditoriaExibirDetalhe,
-    showEsLoading: auditoriaDetalheEsLoading,
-    esIndisponivel: auditoriaEsIndisponivel,
-    temVinculoEs: auditoriaTemVinculoEs,
-  } = useAuditoriaDetalheEs({
-    selected: isAuditoria ? selectedAuditoria : null,
-    showDetails: showDetailsModal && isAuditoria,
-    saas: effectiveVariant === 'saas',
-    queryKeyPrefix: 'auditoria-detalhe-es-logs',
-  });
+  const auditoriaExibirDetalhe = useMemo(
+    () => getAuditoriaDetalheExibir(isAuditoria ? selectedAuditoria : null, showDetailsModal && isAuditoria),
+    [isAuditoria, selectedAuditoria, showDetailsModal]
+  );
 
   const { selectedItem, handleSelectionChange } = useModalSelect<{ id: number | string }>();
 
@@ -142,9 +135,6 @@ const LogsModal: React.FC<LogsModalProps> = ({
         selectedMensagem={selectedMensagem}
         auditoriaExibirDetalhe={auditoriaExibirDetalhe}
         showEmpresaColumn={showEmpresaColumn}
-        auditoriaDetalheEsLoading={auditoriaDetalheEsLoading}
-        auditoriaEsIndisponivel={auditoriaEsIndisponivel}
-        auditoriaTemVinculoEs={auditoriaTemVinculoEs}
       />
     </>
   );

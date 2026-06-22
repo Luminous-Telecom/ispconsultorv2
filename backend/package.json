@@ -12,8 +12,6 @@
     "migrate:undo:all": "npx sequelize-cli db:migrate:undo:all",
     "seed:webhook-logs": "ts-node scripts/seed-webhook-audit-logs.ts",
     "test:scheduler-queue": "ts-node scripts/test-scheduler-queue.ts",
-    "setup:elasticsearch": "node dist/scripts/setupElasticsearch.js",
-    "setup:elasticsearch:dev": "ts-node src/scripts/setupElasticsearch.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -21,7 +19,6 @@
     "lint:fix": "eslint src --ext .ts --fix"
   },
   "dependencies": {
-    "@elastic/elasticsearch": "^8.19.1",
     "@peculiar/webcrypto": "^1.7.1",
     "@peculiar/x509": "^2.0.0",
     "@types/node-forge": "^1.3.14",

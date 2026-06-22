@@ -2,7 +2,11 @@ import { Op, literal, type WhereOptions } from 'sequelize';
 import { sequelize } from '../../../config/database';
 import { SistemaLogOperacional } from '../../../models/sistema/SistemaLogOperacional';
 import { Usuario } from '../../../models/cadastros/Usuario';
-import { AuditoriaQueryService } from '../AuditoriaQueryService';
+import {
+  ENTIDADES_BLOCKDOMI,
+  ENTIDADES_PAINEL_LOGS_SAAS,
+  ENTIDADES_SAAS,
+} from '../auditoriaConstants';
 
 const TIPO_OPERACIONAL_TO_ACAO: Record<string, string> = {
   inseriu: 'create',
@@ -35,7 +39,7 @@ export interface ListOperacionalMysqlParams {
   empresaId?: number | null;
   excludeSaasEntities?: boolean;
   filterSaasOnly?: boolean;
-  /** Lista agregada dos modais "Logs SaaS" — restringe `recurso` a {@link AuditoriaQueryService.ENTIDADES_PAINEL_LOGS_SAAS} */
+  /** Lista agregada dos modais "Logs SaaS" — restringe `recurso` a ENTIDADES_PAINEL_LOGS_SAAS */
   filterPainelLogsSaasOnly?: boolean;
   /** Apenas login/logout cujo usuário existe em `saas_saas_usuarios_super` (modal acesso no painel SaaS). */
   filterAcessoUsuarioSuperSaas?: boolean;
@@ -92,13 +96,72 @@ function normalizeOperacionalPayloadRaw(raw: unknown): Record<string, unknown> |
   return null;
 }
 
+const PAYLOAD_META_KEYS = new Set([
+  'elasticsearch_audit_id',
+  'elasticsearch_log_id',
+  'rotina_execucao_id',
+  'acao_auditoria',
+  'origem_auditoria',
+  'request',
+  'log_contexto',
+  'tipo',
+  'tabela',
+  'origem',
+  'routine_id',
+  'routine_nome',
+  'routine_tipo',
+  'status',
+  'duracao_ms',
+  'empresa_id',
+  'usuario_id',
+  'erro',
+  'resultado_resumo',
+  '_truncado',
+  '_tamanho_aproximado',
+  '_erro_serializacao',
+  'mensagem_operacional',
+]);
+
+function extractDadosFromPayload(
+  payload: Record<string, unknown>,
+  acao: string
+): { dados_anteriores: Record<string, unknown> | null; dados_novos: Record<string, unknown> | null } {
+  const antesPayload = payload.dados_anteriores;
+  const depoisPayload = payload.dados_novos;
+  if (
+    antesPayload != null &&
+    typeof antesPayload === 'object' &&
+    !Array.isArray(antesPayload) &&
+    depoisPayload != null &&
+    typeof depoisPayload === 'object' &&
+    !Array.isArray(depoisPayload)
+  ) {
+    return {
+      dados_anteriores: antesPayload as Record<string, unknown>,
+      dados_novos: depoisPayload as Record<string, unknown>,
+    };
+  }
+
+  const body: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(payload)) {
+    if (!PAYLOAD_META_KEYS.has(k)) body[k] = v;
+  }
+  if (Object.keys(body).length === 0) {
+    return { dados_anteriores: null, dados_novos: null };
+  }
+  if (acao === 'delete') {
+    return { dados_anteriores: body, dados_novos: null };
+  }
+  return { dados_anteriores: null, dados_novos: body };
+}
+
 function rowToListItem(
   row: SistemaLogOperacional,
-  usuarioRow: { nome?: string | null; email?: string | null } | null | undefined
+  usuarioRow: { nome?: string | null; email?: string | null } | null | undefined,
+  includeDados = false
 ): Record<string, unknown> {
   const payloadObj = normalizeOperacionalPayloadRaw(row.payload);
   const payload = payloadObj ?? {};
-  const esId = typeof payload.elasticsearch_audit_id === 'string' ? payload.elasticsearch_audit_id : null;
   const acaoPayload = payload.acao_auditoria;
   const acao =
     typeof acaoPayload === 'string' && acaoPayload.length > 0
@@ -109,13 +172,13 @@ function rowToListItem(
       ? parseInt(String(row.recurso_id).trim(), 10)
       : null;
   const recurso = row.recurso ?? '';
-  const saas = AuditoriaQueryService.ENTIDADES_SAAS.includes(recurso);
+  const saas = (ENTIDADES_SAAS as readonly string[]).includes(recurso);
   const reqRota = typeof payload.request === 'string' ? payload.request : null;
+  const dados = includeDados && payloadObj ? extractDadosFromPayload(payloadObj, acao) : { dados_anteriores: null, dados_novos: null };
 
   return {
-    id: esId ?? `op:${row.id}`,
+    id: `op:${row.id}`,
     operacional_id: String(row.id),
-    elasticsearch_audit_id: esId,
     timestamp: row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at),
     usuario_id: row.usuario_id,
     usuario_nome: usuarioRow?.nome ?? null,
@@ -124,8 +187,8 @@ function rowToListItem(
     acao,
     entidade: recurso,
     entidade_id: rid,
-    dados_anteriores: null,
-    dados_novos: null,
+    dados_anteriores: dados.dados_anteriores,
+    dados_novos: dados.dados_novos,
     ip_address: row.ip_address,
     user_agent: row.user_agent,
     rota: reqRota,
@@ -149,7 +212,7 @@ export class AuditoriaOperacionalMysqlService {
     const and: WhereOptions[] = [];
 
     if (params.moduloBlockdomi) {
-      and.push({ recurso: { [Op.in]: [...AuditoriaQueryService.ENTIDADES_BLOCKDOMI] } });
+      and.push({ recurso: { [Op.in]: [...ENTIDADES_BLOCKDOMI] } });
     } else if (params.entidade?.trim()) {
       const parts = params.entidade
         .split(',')
@@ -168,14 +231,14 @@ export class AuditoriaOperacionalMysqlService {
 
     if (params.excludeSaasEntities) {
       and.push({
-        [Op.or]: [{ recurso: null }, { recurso: { [Op.notIn]: [...AuditoriaQueryService.ENTIDADES_SAAS] } }],
+        [Op.or]: [{ recurso: null }, { recurso: { [Op.notIn]: [...ENTIDADES_SAAS] } }],
       });
     }
     if (params.filterSaasOnly) {
-      and.push({ recurso: { [Op.in]: [...AuditoriaQueryService.ENTIDADES_SAAS] } });
+      and.push({ recurso: { [Op.in]: [...ENTIDADES_SAAS] } });
     }
     if (params.filterPainelLogsSaasOnly) {
-      and.push({ recurso: { [Op.in]: [...AuditoriaQueryService.ENTIDADES_PAINEL_LOGS_SAAS] } });
+      and.push({ recurso: { [Op.in]: [...ENTIDADES_PAINEL_LOGS_SAAS] } });
     }
 
     if (params.filterAcessoUsuarioSuperSaas) {
@@ -289,5 +352,78 @@ export class AuditoriaOperacionalMysqlService {
     );
 
     return { logs, total: count };
+  }
+
+  static async findByEntity(params: {
+    entidade: string;
+    entidadeId: string;
+    empresaId?: number | null;
+    excludeSaasEntities?: boolean;
+    filterSaasOnly?: boolean;
+    limit?: number;
+    sortDirection?: 'asc' | 'desc';
+  }): Promise<Record<string, unknown>[]> {
+    const and: WhereOptions[] = [{ recurso: params.entidade }];
+    const entidadeIdStr = String(params.entidadeId).trim();
+    const isUuid = /^[a-f0-9-]{36}$/i.test(entidadeIdStr);
+
+    if (!isUuid && /^\d+$/.test(entidadeIdStr)) {
+      and.push({ recurso_id: entidadeIdStr });
+    }
+
+    if (params.empresaId != null && params.empresaId > 0) {
+      and.push({ empresa_id: params.empresaId });
+    }
+    if (params.excludeSaasEntities) {
+      and.push({
+        [Op.or]: [{ recurso: null }, { recurso: { [Op.notIn]: [...ENTIDADES_SAAS] } }],
+      });
+    }
+    if (params.filterSaasOnly) {
+      and.push({ recurso: { [Op.in]: [...ENTIDADES_SAAS] } });
+    }
+
+    const sortDir = params.sortDirection === 'desc' ? 'DESC' : 'ASC';
+    const limit = params.limit ?? 10000;
+
+    const { rows } = await SistemaLogOperacional.findAndCountAll({
+      where: { [Op.and]: and },
+      include: [
+        {
+          model: Usuario,
+          as: 'usuario',
+          attributes: ['nome', 'email'],
+          required: false,
+        },
+      ],
+      order: [['created_at', sortDir]],
+      limit,
+    });
+
+    let logs = rows.map((r) =>
+      rowToListItem(
+        r,
+        (r as unknown as { usuario?: { nome?: string | null; email?: string | null } }).usuario,
+        true
+      )
+    );
+
+    if (isUuid) {
+      const matchEntityId = (d: unknown) =>
+        d != null &&
+        typeof d === 'object' &&
+        !Array.isArray(d) &&
+        ((d as Record<string, unknown>).entity_id_str === entidadeIdStr ||
+          String((d as Record<string, unknown>).entity_id_str) === entidadeIdStr);
+
+      logs = logs.filter(
+        (log) =>
+          matchEntityId(log.dados_novos) ||
+          matchEntityId(log.dados_anteriores) ||
+          (log.entidade_id === 0 && log.entidade === params.entidade)
+      );
+    }
+
+    return logs;
   }
 }

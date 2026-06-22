@@ -191,7 +191,6 @@ export interface TranslationKeys {
   'dashboard.deviceBackups': string;
   'dashboard.deviceBackupsSuccessSlice': string;
   'dashboard.deviceBackupsFailureSlice': string;
-  'dashboard.deviceBackupsElasticsearchOff': string;
   'dashboard.deviceBackupsNoEvents': string;
   'dashboard.deviceBackupsPeriod': string;
   'dashboard.deviceBackupsOccurrences': string;

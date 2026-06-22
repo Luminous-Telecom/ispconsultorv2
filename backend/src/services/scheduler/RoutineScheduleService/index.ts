@@ -7,7 +7,7 @@ import { RoutineExecutionService } from '../RoutineExecutionService';
 import { RoutineLogService } from '../RoutineLogService';
 import { RoutineExecutionQueue } from '../RoutineExecutionQueue';
 import type { RoutineJobData } from '../RoutineExecutionQueue/types';
-import { registrarExecucaoRotinaAuditoria } from '../../elasticsearch/ElasticsearchAuditService';
+import { registrarExecucaoRotinaAuditoria } from '../../sistema/AuditoriaRegistroService';
 import type { JsonValue } from '../../../types/index';
 import type {
   SchedulerStatus,

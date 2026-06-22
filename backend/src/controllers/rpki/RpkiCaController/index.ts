@@ -24,7 +24,7 @@ import {
   resolveListEmpresaId,
 } from '../../../utils/tenantUtils';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
-import { registrarAuditoriaElasticsearch } from '../../../services/elasticsearch/ElasticsearchAuditService';
+import { registrarAuditoria } from '../../../services/sistema/AuditoriaRegistroService';
 import { parseListQuery, queryString } from '../../../utils/listQuery';
 import { buildPagination } from '../../../utils/pagination';
 
@@ -1029,7 +1029,7 @@ export class RpkiCaController {
 
       const result = await RpkiRoaService.applySuggestions(ca.id, ca.empresa_id, suggestions);
       await auditarRpki(async () => {
-        await registrarAuditoriaElasticsearch(req, {
+        await registrarAuditoria(req, {
           acao: 'update',
           entidade: 'RpkiCa',
           entidade_id: ca.id,

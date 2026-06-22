@@ -5,7 +5,6 @@ import { normalizeDateForDb, formatDate, ajustarDataVencimento } from '../../../
 import { withTransaction } from '../../../../utils/transaction';
 import { metrics, isMetricsEnabled } from '../../../../utils/metrics';
 import { registrarCriacao } from '../../../sistema/AuditoriaService';
-import { registrarCriacaoElasticsearch } from '../../../elasticsearch/ElasticsearchAuditService';
 import type { Request } from 'express';
 import type Parametros from '../../../../models/sistema/Parametros';
 
@@ -324,7 +323,7 @@ export class TituloGenerationHelper {
           'agendador'
         );
 
-        await registrarCriacaoElasticsearch(
+        await registrarCriacao(
           reqSimulado,
           'Titulo',
           titulo.id,

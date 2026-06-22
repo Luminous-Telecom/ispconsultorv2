@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 import { WorkerManager } from '../WorkerManager';
 import ScheduledRoutine from '../../models/sistema/ScheduledRoutine';
 import { logger } from '../../utils/logger';
-import { buscarLogsExecucaoElasticsearch } from '../../services/elasticsearch/RoutineLogElasticsearchService';
+import { buscarLogsExecucaoMysql, limparLogsExecucaoAntigosMysql } from '../../services/scheduler/RotinaExecucaoLogService';
 
 export interface MonitorConfig {
   healthCheckInterval?: number;
@@ -133,7 +133,7 @@ export class WorkerMonitor extends EventEmitter {
     const workersStatus = this.workerManager.getStatus();
     const workerUtilization = (workersStatus.activeExecutions / workersStatus.config.maxWorkers) * 100;
 
-    const allLogs = await buscarLogsExecucaoElasticsearch(undefined, 1000);
+    const allLogs = await buscarLogsExecucaoMysql(undefined, 1000);
     const executions = allLogs.filter((log) => {
       const ts = (log.timestamp as string) || (log.data_inicio as string);
       return ts && new Date(ts) >= oneHourAgo;
@@ -178,7 +178,7 @@ export class WorkerMonitor extends EventEmitter {
 
   private async checkForAlerts(data: RoutineFailedData): Promise<void> {
     const { routine } = data;
-    const allLogs = await buscarLogsExecucaoElasticsearch(routine.id, 50);
+    const allLogs = await buscarLogsExecucaoMysql(routine.id, 50);
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const recentFailures = allLogs.filter(
       (log) =>
@@ -210,13 +210,17 @@ export class WorkerMonitor extends EventEmitter {
 
   private async cleanupOldLogs(): Promise<void> {
     try {
-      // Retenção de logs de rotinas no Elasticsearch é feita por ILM (data stream logs-backnet-rotinas).
-      // logRetentionDays permanece na config para outros usos / métricas, se necessário.
-      if (this.config.logRetentionDays != null) {
-        logger.debug('WorkerMonitor: retenção de logs de rotinas delegada ao ILM do Elasticsearch', {
+      const days = this.config.logRetentionDays;
+      if (days == null || days <= 0) return;
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - days);
+      const removed = await limparLogsExecucaoAntigosMysql(cutoff);
+      if (removed > 0) {
+        logger.info('WorkerMonitor: logs antigos de rotina removidos', {
           context: 'WorkerMonitor',
           action: 'cleanupOldLogs',
-          logRetentionDays: this.config.logRetentionDays
+          removed,
+          logRetentionDays: days,
         });
       }
     } catch (error) {
@@ -232,7 +236,7 @@ export class WorkerMonitor extends EventEmitter {
   async getDetailedStats(days = 7): Promise<DetailedStats> {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
-    const allLogs = await buscarLogsExecucaoElasticsearch(undefined, 10000);
+    const allLogs = await buscarLogsExecucaoMysql(undefined, 10000);
     const executions = allLogs.filter((log) => {
       const ts = (log.timestamp as string) || (log.data_inicio as string);
       return ts && new Date(ts) >= startDate;

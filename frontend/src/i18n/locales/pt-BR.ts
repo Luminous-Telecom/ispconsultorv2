@@ -192,7 +192,6 @@ const ptBR: TranslationKeys = {
     'dashboard.deviceBackups': 'Backups de equipamentos',
     'dashboard.deviceBackupsSuccessSlice': 'Sucesso',
     'dashboard.deviceBackupsFailureSlice': 'Falha',
-    'dashboard.deviceBackupsElasticsearchOff': 'Elasticsearch indisponível — configure o serviço para ver estatísticas de backup.',
     'dashboard.deviceBackupsNoEvents': 'Nenhum backup de equipamento no período',
     'dashboard.deviceBackupsPeriod': 'Período',
     'dashboard.deviceBackupsOccurrences': 'Ocorrências',

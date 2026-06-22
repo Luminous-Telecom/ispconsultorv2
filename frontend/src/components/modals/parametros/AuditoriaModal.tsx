@@ -9,9 +9,9 @@ import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
 import { auditoriaService, AuditoriaLog, AuditoriaFilters } from 'services/auditoriaService';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
-import { useAuditoriaDetalheEs } from 'hooks/useAuditoriaDetalheEs';
 import AuditoriaDetalhesModal from 'components/modals/auditoria/AuditoriaDetalhesModal';
 import { formatAuditoriaListId, formatDateTime } from 'utils/formatters';
+import { getAuditoriaDetalheExibir } from 'utils/auditoriaOperacionalDetalhe';
 import { useI18n } from 'contexts/I18nContext';
 import { normalizeListPagination } from 'utils/pagination';
 
@@ -82,17 +82,10 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
     retry: 1
   });
 
-  const {
-    exibirDetalhe: auditoriaExibirDetalhe,
-    showEsLoading: auditoriaDetalheEsLoading,
-    esIndisponivel: auditoriaEsIndisponivel,
-    temVinculoEs: auditoriaTemVinculoEs,
-  } = useAuditoriaDetalheEs({
-    selected: selectedLog,
-    showDetails: showDetailsModal,
-    saas: variant === 'saas',
-    queryKeyPrefix: 'auditoria-detalhe-es-modal',
-  });
+  const auditoriaExibirDetalhe = useMemo(
+    () => getAuditoriaDetalheExibir(selectedLog, showDetailsModal),
+    [selectedLog, showDetailsModal]
+  );
 
   // Usar hook customizado para gerenciar seleção
   const {
@@ -410,9 +403,6 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
       modalId={variant === 'saas' ? 'saas-auditoria-detalhes' : 'auditoria-detalhes'}
       showEmpresaColumn={variant === 'saas'}
       showClienteColumn={variant === 'saas'}
-      esLoading={auditoriaDetalheEsLoading}
-      esIndisponivel={auditoriaEsIndisponivel}
-      temVinculoEs={auditoriaTemVinculoEs}
     />
   );
 

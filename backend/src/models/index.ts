@@ -36,7 +36,9 @@ import { TipoCobrancaContrato } from './cadastros/TipoCobrancaContrato';
 import { DadosEmpresa } from './sistema/DadosEmpresa';
 import { ScheduledRoutine } from './sistema/ScheduledRoutine';
 import Parametros from './sistema/Parametros';
+import { RotinaExecucaoLog } from './sistema/RotinaExecucaoLog';
 import { SistemaLogOperacional } from './sistema/SistemaLogOperacional';
+import { SshAuditLog } from './ssh-manager/SshAuditLog';
 
 // Comunicação
 import { ServidorEmail } from './comunicacao/ServidorEmail';
@@ -475,6 +477,8 @@ export {
   AssinaturaDigitalProvider,
   Parametros,
   SistemaLogOperacional,
+  RotinaExecucaoLog,
+  SshAuditLog,
   Fornecedor,
   ContaPagar,
   ContaPagarPagamento,

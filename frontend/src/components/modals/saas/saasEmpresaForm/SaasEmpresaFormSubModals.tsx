@@ -47,9 +47,6 @@ interface SaasEmpresaFormSubModalsProps {
   showLogDetailsModal: boolean;
   closeLogDetailsModal: () => void;
   logExibirDetalhe: AuditoriaLog | null;
-  auditoriaDetalheEsLoading: boolean;
-  auditoriaEsIndisponivel: boolean;
-  auditoriaTemVinculoEs: boolean;
 }
 
 const SaasEmpresaFormSubModals: React.FC<SaasEmpresaFormSubModalsProps> = ({
@@ -90,9 +87,6 @@ const SaasEmpresaFormSubModals: React.FC<SaasEmpresaFormSubModalsProps> = ({
   showLogDetailsModal,
   closeLogDetailsModal,
   logExibirDetalhe,
-  auditoriaDetalheEsLoading,
-  auditoriaEsIndisponivel,
-  auditoriaTemVinculoEs,
 }) => (
   <>
     <SaasContratoFormModal
@@ -157,9 +151,6 @@ const SaasEmpresaFormSubModals: React.FC<SaasEmpresaFormSubModalsProps> = ({
       onClose={closeLogDetailsModal}
       detalhe={logExibirDetalhe}
       modalId="saas-log-details-modal"
-      esLoading={auditoriaDetalheEsLoading}
-      esIndisponivel={auditoriaEsIndisponivel}
-      temVinculoEs={auditoriaTemVinculoEs}
     />
   </>
 );

@@ -2,7 +2,6 @@ import { ServidorWhatsApp } from '../../../models/comunicacao/ServidorWhatsApp';
 import { registrarMensagemHistorico, type ContextoHistorico } from '../RegistroMensagemHistoricoService';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { logger } from '../../../utils/logger';
-import { registrarMensagemElasticsearch } from '../../elasticsearch/MensagemHistoricoElasticsearchService';
 
 interface WhatsAppCloudTemplateComponent {
   type: 'body' | 'header' | 'button';
@@ -144,13 +143,6 @@ export class WhatsAppCloudService {
           );
 
           // Registrar no Elasticsearch
-          await registrarMensagemElasticsearch(null, {
-            tipo: 'whatsapp',
-            destinatario: telefone,
-            mensagem: texto,
-            status: 'enviada',
-            servidor_id: servidor.id
-          });
         } catch (registroError) {
           logger.error('Erro ao registrar WhatsApp Cloud enviado no histórico:', registroError);
           // Não falha o envio por erro no registro
@@ -183,14 +175,6 @@ export class WhatsAppCloudService {
           );
 
           // Registrar erro no Elasticsearch
-          await registrarMensagemElasticsearch(null, {
-            tipo: 'whatsapp',
-            destinatario: telefone,
-            mensagem: texto,
-            status: 'erro',
-            erro_mensagem: errorMessage,
-            servidor_id: servidor.id
-          });
         } catch (registroError) {
           logger.error('Erro ao registrar erro de WhatsApp Cloud no histórico:', registroError);
           // Não falha o envio por erro no registro
@@ -462,13 +446,6 @@ export class WhatsAppCloudService {
           );
 
           // Registrar no Elasticsearch
-          await registrarMensagemElasticsearch(null, {
-            tipo: 'whatsapp',
-            destinatario: telefone,
-            mensagem: mensagemDetalhada,
-            status: 'enviada',
-            servidor_id: servidor.id
-          });
         } catch (registroError) {
           logger.error('Erro ao registrar template WhatsApp Cloud enviado no histórico:', registroError);
           // Não falha o envio por erro no registro
@@ -582,14 +559,6 @@ export class WhatsAppCloudService {
           );
 
           // Registrar erro no Elasticsearch
-          await registrarMensagemElasticsearch(null, {
-            tipo: 'whatsapp',
-            destinatario: telefone,
-            mensagem: `Template: ${templateName} (${languageCode})`,
-            status: 'erro',
-            erro_mensagem: errorMessage,
-            servidor_id: servidor.id
-          });
         } catch (registroError) {
           logger.error('Erro ao registrar erro de template WhatsApp Cloud no histórico:', registroError);
           // Não falha o envio por erro no registro
@@ -719,13 +688,6 @@ export class WhatsAppCloudService {
           );
 
           // Registrar no Elasticsearch
-          await registrarMensagemElasticsearch(null, {
-            tipo: 'whatsapp',
-            destinatario: telefone,
-            mensagem: caption || `Documento: ${filename}`,
-            status: 'enviada',
-            servidor_id: servidor.id
-          });
         } catch (registroError) {
           logger.error('Erro ao registrar documento WhatsApp Cloud enviado no histórico:', registroError);
           // Não falha o envio por erro no registro
@@ -781,14 +743,6 @@ export class WhatsAppCloudService {
           );
 
           // Registrar erro no Elasticsearch
-          await registrarMensagemElasticsearch(null, {
-            tipo: 'whatsapp',
-            destinatario: telefone,
-            mensagem: caption || `Documento: ${filename}`,
-            status: 'erro',
-            erro_mensagem: errorMessage,
-            servidor_id: servidor.id
-          });
         } catch (registroError) {
           logger.error('Erro ao registrar erro de documento WhatsApp Cloud no histórico:', registroError);
           // Não falha o envio por erro no registro

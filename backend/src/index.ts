@@ -364,21 +364,6 @@ const startServer = async () => {
         logger.info('Redis não configurado ou indisponível');
       }
 
-      try {
-        const { getElasticsearchService } = await import('./services/elasticsearch');
-        const elasticsearchService = getElasticsearchService();
-        
-        setTimeout(async () => {
-          const isConnected = await elasticsearchService.checkConnection();
-          if (isConnected) {
-            logger.info('Elasticsearch conectado');
-          } else {
-            logger.info('Elasticsearch não configurado ou indisponível');
-          }
-        }, 3000);
-      } catch {
-        logger.info('Elasticsearch não configurado ou indisponível');
-      }
     });
   } catch (error) {
     logger.error('Erro ao inicializar servidor', error);

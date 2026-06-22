@@ -386,7 +386,7 @@ function objetoAninhadoComparavel(v: unknown): v is Record<string, unknown> {
 
 /**
  * Em `update`, persiste no MySQL apenas chaves que mudaram (antes/depois parciais).
- * Detalhe completo continua no Elasticsearch.
+ * Monta payload JSON para registro operacional a partir de snapshot de auditoria.
  */
 export function extrairCamposAlteradosParaPayload(
   antes: Record<string, unknown> | null | undefined,
@@ -550,7 +550,7 @@ export function tipoOperacionalFromAcao(acao: AcaoOperacionalAuditoria): string 
 }
 
 /**
- * Log operacional unificado no MySQL (detalhe completo de auditoria continua no Elasticsearch).
+ * Log operacional unificado no MySQL.
  */
 export class SistemaLogOperacionalService {
   static async registrar(input: RegistrarLogOperacionalInput): Promise<void> {
@@ -597,7 +597,7 @@ export class SistemaLogOperacionalService {
     }
   }
 
-  /** Espelha auditoria no MySQL: em `update` o payload traz só campos alterados; detalhe integral no Elasticsearch. */
+  /** Espelha auditoria no MySQL: em `update` o payload traz só campos alterados. */
   static registrarFromAuditoriaSnapshot(p: {
     acao: AcaoOperacionalAuditoria;
     entidade: string;
@@ -612,8 +612,6 @@ export class SistemaLogOperacionalService {
     origemAuditoria?: OrigemAuditoriaOperacional;
     dadosNovos?: Record<string, unknown> | null;
     dadosAnteriores?: Record<string, unknown> | null;
-    /** Id do documento no Elasticsearch após indexação (detalhe completo). */
-    elasticsearchLogId?: string | null;
   }): void {
     if (p.acao === 'update') {
       const houve = houveAlteracaoEfetivaEmUpdate(p.dadosAnteriores, p.dadosNovos);
@@ -667,7 +665,6 @@ export class SistemaLogOperacionalService {
     const payloadMerged: Record<string, unknown> = { ...(payloadCorpo ?? {}) };
     if (p.origemAuditoria) payloadMerged.origem_auditoria = p.origemAuditoria;
     payloadMerged.acao_auditoria = p.acao;
-    if (p.elasticsearchLogId) payloadMerged.elasticsearch_audit_id = p.elasticsearchLogId;
 
     const payloadFinal = Object.keys(payloadMerged).length > 0 ? payloadMerged : null;
 
@@ -691,7 +688,7 @@ export class SistemaLogOperacionalService {
     });
   }
 
-  /** Execução de rotina agendada — detalhe no Elasticsearch */
+  /** Execução de rotina agendada — resumo operacional + detalhe em adm_sistema_rotina_execucoes */
   static registrarRotinaExecucao(params: {
     origem: 'erp' | 'saas';
     empresaId?: number | null;
@@ -701,7 +698,7 @@ export class SistemaLogOperacionalService {
     routineTipo: string;
     status: 'sucesso' | 'erro';
     duracaoMs: number;
-    elasticsearchLogId?: string | null;
+    rotinaExecucaoId?: string | null;
     resultado?: Record<string, unknown> | null;
     erro?: string | null;
     ipAddress?: string | null;
@@ -725,8 +722,8 @@ export class SistemaLogOperacionalService {
       empresa_id: params.empresaId != null && params.empresaId > 0 ? params.empresaId : null,
       usuario_id: params.usuarioId != null && params.usuarioId > 0 ? params.usuarioId : null,
     };
-    if (params.elasticsearchLogId) {
-      payload.elasticsearch_log_id = params.elasticsearchLogId;
+    if (params.rotinaExecucaoId) {
+      payload.rotina_execucao_id = params.rotinaExecucaoId;
     }
     if (params.status === 'erro' && params.erro) {
       payload.erro = String(params.erro).slice(0, 500);
