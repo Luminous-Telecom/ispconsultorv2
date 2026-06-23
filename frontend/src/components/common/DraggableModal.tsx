@@ -297,7 +297,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           <div className="d-flex align-items-center justify-content-center position-relative">
             {/* Título centralizado */}
             <h6
-              className={`modal-title text-center fs-6 ${headerActions ? 'mb-2 with-actions' : 'mb-0'} draggable-modal-title-custom ${isDragging ? 'dragging' : ''}`}
+              className={`modal-title text-center fs-6 ${headerActions ? 'mb-1 with-actions' : 'mb-0'} draggable-modal-title-custom ${isDragging ? 'dragging' : ''}`}
             >
               {title}
             </h6>

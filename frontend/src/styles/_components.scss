@@ -4,8 +4,13 @@
   line-height: 1.1;
   font-weight: 600;
   margin: 0;
-  padding: 0.25rem 0;
+  padding: 0.35rem 0 0.125rem;
   text-align: center;
+}
+
+.embedded-table-panel-heading {
+  margin-bottom: 0;
+  flex-shrink: 0;
 }
 
 /* ============================================
@@ -164,7 +169,7 @@
 }
 
 .draggable-modal-title-custom.with-actions {
-  margin-bottom: 8px !important;
+  margin-bottom: 4px !important;
 }
 
 
@@ -1321,9 +1326,9 @@ button,
   flex-direction: column !important;
   align-items: stretch !important;
   width: 100% !important;
-  gap: 0.5rem !important;
+  gap: 0.25rem !important;
   /* Horizontal vem do .draggable-modal-header-custom (8px) — evita duplicar inset */
-  padding: 0.5rem 0 0 0 !important;
+  padding: 0.25rem 0 0 0 !important;
   margin: 0 !important;
   box-sizing: border-box !important;
 }
@@ -3782,7 +3787,7 @@ textarea:focus {
 
 /* Toolbar de tabela alinhada com botões/abas do header do modal (inset 8px) */
 .draggable-modal-body-custom [class*="-tab-content-scrollable"] .table-header-content {
-  padding: 0.5rem 8px 0 8px !important;
+  padding: 0.25rem 8px 0 8px !important;
 }
 
 .draggable-modal-body-custom [class*="-tab-content-scrollable"] .table-pagination-header {
@@ -3792,7 +3797,7 @@ textarea:focus {
 /* Modais de listagem (no-padding): alinhar toolbar com inset do header */
 .draggable-modal-body-custom.no-scroll > .table-container-custom .table-header-content,
 .list-modal-table-wrapper .table-header-content {
-  padding: 0.5rem 8px 0 8px !important;
+  padding: 0.25rem 8px 0 8px !important;
 }
 
 .draggable-modal-body-custom.no-scroll > .table-container-custom .table-pagination-header,
