@@ -10,18 +10,18 @@ export type ResolvedTitulo = {
 };
 
 export type WebhookEmpresaScope = {
-  /** 'saas' = só saas_saas_titulos; slug (ex: minha-empresa-isp) = só titulos admin; undefined = ambos */
+  /** 'saas' = só saas_titulos; slug (ex: minha-empresa-isp) = só titulos admin; undefined = ambos */
   empresaIdentifier?: string;
 };
 
 /**
  * Centraliza a resolução de títulos para webhooks.
- * Busca em titulos (admin) e saas_saas_titulos (SaaS).
+ * Busca em titulos (admin) e saas_titulos (SaaS).
  * @param scope.empresaIdentifier - 'saas' para só SaaS; slug da razão social para só ERP; undefined para buscar em ambos
  */
 export class TituloWebhookResolver {
   /**
-   * Busca título por charge_id em titulos ou saas_saas_titulos
+   * Busca título por charge_id em titulos ou saas_titulos
    */
   static async findByChargeId(chargeId: string, scope?: WebhookEmpresaScope): Promise<ResolvedTitulo | null> {
     const identifier = scope?.empresaIdentifier?.toLowerCase();
@@ -44,7 +44,7 @@ export class TituloWebhookResolver {
       return null;
     }
 
-    // Só SaaS: buscar em saas_saas_titulos
+    // Só SaaS: buscar em saas_titulos
     if (identifier === 'saas') {
       const { default: SaasTituloModel } = await import('../../../models/saas/SaasTitulo');
       const { default: SaasBancoModel } = await import('../../../models/saas/SaasBanco');
@@ -97,7 +97,7 @@ export class TituloWebhookResolver {
   }
 
   /**
-   * Busca título por id (custom_id) em titulos ou saas_saas_titulos
+   * Busca título por id (custom_id) em titulos ou saas_titulos
    */
   static async findByCustomId(customId: string, scope?: WebhookEmpresaScope): Promise<ResolvedTitulo | null> {
     const id = parseInt(customId, 10);

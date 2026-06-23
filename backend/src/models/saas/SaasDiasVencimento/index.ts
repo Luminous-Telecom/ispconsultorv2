@@ -30,7 +30,7 @@ SaasDiasVencimento.init(
   },
   {
     sequelize,
-    tableName: 'saas_saas_dias_vencimento',
+    tableName: 'saas_dias_vencimento',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',

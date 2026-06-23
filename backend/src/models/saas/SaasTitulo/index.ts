@@ -105,7 +105,7 @@ SaasTitulo.init(
   },
   {
     sequelize,
-    tableName: 'saas_saas_titulos',
+    tableName: 'saas_titulos',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',

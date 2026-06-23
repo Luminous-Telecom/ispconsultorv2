@@ -53,7 +53,7 @@ SaasTipoCobranca.init(
   },
   {
     sequelize,
-    tableName: 'saas_saas_tipos_cobranca',
+    tableName: 'saas_tipos_cobranca',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',

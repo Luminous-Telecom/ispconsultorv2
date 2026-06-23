@@ -162,7 +162,7 @@ SaasScheduledRoutine.init(
   },
   {
     sequelize,
-    tableName: 'saas_saas_scheduled_routines',
+    tableName: 'saas_scheduled_routines',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at'

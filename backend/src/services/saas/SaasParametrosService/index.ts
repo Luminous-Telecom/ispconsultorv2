@@ -2,7 +2,7 @@ import SaasParametros from '../../../models/saas/SaasParametros';
 import { createSingletonConfigService } from '../../../utils/createSingletonConfigService';
 
 const saasParametrosStore = createSingletonConfigService(SaasParametros, {
-  cacheKey: 'saas_saas_parametros:config',
+  cacheKey: 'saas_parametros:config',
   attributes: [
     'id',
     'validar_cpf_cnpj',

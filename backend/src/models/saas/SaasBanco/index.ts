@@ -145,7 +145,7 @@ SaasBanco.init(
   },
   {
     sequelize,
-    tableName: 'saas_saas_bancos',
+    tableName: 'saas_bancos',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',

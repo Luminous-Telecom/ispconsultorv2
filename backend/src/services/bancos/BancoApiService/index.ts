@@ -226,11 +226,11 @@ export class BancoApiService {
   /**
    * Gerar título/boleto via API do banco.
    * @param titulo - Título com banco, cliente e plano
-   * @param options - Se bancoTable='saas_saas_bancos', usa SaasBanco para credenciais (SaaS)
+   * @param options - Se bancoTable='saas_bancos', usa SaasBanco para credenciais (SaaS)
    */
   static async gerarTitulo(
     titulo: TituloWithRelations,
-    options?: { bancoTable?: 'bancos' | 'saas_saas_bancos' }
+    options?: { bancoTable?: 'bancos' | 'saas_bancos' }
   ): Promise<ApiResponse> {
     const banco = titulo.banco;
     const cliente = titulo.cliente;
@@ -298,7 +298,7 @@ export class BancoApiService {
         'desconto_valor'
       ];
       const bancoInstanceCredenciais =
-        options?.bancoTable === 'saas_saas_bancos'
+        options?.bancoTable === 'saas_bancos'
           ? await (await import('../../../models/saas/SaasBanco')).SaasBanco.findByPk(banco.id, { attributes: attrs })
           : await Banco.findByPk(banco.id, { attributes: attrs });
 
@@ -344,7 +344,7 @@ export class BancoApiService {
         };
       }
       
-      const tituloParaGeracao = options?.bancoTable === 'saas_saas_bancos'
+      const tituloParaGeracao = options?.bancoTable === 'saas_bancos'
         ? { ...titulo, __skipTituloUpdate: true }
         : titulo;
 

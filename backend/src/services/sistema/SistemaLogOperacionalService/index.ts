@@ -715,7 +715,7 @@ export class SistemaLogOperacionalService {
   }): void {
     const tabela =
       params.origem === 'saas'
-        ? 'saas_saas_scheduled_routines'
+        ? 'saas_scheduled_routines'
         : 'adm_sistema_scheduled_routines';
     const tipo = 'executou';
     const nome = params.routineNome.slice(0, 200);
@@ -797,7 +797,7 @@ export class SistemaLogOperacionalService {
   }): Promise<{ id: string }> {
     const tabela =
       params.origem === 'saas'
-        ? 'saas_saas_scheduled_routines'
+        ? 'saas_scheduled_routines'
         : 'adm_sistema_scheduled_routines';
     const nome = params.routineNome.slice(0, 200);
     const row = await SistemaLogOperacional.create({

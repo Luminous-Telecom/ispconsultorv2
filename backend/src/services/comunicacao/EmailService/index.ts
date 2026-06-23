@@ -54,7 +54,7 @@ export class EmailService {
   }
 
   /**
-   * @param options.saas - Se true, usa saas_saas_titulos e saas_saas_dados_empresa
+   * @param options.saas - Se true, usa saas_titulos e saas_dados_empresa
    * @param options.empresa_id - Filtra títulos por empresa (ERP)
    */
   static async enviarBoletos(config: ConfiguracoesEnvios, options?: { saas?: boolean; empresa_id?: number }): Promise<{

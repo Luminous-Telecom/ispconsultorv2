@@ -285,7 +285,7 @@ export class SaasDashboardService {
   private static async getClientesPorTipoPlano(): Promise<Array<{ tipo_servico: string; quantidade: number }>> {
     const rows = await sequelize.query<{ tipo_servico: string; quantidade: string }>(
       `SELECT 'infraestrutura' as tipo_servico, COUNT(DISTINCT sc.empresa_id) as quantidade
-       FROM saas_saas_contratos sc
+       FROM saas_contratos sc
        WHERE sc.status = 'ativo'`,
       { type: QueryTypes.SELECT }
     );
@@ -303,7 +303,7 @@ export class SaasDashboardService {
 
       const [result] = await sequelize.query<{ total: string }>(
         `SELECT COALESCE(SUM(st.valor), 0) as total
-         FROM saas_saas_titulos st
+         FROM saas_titulos st
          WHERE st.data_vencimento >= :inicio AND st.data_vencimento < :fim AND st.status != 'cancelado'`,
         {
           replacements: { inicio: mes, fim: proxMes },
@@ -494,7 +494,7 @@ export class SaasDashboardService {
     const empresasBloqueadasIds = new Set(empresasBloqueadas.map(e => e.id));
 
     const empresasEmAtrasoRows = await sequelize.query<{ empresa_id: number }>(
-      `SELECT DISTINCT empresa_id FROM saas_saas_titulos
+      `SELECT DISTINCT empresa_id FROM saas_titulos
        WHERE pago = false AND status IN ('pendente', 'vencido') AND data_vencimento < :hoje`,
       { replacements: { hoje }, type: QueryTypes.SELECT }
     );

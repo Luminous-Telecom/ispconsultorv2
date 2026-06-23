@@ -56,7 +56,7 @@ SaasContrato.init(
   },
   {
     sequelize,
-    tableName: 'saas_saas_contratos',
+    tableName: 'saas_contratos',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',

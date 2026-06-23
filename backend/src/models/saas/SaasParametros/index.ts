@@ -100,7 +100,7 @@ SaasParametros.init(
   },
   {
     sequelize,
-    tableName: 'saas_saas_parametros',
+    tableName: 'saas_parametros',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',

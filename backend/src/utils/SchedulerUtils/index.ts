@@ -12,7 +12,7 @@ export interface RoutineScheduleShape {
   dia_semana?: number | string;
   dia_execucao?: number;
   cron_expression?: string;
-  /** Colunas de expressão cron persistidas (SaaS — tabela saas_saas_scheduled_routines) */
+  /** Colunas de expressão cron persistidas (SaaS — tabela saas_scheduled_routines) */
   minuto?: string | null;
   hora?: string | null;
   dia_mes?: string | null;

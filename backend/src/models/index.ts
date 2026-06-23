@@ -361,7 +361,7 @@ DadosEmpresa.hasMany(MensagemHistorico, { foreignKey: 'empresa_id', as: 'mensage
 SistemaLogOperacional.belongsTo(DadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
 SistemaLogOperacional.belongsTo(Usuario, { foreignKey: 'usuario_id', as: 'usuario' });
 
-// SaaS — tenants em adm_sistema_tenants; saas_saas_dados_empresa = empresa operadora do SaaS
+// SaaS — tenants em adm_sistema_tenants; saas_dados_empresa = empresa operadora do SaaS
 DadosEmpresa.hasMany(SaasContrato, { foreignKey: 'empresa_id', as: 'saasContratos' });
 SaasContrato.belongsTo(DadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
 SaasPlano.hasMany(SaasContrato, { foreignKey: 'plano_id', as: 'contratos' });
