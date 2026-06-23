@@ -111,6 +111,13 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
         render: (item) => <span>{item.assunto_nome || '-'}</span>,
       },
       {
+        key: 'cliente_nome',
+        label: 'Cliente',
+        sortable: true,
+        width: '150px',
+        render: (item) => <span>{item.cliente_nome || '-'}</span>,
+      },
+      {
         key: 'id_estrutura',
         label: 'Estrutura',
         sortable: true,
@@ -190,6 +197,7 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
   const searchFields = useMemo(
     () => [
       { key: 'id', label: 'ID' },
+      { key: 'cliente_nome', label: 'Cliente' },
       { key: 'estrutura_nome', label: 'Estrutura' },
       { key: 'mensagem', label: 'Descrição' },
       { key: 'protocolo', label: 'Protocolo' },

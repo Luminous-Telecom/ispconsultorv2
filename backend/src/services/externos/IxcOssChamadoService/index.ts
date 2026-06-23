@@ -4,6 +4,7 @@
  * Operações: listar, buscar por id, criar, editar e deletar chamados de OS.
  */
 import axios, { AxiosInstance, isAxiosError } from 'axios';
+import { ClienteService } from '../../clientes/ClienteService';
 
 const IXC_RESOURCE = 'su_oss_chamado';
 const IXC_MENSAGEM_RESOURCE = 'su_oss_chamado_mensagem';
@@ -94,6 +95,9 @@ export interface ListLookupResponse {
 
 export type OssChamadoInput = Record<string, string | number | null | undefined>;
 
+/** Campos enviados pelo BackNet — não repassar ao IXC. */
+const CAMPOS_BACKNET = ['cliente_id'];
+
 /** Campos adicionados pelo enrich — não enviar ao IXC. */
 const CAMPOS_ENRIQUECIDOS = [
   'estrutura_nome',
@@ -101,6 +105,8 @@ const CAMPOS_ENRIQUECIDOS = [
   'assunto_nome',
   'setor_nome',
   'filial_nome',
+  'cliente_id',
+  'cliente_nome',
   'cidade_nome',
 ];
 
@@ -122,7 +128,27 @@ function prepareCreateBody(payload: OssChamadoInput): Record<string, string> {
   for (const campo of CAMPOS_AUTOGERADOS_CRIACAO) {
     delete body[campo];
   }
+  applyBacknetCliente(payload, body);
   return body;
+}
+
+/** Persiste referência ao cliente BackNet no campo idx da OS (tipo E não usa id_cliente do IXC). */
+function applyBacknetCliente(payload: OssChamadoInput, body: Record<string, string>): void {
+  for (const campo of CAMPOS_BACKNET) {
+    delete body[campo];
+  }
+
+  const rawClienteId = payload.cliente_id;
+  const clienteId =
+    rawClienteId !== undefined &&
+    rawClienteId !== null &&
+    String(rawClienteId).trim() !== '' &&
+    String(rawClienteId) !== '0'
+      ? String(rawClienteId).trim()
+      : '';
+
+  body.id_cliente = '0';
+  body.idx = clienteId;
 }
 
 /**
@@ -624,6 +650,31 @@ async function fetchRegistrosPorIds(
   return mapa;
 }
 
+async function fetchBacknetClientesPorIds(
+  ids: Iterable<string>
+): Promise<Map<string, { razao_social: string; nome_fantasia?: string | null }>> {
+  const mapa = new Map<string, { razao_social: string; nome_fantasia?: string | null }>();
+  const unique = [...new Set([...ids].filter((id) => id && id !== '0' && /^\d+$/.test(id)))];
+
+  await Promise.all(
+    unique.map(async (id) => {
+      try {
+        const cliente = await ClienteService.getById(id);
+        if (cliente) {
+          mapa.set(id, {
+            razao_social: cliente.razao_social,
+            nome_fantasia: cliente.nome_fantasia,
+          });
+        }
+      } catch {
+        // ignora falha pontual de lookup
+      }
+    })
+  );
+
+  return mapa;
+}
+
 /** Busca OS no IXC por id. */
 async function fetchOsRawById(id: string | number): Promise<IxcOssChamado | null> {
   const data = await ixcListar<IxcListResponse>(IXC_RESOURCE, {
@@ -641,17 +692,20 @@ async function fetchOsRawById(id: string | number): Promise<IxcOssChamado | null
 async function enrichOsRegistros(registros: IxcOssChamado[]): Promise<IxcOssChamado[]> {
   if (registros.length === 0) return [];
 
-  const [estruturas, tecnicos, assuntos, setores, filiais, cidades] = await Promise.all([
+  const [estruturas, tecnicos, assuntos, setores, filiais, clientesBacknet, cidades] = await Promise.all([
     fetchRegistrosPorIds(IXC_ESTRUTURA_RESOURCE, registros.map((r) => String(r.id_estrutura ?? ''))),
     fetchRegistrosPorIds(IXC_FUNCIONARIOS_RESOURCE, registros.map((r) => String(r.id_tecnico ?? ''))),
     fetchRegistrosPorIds(IXC_ASSUNTO_RESOURCE, registros.map((r) => String(r.id_assunto ?? ''))),
     fetchRegistrosPorIds(IXC_SETOR_RESOURCE, registros.map((r) => String(r.setor ?? ''))),
     fetchRegistrosPorIds(IXC_FILIAL_RESOURCE, registros.map((r) => String(r.id_filial ?? ''))),
+    fetchBacknetClientesPorIds(registros.map((r) => String(r.idx ?? ''))),
     fetchRegistrosPorIds(IXC_CIDADE_RESOURCE, registros.map((r) => String(r.id_cidade ?? ''))),
   ]);
 
   return registros.map((registro) => {
     const filial = filiais.get(String(registro.id_filial ?? ''));
+    const backnetClienteId = String(registro.idx ?? '').trim();
+    const clienteBacknet = clientesBacknet.get(backnetClienteId);
     const cidade = cidades.get(String(registro.id_cidade ?? ''));
     return {
       ...registro,
@@ -660,6 +714,8 @@ async function enrichOsRegistros(registros: IxcOssChamado[]): Promise<IxcOssCham
       assunto_nome: assuntos.get(String(registro.id_assunto ?? ''))?.assunto ?? '',
       setor_nome: setores.get(String(registro.setor ?? ''))?.setor ?? '',
       filial_nome: filial?.fantasia || filial?.razao || '',
+      cliente_id: backnetClienteId && backnetClienteId !== '0' ? backnetClienteId : '',
+      cliente_nome: clienteBacknet?.nome_fantasia || clienteBacknet?.razao_social || '',
       cidade_nome: cidade?.nome ?? '',
     };
   });
@@ -858,6 +914,7 @@ export class IxcOssChamadoService {
       ...stripCamposEnriquecidos(atual),
       ...sanitizeInput(payload),
     };
+    applyBacknetCliente(payload, body);
 
     try {
       const response = await createIxcClient().put<IxcActionResponse>(`/${IXC_RESOURCE}/${id}`, body);

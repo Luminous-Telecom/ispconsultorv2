@@ -5,6 +5,7 @@ import { useCreateOrdemServico, useUpdateOrdemServico } from 'hooks/useOrdensSer
 import { OrdemServicoService } from 'services/ordemServicoService';
 import type { CreateOrdemServico } from 'services/ordemServicoService';
 import { useFiliais, useEstruturas, useTecnicos, useAssuntos, useSetores } from 'hooks/useIxcLookups';
+import ClienteListModal from 'components/modals/clientes/ClienteListModal';
 import DraggableModal from 'components/common/DraggableModal';
 import { ModalFormActions, Spinner } from 'components/ui';
 import OrdemServicoFormFields, {
@@ -44,11 +45,14 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
 
   const [formData, setFormData] = useState<OrdemServicoFormData>(initialOrdemServicoForm);
   const [errors, setErrors] = useState<Partial<Record<keyof OrdemServicoFormData, string>>>({});
+  const [clienteId, setClienteId] = useState(0);
+  const [clienteNome, setClienteNome] = useState('');
   const [filialNome, setFilialNome] = useState('');
   const [estruturaNome, setEstruturaNome] = useState('');
   const [tecnicoNome, setTecnicoNome] = useState('');
   const [assuntoNome, setAssuntoNome] = useState('');
   const [setorNome, setSetorNome] = useState('');
+  const [showClienteModal, setShowClienteModal] = useState(false);
   const [showFilialModal, setShowFilialModal] = useState(false);
   const [showEstruturaModal, setShowEstruturaModal] = useState(false);
   const [showTecnicoModal, setShowTecnicoModal] = useState(false);
@@ -81,6 +85,8 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
         data_agenda: ixcToDatetimeLocal(String(ordemData.data_agenda ?? '')),
         mensagem: String(ordemData.mensagem ?? ''),
       });
+      setClienteId(Number(ordemData.cliente_id ?? 0) || 0);
+      setClienteNome(String(ordemData.cliente_nome ?? ''));
       setFilialNome(String(ordemData.filial_nome ?? ''));
       setEstruturaNome(String(ordemData.estrutura_nome ?? ''));
       setTecnicoNome(String(ordemData.tecnico_nome ?? ''));
@@ -88,6 +94,8 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
       setSetorNome(String(ordemData.setor_nome ?? ''));
     } else if (!isEdit) {
       setFormData(initialOrdemServicoForm);
+      setClienteId(0);
+      setClienteNome('');
       setFilialNome('');
       setEstruturaNome('');
       setTecnicoNome('');
@@ -135,9 +143,9 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
       // Status não é enviado: na criação o IXC abre como Aberta; na edição o atual é preservado.
       const payload: CreateOrdemServico = {
         ...formData,
+        cliente_id: clienteId || undefined,
         data_agenda: datetimeLocalToIxc(formData.data_agenda),
         tipo: 'E',
-        id_cliente: '0',
         origem_endereco_estrutura: 'E',
       };
       if (isEdit && ordemServicoId != null) {
@@ -186,11 +194,18 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
               errors={errors}
               onChange={handleChange}
               disabled={isPending}
+              clienteId={clienteId}
+              onClienteIdChange={(id) => {
+                setClienteId(id);
+                if (!id) setClienteNome('');
+              }}
+              clienteNome={clienteNome}
               filialNome={filialNome}
               estruturaNome={estruturaNome}
               tecnicoNome={tecnicoNome}
               assuntoNome={assuntoNome}
               setorNome={setorNome}
+              onShowClienteModal={() => setShowClienteModal(true)}
               onShowFilialModal={() => setShowFilialModal(true)}
               onShowEstruturaModal={() => setShowEstruturaModal(true)}
               onShowTecnicoModal={() => setShowTecnicoModal(true)}
@@ -200,6 +215,17 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
           </form>
         )}
       </DraggableModal>
+
+      <ClienteListModal
+        show={showClienteModal}
+        onClose={() => setShowClienteModal(false)}
+        onSelectClient={(cliente) => {
+          setClienteId(cliente.id);
+          setClienteNome(cliente.razao_social || cliente.nome_fantasia || String(cliente.id));
+          setShowClienteModal(false);
+        }}
+        title="Selecionar Cliente"
+      />
 
       <IxcLookupSelectModal
         show={showFilialModal}

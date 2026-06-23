@@ -8,11 +8,12 @@ import { PaginatedResponse } from '../types';
 
 export interface OrdemServico {
   id: string | number;
-  id_cliente?: string;
+  cliente_id?: string | number;
   id_estrutura?: string;
   id_filial?: string;
   estrutura_nome?: string;
   filial_nome?: string;
+  cliente_nome?: string;
   tecnico_nome?: string;
   assunto_nome?: string;
   setor_nome?: string;

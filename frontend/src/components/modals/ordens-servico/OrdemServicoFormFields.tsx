@@ -56,11 +56,15 @@ interface OrdemServicoFormFieldsProps {
   errors: Partial<Record<keyof OrdemServicoFormData, string>>;
   onChange: (field: keyof OrdemServicoFormData, value: string) => void;
   disabled?: boolean;
+  clienteId?: number;
+  onClienteIdChange?: (value: number) => void;
+  clienteNome?: string;
   filialNome?: string;
   estruturaNome?: string;
   tecnicoNome?: string;
   assuntoNome?: string;
   setorNome?: string;
+  onShowClienteModal?: () => void;
   onShowFilialModal?: () => void;
   onShowEstruturaModal?: () => void;
   onShowTecnicoModal?: () => void;
@@ -73,11 +77,15 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
   errors,
   onChange,
   disabled = false,
+  clienteId = 0,
+  onClienteIdChange,
+  clienteNome = '',
   filialNome = '',
   estruturaNome = '',
   tecnicoNome = '',
   assuntoNome = '',
   setorNome = '',
+  onShowClienteModal,
   onShowFilialModal,
   onShowEstruturaModal,
   onShowTecnicoModal,
@@ -86,6 +94,17 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
 }) => {
   return (
     <div className="row g-2">
+      <div className="col-md-6">
+        <EntitySelectField
+          label="Cliente"
+          value={clienteId}
+          onChange={(v) => onClienteIdChange?.(v)}
+          onShowModal={onShowClienteModal}
+          entities={clienteId && clienteNome ? [{ id: clienteId, nome: clienteNome }] : []}
+          idFieldTitle="ID do cliente"
+          searchButtonTitle="Buscar cliente"
+        />
+      </div>
       <div className="col-md-6">
         <EntitySelectField
           stringIdMode
