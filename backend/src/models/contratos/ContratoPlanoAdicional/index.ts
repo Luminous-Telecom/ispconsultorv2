@@ -75,7 +75,7 @@ ContratoPlanoAdicional.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'adm_contratos_contratos',
+        model: 'contratos',
         key: 'id'
       }
     },
@@ -83,7 +83,7 @@ ContratoPlanoAdicional.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'adm_cadastros_planos',
+        model: 'cadastros_planos',
         key: 'id'
       }
     },
@@ -129,7 +129,7 @@ ContratoPlanoAdicional.init(
   {
     sequelize,
     modelName: 'ContratoPlanoAdicional',
-    tableName: 'adm_contratos_contrato_planos_adicionais',
+    tableName: 'contratos_planos_adicionais',
     timestamps: true,
     underscored: true,
     indexes: [

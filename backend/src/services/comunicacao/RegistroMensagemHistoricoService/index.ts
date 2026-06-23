@@ -1,5 +1,5 @@
 /**
- * Serviço para registrar mensagens no histórico unificado (adm_comunicacao_mensagens_historico)
+ * Serviço para registrar mensagens no histórico unificado (comunicacao_mensagens_historico)
  */
 import { MensagemHistorico } from '../../../models/comunicacao/MensagemHistorico';
 import {

@@ -5,7 +5,7 @@ import { SaasBanco } from '../../../models/saas/SaasBanco';
 import { BancoApiService } from '../../bancos/BancoApiService';
 
 /**
- * Gera boleto para SaasTitulo. Sacado vem do tenant (adm_sistema_tenants).
+ * Gera boleto para SaasTitulo. Sacado vem do tenant (sistema_tenants).
  * Adapta SaasPlano.nome -> nome_plano e usa bancoTable='saas_bancos'.
  */
 export class SaasTituloBoletoService {

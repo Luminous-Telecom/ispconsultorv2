@@ -54,14 +54,14 @@ RpkiCa.init(
     empresa_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      references: { model: 'adm_sistema_tenants', key: 'id' },
+      references: { model: 'sistema_tenants', key: 'id' },
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL',
     },
     cliente_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      references: { model: 'adm_clientes_clientes', key: 'id' },
+      references: { model: 'clientes', key: 'id' },
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL',
     },

@@ -37,7 +37,7 @@ NumeroSeiAnatelBlockdomi.init(
   {
     sequelize,
     modelName: 'NumeroSeiAnatelBlockdomi',
-    tableName: 'adm_blockdomi_numeros_sei_anatel',
+    tableName: 'blockdomi_numeros_sei_anatel',
     timestamps: true,
     underscored: true,
     updatedAt: false

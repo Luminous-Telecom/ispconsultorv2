@@ -131,7 +131,7 @@ export class ContratoService {
         if (searchField === 'cliente' || searchField === 'cliente_razao_social') {
           const clienteIdNum = /^\d+$/.test(searchString) ? parseInt(searchString, 10) : null;
           const conditions: any[] = [
-            sequelize.literal(`EXISTS (SELECT 1 FROM adm_clientes_clientes WHERE adm_clientes_clientes.id = Contrato.cliente_id AND (adm_clientes_clientes.razao_social LIKE '${escapedPattern}' OR adm_clientes_clientes.nome_fantasia LIKE '${escapedPattern}'))`)
+            sequelize.literal(`EXISTS (SELECT 1 FROM clientes WHERE clientes.id = Contrato.cliente_id AND (clientes.razao_social LIKE '${escapedPattern}' OR clientes.nome_fantasia LIKE '${escapedPattern}'))`)
           ];
           if (clienteIdNum !== null) {
             conditions.push(sequelize.literal(`Contrato.cliente_id = ${clienteIdNum}`));
@@ -140,7 +140,7 @@ export class ContratoService {
         } else if (searchField === 'plano' || searchField === 'plano_nome') {
           const planoIdNum = /^\d+$/.test(searchString) ? parseInt(searchString, 10) : null;
           const conditions: any[] = [
-            sequelize.literal(`EXISTS (SELECT 1 FROM adm_cadastros_planos WHERE adm_cadastros_planos.id = Contrato.plano_id AND adm_cadastros_planos.nome_plano LIKE '${escapedPattern}')`)
+            sequelize.literal(`EXISTS (SELECT 1 FROM cadastros_planos WHERE cadastros_planos.id = Contrato.plano_id AND cadastros_planos.nome_plano LIKE '${escapedPattern}')`)
           ];
           if (planoIdNum !== null) {
             conditions.push(sequelize.literal(`Contrato.plano_id = ${planoIdNum}`));
@@ -164,8 +164,8 @@ export class ContratoService {
         const numExact = /^\d+$/.test(searchString) ? parseInt(searchString, 10) : null;
         const conditions: any[] = [
           { status: { [Op.like]: searchPattern } },
-          sequelize.literal(`EXISTS (SELECT 1 FROM adm_clientes_clientes WHERE adm_clientes_clientes.id = Contrato.cliente_id AND (adm_clientes_clientes.razao_social LIKE '${escapedPattern}' OR adm_clientes_clientes.nome_fantasia LIKE '${escapedPattern}'))`),
-          sequelize.literal(`EXISTS (SELECT 1 FROM adm_cadastros_planos WHERE adm_cadastros_planos.id = Contrato.plano_id AND adm_cadastros_planos.nome_plano LIKE '${escapedPattern}')`)
+          sequelize.literal(`EXISTS (SELECT 1 FROM clientes WHERE clientes.id = Contrato.cliente_id AND (clientes.razao_social LIKE '${escapedPattern}' OR clientes.nome_fantasia LIKE '${escapedPattern}'))`),
+          sequelize.literal(`EXISTS (SELECT 1 FROM cadastros_planos WHERE cadastros_planos.id = Contrato.plano_id AND cadastros_planos.nome_plano LIKE '${escapedPattern}')`)
         ];
         if (numExact !== null) {
           conditions.unshift({ id: numExact });
@@ -180,7 +180,7 @@ export class ContratoService {
     if (em_atraso) {
       whereClause.status = 'ativo';
       const emAtrasoLiteral = sequelize.literal(`EXISTS (
-        SELECT 1 FROM adm_financeiro_titulos t
+        SELECT 1 FROM financeiro_titulos t
         WHERE t.contrato_id = \`Contrato\`.\`id\`
         AND t.pago = 0
         AND t.status IN ('pendente', 'vencido')
@@ -199,7 +199,7 @@ export class ContratoService {
 
     if (excluir_em_atraso && !em_atraso) {
       const semAtrasoLiteral = sequelize.literal(`NOT EXISTS (
-        SELECT 1 FROM adm_financeiro_titulos t
+        SELECT 1 FROM financeiro_titulos t
         WHERE t.contrato_id = \`Contrato\`.\`id\`
         AND t.pago = 0
         AND t.status IN ('pendente', 'vencido')
@@ -225,11 +225,11 @@ export class ContratoService {
     if (tipo_servico) {
       const escaped = String(tipo_servico).replace(/'/g, "''");
       const subquery = `(
-        SELECT c.id FROM adm_contratos_contratos c
-        WHERE EXISTS (SELECT 1 FROM adm_cadastros_planos p WHERE p.id = c.plano_id AND p.tipo_servico = '${escaped}')
+        SELECT c.id FROM contratos c
+        WHERE EXISTS (SELECT 1 FROM cadastros_planos p WHERE p.id = c.plano_id AND p.tipo_servico = '${escaped}')
         OR EXISTS (
-          SELECT 1 FROM adm_contratos_contrato_planos_adicionais cpa
-          INNER JOIN adm_cadastros_planos p ON cpa.plano_id = p.id
+          SELECT 1 FROM contratos_planos_adicionais cpa
+          INNER JOIN cadastros_planos p ON cpa.plano_id = p.id
           WHERE cpa.contrato_id = c.id AND cpa.status = 'ativo' AND p.tipo_servico = '${escaped}'
         )
       )`;

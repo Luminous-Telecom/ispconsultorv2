@@ -99,7 +99,7 @@ IPv4.init(
     numero_sei_anatel_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      references: { model: 'adm_blockdomi_numeros_sei_anatel', key: 'id' },
+      references: { model: 'blockdomi_numeros_sei_anatel', key: 'id' },
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL'
     },
@@ -111,7 +111,7 @@ IPv4.init(
     versao_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      references: { model: 'adm_blockdomi_versoes', key: 'id' },
+      references: { model: 'blockdomi_versoes', key: 'id' },
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL'
     },
@@ -129,7 +129,7 @@ IPv4.init(
   {
     sequelize,
     modelName: 'IPv4',
-    tableName: 'adm_blockdomi_ipv4',
+    tableName: 'blockdomi_ipv4',
     timestamps: true,
     underscored: true,
     indexes: [

@@ -61,7 +61,7 @@ ContratoIntegracaoIxcVinculo.init(
   {
     sequelize,
     modelName: 'ContratoIntegracaoIxcVinculo',
-    tableName: 'adm_contratos_integracao_ixc_vinculos',
+    tableName: 'contratos_integracao_ixc_vinculos',
     timestamps: true,
     underscored: true,
   }

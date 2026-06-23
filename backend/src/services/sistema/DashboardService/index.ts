@@ -153,15 +153,15 @@ export class DashboardService {
     }
     const rows = await sequelize.query<{ tipo_servico: string; quantidade: string }>(
       `SELECT tipo_servico, COUNT(*) as quantidade FROM (
-        SELECT DISTINCT c.cliente_id, p.tipo_servico FROM adm_contratos_contratos c
-        INNER JOIN adm_cadastros_planos p ON c.plano_id = p.id
-        INNER JOIN adm_clientes_clientes cl ON c.cliente_id = cl.id
+        SELECT DISTINCT c.cliente_id, p.tipo_servico FROM contratos c
+        INNER JOIN cadastros_planos p ON c.plano_id = p.id
+        INNER JOIN clientes cl ON c.cliente_id = cl.id
         WHERE c.status = 'ativo' AND c.cliente_id IS NOT NULL AND cl.ativo = 1 AND p.status = 'ativo'${empresaFilter}
         UNION
-        SELECT DISTINCT c.cliente_id, p.tipo_servico FROM adm_contratos_contrato_planos_adicionais cpa
-        INNER JOIN adm_contratos_contratos c ON cpa.contrato_id = c.id
-        INNER JOIN adm_cadastros_planos p ON cpa.plano_id = p.id
-        INNER JOIN adm_clientes_clientes cl ON c.cliente_id = cl.id
+        SELECT DISTINCT c.cliente_id, p.tipo_servico FROM contratos_planos_adicionais cpa
+        INNER JOIN contratos c ON cpa.contrato_id = c.id
+        INNER JOIN cadastros_planos p ON cpa.plano_id = p.id
+        INNER JOIN clientes cl ON c.cliente_id = cl.id
         WHERE c.status = 'ativo' AND cpa.status = 'ativo' AND cl.ativo = 1 AND p.status = 'ativo'${empresaFilter}
       ) AS sub GROUP BY tipo_servico`,
       { type: QueryTypes.SELECT, replacements: Object.keys(replacements).length ? replacements : undefined }
@@ -203,17 +203,17 @@ export class DashboardService {
         COALESCE(SUM(valor_contrato), 0) AS soma_valor
       FROM (
         SELECT c.cliente_id, p.tipo_servico, ${valorC} AS valor_contrato
-        FROM adm_contratos_contratos c
-        INNER JOIN adm_cadastros_planos p ON c.plano_id = p.id
-        INNER JOIN adm_clientes_clientes cl ON c.cliente_id = cl.id
+        FROM contratos c
+        INNER JOIN cadastros_planos p ON c.plano_id = p.id
+        INNER JOIN clientes cl ON c.cliente_id = cl.id
         WHERE c.status = 'ativo' AND c.cliente_id IS NOT NULL
           AND c.isento_mensalidade = 0 AND cl.ativo = 1 AND p.status = 'ativo'${empresaFilterC}
         UNION ALL
         SELECT c.cliente_id, p.tipo_servico, ${valorCpa} AS valor_contrato
-        FROM adm_contratos_contrato_planos_adicionais cpa
-        INNER JOIN adm_contratos_contratos c ON cpa.contrato_id = c.id
-        INNER JOIN adm_cadastros_planos p ON cpa.plano_id = p.id
-        INNER JOIN adm_clientes_clientes cl ON c.cliente_id = cl.id
+        FROM contratos_planos_adicionais cpa
+        INNER JOIN contratos c ON cpa.contrato_id = c.id
+        INNER JOIN cadastros_planos p ON cpa.plano_id = p.id
+        INNER JOIN clientes cl ON c.cliente_id = cl.id
         WHERE c.status = 'ativo' AND cpa.status = 'ativo' AND c.cliente_id IS NOT NULL
           AND c.isento_mensalidade = 0 AND cl.ativo = 1 AND p.status = 'ativo'${empresaFilterCpa}
       ) AS sub
@@ -1073,7 +1073,7 @@ export class DashboardService {
   }
 
   /**
-   * Série diária de status de backup (tabela adm_ssh_manager_ssh_device_backup_events), para gráfico empilhado no dashboard.
+   * Série diária de status de backup (tabela ssh_manager_device_backup_events), para gráfico empilhado no dashboard.
    */
   static async getBackupStatusGrafico(
     startDate: Date,
@@ -1085,7 +1085,7 @@ export class DashboardService {
     const fim = new Date(endDate);
     fim.setHours(23, 59, 59, 999);
 
-    /** Eventos podem ter `empresa_id` NULL (gravado a partir do device); o tenant do equipamento em `adm_ssh_manager_ssh_devices` vale. */
+    /** Eventos podem ter `empresa_id` NULL (gravado a partir do device); o tenant do equipamento em `ssh_manager_devices` vale. */
     const empresaClause =
       empresaId != null
         ? ' AND (e.empresa_id = :empresaId OR (e.empresa_id IS NULL AND d.empresa_id = :empresaId))'
@@ -1097,8 +1097,8 @@ export class DashboardService {
 
     const rows = await sequelize.query<{ dia: unknown; status: string; total: string | number }>(
       `SELECT DATE_FORMAT(e.created_at, '%Y-%m-%d') AS dia, e.status, COUNT(*) AS total
-       FROM adm_ssh_manager_ssh_device_backup_events e
-       INNER JOIN adm_ssh_manager_ssh_devices d ON d.id = e.ssh_device_id
+       FROM ssh_manager_device_backup_events e
+       INNER JOIN ssh_manager_devices d ON d.id = e.ssh_device_id
        WHERE e.created_at >= :inicio AND e.created_at <= :fim${empresaClause}
        GROUP BY DATE_FORMAT(e.created_at, '%Y-%m-%d'), e.status`,
       { replacements, type: QueryTypes.SELECT }
@@ -1241,8 +1241,8 @@ export class DashboardService {
           b.size_bytes AS sizeBytes,
           b.started_at AS startedAt,
           b.finished_at AS finishedAt
-         FROM adm_ssh_manager_ssh_device_backups b
-         INNER JOIN adm_ssh_manager_ssh_devices d ON d.id = b.ssh_device_id
+         FROM ssh_manager_device_backups b
+         INNER JOIN ssh_manager_devices d ON d.id = b.ssh_device_id
          WHERE DATE(b.finished_at) = :dia${empresaClauseD}
          ORDER BY b.finished_at DESC, d.name, b.file_name`,
         { replacements, type: QueryTypes.SELECT }
@@ -1286,8 +1286,8 @@ export class DashboardService {
         e.created_at AS startedAt,
         e.created_at AS finishedAt,
         e.detail AS detail
-       FROM adm_ssh_manager_ssh_device_backup_events e
-       INNER JOIN adm_ssh_manager_ssh_devices d ON d.id = e.ssh_device_id
+       FROM ssh_manager_device_backup_events e
+       INNER JOIN ssh_manager_devices d ON d.id = e.ssh_device_id
        WHERE DATE(e.created_at) = :dia AND e.status = :status${empresaClauseE}
        ORDER BY e.created_at DESC, d.name`,
       { replacements, type: QueryTypes.SELECT }

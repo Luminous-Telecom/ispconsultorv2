@@ -1,5 +1,5 @@
 /**
- * Registro de auditoria no MySQL (adm_sistema_logs_operacionais).
+ * Registro de auditoria no MySQL (sistema_logs_operacionais).
  */
 import { Request } from 'express';
 import { JwtPayload } from 'jsonwebtoken';
@@ -238,5 +238,5 @@ export async function registrarExecucaoRotinaAuditoria(_params: {
   usuario?: UsuarioAuditoria | null;
   ipAddress?: string | null;
 }): Promise<void> {
-  /* Log unificado em adm_sistema_logs_operacionais via RotinaExecucaoLogService */
+  /* Log unificado em sistema_logs_operacionais via RotinaExecucaoLogService */
 }

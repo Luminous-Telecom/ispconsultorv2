@@ -176,7 +176,7 @@ ServidorWhatsApp.init(
   },
   {
     sequelize,
-    tableName: 'adm_comunicacao_servidores_whatsapp',
+    tableName: 'comunicacao_servidores_whatsapp',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',

@@ -237,7 +237,7 @@ Plano.init(
   {
     sequelize,
     modelName: 'Plano',
-    tableName: 'adm_cadastros_planos',
+    tableName: 'cadastros_planos',
     timestamps: true,
     underscored: true,
     indexes: [

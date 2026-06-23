@@ -41,7 +41,7 @@ export interface SincronizarSeiAnatelDominiosRow {
   quantidade_dominios: number;
   /** Nome do ofício (referência ao primeiro domínio do grupo com esse PDF) */
   nome_oficio?: string | null;
-  /** Número da versão Blockdomi (adm_blockdomi_versoes.numero), exibido como "serial" nos logs */
+  /** Número da versão Blockdomi (blockdomi_versoes.numero), exibido como "serial" nos logs */
   versao_numero?: string | null;
   sei?: string;
   erro?: string;
@@ -487,7 +487,7 @@ export class DominioService {
     const { sequelize } = await import('../../../config/database');
     const { QueryTypes } = await import('sequelize');
     await sequelize.query(
-      `INSERT INTO adm_operacoes_blockdomi (tipo, versao_id, quantidade, ids_deletados, created_at) 
+      `INSERT INTO blockdomi_operacoes (tipo, versao_id, quantidade, ids_deletados, created_at) 
        VALUES ('dominio_delete', :versaoId, 1, :ids, NOW())`,
       {
         replacements: { versaoId, ids: JSON.stringify([Number(id)]) },
@@ -519,7 +519,7 @@ export class DominioService {
     const { sequelize } = await import('../../../config/database');
     const { QueryTypes } = await import('sequelize');
     await sequelize.query(
-      `INSERT INTO adm_operacoes_blockdomi (tipo, versao_id, quantidade, ids_deletados, created_at) 
+      `INSERT INTO blockdomi_operacoes (tipo, versao_id, quantidade, ids_deletados, created_at) 
        VALUES ('dominio_delete', :versaoId, :qtd, :ids, NOW())`,
       {
         replacements: { versaoId, qtd: deleted, ids: JSON.stringify(idsNum) },

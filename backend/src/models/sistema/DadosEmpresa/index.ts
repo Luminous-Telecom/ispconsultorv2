@@ -154,7 +154,7 @@ DadosEmpresa.init(
   },
   {
     sequelize,
-    tableName: 'adm_sistema_tenants',
+    tableName: 'sistema_tenants',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',

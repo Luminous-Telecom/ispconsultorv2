@@ -183,7 +183,7 @@ export class SaasDadosEmpresaService {
   static async getDashboardStats() {
     const total = await DadosEmpresa.count();
     const [{ total: totalUsuarios }] = await sequelize.query<{ total: number }>(
-      `SELECT COUNT(id) AS total FROM adm_cadastros_usuarios`,
+      `SELECT COUNT(id) AS total FROM cadastros_usuarios`,
       { type: QueryTypes.SELECT }
     );
     return { total, totalUsuarios: Number(totalUsuarios) };

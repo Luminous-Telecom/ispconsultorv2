@@ -16,7 +16,7 @@ export class SistemaLogOperacional extends Model<
   declare usuario_id: number | null;
   declare canal: string;
   declare tipo: string;
-  /** Nome da entidade/tabela afetada (ex.: Cliente, adm_financeiro_titulos) */
+  /** Nome da entidade/tabela afetada (ex.: Cliente, financeiro_titulos) */
   declare tabela: string | null;
   declare recurso: string | null;
   declare recurso_id: string | null;
@@ -88,7 +88,7 @@ SistemaLogOperacional.init(
   {
     sequelize,
     modelName: 'SistemaLogOperacional',
-    tableName: 'adm_sistema_logs_operacionais',
+    tableName: 'sistema_logs_operacionais',
     timestamps: false,
     underscored: true,
   }

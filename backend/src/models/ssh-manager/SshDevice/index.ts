@@ -136,7 +136,7 @@ SshDevice.init(
   {
     sequelize,
     modelName: 'SshDevice',
-    tableName: 'adm_ssh_manager_ssh_devices',
+    tableName: 'ssh_manager_devices',
     timestamps: true,
     underscored: true,
     indexes: [

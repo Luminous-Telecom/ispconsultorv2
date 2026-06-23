@@ -106,7 +106,7 @@ Agent.init(
   {
     sequelize,
     modelName: 'Agent',
-    tableName: 'adm_agent_agents',
+    tableName: 'agent_agents',
     timestamps: true,
     underscored: true,
     indexes: [

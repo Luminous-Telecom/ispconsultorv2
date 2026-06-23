@@ -55,7 +55,7 @@ router.delete('/titulos/:id', SaasTituloController.delete);
 router.post('/titulos/:id/pagar', SaasTituloController.marcarPago);
 router.post('/titulos/:id/gerar-boleto', SaasTituloController.gerarBoleto);
 
-// Usuários do tenant (adm_cadastros_usuarios por empresa_id)
+// Usuários do tenant (cadastros_usuarios por empresa_id)
 router.get('/tenant-usuarios', SaasTenantUsuarioController.list);
 router.get('/tenant-usuarios/:id', SaasTenantUsuarioController.getById);
 router.post('/tenant-usuarios', SaasTenantUsuarioController.create);

@@ -25,7 +25,7 @@ function jobKey(source: RoutineSource, id: number): string {
 
 /**
  * Serviço responsável por gerenciar agendamento de rotinas (CRON jobs).
- * Agenda rotinas no SaaS (saas_scheduled_routines). Rotinas adm_sistema_scheduled_routines não são mais carregadas.
+ * Agenda rotinas no SaaS (saas_scheduled_routines). Rotinas sistema_scheduled_routines não são mais carregadas.
  *
  * @class RoutineScheduleService
  */

@@ -120,7 +120,7 @@ NFSeConfig.init(
   },
   {
     sequelize,
-    tableName: 'adm_nfse_config',
+    tableName: 'nfse_config',
     timestamps: true,
     underscored: true
   }

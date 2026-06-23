@@ -116,7 +116,7 @@ Contrato.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'adm_clientes_clientes',
+        model: 'clientes',
         key: 'id'
       }
     },
@@ -124,7 +124,7 @@ Contrato.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'adm_cadastros_planos',
+        model: 'cadastros_planos',
         key: 'id'
       }
     },
@@ -184,7 +184,7 @@ Contrato.init(
       allowNull: true,
       comment: 'ID do banco para geração de boleto',
       references: {
-        model: 'adm_cadastros_bancos',
+        model: 'cadastros_bancos',
         key: 'id'
       }
     },
@@ -207,7 +207,7 @@ Contrato.init(
   {
     sequelize,
     modelName: 'Contrato',
-    tableName: 'adm_contratos_contratos',
+    tableName: 'contratos',
     timestamps: true,
     underscored: true,
     indexes: [

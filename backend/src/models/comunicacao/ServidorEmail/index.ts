@@ -143,7 +143,7 @@ ServidorEmail.init(
   },
   {
     sequelize,
-    tableName: 'adm_comunicacao_servidores_email',
+    tableName: 'comunicacao_servidores_email',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',

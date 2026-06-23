@@ -1,7 +1,7 @@
 /**
  * Middleware que restringe acesso às rotas TXT do Blockdomi (dominios, versao, ipv4, ipv6)
  * somente para IPs cadastrados em ips_permitidos_blockdomi.
- * Registra log de acesso (IP, rota, status) em adm_sistema_logs_operacionais para requisições a essas rotas.
+ * Registra log de acesso (IP, rota, status) em sistema_logs_operacionais para requisições a essas rotas.
  */
 import { Request, Response, NextFunction } from 'express';
 import { IpPermitidoService } from '../../services/blockdomi/IpPermitidoService';

@@ -51,7 +51,7 @@ DiasVencimento.init(
   },
   {
     sequelize,
-    tableName: 'adm_cadastros_dias_vencimento',
+    tableName: 'cadastros_dias_vencimento',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',

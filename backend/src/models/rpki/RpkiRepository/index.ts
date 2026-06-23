@@ -38,7 +38,7 @@ RpkiRepository.init(
     empresa_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      references: { model: 'adm_sistema_tenants', key: 'id' },
+      references: { model: 'sistema_tenants', key: 'id' },
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL',
     },

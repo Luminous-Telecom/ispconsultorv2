@@ -95,7 +95,7 @@ export class DadosEmpresaController {
   }
 
   /**
-   * Lista saas_titulos por empresa_id (adm_sistema_tenants).
+   * Lista saas_titulos por empresa_id (sistema_tenants).
    * Usa auth admin para permitir visualizar titulos SaaS da empresa no modal Dados Empresa.
    * Query: tipo=abertas (pendente,vencido) ou tipo=pagas (pago,pago_atraso,parcial). Default: abertas.
    */

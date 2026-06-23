@@ -70,7 +70,7 @@ IntegracaoIxcProvedor.init(
   {
     sequelize,
     modelName: 'IntegracaoIxcProvedor',
-    tableName: 'adm_integracao_ixc_provedor',
+    tableName: 'integracao_ixc_provedor',
     timestamps: true,
     underscored: true,
   }

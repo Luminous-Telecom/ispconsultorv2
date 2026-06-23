@@ -32,7 +32,7 @@ export interface RegistrarLogOperacionalInput {
   canal?: LogOperacionalCanal;
   /** Ex.: inseriu, editou, excluiu, login, executou */
   tipo: string;
-  /** Nome físico da tabela MySQL (ex.: adm_financeiro_titulos), se já conhecido */
+  /** Nome físico da tabela MySQL (ex.: financeiro_titulos), se já conhecido */
   tabela?: string | null;
   /** Rótulo lógico da auditoria (ex.: Titulo, Cliente); usado para resolver `tabela` quando não for literal */
   recurso?: string | null;
@@ -716,7 +716,7 @@ export class SistemaLogOperacionalService {
     const tabela =
       params.origem === 'saas'
         ? 'saas_scheduled_routines'
-        : 'adm_sistema_scheduled_routines';
+        : 'sistema_scheduled_routines';
     const tipo = 'executou';
     const nome = params.routineNome.slice(0, 200);
     const payload: Record<string, unknown> = {
@@ -798,7 +798,7 @@ export class SistemaLogOperacionalService {
     const tabela =
       params.origem === 'saas'
         ? 'saas_scheduled_routines'
-        : 'adm_sistema_scheduled_routines';
+        : 'sistema_scheduled_routines';
     const nome = params.routineNome.slice(0, 200);
     const row = await SistemaLogOperacional.create({
       empresa_id: params.empresaId != null && params.empresaId > 0 ? params.empresaId : null,
