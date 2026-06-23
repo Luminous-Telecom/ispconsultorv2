@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { ContratoController } from '../../controllers/contratos/ContratoController';
 import { ContratoPlanoAdicionalController } from '../../controllers/contratos/ContratoPlanoAdicionalController';
+import { ContratoIntegracaoIxcController } from '../../controllers/contratos/ContratoIntegracaoIxcController';
 
 const router = Router();
 
@@ -13,6 +14,8 @@ router.get('/cliente/:clienteId', ContratoController.getByCliente);
 // IMPORTANTE: Rotas com caminhos fixos devem vir antes de rotas com parâmetros dinâmicos
 router.get('/:contrato_id/servicos-adicionais', ContratoPlanoAdicionalController.list);
 router.post('/:contrato_id/servicos-adicionais', ContratoPlanoAdicionalController.create);
+router.get('/:contrato_id/integracao-ixc', ContratoIntegracaoIxcController.getByContrato);
+router.put('/:contrato_id/integracao-ixc', ContratoIntegracaoIxcController.link);
 // Rotas com caminho fixo "servicos-adicionais" devem vir antes de rotas genéricas
 router.put('/servicos-adicionais/:id', ContratoPlanoAdicionalController.update);
 router.delete('/servicos-adicionais/:id', ContratoPlanoAdicionalController.delete);

@@ -503,6 +503,7 @@ const enUS: TranslationKeys = {
 
   // Parameters Menu
     'params.users': 'Users',
+    'params.integrations': 'Integrations',
     'params.auditLogs': 'Audit Logs',
     'params.systemResources': 'System Resources',
     'params.taskScheduler': 'Task Scheduler',

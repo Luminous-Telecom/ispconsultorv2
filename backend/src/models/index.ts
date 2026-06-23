@@ -10,6 +10,7 @@ import { ClienteArquivo } from './clientes/ClienteArquivo';
 // Contratos
 import { Contrato } from './contratos/Contrato';
 import { ContratoPlanoAdicional } from './contratos/ContratoPlanoAdicional';
+import { IntegracaoIxcProvedor } from './integracao/IntegracaoIxcProvedor';
 import { TermoContrato } from './contratos/TermoContrato';
 
 // Documentos
@@ -223,6 +224,16 @@ ContratoPlanoAdicional.belongsTo(Plano, {
 Plano.hasMany(ContratoPlanoAdicional, {
   foreignKey: 'plano_id',
   as: 'contratosAdicionais'
+});
+
+Contrato.belongsTo(IntegracaoIxcProvedor, {
+  foreignKey: 'integracao_ixc_provedor_id',
+  as: 'integracaoIxcProvedor',
+});
+
+IntegracaoIxcProvedor.hasMany(Contrato, {
+  foreignKey: 'integracao_ixc_provedor_id',
+  as: 'contratos',
 });
 
 TermoContrato.belongsTo(ModeloDocumento, {
@@ -464,6 +475,7 @@ export {
   Titulo,
   Contrato,
   ContratoPlanoAdicional,
+  IntegracaoIxcProvedor,
   DadosEmpresa,
   ScheduledRoutine,
   ServidorEmail,

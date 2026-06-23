@@ -2,18 +2,20 @@ import { Request, Response } from 'express';
 import { IxcOssChamadoService } from '../../../services/externos/IxcOssChamadoService';
 import { sendSuccess, sendError } from '../../../utils/responseUtils';
 import { parseListQuery } from '../../../utils/listQuery';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class IxcLookupController {
   static async listEstruturas(req: Request, res: Response): Promise<void> {
     try {
       const { page, limit, search, sortColumn, sortDirection } = parseListQuery(req.query);
+      const empresaId = getEmpresaIdOrNull(req);
       const result = await IxcOssChamadoService.listResource('estrutura', 'descricao', {
         page,
         limit,
         search,
         sortColumn,
         sortDirection,
-      });
+      }, {}, empresaId);
       sendSuccess(res, result);
     } catch (error) {
       sendError(res, error, 'Erro ao listar estruturas', 500, true, {
@@ -27,13 +29,14 @@ export class IxcLookupController {
   static async listAssuntos(req: Request, res: Response): Promise<void> {
     try {
       const { page, limit, search, sortColumn, sortDirection } = parseListQuery(req.query);
+      const empresaId = getEmpresaIdOrNull(req);
       const result = await IxcOssChamadoService.listResource('su_oss_assunto', 'assunto', {
         page,
         limit,
         search,
         sortColumn,
         sortDirection,
-      });
+      }, {}, empresaId);
       sendSuccess(res, result);
     } catch (error) {
       sendError(res, error, 'Erro ao listar assuntos', 500, true, {
@@ -47,13 +50,14 @@ export class IxcLookupController {
   static async listSetores(req: Request, res: Response): Promise<void> {
     try {
       const { page, limit, search, sortColumn, sortDirection } = parseListQuery(req.query);
+      const empresaId = getEmpresaIdOrNull(req);
       const result = await IxcOssChamadoService.listResource('empresa_setor', 'setor', {
         page,
         limit,
         search,
         sortColumn,
         sortDirection,
-      });
+      }, {}, empresaId);
       sendSuccess(res, result);
     } catch (error) {
       sendError(res, error, 'Erro ao listar setores', 500, true, {
@@ -67,13 +71,14 @@ export class IxcLookupController {
   static async listFiliais(req: Request, res: Response): Promise<void> {
     try {
       const { page, limit, search, sortColumn, sortDirection } = parseListQuery(req.query);
+      const empresaId = getEmpresaIdOrNull(req);
       const result = await IxcOssChamadoService.listResource('filial', 'fantasia', {
         page,
         limit,
         search,
         sortColumn,
         sortDirection,
-      });
+      }, {}, empresaId);
       sendSuccess(res, result);
     } catch (error) {
       sendError(res, error, 'Erro ao listar filiais', 500, true, {
@@ -87,6 +92,7 @@ export class IxcLookupController {
   static async listTecnicos(req: Request, res: Response): Promise<void> {
     try {
       const { page, limit, search, sortColumn, sortDirection } = parseListQuery(req.query);
+      const empresaId = getEmpresaIdOrNull(req);
       const result = await IxcOssChamadoService.listResource(
         'funcionarios',
         'funcionario',
@@ -98,7 +104,8 @@ export class IxcLookupController {
           sortDirection,
         },
         // Colaboradores > Ordem de serviço > Integração com agenda (mostrar na agenda)
-        { integracao_calendario: 'S' }
+        { integracao_calendario: 'S' },
+        empresaId
       );
       sendSuccess(res, result);
     } catch (error) {

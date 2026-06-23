@@ -5,6 +5,7 @@
  */
 import axios, { AxiosInstance, isAxiosError } from 'axios';
 import { ClienteService } from '../../clientes/ClienteService';
+import { getIxcApiCredentials, runWithIxcCredentials } from '../ixcApiContext';
 
 const IXC_RESOURCE = 'su_oss_chamado';
 const IXC_MENSAGEM_RESOURCE = 'su_oss_chamado_mensagem';
@@ -227,24 +228,17 @@ const OSS_DEFAULTS: Record<string, string> = {
 };
 
 function ixcBaseUrl(): string {
-  const raw = process.env.IXC_API_URL?.trim();
-  if (!raw) {
-    throw new Error('IXC_API_URL não configurado. Defina a URL do webservice IXC no .env.');
-  }
-  return raw.replace(/\/+$/, '');
+  return getIxcApiCredentials().apiUrl;
 }
 
 function ixcAuthHeader(): string {
-  const token = process.env.IXC_API_TOKEN?.trim();
-  if (!token) {
-    throw new Error('IXC_API_TOKEN não configurado. Defina o token do IXC no .env.');
-  }
+  const token = getIxcApiCredentials().apiToken;
   return `Basic ${Buffer.from(token).toString('base64')}`;
 }
 
 /** usuarios.id do token IXC (prefixo antes dos dois pontos). */
 function resolveOperadorId(): string {
-  return process.env.IXC_API_TOKEN?.split(':')[0]?.trim() ?? '';
+  return getIxcApiCredentials().apiToken.split(':')[0]?.trim() ?? '';
 }
 
 function paginaVazia(page: number, limit: number): ListOssChamadosResponse {
@@ -604,7 +598,7 @@ async function registrarMensagemOs(
 function wrapIxcError(error: unknown, fallback: string): Error {
   if (isAxiosError(error)) {
     if (error.response?.status === 401 || error.response?.status === 403) {
-      return new Error('Falha de autenticação no IXC. Verifique IXC_API_TOKEN.');
+      return new Error('Falha de autenticação no IXC. Verifique o token da integração.');
     }
     const data = error.response?.data as IxcActionResponse | undefined;
     if (data) {
@@ -722,70 +716,75 @@ async function enrichOsRegistros(registros: IxcOssChamado[]): Promise<IxcOssCham
 }
 
 export class IxcOssChamadoService {
-  static async list(filters: ListOssChamadosFilters = {}): Promise<ListOssChamadosResponse> {
-    const page = filters.page && filters.page > 0 ? filters.page : 1;
-    const limit = filters.limit && filters.limit > 0 ? filters.limit : 15;
-    const search = filters.search?.trim();
-    const sortColumn = filters.sortColumn?.trim() || 'id';
-    const sortDirection = filters.sortDirection === 'asc' ? 'asc' : 'desc';
-    const searchField = filters.searchField?.trim() || 'cliente_nome';
+  static async list(
+    filters: ListOssChamadosFilters = {},
+    empresaId: number | null = null
+  ): Promise<ListOssChamadosResponse> {
+    return runWithIxcCredentials(empresaId, async () => {
+      const page = filters.page && filters.page > 0 ? filters.page : 1;
+      const limit = filters.limit && filters.limit > 0 ? filters.limit : 15;
+      const search = filters.search?.trim();
+      const sortColumn = filters.sortColumn?.trim() || 'id';
+      const sortDirection = filters.sortDirection === 'asc' ? 'asc' : 'desc';
+      const searchField = filters.searchField?.trim() || 'cliente_nome';
 
-    try {
-      const operadorId = resolveOperadorId();
-      if (!operadorId) return paginaVazia(page, limit);
+      try {
+        const operadorId = resolveOperadorId();
+        if (!operadorId) return paginaVazia(page, limit);
 
-      const osIds = await fetchOsIdsAbertasPeloOperador(operadorId);
-      if (osIds.length === 0) return paginaVazia(page, limit);
+        const osIds = await fetchOsIdsAbertasPeloOperador(operadorId);
+        if (osIds.length === 0) return paginaVazia(page, limit);
 
-      const brutos = await Promise.all(osIds.map((id) => fetchOsRawById(id)));
-      let registros = brutos.filter(
-        (r): r is IxcOssChamado => !!r && Number(r.id_estrutura) > 0
-      );
-
-      if (search) {
-        const termo = search.toLowerCase();
-        if (CAMPOS_ENRIQUECIDOS.includes(searchField)) {
-          registros = await enrichOsRegistros(registros);
-        }
-        const camposBusca = [
-          searchField,
-          'mensagem',
-          'protocolo',
-          'mensagem_resposta',
-          'endereco',
-          'bairro',
-          'complemento',
-          'referencia',
-        ];
-        registros = registros.filter((r) =>
-          [...new Set(camposBusca)].some((campo) =>
-            String(r[campo] ?? '').toLowerCase().includes(termo)
-          )
+        const brutos = await Promise.all(osIds.map((id) => fetchOsRawById(id)));
+        let registros = brutos.filter(
+          (r): r is IxcOssChamado => !!r && Number(r.id_estrutura) > 0
         );
+
+        if (search) {
+          const termo = search.toLowerCase();
+          if (CAMPOS_ENRIQUECIDOS.includes(searchField)) {
+            registros = await enrichOsRegistros(registros);
+          }
+          const camposBusca = [
+            searchField,
+            'mensagem',
+            'protocolo',
+            'mensagem_resposta',
+            'endereco',
+            'bairro',
+            'complemento',
+            'referencia',
+          ];
+          registros = registros.filter((r) =>
+            [...new Set(camposBusca)].some((campo) =>
+              String(r[campo] ?? '').toLowerCase().includes(termo)
+            )
+          );
+        }
+
+        registros = sortRegistros(registros, sortColumn, sortDirection);
+
+        const total = registros.length;
+        const lastPage = Math.max(1, Math.ceil(total / limit) || 1);
+        const offset = (page - 1) * limit;
+        const pagina = registros.slice(offset, offset + limit);
+        const data = await enrichOsRegistros(pagina);
+
+        return {
+          data,
+          pagination: {
+            current_page: page,
+            per_page: limit,
+            total,
+            last_page: lastPage,
+            from: total > 0 ? offset + 1 : 0,
+            to: Math.min(offset + limit, total),
+          },
+        };
+      } catch (error) {
+        throw wrapIxcError(error, 'Erro ao listar ordens de serviço no IXC');
       }
-
-      registros = sortRegistros(registros, sortColumn, sortDirection);
-
-      const total = registros.length;
-      const lastPage = Math.max(1, Math.ceil(total / limit) || 1);
-      const offset = (page - 1) * limit;
-      const pagina = registros.slice(offset, offset + limit);
-      const data = await enrichOsRegistros(pagina);
-
-      return {
-        data,
-        pagination: {
-          current_page: page,
-          per_page: limit,
-          total,
-          last_page: lastPage,
-          from: total > 0 ? offset + 1 : 0,
-          to: Math.min(offset + limit, total),
-        },
-      };
-    } catch (error) {
-      throw wrapIxcError(error, 'Erro ao listar ordens de serviço no IXC');
-    }
+    });
   }
 
   /** Listagem paginada e pesquisável de um recurso auxiliar do IXC (estrutura, funcionarios, etc.). */
@@ -793,8 +792,10 @@ export class IxcOssChamadoService {
     resource: string,
     nomeCampo: string,
     filters: ListOssChamadosFilters = {},
-    additionalFilters: Record<string, string> = {}
+    additionalFilters: Record<string, string> = {},
+    empresaId: number | null = null
   ): Promise<ListLookupResponse> {
+    return runWithIxcCredentials(empresaId, async () => {
     const page = filters.page && filters.page > 0 ? filters.page : 1;
     const limit = filters.limit && filters.limit > 0 ? filters.limit : 15;
     const search = filters.search?.trim();
@@ -870,9 +871,14 @@ export class IxcOssChamadoService {
     } catch (error) {
       throw wrapIxcError(error, `Erro ao listar ${resource} no IXC`);
     }
+    });
   }
 
-  static async getById(id: string | number): Promise<IxcOssChamado | null> {
+  static async getById(
+    id: string | number,
+    empresaId: number | null = null
+  ): Promise<IxcOssChamado | null> {
+    return runWithIxcCredentials(empresaId, async () => {
     try {
       if (!(await osAbertaPeloOperador(id))) return null;
 
@@ -884,9 +890,14 @@ export class IxcOssChamadoService {
     } catch (error) {
       throw wrapIxcError(error, 'Erro ao buscar ordem de serviço no IXC');
     }
+    });
   }
 
-  static async create(payload: OssChamadoInput): Promise<IxcActionResponse> {
+  static async create(
+    payload: OssChamadoInput,
+    empresaId: number | null = null
+  ): Promise<IxcActionResponse> {
+    return runWithIxcCredentials(empresaId, async () => {
     const body = prepareCreateBody(payload);
 
     try {
@@ -898,9 +909,15 @@ export class IxcOssChamadoService {
     } catch (error) {
       throw wrapIxcError(error, 'Erro ao criar ordem de serviço no IXC');
     }
+    });
   }
 
-  static async update(id: string | number, payload: OssChamadoInput): Promise<IxcActionResponse> {
+  static async update(
+    id: string | number,
+    payload: OssChamadoInput,
+    empresaId: number | null = null
+  ): Promise<IxcActionResponse> {
+    return runWithIxcCredentials(empresaId, async () => {
     if (!(await osAbertaPeloOperador(id))) {
       throw new Error('Ordem de serviço não encontrada');
     }
@@ -925,6 +942,7 @@ export class IxcOssChamadoService {
     } catch (error) {
       throw wrapIxcError(error, 'Erro ao editar ordem de serviço no IXC');
     }
+    });
   }
 
   /**
@@ -934,8 +952,10 @@ export class IxcOssChamadoService {
   static async executeAcao(
     id: string | number,
     acao: OssChamadoAcao,
-    payload: OssChamadoInput = {}
+    payload: OssChamadoInput = {},
+    empresaId: number | null = null
   ): Promise<IxcActionResponse> {
+    return runWithIxcCredentials(empresaId, async () => {
     const abertaPeloOperador = await osAbertaPeloOperador(id);
     if (!abertaPeloOperador) {
       throw new Error('Ordem de serviço não encontrada');
@@ -989,9 +1009,14 @@ export class IxcOssChamadoService {
     } catch (error) {
       throw wrapIxcError(error, 'Erro ao executar ação no IXC');
     }
+    });
   }
 
-  static async delete(id: string | number): Promise<IxcActionResponse> {
+  static async delete(
+    id: string | number,
+    empresaId: number | null = null
+  ): Promise<IxcActionResponse> {
+    return runWithIxcCredentials(empresaId, async () => {
     if (!(await osAbertaPeloOperador(id))) {
       throw new Error('Ordem de serviço não encontrada');
     }
@@ -1010,5 +1035,6 @@ export class IxcOssChamadoService {
     } catch (error) {
       throw wrapIxcError(error, 'Erro ao excluir ordem de serviço no IXC');
     }
+    });
   }
 }

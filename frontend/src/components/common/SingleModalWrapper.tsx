@@ -66,7 +66,7 @@ const RpkiRoaListModal = lazy(() => import('../modals/rpki/RpkiRoaListModal'));
 const RpkiValidateRouteModal = lazy(() => import('../modals/rpki/RpkiValidateRouteModal'));
 const RpkiValidationLogsModal = lazy(() => import('../modals/logs/RpkiValidationLogsModal'));
 
-// Suporte (IXC Provedor)
+// Suporte
 const OrdemServicoListModal = lazy(() => import('../modals/ordens-servico').then(m => ({ default: m.OrdemServicoListModal })));
 const RpkiCaPaiLogsModal = lazy(() => import('../modals/logs/rpki/RpkiCaPaiLogsModal'));
 const RpkiRepositorioLogsModal = lazy(() => import('../modals/logs/rpki/RpkiRepositorioLogsModal'));

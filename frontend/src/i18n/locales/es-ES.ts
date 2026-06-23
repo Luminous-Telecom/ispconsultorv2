@@ -505,6 +505,7 @@ const esES: TranslationKeys = {
 
   // Parameters Menu
     'params.users': 'Usuarios',
+    'params.integrations': 'Integraciones',
     'params.auditLogs': 'Registros de Auditoría',
     'params.systemResources': 'Recursos del Sistema',
     'params.taskScheduler': 'Programador de Tareas',
@@ -1066,6 +1067,7 @@ const esES: TranslationKeys = {
     'tabs.servicesObservations': 'Observaciones',
     'tabs.contractData': 'Datos del Contrato',
     'tabs.additionalServices': 'Servicios Adicionales',
+    'tabs.ixcProvedor': 'IXC Provedor',
     'tabs.terms': 'Términos',
     'tabs.collectionLetter': 'Carta de Cobranza',
     'tabs.receipts': 'Recibos',
@@ -1142,6 +1144,7 @@ const esES: TranslationKeys = {
     'placeholder.financialTitlesCreationHelp': 'Cree el contrato primero para gestionar los títulos financieros.',
     'placeholder.financialMiscCreationHelp': 'Cree el contrato primero para gestionar los títulos diversos.',
     'placeholder.additionalServicesCreationHelp': 'Cree el contrato primero para gestionar los servicios adicionales.',
+    'placeholder.ixcProvedorCreationHelp': 'Cree el contrato primero para configurar la integración IXC Provedor.',
     'placeholder.selectProvider': 'Seleccionar proveedor',
     'placeholder.startDate': 'Fecha inicial',
     'placeholder.endDate': 'Fecha final',

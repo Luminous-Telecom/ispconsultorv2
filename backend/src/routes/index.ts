@@ -62,6 +62,7 @@ import tenantRoutes from './tenantRoutes';
 import sshManagerRoutes from './sshManagerRoutes';
 import agentRoutes from './agentRoutes';
 import rpkiRoutes from './rpkiRoutes';
+import integracaoIxcProvedorRoutes from './integracaoIxcProvedorRoutes';
 import ixcOssChamadoRoutes from './ixcOssChamadoRoutes';
 import ixcLookupRoutes from './ixcLookupRoutes';
 
@@ -114,6 +115,7 @@ const routes = [
     { path: '/api/pdf-extract', route: pdfExtractRoutes },
     { path: '/api/agents', route: agentRoutes },
     { path: '/api/rpki', route: rpkiRoutes },
+    { path: '/api/integracao-ixc-provedor', route: integracaoIxcProvedorRoutes },
     { path: '/api/ixc/ordens-servico', route: ixcOssChamadoRoutes },
     { path: '/api/ixc', route: ixcLookupRoutes },
     { path: '/api', route: centralAssinanteRoutes },

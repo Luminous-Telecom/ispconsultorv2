@@ -486,6 +486,7 @@ export interface TranslationKeys {
 
   // Parameters Menu
   'params.users': string;
+  'params.integrations': string;
   'params.auditLogs': string;
   'params.systemResources': string;
   'params.taskScheduler': string;

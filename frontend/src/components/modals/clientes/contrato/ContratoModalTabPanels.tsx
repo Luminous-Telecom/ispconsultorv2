@@ -13,11 +13,14 @@ import TermosTab from './abas/TermosTab';
 import FinanceiroTab from './abas/FinanceiroTab';
 import FinanceiroAvulsoTab from './abas/FinanceiroAvulsoTab';
 import ServicosAdicionaisTab from './abas/ServicosAdicionaisTab';
+import IxcProvedorIntegracaoTab from './abas/IxcProvedorIntegracaoTab';
+import type { IntegracaoIxcProvedorRow } from './useContratoIxcBulkActions';
 import { BulkAction, ContratoForm } from './types';
 
 interface ContratoModalTabPanelsProps {
   activeTab: string;
   isEditMode: boolean;
+  contratoId?: number | null;
   formData: ContratoForm;
   errors: Partial<ContratoForm>;
   handleInputChange: (field: keyof ContratoForm, value: string | number | boolean | null) => void;
@@ -91,9 +94,21 @@ interface ContratoModalTabPanelsProps {
   servicosAdicionaisColumns: TableColumnType<ContratoPlanoAdicional>[];
   refetchServicosAdicionais: () => void;
   onAuditServico: (servico: ContratoPlanoAdicional) => void;
+  integracaoIxcBulkActions: BulkAction<IntegracaoIxcProvedorRow>[];
+  isLoadingIntegracaoIxc: boolean;
+  sortedIntegracaoIxcData: IntegracaoIxcProvedorRow[];
+  selectedIntegracaoIxcItems: IntegracaoIxcProvedorRow[];
+  setSelectedIntegracaoIxcItems: React.Dispatch<React.SetStateAction<IntegracaoIxcProvedorRow[]>>;
+  integracaoIxcColumns: TableColumnType<IntegracaoIxcProvedorRow>[];
+  refetchIntegracaoIxc: () => void;
+  onAuditIntegracaoIxc: (item: IntegracaoIxcProvedorRow) => void;
+  integracaoIxcSortColumn?: string;
+  integracaoIxcSortDirection?: SortDirection;
+  onIntegracaoIxcSort: (column: string, direction: SortDirection) => void;
+  integracaoIxcTotal: number;
 }
 
-function Placeholder({ messageKey }: { messageKey: 'placeholder.contractCreationHelp' | 'placeholder.financialTitlesCreationHelp' | 'placeholder.financialMiscCreationHelp' | 'placeholder.additionalServicesCreationHelp' }) {
+function Placeholder({ messageKey }: { messageKey: 'placeholder.contractCreationHelp' | 'placeholder.financialTitlesCreationHelp' | 'placeholder.financialMiscCreationHelp' | 'placeholder.additionalServicesCreationHelp' | 'placeholder.ixcProvedorCreationHelp' }) {
   const { t } = useI18n();
   return (
     <div className="d-flex align-items-center justify-content-center contrato-placeholder">
@@ -107,6 +122,7 @@ function Placeholder({ messageKey }: { messageKey: 'placeholder.contractCreation
 function ContratoModalTabPanels({
   activeTab,
   isEditMode,
+  contratoId,
   formData,
   errors,
   handleInputChange,
@@ -177,6 +193,18 @@ function ContratoModalTabPanels({
   servicosAdicionaisColumns,
   refetchServicosAdicionais,
   onAuditServico,
+  integracaoIxcBulkActions,
+  isLoadingIntegracaoIxc,
+  sortedIntegracaoIxcData,
+  selectedIntegracaoIxcItems,
+  setSelectedIntegracaoIxcItems,
+  integracaoIxcColumns,
+  refetchIntegracaoIxc,
+  onAuditIntegracaoIxc,
+  integracaoIxcSortColumn,
+  integracaoIxcSortDirection,
+  onIntegracaoIxcSort,
+  integracaoIxcTotal,
 }: ContratoModalTabPanelsProps) {
   if (activeTab === 'contrato') {
     return (
@@ -314,6 +342,32 @@ function ContratoModalTabPanels({
       />
     ) : (
       <Placeholder messageKey="placeholder.additionalServicesCreationHelp" />
+    );
+  }
+
+  if (activeTab === 'ixc-provedor') {
+    return isEditMode ? (
+      <IxcProvedorIntegracaoTab
+        isLoading={isLoadingIntegracaoIxc}
+        bulkActions={integracaoIxcBulkActions as unknown as BulkAction[]}
+        limit={limit}
+        setLimit={setLimit}
+        page={page}
+        setPage={setPage}
+        sortedData={sortedIntegracaoIxcData}
+        selectedItems={selectedIntegracaoIxcItems}
+        setSelectedItems={setSelectedIntegracaoIxcItems}
+        columns={integracaoIxcColumns}
+        onRefresh={refetchIntegracaoIxc}
+        onAudit={onAuditIntegracaoIxc}
+        auditEntity="IntegracaoIxcProvedor"
+        sortColumn={integracaoIxcSortColumn}
+        sortDirection={integracaoIxcSortDirection}
+        onSort={onIntegracaoIxcSort}
+        totalItems={integracaoIxcTotal}
+      />
+    ) : (
+      <Placeholder messageKey="placeholder.ixcProvedorCreationHelp" />
     );
   }
 

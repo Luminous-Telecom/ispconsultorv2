@@ -22,13 +22,22 @@ import {
   buildContratoTermosColumns,
   buildContratoTituloAvulsoColumns,
   buildContratoTituloColumns,
+  buildContratoIxcColumns,
 } from './contratoTableColumns';
 import { useContratoFinanceiroBulkActions } from './useContratoFinanceiroBulkActions';
 import { useContratoTermosBulkActions } from './useContratoTermosBulkActions';
 import { useContratoServicosBulkActions } from './useContratoServicosBulkActions';
+import { useContratoIxcBulkActions } from './useContratoIxcBulkActions';
 import { useContratoTitulosPrint } from './useContratoTitulosPrint';
 import { useContratoModalFormResources } from './useContratoModalFormResources';
 import { useContratoModalTabData } from './useContratoModalTabData';
+import { useTableFilters } from 'hooks/useTableFilters';
+import { useContratoIntegracaoIxc, useLinkContratoIntegracaoIxc } from 'hooks/useContratoIntegracaoIxc';
+import {
+  useDeleteIntegracaoIxcProvedor,
+  useTestIntegracaoIxcProvedor,
+} from 'hooks/useIntegracaoIxcProvedor';
+import type { IntegracaoIxcProvedorRow } from './useContratoIxcBulkActions';
 
 interface ContratoModalProps {
   show: boolean;
@@ -68,9 +77,12 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   const [selectedAvulsosItems, setSelectedAvulsosItems] = useState<Titulo[]>([]);
   const [selectedTermosItems, setSelectedTermosItems] = useState<TermoContrato[]>([]);
   const [selectedServicosAdicionaisItems, setSelectedServicosAdicionaisItems] = useState<ContratoPlanoAdicional[]>([]);
+  const [selectedIntegracaoIxcItems, setSelectedIntegracaoIxcItems] = useState<IntegracaoIxcProvedorRow[]>([]);
   const [isGerandoFinanceiro, setIsGerandoFinanceiro] = useState(false);
   const [showPlanoModal, setShowPlanoModal] = useState(false);
   const [showBancoModal, setShowBancoModal] = useState(false);
+  const [showIntegracaoIxcFormModal, setShowIntegracaoIxcFormModal] = useState(false);
+  const [editingIntegracaoIxcId, setEditingIntegracaoIxcId] = useState<number | null>(null);
   const [showTipoCobrancaContratoModal, setShowTipoCobrancaContratoModal] = useState(false);
   const [showModeloContratoModal, setShowModeloContratoModal] = useState(false);
   const [showServicoAdicionalModal, setShowServicoAdicionalModal] = useState(false);
@@ -96,6 +108,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       setSelectedAvulsosItems([]);
       setSelectedTermosItems([]);
       setSelectedServicosAdicionaisItems([]);
+      setSelectedIntegracaoIxcItems([]);
     }
   }, [show, contratoId]);
 
@@ -116,6 +129,47 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   const handleSubmit = formHook.handleSubmit;
 
   const formResources = useContratoModalFormResources({ show, formData, contratoData });
+
+  const integracaoIxcTableFilters = useTableFilters({
+    initialPage: 1,
+    initialLimit: 10,
+    initialSortColumn: 'nome',
+    initialSortDirection: 'asc',
+    resetPageOnFilterChange: false,
+  });
+
+  const {
+    data: contratoIntegracaoIxc,
+    isLoading: isLoadingIntegracaoIxc,
+    refetch: refetchIntegracaoIxc,
+  } = useContratoIntegracaoIxc(isEditMode ? internalContratoId : null);
+  const linkIxcMutation = useLinkContratoIntegracaoIxc(isEditMode ? internalContratoId : null);
+  const deleteIntegracaoIxcMutation = useDeleteIntegracaoIxcProvedor();
+  const testIntegracaoIxcMutation = useTestIntegracaoIxcProvedor();
+
+  const sortedIntegracaoIxcData = useMemo((): IntegracaoIxcProvedorRow[] => {
+    const integracao = contratoIntegracaoIxc?.integracao;
+    if (!integracao?.id) return [];
+    return [
+      {
+        id: integracao.id,
+        nome: integracao.nome ?? '',
+        api_url: integracao.api_url,
+        ativo: !!integracao.ativo,
+        has_api_token: integracao.has_api_token,
+      },
+    ];
+  }, [contratoIntegracaoIxc?.integracao]);
+
+  const handleIntegracaoIxcFormSuccess = useCallback(
+    async (integracaoId?: number) => {
+      if (integracaoId && internalContratoId) {
+        await linkIxcMutation.mutateAsync(integracaoId);
+      }
+      refetchIntegracaoIxc();
+    },
+    [internalContratoId, linkIxcMutation, refetchIntegracaoIxc]
+  );
 
   const tabData = useContratoModalTabData({
     show,
@@ -140,6 +194,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     setSelectedAvulsosItems([]);
     setSelectedTermosItems([]);
     setSelectedServicosAdicionaisItems([]);
+    setSelectedIntegracaoIxcItems([]);
   }, []);
 
   const handlePlanoSelect = useCallback(
@@ -250,10 +305,20 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     queryClient,
   });
 
+  const { integracaoIxcBulkActions } = useContratoIxcBulkActions({
+    isEditMode,
+    setEditingIntegracaoIxcId,
+    setShowIntegracaoIxcFormModal,
+    deleteIntegracaoMutation: deleteIntegracaoIxcMutation,
+    testIntegracaoMutation: testIntegracaoIxcMutation,
+    queryClient,
+  });
+
   const columns = useMemo(() => buildContratoTituloColumns(t), [t]);
   const columnsAvulsos = useMemo(() => buildContratoTituloAvulsoColumns(t), [t]);
   const termosColumns = useMemo(() => buildContratoTermosColumns(t), [t]);
   const servicosAdicionaisColumns = useMemo(() => buildContratoServicosAdicionaisColumns(t), [t]);
+  const integracaoIxcColumns = useMemo(() => buildContratoIxcColumns(t), [t]);
 
   useEffect(() => {
     if (!isEditMode && formHook.createdContratoId && formHook.createdContratoId !== internalContratoId) {
@@ -261,11 +326,108 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     }
   }, [formHook.createdContratoId, isEditMode, internalContratoId]);
 
+  const isContratoFormTab = activeTab === 'contrato' || activeTab === 'endereco';
+
   const isScrollableTab =
     activeTab === 'termos' ||
     activeTab === 'financeiro' ||
     activeTab === 'financeiro-avulso' ||
-    activeTab === 'servicos-adicionais';
+    activeTab === 'servicos-adicionais' ||
+    activeTab === 'ixc-provedor';
+
+  const tabContentClass = isScrollableTab
+    ? 'contrato-tab-content-scrollable'
+    : 'contrato-tab-content-padded';
+
+  const tabPanels = (
+    <ContratoModalTabPanels
+      activeTab={activeTab}
+      isEditMode={isEditMode}
+      contratoId={internalContratoId}
+      formData={formData}
+      errors={errors}
+      handleInputChange={handleInputChange}
+      planoSelecionado={formResources.planoSelecionado}
+      bancoSelecionado={formResources.bancoSelecionado}
+      tipoCobrancaContratoSelecionado={formResources.tipoCobrancaContratoSelecionado}
+      modeloContratoSelecionado={formResources.modeloContratoSelecionado}
+      onPlanoSelect={handlePlanoSelect}
+      onBancoSelect={handleBancoSelect}
+      onTipoCobrancaContratoSelect={handleTipoCobrancaContratoSelect}
+      onModeloContratoSelect={handleModeloContratoSelect}
+      planosData={formResources.planosData}
+      bancosData={formResources.bancosData}
+      tiposCobrancaContrato={formResources.tiposCobrancaContrato}
+      tipoCobrancaContratoFromContrato={contratoData?.tipoCobrancaContrato ?? undefined}
+      modelosContratoData={formResources.modelosContratoData}
+      diasVencimento={formResources.diasVencimento}
+      onShowPlanoModal={() => setShowPlanoModal(true)}
+      onShowBancoModal={() => setShowBancoModal(true)}
+      onShowTipoCobrancaContratoModal={() => setShowTipoCobrancaContratoModal(true)}
+      onShowModeloContratoModal={() => setShowModeloContratoModal(true)}
+      clienteData={tabData.clienteData ?? null}
+      limit={limit}
+      setLimit={setLimit}
+      page={page}
+      setPage={setPage}
+      termosBulkActions={termosBulkActions}
+      isLoadingTermosContrato={tabData.isLoadingTermosContrato}
+      sortedTermosData={tabData.sortedTermosData}
+      selectedTermosItems={selectedTermosItems}
+      setSelectedTermosItems={setSelectedTermosItems}
+      termosColumns={termosColumns}
+      refetchTermos={tabData.refetchTermos}
+      onAuditTermo={(termo) => auditoria.handleAudit('TermoContrato', termo.id)}
+      termosSortColumn={tabData.termosTableFilters.sortColumn}
+      termosSortDirection={tabData.termosTableFilters.sortDirection}
+      onTermosSort={tabData.termosTableFilters.setSort}
+      bulkActions={bulkActions}
+      bulkActionsAvulsos={bulkActionsAvulsos}
+      isLoadingTitulos={tabData.isLoadingTitulos}
+      isLoadingTitulosAvulsos={tabData.isLoadingTitulosAvulsos}
+      sortedData={tabData.sortedData}
+      sortedAvulsosData={tabData.sortedAvulsosData}
+      selectedItems={selectedItems}
+      setSelectedItems={setSelectedItems}
+      selectedAvulsosItems={selectedAvulsosItems}
+      setSelectedAvulsosItems={setSelectedAvulsosItems}
+      columns={columns}
+      columnsAvulsos={columnsAvulsos}
+      refetchTitulos={tabData.refetchTitulos}
+      refetchTitulosAvulsos={tabData.refetchTitulosAvulsos}
+      showCancelados={showCancelados}
+      setShowCancelados={setShowCancelados}
+      showCanceladosAvulsos={showCanceladosAvulsos}
+      setShowCanceladosAvulsos={setShowCanceladosAvulsos}
+      onAuditTitulo={(titulo) => auditoria.handleAudit('Titulo', titulo.id)}
+      titulosSortColumn={tabData.titulosTableFilters.sortColumn}
+      titulosSortDirection={tabData.titulosTableFilters.sortDirection}
+      onTitulosSort={tabData.titulosTableFilters.setSort}
+      titulosAvulsosSortColumn={tabData.titulosAvulsosTableFilters.sortColumn}
+      titulosAvulsosSortDirection={tabData.titulosAvulsosTableFilters.sortDirection}
+      onTitulosAvulsosSort={tabData.titulosAvulsosTableFilters.setSort}
+      servicosAdicionaisBulkActions={servicosAdicionaisBulkActions}
+      isLoadingServicosAdicionais={tabData.isLoadingServicosAdicionais}
+      sortedServicosAdicionaisData={tabData.sortedServicosAdicionaisData}
+      selectedServicosAdicionaisItems={selectedServicosAdicionaisItems}
+      setSelectedServicosAdicionaisItems={setSelectedServicosAdicionaisItems}
+      servicosAdicionaisColumns={servicosAdicionaisColumns}
+      refetchServicosAdicionais={tabData.refetchServicosAdicionais}
+      onAuditServico={(servico) => auditoria.handleAudit('ContratoPlanoAdicional', servico.id)}
+      integracaoIxcBulkActions={integracaoIxcBulkActions}
+      isLoadingIntegracaoIxc={isLoadingIntegracaoIxc}
+      sortedIntegracaoIxcData={sortedIntegracaoIxcData}
+      selectedIntegracaoIxcItems={selectedIntegracaoIxcItems}
+      setSelectedIntegracaoIxcItems={setSelectedIntegracaoIxcItems}
+      integracaoIxcColumns={integracaoIxcColumns}
+      refetchIntegracaoIxc={refetchIntegracaoIxc}
+      onAuditIntegracaoIxc={(item) => auditoria.handleAudit('IntegracaoIxcProvedor', item.id)}
+      integracaoIxcSortColumn={integracaoIxcTableFilters.sortColumn}
+      integracaoIxcSortDirection={integracaoIxcTableFilters.sortDirection}
+      onIntegracaoIxcSort={integracaoIxcTableFilters.setSort}
+      integracaoIxcTotal={sortedIntegracaoIxcData.length}
+    />
+  );
 
   if (isEditMode && isLoading) {
     return (
@@ -297,98 +459,28 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             isMobile={isMobile}
             activeTab={activeTab}
             isSubmitting={formHook.isSubmitting}
+            formId="contrato-form"
             onClose={onClose}
             onPrintContract={handleImprimirContrato}
             onTabChange={handleTabChange}
           />
         }
       >
-        <form id="contrato-form" onSubmit={handleSubmit}>
+        {isContratoFormTab ? (
+          <form id="contrato-form" onSubmit={handleSubmit}>
+            <div className="contrato-modal-content">
+              <div className={`tab-content contrato-tab-content ${tabContentClass}`}>
+                {tabPanels}
+              </div>
+            </div>
+          </form>
+        ) : (
           <div className="contrato-modal-content">
-            <div
-              className={`tab-content contrato-tab-content ${
-                isScrollableTab
-                  ? 'contrato-tab-content-scrollable'
-                  : 'contrato-tab-content-padded'
-              }`}
-            >
-              <ContratoModalTabPanels
-                activeTab={activeTab}
-                isEditMode={isEditMode}
-                formData={formData}
-                errors={errors}
-                handleInputChange={handleInputChange}
-                planoSelecionado={formResources.planoSelecionado}
-                bancoSelecionado={formResources.bancoSelecionado}
-                tipoCobrancaContratoSelecionado={formResources.tipoCobrancaContratoSelecionado}
-                modeloContratoSelecionado={formResources.modeloContratoSelecionado}
-                onPlanoSelect={handlePlanoSelect}
-                onBancoSelect={handleBancoSelect}
-                onTipoCobrancaContratoSelect={handleTipoCobrancaContratoSelect}
-                onModeloContratoSelect={handleModeloContratoSelect}
-                planosData={formResources.planosData}
-                bancosData={formResources.bancosData}
-                tiposCobrancaContrato={formResources.tiposCobrancaContrato}
-                tipoCobrancaContratoFromContrato={contratoData?.tipoCobrancaContrato ?? undefined}
-                modelosContratoData={formResources.modelosContratoData}
-                diasVencimento={formResources.diasVencimento}
-                onShowPlanoModal={() => setShowPlanoModal(true)}
-                onShowBancoModal={() => setShowBancoModal(true)}
-                onShowTipoCobrancaContratoModal={() => setShowTipoCobrancaContratoModal(true)}
-                onShowModeloContratoModal={() => setShowModeloContratoModal(true)}
-                clienteData={tabData.clienteData ?? null}
-                limit={limit}
-                setLimit={setLimit}
-                page={page}
-                setPage={setPage}
-                termosBulkActions={termosBulkActions}
-                isLoadingTermosContrato={tabData.isLoadingTermosContrato}
-                sortedTermosData={tabData.sortedTermosData}
-                selectedTermosItems={selectedTermosItems}
-                setSelectedTermosItems={setSelectedTermosItems}
-                termosColumns={termosColumns}
-                refetchTermos={tabData.refetchTermos}
-                onAuditTermo={(termo) => auditoria.handleAudit('TermoContrato', termo.id)}
-                termosSortColumn={tabData.termosTableFilters.sortColumn}
-                termosSortDirection={tabData.termosTableFilters.sortDirection}
-                onTermosSort={tabData.termosTableFilters.setSort}
-                bulkActions={bulkActions}
-                bulkActionsAvulsos={bulkActionsAvulsos}
-                isLoadingTitulos={tabData.isLoadingTitulos}
-                isLoadingTitulosAvulsos={tabData.isLoadingTitulosAvulsos}
-                sortedData={tabData.sortedData}
-                sortedAvulsosData={tabData.sortedAvulsosData}
-                selectedItems={selectedItems}
-                setSelectedItems={setSelectedItems}
-                selectedAvulsosItems={selectedAvulsosItems}
-                setSelectedAvulsosItems={setSelectedAvulsosItems}
-                columns={columns}
-                columnsAvulsos={columnsAvulsos}
-                refetchTitulos={tabData.refetchTitulos}
-                refetchTitulosAvulsos={tabData.refetchTitulosAvulsos}
-                showCancelados={showCancelados}
-                setShowCancelados={setShowCancelados}
-                showCanceladosAvulsos={showCanceladosAvulsos}
-                setShowCanceladosAvulsos={setShowCanceladosAvulsos}
-                onAuditTitulo={(titulo) => auditoria.handleAudit('Titulo', titulo.id)}
-                titulosSortColumn={tabData.titulosTableFilters.sortColumn}
-                titulosSortDirection={tabData.titulosTableFilters.sortDirection}
-                onTitulosSort={tabData.titulosTableFilters.setSort}
-                titulosAvulsosSortColumn={tabData.titulosAvulsosTableFilters.sortColumn}
-                titulosAvulsosSortDirection={tabData.titulosAvulsosTableFilters.sortDirection}
-                onTitulosAvulsosSort={tabData.titulosAvulsosTableFilters.setSort}
-                servicosAdicionaisBulkActions={servicosAdicionaisBulkActions}
-                isLoadingServicosAdicionais={tabData.isLoadingServicosAdicionais}
-                sortedServicosAdicionaisData={tabData.sortedServicosAdicionaisData}
-                selectedServicosAdicionaisItems={selectedServicosAdicionaisItems}
-                setSelectedServicosAdicionaisItems={setSelectedServicosAdicionaisItems}
-                servicosAdicionaisColumns={servicosAdicionaisColumns}
-                refetchServicosAdicionais={tabData.refetchServicosAdicionais}
-                onAuditServico={(servico) => auditoria.handleAudit('ContratoPlanoAdicional', servico.id)}
-              />
+            <div className={`tab-content contrato-tab-content ${tabContentClass}`}>
+              {tabPanels}
             </div>
           </div>
-        </form>
+        )}
       </DraggableModal>
 
       <ContratoModalSubModals
@@ -429,6 +521,11 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         setShowTipoCobrancaContratoModal={setShowTipoCobrancaContratoModal}
         showModeloContratoModal={showModeloContratoModal}
         setShowModeloContratoModal={setShowModeloContratoModal}
+        showIntegracaoIxcFormModal={showIntegracaoIxcFormModal}
+        setShowIntegracaoIxcFormModal={setShowIntegracaoIxcFormModal}
+        editingIntegracaoIxcId={editingIntegracaoIxcId}
+        setEditingIntegracaoIxcId={setEditingIntegracaoIxcId}
+        onIntegracaoIxcFormSuccess={handleIntegracaoIxcFormSuccess}
         onPlanoSelect={handlePlanoSelect}
         onBancoSelect={handleBancoSelect}
         onTipoCobrancaContratoSelect={handleTipoCobrancaContratoSelect}

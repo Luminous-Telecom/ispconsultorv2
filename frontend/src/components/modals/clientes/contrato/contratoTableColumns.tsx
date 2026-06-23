@@ -4,6 +4,7 @@ import { TableColumn as TableColumnType } from 'components/tables/types';
 import { Titulo } from 'types';
 import { TermoContrato } from 'services/termoContratoService';
 import { ContratoPlanoAdicional } from 'services/contratoPlanoAdicionalService';
+import { IntegracaoIxcProvedor } from 'services/integracaoIxcProvedorService';
 import { formatDate, formatDateTime } from 'utils/formatters';
 import { getTituloStatusColor } from './contratoStatusUtils';
 
@@ -341,6 +342,48 @@ export function buildContratoServicosAdicionaisColumns(
       sortable: true,
       searchable: true,
       render: (item) => item.observacoes || '-',
+    },
+  ];
+}
+
+export function buildContratoIxcColumns(
+  t: TranslateFn
+): TableColumnType<IntegracaoIxcProvedor>[] {
+  return [
+    {
+      key: 'id',
+      label: t('table.id'),
+      sortable: true,
+      searchable: true,
+      width: 42,
+      resizable: true,
+      render: (item) => item.id,
+    },
+    {
+      key: 'nome',
+      label: t('form.name'),
+      sortable: true,
+      searchable: true,
+      render: (item) => item.nome,
+    },
+    {
+      key: 'api_url',
+      label: 'URL da API',
+      sortable: true,
+      searchable: true,
+      render: (item) => item.api_url || '-',
+    },
+    {
+      key: 'ativo',
+      label: t('table.status'),
+      sortable: true,
+      searchable: true,
+      badgeLabels: [t('status.active'), t('status.inactive')],
+      render: (item) => (
+        <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
+          {item.ativo ? t('status.active') : t('status.inactive')}
+        </span>
+      ),
     },
   ];
 }

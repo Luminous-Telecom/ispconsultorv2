@@ -8,6 +8,7 @@ interface ContratoModalHeaderProps {
   isMobile: boolean;
   activeTab: string;
   isSubmitting: boolean;
+  formId?: string;
   onClose: () => void;
   onPrintContract: () => void;
   onTabChange: (tab: string) => void;
@@ -18,6 +19,7 @@ function ContratoModalHeader({
   isMobile,
   activeTab,
   isSubmitting,
+  formId = 'contrato-form',
   onClose,
   onPrintContract,
   onTabChange,
@@ -32,6 +34,7 @@ function ContratoModalHeader({
       { id: 'financeiro', label: t('tabs.financial'), disabled: !isEditMode },
       { id: 'financeiro-avulso', label: t('tabs.financialMisc'), disabled: !isEditMode },
       { id: 'servicos-adicionais', label: t('tabs.additionalServices'), disabled: !isEditMode },
+      { id: 'ixc-provedor', label: t('tabs.ixcProvedor'), disabled: !isEditMode },
     ],
     [isEditMode, t]
   );
@@ -58,7 +61,7 @@ function ContratoModalHeader({
         <ModalFormActions
           className="d-flex gap-2"
           onCancel={onClose}
-          formId="contrato-form"
+          formId={formId}
           isPending={isSubmitting}
         />
       </div>

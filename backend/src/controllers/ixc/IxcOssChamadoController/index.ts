@@ -6,11 +6,13 @@ import {
 } from '../../../services/externos/IxcOssChamadoService';
 import { sendSuccess, sendError, sendNotFound } from '../../../utils/responseUtils';
 import { parseListQuery } from '../../../utils/listQuery';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class IxcOssChamadoController {
   static async list(req: Request, res: Response): Promise<void> {
     try {
       const { page, limit, search, searchField, sortColumn, sortDirection } = parseListQuery(req.query);
+      const empresaId = getEmpresaIdOrNull(req);
 
       const result = await IxcOssChamadoService.list({
         page,
@@ -19,7 +21,7 @@ export class IxcOssChamadoController {
         searchField,
         sortColumn,
         sortDirection,
-      });
+      }, empresaId);
 
       sendSuccess(res, result);
     } catch (error) {
@@ -34,7 +36,8 @@ export class IxcOssChamadoController {
   static async getById(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const chamado = await IxcOssChamadoService.getById(id);
+      const empresaId = getEmpresaIdOrNull(req);
+      const chamado = await IxcOssChamadoService.getById(id, empresaId);
 
       if (!chamado) {
         sendNotFound(res, 'Ordem de serviço não encontrada');
@@ -53,7 +56,8 @@ export class IxcOssChamadoController {
 
   static async create(req: Request, res: Response): Promise<void> {
     try {
-      const resultado = await IxcOssChamadoService.create(req.body);
+      const empresaId = getEmpresaIdOrNull(req);
+      const resultado = await IxcOssChamadoService.create(req.body, empresaId);
       sendSuccess(res, resultado, 'Ordem de serviço criada com sucesso', 201);
     } catch (error) {
       sendError(res, error, 'Erro ao criar ordem de serviço', 500, true, {
@@ -66,7 +70,8 @@ export class IxcOssChamadoController {
   static async update(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const resultado = await IxcOssChamadoService.update(id, req.body);
+      const empresaId = getEmpresaIdOrNull(req);
+      const resultado = await IxcOssChamadoService.update(id, req.body, empresaId);
       sendSuccess(res, resultado, 'Ordem de serviço atualizada com sucesso');
     } catch (error) {
       sendError(res, error, 'Erro ao atualizar ordem de serviço', 500, true, {
@@ -89,7 +94,8 @@ export class IxcOssChamadoController {
       const resultado = await IxcOssChamadoService.executeAcao(
         id,
         acao as OssChamadoAcao,
-        req.body
+        req.body,
+        getEmpresaIdOrNull(req)
       );
 
       sendSuccess(res, resultado, 'Ação executada com sucesso');
@@ -106,7 +112,8 @@ export class IxcOssChamadoController {
   static async delete(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      await IxcOssChamadoService.delete(id);
+      const empresaId = getEmpresaIdOrNull(req);
+      await IxcOssChamadoService.delete(id, empresaId);
       sendSuccess(res, undefined, 'Ordem de serviço excluída com sucesso');
     } catch (error) {
       sendError(res, error, 'Erro ao excluir ordem de serviço', 500, true, {
