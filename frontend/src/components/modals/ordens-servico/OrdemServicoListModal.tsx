@@ -57,7 +57,7 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
 
   const list = useEntityListModal<OrdemServico>({
     onClose,
-    initialSearchField: 'estrutura_nome',
+    initialSearchField: 'cliente_nome',
   });
 
   const { data: ordensData, isLoading, refetch } = useOrdensServico(
@@ -256,7 +256,7 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
           title: title || 'Ordens de Serviço',
           columns,
           searchPlaceholder: 'Buscar ordens de serviço...',
-          searchField: 'estrutura_nome',
+          searchField: 'cliente_nome',
           searchFields,
           emptyMessage: 'Nenhuma ordem de serviço encontrada',
         }}

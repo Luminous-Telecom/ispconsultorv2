@@ -728,7 +728,7 @@ export class IxcOssChamadoService {
     const search = filters.search?.trim();
     const sortColumn = filters.sortColumn?.trim() || 'id';
     const sortDirection = filters.sortDirection === 'asc' ? 'asc' : 'desc';
-    const searchField = filters.searchField?.trim() || 'estrutura_nome';
+    const searchField = filters.searchField?.trim() || 'cliente_nome';
 
     try {
       const operadorId = resolveOperadorId();
