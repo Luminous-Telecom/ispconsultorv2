@@ -14,7 +14,7 @@ export interface PDFOptions {
 }
 
 /**
- * Opções para geração de PDF usando html-pdf-node
+ * Opções para geração de PDF a partir de HTML.
  */
 export interface HtmlPdfNodeOptions {
   format?: 'A4' | 'Letter' | 'Legal';

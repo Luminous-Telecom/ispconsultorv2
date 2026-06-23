@@ -1,54 +1,57 @@
-import htmlPdf from 'html-pdf-node';
+import puppeteer, { type PDFOptions as PuppeteerPdfOptions, type PaperFormat } from 'puppeteer';
 import { logger } from '../../../utils/logger';
 import { PDFOptions, HtmlPdfNodeOptions } from '../types';
 
+const DEFAULT_MARGIN = {
+  top: '0.5cm',
+  right: '0.5cm',
+  bottom: '0.5cm',
+  left: '0.5cm',
+};
+
+function toPuppeteerPdfOptions(options: HtmlPdfNodeOptions & PDFOptions): PuppeteerPdfOptions {
+  const format = (options.format?.toUpperCase() || 'A4') as PaperFormat;
+  return {
+    format,
+    landscape: options.landscape === true,
+    margin: options.margin || DEFAULT_MARGIN,
+    printBackground: options.printBackground !== false,
+  };
+}
+
 /**
- * Serviço centralizado para geração de PDFs (usa apenas html-pdf-node)
+ * Serviço centralizado para geração de PDFs (Puppeteer headless).
  */
 export class PDFGenerationService {
   /**
-   * Gera PDF a partir de HTML usando html-pdf-node
+   * Gera PDF a partir de HTML.
    */
   static async generateFromHtmlNode(
     html: string,
     options: HtmlPdfNodeOptions = {}
   ): Promise<Buffer> {
+    let browser: Awaited<ReturnType<typeof puppeteer.launch>> | null = null;
     try {
-      const pdfOptions: HtmlPdfNodeOptions = {
-        format: options.format || 'A4',
-        margin: options.margin || {
-          top: '0.5cm',
-          right: '0.5cm',
-          bottom: '0.5cm',
-          left: '0.5cm'
-        },
-        printBackground: options.printBackground !== false
-      };
-
-      const file = { content: html };
-      
-      // html-pdf-node usa callback, então precisamos promisificar
-      const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
-        htmlPdf.generatePdf(file, pdfOptions, (err: Error | null, buffer: Buffer) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(buffer);
-          }
-        });
+      browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
       });
-
-      return Buffer.isBuffer(pdfBuffer) ? pdfBuffer : Buffer.from(pdfBuffer);
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: 'load' });
+      const pdfBuffer = await page.pdf(toPuppeteerPdfOptions(options));
+      return Buffer.from(pdfBuffer);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorStack = error instanceof Error ? error.stack : undefined;
-      
-      logger.error('Erro ao gerar PDF com html-pdf-node', {
+
+      logger.error('Erro ao gerar PDF com Puppeteer', {
         error: errorMessage,
         errorStack,
-        errorName: error instanceof Error ? error.name : 'Unknown'
+        errorName: error instanceof Error ? error.name : 'Unknown',
       });
       throw error;
+    } finally {
+      await browser?.close().catch(() => undefined);
     }
   }
 
@@ -68,13 +71,11 @@ export class PDFGenerationService {
   static async generateFromContent(
     content: string,
     options: PDFOptions = {},
-    styleName = 'document'
+    _styleName = 'document'
   ): Promise<Buffer> {
-    // Garantir que imagens e recursos relativos funcionem no PDF
     const baseHref = process.env.APP_URL || process.env.BASE_URL || '';
     const normalizedBase = baseHref.endsWith('/') ? baseHref : `${baseHref}/`;
 
-    // Gerar HTML diretamente sem template - conteúdo do editor já vem formatado
     const html = `
       <!DOCTYPE html>
       <html>
@@ -114,4 +115,3 @@ export class PDFGenerationService {
     return pdfBuffer.toString('base64');
   }
 }
-
