@@ -2,6 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import {
   useDeleteIntegracaoIxcProvedor,
   useIntegracaoIxcProvedorList,
+  useTestIntegracaoIxcProvedor,
 } from 'hooks/useIntegracaoIxcProvedor';
 import { useEntityListModal } from 'hooks/useEntityListModal';
 import { IntegracaoIxcProvedor } from 'services/integracaoIxcProvedorService';
@@ -51,6 +52,24 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
   });
 
   const deleteMutation = useDeleteIntegracaoIxcProvedor();
+  const testMutation = useTestIntegracaoIxcProvedor();
+
+  const testBulkAction = useMemo(
+    () => ({
+      label: 'Testar integração',
+      variant: bulkBtn.editar.variant,
+      action: async (selectedItems: IntegracaoIxcProvedor[]) => {
+        if (selectedItems.length !== 1) return;
+        try {
+          await testMutation.mutateAsync({ id: selectedItems[0].id });
+        } catch {
+          // Erro tratado pelo hook
+        }
+      },
+      disabled: (selectedItems: IntegracaoIxcProvedor[]) => selectedItems.length !== 1,
+    }),
+    [bulkBtn.editar.variant, testMutation]
+  );
 
   const handleDelete = useCallback(
     async (id: number) => {
@@ -128,16 +147,28 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
             action: () => list.openCreateForm(),
           },
           ...selectActions,
+          testBulkAction,
         ];
       }
       return selectActions;
     }
-    return list.buildCrudBulkActions({
-      onNew: list.openCreateForm,
-      onEdit: list.openEditForm,
-      onDelete: handleDelete,
-    });
-  }, [onSelectIntegracao, allowManage, list, handleDelete, bulkBtn.novo.label, bulkBtn.novo.variant]);
+    return [
+      ...list.buildCrudBulkActions({
+        onNew: list.openCreateForm,
+        onEdit: list.openEditForm,
+        onDelete: handleDelete,
+      }),
+      testBulkAction,
+    ];
+  }, [
+    onSelectIntegracao,
+    allowManage,
+    list,
+    handleDelete,
+    bulkBtn.novo.label,
+    bulkBtn.novo.variant,
+    testBulkAction,
+  ]);
 
   const pagination = useMemo(
     () => list.buildPagination(integracoesData?.pagination),
