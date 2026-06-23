@@ -15,8 +15,6 @@ export type { NetworkData } from './PolarAreaChart';
 export type { ChartDataItem, ChartFormat } from './types';
 export { default as BackupStatusStackedBarChart } from './BackupStatusStackedBarChart';
 export type { BackupStatusDayDatum, BackupStatusKey } from './BackupStatusStackedBarChart';
-export { default as ClientesCard } from './ClientesCard';
-export type { ClientesData, ClientesCardProps } from './ClientesCard';
 export { default as TicketMedioCard } from './TicketMedioCard';
 export type { TicketMedioData, TicketMedioCardProps, TicketMedioMes } from './TicketMedioCard';
 
