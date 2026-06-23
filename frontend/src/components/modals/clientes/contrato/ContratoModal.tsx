@@ -34,7 +34,6 @@ import { useContratoModalTabData } from './useContratoModalTabData';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { useContratoIntegracaoIxc, useLinkContratoIntegracaoIxc } from 'hooks/useContratoIntegracaoIxc';
 import {
-  useDeleteIntegracaoIxcProvedor,
   useTestIntegracaoIxcProvedor,
 } from 'hooks/useIntegracaoIxcProvedor';
 import type { IntegracaoIxcProvedorRow } from './useContratoIxcBulkActions';
@@ -82,6 +81,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   const [showPlanoModal, setShowPlanoModal] = useState(false);
   const [showBancoModal, setShowBancoModal] = useState(false);
   const [showIntegracaoIxcFormModal, setShowIntegracaoIxcFormModal] = useState(false);
+  const [showIntegracaoIxcLinkModal, setShowIntegracaoIxcLinkModal] = useState(false);
   const [editingIntegracaoIxcId, setEditingIntegracaoIxcId] = useState<number | null>(null);
   const [showTipoCobrancaContratoModal, setShowTipoCobrancaContratoModal] = useState(false);
   const [showModeloContratoModal, setShowModeloContratoModal] = useState(false);
@@ -144,32 +144,51 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     refetch: refetchIntegracaoIxc,
   } = useContratoIntegracaoIxc(isEditMode ? internalContratoId : null);
   const linkIxcMutation = useLinkContratoIntegracaoIxc(isEditMode ? internalContratoId : null);
-  const deleteIntegracaoIxcMutation = useDeleteIntegracaoIxcProvedor();
   const testIntegracaoIxcMutation = useTestIntegracaoIxcProvedor();
 
-  const sortedIntegracaoIxcData = useMemo((): IntegracaoIxcProvedorRow[] => {
-    const integracao = contratoIntegracaoIxc?.integracao;
-    if (!integracao?.id) return [];
-    return [
-      {
-        id: integracao.id,
-        nome: integracao.nome ?? '',
-        api_url: integracao.api_url,
-        ativo: !!integracao.ativo,
-        has_api_token: integracao.has_api_token,
-      },
-    ];
-  }, [contratoIntegracaoIxc?.integracao]);
+  const allIntegracaoIxcData = useMemo((): IntegracaoIxcProvedorRow[] => {
+    const integracoes = contratoIntegracaoIxc?.integracoes ?? [];
+    return integracoes.map((integracao) => ({
+      id: integracao.id,
+      nome: integracao.nome ?? '',
+      api_url: integracao.api_url,
+      ativo: !!integracao.ativo,
+      has_api_token: integracao.has_api_token,
+    }));
+  }, [contratoIntegracaoIxc?.integracoes]);
 
-  const handleIntegracaoIxcFormSuccess = useCallback(
-    async (integracaoId?: number) => {
-      if (integracaoId && internalContratoId) {
+  const sortedIntegracaoIxcData = useMemo((): IntegracaoIxcProvedorRow[] => {
+    const sortColumn = integracaoIxcTableFilters.sortColumn || 'nome';
+    const sortDirection = integracaoIxcTableFilters.sortDirection || 'asc';
+    const sorted = [...allIntegracaoIxcData].sort((a, b) => {
+      const aValue = String(a[sortColumn as keyof IntegracaoIxcProvedorRow] ?? '');
+      const bValue = String(b[sortColumn as keyof IntegracaoIxcProvedorRow] ?? '');
+      const comparison = aValue.localeCompare(bValue, 'pt-BR', { numeric: true });
+      return sortDirection === 'desc' ? -comparison : comparison;
+    });
+    const offset = (page - 1) * limit;
+    return sorted.slice(offset, offset + limit);
+  }, [
+    allIntegracaoIxcData,
+    integracaoIxcTableFilters.sortColumn,
+    integracaoIxcTableFilters.sortDirection,
+    page,
+    limit,
+  ]);
+
+  const handleIntegracaoIxcLink = useCallback(
+    async (integracaoId: number) => {
+      if (internalContratoId) {
         await linkIxcMutation.mutateAsync(integracaoId);
       }
       refetchIntegracaoIxc();
     },
     [internalContratoId, linkIxcMutation, refetchIntegracaoIxc]
   );
+
+  const handleIntegracaoIxcFormSuccess = useCallback(() => {
+    refetchIntegracaoIxc();
+  }, [refetchIntegracaoIxc]);
 
   const tabData = useContratoModalTabData({
     show,
@@ -309,9 +328,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     isEditMode,
     setEditingIntegracaoIxcId,
     setShowIntegracaoIxcFormModal,
-    deleteIntegracaoMutation: deleteIntegracaoIxcMutation,
+    setShowIntegracaoIxcLinkModal,
     testIntegracaoMutation: testIntegracaoIxcMutation,
-    queryClient,
   });
 
   const columns = useMemo(() => buildContratoTituloColumns(t), [t]);
@@ -425,7 +443,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       integracaoIxcSortColumn={integracaoIxcTableFilters.sortColumn}
       integracaoIxcSortDirection={integracaoIxcTableFilters.sortDirection}
       onIntegracaoIxcSort={integracaoIxcTableFilters.setSort}
-      integracaoIxcTotal={sortedIntegracaoIxcData.length}
+      integracaoIxcTotal={allIntegracaoIxcData.length}
     />
   );
 
@@ -523,9 +541,12 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         setShowModeloContratoModal={setShowModeloContratoModal}
         showIntegracaoIxcFormModal={showIntegracaoIxcFormModal}
         setShowIntegracaoIxcFormModal={setShowIntegracaoIxcFormModal}
+        showIntegracaoIxcLinkModal={showIntegracaoIxcLinkModal}
+        setShowIntegracaoIxcLinkModal={setShowIntegracaoIxcLinkModal}
         editingIntegracaoIxcId={editingIntegracaoIxcId}
         setEditingIntegracaoIxcId={setEditingIntegracaoIxcId}
         onIntegracaoIxcFormSuccess={handleIntegracaoIxcFormSuccess}
+        onIntegracaoIxcLink={handleIntegracaoIxcLink}
         onPlanoSelect={handlePlanoSelect}
         onBancoSelect={handleBancoSelect}
         onTipoCobrancaContratoSelect={handleTipoCobrancaContratoSelect}

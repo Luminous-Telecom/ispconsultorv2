@@ -5,7 +5,7 @@ import ReceberModal from 'components/modals/pagamentos/ReceberModal';
 import PlanoListModal from 'components/modals/planos/PlanoListModal';
 import BancoListModal from 'components/modals/bancos/BancoListModal';
 import { TipoCobrancaContratoListModal } from 'components/modals/tipoCobrancaContrato';
-import { IntegracaoIxcProvedorModal } from 'components/modals/integracao-ixc-provedor';
+import { IntegracaoIxcProvedorModal, IntegracaoIxcProvedorListModal } from 'components/modals/integracao-ixc-provedor';
 import ModeloContratoSelectModal from 'components/modals/parametros/ModeloContratoSelectModal';
 import ImprimirModal from 'components/common/ImprimirModal';
 import { useI18n } from 'contexts/I18nContext';
@@ -58,9 +58,12 @@ interface ContratoModalSubModalsProps {
   setShowModeloContratoModal: (show: boolean) => void;
   showIntegracaoIxcFormModal: boolean;
   setShowIntegracaoIxcFormModal: (show: boolean) => void;
+  showIntegracaoIxcLinkModal: boolean;
+  setShowIntegracaoIxcLinkModal: (show: boolean) => void;
   editingIntegracaoIxcId: number | null;
   setEditingIntegracaoIxcId: (id: number | null) => void;
-  onIntegracaoIxcFormSuccess: (integracaoId?: number) => void | Promise<void>;
+  onIntegracaoIxcFormSuccess: () => void;
+  onIntegracaoIxcLink: (integracaoId: number) => Promise<void>;
   onPlanoSelect: (plano: Plano) => void;
   onBancoSelect: (banco: Banco) => void;
   onTipoCobrancaContratoSelect: (tipo: TipoCobrancaContrato) => void;
@@ -123,9 +126,12 @@ function ContratoModalSubModals({
   setShowModeloContratoModal,
   showIntegracaoIxcFormModal,
   setShowIntegracaoIxcFormModal,
+  showIntegracaoIxcLinkModal,
+  setShowIntegracaoIxcLinkModal,
   editingIntegracaoIxcId,
   setEditingIntegracaoIxcId,
   onIntegracaoIxcFormSuccess,
+  onIntegracaoIxcLink,
   onPlanoSelect,
   onBancoSelect,
   onTipoCobrancaContratoSelect,
@@ -325,11 +331,22 @@ function ContratoModalSubModals({
           setEditingIntegracaoIxcId(null);
         }}
         integracaoId={editingIntegracaoIxcId}
-        onSuccess={(integracaoId) => {
-          void onIntegracaoIxcFormSuccess(integracaoId);
+        onSuccess={() => {
+          onIntegracaoIxcFormSuccess();
           setShowIntegracaoIxcFormModal(false);
           setEditingIntegracaoIxcId(null);
         }}
+      />
+
+      <IntegracaoIxcProvedorListModal
+        show={showIntegracaoIxcLinkModal}
+        onClose={() => setShowIntegracaoIxcLinkModal(false)}
+        onSelectIntegracao={(integracao) => {
+          void onIntegracaoIxcLink(integracao.id);
+          setShowIntegracaoIxcLinkModal(false);
+        }}
+        allowManage
+        title={t('ui.selectIxcProvedor')}
       />
     </>
   );

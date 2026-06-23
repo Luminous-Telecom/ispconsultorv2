@@ -2,6 +2,7 @@ import { Op, WhereOptions } from 'sequelize';
 import axios, { isAxiosError } from 'axios';
 import { IntegracaoIxcProvedor } from '../../../models/integracao/IntegracaoIxcProvedor';
 import { Contrato } from '../../../models/contratos/Contrato';
+import { ContratoIntegracaoIxcVinculo } from '../../../models/contratos/ContratoIntegracaoIxcVinculo';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { buildPagination } from '../../../utils/pagination';
 
@@ -105,21 +106,32 @@ export class IntegracaoIxcProvedorService {
     const clientesPorIntegracao = new Map<number, string[]>();
 
     if (integracaoIds.length > 0) {
-      const contratos = (await Contrato.findAll({
+      const vinculos = (await ContratoIntegracaoIxcVinculo.findAll({
         where: { integracao_ixc_provedor_id: { [Op.in]: integracaoIds } },
         attributes: ['integracao_ixc_provedor_id'],
         include: [
           {
-            association: 'cliente',
-            attributes: ['id', 'razao_social', 'nome_fantasia'],
+            association: 'contrato',
+            attributes: ['id'],
             required: true,
+            include: [
+              {
+                association: 'cliente',
+                attributes: ['id', 'razao_social', 'nome_fantasia'],
+                required: true,
+              },
+            ],
           },
         ],
-      })) as Array<Contrato & { cliente?: Cliente | null }>;
+      })) as Array<
+        ContratoIntegracaoIxcVinculo & {
+          contrato?: (Contrato & { cliente?: Cliente | null }) | null;
+        }
+      >;
 
-      for (const contrato of contratos) {
-        const integracaoId = contrato.integracao_ixc_provedor_id;
-        const cliente = contrato.cliente;
+      for (const vinculo of vinculos) {
+        const integracaoId = vinculo.integracao_ixc_provedor_id;
+        const cliente = vinculo.contrato?.cliente;
         if (!integracaoId || !cliente) continue;
 
         const nome = clienteDisplayName(cliente);
@@ -203,10 +215,9 @@ export class IntegracaoIxcProvedorService {
     const item = await IntegracaoIxcProvedor.findByPk(id);
     if (!item) throw new Error('Integração IXC Provedor não encontrada');
 
-    await Contrato.update(
-      { integracao_ixc_provedor_id: null },
-      { where: { integracao_ixc_provedor_id: item.id } }
-    );
+    await ContratoIntegracaoIxcVinculo.destroy({
+      where: { integracao_ixc_provedor_id: item.id },
+    });
 
     await item.destroy();
   }
@@ -254,21 +265,15 @@ export class IntegracaoIxcProvedorService {
     clienteId: number,
     empresaId: number | null
   ): Promise<IxcApiCredentials> {
-    const contrato = await IntegracaoIxcProvedorService.findContratoComIntegracao(clienteId, empresaId);
+    const integracao = await IntegracaoIxcProvedorService.findIntegracaoAtivaForCliente(
+      clienteId,
+      empresaId
+    );
 
-    if (!contrato?.integracao_ixc_provedor_id) {
+    if (!integracao) {
       throw new Error(
         'Integração IXC não configurada. Cadastre uma integração IXC Provedor no contrato do cliente.'
       );
-    }
-
-    const integracao = await IntegracaoIxcProvedor.findByPk(contrato.integracao_ixc_provedor_id);
-    if (!integracao) {
-      throw new Error('Integração IXC Provedor vinculada ao contrato não encontrada.');
-    }
-
-    if (!integracao.ativo) {
-      throw new Error('A integração IXC Provedor vinculada ao contrato está inativa.');
     }
 
     const apiUrl = integracao.api_url?.trim();
@@ -283,14 +288,52 @@ export class IntegracaoIxcProvedorService {
     };
   }
 
+  static async findIntegracaoAtivaForCliente(
+    clienteId: number,
+    empresaId: number | null
+  ): Promise<IntegracaoIxcProvedor | null> {
+    const contratoWhere: WhereOptions<Contrato> = { cliente_id: clienteId };
+    if (empresaId != null) {
+      contratoWhere.empresa_id = empresaId;
+    }
+
+    const vinculos = (await ContratoIntegracaoIxcVinculo.findAll({
+      include: [
+        {
+          association: 'contrato',
+          where: contratoWhere,
+          required: true,
+          attributes: ['id'],
+        },
+        {
+          association: 'integracaoIxcProvedor',
+          required: true,
+        },
+      ],
+      order: [['updated_at', 'DESC']],
+    })) as Array<
+      ContratoIntegracaoIxcVinculo & { integracaoIxcProvedor?: IntegracaoIxcProvedor | null }
+    >;
+
+    for (const vinculo of vinculos) {
+      const integracao = vinculo.integracaoIxcProvedor;
+      if (!integracao?.ativo) continue;
+
+      const apiUrl = integracao.api_url?.trim();
+      const apiToken = integracao.api_token?.trim();
+      if (apiUrl && apiToken) {
+        return integracao;
+      }
+    }
+
+    return null;
+  }
+
   static async findContratoComIntegracao(
     clienteId: number,
     empresaId: number | null
   ): Promise<Contrato | null> {
-    const contratoWhere: WhereOptions<Contrato> = {
-      cliente_id: clienteId,
-      integracao_ixc_provedor_id: { [Op.ne]: null },
-    };
+    const contratoWhere: WhereOptions<Contrato> = { cliente_id: clienteId };
 
     if (empresaId != null) {
       contratoWhere.empresa_id = empresaId;
@@ -298,6 +341,12 @@ export class IntegracaoIxcProvedorService {
 
     return Contrato.findOne({
       where: contratoWhere,
+      include: [
+        {
+          association: 'integracaoIxcProvedores',
+          required: true,
+        },
+      ],
       order: [['updated_at', 'DESC']],
     });
   }
@@ -306,15 +355,11 @@ export class IntegracaoIxcProvedorService {
     clienteId: number,
     empresaId: number | null
   ): Promise<boolean> {
-    const contrato = await IntegracaoIxcProvedorService.findContratoComIntegracao(clienteId, empresaId);
-    if (!contrato?.integracao_ixc_provedor_id) return false;
-
-    const integracao = await IntegracaoIxcProvedor.findByPk(contrato.integracao_ixc_provedor_id);
-    if (!integracao?.ativo) return false;
-
-    const apiUrl = integracao.api_url?.trim();
-    const apiToken = integracao.api_token?.trim();
-    return !!(apiUrl && apiToken);
+    const integracao = await IntegracaoIxcProvedorService.findIntegracaoAtivaForCliente(
+      clienteId,
+      empresaId
+    );
+    return integracao != null;
   }
 
   static async assertEmpresaAccess(

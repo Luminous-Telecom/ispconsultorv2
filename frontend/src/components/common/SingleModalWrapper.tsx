@@ -68,6 +68,9 @@ const RpkiValidationLogsModal = lazy(() => import('../modals/logs/RpkiValidation
 
 // Suporte
 const OrdemServicoListModal = lazy(() => import('../modals/ordens-servico').then(m => ({ default: m.OrdemServicoListModal })));
+const IntegracaoIxcProvedorListModal = lazy(() =>
+  import('../modals/integracao-ixc-provedor').then((m) => ({ default: m.IntegracaoIxcProvedorListModal }))
+);
 const RpkiCaPaiLogsModal = lazy(() => import('../modals/logs/rpki/RpkiCaPaiLogsModal'));
 const RpkiRepositorioLogsModal = lazy(() => import('../modals/logs/rpki/RpkiRepositorioLogsModal'));
 
@@ -178,6 +181,13 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
   'blockdomi-ipv6': { component: IPv6ListModal, titleKey: 'modal.ipv6', loadingMessageKey: 'ui.loadingPage', className: 'no-padding list-modal-no-body-scroll' },
   'blockdomi-importar-lista': { component: ImportarListaBlockdomiModal, titleKey: 'modal.importList', loadingMessageKey: 'ui.loadingPage', size: 'xl' },
   'blockdomi-ips-permitidos': { component: IpsPermitidosListModal, titleKey: 'blockdomi.ipsPermitidos', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
+  'integracao-ixc-provedor': {
+    component: IntegracaoIxcProvedorListModal,
+    titleKey: 'tabs.ixcProvedor',
+    loadingMessageKey: 'ui.loadingPage',
+    size: 'xl',
+    className: 'no-padding list-modal-no-body-scroll',
+  },
   // Logs ERP/SaaS: resolveLogsModal (logsModalRegistry.ts) — não duplicar aqui
   // SaaS Super Admin
   'saas-planos': { component: SaasPlanoListModal, titleKey: 'modal.plans', loadingMessageKey: 'ui.loadingPage', size: 'lg', className: 'no-padding' },

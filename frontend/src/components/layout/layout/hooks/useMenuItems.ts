@@ -105,6 +105,19 @@ export const useMenuItems = ({ t, openModal, hasModulo }: UseMenuItemsParams) =>
     [handleOpenModal, filterItem]
   );
 
+  const integracoesFolderItems = useMemo(
+    () => [
+      {
+        id: 'integracao-ixc-provedor',
+        modalId: 'integracao-ixc-provedor',
+        label: t('tabs.ixcProvedor'),
+        icon: 'bi-plug',
+        onClick: () => handleOpenModal('integracao-ixc-provedor'),
+      },
+    ],
+    [t, handleOpenModal]
+  );
+
   const logsFolderItems = useMemo(
     () =>
       [
@@ -186,6 +199,13 @@ export const useMenuItems = ({ t, openModal, hasModulo }: UseMenuItemsParams) =>
         items: rpkiFolderItems,
       },
       {
+        accordionId: 'integracoesAccordion',
+        collapseId: 'integracoesCollapse',
+        headingId: 'integracoesHeading',
+        title: t('layout.folderIntegracoes'),
+        items: integracoesFolderItems,
+      },
+      {
         accordionId: 'suporteAccordion',
         collapseId: 'suporteCollapse',
         headingId: 'suporteHeading',
@@ -237,6 +257,7 @@ export const useMenuItems = ({ t, openModal, hasModulo }: UseMenuItemsParams) =>
       sshManagerFolderItems,
       blockdomiFolderItems,
       rpkiFolderItems,
+      integracoesFolderItems,
       suporteFolderItems,
       logsFolderItems,
       logsComunicacaoFolderItems,

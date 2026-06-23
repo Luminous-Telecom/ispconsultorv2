@@ -78,6 +78,8 @@ export type ModalType =
   | 'agents'
   // Suporte
   | 'ordens-servico'
+  // Integrações
+  | 'integracao-ixc-provedor'
   | null;
 
 interface ModalContextType {

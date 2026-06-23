@@ -19,7 +19,7 @@ export const useLinkContratoIntegracaoIxc = (contratoId?: number | null) => {
   const { showApiError } = useApiError();
 
   return useMutation({
-    mutationFn: (integracaoIxcProvedorId: number | null) => {
+    mutationFn: (integracaoIxcProvedorId: number) => {
       if (!contratoId) {
         return Promise.reject(new Error('Contrato não encontrado'));
       }
@@ -27,7 +27,31 @@ export const useLinkContratoIntegracaoIxc = (contratoId?: number | null) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contrato-integracao-ixc', contratoId] });
+      queryClient.invalidateQueries({ queryKey: ['integracao-ixc-provedor'] });
       success('Integração IXC vinculada ao contrato');
+    },
+    onError: (error) => {
+      showApiError(error);
+    },
+  });
+};
+
+export const useUnlinkContratoIntegracaoIxc = (contratoId?: number | null) => {
+  const queryClient = useQueryClient();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
+
+  return useMutation({
+    mutationFn: (integracaoIxcProvedorId: number) => {
+      if (!contratoId) {
+        return Promise.reject(new Error('Contrato não encontrado'));
+      }
+      return ContratoIntegracaoIxcService.unlink(contratoId, integracaoIxcProvedorId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contrato-integracao-ixc', contratoId] });
+      queryClient.invalidateQueries({ queryKey: ['integracao-ixc-provedor'] });
+      success('Integração IXC desvinculada do contrato');
     },
     onError: (error) => {
       showApiError(error);

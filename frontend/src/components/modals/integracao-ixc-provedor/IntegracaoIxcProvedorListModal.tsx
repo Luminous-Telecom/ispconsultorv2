@@ -7,6 +7,7 @@ import { useEntityListModal } from 'hooks/useEntityListModal';
 import { IntegracaoIxcProvedor } from 'services/integracaoIxcProvedorService';
 import { useI18n } from 'contexts/I18nContext';
 import { formatDateTime } from 'utils/formatters';
+import { useBulkBtn } from 'components/ui';
 import ListModal from 'components/common/ListModal';
 import { ListModalConfig } from 'types/modal';
 import IntegracaoIxcProvedorModal from './IntegracaoIxcProvedorModal';
@@ -16,6 +17,7 @@ interface IntegracaoIxcProvedorListModalProps {
   show: boolean;
   onClose: () => void;
   onSelectIntegracao?: (integracao: IntegracaoIxcProvedor) => void;
+  allowManage?: boolean;
   title?: string;
   skipWrapper?: boolean;
 }
@@ -24,12 +26,14 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
   show,
   onClose,
   onSelectIntegracao,
+  allowManage = false,
   title,
   skipWrapper = false,
 }) => {
   const { t } = useI18n();
+  const bulkBtn = useBulkBtn();
   const defaultTitle =
-    title || (onSelectIntegracao ? 'Selecionar IXC Provedor' : t('params.integrations'));
+    title || (onSelectIntegracao ? t('ui.selectIxcProvedor') : t('tabs.ixcProvedor'));
 
   const list = useEntityListModal<IntegracaoIxcProvedor>({
     onClose,
@@ -79,11 +83,6 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
       },
       { key: 'nome', label: t('form.name'), sortable: true, render: (item) => item.nome },
       {
-        key: 'clientes',
-        label: t('table.clients'),
-        render: (item) => item.clientes_label || '-',
-      },
-      {
         key: 'api_url',
         label: 'URL da API',
         sortable: true,
@@ -120,14 +119,25 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
 
   const bulkActions = useMemo(() => {
     if (onSelectIntegracao) {
-      return list.buildSelectBulkActions();
+      const selectActions = list.buildSelectBulkActions();
+      if (allowManage) {
+        return [
+          {
+            label: bulkBtn.novo.label,
+            variant: bulkBtn.novo.variant,
+            action: () => list.openCreateForm(),
+          },
+          ...selectActions,
+        ];
+      }
+      return selectActions;
     }
     return list.buildCrudBulkActions({
       onNew: list.openCreateForm,
       onEdit: list.openEditForm,
       onDelete: handleDelete,
     });
-  }, [onSelectIntegracao, list, handleDelete]);
+  }, [onSelectIntegracao, allowManage, list, handleDelete, bulkBtn.novo.label, bulkBtn.novo.variant]);
 
   const pagination = useMemo(
     () => list.buildPagination(integracoesData?.pagination),
@@ -188,9 +198,12 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
         show={list.showFormModal}
         onClose={list.closeFormModal}
         integracaoId={list.selectedEntityId}
-        onSuccess={() => {
+        onSuccess={(integracaoId) => {
           refetch();
           list.closeFormModal();
+          if (allowManage && onSelectIntegracao && integracaoId) {
+            onSelectIntegracao({ id: integracaoId, nome: '' } as IntegracaoIxcProvedor);
+          }
         }}
       />
       <ImprimirModal

@@ -10,6 +10,7 @@ import { ClienteArquivo } from './clientes/ClienteArquivo';
 // Contratos
 import { Contrato } from './contratos/Contrato';
 import { ContratoPlanoAdicional } from './contratos/ContratoPlanoAdicional';
+import { ContratoIntegracaoIxcVinculo } from './contratos/ContratoIntegracaoIxcVinculo';
 import { IntegracaoIxcProvedor } from './integracao/IntegracaoIxcProvedor';
 import { TermoContrato } from './contratos/TermoContrato';
 
@@ -226,14 +227,38 @@ Plano.hasMany(ContratoPlanoAdicional, {
   as: 'contratosAdicionais'
 });
 
-Contrato.belongsTo(IntegracaoIxcProvedor, {
+Contrato.belongsToMany(IntegracaoIxcProvedor, {
+  through: ContratoIntegracaoIxcVinculo,
+  foreignKey: 'contrato_id',
+  otherKey: 'integracao_ixc_provedor_id',
+  as: 'integracaoIxcProvedores',
+});
+
+IntegracaoIxcProvedor.belongsToMany(Contrato, {
+  through: ContratoIntegracaoIxcVinculo,
+  foreignKey: 'integracao_ixc_provedor_id',
+  otherKey: 'contrato_id',
+  as: 'contratos',
+});
+
+ContratoIntegracaoIxcVinculo.belongsTo(Contrato, {
+  foreignKey: 'contrato_id',
+  as: 'contrato',
+});
+
+ContratoIntegracaoIxcVinculo.belongsTo(IntegracaoIxcProvedor, {
   foreignKey: 'integracao_ixc_provedor_id',
   as: 'integracaoIxcProvedor',
 });
 
-IntegracaoIxcProvedor.hasMany(Contrato, {
+Contrato.hasMany(ContratoIntegracaoIxcVinculo, {
+  foreignKey: 'contrato_id',
+  as: 'integracaoIxcVinculos',
+});
+
+IntegracaoIxcProvedor.hasMany(ContratoIntegracaoIxcVinculo, {
   foreignKey: 'integracao_ixc_provedor_id',
-  as: 'contratos',
+  as: 'contratoVinculos',
 });
 
 TermoContrato.belongsTo(ModeloDocumento, {
@@ -475,6 +500,7 @@ export {
   Titulo,
   Contrato,
   ContratoPlanoAdicional,
+  ContratoIntegracaoIxcVinculo,
   IntegracaoIxcProvedor,
   DadosEmpresa,
   ScheduledRoutine,

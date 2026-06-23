@@ -8,7 +8,7 @@ import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
 
 export class ContratoIntegracaoIxcController {
   private static linkSchema = Joi.object({
-    integracao_ixc_provedor_id: Joi.number().integer().positive().allow(null),
+    integracao_ixc_provedor_id: Joi.number().integer().positive().required(),
   });
 
   private static async assertContratoAccess(req: Request, contratoId: string): Promise<boolean> {
@@ -37,10 +37,10 @@ export class ContratoIntegracaoIxcController {
         return;
       }
 
-      const config = await ContratoIntegracaoIxcService.getByContrato(contratoId);
+      const config = await ContratoIntegracaoIxcService.listByContrato(contratoId);
       sendSuccess(res, config);
     } catch (error) {
-      sendError(res, error, 'Erro ao buscar integração IXC do contrato', 500, true, {
+      sendError(res, error, 'Erro ao buscar integrações IXC do contrato', 500, true, {
         context: 'ContratoIntegracaoIxcController',
         action: 'getByContrato',
         contratoId: req.params.contrato_id,
@@ -66,7 +66,7 @@ export class ContratoIntegracaoIxcController {
       const empresaId = getEmpresaIdOrNull(req);
       const config = await ContratoIntegracaoIxcService.link(
         contratoId,
-        value.integracao_ixc_provedor_id ?? null,
+        value.integracao_ixc_provedor_id,
         empresaId
       );
 
@@ -80,6 +80,35 @@ export class ContratoIntegracaoIxcController {
         context: 'ContratoIntegracaoIxcController',
         action: 'link',
         contratoId: req.params.contrato_id,
+      });
+    }
+  }
+
+  static async unlink(req: Request, res: Response): Promise<void> {
+    try {
+      const { contrato_id, integracao_ixc_provedor_id } = req.params;
+      const contratoId = parseInt(contrato_id, 10);
+      const integracaoId = parseInt(integracao_ixc_provedor_id, 10);
+
+      if (
+        Number.isNaN(contratoId) ||
+        Number.isNaN(integracaoId) ||
+        !(await ContratoIntegracaoIxcController.assertContratoAccess(req, contrato_id))
+      ) {
+        sendNotFound(res, 'Contrato não encontrado');
+        return;
+      }
+
+      const empresaId = getEmpresaIdOrNull(req);
+      const config = await ContratoIntegracaoIxcService.unlink(contratoId, integracaoId, empresaId);
+
+      sendSuccess(res, config, 'Integração IXC desvinculada do contrato');
+    } catch (error) {
+      sendError(res, error, 'Erro ao desvincular integração IXC do contrato', 500, true, {
+        context: 'ContratoIntegracaoIxcController',
+        action: 'unlink',
+        contratoId: req.params.contrato_id,
+        integracaoId: req.params.integracao_ixc_provedor_id,
       });
     }
   }

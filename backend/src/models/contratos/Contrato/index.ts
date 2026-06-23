@@ -16,7 +16,16 @@ import {
   HasManyRemoveAssociationsMixin,
   HasManyHasAssociationMixin,
   HasManyHasAssociationsMixin,
-  HasManyCountAssociationsMixin
+  HasManyCountAssociationsMixin,
+  BelongsToManyGetAssociationsMixin,
+  BelongsToManySetAssociationsMixin,
+  BelongsToManyAddAssociationMixin,
+  BelongsToManyAddAssociationsMixin,
+  BelongsToManyRemoveAssociationMixin,
+  BelongsToManyRemoveAssociationsMixin,
+  BelongsToManyHasAssociationMixin,
+  BelongsToManyHasAssociationsMixin,
+  BelongsToManyCountAssociationsMixin,
 } from 'sequelize';
 import { sequelize } from '../../../config/database';
 import { Cliente } from '../../clientes/Cliente';
@@ -49,7 +58,6 @@ export class Contrato extends Model<
   declare tipo_cobranca_contrato_id: number;
   declare data_validade_desconto: Date | null;
   declare modelo_documento_id: number | null;
-  declare integracao_ixc_provedor_id: number | null;
   declare endereco: string | null;
   declare numero: string | null;
   declare complemento: string | null;
@@ -77,8 +85,15 @@ export class Contrato extends Model<
   declare setTipoCobrancaContrato: BelongsToSetAssociationMixin<TipoCobrancaContrato, number>;
   declare createTipoCobrancaContrato: BelongsToCreateAssociationMixin<TipoCobrancaContrato>;
 
-  declare getIntegracaoIxcProvedor: BelongsToGetAssociationMixin<IntegracaoIxcProvedor>;
-  declare setIntegracaoIxcProvedor: BelongsToSetAssociationMixin<IntegracaoIxcProvedor, number>;
+  declare getIntegracaoIxcProvedores: BelongsToManyGetAssociationsMixin<IntegracaoIxcProvedor>;
+  declare setIntegracaoIxcProvedores: BelongsToManySetAssociationsMixin<IntegracaoIxcProvedor, number>;
+  declare addIntegracaoIxcProvedor: BelongsToManyAddAssociationMixin<IntegracaoIxcProvedor, number>;
+  declare addIntegracaoIxcProvedores: BelongsToManyAddAssociationsMixin<IntegracaoIxcProvedor, number>;
+  declare removeIntegracaoIxcProvedor: BelongsToManyRemoveAssociationMixin<IntegracaoIxcProvedor, number>;
+  declare removeIntegracaoIxcProvedores: BelongsToManyRemoveAssociationsMixin<IntegracaoIxcProvedor, number>;
+  declare hasIntegracaoIxcProvedor: BelongsToManyHasAssociationMixin<IntegracaoIxcProvedor, number>;
+  declare hasIntegracaoIxcProvedores: BelongsToManyHasAssociationsMixin<IntegracaoIxcProvedor, number>;
+  declare countIntegracaoIxcProvedores: BelongsToManyCountAssociationsMixin;
 
   // Relacionamentos com Termos
   declare getTermos: HasManyGetAssociationsMixin<TermoContrato>;
@@ -298,15 +313,6 @@ Contrato.init(
         model: 'adm_documentos_modelo_documento',
         key: 'id'
       }
-    },
-    integracao_ixc_provedor_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      comment: 'Integração IXC Provedor vinculada ao contrato',
-      references: {
-        model: 'adm_integracao_ixc_provedor',
-        key: 'id',
-      },
     },
     endereco: {
       type: DataTypes.STRING(255),

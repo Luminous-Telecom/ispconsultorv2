@@ -1,32 +1,52 @@
 import { defaultApiClient } from './core';
 
-export interface ContratoIntegracaoIxcLink {
-  integracao_ixc_provedor_id?: number | null;
-  integracao?: {
-    id?: number;
-    nome?: string;
-    api_url?: string | null;
-    ativo?: boolean;
-    has_api_token?: boolean;
-  } | null;
+export interface ContratoIntegracaoIxcItem {
+  id: number;
+  nome: string;
+  api_url?: string | null;
+  ativo?: boolean;
+  has_api_token?: boolean;
+}
+
+export interface ContratoIntegracaoIxcResponse {
+  integracoes: ContratoIntegracaoIxcItem[];
 }
 
 export class ContratoIntegracaoIxcService {
-  static async getByContrato(contratoId: number): Promise<ContratoIntegracaoIxcLink> {
-    const response = await defaultApiClient.get<{ data?: ContratoIntegracaoIxcLink }>(
+  static async getByContrato(contratoId: number): Promise<ContratoIntegracaoIxcResponse> {
+    const response = await defaultApiClient.get<{ data?: ContratoIntegracaoIxcResponse }>(
       `/contratos/${contratoId}/integracao-ixc`
     );
-    return response.data?.data ?? (response.data as unknown as ContratoIntegracaoIxcLink);
+    const data = response.data?.data ?? (response.data as unknown as ContratoIntegracaoIxcResponse);
+    return {
+      integracoes: Array.isArray(data?.integracoes) ? data.integracoes : [],
+    };
   }
 
   static async link(
     contratoId: number,
-    integracaoIxcProvedorId: number | null
-  ): Promise<ContratoIntegracaoIxcLink> {
-    const response = await defaultApiClient.put<{ data?: ContratoIntegracaoIxcLink }>(
+    integracaoIxcProvedorId: number
+  ): Promise<ContratoIntegracaoIxcResponse> {
+    const response = await defaultApiClient.post<{ data?: ContratoIntegracaoIxcResponse }>(
       `/contratos/${contratoId}/integracao-ixc`,
       { integracao_ixc_provedor_id: integracaoIxcProvedorId }
     );
-    return response.data?.data ?? (response.data as unknown as ContratoIntegracaoIxcLink);
+    const data = response.data?.data ?? (response.data as unknown as ContratoIntegracaoIxcResponse);
+    return {
+      integracoes: Array.isArray(data?.integracoes) ? data.integracoes : [],
+    };
+  }
+
+  static async unlink(
+    contratoId: number,
+    integracaoIxcProvedorId: number
+  ): Promise<ContratoIntegracaoIxcResponse> {
+    const response = await defaultApiClient.delete<{ data?: ContratoIntegracaoIxcResponse }>(
+      `/contratos/${contratoId}/integracao-ixc/${integracaoIxcProvedorId}`
+    );
+    const data = response.data?.data ?? (response.data as unknown as ContratoIntegracaoIxcResponse);
+    return {
+      integracoes: Array.isArray(data?.integracoes) ? data.integracoes : [],
+    };
   }
 }

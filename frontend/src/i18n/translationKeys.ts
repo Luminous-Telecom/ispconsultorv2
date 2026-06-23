@@ -239,6 +239,7 @@ export interface TranslationKeys {
   'layout.closeMenu': string;
   'layout.folderCadastros': string;
   'layout.folderFinanceiro': string;
+  'layout.folderIntegracoes': string;
   'layout.folderLogs': string;
   'layout.folderLogsEquipamentos': string;
   'layout.folderLogsComunicacao': string;
@@ -566,6 +567,7 @@ export interface TranslationKeys {
   'ui.selectCompany': string;
   'ui.selectAgent': string;
   'ui.selectBank': string;
+  'ui.selectIxcProvedor': string;
   'ui.yes': string;
   'ui.no': string;
   'ui.actionsMenu': string;

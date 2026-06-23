@@ -15,7 +15,11 @@ router.get('/cliente/:clienteId', ContratoController.getByCliente);
 router.get('/:contrato_id/servicos-adicionais', ContratoPlanoAdicionalController.list);
 router.post('/:contrato_id/servicos-adicionais', ContratoPlanoAdicionalController.create);
 router.get('/:contrato_id/integracao-ixc', ContratoIntegracaoIxcController.getByContrato);
-router.put('/:contrato_id/integracao-ixc', ContratoIntegracaoIxcController.link);
+router.post('/:contrato_id/integracao-ixc', ContratoIntegracaoIxcController.link);
+router.delete(
+  '/:contrato_id/integracao-ixc/:integracao_ixc_provedor_id',
+  ContratoIntegracaoIxcController.unlink
+);
 // Rotas com caminho fixo "servicos-adicionais" devem vir antes de rotas genéricas
 router.put('/servicos-adicionais/:id', ContratoPlanoAdicionalController.update);
 router.delete('/servicos-adicionais/:id', ContratoPlanoAdicionalController.delete);
