@@ -111,7 +111,7 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
         case 'is_active':
           return agent.is_active ? '1' : '0';
         default:
-          return String((agent as Record<string, unknown>)[sortKey] ?? '');
+          return String((agent as unknown as Record<string, unknown>)[sortKey] ?? '');
       }
     },
     [getClienteLabel]

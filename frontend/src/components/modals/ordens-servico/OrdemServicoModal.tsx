@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useCreateOrdemServico, useUpdateOrdemServico } from 'hooks/useOrdensServico';
@@ -49,11 +49,11 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
   const { warning } = useNotificationContext();
   const lastIntegracaoToastClienteId = useRef(0);
 
-  const notifySemIntegracaoIxc = (id: number) => {
+  const notifySemIntegracaoIxc = useCallback((id: number) => {
     if (lastIntegracaoToastClienteId.current === id) return;
     lastIntegracaoToastClienteId.current = id;
     warning(INTEGRACAO_IXC_MSG);
-  };
+  }, [warning]);
 
   const [formData, setFormData] = useState<OrdemServicoFormData>(initialOrdemServicoForm);
   const [errors, setErrors] = useState<Partial<Record<keyof OrdemServicoFormData, string>>>({});
@@ -95,7 +95,7 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
     } else {
       lastIntegracaoToastClienteId.current = 0;
     }
-  }, [show, clienteId, ixcIntegracaoStatus]);
+  }, [show, clienteId, ixcIntegracaoStatus, notifySemIntegracaoIxc]);
 
   useEffect(() => {
     if (!show) {

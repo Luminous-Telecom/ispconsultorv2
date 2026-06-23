@@ -31,10 +31,10 @@ module.exports = {
         (plugin) => !(plugin instanceof ModuleScopePlugin)
       );
 
-      if (env === 'development') {
-        // SCSS usa só data: URLs — resolve-url-loader + source maps do PostCSS atrasam muito o start
-        stripResolveUrlLoader(webpackConfig.module.rules);
+      // SCSS usa só data: URLs — resolve-url-loader exige source-map e quebra com GENERATE_SOURCEMAP=false
+      stripResolveUrlLoader(webpackConfig.module.rules);
 
+      if (env === 'development') {
         // Typecheck fica no IDE; ForkTsChecker recompila ~850 arquivos .ts/.tsx em paralelo
         webpackConfig.plugins = webpackConfig.plugins.filter(
           (plugin) =>

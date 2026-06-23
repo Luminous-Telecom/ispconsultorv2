@@ -1084,6 +1084,7 @@ const enUS: TranslationKeys = {
     'tabs.messages': 'Messages',
     'tabs.responsible': 'Responsible',
     'tabs.communicationPreferences': 'Communication Preferences',
+    'tabs.ixcProvedor': 'IXC Provider',
 
     // Status Labels
     'status.processing': 'Processing',
@@ -1143,6 +1144,7 @@ const enUS: TranslationKeys = {
     'placeholder.financialTitlesCreationHelp': 'Create the contract first to manage financial titles.',
     'placeholder.financialMiscCreationHelp': 'Create the contract first to manage miscellaneous titles.',
     'placeholder.additionalServicesCreationHelp': 'Create the contract first to manage additional services.',
+    'placeholder.ixcProvedorCreationHelp': 'Create the contract first to configure IXC Provider integration.',
     'placeholder.selectProvider': 'Select provider',
     'placeholder.startDate': 'Start date',
     'placeholder.endDate': 'End date',

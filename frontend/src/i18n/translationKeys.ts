@@ -1103,6 +1103,7 @@ export interface TranslationKeys {
   'tabs.messages': string;
   'tabs.responsible': string;
   'tabs.communicationPreferences': string;
+  'tabs.ixcProvedor': string;
 
   // Status Labels
   'status.processing': string;
@@ -1162,6 +1163,7 @@ export interface TranslationKeys {
   'placeholder.financialTitlesCreationHelp': string;
   'placeholder.financialMiscCreationHelp': string;
   'placeholder.additionalServicesCreationHelp': string;
+  'placeholder.ixcProvedorCreationHelp': string;
   'placeholder.enterJustification': string;
   'placeholder.enterSupplierId': string;
   'placeholder.enterPixKey': string;

@@ -122,7 +122,7 @@ function Placeholder({ messageKey }: { messageKey: 'placeholder.contractCreation
 function ContratoModalTabPanels({
   activeTab,
   isEditMode,
-  contratoId,
+  contratoId: _contratoId,
   formData,
   errors,
   handleInputChange,
