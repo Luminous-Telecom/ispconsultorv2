@@ -111,10 +111,19 @@
   width: 100%;
 
   .chart-title--inline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.35rem;
     margin-bottom: 0;
     flex: 1 1 auto;
     min-width: 0;
     text-align: center;
+
+    .bi-info-circle {
+      margin-left: 0 !important;
+    }
   }
 }
 
@@ -346,9 +355,16 @@
   min-width: 0;
 
   .pie-metric-header__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     flex: 1;
     min-width: 0;
     margin: 0;
+
+    .bi-info-circle {
+      margin-left: 0 !important;
+    }
   }
 }
 

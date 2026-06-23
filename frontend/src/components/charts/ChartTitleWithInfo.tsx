@@ -17,7 +17,6 @@ export const ChartTitleWithInfo: React.FC<ChartTitleWithInfoProps> = ({ title, t
         as="span"
         className="chart-title chart-title--inline mb-0"
         helpText={titleInfo}
-        helpIconClassName="ms-0 flex-shrink-0"
       >
         {title}
       </LabelWithHelp>
