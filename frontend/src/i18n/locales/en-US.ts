@@ -109,6 +109,10 @@ const enUS: TranslationKeys = {
     'messages.successDeleteTerms': 'Term(s) deleted successfully!',
     'messages.errorDeleteTerm': 'Error deleting term',
     'messages.errorDeleteTerms': 'Error deleting term(s)',
+    'messages.confirmUnlinkIxcFromContract':
+      'Unlink the IXC integration from this contract? The integration will not be deleted.',
+    'messages.confirmUnlinkIxcFromContractMultiple':
+      'Unlink ${count} IXC integrations from this contract? The integrations will not be deleted.',
     'messages.confirmDeleteAdditionalService': 'Are you sure you want to delete this additional service?',
     'messages.confirmDeleteAdditionalServices': 'Are you sure you want to delete ${count} additional services?',
     'messages.successDeleteAdditionalService': 'Additional service deleted successfully!',

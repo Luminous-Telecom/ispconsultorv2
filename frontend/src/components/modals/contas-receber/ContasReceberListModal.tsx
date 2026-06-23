@@ -218,7 +218,6 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
         onRefresh={refetchData}
         bulkActions={bulkActions}
         onSelectionChange={onSelectTitulo ? list.handleSelectionChange : setSelectedItems}
-        onRowClick={onSelectTitulo ? handleRowSelect : undefined}
         onRowDoubleClick={onSelectTitulo ? handleRowSelect : undefined}
         onAudit={handleAudit}
         auditEntity={isSaas ? 'SaasTitulo' : 'Titulo'}

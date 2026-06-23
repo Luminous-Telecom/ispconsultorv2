@@ -130,7 +130,6 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
         onRefresh={refetch}
         bulkActions={bulkActions}
         onSelectionChange={list.handleSelectionChange}
-        onRowClick={onSelectContrato ? handleRowSelect : undefined}
         onRowDoubleClick={onSelectContrato ? handleRowSelect : undefined}
         onAudit={handleAudit}
         auditEntity="Contrato"

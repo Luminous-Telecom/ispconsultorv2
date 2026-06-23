@@ -159,7 +159,6 @@ const SaasBancosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false, 
       onRefresh={refetch}
       bulkActions={bulkActions}
       onSelectionChange={list.handleSelectionChange}
-      onRowClick={onSelectBanco ? handleRowSelect : undefined}
       onRowDoubleClick={
         onSelectBanco
           ? handleRowSelect

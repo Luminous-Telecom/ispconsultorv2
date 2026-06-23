@@ -32,7 +32,11 @@ import { useContratoTitulosPrint } from './useContratoTitulosPrint';
 import { useContratoModalFormResources } from './useContratoModalFormResources';
 import { useContratoModalTabData } from './useContratoModalTabData';
 import { useTableFilters } from 'hooks/useTableFilters';
-import { useContratoIntegracaoIxc, useLinkContratoIntegracaoIxc } from 'hooks/useContratoIntegracaoIxc';
+import {
+  useContratoIntegracaoIxc,
+  useLinkContratoIntegracaoIxc,
+  useUnlinkContratoIntegracaoIxc,
+} from 'hooks/useContratoIntegracaoIxc';
 import {
   useTestIntegracaoIxcProvedor,
 } from 'hooks/useIntegracaoIxcProvedor';
@@ -145,6 +149,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     refetch: refetchIntegracaoIxc,
   } = useContratoIntegracaoIxc(isEditMode ? internalContratoId : null);
   const linkIxcMutation = useLinkContratoIntegracaoIxc(isEditMode ? internalContratoId : null);
+  const unlinkIxcMutation = useUnlinkContratoIntegracaoIxc(isEditMode ? internalContratoId : null);
   const testIntegracaoIxcMutation = useTestIntegracaoIxcProvedor();
 
   const allIntegracaoIxcData = useMemo((): IntegracaoIxcProvedorRow[] => {
@@ -327,10 +332,13 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
 
   const { integracaoIxcBulkActions } = useContratoIxcBulkActions({
     isEditMode,
+    selectedIntegracaoIxcItems,
+    setSelectedIntegracaoIxcItems,
     setEditingIntegracaoIxcId,
     setShowIntegracaoIxcFormModal,
     setShowIntegracaoIxcLinkModal,
     testIntegracaoMutation: testIntegracaoIxcMutation,
+    unlinkIxcMutation,
   });
 
   const columns = useMemo(() => buildContratoTituloColumns(t), [t]);

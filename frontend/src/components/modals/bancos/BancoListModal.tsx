@@ -205,7 +205,6 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       onRefresh={refetch}
       bulkActions={bulkActions}
       onSelectionChange={list.handleSelectionChange}
-      onRowClick={onSelectBanco ? handleRowSelect : undefined}
       onRowDoubleClick={onSelectBanco ? handleRowSelect : undefined}
       onAudit={handleAudit}
       auditEntity="Banco"

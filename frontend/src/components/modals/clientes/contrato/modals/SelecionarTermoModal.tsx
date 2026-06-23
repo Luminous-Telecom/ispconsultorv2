@@ -208,7 +208,7 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
             onSelectionChange={(items) => {
               handleSelectionChange(items);
             }}
-            onRowClick={(item) => {
+            onRowDoubleClick={(item) => {
               onSelect(item);
               onClose();
             }}

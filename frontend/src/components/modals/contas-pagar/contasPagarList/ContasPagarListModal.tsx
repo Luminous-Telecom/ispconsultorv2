@@ -153,7 +153,6 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
         onRefresh={refetch}
         bulkActions={bulkActions}
         onSelectionChange={list.handleSelectionChange}
-        onRowClick={onSelectContaPagar ? handleRowSelect : undefined}
         onRowDoubleClick={onSelectContaPagar ? handleRowSelect : undefined}
         onAudit={handleAudit}
         auditEntity="ContaPagar"

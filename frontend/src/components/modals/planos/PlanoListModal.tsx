@@ -256,7 +256,6 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       onRefresh={refetch}
       bulkActions={bulkActions}
       onSelectionChange={list.handleSelectionChange}
-      onRowClick={onSelectPlano ? handleRowSelect : undefined}
       onRowDoubleClick={onSelectPlano ? handleRowSelect : undefined}
       onAudit={handleAudit}
       auditEntity="Plano"

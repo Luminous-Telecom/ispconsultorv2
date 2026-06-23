@@ -423,7 +423,6 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
       onRefresh={refetch}
       bulkActions={bulkActions}
       onSelectionChange={list.handleSelectionChange}
-      onRowClick={onSelectAgent ? handleRowSelect : undefined}
       onRowDoubleClick={onSelectAgent ? handleRowSelect : undefined}
       onAudit={!onSelectAgent ? handleAudit : undefined}
       auditEntity={!onSelectAgent ? 'Agent' : undefined}

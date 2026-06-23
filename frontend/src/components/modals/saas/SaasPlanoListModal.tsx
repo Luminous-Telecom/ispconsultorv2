@@ -143,7 +143,6 @@ const SaasPlanoListModal: React.FC<Props> = ({ show, onClose, skipWrapper = fals
       loading={isLoading}
       bulkActions={bulkActions}
       onSelectionChange={list.handleSelectionChange}
-      onRowClick={onSelectPlano ? handleRowSelect : undefined}
       onRowDoubleClick={
         onSelectPlano
           ? handleRowSelect

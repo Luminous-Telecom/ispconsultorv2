@@ -251,7 +251,6 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
       onRefresh={refetch}
       bulkActions={bulkActions}
       onSelectionChange={list.handleSelectionChange}
-      onRowClick={onSelectFornecedor ? handleRowSelect : undefined}
       onRowDoubleClick={onSelectFornecedor ? handleRowSelect : undefined}
       onAudit={handleAudit}
       auditEntity="Fornecedor"

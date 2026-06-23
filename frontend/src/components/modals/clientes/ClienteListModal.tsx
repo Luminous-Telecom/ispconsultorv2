@@ -262,7 +262,6 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       onRefresh={refetch}
       bulkActions={bulkActions}
       onSelectionChange={list.handleSelectionChange}
-      onRowClick={onSelectClient ? handleRowSelect : undefined}
       onRowDoubleClick={onSelectClient ? handleRowSelect : undefined}
       onAudit={handleAudit}
       auditEntity="Cliente"

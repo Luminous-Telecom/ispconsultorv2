@@ -109,6 +109,10 @@ const ptBR: TranslationKeys = {
     'messages.successDeleteTerms': 'Termo(s) deletado(s) com sucesso!',
     'messages.errorDeleteTerm': 'Erro ao deletar termo',
     'messages.errorDeleteTerms': 'Erro ao deletar termo(s)',
+    'messages.confirmUnlinkIxcFromContract':
+      'Desvincular a integração IXC deste contrato? A integração não será excluída.',
+    'messages.confirmUnlinkIxcFromContractMultiple':
+      'Desvincular ${count} integrações IXC deste contrato? As integrações não serão excluídas.',
     'messages.confirmDeleteAdditionalService': 'Tem certeza que deseja deletar este serviço adicional?',
     'messages.confirmDeleteAdditionalServices': 'Tem certeza que deseja deletar ${count} serviços adicionais?',
     'messages.successDeleteAdditionalService': 'Serviço adicional deletado com sucesso!',

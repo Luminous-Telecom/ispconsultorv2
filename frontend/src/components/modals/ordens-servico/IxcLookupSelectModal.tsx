@@ -106,7 +106,6 @@ const IxcLookupSelectModal: React.FC<IxcLookupSelectModalProps> = ({
       onRefresh={refetch}
       bulkActions={bulkActions}
       onSelectionChange={list.handleSelectionChange}
-      onRowClick={handleRowSelect}
       onRowDoubleClick={handleRowSelect}
       tableId={tableId}
       modalId={tableId}

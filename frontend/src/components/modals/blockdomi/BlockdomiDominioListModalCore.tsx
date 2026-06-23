@@ -314,7 +314,6 @@ const BlockdomiDominioListModalCore: React.FC<BlockdomiDominioListModalCoreProps
       onRefresh={refetch}
       bulkActions={bulkActions}
       onSelectionChange={handleSelectionChange}
-      onRowClick={onSelect ? handleRowSelect : undefined}
       onRowDoubleClick={onSelect ? handleRowSelect : undefined}
       onAudit={handleAudit}
       auditEntity="Dominio"

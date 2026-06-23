@@ -177,7 +177,7 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
       onRefresh={refetch}
       bulkActions={bulkActions}
       onSelectionChange={list.handleSelectionChange}
-      onRowClick={onSelectTipo ? handleRowSelect : undefined}
+      onRowDoubleClick={onSelectTipo ? handleRowSelect : undefined}
       onAudit={handleAudit}
       auditEntity="TipoCobrancaContrato"
       tableId="tipos-cobranca-contrato-modal"

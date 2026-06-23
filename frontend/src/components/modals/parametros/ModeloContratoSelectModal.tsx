@@ -166,7 +166,7 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
             onSelectionChange={(items) => {
               handleSelectionChange(items);
             }}
-            onRowClick={onSelect ? (item) => {
+            onRowDoubleClick={onSelect ? (item) => {
               onSelect(item);
               onClose();
             } : undefined}

@@ -109,6 +109,10 @@ const esES: TranslationKeys = {
     'messages.successDeleteTerms': '¡Término(s) eliminado(s) con éxito!',
     'messages.errorDeleteTerm': 'Error al eliminar término',
     'messages.errorDeleteTerms': 'Error al eliminar término(s)',
+    'messages.confirmUnlinkIxcFromContract':
+      '¿Desvincular la integración IXC de este contrato? La integración no será eliminada.',
+    'messages.confirmUnlinkIxcFromContractMultiple':
+      '¿Desvincular ${count} integraciones IXC de este contrato? Las integraciones no serán eliminadas.',
     'messages.confirmDeleteAdditionalService': '¿Estás seguro de que deseas eliminar este servicio adicional?',
     'messages.confirmDeleteAdditionalServices': '¿Estás seguro de que deseas eliminar ${count} servicios adicionales?',
     'messages.successDeleteAdditionalService': '¡Servicio adicional eliminado con éxito!',

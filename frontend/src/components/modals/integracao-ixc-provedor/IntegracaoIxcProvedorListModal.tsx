@@ -215,7 +215,7 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
       onRefresh={refetch}
       bulkActions={bulkActions}
       onSelectionChange={list.handleSelectionChange}
-      onRowClick={onSelectIntegracao ? handleRowSelect : undefined}
+      onRowDoubleClick={onSelectIntegracao ? handleRowSelect : undefined}
       onAudit={handleAudit}
       auditEntity="IntegracaoIxcProvedor"
       tableId="integracao-ixc-provedor-list-modal"

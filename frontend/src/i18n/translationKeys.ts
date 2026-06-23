@@ -109,6 +109,8 @@ export interface TranslationKeys {
   'messages.successDeleteTerms': string;
   'messages.errorDeleteTerm': string;
   'messages.errorDeleteTerms': string;
+  'messages.confirmUnlinkIxcFromContract': string;
+  'messages.confirmUnlinkIxcFromContractMultiple': string;
   'messages.confirmDeleteAdditionalService': string;
   'messages.confirmDeleteAdditionalServices': string;
   'messages.successDeleteAdditionalService': string;
