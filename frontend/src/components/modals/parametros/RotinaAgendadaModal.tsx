@@ -59,9 +59,9 @@ function buildTipoOptionsSaaS(alvo: 'saas' | 'erp_global', hasBlockdomi: boolean
   return opts;
 }
 
-const ALVO_OPTIONS_SAAS = [
-  { value: 'saas', label: 'Cobrança do produto (SaaS)' },
-  { value: 'erp_global', label: 'ERP — todos os clientes' },
+const ALVO_OPTIONS = [
+  { value: 'saas', label: 'SaaS' },
+  { value: 'erp_global', label: 'BackNet' },
 ];
 
 interface RotinaAgendadaModalProps {
@@ -284,7 +284,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
                   });
                 }}
                 required
-                options={ALVO_OPTIONS_SAAS}
+                options={ALVO_OPTIONS}
               />
             </div>
             <div className="col-12 col-md-6">
