@@ -54,6 +54,37 @@ export class IxcOssChamadoController {
     }
   }
 
+  static async listMensagens(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
+      const mensagens = await IxcOssChamadoService.listMensagens(id, empresaId);
+      sendSuccess(res, mensagens);
+    } catch (error) {
+      sendError(res, error, 'Erro ao listar mensagens da ordem de serviço', 500, true, {
+        context: 'IxcOssChamadoController',
+        action: 'listMensagens',
+        id: req.params.id,
+      });
+    }
+  }
+
+  static async deleteMensagem(req: Request, res: Response): Promise<void> {
+    try {
+      const { id, mensagemId } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
+      await IxcOssChamadoService.deleteMensagem(id, mensagemId, empresaId);
+      sendSuccess(res, undefined, 'Mensagem excluída com sucesso');
+    } catch (error) {
+      sendError(res, error, 'Erro ao excluir mensagem da ordem de serviço', 500, true, {
+        context: 'IxcOssChamadoController',
+        action: 'deleteMensagem',
+        id: req.params.id,
+        mensagemId: req.params.mensagemId,
+      });
+    }
+  }
+
   static async create(req: Request, res: Response): Promise<void> {
     try {
       const empresaId = getEmpresaIdOrNull(req);

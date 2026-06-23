@@ -1585,6 +1585,11 @@ colgroup col.col-checkbox {
   background-color: #6c757d !important;
 }
 
+.os-mensagem-texto {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 /* Filtros compactos - padding simétrico */
 .table-pagination-header .filter-compact .form-control,
 .table-pagination-header .filter-compact .form-select {

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useCreateOrdemServico, useUpdateOrdemServico } from 'hooks/useOrdensServico';
@@ -8,11 +8,13 @@ import { useFiliais, useEstruturas, useTecnicos, useAssuntos, useSetores, useCli
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import ClienteListModal from 'components/modals/clientes/ClienteListModal';
 import DraggableModal from 'components/common/DraggableModal';
+import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
 import { ModalFormActions, Spinner } from 'components/ui';
 import OrdemServicoFormFields, {
   initialOrdemServicoForm,
   type OrdemServicoFormData,
 } from './OrdemServicoFormFields';
+import OrdemServicoMensagensList from './OrdemServicoMensagensList';
 import IxcLookupSelectModal from './IxcLookupSelectModal';
 
 interface OrdemServicoModalProps {
@@ -38,6 +40,8 @@ const datetimeLocalToIxc = (value: string): string => {
 const INTEGRACAO_IXC_MSG =
   'Cliente sem integração IXC no contrato. Configure na aba IXC Provedor do contrato.';
 
+type OrdemServicoTab = 'principal' | 'mensagens';
+
 const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
   show,
   onClose,
@@ -46,8 +50,18 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const isEdit = !!ordemServicoId;
+  const formId = isEdit ? 'ordem-servico-edit-form' : 'ordem-servico-create-form';
+  const modalId = isEdit ? 'ordem-servico-edit-modal' : 'ordem-servico-create-modal';
   const { warning } = useNotificationContext();
   const lastIntegracaoToastClienteId = useRef(0);
+
+  const ordemServicoTabs = useMemo(
+    (): ModalTabItem<OrdemServicoTab>[] => [
+      { id: 'principal', label: 'Principal' },
+      { id: 'mensagens', label: 'Histórico' },
+    ],
+    []
+  );
 
   const notifySemIntegracaoIxc = useCallback((id: number) => {
     if (lastIntegracaoToastClienteId.current === id) return;
@@ -71,6 +85,7 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
   const [showTecnicoModal, setShowTecnicoModal] = useState(false);
   const [showAssuntoModal, setShowAssuntoModal] = useState(false);
   const [showSetorModal, setShowSetorModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<OrdemServicoTab>('principal');
 
   const { data: ordemData, isLoading: isLoadingOrdem } = useQuery({
     queryKey: ['ordem-servico', ordemServicoId],
@@ -98,7 +113,9 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
   }, [show, clienteId, ixcIntegracaoStatus, notifySemIntegracaoIxc]);
 
   useEffect(() => {
-    if (!show) {
+    if (show) {
+      setActiveTab('principal');
+    } else {
       lastIntegracaoToastClienteId.current = 0;
     }
   }, [show]);
@@ -210,8 +227,6 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
     if (!validate()) return;
 
     try {
-      // OS de estrutura própria (tipo E): endereço vem do cadastro da estrutura.
-      // Status não é enviado: na criação o IXC abre como Aberta; na edição o atual é preservado.
       const payload: CreateOrdemServico = {
         ...formData,
         cliente_id: clienteId || undefined,
@@ -232,6 +247,83 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
 
   const modalTitle = isEdit ? 'Editar Ordem de Serviço' : 'Criar Ordem de Serviço';
 
+  const formFields = (
+    <OrdemServicoFormFields
+      form={formData}
+      errors={errors}
+      onChange={handleChange}
+      disabled={isPending}
+      clienteId={clienteId}
+      onClienteIdChange={(id) => {
+        setClienteId(id);
+        if (!id) {
+          setClienteNome('');
+        }
+        if (clienteError) setClienteError('');
+        if (id && id !== clienteId) {
+          clearIxcSelections();
+        }
+      }}
+      clienteNome={clienteNome}
+      clienteError={clienteError}
+      filialNome={filialNome}
+      estruturaNome={estruturaNome}
+      tecnicoNome={tecnicoNome}
+      assuntoNome={assuntoNome}
+      setorNome={setorNome}
+      onShowClienteModal={() => setShowClienteModal(true)}
+      onShowFilialModal={() => handleOpenLookupModal(() => setShowFilialModal(true))}
+      onShowEstruturaModal={() => handleOpenLookupModal(() => setShowEstruturaModal(true))}
+      onShowTecnicoModal={() => handleOpenLookupModal(() => setShowTecnicoModal(true))}
+      onShowAssuntoModal={() => handleOpenLookupModal(() => setShowAssuntoModal(true))}
+      onShowSetorModal={() => handleOpenLookupModal(() => setShowSetorModal(true))}
+    />
+  );
+
+  const renderContent = () => {
+    if (isEdit && isLoadingOrdem) {
+      return (
+        <div className="text-center p-4">
+          <Spinner size="md" variant="primary" aria-label="Carregando" />
+          <p className="mt-2">Carregando dados da ordem de serviço...</p>
+        </div>
+      );
+    }
+
+    return (
+      <form id={formId} onSubmit={handleSubmit}>
+        <div className="ordem-servico-modal-content">
+          <div
+            className={`tab-content ordem-servico-tab-content ${
+              activeTab === 'mensagens'
+                ? 'ordem-servico-tab-content-scrollable'
+                : 'ordem-servico-tab-content-padded'
+            }`}
+            id="ordemServicoTabContent"
+          >
+            {activeTab === 'principal' && formFields}
+            {activeTab === 'mensagens' && (
+              isEdit && ordemServicoId != null ? (
+                <OrdemServicoMensagensList
+                  ordemServicoId={ordemServicoId}
+                  ordemServico={
+                    ordemData
+                      ? { ...ordemData, id: ordemServicoId, cliente_id: clienteId || ordemData.cliente_id }
+                      : { id: ordemServicoId, cliente_id: clienteId }
+                  }
+                />
+              ) : (
+                <p className="text-muted small mb-0">
+                  Salve a ordem de serviço para visualizar as mensagens.
+                </p>
+              )
+            )}
+          </div>
+        </div>
+      </form>
+    );
+  };
+
   return (
     <>
       <DraggableModal
@@ -239,59 +331,31 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
         onClose={onClose}
         title={modalTitle}
         size="xl"
-        modalId="ordem-servico-form-modal"
+        modalId={modalId}
         headerActions={
           !(isEdit && isLoadingOrdem) ? (
-            <ModalFormActions
-              onCancel={onClose}
-              formId="ordem-servico-form"
-              isPending={isPending}
-            />
+            <div className="ordem-servico-header-unified">
+              <ModalFormActions
+                className="ordem-servico-header-buttons modal-header-actions d-flex gap-2"
+                onCancel={onClose}
+                formId={formId}
+                isPending={isPending}
+              />
+              <div className="ordem-servico-header-tabs">
+                <ModalTabsOverflow
+                  tabs={ordemServicoTabs}
+                  activeTab={activeTab}
+                  onTabChange={setActiveTab}
+                  tabsClassName={`ordem-servico-tabs-unified ${isMobile ? 'ordem-servico-tabs-mobile' : ''}`}
+                  isMobile={isMobile}
+                  id="ordemServicoTab"
+                />
+              </div>
+            </div>
           ) : undefined
         }
       >
-        {isEdit && isLoadingOrdem ? (
-          <div className="d-flex justify-content-center p-4">
-            <Spinner />
-          </div>
-        ) : (
-          <form
-            id="ordem-servico-form"
-            onSubmit={handleSubmit}
-            style={{ padding: isMobile ? '0' : '16px' }}
-          >
-            <OrdemServicoFormFields
-              form={formData}
-              errors={errors}
-              onChange={handleChange}
-              disabled={isPending}
-              clienteId={clienteId}
-              onClienteIdChange={(id) => {
-                setClienteId(id);
-                if (!id) {
-                  setClienteNome('');
-                }
-                if (clienteError) setClienteError('');
-                if (id && id !== clienteId) {
-                  clearIxcSelections();
-                }
-              }}
-              clienteNome={clienteNome}
-              clienteError={clienteError}
-              filialNome={filialNome}
-              estruturaNome={estruturaNome}
-              tecnicoNome={tecnicoNome}
-              assuntoNome={assuntoNome}
-              setorNome={setorNome}
-              onShowClienteModal={() => setShowClienteModal(true)}
-              onShowFilialModal={() => handleOpenLookupModal(() => setShowFilialModal(true))}
-              onShowEstruturaModal={() => handleOpenLookupModal(() => setShowEstruturaModal(true))}
-              onShowTecnicoModal={() => handleOpenLookupModal(() => setShowTecnicoModal(true))}
-              onShowAssuntoModal={() => handleOpenLookupModal(() => setShowAssuntoModal(true))}
-              onShowSetorModal={() => handleOpenLookupModal(() => setShowSetorModal(true))}
-            />
-          </form>
-        )}
+        {renderContent()}
       </DraggableModal>
 
       <ClienteListModal

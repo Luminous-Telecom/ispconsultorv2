@@ -65,3 +65,16 @@ export interface ListLookupResponse {
 }
 
 export type OssChamadoInput = Record<string, string | number | null | undefined>;
+
+export interface IxcOssMensagem {
+  id: string;
+  id_chamado: string;
+  id_evento: string;
+  id_operador: string;
+  id_tecnico?: string;
+  mensagem: string;
+  data: string;
+  evento_nome?: string;
+  operador_nome?: string;
+  colaborador_nome?: string;
+}

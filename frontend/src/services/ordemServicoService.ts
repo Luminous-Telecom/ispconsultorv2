@@ -64,6 +64,19 @@ export interface OrdemServicoAcaoPayload {
   altera_setor_encaminhamento?: string;
 }
 
+export interface OrdemServicoMensagem {
+  id: string;
+  id_chamado: string;
+  id_evento: string;
+  id_operador: string;
+  id_tecnico?: string;
+  evento_nome?: string;
+  operador_nome?: string;
+  colaborador_nome?: string;
+  mensagem: string;
+  data: string;
+}
+
 export interface OrdemServicoFilters extends BaseFilters {
   searchField?: string;
   sortColumn?: string;
@@ -94,6 +107,22 @@ export class OrdemServicoService {
       return response.data;
     }
     return response as unknown as OrdemServico;
+  }
+
+  static async listMensagens(id: number | string): Promise<OrdemServicoMensagem[]> {
+    const response = await defaultApiClient.get<OrdemServicoMensagem[]>(
+      `/ixc/ordens-servico/${id}/mensagens`
+    );
+    return response.data ?? [];
+  }
+
+  static async deleteMensagem(
+    ordemServicoId: number | string,
+    mensagemId: number | string
+  ): Promise<void> {
+    await defaultApiClient.delete(
+      `/ixc/ordens-servico/${ordemServicoId}/mensagens/${mensagemId}`
+    );
   }
 
   static async create(data: CreateOrdemServico): Promise<OrdemServico> {

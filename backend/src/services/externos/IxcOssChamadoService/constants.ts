@@ -12,6 +12,22 @@ export const IXC_ASSUNTO_RESOURCE = 'su_oss_assunto';
 export const IXC_SETOR_RESOURCE = 'empresa_setor';
 export const IXC_FILIAL_RESOURCE = 'filial';
 export const IXC_CIDADE_RESOURCE = 'cidade';
+export const IXC_USUARIOS_RESOURCE = 'usuarios';
+
+/** Labels dos eventos de mensagem da OS (parâmetros gerais IXC). */
+export const OSS_EVENTO_LABELS: Record<string, string> = {
+  '1': 'Abertura',
+  '2': 'Mensagem',
+  '3': 'Reabrir',
+  '4': 'Alterar setor',
+  '5': 'Reagendar',
+  '6': 'Finalizar',
+  '7': 'Em análise',
+  '8': 'Assumido',
+  '9': 'Em execução',
+  '12': 'Observação',
+  '13': 'Reagendamento',
+};
 
 export const OSS_CHAMADO_ACOES: OssChamadoAcao[] = [
   'agendar',

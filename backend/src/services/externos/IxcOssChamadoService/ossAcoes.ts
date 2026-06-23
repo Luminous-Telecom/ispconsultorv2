@@ -4,7 +4,7 @@ import {
   IXC_RESOURCE,
   IXC_EVENTO_OBSERVACAO,
 } from './constants';
-import { fetchOsRawById } from './ossData';
+import { fetchMensagensOs, fetchOsRawById } from './ossData';
 import { buildActionBody } from './ossPayload';
 import {
   actionErrorMessage,
@@ -213,4 +213,27 @@ export async function registrarMensagemOs(
     String(atual.status ?? 'A'),
     String(payload.id_tecnico ?? atual.id_tecnico ?? '')
   );
+}
+
+export async function deleteMensagemOs(
+  ordemId: string | number,
+  mensagemId: string | number
+): Promise<IxcActionResponse> {
+  const mensagens = await fetchMensagensOs(ordemId);
+  const mensagem = mensagens.find((item) => item.id === String(mensagemId));
+  if (!mensagem) {
+    throw new Error('Mensagem não encontrada');
+  }
+
+  try {
+    const response = await createIxcClient().delete<IxcActionResponse>(
+      `/${IXC_MENSAGEM_RESOURCE}/${mensagemId}`
+    );
+    if (response.data?.type === 'error') {
+      throw new Error(actionErrorMessage(response.data, 'Erro ao excluir mensagem no IXC'));
+    }
+    return response.data;
+  } catch (error) {
+    throw wrapIxcError(error, 'Erro ao excluir mensagem no IXC');
+  }
 }

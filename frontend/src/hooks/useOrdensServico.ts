@@ -27,6 +27,20 @@ export const useOrdensServico = (
   });
 };
 
+export const useOrdemServicoMensagens = (
+  ordemServicoId: number | string | null | undefined,
+  enabled = true
+) => {
+  return useQuery({
+    queryKey: ['ordem-servico-mensagens', ordemServicoId],
+    queryFn: () => OrdemServicoService.listMensagens(ordemServicoId as number | string),
+    enabled: enabled && ordemServicoId != null && ordemServicoId !== '',
+    staleTime: 0,
+    gcTime: DEFAULT_CACHE_TIME,
+    refetchOnWindowFocus: false,
+  });
+};
+
 const refreshOrdensServicoCache = async (queryClient: ReturnType<typeof useQueryClient>) => {
   await queryClient.refetchQueries({ queryKey: ['ordens-servico'] });
 };
@@ -56,6 +70,7 @@ export const useUpdateOrdemServico = () => {
       OrdemServicoService.update(id, data),
     onSuccess: async (_data, { id }) => {
       await queryClient.invalidateQueries({ queryKey: ['ordem-servico', id] });
+      await queryClient.invalidateQueries({ queryKey: ['ordem-servico-mensagens', id] });
       await refreshOrdensServicoCache(queryClient);
       success('Ordem de serviço atualizada com sucesso!');
     },
@@ -95,11 +110,33 @@ export const useExecutarAcaoOrdemServico = () => {
     }) => OrdemServicoService.executarAcao(id, acao, data),
     onSuccess: async (_data, { id }) => {
       await queryClient.invalidateQueries({ queryKey: ['ordem-servico', id] });
+      await queryClient.invalidateQueries({ queryKey: ['ordem-servico-mensagens', id] });
       await refreshOrdensServicoCache(queryClient);
       success('Ação executada com sucesso!');
     },
     onError: (err) => {
       showApiError(err, 'Erro ao executar ação');
     },
+  });
+};
+
+export const useDeleteOrdemServicoMensagem = () => {
+  const queryClient = useQueryClient();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
+
+  return useMutation({
+    mutationFn: ({
+      ordemServicoId,
+      mensagemId,
+    }: {
+      ordemServicoId: number | string;
+      mensagemId: number | string;
+    }) => OrdemServicoService.deleteMensagem(ordemServicoId, mensagemId),
+    onSuccess: async (_data, { ordemServicoId }) => {
+      await queryClient.invalidateQueries({ queryKey: ['ordem-servico-mensagens', ordemServicoId] });
+      success('Mensagem excluída com sucesso!');
+    },
+    onError: (err) => showApiError(err, 'Erro ao excluir mensagem'),
   });
 };

@@ -9,9 +9,11 @@ import {
   IXC_RESOURCE,
   IXC_SETOR_RESOURCE,
   IXC_EVENTO_ABERTURA,
+  IXC_USUARIOS_RESOURCE,
+  OSS_EVENTO_LABELS,
 } from './constants';
 import { ixcListar, resolveOperadorId } from './ixcHttp';
-import type { IxcListResponse, IxcNamedRecord, IxcOssChamado } from './types';
+import type { IxcListResponse, IxcNamedRecord, IxcOssChamado, IxcOssMensagem } from './types';
 
 const gridMensagemAbertura = (operadorId: string) =>
   JSON.stringify([
@@ -71,6 +73,44 @@ export async function fetchOsRawById(id: string | number): Promise<IxcOssChamado
     sortorder: 'desc',
   });
   return data.registros?.[0] ?? null;
+}
+
+export async function fetchMensagensOs(id: string | number): Promise<IxcOssMensagem[]> {
+  const data = await ixcListar<IxcListResponse>(IXC_MENSAGEM_RESOURCE, {
+    qtype: `${IXC_MENSAGEM_RESOURCE}.id_chamado`,
+    query: String(id),
+    oper: '=',
+    page: '1',
+    rp: '500',
+    sortname: `${IXC_MENSAGEM_RESOURCE}.id`,
+    sortorder: 'asc',
+  });
+
+  const registros = data.registros ?? [];
+  if (registros.length === 0) return [];
+
+  const operadores = await fetchRegistrosPorIds(
+    IXC_USUARIOS_RESOURCE,
+    registros.map((r) => String(r.id_operador ?? ''))
+  );
+
+  const colaboradores = await fetchRegistrosPorIds(
+    IXC_FUNCIONARIOS_RESOURCE,
+    registros.map((r) => String(r.id_tecnico ?? ''))
+  );
+
+  return registros.map((registro): IxcOssMensagem => ({
+    id: String(registro.id ?? ''),
+    id_chamado: String(registro.id_chamado ?? ''),
+    id_evento: String(registro.id_evento ?? ''),
+    id_operador: String(registro.id_operador ?? ''),
+    id_tecnico: String(registro.id_tecnico ?? ''),
+    mensagem: String(registro.mensagem ?? ''),
+    data: String(registro.data ?? ''),
+    evento_nome: OSS_EVENTO_LABELS[String(registro.id_evento ?? '')] ?? `Evento ${registro.id_evento}`,
+    operador_nome: operadores.get(String(registro.id_operador ?? ''))?.nome ?? '',
+    colaborador_nome: colaboradores.get(String(registro.id_tecnico ?? ''))?.funcionario ?? '',
+  }));
 }
 
 async function fetchRegistrosPorIds(

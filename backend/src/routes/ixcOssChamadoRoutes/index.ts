@@ -4,6 +4,8 @@ import { IxcOssChamadoController } from '../../controllers/ixc/IxcOssChamadoCont
 const router = Router();
 
 router.get('/', IxcOssChamadoController.list);
+router.get('/:id/mensagens', IxcOssChamadoController.listMensagens);
+router.delete('/:id/mensagens/:mensagemId', IxcOssChamadoController.deleteMensagem);
 router.get('/:id', IxcOssChamadoController.getById);
 router.post('/', IxcOssChamadoController.create);
 router.put('/:id', IxcOssChamadoController.update);

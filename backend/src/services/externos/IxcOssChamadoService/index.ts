@@ -13,9 +13,11 @@ import {
   executarEncaminharOs,
   executarFinalizarOs,
   registrarMensagemOs,
+  deleteMensagemOs,
 } from './ossAcoes';
 import {
   enrichOsRegistros,
+  fetchMensagensOs,
   fetchOsIdsAbertasPeloOperador,
   fetchOsRawById,
   osAbertaPeloOperador,
@@ -33,6 +35,7 @@ import type {
   IxcActionResponse,
   IxcNamedRecord,
   IxcOssChamado,
+  IxcOssMensagem,
   ListLookupResponse,
   ListOssChamadosFilters,
   ListOssChamadosResponse,
@@ -43,6 +46,7 @@ import type {
 
 export type {
   IxcOssChamado,
+  IxcOssMensagem,
   ListOssChamadosFilters,
   ListOssChamadosResponse,
   ListLookupResponse,
@@ -215,6 +219,47 @@ export class IxcOssChamadoService {
       } catch (error) {
         throw wrapIxcError(error, 'Erro ao buscar ordem de serviço no IXC');
       }
+    });
+  }
+
+  static async listMensagens(
+    id: string | number,
+    empresaId: number | null = null
+  ): Promise<IxcOssMensagem[]> {
+    return runWithIxcCredentials(empresaId, async () => {
+      try {
+        if (!(await osAbertaPeloOperador(id))) {
+          throw new Error('Ordem de serviço não encontrada');
+        }
+
+        const registro = await fetchOsRawById(id);
+        if (!registro || Number(registro.id_estrutura) <= 0) {
+          throw new Error('Ordem de serviço não encontrada');
+        }
+
+        return fetchMensagensOs(id);
+      } catch (error) {
+        throw wrapIxcError(error, 'Erro ao listar mensagens da ordem de serviço no IXC');
+      }
+    });
+  }
+
+  static async deleteMensagem(
+    ordemId: string | number,
+    mensagemId: string | number,
+    empresaId: number | null = null
+  ): Promise<IxcActionResponse> {
+    return runWithIxcCredentials(empresaId, async () => {
+      if (!(await osAbertaPeloOperador(ordemId))) {
+        throw new Error('Ordem de serviço não encontrada');
+      }
+
+      const registro = await fetchOsRawById(ordemId);
+      if (!registro || Number(registro.id_estrutura) <= 0) {
+        throw new Error('Ordem de serviço não encontrada');
+      }
+
+      return deleteMensagemOs(ordemId, mensagemId);
     });
   }
 

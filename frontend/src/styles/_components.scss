@@ -245,6 +245,7 @@ body .draggable-modal-container-custom .modal-body.draggable-modal-body-custom:h
 .empresa-tab-content-padded,
 .whatsapp-tab-content-padded,
 .email-tab-content-padded,
+.ordem-servico-tab-content-padded,
 .sistema-tab-content-padded {
   flex: 1 1 0 !important;
   min-height: 0 !important;
@@ -2632,6 +2633,88 @@ textarea:focus {
 
 /* Para mobile */
 .fornecedor-tabs-mobile.fornecedor-tabs-unified {
+  .nav-item {
+    flex: 1;
+    margin-right: 0.0625rem !important;
+  }
+
+  .nav-link {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.375rem !important;
+    text-align: center !important;
+  }
+}
+
+/* ============================================
+   ORDEM DE SERVIÇO MODAL - Estilos específicos
+   ============================================ */
+
+.ordem-servico-modal-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary);
+}
+
+.ordem-servico-tab-content {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ordem-servico-tab-content-scrollable {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.ordem-servico-tabs-unified {
+  --bs-nav-tabs-border-color: transparent !important;
+  border-bottom: none !important;
+  background-color: transparent !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  justify-content: flex-start !important;
+  flex-wrap: nowrap !important;
+  min-width: max-content !important;
+
+  .nav-item {
+    flex-shrink: 0 !important;
+  }
+
+  .nav-link {
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+    font-weight: 400 !important;
+    font-size: var(--font-size-sm) !important;
+    padding: 0.5rem 0.75rem !important;
+    margin-right: 0.25rem !important;
+    border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0 !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+  }
+
+  .nav-link:hover,
+  .nav-link:focus {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+    cursor: pointer !important;
+  }
+
+  .nav-link.active {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+    border-bottom-color: var(--bg-primary) !important;
+  }
+}
+
+.ordem-servico-tabs-mobile.ordem-servico-tabs-unified {
   .nav-item {
     flex: 1;
     margin-right: 0.0625rem !important;
