@@ -12,16 +12,9 @@ import { privateKeyPemForSsh2 } from '../../../utils/sshPrivateKey';
 import { registerSshDeviceBackupRow } from '../SshDeviceBackupStorageService';
 import { recordSshDeviceBackupEvent } from '../SshDeviceBackupEventService';
 import { executeHttpFetchThroughAgent, executeSshCommandThroughAgent, isAgentOnline } from '../../agent/AgentService';
+import { httpGetWithDigestAuth } from '../../../utils/httpDigestGet';
 import * as routeros from './models/routeros';
 import * as vrp from './models/vrp';
-
-// SwOS: HTTP Digest (interface web), não Basic — digest-fetch@2 negocia o 401.
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const DigestClient = require('digest-fetch') as new (
-  user: string,
-  pass: string,
-  opts?: Record<string, unknown>
-) => { fetch(url: string, init?: { signal?: AbortSignal }): Promise<Response> };
 
 export type RunSshDeviceBackupContext = {
   manual?: boolean;
@@ -72,25 +65,18 @@ async function fetchSwosBackupBuffer(
     return { ok: true, body: r.body };
   }
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const client = new DigestClient(user, passwordPlain);
-    const res = await client.fetch(url, { signal: controller.signal });
-    clearTimeout(timer);
+    const res = await httpGetWithDigestAuth(url, user, passwordPlain, timeoutMs);
     if (!res.ok) {
-      return { ok: false, error: `HTTP ${res.status} ao baixar backup SwOS` };
+      return { ok: false, error: res.error ?? `HTTP ${res.statusCode} ao baixar backup SwOS` };
     }
-    const arr = await res.arrayBuffer();
-    const body = Buffer.from(arr);
-    if (!body.length) {
+    if (!res.body.length) {
       return { ok: false, error: 'Resposta vazia do equipamento SwOS' };
     }
-    return { ok: true, body };
+    return { ok: true, body: res.body };
   } catch (e) {
-    clearTimeout(timer);
     const msg = e instanceof Error ? e.message : String(e);
-    if (msg.includes('abort') || msg.toLowerCase().includes('aborted')) {
+    if (msg.toLowerCase().includes('timeout')) {
       return { ok: false, error: 'Timeout ao baixar backup SwOS (HTTP)' };
     }
     return { ok: false, error: msg };
