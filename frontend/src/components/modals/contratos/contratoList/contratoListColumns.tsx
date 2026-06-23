@@ -166,6 +166,8 @@ export function useContratoListColumns(): ListModalConfig<ContratoRow>['columns'
   );
 }
 
+export const CONTRATO_LIST_DEFAULT_SEARCH_FIELD = 'cliente_razao_social';
+
 export const CONTRATO_LIST_SEARCH_FIELDS = [
   { key: 'id', label: 'ID' },
   { key: 'cliente_razao_social', label: 'Cliente' },

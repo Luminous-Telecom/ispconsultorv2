@@ -6,7 +6,7 @@ import { useIsMobile } from 'hooks/useMediaQuery';
 import ListModal from 'components/common/ListModal';
 import { ContratoListModalProps, ContratoRow } from './contratoListTypes';
 import { buildDisplayTitle } from './contratoListUtils';
-import { useContratoListColumns, CONTRATO_LIST_SEARCH_FIELDS } from './contratoListColumns';
+import { useContratoListColumns, CONTRATO_LIST_SEARCH_FIELDS, CONTRATO_LIST_DEFAULT_SEARCH_FIELD } from './contratoListColumns';
 import { useContratoListData } from './useContratoListData';
 import { useContratoPrintActions } from './useContratoPrintActions';
 import { useContratoListBulkActions } from './useContratoListBulkActions';
@@ -31,6 +31,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   const list = useEntityListModal<Contrato>({
     onClose,
     onSelect: onSelectContrato,
+    initialSearchField: CONTRATO_LIST_DEFAULT_SEARCH_FIELD,
   });
 
   const {
@@ -111,6 +112,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
           title: displayTitle,
           columns,
           searchPlaceholder: '',
+          searchField: CONTRATO_LIST_DEFAULT_SEARCH_FIELD,
           searchFields: CONTRATO_LIST_SEARCH_FIELDS,
           emptyMessage: 'Nenhum contrato encontrado',
         }}
@@ -118,6 +120,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
         loading={isLoading}
         search={list.tableFilters.search}
         onSearchChange={list.handleSearchChange}
+        onSearchFieldChange={list.handleSearchFieldChange}
         sortColumn={list.tableFilters.sortColumn}
         sortDirection={list.tableFilters.sortDirection}
         onSortChange={list.tableFilters.setSort}

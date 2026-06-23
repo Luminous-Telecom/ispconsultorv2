@@ -22,6 +22,7 @@ import {
 import { normalizePagination } from './tableUtils';
 import { computeTablePaginationValues } from './tablePaginationUtils';
 import { useTableHeaderSync } from './useTableHeaderSync';
+import { resolveDefaultSearchField } from 'utils/resolveDefaultSearchField';
 
 /** Altura aproximada de cada linha do tbody (2rem em _tables.scss). */
 const TABLE_BODY_ROW_HEIGHT_PX = 32;
@@ -152,13 +153,9 @@ function Table<T extends { id: number | string }>({
   const defaultEmptyMessage = emptyMessage || t('messages.noData');
   const defaultLoadingMessage = loadingMessage || t('messages.loading');
 
-  const [localSearchField, setLocalSearchField] = useState<string>(() => {
-    if (!configSearchFields?.length) return configSearchField || '';
-    const hasTodos = configSearchFields.some((f) => f.key === 'todos');
-    if (hasTodos) return 'todos';
-    const hasId = configSearchFields.some((f) => f.key === 'id');
-    return hasId ? 'id' : configSearchField || configSearchFields[0].key;
-  });
+  const [localSearchField, setLocalSearchField] = useState<string>(() =>
+    resolveDefaultSearchField(configSearchFields, configSearchField)
+  );
 
   const selectedSearchField = syncWithHeader ? headerSearchField || localSearchField : localSearchField;
 

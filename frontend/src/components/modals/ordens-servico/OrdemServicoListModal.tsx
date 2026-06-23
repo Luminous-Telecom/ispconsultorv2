@@ -55,7 +55,10 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
     ordem: OrdemServico;
   } | null>(null);
 
-  const list = useEntityListModal<OrdemServico>({ onClose });
+  const list = useEntityListModal<OrdemServico>({
+    onClose,
+    initialSearchField: 'estrutura_nome',
+  });
 
   const { data: ordensData, isLoading, refetch } = useOrdensServico(
     {
@@ -187,6 +190,7 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
   const searchFields = useMemo(
     () => [
       { key: 'id', label: 'ID' },
+      { key: 'estrutura_nome', label: 'Estrutura' },
       { key: 'mensagem', label: 'Descrição' },
       { key: 'protocolo', label: 'Protocolo' },
       { key: 'status', label: 'Status' },
@@ -244,6 +248,7 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
           title: title || 'Ordens de Serviço',
           columns,
           searchPlaceholder: 'Buscar ordens de serviço...',
+          searchField: 'estrutura_nome',
           searchFields,
           emptyMessage: 'Nenhuma ordem de serviço encontrada',
         }}
@@ -251,6 +256,7 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
         loading={isLoading}
         search={list.tableFilters.search}
         onSearchChange={list.handleSearchChange}
+        onSearchFieldChange={list.handleSearchFieldChange}
         sortColumn={list.tableFilters.sortColumn}
         sortDirection={list.tableFilters.sortDirection}
         onSortChange={list.tableFilters.setSort}

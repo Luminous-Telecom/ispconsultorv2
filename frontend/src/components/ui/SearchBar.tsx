@@ -32,7 +32,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   onChange,
   onSearch,
   placeholder = 'Buscar...',
-  searchField = 'id',
+  searchField = '',
   onSearchFieldChange,
   searchFields = [],
   id = 'search-bar',
@@ -47,6 +47,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     key: getFieldKey(f),
     label: f.label,
   }));
+  const effectiveSearchField = searchField || normalizedFields[0]?.key || '';
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -65,7 +66,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   useEffect(() => {
     if (!showFieldSelect || !selectRef.current) return;
     const select = selectRef.current;
-    const opt = normalizedFields.find((f) => f.key === searchField);
+    const opt = normalizedFields.find((f) => f.key === effectiveSearchField);
     if (!opt) return;
     const computed = window.getComputedStyle(select);
     const temp = document.createElement('span');
@@ -82,7 +83,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     const w = Math.max(42, temp.offsetWidth + extraSpace);
     document.body.removeChild(temp);
     select.style.width = `${w}px`;
-  }, [variant, searchField, normalizedFields, showFieldSelect]);
+  }, [variant, effectiveSearchField, normalizedFields, showFieldSelect]);
 
   const isNavbar = variant === 'navbar';
   const isMobile = variant === 'mobile';
@@ -139,7 +140,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             id={`${id}-field`}
             name="searchField"
             className={selectClass}
-            value={searchField}
+            value={effectiveSearchField}
             onChange={(e) => onSearchFieldChange?.(e.target.value)}
             aria-label={placeholder}
           >
@@ -182,7 +183,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             id={`${id}-field`}
             name="searchField"
             className={selectClass}
-            value={searchField}
+            value={effectiveSearchField}
             onChange={(e) => onSearchFieldChange?.(e.target.value)}
             aria-label={placeholder}
           >
@@ -205,7 +206,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           ref={selectRef}
           id={`${id}-field`}
           className={selectClass}
-          value={searchField}
+          value={effectiveSearchField}
           onChange={(e) => onSearchFieldChange?.(e.target.value)}
           aria-label={placeholder}
         >

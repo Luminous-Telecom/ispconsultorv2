@@ -18,6 +18,7 @@ export interface ListModalConfig<T> {
   title: string;
   columns: ListModalColumn<T>[];
   searchPlaceholder?: string;
+  searchField?: string;
   searchFields?: Array<{ key: string; label: string }>;
   emptyMessage?: string;
   multiSelect?: boolean;

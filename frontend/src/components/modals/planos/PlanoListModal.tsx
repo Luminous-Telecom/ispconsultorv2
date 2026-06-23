@@ -36,6 +36,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
   const list = useEntityListModal<Plano>({
     onClose,
     onSelect: onSelectPlano,
+    initialSearchField: 'nome_plano',
   });
 
   const getStatusBadgeClass = useCallback((status: string) => getPlanoStatusBadgeClass(status), []);
@@ -237,6 +238,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
         title: defaultTitle,
         columns,
         searchPlaceholder: t('layout.searchPlaceholder'),
+        searchField: 'nome_plano',
         searchFields,
         emptyMessage: 'Nenhum plano encontrado',
       }}
@@ -244,6 +246,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       loading={isLoading}
       search={list.tableFilters.search}
       onSearchChange={list.handleSearchChange}
+      onSearchFieldChange={list.handleSearchFieldChange}
       sortColumn={list.tableFilters.sortColumn}
       sortDirection={list.tableFilters.sortDirection}
       onSortChange={list.tableFilters.setSort}

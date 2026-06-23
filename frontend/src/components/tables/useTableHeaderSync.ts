@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useTableHeader } from 'contexts/TableHeaderContext';
 import { TranslationKeys } from 'contexts/I18nContext';
+import { resolveDefaultSearchField } from 'utils/resolveDefaultSearchField';
 
 interface SearchFieldOption {
   key: string;
@@ -104,12 +105,7 @@ export function useTableHeaderSync({
         }
 
         const parsedFieldKeys = new Set(parsedFields.map((f) => f.key));
-        const hasId = parsedFields.some((f) => f.key === 'id');
-        const defaultField = parsedFieldKeys.has('todos')
-          ? 'todos'
-          : hasId
-            ? 'id'
-            : configSearchField || parsedFields[0]?.key || '';
+        const defaultField = resolveDefaultSearchField(parsedFields, configSearchField);
         const headerFieldIsValid = Boolean(headerSearchField && parsedFieldKeys.has(headerSearchField));
         if (defaultField && !headerFieldIsValid) {
           setHeaderSearchField(defaultField);

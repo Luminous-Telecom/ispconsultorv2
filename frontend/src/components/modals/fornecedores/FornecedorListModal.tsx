@@ -33,6 +33,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
   const list = useEntityListModal<Fornecedor>({
     onClose,
     onSelect: onSelectFornecedor,
+    initialSearchField: 'nome_razao_social',
   });
 
   const { data: fornecedoresData, isLoading, refetch } = useFornecedores({
@@ -232,6 +233,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
         title: defaultTitle,
         columns,
         searchPlaceholder: t('layout.searchPlaceholder'),
+        searchField: 'nome_razao_social',
         searchFields,
         emptyMessage: 'Nenhum fornecedor encontrado',
       }}
@@ -239,6 +241,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
       loading={isLoading}
       search={list.tableFilters.search}
       onSearchChange={list.handleSearchChange}
+      onSearchFieldChange={list.handleSearchFieldChange}
       sortColumn={list.tableFilters.sortColumn}
       sortDirection={list.tableFilters.sortDirection}
       onSortChange={list.tableFilters.setSort}

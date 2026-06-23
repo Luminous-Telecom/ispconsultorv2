@@ -34,6 +34,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   const list = useEntityListModal<Cliente>({
     onClose,
     onSelect: onSelectClient,
+    initialSearchField: 'razao_social',
   });
 
   const filterTitleSuffix = initialFilters?.ativo === true
@@ -243,6 +244,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
         title: defaultTitle,
         columns,
         searchPlaceholder: t('layout.searchPlaceholder'),
+        searchField: 'razao_social',
         searchFields,
         emptyMessage: 'Nenhum cliente encontrado',
       }}
@@ -250,6 +252,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       loading={isLoading}
       search={list.tableFilters.search}
       onSearchChange={list.handleSearchChange}
+      onSearchFieldChange={list.handleSearchFieldChange}
       sortColumn={list.tableFilters.sortColumn}
       sortDirection={list.tableFilters.sortDirection}
       onSortChange={list.tableFilters.setSort}

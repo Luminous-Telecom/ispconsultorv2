@@ -672,7 +672,7 @@ export class IxcOssChamadoService {
     const search = filters.search?.trim();
     const sortColumn = filters.sortColumn?.trim() || 'id';
     const sortDirection = filters.sortDirection === 'asc' ? 'asc' : 'desc';
-    const searchField = filters.searchField?.trim() || 'id';
+    const searchField = filters.searchField?.trim() || 'estrutura_nome';
 
     try {
       const operadorId = resolveOperadorId();
@@ -688,6 +688,9 @@ export class IxcOssChamadoService {
 
       if (search) {
         const termo = search.toLowerCase();
+        if (CAMPOS_ENRIQUECIDOS.includes(searchField)) {
+          registros = await enrichOsRegistros(registros);
+        }
         const camposBusca = [
           searchField,
           'mensagem',

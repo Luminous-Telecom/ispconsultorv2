@@ -12,6 +12,7 @@ type BulkAction<T> = NonNullable<ListModalProps<T>['bulkActions']>[number];
 export interface UseEntityListModalOptions<T extends { id: number | string }> {
   onClose: () => void;
   onSelect?: (item: T) => void;
+  initialSearchField?: string;
 }
 
 export interface CrudBulkActionsConfig<T> {
@@ -23,6 +24,7 @@ export interface CrudBulkActionsConfig<T> {
 export function useEntityListModal<T extends { id: number | string }>({
   onClose,
   onSelect,
+  initialSearchField,
 }: UseEntityListModalOptions<T>) {
   const { t } = useI18n();
   const bulkBtn = useBulkBtn();
@@ -30,6 +32,7 @@ export function useEntityListModal<T extends { id: number | string }>({
 
   const tableFilters = useTableFilters({
     initialSearch: '',
+    initialSearchField,
     initialPage: 1,
     initialLimit: 15,
     searchDebounceMs: 300,
@@ -78,6 +81,13 @@ export function useEntityListModal<T extends { id: number | string }>({
       if (field) {
         tableFilters.setSearchField(field);
       }
+    },
+    [tableFilters]
+  );
+
+  const handleSearchFieldChange = useCallback(
+    (field: string) => {
+      tableFilters.setSearchField(field);
     },
     [tableFilters]
   );
@@ -187,6 +197,7 @@ export function useEntityListModal<T extends { id: number | string }>({
     isNothingSelected,
     handleModalClose,
     handleSearchChange,
+    handleSearchFieldChange,
     openCreateForm,
     openEditForm,
     closeFormModal,

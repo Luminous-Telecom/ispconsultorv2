@@ -228,6 +228,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
             multiSelect: false,
             searchable: true,
             searchPlaceholder: '',
+            searchField: 'plano_nome',
             searchFields: [
               { key: 'id', label: t('table.id') },
               { key: 'plano_nome', label: t('table.plan') },

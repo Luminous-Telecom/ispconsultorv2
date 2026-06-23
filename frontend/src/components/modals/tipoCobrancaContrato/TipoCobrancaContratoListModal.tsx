@@ -32,6 +32,7 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
   const list = useEntityListModal<TipoCobrancaContrato>({
     onClose,
     onSelect: onSelectTipo,
+    initialSearchField: 'nome',
   });
 
   const { data: tiposData, isLoading, refetch } = useTipoCobrancaContratos({
@@ -158,6 +159,7 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
         title: defaultTitle,
         columns,
         searchPlaceholder: t('layout.searchPlaceholder'),
+        searchField: 'nome',
         searchFields,
         emptyMessage: 'Nenhum tipo de cobrança encontrado',
       }}
@@ -165,6 +167,7 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
       loading={isLoading}
       search={list.tableFilters.search}
       onSearchChange={list.handleSearchChange}
+      onSearchFieldChange={list.handleSearchFieldChange}
       sortColumn={list.tableFilters.sortColumn}
       sortDirection={list.tableFilters.sortDirection}
       onSortChange={list.tableFilters.setSort}

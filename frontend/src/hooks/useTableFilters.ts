@@ -55,6 +55,11 @@ export interface UseTableFiltersOptions<
   immediateSearch?: boolean;
   
   /**
+   * Campo de busca inicial (ex.: razao_social, nome_plano)
+   */
+  initialSearchField?: string;
+
+  /**
    * Callback chamado quando a busca muda
    */
   onSearchChange?: (search: string) => void;
@@ -169,6 +174,7 @@ export const useTableFilters = <
     initialSortDirection = 'desc',
     initialPage = 1,
     initialLimit = 15,
+    initialSearchField = '',
     searchDebounceMs = 300,
     immediateSearch = false,
     onSearchChange,
@@ -201,7 +207,7 @@ export const useTableFilters = <
   });
 
   // Campo de busca (field)
-  const [searchField, setSearchFieldState] = useState<string>('');
+  const [searchField, setSearchFieldState] = useState<string>(initialSearchField);
 
   const setSearchField = useCallback((field: string) => {
     setSearchFieldState(field);

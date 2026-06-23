@@ -30,6 +30,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
   const list = useEntityListModal<Banco>({
     onClose,
     onSelect: onSelectBanco,
+    initialSearchField: 'nome',
   });
 
   const { data: bancosData, isLoading, refetch } = useBancos({
@@ -186,6 +187,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         title: defaultTitle,
         columns,
         searchPlaceholder: t('layout.searchPlaceholder'),
+        searchField: 'nome',
         searchFields,
         emptyMessage: 'Nenhum banco encontrado',
       }}
@@ -193,6 +195,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       loading={isLoading}
       search={list.tableFilters.search}
       onSearchChange={list.handleSearchChange}
+      onSearchFieldChange={list.handleSearchFieldChange}
       sortColumn={list.tableFilters.sortColumn}
       sortDirection={list.tableFilters.sortDirection}
       onSortChange={list.tableFilters.setSort}
