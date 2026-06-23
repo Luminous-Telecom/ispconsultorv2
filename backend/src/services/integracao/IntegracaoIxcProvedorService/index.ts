@@ -250,6 +250,73 @@ export class IntegracaoIxcProvedorService {
     );
   }
 
+  static async resolveCredentialsForCliente(
+    clienteId: number,
+    empresaId: number | null
+  ): Promise<IxcApiCredentials> {
+    const contrato = await IntegracaoIxcProvedorService.findContratoComIntegracao(clienteId, empresaId);
+
+    if (!contrato?.integracao_ixc_provedor_id) {
+      throw new Error(
+        'Integração IXC não configurada. Cadastre uma integração IXC Provedor no contrato do cliente.'
+      );
+    }
+
+    const integracao = await IntegracaoIxcProvedor.findByPk(contrato.integracao_ixc_provedor_id);
+    if (!integracao) {
+      throw new Error('Integração IXC Provedor vinculada ao contrato não encontrada.');
+    }
+
+    if (!integracao.ativo) {
+      throw new Error('A integração IXC Provedor vinculada ao contrato está inativa.');
+    }
+
+    const apiUrl = integracao.api_url?.trim();
+    const apiToken = integracao.api_token?.trim();
+    if (!apiUrl || !apiToken) {
+      throw new Error('Integração IXC Provedor vinculada ao contrato sem URL ou token configurados.');
+    }
+
+    return {
+      apiUrl: apiUrl.replace(/\/+$/, ''),
+      apiToken,
+    };
+  }
+
+  static async findContratoComIntegracao(
+    clienteId: number,
+    empresaId: number | null
+  ): Promise<Contrato | null> {
+    const contratoWhere: WhereOptions<Contrato> = {
+      cliente_id: clienteId,
+      integracao_ixc_provedor_id: { [Op.ne]: null },
+    };
+
+    if (empresaId != null) {
+      contratoWhere.empresa_id = empresaId;
+    }
+
+    return Contrato.findOne({
+      where: contratoWhere,
+      order: [['updated_at', 'DESC']],
+    });
+  }
+
+  static async hasIntegracaoForCliente(
+    clienteId: number,
+    empresaId: number | null
+  ): Promise<boolean> {
+    const contrato = await IntegracaoIxcProvedorService.findContratoComIntegracao(clienteId, empresaId);
+    if (!contrato?.integracao_ixc_provedor_id) return false;
+
+    const integracao = await IntegracaoIxcProvedor.findByPk(contrato.integracao_ixc_provedor_id);
+    if (!integracao?.ativo) return false;
+
+    const apiUrl = integracao.api_url?.trim();
+    const apiToken = integracao.api_token?.trim();
+    return !!(apiUrl && apiToken);
+  }
+
   static async assertEmpresaAccess(
     integracaoId: number,
     empresaId: number | null

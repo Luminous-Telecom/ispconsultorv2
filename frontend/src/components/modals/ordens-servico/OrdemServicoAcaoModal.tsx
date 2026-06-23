@@ -71,6 +71,8 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
   const [showSetorModal, setShowSetorModal] = useState(false);
   const [showAssuntoModal, setShowAssuntoModal] = useState(false);
 
+  const clienteId = Number(ordemServico?.cliente_id ?? 0) || 0;
+
   useEffect(() => {
     if (!show || !ordemServico || !acao) return;
     setForm({
@@ -145,6 +147,7 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
     if (!validate()) return;
 
     const payload = {
+      cliente_id: clienteId || undefined,
       mensagem: acao === 'finalizar' ? undefined : form.mensagem.trim(),
       mensagem_resposta: acao === 'finalizar' ? form.mensagem_resposta.trim() : form.mensagem_resposta.trim() || undefined,
       data_agenda: form.data_agenda ? datetimeLocalToIxc(form.data_agenda) : undefined,
@@ -400,6 +403,7 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
       <IxcLookupSelectModal
         show={showTecnicoModal}
         onClose={() => setShowTecnicoModal(false)}
+        clienteId={clienteId}
         onSelect={(item) => {
           handleChange('id_tecnico', item.id);
           setTecnicoNome(item.nome);
@@ -412,6 +416,7 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
       <IxcLookupSelectModal
         show={showSetorModal}
         onClose={() => setShowSetorModal(false)}
+        clienteId={clienteId}
         onSelect={(item) => {
           handleChange('setor', item.id);
           setSetorNome(item.nome);
@@ -424,6 +429,7 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
       <IxcLookupSelectModal
         show={showAssuntoModal}
         onClose={() => setShowAssuntoModal(false)}
+        clienteId={clienteId}
         onSelect={(item) => {
           handleChange('id_assunto', item.id);
           setAssuntoNome(item.nome);

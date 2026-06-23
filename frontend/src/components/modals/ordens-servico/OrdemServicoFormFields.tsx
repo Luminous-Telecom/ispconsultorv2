@@ -59,6 +59,7 @@ interface OrdemServicoFormFieldsProps {
   clienteId?: number;
   onClienteIdChange?: (value: number) => void;
   clienteNome?: string;
+  clienteError?: string;
   filialNome?: string;
   estruturaNome?: string;
   tecnicoNome?: string;
@@ -80,6 +81,7 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
   clienteId = 0,
   onClienteIdChange,
   clienteNome = '',
+  clienteError,
   filialNome = '',
   estruturaNome = '',
   tecnicoNome = '',
@@ -101,6 +103,7 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
           onChange={(v) => onClienteIdChange?.(v)}
           onShowModal={onShowClienteModal}
           entities={clienteId && clienteNome ? [{ id: clienteId, nome: clienteNome }] : []}
+          error={clienteError}
           idFieldTitle="ID do cliente"
           searchButtonTitle="Buscar cliente"
         />

@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useCreateOrdemServico, useUpdateOrdemServico } from 'hooks/useOrdensServico';
 import { OrdemServicoService } from 'services/ordemServicoService';
 import type { CreateOrdemServico } from 'services/ordemServicoService';
-import { useFiliais, useEstruturas, useTecnicos, useAssuntos, useSetores } from 'hooks/useIxcLookups';
+import { useFiliais, useEstruturas, useTecnicos, useAssuntos, useSetores, useClienteIxcIntegracao } from 'hooks/useIxcLookups';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import ClienteListModal from 'components/modals/clientes/ClienteListModal';
 import DraggableModal from 'components/common/DraggableModal';
 import { ModalFormActions, Spinner } from 'components/ui';
@@ -34,6 +35,9 @@ const datetimeLocalToIxc = (value: string): string => {
   return `${value.replace('T', ' ')}:00`.slice(0, 19);
 };
 
+const INTEGRACAO_IXC_MSG =
+  'Cliente sem integração IXC no contrato. Configure na aba IXC Provedor do contrato.';
+
 const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
   show,
   onClose,
@@ -42,9 +46,18 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const isEdit = !!ordemServicoId;
+  const { warning } = useNotificationContext();
+  const lastIntegracaoToastClienteId = useRef(0);
+
+  const notifySemIntegracaoIxc = (id: number) => {
+    if (lastIntegracaoToastClienteId.current === id) return;
+    lastIntegracaoToastClienteId.current = id;
+    warning(INTEGRACAO_IXC_MSG);
+  };
 
   const [formData, setFormData] = useState<OrdemServicoFormData>(initialOrdemServicoForm);
   const [errors, setErrors] = useState<Partial<Record<keyof OrdemServicoFormData, string>>>({});
+  const [clienteError, setClienteError] = useState('');
   const [clienteId, setClienteId] = useState(0);
   const [clienteNome, setClienteNome] = useState('');
   const [filialNome, setFilialNome] = useState('');
@@ -70,6 +83,25 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
   const createMutation = useCreateOrdemServico();
   const updateMutation = useUpdateOrdemServico();
   const isPending = createMutation.isPending || updateMutation.isPending;
+
+  const { data: ixcIntegracaoStatus } = useClienteIxcIntegracao(clienteId, show);
+  const clienteSemIntegracaoIxc =
+    clienteId > 0 && ixcIntegracaoStatus !== undefined && !ixcIntegracaoStatus.configured;
+
+  useEffect(() => {
+    if (!show || !clienteId || ixcIntegracaoStatus === undefined) return;
+    if (!ixcIntegracaoStatus.configured) {
+      notifySemIntegracaoIxc(clienteId);
+    } else {
+      lastIntegracaoToastClienteId.current = 0;
+    }
+  }, [show, clienteId, ixcIntegracaoStatus]);
+
+  useEffect(() => {
+    if (!show) {
+      lastIntegracaoToastClienteId.current = 0;
+    }
+  }, [show]);
 
   useEffect(() => {
     if (!show) return;
@@ -103,7 +135,36 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
       setSetorNome('');
     }
     setErrors({});
+    setClienteError('');
   }, [show, isEdit, ordemData]);
+
+  const clearIxcSelections = () => {
+    setFormData((prev) => ({
+      ...prev,
+      id_filial: '',
+      id_estrutura: '',
+      id_assunto: '',
+      setor: '',
+      id_tecnico: '',
+    }));
+    setFilialNome('');
+    setEstruturaNome('');
+    setAssuntoNome('');
+    setSetorNome('');
+    setTecnicoNome('');
+  };
+
+  const handleOpenLookupModal = (open: () => void) => {
+    if (!clienteId) {
+      setClienteError('Selecione o cliente antes de buscar no IXC');
+      return;
+    }
+    if (clienteSemIntegracaoIxc) {
+      notifySemIntegracaoIxc(clienteId);
+      return;
+    }
+    open();
+  };
 
   const handleChange = (field: keyof OrdemServicoFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -118,6 +179,16 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
 
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof OrdemServicoFormData, string>> = {};
+    let hasClienteError = false;
+    if (!clienteId) {
+      setClienteError('Selecione o cliente');
+      hasClienteError = true;
+    } else if (clienteSemIntegracaoIxc) {
+      notifySemIntegracaoIxc(clienteId);
+      hasClienteError = true;
+    } else {
+      setClienteError('');
+    }
     if (!formData.id_filial.trim()) {
       newErrors.id_filial = 'Selecione a filial';
     }
@@ -131,7 +202,7 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
       newErrors.setor = 'Selecione o setor';
     }
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return Object.keys(newErrors).length === 0 && !hasClienteError;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -197,20 +268,27 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
               clienteId={clienteId}
               onClienteIdChange={(id) => {
                 setClienteId(id);
-                if (!id) setClienteNome('');
+                if (!id) {
+                  setClienteNome('');
+                }
+                if (clienteError) setClienteError('');
+                if (id && id !== clienteId) {
+                  clearIxcSelections();
+                }
               }}
               clienteNome={clienteNome}
+              clienteError={clienteError}
               filialNome={filialNome}
               estruturaNome={estruturaNome}
               tecnicoNome={tecnicoNome}
               assuntoNome={assuntoNome}
               setorNome={setorNome}
               onShowClienteModal={() => setShowClienteModal(true)}
-              onShowFilialModal={() => setShowFilialModal(true)}
-              onShowEstruturaModal={() => setShowEstruturaModal(true)}
-              onShowTecnicoModal={() => setShowTecnicoModal(true)}
-              onShowAssuntoModal={() => setShowAssuntoModal(true)}
-              onShowSetorModal={() => setShowSetorModal(true)}
+              onShowFilialModal={() => handleOpenLookupModal(() => setShowFilialModal(true))}
+              onShowEstruturaModal={() => handleOpenLookupModal(() => setShowEstruturaModal(true))}
+              onShowTecnicoModal={() => handleOpenLookupModal(() => setShowTecnicoModal(true))}
+              onShowAssuntoModal={() => handleOpenLookupModal(() => setShowAssuntoModal(true))}
+              onShowSetorModal={() => handleOpenLookupModal(() => setShowSetorModal(true))}
             />
           </form>
         )}
@@ -220,8 +298,13 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
         show={showClienteModal}
         onClose={() => setShowClienteModal(false)}
         onSelectClient={(cliente) => {
-          setClienteId(cliente.id);
+          const newId = cliente.id;
+          if (newId !== clienteId) {
+            clearIxcSelections();
+          }
+          setClienteId(newId);
           setClienteNome(cliente.razao_social || cliente.nome_fantasia || String(cliente.id));
+          if (clienteError) setClienteError('');
           setShowClienteModal(false);
         }}
         title="Selecionar Cliente"
@@ -230,6 +313,7 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
       <IxcLookupSelectModal
         show={showFilialModal}
         onClose={() => setShowFilialModal(false)}
+        clienteId={clienteId}
         onSelect={(item) => {
           handleChange('id_filial', item.id);
           setFilialNome(item.nome);
@@ -242,6 +326,7 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
       <IxcLookupSelectModal
         show={showEstruturaModal}
         onClose={() => setShowEstruturaModal(false)}
+        clienteId={clienteId}
         onSelect={(item) => {
           handleChange('id_estrutura', item.id);
           setEstruturaNome(item.nome);
@@ -254,6 +339,7 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
       <IxcLookupSelectModal
         show={showTecnicoModal}
         onClose={() => setShowTecnicoModal(false)}
+        clienteId={clienteId}
         onSelect={(item) => {
           handleChange('id_tecnico', item.id);
           setTecnicoNome(item.nome);
@@ -266,6 +352,7 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
       <IxcLookupSelectModal
         show={showAssuntoModal}
         onClose={() => setShowAssuntoModal(false)}
+        clienteId={clienteId}
         onSelect={(item) => {
           handleChange('id_assunto', item.id);
           setAssuntoNome(item.nome);
@@ -278,6 +365,7 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
       <IxcLookupSelectModal
         show={showSetorModal}
         onClose={() => setShowSetorModal(false)}
+        clienteId={clienteId}
         onSelect={(item) => {
           handleChange('setor', item.id);
           setSetorNome(item.nome);

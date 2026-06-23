@@ -96,6 +96,12 @@ export interface ListLookupResponse {
 
 export type OssChamadoInput = Record<string, string | number | null | undefined>;
 
+function parseClienteId(raw: string | number | null | undefined): number | null {
+  if (raw == null || raw === '') return null;
+  const n = typeof raw === 'number' ? raw : parseInt(String(raw), 10);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
 /** Campos enviados pelo BackNet — não repassar ao IXC. */
 const CAMPOS_BACKNET = ['cliente_id'];
 
@@ -793,7 +799,8 @@ export class IxcOssChamadoService {
     nomeCampo: string,
     filters: ListOssChamadosFilters = {},
     additionalFilters: Record<string, string> = {},
-    empresaId: number | null = null
+    empresaId: number | null = null,
+    clienteId: number | null = null
   ): Promise<ListLookupResponse> {
     return runWithIxcCredentials(empresaId, async () => {
     const page = filters.page && filters.page > 0 ? filters.page : 1;
@@ -871,7 +878,7 @@ export class IxcOssChamadoService {
     } catch (error) {
       throw wrapIxcError(error, `Erro ao listar ${resource} no IXC`);
     }
-    });
+    }, clienteId);
   }
 
   static async getById(
@@ -897,6 +904,7 @@ export class IxcOssChamadoService {
     payload: OssChamadoInput,
     empresaId: number | null = null
   ): Promise<IxcActionResponse> {
+    const clienteId = parseClienteId(payload.cliente_id);
     return runWithIxcCredentials(empresaId, async () => {
     const body = prepareCreateBody(payload);
 
@@ -909,7 +917,7 @@ export class IxcOssChamadoService {
     } catch (error) {
       throw wrapIxcError(error, 'Erro ao criar ordem de serviço no IXC');
     }
-    });
+    }, clienteId);
   }
 
   static async update(
@@ -917,6 +925,7 @@ export class IxcOssChamadoService {
     payload: OssChamadoInput,
     empresaId: number | null = null
   ): Promise<IxcActionResponse> {
+    const clienteId = parseClienteId(payload.cliente_id);
     return runWithIxcCredentials(empresaId, async () => {
     if (!(await osAbertaPeloOperador(id))) {
       throw new Error('Ordem de serviço não encontrada');
@@ -942,7 +951,7 @@ export class IxcOssChamadoService {
     } catch (error) {
       throw wrapIxcError(error, 'Erro ao editar ordem de serviço no IXC');
     }
-    });
+    }, clienteId);
   }
 
   /**
@@ -955,6 +964,7 @@ export class IxcOssChamadoService {
     payload: OssChamadoInput = {},
     empresaId: number | null = null
   ): Promise<IxcActionResponse> {
+    const clienteId = parseClienteId(payload.cliente_id);
     return runWithIxcCredentials(empresaId, async () => {
     const abertaPeloOperador = await osAbertaPeloOperador(id);
     if (!abertaPeloOperador) {
@@ -1009,7 +1019,7 @@ export class IxcOssChamadoService {
     } catch (error) {
       throw wrapIxcError(error, 'Erro ao executar ação no IXC');
     }
-    });
+    }, clienteId);
   }
 
   static async delete(

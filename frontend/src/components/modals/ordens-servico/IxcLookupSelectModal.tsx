@@ -12,6 +12,7 @@ interface IxcLookupSelectModalProps {
   onSelect: (item: LookupItem) => void;
   title: string;
   nomeLabel: string;
+  clienteId?: number;
   useData: (filters: LookupFilters) => UseQueryResult<PaginatedResponse<LookupItem>>;
 }
 
@@ -21,11 +22,14 @@ const IxcLookupSelectModal: React.FC<IxcLookupSelectModalProps> = ({
   onSelect,
   title,
   nomeLabel,
+  clienteId,
   useData,
 }) => {
   const list = useEntityListModal<LookupItem>({ onClose, onSelect });
 
   const { data, isLoading, refetch } = useData({
+    cliente_id: clienteId || undefined,
+    enabled: show,
     search: list.tableFilters.debouncedSearch || undefined,
     page: list.tableFilters.page,
     limit: list.tableFilters.limit,
@@ -85,7 +89,9 @@ const IxcLookupSelectModal: React.FC<IxcLookupSelectModalProps> = ({
         columns,
         searchPlaceholder: 'Buscar...',
         searchFields,
-        emptyMessage: 'Nenhum registro encontrado',
+        emptyMessage: clienteId
+          ? 'Nenhum registro encontrado'
+          : 'Selecione um cliente antes de buscar no IXC',
       }}
       data={modalData}
       loading={isLoading}

@@ -14,9 +14,13 @@ export function getIxcApiCredentials(): IxcApiCredentials {
 
 export async function runWithIxcCredentials<T>(
   empresaId: number | null,
-  fn: () => Promise<T>
+  fn: () => Promise<T>,
+  clienteId?: number | null
 ): Promise<T> {
-  const credentials = await IntegracaoIxcProvedorService.resolveCredentials(empresaId);
+  const credentials =
+    clienteId != null && clienteId > 0
+      ? await IntegracaoIxcProvedorService.resolveCredentialsForCliente(clienteId, empresaId)
+      : await IntegracaoIxcProvedorService.resolveCredentials(empresaId);
   return ixcCredentialsStorage.run(credentials, fn);
 }
 

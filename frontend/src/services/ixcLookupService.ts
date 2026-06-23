@@ -10,7 +10,11 @@ export interface LookupItem {
   nome: string;
 }
 
-export type LookupFilters = BaseFilters;
+export type LookupFilters = BaseFilters & {
+  cliente_id?: number;
+  /** Quando false, a query não é executada (ex.: modal fechado). */
+  enabled?: boolean;
+};
 
 class LookupServiceClass extends BaseService<LookupItem, never, never, LookupFilters> {
   constructor(endpoint: string) {
@@ -51,5 +55,19 @@ export class AssuntoLookupService {
 export class SetorLookupService {
   static async list(filters: LookupFilters = {}): Promise<PaginatedResponse<LookupItem>> {
     return setorLookupService.list(filters);
+  }
+}
+
+export interface ClienteIntegracaoIxcStatus {
+  configured: boolean;
+}
+
+export class IxcIntegracaoStatusService {
+  static async getByClienteId(clienteId: number): Promise<ClienteIntegracaoIxcStatus> {
+    const queryString = defaultApiClient.buildQueryString({ cliente_id: clienteId });
+    const response = await defaultApiClient.get<{ data?: ClienteIntegracaoIxcStatus }>(
+      `/ixc/integracao-status${queryString}`
+    );
+    return response.data?.data ?? (response.data as unknown as ClienteIntegracaoIxcStatus);
   }
 }
