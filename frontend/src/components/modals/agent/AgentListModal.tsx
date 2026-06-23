@@ -38,6 +38,7 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
   const list = useEntityListModal<Agent>({
     onClose,
     onSelect: onSelectAgent,
+    initialSearchField: 'name',
   });
 
   const agentListFilters = useMemo(() => {
@@ -55,7 +56,125 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
   const updateMutation = useUpdateAgent();
   const testMutation = useTestAgent();
 
-  const tableData = useMemo(() => agents.map((a) => ({ ...a })), [agents]);
+  const getClienteLabel = useCallback((agent: Agent) => {
+    const c = agent.cliente;
+    return c?.nome_fantasia?.trim() || c?.razao_social?.trim() || '';
+  }, []);
+
+  const matchAgentSearch = useCallback(
+    (agent: Agent, term: string, field: string): boolean => {
+      const normalizedTerm = term.toLowerCase();
+      const matchValue = (value: unknown) =>
+        String(value ?? '').toLowerCase().includes(normalizedTerm);
+
+      switch (field) {
+        case 'id':
+          return matchValue(agent.id);
+        case 'name':
+          return matchValue(agent.name);
+        case 'cliente':
+          return matchValue(getClienteLabel(agent));
+        case 'hostname':
+          return matchValue(agent.hostname);
+        case 'ip_address':
+          return matchValue(agent.ip_address);
+        case 'os_info':
+          return matchValue(agent.os_info);
+        case 'online':
+          return (agent.online ? 'online' : 'offline').includes(normalizedTerm);
+        case 'is_active':
+          return (
+            (agent.is_active ? 'sim ativo' : 'não inativo').includes(normalizedTerm)
+          );
+        default:
+          return [
+            agent.id,
+            agent.name,
+            getClienteLabel(agent),
+            agent.hostname,
+            agent.ip_address,
+            agent.os_info,
+            agent.description,
+          ].some(matchValue);
+      }
+    },
+    [getClienteLabel]
+  );
+
+  const getAgentSortValue = useCallback(
+    (agent: Agent, sortKey: string): string => {
+      switch (sortKey) {
+        case 'cliente':
+          return getClienteLabel(agent);
+        case 'online':
+          return agent.online ? '1' : '0';
+        case 'is_active':
+          return agent.is_active ? '1' : '0';
+        default:
+          return String((agent as Record<string, unknown>)[sortKey] ?? '');
+      }
+    },
+    [getClienteLabel]
+  );
+
+  const { tableData, pagination } = useMemo(() => {
+    const term = list.tableFilters.debouncedSearch.trim();
+    const field = list.tableFilters.searchField || 'name';
+    let filtered = agents;
+
+    if (term) {
+      filtered = agents.filter((agent) => matchAgentSearch(agent, term, field));
+    }
+
+    const sortKey = list.tableFilters.sortColumn || 'name';
+    const direction = list.tableFilters.sortDirection === 'asc' ? 1 : -1;
+    filtered = [...filtered].sort((a, b) => {
+      const valueA = getAgentSortValue(a, sortKey).toLowerCase();
+      const valueB = getAgentSortValue(b, sortKey).toLowerCase();
+      if (valueA < valueB) return -1 * direction;
+      if (valueA > valueB) return 1 * direction;
+      return 0;
+    });
+
+    const total = filtered.length;
+    const perPage = list.tableFilters.limit;
+    const lastPage = Math.max(1, Math.ceil(total / perPage));
+    const safePage = Math.min(list.tableFilters.page, lastPage);
+    const from = total === 0 ? 0 : (safePage - 1) * perPage + 1;
+    const to = total === 0 ? 0 : Math.min(safePage * perPage, total);
+    const rows = filtered.slice(from > 0 ? from - 1 : 0, to);
+
+    return {
+      tableData: rows,
+      pagination: list.buildPagination({
+        current_page: safePage,
+        last_page: lastPage,
+        per_page: perPage,
+        total,
+        from,
+        to,
+      }),
+    };
+  }, [
+    agents,
+    list,
+    matchAgentSearch,
+    getAgentSortValue,
+  ]);
+
+  const searchFields = useMemo(
+    () => [
+      { key: 'id', label: 'ID' },
+      { key: 'name', label: 'Nome' },
+      { key: 'cliente', label: 'Cliente' },
+      { key: 'hostname', label: 'Host' },
+      { key: 'ip_address', label: 'IP' },
+      { key: 'os_info', label: 'OS' },
+      { key: 'online', label: 'Status' },
+      { key: 'is_active', label: 'Ativo' },
+    ],
+    []
+  );
 
   const handleDelete = useCallback(
     async (agent: Agent) => {
@@ -116,6 +235,12 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
         render: (item) => <span className="font-monospace small">{item.id}</span>,
       },
       {
+        key: 'name',
+        label: 'Nome',
+        sortable: true,
+        render: (item) => <span className="fw-semibold">{item.name}</span>,
+      },
+      {
         key: 'online',
         label: 'Status',
         sortable: true,
@@ -125,12 +250,6 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
             {item.online ? 'Online' : 'Offline'}
           </span>
         ),
-      },
-      {
-        key: 'name',
-        label: 'Nome',
-        sortable: true,
-        render: (item) => <span className="fw-semibold">{item.name}</span>,
       },
       {
         key: 'cliente',
@@ -284,10 +403,22 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
       config={{
         title: tableTitle ?? modalTitle ?? 'Agentes Backnet',
         columns,
+        searchPlaceholder: t('layout.searchPlaceholder'),
+        searchField: 'name',
+        searchFields,
         emptyMessage: 'Nenhum agente cadastrado',
       }}
       data={tableData}
       loading={isLoading}
+      search={list.tableFilters.search}
+      onSearchChange={list.handleSearchChange}
+      onSearchFieldChange={list.handleSearchFieldChange}
+      sortColumn={list.tableFilters.sortColumn}
+      sortDirection={list.tableFilters.sortDirection}
+      onSortChange={list.tableFilters.setSort}
+      pagination={pagination}
+      onPageChange={list.tableFilters.setPage}
+      onLimitChange={list.tableFilters.setLimit}
       onRefresh={refetch}
       bulkActions={bulkActions}
       onSelectionChange={list.handleSelectionChange}
