@@ -225,7 +225,7 @@ export interface UsuarioAuditoria {
   email: string | null;
 }
 
-export async function registrarExecucaoRotinaAuditoria(params: {
+export async function registrarExecucaoRotinaAuditoria(_params: {
   routineId: number;
   routineNome: string;
   routineTipo: string;
@@ -238,31 +238,5 @@ export async function registrarExecucaoRotinaAuditoria(params: {
   usuario?: UsuarioAuditoria | null;
   ipAddress?: string | null;
 }): Promise<void> {
-  const {
-    routineId,
-    routineNome,
-    routineTipo,
-    status,
-    duracaoMs,
-    empresaId,
-    saas = false,
-    erro,
-    resultado,
-    usuario,
-    ipAddress,
-  } = params;
-
-  SistemaLogOperacionalService.registrarRotinaExecucao({
-    origem: saas ? 'saas' : 'erp',
-    empresaId: empresaId ?? null,
-    usuarioId: usuario?.id ?? null,
-    routineId,
-    routineNome,
-    routineTipo,
-    status,
-    duracaoMs,
-    resultado: resultado ?? null,
-    erro: erro ?? null,
-    ipAddress: usuario && ipAddress ? ipAddress : null,
-  });
+  /* Log unificado em adm_sistema_logs_operacionais via RotinaExecucaoLogService */
 }

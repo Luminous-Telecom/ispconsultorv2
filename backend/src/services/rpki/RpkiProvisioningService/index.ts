@@ -341,15 +341,15 @@ export class RpkiProvisioningService {
       last_error: null,
     });
 
-    const { RpkiSyncLog } = await import('../../../models/rpki/RpkiSyncLog');
-    RpkiSyncLog.create({
-      empresa_id: params.ca.empresa_id,
-      ca_id: params.ca.id,
+    const { SistemaLogOperacionalService } = await import('../../sistema/SistemaLogOperacionalService');
+    SistemaLogOperacionalService.registrarRpkiSync({
+      empresaId: params.ca.empresa_id,
+      caId: params.ca.id,
       type: 'provisioning',
       status: 'success',
-      remote_host: process.env.KRILL_API_URL?.trim() || 'https://127.0.0.1:3100',
+      remoteHost: process.env.KRILL_API_URL?.trim() || 'https://127.0.0.1:3100',
       message: `Krill: recursos sincronizados (ASN: ${resources.asnResources.length}, IPv4: ${resources.ipv4Resources.length}, IPv6: ${resources.ipv6Resources.length})`,
-    }).catch(() => {});
+    });
 
     return {
       asnResources: resources.asnResources,

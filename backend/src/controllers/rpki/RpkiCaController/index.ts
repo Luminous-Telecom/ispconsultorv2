@@ -10,7 +10,7 @@ import { RpkiCaResource } from '../../../models/rpki/RpkiCaResource';
 import { RpkiRepository } from '../../../models/rpki/RpkiRepository';
 import { RpkiRoa } from '../../../models/rpki/RpkiRoa';
 import { RpkiAspa } from '../../../models/rpki/RpkiAspa';
-import { RpkiSyncLog } from '../../../models/rpki/RpkiSyncLog';
+import { SistemaLogOperacionalQueryService } from '../../../services/sistema/SistemaLogOperacionalQueryService';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { Op } from 'sequelize';
@@ -40,9 +40,13 @@ async function auditarRpki(exec: () => Promise<void>): Promise<void> {
   }
 }
 
-async function enrichRpkiSyncLogsWithEmpresaSaas(rows: RpkiSyncLog[]): Promise<Record<string, unknown>[]> {
+async function enrichRpkiSyncLogsWithEmpresaSaas(rows: Record<string, unknown>[]): Promise<Record<string, unknown>[]> {
   const empresaIds = [
-    ...new Set(rows.map((r) => r.empresa_id).filter((id): id is number => id != null && Number(id) > 0)),
+    ...new Set(
+      rows
+        .map((r) => r.empresa_id)
+        .filter((id): id is number => typeof id === 'number' && id != null && Number(id) > 0)
+    ),
   ];
   const nomeById = new Map<number, string>();
   if (empresaIds.length > 0) {
@@ -59,7 +63,11 @@ async function enrichRpkiSyncLogsWithEmpresaSaas(rows: RpkiSyncLog[]): Promise<R
   }
 
   const caIds = [
-    ...new Set(rows.map((r) => r.ca_id).filter((id): id is number => id != null && Number(id) > 0)),
+    ...new Set(
+      rows
+        .map((r) => r.ca_id)
+        .filter((id): id is number => typeof id === 'number' && id != null && Number(id) > 0)
+    ),
   ];
   const caNomeById = new Map<number, string>();
   const clienteIdByCaId = new Map<number, number | null>();
@@ -95,13 +103,13 @@ async function enrichRpkiSyncLogsWithEmpresaSaas(rows: RpkiSyncLog[]): Promise<R
   }
 
   return rows.map((row) => {
-    const plain = row.get({ plain: true }) as Record<string, unknown>;
+    const plain = { ...row };
     const eid = row.empresa_id;
     plain.empresa_saas =
-      eid != null && Number(eid) > 0 ? nomeById.get(Number(eid)) ?? null : null;
+      typeof eid === 'number' && eid > 0 ? nomeById.get(Number(eid)) ?? null : null;
 
     const caId = row.ca_id;
-    if (caId != null && Number(caId) > 0) {
+    if (typeof caId === 'number' && caId > 0) {
       plain.ca_nome = caNomeById.get(Number(caId)) ?? null;
       const cid = clienteIdByCaId.get(Number(caId));
       plain.cliente_nome =
@@ -1214,21 +1222,18 @@ export class RpkiCaController {
       const offset = (page - 1) * limit;
       const search = searchRaw?.trim() ?? '';
       const status = queryString(req.query.status) ?? '';
-      const where: Record<string, unknown> = { ...baseWhere };
-      if (empresaId != null) where.empresa_id = empresaId;
-      if (status && ['success', 'failed'].includes(status)) where.status = status;
-      if (search) {
-        where[Op.or as unknown as string] = [
-          { remote_host: { [Op.like]: `%${search}%` } },
-          { message: { [Op.like]: `%${search}%` } },
-        ];
-      }
 
-      const { count, rows } = await RpkiSyncLog.findAndCountAll({
-        where,
-        order: [['created_at', 'DESC']],
+      const { count, rows } = await SistemaLogOperacionalQueryService.listRpkiSync({
+        page,
         limit,
         offset,
+        empresaId,
+        search,
+        status,
+        baseWhere: baseWhere as {
+          type?: 'provisioning' | 'publication';
+          trigger_type?: 'roa' | 'aspa' | 'manual';
+        },
       });
 
       sendSuccess(res, {
@@ -1267,7 +1272,45 @@ export class RpkiCaController {
   }
 
   static listValidationLogs(req: Request, res: Response): Promise<void> {
-    return RpkiCaController.listSyncLogs(req, res, 'listValidationLogs', 'Erro ao listar logs de sincronização', {});
+    return RpkiCaController.listValidationLogsPaginated(req, res);
+  }
+
+  private static async listValidationLogsPaginated(req: Request, res: Response): Promise<void> {
+    try {
+      const empresaId = resolveListEmpresaId(req);
+      const { page, limit, search: searchRaw } = parseListQuery(req.query, {
+        defaultLimit: 20,
+        maxLimit: 100,
+      });
+      if (empresaId === false) {
+        sendSuccess(res, {
+          data: [],
+          pagination: buildPagination(page, limit, 0, { minLastPageWhenEmpty: 1 }),
+        });
+        return;
+      }
+
+      const offset = (page - 1) * limit;
+      const search = searchRaw?.trim() ?? '';
+
+      const { count, rows } = await SistemaLogOperacionalQueryService.listRpkiValidation({
+        page,
+        limit,
+        offset,
+        empresaId,
+        search,
+      });
+
+      sendSuccess(res, {
+        data: rows,
+        pagination: buildPagination(page, limit, count, { minLastPageWhenEmpty: 1, minLastPage: 1 }),
+      });
+    } catch (error) {
+      sendError(res, error, 'Erro ao listar logs de validação', 500, true, {
+        context: 'RpkiCaController',
+        action: 'listValidationLogs',
+      });
+    }
   }
 }
 

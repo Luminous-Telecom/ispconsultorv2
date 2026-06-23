@@ -38,9 +38,7 @@ import { TipoCobrancaContrato } from './cadastros/TipoCobrancaContrato';
 import { DadosEmpresa } from './sistema/DadosEmpresa';
 import { ScheduledRoutine } from './sistema/ScheduledRoutine';
 import Parametros from './sistema/Parametros';
-import { RotinaExecucaoLog } from './sistema/RotinaExecucaoLog';
 import { SistemaLogOperacional } from './sistema/SistemaLogOperacional';
-import { SshAuditLog } from './ssh-manager/SshAuditLog';
 
 // Comunicação
 import { ServidorEmail } from './comunicacao/ServidorEmail';
@@ -56,7 +54,6 @@ import { IPv6 } from './blockdomi/IPv6';
 import { VersaoBlockdomi } from './blockdomi/VersaoBlockdomi';
 import { NumeroSeiAnatelBlockdomi } from './blockdomi/NumeroSeiAnatelBlockdomi';
 import { IpPermitidoBlockdomi } from './blockdomi/IpPermitidoBlockdomi';
-import { BlockdomiLogAcesso } from './blockdomi/BlockdomiLogAcesso';
 
 // SSH Manager
 import { SshDevice } from './ssh-manager/SshDevice';
@@ -67,7 +64,6 @@ import { SshDeviceBackupEvent } from './ssh-manager/SshDeviceBackupEvent';
 import { Agent } from './agent/Agent';
 import {
   RpkiRoa,
-  RpkiValidationLog,
   RpkiAlert,
   RpkiSyncSession,
   RpkiCa,
@@ -515,8 +511,6 @@ export {
   AssinaturaDigitalProvider,
   Parametros,
   SistemaLogOperacional,
-  RotinaExecucaoLog,
-  SshAuditLog,
   Fornecedor,
   ContaPagar,
   ContaPagarPagamento,
@@ -549,7 +543,6 @@ export {
   SshDeviceBackupEvent,
   Agent,
   RpkiRoa,
-  RpkiValidationLog,
   RpkiAlert,
   RpkiSyncSession,
   RpkiCa,

@@ -1,7 +1,7 @@
 import axios, { isAxiosError } from 'axios';
 import http from 'http';
 import https from 'https';
-import { RpkiValidationLog } from '../../../models/rpki/RpkiValidationLog';
+import { SistemaLogOperacionalService } from '../../sistema/SistemaLogOperacionalService';
 import { RpkiClientError } from '../../../utils/errorUtils';
 import { normalizeAsn, parseCidr } from '../RpkiRouteValidationCore';
 
@@ -414,16 +414,16 @@ export class RpkiRouteValidationService {
     const message = routinatorMessage(state);
     const reason = routinatorAggregateReason(state, rpki.validity.reason, rpki.validity.description);
 
-    await RpkiValidationLog.create({
-      empresa_id: params.empresaId,
+    SistemaLogOperacionalService.registrarRpkiValidation({
+      empresaId: params.empresaId,
       prefix: announcementCidr.slice(0, 64),
       asn,
-      prefix_length: annParsed.prefixLength,
+      prefixLength: annParsed.prefixLength,
       state,
-      matched_roa_id: null,
+      matchedRoaId: null,
       reason,
-      request_ip: params.requestIp ?? null,
-    }).catch(() => { /* log não deve interromper a resposta */ });
+      requestIp: params.requestIp ?? null,
+    });
 
     return {
       state,

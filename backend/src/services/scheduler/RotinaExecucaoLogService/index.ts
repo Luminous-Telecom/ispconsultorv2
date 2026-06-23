@@ -1,7 +1,7 @@
 import type { JsonValue } from '../../../types/index';
-import { RotinaExecucaoLog } from '../../../models/sistema/RotinaExecucaoLog';
 import { logger } from '../../../utils/logger';
-import { Op } from 'sequelize';
+import { SistemaLogOperacionalService } from '../../sistema/SistemaLogOperacionalService';
+import { SistemaLogOperacionalQueryService } from '../../sistema/SistemaLogOperacionalQueryService';
 
 interface UpdateLogData {
   status: 'executando' | 'sucesso' | 'erro';
@@ -19,68 +19,34 @@ export async function criarLogExecucaoMysql(
   origem: 'erp' | 'saas' = 'erp',
   empresaId?: number | null
 ): Promise<{ id: string }> {
-  const row = await RotinaExecucaoLog.create({
-    routine_id: routineId,
-    routine_nome: routineNome,
-    routine_tipo: routineTipo,
+  return SistemaLogOperacionalService.criarRotinaExecucao({
+    routineId,
+    routineNome,
+    routineTipo,
+    startTime,
     origem,
-    empresa_id: empresaId != null && empresaId > 0 ? empresaId : null,
-    status: 'executando',
-    data_inicio: startTime,
-    data_fim: null,
-    duracao_ms: null,
-    resultado: null,
-    erro: null,
+    empresaId,
   });
-  return { id: String(row.id) };
 }
 
 export async function atualizarLogExecucaoMysql(
   logId: string,
   data: UpdateLogData & { status?: 'executando' | 'sucesso' | 'erro' }
 ): Promise<void> {
-  const id = parseInt(logId, 10);
-  if (!Number.isFinite(id)) return;
-
-  await RotinaExecucaoLog.update(
-    {
-      status: data.status ?? 'sucesso',
-      data_fim: data.data_fim,
-      duracao_ms: data.duracao_ms,
-      resultado: data.resultado ?? null,
-      erro: data.erro ?? null,
-    },
-    { where: { id } }
-  );
+  await SistemaLogOperacionalService.atualizarRotinaExecucao(logId, {
+    status: data.status ?? 'sucesso',
+    data_fim: data.data_fim,
+    duracao_ms: data.duracao_ms,
+    resultado: data.resultado ?? null,
+    erro: data.erro ?? null,
+  });
 }
 
 export async function buscarLogsExecucaoMysql(
   routineId?: number,
   limit = 100
 ): Promise<Array<Record<string, unknown>>> {
-  const where = routineId != null ? { routine_id: routineId } : {};
-  const rows = await RotinaExecucaoLog.findAll({
-    where,
-    order: [['created_at', 'DESC']],
-    limit,
-  });
-
-  return rows.map((r) => ({
-    id: String(r.id),
-    log_tipo: 'rotina',
-    routine_id: r.routine_id,
-    routine_nome: r.routine_nome,
-    routine_tipo: r.routine_tipo,
-    saas: r.origem === 'saas',
-    status: r.status,
-    data_inicio: r.data_inicio.toISOString(),
-    data_fim: r.data_fim?.toISOString() ?? null,
-    duracao_ms: r.duracao_ms,
-    resultado: r.resultado,
-    erro: r.erro,
-    empresa_id: r.empresa_id,
-    timestamp: r.created_at.toISOString(),
-  }));
+  return SistemaLogOperacionalQueryService.buscarLogsRotinaExecucao(routineId, limit);
 }
 
 export async function buscarLogsExecucaoRecentesMysql(limit = 10): Promise<Array<Record<string, unknown>>> {
@@ -89,10 +55,7 @@ export async function buscarLogsExecucaoRecentesMysql(limit = 10): Promise<Array
 
 export async function limparLogsExecucaoAntigosMysql(cutoffDate: Date): Promise<number> {
   try {
-    const deleted = await RotinaExecucaoLog.destroy({
-      where: { created_at: { [Op.lt]: cutoffDate } },
-    });
-    return deleted;
+    return await SistemaLogOperacionalQueryService.limparLogsRotinaExecucaoAntigos(cutoffDate);
   } catch (error) {
     logger.warn('Falha ao limpar logs antigos de rotina', {
       context: 'RotinaExecucaoLogService',

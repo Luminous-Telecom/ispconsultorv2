@@ -7,6 +7,7 @@ import {
   ENTIDADES_PAINEL_LOGS_SAAS,
   ENTIDADES_SAAS,
 } from '../auditoriaConstants';
+import { sqlExcluirLogContextosEspecializados } from '../../sistema/sistemaLogOperacionalContextos';
 
 const TIPO_OPERACIONAL_TO_ACAO: Record<string, string> = {
   inseriu: 'create',
@@ -209,7 +210,7 @@ export class AuditoriaOperacionalMysqlService {
     logs: Record<string, unknown>[];
     total: number;
   }> {
-    const and: WhereOptions[] = [];
+    const and: WhereOptions[] = [literal(sqlExcluirLogContextosEspecializados())];
 
     if (params.moduloBlockdomi) {
       and.push({ recurso: { [Op.in]: [...ENTIDADES_BLOCKDOMI] } });

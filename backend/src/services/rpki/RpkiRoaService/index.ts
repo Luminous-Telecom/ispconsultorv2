@@ -2,8 +2,8 @@ import { Op } from 'sequelize';
 import { RpkiRoa } from '../../../models/rpki/RpkiRoa';
 import { RpkiCa } from '../../../models/rpki/RpkiCa';
 import { RpkiCaResource } from '../../../models/rpki/RpkiCaResource';
-import { RpkiValidationLog } from '../../../models/rpki/RpkiValidationLog';
-import { RpkiActivityLog } from '../../../models/rpki/RpkiActivityLog';
+import { SistemaLogOperacionalQueryService } from '../../sistema/SistemaLogOperacionalQueryService';
+import { SistemaLogOperacionalService } from '../../sistema/SistemaLogOperacionalService';
 import { RpkiClientError } from '../../../utils/errorUtils';
 import { syncKrillRoutesForCa, syncRoasFromKrillToDb } from '../KrillSyncService';
 import { collectRisWhoisSuggestedRoas } from '../RpkiBgpRisWhoisService';
@@ -136,14 +136,14 @@ export class RpkiRoaService {
       revoked_at: null,
     });
 
-    RpkiActivityLog.create({
-      empresa_id: input.empresaId,
-      ca_id: input.caId,
-      object_type: 'roa',
-      object_id: row.id,
+    SistemaLogOperacionalService.registrarRpkiActivity({
+      empresaId: input.empresaId,
+      caId: input.caId,
+      objectType: 'roa',
+      objectId: row.id,
       action: 'create',
       details: JSON.stringify({ prefix: row.prefix, asn: row.asn, max_length: row.max_length }),
-    }).catch(() => undefined);
+    });
 
     await syncKrillRoutesForCa(input.caId, 'roa');
     return row;
@@ -178,14 +178,14 @@ export class RpkiRoaService {
       revoked_at: new Date(),
     });
 
-    RpkiActivityLog.create({
-      empresa_id: row.empresa_id,
-      ca_id: caId,
-      object_type: 'roa',
-      object_id: roaId,
+    SistemaLogOperacionalService.registrarRpkiActivity({
+      empresaId: row.empresa_id,
+      caId,
+      objectType: 'roa',
+      objectId: roaId,
       action: 'revoke',
       details: JSON.stringify({ prefix: row.prefix, asn: row.asn, max_length: row.max_length }),
-    }).catch(() => undefined);
+    });
 
     await syncKrillRoutesForCa(caId, 'roa');
     return row;
@@ -197,14 +197,14 @@ export class RpkiRoaService {
 
     await RpkiRoa.destroy({ where: { id: roaId, ca_id: caId } });
 
-    RpkiActivityLog.create({
-      empresa_id: row.empresa_id,
-      ca_id: caId,
-      object_type: 'roa',
-      object_id: roaId,
+    SistemaLogOperacionalService.registrarRpkiActivity({
+      empresaId: row.empresa_id,
+      caId,
+      objectType: 'roa',
+      objectId: roaId,
       action: 'delete',
       details: JSON.stringify({ prefix: row.prefix, asn: row.asn, max_length: row.max_length }),
-    }).catch(() => undefined);
+    });
 
     await syncKrillRoutesForCa(caId, 'roa');
   }
@@ -238,11 +238,7 @@ export class RpkiRoaService {
     });
     const ca = await RpkiCa.findByPk(caId);
     const empresaId = ca?.empresa_id ?? roas[0]?.empresa_id ?? null;
-    const validationLogs = await RpkiValidationLog.findAll({
-      where: empresaId == null ? { empresa_id: null } : { empresa_id: empresaId },
-      order: [['created_at', 'DESC']],
-      limit: 500,
-    });
+    const validationLogs = await SistemaLogOperacionalQueryService.listRpkiValidationByEmpresa(empresaId, 500);
     const now = new Date();
     let active = 0;
     let revoked = 0;

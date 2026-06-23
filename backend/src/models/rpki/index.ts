@@ -1,5 +1,4 @@
 import { RpkiRoa } from './RpkiRoa';
-import { RpkiValidationLog } from './RpkiValidationLog';
 import { RpkiAlert } from './RpkiAlert';
 import { RpkiSyncSession } from './RpkiSyncSession';
 import { RpkiCa } from './RpkiCa';
@@ -8,18 +7,6 @@ import { RpkiRepository } from './RpkiRepository';
 import { RpkiCaResource } from './RpkiCaResource';
 import { RpkiAspa } from './RpkiAspa';
 import { RpkiPublishedObject } from './RpkiPublishedObject';
-import { RpkiSyncLog } from './RpkiSyncLog';
-import { RpkiActivityLog } from './RpkiActivityLog';
-
-RpkiRoa.hasMany(RpkiValidationLog, {
-  foreignKey: 'matched_roa_id',
-  as: 'validation_logs',
-});
-
-RpkiValidationLog.belongsTo(RpkiRoa, {
-  foreignKey: 'matched_roa_id',
-  as: 'matched_roa',
-});
 
 RpkiRoa.hasMany(RpkiAlert, {
   foreignKey: 'roa_id',
@@ -103,7 +90,6 @@ RpkiPublishedObject.belongsTo(RpkiRepository, {
 
 export {
   RpkiRoa,
-  RpkiValidationLog,
   RpkiAlert,
   RpkiSyncSession,
   RpkiCa,
@@ -112,7 +98,4 @@ export {
   RpkiCaResource,
   RpkiAspa,
   RpkiPublishedObject,
-  RpkiSyncLog,
-  RpkiActivityLog,
 };
-

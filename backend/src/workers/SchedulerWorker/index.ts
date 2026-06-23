@@ -1,7 +1,6 @@
 import { Worker, isMainThread, parentPort, workerData } from 'worker_threads';
 import ScheduledRoutine from '../../models/sistema/ScheduledRoutine';
 import { criarLogExecucaoMysql, atualizarLogExecucaoMysql } from '../../services/scheduler/RotinaExecucaoLogService';
-import { SistemaLogOperacionalService } from '../../services/sistema/SistemaLogOperacionalService';
 import { EnvioBoletosRoutine } from '../../services/scheduler/routines/EnvioBoletosRoutine';
 import { RemessaBancariaRoutine } from '../../services/scheduler/routines/RemessaBancariaRoutine';
 import { IRoutine } from '../../interfaces/IRoutine';
@@ -51,7 +50,7 @@ class SchedulerWorker {
   private static workers: Map<string, Worker> = new Map();
   private static maxWorkers = 5;
   private static activeWorkers = 0;
-  /** Metadados por executionId (ES) para gravar log operacional ao finalizar */
+  /** Metadados por executionId para logs de rotina na tabela unificada */
   private static executionMeta = new Map<
     string,
     { routineId: number; empresaId: number | null; nome: string; tipo: string }
@@ -166,31 +165,6 @@ class SchedulerWorker {
     });
   }
 
-  private static registrarLogOperacionalRotina(
-    executionId: string,
-    status: 'sucesso' | 'erro',
-    extras: {
-      duracaoMs: number;
-      resultado?: Record<string, unknown> | undefined;
-      erro: string | null;
-    }
-  ): void {
-    const meta = SchedulerWorker.executionMeta.get(executionId);
-    if (!meta) return;
-    SistemaLogOperacionalService.registrarRotinaExecucao({
-      origem: 'erp',
-      empresaId: meta.empresaId,
-      routineId: meta.routineId,
-      routineNome: meta.nome,
-      routineTipo: meta.tipo,
-      status,
-      duracaoMs: extras.duracaoMs,
-      rotinaExecucaoId: executionId,
-      resultado: extras.resultado ?? null,
-      erro: extras.erro,
-    });
-  }
-
   /**
    * Processa mensagens dos workers
    */
@@ -220,11 +194,6 @@ class SchedulerWorker {
           duracao_ms: completeData?.duration || 0,
           resultado: { ...completeData, completed_at: getCurrentTimestamp() }
         });
-        SchedulerWorker.registrarLogOperacionalRotina(executionId, 'sucesso', {
-          duracaoMs: completeData?.duration || 0,
-          resultado: completeData?.result as Record<string, unknown> | undefined,
-          erro: null,
-        });
         break;
       }
 
@@ -240,11 +209,6 @@ class SchedulerWorker {
             error_data: errorData?.error_data || null,
             failed_at: getCurrentTimestamp()
           }
-        });
-        SchedulerWorker.registrarLogOperacionalRotina(executionId, 'erro', {
-          duracaoMs: errorData?.duration || 0,
-          resultado: errorData?.error_data as Record<string, unknown> | undefined,
-          erro: message.error || 'Erro na execução',
         });
         break;
       }
@@ -262,10 +226,6 @@ class SchedulerWorker {
         duracao_ms: 0,
         erro: error,
         resultado: { error, failed_at: getCurrentTimestamp() }
-      });
-      SchedulerWorker.registrarLogOperacionalRotina(executionId, 'erro', {
-        duracaoMs: 0,
-        erro: error,
       });
     } catch (err) {
       logger.error('Erro ao registrar falha de execução', {

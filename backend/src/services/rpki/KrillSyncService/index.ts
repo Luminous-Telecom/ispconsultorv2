@@ -5,7 +5,7 @@ import { RpkiCa } from '../../../models/rpki/RpkiCa';
 import { RpkiRoa } from '../../../models/rpki/RpkiRoa';
 import { RpkiAspa } from '../../../models/rpki/RpkiAspa';
 import { RpkiRepository } from '../../../models/rpki/RpkiRepository';
-import { RpkiSyncLog } from '../../../models/rpki/RpkiSyncLog';
+import { SistemaLogOperacionalService } from '../../sistema/SistemaLogOperacionalService';
 import { RpkiClientError } from '../../../utils/errorUtils';
 import { KrillApiService, type KrillAspaEntry, type KrillRoaEntry } from '../KrillApiService';
 
@@ -193,15 +193,15 @@ export async function syncKrillRoutesForCa(caId: number, triggerType?: 'roa' | '
   await KrillApiService.syncRepository(handle);
 
   const repository = await RpkiRepository.findOne({ where: { ca_id: caId } });
-  RpkiSyncLog.create({
-    empresa_id: ca.empresa_id,
-    ca_id: caId,
+  SistemaLogOperacionalService.registrarRpkiSync({
+    empresaId: ca.empresa_id,
+    caId,
     type: 'publication',
-    trigger_type: triggerType ?? 'roa',
+    triggerType: triggerType ?? 'roa',
     status: 'success',
-    remote_host: process.env.KRILL_API_URL?.trim() || 'https://127.0.0.1:3100',
+    remoteHost: process.env.KRILL_API_URL?.trim() || 'https://127.0.0.1:3100',
     message: `Krill: ROAs sincronizadas (+${added.length}, -${removed.length})`,
-  }).catch(() => undefined);
+  });
 
   if (repository) {
     await repository.update({
@@ -247,15 +247,15 @@ export async function syncKrillAspasForCa(caId: number, triggerType?: 'aspa' | '
   await KrillApiService.syncRepository(handle);
 
   const repository = await RpkiRepository.findOne({ where: { ca_id: caId } });
-  RpkiSyncLog.create({
-    empresa_id: ca.empresa_id,
-    ca_id: caId,
+  SistemaLogOperacionalService.registrarRpkiSync({
+    empresaId: ca.empresa_id,
+    caId,
     type: 'publication',
-    trigger_type: triggerType ?? 'aspa',
+    triggerType: triggerType ?? 'aspa',
     status: 'success',
-    remote_host: process.env.KRILL_API_URL?.trim() || 'https://127.0.0.1:3100',
+    remoteHost: process.env.KRILL_API_URL?.trim() || 'https://127.0.0.1:3100',
     message: `Krill: ASPAs sincronizados (+${addOrReplace.length}, -${remove.length})`,
-  }).catch(() => undefined);
+  });
 
   if (repository) {
     await repository.update({
@@ -290,17 +290,17 @@ export async function syncKrillRepositoryForCa(
     last_error: hasFailure ? `Krill repo sync: ${status.last_exchange?.result ?? 'failure'}` : null,
   });
 
-  RpkiSyncLog.create({
-    empresa_id: ca.empresa_id,
-    ca_id: caId,
+  SistemaLogOperacionalService.registrarRpkiSync({
+    empresaId: ca.empresa_id,
+    caId,
     type: 'publication',
-    trigger_type: triggerType ?? 'manual',
+    triggerType: triggerType ?? 'manual',
     status: hasFailure ? 'failed' : 'success',
-    remote_host: process.env.KRILL_API_URL?.trim() || 'https://127.0.0.1:3100',
+    remoteHost: process.env.KRILL_API_URL?.trim() || 'https://127.0.0.1:3100',
     message: hasFailure
       ? `Krill: falha na sincronização do repositório (${status.last_exchange?.result ?? 'unknown'})`
       : 'Krill: repositório sincronizado com sucesso',
-  }).catch(() => undefined);
+  });
 
   return repository;
 }

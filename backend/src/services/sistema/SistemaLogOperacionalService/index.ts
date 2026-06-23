@@ -1,3 +1,4 @@
+import type { JsonValue } from '../../../types/index';
 import { SistemaLogOperacional } from '../../../models/sistema/SistemaLogOperacional';
 import { logger } from '../../../utils/logger';
 import {
@@ -5,6 +6,15 @@ import {
   tabelaMysqlFromEntidadeAuditoria,
 } from '../auditoriaEntidadeParaTabelaMysql';
 import { normalizarSnapshotAuditoria } from '../../auditoria/normalizarSnapshotAuditoria';
+import {
+  LOG_CONTEXTO_BLOCKDOMI_ACESSO,
+  LOG_CONTEXTO_RPKI_ACTIVITY,
+  LOG_CONTEXTO_RPKI_SYNC,
+  LOG_CONTEXTO_RPKI_VALIDATION,
+  LOG_CONTEXTO_ROTINA_EXECUCAO,
+  LOG_CONTEXTO_SSH_AUDIT,
+  normalizeOperacionalPayload,
+} from '../sistemaLogOperacionalContextos';
 
 /** Canais sugeridos; aceita qualquer string curta para extensibilidade */
 export type LogOperacionalCanal =
@@ -688,7 +698,7 @@ export class SistemaLogOperacionalService {
     });
   }
 
-  /** Execução de rotina agendada — resumo operacional + detalhe em adm_sistema_rotina_execucoes */
+  /** @deprecated Use criarRotinaExecucao + atualizarRotinaExecucao na tabela unificada. */
   static registrarRotinaExecucao(params: {
     origem: 'erp' | 'saas';
     empresaId?: number | null;
@@ -759,6 +769,299 @@ export class SistemaLogOperacionalService {
         params.status === 'sucesso'
           ? `Rotina "${nome}" (${params.routineTipo}) concluída em ${params.duracaoMs} ms`
           : `Rotina "${nome}" (${params.routineTipo}) falhou: ${params.erro ?? 'erro'}`,
+    });
+  }
+
+  static async mergePayloadPorId(
+    id: number,
+    patch: Record<string, unknown>,
+    extras?: { mensagem?: string | null }
+  ): Promise<void> {
+    const row = await SistemaLogOperacional.findByPk(id);
+    if (!row) return;
+    const current = normalizeOperacionalPayload(row.payload) ?? {};
+    const merged = { ...current, ...patch };
+    await row.update({
+      payload: merged,
+      ...(extras?.mensagem !== undefined ? { mensagem: extras.mensagem } : {}),
+    });
+  }
+
+  static async criarRotinaExecucao(params: {
+    routineId: number;
+    routineNome: string;
+    routineTipo: string;
+    startTime: Date;
+    origem: 'erp' | 'saas';
+    empresaId?: number | null;
+  }): Promise<{ id: string }> {
+    const tabela =
+      params.origem === 'saas'
+        ? 'saas_saas_scheduled_routines'
+        : 'adm_sistema_scheduled_routines';
+    const nome = params.routineNome.slice(0, 200);
+    const row = await SistemaLogOperacional.create({
+      empresa_id: params.empresaId != null && params.empresaId > 0 ? params.empresaId : null,
+      usuario_id: null,
+      canal: 'job',
+      tipo: 'executou',
+      tabela,
+      recurso: params.origem === 'saas' ? 'SaasScheduledRoutine' : 'ScheduledRoutine',
+      recurso_id: String(params.routineId),
+      payload: {
+        log_contexto: LOG_CONTEXTO_ROTINA_EXECUCAO,
+        routine_id: params.routineId,
+        routine_nome: nome,
+        routine_tipo: params.routineTipo.slice(0, 80),
+        origem: params.origem,
+        status: 'executando',
+        data_inicio: params.startTime.toISOString(),
+        data_fim: null,
+        duracao_ms: null,
+        resultado: null,
+        erro: null,
+      },
+      mensagem: `Rotina "${nome}" em execução`,
+    });
+    return { id: String(row.id) };
+  }
+
+  static async atualizarRotinaExecucao(
+    logId: string,
+    data: {
+      status: 'executando' | 'sucesso' | 'erro';
+      data_fim: Date;
+      duracao_ms: number;
+      resultado?: Record<string, JsonValue> | null;
+      erro?: string | null;
+    }
+  ): Promise<void> {
+    const id = parseInt(logId, 10);
+    if (!Number.isFinite(id)) return;
+
+    const row = await SistemaLogOperacional.findByPk(id);
+    if (!row) return;
+
+    const current = normalizeOperacionalPayload(row.payload) ?? {};
+    const routineNome =
+      typeof current.routine_nome === 'string' ? current.routine_nome : 'Rotina';
+    const routineTipo =
+      typeof current.routine_tipo === 'string' ? current.routine_tipo : 'unknown';
+
+    const payload = {
+      ...current,
+      log_contexto: LOG_CONTEXTO_ROTINA_EXECUCAO,
+      status: data.status,
+      data_fim: data.data_fim.toISOString(),
+      duracao_ms: data.duracao_ms,
+      resultado: data.resultado ?? null,
+      erro: data.erro ?? null,
+    };
+
+    const mensagem =
+      data.status === 'sucesso'
+        ? `Rotina "${routineNome}" (${routineTipo}) concluída em ${data.duracao_ms} ms`
+        : data.status === 'erro'
+          ? `Rotina "${routineNome}" (${routineTipo}) falhou: ${data.erro ?? 'erro'}`
+          : `Rotina "${routineNome}" em execução`;
+
+    await row.update({ payload, mensagem });
+  }
+
+  static async registrarBlockdomiAcesso(payload: {
+    ip: string | null;
+    rota: string;
+    metodo: string;
+    status_http: number;
+    sucesso?: boolean;
+    mensagem_erro?: string | null;
+    user_agent?: string | null;
+    empresa_id?: number | null;
+  }): Promise<Record<string, unknown>> {
+    const sucesso =
+      payload.sucesso !== undefined ? payload.sucesso : payload.status_http < 400;
+    const ua =
+      payload.user_agent != null && payload.user_agent !== ''
+        ? payload.user_agent.trim().slice(0, 500)
+        : null;
+
+    const row = await SistemaLogOperacional.create({
+      empresa_id:
+        payload.empresa_id != null && payload.empresa_id > 0 ? payload.empresa_id : null,
+      usuario_id: null,
+      canal: 'blockdomi',
+      tipo: 'acesso',
+      recurso: 'BlockdomiLogAcesso',
+      payload: {
+        log_contexto: LOG_CONTEXTO_BLOCKDOMI_ACESSO,
+        ip: payload.ip,
+        rota: payload.rota,
+        metodo: payload.metodo,
+        status_http: payload.status_http,
+        sucesso,
+        mensagem_erro: payload.mensagem_erro ?? null,
+        user_agent: ua,
+      },
+      ip_address: payload.ip,
+      user_agent: ua,
+      mensagem: `${payload.metodo} ${payload.rota} → ${payload.status_http}`,
+    });
+
+    const plain = row.get({ plain: true }) as Record<string, unknown>;
+    const p = normalizeOperacionalPayload(plain.payload) ?? {};
+    return {
+      id: plain.id,
+      ip: p.ip ?? payload.ip,
+      rota: p.rota ?? payload.rota,
+      metodo: p.metodo ?? payload.metodo,
+      status_http: p.status_http ?? payload.status_http,
+      sucesso: p.sucesso ?? sucesso,
+      mensagem_erro: p.mensagem_erro ?? null,
+      user_agent: p.user_agent ?? ua,
+      empresa_id: plain.empresa_id ?? null,
+      created_at: plain.created_at,
+    };
+  }
+
+  static registrarSshAudit(data: {
+    action: string;
+    userId: string;
+    deviceId?: number | null;
+    deviceName?: string | null;
+    empresaId?: number | null;
+    command?: string | null;
+    output?: string | null;
+    success: boolean;
+    errorMessage?: string | null;
+    ip: string;
+    duration?: number | null;
+  }): void {
+    setImmediate(() => {
+      void (async () => {
+        try {
+          const userIdNum = /^\d+$/.test(data.userId) ? parseInt(data.userId, 10) : null;
+          await SistemaLogOperacional.create({
+            empresa_id: data.empresaId != null && data.empresaId > 0 ? data.empresaId : null,
+            usuario_id: userIdNum,
+            canal: 'ssh',
+            tipo: 'auditoria',
+            recurso: 'SshDevice',
+            recurso_id: data.deviceId != null ? String(data.deviceId) : null,
+            payload: {
+              log_contexto: LOG_CONTEXTO_SSH_AUDIT,
+              action: data.action,
+              user_id: data.userId,
+              device_id: data.deviceId != null ? String(data.deviceId) : null,
+              device_name: data.deviceName ?? null,
+              command: data.command ?? null,
+              output: data.output ? data.output.slice(0, 5000) : null,
+              success: data.success,
+              error_message: data.errorMessage ?? null,
+              duration: data.duration ?? null,
+            },
+            ip_address: data.ip?.slice(0, 45) ?? null,
+            mensagem: `${data.action}${data.deviceName ? ` · ${data.deviceName}` : ''}`,
+          });
+        } catch (err) {
+          logger.warn('Falha ao registrar auditoria SSH (não crítico)', {
+            context: 'SistemaLogOperacionalService',
+            action: data.action,
+            error: err instanceof Error ? err.message : 'Erro desconhecido',
+          });
+        }
+      })();
+    });
+  }
+
+  static registrarRpkiSync(data: {
+    empresaId?: number | null;
+    caId?: number | null;
+    type: 'provisioning' | 'publication';
+    triggerType?: 'roa' | 'aspa' | 'manual' | null;
+    status: 'success' | 'failed';
+    remoteHost?: string | null;
+    message?: string | null;
+  }): void {
+    setImmediate(() => {
+      void SistemaLogOperacional.create({
+        empresa_id: data.empresaId != null && data.empresaId > 0 ? data.empresaId : null,
+        usuario_id: null,
+        canal: 'rpki',
+        tipo: 'sync',
+        recurso: 'RpkiCa',
+        recurso_id: data.caId != null ? String(data.caId) : null,
+        payload: {
+          log_contexto: LOG_CONTEXTO_RPKI_SYNC,
+          ca_id: data.caId ?? null,
+          sync_type: data.type,
+          trigger_type: data.triggerType ?? null,
+          status: data.status,
+          remote_host: data.remoteHost ?? null,
+          message: data.message ?? null,
+        },
+        mensagem: data.message ?? `RPKI sync ${data.type} (${data.status})`,
+      }).catch(() => undefined);
+    });
+  }
+
+  static registrarRpkiActivity(data: {
+    empresaId?: number | null;
+    caId?: number | null;
+    objectType: 'roa' | 'aspa';
+    objectId?: number | null;
+    action: 'create' | 'revoke' | 'delete';
+    details?: string | null;
+  }): void {
+    setImmediate(() => {
+      void SistemaLogOperacional.create({
+        empresa_id: data.empresaId != null && data.empresaId > 0 ? data.empresaId : null,
+        usuario_id: null,
+        canal: 'rpki',
+        tipo: 'atividade',
+        recurso: data.objectType === 'roa' ? 'RpkiRoa' : 'RpkiAspa',
+        recurso_id: data.objectId != null ? String(data.objectId) : null,
+        payload: {
+          log_contexto: LOG_CONTEXTO_RPKI_ACTIVITY,
+          ca_id: data.caId ?? null,
+          object_type: data.objectType,
+          object_id: data.objectId ?? null,
+          action: data.action,
+          details: data.details ?? null,
+        },
+        mensagem: `${data.action} ${data.objectType}${data.objectId != null ? ` #${data.objectId}` : ''}`,
+      }).catch(() => undefined);
+    });
+  }
+
+  static registrarRpkiValidation(data: {
+    empresaId?: number | null;
+    prefix: string;
+    asn: string;
+    prefixLength: number;
+    state: 'valid' | 'invalid' | 'not-found';
+    matchedRoaId?: number | null;
+    reason?: string | null;
+    requestIp?: string | null;
+  }): void {
+    setImmediate(() => {
+      void SistemaLogOperacional.create({
+        empresa_id: data.empresaId != null && data.empresaId > 0 ? data.empresaId : null,
+        usuario_id: null,
+        canal: 'rpki',
+        tipo: 'validacao',
+        recurso: 'RpkiValidation',
+        payload: {
+          log_contexto: LOG_CONTEXTO_RPKI_VALIDATION,
+          prefix: data.prefix.slice(0, 64),
+          asn: data.asn,
+          prefix_length: data.prefixLength,
+          state: data.state,
+          matched_roa_id: data.matchedRoaId ?? null,
+          reason: data.reason ?? null,
+        },
+        ip_address: data.requestIp?.slice(0, 45) ?? null,
+        mensagem: `${data.prefix} AS${data.asn} → ${data.state}`,
+      }).catch(() => undefined);
     });
   }
 }

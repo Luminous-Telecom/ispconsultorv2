@@ -1,6 +1,6 @@
 import { Op } from 'sequelize';
 import { RpkiAspa } from '../../../models/rpki/RpkiAspa';
-import { RpkiActivityLog } from '../../../models/rpki/RpkiActivityLog';
+import { SistemaLogOperacionalService } from '../../sistema/SistemaLogOperacionalService';
 import { RpkiClientError } from '../../../utils/errorUtils';
 import { syncKrillAspasForCa, syncAspasFromKrillToDb } from '../KrillSyncService';
 
@@ -72,14 +72,14 @@ export class RpkiAspaService {
       revoked_at: null,
     });
 
-    RpkiActivityLog.create({
-      empresa_id: input.empresaId,
-      ca_id: input.caId,
-      object_type: 'aspa',
-      object_id: row.id,
+    SistemaLogOperacionalService.registrarRpkiActivity({
+      empresaId: input.empresaId,
+      caId: input.caId,
+      objectType: 'aspa',
+      objectId: row.id,
       action: 'create',
       details: JSON.stringify({ customer_asn: row.customer_asn, providers: providersJson }),
-    }).catch(() => undefined);
+    });
 
     await syncKrillAspasForCa(input.caId, 'aspa');
     return row;
@@ -92,14 +92,14 @@ export class RpkiAspaService {
 
     await row.update({ status: 'revoked', revoked_at: new Date() });
 
-    RpkiActivityLog.create({
-      empresa_id: row.empresa_id,
-      ca_id: caId,
-      object_type: 'aspa',
-      object_id: aspaId,
+    SistemaLogOperacionalService.registrarRpkiActivity({
+      empresaId: row.empresa_id,
+      caId,
+      objectType: 'aspa',
+      objectId: aspaId,
       action: 'revoke',
       details: JSON.stringify({ customer_asn: row.customer_asn }),
-    }).catch(() => undefined);
+    });
 
     await syncKrillAspasForCa(caId, 'aspa');
     return row;
@@ -111,14 +111,14 @@ export class RpkiAspaService {
 
     await RpkiAspa.destroy({ where: { id: aspaId, ca_id: caId } });
 
-    RpkiActivityLog.create({
-      empresa_id: row.empresa_id,
-      ca_id: caId,
-      object_type: 'aspa',
-      object_id: aspaId,
+    SistemaLogOperacionalService.registrarRpkiActivity({
+      empresaId: row.empresa_id,
+      caId,
+      objectType: 'aspa',
+      objectId: aspaId,
       action: 'delete',
       details: JSON.stringify({ customer_asn: row.customer_asn }),
-    }).catch(() => undefined);
+    });
 
     await syncKrillAspasForCa(caId, 'aspa');
   }
