@@ -1585,32 +1585,6 @@ colgroup col.col-checkbox {
   background-color: #6c757d !important;
 }
 
-/* SLA (IXC) */
-.os-sla-badge {
-  font-weight: 500;
-  font-size: 0.75rem;
-  padding: 0.35em 0.6em;
-  border-radius: 0.25rem;
-  color: #fff !important;
-}
-
-.os-sla--ok {
-  background-color: #3bb54a !important;
-}
-
-.os-sla--alerta {
-  background-color: #7b68c4 !important;
-}
-
-.os-sla--atrasado {
-  background-color: #8e44ad !important;
-}
-
-.os-sla--vazio,
-.os-sla--default {
-  background-color: #6c757d !important;
-}
-
 /* Filtros compactos - padding simétrico */
 .table-pagination-header .filter-compact .form-control,
 .table-pagination-header .filter-compact .form-select {

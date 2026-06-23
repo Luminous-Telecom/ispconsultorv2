@@ -18,7 +18,6 @@ export interface OrdemServico {
   assunto_nome?: string;
   setor_nome?: string;
   cidade_nome?: string;
-  status_sla?: string;
   origem_endereco?: string;
   id_assunto?: string;
   id_tecnico?: string;
@@ -32,6 +31,7 @@ export interface OrdemServico {
   mensagem_resposta?: string;
   data_abertura?: string;
   data_agenda?: string;
+  data_final?: string;
   data_fechamento?: string;
   id_cidade?: string;
   bairro?: string;

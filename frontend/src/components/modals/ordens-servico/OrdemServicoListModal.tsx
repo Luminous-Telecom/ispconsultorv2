@@ -18,10 +18,6 @@ import {
   getOrdemServicoStatusBadgeConfig,
   ORDEM_SERVICO_STATUS_BADGE_LABELS,
 } from './ordemServicoStatusBadges';
-import {
-  getOrdemServicoSlaBadgeConfig,
-  ORDEM_SERVICO_SLA_BADGE_LABELS,
-} from './ordemServicoSlaBadges';
 import { renderStatusBadge } from 'components/ui/StatusBadge';
 import { formatRpkiValidityDisplay } from 'utils/formatters';
 
@@ -104,6 +100,13 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
         render: (item) => <span>{item.id}</span>,
       },
       {
+        key: 'protocolo',
+        label: 'Protocolo',
+        sortable: true,
+        width: '120px',
+        render: (item) => <span>{item.protocolo || '-'}</span>,
+      },
+      {
         key: 'id_assunto',
         label: 'Assunto',
         sortable: true,
@@ -162,14 +165,6 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
         render: (item) => renderStatusBadge(getOrdemServicoPrioridadeBadgeConfig(item.prioridade)),
       },
       {
-        key: 'status_sla',
-        label: 'SLA',
-        sortable: true,
-        width: '90px',
-        badgeLabels: ORDEM_SERVICO_SLA_BADGE_LABELS,
-        render: (item) => renderStatusBadge(getOrdemServicoSlaBadgeConfig(item.status_sla)),
-      },
-      {
         key: 'data_abertura',
         label: 'Abertura',
         sortable: true,
@@ -182,6 +177,13 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
         sortable: true,
         width: '150px',
         render: (item) => <span>{formatIxcData(item.data_agenda)}</span>,
+      },
+      {
+        key: 'data_final',
+        label: 'Final',
+        sortable: true,
+        width: '150px',
+        render: (item) => <span>{formatIxcData(item.data_final)}</span>,
       },
       {
         key: 'data_fechamento',
