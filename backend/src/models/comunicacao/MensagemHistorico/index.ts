@@ -1,9 +1,12 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../../../config/database';
 
+export type HistoricoOrigemMensagem = 'erp' | 'saas';
+
 interface MensagemHistoricoAttributes {
   id: number;
   empresa_id?: number | null;
+  historico_origem: HistoricoOrigemMensagem;
   tipo: 'email' | 'whatsapp';
   destinatario: string;
   titulo?: string;
@@ -21,11 +24,15 @@ interface MensagemHistoricoAttributes {
   updated_at?: Date;
 }
 
-type MensagemHistoricoCreationAttributes = Optional<MensagemHistoricoAttributes, 'id' | 'created_at' | 'updated_at'>;
+type MensagemHistoricoCreationAttributes = Optional<
+  MensagemHistoricoAttributes,
+  'id' | 'historico_origem' | 'created_at' | 'updated_at'
+>;
 
 export class MensagemHistorico extends Model<MensagemHistoricoAttributes, MensagemHistoricoCreationAttributes> implements MensagemHistoricoAttributes {
   public id!: number;
   public empresa_id?: number | null;
+  public historico_origem!: HistoricoOrigemMensagem;
   public tipo!: 'email' | 'whatsapp';
   public destinatario!: string;
   public titulo?: string;
@@ -52,6 +59,12 @@ MensagemHistorico.init({
   empresa_id: {
     type: DataTypes.INTEGER,
     allowNull: true
+  },
+  historico_origem: {
+    type: DataTypes.ENUM('erp', 'saas'),
+    allowNull: false,
+    defaultValue: 'erp',
+    comment: 'Origem do registro: erp (tenant) ou saas (operador SaaS)'
   },
   tipo: {
     type: DataTypes.ENUM('email', 'whatsapp'),

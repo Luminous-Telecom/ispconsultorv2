@@ -8,6 +8,7 @@ import { sendSuccess, sendError } from '../../../utils/responseUtils';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { getEmpresaIdOrNull, resolveListEmpresaId } from '../../../utils/tenantUtils';
 import { buildListPagination } from '../../../utils/pagination';
+import { HISTORICO_ORIGEM_ERP } from '../../../services/comunicacao/mensagemHistoricoOrigens';
 import { parseListQuery, parseOptionalQueryInt, queryString } from '../../../utils/listQuery';
 
 interface MensagemHistoricoFilters {
@@ -54,7 +55,10 @@ export class MensagemHistoricoController {
         return;
       }
 
-      const where: Record<string, unknown> = listEmpresaId != null ? { empresa_id: listEmpresaId } : {};
+      const where: Record<string, unknown> = {
+        historico_origem: HISTORICO_ORIGEM_ERP,
+        ...(listEmpresaId != null ? { empresa_id: listEmpresaId } : {}),
+      };
 
       if (tipo) {
         where.tipo = tipo;
@@ -174,7 +178,7 @@ export class MensagemHistoricoController {
         ]
       });
 
-      if (!mensagem) {
+      if (!mensagem || mensagem.getDataValue('historico_origem') !== HISTORICO_ORIGEM_ERP) {
         sendError(res, null, 'Mensagem não encontrada', 404);
         return;
       }
@@ -205,7 +209,11 @@ export class MensagemHistoricoController {
 
       const offset = (page - 1) * limit;
 
-      const where: Record<string, unknown> = { entidade_tipo, entidade_id: Number(entidade_id) };
+      const where: Record<string, unknown> = {
+        historico_origem: HISTORICO_ORIGEM_ERP,
+        entidade_tipo,
+        entidade_id: Number(entidade_id),
+      };
       if (empresaId != null) {
         (where as Record<string, unknown>)[Op.or as unknown as string] = [{ empresa_id: empresaId }, { empresa_id: null }];
       }

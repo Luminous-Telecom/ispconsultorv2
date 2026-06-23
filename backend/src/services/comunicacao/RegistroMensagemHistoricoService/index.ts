@@ -1,8 +1,11 @@
 /**
- * Serviço para registrar mensagens no histórico correto (adm ou saas)
+ * Serviço para registrar mensagens no histórico unificado (adm_comunicacao_mensagens_historico)
  */
 import { MensagemHistorico } from '../../../models/comunicacao/MensagemHistorico';
-import { SaasMensagemHistorico } from '../../../models/saas/SaasMensagemHistorico';
+import {
+  HISTORICO_ORIGEM_ERP,
+  HISTORICO_ORIGEM_SAAS,
+} from '../mensagemHistoricoOrigens';
 import { logger } from '../../../utils/logger';
 
 export interface DadosRegistroHistorico {
@@ -34,8 +37,7 @@ export interface ContextoErp {
 export type ContextoHistorico = ContextoSaas | ContextoErp;
 
 /**
- * Registra mensagem no histórico (adm_comunicacao_mensagens_historico ou saas_saas_mensagens_historico)
- * Usa empresa_id do contexto para isolar por empresa (SaaS ou ERP).
+ * Registra mensagem no histórico unificado, discriminando por historico_origem.
  */
 export async function registrarMensagemHistorico(
   dados: DadosRegistroHistorico,
@@ -43,17 +45,13 @@ export async function registrarMensagemHistorico(
 ): Promise<void> {
   try {
     const empresaId = contexto?.empresa_id;
-    if (contexto && 'saas' in contexto && contexto.saas && empresaId) {
-      await SaasMensagemHistorico.create({
-        empresa_id: empresaId,
-        ...dados,
-      });
-    } else {
-      await MensagemHistorico.create({
-        ...dados,
-        ...(empresaId != null && { empresa_id: empresaId }),
-      });
-    }
+    const isSaas = !!(contexto && 'saas' in contexto && contexto.saas);
+
+    await MensagemHistorico.create({
+      ...dados,
+      historico_origem: isSaas ? HISTORICO_ORIGEM_SAAS : HISTORICO_ORIGEM_ERP,
+      ...(empresaId != null && { empresa_id: empresaId }),
+    });
   } catch (error) {
     logger.error('Erro ao registrar mensagem no histórico:', {
       context: 'RegistroMensagemHistoricoService',

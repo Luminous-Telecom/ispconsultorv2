@@ -87,7 +87,6 @@ import { SaasTitulo } from './saas/SaasTitulo';
 import SaasParametros from './saas/SaasParametros';
 import { SaasScheduledRoutine } from './saas/SaasScheduledRoutine';
 import { SaasNFSeConfig } from './saas/SaasNFSeConfig';
-import { SaasMensagemHistorico } from './saas/SaasMensagemHistorico';
 
 // Importar associações específicas
 import './associations';
@@ -353,6 +352,11 @@ MensagemHistorico.belongsTo(Usuario, {
   foreignKey: 'usuario_id',
   as: 'usuario'
 });
+MensagemHistorico.belongsTo(DadosEmpresa, {
+  foreignKey: 'empresa_id',
+  as: 'empresa'
+});
+DadosEmpresa.hasMany(MensagemHistorico, { foreignKey: 'empresa_id', as: 'mensagensHistorico' });
 
 SistemaLogOperacional.belongsTo(DadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
 SistemaLogOperacional.belongsTo(Usuario, { foreignKey: 'usuario_id', as: 'usuario' });
@@ -363,8 +367,6 @@ SaasContrato.belongsTo(DadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' }
 SaasPlano.hasMany(SaasContrato, { foreignKey: 'plano_id', as: 'contratos' });
 SaasContrato.belongsTo(SaasPlano, { foreignKey: 'plano_id', as: 'plano' });
 
-DadosEmpresa.hasMany(SaasMensagemHistorico, { foreignKey: 'empresa_id', as: 'mensagensHistorico' });
-SaasMensagemHistorico.belongsTo(DadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
 
 DadosEmpresa.hasMany(SaasTitulo, { foreignKey: 'empresa_id', as: 'titulos' });
 SaasTitulo.belongsTo(DadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
@@ -537,7 +539,6 @@ export {
   SaasParametros,
   SaasScheduledRoutine,
   SaasNFSeConfig,
-  SaasMensagemHistorico,
   SshDevice,
   SshDeviceBackup,
   SshDeviceBackupEvent,
