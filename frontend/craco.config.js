@@ -20,6 +20,29 @@ function stripResolveUrlLoader(rules) {
 }
 
 module.exports = {
+  devServer: (devServerConfig) => {
+    const { onBeforeSetupMiddleware, onAfterSetupMiddleware, https, ...rest } = devServerConfig;
+
+    const config = { ...rest };
+
+    if (https === true) {
+      config.server = 'https';
+    } else if (https && typeof https === 'object') {
+      config.server = { type: 'https', options: https };
+    }
+
+    config.setupMiddlewares = (middlewares, devServer) => {
+      if (onBeforeSetupMiddleware) {
+        onBeforeSetupMiddleware(devServer);
+      }
+      if (onAfterSetupMiddleware) {
+        onAfterSetupMiddleware(devServer);
+      }
+      return middlewares;
+    };
+
+    return config;
+  },
   webpack: {
     alias: {
       '@xterm/xterm$': require.resolve('@xterm/xterm/lib/xterm.js'),
