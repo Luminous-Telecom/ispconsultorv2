@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { ClienteService } from 'services/clienteService';
+import type { Cliente } from 'types';
 import { useRpkiCas } from 'hooks/useRpkiCas';
 import { fetchAllRoasForCas } from './rpkiRoaListUtils';
 import type { RpkiRoaRow } from './types';
@@ -17,7 +18,7 @@ export function useRpkiRoaListData({ show, clienteIdFilter }: UseRpkiRoaListData
   const [roas, setRoas] = useState<RpkiRoaRow[]>([]);
   const { cas } = useRpkiCas(clienteIdFilter);
 
-  const { data: clientes = [] } = useQuery({
+  const { data: clientes = [] as Cliente[] } = useQuery<Cliente[]>({
     queryKey: ['clientes-rpki'],
     queryFn: async () => {
       const response = await ClienteService.list({ limit: 1000 });
@@ -28,7 +29,7 @@ export function useRpkiRoaListData({ show, clienteIdFilter }: UseRpkiRoaListData
 
   const clienteNomeById = useMemo(() => {
     const map = new Map<number, string>();
-    for (const cliente of clientes) {
+    for (const cliente of clientes as Cliente[]) {
       map.set(cliente.id, cliente.razao_social || cliente.nome_fantasia || '');
     }
     return map;

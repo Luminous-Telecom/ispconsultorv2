@@ -29,7 +29,7 @@ export const useTipoCobrancaContrato = (id: number | null) => {
 };
 
 export const useTipoCobrancaContratosAtivos = () => {
-  return useQuery({
+  return useQuery<TipoCobrancaContrato[]>({
     queryKey: ['tipos-cobranca-contrato-ativos'],
     queryFn: () => TipoCobrancaContratoService.findAtivos(),
     staleTime: DEFAULT_STALE_TIME,

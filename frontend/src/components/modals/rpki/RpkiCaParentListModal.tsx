@@ -10,6 +10,7 @@ import { renderStatusBadge } from 'components/ui/StatusBadge';
 import { getRpkiCaStatusBadgeConfig } from 'utils/tableStatusBadges';
 import { RpkiCaParent, RpkiCaResource, RpkiCaService } from 'services/rpkiCaService';
 import { ClienteService } from 'services/clienteService';
+import type { Cliente } from 'types';
 import { useRpkiCas } from 'hooks/useRpkiCas';
 import RpkiCaParentCreateModal from './RpkiCaParentCreateModal';
 import ImprimirModal from 'components/common/ImprimirModal';
@@ -62,7 +63,7 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
   );
 
   const { cas, caIdsKey } = useRpkiCas(clienteIdFilter);
-  const { data: clientes = [] } = useQuery({
+  const { data: clientes = [] as Cliente[] } = useQuery<Cliente[]>({
     queryKey: ['clientes-rpki'],
     queryFn: async () => {
       const response = await ClienteService.list({ limit: 1000 });
@@ -71,7 +72,7 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
     enabled: clienteIdFilter == null,
   });
 
-  const { data: parents = [], isLoading, refetch } = useQuery({
+  const { data: parents = [] as RpkiCaParent[], isLoading, refetch } = useQuery<RpkiCaParent[]>({
     queryKey: ['rpki-ca-parents-all', caIdsKey],
     queryFn: async () => {
       const rows = await Promise.all(cas.map((ca) => RpkiCaService.listParents(ca.id)));
@@ -79,7 +80,7 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
     },
     enabled: cas.length > 0,
   });
-  const { data: resourcesByCa = new Map<number, RpkiCaResource[]>() } = useQuery({
+  const { data: resourcesByCa = new Map<number, RpkiCaResource[]>() } = useQuery<Map<number, RpkiCaResource[]>>({
     queryKey: ['rpki-ca-resources-all', caIdsKey],
     queryFn: async () => {
       const rows = await Promise.all(
@@ -119,7 +120,7 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
 
   const caById = useMemo(() => new Map(cas.map((ca) => [ca.id, ca])), [cas]);
   const clienteNomeById = useMemo(
-    () => new Map(clientes.map((c) => [c.id, c.razao_social || c.nome_fantasia || ''])),
+    () => new Map((clientes as Cliente[]).map((c) => [c.id, c.razao_social || c.nome_fantasia || ''])),
     [clientes]
   );
 
@@ -166,7 +167,7 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
       sortable: false,
       width: '180px',
       render: (item) => {
-        const resources = resourcesByCa.get(item.ca_id) ?? [];
+        const resources: RpkiCaResource[] = (resourcesByCa as Map<number, RpkiCaResource[]>).get(item.ca_id) ?? [];
         const asn = resources
           .filter((r) => r.resource_type === 'asn')
           .map((r) => (r.end_range ? `${r.start_range}-${r.end_range}` : r.start_range));
@@ -179,7 +180,7 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
       sortable: false,
       width: '200px',
       render: (item) => {
-        const resources = resourcesByCa.get(item.ca_id) ?? [];
+        const resources: RpkiCaResource[] = (resourcesByCa as Map<number, RpkiCaResource[]>).get(item.ca_id) ?? [];
         const ipv4 = resources
           .filter((r) => r.resource_type === 'ipv4')
           .map((r) => (r.end_range ? `${r.start_range}-${r.end_range}` : r.start_range));
@@ -192,7 +193,7 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
       sortable: false,
       width: '220px',
       render: (item) => {
-        const resources = resourcesByCa.get(item.ca_id) ?? [];
+        const resources: RpkiCaResource[] = (resourcesByCa as Map<number, RpkiCaResource[]>).get(item.ca_id) ?? [];
         const ipv6 = resources
           .filter((r) => r.resource_type === 'ipv6')
           .map((r) => (r.end_range ? `${r.start_range}-${r.end_range}` : r.start_range));

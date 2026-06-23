@@ -6,7 +6,7 @@ import { useNotificationContext } from 'components/notifications/NotificationPro
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES, ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
-import { RpkiCaService } from 'services/rpkiCaService';
+import { RpkiCaService, type RpkiCa, type RpkiCaParent } from 'services/rpkiCaService';
 
 interface RpkiRepositoryCreateModalProps {
   show: boolean;
@@ -34,17 +34,18 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
   });
   const showApiErrorRef = useRef(showApiError);
 
-  const { data: cas = [] } = useQuery({
+  const { data: cas = [] as RpkiCa[] } = useQuery<RpkiCa[]>({
     queryKey: ['rpki-cas'],
     queryFn: () => RpkiCaService.list(),
   });
-  const selectableCas = useMemo(() => {
-    if (!allowedCaIds?.length) return cas;
+  const selectableCas = useMemo((): RpkiCa[] => {
+    const caList = cas as RpkiCa[];
+    if (!allowedCaIds?.length) return caList;
     const allowed = new Set(allowedCaIds);
-    return cas.filter((ca) => allowed.has(ca.id));
+    return caList.filter((ca) => allowed.has(ca.id));
   }, [cas, allowedCaIds]);
   const selectedCaId = Number(caId || 0);
-  const { data: parents = [] } = useQuery({
+  const { data: parents = [] as RpkiCaParent[] } = useQuery<RpkiCaParent[]>({
     queryKey: ['rpki-ca-parents', selectedCaId],
     queryFn: () => RpkiCaService.listParents(selectedCaId),
     enabled: selectedCaId > 0,

@@ -54,7 +54,7 @@ const DashboardSearchResult: React.FC<DashboardSearchResultProps> = ({ searchTer
     sortDirection: 'desc',
   });
 
-  const clientes = useMemo(() => clientesData?.data ?? [], [clientesData?.data]);
+  const clientes = useMemo((): Cliente[] => clientesData?.data ?? [], [clientesData?.data]);
   const total = Math.max(clientesData?.pagination?.total ?? 0, clientes.length);
 
   const handleOpenCliente = useCallback(

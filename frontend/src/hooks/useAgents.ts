@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AgentService } from '../services/agentService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
-import { UpdateAgent } from '../types';
+import { Agent, UpdateAgent } from '../types';
 import { AxiosError } from 'axios';
 
 function getErrorMessage(err: unknown, fallback: string): string {
@@ -15,7 +15,7 @@ function getErrorMessage(err: unknown, fallback: string): string {
 }
 
 export const useAgents = (filters?: { cliente_id?: number; empresa_id?: number }) => {
-  return useQuery({
+  return useQuery<Agent[]>({
     queryKey: ['agents', filters],
     queryFn: () => AgentService.list(filters),
     staleTime: 15_000,

@@ -36,6 +36,7 @@ import { useContratoIntegracaoIxc, useLinkContratoIntegracaoIxc } from 'hooks/us
 import {
   useTestIntegracaoIxcProvedor,
 } from 'hooks/useIntegracaoIxcProvedor';
+import type { ContratoIntegracaoIxcItem } from 'services/contratoIntegracaoIxcService';
 import type { IntegracaoIxcProvedorRow } from './useContratoIxcBulkActions';
 
 interface ContratoModalProps {
@@ -147,7 +148,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   const testIntegracaoIxcMutation = useTestIntegracaoIxcProvedor();
 
   const allIntegracaoIxcData = useMemo((): IntegracaoIxcProvedorRow[] => {
-    const integracoes = contratoIntegracaoIxc?.integracoes ?? [];
+    const integracoes: ContratoIntegracaoIxcItem[] = contratoIntegracaoIxc?.integracoes ?? [];
     return integracoes.map((integracao) => ({
       id: integracao.id,
       nome: integracao.nome ?? '',

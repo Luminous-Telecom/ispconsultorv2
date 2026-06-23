@@ -46,7 +46,8 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
     return undefined;
   }, [clienteIdFilter]);
 
-  const { data: agents = [], isLoading, refetch } = useAgents(agentListFilters);
+  const { data: agentsData, isLoading, refetch } = useAgents(agentListFilters);
+  const agents = useMemo((): Agent[] => agentsData ?? [], [agentsData]);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);

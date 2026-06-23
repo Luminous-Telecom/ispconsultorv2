@@ -5,7 +5,8 @@ import { useNotificationContext } from 'components/notifications/NotificationPro
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { defaultApiClient } from 'services/core';
-import { TemplateWhatsAppService } from 'services/templateWhatsAppService';
+import { TemplateWhatsAppService, type TemplateWhatsApp } from 'services/templateWhatsAppService';
+import type { ApiResponse } from 'types';
 import { RecarregarButton, Spinner, SystemButton } from 'components/ui';
 
 interface Template {
@@ -92,7 +93,7 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
     textarea.style.height = `${textarea.scrollHeight}px`;
   }, []);
 
-  const { data: templatesConfigurados } = useQuery({
+  const { data: templatesConfigurados } = useQuery<ApiResponse<TemplateWhatsApp[]>>({
     queryKey: ['templates-whatsapp'],
     queryFn: () => TemplateWhatsAppService.list(),
     enabled: true,
@@ -138,9 +139,9 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
   const handleCriarTemplate = async (template: Template, key: string) => {
     const nome = template.name;
     const idioma = template.language || 'pt_BR';
-    const lista = templatesConfigurados?.data ?? [];
+    const lista: TemplateWhatsApp[] = templatesConfigurados?.data ?? [];
     const jaExiste = lista.some(
-      (t) => t.nome === nome && (t.idioma || 'pt_BR') === idioma
+      (t: TemplateWhatsApp) => t.nome === nome && (t.idioma || 'pt_BR') === idioma
     );
     if (jaExiste) {
       showApiError(`Já existe um template com o nome "${nome}" e idioma "${idioma}"`);
@@ -236,7 +237,7 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
           ) : (
             <>
               <div className="row g-2 mb-3" style={{ maxHeight: '380px', overflowY: 'auto' }}>
-                {data.templates.map((template, index) => {
+                {data.templates.map((template: Template, index: number) => {
                   const key = `${template.name}-${template.language}-${index}`;
                   const isExpanded = expandedKey === key;
                   return (
@@ -264,9 +265,9 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
                 })}
               </div>
               {expandedKey && (() => {
-                const template = data.templates.find((t, i) => `${t.name}-${t.language}-${i}` === expandedKey);
+                const template = data.templates.find((t: Template, i: number) => `${t.name}-${t.language}-${i}` === expandedKey);
                 if (!template) return null;
-                const bodyComp = template.components?.find((c) => c.type === 'BODY');
+                const bodyComp = template.components?.find((c: NonNullable<Template['components']>[number]) => c.type === 'BODY');
                 const textoMeta = (bodyComp as { text?: string })?.text || '';
                 const numVars = (textoMeta.match(/\{\{\d+\}\}/g) || [])
                   .map((m) => parseInt(m.replace(/\{\{|\}\}/g, ''), 10))

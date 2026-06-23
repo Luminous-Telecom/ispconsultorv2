@@ -5,7 +5,7 @@ import { useBancos } from 'hooks/useBancos';
 import { useTipoCobrancaContratosAtivos } from 'hooks/useTipoCobrancaContratos';
 import { useSelectedEntity } from 'hooks/useSelectedEntity';
 import DocumentoSistemaService, { DocumentoSistema } from 'services/documentoSistemaService';
-import { DiasVencimentoService } from 'services/diasVencimentoService';
+import { DiasVencimentoService, type DiasVencimento } from 'services/diasVencimentoService';
 import { TipoCobrancaContrato } from 'services/tipoCobrancaContratoService';
 import { Contrato } from 'hooks/useContratos';
 import { Banco, Plano } from 'types';
@@ -25,30 +25,27 @@ export function useContratoModalFormResources({
   const { data: planosData } = usePlanos();
   const { data: bancosData } = useBancos();
   const { data: tiposCobrancaContratoData } = useTipoCobrancaContratosAtivos();
-  const { data: modelosContratoData } = useQuery({
+  const { data: modelosContratoData } = useQuery<{ success: boolean; data: DocumentoSistema[]; message: string }>({
     queryKey: ['modelos-documento', 'contrato'],
     queryFn: () => DocumentoSistemaService.getByType('contrato'),
     enabled: show,
   });
-  const { data: diasVencimentoData } = useQuery({
+  const { data: diasVencimentoData } = useQuery<{ success: boolean; data: DiasVencimento[]; message: string }>({
     queryKey: ['dias-vencimento'],
     queryFn: () => DiasVencimentoService.get(),
     enabled: show,
   });
 
-  const planos = useMemo(
-    () => (Array.isArray(planosData) ? planosData : planosData?.data || []),
-    [planosData]
-  );
-  const bancos = useMemo(
-    () => (Array.isArray(bancosData) ? bancosData : bancosData?.data || []),
-    [bancosData]
-  );
-  const tiposCobrancaContrato = useMemo(
-    () => (Array.isArray(tiposCobrancaContratoData) ? tiposCobrancaContratoData : []),
-    [tiposCobrancaContratoData]
-  );
-  const modelosContrato = useMemo(() => modelosContratoData?.data || [], [modelosContratoData]);
+  const planos = useMemo((): Plano[] => (
+    Array.isArray(planosData) ? planosData : planosData?.data || []
+  ), [planosData]);
+  const bancos = useMemo((): Banco[] => (
+    Array.isArray(bancosData) ? bancosData : bancosData?.data || []
+  ), [bancosData]);
+  const tiposCobrancaContrato = useMemo((): TipoCobrancaContrato[] => (
+    Array.isArray(tiposCobrancaContratoData) ? tiposCobrancaContratoData : []
+  ), [tiposCobrancaContratoData]);
+  const modelosContrato = useMemo((): DocumentoSistema[] => modelosContratoData?.data || [], [modelosContratoData]);
   const diasVencimento = useMemo(
     () =>
       diasVencimentoData?.data && Array.isArray(diasVencimentoData.data) ? diasVencimentoData.data : [],

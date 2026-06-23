@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
-import { RpkiCaService, type RpkiCaRepository } from 'services/rpkiCaService';
+import { RpkiCaService, type RpkiCaParent, type RpkiCaRepository, type RpkiCaResource } from 'services/rpkiCaService';
 import { formatResourceBlocks } from './resourceBlocks';
 import type { AspaItem, CaItem, CaSelectOption } from './types';
 
@@ -36,9 +36,9 @@ export function useRpkiKrillConfig() {
   const [providers, setProviders] = useState('');
 
   const {
-    data: cas = [],
+    data: cas = [] as CaItem[],
     isLoading: isLoadingCas,
-  } = useQuery({
+  } = useQuery<CaItem[]>({
     queryKey: ['rpki-cas'],
     queryFn: async () => {
       const rows = await RpkiCaService.list();
@@ -54,7 +54,7 @@ export function useRpkiKrillConfig() {
   const fallbackParentCaId = cas.length > 0 ? Number(cas[0]?.id || 0) : 0;
   const effectiveParentCaId = selectedParentCaId || fallbackParentCaId;
 
-  const { data: parentsFromApi = [] } = useQuery({
+  const { data: parentsFromApi = [] as RpkiCaParent[] } = useQuery<RpkiCaParent[]>({
     queryKey: ['rpki-ca-parents', effectiveParentCaId],
     queryFn: async () => {
       if (!effectiveParentCaId) return [];
@@ -63,7 +63,7 @@ export function useRpkiKrillConfig() {
     enabled: effectiveParentCaId > 0,
   });
 
-  const { data: resourcesFromApi = [] } = useQuery({
+  const { data: resourcesFromApi = [] as RpkiCaResource[] } = useQuery<RpkiCaResource[]>({
     queryKey: ['rpki-ca-resources', effectiveParentCaId],
     queryFn: async () => {
       if (!effectiveParentCaId) return [];
@@ -117,13 +117,13 @@ export function useRpkiKrillConfig() {
 
   const selectedRepoCaId = Number(repositoryCaId || 0);
 
-  const { data: repositoryParentsFromApi = [] } = useQuery({
+  const { data: repositoryParentsFromApi = [] as RpkiCaParent[] } = useQuery<RpkiCaParent[]>({
     queryKey: ['rpki-ca-parents', selectedRepoCaId],
     queryFn: () => RpkiCaService.listParents(selectedRepoCaId),
     enabled: selectedRepoCaId > 0,
   });
 
-  const { data: repositoriesFromApi = [] } = useQuery({
+  const { data: repositoriesFromApi = [] as RpkiCaRepository[] } = useQuery<RpkiCaRepository[]>({
     queryKey: ['rpki-ca-repositories', selectedRepoCaId],
     queryFn: () => RpkiCaService.listRepositories(selectedRepoCaId),
     enabled: selectedRepoCaId > 0,
@@ -154,7 +154,7 @@ export function useRpkiKrillConfig() {
       if (variables.caId > 0) {
         queryClient.setQueryData<RpkiCaRepository[]>(
           ['rpki-ca-repositories', variables.caId],
-          (prev = []) => {
+          (prev: RpkiCaRepository[] = []) => {
             const next = prev.filter((item) => item.id !== row.id);
             return [row, ...next];
           }
@@ -171,13 +171,13 @@ export function useRpkiKrillConfig() {
 
   const repositoryReferralParentOptions = [
     { value: '', label: 'Sem referral (opcional)' },
-    ...repositoryParentsFromApi.map((parent) => ({
+    ...(repositoryParentsFromApi as RpkiCaParent[]).map((parent) => ({
       value: String(parent.id),
       label: `${parent.parent_name} (${parent.parent_handle ?? '—'})`,
     })),
   ];
 
-  const caOptions: CaSelectOption[] = cas.map((ca) => ({
+  const caOptions: CaSelectOption[] = (cas as CaItem[]).map((ca) => ({
     value: ca.id,
     label: ca.nome,
   }));
@@ -193,7 +193,7 @@ export function useRpkiKrillConfig() {
 
   const handleGenerateChildRequest = () => {
     if (!parentCaId.trim()) return;
-    const selectedCa = cas.find((ca) => String(ca.id) === parentCaId);
+    const selectedCa = (cas as CaItem[]).find((ca) => String(ca.id) === parentCaId);
     if (!selectedCa) return;
     generateChildRequestMutation.mutate(Number(selectedCa.id));
   };
@@ -202,7 +202,7 @@ export function useRpkiKrillConfig() {
     if (!parentCaId.trim() || !parentChildRequestXml.trim() || !parentResponseXml.trim() || !parentNome.trim()) {
       return;
     }
-    const selectedCa = cas.find((ca) => String(ca.id) === parentCaId);
+    const selectedCa = (cas as CaItem[]).find((ca) => String(ca.id) === parentCaId);
     if (!selectedCa) return;
     importParentResponseMutation.mutate(
       {
@@ -253,7 +253,7 @@ export function useRpkiKrillConfig() {
 
   const handleSaveAspa = () => {
     if (!aspaCaId.trim() || !customerAsn.trim() || !providers.trim()) return;
-    const selectedCa = cas.find((ca) => String(ca.id) === aspaCaId);
+    const selectedCa = (cas as CaItem[]).find((ca) => String(ca.id) === aspaCaId);
     if (!selectedCa) return;
     setAspas((prev) => [
       {

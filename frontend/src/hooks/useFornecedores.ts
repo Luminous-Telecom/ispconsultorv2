@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FornecedorService } from '../services/fornecedorService';
-import { UpdateFornecedor, FornecedorFilters } from '../types';
+import { UpdateFornecedor, FornecedorFilters, PaginatedResponse, Fornecedor } from '../types';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { CACHE_CONFIG } from '../config/api';
 import { useApiError } from './useApiError';
@@ -10,7 +10,7 @@ const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;
 
 // Hook para listar fornecedores
 export const useFornecedores = (filters: FornecedorFilters = {}) => {
-  return useQuery({
+  return useQuery<PaginatedResponse<Fornecedor>>({
     queryKey: ['fornecedores', filters],
     queryFn: () => FornecedorService.list(filters),
     staleTime: 0, // Sempre considerar dados como stale para permitir refresh manual

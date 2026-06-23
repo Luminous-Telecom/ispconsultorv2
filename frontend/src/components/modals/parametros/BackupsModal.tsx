@@ -45,7 +45,7 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
   const [sortColumn, setSortColumn] = useState<string>('data');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
-  const { data: backups = [], isLoading, refetch } = useQuery({
+  const { data: backups = [] as Backup[], isLoading, refetch } = useQuery<Backup[]>({
     queryKey: ['backups'],
     queryFn: () => BackupService.list(),
     enabled: show,
@@ -129,7 +129,7 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
   }, [queryClient, refetch, success, showApiError, t]);
 
   const modalData = useMemo<BackupWithId[]>(() =>
-    backups.map(b => ({ ...b, id: b.nome })),
+    (backups as Backup[]).map((b) => ({ ...b, id: b.nome })),
     [backups]
   );
 

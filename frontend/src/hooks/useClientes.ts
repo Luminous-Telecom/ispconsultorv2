@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ClienteService } from '../services/clienteService';
-import { UpdateCliente, ClienteFilters } from '../types';
+import { UpdateCliente, ClienteFilters, PaginatedResponse, Cliente } from '../types';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { CACHE_CONFIG } from '../config/api';
 import { useApiError } from './useApiError';
@@ -11,7 +11,7 @@ const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;
 
 // Hook para listar clientes
 export const useClientes = (filters: ClienteFilters = {}) => {
-  return useQuery({
+  return useQuery<PaginatedResponse<Cliente>>({
     queryKey: ['clientes', filters],
     queryFn: () => ClienteService.list(filters),
     staleTime: 0, // Sempre considerar dados como stale para permitir refresh manual

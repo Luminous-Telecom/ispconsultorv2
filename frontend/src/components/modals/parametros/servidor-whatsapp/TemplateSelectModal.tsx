@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useModalSelect } from 'hooks/useModalSelect';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { TemplateWhatsAppService, TemplateWhatsApp } from 'services/templateWhatsAppService';
+import type { ApiResponse } from 'types';
 import DraggableModal from 'components/common/DraggableModal';
 import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import { TableConfig } from 'components/tables/types';
@@ -39,13 +40,13 @@ const TemplateSelectModal: React.FC<TemplateSelectModalProps> = ({
     clearSelection
   } = useModalSelect<TemplateWhatsApp>(undefined);
 
-  const { data: templatesData, isLoading, error, refetch } = useQuery({
+  const { data: templatesData, isLoading, error, refetch } = useQuery<ApiResponse<TemplateWhatsApp[]>>({
     queryKey: ['templates-whatsapp'],
     queryFn: () => TemplateWhatsAppService.list(),
     enabled: show,
   });
 
-  const templates = useMemo(() => templatesData?.data ?? [], [templatesData?.data]);
+  const templates = useMemo((): TemplateWhatsApp[] => templatesData?.data ?? [], [templatesData?.data]);
 
   const handleSelect = useCallback((selectedItems?: TemplateWhatsApp[]) => {
     const item = selectedItems && selectedItems.length > 0 ? selectedItems[0] : selectedItem;

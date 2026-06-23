@@ -9,6 +9,7 @@ import { useRpkiListModal } from 'hooks/useRpkiListModal';
 import { renderStatusBadge } from 'components/ui/StatusBadge';
 import { getRpkiCaStatusBadgeConfig } from 'utils/tableStatusBadges';
 import { ClienteService } from 'services/clienteService';
+import type { Cliente } from 'types';
 import { RpkiCaRepository, RpkiCaService } from 'services/rpkiCaService';
 import { useRpkiCas } from 'hooks/useRpkiCas';
 import RpkiRepositoryCreateModal from './RpkiRepositoryCreateModal';
@@ -74,7 +75,7 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = ({
   );
 
   const { cas, caIdsKey } = useRpkiCas(clienteIdFilter);
-  const { data: clientes = [] } = useQuery({
+  const { data: clientes = [] as Cliente[] } = useQuery<Cliente[]>({
     queryKey: ['clientes-rpki'],
     queryFn: async () => {
       const response = await ClienteService.list({ limit: 1000 });
@@ -82,7 +83,7 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = ({
     },
     enabled: clienteIdFilter == null,
   });
-  const { data: repositories = [], isLoading, refetch } = useQuery({
+  const { data: repositories = [] as RpkiCaRepository[], isLoading, refetch } = useQuery<RpkiCaRepository[]>({
     queryKey: ['rpki-repositories-all', caIdsKey],
     queryFn: async () => {
       const rows = await Promise.all(cas.map((ca) => RpkiCaService.listRepositories(ca.id)));
@@ -93,7 +94,7 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = ({
 
   const caById = useMemo(() => new Map(cas.map((ca) => [ca.id, ca])), [cas]);
   const clienteNomeById = useMemo(
-    () => new Map(clientes.map((c) => [c.id, c.razao_social || c.nome_fantasia || ''])),
+    () => new Map((clientes as Cliente[]).map((c) => [c.id, c.razao_social || c.nome_fantasia || ''])),
     [clientes]
   );
 

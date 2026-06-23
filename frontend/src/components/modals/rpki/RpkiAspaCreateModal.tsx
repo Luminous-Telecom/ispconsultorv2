@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import DraggableModal from 'components/common/DraggableModal';
 import { CancelarButton, FormField, NovoButton } from 'components/ui';
-import { RpkiCaService } from 'services/rpkiCaService';
+import { RpkiCaService, type RpkiCa } from 'services/rpkiCaService';
 
 interface RpkiAspaCreatePayload {
   caId: number;
@@ -29,14 +29,15 @@ const RpkiAspaCreateModal: React.FC<RpkiAspaCreateModalProps> = ({
   const [customerAsn, setCustomerAsn] = useState('');
   const [providers, setProviders] = useState('');
 
-  const { data: cas = [] } = useQuery({
+  const { data: cas = [] as RpkiCa[] } = useQuery<RpkiCa[]>({
     queryKey: ['rpki-cas'],
     queryFn: () => RpkiCaService.list(),
   });
-  const selectableCas = useMemo(() => {
-    if (!allowedCaIds?.length) return cas;
+  const selectableCas = useMemo((): RpkiCa[] => {
+    const caList = cas as RpkiCa[];
+    if (!allowedCaIds?.length) return caList;
     const allowed = new Set(allowedCaIds);
-    return cas.filter((ca) => allowed.has(ca.id));
+    return caList.filter((ca) => allowed.has(ca.id));
   }, [cas, allowedCaIds]);
 
   useEffect(() => {

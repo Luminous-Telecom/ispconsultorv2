@@ -5,7 +5,7 @@ import { useI18n } from 'contexts/I18nContext';
 import { useBulkBtn } from 'components/ui';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
-import { SshDeviceBackupService } from 'services/sshDeviceBackupService';
+import { SshDeviceBackupService, type SshDeviceBackupFile } from 'services/sshDeviceBackupService';
 import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import TextPreviewModal from 'components/common/TextPreviewModal';
 import {
@@ -43,14 +43,14 @@ const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }
   const [, setSelectedItems] = useState<ClienteBackupRow[]>([]);
   const preview = useSshBackupPreview();
 
-  const { data: files = [], isLoading, isError, refetch } = useQuery({
+  const { data: files = [], isLoading, isError, refetch } = useQuery<SshDeviceBackupFile[]>({
     queryKey: ['ssh-device-backups', 'cliente', clienteId],
     queryFn: () => SshDeviceBackupService.listByCliente(clienteId!),
     enabled: clienteId != null && clienteId > 0,
   });
 
   const tableData = useMemo<ClienteBackupRow[]>(() => {
-    return (files ?? []).map((f) => {
+    return (files ?? []).map((f: SshDeviceBackupFile) => {
       const did = f.device_id ?? '';
       return {
         id: `${did}:${f.fileName}`,

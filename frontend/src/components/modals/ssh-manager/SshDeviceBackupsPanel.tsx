@@ -48,7 +48,7 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
 
   const { handleSelectionChange, clearSelection } = useModalSelect<BackupTableRow>();
 
-  const { data: files = [], isLoading, isError, refetch } = useQuery({
+  const { data: files = [], isLoading, isError, refetch } = useQuery<SshDeviceBackupFile[]>({
     queryKey: ['ssh-device-backups', deviceId],
     queryFn: () => SshDeviceBackupService.listByDevice(deviceId),
     enabled: !!deviceId,

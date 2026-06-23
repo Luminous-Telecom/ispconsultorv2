@@ -8,6 +8,7 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useRpkiListModal } from 'hooks/useRpkiListModal';
 import { RpkiCa, RpkiCaService } from 'services/rpkiCaService';
 import { ClienteService } from 'services/clienteService';
+import type { Cliente } from 'types';
 import { useRpkiCas } from 'hooks/useRpkiCas';
 import { renderStatusBadge } from 'components/ui/StatusBadge';
 import { getRpkiCaStatusBadgeConfig } from 'utils/tableStatusBadges';
@@ -55,7 +56,7 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = ({
   const { showApiError } = useApiError();
 
   const { cas, isLoading, refetch } = useRpkiCas(clienteIdFilter);
-  const { data: clientes = [] } = useQuery({
+  const { data: clientes = [] as Cliente[] } = useQuery<Cliente[]>({
     queryKey: ['clientes-rpki'],
     queryFn: async () => {
       const response = await ClienteService.list({ limit: 1000 });
@@ -93,7 +94,7 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = ({
   });
 
   const clienteNomeById = useMemo(
-    () => new Map(clientes.map((c) => [c.id, c.razao_social || c.nome_fantasia || ''])),
+    () => new Map((clientes as Cliente[]).map((c) => [c.id, c.razao_social || c.nome_fantasia || ''])),
     [clientes]
   );
 

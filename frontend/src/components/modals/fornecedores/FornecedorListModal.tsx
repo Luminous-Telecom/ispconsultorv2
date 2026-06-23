@@ -212,7 +212,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
   );
 
   const modalData = useMemo(
-    () => (fornecedoresData?.data || []).filter((item) => item.id != null),
+    () => (fornecedoresData?.data ?? [] as Fornecedor[]).filter((item: Fornecedor) => item.id != null),
     [fornecedoresData?.data]
   );
 

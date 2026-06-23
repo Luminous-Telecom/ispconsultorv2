@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { ContaPagarService } from '../services/contaPagarService';
-import { UpdateContaPagar, ContaPagarFilters } from '../types';
+import { UpdateContaPagar, ContaPagarFilters, PaginatedResponse, ContaPagar } from '../types';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { CACHE_CONFIG } from '../config/api';
 import { useApiError } from './useApiError';
@@ -10,7 +10,7 @@ const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;
 
 // Hook para listar contas a pagar
 export const useContasPagar = (filters: ContaPagarFilters = {}) => {
-  return useQuery({
+  return useQuery<PaginatedResponse<ContaPagar>>({
     queryKey: ['contas-pagar', filters],
     queryFn: () => ContaPagarService.list(filters),
     staleTime: 0, // Sempre considerar dados como stale para permitir refresh manual

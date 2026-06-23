@@ -4,6 +4,7 @@ import { useModalSelect } from 'hooks/useModalSelect';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { useAuditoria } from 'hooks/useAuditoria';
 import { TemplateWhatsAppService, TemplateWhatsApp } from 'services/templateWhatsAppService';
+import type { ApiResponse } from 'types';
 import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import { TableConfig } from 'components/tables/types';
 import { useI18n } from 'contexts/I18nContext';
@@ -36,12 +37,12 @@ const TemplatesTab: React.FC<TemplatesTabProps> = () => {
 
   const { handleSelectionChange } = useModalSelect<TemplateWhatsApp>(undefined);
 
-  const { data: templatesData, isLoading, error, refetch } = useQuery({
+  const { data: templatesData, isLoading, error, refetch } = useQuery<ApiResponse<TemplateWhatsApp[]>>({
     queryKey: ['templates-whatsapp'],
     queryFn: () => TemplateWhatsAppService.list(),
   });
 
-  const templates = useMemo(() => templatesData?.data ?? [], [templatesData?.data]);
+  const templates = useMemo((): TemplateWhatsApp[] => templatesData?.data ?? [], [templatesData?.data]);
 
   const deleteTemplateMutation = useMutation({
     mutationFn: (id: number) => TemplateWhatsAppService.delete(id),

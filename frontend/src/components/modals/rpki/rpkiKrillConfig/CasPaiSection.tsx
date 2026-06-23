@@ -5,6 +5,8 @@ import {
   GerarRequisicaoCaFilhaButton,
   SincronizarButton,
 } from 'components/ui';
+import type { CaItem } from './types';
+import type { RpkiCaParent } from 'services/rpkiCaService';
 import type { useRpkiKrillConfig } from './useRpkiKrillConfig';
 
 type CasPaiSectionProps = {
@@ -119,9 +121,9 @@ const CasPaiSection: React.FC<CasPaiSectionProps> = ({
             </tr>
           </thead>
           <tbody>
-            {parentsFromApi.map((item) => (
+            {(parentsFromApi as RpkiCaParent[]).map((item) => (
               <tr key={item.id}>
-                <td>{cas.find((ca) => Number(ca.id) === item.ca_id)?.nome ?? '-'}</td>
+                <td>{(cas as CaItem[]).find((ca) => Number(ca.id) === item.ca_id)?.nome ?? '-'}</td>
                 <td>{item.parent_name}</td>
                 <td>{item.service_uri || '-'}</td>
                 <td>{asnBlocks}</td>

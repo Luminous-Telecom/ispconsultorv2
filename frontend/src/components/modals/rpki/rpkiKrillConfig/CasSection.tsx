@@ -1,5 +1,6 @@
 import React from 'react';
 import { FormField, NovoButton } from 'components/ui';
+import type { CaItem } from './types';
 import type { useRpkiKrillConfig } from './useRpkiKrillConfig';
 
 type CasSectionProps = {
@@ -50,7 +51,7 @@ const CasSection: React.FC<CasSectionProps> = ({
                 <td className="text-muted">Carregando...</td>
               </tr>
             )}
-            {cas.map((ca) => (
+            {(cas as CaItem[]).map((ca) => (
               <tr key={ca.id}>
                 <td>{ca.nome}</td>
               </tr>

@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PlanoService } from '../services/planoService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { CACHE_CONFIG } from '../config/api';
-import { PlanoFilters, UpdatePlano } from '../types';
+import { PlanoFilters, UpdatePlano, PaginatedResponse, Plano } from '../types';
 import { useApiError } from './useApiError';
 import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 
@@ -10,7 +10,7 @@ const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;
 
 // Hook para listar planos
 export const usePlanos = (filters: PlanoFilters = {}) => {
-  return useQuery({
+  return useQuery<PaginatedResponse<Plano>>({
     queryKey: ['planos', filters],
     queryFn: () => PlanoService.list(filters),
     staleTime: 30 * 1000, // 30 segundos - dados ficam fresh por 30s

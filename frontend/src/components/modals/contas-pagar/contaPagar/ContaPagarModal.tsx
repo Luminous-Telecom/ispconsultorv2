@@ -10,6 +10,7 @@ import { useContaPagarForm } from './hooks/useContaPagarForm';
 import { useContaPagarPagamento } from './hooks/useContaPagarPagamento';
 import ContaPagarFormContent from './sections/ContaPagarFormContent';
 import PagamentoModal from './subModals/PagamentoModal';
+import type { Fornecedor } from 'types';
 import type { ContaPagarFormData, ContaPagarModalProps } from './types';
 
 const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
@@ -72,7 +73,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
 
   const modalTitle = isEditing ? t('modal.editAccountPayable') : t('modal.createAccountPayable');
 
-  const fornecedores = (fornecedoresData?.data || []).map((f) => ({
+  const fornecedores = (fornecedoresData?.data ?? [] as Fornecedor[]).map((f: Fornecedor) => ({
     id: f.id,
     nome: f.nome_razao_social
   }));

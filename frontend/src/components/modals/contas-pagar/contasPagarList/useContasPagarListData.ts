@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useContasPagar, useDeleteContaPagar, useDuplicarContaPagar } from 'hooks/useContasPagar';
 import { useFornecedores } from 'hooks/useFornecedores';
 import { useEntityListModal } from 'hooks/useEntityListModal';
-import { ContaPagar, ContaPagarFilters } from 'types';
+import { ContaPagar, ContaPagarFilters, Fornecedor } from 'types';
 import { FilterValue } from 'types/common';
 import { calcResumoFinanceiro } from './contasPagarListUtils';
 import { ContasPagarResumoFinanceiro } from './contasPagarListTypes';
@@ -27,7 +27,7 @@ export function useContasPagarListData({ show, initialFilters, list }: UseContas
   const { data: fornecedoresData } = useFornecedores({ limit: 1000 });
   const fornecedoresOptions = useMemo(() => {
     if (!fornecedoresData?.data) return [];
-    return fornecedoresData.data.map((fornecedor) => ({
+    return fornecedoresData.data.map((fornecedor: Fornecedor) => ({
       value: fornecedor.id?.toString() || '',
       label:
         fornecedor.nome_razao_social ||
@@ -67,7 +67,7 @@ export function useContasPagarListData({ show, initialFilters, list }: UseContas
   });
 
   const modalData = useMemo(
-    () => (contasPagarData?.data || []).filter((item) => item.id != null),
+    () => (contasPagarData?.data ?? [] as ContaPagar[]).filter((item: ContaPagar) => item.id != null),
     [contasPagarData?.data]
   );
 
