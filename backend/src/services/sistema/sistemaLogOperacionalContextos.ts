@@ -7,6 +7,7 @@ export const LOG_CONTEXTO_SSH_AUDIT = 'ssh_audit';
 export const LOG_CONTEXTO_RPKI_SYNC = 'rpki_sync';
 export const LOG_CONTEXTO_RPKI_ACTIVITY = 'rpki_activity';
 export const LOG_CONTEXTO_RPKI_VALIDATION = 'rpki_validation';
+export const LOG_CONTEXTO_IXC_OS_SYNC = 'ixc_os_sync';
 
 /** Resumo legado de rotina (`log_contexto: rotina`) — ainda pode existir em registros antigos. */
 export const LOG_CONTEXTO_ROTINA_RESUMO = 'rotina';
@@ -19,6 +20,7 @@ export const LOG_CONTEXTO_ESPECIALIZADOS = [
   LOG_CONTEXTO_RPKI_SYNC,
   LOG_CONTEXTO_RPKI_ACTIVITY,
   LOG_CONTEXTO_RPKI_VALIDATION,
+  LOG_CONTEXTO_IXC_OS_SYNC,
 ] as const;
 
 export type LogContextoEspecializado = (typeof LOG_CONTEXTO_ESPECIALIZADOS)[number];

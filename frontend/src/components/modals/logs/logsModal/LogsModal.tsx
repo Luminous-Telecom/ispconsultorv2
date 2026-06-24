@@ -109,7 +109,6 @@ const LogsModal: React.FC<LogsModalProps> = ({
         columns={columns as TableConfig<unknown>['columns']}
         modalData={tableMeta.modalData}
         isLoading={isLoading}
-        title={tableMeta.title}
         emptyMessage={tableMeta.emptyMessage}
         searchPlaceholder={tableMeta.searchPlaceholder}
         defaultSearchField={tableMeta.defaultSearchField}

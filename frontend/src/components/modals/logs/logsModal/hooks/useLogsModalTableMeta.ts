@@ -112,18 +112,6 @@ export function useLogsModalTableMeta({
     ];
   }, [t, selectedItem, handleViewDetails, isAuditoria, isBlockdomiApi, setShowBlockdomiLogsReal, setWhoisIp]);
 
-  const title = isEquipamentosOuAgentes
-    ? isEquipamentos
-      ? t('logs.equipamentos')
-      : t('logs.agentes')
-    : isAuditoria
-      ? t('audit.title')
-      : isBlockdomiApi
-        ? t('blockdomi.logsApi')
-        : isEmail
-          ? t('history.emailTitle')
-          : t('history.whatsappTitle');
-
   const emptyMessage = isEquipamentosOuAgentes
     ? 'Nenhum log encontrado'
     : isBlockdomiApi
@@ -171,7 +159,6 @@ export function useLogsModalTableMeta({
     pagination,
     modalData,
     bulkActions,
-    title,
     emptyMessage,
     searchFields,
     defaultSearchField,

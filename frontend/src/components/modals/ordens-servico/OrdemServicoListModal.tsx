@@ -9,7 +9,7 @@ import { ListModalConfig } from 'types/modal';
 import type { OrdemServico } from 'services/ordemServicoService';
 import OrdemServicoModal from './OrdemServicoModal';
 import OrdemServicoAcaoModal from './OrdemServicoAcaoModal';
-import { ORDEM_SERVICO_ACOES, isOrdemServicoLocal, type OrdemServicoAcao } from './ordemServicoAcoes';
+import { ORDEM_SERVICO_ACOES, isOrdemServicoExcluivel, isOrdemServicoLocal, type OrdemServicoAcao } from './ordemServicoAcoes';
 import {
   getOrdemServicoPrioridadeBadgeConfig,
   ORDEM_SERVICO_PRIORIDADE_BADGE_LABELS,
@@ -18,6 +18,7 @@ import {
   getOrdemServicoStatusBadgeConfig,
   ORDEM_SERVICO_STATUS_BADGE_LABELS,
 } from './ordemServicoStatusBadges';
+import { useBulkBtn } from 'components/ui';
 import { renderStatusBadge } from 'components/ui/StatusBadge';
 import { formatRpkiValidityDisplay } from 'utils/formatters';
 
@@ -71,6 +72,7 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
   );
 
   const deleteMutation = useDeleteOrdemServico();
+  const bulkBtn = useBulkBtn();
 
   const handleAcao = useCallback((ordem: OrdemServico, acao: OrdemServicoAcao) => {
     if (isOrdemServicoLocal(ordem) && acao !== 'registrar_mensagem' && acao !== 'finalizar') {
@@ -236,30 +238,37 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
     }));
   }, [list, handleAcao]);
 
-  const bulkActions = useMemo(
-    () => [
-      ...list.buildCrudBulkActions({
-        onNew: () => {
-          list.setSelectedEntityId(null);
-          setIsEditMode(false);
-          setShowFormModal(true);
-        },
-        onEdit: (item) => {
-          list.setSelectedEntityId(Number(resolveOrdemId(item)));
-          setIsEditMode(true);
-          setShowFormModal(true);
-        },
-        onDelete: handleDelete,
-      }),
+  const bulkActions = useMemo(() => {
+    const crudActions = list.buildCrudBulkActions({
+      onNew: () => {
+        list.setSelectedEntityId(null);
+        setIsEditMode(false);
+        setShowFormModal(true);
+      },
+      onEdit: (item) => {
+        list.setSelectedEntityId(Number(resolveOrdemId(item)));
+        setIsEditMode(true);
+        setShowFormModal(true);
+      },
+      onDelete: handleDelete,
+    });
+
+    const deleteAction = crudActions.find((action) => action.label === bulkBtn.deletar.label);
+    if (deleteAction) {
+      deleteAction.disabled = (selectedItems: OrdemServico[]) =>
+        selectedItems.length === 0 || selectedItems.some((item) => !isOrdemServicoExcluivel(item));
+    }
+
+    return [
+      ...crudActions,
       {
         label: 'Ações',
         variant: 'primary' as const,
         disabled: (selectedItems: OrdemServico[]) => selectedItems.length !== 1,
         dropdown: acoesDropdown,
       },
-    ],
-    [list, handleDelete, acoesDropdown]
-  );
+    ];
+  }, [list, handleDelete, acoesDropdown, bulkBtn.deletar.label]);
 
   const pagination = useMemo(
     () => list.buildPagination(ordensData?.pagination),

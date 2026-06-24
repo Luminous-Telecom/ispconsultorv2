@@ -147,6 +147,20 @@ export const useMenuItems = ({ t, openModal, hasModulo }: UseMenuItemsParams) =>
     [t, handleOpenModal, filterItem]
   );
 
+  const logsIntegracaoFolderItems = useMemo(
+    () =>
+      [
+        {
+          id: 'logs-ixc-os-sync',
+          modalId: 'logs-ixc-os-sync',
+          label: t('logs.ixcOsSincronizacao'),
+          icon: 'bi-journal-text',
+          onClick: () => handleOpenModal('logs-ixc-os-sync'),
+        },
+      ].filter(filterItem),
+    [t, handleOpenModal, filterItem]
+  );
+
   const logsRpkiFolderItems = useMemo(
     () =>
       [
@@ -234,6 +248,13 @@ export const useMenuItems = ({ t, openModal, hasModulo }: UseMenuItemsParams) =>
             items: logsEquipamentosFolderItems,
           },
           {
+            accordionId: 'logsIntegracaoAccordion',
+            collapseId: 'logsIntegracaoCollapse',
+            headingId: 'logsIntegracaoHeading',
+            titleKey: 'layout.folderLogsIntegracao',
+            items: logsIntegracaoFolderItems,
+          },
+          {
             accordionId: 'logsRpkiAccordion',
             collapseId: 'logsRpkiCollapse',
             headingId: 'logsRpkiHeading',
@@ -262,6 +283,7 @@ export const useMenuItems = ({ t, openModal, hasModulo }: UseMenuItemsParams) =>
       logsFolderItems,
       logsComunicacaoFolderItems,
       logsEquipamentosFolderItems,
+      logsIntegracaoFolderItems,
       logsRpkiFolderItems,
       parametrosFolderItems,
     ]

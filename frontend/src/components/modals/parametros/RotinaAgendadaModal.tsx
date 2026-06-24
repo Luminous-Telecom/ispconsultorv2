@@ -30,6 +30,7 @@ const NOMES_POR_TIPO: Record<string, string> = {
   rpki_sync_repositories: 'RPKI: sincronizar repositórios',
   consulta_titulos_asaas: 'Consulta títulos Asaas',
   consulta_titulos_efi: 'Consulta títulos Efi',
+  ixc_sync_ordens_servico: 'Sincronizar ordens de serviço IXC',
   outros: 'Outros',
 };
 
@@ -53,6 +54,7 @@ function buildTipoOptionsSaaS(alvo: 'saas' | 'erp_global', hasBlockdomi: boolean
     { value: 'rpki_sync_repositories', label: 'RPKI: sincronizar repositórios' },
     { value: 'consulta_titulos_asaas', label: 'Consulta títulos Asaas (ERP + SaaS)' },
     { value: 'consulta_titulos_efi', label: 'Consulta títulos Efi (ERP + SaaS)' },
+    { value: 'ixc_sync_ordens_servico', label: 'Sincronizar ordens de serviço IXC (ERP — todos)' },
     { value: 'outros', label: 'Outros' },
   ];
   if (!hasBlockdomi) return opts.filter((o) => o.value !== 'desbloquear_blockdomi');

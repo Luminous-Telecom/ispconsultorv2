@@ -120,6 +120,7 @@ export class RoutineExecutionService {
         'rpki_sync_repositories',
         'consulta_titulos_asaas',
         'consulta_titulos_efi',
+        'ixc_sync_ordens_servico',
         'outros'
       ] as const;
       const ok =
@@ -226,6 +227,12 @@ export class RoutineExecutionService {
           return { success: false, message: 'Consulta de títulos Efi deve usar alvo ERP (todos os clientes).' };
         }
         return await this.executeConsultaTitulosEfi();
+
+      case 'ixc_sync_ordens_servico':
+        if (saas && saasAlvo(routine as SaasScheduledRoutine) !== 'erp_global') {
+          return { success: false, message: 'Sincronização IXC de OS deve usar alvo ERP (todos os clientes).' };
+        }
+        return await this.executeIxcSyncOrdensServico();
 
       default:
         logger.warn('RoutineExecutionService.executeRoutine - Tipo de rotina não implementado', {
@@ -1075,6 +1082,34 @@ export class RoutineExecutionService {
         error: errorMessage,
       });
       return { success: false, message: `Erro na consulta de títulos Efi: ${errorMessage}` };
+    }
+  }
+
+  public async executeIxcSyncOrdensServico(): Promise<RoutineExecutionResult> {
+    try {
+      const { IxcOsSchedulerRoutineService } = await import('../../ordens/IxcOsSchedulerRoutineService');
+      const resultado = await IxcOsSchedulerRoutineService.syncAllIntegracoes('scheduled');
+      return {
+        success: resultado.success,
+        message: resultado.message,
+        total: resultado.total,
+        sucesso: resultado.sucesso,
+        erro: resultado.erro,
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao executar sincronização IXC de ordens de serviço', {
+        context: 'RoutineExecutionService',
+        action: 'executeIxcSyncOrdensServico',
+        error: errorMessage,
+      });
+      return {
+        success: false,
+        message: `Erro na sincronização IXC de OS: ${errorMessage}`,
+        total: 0,
+        sucesso: 0,
+        erro: 0,
+      };
     }
   }
 }

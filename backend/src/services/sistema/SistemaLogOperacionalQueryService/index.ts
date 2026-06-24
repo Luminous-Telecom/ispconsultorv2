@@ -7,6 +7,7 @@ import {
   LOG_CONTEXTO_BLOCKDOMI_ACESSO,
   LOG_CONTEXTO_RPKI_SYNC,
   LOG_CONTEXTO_RPKI_VALIDATION,
+  LOG_CONTEXTO_IXC_OS_SYNC,
   LOG_CONTEXTO_ROTINA_EXECUCAO,
   LOG_CONTEXTO_SSH_AUDIT,
   normalizeOperacionalPayload,
@@ -506,5 +507,75 @@ export class SistemaLogOperacionalQueryService {
         created_at: row.created_at,
       };
     });
+  }
+
+  static ixcOsSyncToListItem(row: SistemaLogOperacional): Record<string, unknown> {
+    const p = normalizeOperacionalPayload(row.payload) ?? {};
+    return {
+      id: row.id,
+      empresa_id: row.empresa_id,
+      integracao_id: p.integracao_id ?? null,
+      integracao_nome: p.integracao_nome ?? null,
+      event_type: p.event_type ?? null,
+      status: p.status ?? null,
+      trigger_type: p.trigger_type ?? null,
+      ordem_servico_id: p.ordem_servico_id ?? null,
+      ixc_os_id: p.ixc_os_id ?? null,
+      protocolo: p.protocolo ?? null,
+      cliente_nome: p.cliente_nome ?? null,
+      origem_abertura: p.origem_abertura ?? null,
+      operador_nome: p.operador_nome ?? null,
+      status_anterior: p.status_anterior ?? null,
+      status_novo: p.status_novo ?? null,
+      message: p.message ?? row.mensagem ?? null,
+      created_at: row.created_at,
+    };
+  }
+
+  static async listIxcOsSync(params: {
+    page: number;
+    limit: number;
+    offset: number;
+    empresaId?: number | null;
+    search?: string;
+    eventType?: string;
+  }): Promise<{ rows: Record<string, unknown>[]; count: number }> {
+    const and: WhereOptions[] = [literal(sqlFiltrarLogContexto(LOG_CONTEXTO_IXC_OS_SYNC))];
+    const alias = 'SistemaLogOperacional';
+    const seq = SistemaLogOperacional.sequelize!;
+
+    if (params.empresaId != null) and.push({ empresa_id: params.empresaId });
+    if (params.eventType?.trim()) {
+      and.push(
+        literal(
+          `JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.event_type')) = ${seq.escape(params.eventType.trim())}`
+        )
+      );
+    }
+    if (params.search) {
+      const esc = seq.escape(`%${params.search}%`);
+      and.push({
+        [Op.or]: [
+          literal(`JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.protocolo')) LIKE ${esc}`),
+          literal(`JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.cliente_nome')) LIKE ${esc}`),
+          literal(`JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.operador_nome')) LIKE ${esc}`),
+          literal(`JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.integracao_nome')) LIKE ${esc}`),
+          literal(`JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.message')) LIKE ${esc}`),
+          { mensagem: { [Op.like]: `%${params.search}%` } },
+        ],
+      });
+    }
+
+    const { rows, count } = await SistemaLogOperacional.findAndCountAll({
+      where: { [Op.and]: and },
+      order: [['created_at', 'DESC']],
+      limit: params.limit,
+      offset: params.offset,
+    });
+
+    return {
+      rows: rows.map((r) => SistemaLogOperacionalQueryService.ixcOsSyncToListItem(r)),
+      count,
+    };
   }
 }

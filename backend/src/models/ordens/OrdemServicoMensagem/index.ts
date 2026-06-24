@@ -18,6 +18,7 @@ export class OrdemServicoMensagem extends Model<
   declare mensagem: string;
   declare data: string;
   declare usuario_id: number | null;
+  declare ixc_id: string | null;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 }
@@ -54,6 +55,10 @@ OrdemServicoMensagem.init(
       type: DataTypes.INTEGER,
       allowNull: true,
     },
+    ixc_id: {
+      type: DataTypes.STRING(32),
+      allowNull: true,
+    },
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,
@@ -75,6 +80,8 @@ OrdemServicoMensagem.init(
       { fields: ['ordem_servico_id'] },
       { fields: ['empresa_id'] },
       { fields: ['usuario_id'] },
+      { fields: ['ixc_id'] },
+      { fields: ['ordem_servico_id', 'ixc_id'], name: 'ordens_servico_mensagens_ordem_ixc_id_idx' },
     ],
   }
 );

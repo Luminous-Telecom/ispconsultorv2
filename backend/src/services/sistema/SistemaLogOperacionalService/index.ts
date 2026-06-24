@@ -11,6 +11,7 @@ import {
   LOG_CONTEXTO_RPKI_ACTIVITY,
   LOG_CONTEXTO_RPKI_SYNC,
   LOG_CONTEXTO_RPKI_VALIDATION,
+  LOG_CONTEXTO_IXC_OS_SYNC,
   LOG_CONTEXTO_ROTINA_EXECUCAO,
   LOG_CONTEXTO_SSH_AUDIT,
   normalizeOperacionalPayload,
@@ -1061,6 +1062,53 @@ export class SistemaLogOperacionalService {
         },
         ip_address: data.requestIp?.slice(0, 45) ?? null,
         mensagem: `${data.prefix} AS${data.asn} → ${data.state}`,
+      }).catch(() => undefined);
+    });
+  }
+
+  static registrarIxcOsSync(data: {
+    empresaId?: number | null;
+    integracaoId?: number | null;
+    integracaoNome?: string | null;
+    eventType: string;
+    status?: 'success' | 'failed' | 'info';
+    triggerType?: 'scheduled' | 'manual' | 'create' | null;
+    ordemServicoId?: number | null;
+    ixcOsId?: string | null;
+    protocolo?: string | null;
+    clienteNome?: string | null;
+    origemAbertura?: 'backnet' | 'ixc' | null;
+    operadorNome?: string | null;
+    statusAnterior?: string | null;
+    statusNovo?: string | null;
+    message?: string | null;
+  }): void {
+    setImmediate(() => {
+      void SistemaLogOperacional.create({
+        empresa_id: data.empresaId != null && data.empresaId > 0 ? data.empresaId : null,
+        usuario_id: null,
+        canal: 'integracao',
+        tipo: 'sync',
+        recurso: 'OrdemServicoLocal',
+        recurso_id: data.ordemServicoId != null ? String(data.ordemServicoId) : null,
+        payload: {
+          log_contexto: LOG_CONTEXTO_IXC_OS_SYNC,
+          integracao_id: data.integracaoId ?? null,
+          integracao_nome: data.integracaoNome ?? null,
+          event_type: data.eventType,
+          status: data.status ?? 'info',
+          trigger_type: data.triggerType ?? null,
+          ordem_servico_id: data.ordemServicoId ?? null,
+          ixc_os_id: data.ixcOsId ?? null,
+          protocolo: data.protocolo ?? null,
+          cliente_nome: data.clienteNome ?? null,
+          origem_abertura: data.origemAbertura ?? null,
+          operador_nome: data.operadorNome ?? null,
+          status_anterior: data.statusAnterior ?? null,
+          status_novo: data.statusNovo ?? null,
+          message: data.message ?? null,
+        },
+        mensagem: data.message ?? `IXC OS sync: ${data.eventType}`,
       }).catch(() => undefined);
     });
   }

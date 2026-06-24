@@ -65,6 +65,7 @@ const RpkiAspaListModal = lazy(() => import('../modals/rpki/RpkiAspaListModal'))
 const RpkiRoaListModal = lazy(() => import('../modals/rpki/RpkiRoaListModal'));
 const RpkiValidateRouteModal = lazy(() => import('../modals/rpki/RpkiValidateRouteModal'));
 const RpkiValidationLogsModal = lazy(() => import('../modals/logs/RpkiValidationLogsModal'));
+const IxcOsSyncLogsModal = lazy(() => import('../modals/logs/ixc/IxcOsSyncLogsModal'));
 
 // Suporte
 const OrdemServicoListModal = lazy(() => import('../modals/ordens-servico').then(m => ({ default: m.OrdemServicoListModal })));
@@ -103,6 +104,8 @@ const resolveRpkiModal = (active: ModalType): ResolvedRpkiModal | null => {
       return { titleKey: 'logs.rpkiCaPai', component: RpkiCaPaiLogsModal, size: 'xl', className: 'no-padding' };
     case 'rpki-logs-repositorios':
       return { titleKey: 'logs.rpkiRepositorios', component: RpkiRepositorioLogsModal, size: 'xl', className: 'no-padding' };
+    case 'logs-ixc-os-sync':
+      return { titleKey: 'logs.ixcOsSincronizacao', component: IxcOsSyncLogsModal, size: 'xl', className: 'no-padding' };
     default:
       return null;
   }

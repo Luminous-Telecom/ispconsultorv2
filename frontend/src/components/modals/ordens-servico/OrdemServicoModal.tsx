@@ -383,7 +383,7 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
             clearAgendaFields();
           }
           setClienteId(newId);
-          setClienteNome(cliente.razao_social || cliente.nome_fantasia || String(cliente.id));
+          setClienteNome(cliente.razao_social?.trim() || cliente.nome_fantasia?.trim() || String(cliente.id));
           if (clienteError) setClienteError('');
           setShowClienteModal(false);
         }}

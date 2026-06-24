@@ -3,6 +3,8 @@ import { IntegracaoIxcProvedorController } from '../../controllers/integracao/In
 
 const router = Router();
 
+router.get('/sync-logs', IntegracaoIxcProvedorController.listSyncLogs);
+router.post('/sync-ordens-servico', IntegracaoIxcProvedorController.syncOrdensServico);
 router.get('/', IntegracaoIxcProvedorController.list);
 router.get('/ativos', IntegracaoIxcProvedorController.findAtivos);
 router.post('/test', IntegracaoIxcProvedorController.testConnectionWithCredentials);

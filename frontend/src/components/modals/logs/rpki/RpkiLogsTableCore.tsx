@@ -307,7 +307,6 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
   return (
     <>
       <EmbeddedTablePanel<RpkiSyncLogRow>
-        title={config.tableTitle}
         config={{
           columns,
           data: rows,

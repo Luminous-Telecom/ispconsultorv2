@@ -26,6 +26,11 @@ import {
   localProtocoloYearMonthPrefix,
   parseLocalProtocolo,
 } from '../ordemServicoProtocolo';
+import { clienteNomeParaOrdemServico } from '../clienteNomeOrdemServico';
+import {
+  isOrdemServicoFinalizada,
+  MSG_OS_FINALIZADA,
+} from '../ordemServicoExclusao';
 
 function parseNumericId(id: string | number): number | null {
   const numericId = parseInt(String(id).trim(), 10);
@@ -42,7 +47,7 @@ async function fetchClienteNome(clienteId: number): Promise<string> {
     attributes: ['razao_social', 'nome_fantasia'],
   });
   if (!cliente) return '';
-  return cliente.nome_fantasia?.trim() || cliente.razao_social?.trim() || String(clienteId);
+  return clienteNomeParaOrdemServico(cliente, clienteId);
 }
 
 function toIxcOssChamado(record: OrdemServicoLocal, clienteNome: string): IxcOssChamado {
@@ -265,7 +270,7 @@ async function mapLocalRegistros(
       })
     : [];
   const clienteNomes = new Map(
-    clientes.map((c) => [c.id, c.nome_fantasia?.trim() || c.razao_social?.trim() || String(c.id)])
+    clientes.map((c) => [c.id, clienteNomeParaOrdemServico(c, c.id)])
   );
 
   const operadorPorOrdem = await fetchOperadorAberturaPorOrdemIds(registros.map((r) => r.id));
@@ -626,8 +631,17 @@ export class OrdemServicoLocalService {
       throw new Error('Ordem de serviço não encontrada');
     }
 
-    await record.destroy();
+    if (isOrdemServicoFinalizada(record.status)) {
+      throw new Error(MSG_OS_FINALIZADA);
+    }
+
+    await this.destroyRecord(record);
     return { type: 'success' };
+  }
+
+  static async destroyRecord(record: OrdemServicoLocal): Promise<void> {
+    await OrdemServicoMensagem.destroy({ where: { ordem_servico_id: record.id } });
+    await record.destroy();
   }
 
   static async listMensagens(
@@ -737,10 +751,6 @@ export class OrdemServicoLocalService {
       throw new Error('Mensagem não encontrada');
     }
 
-    if (mensagem.id_evento === IXC_EVENTO_ABERTURA) {
-      throw new Error('Não é possível excluir a mensagem de abertura');
-    }
-
     await mensagem.destroy();
     return { type: 'success' };
   }
@@ -780,5 +790,51 @@ export class OrdemServicoLocalService {
         id_evento: { [Op.ne]: IXC_EVENTO_ABERTURA },
       },
     });
+  }
+
+  static async syncMensagensFromIxc(
+    record: OrdemServicoLocal,
+    ixcMensagens: IxcOssMensagem[],
+    empresaId: number | null = null
+  ): Promise<{ novas: number; inseridas: IxcOssMensagem[] }> {
+    const inseridas: IxcOssMensagem[] = [];
+
+    for (const ixcMsg of ixcMensagens) {
+      const ixcMsgId = String(ixcMsg.id ?? '').trim();
+      const idEvento = String(ixcMsg.id_evento ?? IXC_EVENTO_OBSERVACAO).trim() || IXC_EVENTO_OBSERVACAO;
+      const mensagem = String(ixcMsg.mensagem ?? '').trim();
+      const data = String(ixcMsg.data ?? nowIxcDateTime()).trim() || nowIxcDateTime();
+      if (!mensagem) continue;
+
+      if (ixcMsgId) {
+        const byIxc = await OrdemServicoMensagem.findOne({
+          where: { ordem_servico_id: record.id, ixc_id: ixcMsgId },
+        });
+        if (byIxc) continue;
+      }
+
+      const dup = await OrdemServicoMensagem.findOne({
+        where: {
+          ordem_servico_id: record.id,
+          id_evento: idEvento,
+          data,
+          mensagem,
+        },
+      });
+      if (dup) continue;
+
+      await OrdemServicoMensagem.create({
+        empresa_id: empresaId ?? record.empresa_id,
+        ordem_servico_id: record.id,
+        id_evento: idEvento,
+        mensagem,
+        data,
+        usuario_id: null,
+        ixc_id: ixcMsgId || null,
+      });
+      inseridas.push(ixcMsg);
+    }
+
+    return { novas: inseridas.length, inseridas };
   }
 }

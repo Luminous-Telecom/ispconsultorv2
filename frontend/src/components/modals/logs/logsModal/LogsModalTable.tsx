@@ -22,7 +22,6 @@ interface LogsModalTableProps {
   columns: TableConfig<unknown>['columns'];
   modalData: { id: number | string }[];
   isLoading: boolean;
-  title: string;
   emptyMessage: string;
   searchPlaceholder: string;
   defaultSearchField: string;
@@ -50,7 +49,6 @@ const LogsModalTable: React.FC<LogsModalTableProps> = ({
   columns,
   modalData,
   isLoading,
-  title,
   emptyMessage,
   searchPlaceholder,
   defaultSearchField,
@@ -100,7 +98,6 @@ const LogsModalTable: React.FC<LogsModalTableProps> = ({
 
   return (
     <EmbeddedTablePanel
-      title={title}
       config={{
         columns,
         data: modalData,

@@ -6,6 +6,9 @@ import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { parseListQuery, queryString } from '../../../utils/listQuery';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
+import { SistemaLogOperacionalQueryService } from '../../../services/sistema/SistemaLogOperacionalQueryService';
+import { buildPagination } from '../../../utils/pagination';
+import { resolveListEmpresaId } from '../../../utils/tenantUtils';
 
 export class IntegracaoIxcProvedorController {
   private static upsertSchema = Joi.object({
@@ -298,6 +301,55 @@ export class IntegracaoIxcProvedorController {
         context: 'IntegracaoIxcProvedorController',
         action: 'destroy',
         id: req.params.id,
+      });
+    }
+  }
+
+  static async listSyncLogs(req: Request, res: Response): Promise<void> {
+    try {
+      const empresaId = resolveListEmpresaId(req);
+      const { page, limit, search } = parseListQuery(req.query, { defaultLimit: 20, maxLimit: 100 });
+      const eventType = queryString(req.query.event_type);
+
+      if (empresaId === false) {
+        sendSuccess(res, {
+          data: [],
+          pagination: buildPagination(page, limit, 0, { minLastPageWhenEmpty: 1 }),
+        });
+        return;
+      }
+
+      const offset = (page - 1) * limit;
+      const { rows, count } = await SistemaLogOperacionalQueryService.listIxcOsSync({
+        page,
+        limit,
+        offset,
+        empresaId,
+        search,
+        eventType,
+      });
+
+      sendSuccess(res, {
+        data: rows,
+        pagination: buildPagination(page, limit, count, { minLastPageWhenEmpty: 1, minLastPage: 1 }),
+      });
+    } catch (error) {
+      sendError(res, error, 'Erro ao listar logs de sincronização IXC', 500, true, {
+        context: 'IntegracaoIxcProvedorController',
+        action: 'listSyncLogs',
+      });
+    }
+  }
+
+  static async syncOrdensServico(req: Request, res: Response): Promise<void> {
+    try {
+      const { IxcOsSchedulerRoutineService } = await import('../../../services/ordens/IxcOsSchedulerRoutineService');
+      const resultado = await IxcOsSchedulerRoutineService.syncAllIntegracoes('manual');
+      sendSuccess(res, resultado, resultado.message);
+    } catch (error) {
+      sendError(res, error, 'Erro ao sincronizar ordens de serviço com IXC', 500, true, {
+        context: 'IntegracaoIxcProvedorController',
+        action: 'syncOrdensServico',
       });
     }
   }

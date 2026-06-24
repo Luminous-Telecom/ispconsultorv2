@@ -36,6 +36,7 @@ export type ModalType =
   | 'logs-acesso-sistema'
   | 'logs-equipamentos'
   | 'logs-agentes'
+  | 'logs-ixc-os-sync'
   // RPKI (ERP)
   | 'rpki-cas'
   | 'rpki-cas-pai'

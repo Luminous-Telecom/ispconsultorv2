@@ -1,4 +1,6 @@
 import { runWithIxcCredentials } from '../ixcApiContext';
+import { clienteNomeParaOrdemServico } from '../../ordens/clienteNomeOrdemServico';
+import { Cliente } from '../../../models/clientes/Cliente';
 import { IntegracaoIxcProvedorService } from '../../integracao/IntegracaoIxcProvedorService';
 import { OrdemServicoCadastroService } from '../../ordens/OrdemServicoCadastroService';
 import { IXC_EVENTO_ABERTURA, IXC_FILIAL_RESOURCE, IXC_RESOURCE, OSS_CHAMADO_ACOES } from './constants';
@@ -13,9 +15,17 @@ import {
   executarEncaminharOs,
   executarFinalizarOs,
   registrarMensagemOs,
-  deleteMensagemOs,
+  deleteMensagemIxcById,
 } from './ossAcoes';
+import { OrdemServicoMensagem } from '../../../models/ordens/OrdemServicoMensagem';
 import { OrdemServicoArquivoService, type OrdemServicoArquivoItem } from '../../ordens/OrdemServicoArquivoService';
+import {
+  countMensagensExtrasIxc,
+  isOrdemServicoFinalizada,
+  MSG_OS_COM_ARQUIVOS,
+  MSG_OS_COM_MENSAGENS,
+  MSG_OS_FINALIZADA,
+} from '../../ordens/ordemServicoExclusao';
 import {
   OrdemServicoLocalService,
   fetchUsuarioNomeById,
@@ -62,6 +72,12 @@ export type {
 };
 export { OSS_CHAMADO_ACOES };
 
+async function fetchClienteNomeForLog(clienteId: number): Promise<string> {
+  const cliente = await Cliente.findByPk(clienteId, { attributes: ['razao_social', 'nome_fantasia'] });
+  if (!cliente) return String(clienteId);
+  return clienteNomeParaOrdemServico(cliente, clienteId);
+}
+
 export class IxcOssChamadoService {
   private static async assertOsAcessivel(
     id: string | number,
@@ -107,6 +123,16 @@ export class IxcOssChamadoService {
     });
   }
 
+  private static async resolveIxcOsId(
+    id: string | number,
+    empresaId: number | null
+  ): Promise<string> {
+    const record = await OrdemServicoLocalService.findRecord(id, empresaId);
+    const ixcId = record?.ixc_id?.trim();
+    if (ixcId) return ixcId;
+    return String(id).trim();
+  }
+
   private static async syncMirrorFromIxc(
     id: string | number,
     empresaId: number | null,
@@ -116,6 +142,18 @@ export class IxcOssChamadoService {
     if (atualizado) {
       await OrdemServicoLocalService.syncFromIxcOs(id, atualizado, payload, empresaId);
     }
+  }
+
+  private static async syncLocalMirrorFromIxc(
+    ixcId: string | number,
+    empresaId: number | null,
+    payload: OssChamadoInput = {}
+  ): Promise<void> {
+    await IxcOssChamadoService.syncMirrorFromIxc(ixcId, empresaId, payload);
+    const record = await OrdemServicoLocalService.findByIxcId(ixcId, empresaId);
+    if (!record) return;
+    const mensagens = await fetchMensagensOs(ixcId);
+    await OrdemServicoLocalService.syncMensagensFromIxc(record, mensagens, empresaId);
   }
 
   private static async payloadComOperadorBacknet(
@@ -362,25 +400,72 @@ export class IxcOssChamadoService {
     }
   }
 
+  private static async resolveIxcMensagemId(
+    ixcOsId: string,
+    mensagemLocal: OrdemServicoMensagem
+  ): Promise<string | null> {
+    const stored = mensagemLocal.ixc_id?.trim();
+    if (stored) return stored;
+
+    const ixcMensagens = await fetchMensagensOs(ixcOsId);
+    if (mensagemLocal.id_evento === IXC_EVENTO_ABERTURA) {
+      const abertura = ixcMensagens.find((item) => String(item.id_evento) === IXC_EVENTO_ABERTURA);
+      return abertura?.id ? String(abertura.id).trim() : null;
+    }
+
+    const texto = mensagemLocal.mensagem.trim();
+    const match = ixcMensagens.find(
+      (item) =>
+        String(item.id_evento ?? '') === mensagemLocal.id_evento &&
+        String(item.mensagem ?? '').trim() === texto
+    );
+    return match?.id ? String(match.id).trim() : null;
+  }
+
   static async deleteMensagem(
     ordemId: string | number,
     mensagemId: string | number,
     empresaId: number | null = null,
     usuarioId: number | null = null
   ): Promise<IxcActionResponse> {
-    if (await OrdemServicoLocalService.exists(ordemId, empresaId)) {
-      return OrdemServicoLocalService.deleteMensagem(ordemId, mensagemId, empresaId);
+    const record = await OrdemServicoLocalService.findRecord(ordemId, empresaId);
+    if (!record) {
+      throw new Error('Ordem de serviço não encontrada');
     }
 
-    return runWithIxcCredentials(empresaId, async () => {
-      await IxcOssChamadoService.assertOsAcessivel(ordemId, empresaId, usuarioId);
+    const mensagemLocal = await OrdemServicoMensagem.findOne({
+      where: {
+        id: Number(mensagemId),
+        ordem_servico_id: record.id,
+      },
+    });
+    if (!mensagemLocal) {
+      throw new Error('Mensagem não encontrada');
+    }
 
-      const registro = await fetchOsRawById(ordemId);
+    if (await OrdemServicoLocalService.isPureBacknet(ordemId, empresaId)) {
+      await mensagemLocal.destroy();
+      return { type: 'success' };
+    }
+
+    const ixcId = await IxcOssChamadoService.resolveIxcOsId(ordemId, empresaId);
+
+    return runWithIxcCredentials(empresaId, async () => {
+      await IxcOssChamadoService.assertOsAcessivel(ixcId, empresaId, usuarioId);
+
+      const registro = await fetchOsRawById(ixcId);
       if (!registro || Number(registro.id_estrutura) <= 0) {
         throw new Error('Ordem de serviço não encontrada');
       }
 
-      return deleteMensagemOs(ordemId, mensagemId);
+      const ixcMensagemId = await IxcOssChamadoService.resolveIxcMensagemId(ixcId, mensagemLocal);
+      if (!ixcMensagemId) {
+        throw new Error('Mensagem não encontrada no IXC');
+      }
+
+      const resultado = await deleteMensagemIxcById(ixcMensagemId);
+      await mensagemLocal.destroy();
+      return resultado;
     });
   }
 
@@ -484,13 +569,26 @@ export class IxcOssChamadoService {
 
         const os = await fetchOsRawById(newId);
         if (os && clienteId) {
-          await OrdemServicoLocalService.createIxcMirror(
+          const integracao = await IntegracaoIxcProvedorService.findIntegracaoAtivaForCliente(
+            clienteId,
+            empresaId
+          );
+          const mirror = await OrdemServicoLocalService.createIxcMirror(
             os,
             payloadComOperador,
             empresaId,
             usuarioId,
             clienteId
           );
+          const clienteNome = await fetchClienteNomeForLog(clienteId);
+          const { IxcOsSchedulerRoutineService } = await import('../../ordens/IxcOsSchedulerRoutineService');
+          await IxcOsSchedulerRoutineService.registrarAberturaBacknet({
+            record: mirror,
+            integracaoId: integracao?.id,
+            integracaoNome: integracao?.nome,
+            usuarioId,
+            clienteNome,
+          });
         }
 
         return {
@@ -511,15 +609,16 @@ export class IxcOssChamadoService {
     empresaId: number | null = null,
     usuarioId: number | null = null
   ): Promise<IxcActionResponse> {
-    if (await OrdemServicoLocalService.exists(id, empresaId)) {
+    if (await OrdemServicoLocalService.isPureBacknet(id, empresaId)) {
       return OrdemServicoLocalService.update(id, payload, empresaId);
     }
 
+    const ixcId = await IxcOssChamadoService.resolveIxcOsId(id, empresaId);
     const clienteId = parseClienteId(payload.cliente_id);
     return runWithIxcCredentials(empresaId, async () => {
-      await IxcOssChamadoService.assertOsAcessivel(id, empresaId, usuarioId);
+      await IxcOssChamadoService.assertOsAcessivel(ixcId, empresaId, usuarioId);
 
-      const atual = await fetchOsRawById(id);
+      const atual = await fetchOsRawById(ixcId);
       if (!atual || Number(atual.id_estrutura) <= 0) {
         throw new Error('Ordem de serviço não encontrada');
       }
@@ -531,12 +630,12 @@ export class IxcOssChamadoService {
       applyBacknetCliente(payload, body);
 
       try {
-        const response = await createIxcClient().put<IxcActionResponse>(`/${IXC_RESOURCE}/${id}`, body);
+        const response = await createIxcClient().put<IxcActionResponse>(`/${IXC_RESOURCE}/${ixcId}`, body);
         if (response.data?.type === 'error') {
           throw new Error(actionErrorMessage(response.data, 'Erro ao editar ordem de serviço no IXC'));
         }
 
-        await IxcOssChamadoService.syncMirrorFromIxc(id, empresaId, payload);
+        await IxcOssChamadoService.syncLocalMirrorFromIxc(ixcId, empresaId, payload);
 
         return response.data;
       } catch (error) {
@@ -552,7 +651,7 @@ export class IxcOssChamadoService {
     empresaId: number | null = null,
     usuarioId: number | null = null
   ): Promise<IxcActionResponse> {
-    if (await OrdemServicoLocalService.exists(id, empresaId)) {
+    if (await OrdemServicoLocalService.isPureBacknet(id, empresaId)) {
       if (acao === 'finalizar') {
         return OrdemServicoLocalService.finalizar(id, payload, empresaId, usuarioId);
       }
@@ -562,35 +661,36 @@ export class IxcOssChamadoService {
       throw new Error('Ação não disponível para ordens de serviço sem integração IXC');
     }
 
+    const ixcId = await IxcOssChamadoService.resolveIxcOsId(id, empresaId);
     const clienteId = parseClienteId(payload.cliente_id);
     return runWithIxcCredentials(empresaId, async () => {
-      await IxcOssChamadoService.assertOsAcessivel(id, empresaId, usuarioId);
+      await IxcOssChamadoService.assertOsAcessivel(ixcId, empresaId, usuarioId);
       const payloadIx = await IxcOssChamadoService.payloadComOperadorBacknet(payload, usuarioId);
 
       if (acao === 'registrar_mensagem') {
-        const resultado = await registrarMensagemOs(id, payloadIx);
-        await IxcOssChamadoService.syncMirrorFromIxc(id, empresaId, payload);
+        const resultado = await registrarMensagemOs(ixcId, payloadIx);
+        await IxcOssChamadoService.syncLocalMirrorFromIxc(ixcId, empresaId, payload);
         return resultado;
       }
 
-      const atual = await fetchOsRawById(id);
+      const atual = await fetchOsRawById(ixcId);
       if (!atual || Number(atual.id_estrutura) <= 0) {
         throw new Error('Ordem de serviço não encontrada');
       }
 
       if (acao === 'encaminhar') {
-        const resultado = await executarEncaminharOs(id, payloadIx, atual);
-        await IxcOssChamadoService.syncMirrorFromIxc(id, empresaId, payload);
+        const resultado = await executarEncaminharOs(ixcId, payloadIx, atual);
+        await IxcOssChamadoService.syncLocalMirrorFromIxc(ixcId, empresaId, payload);
         return resultado;
       }
       if (acao === 'agendar') {
-        const resultado = await executarAgendarOs(id, payloadIx, atual);
-        await IxcOssChamadoService.syncMirrorFromIxc(id, empresaId, payload);
+        const resultado = await executarAgendarOs(ixcId, payloadIx, atual);
+        await IxcOssChamadoService.syncLocalMirrorFromIxc(ixcId, empresaId, payload);
         return resultado;
       }
       if (acao === 'finalizar') {
-        const resultado = await executarFinalizarOs(id, payloadIx, atual);
-        await IxcOssChamadoService.syncMirrorFromIxc(id, empresaId, payload);
+        const resultado = await executarFinalizarOs(ixcId, payloadIx, atual);
+        await IxcOssChamadoService.syncLocalMirrorFromIxc(ixcId, empresaId, payload);
         return resultado;
       }
 
@@ -600,7 +700,7 @@ export class IxcOssChamadoService {
       try {
         const response = await createIxcClient().request<IxcActionResponse>({
           method: 'PUT',
-          url: `/${IXC_RESOURCE}/${id}`,
+          url: `/${IXC_RESOURCE}/${ixcId}`,
           headers: { ixcsoft: acao },
           data: body,
         });
@@ -610,14 +710,14 @@ export class IxcOssChamadoService {
         }
 
         if (mensagemAcao) {
-          await registrarMensagemOs(id, {
+          await registrarMensagemOs(ixcId, {
             ...payloadIx,
             mensagem: mensagemAcao,
             id_tecnico: payload.id_tecnico ?? atual.id_tecnico,
           });
         }
 
-        await IxcOssChamadoService.syncMirrorFromIxc(id, empresaId, payload);
+        await IxcOssChamadoService.syncLocalMirrorFromIxc(ixcId, empresaId, payload);
 
         return response.data;
       } catch (error) {
@@ -635,36 +735,36 @@ export class IxcOssChamadoService {
 
     const arquivos = await OrdemServicoArquivoService.list(osId);
     if (arquivos.length > 0) {
-      throw new Error(
-        'Não é possível excluir a ordem de serviço com arquivos anexados. Exclua os arquivos antes.'
-      );
+      throw new Error(MSG_OS_COM_ARQUIVOS);
+    }
+
+    if (record && isOrdemServicoFinalizada(record.status)) {
+      throw new Error(MSG_OS_FINALIZADA);
     }
 
     if (record) {
       const mensagensExtras = await OrdemServicoLocalService.countMensagensExtras(record.id, empresaId);
       if (mensagensExtras > 0) {
-        throw new Error(
-          'Não é possível excluir a ordem de serviço com mensagens no histórico. Exclua as mensagens antes.'
-        );
+        throw new Error(MSG_OS_COM_MENSAGENS);
       }
-      return;
     }
 
+    const ixcId = record?.ixc_id?.trim() || (!record ? String(id).trim() : '');
+    if (!ixcId) return;
+
     await runWithIxcCredentials(empresaId, async () => {
-      if (!(await osAbertaPeloOperador(id))) return;
+      const registro = await fetchOsRawById(ixcId);
+      if (!registro || Number(registro.id_estrutura) <= 0) {
+        throw new Error('Ordem de serviço não encontrada');
+      }
 
-      const registro = await fetchOsRawById(id);
-      if (!registro || Number(registro.id_estrutura) <= 0) return;
+      if (isOrdemServicoFinalizada(registro.status)) {
+        throw new Error(MSG_OS_FINALIZADA);
+      }
 
-      const mensagens = await fetchMensagensOs(id);
-      const mensagensExtras = mensagens.filter(
-        (mensagem) => mensagem.id_evento !== IXC_EVENTO_ABERTURA
-      ).length;
-
-      if (mensagensExtras > 0) {
-        throw new Error(
-          'Não é possível excluir a ordem de serviço com mensagens no histórico. Exclua as mensagens antes.'
-        );
+      const mensagens = await fetchMensagensOs(ixcId);
+      if (countMensagensExtrasIxc(mensagens) > 0) {
+        throw new Error(MSG_OS_COM_MENSAGENS);
       }
     });
   }
@@ -676,34 +776,39 @@ export class IxcOssChamadoService {
   ): Promise<IxcActionResponse> {
     await IxcOssChamadoService.assertPodeExcluir(id, empresaId);
 
-    if (await OrdemServicoLocalService.exists(id, empresaId)) {
+    const record = await OrdemServicoLocalService.findRecord(id, empresaId);
+    const ixcId = record?.ixc_id?.trim() || (!record ? String(id).trim() : '');
+
+    if (ixcId) {
+      return runWithIxcCredentials(empresaId, async () => {
+        await IxcOssChamadoService.assertOsAcessivel(ixcId, empresaId, usuarioId);
+
+        const atual = await fetchOsRawById(ixcId);
+        if (!atual || Number(atual.id_estrutura) <= 0) {
+          throw new Error('Ordem de serviço não encontrada');
+        }
+
+        try {
+          const response = await createIxcClient().delete<IxcActionResponse>(`/${IXC_RESOURCE}/${ixcId}`);
+          if (response.data?.type === 'error') {
+            throw new Error(actionErrorMessage(response.data, 'Erro ao excluir ordem de serviço no IXC'));
+          }
+
+          if (record) {
+            await OrdemServicoLocalService.destroyRecord(record);
+          }
+
+          return response.data;
+        } catch (error) {
+          throw wrapIxcError(error, 'Erro ao excluir ordem de serviço no IXC');
+        }
+      });
+    }
+
+    if (record) {
       return OrdemServicoLocalService.delete(id, empresaId);
     }
 
-    const mirror = await OrdemServicoLocalService.findByIxcId(id, empresaId);
-
-    return runWithIxcCredentials(empresaId, async () => {
-      await IxcOssChamadoService.assertOsAcessivel(id, empresaId, usuarioId);
-
-      const atual = await fetchOsRawById(id);
-      if (!atual || Number(atual.id_estrutura) <= 0) {
-        throw new Error('Ordem de serviço não encontrada');
-      }
-
-      try {
-        const response = await createIxcClient().delete<IxcActionResponse>(`/${IXC_RESOURCE}/${id}`);
-        if (response.data?.type === 'error') {
-          throw new Error(actionErrorMessage(response.data, 'Erro ao excluir ordem de serviço no IXC'));
-        }
-
-        if (mirror) {
-          await mirror.destroy();
-        }
-
-        return response.data;
-      } catch (error) {
-        throw wrapIxcError(error, 'Erro ao excluir ordem de serviço no IXC');
-      }
-    });
+    throw new Error('Ordem de serviço não encontrada');
   }
 }

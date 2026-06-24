@@ -215,6 +215,20 @@ export async function registrarMensagemOs(
   );
 }
 
+export async function deleteMensagemIxcById(mensagemIxcId: string | number): Promise<IxcActionResponse> {
+  try {
+    const response = await createIxcClient().delete<IxcActionResponse>(
+      `/${IXC_MENSAGEM_RESOURCE}/${mensagemIxcId}`
+    );
+    if (response.data?.type === 'error') {
+      throw new Error(actionErrorMessage(response.data, 'Erro ao excluir mensagem no IXC'));
+    }
+    return response.data;
+  } catch (error) {
+    throw wrapIxcError(error, 'Erro ao excluir mensagem no IXC');
+  }
+}
+
 export async function deleteMensagemOs(
   ordemId: string | number,
   mensagemId: string | number
@@ -225,15 +239,5 @@ export async function deleteMensagemOs(
     throw new Error('Mensagem não encontrada');
   }
 
-  try {
-    const response = await createIxcClient().delete<IxcActionResponse>(
-      `/${IXC_MENSAGEM_RESOURCE}/${mensagemId}`
-    );
-    if (response.data?.type === 'error') {
-      throw new Error(actionErrorMessage(response.data, 'Erro ao excluir mensagem no IXC'));
-    }
-    return response.data;
-  } catch (error) {
-    throw wrapIxcError(error, 'Erro ao excluir mensagem no IXC');
-  }
+  return deleteMensagemIxcById(mensagemId);
 }

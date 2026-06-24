@@ -245,6 +245,7 @@ export interface TranslationKeys {
   'layout.folderLogs': string;
   'layout.folderLogsEquipamentos': string;
   'layout.folderLogsComunicacao': string;
+  'layout.folderLogsIntegracao': string;
   'layout.folderLogsRpki': string;
   'layout.folderLogsErp': string;
   'layout.folderLogsSaas': string;
@@ -260,6 +261,7 @@ export interface TranslationKeys {
   'logs.equipamentos': string;
   'logs.agentes': string;
   'logs.rpkiSincronizacao': string;
+  'logs.ixcOsSincronizacao': string;
   'logs.rpkiCaPai': string;
   'logs.rpkiRepositorios': string;
   'logs.agentesEmpty': string;

@@ -21,8 +21,13 @@ export const ORDEM_SERVICO_ACOES: OrdemServicoAcaoConfig[] = [
   { key: 'registrar_mensagem', label: 'Registrar mensagem', needsForm: true },
 ];
 
-export const isOrdemServicoLocal = (ordem?: { origem?: string; id_local?: string | number } | null): boolean =>
-  ordem?.origem === 'backnet' || Boolean(ordem?.id_local);
+/** OS criada apenas no BackNet, sem vínculo IXC. */
+export const isOrdemServicoLocal = (
+  ordem?: { origem?: string; ixc_id?: string } | null
+): boolean => ordem?.origem === 'backnet';
+
+export const isOrdemServicoExcluivel = (ordem?: { status?: string } | null): boolean =>
+  ordem != null && ordem.status !== 'F';
 
 export const labelAcaoOrdemServico = (acao: OrdemServicoAcao): string =>
   ORDEM_SERVICO_ACOES.find((a) => a.key === acao)?.label ?? acao;

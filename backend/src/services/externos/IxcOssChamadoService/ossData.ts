@@ -1,4 +1,5 @@
 import { ClienteService } from '../../clientes/ClienteService';
+import { clienteNomeParaOrdemServico } from '../../ordens/clienteNomeOrdemServico';
 import {
   IXC_ASSUNTO_RESOURCE,
   IXC_CIDADE_RESOURCE,
@@ -59,6 +60,26 @@ export async function osAbertaPeloOperador(ixcOsId: string | number): Promise<bo
   });
 
   return (parseInt(data.total ?? '0', 10) || 0) > 0;
+}
+
+export async function fetchOsListByClienteIdx(clienteId: number): Promise<IxcOssChamado[]> {
+  const gridParam = JSON.stringify([
+    { TB: `${IXC_RESOURCE}.idx`, OP: '=', P: String(clienteId) },
+    { TB: `${IXC_RESOURCE}.id_estrutura`, OP: '>', P: '0' },
+  ]);
+
+  const data = await ixcListar<IxcListResponse>(IXC_RESOURCE, {
+    qtype: `${IXC_RESOURCE}.idx`,
+    query: String(clienteId),
+    oper: '=',
+    page: '1',
+    rp: '500',
+    sortname: `${IXC_RESOURCE}.id`,
+    sortorder: 'desc',
+    grid_param: gridParam,
+  });
+
+  return (data.registros ?? []).filter((registro) => Number(registro.id_estrutura) > 0);
 }
 
 export async function fetchOsRawById(id: string | number): Promise<IxcOssChamado | null> {
@@ -190,9 +211,9 @@ export async function enrichOsRegistros(registros: IxcOssChamado[]): Promise<Ixc
           ? backnetClienteId
           : String(registro.cliente_id ?? ''),
       cliente_nome:
-        clienteBacknet?.nome_fantasia ||
-        clienteBacknet?.razao_social ||
-        String(registro.cliente_nome ?? ''),
+        clienteBacknet
+          ? clienteNomeParaOrdemServico(clienteBacknet, backnetClienteId)
+          : String(registro.cliente_nome ?? ''),
       cidade_nome: cidade?.nome ?? '',
     };
   });
