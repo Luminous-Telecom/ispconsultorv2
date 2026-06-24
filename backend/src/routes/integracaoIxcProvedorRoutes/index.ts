@@ -8,6 +8,7 @@ router.get('/ativos', IntegracaoIxcProvedorController.findAtivos);
 router.post('/test', IntegracaoIxcProvedorController.testConnectionWithCredentials);
 router.get('/:id', IntegracaoIxcProvedorController.getById);
 router.post('/:id/test', IntegracaoIxcProvedorController.testConnection);
+router.post('/:id/sync-ordem-servico-cadastros', IntegracaoIxcProvedorController.syncOrdemServicoCadastros);
 router.post('/', IntegracaoIxcProvedorController.create);
 router.put('/:id', IntegracaoIxcProvedorController.update);
 router.delete('/:id', IntegracaoIxcProvedorController.destroy);

@@ -24,4 +24,11 @@ export async function runWithIxcCredentials<T>(
   return ixcCredentialsStorage.run(credentials, fn);
 }
 
+export async function runWithIntegracaoCredentials<T>(
+  credentials: IxcApiCredentials,
+  fn: () => Promise<T>
+): Promise<T> {
+  return ixcCredentialsStorage.run(credentials, fn);
+}
+
 export type { IxcApiCredentials };

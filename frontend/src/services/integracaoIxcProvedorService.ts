@@ -47,6 +47,10 @@ export interface TestIntegracaoIxcProvedorResult {
   message: string;
 }
 
+export interface SyncOrdemServicoCadastrosResult {
+  message: string;
+}
+
 export class IntegracaoIxcProvedorService {
   static async list(filters: IntegracaoIxcProvedorFilters = {}): Promise<PaginatedIntegracaoIxcProvedor> {
     const params = new URLSearchParams();
@@ -139,5 +143,13 @@ export class IntegracaoIxcProvedorService {
       return { success: raw.success, message: raw.message ?? '' };
     }
     return response as unknown as TestIntegracaoIxcProvedorResult;
+  }
+
+  static async syncOrdemServicoCadastros(id: number): Promise<SyncOrdemServicoCadastrosResult> {
+    const response = await apiService.post<{ data?: SyncOrdemServicoCadastrosResult; message?: string }>(
+      `/integracao-ixc-provedor/${id}/sync-ordem-servico-cadastros`
+    );
+    const raw = response as unknown as { data?: SyncOrdemServicoCadastrosResult; message?: string };
+    return raw?.data ?? { message: raw?.message ?? '' };
   }
 }

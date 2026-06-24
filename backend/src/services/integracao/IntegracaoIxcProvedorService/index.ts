@@ -5,6 +5,16 @@ import { Contrato } from '../../../models/contratos/Contrato';
 import { ContratoIntegracaoIxcVinculo } from '../../../models/contratos/ContratoIntegracaoIxcVinculo';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { buildPagination } from '../../../utils/pagination';
+import { runWithIntegracaoCredentials } from '../../externos/ixcApiContext';
+import { IxcOssChamadoService } from '../../externos/IxcOssChamadoService';
+import {
+  IXC_ASSUNTO_RESOURCE,
+  IXC_ESTRUTURA_RESOURCE,
+  IXC_FILIAL_RESOURCE,
+  IXC_FUNCIONARIOS_RESOURCE,
+  IXC_SETOR_RESOURCE,
+} from '../../externos/IxcOssChamadoService/constants';
+import { OrdemServicoCadastroService } from '../../ordens/OrdemServicoCadastroService';
 
 function clienteDisplayName(cliente: Pick<Cliente, 'id' | 'nome_fantasia' | 'razao_social'>): string {
   const nome = (cliente.nome_fantasia || cliente.razao_social || '').trim();
@@ -18,6 +28,10 @@ export interface IxcApiCredentials {
 
 export interface TestIntegracaoIxcResult {
   success: boolean;
+  message: string;
+}
+
+export interface SyncOrdemServicoCadastrosResult {
   message: string;
 }
 
@@ -329,28 +343,6 @@ export class IntegracaoIxcProvedorService {
     return null;
   }
 
-  static async findContratoComIntegracao(
-    clienteId: number,
-    empresaId: number | null
-  ): Promise<Contrato | null> {
-    const contratoWhere: WhereOptions<Contrato> = { cliente_id: clienteId };
-
-    if (empresaId != null) {
-      contratoWhere.empresa_id = empresaId;
-    }
-
-    return Contrato.findOne({
-      where: contratoWhere,
-      include: [
-        {
-          association: 'integracaoIxcProvedores',
-          required: true,
-        },
-      ],
-      order: [['updated_at', 'DESC']],
-    });
-  }
-
   static async hasIntegracaoForCliente(
     clienteId: number,
     empresaId: number | null
@@ -452,5 +444,77 @@ export class IntegracaoIxcProvedorService {
     const apiToken = tokenOverride || integracao.api_token?.trim() || '';
 
     return IntegracaoIxcProvedorService.testCredentials({ apiUrl, apiToken });
+  }
+
+  static async resolveCredentialsByIntegracaoId(
+    integracaoId: number,
+    empresaId: number | null
+  ): Promise<IxcApiCredentials> {
+    const integracao = await IntegracaoIxcProvedorService.assertEmpresaAccess(integracaoId, empresaId);
+    if (!integracao) {
+      throw new Error('Integração IXC Provedor não encontrada');
+    }
+
+    const apiUrl = integracao.api_url?.trim().replace(/\/+$/, '');
+    const apiToken = integracao.api_token?.trim();
+    if (!apiUrl || !apiToken) {
+      throw new Error('Integração IXC Provedor sem URL ou token configurados.');
+    }
+
+    return { apiUrl, apiToken };
+  }
+
+  static async syncOrdemServicoCadastros(
+    integracaoId: number,
+    empresaId: number | null
+  ): Promise<SyncOrdemServicoCadastrosResult> {
+    const integracao = await IntegracaoIxcProvedorService.assertEmpresaAccess(integracaoId, empresaId);
+    if (!integracao) {
+      throw new Error('Integração IXC Provedor não encontrada');
+    }
+    if (!integracao.ativo) {
+      throw new Error('Ative a integração IXC Provedor antes de sincronizar.');
+    }
+
+    const apiUrl = integracao.api_url?.trim().replace(/\/+$/, '');
+    const apiToken = integracao.api_token?.trim();
+    if (!apiUrl || !apiToken) {
+      throw new Error('Integração IXC Provedor sem URL ou token configurados.');
+    }
+
+    return runWithIntegracaoCredentials({ apiUrl, apiToken }, async () => {
+      const cadastros: Array<{
+        resource: string;
+        nomeCampo: string;
+        filters: Record<string, string>;
+      }> = [
+        { resource: IXC_FILIAL_RESOURCE, nomeCampo: 'fantasia', filters: {} },
+        { resource: IXC_SETOR_RESOURCE, nomeCampo: 'setor', filters: {} },
+        {
+          resource: IXC_FUNCIONARIOS_RESOURCE,
+          nomeCampo: 'funcionario',
+          filters: { integracao_calendario: 'S' },
+        },
+        { resource: IXC_ASSUNTO_RESOURCE, nomeCampo: 'assunto', filters: {} },
+        { resource: IXC_ESTRUTURA_RESOURCE, nomeCampo: 'descricao', filters: {} },
+      ];
+
+      let total = 0;
+
+      for (const cadastro of cadastros) {
+        const tipo = OrdemServicoCadastroService.resolveTipoByIxcResource(cadastro.resource)!;
+        const itens = await IxcOssChamadoService.fetchAllLookupResource(
+          cadastro.resource,
+          cadastro.nomeCampo,
+          cadastro.filters
+        );
+        await OrdemServicoCadastroService.syncIxcItens(tipo, empresaId, integracaoId, itens);
+        total += itens.length;
+      }
+
+      return {
+        message: `Sincronização concluída: ${total} registros importados do IXC.`,
+      };
+    });
   }
 }

@@ -119,3 +119,16 @@ export const useTestIntegracaoIxcProvedor = () => {
     onError: (error) => showApiError(error),
   });
 };
+
+export const useSyncIntegracaoIxcProvedorOsCadastros = () => {
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
+
+  return useMutation({
+    mutationFn: (id: number) => IntegracaoIxcProvedorService.syncOrdemServicoCadastros(id),
+    onSuccess: (result) => {
+      success(result.message || 'Dados de OS sincronizados com sucesso.');
+    },
+    onError: (error) => showApiError(error),
+  });
+};

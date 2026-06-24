@@ -58,7 +58,7 @@ export class IxcLookupController {
     try {
       const { page, limit, search, sortColumn, sortDirection, empresaId, clienteId } =
         parseIxcLookupContext(req);
-      const result = await IxcOssChamadoService.listResource(
+      const result = await IxcOssChamadoService.listCadastroLookup(
         'estrutura',
         'descricao',
         { page, limit, search, sortColumn, sortDirection },
@@ -76,7 +76,7 @@ export class IxcLookupController {
     try {
       const { page, limit, search, sortColumn, sortDirection, empresaId, clienteId } =
         parseIxcLookupContext(req);
-      const result = await IxcOssChamadoService.listResource(
+      const result = await IxcOssChamadoService.listCadastroLookup(
         'su_oss_assunto',
         'assunto',
         { page, limit, search, sortColumn, sortDirection },
@@ -94,7 +94,7 @@ export class IxcLookupController {
     try {
       const { page, limit, search, sortColumn, sortDirection, empresaId, clienteId } =
         parseIxcLookupContext(req);
-      const result = await IxcOssChamadoService.listResource(
+      const result = await IxcOssChamadoService.listCadastroLookup(
         'empresa_setor',
         'setor',
         { page, limit, search, sortColumn, sortDirection },
@@ -112,7 +112,7 @@ export class IxcLookupController {
     try {
       const { page, limit, search, sortColumn, sortDirection, empresaId, clienteId } =
         parseIxcLookupContext(req);
-      const result = await IxcOssChamadoService.listResource(
+      const result = await IxcOssChamadoService.listCadastroLookup(
         'filial',
         'fantasia',
         { page, limit, search, sortColumn, sortDirection },
@@ -130,7 +130,7 @@ export class IxcLookupController {
     try {
       const { page, limit, search, sortColumn, sortDirection, empresaId, clienteId } =
         parseIxcLookupContext(req);
-      const result = await IxcOssChamadoService.listResource(
+      const result = await IxcOssChamadoService.listCadastroLookup(
         'funcionarios',
         'funcionario',
         { page, limit, search, sortColumn, sortDirection },

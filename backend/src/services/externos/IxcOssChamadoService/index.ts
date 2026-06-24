@@ -1,5 +1,6 @@
 import { runWithIxcCredentials } from '../ixcApiContext';
 import { IntegracaoIxcProvedorService } from '../../integracao/IntegracaoIxcProvedorService';
+import { OrdemServicoCadastroService } from '../../ordens/OrdemServicoCadastroService';
 import { CAMPOS_ENRIQUECIDOS, IXC_EVENTO_ABERTURA, IXC_FILIAL_RESOURCE, IXC_RESOURCE, OSS_CHAMADO_ACOES } from './constants';
 import {
   actionErrorMessage,
@@ -239,6 +240,183 @@ export class IxcOssChamadoService {
     return IxcOssChamadoService.paginateRegistros(merged, filters);
   }
 
+  private static paginateLookup(
+    data: LookupItem[],
+    filters: ListOssChamadosFilters
+  ): ListLookupResponse {
+    const page = filters.page && filters.page > 0 ? filters.page : 1;
+    const limit = filters.limit && filters.limit > 0 ? filters.limit : 15;
+    const total = data.length;
+    const lastPage = Math.max(1, Math.ceil(total / limit) || 1);
+    const offset = (page - 1) * limit;
+    const pagina = data.slice(offset, offset + limit);
+
+    return {
+      data: pagina,
+      pagination: {
+        current_page: page,
+        per_page: limit,
+        total,
+        last_page: lastPage,
+        from: total > 0 ? offset + 1 : 0,
+        to: Math.min(offset + limit, total),
+      },
+    };
+  }
+
+  static async listCadastroLookup(
+    resource: string,
+    nomeCampo: string,
+    filters: ListOssChamadosFilters = {},
+    additionalFilters: Record<string, string> = {},
+    empresaId: number | null = null,
+    clienteId: number | null = null
+  ): Promise<ListLookupResponse> {
+    const tipo = OrdemServicoCadastroService.resolveTipoByIxcResource(resource);
+    const integracao =
+      clienteId != null
+        ? await IntegracaoIxcProvedorService.findIntegracaoAtivaForCliente(clienteId, empresaId)
+        : null;
+
+    if (!integracao && tipo) {
+      const locais = await OrdemServicoCadastroService.listLocais(tipo, empresaId, filters.search);
+      return IxcOssChamadoService.paginateLookup(locais, filters);
+    }
+
+    const result = await IxcOssChamadoService.listResource(
+      resource,
+      nomeCampo,
+      filters,
+      additionalFilters,
+      empresaId,
+      clienteId
+    );
+
+    if (!tipo) return result;
+
+    const locais = await OrdemServicoCadastroService.listLocais(tipo, empresaId, filters.search);
+    const ixcIds = new Set(result.data.map((item) => String(item.id)));
+    const locaisFiltrados = locais.filter((item) => !ixcIds.has(String(item.id)));
+
+    return {
+      ...result,
+      data: [...result.data, ...locaisFiltrados],
+    };
+  }
+
+  private static mapLookupRegistros(
+    resource: string,
+    nomeCampo: string,
+    registros: IxcNamedRecord[]
+  ): LookupItem[] {
+    return registros.map((registro) => ({
+      id: String(registro.id),
+      nome:
+        resource === IXC_FILIAL_RESOURCE
+          ? registro.fantasia || registro.razao || ''
+          : registro[nomeCampo] ?? '',
+    }));
+  }
+
+  static async listResourceRaw(
+    resource: string,
+    nomeCampo: string,
+    filters: ListOssChamadosFilters = {},
+    additionalFilters: Record<string, string> = {}
+  ): Promise<ListLookupResponse> {
+    const page = filters.page && filters.page > 0 ? filters.page : 1;
+    const limit = filters.limit && filters.limit > 0 ? filters.limit : 15;
+    const search = filters.search?.trim();
+    const hasSearch = !!search;
+    const sortDirection = filters.sortDirection === 'desc' ? 'desc' : 'asc';
+    const sortColumn = filters.sortColumn === 'id' ? 'id' : nomeCampo;
+
+    const extraFilters = Object.entries(additionalFilters);
+    const hasExtraFilters = extraFilters.length > 0;
+
+    const gridBase: Array<{ TB: string; OP: string; P: string }> = [
+      { TB: `${resource}.ativo`, OP: '=', P: 'S' },
+      ...extraFilters.map(([field, value]) => ({
+        TB: `${resource}.${field}`,
+        OP: '=',
+        P: value,
+      })),
+    ];
+
+    const [primaryField, primaryValue] = hasExtraFilters ? extraFilters[0] : ['ativo', 'S'];
+
+    const body: Record<string, string> = {
+      qtype: `${resource}.${primaryField}`,
+      query: primaryValue,
+      oper: '=',
+      page: String(page),
+      rp: String(limit),
+      sortname: `${resource}.${sortColumn}`,
+      sortorder: sortDirection,
+    };
+
+    if (hasExtraFilters || hasSearch) {
+      body.grid_param = JSON.stringify(
+        hasSearch
+          ? [...gridBase, { TB: `${resource}.${nomeCampo}`, OP: 'L', P: search }]
+          : gridBase
+      );
+    }
+
+    try {
+      const response = await createIxcClient().request<{ total?: string; registros?: IxcNamedRecord[] }>({
+        method: 'GET',
+        url: `/${resource}`,
+        headers: { ixcsoft: 'listar' },
+        data: body,
+      });
+
+      const registros = response.data?.registros ?? [];
+      const total = parseInt(response.data?.total ?? '0', 10) || 0;
+      const lastPage = Math.max(1, Math.ceil(total / limit) || 1);
+      const data = IxcOssChamadoService.mapLookupRegistros(resource, nomeCampo, registros);
+
+      return {
+        data,
+        pagination: {
+          current_page: page,
+          per_page: limit,
+          total,
+          last_page: lastPage,
+          from: total > 0 ? (page - 1) * limit + 1 : 0,
+          to: Math.min(page * limit, total),
+        },
+      };
+    } catch (error) {
+      throw wrapIxcError(error, `Erro ao listar ${resource} no IXC`);
+    }
+  }
+
+  static async fetchAllLookupResource(
+    resource: string,
+    nomeCampo: string,
+    additionalFilters: Record<string, string> = {}
+  ): Promise<LookupItem[]> {
+    const limit = 500;
+    let page = 1;
+    let lastPage = 1;
+    const all: LookupItem[] = [];
+
+    while (page <= lastPage) {
+      const result = await IxcOssChamadoService.listResourceRaw(
+        resource,
+        nomeCampo,
+        { page, limit, sortColumn: 'id', sortDirection: 'asc' },
+        additionalFilters
+      );
+      all.push(...result.data);
+      lastPage = result.pagination.last_page;
+      page += 1;
+    }
+
+    return all;
+  }
+
   static async listResource(
     resource: string,
     nomeCampo: string,
@@ -247,81 +425,11 @@ export class IxcOssChamadoService {
     empresaId: number | null = null,
     clienteId: number | null = null
   ): Promise<ListLookupResponse> {
-    return runWithIxcCredentials(empresaId, async () => {
-      const page = filters.page && filters.page > 0 ? filters.page : 1;
-      const limit = filters.limit && filters.limit > 0 ? filters.limit : 15;
-      const search = filters.search?.trim();
-      const hasSearch = !!search;
-      const sortDirection = filters.sortDirection === 'desc' ? 'desc' : 'asc';
-      const sortColumn = filters.sortColumn === 'id' ? 'id' : nomeCampo;
-
-      const extraFilters = Object.entries(additionalFilters);
-      const hasExtraFilters = extraFilters.length > 0;
-
-      const gridBase: Array<{ TB: string; OP: string; P: string }> = [
-        { TB: `${resource}.ativo`, OP: '=', P: 'S' },
-        ...extraFilters.map(([field, value]) => ({
-          TB: `${resource}.${field}`,
-          OP: '=',
-          P: value,
-        })),
-      ];
-
-      const [primaryField, primaryValue] = hasExtraFilters ? extraFilters[0] : ['ativo', 'S'];
-
-      const body: Record<string, string> = {
-        qtype: `${resource}.${primaryField}`,
-        query: primaryValue,
-        oper: '=',
-        page: String(page),
-        rp: String(limit),
-        sortname: `${resource}.${sortColumn}`,
-        sortorder: sortDirection,
-      };
-
-      if (hasExtraFilters || hasSearch) {
-        body.grid_param = JSON.stringify(
-          hasSearch
-            ? [...gridBase, { TB: `${resource}.${nomeCampo}`, OP: 'L', P: search }]
-            : gridBase
-        );
-      }
-
-      try {
-        const response = await createIxcClient().request<{ total?: string; registros?: IxcNamedRecord[] }>({
-          method: 'GET',
-          url: `/${resource}`,
-          headers: { ixcsoft: 'listar' },
-          data: body,
-        });
-
-        const registros = response.data?.registros ?? [];
-        const total = parseInt(response.data?.total ?? '0', 10) || 0;
-        const lastPage = Math.max(1, Math.ceil(total / limit) || 1);
-
-        const data: LookupItem[] = registros.map((registro) => ({
-          id: String(registro.id),
-          nome:
-            resource === IXC_FILIAL_RESOURCE
-              ? registro.fantasia || registro.razao || ''
-              : registro[nomeCampo] ?? '',
-        }));
-
-        return {
-          data,
-          pagination: {
-            current_page: page,
-            per_page: limit,
-            total,
-            last_page: lastPage,
-            from: total > 0 ? (page - 1) * limit + 1 : 0,
-            to: Math.min(page * limit, total),
-          },
-        };
-      } catch (error) {
-        throw wrapIxcError(error, `Erro ao listar ${resource} no IXC`);
-      }
-    }, clienteId);
+    return runWithIxcCredentials(
+      empresaId,
+      () => IxcOssChamadoService.listResourceRaw(resource, nomeCampo, filters, additionalFilters),
+      clienteId
+    );
   }
 
   static async getById(

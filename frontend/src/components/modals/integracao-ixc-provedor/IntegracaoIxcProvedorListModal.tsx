@@ -2,6 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import {
   useDeleteIntegracaoIxcProvedor,
   useIntegracaoIxcProvedorList,
+  useSyncIntegracaoIxcProvedorOsCadastros,
   useTestIntegracaoIxcProvedor,
 } from 'hooks/useIntegracaoIxcProvedor';
 import { useEntityListModal } from 'hooks/useEntityListModal';
@@ -53,6 +54,7 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
 
   const deleteMutation = useDeleteIntegracaoIxcProvedor();
   const testMutation = useTestIntegracaoIxcProvedor();
+  const syncOsMutation = useSyncIntegracaoIxcProvedorOsCadastros();
 
   const testBulkAction = useMemo(
     () => ({
@@ -69,6 +71,24 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
       disabled: (selectedItems: IntegracaoIxcProvedor[]) => selectedItems.length !== 1,
     }),
     [bulkBtn.editar.variant, testMutation]
+  );
+
+  const syncOsBulkAction = useMemo(
+    () => ({
+      label: 'Sincronizar dados OS',
+      variant: bulkBtn.editar.variant,
+      action: async (selectedItems: IntegracaoIxcProvedor[]) => {
+        if (selectedItems.length !== 1) return;
+        try {
+          await syncOsMutation.mutateAsync(selectedItems[0].id);
+        } catch {
+          // Erro tratado pelo hook
+        }
+      },
+      disabled: (selectedItems: IntegracaoIxcProvedor[]) =>
+        selectedItems.length !== 1 || syncOsMutation.isPending,
+    }),
+    [bulkBtn.editar.variant, syncOsMutation]
   );
 
   const handleDelete = useCallback(
@@ -148,6 +168,7 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
           },
           ...selectActions,
           testBulkAction,
+          syncOsBulkAction,
         ];
       }
       return selectActions;
@@ -159,6 +180,7 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
         onDelete: handleDelete,
       }),
       testBulkAction,
+      syncOsBulkAction,
     ];
   }, [
     onSelectIntegracao,
@@ -168,6 +190,7 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
     bulkBtn.novo.label,
     bulkBtn.novo.variant,
     testBulkAction,
+    syncOsBulkAction,
   ]);
 
   const pagination = useMemo(

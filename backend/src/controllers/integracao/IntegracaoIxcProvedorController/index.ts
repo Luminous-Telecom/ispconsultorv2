@@ -247,6 +247,21 @@ export class IntegracaoIxcProvedorController {
     }
   }
 
+  static async syncOrdemServicoCadastros(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
+      const result = await IntegracaoIxcProvedorService.syncOrdemServicoCadastros(Number(id), empresaId);
+      sendSuccess(res, result, result.message);
+    } catch (error) {
+      sendError(res, error, 'Erro ao sincronizar dados de OS do IXC', 500, true, {
+        context: 'IntegracaoIxcProvedorController',
+        action: 'syncOrdemServicoCadastros',
+        id: req.params.id,
+      });
+    }
+  }
+
   static async destroy(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
