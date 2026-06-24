@@ -232,7 +232,7 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
         }
       },
     }));
-  }, [list, handleAcao, list.selectedItem]);
+  }, [list, handleAcao]);
 
   const bulkActions = useMemo(
     () => [
