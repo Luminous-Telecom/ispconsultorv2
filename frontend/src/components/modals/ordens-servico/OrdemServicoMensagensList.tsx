@@ -47,7 +47,7 @@ const OrdemServicoMensagensList: React.FC<OrdemServicoMensagensListProps> = ({
   const { data: mensagens = [], isLoading, refetch } = useOrdemServicoMensagens(ordemServicoId, true);
   const deleteMutation = useDeleteOrdemServicoMensagem();
 
-  const [selectedItems, setSelectedItems] = useState<OrdemServicoMensagem[]>([]);
+  const [, setSelectedItems] = useState<OrdemServicoMensagem[]>([]);
   const [showNovaMensagemModal, setShowNovaMensagemModal] = useState(false);
   const [previewMensagem, setPreviewMensagem] = useState<OrdemServicoMensagem | null>(null);
 

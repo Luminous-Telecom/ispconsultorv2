@@ -29,7 +29,7 @@ const OrdemServicoArquivosList: React.FC<OrdemServicoArquivosListProps> = ({ ord
   const { data: arquivos = [], isLoading, refetch } = useOrdemServicoArquivos(ordemServicoId, true);
   const deleteMutation = useDeleteOrdemServicoArquivo();
 
-  const [selectedItems, setSelectedItems] = useState<OrdemServicoArquivo[]>([]);
+  const [, setSelectedItems] = useState<OrdemServicoArquivo[]>([]);
   const [showAdicionarModal, setShowAdicionarModal] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showImagePreview, setShowImagePreview] = useState(false);
