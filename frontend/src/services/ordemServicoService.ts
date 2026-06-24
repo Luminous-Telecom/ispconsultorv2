@@ -19,6 +19,7 @@ export interface OrdemServico {
   setor_nome?: string;
   cidade_nome?: string;
   origem_endereco?: string;
+  origem?: string;
   id_assunto?: string;
   id_tecnico?: string;
   setor?: string;

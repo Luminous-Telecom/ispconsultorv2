@@ -6,6 +6,7 @@ import {
   OSS_DEFAULTS,
 } from './constants';
 import { ixcListar, sanitizeInput } from './ixcHttp';
+import { IXC_PROTOCOLO_PATTERN } from '../../ordens/ordemServicoProtocolo';
 import type { IxcListResponse, IxcOssChamado, OssChamadoAcao, OssChamadoInput } from './types';
 
 export function parseClienteId(raw: string | number | null | undefined): number | null {
@@ -54,7 +55,7 @@ export async function fetchProximoProtocolo(): Promise<string> {
   });
 
   const ultimo = data.registros?.[0]?.protocolo?.trim();
-  if (!ultimo || !/^\d+$/.test(ultimo)) {
+  if (!ultimo || !IXC_PROTOCOLO_PATTERN.test(ultimo)) {
     return `${year}000001`;
   }
   return String(Number(ultimo) + 1);

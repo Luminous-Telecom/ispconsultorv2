@@ -72,6 +72,8 @@ interface OrdemServicoFormFieldsProps {
   onShowTecnicoModal?: () => void;
   onShowAssuntoModal?: () => void;
   onShowSetorModal?: () => void;
+  showIxcFields?: boolean;
+  showAgendaFields?: boolean;
 }
 
 const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
@@ -95,6 +97,8 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
   onShowTecnicoModal,
   onShowAssuntoModal,
   onShowSetorModal,
+  showIxcFields = true,
+  showAgendaFields = true,
 }) => {
   return (
     <div className="row g-2">
@@ -123,130 +127,137 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
           searchButtonTitle="Buscar cliente"
         />
       </div>
-      <div className="col-md-6">
-        <EntitySelectField
-          stringIdMode
-          label="Filial"
-          required
-          value={form.id_filial}
-          onChange={(v) => onChange('id_filial', v)}
-          onShowModal={onShowFilialModal}
-          entities={form.id_filial ? [{ id: form.id_filial, nome: filialNome }] : []}
-          error={errors.id_filial}
-          idFieldTitle="ID da filial"
-          idPlaceholder="ID"
-          searchButtonTitle="Buscar filial"
-        />
-      </div>
-      <div className="col-md-6">
-        <EntitySelectField
-          stringIdMode
-          label="Estrutura"
-          required
-          value={form.id_estrutura}
-          onChange={(v) => onChange('id_estrutura', v)}
-          onShowModal={onShowEstruturaModal}
-          entities={form.id_estrutura ? [{ id: form.id_estrutura, nome: estruturaNome }] : []}
-          error={errors.id_estrutura}
-          idFieldTitle="ID da estrutura"
-          idPlaceholder="ID"
-          searchButtonTitle="Buscar estrutura"
-        />
-      </div>
-      <div className="col-md-6">
-        <EntitySelectField
-          stringIdMode
-          label="Assunto"
-          required
-          value={form.id_assunto}
-          onChange={(v) => onChange('id_assunto', v)}
-          onShowModal={onShowAssuntoModal}
-          entities={form.id_assunto ? [{ id: form.id_assunto, nome: assuntoNome }] : []}
-          error={errors.id_assunto}
-          idFieldTitle="ID do assunto"
-          idPlaceholder="ID"
-          searchButtonTitle="Buscar assunto"
-        />
-      </div>
+      {showIxcFields ? (
+        <>
+          <div className="col-md-6">
+            <EntitySelectField
+              stringIdMode
+              label="Filial"
+              required
+              value={form.id_filial}
+              onChange={(v) => onChange('id_filial', v)}
+              onShowModal={onShowFilialModal}
+              entities={form.id_filial ? [{ id: form.id_filial, nome: filialNome }] : []}
+              error={errors.id_filial}
+              idFieldTitle="ID da filial"
+              idPlaceholder="ID"
+              searchButtonTitle="Buscar filial"
+            />
+          </div>
+          <div className="col-md-6">
+            <EntitySelectField
+              stringIdMode
+              label="Estrutura"
+              required
+              value={form.id_estrutura}
+              onChange={(v) => onChange('id_estrutura', v)}
+              onShowModal={onShowEstruturaModal}
+              entities={form.id_estrutura ? [{ id: form.id_estrutura, nome: estruturaNome }] : []}
+              error={errors.id_estrutura}
+              idFieldTitle="ID da estrutura"
+              idPlaceholder="ID"
+              searchButtonTitle="Buscar estrutura"
+            />
+          </div>
+          <div className="col-md-6">
+            <EntitySelectField
+              stringIdMode
+              label="Assunto"
+              required
+              value={form.id_assunto}
+              onChange={(v) => onChange('id_assunto', v)}
+              onShowModal={onShowAssuntoModal}
+              entities={form.id_assunto ? [{ id: form.id_assunto, nome: assuntoNome }] : []}
+              error={errors.id_assunto}
+              idFieldTitle="ID do assunto"
+              idPlaceholder="ID"
+              searchButtonTitle="Buscar assunto"
+            />
+          </div>
+          <div className="col-md-6">
+            <EntitySelectField
+              stringIdMode
+              label="Setor"
+              required
+              value={form.setor}
+              onChange={(v) => onChange('setor', v)}
+              onShowModal={onShowSetorModal}
+              entities={form.setor ? [{ id: form.setor, nome: setorNome }] : []}
+              error={errors.setor}
+              idFieldTitle="ID do setor"
+              idPlaceholder="ID"
+              searchButtonTitle="Buscar setor"
+            />
+          </div>
+          <div className="col-md-6">
+            <EntitySelectField
+              stringIdMode
+              label="Técnico"
+              value={form.id_tecnico}
+              onChange={(v) => onChange('id_tecnico', v)}
+              onShowModal={onShowTecnicoModal}
+              entities={form.id_tecnico ? [{ id: form.id_tecnico, nome: tecnicoNome }] : []}
+              idFieldTitle="ID do técnico"
+              idPlaceholder="ID"
+              searchButtonTitle="Buscar técnico"
+            />
+          </div>
+        </>
+      ) : null}
 
-      <div className="col-md-6">
-        <EntitySelectField
-          stringIdMode
-          label="Setor"
-          required
-          value={form.setor}
-          onChange={(v) => onChange('setor', v)}
-          onShowModal={onShowSetorModal}
-          entities={form.setor ? [{ id: form.setor, nome: setorNome }] : []}
-          error={errors.setor}
-          idFieldTitle="ID do setor"
-          idPlaceholder="ID"
-          searchButtonTitle="Buscar setor"
-        />
-      </div>
-      <div className="col-md-6">
-        <EntitySelectField
-          stringIdMode
-          label="Técnico"
-          value={form.id_tecnico}
-          onChange={(v) => onChange('id_tecnico', v)}
-          onShowModal={onShowTecnicoModal}
-          entities={form.id_tecnico ? [{ id: form.id_tecnico, nome: tecnicoNome }] : []}
-          idFieldTitle="ID do técnico"
-          idPlaceholder="ID"
-          searchButtonTitle="Buscar técnico"
-        />
-      </div>
-
-      <div className="col-md-4">
-        <FormField
-          name="prioridade"
-          type="select"
-          label="Prioridade"
-          value={form.prioridade}
-          onChange={(v) => onChange('prioridade', String(v ?? 'N'))}
-          options={PRIORIDADE_OPTIONS}
-          size="sm"
-          disabled={disabled}
-        />
-      </div>
-      <div className="col-md-4">
-        <FormField
-          name="melhor_horario_agenda"
-          type="select"
-          label="Melhor horário"
-          value={form.melhor_horario_agenda}
-          onChange={(v) => onChange('melhor_horario_agenda', String(v ?? 'Q'))}
-          options={HORARIO_AGENDA_OPTIONS}
-          size="sm"
-          disabled={disabled}
-        />
-      </div>
-      <div className="col-md-4">
-        <FormField
-          name="data_agenda"
-          type="datetime-local"
-          label="Data agenda"
-          value={form.data_agenda}
-          onChange={(v) => onChange('data_agenda', String(v ?? ''))}
-          size="sm"
-          disabled={disabled}
-        />
-      </div>
-
-      <div className="col-12">
-        <FormField
-          name="mensagem"
-          type="textarea"
-          label="Mensagem / Descrição"
-          value={form.mensagem}
-          onChange={(v) => onChange('mensagem', String(v ?? ''))}
-          rows={5}
-          maxLength={10000}
-          size="sm"
-          disabled={disabled}
-        />
-      </div>
+      {showAgendaFields ? (
+        <>
+          <div className="col-md-4">
+            <FormField
+              name="prioridade"
+              type="select"
+              label="Prioridade"
+              value={form.prioridade}
+              onChange={(v) => onChange('prioridade', String(v ?? 'N'))}
+              options={PRIORIDADE_OPTIONS}
+              size="sm"
+              disabled={disabled}
+            />
+          </div>
+          <div className="col-md-4">
+            <FormField
+              name="melhor_horario_agenda"
+              type="select"
+              label="Melhor horário"
+              value={form.melhor_horario_agenda}
+              onChange={(v) => onChange('melhor_horario_agenda', String(v ?? 'Q'))}
+              options={HORARIO_AGENDA_OPTIONS}
+              size="sm"
+              disabled={disabled}
+            />
+          </div>
+          <div className="col-md-4">
+            <FormField
+              name="data_agenda"
+              type="datetime-local"
+              label="Data agenda"
+              value={form.data_agenda}
+              onChange={(v) => onChange('data_agenda', String(v ?? ''))}
+              size="sm"
+              disabled={disabled}
+            />
+          </div>
+          <div className="col-12">
+            <FormField
+              name="mensagem"
+              type="textarea"
+              label="Mensagem / Descrição"
+              value={form.mensagem}
+              onChange={(v) => onChange('mensagem', String(v ?? ''))}
+              rows={5}
+              maxLength={10000}
+              size="sm"
+              disabled={disabled}
+              error={errors.mensagem}
+            />
+          </div>
+        </>
+      ) : null}
     </div>
   );
 };

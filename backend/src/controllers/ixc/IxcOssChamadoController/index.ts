@@ -6,7 +6,7 @@ import {
 } from '../../../services/externos/IxcOssChamadoService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { parseListQuery } from '../../../utils/listQuery';
-import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { getEmpresaIdOrNull, getUsuarioIdOrNull } from '../../../utils/tenantUtils';
 
 export class IxcOssChamadoController {
   static async list(req: Request, res: Response): Promise<void> {
@@ -182,7 +182,8 @@ export class IxcOssChamadoController {
   static async create(req: Request, res: Response): Promise<void> {
     try {
       const empresaId = getEmpresaIdOrNull(req);
-      const resultado = await IxcOssChamadoService.create(req.body, empresaId);
+      const usuarioId = getUsuarioIdOrNull(req);
+      const resultado = await IxcOssChamadoService.create(req.body, empresaId, usuarioId);
       sendSuccess(res, resultado, 'Ordem de serviço criada com sucesso', 201);
     } catch (error) {
       sendError(res, error, 'Erro ao criar ordem de serviço', 500, true, {
@@ -220,7 +221,8 @@ export class IxcOssChamadoController {
         id,
         acao as OssChamadoAcao,
         req.body,
-        getEmpresaIdOrNull(req)
+        getEmpresaIdOrNull(req),
+        getUsuarioIdOrNull(req)
       );
 
       sendSuccess(res, resultado, 'Ação executada com sucesso');

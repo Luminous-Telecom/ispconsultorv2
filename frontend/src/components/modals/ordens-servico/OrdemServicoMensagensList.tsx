@@ -1,6 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
-import TextPreviewModal from 'components/common/TextPreviewModal';
 import { useBulkBtn } from 'components/ui';
 import type { TableConfig } from 'components/tables/types';
 import { useTableFilters } from 'hooks/useTableFilters';
@@ -11,6 +10,7 @@ import {
 import type { OrdemServico, OrdemServicoMensagem } from 'services/ordemServicoService';
 import { formatRpkiValidityDisplay } from 'utils/formatters';
 import OrdemServicoAcaoModal from './OrdemServicoAcaoModal';
+import OrdemServicoMensagemDetalhesModal from './OrdemServicoMensagemDetalhesModal';
 
 interface OrdemServicoMensagensListProps {
   ordemServicoId: number | string;
@@ -20,17 +20,6 @@ interface OrdemServicoMensagensListProps {
 const formatIxcData = (value?: string): string => {
   if (!value?.trim() || value.startsWith('0000-00-00')) return '-';
   return formatRpkiValidityDisplay(value);
-};
-
-const formatMensagemPreview = (msg: OrdemServicoMensagem): string => {
-  const linhas = [
-    `Data: ${formatIxcData(msg.data)}`,
-    `Evento: ${msg.evento_nome || `Evento ${msg.id_evento}`}`,
-    `Colaborador: ${msg.colaborador_nome || '-'}`,
-    '',
-    msg.mensagem || '-',
-  ];
-  return linhas.join('\n');
 };
 
 const OrdemServicoMensagensList: React.FC<OrdemServicoMensagensListProps> = ({
@@ -70,12 +59,12 @@ const OrdemServicoMensagensList: React.FC<OrdemServicoMensagensListProps> = ({
         render: (item) => item.evento_nome || `Evento ${item.id_evento}`,
       },
       {
-        key: 'colaborador_nome',
-        label: 'Colaborador',
+        key: 'operador_nome',
+        label: 'Operador',
         sortable: true,
         searchable: true,
-        width: '140px',
-        render: (item) => item.colaborador_nome || '-',
+        width: '160px',
+        render: (item) => item.operador_nome || '-',
       },
       {
         key: 'mensagem',
@@ -155,7 +144,7 @@ const OrdemServicoMensagensList: React.FC<OrdemServicoMensagensListProps> = ({
           searchField: tableFilters.searchField || 'mensagem',
           searchFields: [
             { key: 'evento_nome', label: 'Evento' },
-            { key: 'colaborador_nome', label: 'Colaborador' },
+            { key: 'operador_nome', label: 'Operador' },
             { key: 'mensagem', label: 'Mensagem' },
           ],
           sortable: true,
@@ -199,16 +188,10 @@ const OrdemServicoMensagensList: React.FC<OrdemServicoMensagensListProps> = ({
         }}
       />
 
-      <TextPreviewModal
+      <OrdemServicoMensagemDetalhesModal
         show={previewMensagem != null}
         onClose={() => setPreviewMensagem(null)}
-        title={
-          previewMensagem
-            ? `Mensagem — ${formatIxcData(previewMensagem.data)}`
-            : 'Mensagem'
-        }
-        content={previewMensagem ? formatMensagemPreview(previewMensagem) : null}
-        modalId="ordem-servico-mensagem-preview-modal"
+        mensagem={previewMensagem}
       />
     </>
   );

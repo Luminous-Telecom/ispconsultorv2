@@ -5,6 +5,7 @@ export const IXC_MENSAGEM_RESOURCE = 'su_oss_chamado_mensagem';
 export const IXC_ALTERAR_SETOR_RESOURCE = 'su_oss_chamado_alterar_setor';
 export const IXC_EVENTO_ABERTURA = '1';
 export const IXC_EVENTO_OBSERVACAO = '12';
+export const IXC_EVENTO_FINALIZAR = '6';
 
 export const IXC_ESTRUTURA_RESOURCE = 'estrutura';
 export const IXC_FUNCIONARIOS_RESOURCE = 'funcionarios';

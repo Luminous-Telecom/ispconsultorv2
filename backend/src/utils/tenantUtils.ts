@@ -1,4 +1,5 @@
 import { Request } from 'express';
+import { JwtPayload } from 'jsonwebtoken';
 import { AuthTokenPayload, AuthenticatedRequest } from '../types/auth';
 import { DadosEmpresa } from '../models/sistema/DadosEmpresa';
 import { Cliente } from '../models/clientes/Cliente';
@@ -27,6 +28,25 @@ export const getEmpresaIdOrNull = (req: Request): number | null => {
   } catch {
     return null;
   }
+};
+
+export const getUsuarioIdOrNull = (req: Request): number | null => {
+  const user = (req as AuthenticatedRequest).user;
+  if (!user || typeof user === 'string') return null;
+
+  const payload = user as JwtPayload & { id?: number; sub?: string };
+  if (payload.id != null && Number(payload.id) > 0) {
+    return Number(payload.id);
+  }
+
+  if (payload.sub) {
+    const usuarioId = parseInt(String(payload.sub), 10);
+    if (Number.isFinite(usuarioId) && usuarioId > 0) {
+      return usuarioId;
+    }
+  }
+
+  return null;
 };
 
 export function parseEmpresaIdQuery(raw: unknown): number | null {

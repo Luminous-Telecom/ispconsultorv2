@@ -9,7 +9,7 @@ import { ListModalConfig } from 'types/modal';
 import type { OrdemServico } from 'services/ordemServicoService';
 import OrdemServicoModal from './OrdemServicoModal';
 import OrdemServicoAcaoModal from './OrdemServicoAcaoModal';
-import { ORDEM_SERVICO_ACOES, type OrdemServicoAcao } from './ordemServicoAcoes';
+import { ORDEM_SERVICO_ACOES, isOrdemServicoLocal, type OrdemServicoAcao } from './ordemServicoAcoes';
 import {
   getOrdemServicoPrioridadeBadgeConfig,
   ORDEM_SERVICO_PRIORIDADE_BADGE_LABELS,
@@ -70,14 +70,14 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
 
   const deleteMutation = useDeleteOrdemServico();
 
-  const handleAcao = useCallback(
-    (ordem: OrdemServico, acao: OrdemServicoAcao) => {
-      const config = ORDEM_SERVICO_ACOES.find((a) => a.key === acao);
-      if (!config?.needsForm) return;
-      setAcaoModal({ acao, ordem });
-    },
-    []
-  );
+  const handleAcao = useCallback((ordem: OrdemServico, acao: OrdemServicoAcao) => {
+    if (isOrdemServicoLocal(ordem) && acao !== 'registrar_mensagem' && acao !== 'finalizar') {
+      return;
+    }
+    const config = ORDEM_SERVICO_ACOES.find((a) => a.key === acao);
+    if (!config?.needsForm) return;
+    setAcaoModal({ acao, ordem });
+  }, []);
 
   const handleDelete = useCallback(
     async (id: number) => {
@@ -208,6 +208,24 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
     []
   );
 
+  const acoesDropdown = useMemo(() => {
+    const acoes = list.selectedItem && isOrdemServicoLocal(list.selectedItem)
+      ? ORDEM_SERVICO_ACOES.filter(
+          (acao) => acao.key === 'registrar_mensagem' || acao.key === 'finalizar'
+        )
+      : ORDEM_SERVICO_ACOES;
+
+    return acoes.map((acao) => ({
+      label: acao.label,
+      action: (selectedItems?: OrdemServico[]) => {
+        const ordem = list.resolveItem(selectedItems ?? []);
+        if (ordem) {
+          void handleAcao(ordem, acao.key);
+        }
+      },
+    }));
+  }, [list, handleAcao, list.selectedItem]);
+
   const bulkActions = useMemo(
     () => [
       ...list.buildCrudBulkActions({
@@ -227,18 +245,10 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
         label: 'Ações',
         variant: 'primary' as const,
         disabled: (selectedItems: OrdemServico[]) => selectedItems.length !== 1,
-        dropdown: ORDEM_SERVICO_ACOES.map((acao) => ({
-          label: acao.label,
-          action: (selectedItems?: OrdemServico[]) => {
-            const ordem = list.resolveItem(selectedItems ?? []);
-            if (ordem) {
-              void handleAcao(ordem, acao.key);
-            }
-          },
-        })),
+        dropdown: acoesDropdown,
       },
     ],
-    [list, handleDelete, handleAcao]
+    [list, handleDelete, acoesDropdown]
   );
 
   const pagination = useMemo(
