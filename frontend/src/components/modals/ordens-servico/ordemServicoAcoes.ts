@@ -21,8 +21,8 @@ export const ORDEM_SERVICO_ACOES: OrdemServicoAcaoConfig[] = [
   { key: 'registrar_mensagem', label: 'Registrar mensagem', needsForm: true },
 ];
 
-export const isOrdemServicoLocal = (ordem?: { origem?: string } | null): boolean =>
-  ordem?.origem === 'backnet';
+export const isOrdemServicoLocal = (ordem?: { origem?: string; id_local?: string | number } | null): boolean =>
+  ordem?.origem === 'backnet' || Boolean(ordem?.id_local);
 
 export const labelAcaoOrdemServico = (acao: OrdemServicoAcao): string =>
   ORDEM_SERVICO_ACOES.find((a) => a.key === acao)?.label ?? acao;

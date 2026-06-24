@@ -90,8 +90,9 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
   const updateMutation = useUpdateOrdemServico();
   const isPending = createMutation.isPending || updateMutation.isPending;
 
+  const hasIxcVinculo = Boolean(ordemData?.ixc_id?.trim());
   const isOrdemLocal = isEdit && isOrdemServicoLocal(ordemData);
-  const isOrdemIxc = isEdit && !isOrdemLocal;
+  const isOrdemIxc = isEdit && hasIxcVinculo;
 
   const { data: ixcIntegracaoStatus } = useClienteIxcIntegracao(clienteId, show && !isEdit);
   const clienteComIntegracaoIxc =

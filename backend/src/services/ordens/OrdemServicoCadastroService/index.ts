@@ -116,4 +116,44 @@ export class OrdemServicoCadastroService {
 
     return registros.map(toLookupItem);
   }
+
+  static async lookupNomesPorReferencias(
+    tipo: OrdemServicoCadastroTipo,
+    referencias: string[],
+    empresaId: number | null
+  ): Promise<Map<string, string>> {
+    const refs = [...new Set(referencias.map((ref) => String(ref).trim()).filter((ref) => ref && ref !== '0'))];
+    if (refs.length === 0) return new Map();
+
+    const Model = MODEL_POR_TIPO[tipo];
+    const numericIds = refs
+      .map((ref) => parseInt(ref, 10))
+      .filter((id) => Number.isFinite(id) && id > 0);
+
+    const registros = await Model.findAll({
+      where: {
+        [Op.or]: [
+          { ixc_id: { [Op.in]: refs } },
+          ...(numericIds.length > 0 ? [{ id: { [Op.in]: numericIds } }] : []),
+        ],
+        ...empresaWhere(empresaId),
+      },
+      attributes: ['id', 'ixc_id', 'nome'],
+    });
+
+    const mapa = new Map<string, string>();
+    for (const registro of registros) {
+      const nome = registro.nome?.trim() || '';
+      if (!nome) continue;
+
+      mapa.set(String(registro.id), nome);
+
+      const ixcId = registro.ixc_id?.trim();
+      if (ixcId) {
+        mapa.set(ixcId, nome);
+      }
+    }
+
+    return mapa;
+  }
 }

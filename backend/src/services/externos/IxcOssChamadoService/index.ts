@@ -1,11 +1,10 @@
 import { runWithIxcCredentials } from '../ixcApiContext';
 import { IntegracaoIxcProvedorService } from '../../integracao/IntegracaoIxcProvedorService';
 import { OrdemServicoCadastroService } from '../../ordens/OrdemServicoCadastroService';
-import { CAMPOS_ENRIQUECIDOS, IXC_EVENTO_ABERTURA, IXC_FILIAL_RESOURCE, IXC_RESOURCE, OSS_CHAMADO_ACOES } from './constants';
+import { IXC_EVENTO_ABERTURA, IXC_FILIAL_RESOURCE, IXC_RESOURCE, OSS_CHAMADO_ACOES } from './constants';
 import {
   actionErrorMessage,
   createIxcClient,
-  resolveOperadorId,
   sanitizeInput,
   wrapIxcError,
 } from './ixcHttp';
@@ -26,12 +25,9 @@ import {
   prefixarMensagemOperador,
 } from '../../ordens/ordemServicoMensagemFormat';
 import {
-  enrichOsRegistros,
   fetchMensagensOs,
-  fetchOsIdsAbertasPeloOperador,
   fetchOsRawById,
   osAbertaPeloOperador,
-  sortRegistros,
 } from './ossData';
 import {
   applyBacknetCliente,
@@ -67,79 +63,12 @@ export type {
 export { OSS_CHAMADO_ACOES };
 
 export class IxcOssChamadoService {
-  private static paginateRegistros(
-    registros: IxcOssChamado[],
-    filters: ListOssChamadosFilters
-  ): ListOssChamadosResponse {
-    const page = filters.page && filters.page > 0 ? filters.page : 1;
-    const limit = filters.limit && filters.limit > 0 ? filters.limit : 15;
-    const total = registros.length;
-    const lastPage = Math.max(1, Math.ceil(total / limit) || 1);
-    const offset = (page - 1) * limit;
-    const pagina = registros.slice(offset, offset + limit);
-
-    return {
-      data: pagina,
-      pagination: {
-        current_page: page,
-        per_page: limit,
-        total,
-        last_page: lastPage,
-        from: total > 0 ? offset + 1 : 0,
-        to: Math.min(offset + limit, total),
-      },
-    };
-  }
-
-  private static async listIxcRegistros(
-    filters: ListOssChamadosFilters
-  ): Promise<IxcOssChamado[]> {
-    const search = filters.search?.trim();
-    const sortColumn = filters.sortColumn?.trim() || 'id';
-    const sortDirection = filters.sortDirection === 'asc' ? 'asc' : 'desc';
-    const searchField = filters.searchField?.trim() || 'cliente_nome';
-
-    const operadorId = resolveOperadorId();
-    if (!operadorId) return [];
-
-    const osIds = await fetchOsIdsAbertasPeloOperador(operadorId);
-    if (osIds.length === 0) return [];
-
-    const brutos = await Promise.all(osIds.map((id) => fetchOsRawById(id)));
-    let registros = brutos.filter(
-      (r): r is IxcOssChamado => !!r && Number(r.id_estrutura) > 0
-    );
-
-    if (search) {
-      const termo = search.toLowerCase();
-      if (CAMPOS_ENRIQUECIDOS.includes(searchField)) {
-        registros = await enrichOsRegistros(registros);
-      }
-      registros = registros.filter((r) =>
-        [searchField, 'mensagem', 'protocolo'].some((campo) =>
-          String(r[campo] ?? '').toLowerCase().includes(termo)
-        )
-      );
-    }
-
-    registros = sortRegistros(registros, sortColumn, sortDirection);
-    return enrichOsRegistros(registros);
-  }
-
   private static async assertOsAcessivel(
     id: string | number,
     empresaId: number | null = null,
     usuarioId: number | null = null
   ): Promise<void> {
-    const record = await OrdemServicoLocalService.findRecord(id, empresaId);
-    if (record) {
-      if (
-        record.ixc_id?.trim() &&
-        usuarioId != null &&
-        !(await OrdemServicoLocalService.wasOpenedByUsuario(id, usuarioId, empresaId))
-      ) {
-        throw new Error('Ordem de serviço não encontrada');
-      }
+    if (await OrdemServicoLocalService.findRecord(id, empresaId)) {
       return;
     }
 
@@ -157,8 +86,9 @@ export class IxcOssChamadoService {
     id: string | number,
     empresaId: number | null = null
   ): Promise<string> {
-    const chamado = await OrdemServicoLocalService.getChamado(id, empresaId);
-    return chamado ? String(chamado.id) : String(id);
+    const record = await OrdemServicoLocalService.findRecord(id, empresaId);
+    if (record) return String(record.id);
+    return String(id);
   }
 
   private static async fetchMensagensIxc(
@@ -208,36 +138,9 @@ export class IxcOssChamadoService {
   static async list(
     filters: ListOssChamadosFilters = {},
     empresaId: number | null = null,
-    usuarioId: number | null = null
+    _usuarioId: number | null = null
   ): Promise<ListOssChamadosResponse> {
-    const localResult = await OrdemServicoLocalService.list(
-      { ...filters, page: 1, limit: 100_000 },
-      empresaId
-    );
-
-    let ixcRegistros: IxcOssChamado[] = [];
-    if (usuarioId != null) {
-      const vinculadas = await OrdemServicoLocalService.listIxcVinculadas(filters, empresaId, usuarioId);
-      try {
-        ixcRegistros = await runWithIxcCredentials(empresaId, () => enrichOsRegistros(vinculadas));
-      } catch {
-        ixcRegistros = vinculadas;
-      }
-    } else {
-      try {
-        ixcRegistros = await runWithIxcCredentials(empresaId, () =>
-          IxcOssChamadoService.listIxcRegistros(filters)
-        );
-      } catch {
-        ixcRegistros = [];
-      }
-    }
-
-    const sortColumn = filters.sortColumn?.trim() || 'id';
-    const sortDirection = filters.sortDirection === 'asc' ? 'asc' : 'desc';
-    const merged = sortRegistros([...ixcRegistros, ...localResult.data], sortColumn, sortDirection);
-
-    return IxcOssChamadoService.paginateRegistros(merged, filters);
+    return OrdemServicoLocalService.list(filters, empresaId);
   }
 
   private static paginateLookup(
@@ -435,33 +338,9 @@ export class IxcOssChamadoService {
   static async getById(
     id: string | number,
     empresaId: number | null = null,
-    usuarioId: number | null = null
+    _usuarioId: number | null = null
   ): Promise<IxcOssChamado | null> {
-    const local = await OrdemServicoLocalService.getChamado(id, empresaId);
-    if (local) {
-      if (
-        local.ixc_id &&
-        usuarioId != null &&
-        !(await OrdemServicoLocalService.wasOpenedByUsuario(id, usuarioId, empresaId))
-      ) {
-        return null;
-      }
-      return local;
-    }
-
-    return runWithIxcCredentials(empresaId, async () => {
-      try {
-        await IxcOssChamadoService.assertOsAcessivel(id, empresaId, usuarioId);
-
-        const registro = await fetchOsRawById(id);
-        if (!registro || Number(registro.id_estrutura) <= 0) return null;
-
-        const [enriquecido] = await enrichOsRegistros([registro]);
-        return enriquecido ?? null;
-      } catch (error) {
-        throw wrapIxcError(error, 'Erro ao buscar ordem de serviço no IXC');
-      }
-    });
+    return OrdemServicoLocalService.getChamado(id, empresaId);
   }
 
   static async listMensagens(
@@ -471,17 +350,8 @@ export class IxcOssChamadoService {
   ): Promise<IxcOssMensagem[]> {
     const record = await OrdemServicoLocalService.findRecord(id, empresaId);
 
-    if (record && !record.ixc_id?.trim()) {
+    if (record) {
       return OrdemServicoLocalService.listMensagens(record.id, empresaId);
-    }
-
-    if (record?.ixc_id) {
-      await IxcOssChamadoService.assertOsAcessivel(id, empresaId, usuarioId);
-      try {
-        return await IxcOssChamadoService.fetchMensagensIxc(record.ixc_id, empresaId);
-      } catch {
-        return OrdemServicoLocalService.listMensagens(record.id, empresaId);
-      }
     }
 
     await IxcOssChamadoService.assertOsAcessivel(id, empresaId, usuarioId);
@@ -760,15 +630,18 @@ export class IxcOssChamadoService {
     id: string | number,
     empresaId: number | null = null
   ): Promise<void> {
-    const arquivos = await OrdemServicoArquivoService.list(String(id));
+    const record = await OrdemServicoLocalService.findRecord(id, empresaId);
+    const osId = record ? String(record.id) : String(id);
+
+    const arquivos = await OrdemServicoArquivoService.list(osId);
     if (arquivos.length > 0) {
       throw new Error(
         'Não é possível excluir a ordem de serviço com arquivos anexados. Exclua os arquivos antes.'
       );
     }
 
-    if (await OrdemServicoLocalService.exists(id, empresaId)) {
-      const mensagensExtras = await OrdemServicoLocalService.countMensagensExtras(id, empresaId);
+    if (record) {
+      const mensagensExtras = await OrdemServicoLocalService.countMensagensExtras(record.id, empresaId);
       if (mensagensExtras > 0) {
         throw new Error(
           'Não é possível excluir a ordem de serviço com mensagens no histórico. Exclua as mensagens antes.'

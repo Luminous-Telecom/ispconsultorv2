@@ -38,6 +38,8 @@ const truncar = (texto?: string, max = 80): string => {
   return texto.length > max ? `${texto.slice(0, max)}…` : texto;
 };
 
+const resolveOrdemId = (ordem: OrdemServico): number | string => ordem.id_local ?? ordem.id;
+
 const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
   show,
   onClose,
@@ -243,7 +245,7 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
           setShowFormModal(true);
         },
         onEdit: (item) => {
-          list.setSelectedEntityId(Number(item.id));
+          list.setSelectedEntityId(Number(resolveOrdemId(item)));
           setIsEditMode(true);
           setShowFormModal(true);
         },

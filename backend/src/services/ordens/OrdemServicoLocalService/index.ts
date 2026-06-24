@@ -20,6 +20,7 @@ import type {
 } from '../../externos/IxcOssChamadoService/types';
 import { parseClienteId } from '../../externos/IxcOssChamadoService/ossPayload';
 import { sortRegistros } from '../../externos/IxcOssChamadoService/ossData';
+import { OrdemServicoCadastroService } from '../OrdemServicoCadastroService';
 import {
   formatLocalProtocolo,
   localProtocoloYearMonthPrefix,
@@ -190,16 +191,70 @@ function applyListFilters(
   if (search) {
     const termo = search.toLowerCase();
     result = result.filter((item) =>
-      [searchField, 'mensagem', 'protocolo', 'cliente_nome', 'operador_nome'].some((campo) =>
-        String(item[campo] ?? '').toLowerCase().includes(termo)
-      )
+      [
+        searchField,
+        'mensagem',
+        'protocolo',
+        'cliente_nome',
+        'operador_nome',
+        'estrutura_nome',
+        'filial_nome',
+        'assunto_nome',
+        'setor_nome',
+        'tecnico_nome',
+      ].some((campo) => String(item[campo] ?? '').toLowerCase().includes(termo))
     );
   }
 
   return sortRegistros(result, sortColumn, sortDirection);
 }
 
-async function mapLocalRegistros(registros: OrdemServicoLocal[]): Promise<IxcOssChamado[]> {
+function resolveCadastroNome(mapa: Map<string, string>, referencia: string): string {
+  const ref = String(referencia ?? '').trim();
+  if (!ref || ref === '0') return '';
+  return mapa.get(ref) ?? '';
+}
+
+async function enrichChamadosComCadastrosLocais(
+  chamados: IxcOssChamado[],
+  registros: OrdemServicoLocal[],
+  empresaId: number | null
+): Promise<IxcOssChamado[]> {
+  if (chamados.length === 0) return [];
+
+  const filialRefs = registros.map((r) => r.id_filial);
+  const estruturaRefs = registros.map((r) => r.id_estrutura);
+  const assuntoRefs = registros.map((r) => r.id_assunto);
+  const setorRefs = registros.map((r) => r.setor);
+  const tecnicoRefs = registros.map((r) => r.id_tecnico);
+
+  const [filiais, estruturas, assuntos, setores, tecnicos] = await Promise.all([
+    OrdemServicoCadastroService.lookupNomesPorReferencias('filial', filialRefs, empresaId),
+    OrdemServicoCadastroService.lookupNomesPorReferencias('estrutura', estruturaRefs, empresaId),
+    OrdemServicoCadastroService.lookupNomesPorReferencias('assunto', assuntoRefs, empresaId),
+    OrdemServicoCadastroService.lookupNomesPorReferencias('setor', setorRefs, empresaId),
+    OrdemServicoCadastroService.lookupNomesPorReferencias('tecnico', tecnicoRefs, empresaId),
+  ]);
+
+  return chamados.map((chamado, index) => {
+    const record = registros[index];
+    if (!record) return chamado;
+
+    return {
+      ...chamado,
+      filial_nome: resolveCadastroNome(filiais, record.id_filial),
+      estrutura_nome: resolveCadastroNome(estruturas, record.id_estrutura),
+      assunto_nome: resolveCadastroNome(assuntos, record.id_assunto),
+      setor_nome: resolveCadastroNome(setores, record.setor),
+      tecnico_nome: resolveCadastroNome(tecnicos, record.id_tecnico),
+    };
+  });
+}
+
+async function mapLocalRegistros(
+  registros: OrdemServicoLocal[],
+  empresaId: number | null = null
+): Promise<IxcOssChamado[]> {
   if (registros.length === 0) return [];
 
   const clienteIds = [...new Set(registros.map((r) => r.cliente_id))];
@@ -215,14 +270,18 @@ async function mapLocalRegistros(registros: OrdemServicoLocal[]): Promise<IxcOss
 
   const operadorPorOrdem = await fetchOperadorAberturaPorOrdemIds(registros.map((r) => r.id));
 
-  return registros.map((record) => {
-    const chamado = toIxcOssChamado(
-      record,
-      clienteNomes.get(record.cliente_id) ?? String(record.cliente_id)
-    );
-    const operadorNome = operadorPorOrdem.get(record.id);
-    return operadorNome ? { ...chamado, operador_nome: operadorNome } : chamado;
-  });
+  return enrichChamadosComCadastrosLocais(
+    registros.map((record) => {
+      const chamado = toIxcOssChamado(
+        record,
+        clienteNomes.get(record.cliente_id) ?? String(record.cliente_id)
+      );
+      const operadorNome = operadorPorOrdem.get(record.id);
+      return operadorNome ? { ...chamado, operador_nome: operadorNome } : chamado;
+    }),
+    registros,
+    empresaId
+  );
 }
 
 export class OrdemServicoLocalService {
@@ -234,14 +293,11 @@ export class OrdemServicoLocalService {
     const limit = filters.limit && filters.limit > 0 ? filters.limit : 15;
 
     const registros = await OrdemServicoLocal.findAll({
-      where: {
-        ...empresaWhere(empresaId),
-        ixc_id: null,
-      },
+      where: empresaWhere(empresaId),
       order: [['id', 'DESC']],
     });
 
-    const data = applyListFilters(await mapLocalRegistros(registros), filters);
+    const data = applyListFilters(await mapLocalRegistros(registros, empresaId), filters);
 
     const total = data.length;
     const lastPage = Math.max(1, Math.ceil(total / limit) || 1);
@@ -289,7 +345,7 @@ export class OrdemServicoLocalService {
       order: [['id', 'DESC']],
     });
 
-    return applyListFilters(await mapLocalRegistros(registros), filters);
+    return applyListFilters(await mapLocalRegistros(registros, empresaId), filters);
   }
 
   static async createIxcMirror(
@@ -413,7 +469,7 @@ export class OrdemServicoLocalService {
     const record = await this.findRecord(id, empresaId);
     if (!record) return null;
 
-    const [chamado] = await mapLocalRegistros([record]);
+    const [chamado] = await mapLocalRegistros([record], empresaId ?? record.empresa_id);
     return chamado ?? null;
   }
 
@@ -452,7 +508,7 @@ export class OrdemServicoLocalService {
   }
 
   static async exists(id: string | number, empresaId: number | null = null): Promise<boolean> {
-    return this.isPureBacknet(id, empresaId);
+    return (await this.findRecord(id, empresaId)) != null;
   }
 
   static async create(
@@ -539,6 +595,24 @@ export class OrdemServicoLocalService {
     }
     if (payload.status !== undefined) {
       updates.status = String(payload.status).trim() || record.status;
+    }
+    if (payload.id_filial !== undefined) {
+      updates.id_filial = String(payload.id_filial).trim();
+    }
+    if (payload.id_estrutura !== undefined) {
+      updates.id_estrutura = String(payload.id_estrutura).trim() || '0';
+    }
+    if (payload.id_assunto !== undefined) {
+      updates.id_assunto = String(payload.id_assunto).trim();
+    }
+    if (payload.setor !== undefined) {
+      updates.setor = String(payload.setor).trim();
+    }
+    if (payload.id_tecnico !== undefined) {
+      updates.id_tecnico = String(payload.id_tecnico).trim();
+    }
+    if (payload.tipo !== undefined) {
+      updates.tipo = String(payload.tipo).trim() || record.tipo;
     }
 
     await record.update(updates);
