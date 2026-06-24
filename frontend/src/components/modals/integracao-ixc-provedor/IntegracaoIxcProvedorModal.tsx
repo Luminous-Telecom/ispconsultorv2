@@ -116,7 +116,7 @@ const IntegracaoIxcProvedorModal: React.FC<IntegracaoIxcProvedorModalProps> = ({
     <DraggableModal
       show={show}
       onClose={onClose}
-      title={isEdit ? 'IXC Provedor' : 'Criar IXC Provedor'}
+      title="IXC Provedor"
       size="md"
       modalId="integracao-ixc-provedor-modal"
       headerActions={

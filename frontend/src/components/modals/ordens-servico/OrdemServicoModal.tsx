@@ -243,7 +243,7 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
     }
   };
 
-  const modalTitle = isEdit ? 'Editar Ordem de Serviço' : 'Criar Ordem de Serviço';
+  const modalTitle = 'Ordem de Serviço';
   const showIxcFields = isOrdemIxc || clienteComIntegracaoIxc;
   const showAgendaFields = isOrdemIxc || isOrdemLocal || clienteComIntegracaoIxc || clienteSemIntegracaoIxc;
 
@@ -387,7 +387,7 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
           if (clienteError) setClienteError('');
           setShowClienteModal(false);
         }}
-        title="Selecionar Cliente"
+        title="Cliente"
       />
 
       <IxcLookupSelectModal
@@ -398,7 +398,7 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
           handleChange('id_filial', item.id);
           setFilialNome(item.nome);
         }}
-        title="Selecionar Filial"
+        title="Filial"
         nomeLabel="Filial"
         useData={useFiliais}
       />
@@ -411,7 +411,7 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
           handleChange('id_estrutura', item.id);
           setEstruturaNome(item.nome);
         }}
-        title="Selecionar Estrutura"
+        title="Estrutura"
         nomeLabel="Estrutura"
         useData={useEstruturas}
       />
@@ -424,7 +424,7 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
           handleChange('id_tecnico', item.id);
           setTecnicoNome(item.nome);
         }}
-        title="Selecionar Técnico"
+        title="Técnico"
         nomeLabel="Técnico"
         useData={useTecnicos}
       />
@@ -437,7 +437,7 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
           handleChange('id_assunto', item.id);
           setAssuntoNome(item.nome);
         }}
-        title="Selecionar Assunto"
+        title="Assunto"
         nomeLabel="Assunto"
         useData={useAssuntos}
       />
@@ -450,7 +450,7 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
           handleChange('setor', item.id);
           setSetorNome(item.nome);
         }}
-        title="Selecionar Setor"
+        title="Setor"
         nomeLabel="Setor"
         useData={useSetores}
       />

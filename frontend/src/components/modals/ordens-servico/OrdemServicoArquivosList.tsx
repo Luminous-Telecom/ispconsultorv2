@@ -34,7 +34,7 @@ const OrdemServicoArquivosList: React.FC<OrdemServicoArquivosListProps> = ({ ord
   const [showPreview, setShowPreview] = useState(false);
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [previewTitle, setPreviewTitle] = useState('Visualizar arquivo');
+  const [previewTitle, setPreviewTitle] = useState('Arquivo');
 
   const isImageFile = useCallback((arquivo: OrdemServicoArquivo): boolean => {
     const mimeType = (arquivo.mime_type || '').toLowerCase();
@@ -64,8 +64,8 @@ const OrdemServicoArquivosList: React.FC<OrdemServicoArquivosListProps> = ({ ord
         setPreviewUrl(url);
         setPreviewTitle(
           isImage
-            ? `Visualizar foto — ${arquivo.descricao || arquivo.nome}`
-            : `Visualizar documento — ${arquivo.descricao || arquivo.nome}`
+            ? `Foto — ${arquivo.descricao || arquivo.nome}`
+            : `Documento — ${arquivo.descricao || arquivo.nome}`
         );
 
         if (isImage) {

@@ -53,7 +53,7 @@ const RpkiCaCreateModal: React.FC<RpkiCaCreateModalProps> = ({ show, onClose, de
   });
 
   return (
-    <DraggableModal show={show} onClose={onClose} title="Novo CA" size="sm" modalId="rpki-ca-create-modal">
+    <DraggableModal show={show} onClose={onClose} title="CA" size="sm" modalId="rpki-ca-create-modal">
       <div className="p-2">
         <FormField
           name="rpki_ca_nome"
@@ -81,7 +81,7 @@ const RpkiCaCreateModal: React.FC<RpkiCaCreateModalProps> = ({ show, onClose, de
                   : []
               }
               label="Cliente"
-              searchButtonTitle="Selecionar cliente"
+              searchButtonTitle="Cliente"
             />
             <div className="d-flex gap-2 mt-2">
               <LimparButton

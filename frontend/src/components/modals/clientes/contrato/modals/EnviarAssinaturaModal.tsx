@@ -132,7 +132,7 @@ const EnviarAssinaturaModal: React.FC<EnviarAssinaturaModalProps> = ({
     <DraggableModal
       show={show}
       onClose={onClose}
-      title="Enviar para Assinatura Digital"
+      title="Assinatura Digital"
       size="lg"
       headerActions={headerActions}
     >

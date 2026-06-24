@@ -250,7 +250,7 @@ const ServicoAdicionalModal: React.FC<ServicoAdicionalModalProps> = ({
           show={showPlanoModal}
           onClose={() => setShowPlanoModal(false)}
           onSelectPlano={handlePlanoSelect}
-          title="Selecionar Plano"
+          title="Plano"
         />
       )}
     </>

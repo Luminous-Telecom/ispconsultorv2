@@ -16,7 +16,7 @@ const ImprimirModal: React.FC<ImprimirModalProps> = ({
   show,
   onClose,
   pdfUrl,
-  title = "Visualizar Documento",
+  title = "Documento",
   modalId = "imprimir-modal",
   isGenerating = false
 }) => {

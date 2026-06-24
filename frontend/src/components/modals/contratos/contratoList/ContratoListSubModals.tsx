@@ -45,7 +45,7 @@ export const ContratoListSubModals: React.FC<ContratoListSubModalsProps> = ({
       onClose={onCloseImprimirModal}
       pdfUrl={impressaoHook.pdfUrl || pdfUrlLocal || null}
       isGenerating={impressaoHook.isGeneratingPdf || isGeneratingPdfLocal}
-      title="Visualizar Documento"
+      title="Documento"
       modalId="contrato-list-imprimir-modal"
     />
 

@@ -173,13 +173,13 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
         clearSelection();
         onClose();
       }}
-      title="Selecionar Termo Cadastrado"
+      title="Termo"
       size="lg"
       modalId="selecionar-termo-modal"
       className="no-padding"
     >
       <EmbeddedTablePanel
-            title="Selecionar Termo Cadastrado"
+            title="Termo"
             config={{
               columns: tableColumns,
               data: paginatedTermos,

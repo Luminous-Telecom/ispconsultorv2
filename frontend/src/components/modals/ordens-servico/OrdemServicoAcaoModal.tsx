@@ -6,7 +6,7 @@ import type { OrdemServico } from 'services/ordemServicoService';
 import DraggableModal from 'components/common/DraggableModal';
 import { EntitySelectField, FormField, ModalFormActions } from 'components/ui';
 import IxcLookupSelectModal from './IxcLookupSelectModal';
-import { labelAcaoOrdemServico, type OrdemServicoAcao } from './ordemServicoAcoes';
+import { type OrdemServicoAcao } from './ordemServicoAcoes';
 
 interface OrdemServicoAcaoModalProps {
   show: boolean;
@@ -179,10 +179,7 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
 
   if (!acao) return null;
 
-  const titulo =
-    acao === 'encaminhar'
-      ? 'Encaminhar ordem de serviço'
-      : `${labelAcaoOrdemServico(acao)} — OS #${ordemServico?.id ?? ''}`;
+  const titulo = `Ordem de Serviço — OS #${ordemServico?.id ?? ''}`;
 
   const setorEncaminhamentoDesabilitado =
     acao === 'encaminhar' && form.alteraSetorEncaminhamento === 'N';
@@ -408,7 +405,7 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
           handleChange('id_tecnico', item.id);
           setTecnicoNome(item.nome);
         }}
-        title="Selecionar Colaborador"
+        title="Colaborador"
         nomeLabel="Colaborador"
         useData={useTecnicos}
       />
@@ -421,7 +418,7 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
           handleChange('setor', item.id);
           setSetorNome(item.nome);
         }}
-        title="Selecionar Setor"
+        title="Setor"
         nomeLabel="Setor"
         useData={useSetores}
       />
@@ -434,7 +431,7 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
           handleChange('id_assunto', item.id);
           setAssuntoNome(item.nome);
         }}
-        title="Selecionar Assunto"
+        title="Assunto"
         nomeLabel="Assunto"
         useData={useAssuntos}
       />

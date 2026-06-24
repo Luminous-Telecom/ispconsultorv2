@@ -284,6 +284,6 @@ export function useSshDeviceModal({
     handleSelectAgent,
     handleSubmit,
     isSubmitting,
-    modalTitle: isEditing ? 'Editar Device SSH' : 'Novo Device SSH',
+    modalTitle: 'Device SSH',
   };
 }

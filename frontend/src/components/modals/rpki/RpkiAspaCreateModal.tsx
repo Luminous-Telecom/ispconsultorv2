@@ -52,7 +52,7 @@ const RpkiAspaCreateModal: React.FC<RpkiAspaCreateModalProps> = ({
   }, [show, initialCaId, selectableCas]);
 
   return (
-    <DraggableModal show={show} onClose={onClose} title="Novo ASPA" size="sm" modalId="rpki-aspa-create-modal">
+    <DraggableModal show={show} onClose={onClose} title="ASPA" size="sm" modalId="rpki-aspa-create-modal">
       <div className="p-2">
         <FormField
           name="rpki_aspa_ca_id"

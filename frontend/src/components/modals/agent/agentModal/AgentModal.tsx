@@ -37,7 +37,7 @@ const AgentModal: React.FC<AgentModalProps> = (props) => {
       <DraggableModal
         show={props.show}
         onClose={modal.handleClose}
-        title={modal.isEditing ? `Editar Agente — ${modal.agentData?.name}` : 'Novo Agente'}
+        title={modal.isEditing && modal.agentData?.name ? `Agente — ${modal.agentData.name}` : 'Agente'}
         size="md"
         headerActions={headerActions}
       >

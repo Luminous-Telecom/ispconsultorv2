@@ -201,7 +201,7 @@ const RpkiRoaCreateEditModal: React.FC<RpkiRoaCreateEditModalProps> = ({
     }
   };
 
-  const title = isEditing ? 'Editar ROA' : 'Novo ROA';
+  const title = 'ROA';
 
   return (
     <DraggableModal

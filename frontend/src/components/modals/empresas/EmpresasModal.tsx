@@ -398,7 +398,7 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
   if (skipWrapper) return content;
 
   return (
-    <DraggableModal show={show} onClose={onClose} title="Gerenciar Empresas">
+    <DraggableModal show={show} onClose={onClose} title="Empresas">
       {content}
     </DraggableModal>
   );

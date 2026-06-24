@@ -76,7 +76,7 @@ const OrdemServicoAdicionarArquivoModal: React.FC<OrdemServicoAdicionarArquivoMo
     <DraggableModal
       show={show}
       onClose={onClose}
-      title="Anexar Arquivo"
+      title="Arquivo"
       size="md"
       headerActions={
         <ModalFormActions

@@ -263,7 +263,7 @@ const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
     <DraggableModal
       show={show}
       onClose={handleClose}
-      title={agent ? `Instalar Agente — ${agent.name}` : 'Instalar Novo Agente'}
+      title={agent ? `Agente — ${agent.name}` : 'Agente'}
       size="lg"
       headerActions={headerActions}
     >

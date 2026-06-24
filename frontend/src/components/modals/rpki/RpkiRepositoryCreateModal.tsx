@@ -123,7 +123,7 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
   });
 
   return (
-    <DraggableModal show={show} onClose={onClose} title="Novo Repositório" size="lg" modalId="rpki-repository-create-modal">
+    <DraggableModal show={show} onClose={onClose} title="Repositório" size="lg" modalId="rpki-repository-create-modal">
       <div className="p-2">
         <div className="row g-2">
           <div className="col-md-4">

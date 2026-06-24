@@ -97,7 +97,7 @@ const resolveRpkiModal = (active: ModalType): ResolvedRpkiModal | null => {
     case 'rpki-roas':
       return { title: 'RPKI - ROAs', component: RpkiRoaListModal };
     case 'rpki-validar-rota':
-      return { title: 'RPKI - Validar Rota', component: RpkiValidateRouteModal };
+      return { title: 'RPKI - Rota', component: RpkiValidateRouteModal };
     case 'rpki-logs-validacao':
       return { titleKey: 'logs.rpkiSincronizacao', component: RpkiValidationLogsModal, size: 'xl', className: 'no-padding' };
     case 'rpki-logs-ca-pai':

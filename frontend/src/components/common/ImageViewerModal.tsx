@@ -16,7 +16,7 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
   show,
   onClose,
   imageUrl,
-  title = "Visualizar Imagem",
+  title = "Imagem",
   modalId = "image-viewer-modal"
 }) => {
   const imageRef = useRef<HTMLImageElement>(null);

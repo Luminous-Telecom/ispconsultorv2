@@ -26,8 +26,7 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
   skipWrapper = false,
 }) => {
   const { t } = useI18n();
-  const defaultTitle =
-    title || (onSelectTipo ? `Selecionar ${t('modal.billingType')}` : t('menu.billingType'));
+  const defaultTitle = title || t('modal.billingType');
 
   const list = useEntityListModal<TipoCobrancaContrato>({
     onClose,
