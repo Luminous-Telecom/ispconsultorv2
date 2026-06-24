@@ -65,6 +65,7 @@ interface OrdemServicoFormFieldsProps {
   tecnicoNome?: string;
   assuntoNome?: string;
   setorNome?: string;
+  protocolo?: string;
   onShowClienteModal?: () => void;
   onShowFilialModal?: () => void;
   onShowEstruturaModal?: () => void;
@@ -87,6 +88,7 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
   tecnicoNome = '',
   assuntoNome = '',
   setorNome = '',
+  protocolo = '',
   onShowClienteModal,
   onShowFilialModal,
   onShowEstruturaModal,
@@ -96,7 +98,20 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
 }) => {
   return (
     <div className="row g-2">
-      <div className="col-md-6">
+      {protocolo ? (
+        <div className="col-md-4">
+          <FormField
+            name="protocolo"
+            type="text"
+            label="Protocolo"
+            value={protocolo}
+            onChange={() => undefined}
+            size="sm"
+            readOnly
+          />
+        </div>
+      ) : null}
+      <div className={protocolo ? 'col-md-8' : 'col-md-6'}>
         <EntitySelectField
           label="Cliente"
           value={clienteId}

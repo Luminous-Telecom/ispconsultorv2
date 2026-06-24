@@ -15,6 +15,7 @@ import OrdemServicoFormFields, {
   type OrdemServicoFormData,
 } from './OrdemServicoFormFields';
 import OrdemServicoMensagensList from './OrdemServicoMensagensList';
+import OrdemServicoArquivosList from './OrdemServicoArquivosList';
 import IxcLookupSelectModal from './IxcLookupSelectModal';
 
 interface OrdemServicoModalProps {
@@ -40,7 +41,7 @@ const datetimeLocalToIxc = (value: string): string => {
 const INTEGRACAO_IXC_MSG =
   'Cliente sem integração IXC no contrato. Configure na aba IXC Provedor do contrato.';
 
-type OrdemServicoTab = 'principal' | 'mensagens';
+type OrdemServicoTab = 'principal' | 'mensagens' | 'arquivos';
 
 const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
   show,
@@ -59,6 +60,7 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
     (): ModalTabItem<OrdemServicoTab>[] => [
       { id: 'principal', label: 'Principal' },
       { id: 'mensagens', label: 'Histórico' },
+      { id: 'arquivos', label: 'Arquivos' },
     ],
     []
   );
@@ -271,6 +273,7 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
       tecnicoNome={tecnicoNome}
       assuntoNome={assuntoNome}
       setorNome={setorNome}
+      protocolo={isEdit ? String(ordemData?.protocolo ?? '') : ''}
       onShowClienteModal={() => setShowClienteModal(true)}
       onShowFilialModal={() => handleOpenLookupModal(() => setShowFilialModal(true))}
       onShowEstruturaModal={() => handleOpenLookupModal(() => setShowEstruturaModal(true))}
@@ -295,7 +298,7 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
         <div className="ordem-servico-modal-content">
           <div
             className={`tab-content ordem-servico-tab-content ${
-              activeTab === 'mensagens'
+              activeTab === 'mensagens' || activeTab === 'arquivos'
                 ? 'ordem-servico-tab-content-scrollable'
                 : 'ordem-servico-tab-content-padded'
             }`}
@@ -315,6 +318,15 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
               ) : (
                 <p className="text-muted small mb-0">
                   Salve a ordem de serviço para visualizar as mensagens.
+                </p>
+              )
+            )}
+            {activeTab === 'arquivos' && (
+              isEdit && ordemServicoId != null ? (
+                <OrdemServicoArquivosList ordemServicoId={ordemServicoId} />
+              ) : (
+                <p className="text-muted small mb-0">
+                  Salve a ordem de serviço para visualizar os arquivos.
                 </p>
               )
             )}

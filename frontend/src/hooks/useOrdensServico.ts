@@ -5,6 +5,7 @@ import type {
   UpdateOrdemServico,
   OrdemServicoAcao,
   OrdemServicoAcaoPayload,
+  CreateOrdemServicoArquivoRequest,
 } from '../services/ordemServicoService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { CACHE_CONFIG } from '../config/api';
@@ -138,5 +139,61 @@ export const useDeleteOrdemServicoMensagem = () => {
       success('Mensagem excluída com sucesso!');
     },
     onError: (err) => showApiError(err, 'Erro ao excluir mensagem'),
+  });
+};
+
+export const useOrdemServicoArquivos = (
+  ordemServicoId: number | string | null | undefined,
+  enabled = true
+) => {
+  return useQuery({
+    queryKey: ['ordem-servico-arquivos', ordemServicoId],
+    queryFn: () => OrdemServicoService.listArquivos(ordemServicoId as number | string),
+    enabled: enabled && ordemServicoId != null && ordemServicoId !== '',
+    staleTime: 0,
+    gcTime: DEFAULT_CACHE_TIME,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useUploadOrdemServicoArquivo = () => {
+  const queryClient = useQueryClient();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
+
+  return useMutation({
+    mutationFn: ({
+      ordemServicoId,
+      data,
+    }: {
+      ordemServicoId: number | string;
+      data: CreateOrdemServicoArquivoRequest;
+    }) => OrdemServicoService.uploadArquivo(ordemServicoId, data),
+    onSuccess: async (_data, { ordemServicoId }) => {
+      await queryClient.invalidateQueries({ queryKey: ['ordem-servico-arquivos', ordemServicoId] });
+      success('Arquivo anexado com sucesso!');
+    },
+    onError: (err) => showApiError(err, 'Erro ao anexar arquivo'),
+  });
+};
+
+export const useDeleteOrdemServicoArquivo = () => {
+  const queryClient = useQueryClient();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
+
+  return useMutation({
+    mutationFn: ({
+      ordemServicoId,
+      arquivoId,
+    }: {
+      ordemServicoId: number | string;
+      arquivoId: number | string;
+    }) => OrdemServicoService.deleteArquivo(ordemServicoId, arquivoId),
+    onSuccess: async (_data, { ordemServicoId }) => {
+      await queryClient.invalidateQueries({ queryKey: ['ordem-servico-arquivos', ordemServicoId] });
+      success('Arquivo excluído com sucesso!');
+    },
+    onError: (err) => showApiError(err, 'Erro ao excluir arquivo'),
   });
 };

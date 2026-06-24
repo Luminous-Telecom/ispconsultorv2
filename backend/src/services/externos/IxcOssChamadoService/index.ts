@@ -15,6 +15,7 @@ import {
   registrarMensagemOs,
   deleteMensagemOs,
 } from './ossAcoes';
+import { OrdemServicoArquivoService, type OrdemServicoArquivoItem } from '../../ordens/OrdemServicoArquivoService';
 import {
   enrichOsRegistros,
   fetchMensagensOs,
@@ -57,6 +58,17 @@ export type {
 export { OSS_CHAMADO_ACOES };
 
 export class IxcOssChamadoService {
+  private static async assertOsAcessivel(id: string | number): Promise<void> {
+    if (!(await osAbertaPeloOperador(id))) {
+      throw new Error('Ordem de serviço não encontrada');
+    }
+
+    const registro = await fetchOsRawById(id);
+    if (!registro || Number(registro.id_estrutura) <= 0) {
+      throw new Error('Ordem de serviço não encontrada');
+    }
+  }
+
   static async list(
     filters: ListOssChamadosFilters = {},
     empresaId: number | null = null
@@ -260,6 +272,67 @@ export class IxcOssChamadoService {
       }
 
       return deleteMensagemOs(ordemId, mensagemId);
+    });
+  }
+
+  static async listArquivos(
+    id: string | number,
+    empresaId: number | null = null
+  ): Promise<OrdemServicoArquivoItem[]> {
+    return runWithIxcCredentials(empresaId, async () => {
+      await IxcOssChamadoService.assertOsAcessivel(id);
+      return OrdemServicoArquivoService.list(String(id));
+    });
+  }
+
+  static async createArquivo(
+    id: string | number,
+    descricao: string,
+    buffer: Buffer,
+    nomeOriginal: string,
+    mimeType: string | undefined,
+    empresaId: number | null = null
+  ): Promise<OrdemServicoArquivoItem> {
+    return runWithIxcCredentials(empresaId, async () => {
+      await IxcOssChamadoService.assertOsAcessivel(id);
+
+      const arquivo = {
+        buffer,
+        originalname: nomeOriginal,
+        mimetype: mimeType ?? 'application/octet-stream',
+        size: buffer.length,
+      } as Express.Multer.File;
+
+      return OrdemServicoArquivoService.create({
+        ordem_servico_id: String(id),
+        empresa_id: empresaId,
+        nome: nomeOriginal,
+        descricao: descricao.trim() || nomeOriginal,
+        arquivo,
+        mime_type: mimeType,
+      });
+    });
+  }
+
+  static async deleteArquivo(
+    ordemId: string | number,
+    arquivoId: string | number,
+    empresaId: number | null = null
+  ): Promise<void> {
+    return runWithIxcCredentials(empresaId, async () => {
+      await IxcOssChamadoService.assertOsAcessivel(ordemId);
+      await OrdemServicoArquivoService.delete(Number(arquivoId), String(ordemId));
+    });
+  }
+
+  static async downloadArquivo(
+    ordemId: string | number,
+    arquivoId: string | number,
+    empresaId: number | null = null
+  ): Promise<{ buffer: Buffer; nome: string; mimeType: string }> {
+    return runWithIxcCredentials(empresaId, async () => {
+      await IxcOssChamadoService.assertOsAcessivel(ordemId);
+      return OrdemServicoArquivoService.getFileContent(Number(arquivoId), String(ordemId));
     });
   }
 

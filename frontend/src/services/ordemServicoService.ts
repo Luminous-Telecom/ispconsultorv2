@@ -77,6 +77,19 @@ export interface OrdemServicoMensagem {
   data: string;
 }
 
+export interface OrdemServicoArquivo {
+  id: string;
+  ordem_servico_id: string;
+  descricao: string;
+  nome: string;
+  mime_type: string;
+}
+
+export interface CreateOrdemServicoArquivoRequest {
+  descricao?: string;
+  arquivo: File;
+}
+
 export interface OrdemServicoFilters extends BaseFilters {
   searchField?: string;
   sortColumn?: string;
@@ -123,6 +136,76 @@ export class OrdemServicoService {
     await defaultApiClient.delete(
       `/ixc/ordens-servico/${ordemServicoId}/mensagens/${mensagemId}`
     );
+  }
+
+  static async listArquivos(id: number | string): Promise<OrdemServicoArquivo[]> {
+    const response = await defaultApiClient.get<OrdemServicoArquivo[]>(
+      `/ixc/ordens-servico/${id}/arquivos`
+    );
+    return response.data ?? [];
+  }
+
+  static async uploadArquivo(
+    ordemServicoId: number | string,
+    data: CreateOrdemServicoArquivoRequest
+  ): Promise<void> {
+    const formData = new FormData();
+    formData.append('arquivo', data.arquivo);
+    if (data.descricao) {
+      formData.append('descricao', data.descricao);
+    }
+
+    await defaultApiClient.post(
+      `/ixc/ordens-servico/${ordemServicoId}/arquivos`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+  }
+
+  static async deleteArquivo(
+    ordemServicoId: number | string,
+    arquivoId: number | string
+  ): Promise<void> {
+    await defaultApiClient.delete(
+      `/ixc/ordens-servico/${ordemServicoId}/arquivos/${arquivoId}`
+    );
+  }
+
+  static async fetchArquivoBlob(
+    ordemServicoId: number | string,
+    arquivoId: number | string,
+    view = false
+  ): Promise<Blob> {
+    const viewParam = view ? '?view=true' : '';
+    const response = await defaultApiClient.get<Blob>(
+      `/ixc/ordens-servico/${ordemServicoId}/arquivos/${arquivoId}/download${viewParam}`,
+      { responseType: 'blob' }
+    );
+
+    const blob = (response.data ?? response) as Blob;
+    if (!(blob instanceof Blob)) {
+      throw new Error('Erro ao baixar arquivo');
+    }
+
+    return blob;
+  }
+
+  static async downloadArquivo(
+    ordemServicoId: number | string,
+    arquivoId: number | string,
+    nome: string
+  ): Promise<void> {
+    const blob = await OrdemServicoService.fetchArquivoBlob(ordemServicoId, arquivoId, false);
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = nome || 'arquivo';
+    link.click();
+    window.URL.revokeObjectURL(url);
   }
 
   static async create(data: CreateOrdemServico): Promise<OrdemServico> {
