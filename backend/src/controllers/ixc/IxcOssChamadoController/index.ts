@@ -13,6 +13,7 @@ export class IxcOssChamadoController {
     try {
       const { page, limit, search, searchField, sortColumn, sortDirection } = parseListQuery(req.query);
       const empresaId = getEmpresaIdOrNull(req);
+      const usuarioId = getUsuarioIdOrNull(req);
 
       const result = await IxcOssChamadoService.list({
         page,
@@ -21,7 +22,7 @@ export class IxcOssChamadoController {
         searchField,
         sortColumn,
         sortDirection,
-      }, empresaId);
+      }, empresaId, usuarioId);
 
       sendSuccess(res, result);
     } catch (error) {
@@ -37,7 +38,7 @@ export class IxcOssChamadoController {
     try {
       const { id } = req.params;
       const empresaId = getEmpresaIdOrNull(req);
-      const chamado = await IxcOssChamadoService.getById(id, empresaId);
+      const chamado = await IxcOssChamadoService.getById(id, empresaId, getUsuarioIdOrNull(req));
 
       if (!chamado) {
         sendNotFound(res, 'Ordem de serviço não encontrada');
@@ -58,7 +59,7 @@ export class IxcOssChamadoController {
     try {
       const { id } = req.params;
       const empresaId = getEmpresaIdOrNull(req);
-      const mensagens = await IxcOssChamadoService.listMensagens(id, empresaId);
+      const mensagens = await IxcOssChamadoService.listMensagens(id, empresaId, getUsuarioIdOrNull(req));
       sendSuccess(res, mensagens);
     } catch (error) {
       sendError(res, error, 'Erro ao listar mensagens da ordem de serviço', 500, true, {
@@ -73,7 +74,7 @@ export class IxcOssChamadoController {
     try {
       const { id, mensagemId } = req.params;
       const empresaId = getEmpresaIdOrNull(req);
-      await IxcOssChamadoService.deleteMensagem(id, mensagemId, empresaId);
+      await IxcOssChamadoService.deleteMensagem(id, mensagemId, empresaId, getUsuarioIdOrNull(req));
       sendSuccess(res, undefined, 'Mensagem excluída com sucesso');
     } catch (error) {
       sendError(res, error, 'Erro ao excluir mensagem da ordem de serviço', 500, true, {
@@ -197,7 +198,7 @@ export class IxcOssChamadoController {
     try {
       const { id } = req.params;
       const empresaId = getEmpresaIdOrNull(req);
-      const resultado = await IxcOssChamadoService.update(id, req.body, empresaId);
+      const resultado = await IxcOssChamadoService.update(id, req.body, empresaId, getUsuarioIdOrNull(req));
       sendSuccess(res, resultado, 'Ordem de serviço atualizada com sucesso');
     } catch (error) {
       sendError(res, error, 'Erro ao atualizar ordem de serviço', 500, true, {
@@ -240,7 +241,7 @@ export class IxcOssChamadoController {
     try {
       const { id } = req.params;
       const empresaId = getEmpresaIdOrNull(req);
-      await IxcOssChamadoService.delete(id, empresaId);
+      await IxcOssChamadoService.delete(id, empresaId, getUsuarioIdOrNull(req));
       sendSuccess(res, undefined, 'Ordem de serviço excluída com sucesso');
     } catch (error) {
       sendError(res, error, 'Erro ao excluir ordem de serviço', 500, true, {

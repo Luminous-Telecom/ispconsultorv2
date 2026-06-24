@@ -97,7 +97,7 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
         label: 'ID',
         sortable: true,
         width: '65px',
-        render: (item) => <span>{item.id}</span>,
+        render: (item) => <span>{item.id_local ?? item.id}</span>,
       },
       {
         key: 'protocolo',
@@ -119,6 +119,13 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
         sortable: true,
         width: '150px',
         render: (item) => <span>{item.cliente_nome || '-'}</span>,
+      },
+      {
+        key: 'operador_nome',
+        label: 'Operador',
+        sortable: true,
+        width: '130px',
+        render: (item) => <span>{item.operador_nome || '-'}</span>,
       },
       {
         key: 'id_estrutura',
@@ -200,6 +207,7 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
     () => [
       { key: 'id', label: 'ID' },
       { key: 'cliente_nome', label: 'Cliente' },
+      { key: 'operador_nome', label: 'Operador' },
       { key: 'estrutura_nome', label: 'Estrutura' },
       { key: 'mensagem', label: 'Descrição' },
       { key: 'protocolo', label: 'Protocolo' },

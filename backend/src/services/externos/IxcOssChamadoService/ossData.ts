@@ -9,7 +9,6 @@ import {
   IXC_RESOURCE,
   IXC_SETOR_RESOURCE,
   IXC_EVENTO_ABERTURA,
-  IXC_USUARIOS_RESOURCE,
   OSS_EVENTO_LABELS,
 } from './constants';
 import { ixcListar, resolveOperadorId } from './ixcHttp';
@@ -89,16 +88,6 @@ export async function fetchMensagensOs(id: string | number): Promise<IxcOssMensa
   const registros = data.registros ?? [];
   if (registros.length === 0) return [];
 
-  const operadores = await fetchRegistrosPorIds(
-    IXC_USUARIOS_RESOURCE,
-    registros.map((r) => String(r.id_operador ?? ''))
-  );
-
-  const colaboradores = await fetchRegistrosPorIds(
-    IXC_FUNCIONARIOS_RESOURCE,
-    registros.map((r) => String(r.id_tecnico ?? ''))
-  );
-
   return registros.map((registro): IxcOssMensagem => ({
     id: String(registro.id ?? ''),
     id_chamado: String(registro.id_chamado ?? ''),
@@ -108,8 +97,8 @@ export async function fetchMensagensOs(id: string | number): Promise<IxcOssMensa
     mensagem: String(registro.mensagem ?? ''),
     data: String(registro.data ?? ''),
     evento_nome: OSS_EVENTO_LABELS[String(registro.id_evento ?? '')] ?? `Evento ${registro.id_evento}`,
-    operador_nome: operadores.get(String(registro.id_operador ?? ''))?.nome ?? '',
-    colaborador_nome: colaboradores.get(String(registro.id_tecnico ?? ''))?.funcionario ?? '',
+    operador_nome: '',
+    colaborador_nome: '',
   }));
 }
 
@@ -177,14 +166,16 @@ export async function enrichOsRegistros(registros: IxcOssChamado[]): Promise<Ixc
     fetchRegistrosPorIds(IXC_ASSUNTO_RESOURCE, registros.map((r) => String(r.id_assunto ?? ''))),
     fetchRegistrosPorIds(IXC_SETOR_RESOURCE, registros.map((r) => String(r.setor ?? ''))),
     fetchRegistrosPorIds(IXC_FILIAL_RESOURCE, registros.map((r) => String(r.id_filial ?? ''))),
-    fetchBacknetClientesPorIds(registros.map((r) => String(r.idx ?? ''))),
+    fetchBacknetClientesPorIds(
+      registros.map((r) => String(r.idx ?? r.cliente_id ?? ''))
+    ),
     fetchRegistrosPorIds(IXC_CIDADE_RESOURCE, registros.map((r) => String(r.id_cidade ?? ''))),
   ]);
 
   return registros.map((registro) => {
     const filial = filiais.get(String(registro.id_filial ?? ''));
     const assunto = assuntos.get(String(registro.id_assunto ?? ''));
-    const backnetClienteId = String(registro.idx ?? '').trim();
+    const backnetClienteId = String(registro.idx ?? registro.cliente_id ?? '').trim();
     const clienteBacknet = clientesBacknet.get(backnetClienteId);
     const cidade = cidades.get(String(registro.id_cidade ?? ''));
     return {
@@ -194,8 +185,14 @@ export async function enrichOsRegistros(registros: IxcOssChamado[]): Promise<Ixc
       assunto_nome: assunto?.assunto ?? '',
       setor_nome: setores.get(String(registro.setor ?? ''))?.setor ?? '',
       filial_nome: filial?.fantasia || filial?.razao || '',
-      cliente_id: backnetClienteId && backnetClienteId !== '0' ? backnetClienteId : '',
-      cliente_nome: clienteBacknet?.nome_fantasia || clienteBacknet?.razao_social || '',
+      cliente_id:
+        backnetClienteId && backnetClienteId !== '0'
+          ? backnetClienteId
+          : String(registro.cliente_id ?? ''),
+      cliente_nome:
+        clienteBacknet?.nome_fantasia ||
+        clienteBacknet?.razao_social ||
+        String(registro.cliente_nome ?? ''),
       cidade_nome: cidade?.nome ?? '',
     };
   });

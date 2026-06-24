@@ -8,6 +8,8 @@ import { PaginatedResponse } from '../types';
 
 export interface OrdemServico {
   id: string | number;
+  id_local?: string | number;
+  ixc_id?: string;
   cliente_id?: string | number;
   id_estrutura?: string;
   id_filial?: string;
@@ -24,6 +26,7 @@ export interface OrdemServico {
   id_tecnico?: string;
   setor?: string;
   protocolo?: string;
+  operador_nome?: string;
   tipo?: string;
   prioridade?: string;
   status?: string;

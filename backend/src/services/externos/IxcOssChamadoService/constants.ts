@@ -50,6 +50,7 @@ export const CAMPOS_ENRIQUECIDOS = [
   'cliente_id',
   'cliente_nome',
   'cidade_nome',
+  'operador_nome',
 ];
 
 export const CAMPOS_AUTOGERADOS_CRIACAO = ['protocolo', 'data_abertura', 'ultima_atualizacao'];

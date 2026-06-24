@@ -21,6 +21,13 @@ export class OrdemServicoLocal extends Model<
   declare status: string;
   declare protocolo: string;
   declare data_abertura: string;
+  declare ixc_id: string | null;
+  declare id_filial: string;
+  declare id_estrutura: string;
+  declare id_assunto: string;
+  declare setor: string;
+  declare id_tecnico: string;
+  declare tipo: string;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 }
@@ -71,6 +78,40 @@ OrdemServicoLocal.init(
       type: DataTypes.STRING(19),
       allowNull: false,
     },
+    ixc_id: {
+      type: DataTypes.STRING(32),
+      allowNull: true,
+    },
+    id_filial: {
+      type: DataTypes.STRING(32),
+      allowNull: false,
+      defaultValue: '',
+    },
+    id_estrutura: {
+      type: DataTypes.STRING(32),
+      allowNull: false,
+      defaultValue: '0',
+    },
+    id_assunto: {
+      type: DataTypes.STRING(32),
+      allowNull: false,
+      defaultValue: '',
+    },
+    setor: {
+      type: DataTypes.STRING(32),
+      allowNull: false,
+      defaultValue: '',
+    },
+    id_tecnico: {
+      type: DataTypes.STRING(32),
+      allowNull: false,
+      defaultValue: '',
+    },
+    tipo: {
+      type: DataTypes.STRING(4),
+      allowNull: false,
+      defaultValue: 'E',
+    },
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,
@@ -92,6 +133,7 @@ OrdemServicoLocal.init(
       { fields: ['empresa_id'] },
       { fields: ['cliente_id'] },
       { fields: ['protocolo'] },
+      { fields: ['ixc_id'] },
     ],
   }
 );

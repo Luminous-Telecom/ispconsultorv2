@@ -66,6 +66,8 @@ interface OrdemServicoFormFieldsProps {
   assuntoNome?: string;
   setorNome?: string;
   protocolo?: string;
+  idLocal?: string;
+  ixcId?: string;
   onShowClienteModal?: () => void;
   onShowFilialModal?: () => void;
   onShowEstruturaModal?: () => void;
@@ -91,6 +93,8 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
   assuntoNome = '',
   setorNome = '',
   protocolo = '',
+  idLocal = '',
+  ixcId = '',
   onShowClienteModal,
   onShowFilialModal,
   onShowEstruturaModal,
@@ -100,10 +104,38 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
   showIxcFields = true,
   showAgendaFields = true,
 }) => {
+  const metaColClass = 'col-md-4';
+
   return (
     <div className="row g-2">
+      {idLocal ? (
+        <div className={metaColClass}>
+          <FormField
+            name="id_local"
+            type="text"
+            label="ID"
+            value={idLocal}
+            onChange={() => undefined}
+            size="sm"
+            readOnly
+          />
+        </div>
+      ) : null}
+      {ixcId ? (
+        <div className={metaColClass}>
+          <FormField
+            name="ixc_id"
+            type="text"
+            label="ID IXC"
+            value={ixcId}
+            onChange={() => undefined}
+            size="sm"
+            readOnly
+          />
+        </div>
+      ) : null}
       {protocolo ? (
-        <div className="col-md-4">
+        <div className={metaColClass}>
           <FormField
             name="protocolo"
             type="text"
@@ -115,7 +147,7 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
           />
         </div>
       ) : null}
-      <div className={protocolo ? 'col-md-8' : 'col-md-6'}>
+      <div className={idLocal || ixcId || protocolo ? 'col-12' : 'col-md-6'}>
         <EntitySelectField
           label="Cliente"
           value={clienteId}

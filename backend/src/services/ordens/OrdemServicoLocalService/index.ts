@@ -27,9 +27,7 @@ import {
 } from '../ordemServicoProtocolo';
 
 function parseNumericId(id: string | number): number | null {
-  const raw = String(id).trim();
-  const normalized = /^L\d+$/.test(raw) ? raw.slice(1) : raw;
-  const numericId = parseInt(normalized, 10);
+  const numericId = parseInt(String(id).trim(), 10);
   return Number.isFinite(numericId) && numericId > 0 ? numericId : null;
 }
 
@@ -47,9 +45,13 @@ async function fetchClienteNome(clienteId: number): Promise<string> {
 }
 
 function toIxcOssChamado(record: OrdemServicoLocal, clienteNome: string): IxcOssChamado {
+  const isIxc = Boolean(record.ixc_id?.trim());
+
   return {
-    id: String(record.id),
-    origem: 'backnet',
+    id: isIxc ? String(record.ixc_id) : String(record.id),
+    id_local: String(record.id),
+    ixc_id: isIxc ? String(record.ixc_id) : '',
+    origem: isIxc ? 'ixc' : 'backnet',
     cliente_id: String(record.cliente_id),
     cliente_nome: clienteNome,
     prioridade: record.prioridade,
@@ -59,12 +61,12 @@ function toIxcOssChamado(record: OrdemServicoLocal, clienteNome: string): IxcOss
     status: record.status,
     protocolo: record.protocolo,
     data_abertura: record.data_abertura,
-    id_filial: '',
-    id_estrutura: '0',
-    id_assunto: '',
-    setor: '',
-    id_tecnico: '',
-    tipo: 'E',
+    id_filial: record.id_filial,
+    id_estrutura: record.id_estrutura,
+    id_assunto: record.id_assunto,
+    setor: record.setor,
+    id_tecnico: record.id_tecnico,
+    tipo: record.tipo,
   };
 }
 
@@ -124,6 +126,12 @@ async function fetchUsuarioNomes(usuarioIds: number[]): Promise<Map<number, stri
   return new Map(usuarios.map((usuario) => [usuario.id, usuario.nome?.trim() || String(usuario.id)]));
 }
 
+export async function fetchUsuarioNomeById(usuarioId: number | null): Promise<string> {
+  if (!usuarioId) return '';
+  const mapa = await fetchUsuarioNomes([usuarioId]);
+  return mapa.get(usuarioId) ?? '';
+}
+
 async function mapMensagensComOperador(
   mensagens: OrdemServicoMensagem[],
   ordemId: number
@@ -139,6 +147,84 @@ async function mapMensagensComOperador(
   return mensagens.map((item) => toIxcOssMensagem(item, ordemId, usuarioNomes));
 }
 
+async function fetchOperadorAberturaPorOrdemIds(
+  ordemIds: number[]
+): Promise<Map<number, string>> {
+  if (ordemIds.length === 0) return new Map();
+
+  const aberturas = await OrdemServicoMensagem.findAll({
+    where: {
+      ordem_servico_id: { [Op.in]: ordemIds },
+      id_evento: IXC_EVENTO_ABERTURA,
+    },
+  });
+
+  const usuarioIds = [
+    ...new Set(
+      aberturas
+        .map((item) => item.usuario_id)
+        .filter((id): id is number => id != null && id > 0)
+    ),
+  ];
+  const usuarioNomes = await fetchUsuarioNomes(usuarioIds);
+
+  const mapa = new Map<number, string>();
+  for (const abertura of aberturas) {
+    if (abertura.usuario_id == null) continue;
+    const nome = usuarioNomes.get(abertura.usuario_id) ?? '';
+    if (nome) mapa.set(abertura.ordem_servico_id, nome);
+  }
+  return mapa;
+}
+
+function applyListFilters(
+  data: IxcOssChamado[],
+  filters: ListOssChamadosFilters
+): IxcOssChamado[] {
+  const search = filters.search?.trim();
+  const sortColumn = filters.sortColumn?.trim() || 'id';
+  const sortDirection = filters.sortDirection === 'asc' ? 'asc' : 'desc';
+  const searchField = filters.searchField?.trim() || 'cliente_nome';
+
+  let result = data;
+  if (search) {
+    const termo = search.toLowerCase();
+    result = result.filter((item) =>
+      [searchField, 'mensagem', 'protocolo', 'cliente_nome', 'operador_nome'].some((campo) =>
+        String(item[campo] ?? '').toLowerCase().includes(termo)
+      )
+    );
+  }
+
+  return sortRegistros(result, sortColumn, sortDirection);
+}
+
+async function mapLocalRegistros(registros: OrdemServicoLocal[]): Promise<IxcOssChamado[]> {
+  if (registros.length === 0) return [];
+
+  const clienteIds = [...new Set(registros.map((r) => r.cliente_id))];
+  const clientes = clienteIds.length
+    ? await Cliente.findAll({
+        where: { id: { [Op.in]: clienteIds } },
+        attributes: ['id', 'razao_social', 'nome_fantasia'],
+      })
+    : [];
+  const clienteNomes = new Map(
+    clientes.map((c) => [c.id, c.nome_fantasia?.trim() || c.razao_social?.trim() || String(c.id)])
+  );
+
+  const operadorPorOrdem = await fetchOperadorAberturaPorOrdemIds(registros.map((r) => r.id));
+
+  return registros.map((record) => {
+    const chamado = toIxcOssChamado(
+      record,
+      clienteNomes.get(record.cliente_id) ?? String(record.cliente_id)
+    );
+    const operadorNome = operadorPorOrdem.get(record.id);
+    return operadorNome ? { ...chamado, operador_nome: operadorNome } : chamado;
+  });
+}
+
 export class OrdemServicoLocalService {
   static async list(
     filters: ListOssChamadosFilters = {},
@@ -146,41 +232,16 @@ export class OrdemServicoLocalService {
   ): Promise<ListOssChamadosResponse> {
     const page = filters.page && filters.page > 0 ? filters.page : 1;
     const limit = filters.limit && filters.limit > 0 ? filters.limit : 15;
-    const search = filters.search?.trim();
-    const sortColumn = filters.sortColumn?.trim() || 'id';
-    const sortDirection = filters.sortDirection === 'asc' ? 'asc' : 'desc';
-    const searchField = filters.searchField?.trim() || 'cliente_nome';
 
     const registros = await OrdemServicoLocal.findAll({
-      where: empresaWhere(empresaId),
+      where: {
+        ...empresaWhere(empresaId),
+        ixc_id: null,
+      },
       order: [['id', 'DESC']],
     });
 
-    const clienteIds = [...new Set(registros.map((r) => r.cliente_id))];
-    const clientes = clienteIds.length
-      ? await Cliente.findAll({
-          where: { id: { [Op.in]: clienteIds } },
-          attributes: ['id', 'razao_social', 'nome_fantasia'],
-        })
-      : [];
-    const clienteNomes = new Map(
-      clientes.map((c) => [c.id, c.nome_fantasia?.trim() || c.razao_social?.trim() || String(c.id)])
-    );
-
-    let data = registros.map((record) =>
-      toIxcOssChamado(record, clienteNomes.get(record.cliente_id) ?? String(record.cliente_id))
-    );
-
-    if (search) {
-      const termo = search.toLowerCase();
-      data = data.filter((item) =>
-        [searchField, 'mensagem', 'protocolo', 'cliente_nome'].some((campo) =>
-          String(item[campo] ?? '').toLowerCase().includes(termo)
-        )
-      );
-    }
-
-    data = sortRegistros(data, sortColumn, sortDirection);
+    const data = applyListFilters(await mapLocalRegistros(registros), filters);
 
     const total = data.length;
     const lastPage = Math.max(1, Math.ceil(total / limit) || 1);
@@ -200,14 +261,198 @@ export class OrdemServicoLocalService {
     };
   }
 
-  static async getById(
+  static async listIxcVinculadas(
+    filters: ListOssChamadosFilters = {},
+    empresaId: number | null = null,
+    usuarioId: number | null = null
+  ): Promise<IxcOssChamado[]> {
+    if (!usuarioId) return [];
+
+    const aberturas = await OrdemServicoMensagem.findAll({
+      where: {
+        id_evento: IXC_EVENTO_ABERTURA,
+        usuario_id: usuarioId,
+        ...(empresaId != null ? { empresa_id: empresaId } : {}),
+      },
+      attributes: ['ordem_servico_id'],
+    });
+
+    const ordemIds = [...new Set(aberturas.map((item) => item.ordem_servico_id))];
+    if (ordemIds.length === 0) return [];
+
+    const registros = await OrdemServicoLocal.findAll({
+      where: {
+        id: { [Op.in]: ordemIds },
+        ixc_id: { [Op.ne]: null },
+        ...empresaWhere(empresaId),
+      },
+      order: [['id', 'DESC']],
+    });
+
+    return applyListFilters(await mapLocalRegistros(registros), filters);
+  }
+
+  static async createIxcMirror(
+    ixcOs: IxcOssChamado,
+    payload: OssChamadoInput,
+    empresaId: number | null,
+    usuarioId: number | null,
+    clienteId: number
+  ): Promise<OrdemServicoLocal> {
+    const ixcId = String(ixcOs.id ?? '').trim();
+    if (!ixcId) {
+      throw new Error('IXC não retornou o ID da ordem de serviço criada');
+    }
+
+    const mensagem = String(ixcOs.mensagem ?? payload.mensagem ?? '').trim();
+    const dataAbertura = String(ixcOs.data_abertura ?? nowIxcDateTime()).trim() || nowIxcDateTime();
+
+    const record = await OrdemServicoLocal.create({
+      empresa_id: empresaId,
+      cliente_id: clienteId,
+      ixc_id: ixcId,
+      prioridade: String(ixcOs.prioridade ?? payload.prioridade ?? 'N').trim() || 'N',
+      melhor_horario_agenda:
+        String(ixcOs.melhor_horario_agenda ?? payload.melhor_horario_agenda ?? 'Q').trim() || 'Q',
+      data_agenda: String(ixcOs.data_agenda ?? payload.data_agenda ?? '').trim() || null,
+      mensagem,
+      status: String(ixcOs.status ?? 'A').trim() || 'A',
+      protocolo: String(ixcOs.protocolo ?? '').trim() || ixcId,
+      data_abertura: dataAbertura,
+      id_filial: String(ixcOs.id_filial ?? payload.id_filial ?? '').trim(),
+      id_estrutura: String(ixcOs.id_estrutura ?? payload.id_estrutura ?? '0').trim() || '0',
+      id_assunto: String(ixcOs.id_assunto ?? payload.id_assunto ?? '').trim(),
+      setor: String(ixcOs.setor ?? payload.setor ?? '').trim(),
+      id_tecnico: String(ixcOs.id_tecnico ?? payload.id_tecnico ?? '').trim(),
+      tipo: String(ixcOs.tipo ?? payload.tipo ?? 'E').trim() || 'E',
+    });
+
+    await OrdemServicoMensagem.create({
+      empresa_id: empresaId,
+      ordem_servico_id: record.id,
+      id_evento: IXC_EVENTO_ABERTURA,
+      mensagem,
+      data: dataAbertura,
+      usuario_id: usuarioId,
+    });
+
+    return record;
+  }
+
+  static async syncFromIxcOs(
+    ixcId: string | number,
+    ixcOs: IxcOssChamado,
+    payload: OssChamadoInput = {},
+    empresaId: number | null = null
+  ): Promise<void> {
+    const record = await this.findByIxcId(ixcId, empresaId);
+    if (!record) return;
+
+    const updates: Partial<OrdemServicoLocal> = {
+      prioridade: String(ixcOs.prioridade ?? record.prioridade).trim() || record.prioridade,
+      melhor_horario_agenda:
+        String(ixcOs.melhor_horario_agenda ?? record.melhor_horario_agenda).trim() ||
+        record.melhor_horario_agenda,
+      data_agenda: String(ixcOs.data_agenda ?? record.data_agenda ?? '').trim() || null,
+      mensagem: String(ixcOs.mensagem ?? record.mensagem).trim() || record.mensagem,
+      status: String(ixcOs.status ?? record.status).trim() || record.status,
+      protocolo: String(ixcOs.protocolo ?? record.protocolo).trim() || record.protocolo,
+      data_abertura: String(ixcOs.data_abertura ?? record.data_abertura).trim() || record.data_abertura,
+      id_filial: String(ixcOs.id_filial ?? payload.id_filial ?? record.id_filial).trim(),
+      id_estrutura: String(ixcOs.id_estrutura ?? payload.id_estrutura ?? record.id_estrutura).trim() || '0',
+      id_assunto: String(ixcOs.id_assunto ?? payload.id_assunto ?? record.id_assunto).trim(),
+      setor: String(ixcOs.setor ?? payload.setor ?? record.setor).trim(),
+      id_tecnico: String(ixcOs.id_tecnico ?? payload.id_tecnico ?? record.id_tecnico).trim(),
+      tipo: String(ixcOs.tipo ?? payload.tipo ?? record.tipo).trim() || record.tipo,
+    };
+
+    await record.update(updates);
+  }
+
+  static async findByIxcId(
+    ixcId: string | number,
+    empresaId: number | null = null
+  ): Promise<OrdemServicoLocal | null> {
+    const normalized = String(ixcId).trim();
+    if (!normalized) return null;
+
+    return OrdemServicoLocal.findOne({
+      where: {
+        ixc_id: normalized,
+        ...empresaWhere(empresaId),
+      },
+    });
+  }
+
+  static async findRecord(
+    id: string | number,
+    empresaId: number | null = null
+  ): Promise<OrdemServicoLocal | null> {
+    const byIxc = await this.findByIxcId(id, empresaId);
+    if (byIxc) return byIxc;
+
+    const numericId = parseNumericId(id);
+    if (numericId != null) {
+      const byLocalId = await OrdemServicoLocal.findOne({
+        where: {
+          id: numericId,
+          ixc_id: { [Op.ne]: null },
+          ...empresaWhere(empresaId),
+        },
+      });
+      if (byLocalId) return byLocalId;
+    }
+
+    return this.findPureLocalRecord(id, empresaId);
+  }
+
+  static async getChamado(
     id: string | number,
     empresaId: number | null = null
   ): Promise<IxcOssChamado | null> {
     const record = await this.findRecord(id, empresaId);
     if (!record) return null;
-    const clienteNome = await fetchClienteNome(record.cliente_id);
-    return toIxcOssChamado(record, clienteNome);
+
+    const [chamado] = await mapLocalRegistros([record]);
+    return chamado ?? null;
+  }
+
+  static async isPureBacknet(id: string | number, empresaId: number | null = null): Promise<boolean> {
+    const record = await this.findRecord(id, empresaId);
+    return record != null && !record.ixc_id?.trim();
+  }
+
+  static async wasOpenedByUsuario(
+    id: string | number,
+    usuarioId: number,
+    empresaId: number | null = null
+  ): Promise<boolean> {
+    const record = await this.findRecord(id, empresaId);
+    if (!record?.ixc_id?.trim()) return false;
+
+    const abertura = await OrdemServicoMensagem.findOne({
+      where: {
+        ordem_servico_id: record.id,
+        id_evento: IXC_EVENTO_ABERTURA,
+      },
+    });
+
+    return abertura?.usuario_id === usuarioId;
+  }
+
+  static async getOperadorAbertura(
+    id: string | number,
+    empresaId: number | null = null
+  ): Promise<string> {
+    const record = await this.findRecord(id, empresaId);
+    if (!record) return '';
+
+    const operadorPorOrdem = await fetchOperadorAberturaPorOrdemIds([record.id]);
+    return operadorPorOrdem.get(record.id) ?? '';
+  }
+
+  static async exists(id: string | number, empresaId: number | null = null): Promise<boolean> {
+    return this.isPureBacknet(id, empresaId);
   }
 
   static async create(
@@ -229,6 +474,7 @@ export class OrdemServicoLocalService {
     const record = await OrdemServicoLocal.create({
       empresa_id: empresaId,
       cliente_id: clienteId,
+      ixc_id: null,
       prioridade: String(payload.prioridade ?? 'N').trim() || 'N',
       melhor_horario_agenda: String(payload.melhor_horario_agenda ?? 'Q').trim() || 'Q',
       data_agenda: String(payload.data_agenda ?? '').trim() || null,
@@ -236,6 +482,12 @@ export class OrdemServicoLocalService {
       status: 'A',
       protocolo: await nextProtocolo(empresaId),
       data_abertura: dataAbertura,
+      id_filial: '',
+      id_estrutura: '0',
+      id_assunto: '',
+      setor: '',
+      id_tecnico: '',
+      tipo: 'E',
     });
 
     await OrdemServicoMensagem.create({
@@ -419,8 +671,26 @@ export class OrdemServicoLocalService {
     return { type: 'success' };
   }
 
-  static async exists(id: string | number, empresaId: number | null = null): Promise<boolean> {
-    return (await this.findRecord(id, empresaId)) != null;
+  static async assertAccessible(id: string | number, empresaId: number | null = null): Promise<void> {
+    if (!(await this.findRecord(id, empresaId))) {
+      throw new Error('Ordem de serviço não encontrada');
+    }
+  }
+
+  private static async findPureLocalRecord(
+    id: string | number,
+    empresaId: number | null
+  ): Promise<OrdemServicoLocal | null> {
+    const numericId = parseNumericId(id);
+    if (numericId == null) return null;
+
+    return OrdemServicoLocal.findOne({
+      where: {
+        id: numericId,
+        ixc_id: null,
+        ...empresaWhere(empresaId),
+      },
+    });
   }
 
   static async countMensagensExtras(
@@ -434,28 +704,6 @@ export class OrdemServicoLocalService {
       where: {
         ordem_servico_id: record.id,
         id_evento: { [Op.ne]: IXC_EVENTO_ABERTURA },
-      },
-    });
-  }
-
-  static async assertAccessible(id: string | number, empresaId: number | null = null): Promise<void> {
-    const record = await this.findRecord(id, empresaId);
-    if (!record) {
-      throw new Error('Ordem de serviço não encontrada');
-    }
-  }
-
-  private static async findRecord(
-    id: string | number,
-    empresaId: number | null
-  ): Promise<OrdemServicoLocal | null> {
-    const numericId = parseNumericId(id);
-    if (numericId == null) return null;
-
-    return OrdemServicoLocal.findOne({
-      where: {
-        id: numericId,
-        ...empresaWhere(empresaId),
       },
     });
   }

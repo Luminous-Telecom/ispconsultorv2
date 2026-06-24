@@ -23,7 +23,7 @@ const OrdemServicoMensagemDetalhesModal: React.FC<OrdemServicoMensagemDetalhesMo
   if (!mensagem) return null;
 
   const evento = mensagem.evento_nome || `Evento ${mensagem.id_evento}`;
-  const operador = mensagem.operador_nome || mensagem.colaborador_nome || '-';
+  const operador = mensagem.operador_nome || '-';
   const texto = mensagem.mensagem || '-';
   const linhas = Math.min(12, Math.max(4, texto.split('\n').length + 1));
 
