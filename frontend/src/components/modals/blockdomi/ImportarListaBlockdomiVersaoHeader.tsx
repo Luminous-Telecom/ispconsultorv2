@@ -15,11 +15,21 @@ const ImportarListaBlockdomiVersaoHeader: React.FC<ImportarListaBlockdomiVersaoH
   onGerarVersao,
   t,
 }) => (
-  <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
-    <span className="text-muted small me-2">
-      {t('blockdomi.versao')} atual: <strong>{versaoAtual || '-'}</strong>
-    </span>
-    <GerarButton variant="secondary" onClick={onGerarVersao} disabled={isGerandoVersao} isPending={isGerandoVersao} />
+  <div className="row g-2 align-items-end mb-2">
+    <div className="col-6 col-md-3 col-lg-2">
+      <label className="form-label small mb-1">{t('blockdomi.versao')} atual</label>
+      <input
+        type="text"
+        className="form-control form-control-sm"
+        value={versaoAtual || '-'}
+        readOnly
+        aria-readonly
+        tabIndex={-1}
+      />
+    </div>
+    <div className="col-auto pb-1">
+      <GerarButton variant="secondary" onClick={onGerarVersao} disabled={isGerandoVersao} isPending={isGerandoVersao} />
+    </div>
   </div>
 );
 
