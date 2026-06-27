@@ -1,6 +1,7 @@
 import React from 'react';
 import FormField from 'components/ui/FormField';
 import EntitySelectField from 'components/ui/EntitySelectField';
+import { LabelWithHelp } from 'components/ui/LabelWithHelp';
 import { useI18n } from 'contexts/I18nContext';
 import ContratoTab from '../abas/ContratoTab';
 import AdesaoTab from '../abas/AdesaoTab';
@@ -97,10 +98,9 @@ function DocumentoModalBody({
 
         <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 180px)' }}>
           <div className="d-flex justify-content-between align-items-center mb-1">
-            <span id="conteudo-label" className="form-label small mb-0">
-              {tipo === 'contrato' ? t('document.contractContent') : t('document.content')}{' '}
-              <span className="text-danger">*</span>
-            </span>
+            <LabelWithHelp id="conteudo-label" as="span" className="form-label small mb-0" required>
+              {tipo === 'contrato' ? t('document.contractContent') : t('document.content')}
+            </LabelWithHelp>
           </div>
 
           {tipo === 'contrato' ? (

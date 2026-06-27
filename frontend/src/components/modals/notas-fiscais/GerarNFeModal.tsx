@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DraggableModal from 'components/common/DraggableModal';
-import { CancelarButton, GerarNFSeAvulsaButton } from 'components/ui';
+import { CancelarButton, GerarNFSeAvulsaButton, LabelWithHelp } from 'components/ui';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useI18n } from 'contexts/I18nContext';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
@@ -210,7 +210,9 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
 
         <div className="row">
           <div className="col-md-6 mb-3">
-            <label className="form-label">{t('form.operationNature')} <span className="text-danger ms-1">*</span></label>
+            <LabelWithHelp className="form-label" required>
+              {t('form.operationNature')}
+            </LabelWithHelp>
             <input
               type="text"
               className={`form-control ${formErrors.natureza_operacao ? 'is-invalid' : ''}`}
@@ -259,7 +261,9 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
 
         <div className="row">
           <div className="col-md-6 mb-3">
-            <label className="form-label">{t('form.totalValue')} <span className="text-danger ms-1">*</span></label>
+            <LabelWithHelp className="form-label" required>
+              {t('form.totalValue')}
+            </LabelWithHelp>
             <input
               type="text"
               className={`form-control ${formErrors.valor_total ? 'is-invalid' : ''}`}

@@ -12,6 +12,7 @@ import {
   CancelarButton,
   EditarButton,
   DeletarButton,
+  LabelWithHelp,
 } from 'components/ui';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -124,7 +125,9 @@ const SaasPlanos: React.FC = () => {
             <form onSubmit={handleSave}>
               <div className="row g-3">
                 <div className="col-md-6">
-                  <label className="form-label">Nome <span className="text-danger ms-1">*</span></label>
+                  <LabelWithHelp className="form-label" required>
+                    Nome
+                  </LabelWithHelp>
                   <input
                     type="text"
                     className="form-control"
@@ -134,7 +137,9 @@ const SaasPlanos: React.FC = () => {
                   />
                 </div>
                 <div className="col-md-3">
-                  <label className="form-label">Valor Mensal (R$) <span className="text-danger ms-1">*</span></label>
+                  <LabelWithHelp className="form-label" required>
+                    Valor Mensal (R$)
+                  </LabelWithHelp>
                   <input
                     type="number"
                     className="form-control"

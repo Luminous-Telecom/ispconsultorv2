@@ -13,7 +13,7 @@ import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { formatCNPJ, formatCEP } from 'utils/formatters';
 import { isValidCNPJ } from 'utils/validators';
-import { CancelarButton, NovoButton, SalvarButton } from 'components/ui';
+import { CancelarButton, NovoButton, SalvarButton, RequiredMark } from 'components/ui';
 import { normalizeListPagination } from 'utils/pagination';
 
 interface EmpresasModalProps {
@@ -289,7 +289,7 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
   }) => (
     <div className="mb-2">
       <label className="form-label mb-1 small fw-semibold">
-        {label} {required && <span className="text-danger">*</span>}
+        {label} {required && <RequiredMark />}
       </label>
       <input
         type="text"

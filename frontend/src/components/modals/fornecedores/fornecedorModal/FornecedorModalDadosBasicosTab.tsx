@@ -1,5 +1,6 @@
 import React from 'react';
 import FormField from 'components/ui/FormField';
+import { LabelWithHelp } from 'components/ui/LabelWithHelp';
 import { FornecedorFormData, FornecedorFormErrors } from './types';
 
 interface FornecedorModalDadosBasicosTabProps {
@@ -37,10 +38,9 @@ const FornecedorModalDadosBasicosTab: React.FC<FornecedorModalDadosBasicosTabPro
 }) => (
   <div className="d-flex flex-column gap-2">
     <div>
-      <label className="form-label">
+      <LabelWithHelp className="form-label" required>
         {personTypeLabel}:
-        <span className="text-danger ms-1">*</span>
-      </label>
+      </LabelWithHelp>
       <div className="d-flex gap-3 mt-2">
         <div className="form-check">
           <input

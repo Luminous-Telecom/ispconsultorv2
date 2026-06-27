@@ -11,7 +11,7 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { formatDate } from 'utils/formatters';
 import { receberSchema, ReceberFormData } from 'schemas/receber.schema';
 import DraggableModal from 'components/common/DraggableModal';
-import { CancelarButton, ReceberButton } from 'components/ui';
+import { CancelarButton, ReceberButton, LabelWithHelp } from 'components/ui';
 import FormField from 'components/ui/FormField';
 import { saasTituloService } from 'services/saas/saasCrudService';
 import type { ReceberModalVariant, ReceberTarget } from './receberModalTypes';
@@ -177,9 +177,9 @@ const ReceberModalCore: React.FC<ReceberModalCoreProps> = ({
           </div>
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="valor_pago_receber" className="form-label">
-                {t('financial.amountPaid')} *
-              </label>
+              <LabelWithHelp htmlFor="valor_pago_receber" className="form-label" required>
+                {t('financial.amountPaid')}
+              </LabelWithHelp>
               <div className="input-group has-validation">
                 <span className="input-group-text" style={{ padding: '0 0.75rem' }}>
                   R$

@@ -44,6 +44,7 @@ const ContactFields: React.FC<ContactFieldsProps> = ({
       type: 'email' as const,
       label: t('form.email'),
       placeholder: t('placeholder.email'),
+      fieldRequired: required,
       validation: required ? [
         { type: 'required', message: t('form.required') },
         { type: 'email', message: t('form.invalidEmail') }
@@ -59,10 +60,8 @@ const ContactFields: React.FC<ContactFieldsProps> = ({
     type: 'tel' as const,
     label: t('form.phone'),
     placeholder: '(11) 99999-9999',
-    validation: required ? [
-      { type: 'required', message: t('form.required') },
-      { type: 'pattern', value: /^\(\d{2}\)\s\d{4,5}-\d{4}$/, message: t('form.invalidPhone') }
-    ] : [
+    fieldRequired: false,
+    validation: [
       { type: 'pattern', value: /^\(\d{2}\)\s\d{4,5}-\d{4}$/, message: t('form.invalidPhone') }
     ]
   });
@@ -89,7 +88,7 @@ const ContactFields: React.FC<ContactFieldsProps> = ({
             type={field.type}
             label={field.label}
             placeholder={field.placeholder}
-            required={required}
+            required={field.fieldRequired ?? required}
             size={size}
             value={getFieldValue(field.name)}
             onChange={(value) => handleChange(field.name, value)}

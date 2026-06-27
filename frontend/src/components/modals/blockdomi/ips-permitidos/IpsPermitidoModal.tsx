@@ -3,7 +3,7 @@ import { useCreateIpPermitido, useUpdateIpPermitido } from 'hooks/useIpsPermitid
 import { IpsPermitidosService, type IpPermitido } from 'services/ipsPermitidosService';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
-import { ModalFormActions } from 'components/ui';
+import { ModalFormActions, LabelWithHelp } from 'components/ui';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import ClienteListModal from 'components/modals/clientes/ClienteListModal';
 
@@ -136,7 +136,9 @@ const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
             )}
           </div>
           <div className="mb-3">
-            <label className="form-label">{t('blockdomi.faixaIps')}</label>
+            <LabelWithHelp className="form-label" required>
+              {t('blockdomi.faixaIps')}
+            </LabelWithHelp>
             <textarea
               className="form-control"
               rows={4}

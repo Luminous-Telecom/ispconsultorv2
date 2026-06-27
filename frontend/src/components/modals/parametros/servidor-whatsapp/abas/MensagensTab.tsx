@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { FormField } from 'components/ui';
+import { FormField, LabelWithHelp } from 'components/ui';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import {
   MensagemTypeSelect,
@@ -123,10 +123,10 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                   <div className="row g-0 mt-3">
                     <div className="col-12">
                       <div className="mb-2">
-                        <label className="form-label">
+                        <LabelWithHelp className="form-label" required={mensagemType !== 'envio_manual'}>
                           <i className="bi bi-chat-text me-2"></i>
                           {t('settings.messages.defaultMessage')}
-                        </label>
+                        </LabelWithHelp>
                       </div>
                       <FormField
                         name="mensagemPadrao"
@@ -146,10 +146,10 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                     <div className="row g-0 mt-3">
                       <div className="col-12">
                         <div className="mb-2">
-                          <label className="form-label">
+                          <LabelWithHelp className="form-label" required>
                             <i className="bi bi-send me-2"></i>
                             {t('settings.messages.manualLabel')}
-                          </label>
+                          </LabelWithHelp>
                           <small className="text-muted form-hint d-block">{t('settings.messages.manualHelper')}</small>
                         </div>
                         <FormField

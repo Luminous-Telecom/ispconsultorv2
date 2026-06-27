@@ -55,6 +55,7 @@ const TipoCobrancaFormFields: React.FC<TipoCobrancaFormFieldsProps> = ({
           }
           min={1}
           max={999}
+          required
           size="sm"
           error={errors.quantidade_titulos}
           disabled={disabled}

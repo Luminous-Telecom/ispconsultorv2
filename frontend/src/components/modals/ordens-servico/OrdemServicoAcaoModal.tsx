@@ -4,7 +4,7 @@ import { useExecutarAcaoOrdemServico } from 'hooks/useOrdensServico';
 import { useTecnicos, useSetores, useAssuntos } from 'hooks/useIxcLookups';
 import type { OrdemServico } from 'services/ordemServicoService';
 import DraggableModal from 'components/common/DraggableModal';
-import { EntitySelectField, FormField, ModalFormActions } from 'components/ui';
+import { EntitySelectField, FormField, ModalFormActions, LabelWithHelp } from 'components/ui';
 import IxcLookupSelectModal from './IxcLookupSelectModal';
 import { type OrdemServicoAcao } from './ordemServicoAcoes';
 
@@ -274,9 +274,9 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
                 <div className="col-12">
                   {setorEncaminhamentoDesabilitado ? (
                     <div className="mb-1">
-                      <label className="form-label small">
-                        Setor <span className="text-danger">*</span>
-                      </label>
+                      <LabelWithHelp className="form-label small" required>
+                        Setor
+                      </LabelWithHelp>
                       <div className="input-group">
                         <input
                           readOnly

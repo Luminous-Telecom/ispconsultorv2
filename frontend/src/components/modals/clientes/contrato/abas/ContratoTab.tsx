@@ -7,6 +7,7 @@ import { DiasVencimento } from 'services/diasVencimentoService';
 import { TipoCobrancaContrato } from 'services/tipoCobrancaContratoService';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import FormField from 'components/ui/FormField';
+import { LabelWithHelp } from 'components/ui/LabelWithHelp';
 import { ContratoForm } from '../types';
 
 interface ContratoTabProps {
@@ -170,9 +171,9 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
 
       {/* Status */}
       <div>
-        <label htmlFor="status" className="form-label">
-          {t('form.status')} <span className="text-danger ms-1">*</span>
-        </label>
+        <LabelWithHelp htmlFor="status" className="form-label" required>
+          {t('form.status')}
+        </LabelWithHelp>
         <select
           id="status"
           name="status"
@@ -217,9 +218,9 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
       {/* Dia de Vencimento e Banco lado a lado */}
       <div className="d-flex gap-2">
         <div className="flex-fill">
-          <label htmlFor="dia_vencimento_id" className="form-label">
-            {t('form.dueDay')} <span className="text-danger ms-1">*</span>
-          </label>
+          <LabelWithHelp htmlFor="dia_vencimento_id" className="form-label" required>
+            {t('form.dueDay')}
+          </LabelWithHelp>
           <select
             id="dia_vencimento_id"
             name="dia_vencimento_id"

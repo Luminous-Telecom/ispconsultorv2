@@ -62,6 +62,7 @@ const IntegracaoIxcProvedorFormFields: React.FC<IntegracaoIxcProvedorFormFieldsP
         error={errors.api_url}
         disabled={disabled}
         size="sm"
+        required={form.ativo}
         helpText="URL do webservice IXC Provedor (webservice/v1)."
       />
     </div>
@@ -77,10 +78,11 @@ const IntegracaoIxcProvedorFormFields: React.FC<IntegracaoIxcProvedorFormFieldsP
         error={errors.api_token}
         disabled={disabled}
         size="sm"
+        required={form.ativo && !hasApiToken}
         helpText={
           hasApiToken
-            ? 'Deixe em branco para manter o token atual. Formato: id:hash'
-            : 'Token no formato id:hash com permissão de acesso à API do IXC.'
+            ? 'Deixe em branco para manter o token atual. Formato: id:hash. O grupo do usuário API precisa permitir listar filial, empresa_setor, colaboradores, su_oss_assunto e estrutura, com acesso às filiais na aba Filiais do usuário.'
+            : 'Token no formato id:hash. Permissões no IXC: webservice ativo, listar filial, empresa_setor, colaboradores, su_oss_assunto e estrutura.'
         }
       />
     </div>

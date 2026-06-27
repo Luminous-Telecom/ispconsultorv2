@@ -138,10 +138,10 @@ const RpkiRoaCreateEditModal: React.FC<RpkiRoaCreateEditModalProps> = ({
       }
     }
 
-    if (form.max_length.trim()) {
-      if (!/^\d+$/.test(form.max_length.trim())) {
-        nextErrors.max_length = 'Max length deve ser numérico';
-      }
+    if (!form.max_length.trim()) {
+      nextErrors.max_length = 'Max length é obrigatório';
+    } else if (!/^\d+$/.test(form.max_length.trim())) {
+      nextErrors.max_length = 'Max length deve ser numérico';
     }
 
     if (!form.not_before) nextErrors.not_before = 'Válido de é obrigatório';
@@ -298,6 +298,7 @@ const RpkiRoaCreateEditModal: React.FC<RpkiRoaCreateEditModalProps> = ({
                   if (errors.max_length) setErrors((prev) => ({ ...prev, max_length: '' }));
                 }}
                 error={errors.max_length}
+                required
                 size="sm"
                 placeholder="24"
               />

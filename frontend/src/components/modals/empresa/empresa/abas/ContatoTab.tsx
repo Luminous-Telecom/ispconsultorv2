@@ -49,6 +49,7 @@ const ContatoTab: React.FC<DadosEmpresaTabProps> = ({
             type="email"
             label="E-mail"
             placeholder="email@empresa.com"
+            required
             size="md"
             value={dados.email}
             onChange={(value) => handleInputChange('email', String(value ?? ''))}

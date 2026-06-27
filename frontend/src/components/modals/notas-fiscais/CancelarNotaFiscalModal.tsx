@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
-import { CancelarButton, ConfirmarCancelamentoButton } from 'components/ui';
+import { CancelarButton, ConfirmarCancelamentoButton, LabelWithHelp } from 'components/ui';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { NotaFiscal } from 'types';
 import { NotaFiscalService } from 'services/notaFiscalService';
@@ -169,9 +169,9 @@ const CancelarNotaFiscalModal: React.FC<CancelarNotaFiscalModalProps> = ({
 
         <form id="cancelar-nf-form" onSubmit={handleSubmit}>
           <div className="mb-3">
-            <label htmlFor="justificativa" className="form-label">
-              {t('form.justificationCancel')} <span className="text-danger">*</span>
-            </label>
+            <LabelWithHelp htmlFor="justificativa" className="form-label" required>
+              {t('form.justificationCancel')}
+            </LabelWithHelp>
             <textarea
               id="justificativa"
               name="justificativa"

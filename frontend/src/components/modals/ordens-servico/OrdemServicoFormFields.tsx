@@ -76,6 +76,7 @@ interface OrdemServicoFormFieldsProps {
   onShowSetorModal?: () => void;
   showIxcFields?: boolean;
   showAgendaFields?: boolean;
+  mensagemRequired?: boolean;
 }
 
 const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
@@ -103,6 +104,7 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
   onShowSetorModal,
   showIxcFields = true,
   showAgendaFields = true,
+  mensagemRequired = false,
 }) => {
   const metaColClass = 'col-md-4';
 
@@ -150,6 +152,7 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
       <div className={idLocal || ixcId || protocolo ? 'col-12' : 'col-md-6'}>
         <EntitySelectField
           label="Cliente"
+          required
           value={clienteId}
           onChange={(v) => onClienteIdChange?.(v)}
           onShowModal={onShowClienteModal}
@@ -279,6 +282,7 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
               name="mensagem"
               type="textarea"
               label="Mensagem / Descrição"
+              required={mensagemRequired}
               value={form.mensagem}
               onChange={(v) => onChange('mensagem', String(v ?? ''))}
               rows={5}

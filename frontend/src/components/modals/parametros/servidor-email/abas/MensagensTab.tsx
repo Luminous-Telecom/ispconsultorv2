@@ -1,6 +1,7 @@
 import React, { Suspense } from 'react';
 import { RichTextEditor, RichTextEditorFallback } from 'components/common/RichTextEditorLazy';
 import { MensagemTypeSelect, MensagemTipoEnvioRadio } from 'components/modals/parametros/servidor-shared';
+import { LabelWithHelp } from 'components/ui';
 import { MensagensTabProps } from '../types';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -49,13 +50,11 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
               }}
             >
               <div className="d-flex justify-content-between align-items-center mb-1">
-                <span id="mensagem-manual-label" className="form-label small mb-0">
-                  {t('settings.messages.manualLabel')} <span className="text-danger">*</span>
-                  <small className="text-muted form-hint d-block mt-1">
-                    {t('settings.messages.manualHelper')}
-                  </small>
-                </span>
+                <LabelWithHelp id="mensagem-manual-label" as="span" className="form-label small mb-0" required>
+                  {t('settings.messages.manualLabel')}
+                </LabelWithHelp>
               </div>
+              <small className="text-muted form-hint d-block mb-1">{t('settings.messages.manualHelper')}</small>
               <div style={{ flex: 1, minHeight: 0 }}>
                 <Suspense fallback={<RichTextEditorFallback />}>
                   <RichTextEditor
@@ -81,9 +80,9 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
               }}
             >
               <div className="d-flex justify-content-between align-items-center mb-1">
-                <span id="mensagem-label" className="form-label small mb-0">
-                  {t('settings.messages.emailLabel')} <span className="text-danger">*</span>
-                </span>
+                <LabelWithHelp id="mensagem-label" as="span" className="form-label small mb-0" required>
+                  {t('settings.messages.emailLabel')}
+                </LabelWithHelp>
               </div>
               <div style={{ flex: 1, minHeight: 0 }}>
                 <Suspense fallback={<RichTextEditorFallback />}>

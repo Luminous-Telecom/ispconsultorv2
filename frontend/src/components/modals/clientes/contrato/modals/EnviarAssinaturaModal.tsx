@@ -149,9 +149,9 @@ const EnviarAssinaturaModal: React.FC<EnviarAssinaturaModalProps> = ({
           </div>
 
           <div>
-            <label className="form-label">
-              Email do Assinante <span className="text-danger">*</span>
-            </label>
+            <LabelWithHelp className="form-label" required>
+              Email do Assinante
+            </LabelWithHelp>
             <input
               type="email"
               name="email_assinante"
@@ -164,9 +164,9 @@ const EnviarAssinaturaModal: React.FC<EnviarAssinaturaModalProps> = ({
           </div>
 
           <div>
-            <label className="form-label">
-              Nome do Assinante <span className="text-danger">*</span>
-            </label>
+            <LabelWithHelp className="form-label" required>
+              Nome do Assinante
+            </LabelWithHelp>
             <input
               type="text"
               name="nome_assinante"

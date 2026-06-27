@@ -277,6 +277,7 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
       ixcId={isEdit && isOrdemIxc ? String(ordemData?.ixc_id ?? ordemData?.id ?? '') : ''}
       showIxcFields={showIxcFields}
       showAgendaFields={showAgendaFields}
+      mensagemRequired={clienteSemIntegracaoIxc}
       onShowClienteModal={() => setShowClienteModal(true)}
       onShowFilialModal={() => handleOpenLookupModal(() => setShowFilialModal(true))}
       onShowEstruturaModal={() => handleOpenLookupModal(() => setShowEstruturaModal(true))}

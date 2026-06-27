@@ -1,6 +1,7 @@
 import React from 'react';
 import FormField from 'components/ui/FormField';
 import EntitySelectField from 'components/ui/EntitySelectField';
+import { LabelWithHelp } from 'components/ui/LabelWithHelp';
 import { useI18n } from 'contexts/I18nContext';
 
 export interface SaasContratoFormData {
@@ -100,9 +101,9 @@ const SaasContratoFormFields: React.FC<SaasContratoFormFieldsProps> = ({
       </div>
       <div className="d-flex gap-2">
         <div className="flex-fill">
-          <label htmlFor="dia_vencimento_saas" className="form-label">
-            {t('form.dueDay')} <span className="text-danger ms-1">*</span>
-          </label>
+          <LabelWithHelp htmlFor="dia_vencimento_saas" className="form-label">
+            {t('form.dueDay')}
+          </LabelWithHelp>
           <select
             id="dia_vencimento_saas"
             name="dia_vencimento"
