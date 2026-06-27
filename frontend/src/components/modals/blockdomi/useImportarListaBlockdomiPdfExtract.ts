@@ -14,8 +14,6 @@ interface UseImportarListaBlockdomiPdfExtractParams {
   pdfOficioJustica: File | null;
   linkPlanilhaDominios: string;
   pdfUrlToExtract?: string;
-  dataInicioBloqueio: string;
-  dataFimBloqueio: string;
   pdfAnatelInputRef: RefObject<HTMLInputElement | null>;
   pdfJusticaInputRef: RefObject<HTMLInputElement | null>;
   pdfFileInputRef: RefObject<HTMLInputElement | null>;
@@ -24,8 +22,6 @@ interface UseImportarListaBlockdomiPdfExtractParams {
   setPdfOficioAnatel: (file: File | null) => void;
   setPdfOficioJustica: (file: File | null) => void;
   setPdfFile: (file: File | null) => void;
-  setDataInicioBloqueio: (value: string) => void;
-  setDataFimBloqueio: (value: string) => void;
   setLinkPlanilhaDominios: (value: string) => void;
   setColunasDisponiveis: (value: Record<string, string[]> | null) => void;
   setColunasSeleccionadas: (value: Set<string>) => void;
@@ -44,8 +40,6 @@ export function useImportarListaBlockdomiPdfExtract({
   pdfOficioJustica,
   linkPlanilhaDominios,
   pdfUrlToExtract,
-  dataInicioBloqueio,
-  dataFimBloqueio,
   pdfAnatelInputRef,
   pdfJusticaInputRef,
   pdfFileInputRef,
@@ -54,8 +48,6 @@ export function useImportarListaBlockdomiPdfExtract({
   setPdfOficioAnatel,
   setPdfOficioJustica,
   setPdfFile,
-  setDataInicioBloqueio,
-  setDataFimBloqueio,
   setLinkPlanilhaDominios,
   setColunasDisponiveis,
   setColunasSeleccionadas,
@@ -144,10 +136,6 @@ export function useImportarListaBlockdomiPdfExtract({
 
       if (result.success && result.data) {
         const listBruto = result.data.dominios_bruto ?? result.data.dominios;
-        const dataInicio = result.data.data_inicio_bloqueio ?? dataInicioBloqueio;
-        const dataFim = result.data.data_fim_bloqueio ?? dataFimBloqueio;
-        if (dataInicio) setDataInicioBloqueio(dataInicio);
-        if (dataFim) setDataFimBloqueio(dataFim);
         const colunas = result.data.colunas ?? null;
         if (colunas && Object.keys(colunas).length > 0) {
           const todas = new Set(Object.keys(colunas));
@@ -185,13 +173,9 @@ export function useImportarListaBlockdomiPdfExtract({
     showApiError,
     t,
     setExtractionLoading,
-    dataInicioBloqueio,
-    dataFimBloqueio,
     handlePdfPollProgress,
     setClassifiedRef,
     pendingPdfFilesRef,
-    setDataInicioBloqueio,
-    setDataFimBloqueio,
     setColunasDisponiveis,
     setColunasSeleccionadas,
     setRawText,
@@ -214,10 +198,6 @@ export function useImportarListaBlockdomiPdfExtract({
       if (result.success && result.data) {
         setLinkPlanilhaDominios(urlResolved);
         const listBruto = result.data.dominios_bruto ?? result.data.dominios;
-        const dataInicio = result.data.data_inicio_bloqueio ?? dataInicioBloqueio;
-        const dataFim = result.data.data_fim_bloqueio ?? dataFimBloqueio;
-        if (dataInicio) setDataInicioBloqueio(dataInicio);
-        if (dataFim) setDataFimBloqueio(dataFim);
         const colunas = result.data.colunas ?? null;
         if (colunas && Object.keys(colunas).length > 0) {
           const todas = new Set(Object.keys(colunas));
@@ -249,14 +229,10 @@ export function useImportarListaBlockdomiPdfExtract({
     showApiError,
     t,
     setExtractionLoading,
-    dataInicioBloqueio,
-    dataFimBloqueio,
     handlePdfPollProgress,
     setClassifiedRef,
     pendingPdfFilesRef,
     setLinkPlanilhaDominios,
-    setDataInicioBloqueio,
-    setDataFimBloqueio,
     setColunasDisponiveis,
     setColunasSeleccionadas,
     setRawText,

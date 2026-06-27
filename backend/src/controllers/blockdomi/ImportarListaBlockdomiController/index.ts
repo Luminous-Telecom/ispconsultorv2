@@ -38,9 +38,20 @@ export class ImportarListaBlockdomiController {
         return;
       }
 
-      const dataInicio = data_inicio_bloqueio != null ? String(data_inicio_bloqueio).trim() : '';
-      if (!dataInicio) {
-        sendValidationError(res, 'Data início bloqueio é obrigatória no importe em lote.');
+      const dataInicioVal = data_inicio_bloqueio != null ? String(data_inicio_bloqueio).trim() : '';
+      const nomeOficioVal = nome_oficio != null ? String(nome_oficio).trim() : '';
+      const numeroSeiVal = numero_sei_anatel != null ? String(numero_sei_anatel).trim() : '';
+
+      if (!dataInicioVal) {
+        sendValidationError(res, 'Data início bloqueio é obrigatória.');
+        return;
+      }
+      if (!nomeOficioVal) {
+        sendValidationError(res, 'Nome do ofício é obrigatório.');
+        return;
+      }
+      if (!numeroSeiVal) {
+        sendValidationError(res, 'Nº SEI Anatel é obrigatório.');
         return;
       }
 
@@ -49,15 +60,13 @@ export class ImportarListaBlockdomiController {
         dominios: dominiosArr,
         ipv4: ipv4Arr,
         ipv6: ipv6Arr,
-        nome_oficio: nome_oficio ?? null,
-        data_inicio_bloqueio: data_inicio_bloqueio ?? null,
+        nome_oficio: nomeOficioVal,
+        data_inicio_bloqueio: dataInicioVal,
         data_fim_bloqueio: data_fim_bloqueio ?? null,
         link_oficio_anatel: link_oficio_anatel ?? null,
         link_oficio_justica: link_oficio_justica ?? null,
         link_planilha_dominios: link_planilha_dominios ?? null,
-        numero_sei_anatel: numero_sei_anatel != null && String(numero_sei_anatel).trim() !== ''
-          ? String(numero_sei_anatel).trim()
-          : null,
+        numero_sei_anatel: numeroSeiVal,
         empresa_id: empresaIdAudit
       });
 

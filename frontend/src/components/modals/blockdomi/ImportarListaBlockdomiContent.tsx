@@ -65,7 +65,7 @@ export interface ImportarListaBlockdomiContentProps {
   listaModo: 'bloqueio' | 'desbloqueio';
   onListaModoChange: (modo: 'bloqueio' | 'desbloqueio') => void;
   onCadastrar: () => void;
-  totalValid: number;
+  canCadastrar: boolean;
   isCadastrando: boolean;
   showFiltrosExtract: boolean;
   dominiosBruto: string[];
@@ -91,7 +91,7 @@ const ImportarListaBlockdomiContent: React.FC<ImportarListaBlockdomiContentProps
   } = props;
 
   return (
-    <div className="p-4 importar-lista-blockdomi">
+    <div className="p-3 importar-lista-blockdomi">
       <ImportarListaBlockdomiVersaoHeader
         versaoAtual={versaoAtual}
         isGerandoVersao={isGerandoVersao}
@@ -161,7 +161,7 @@ const ImportarListaBlockdomiContent: React.FC<ImportarListaBlockdomiContentProps
         listaModo={props.listaModo}
         onListaModoChange={props.onListaModoChange}
         onCadastrar={props.onCadastrar}
-        totalValid={props.totalValid}
+        canCadastrar={props.canCadastrar}
         isCadastrando={props.isCadastrando}
       />
 

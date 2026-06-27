@@ -11,6 +11,13 @@ export interface LabelWithHelpProps {
   as?: 'label' | 'span';
 }
 
+/** Asterisco vermelho para campos obrigatórios. */
+export const RequiredMark: React.FC = () => (
+  <span className="required-mark text-danger ms-1" aria-hidden="true">
+    *
+  </span>
+);
+
 const HelpIcon: React.FC<{ text: string; className?: string }> = ({ text, className = 'ms-1' }) => (
   <i
     className={`bi bi-info-circle text-muted flex-shrink-0 ${className}`.trim()}
@@ -35,7 +42,7 @@ export const LabelWithHelp: React.FC<LabelWithHelpProps> = ({
   const content = (
     <>
       {children}
-      {required && <span className="text-danger ms-1">*</span>}
+      {required && <RequiredMark />}
       {helpText && <HelpIcon text={helpText} className={helpIconClassName} />}
     </>
   );

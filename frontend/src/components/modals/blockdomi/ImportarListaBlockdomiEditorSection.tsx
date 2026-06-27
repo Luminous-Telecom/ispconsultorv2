@@ -16,7 +16,7 @@ interface ImportarListaBlockdomiEditorSectionProps {
   listaModo: 'bloqueio' | 'desbloqueio';
   onListaModoChange: (modo: 'bloqueio' | 'desbloqueio') => void;
   onCadastrar: () => void;
-  totalValid: number;
+  canCadastrar: boolean;
   isCadastrando: boolean;
 }
 
@@ -33,7 +33,7 @@ const ImportarListaBlockdomiEditorSection: React.FC<ImportarListaBlockdomiEditor
   listaModo,
   onListaModoChange,
   onCadastrar,
-  totalValid,
+  canCadastrar,
   isCadastrando,
 }) => (
   <>
@@ -113,7 +113,7 @@ const ImportarListaBlockdomiEditorSection: React.FC<ImportarListaBlockdomiEditor
             variant={listaModo === 'desbloqueio' ? 'danger' : 'primary'}
             size="sm"
             onClick={onCadastrar}
-            disabled={totalValid === 0 || isCadastrando}
+            disabled={!canCadastrar || isCadastrando}
             isPending={isCadastrando}
           />
         </>

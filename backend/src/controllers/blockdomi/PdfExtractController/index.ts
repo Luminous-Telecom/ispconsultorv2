@@ -219,8 +219,6 @@ function runPythonInBackground(scriptPath: string, tempFilePath: string, jobId: 
       total_bruto?: number;
       /** Colunas detectadas dinamicamente no PDF: {header_text: [items]} */
       colunas?: Record<string, string[]>;
-      data_inicio_bloqueio?: string | null;
-      data_fim_bloqueio?: string | null;
       error?: string;
     };
     let result: PyResult | null = null;
@@ -259,8 +257,6 @@ function runPythonInBackground(scriptPath: string, tempFilePath: string, jobId: 
         dominios_bruto: dominiosBruto,
         total: dominiosBruto.length,
         total_bruto: result.total_bruto ?? dominiosBruto.length,
-        data_inicio_bloqueio: result.data_inicio_bloqueio ?? undefined,
-        data_fim_bloqueio: result.data_fim_bloqueio ?? undefined,
         totaisPorColuna,
         colunas
       };

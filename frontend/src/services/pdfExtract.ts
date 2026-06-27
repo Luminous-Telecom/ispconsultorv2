@@ -12,8 +12,6 @@ export interface PdfExtractResponse {
     total: number;
     total_bruto?: number;
     message?: string;
-    data_inicio_bloqueio?: string | null;
-    data_fim_bloqueio?: string | null;
     totaisPorColuna?: PdfExtractTotaisPorColuna;
     /** Colunas detectadas dinamicamente no PDF: chave = texto do cabeçalho original, valor = itens */
     colunas?: Record<string, string[]>;
@@ -31,8 +29,6 @@ interface PdfExtractJobStatusPayload {
     dominios_bruto?: string[];
     total: number;
     total_bruto?: number;
-    data_inicio_bloqueio?: string | null;
-    data_fim_bloqueio?: string | null;
     totaisPorColuna?: PdfExtractTotaisPorColuna;
     colunas?: Record<string, string[]>;
   };

@@ -56,8 +56,6 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     pdfOficioJustica: state.pdfOficioJustica,
     linkPlanilhaDominios: state.linkPlanilhaDominios,
     pdfUrlToExtract,
-    dataInicioBloqueio: state.dataInicioBloqueio,
-    dataFimBloqueio: state.dataFimBloqueio,
     pdfAnatelInputRef: state.pdfAnatelInputRef,
     pdfJusticaInputRef: state.pdfJusticaInputRef,
     pdfFileInputRef: state.pdfFileInputRef,
@@ -66,8 +64,6 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     setPdfOficioAnatel: state.setPdfOficioAnatel,
     setPdfOficioJustica: state.setPdfOficioJustica,
     setPdfFile: state.setPdfFile,
-    setDataInicioBloqueio: state.setDataInicioBloqueio,
-    setDataFimBloqueio: state.setDataFimBloqueio,
     setLinkPlanilhaDominios: state.setLinkPlanilhaDominios,
     setColunasDisponiveis: state.setColunasDisponiveis,
     setColunasSeleccionadas: state.setColunasSeleccionadas,
@@ -103,6 +99,16 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   });
 
   const versao = useImportarListaBlockdomiVersao({ show, showApiError, success, t });
+
+  const canCadastrar =
+    !!analyze.classified &&
+    analyze.totalValid > 0 &&
+    (state.listaModo === 'desbloqueio' ||
+      Boolean(
+        state.numeroSeiAnatel.trim() &&
+          state.nomeOficio.trim() &&
+          state.dataInicioBloqueio.trim()
+      ));
 
   const content = (
     <ImportarListaBlockdomiContent
@@ -160,7 +166,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       listaModo={state.listaModo}
       onListaModoChange={state.setListaModo}
       onCadastrar={cadastrar.handleCadastrar}
-      totalValid={analyze.totalValid}
+      canCadastrar={canCadastrar}
       isCadastrando={cadastrar.isCadastrando}
       showFiltrosExtract={state.showFiltrosExtract}
       dominiosBruto={state.dominiosBruto}

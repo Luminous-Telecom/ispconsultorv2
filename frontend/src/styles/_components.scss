@@ -1018,6 +1018,11 @@ button,
   font-size: var(--font-size-sm);
 }
 
+.required-mark {
+  font-weight: 600;
+  line-height: 1;
+}
+
 .form-check {
   display: flex;
   align-items: center;

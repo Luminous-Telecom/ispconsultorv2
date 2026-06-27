@@ -18,7 +18,7 @@ export type { DateRangeFilterProps } from './DateRangeFilter';
 export type { BadgeProps, BadgeVariant } from './Badge';
 export { default as Spinner } from './Spinner';
 export type { SpinnerProps, SpinnerSize, SpinnerVariant } from './Spinner';
-export { LabelWithHelp } from './LabelWithHelp';
+export { LabelWithHelp, RequiredMark } from './LabelWithHelp';
 export type { LabelWithHelpProps } from './LabelWithHelp';
 export { getBootstrapTooltipProps } from './tooltipProps';
 

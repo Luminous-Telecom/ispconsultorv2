@@ -15,7 +15,7 @@ const ImportarListaBlockdomiVersaoHeader: React.FC<ImportarListaBlockdomiVersaoH
   onGerarVersao,
   t,
 }) => (
-  <div className="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
     <span className="text-muted small me-2">
       {t('blockdomi.versao')} atual: <strong>{versaoAtual || '-'}</strong>
     </span>

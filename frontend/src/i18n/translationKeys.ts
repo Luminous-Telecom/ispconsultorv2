@@ -370,6 +370,9 @@ export interface TranslationKeys {
   'blockdomi.anatel': string;
   'blockdomi.numeroSeiAnatel': string;
   'blockdomi.numeroSeiAnatelOptional': string;
+  'blockdomi.seiAnatelRequired': string;
+  'blockdomi.nomeOficioRequired': string;
+  'blockdomi.dataInicioRequired': string;
   'blockdomi.seiAnatelHelp': string;
   'blockdomi.extractSeiFromAnatelPdf': string;
   'blockdomi.syncSeiAnatel': string;

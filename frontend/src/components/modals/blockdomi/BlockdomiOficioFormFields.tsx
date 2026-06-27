@@ -66,7 +66,7 @@ const BlockdomiOficioFormFields: React.FC<BlockdomiOficioFormFieldsProps> = ({
         <FormField
           name="numero_sei_anatel"
           type="text"
-          label={t('blockdomi.numeroSeiAnatelOptional')}
+          label={t('blockdomi.numeroSeiAnatel')}
           value={value.numero_sei_anatel}
           onChange={(v) =>
             onChange({

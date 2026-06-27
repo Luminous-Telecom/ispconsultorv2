@@ -59,6 +59,20 @@ export function useImportarListaBlockdomiCadastrar({
     if (listaModo === 'desbloqueio' && !window.confirm(t('blockdomi.removerListaConfirm'))) {
       return;
     }
+    if (listaModo === 'bloqueio') {
+      if (!numeroSeiAnatel.trim()) {
+        showApiError(t('blockdomi.seiAnatelRequired'));
+        return;
+      }
+      if (!nomeOficio.trim()) {
+        showApiError(t('blockdomi.nomeOficioRequired'));
+        return;
+      }
+      if (!dataInicioBloqueio.trim()) {
+        showApiError(t('blockdomi.dataInicioRequired'));
+        return;
+      }
+    }
     setIsCadastrando(true);
     try {
       if (listaModo === 'desbloqueio') {
@@ -83,10 +97,8 @@ export function useImportarListaBlockdomiCadastrar({
         return;
       }
 
-      const nomeOficioVal = nomeOficio.trim() || null;
-      const today = new Date();
-      const hojeStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-      const dataInicioVal = dataInicioBloqueio.trim() || hojeStr;
+      const nomeOficioVal = nomeOficio.trim();
+      const dataInicioVal = dataInicioBloqueio.trim();
       const dataFimVal = dataFimBloqueio.trim() || null;
 
       let linkAnatelVal = linkOficioAnatel.trim() || null;
@@ -116,7 +128,7 @@ export function useImportarListaBlockdomiCadastrar({
         linkPlanilhaVal = url;
       }
 
-      const seiVal = numeroSeiAnatel.trim() || null;
+      const seiVal = numeroSeiAnatel.trim();
       const result = await BlockdomiService.importarLista({
         dominios: classified.dominios,
         ipv4: classified.ipv4,
