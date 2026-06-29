@@ -16,11 +16,10 @@ export type LookupFilters = BaseFilters & {
   enabled?: boolean;
 };
 
+class LookupService extends BaseService<LookupItem, never, never, LookupFilters> {}
+
 function createLookupService(endpoint: string) {
-  const service = new BaseService<LookupItem, never, never, LookupFilters>(
-    defaultApiClient,
-    endpoint
-  );
+  const service = new LookupService(defaultApiClient, endpoint);
   return {
     list: (filters: LookupFilters = {}) => service.list(filters),
   };

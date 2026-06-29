@@ -2,6 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { saasEmpresasService, type SaasEmpresa, type SaasConfigListResponse } from 'services/saas/saasEmpresasService';
 import { useModal } from 'contexts/ModalContext';
+import { useI18n } from 'contexts/I18nContext';
 import { useTableHeader } from 'contexts/TableHeaderContext';
 import { Loading } from 'components/ui';
 

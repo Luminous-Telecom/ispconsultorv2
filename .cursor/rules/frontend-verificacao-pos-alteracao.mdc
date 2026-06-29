@@ -1,0 +1,53 @@
+---
+description: Verificações obrigatórias após alterações no frontend (build, i18n, types)
+globs: frontend/**/*
+alwaysApply: false
+---
+
+# Verificação pós-alteração — Frontend
+
+**Antes de concluir qualquer tarefa que altere o frontend**, execute as verificações abaixo.
+
+## 1. Build de produção (obrigatório)
+
+```bash
+cd frontend && npm run build
+```
+
+- Corrija **todos** os erros de compilação antes de encerrar
+- Não considere a tarefa concluída com build falhando
+
+## 2. i18n com `t()`
+
+Ao adicionar ou usar chave em `t('...')`:
+
+1. `frontend/src/i18n/locales/pt-BR.ts`
+2. `frontend/src/i18n/locales/en-US.ts`
+3. `frontend/src/i18n/locales/es-ES.ts`
+4. **`frontend/src/i18n/translationKeys.ts`** — sem isso o CI quebra com `TS2345`
+
+## 3. Tipos de formulário
+
+Novo campo em formulário → atualizar **todos** os tipos relacionados:
+
+- `frontend/src/types/forms.ts` (`*FormData`, `*FormErrors`)
+- `frontend/src/schemas/*.schema.ts` (se existir schema Zod)
+- Props/interfaces do componente que consome o campo
+
+Ex.: `errors.central_assinante_senha` exige `central_assinante_senha` em `ClienteFormErrors`.
+
+## 4. Services (`BaseService`)
+
+- **Nunca** `new BaseService(...)` — classe abstrata
+- Criar classe concreta: `class XService extends BaseService<...> {}`
+
+## 5. Imports e exports
+
+- Novo componente em `components/ui/` → exportar em `components/ui/index.ts`
+- Verificar imports faltando (`useI18n`, hooks, tipos)
+
+## Checklist rápido
+
+- [ ] Chaves i18n nos 3 locales + `translationKeys.ts`
+- [ ] Tipos/schemas alinhados com campos novos
+- [ ] `npm run build` passou sem erro

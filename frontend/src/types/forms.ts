@@ -58,6 +58,7 @@ export interface ClienteFormErrors {
   cidade?: string;
   estado?: string;
   observacoes?: string;
+  central_assinante_senha?: string;
 }
 
 /**

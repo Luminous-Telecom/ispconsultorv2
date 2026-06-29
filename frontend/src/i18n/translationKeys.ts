@@ -750,6 +750,8 @@ export interface TranslationKeys {
   'rpki.generateChildCaRequest': string;
   'messages.tryAgain': string;
   'central.openPortal': string;
+  'central.passwordPlaceholder': string;
+  'central.passwordHelp': string;
   'central.sendPassword': string;
   'central.changePassword': string;
   'central.copyBarcode': string;
@@ -789,6 +791,7 @@ export interface TranslationKeys {
   'form.cell': string;
   'form.site': string;
   'form.receivesEmail': string;
+  'form.communication': string;
   'form.receivesWhatsApp': string;
   'form.file': string;
   'form.fileName': string;
@@ -1291,6 +1294,7 @@ export interface TranslationKeys {
   'emailServer.senderEmail': string;
   'emailServer.useSsl': string;
   'emailServer.useTls': string;
+  'emailServer.security': string;
   'emailServer.timeout': string;
   'emailServer.sendTestEmail': string;
   'emailServer.testEmailPlaceholder': string;
