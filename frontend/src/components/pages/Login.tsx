@@ -94,9 +94,6 @@ const Login: React.FC = () => {
 
                 <form onSubmit={handleSubmit}>
                   <div className="mb-3">
-                    <label htmlFor="email" className="form-label">
-                      {t('form.email')}
-                    </label>
                     <input
                       type="email"
                       className="form-control"
@@ -106,14 +103,12 @@ const Login: React.FC = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      placeholder={t('login.emailPlaceholder')}
+                      aria-label={t('form.email')}
+                      placeholder={t('form.email')}
                     />
                   </div>
 
                   <div className="mb-3">
-                    <label htmlFor="password" className="form-label">
-                      {t('form.password')}
-                    </label>
                     <input
                       type="password"
                       className="form-control"
@@ -123,7 +118,8 @@ const Login: React.FC = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      placeholder={t('login.passwordPlaceholder')}
+                      aria-label={t('form.password')}
+                      placeholder={t('form.password')}
                     />
                   </div>
 
