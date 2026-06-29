@@ -3,7 +3,6 @@
  */
 import { BaseService, defaultApiClient } from './core';
 import type { BaseFilters } from './core/BaseService';
-import { PaginatedResponse } from '../types';
 
 export interface LookupItem {
   id: string;

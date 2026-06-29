@@ -23,7 +23,6 @@ interface UseLogsModalTableMetaParams {
 export function useLogsModalTableMeta({
   ctx,
   data,
-  isEquipamentos,
   isEquipamentosOuAgentes,
   isAuditoria,
   isEmail,

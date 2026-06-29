@@ -4,7 +4,6 @@ import { saasEmpresasService, type SaasEmpresa, type SaasConfigListResponse } fr
 import { useModal } from 'contexts/ModalContext';
 import { useTableHeader } from 'contexts/TableHeaderContext';
 import { Loading } from 'components/ui';
-import { useI18n } from 'contexts/I18nContext';
 
 interface SaasDashboardSearchResultProps {
   searchTerm: string;
@@ -25,7 +24,6 @@ function collectTelefonesTenant(e: SaasEmpresa): string[] {
 }
 
 const SaasDashboardSearchResult: React.FC<SaasDashboardSearchResultProps> = ({ searchTerm }) => {
-  const { t } = useI18n();
   const { openModal } = useModal();
   const { searchField } = useTableHeader();
 
