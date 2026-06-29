@@ -538,26 +538,21 @@ export class IntegracaoIxcProvedorService {
         total += itens.length;
       }
 
-      const resumoDetalhes = cadastros
-        .map((c) => `${c.label}: ${detalhes[c.label] ?? 0}`)
-        .join(', ');
-
       return {
         total,
         detalhes,
-        resumoDetalhes,
       };
     });
 
     const { IxcOsSchedulerRoutineService } = await import('../../ordens/IxcOsSchedulerRoutineService');
     const ordensResult = await IxcOsSchedulerRoutineService.syncIntegracao(integracao, 'manual');
 
-    const resumoCadastros =
-      cadastrosResult.total > 0
-        ? `${cadastrosResult.total} cadastros (${cadastrosResult.resumoDetalhes})`
-        : `cadastros sem novidades (${cadastrosResult.resumoDetalhes})`;
-
-    const resumoOrdens = ordensResult.message;
+    let message = 'Sincronização concluída.';
+    if (ordensResult.erro > 0) {
+      message = `Sincronização concluída com ${ordensResult.erro} erro(s).`;
+    } else if (ordensResult.sucesso > 0) {
+      message = `Sincronização concluída: ${ordensResult.sucesso} ordens atualizadas.`;
+    }
 
     return {
       total: cadastrosResult.total,
@@ -570,7 +565,7 @@ export class IntegracaoIxcProvedorService {
         desvinculadas: ordensResult.desvinculadas,
         importadas: ordensResult.importadas,
       },
-      message: `Sincronização concluída: ${resumoCadastros}. ${resumoOrdens}.`,
+      message,
     };
   }
 
