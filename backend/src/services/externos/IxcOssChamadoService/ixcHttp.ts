@@ -18,7 +18,7 @@ export function resolveOperadorId(): string {
 export function createIxcClient(): AxiosInstance {
   return axios.create({
     baseURL: ixcBaseUrl(),
-    timeout: 30_000,
+    timeout: 90_000,
     headers: {
       'Content-Type': 'application/json',
       Authorization: ixcAuthHeader(),

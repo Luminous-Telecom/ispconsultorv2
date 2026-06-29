@@ -9,90 +9,131 @@ import {
   IXC_MENSAGEM_RESOURCE,
   IXC_RESOURCE,
   IXC_SETOR_RESOURCE,
-  IXC_EVENTO_ABERTURA,
   OSS_EVENTO_LABELS,
 } from './constants';
-import { ixcListar, resolveOperadorId } from './ixcHttp';
+import { ixcListar } from './ixcHttp';
 import type { IxcListResponse, IxcNamedRecord, IxcOssChamado, IxcOssMensagem } from './types';
 
-const gridMensagemAbertura = (operadorId: string) =>
-  JSON.stringify([
-    { TB: `${IXC_MENSAGEM_RESOURCE}.id_operador`, OP: '=', P: operadorId },
-    { TB: `${IXC_MENSAGEM_RESOURCE}.id_evento`, OP: '=', P: IXC_EVENTO_ABERTURA },
-  ]);
+const OS_ESTRUTURA_GRID = JSON.stringify([{ TB: `${IXC_RESOURCE}.id_estrutura`, OP: '>', P: '0' }]);
 
-export async function fetchOsIdsAbertasPeloOperador(operadorId: string): Promise<string[]> {
-  const data = await ixcListar<{ registros?: IxcNamedRecord[] }>(IXC_MENSAGEM_RESOURCE, {
-    qtype: `${IXC_MENSAGEM_RESOURCE}.id_operador`,
-    query: operadorId,
-    oper: '=',
-    page: '1',
-    rp: '1000',
-    sortname: `${IXC_MENSAGEM_RESOURCE}.id`,
-    sortorder: 'desc',
-    grid_param: gridMensagemAbertura(operadorId),
-  });
+/** Lista OS de estrutura visíveis ao usuário do token IXC (pode filtrar por setor do operador API). */
+export async function fetchOsListIxc(maxPages = 20): Promise<IxcOssChamado[]> {
+  const result: IxcOssChamado[] = [];
+  const rp = 100;
 
-  const ids = (data.registros ?? [])
-    .map((r) => r.id_chamado)
-    .filter(Boolean)
-    .map(String);
-  return [...new Set(ids)];
+  for (let page = 1; page <= maxPages; page++) {
+    const data = await ixcListar<IxcListResponse>(IXC_RESOURCE, {
+      qtype: `${IXC_RESOURCE}.id`,
+      query: '0',
+      oper: '>',
+      page: String(page),
+      rp: String(rp),
+      sortname: `${IXC_RESOURCE}.id`,
+      sortorder: 'desc',
+      grid_param: OS_ESTRUTURA_GRID,
+    });
+
+    const batch = data.registros ?? [];
+    result.push(...batch);
+
+    const total = parseInt(data.total ?? '0', 10) || 0;
+    if (batch.length === 0 || page * rp >= total) break;
+  }
+
+  return result;
 }
 
-export async function osAbertaPeloOperador(ixcOsId: string | number): Promise<boolean> {
-  const operadorId = resolveOperadorId();
-  if (!operadorId) return false;
+/** OS de estrutura vinculadas ao cliente BackNet (`idx`). Contorna filtro de setor da listagem geral. */
+export async function fetchOsListByClienteIdx(
+  clienteId: number,
+  maxPages = 10
+): Promise<IxcOssChamado[]> {
+  const result: IxcOssChamado[] = [];
+  const rp = 100;
+  const query = String(clienteId);
 
-  const data = await ixcListar<{ total?: string }>(IXC_MENSAGEM_RESOURCE, {
-    qtype: `${IXC_MENSAGEM_RESOURCE}.id_chamado`,
-    query: String(ixcOsId),
-    oper: '=',
-    page: '1',
-    rp: '1',
-    sortname: `${IXC_MENSAGEM_RESOURCE}.id`,
-    sortorder: 'desc',
-    grid_param: JSON.stringify([
-      { TB: `${IXC_MENSAGEM_RESOURCE}.id_chamado`, OP: '=', P: String(ixcOsId) },
-      { TB: `${IXC_MENSAGEM_RESOURCE}.id_operador`, OP: '=', P: operadorId },
-      { TB: `${IXC_MENSAGEM_RESOURCE}.id_evento`, OP: '=', P: IXC_EVENTO_ABERTURA },
-    ]),
-  });
+  for (let page = 1; page <= maxPages; page++) {
+    const data = await ixcListar<IxcListResponse>(IXC_RESOURCE, {
+      qtype: `${IXC_RESOURCE}.idx`,
+      query,
+      oper: '=',
+      page: String(page),
+      rp: String(rp),
+      sortname: `${IXC_RESOURCE}.id`,
+      sortorder: 'desc',
+      grid_param: OS_ESTRUTURA_GRID,
+    });
 
-  return (parseInt(data.total ?? '0', 10) || 0) > 0;
+    const batch = data.registros ?? [];
+    result.push(...batch);
+
+    const total = parseInt(data.total ?? '0', 10) || 0;
+    if (batch.length === 0 || page * rp >= total) break;
+  }
+
+  return result;
 }
 
-export async function fetchOsListByClienteIdx(clienteId: number): Promise<IxcOssChamado[]> {
-  const gridParam = JSON.stringify([
-    { TB: `${IXC_RESOURCE}.idx`, OP: '=', P: String(clienteId) },
-    { TB: `${IXC_RESOURCE}.id_estrutura`, OP: '>', P: '0' },
-  ]);
+/** Listagem geral + por cliente vinculado (importação mais completa que só o bulk). */
+export async function fetchOsListForImport(clienteIds: number[]): Promise<IxcOssChamado[]> {
+  const mapa = indexOsListById(await fetchOsListIxc());
 
-  const data = await ixcListar<IxcListResponse>(IXC_RESOURCE, {
-    qtype: `${IXC_RESOURCE}.idx`,
-    query: String(clienteId),
-    oper: '=',
-    page: '1',
-    rp: '500',
-    sortname: `${IXC_RESOURCE}.id`,
-    sortorder: 'desc',
-    grid_param: gridParam,
-  });
+  for (const clienteId of clienteIds) {
+    if (!Number.isFinite(clienteId) || clienteId <= 0) continue;
+    const porCliente = await fetchOsListByClienteIdx(clienteId);
+    for (const os of porCliente) {
+      const id = String(os.id ?? '').trim();
+      if (id) mapa.set(id, os);
+    }
+  }
 
-  return (data.registros ?? []).filter((registro) => Number(registro.id_estrutura) > 0);
+  return [...mapa.values()];
+}
+
+export function resolveClienteIdFromOs(os: IxcOssChamado, clienteIds: Set<number>): number | null {
+  const idx = parseInt(String(os.idx ?? '').trim(), 10);
+  if (Number.isFinite(idx) && idx > 0 && clienteIds.has(idx)) return idx;
+
+  const idCliente = parseInt(String(os.id_cliente ?? '').trim(), 10);
+  if (Number.isFinite(idCliente) && idCliente > 0 && clienteIds.has(idCliente)) return idCliente;
+
+  return null;
+}
+
+export function indexOsListById(registros: IxcOssChamado[]): Map<string, IxcOssChamado> {
+  const mapa = new Map<string, IxcOssChamado>();
+  for (const os of registros) {
+    const id = String(os.id ?? '').trim();
+    if (id) mapa.set(id, os);
+  }
+  return mapa;
 }
 
 export async function fetchOsRawById(id: string | number): Promise<IxcOssChamado | null> {
+  const idStr = String(id).trim();
+  if (!idStr) return null;
+
   const data = await ixcListar<IxcListResponse>(IXC_RESOURCE, {
     qtype: `${IXC_RESOURCE}.id`,
-    query: String(id),
+    query: idStr,
     oper: '=',
     page: '1',
     rp: '1',
     sortname: `${IXC_RESOURCE}.id`,
     sortorder: 'desc',
   });
+
   return data.registros?.[0] ?? null;
+}
+
+export async function fetchOsForSync(
+  ixcId: string | number,
+  bulkById?: Map<string, IxcOssChamado>
+): Promise<IxcOssChamado | null> {
+  const idStr = String(ixcId).trim();
+  if (!idStr) return null;
+  if (bulkById?.has(idStr)) return bulkById.get(idStr)!;
+  return fetchOsRawById(idStr);
 }
 
 export async function fetchMensagensOs(id: string | number): Promise<IxcOssMensagem[]> {
@@ -187,9 +228,7 @@ export async function enrichOsRegistros(registros: IxcOssChamado[]): Promise<Ixc
     fetchRegistrosPorIds(IXC_ASSUNTO_RESOURCE, registros.map((r) => String(r.id_assunto ?? ''))),
     fetchRegistrosPorIds(IXC_SETOR_RESOURCE, registros.map((r) => String(r.setor ?? ''))),
     fetchRegistrosPorIds(IXC_FILIAL_RESOURCE, registros.map((r) => String(r.id_filial ?? ''))),
-    fetchBacknetClientesPorIds(
-      registros.map((r) => String(r.idx ?? r.cliente_id ?? ''))
-    ),
+    fetchBacknetClientesPorIds(registros.map((r) => String(r.idx ?? r.cliente_id ?? ''))),
     fetchRegistrosPorIds(IXC_CIDADE_RESOURCE, registros.map((r) => String(r.id_cidade ?? ''))),
   ]);
 

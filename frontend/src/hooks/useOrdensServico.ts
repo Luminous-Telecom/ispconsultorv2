@@ -46,6 +46,15 @@ const refreshOrdensServicoCache = async (queryClient: ReturnType<typeof useQuery
   await queryClient.refetchQueries({ queryKey: ['ordens-servico'] });
 };
 
+const invalidateOrdemServico = async (
+  queryClient: ReturnType<typeof useQueryClient>,
+  id: number | string
+) => {
+  await queryClient.invalidateQueries({ queryKey: ['ordem-servico', id] });
+  await queryClient.invalidateQueries({ queryKey: ['ordem-servico-mensagens', id] });
+  await refreshOrdensServicoCache(queryClient);
+};
+
 export const useCreateOrdemServico = () => {
   const queryClient = useQueryClient();
   const { success } = useNotificationContext();
@@ -70,9 +79,7 @@ export const useUpdateOrdemServico = () => {
     mutationFn: ({ id, data }: { id: number | string; data: UpdateOrdemServico }) =>
       OrdemServicoService.update(id, data),
     onSuccess: async (_data, { id }) => {
-      await queryClient.invalidateQueries({ queryKey: ['ordem-servico', id] });
-      await queryClient.invalidateQueries({ queryKey: ['ordem-servico-mensagens', id] });
-      await refreshOrdensServicoCache(queryClient);
+      await invalidateOrdemServico(queryClient, id);
       success('Ordem de serviço atualizada com sucesso!');
     },
     onError: (err) => showApiError(err, 'Erro ao atualizar ordem de serviço'),
@@ -110,9 +117,7 @@ export const useExecutarAcaoOrdemServico = () => {
       data?: OrdemServicoAcaoPayload;
     }) => OrdemServicoService.executarAcao(id, acao, data),
     onSuccess: async (_data, { id }) => {
-      await queryClient.invalidateQueries({ queryKey: ['ordem-servico', id] });
-      await queryClient.invalidateQueries({ queryKey: ['ordem-servico-mensagens', id] });
-      await refreshOrdensServicoCache(queryClient);
+      await invalidateOrdemServico(queryClient, id);
       success('Ação executada com sucesso!');
     },
     onError: (err) => {

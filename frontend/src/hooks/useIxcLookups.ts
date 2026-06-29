@@ -12,14 +12,16 @@ import { CACHE_CONFIG } from '../config/api';
 
 const { DEFAULT_CACHE_TIME } = CACHE_CONFIG;
 
-const lookupQueryOptions = (filters: LookupFilters) => ({
-  staleTime: 60 * 1000,
-  gcTime: DEFAULT_CACHE_TIME,
-  refetchOnWindowFocus: false,
-  refetchOnMount: false,
-  retry: false,
-  enabled: filters.enabled !== false && (filters.cliente_id ?? 0) > 0,
-});
+function lookupQueryOptions(filters: LookupFilters, operadorScoped = false) {
+  return {
+    staleTime: operadorScoped ? 0 : 60 * 1000,
+    gcTime: DEFAULT_CACHE_TIME,
+    refetchOnWindowFocus: false,
+    refetchOnMount: operadorScoped,
+    retry: false,
+    enabled: filters.enabled !== false && (filters.cliente_id ?? 0) > 0,
+  };
+}
 
 export const useEstruturas = (filters: LookupFilters = {}) => {
   return useQuery({
@@ -41,7 +43,7 @@ export const useTecnicos = (filters: LookupFilters = {}) => {
   return useQuery({
     queryKey: ['ixc-tecnicos', filters],
     queryFn: () => TecnicoLookupService.list(filters),
-    ...lookupQueryOptions(filters),
+    ...lookupQueryOptions(filters, true),
   });
 };
 
@@ -49,7 +51,7 @@ export const useAssuntos = (filters: LookupFilters = {}) => {
   return useQuery({
     queryKey: ['ixc-assuntos', filters],
     queryFn: () => AssuntoLookupService.list(filters),
-    ...lookupQueryOptions(filters),
+    ...lookupQueryOptions(filters, Boolean(filters.setor_id)),
   });
 };
 
@@ -57,7 +59,7 @@ export const useSetores = (filters: LookupFilters = {}) => {
   return useQuery({
     queryKey: ['ixc-setores', filters],
     queryFn: () => SetorLookupService.list(filters),
-    ...lookupQueryOptions(filters),
+    ...lookupQueryOptions(filters, true),
   });
 };
 

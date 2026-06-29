@@ -15,9 +15,14 @@ import {
 } from '../../externos/IxcOssChamadoService/constants';
 import {
   fetchMensagensOs,
-  fetchOsListByClienteIdx,
   fetchOsRawById,
+  fetchOsForSync,
+  fetchOsListForImport,
+  indexOsListById,
+  resolveClienteIdFromOs,
 } from '../../externos/IxcOssChamadoService/ossData';
+import type { IxcOssChamado } from '../../externos/IxcOssChamadoService/types';
+import { mapMensagensIxcOperadorBacknet } from '../ordemServicoMensagemFormat';
 import { OrdemServicoLocalService, fetchUsuarioNomeById } from '../OrdemServicoLocalService';
 import { IxcOsSyncLogService } from '../IxcOsSyncLogService';
 
@@ -27,7 +32,12 @@ interface SchedulerResult {
   total: number;
   sucesso: number;
   erro: number;
+  ignoradas?: number;
+  desvinculadas?: number;
+  importadas?: number;
 }
+
+type MirrorSyncResult = 'synced' | 'ignorada' | 'desvinculada';
 
 interface ClienteVinculo {
   clienteId: number;
@@ -76,9 +86,16 @@ async function listClientesPorIntegracao(integracaoId: number): Promise<ClienteV
   return [...mapa.values()];
 }
 
-function resolveOperadorIxcNome(ixcMensagens: Array<{ id_evento?: string; operador_nome?: string }>, evento: string): string {
-  const msg = ixcMensagens.find((item) => String(item.id_evento) === evento);
-  return msg?.operador_nome?.trim() || '';
+function resolveClienteParaImportacao(
+  os: IxcOssChamado,
+  clienteIdSet: Set<number>,
+  clientes: ClienteVinculo[]
+): ClienteVinculo | null {
+  const porIdx = resolveClienteIdFromOs(os, clienteIdSet);
+  if (porIdx != null) {
+    return clientes.find((c) => c.clienteId === porIdx) ?? null;
+  }
+  return clientes[0] ?? null;
 }
 
 export class IxcOsSchedulerRoutineService {
@@ -141,33 +158,43 @@ export class IxcOsSchedulerRoutineService {
     let processadas = 0;
     let sucesso = 0;
     let erro = 0;
+    let ignoradas = 0;
+    let desvinculadas = 0;
+    let importadas = 0;
+    let encontradasIxc = 0;
+    let clienteVinculados = 0;
 
     await runWithIntegracaoCredentials({ apiUrl, apiToken }, async () => {
       const clientes = await listClientesPorIntegracao(integracao.id);
-      const clienteIds = clientes.map((c) => c.clienteId);
+      clienteVinculados = clientes.length;
+      const clienteIdSet = new Set(clientes.map((c) => c.clienteId));
 
-      const mirrors =
-        clienteIds.length > 0
-          ? await OrdemServicoLocal.findAll({
-              where: {
-                ixc_id: { [Op.ne]: null },
-                cliente_id: { [Op.in]: clienteIds },
-              },
-            })
-          : [];
+      const ixcOsBulk = await fetchOsListForImport(clientes.map((c) => c.clienteId));
+      encontradasIxc = ixcOsBulk.length;
+      const bulkById = indexOsListById(ixcOsBulk);
+
+      const mirrors = await OrdemServicoLocal.findAll({
+        where: {
+          ixc_id: { [Op.ne]: null },
+          ...(integracao.empresa_id != null ? { empresa_id: integracao.empresa_id } : {}),
+        },
+      });
 
       const mirrorsPorIxcId = new Map(mirrors.map((m) => [String(m.ixc_id).trim(), m]));
 
       for (const mirror of mirrors) {
         processadas++;
         try {
-          await IxcOsSchedulerRoutineService.syncMirrorRecord(
+          const resultado = await IxcOsSchedulerRoutineService.syncMirrorRecord(
             mirror,
             integracao,
             triggerType,
-            clientes.find((c) => c.clienteId === mirror.cliente_id)?.clienteNome ?? ''
+            clientes.find((c) => c.clienteId === mirror.cliente_id)?.clienteNome ?? '',
+            bulkById
           );
-          sucesso++;
+          if (resultado === 'synced') sucesso++;
+          else if (resultado === 'desvinculada') desvinculadas++;
+          else ignoradas++;
         } catch (err) {
           erro++;
           logger.warn('IxcOsSchedulerRoutineService: erro ao sincronizar OS local', {
@@ -179,81 +206,94 @@ export class IxcOsSchedulerRoutineService {
         }
       }
 
-      for (const cliente of clientes) {
+      for (const ixcOs of ixcOsBulk) {
+        const ixcId = String(ixcOs.id ?? '').trim();
+        if (!ixcId || mirrorsPorIxcId.has(ixcId)) continue;
+
+        const cliente = resolveClienteParaImportacao(ixcOs, clienteIdSet, clientes);
+        if (!cliente) continue;
+
+        processadas++;
         try {
-          const ixcOsList = await fetchOsListByClienteIdx(cliente.clienteId);
-          for (const ixcOs of ixcOsList) {
-            const ixcId = String(ixcOs.id ?? '').trim();
-            if (!ixcId || mirrorsPorIxcId.has(ixcId)) continue;
+          const record = await OrdemServicoLocalService.createIxcMirror(
+            ixcOs,
+            {},
+            cliente.empresaId,
+            null,
+            cliente.clienteId
+          );
+          mirrorsPorIxcId.set(ixcId, record);
+          importadas++;
+          sucesso++;
 
-            processadas++;
-            const record = await OrdemServicoLocalService.createIxcMirror(
-              ixcOs,
-              {},
-              cliente.empresaId,
-              null,
-              cliente.clienteId
-            );
-            mirrorsPorIxcId.set(ixcId, record);
+          const ixcMensagens = mapMensagensIxcOperadorBacknet(await fetchMensagensOs(ixcId));
 
-            IxcOsSyncLogService.registrar({
-              empresaId: cliente.empresaId,
-              integracaoId: integracao.id,
-              integracaoNome: integracao.nome,
-              eventType: 'os_abertura',
-              status: 'info',
-              triggerType,
-              ordemServicoId: record.id,
-              ixcOsId: ixcId,
-              protocolo: record.protocolo,
-              clienteNome: cliente.clienteNome,
-              origemAbertura: 'ixc',
-              operadorNome: resolveOperadorIxcNome(
-                await fetchMensagensOs(ixcId),
-                IXC_EVENTO_ABERTURA
-              ),
-              message: `OS aberta diretamente no IXC Provedor (${record.protocolo})`,
-            });
+          IxcOsSyncLogService.registrar({
+            empresaId: cliente.empresaId,
+            integracaoId: integracao.id,
+            integracaoNome: integracao.nome,
+            eventType: 'os_abertura',
+            status: 'info',
+            triggerType,
+            ordemServicoId: record.id,
+            ixcOsId: ixcId,
+            protocolo: record.protocolo,
+            clienteNome: cliente.clienteNome,
+            origemAbertura: 'ixc',
+            operadorNome:
+              ixcMensagens.find((m) => String(m.id_evento) === IXC_EVENTO_ABERTURA)?.operador_nome ?? '',
+            message: `OS aberta diretamente no IXC Provedor (${record.protocolo})`,
+          });
 
-            const { inseridas } = await OrdemServicoLocalService.syncMensagensFromIxc(
-              record,
-              await fetchMensagensOs(ixcId),
-              cliente.empresaId
-            );
-            for (const msg of inseridas) {
-              if (String(msg.id_evento) === IXC_EVENTO_OBSERVACAO) {
-                IxcOsSyncLogService.registrar({
-                  empresaId: cliente.empresaId,
-                  integracaoId: integracao.id,
-                  integracaoNome: integracao.nome,
-                  eventType: 'os_mensagem',
-                  status: 'info',
-                  triggerType,
-                  ordemServicoId: record.id,
-                  ixcOsId: ixcId,
-                  protocolo: record.protocolo,
-                  clienteNome: cliente.clienteNome,
-                  origemAbertura: 'ixc',
-                  operadorNome: msg.operador_nome ?? '',
-                  message: `Nova mensagem sincronizada do IXC (${record.protocolo})`,
-                });
-              }
+          const { inseridas } = await OrdemServicoLocalService.syncMensagensFromIxc(
+            record,
+            ixcMensagens,
+            cliente.empresaId
+          );
+          for (const msg of inseridas) {
+            if (String(msg.id_evento) === IXC_EVENTO_OBSERVACAO) {
+              IxcOsSyncLogService.registrar({
+                empresaId: cliente.empresaId,
+                integracaoId: integracao.id,
+                integracaoNome: integracao.nome,
+                eventType: 'os_mensagem',
+                status: 'info',
+                triggerType,
+                ordemServicoId: record.id,
+                ixcOsId: ixcId,
+                protocolo: record.protocolo,
+                clienteNome: cliente.clienteNome,
+                origemAbertura: 'ixc',
+                operadorNome: msg.operador_nome ?? '',
+                message: `Nova mensagem sincronizada do IXC (${record.protocolo})`,
+              });
             }
-
-            sucesso++;
           }
         } catch (err) {
           erro++;
-          logger.warn('IxcOsSchedulerRoutineService: erro ao importar OS do cliente', {
+          logger.warn('IxcOsSchedulerRoutineService: erro ao importar OS do IXC', {
             context: 'IxcOsSchedulerRoutineService',
             clienteId: cliente.clienteId,
+            ixcOsId: ixcId,
             error: err instanceof Error ? err.message : String(err),
           });
         }
       }
     });
 
-    const message = `IXC OS (${integracao.nome}): ${sucesso}/${processadas} processadas${erro > 0 ? `, ${erro} com erro` : ''}`;
+    let message: string;
+    if (clienteVinculados === 0) {
+      message = `IXC OS (${integracao.nome}): nenhum cliente vinculado à integração`;
+    } else if (processadas === 0) {
+      message = `IXC OS (${integracao.nome}): ${encontradasIxc} OS no IXC, nada a sincronizar`;
+    } else {
+      const partes = [`${sucesso}/${processadas} OS sincronizadas`];
+      if (importadas > 0) partes.push(`${importadas} importadas`);
+      if (desvinculadas > 0) partes.push(`${desvinculadas} desvinculadas`);
+      if (ignoradas > 0) partes.push(`${ignoradas} ignoradas`);
+      if (erro > 0) partes.push(`${erro} com erro`);
+      message = `IXC OS (${integracao.nome}): ${partes.join(', ')}`;
+    }
 
     IxcOsSyncLogService.registrar({
       empresaId: integracao.empresa_id,
@@ -271,6 +311,9 @@ export class IxcOsSchedulerRoutineService {
       total: processadas,
       sucesso,
       erro,
+      ignoradas,
+      desvinculadas,
+      importadas,
     };
   }
 
@@ -278,14 +321,16 @@ export class IxcOsSchedulerRoutineService {
     record: OrdemServicoLocal,
     integracao: IntegracaoIxcProvedor,
     triggerType: 'scheduled' | 'manual',
-    clienteNome: string
-  ): Promise<void> {
+    clienteNome: string,
+    bulkById: Map<string, IxcOssChamado>
+  ): Promise<MirrorSyncResult> {
     const ixcId = String(record.ixc_id ?? '').trim();
-    if (!ixcId) return;
+    if (!ixcId) return 'ignorada';
 
-    const ixcOs = await fetchOsRawById(ixcId);
-    if (!ixcOs || Number(ixcOs.id_estrutura) <= 0) {
-      throw new Error(`OS IXC #${ixcId} não encontrada`);
+    const ixcOs = await fetchOsForSync(ixcId, bulkById);
+    if (!ixcOs?.id) {
+      await record.update({ ixc_id: null });
+      return 'desvinculada';
     }
 
     const statusAnterior = record.status;
@@ -293,9 +338,7 @@ export class IxcOsSchedulerRoutineService {
     await record.reload();
 
     const statusNovo = record.status;
-    const hadStatusChange = statusAnterior !== statusNovo;
-
-    if (hadStatusChange) {
+    if (statusAnterior !== statusNovo) {
       IxcOsSyncLogService.registrar({
         empresaId: record.empresa_id,
         integracaoId: integracao.id,
@@ -320,8 +363,7 @@ export class IxcOsSchedulerRoutineService {
     );
 
     for (const msg of inseridas) {
-      const idEvento = String(msg.id_evento ?? '');
-      if (idEvento === IXC_EVENTO_OBSERVACAO) {
+      if (String(msg.id_evento) === IXC_EVENTO_OBSERVACAO) {
         IxcOsSyncLogService.registrar({
           empresaId: record.empresa_id,
           integracaoId: integracao.id,
@@ -353,10 +395,15 @@ export class IxcOsSchedulerRoutineService {
         protocolo: record.protocolo,
         clienteNome,
         origemAbertura: 'ixc',
-        operadorNome: resolveOperadorIxcNome(ixcMensagens, IXC_EVENTO_FINALIZAR),
+        operadorNome:
+          mapMensagensIxcOperadorBacknet(ixcMensagens).find(
+            (m) => String(m.id_evento) === IXC_EVENTO_FINALIZAR
+          )?.operador_nome ?? '',
         message: `OS finalizada no IXC (${record.protocolo})`,
       });
     }
+
+    return 'synced';
   }
 
   static async registrarAberturaBacknet(params: {

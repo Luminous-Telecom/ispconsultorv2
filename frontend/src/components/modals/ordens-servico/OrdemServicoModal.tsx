@@ -1,14 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useIsMobile } from 'hooks/useMediaQuery';
-import { useCreateOrdemServico, useUpdateOrdemServico } from 'hooks/useOrdensServico';
+import {
+  useCreateOrdemServico,
+  useDeleteOrdemServico,
+  useUpdateOrdemServico,
+} from 'hooks/useOrdensServico';
+import { useI18n } from 'contexts/I18nContext';
 import { OrdemServicoService } from 'services/ordemServicoService';
 import type { CreateOrdemServico } from 'services/ordemServicoService';
 import { useFiliais, useEstruturas, useTecnicos, useAssuntos, useSetores, useClienteIxcIntegracao } from 'hooks/useIxcLookups';
 import ClienteListModal from 'components/modals/clientes/ClienteListModal';
 import DraggableModal from 'components/common/DraggableModal';
 import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
-import { ModalFormActions, Spinner } from 'components/ui';
+import { DeletarButton, ModalFormActions, Spinner } from 'components/ui';
 import OrdemServicoFormFields, {
   initialOrdemServicoForm,
   type OrdemServicoFormData,
@@ -16,7 +21,8 @@ import OrdemServicoFormFields, {
 import OrdemServicoMensagensList from './OrdemServicoMensagensList';
 import OrdemServicoArquivosList from './OrdemServicoArquivosList';
 import IxcLookupSelectModal from './IxcLookupSelectModal';
-import { isOrdemServicoLocal } from './ordemServicoAcoes';
+import { isOrdemServicoExcluivel, isOrdemServicoLocal } from './ordemServicoAcoes';
+import { ixcToDatetimeLocal, datetimeLocalToIxc } from 'utils/ixcDateTime';
 
 interface OrdemServicoModalProps {
   show: boolean;
@@ -24,19 +30,6 @@ interface OrdemServicoModalProps {
   ordemServicoId?: number | string | null;
   onSuccess?: () => void;
 }
-
-/** IXC "AAAA-MM-DD HH:MM:SS" -> input datetime-local "AAAA-MM-DDTHH:MM". */
-const ixcToDatetimeLocal = (value: string): string => {
-  const v = value.trim();
-  if (!v || v.startsWith('0000')) return '';
-  return v.replace(' ', 'T').slice(0, 16);
-};
-
-/** Input datetime-local "AAAA-MM-DDTHH:MM" -> IXC "AAAA-MM-DD HH:MM:SS". */
-const datetimeLocalToIxc = (value: string): string => {
-  if (!value) return '';
-  return `${value.replace('T', ' ')}:00`.slice(0, 19);
-};
 
 type OrdemServicoTab = 'principal' | 'mensagens' | 'arquivos';
 
@@ -47,6 +40,7 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
   onSuccess,
 }) => {
   const isMobile = useIsMobile();
+  const { t } = useI18n();
   const isEdit = !!ordemServicoId;
   const formId = isEdit ? 'ordem-servico-edit-form' : 'ordem-servico-create-form';
   const modalId = isEdit ? 'ordem-servico-edit-modal' : 'ordem-servico-create-modal';
@@ -88,7 +82,9 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
 
   const createMutation = useCreateOrdemServico();
   const updateMutation = useUpdateOrdemServico();
-  const isPending = createMutation.isPending || updateMutation.isPending;
+  const deleteMutation = useDeleteOrdemServico();
+  const isPending =
+    createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   const hasIxcVinculo = Boolean(ordemData?.ixc_id?.trim());
   const isOrdemLocal = isEdit && isOrdemServicoLocal(ordemData);
@@ -218,6 +214,20 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0 && !hasClienteError;
+  };
+
+  const handleDelete = async () => {
+    if (!isEdit || ordemServicoId == null) return;
+    if (!isOrdemServicoExcluivel(ordemData)) return;
+    if (!window.confirm(t('messages.confirmDelete'))) return;
+
+    try {
+      await deleteMutation.mutateAsync(ordemServicoId);
+      onSuccess?.();
+      onClose();
+    } catch {
+      // Erro tratado pelo hook
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -351,12 +361,21 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
         headerActions={
           !(isEdit && isLoadingOrdem) ? (
             <div className="ordem-servico-header-unified">
-              <ModalFormActions
-                className="ordem-servico-header-buttons modal-header-actions d-flex gap-2"
-                onCancel={onClose}
-                formId={formId}
-                isPending={isPending}
-              />
+              <div className="ordem-servico-header-buttons modal-header-actions d-flex gap-2">
+                <ModalFormActions
+                  className="d-flex gap-2"
+                  onCancel={onClose}
+                  formId={formId}
+                  isPending={isPending}
+                />
+                {isEdit && isOrdemServicoExcluivel(ordemData) && (
+                  <DeletarButton
+                    type="button"
+                    onClick={() => void handleDelete()}
+                    isPending={isPending}
+                  />
+                )}
+              </div>
               <div className="ordem-servico-header-tabs">
                 <ModalTabsOverflow
                   tabs={ordemServicoTabs}
@@ -434,6 +453,7 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
         show={showAssuntoModal}
         onClose={() => setShowAssuntoModal(false)}
         clienteId={clienteId}
+        setorId={formData.setor || undefined}
         onSelect={(item) => {
           handleChange('id_assunto', item.id);
           setAssuntoNome(item.nome);
@@ -450,6 +470,10 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
         onSelect={(item) => {
           handleChange('setor', item.id);
           setSetorNome(item.nome);
+          if (formData.id_assunto) {
+            handleChange('id_assunto', '');
+            setAssuntoNome('');
+          }
         }}
         title="Setor"
         nomeLabel="Setor"

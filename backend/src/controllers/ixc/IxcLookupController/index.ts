@@ -10,12 +10,13 @@ function parseIxcLookupContext(req: Request) {
   const { page, limit, search, sortColumn, sortDirection } = parseListQuery(req.query);
   const empresaId = getEmpresaIdOrNull(req);
   const clienteId = parseOptionalQueryInt(req.query.cliente_id) ?? null;
-  return { page, limit, search, sortColumn, sortDirection, empresaId, clienteId };
+  const setorIdRaw = parseOptionalQueryInt(req.query.setor_id);
+  const setor_id = setorIdRaw != null ? String(setorIdRaw) : undefined;
+  return { page, limit, search, sortColumn, sortDirection, empresaId, clienteId, setor_id };
 }
 
 function isIntegracaoConfigError(error: unknown): boolean {
-  const message = getErrorMessage(error);
-  return message.includes('Integração IXC');
+  return getErrorMessage(error).includes('Integração IXC');
 }
 
 function handleLookupError(
@@ -31,6 +32,31 @@ function handleLookupError(
     action,
     query,
   });
+}
+
+async function listLookup(
+  req: Request,
+  res: Response,
+  resource: string,
+  nomeCampo: string,
+  action: string,
+  errorMessage: string
+): Promise<void> {
+  try {
+    const { page, limit, search, sortColumn, sortDirection, empresaId, clienteId, setor_id } =
+      parseIxcLookupContext(req);
+    const result = await IxcOssChamadoService.listCadastroLookup(
+      resource,
+      nomeCampo,
+      { page, limit, search, sortColumn, sortDirection, setor_id },
+      {},
+      empresaId,
+      clienteId
+    );
+    sendSuccess(res, result);
+  } catch (error) {
+    handleLookupError(res, error, errorMessage, action, req.query);
+  }
 }
 
 export class IxcLookupController {
@@ -55,92 +81,22 @@ export class IxcLookupController {
   }
 
   static async listEstruturas(req: Request, res: Response): Promise<void> {
-    try {
-      const { page, limit, search, sortColumn, sortDirection, empresaId, clienteId } =
-        parseIxcLookupContext(req);
-      const result = await IxcOssChamadoService.listCadastroLookup(
-        'estrutura',
-        'descricao',
-        { page, limit, search, sortColumn, sortDirection },
-        {},
-        empresaId,
-        clienteId
-      );
-      sendSuccess(res, result);
-    } catch (error) {
-      handleLookupError(res, error, 'Erro ao listar estruturas', 'listEstruturas', req.query);
-    }
+    await listLookup(req, res, 'estrutura', 'descricao', 'listEstruturas', 'Erro ao listar estruturas');
   }
 
   static async listAssuntos(req: Request, res: Response): Promise<void> {
-    try {
-      const { page, limit, search, sortColumn, sortDirection, empresaId, clienteId } =
-        parseIxcLookupContext(req);
-      const result = await IxcOssChamadoService.listCadastroLookup(
-        'su_oss_assunto',
-        'assunto',
-        { page, limit, search, sortColumn, sortDirection },
-        {},
-        empresaId,
-        clienteId
-      );
-      sendSuccess(res, result);
-    } catch (error) {
-      handleLookupError(res, error, 'Erro ao listar assuntos', 'listAssuntos', req.query);
-    }
+    await listLookup(req, res, 'su_oss_assunto', 'assunto', 'listAssuntos', 'Erro ao listar assuntos');
   }
 
   static async listSetores(req: Request, res: Response): Promise<void> {
-    try {
-      const { page, limit, search, sortColumn, sortDirection, empresaId, clienteId } =
-        parseIxcLookupContext(req);
-      const result = await IxcOssChamadoService.listCadastroLookup(
-        'empresa_setor',
-        'setor',
-        { page, limit, search, sortColumn, sortDirection },
-        {},
-        empresaId,
-        clienteId
-      );
-      sendSuccess(res, result);
-    } catch (error) {
-      handleLookupError(res, error, 'Erro ao listar setores', 'listSetores', req.query);
-    }
+    await listLookup(req, res, 'empresa_setor', 'setor', 'listSetores', 'Erro ao listar setores');
   }
 
   static async listFiliais(req: Request, res: Response): Promise<void> {
-    try {
-      const { page, limit, search, sortColumn, sortDirection, empresaId, clienteId } =
-        parseIxcLookupContext(req);
-      const result = await IxcOssChamadoService.listCadastroLookup(
-        'filial',
-        'fantasia',
-        { page, limit, search, sortColumn, sortDirection },
-        {},
-        empresaId,
-        clienteId
-      );
-      sendSuccess(res, result);
-    } catch (error) {
-      handleLookupError(res, error, 'Erro ao listar filiais', 'listFiliais', req.query);
-    }
+    await listLookup(req, res, 'filial', 'fantasia', 'listFiliais', 'Erro ao listar filiais');
   }
 
   static async listTecnicos(req: Request, res: Response): Promise<void> {
-    try {
-      const { page, limit, search, sortColumn, sortDirection, empresaId, clienteId } =
-        parseIxcLookupContext(req);
-      const result = await IxcOssChamadoService.listCadastroLookup(
-        'funcionarios',
-        'funcionario',
-        { page, limit, search, sortColumn, sortDirection },
-        { integracao_calendario: 'S' },
-        empresaId,
-        clienteId
-      );
-      sendSuccess(res, result);
-    } catch (error) {
-      handleLookupError(res, error, 'Erro ao listar técnicos', 'listTecnicos', req.query);
-    }
+    await listLookup(req, res, 'funcionarios', 'funcionario', 'listTecnicos', 'Erro ao listar técnicos');
   }
 }

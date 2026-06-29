@@ -1,18 +1,20 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   useDeleteIntegracaoIxcProvedor,
   useIntegracaoIxcProvedorList,
+  useCheckIntegracaoIxcProvedorPermissions,
   useSyncIntegracaoIxcProvedorOsCadastros,
   useTestIntegracaoIxcProvedor,
 } from 'hooks/useIntegracaoIxcProvedor';
 import { useEntityListModal } from 'hooks/useEntityListModal';
-import { IntegracaoIxcProvedor } from 'services/integracaoIxcProvedorService';
+import { IntegracaoIxcProvedor, type IxcApiPermissionsCheckResult } from 'services/integracaoIxcProvedorService';
 import { useI18n } from 'contexts/I18nContext';
 import { formatDateTime } from 'utils/formatters';
 import { useBulkBtn } from 'components/ui';
 import ListModal from 'components/common/ListModal';
 import { ListModalConfig } from 'types/modal';
 import IntegracaoIxcProvedorModal from './IntegracaoIxcProvedorModal';
+import IntegracaoIxcProvedorPermissoesModal from './IntegracaoIxcProvedorPermissoesModal';
 import ImprimirModal from 'components/common/ImprimirModal';
 
 interface IntegracaoIxcProvedorListModalProps {
@@ -55,6 +57,52 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
   const deleteMutation = useDeleteIntegracaoIxcProvedor();
   const testMutation = useTestIntegracaoIxcProvedor();
   const syncOsMutation = useSyncIntegracaoIxcProvedorOsCadastros();
+  const checkPermissionsMutation = useCheckIntegracaoIxcProvedorPermissions();
+
+  const [showPermissoesModal, setShowPermissoesModal] = useState(false);
+  const [permissoesResult, setPermissoesResult] = useState<IxcApiPermissionsCheckResult | null>(null);
+  const [permissoesIntegracaoId, setPermissoesIntegracaoId] = useState<number | null>(null);
+  const [permissoesIntegracaoNome, setPermissoesIntegracaoNome] = useState('');
+  const [permissoesError, setPermissoesError] = useState<string | null>(null);
+
+  const handleClosePermissoesModal = useCallback(() => {
+    setShowPermissoesModal(false);
+    setPermissoesError(null);
+    setPermissoesIntegracaoId(null);
+  }, []);
+
+  const fetchPermissions = useCallback(
+    async (integracaoId: number, integracaoNome?: string) => {
+      setPermissoesIntegracaoId(integracaoId);
+      if (integracaoNome) {
+        setPermissoesIntegracaoNome(integracaoNome);
+      }
+      setPermissoesError(null);
+
+      try {
+        const result = await checkPermissionsMutation.mutateAsync(integracaoId);
+        setPermissoesResult(result);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Erro ao verificar permissões';
+        setPermissoesError(message);
+      }
+    },
+    [checkPermissionsMutation]
+  );
+
+  const handleCheckPermissions = useCallback(
+    async (integracao: IntegracaoIxcProvedor) => {
+      setShowPermissoesModal(true);
+      setPermissoesResult(null);
+      await fetchPermissions(integracao.id, integracao.nome);
+    },
+    [fetchPermissions]
+  );
+
+  const handleReloadPermissions = useCallback(async () => {
+    if (!permissoesIntegracaoId) return;
+    await fetchPermissions(permissoesIntegracaoId);
+  }, [fetchPermissions, permissoesIntegracaoId]);
 
   const testBulkAction = useMemo(
     () => ({
@@ -71,6 +119,20 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
       disabled: (selectedItems: IntegracaoIxcProvedor[]) => selectedItems.length !== 1,
     }),
     [bulkBtn.editar.variant, testMutation]
+  );
+
+  const checkPermissionsBulkAction = useMemo(
+    () => ({
+      label: 'Verificar permissões',
+      variant: bulkBtn.editar.variant,
+      action: async (selectedItems: IntegracaoIxcProvedor[]) => {
+        if (selectedItems.length !== 1) return;
+        await handleCheckPermissions(selectedItems[0]);
+      },
+      disabled: (selectedItems: IntegracaoIxcProvedor[]) =>
+        selectedItems.length !== 1 || checkPermissionsMutation.isPending,
+    }),
+    [bulkBtn.editar.variant, checkPermissionsMutation.isPending, handleCheckPermissions]
   );
 
   const syncOsBulkAction = useMemo(
@@ -168,6 +230,7 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
           },
           ...selectActions,
           testBulkAction,
+          checkPermissionsBulkAction,
           syncOsBulkAction,
         ];
       }
@@ -180,6 +243,7 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
         onDelete: handleDelete,
       }),
       testBulkAction,
+      checkPermissionsBulkAction,
       syncOsBulkAction,
     ];
   }, [
@@ -190,6 +254,7 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
     bulkBtn.novo.label,
     bulkBtn.novo.variant,
     testBulkAction,
+    checkPermissionsBulkAction,
     syncOsBulkAction,
   ]);
 
@@ -267,6 +332,16 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
         isGenerating={list.auditoria.isGeneratingPdf}
         title={t('financial.executionLogs')}
         modalId="auditoria-integracao-ixc-provedor-modal"
+      />
+      <IntegracaoIxcProvedorPermissoesModal
+        show={showPermissoesModal}
+        onClose={handleClosePermissoesModal}
+        integracaoId={permissoesIntegracaoId}
+        integracaoNome={permissoesIntegracaoNome}
+        result={permissoesResult}
+        isLoading={checkPermissionsMutation.isPending}
+        error={permissoesError}
+        onReload={handleReloadPermissions}
       />
     </>
   );

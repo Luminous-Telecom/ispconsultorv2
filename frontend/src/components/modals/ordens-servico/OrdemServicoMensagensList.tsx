@@ -8,7 +8,7 @@ import {
   useOrdemServicoMensagens,
 } from 'hooks/useOrdensServico';
 import type { OrdemServico, OrdemServicoMensagem } from 'services/ordemServicoService';
-import { formatRpkiValidityDisplay } from 'utils/formatters';
+import { formatIxcData } from 'utils/ixcDateTime';
 import OrdemServicoAcaoModal from './OrdemServicoAcaoModal';
 import OrdemServicoMensagemDetalhesModal from './OrdemServicoMensagemDetalhesModal';
 
@@ -16,11 +16,6 @@ interface OrdemServicoMensagensListProps {
   ordemServicoId: number | string;
   ordemServico: OrdemServico | null;
 }
-
-const formatIxcData = (value?: string): string => {
-  if (!value?.trim() || value.startsWith('0000-00-00')) return '-';
-  return formatRpkiValidityDisplay(value);
-};
 
 const OrdemServicoMensagensList: React.FC<OrdemServicoMensagensListProps> = ({
   ordemServicoId,

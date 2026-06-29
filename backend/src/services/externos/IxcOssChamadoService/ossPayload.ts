@@ -2,12 +2,10 @@ import {
   CAMPOS_AUTOGERADOS_CRIACAO,
   CAMPOS_BACKNET,
   CAMPOS_ENRIQUECIDOS,
-  IXC_RESOURCE,
   OSS_DEFAULTS,
 } from './constants';
-import { ixcListar, sanitizeInput } from './ixcHttp';
-import { IXC_PROTOCOLO_PATTERN } from '../../ordens/ordemServicoProtocolo';
-import type { IxcListResponse, IxcOssChamado, OssChamadoAcao, OssChamadoInput } from './types';
+import { resolveOperadorId, sanitizeInput } from './ixcHttp';
+import type { IxcOssChamado, OssChamadoAcao, OssChamadoInput } from './types';
 
 export function parseClienteId(raw: string | number | null | undefined): number | null {
   if (raw == null || raw === '') return null;
@@ -42,25 +40,6 @@ export function applyBacknetCliente(payload: OssChamadoInput, body: Record<strin
   body.idx = clienteId;
 }
 
-export async function fetchProximoProtocolo(): Promise<string> {
-  const year = String(new Date().getFullYear());
-  const data = await ixcListar<IxcListResponse>(IXC_RESOURCE, {
-    qtype: `${IXC_RESOURCE}.protocolo`,
-    query: year,
-    oper: 'L',
-    page: '1',
-    rp: '1',
-    sortname: `${IXC_RESOURCE}.protocolo`,
-    sortorder: 'desc',
-  });
-
-  const ultimo = data.registros?.[0]?.protocolo?.trim();
-  if (!ultimo || !IXC_PROTOCOLO_PATTERN.test(ultimo)) {
-    return `${year}000001`;
-  }
-  return String(Number(ultimo) + 1);
-}
-
 export function prepareCreateBody(payload: OssChamadoInput): Record<string, string> {
   const body = { ...OSS_DEFAULTS, ...sanitizeInput(payload) };
   delete body.id;
@@ -69,6 +48,20 @@ export function prepareCreateBody(payload: OssChamadoInput): Record<string, stri
   }
   applyBacknetCliente(payload, body);
   return body;
+}
+
+export function applyBacknetProtocoloAbertura(body: Record<string, string>, protocolo: string): void {
+  const normalized = protocolo.trim();
+  if (normalized) {
+    body.protocolo = normalized;
+  }
+}
+
+export function applyApiOperadorAbertura(body: Record<string, string>): void {
+  const operadorId = resolveOperadorId();
+  if (operadorId) {
+    body.id_operador = operadorId;
+  }
 }
 
 export function buildActionBody(

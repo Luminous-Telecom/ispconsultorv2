@@ -17,6 +17,8 @@ export interface IxcOssChamado {
 }
 
 export interface IxcListResponse {
+  type?: string;
+  message?: string;
   page?: string;
   total?: string;
   registros?: IxcOssChamado[];
@@ -38,6 +40,8 @@ export interface ListOssChamadosFilters {
   searchField?: string;
   sortColumn?: string;
   sortDirection?: 'asc' | 'desc';
+  /** Filtra assuntos vinculados ao setor (empresa_setor) no IXC. */
+  setor_id?: string;
 }
 
 export interface OssChamadoPagination {

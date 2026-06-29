@@ -1,28 +1,19 @@
 /**
  * Protocolo de ordem de serviço.
  *
- * IXC (su_oss_chamado): sequência numérica — ano + contador (ex: 2026000001).
- * O webservice do BackNet valida apenas dígitos ao buscar o próximo protocolo no IXC.
+ * IXC (su_oss_chamado): sequência numérica própria do IXC (não usada no BackNet).
  *
  * BackNet (ordens_servico): BN + AAAA + MM + NNNNNN (ex: BN202606000001).
- * Letras no prefixo evitam colisão com protocolos do IXC e identificam a origem local.
+ * Sequência única global no banco (índice unique em `protocolo`).
  */
 
 export const LOCAL_PROTOCOLO_PREFIX = 'BN';
 
-/** Protocolo gerado automaticamente pelo IXC (somente números). */
+/** Protocolo gerado automaticamente pelo IXC (somente números). Mantido para referência. */
 export const IXC_PROTOCOLO_PATTERN = /^\d+$/;
 
 /** Protocolo de OS local do BackNet: BN + AAAA + MM + NNNNNN */
 export const LOCAL_PROTOCOLO_PATTERN = /^BN\d{4}\d{2}\d{6}$/;
-
-export function isIxcProtocolo(protocolo: string): boolean {
-  return IXC_PROTOCOLO_PATTERN.test(protocolo.trim());
-}
-
-export function isLocalProtocolo(protocolo: string): boolean {
-  return LOCAL_PROTOCOLO_PATTERN.test(protocolo.trim());
-}
 
 export function formatLocalProtocolo(year: number, month: number, sequence: number): string {
   const mm = String(month).padStart(2, '0');

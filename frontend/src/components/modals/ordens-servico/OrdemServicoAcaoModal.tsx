@@ -7,6 +7,7 @@ import DraggableModal from 'components/common/DraggableModal';
 import { EntitySelectField, FormField, ModalFormActions, LabelWithHelp } from 'components/ui';
 import IxcLookupSelectModal from './IxcLookupSelectModal';
 import { type OrdemServicoAcao } from './ordemServicoAcoes';
+import { ixcToDatetimeLocal, datetimeLocalToIxc } from 'utils/ixcDateTime';
 
 interface OrdemServicoAcaoModalProps {
   show: boolean;
@@ -36,19 +37,6 @@ const initialForm: AcaoFormData = {
   setor: '',
   id_assunto: '',
   alteraSetorEncaminhamento: 'N',
-};
-
-/** IXC "AAAA-MM-DD HH:MM:SS" -> input datetime-local. */
-const ixcToDatetimeLocal = (value: string): string => {
-  const v = value.trim();
-  if (!v || v.startsWith('0000')) return '';
-  return v.replace(' ', 'T').slice(0, 16);
-};
-
-/** Input datetime-local -> IXC "AAAA-MM-DD HH:MM:SS". */
-const datetimeLocalToIxc = (value: string): string => {
-  if (!value) return '';
-  return `${value.replace('T', ' ')}:00`.slice(0, 19);
 };
 
 const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
@@ -417,6 +405,10 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
         onSelect={(item) => {
           handleChange('setor', item.id);
           setSetorNome(item.nome);
+          if (form.id_assunto) {
+            handleChange('id_assunto', '');
+            setAssuntoNome('');
+          }
         }}
         title="Setor"
         nomeLabel="Setor"
@@ -427,6 +419,7 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
         show={showAssuntoModal}
         onClose={() => setShowAssuntoModal(false)}
         clienteId={clienteId}
+        setorId={form.setor || undefined}
         onSelect={(item) => {
           handleChange('id_assunto', item.id);
           setAssuntoNome(item.nome);

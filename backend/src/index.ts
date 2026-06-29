@@ -203,6 +203,8 @@ const ddosMaxConcurrentRequests = parseInt(process.env.DDOS_MAX_CONCURRENT_REQUE
 const ddosRpkiRoaAnalyzeMaxMs = parseInt(process.env.DDOS_RPKI_ROA_ANALYZE_MAX_MS || '600000', 10); // 10 minutos
 /** Lista de releases no GitHub pode ultrapassar 15s (rede lenta, rate limit, repositório grande) */
 const ddosSaasAtualizacoesMaxMs = parseInt(process.env.DDOS_SAAS_ATUALIZACOES_MAX_MS || '120000', 10); // 2 minutos
+/** Criação/sync de OS IXC pode ultrapassar 15s */
+const ddosIxcOsMaxMs = parseInt(process.env.DDOS_IXC_OS_MAX_MS || '120000', 10); // 2 minutos
 
 app.use(ddosProtectionMiddleware({
   maxProcessingTime: ddosMaxProcessingTime,
@@ -215,6 +217,12 @@ app.use(ddosProtectionMiddleware({
     {
       test: (pathname) => /^\/api\/saas\/atualizacoes\/?$/.test(pathname),
       maxProcessingTime: Number.isFinite(ddosSaasAtualizacoesMaxMs) ? ddosSaasAtualizacoesMaxMs : 120_000,
+    },
+    {
+      test: (pathname) =>
+        /\/api\/ixc\/ordens-servico/.test(pathname) ||
+        /\/api\/integracao-ixc-provedor\/.*sync/.test(pathname),
+      maxProcessingTime: Number.isFinite(ddosIxcOsMaxMs) ? ddosIxcOsMaxMs : 120_000,
     },
   ],
   skipRoutes: [

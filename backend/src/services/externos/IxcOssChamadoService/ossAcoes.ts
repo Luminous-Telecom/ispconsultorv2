@@ -228,16 +228,3 @@ export async function deleteMensagemIxcById(mensagemIxcId: string | number): Pro
     throw wrapIxcError(error, 'Erro ao excluir mensagem no IXC');
   }
 }
-
-export async function deleteMensagemOs(
-  ordemId: string | number,
-  mensagemId: string | number
-): Promise<IxcActionResponse> {
-  const mensagens = await fetchMensagensOs(ordemId);
-  const mensagem = mensagens.find((item) => item.id === String(mensagemId));
-  if (!mensagem) {
-    throw new Error('Mensagem não encontrada');
-  }
-
-  return deleteMensagemIxcById(mensagemId);
-}

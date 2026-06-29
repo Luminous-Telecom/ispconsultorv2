@@ -132,7 +132,7 @@ OrdemServicoLocal.init(
     indexes: [
       { fields: ['empresa_id'] },
       { fields: ['cliente_id'] },
-      { fields: ['protocolo'] },
+      { fields: ['protocolo'], unique: true, name: 'ordens_servico_protocolo_unique' },
       { fields: ['ixc_id'] },
     ],
   }

@@ -1,5 +1,5 @@
 /**
- * Serviços de lookup do IXC (estruturas, técnicos) usados nos campos de seleção (lupa).
+ * Serviços de lookup do IXC usados nos campos de seleção (lupa) de ordens de serviço.
  */
 import { BaseService, defaultApiClient } from './core';
 import type { BaseFilters } from './core/BaseService';
@@ -12,51 +12,26 @@ export interface LookupItem {
 
 export type LookupFilters = BaseFilters & {
   cliente_id?: number;
+  setor_id?: number | string;
   /** Quando false, a query não é executada (ex.: modal fechado). */
   enabled?: boolean;
 };
 
-class LookupServiceClass extends BaseService<LookupItem, never, never, LookupFilters> {
-  constructor(endpoint: string) {
-    super(defaultApiClient, endpoint);
-  }
+function createLookupService(endpoint: string) {
+  const service = new BaseService<LookupItem, never, never, LookupFilters>(
+    defaultApiClient,
+    endpoint
+  );
+  return {
+    list: (filters: LookupFilters = {}) => service.list(filters),
+  };
 }
 
-const estruturaLookupService = new LookupServiceClass('/ixc/estruturas');
-const filialLookupService = new LookupServiceClass('/ixc/filiais');
-const tecnicoLookupService = new LookupServiceClass('/ixc/tecnicos');
-const assuntoLookupService = new LookupServiceClass('/ixc/assuntos');
-const setorLookupService = new LookupServiceClass('/ixc/setores');
-
-export class EstruturaLookupService {
-  static async list(filters: LookupFilters = {}): Promise<PaginatedResponse<LookupItem>> {
-    return estruturaLookupService.list(filters);
-  }
-}
-
-export class FilialLookupService {
-  static async list(filters: LookupFilters = {}): Promise<PaginatedResponse<LookupItem>> {
-    return filialLookupService.list(filters);
-  }
-}
-
-export class TecnicoLookupService {
-  static async list(filters: LookupFilters = {}): Promise<PaginatedResponse<LookupItem>> {
-    return tecnicoLookupService.list(filters);
-  }
-}
-
-export class AssuntoLookupService {
-  static async list(filters: LookupFilters = {}): Promise<PaginatedResponse<LookupItem>> {
-    return assuntoLookupService.list(filters);
-  }
-}
-
-export class SetorLookupService {
-  static async list(filters: LookupFilters = {}): Promise<PaginatedResponse<LookupItem>> {
-    return setorLookupService.list(filters);
-  }
-}
+export const EstruturaLookupService = createLookupService('/ixc/estruturas');
+export const FilialLookupService = createLookupService('/ixc/filiais');
+export const TecnicoLookupService = createLookupService('/ixc/tecnicos');
+export const AssuntoLookupService = createLookupService('/ixc/assuntos');
+export const SetorLookupService = createLookupService('/ixc/setores');
 
 export interface ClienteIntegracaoIxcStatus {
   configured: boolean;

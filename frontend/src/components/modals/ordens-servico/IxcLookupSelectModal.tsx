@@ -13,6 +13,7 @@ interface IxcLookupSelectModalProps {
   title: string;
   nomeLabel: string;
   clienteId?: number;
+  setorId?: number | string;
   useData: (filters: LookupFilters) => UseQueryResult<PaginatedResponse<LookupItem>>;
 }
 
@@ -23,12 +24,14 @@ const IxcLookupSelectModal: React.FC<IxcLookupSelectModalProps> = ({
   title,
   nomeLabel,
   clienteId,
+  setorId,
   useData,
 }) => {
   const list = useEntityListModal<LookupItem>({ onClose, onSelect });
 
   const { data, isLoading, refetch } = useData({
     cliente_id: clienteId || undefined,
+    setor_id: setorId || undefined,
     enabled: show,
     search: list.tableFilters.debouncedSearch || undefined,
     page: list.tableFilters.page,
@@ -71,7 +74,10 @@ const IxcLookupSelectModal: React.FC<IxcLookupSelectModalProps> = ({
     [list, data?.pagination]
   );
 
-  const modalData = useMemo(() => data?.data || [], [data?.data]);
+  const modalData = useMemo(() => {
+    if (!clienteId) return [];
+    return data?.data ?? [];
+  }, [data?.data, clienteId]);
 
   const tableId = `ixc-lookup-${title.toLowerCase().replace(/\s+/g, '-')}`;
 

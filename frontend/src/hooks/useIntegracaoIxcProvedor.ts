@@ -121,14 +121,26 @@ export const useTestIntegracaoIxcProvedor = () => {
 };
 
 export const useSyncIntegracaoIxcProvedorOsCadastros = () => {
+  const queryClient = useQueryClient();
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
 
   return useMutation({
     mutationFn: (id: number) => IntegracaoIxcProvedorService.syncOrdemServicoCadastros(id),
     onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['ordens-servico'] });
+      queryClient.invalidateQueries({ queryKey: ['ixc-os-sync-logs'] });
       success(result.message || 'Dados de OS sincronizados com sucesso.');
     },
+    onError: (error) => showApiError(error),
+  });
+};
+
+export const useCheckIntegracaoIxcProvedorPermissions = () => {
+  const { showApiError } = useApiError();
+
+  return useMutation({
+    mutationFn: (id: number) => IntegracaoIxcProvedorService.checkPermissions(id),
     onError: (error) => showApiError(error),
   });
 };

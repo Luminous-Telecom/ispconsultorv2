@@ -3,13 +3,26 @@ import { clienteNomeParaOrdemServico } from '../../ordens/clienteNomeOrdemServic
 import { Cliente } from '../../../models/clientes/Cliente';
 import { IntegracaoIxcProvedorService } from '../../integracao/IntegracaoIxcProvedorService';
 import { OrdemServicoCadastroService } from '../../ordens/OrdemServicoCadastroService';
-import { IXC_EVENTO_ABERTURA, IXC_FILIAL_RESOURCE, IXC_RESOURCE, OSS_CHAMADO_ACOES } from './constants';
+import {
+  IXC_EVENTO_ABERTURA,
+  IXC_ASSUNTO_RESOURCE,
+  IXC_FILIAL_RESOURCE,
+  IXC_FUNCIONARIOS_RESOURCE,
+  IXC_RESOURCE,
+  IXC_SETOR_RESOURCE,
+  OSS_CHAMADO_ACOES,
+} from './constants';
 import {
   actionErrorMessage,
   createIxcClient,
   sanitizeInput,
   wrapIxcError,
 } from './ixcHttp';
+import {
+  buildIxcListGridParam,
+  filterRegistrosAtivos,
+  ixcResourceSupportsAtivoFilter,
+} from './ixcListFilters';
 import {
   executarAgendarOs,
   executarEncaminharOs,
@@ -31,22 +44,26 @@ import {
   fetchUsuarioNomeById,
 } from '../../ordens/OrdemServicoLocalService';
 import {
-  mapMensagensIxcOperadorBacknet,
   prefixarMensagemOperador,
 } from '../../ordens/ordemServicoMensagemFormat';
 import {
   fetchMensagensOs,
   fetchOsRawById,
-  osAbertaPeloOperador,
 } from './ossData';
 import {
+  applyApiOperadorAbertura,
+  applyBacknetProtocoloAbertura,
   applyBacknetCliente,
   buildActionBody,
-  fetchProximoProtocolo,
   parseClienteId,
   prepareCreateBody,
   stripCamposEnriquecidos,
 } from './ossPayload';
+import {
+  fetchLookupItemsByIxcIds,
+  fetchAssuntoIdsBySetores,
+  resolveApiOperadorContext,
+} from './ossUsuarioContext';
 import type {
   IxcActionResponse,
   IxcNamedRecord,
@@ -79,48 +96,13 @@ async function fetchClienteNomeForLog(clienteId: number): Promise<string> {
 }
 
 export class IxcOssChamadoService {
-  private static async assertOsAcessivel(
-    id: string | number,
-    empresaId: number | null = null,
-    usuarioId: number | null = null
-  ): Promise<void> {
-    if (await OrdemServicoLocalService.findRecord(id, empresaId)) {
-      return;
-    }
-
-    if (!(await osAbertaPeloOperador(id))) {
-      throw new Error('Ordem de serviço não encontrada');
-    }
-
-    const registro = await fetchOsRawById(id);
-    if (!registro || Number(registro.id_estrutura) <= 0) {
-      throw new Error('Ordem de serviço não encontrada');
-    }
-  }
-
-  private static async resolveOsId(
+  private static async requireOrdemRecord(
     id: string | number,
     empresaId: number | null = null
-  ): Promise<string> {
+  ) {
     const record = await OrdemServicoLocalService.findRecord(id, empresaId);
-    if (record) return String(record.id);
-    return String(id);
-  }
-
-  private static async fetchMensagensIxc(
-    ixcId: string | number,
-    empresaId: number | null
-  ): Promise<IxcOssMensagem[]> {
-    return runWithIxcCredentials(empresaId, async () => {
-      const registro = await fetchOsRawById(ixcId);
-      if (!registro || Number(registro.id_estrutura) <= 0) {
-        throw new Error('Ordem de serviço não encontrada no IXC');
-      }
-
-      const mensagens = await fetchMensagensOs(ixcId);
-      const operadorAbertura = await OrdemServicoLocalService.getOperadorAbertura(ixcId, empresaId);
-      return mapMensagensIxcOperadorBacknet(mensagens, operadorAbertura);
-    });
+    if (!record) throw new Error('Ordem de serviço não encontrada');
+    return record;
   }
 
   private static async resolveIxcOsId(
@@ -133,27 +115,20 @@ export class IxcOssChamadoService {
     return String(id).trim();
   }
 
-  private static async syncMirrorFromIxc(
-    id: string | number,
-    empresaId: number | null,
-    payload: OssChamadoInput = {}
-  ): Promise<void> {
-    const atualizado = await fetchOsRawById(id);
-    if (atualizado) {
-      await OrdemServicoLocalService.syncFromIxcOs(id, atualizado, payload, empresaId);
-    }
-  }
-
   private static async syncLocalMirrorFromIxc(
     ixcId: string | number,
     empresaId: number | null,
-    payload: OssChamadoInput = {}
+    payload: OssChamadoInput = {},
+    usuarioId: number | null = null
   ): Promise<void> {
-    await IxcOssChamadoService.syncMirrorFromIxc(ixcId, empresaId, payload);
+    const atualizado = await fetchOsRawById(ixcId);
+    if (atualizado) {
+      await OrdemServicoLocalService.syncFromIxcOs(ixcId, atualizado, payload, empresaId);
+    }
     const record = await OrdemServicoLocalService.findByIxcId(ixcId, empresaId);
     if (!record) return;
     const mensagens = await fetchMensagensOs(ixcId);
-    await OrdemServicoLocalService.syncMensagensFromIxc(record, mensagens, empresaId);
+    await OrdemServicoLocalService.syncMensagensFromIxc(record, mensagens, empresaId, usuarioId);
   }
 
   private static async payloadComOperadorBacknet(
@@ -224,6 +199,49 @@ export class IxcOssChamadoService {
       return IxcOssChamadoService.paginateLookup(locais, filters);
     }
 
+    if (integracao && resource === IXC_SETOR_RESOURCE) {
+      return runWithIxcCredentials(
+        empresaId,
+        async () => {
+          const itens = await IxcOssChamadoService.fetchSetoresForApiOperador(nomeCampo);
+          return IxcOssChamadoService.paginateLookup(
+            IxcOssChamadoService.filterLookupItems(itens, filters),
+            filters
+          );
+        },
+        clienteId
+      );
+    }
+
+    if (integracao && resource === IXC_FUNCIONARIOS_RESOURCE) {
+      return runWithIxcCredentials(
+        empresaId,
+        async () => {
+          const itens = await IxcOssChamadoService.fetchFuncionariosForApiOperador(nomeCampo, 'lookup');
+          return IxcOssChamadoService.paginateLookup(
+            IxcOssChamadoService.filterLookupItems(itens, filters),
+            filters
+          );
+        },
+        clienteId
+      );
+    }
+
+    if (integracao && resource === IXC_ASSUNTO_RESOURCE) {
+      return runWithIxcCredentials(
+        empresaId,
+        async () => {
+          const setorIds = await IxcOssChamadoService.resolveSetorIdsForAssuntoLookup(filters);
+          const itens = await IxcOssChamadoService.fetchAssuntosForSetores(nomeCampo, setorIds, 'lookup');
+          return IxcOssChamadoService.paginateLookup(
+            IxcOssChamadoService.filterLookupItems(itens, filters),
+            filters
+          );
+        },
+        clienteId
+      );
+    }
+
     const result = await IxcOssChamadoService.listResource(
       resource,
       nomeCampo,
@@ -263,7 +281,8 @@ export class IxcOssChamadoService {
     resource: string,
     nomeCampo: string,
     filters: ListOssChamadosFilters = {},
-    additionalFilters: Record<string, string> = {}
+    additionalFilters: Record<string, string> = {},
+    mode: 'lookup' | 'sync' = 'lookup'
   ): Promise<ListLookupResponse> {
     const page = filters.page && filters.page > 0 ? filters.page : 1;
     const limit = filters.limit && filters.limit > 0 ? filters.limit : 15;
@@ -274,51 +293,62 @@ export class IxcOssChamadoService {
 
     const extraFilters = Object.entries(additionalFilters);
     const hasExtraFilters = extraFilters.length > 0;
+    const supportsAtivo = ixcResourceSupportsAtivoFilter(resource);
 
-    const gridBase: Array<{ TB: string; OP: string; P: string }> = [
-      { TB: `${resource}.ativo`, OP: '=', P: 'S' },
-      ...extraFilters.map(([field, value]) => ({
-        TB: `${resource}.${field}`,
-        OP: '=',
-        P: value,
-      })),
-    ];
-
-    const [primaryField, primaryValue] = hasExtraFilters ? extraFilters[0] : ['ativo', 'S'];
+    const [primaryField, primaryValue, primaryOper] = hasExtraFilters
+      ? [extraFilters[0][0], extraFilters[0][1], '=' as const]
+      : supportsAtivo
+        ? ['ativo', 'S', '=' as const]
+        : ['id', '0', '>' as const];
 
     const body: Record<string, string> = {
       qtype: `${resource}.${primaryField}`,
       query: primaryValue,
-      oper: '=',
+      oper: primaryOper,
       page: String(page),
       rp: String(limit),
       sortname: `${resource}.${sortColumn}`,
       sortorder: sortDirection,
     };
 
-    if (hasExtraFilters || hasSearch) {
-      body.grid_param = JSON.stringify(
-        hasSearch
-          ? [...gridBase, { TB: `${resource}.${nomeCampo}`, OP: 'L', P: search }]
-          : gridBase
-      );
+    const gridParam = buildIxcListGridParam(
+      resource,
+      additionalFilters,
+      hasSearch ? { nomeCampo, term: search! } : undefined
+    );
+    if (gridParam) {
+      body.grid_param = gridParam;
     }
 
     try {
-      const response = await createIxcClient().request<{ total?: string; registros?: IxcNamedRecord[] }>({
+      const response = await createIxcClient().request<{
+        total?: string;
+        type?: string;
+        message?: string;
+        mensagem?: string;
+        registros?: IxcNamedRecord[];
+      }>({
         method: 'GET',
         url: `/${resource}`,
         headers: { ixcsoft: 'listar' },
         data: body,
       });
 
-      const registros = response.data?.registros ?? [];
-      const total = parseInt(response.data?.total ?? '0', 10) || 0;
+      const responseData = response.data;
+      if (responseData?.type === 'error') {
+        throw new Error(
+          actionErrorMessage(responseData as IxcActionResponse, `Erro ao listar ${resource} no IXC`)
+        );
+      }
+
+      const rawRegistros = responseData?.registros ?? [];
+      const registros = supportsAtivo ? filterRegistrosAtivos(rawRegistros) : rawRegistros;
+      const total = parseInt(responseData?.total ?? '0', 10) || 0;
       const lastPage = Math.max(1, Math.ceil(total / limit) || 1);
-      const data = IxcOssChamadoService.mapLookupRegistros(resource, nomeCampo, registros);
+      const lookupData = IxcOssChamadoService.mapLookupRegistros(resource, nomeCampo, registros);
 
       return {
-        data,
+        data: lookupData,
         pagination: {
           current_page: page,
           per_page: limit,
@@ -336,7 +366,8 @@ export class IxcOssChamadoService {
   static async fetchAllLookupResource(
     resource: string,
     nomeCampo: string,
-    additionalFilters: Record<string, string> = {}
+    additionalFilters: Record<string, string> = {},
+    mode: 'lookup' | 'sync' = 'lookup'
   ): Promise<LookupItem[]> {
     const limit = 500;
     let page = 1;
@@ -348,7 +379,8 @@ export class IxcOssChamadoService {
         resource,
         nomeCampo,
         { page, limit, sortColumn: 'id', sortDirection: 'asc' },
-        additionalFilters
+        additionalFilters,
+        mode
       );
       all.push(...result.data);
       lastPage = result.pagination.last_page;
@@ -356,6 +388,94 @@ export class IxcOssChamadoService {
     }
 
     return all;
+  }
+
+  private static filterLookupItems(
+    items: LookupItem[],
+    filters: ListOssChamadosFilters
+  ): LookupItem[] {
+    const search = filters.search?.trim().toLowerCase();
+    if (!search) return items;
+    return items.filter((item) => item.nome.toLowerCase().includes(search));
+  }
+
+  static async fetchSetoresForApiOperador(nomeCampo: string): Promise<LookupItem[]> {
+    const { setorIds } = await resolveApiOperadorContext();
+    if (setorIds.length === 0) return [];
+    return fetchLookupItemsByIxcIds(IXC_SETOR_RESOURCE, nomeCampo, setorIds);
+  }
+
+  private static async resolveSetorIdsForAssuntoLookup(
+    filters: ListOssChamadosFilters
+  ): Promise<string[]> {
+    const setorId = String(filters.setor_id ?? '').trim();
+    if (setorId && setorId !== '0') return [setorId];
+    return (await resolveApiOperadorContext()).setorIds;
+  }
+
+  static async fetchAssuntosForSetores(
+    nomeCampo: string,
+    setorIds: string[],
+    mode: 'lookup' | 'sync'
+  ): Promise<LookupItem[]> {
+    const assuntoIds = await fetchAssuntoIdsBySetores(setorIds);
+    if (assuntoIds === null) {
+      throw new Error(
+        'Sem permissão para listar assuntos do setor no IXC. Verifique as permissões de assuntos do usuário API.'
+      );
+    }
+    if (assuntoIds.length === 0) return [];
+    return fetchLookupItemsByIxcIds(IXC_ASSUNTO_RESOURCE, nomeCampo, assuntoIds);
+  }
+
+  static async fetchFuncionariosForApiOperador(
+    nomeCampo: string,
+    mode: 'lookup' | 'sync'
+  ): Promise<LookupItem[]> {
+    const { setorIds, funcionarioId } = await resolveApiOperadorContext();
+    const mapa = new Map<string, LookupItem>();
+
+    for (const setorId of setorIds) {
+      const batch = await IxcOssChamadoService.fetchAllLookupResource(
+        IXC_FUNCIONARIOS_RESOURCE,
+        nomeCampo,
+        { id_setor_padrao: setorId },
+        mode
+      );
+      for (const item of batch) {
+        mapa.set(String(item.id), item);
+      }
+    }
+
+    if (funcionarioId) {
+      const operadorItens = await fetchLookupItemsByIxcIds(
+        IXC_FUNCIONARIOS_RESOURCE,
+        nomeCampo,
+        [funcionarioId]
+      );
+      for (const item of operadorItens) {
+        mapa.set(String(item.id), item);
+      }
+    }
+
+    return [...mapa.values()];
+  }
+
+  static async fetchCadastrosForSync(
+    resource: string,
+    nomeCampo: string
+  ): Promise<LookupItem[]> {
+    if (resource === IXC_SETOR_RESOURCE) {
+      return IxcOssChamadoService.fetchSetoresForApiOperador(nomeCampo);
+    }
+    if (resource === IXC_ASSUNTO_RESOURCE) {
+      const setorIds = (await resolveApiOperadorContext()).setorIds;
+      return IxcOssChamadoService.fetchAssuntosForSetores(nomeCampo, setorIds, 'sync');
+    }
+    if (resource === IXC_FUNCIONARIOS_RESOURCE) {
+      return IxcOssChamadoService.fetchFuncionariosForApiOperador(nomeCampo, 'sync');
+    }
+    return IxcOssChamadoService.fetchAllLookupResource(resource, nomeCampo, {}, 'sync');
   }
 
   static async listResource(
@@ -387,17 +507,10 @@ export class IxcOssChamadoService {
     usuarioId: number | null = null
   ): Promise<IxcOssMensagem[]> {
     const record = await OrdemServicoLocalService.findRecord(id, empresaId);
-
-    if (record) {
-      return OrdemServicoLocalService.listMensagens(record.id, empresaId);
+    if (!record) {
+      throw new Error('Ordem de serviço não encontrada');
     }
-
-    await IxcOssChamadoService.assertOsAcessivel(id, empresaId, usuarioId);
-    try {
-      return await IxcOssChamadoService.fetchMensagensIxc(id, empresaId);
-    } catch (error) {
-      throw wrapIxcError(error, 'Erro ao listar mensagens da ordem de serviço no IXC');
-    }
+    return OrdemServicoLocalService.listMensagens(record.id, empresaId);
   }
 
   private static async resolveIxcMensagemId(
@@ -451,8 +564,6 @@ export class IxcOssChamadoService {
     const ixcId = await IxcOssChamadoService.resolveIxcOsId(ordemId, empresaId);
 
     return runWithIxcCredentials(empresaId, async () => {
-      await IxcOssChamadoService.assertOsAcessivel(ixcId, empresaId, usuarioId);
-
       const registro = await fetchOsRawById(ixcId);
       if (!registro || Number(registro.id_estrutura) <= 0) {
         throw new Error('Ordem de serviço não encontrada');
@@ -474,8 +585,9 @@ export class IxcOssChamadoService {
     empresaId: number | null = null,
     usuarioId: number | null = null
   ): Promise<OrdemServicoArquivoItem[]> {
-    await IxcOssChamadoService.assertOsAcessivel(id, empresaId, usuarioId);
-    return OrdemServicoArquivoService.list(await IxcOssChamadoService.resolveOsId(id, empresaId));
+    const record = await IxcOssChamadoService.requireOrdemRecord(id, empresaId);
+    const ordemServicoId = String(record.id);
+    return OrdemServicoArquivoService.list(ordemServicoId);
   }
 
   static async createArquivo(
@@ -487,7 +599,8 @@ export class IxcOssChamadoService {
     empresaId: number | null = null,
     usuarioId: number | null = null
   ): Promise<OrdemServicoArquivoItem> {
-    await IxcOssChamadoService.assertOsAcessivel(id, empresaId, usuarioId);
+    const record = await IxcOssChamadoService.requireOrdemRecord(id, empresaId);
+    const ordemServicoId = String(record.id);
 
     const arquivo = {
       buffer,
@@ -497,7 +610,7 @@ export class IxcOssChamadoService {
     } as Express.Multer.File;
 
     return OrdemServicoArquivoService.create({
-      ordem_servico_id: await IxcOssChamadoService.resolveOsId(id, empresaId),
+      ordem_servico_id: ordemServicoId,
       empresa_id: empresaId,
       nome: nomeOriginal,
       descricao: descricao.trim() || nomeOriginal,
@@ -512,11 +625,9 @@ export class IxcOssChamadoService {
     empresaId: number | null = null,
     usuarioId: number | null = null
   ): Promise<void> {
-    await IxcOssChamadoService.assertOsAcessivel(ordemId, empresaId, usuarioId);
-    await OrdemServicoArquivoService.delete(
-      Number(arquivoId),
-      await IxcOssChamadoService.resolveOsId(ordemId, empresaId)
-    );
+    const record = await IxcOssChamadoService.requireOrdemRecord(ordemId, empresaId);
+    const ordemServicoId = String(record.id);
+    await OrdemServicoArquivoService.delete(Number(arquivoId), ordemServicoId);
   }
 
   static async downloadArquivo(
@@ -525,11 +636,9 @@ export class IxcOssChamadoService {
     empresaId: number | null = null,
     usuarioId: number | null = null
   ): Promise<{ buffer: Buffer; nome: string; mimeType: string }> {
-    await IxcOssChamadoService.assertOsAcessivel(ordemId, empresaId, usuarioId);
-    return OrdemServicoArquivoService.getFileContent(
-      Number(arquivoId),
-      await IxcOssChamadoService.resolveOsId(ordemId, empresaId)
-    );
+    const record = await IxcOssChamadoService.requireOrdemRecord(ordemId, empresaId);
+    const ordemServicoId = String(record.id);
+    return OrdemServicoArquivoService.getFileContent(Number(arquivoId), ordemServicoId);
   }
 
   static async create(
@@ -538,18 +647,31 @@ export class IxcOssChamadoService {
     usuarioId: number | null = null
   ): Promise<IxcActionResponse> {
     const clienteId = parseClienteId(payload.cliente_id);
-
-    if (
+    const hasIxc =
       clienteId != null &&
-      !(await IntegracaoIxcProvedorService.hasIntegracaoForCliente(clienteId, empresaId))
-    ) {
-      return OrdemServicoLocalService.create(payload, empresaId, usuarioId);
+      (await IntegracaoIxcProvedorService.hasIntegracaoForCliente(clienteId, empresaId));
+
+    const record = await OrdemServicoLocalService.createRecord(
+      payload,
+      empresaId,
+      usuarioId,
+      !hasIxc
+    );
+
+    if (!hasIxc) {
+      return {
+        type: 'success',
+        id: String(record.id),
+        protocolo: record.protocolo,
+        data_abertura: record.data_abertura,
+      };
     }
 
     return runWithIxcCredentials(empresaId, async () => {
       const payloadComOperador = await IxcOssChamadoService.payloadComOperadorBacknet(payload, usuarioId);
       const body = prepareCreateBody(payloadComOperador);
-      body.protocolo = await fetchProximoProtocolo();
+      applyBacknetProtocoloAbertura(body, record.protocolo);
+      applyApiOperadorAbertura(body);
 
       try {
         const response = await createIxcClient().request<IxcActionResponse>({
@@ -562,42 +684,39 @@ export class IxcOssChamadoService {
           throw new Error(actionErrorMessage(response.data, 'Erro ao criar ordem de serviço no IXC'));
         }
 
-        const newId = response.data?.id;
-        if (!newId) {
+        const ixcId = response.data?.id;
+        if (!ixcId) {
           throw new Error('IXC não retornou o ID da ordem de serviço criada');
         }
 
-        const os = await fetchOsRawById(newId);
-        if (os && clienteId) {
-          const integracao = await IntegracaoIxcProvedorService.findIntegracaoAtivaForCliente(
-            clienteId,
-            empresaId
-          );
-          const mirror = await OrdemServicoLocalService.createIxcMirror(
-            os,
-            payloadComOperador,
-            empresaId,
-            usuarioId,
-            clienteId
-          );
-          const clienteNome = await fetchClienteNomeForLog(clienteId);
-          const { IxcOsSchedulerRoutineService } = await import('../../ordens/IxcOsSchedulerRoutineService');
-          await IxcOsSchedulerRoutineService.registrarAberturaBacknet({
-            record: mirror,
-            integracaoId: integracao?.id,
-            integracaoNome: integracao?.nome,
-            usuarioId,
-            clienteNome,
-          });
-        }
+        const linked = await OrdemServicoLocalService.linkToIxc(record, ixcId, {
+          data_abertura: response.data?.data_abertura,
+        });
+
+        await IxcOssChamadoService.syncLocalMirrorFromIxc(ixcId, empresaId, {}, usuarioId);
+
+        const integracao = await IntegracaoIxcProvedorService.findIntegracaoAtivaForCliente(
+          clienteId!,
+          empresaId
+        );
+        const clienteNome = await fetchClienteNomeForLog(clienteId!);
+        const { IxcOsSchedulerRoutineService } = await import('../../ordens/IxcOsSchedulerRoutineService');
+        await IxcOsSchedulerRoutineService.registrarAberturaBacknet({
+          record: linked,
+          integracaoId: integracao?.id,
+          integracaoNome: integracao?.nome,
+          usuarioId,
+          clienteNome,
+        });
 
         return {
-          ...response.data,
-          id: String(newId),
-          protocolo: os?.protocolo ?? body.protocolo,
-          data_abertura: os?.data_abertura ?? '',
+          type: 'success',
+          id: String(ixcId),
+          protocolo: linked.protocolo,
+          data_abertura: linked.data_abertura,
         };
       } catch (error) {
+        await OrdemServicoLocalService.destroyRecord(record);
         throw wrapIxcError(error, 'Erro ao criar ordem de serviço no IXC');
       }
     }, clienteId);
@@ -616,8 +735,6 @@ export class IxcOssChamadoService {
     const ixcId = await IxcOssChamadoService.resolveIxcOsId(id, empresaId);
     const clienteId = parseClienteId(payload.cliente_id);
     return runWithIxcCredentials(empresaId, async () => {
-      await IxcOssChamadoService.assertOsAcessivel(ixcId, empresaId, usuarioId);
-
       const atual = await fetchOsRawById(ixcId);
       if (!atual || Number(atual.id_estrutura) <= 0) {
         throw new Error('Ordem de serviço não encontrada');
@@ -635,7 +752,7 @@ export class IxcOssChamadoService {
           throw new Error(actionErrorMessage(response.data, 'Erro ao editar ordem de serviço no IXC'));
         }
 
-        await IxcOssChamadoService.syncLocalMirrorFromIxc(ixcId, empresaId, payload);
+        await IxcOssChamadoService.syncLocalMirrorFromIxc(ixcId, empresaId, payload, usuarioId);
 
         return response.data;
       } catch (error) {
@@ -664,12 +781,11 @@ export class IxcOssChamadoService {
     const ixcId = await IxcOssChamadoService.resolveIxcOsId(id, empresaId);
     const clienteId = parseClienteId(payload.cliente_id);
     return runWithIxcCredentials(empresaId, async () => {
-      await IxcOssChamadoService.assertOsAcessivel(ixcId, empresaId, usuarioId);
       const payloadIx = await IxcOssChamadoService.payloadComOperadorBacknet(payload, usuarioId);
 
       if (acao === 'registrar_mensagem') {
         const resultado = await registrarMensagemOs(ixcId, payloadIx);
-        await IxcOssChamadoService.syncLocalMirrorFromIxc(ixcId, empresaId, payload);
+        await IxcOssChamadoService.syncLocalMirrorFromIxc(ixcId, empresaId, payload, usuarioId);
         return resultado;
       }
 
@@ -680,17 +796,17 @@ export class IxcOssChamadoService {
 
       if (acao === 'encaminhar') {
         const resultado = await executarEncaminharOs(ixcId, payloadIx, atual);
-        await IxcOssChamadoService.syncLocalMirrorFromIxc(ixcId, empresaId, payload);
+        await IxcOssChamadoService.syncLocalMirrorFromIxc(ixcId, empresaId, payload, usuarioId);
         return resultado;
       }
       if (acao === 'agendar') {
         const resultado = await executarAgendarOs(ixcId, payloadIx, atual);
-        await IxcOssChamadoService.syncLocalMirrorFromIxc(ixcId, empresaId, payload);
+        await IxcOssChamadoService.syncLocalMirrorFromIxc(ixcId, empresaId, payload, usuarioId);
         return resultado;
       }
       if (acao === 'finalizar') {
         const resultado = await executarFinalizarOs(ixcId, payloadIx, atual);
-        await IxcOssChamadoService.syncLocalMirrorFromIxc(ixcId, empresaId, payload);
+        await IxcOssChamadoService.syncLocalMirrorFromIxc(ixcId, empresaId, payload, usuarioId);
         return resultado;
       }
 
@@ -717,7 +833,7 @@ export class IxcOssChamadoService {
           });
         }
 
-        await IxcOssChamadoService.syncLocalMirrorFromIxc(ixcId, empresaId, payload);
+        await IxcOssChamadoService.syncLocalMirrorFromIxc(ixcId, empresaId, payload, usuarioId);
 
         return response.data;
       } catch (error) {
@@ -781,8 +897,6 @@ export class IxcOssChamadoService {
 
     if (ixcId) {
       return runWithIxcCredentials(empresaId, async () => {
-        await IxcOssChamadoService.assertOsAcessivel(ixcId, empresaId, usuarioId);
-
         const atual = await fetchOsRawById(ixcId);
         if (!atual || Number(atual.id_estrutura) <= 0) {
           throw new Error('Ordem de serviço não encontrada');

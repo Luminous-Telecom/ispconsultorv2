@@ -9,7 +9,9 @@ export const IXC_EVENTO_FINALIZAR = '6';
 
 export const IXC_ESTRUTURA_RESOURCE = 'estrutura';
 export const IXC_FUNCIONARIOS_RESOURCE = 'funcionarios';
+export const IXC_FUNCIONARIO_SETORES_RESOURCE = 'funcionario_setores';
 export const IXC_ASSUNTO_RESOURCE = 'su_oss_assunto';
+export const IXC_SETOR_ASSUNTO_RESOURCE = 'setor_assunto';
 export const IXC_SETOR_RESOURCE = 'empresa_setor';
 export const IXC_FILIAL_RESOURCE = 'filial';
 export const IXC_CIDADE_RESOURCE = 'cidade';
@@ -53,7 +55,7 @@ export const CAMPOS_ENRIQUECIDOS = [
   'operador_nome',
 ];
 
-export const CAMPOS_AUTOGERADOS_CRIACAO = ['protocolo', 'data_abertura', 'ultima_atualizacao'];
+export const CAMPOS_AUTOGERADOS_CRIACAO = ['data_abertura', 'ultima_atualizacao'];
 
 /** Valores padrão ao criar OS no IXC (tipo E — estrutura própria). */
 export const OSS_DEFAULTS: Record<string, string> = {

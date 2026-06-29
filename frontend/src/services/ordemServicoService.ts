@@ -6,6 +6,9 @@ import { BaseService, defaultApiClient } from './core';
 import type { BaseFilters } from './core/BaseService';
 import { PaginatedResponse } from '../types';
 
+/** Criação/ações de OS IXC podem levar várias chamadas ao webservice */
+const IXC_OS_REQUEST_TIMEOUT_MS = 120_000;
+
 export interface OrdemServico {
   id: string | number;
   id_local?: string | number;
@@ -213,11 +216,15 @@ export class OrdemServicoService {
   }
 
   static async create(data: CreateOrdemServico): Promise<OrdemServico> {
-    const response = await ordemServicoServiceInstance.create(data);
-    if (response.data) {
-      return response.data;
+    const response = await defaultApiClient.post<{ data?: OrdemServico }>(
+      '/ixc/ordens-servico',
+      data,
+      { timeout: IXC_OS_REQUEST_TIMEOUT_MS, forceLoading: true }
+    );
+    if (response.data?.data) {
+      return response.data.data;
     }
-    return response as unknown as OrdemServico;
+    return response.data as unknown as OrdemServico;
   }
 
   static async update(id: number | string, data: UpdateOrdemServico): Promise<OrdemServico> {
@@ -241,7 +248,8 @@ export class OrdemServicoService {
 
     const response = await defaultApiClient.post<{ data?: { type?: string; message?: string; id?: string } }>(
       url,
-      data
+      data,
+      { timeout: IXC_OS_REQUEST_TIMEOUT_MS, forceLoading: true }
     );
 
     return response.data?.data ?? (response.data as { type?: string; message?: string; id?: string });

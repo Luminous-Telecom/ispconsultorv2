@@ -14,6 +14,11 @@ import {
   IXC_FUNCIONARIOS_RESOURCE,
   IXC_SETOR_RESOURCE,
 } from '../../externos/IxcOssChamadoService/constants';
+import {
+  IxcApiPermissionsService,
+  type IxcApiPermissionsCheckResult,
+  type IxcPermissionSampleResult,
+} from '../IxcApiPermissionsService';
 import { OrdemServicoCadastroService } from '../../ordens/OrdemServicoCadastroService';
 
 function clienteDisplayName(cliente: Pick<Cliente, 'id' | 'nome_fantasia' | 'razao_social'>): string {
@@ -33,6 +38,16 @@ export interface TestIntegracaoIxcResult {
 
 export interface SyncOrdemServicoCadastrosResult {
   message: string;
+  total: number;
+  detalhes: Record<string, number>;
+  ordens?: {
+    total: number;
+    sucesso: number;
+    erro: number;
+    ignoradas?: number;
+    desvinculadas?: number;
+    importadas?: number;
+  };
 }
 
 export interface ListIntegracaoIxcProvedorFilters {
@@ -482,39 +497,119 @@ export class IntegracaoIxcProvedorService {
       throw new Error('Integração IXC Provedor sem URL ou token configurados.');
     }
 
-    return runWithIntegracaoCredentials({ apiUrl, apiToken }, async () => {
+    const cadastrosResult = await runWithIntegracaoCredentials({ apiUrl, apiToken }, async () => {
       const cadastros: Array<{
         resource: string;
         nomeCampo: string;
-        filters: Record<string, string>;
+        label: string;
       }> = [
-        { resource: IXC_FILIAL_RESOURCE, nomeCampo: 'fantasia', filters: {} },
-        { resource: IXC_SETOR_RESOURCE, nomeCampo: 'setor', filters: {} },
-        {
-          resource: IXC_FUNCIONARIOS_RESOURCE,
-          nomeCampo: 'funcionario',
-          filters: { integracao_calendario: 'S' },
-        },
-        { resource: IXC_ASSUNTO_RESOURCE, nomeCampo: 'assunto', filters: {} },
-        { resource: IXC_ESTRUTURA_RESOURCE, nomeCampo: 'descricao', filters: {} },
+        { resource: IXC_FILIAL_RESOURCE, nomeCampo: 'fantasia', label: 'filiais' },
+        { resource: IXC_SETOR_RESOURCE, nomeCampo: 'setor', label: 'setores' },
+        { resource: IXC_FUNCIONARIOS_RESOURCE, nomeCampo: 'funcionario', label: 'colaboradores' },
+        { resource: IXC_ASSUNTO_RESOURCE, nomeCampo: 'assunto', label: 'assuntos' },
+        { resource: IXC_ESTRUTURA_RESOURCE, nomeCampo: 'descricao', label: 'estruturas' },
       ];
 
       let total = 0;
+      const detalhes: Record<string, number> = {};
 
       for (const cadastro of cadastros) {
         const tipo = OrdemServicoCadastroService.resolveTipoByIxcResource(cadastro.resource)!;
-        const itens = await IxcOssChamadoService.fetchAllLookupResource(
+        const itens = await IxcOssChamadoService.fetchCadastrosForSync(
           cadastro.resource,
-          cadastro.nomeCampo,
-          cadastro.filters
+          cadastro.nomeCampo
         );
         await OrdemServicoCadastroService.syncIxcItens(tipo, empresaId, integracaoId, itens);
+
+        if (
+          cadastro.resource === IXC_SETOR_RESOURCE ||
+          cadastro.resource === IXC_ASSUNTO_RESOURCE ||
+          cadastro.resource === IXC_FUNCIONARIOS_RESOURCE
+        ) {
+          await OrdemServicoCadastroService.pruneIxcCadastros(
+            tipo,
+            empresaId,
+            integracaoId,
+            new Set(itens.map((item) => String(item.id)))
+          );
+        }
+
+        detalhes[cadastro.label] = itens.length;
         total += itens.length;
       }
 
+      const resumoDetalhes = cadastros
+        .map((c) => `${c.label}: ${detalhes[c.label] ?? 0}`)
+        .join(', ');
+
       return {
-        message: `Sincronização concluída: ${total} registros importados do IXC.`,
+        total,
+        detalhes,
+        resumoDetalhes,
       };
     });
+
+    const { IxcOsSchedulerRoutineService } = await import('../../ordens/IxcOsSchedulerRoutineService');
+    const ordensResult = await IxcOsSchedulerRoutineService.syncIntegracao(integracao, 'manual');
+
+    const resumoCadastros =
+      cadastrosResult.total > 0
+        ? `${cadastrosResult.total} cadastros (${cadastrosResult.resumoDetalhes})`
+        : `cadastros sem novidades (${cadastrosResult.resumoDetalhes})`;
+
+    const resumoOrdens = ordensResult.message;
+
+    return {
+      total: cadastrosResult.total,
+      detalhes: cadastrosResult.detalhes,
+      ordens: {
+        total: ordensResult.total,
+        sucesso: ordensResult.sucesso,
+        erro: ordensResult.erro,
+        ignoradas: ordensResult.ignoradas,
+        desvinculadas: ordensResult.desvinculadas,
+        importadas: ordensResult.importadas,
+      },
+      message: `Sincronização concluída: ${resumoCadastros}. ${resumoOrdens}.`,
+    };
+  }
+
+  static async checkApiPermissions(
+    integracaoId: number,
+    empresaId: number | null
+  ): Promise<IxcApiPermissionsCheckResult> {
+    const integracao = await IntegracaoIxcProvedorService.assertEmpresaAccess(integracaoId, empresaId);
+    if (!integracao) {
+      throw new Error('Integração IXC Provedor não encontrada');
+    }
+
+    const apiUrl = integracao.api_url?.trim().replace(/\/+$/, '');
+    const apiToken = integracao.api_token?.trim();
+    if (!apiUrl || !apiToken) {
+      throw new Error('Integração IXC Provedor sem URL ou token configurados.');
+    }
+
+    return runWithIntegracaoCredentials({ apiUrl, apiToken }, () => IxcApiPermissionsService.checkAll());
+  }
+
+  static async checkApiPermissionsDados(
+    integracaoId: number,
+    resourceId: string,
+    empresaId: number | null
+  ): Promise<IxcPermissionSampleResult> {
+    const integracao = await IntegracaoIxcProvedorService.assertEmpresaAccess(integracaoId, empresaId);
+    if (!integracao) {
+      throw new Error('Integração IXC Provedor não encontrada');
+    }
+
+    const apiUrl = integracao.api_url?.trim().replace(/\/+$/, '');
+    const apiToken = integracao.api_token?.trim();
+    if (!apiUrl || !apiToken) {
+      throw new Error('Integração IXC Provedor sem URL ou token configurados.');
+    }
+
+    return runWithIntegracaoCredentials({ apiUrl, apiToken }, () =>
+      IxcApiPermissionsService.fetchSample(resourceId)
+    );
   }
 }

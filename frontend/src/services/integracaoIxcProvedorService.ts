@@ -49,6 +49,43 @@ export interface TestIntegracaoIxcProvedorResult {
 
 export interface SyncOrdemServicoCadastrosResult {
   message: string;
+  total: number;
+  detalhes: Record<string, number>;
+  ordens?: {
+    total: number;
+    sucesso: number;
+    erro: number;
+  };
+}
+
+export type IxcPermissionCellValue = 'liberado' | 'bloqueado' | null;
+
+export interface IxcPermissionFormRow {
+  id: string;
+  grupo: string;
+  formulario: string;
+  dados: number | null;
+  menu: IxcPermissionCellValue;
+  listar: IxcPermissionCellValue;
+}
+
+export interface IxcApiPermissionsCheckResult {
+  success: boolean;
+  items: IxcPermissionFormRow[];
+}
+
+export interface IxcPermissionSampleItem {
+  id: string;
+  texto: string;
+}
+
+export interface IxcPermissionSampleResult {
+  resourceId: string;
+  resource: string;
+  ok: boolean;
+  total: number | null;
+  items: IxcPermissionSampleItem[];
+  message?: string;
 }
 
 export class IntegracaoIxcProvedorService {
@@ -150,6 +187,27 @@ export class IntegracaoIxcProvedorService {
       `/integracao-ixc-provedor/${id}/sync-ordem-servico-cadastros`
     );
     const raw = response as unknown as { data?: SyncOrdemServicoCadastrosResult; message?: string };
-    return raw?.data ?? { message: raw?.message ?? '' };
+    return raw?.data ?? { message: raw?.message ?? '', total: 0, detalhes: {} };
+  }
+
+  static async checkPermissions(id: number): Promise<IxcApiPermissionsCheckResult> {
+    const response = await apiService.post<{ data?: IxcApiPermissionsCheckResult; message?: string }>(
+      `/integracao-ixc-provedor/${id}/check-permissions`
+    );
+    const raw = response as unknown as { data?: IxcApiPermissionsCheckResult; message?: string };
+    if (raw?.data) return raw.data;
+    throw new Error(raw?.message ?? 'Erro ao verificar permissões IXC');
+  }
+
+  static async checkPermissionsDados(
+    integracaoId: number,
+    resourceId: string
+  ): Promise<IxcPermissionSampleResult> {
+    const response = await apiService.get<{ data?: IxcPermissionSampleResult }>(
+      `/integracao-ixc-provedor/${integracaoId}/check-permissions/${encodeURIComponent(resourceId)}/dados`
+    );
+    const raw = response as unknown as { data?: IxcPermissionSampleResult };
+    if (raw?.data) return raw.data;
+    throw new Error('Erro ao listar dados do formulário IXC');
   }
 }

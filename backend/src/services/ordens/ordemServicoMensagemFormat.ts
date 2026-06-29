@@ -1,7 +1,19 @@
 import { IXC_EVENTO_ABERTURA } from '../externos/IxcOssChamadoService/constants';
 import type { IxcOssMensagem } from '../externos/IxcOssChamadoService/types';
 
-const PREFIXO_RX = /^([^:]+):\s/;
+const PREFIXO_RX = /^([^:]+):\s([\s\S]*)$/;
+
+export function extractOperadorFromMensagem(mensagem: string): { operador: string; texto: string } {
+  const texto = String(mensagem ?? '').trim();
+  const match = texto.match(PREFIXO_RX);
+  if (!match) {
+    return { operador: '', texto };
+  }
+  return {
+    operador: match[1].trim(),
+    texto: match[2].trim() || texto,
+  };
+}
 
 export function prefixarMensagemOperador(
   operadorNome: string,
@@ -21,16 +33,14 @@ export function mapMensagensIxcOperadorBacknet(
   const abertura = operadorAbertura.trim();
 
   return mensagens.map((mensagem) => {
-    const texto = String(mensagem.mensagem ?? '').trim();
-    const match = texto.match(/^([^:]+):\s([\s\S]*)$/);
-    const operador =
-      match?.[1]?.trim() ||
-      (mensagem.id_evento === IXC_EVENTO_ABERTURA ? abertura : '');
+    const { operador, texto } = extractOperadorFromMensagem(String(mensagem.mensagem ?? ''));
+    const operadorNome =
+      operador || (mensagem.id_evento === IXC_EVENTO_ABERTURA ? abertura : '');
 
     return {
       ...mensagem,
-      operador_nome: operador,
-      mensagem: match ? texto : operador ? `${operador}: ${texto}` : texto,
+      operador_nome: operadorNome,
+      mensagem: operadorNome && texto ? `${operadorNome}: ${texto}` : String(mensagem.mensagem ?? ''),
     };
   });
 }

@@ -250,6 +250,45 @@ export class IntegracaoIxcProvedorController {
     }
   }
 
+  static async checkPermissions(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
+      const result = await IntegracaoIxcProvedorService.checkApiPermissions(Number(id), empresaId);
+      sendSuccess(
+        res,
+        result,
+        result.success ? 'Permissões verificadas' : 'Permissões com bloqueios'
+      );
+    } catch (error) {
+      sendError(res, error, 'Erro ao verificar permissões IXC', 500, true, {
+        context: 'IntegracaoIxcProvedorController',
+        action: 'checkPermissions',
+        id: req.params.id,
+      });
+    }
+  }
+
+  static async checkPermissionsDados(req: Request, res: Response): Promise<void> {
+    try {
+      const { id, resourceId } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
+      const result = await IntegracaoIxcProvedorService.checkApiPermissionsDados(
+        Number(id),
+        resourceId,
+        empresaId
+      );
+      sendSuccess(res, result);
+    } catch (error) {
+      sendError(res, error, 'Erro ao listar dados do formulário IXC', 500, true, {
+        context: 'IntegracaoIxcProvedorController',
+        action: 'checkPermissionsDados',
+        id: req.params.id,
+        resourceId: req.params.resourceId,
+      });
+    }
+  }
+
   static async syncOrdemServicoCadastros(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;

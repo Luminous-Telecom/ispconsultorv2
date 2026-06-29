@@ -20,7 +20,7 @@ import {
 } from './ordemServicoStatusBadges';
 import { useBulkBtn } from 'components/ui';
 import { renderStatusBadge } from 'components/ui/StatusBadge';
-import { formatRpkiValidityDisplay } from 'utils/formatters';
+import { formatIxcData } from 'utils/ixcDateTime';
 
 interface OrdemServicoListModalProps {
   show: boolean;
@@ -28,11 +28,6 @@ interface OrdemServicoListModalProps {
   title?: string;
   skipWrapper?: boolean;
 }
-
-const formatIxcData = (value?: string): string => {
-  if (!value?.trim() || value.startsWith('0000-00-00')) return '-';
-  return formatRpkiValidityDisplay(value);
-};
 
 const truncar = (texto?: string, max = 80): string => {
   if (!texto) return '-';

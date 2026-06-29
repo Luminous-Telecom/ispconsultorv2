@@ -2,18 +2,13 @@ import React from 'react';
 import DraggableModal from 'components/common/DraggableModal';
 import { FormField } from 'components/ui';
 import type { OrdemServicoMensagem } from 'services/ordemServicoService';
-import { formatRpkiValidityDisplay } from 'utils/formatters';
+import { formatIxcData } from 'utils/ixcDateTime';
 
 interface OrdemServicoMensagemDetalhesModalProps {
   show: boolean;
   onClose: () => void;
   mensagem: OrdemServicoMensagem | null;
 }
-
-const formatIxcData = (value?: string): string => {
-  if (!value?.trim() || value.startsWith('0000-00-00')) return '-';
-  return formatRpkiValidityDisplay(value);
-};
 
 const OrdemServicoMensagemDetalhesModal: React.FC<OrdemServicoMensagemDetalhesModalProps> = ({
   show,

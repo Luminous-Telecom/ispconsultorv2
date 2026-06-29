@@ -1,4 +1,4 @@
-import { Op, WhereOptions } from 'sequelize';
+import { Op, UniqueConstraintError, WhereOptions } from 'sequelize';
 import { OrdemServicoLocal } from '../../../models/ordens/OrdemServicoLocal';
 import { OrdemServicoMensagem } from '../../../models/ordens/OrdemServicoMensagem';
 import { Cliente } from '../../../models/clientes/Cliente';
@@ -31,6 +31,7 @@ import {
   isOrdemServicoFinalizada,
   MSG_OS_FINALIZADA,
 } from '../ordemServicoExclusao';
+import { extractOperadorFromMensagem } from '../ordemServicoMensagemFormat';
 
 function parseNumericId(id: string | number): number | null {
   const numericId = parseInt(String(id).trim(), 10);
@@ -76,29 +77,29 @@ function toIxcOssChamado(record: OrdemServicoLocal, clienteNome: string): IxcOss
   };
 }
 
-async function nextProtocolo(empresaId: number | null): Promise<string> {
+const PROTOCOLO_CREATE_MAX_RETRIES = 5;
+
+async function nextProtocolo(): Promise<string> {
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth() + 1;
   const prefix = localProtocoloYearMonthPrefix(now);
 
-  const registros = await OrdemServicoLocal.findAll({
-    where: {
-      ...empresaWhere(empresaId),
-      protocolo: { [Op.like]: `${prefix}%` },
-    },
+  const ultimo = await OrdemServicoLocal.findOne({
+    where: { protocolo: { [Op.like]: `${prefix}%` } },
     attributes: ['protocolo'],
+    order: [['protocolo', 'DESC']],
   });
 
-  let maxSequence = 0;
-  for (const registro of registros) {
-    const parsed = parseLocalProtocolo(registro.protocolo ?? '');
+  let sequence = 1;
+  if (ultimo?.protocolo) {
+    const parsed = parseLocalProtocolo(ultimo.protocolo);
     if (parsed?.year === year && parsed.month === month) {
-      maxSequence = Math.max(maxSequence, parsed.sequence);
+      sequence = parsed.sequence + 1;
     }
   }
 
-  return formatLocalProtocolo(year, month, maxSequence + 1);
+  return formatLocalProtocolo(year, month, sequence);
 }
 
 function toIxcOssMensagem(
@@ -106,8 +107,11 @@ function toIxcOssMensagem(
   ordemId: number,
   usuarioNomes: Map<number, string>
 ): IxcOssMensagem {
-  const operadorNome =
+  let operadorNome =
     record.usuario_id != null ? usuarioNomes.get(record.usuario_id) ?? '' : '';
+  if (!operadorNome) {
+    operadorNome = extractOperadorFromMensagem(record.mensagem).operador;
+  }
 
   return {
     id: String(record.id),
@@ -136,6 +140,25 @@ export async function fetchUsuarioNomeById(usuarioId: number | null): Promise<st
   if (!usuarioId) return '';
   const mapa = await fetchUsuarioNomes([usuarioId]);
   return mapa.get(usuarioId) ?? '';
+}
+
+async function resolveUsuarioIdByNome(
+  nome: string,
+  empresaId: number | null
+): Promise<number | null> {
+  const trimmed = nome.trim();
+  if (!trimmed) return null;
+
+  const where: WhereOptions = { nome: trimmed };
+  if (empresaId != null && empresaId > 0) {
+    where.empresa_id = empresaId;
+  }
+
+  const usuario = await Usuario.findOne({
+    where,
+    attributes: ['id'],
+  });
+  return usuario?.id ?? null;
 }
 
 async function mapMensagensComOperador(
@@ -322,37 +345,6 @@ export class OrdemServicoLocalService {
     };
   }
 
-  static async listIxcVinculadas(
-    filters: ListOssChamadosFilters = {},
-    empresaId: number | null = null,
-    usuarioId: number | null = null
-  ): Promise<IxcOssChamado[]> {
-    if (!usuarioId) return [];
-
-    const aberturas = await OrdemServicoMensagem.findAll({
-      where: {
-        id_evento: IXC_EVENTO_ABERTURA,
-        usuario_id: usuarioId,
-        ...(empresaId != null ? { empresa_id: empresaId } : {}),
-      },
-      attributes: ['ordem_servico_id'],
-    });
-
-    const ordemIds = [...new Set(aberturas.map((item) => item.ordem_servico_id))];
-    if (ordemIds.length === 0) return [];
-
-    const registros = await OrdemServicoLocal.findAll({
-      where: {
-        id: { [Op.in]: ordemIds },
-        ixc_id: { [Op.ne]: null },
-        ...empresaWhere(empresaId),
-      },
-      order: [['id', 'DESC']],
-    });
-
-    return applyListFilters(await mapLocalRegistros(registros, empresaId), filters);
-  }
-
   static async createIxcMirror(
     ixcOs: IxcOssChamado,
     payload: OssChamadoInput,
@@ -360,44 +352,35 @@ export class OrdemServicoLocalService {
     usuarioId: number | null,
     clienteId: number
   ): Promise<OrdemServicoLocal> {
-    const ixcId = String(ixcOs.id ?? '').trim();
-    if (!ixcId) {
-      throw new Error('IXC não retornou o ID da ordem de serviço criada');
+    const record = await this.createRecord(
+      {
+        ...payload,
+        cliente_id: clienteId,
+        mensagem:
+          String(ixcOs.mensagem ?? payload.mensagem ?? '').trim() || 'OS importada do IXC',
+        prioridade: ixcOs.prioridade ?? payload.prioridade,
+        melhor_horario_agenda: ixcOs.melhor_horario_agenda ?? payload.melhor_horario_agenda,
+        data_agenda: ixcOs.data_agenda ?? payload.data_agenda,
+        id_filial: ixcOs.id_filial ?? payload.id_filial,
+        id_estrutura: ixcOs.id_estrutura ?? payload.id_estrutura,
+        id_assunto: ixcOs.id_assunto ?? payload.id_assunto,
+        setor: ixcOs.setor ?? payload.setor,
+        id_tecnico: ixcOs.id_tecnico ?? payload.id_tecnico,
+        tipo: ixcOs.tipo ?? payload.tipo,
+      },
+      empresaId,
+      usuarioId,
+      false
+    );
+
+    const linked = await this.linkToIxc(record, ixcOs.id, {
+      data_abertura: ixcOs.data_abertura,
+    });
+    const status = String(ixcOs.status ?? '').trim();
+    if (status && status !== linked.status) {
+      await linked.update({ status });
     }
-
-    const mensagem = String(ixcOs.mensagem ?? payload.mensagem ?? '').trim();
-    const dataAbertura = String(ixcOs.data_abertura ?? nowIxcDateTime()).trim() || nowIxcDateTime();
-
-    const record = await OrdemServicoLocal.create({
-      empresa_id: empresaId,
-      cliente_id: clienteId,
-      ixc_id: ixcId,
-      prioridade: String(ixcOs.prioridade ?? payload.prioridade ?? 'N').trim() || 'N',
-      melhor_horario_agenda:
-        String(ixcOs.melhor_horario_agenda ?? payload.melhor_horario_agenda ?? 'Q').trim() || 'Q',
-      data_agenda: String(ixcOs.data_agenda ?? payload.data_agenda ?? '').trim() || null,
-      mensagem,
-      status: String(ixcOs.status ?? 'A').trim() || 'A',
-      protocolo: String(ixcOs.protocolo ?? '').trim() || ixcId,
-      data_abertura: dataAbertura,
-      id_filial: String(ixcOs.id_filial ?? payload.id_filial ?? '').trim(),
-      id_estrutura: String(ixcOs.id_estrutura ?? payload.id_estrutura ?? '0').trim() || '0',
-      id_assunto: String(ixcOs.id_assunto ?? payload.id_assunto ?? '').trim(),
-      setor: String(ixcOs.setor ?? payload.setor ?? '').trim(),
-      id_tecnico: String(ixcOs.id_tecnico ?? payload.id_tecnico ?? '').trim(),
-      tipo: String(ixcOs.tipo ?? payload.tipo ?? 'E').trim() || 'E',
-    });
-
-    await OrdemServicoMensagem.create({
-      empresa_id: empresaId,
-      ordem_servico_id: record.id,
-      id_evento: IXC_EVENTO_ABERTURA,
-      mensagem,
-      data: dataAbertura,
-      usuario_id: usuarioId,
-    });
-
-    return record;
+    return linked;
   }
 
   static async syncFromIxcOs(
@@ -417,7 +400,6 @@ export class OrdemServicoLocalService {
       data_agenda: String(ixcOs.data_agenda ?? record.data_agenda ?? '').trim() || null,
       mensagem: String(ixcOs.mensagem ?? record.mensagem).trim() || record.mensagem,
       status: String(ixcOs.status ?? record.status).trim() || record.status,
-      protocolo: String(ixcOs.protocolo ?? record.protocolo).trim() || record.protocolo,
       data_abertura: String(ixcOs.data_abertura ?? record.data_abertura).trim() || record.data_abertura,
       id_filial: String(ixcOs.id_filial ?? payload.id_filial ?? record.id_filial).trim(),
       id_estrutura: String(ixcOs.id_estrutura ?? payload.id_estrutura ?? record.id_estrutura).trim() || '0',
@@ -483,24 +465,6 @@ export class OrdemServicoLocalService {
     return record != null && !record.ixc_id?.trim();
   }
 
-  static async wasOpenedByUsuario(
-    id: string | number,
-    usuarioId: number,
-    empresaId: number | null = null
-  ): Promise<boolean> {
-    const record = await this.findRecord(id, empresaId);
-    if (!record?.ixc_id?.trim()) return false;
-
-    const abertura = await OrdemServicoMensagem.findOne({
-      where: {
-        ordem_servico_id: record.id,
-        id_evento: IXC_EVENTO_ABERTURA,
-      },
-    });
-
-    return abertura?.usuario_id === usuarioId;
-  }
-
   static async getOperadorAbertura(
     id: string | number,
     empresaId: number | null = null
@@ -516,11 +480,12 @@ export class OrdemServicoLocalService {
     return (await this.findRecord(id, empresaId)) != null;
   }
 
-  static async create(
+  static async createRecord(
     payload: OssChamadoInput,
     empresaId: number | null = null,
-    usuarioId: number | null = null
-  ): Promise<IxcActionResponse> {
+    usuarioId: number | null = null,
+    criarMensagemAbertura = true
+  ): Promise<OrdemServicoLocal> {
     const clienteId = parseClienteId(payload.cliente_id);
     if (!clienteId) {
       throw new Error('Selecione o cliente');
@@ -532,40 +497,71 @@ export class OrdemServicoLocalService {
     }
 
     const dataAbertura = nowIxcDateTime();
-    const record = await OrdemServicoLocal.create({
-      empresa_id: empresaId,
-      cliente_id: clienteId,
-      ixc_id: null,
-      prioridade: String(payload.prioridade ?? 'N').trim() || 'N',
-      melhor_horario_agenda: String(payload.melhor_horario_agenda ?? 'Q').trim() || 'Q',
-      data_agenda: String(payload.data_agenda ?? '').trim() || null,
-      mensagem,
-      status: 'A',
-      protocolo: await nextProtocolo(empresaId),
+
+    for (let attempt = 0; attempt < PROTOCOLO_CREATE_MAX_RETRIES; attempt++) {
+      const protocolo = await nextProtocolo();
+
+      try {
+        const record = await OrdemServicoLocal.create({
+          empresa_id: empresaId,
+          cliente_id: clienteId,
+          ixc_id: null,
+          prioridade: String(payload.prioridade ?? 'N').trim() || 'N',
+          melhor_horario_agenda: String(payload.melhor_horario_agenda ?? 'Q').trim() || 'Q',
+          data_agenda: String(payload.data_agenda ?? '').trim() || null,
+          mensagem,
+          status: 'A',
+          protocolo,
+          data_abertura: dataAbertura,
+          id_filial: String(payload.id_filial ?? '').trim(),
+          id_estrutura: String(payload.id_estrutura ?? '0').trim() || '0',
+          id_assunto: String(payload.id_assunto ?? '').trim(),
+          setor: String(payload.setor ?? '').trim(),
+          id_tecnico: String(payload.id_tecnico ?? '').trim(),
+          tipo: String(payload.tipo ?? 'E').trim() || 'E',
+        });
+
+        if (criarMensagemAbertura) {
+          await OrdemServicoMensagem.create({
+            empresa_id: empresaId,
+            ordem_servico_id: record.id,
+            id_evento: IXC_EVENTO_ABERTURA,
+            mensagem,
+            data: dataAbertura,
+            usuario_id: usuarioId,
+          });
+        }
+
+        return record;
+      } catch (error) {
+        if (error instanceof UniqueConstraintError && attempt < PROTOCOLO_CREATE_MAX_RETRIES - 1) {
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    throw new Error('Não foi possível gerar um protocolo único para a ordem de serviço');
+  }
+
+  static async linkToIxc(
+    record: OrdemServicoLocal,
+    ixcId: string | number,
+    meta: { data_abertura?: string } = {}
+  ): Promise<OrdemServicoLocal> {
+    const normalized = String(ixcId).trim();
+    if (!normalized) {
+      throw new Error('IXC não retornou o ID da ordem de serviço criada');
+    }
+
+    const dataAbertura = String(meta.data_abertura ?? record.data_abertura).trim() || record.data_abertura;
+
+    await record.update({
+      ixc_id: normalized,
       data_abertura: dataAbertura,
-      id_filial: '',
-      id_estrutura: '0',
-      id_assunto: '',
-      setor: '',
-      id_tecnico: '',
-      tipo: 'E',
     });
 
-    await OrdemServicoMensagem.create({
-      empresa_id: empresaId,
-      ordem_servico_id: record.id,
-      id_evento: IXC_EVENTO_ABERTURA,
-      mensagem,
-      data: dataAbertura,
-      usuario_id: usuarioId,
-    });
-
-    return {
-      type: 'success',
-      id: String(record.id),
-      protocolo: record.protocolo,
-      data_abertura: record.data_abertura,
-    };
+    return record;
   }
 
   static async update(
@@ -795,9 +791,11 @@ export class OrdemServicoLocalService {
   static async syncMensagensFromIxc(
     record: OrdemServicoLocal,
     ixcMensagens: IxcOssMensagem[],
-    empresaId: number | null = null
+    empresaId: number | null = null,
+    usuarioId: number | null = null
   ): Promise<{ novas: number; inseridas: IxcOssMensagem[] }> {
     const inseridas: IxcOssMensagem[] = [];
+    const empresaRef = empresaId ?? record.empresa_id;
 
     for (const ixcMsg of ixcMensagens) {
       const ixcMsgId = String(ixcMsg.id ?? '').trim();
@@ -813,23 +811,21 @@ export class OrdemServicoLocalService {
         if (byIxc) continue;
       }
 
-      const dup = await OrdemServicoMensagem.findOne({
-        where: {
-          ordem_servico_id: record.id,
-          id_evento: idEvento,
-          data,
-          mensagem,
-        },
-      });
-      if (dup) continue;
+      let resolvedUsuarioId = usuarioId;
+      if (resolvedUsuarioId == null) {
+        const { operador } = extractOperadorFromMensagem(mensagem);
+        if (operador) {
+          resolvedUsuarioId = await resolveUsuarioIdByNome(operador, empresaRef);
+        }
+      }
 
       await OrdemServicoMensagem.create({
-        empresa_id: empresaId ?? record.empresa_id,
+        empresa_id: empresaRef,
         ordem_servico_id: record.id,
         id_evento: idEvento,
         mensagem,
         data,
-        usuario_id: null,
+        usuario_id: resolvedUsuarioId,
         ixc_id: ixcMsgId || null,
       });
       inseridas.push(ixcMsg);

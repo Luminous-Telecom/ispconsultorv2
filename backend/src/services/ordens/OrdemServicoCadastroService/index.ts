@@ -97,6 +97,49 @@ export class OrdemServicoCadastroService {
     }
   }
 
+  static async pruneIxcCadastros(
+    tipo: OrdemServicoCadastroTipo,
+    empresaId: number | null,
+    integracaoIxcProvedorId: number,
+    allowedIxcIds: Set<string>
+  ): Promise<void> {
+    const Model = MODEL_POR_TIPO[tipo];
+    const registros = await Model.findAll({
+      where: {
+        integracao_ixc_provedor_id: integracaoIxcProvedorId,
+        ixc: true,
+        ...empresaWhere(empresaId),
+      },
+    });
+
+    for (const registro of registros) {
+      const ixcId = String(registro.ixc_id ?? '').trim();
+      if (ixcId && !allowedIxcIds.has(ixcId)) {
+        await registro.destroy();
+      }
+    }
+  }
+
+  static async listIxcIdsForIntegracao(
+    tipo: OrdemServicoCadastroTipo,
+    integracaoIxcProvedorId: number,
+    empresaId: number | null
+  ): Promise<string[]> {
+    const Model = MODEL_POR_TIPO[tipo];
+    const registros = await Model.findAll({
+      where: {
+        integracao_ixc_provedor_id: integracaoIxcProvedorId,
+        ixc: true,
+        ...empresaWhere(empresaId),
+      },
+      attributes: ['ixc_id'],
+    });
+
+    return registros
+      .map((registro) => String(registro.ixc_id ?? '').trim())
+      .filter((ixcId) => ixcId.length > 0);
+  }
+
   static async listLocais(
     tipo: OrdemServicoCadastroTipo,
     empresaId: number | null,
