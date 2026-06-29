@@ -28,41 +28,43 @@ const AtivoInativoField: React.FC<AtivoInativoFieldProps> = ({
   const idNao = `${fieldId}-nao`;
 
   return (
-    <div className={className}>
-      <label className="form-label small mb-1">
+    <div className={`form-field ${className}`.trim()}>
+      <label className="form-label small">
         {label ?? t('status.active')}
         {required && <RequiredMark />}
       </label>
-      <div className="d-flex flex-wrap gap-3">
-        <div className="form-check form-check-inline">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            id={idSim}
-            checked={value}
-            onChange={(e) => {
-              if (e.target.checked) onChange(true);
-            }}
-            disabled={disabled}
-          />
-          <label className="form-check-label" htmlFor={idSim}>
-            {t('ui.yes')}
-          </label>
-        </div>
-        <div className="form-check form-check-inline">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            id={idNao}
-            checked={!value}
-            onChange={(e) => {
-              if (e.target.checked) onChange(false);
-            }}
-            disabled={disabled}
-          />
-          <label className="form-check-label" htmlFor={idNao}>
-            {t('ui.no')}
-          </label>
+      <div className="form-field-control">
+        <div className="d-flex flex-wrap gap-3">
+          <div className="form-check form-check-inline">
+            <input
+              className="form-check-input"
+              type="checkbox"
+              id={idSim}
+              checked={value}
+              onChange={(e) => {
+                if (e.target.checked) onChange(true);
+              }}
+              disabled={disabled}
+            />
+            <label className="form-check-label" htmlFor={idSim}>
+              {t('ui.yes')}
+            </label>
+          </div>
+          <div className="form-check form-check-inline">
+            <input
+              className="form-check-input"
+              type="checkbox"
+              id={idNao}
+              checked={!value}
+              onChange={(e) => {
+                if (e.target.checked) onChange(false);
+              }}
+              disabled={disabled}
+            />
+            <label className="form-check-label" htmlFor={idNao}>
+              {t('ui.no')}
+            </label>
+          </div>
         </div>
       </div>
     </div>

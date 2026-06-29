@@ -30,7 +30,7 @@ const DadosBasicosTab: React.FC<ClienteTabProps> = ({
         error={errors.cnpj}
         />
       </div>
-      <div className="col-md-6">
+      <div className="col-12">
         <FormField
           name="razao_social"
         type="text"
@@ -45,7 +45,7 @@ const DadosBasicosTab: React.FC<ClienteTabProps> = ({
         error={errors.razao_social}
         />
       </div>
-      <div className="col-md-6">
+      <div className="col-12">
         <FormField
           name="nome_fantasia"
         type="text"

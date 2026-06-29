@@ -325,7 +325,9 @@ const FormField: React.FC<FormFieldProps> = ({
   return (
     <div className={`form-field ${className}`}>
       {renderLabel()}
-      {renderField()}
+      <div className="form-field-control">
+        {renderField()}
+      </div>
     </div>
   );
 };

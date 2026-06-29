@@ -253,10 +253,53 @@ body .draggable-modal-container-custom .modal-body.draggable-modal-body-custom:h
   flex-direction: column !important;
   overflow-x: hidden !important;
   overflow-y: auto !important;
-  padding: 16px;
+  padding: 20px 24px 20px var(--form-block-padding-left);
 
   .row > * {
     margin-top: 0;
+  }
+
+  .row > [class*='col-'] {
+    flex: 0 0 100%;
+    max-width: var(--form-block-max-width);
+  }
+
+  .form-field {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: var(--form-field-gap);
+    margin-bottom: 0.5rem;
+    width: 100%;
+    max-width: var(--form-block-max-width);
+
+    > .form-label,
+    > label.form-label:not(.form-check-label),
+    > span.form-label {
+      flex: 0 0 var(--form-label-width);
+      width: var(--form-label-width);
+      min-width: var(--form-label-width);
+      text-align: right;
+      white-space: nowrap;
+      padding-top: 0.375rem;
+      margin-bottom: 0 !important;
+    }
+
+    > .form-field-control {
+      flex: 1 1 auto;
+      width: 100%;
+      max-width: var(--form-input-max-width);
+      min-width: 0;
+
+      .form-control,
+      .form-select,
+      textarea.form-control,
+      .input-group,
+      .input-wrapper {
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+    }
   }
 }
 
@@ -4143,7 +4186,67 @@ textarea:focus {
   }
 }
 
-/* FormField */
+/* FormField — labels à direita, inputs alinhados (variáveis em _variables.scss) */
+@mixin form-field-row-layout {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--form-field-gap);
+  width: 100%;
+  max-width: var(--form-block-max-width);
+
+  > .form-label,
+  > label.form-label:not(.form-check-label),
+  > span.form-label {
+    flex: 0 0 var(--form-label-width);
+    width: var(--form-label-width);
+    min-width: var(--form-label-width);
+    text-align: right;
+    white-space: nowrap;
+    margin-bottom: 0 !important;
+    padding-top: 0.375rem;
+    box-sizing: border-box;
+  }
+
+  > .form-field-control {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: var(--form-input-max-width);
+    min-width: 0;
+
+    > .form-control,
+    > .form-select,
+    > textarea.form-control,
+    > .input-group,
+    > .input-wrapper {
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+  }
+
+  > .form-control,
+  > .form-select,
+  > textarea.form-control,
+  > .input-group,
+  > .input-wrapper,
+  > .d-flex,
+  > .btn-group {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: var(--form-input-max-width);
+    min-width: 0;
+  }
+
+  > .invalid-feedback,
+  > .entity-select-error,
+  > .form-text,
+  > small.text-muted {
+    flex: 1 1 100%;
+    max-width: var(--form-input-max-width);
+    margin-left: calc(var(--form-label-width) + var(--form-field-gap));
+  }
+}
+
 .form-field {
   margin-bottom: 0.5rem;
 }
@@ -4151,7 +4254,50 @@ textarea:focus {
 .form-field .form-label {
   color: var(--text-primary) !important;
   font-weight: 500;
-  margin-bottom: 0.25rem;
+}
+
+/* Formulários simples em modais (sem abas) */
+.draggable-modal-body-custom form.form-modal-simple {
+  padding: 20px 24px 20px var(--form-block-padding-left);
+
+  .form-field {
+    @include form-field-row-layout;
+  }
+
+  .row > [class*='col-'] {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+
+/* Campos manuais em modais (sem FormField) */
+.draggable-modal-body-custom {
+  .mb-1:has(> .form-label):has(> .form-control),
+  .mb-1:has(> label.form-label):has(> .form-control),
+  .mb-1:has(> .form-label):has(> .input-group),
+  .mb-1:has(> label.form-label):has(> .input-group),
+  .mb-1:has(> span.form-label):has(> .form-control),
+  .mb-1:has(> span.form-label):has(> textarea),
+  .mb-2:has(> .form-label):has(> .form-control),
+  .mb-2:has(> label.form-label):has(> .form-control),
+  .mb-2:has(> .form-label):has(> .input-group),
+  .mb-2:has(> label.form-label):has(> .input-group),
+  .mb-2:has(> span.form-label):has(> textarea),
+  .mb-3:has(> .form-label):has(> .form-control),
+  .mb-3:has(> label.form-label):has(> .form-control),
+  .mb-3:has(> .form-label):has(> .form-select),
+  .mb-3:has(> label.form-label):has(> .form-select),
+  .mb-3:has(> .form-label):has(> .input-group),
+  .mb-3:has(> label.form-label):has(> .input-group),
+  .mb-3:has(> span.form-label):has(> textarea),
+  .mb-3:has(> .form-label):has(> .btn-group),
+  .mb-3:has(> label.form-label):has(> .btn-group),
+  > div:has(> .form-label):has(> .btn-group),
+  > div:has(> label.form-label):has(> .btn-group) {
+    @include form-field-row-layout;
+    padding-left: var(--form-block-padding-left);
+    max-width: calc(var(--form-block-max-width) + var(--form-block-padding-left));
+  }
 }
 
 /* Avisos auxiliares abaixo de campos (ex.: "não pode ser alterado") */
@@ -4182,7 +4328,6 @@ form p.text-muted.small {
 /* Reduzir espaçamento em modais */
 .modal-content .form-label {
   color: var(--text-primary) !important;
-  margin-bottom: 0.25rem !important;
 }
 
 
@@ -4302,6 +4447,83 @@ form p.text-muted.small {
 
 /* Responsividade */
 @media (max-width: 576px) {
+  .cliente-tab-content-padded,
+  .contrato-tab-content-padded,
+  .plano-tab-content-padded,
+  .fornecedor-tab-content-padded,
+  .banco-tab-content-padded,
+  .documento-tab-content-padded,
+  .empresa-tab-content-padded,
+  .whatsapp-tab-content-padded,
+  .email-tab-content-padded,
+  .ordem-servico-tab-content-padded,
+  .sistema-tab-content-padded {
+    padding: 16px;
+
+    .form-field {
+      flex-direction: column;
+      gap: 0.25rem;
+      max-width: 100%;
+
+      > .form-label,
+      > label.form-label:not(.form-check-label),
+      > span.form-label {
+        flex: none;
+        width: 100%;
+        min-width: 0;
+        text-align: left;
+        padding-top: 0;
+      }
+
+      > .form-field-control {
+        max-width: 100%;
+      }
+    }
+  }
+
+  .form-field,
+  .draggable-modal-body-custom .mb-1:has(> .form-label),
+  .draggable-modal-body-custom .mb-2:has(> .form-label),
+  .draggable-modal-body-custom .mb-3:has(> .form-label) {
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-left: 0;
+    width: 100%;
+    max-width: 100%;
+
+    > .form-label,
+    > label.form-label:not(.form-check-label),
+    > span.form-label {
+      flex: none;
+      width: 100%;
+      min-width: 0;
+      max-width: none;
+      text-align: left;
+      padding-top: 0;
+      white-space: normal;
+    }
+
+    > .invalid-feedback,
+    > .entity-select-error,
+    > .form-text,
+    > small.text-muted {
+      margin-left: 0;
+      max-width: 100%;
+    }
+
+    > .form-field-control,
+    > .form-control,
+    > .form-select,
+    > textarea.form-control,
+    > .input-group,
+    > .input-wrapper,
+    > .d-flex,
+    > .btn-group {
+      max-width: 100%;
+      width: 100%;
+    }
+  }
+
   .form-field {
     margin-bottom: 0.5rem;
   }
