@@ -43,54 +43,48 @@ const ContatoTab: React.FC<ClienteTabProps> = ({
         errors={errors as unknown as Record<string, string>}
       />
 
-      <div>
-        <h6 className="text-primary mb-2">{t('tabs.communicationPreferences')}</h6>
+      <h6 className="text-primary mb-2">{t('tabs.communicationPreferences')}</h6>
 
-        <div className="d-flex flex-column gap-2">
-          <FormField
-            name="recebe_email"
-            type="checkbox"
-            label={t('form.receivesEmail')}
-            value={formData.recebe_email}
-            onChange={(value: FormValue) => handleInputChange('recebe_email', value as boolean)}
-            switch
-            formPrefix={formPrefix}
-          />
+      <FormField
+        name="recebe_email"
+        type="checkbox"
+        label={t('form.receivesEmail')}
+        value={formData.recebe_email}
+        onChange={(value: FormValue) => handleInputChange('recebe_email', value as boolean)}
+        switch
+        formPrefix={formPrefix}
+      />
 
-          <FormField
-            name="recebe_whatsapp"
-            type="checkbox"
-            label={t('form.receivesWhatsApp')}
-            value={formData.recebe_whatsapp}
-            onChange={(value: FormValue) => handleInputChange('recebe_whatsapp', value as boolean)}
-            switch
-            formPrefix={formPrefix}
-          />
-        </div>
-      </div>
+      <FormField
+        name="recebe_whatsapp"
+        type="checkbox"
+        label={t('form.receivesWhatsApp')}
+        value={formData.recebe_whatsapp}
+        onChange={(value: FormValue) => handleInputChange('recebe_whatsapp', value as boolean)}
+        switch
+        formPrefix={formPrefix}
+      />
 
-      <div>
-        <h6 className="text-primary mb-2">Central do Assinante</h6>
-        <FormField
-          name="central_assinante_senha"
-          type="password"
-          label="Senha da Central do Assinante"
-          placeholder="Deixe em branco para não alterar"
-          value={formData.central_assinante_senha || ''}
-          onChange={(value: FormValue) => handleInputChange('central_assinante_senha', value as string)}
-          formPrefix={formPrefix}
-          helpText="Senha para acesso à central do assinante. Deixe em branco para não alterar."
+      <h6 className="text-primary mb-2 mt-2">Central do Assinante</h6>
+      <FormField
+        name="central_assinante_senha"
+        type="password"
+        label="Senha da Central do Assinante"
+        placeholder="Deixe em branco para não alterar"
+        value={formData.central_assinante_senha || ''}
+        onChange={(value: FormValue) => handleInputChange('central_assinante_senha', value as string)}
+        formPrefix={formPrefix}
+        helpText="Senha para acesso à central do assinante. Deixe em branco para não alterar."
+      />
+      <div className="form-modal-input-col mt-2">
+        <AbrirCentralAssinanteButton
+          type="button"
+          onClick={() => window.open(centralUrl, '_blank')}
         />
-        <div className="mt-2">
-          <AbrirCentralAssinanteButton
-            type="button"
-            onClick={() => window.open(centralUrl, '_blank')}
-          />
-          <div className="small text-muted mt-2">
-            O cliente pode acessar a central do assinante em: <code>{centralUrl}</code>
-            <br />
-            Para fazer login, o cliente precisa usar o CNPJ ou Email (conforme configurado nos parâmetros do sistema) e a senha cadastrada acima.
-          </div>
+        <div className="small text-muted mt-2">
+          O cliente pode acessar a central do assinante em: <code>{centralUrl}</code>
+          <br />
+          Para fazer login, o cliente precisa usar o CNPJ ou Email (conforme configurado nos parâmetros do sistema) e a senha cadastrada acima.
         </div>
       </div>
     </div>

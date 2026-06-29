@@ -252,3 +252,64 @@
     @content;
   }
 }
+
+/* Formulários horizontais em modais */
+@mixin form-modal-field {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--form-field-gap);
+  margin-bottom: 0.5rem;
+  width: 100%;
+  max-width: var(--form-block-max-width);
+
+  > .form-label,
+  > label.form-label:not(.form-check-label),
+  > span.form-label {
+    flex: 0 0 var(--form-label-width);
+    width: var(--form-label-width);
+    text-align: right;
+    white-space: nowrap;
+    padding-top: 0.375rem;
+    margin-bottom: 0 !important;
+  }
+
+  > .form-field-control {
+    flex: 1 1 auto;
+    max-width: var(--form-input-max-width);
+    min-width: 0;
+
+    .form-control,
+    .form-select,
+    textarea.form-control,
+    .input-group,
+    .input-wrapper {
+      width: 100%;
+    }
+
+    > .form-check {
+      padding-top: 0.25rem;
+      margin-bottom: 0;
+    }
+  }
+}
+
+@mixin form-modal-tab-padding {
+  padding: 20px 24px 20px var(--form-block-padding-left);
+
+  .row > [class*='col-'] {
+    flex: 0 0 100%;
+    max-width: var(--form-block-max-width);
+  }
+
+  .form-field {
+    @include form-modal-field;
+  }
+
+  h6.text-primary,
+  .form-modal-input-col {
+    margin-left: var(--form-input-col-offset);
+    max-width: var(--form-input-max-width);
+    width: 100%;
+  }
+}

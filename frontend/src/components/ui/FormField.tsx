@@ -235,7 +235,6 @@ const FormField: React.FC<FormFieldProps> = ({
           <Checkbox
             {...commonProps}
             checked={convertToBoolean(value)}
-            label={label}
             description={description}
             inline={inline}
             switch={isSwitch}
@@ -311,15 +310,6 @@ const FormField: React.FC<FormFieldProps> = ({
         );
     }
   };
-
-  // Se for checkbox com label, não renderizar label separado
-  if (type === 'checkbox' && label) {
-    return (
-      <div className={`form-field ${className}`}>
-        {renderField()}
-      </div>
-    );
-  }
 
   // Renderizar campo com label
   return (

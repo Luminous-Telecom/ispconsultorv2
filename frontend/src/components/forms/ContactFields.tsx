@@ -82,7 +82,7 @@ const ContactFields: React.FC<ContactFieldsProps> = ({
   return (
     <div className="row g-2">
       {contactFields.map((field) => (
-        <div key={field.name} className="col-md-6">
+        <div key={field.name} className="col-12">
           <FormField
             name={getFieldName(field.name)}
             type={field.type}
