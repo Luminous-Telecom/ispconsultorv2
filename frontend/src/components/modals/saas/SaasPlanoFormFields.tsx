@@ -34,7 +34,7 @@ export const SaasPlanoGeralFormFields: React.FC<SaasPlanoGeralFormFieldsProps> =
   return (
     <>
       <div className="row g-2">
-        <div className="col-md-8">
+        <div className="col-12">
           <div className="mb-0">
             <FormField
               name="nome"
@@ -51,7 +51,7 @@ export const SaasPlanoGeralFormFields: React.FC<SaasPlanoGeralFormFieldsProps> =
             />
           </div>
         </div>
-        <div className="col-md-4">
+        <div className="col-12">
           <div className="mb-0">
             <AtivoInativoField
               value={form.ativo}
@@ -61,7 +61,7 @@ export const SaasPlanoGeralFormFields: React.FC<SaasPlanoGeralFormFieldsProps> =
             />
           </div>
         </div>
-        <div className="col-md-4">
+        <div className="col-12">
           <div className="mb-0">
             <FormField
               name="valor_mensal"
@@ -80,7 +80,7 @@ export const SaasPlanoGeralFormFields: React.FC<SaasPlanoGeralFormFieldsProps> =
             />
           </div>
         </div>
-        <div className="col-md-4">
+        <div className="col-12">
           <div className="mb-0">
             <FormField
               name="valor_anual"
@@ -99,7 +99,7 @@ export const SaasPlanoGeralFormFields: React.FC<SaasPlanoGeralFormFieldsProps> =
             />
           </div>
         </div>
-        <div className="col-md-4">
+        <div className="col-12">
           <div className="mb-0">
             <FormField
               name="limite_usuarios"
@@ -171,7 +171,7 @@ export const SaasPlanoEquipamentosFormFields: React.FC<SaasPlanoEquipamentosForm
       <LabelWithHelp as="span" helpText={t('saas.planLimitZeroHelp')} helpIconClassName="ms-0" />
     </div>
     <div className="row g-2">
-      <div className="col-md-4">
+      <div className="col-12">
         <div className="mb-0">
           <FormField
             name="equipamentos_limite_equipamentos"
@@ -189,7 +189,7 @@ export const SaasPlanoEquipamentosFormFields: React.FC<SaasPlanoEquipamentosForm
           />
         </div>
       </div>
-      <div className="col-md-4">
+      <div className="col-12">
         <div className="mb-0">
           <FormField
             name="equipamentos_limite_tuneis"
@@ -207,7 +207,7 @@ export const SaasPlanoEquipamentosFormFields: React.FC<SaasPlanoEquipamentosForm
           />
         </div>
       </div>
-      <div className="col-md-4">
+      <div className="col-12">
         <div className="mb-0">
           <FormField
             name="equipamentos_limite_backups"

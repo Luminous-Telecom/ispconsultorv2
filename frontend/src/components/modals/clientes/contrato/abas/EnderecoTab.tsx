@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Cliente } from 'types';
 import { useI18n } from 'contexts/I18nContext';
 import FormField from 'components/ui/FormField';
+import AtivoInativoField from 'components/ui/AtivoInativoField';
 import { ContratoForm } from '../types';
 
 interface EnderecoTabProps {
@@ -32,23 +33,12 @@ const EnderecoTab: React.FC<EnderecoTabProps> = ({
   return (
     <div className="d-flex flex-column gap-2">
       {/* Usar Endereço do Cliente */}
-      <div className="form-check form-switch">
-        <input
-          className="form-check-input"
-          type="checkbox"
-          role="switch"
-          id="usar_endereco_cliente"
-          name="usar_endereco_cliente"
-          checked={formData.usar_endereco_cliente || false}
-          onChange={(e) => {
-            handleInputChange('usar_endereco_cliente', e.target.checked);
-          }}
-          style={{ cursor: 'pointer' }}
-        />
-        <label className="form-check-label" htmlFor="usar_endereco_cliente" style={{ cursor: 'pointer' }}>
-          {t('form.useClientAddress')}
-        </label>
-      </div>
+      <AtivoInativoField
+        value={!!formData.usar_endereco_cliente}
+        onChange={(v) => handleInputChange('usar_endereco_cliente', v)}
+        label={t('form.useClientAddress')}
+        name="usar_endereco_cliente"
+      />
 
       {/* Endereço */}
       <FormField

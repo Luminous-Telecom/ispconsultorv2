@@ -7,6 +7,8 @@ export { default as Checkbox } from './Checkbox';
 export { default as FormField } from './FormField';
 export { default as AtivoInativoField } from './AtivoInativoField';
 export type { AtivoInativoFieldProps } from './AtivoInativoField';
+export { default as ComunicacaoPreferenciasField } from './ComunicacaoPreferenciasField';
+export type { ComunicacaoPreferenciasFieldProps } from './ComunicacaoPreferenciasField';
 export { default as EntitySelectField } from './EntitySelectField';
 export { default as Card } from './Card';
 export type { CardProps, CardVariant, CardPadding } from './Card';

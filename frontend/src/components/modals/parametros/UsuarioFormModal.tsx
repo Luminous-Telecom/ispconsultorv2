@@ -4,7 +4,6 @@ import { UsuarioService } from 'services/usuarioService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
-import { useIsMobile } from 'hooks/useMediaQuery';
 import { useFormReset } from 'hooks/useFormReset';
 import { useUsuario, useGerarWebhookSecret } from 'hooks/useUsuarios';
 import DraggableModal from 'components/common/DraggableModal';
@@ -35,7 +34,6 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
   usuarioId
 }) => {
   const { t } = useI18n();
-  const isMobile = useIsMobile();
   const isEditing = !!usuarioId;
   const initialFormData: UsuarioForm = {
     nome: '',
@@ -177,7 +175,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
         <ModalFormActions onCancel={onClose} formId="usuario-form" isPending={isPending} />
       }
   >
-    <form id="usuario-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
+    <form id="usuario-form" onSubmit={handleSubmit} className="form-modal-simple">
       <div>
         <div className="row g-1 mb-0">
           <UsuarioAccountFormFields
@@ -203,7 +201,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
             }}
             isEditing={isEditing}
           />
-          <div className="col-md-6">
+          <div className="col-12">
             <AtivoInativoField
               value={formData.ativo}
               onChange={(v) => setFormData(prev => ({ ...prev, ativo: v }))}
@@ -214,7 +212,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
 
         {isEditing && (
           <div className="row g-1 mb-0">
-            <div className="col-md-12">
+            <div className="col-12">
               <div className="mb-3">
                 <FormField
                   name="webhook_secret"

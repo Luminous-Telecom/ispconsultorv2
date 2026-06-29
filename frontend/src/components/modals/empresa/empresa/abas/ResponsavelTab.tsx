@@ -25,7 +25,7 @@ const ResponsavelTab: React.FC<DadosEmpresaTabProps & { onAssinaturaChange: (fil
   return (
     <div className="mb-0">
       <div className="row">
-        <div className="col-md-4">
+        <div className="col-12">
           <FormField
             name="responsavel_nome"
             type="text"
@@ -37,7 +37,7 @@ const ResponsavelTab: React.FC<DadosEmpresaTabProps & { onAssinaturaChange: (fil
             disabled={isPending}
           />
         </div>
-        <div className="col-md-4">
+        <div className="col-12">
           <FormField
             name="responsavel_cpf"
             type="text"
@@ -49,7 +49,7 @@ const ResponsavelTab: React.FC<DadosEmpresaTabProps & { onAssinaturaChange: (fil
             disabled={isPending}
           />
         </div>
-        <div className="col-md-4">
+        <div className="col-12">
           <FormField
             name="responsavel_cargo"
             type="text"
@@ -65,7 +65,7 @@ const ResponsavelTab: React.FC<DadosEmpresaTabProps & { onAssinaturaChange: (fil
 
       {/* Assinatura do Responsável */}
       {SHOW_ASSINATURA_RESPONSAVEL && <div className="row mt-4 pt-3 border-top">
-        <div className="col-md-12">
+        <div className="col-12">
           <label htmlFor="assinatura" className="form-label small fw-bold">{t('company.responsibleSignature')}</label>
           <div className="d-flex align-items-start gap-3">
             <div style={{ minWidth: '200px' }}>

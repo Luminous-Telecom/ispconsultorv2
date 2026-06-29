@@ -56,7 +56,7 @@ const SaasUsuarioFormFields: React.FC<SaasUsuarioFormFieldsProps> = ({
         isEditing={isEditing}
         passwordInputName="senha"
       />
-      <div className="col-md-6">
+      <div className="col-12">
         <FormField
           name="nivel_acesso"
           type="select"
@@ -67,7 +67,7 @@ const SaasUsuarioFormFields: React.FC<SaasUsuarioFormFieldsProps> = ({
           size="sm"
         />
       </div>
-      <div className="col-md-6">
+      <div className="col-12">
         <AtivoInativoField
           value={form.ativo}
           onChange={(v) => onChange('ativo', v)}

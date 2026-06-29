@@ -2,6 +2,7 @@ import React from 'react';
 import { FormValue } from 'types/common';
 import { useI18n } from 'contexts/I18nContext';
 import FormField from 'components/ui/FormField';
+import AtivoInativoField from 'components/ui/AtivoInativoField';
 import { PlanoTabProps } from '../types';
 
 const DescontosConfiguracoesTab: React.FC<PlanoTabProps> = ({
@@ -13,7 +14,7 @@ const DescontosConfiguracoesTab: React.FC<PlanoTabProps> = ({
   return (
     <>
       <div className="row">
-        <div className="col-md-4">
+        <div className="col-12">
           <div className="mb-0">
             <FormField
               name="status"
@@ -35,15 +36,12 @@ const DescontosConfiguracoesTab: React.FC<PlanoTabProps> = ({
           </div>
         </div>
 
-        <div className="col-md-4">
+        <div className="col-12">
           <div className="mb-0">
-            <FormField
-              name="renovacao_automatica"
-              type="checkbox"
-              label={t('form.autoRenewal')}
+            <AtivoInativoField
               value={formData.renovacao_automatica}
-              onChange={(value: FormValue) => handleInputChange('renovacao_automatica', !!value)}
-              switch
+              onChange={(v) => handleInputChange('renovacao_automatica', v)}
+              label={t('form.autoRenewal')}
               disabled={isSubmitting}
             />
           </div>
@@ -54,4 +52,3 @@ const DescontosConfiguracoesTab: React.FC<PlanoTabProps> = ({
 };
 
 export default DescontosConfiguracoesTab;
-

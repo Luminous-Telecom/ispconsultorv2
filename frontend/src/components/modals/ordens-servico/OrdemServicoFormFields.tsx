@@ -106,7 +106,7 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
   showAgendaFields = true,
   mensagemRequired = false,
 }) => {
-  const metaColClass = 'col-md-4';
+  const metaColClass = 'col-12';
 
   return (
     <div className="row g-2">
@@ -149,7 +149,7 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
           />
         </div>
       ) : null}
-      <div className={idLocal || ixcId || protocolo ? 'col-12' : 'col-md-6'}>
+      <div className={idLocal || ixcId || protocolo ? 'col-12' : 'col-12'}>
         <EntitySelectField
           label="Cliente"
           required
@@ -164,7 +164,7 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
       </div>
       {showIxcFields ? (
         <>
-          <div className="col-md-6">
+          <div className="col-12">
             <EntitySelectField
               stringIdMode
               label="Filial"
@@ -179,7 +179,7 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
               searchButtonTitle="Buscar filial"
             />
           </div>
-          <div className="col-md-6">
+          <div className="col-12">
             <EntitySelectField
               stringIdMode
               label="Estrutura"
@@ -194,7 +194,7 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
               searchButtonTitle="Buscar estrutura"
             />
           </div>
-          <div className="col-md-6">
+          <div className="col-12">
             <EntitySelectField
               stringIdMode
               label="Assunto"
@@ -209,7 +209,7 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
               searchButtonTitle="Buscar assunto"
             />
           </div>
-          <div className="col-md-6">
+          <div className="col-12">
             <EntitySelectField
               stringIdMode
               label="Setor"
@@ -224,7 +224,7 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
               searchButtonTitle="Buscar setor"
             />
           </div>
-          <div className="col-md-6">
+          <div className="col-12">
             <EntitySelectField
               stringIdMode
               label="Técnico"
@@ -242,7 +242,7 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
 
       {showAgendaFields ? (
         <>
-          <div className="col-md-4">
+          <div className="col-12">
             <FormField
               name="prioridade"
               type="select"
@@ -254,7 +254,7 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
               disabled={disabled}
             />
           </div>
-          <div className="col-md-4">
+          <div className="col-12">
             <FormField
               name="melhor_horario_agenda"
               type="select"
@@ -266,7 +266,7 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
               disabled={disabled}
             />
           </div>
-          <div className="col-md-4">
+          <div className="col-12">
             <FormField
               name="data_agenda"
               type="datetime-local"

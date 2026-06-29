@@ -44,7 +44,7 @@ const TipoCobrancaFormFields: React.FC<TipoCobrancaFormFieldsProps> = ({
           placeholder="Ex: 12 parcelas mensais"
         />
       </div>
-      <div className="col-md-6">
+      <div className="col-12">
         <FormField
           name="quantidade_titulos"
           type="number"
@@ -61,7 +61,7 @@ const TipoCobrancaFormFields: React.FC<TipoCobrancaFormFieldsProps> = ({
           disabled={disabled}
         />
       </div>
-      <div className="col-md-6">
+      <div className="col-12">
         <FormField
           name="periodicidade"
           type="select"
@@ -73,7 +73,7 @@ const TipoCobrancaFormFields: React.FC<TipoCobrancaFormFieldsProps> = ({
           disabled={disabled}
         />
       </div>
-      <div className="col-md-4">
+      <div className="col-12">
         <AtivoInativoField
           value={form.ativo}
           onChange={(v) => onChange('ativo', v)}

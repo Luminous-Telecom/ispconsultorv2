@@ -1,6 +1,5 @@
 import React, { useCallback } from 'react';
-import FormField from 'components/ui/FormField';
-import { CopiarButton, Input, LabelWithHelp } from 'components/ui';
+import { FormField, AtivoInativoField, CopiarButton, Input, LabelWithHelp } from 'components/ui';
 import { BancoTabProps } from '../types';
 import { useI18n } from 'contexts/I18nContext';
 import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
@@ -38,7 +37,7 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
       {formData.tipo_banco === 'efi' && (
         <>
           <div className="row">
-            <div className="col-md-6">
+            <div className="col-12">
               <div className="mb-3">
                 <FormField
                   name="client_id_producao"
@@ -56,7 +55,7 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
               </div>
             </div>
 
-            <div className="col-md-6">
+            <div className="col-12">
               <div className="mb-3">
                 <FormField
                   name="client_secret_producao"
@@ -76,7 +75,7 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
           </div>
 
           <div className="row">
-            <div className="col-md-12">
+            <div className="col-12">
               <div className="mb-3">
                 <LabelWithHelp
                   htmlFor={formPrefix ? `${formPrefix}-field-url_retorno` : 'field-url_retorno'}
@@ -110,18 +109,14 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
           </div>
 
           <div className="row">
-            <div className="col-md-12">
+            <div className="col-12">
               <div className="mb-3">
-                <FormField
-                  name="sandbox"
-                  type="checkbox"
-                  label={t('table.sandbox')}
-                  description={t('form.sandboxHelp')}
+                <AtivoInativoField
                   value={formData.sandbox}
-                  onChange={(value) => handleInputChange('sandbox', value as boolean)}
+                  onChange={(v) => handleInputChange('sandbox', v)}
+                  label={t('table.sandbox')}
+                  name={formPrefix ? `${formPrefix}-sandbox` : 'banco-sandbox'}
                   disabled={isPending}
-                  formPrefix={formPrefix}
-                  switch={true}
                 />
               </div>
             </div>
@@ -133,7 +128,7 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
       {formData.tipo_banco === 'asaas' && (
         <>
           <div className="row">
-            <div className="col-md-12">
+            <div className="col-12">
               <div className="mb-3">
                 <LabelWithHelp
                   htmlFor={formPrefix ? `${formPrefix}-field-url_retorno-asaas` : 'field-url_retorno-asaas'}
@@ -167,18 +162,14 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
           </div>
 
           <div className="row">
-            <div className="col-md-12">
+            <div className="col-12">
               <div className="mb-3">
-                <FormField
-                  name="sandbox"
-                  type="checkbox"
-                  label={t('table.sandbox')}
-                  description={t('form.sandboxHelp')}
+                <AtivoInativoField
                   value={formData.sandbox}
-                  onChange={(value) => handleInputChange('sandbox', value as boolean)}
+                  onChange={(v) => handleInputChange('sandbox', v)}
+                  label={t('table.sandbox')}
+                  name={formPrefix ? `${formPrefix}-sandbox` : 'banco-sandbox'}
                   disabled={isPending}
-                  formPrefix={formPrefix}
-                  switch={true}
                 />
               </div>
             </div>

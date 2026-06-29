@@ -1,11 +1,10 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FormValue } from 'types/common';
-import { useI18n } from 'contexts/I18nContext';
-import FormField from 'components/ui/FormField';
 import ContactFields from 'components/forms/ContactFields';
+import CentralAssinanteFields from 'components/forms/CentralAssinanteFields';
 import { ClienteTabProps } from '../types';
-import { AbrirCentralAssinanteButton } from 'components/ui';
+import { ComunicacaoPreferenciasField } from 'components/ui';
 import { DadosEmpresaService } from 'services/dadosEmpresaService';
 import { slugify } from 'utils/stringUtils';
 
@@ -13,10 +12,9 @@ const ContatoTab: React.FC<ClienteTabProps> = ({
   formData,
   errors,
   handleInputChange,
-  formPrefix
+  formPrefix,
+  isSubmitting,
 }) => {
-  const { t } = useI18n();
-
   const { data: empresaData } = useQuery({
     queryKey: ['dados-empresa-public'],
     queryFn: () => DadosEmpresaService.getPublic(),
@@ -43,50 +41,22 @@ const ContatoTab: React.FC<ClienteTabProps> = ({
         errors={errors as unknown as Record<string, string>}
       />
 
-      <h6 className="text-primary mb-2">{t('tabs.communicationPreferences')}</h6>
-
-      <FormField
-        name="recebe_email"
-        type="checkbox"
-        label={t('form.receivesEmail')}
-        value={formData.recebe_email}
-        onChange={(value: FormValue) => handleInputChange('recebe_email', value as boolean)}
-        switch
+      <ComunicacaoPreferenciasField
+        recebeEmail={formData.recebe_email}
+        recebeWhatsApp={formData.recebe_whatsapp}
+        onRecebeEmailChange={(value) => handleInputChange('recebe_email', value)}
+        onRecebeWhatsAppChange={(value) => handleInputChange('recebe_whatsapp', value)}
         formPrefix={formPrefix}
       />
 
-      <FormField
-        name="recebe_whatsapp"
-        type="checkbox"
-        label={t('form.receivesWhatsApp')}
-        value={formData.recebe_whatsapp}
-        onChange={(value: FormValue) => handleInputChange('recebe_whatsapp', value as boolean)}
-        switch
+      <CentralAssinanteFields
+        senha={formData.central_assinante_senha || ''}
+        onSenhaChange={(value) => handleInputChange('central_assinante_senha', value)}
+        centralUrl={centralUrl}
         formPrefix={formPrefix}
+        disabled={isSubmitting}
+        senhaError={errors.central_assinante_senha}
       />
-
-      <h6 className="text-primary mb-2 mt-2">Central do Assinante</h6>
-      <FormField
-        name="central_assinante_senha"
-        type="password"
-        label="Senha da Central do Assinante"
-        placeholder="Deixe em branco para não alterar"
-        value={formData.central_assinante_senha || ''}
-        onChange={(value: FormValue) => handleInputChange('central_assinante_senha', value as string)}
-        formPrefix={formPrefix}
-        helpText="Senha para acesso à central do assinante. Deixe em branco para não alterar."
-      />
-      <div className="form-modal-input-col mt-2">
-        <AbrirCentralAssinanteButton
-          type="button"
-          onClick={() => window.open(centralUrl, '_blank')}
-        />
-        <div className="small text-muted mt-2">
-          O cliente pode acessar a central do assinante em: <code>{centralUrl}</code>
-          <br />
-          Para fazer login, o cliente precisa usar o CNPJ ou Email (conforme configurado nos parâmetros do sistema) e a senha cadastrada acima.
-        </div>
-      </div>
     </div>
   );
 };

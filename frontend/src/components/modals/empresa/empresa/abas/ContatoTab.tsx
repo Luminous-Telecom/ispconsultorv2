@@ -19,7 +19,7 @@ const ContatoTab: React.FC<DadosEmpresaTabProps> = ({
   return (
     <div className="mb-0">
       <div className="row">
-        <div className="col-md-4">
+        <div className="col-12">
           <FormField
             name="telefone"
             type="tel"
@@ -31,7 +31,7 @@ const ContatoTab: React.FC<DadosEmpresaTabProps> = ({
             disabled={isPending}
           />
         </div>
-        <div className="col-md-4">
+        <div className="col-12">
           <FormField
             name="celular"
             type="tel"
@@ -43,7 +43,7 @@ const ContatoTab: React.FC<DadosEmpresaTabProps> = ({
             disabled={isPending}
           />
         </div>
-        <div className="col-md-4">
+        <div className="col-12">
           <FormField
             name="email"
             type="email"
@@ -59,7 +59,7 @@ const ContatoTab: React.FC<DadosEmpresaTabProps> = ({
       </div>
 
       <div className="row">
-        <div className="col-md-12">
+        <div className="col-12">
           <FormField
             name="site"
             type="url"

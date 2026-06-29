@@ -4,7 +4,6 @@ import { useNotificationContext } from 'components/notifications/NotificationPro
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { SaasSchedulerService, type CreateRotinaData, type UpdateRotinaData } from 'services/saas/saasSchedulerService';
-import { useIsMobile } from 'hooks/useMediaQuery';
 import { usePlanoModulos } from 'hooks/usePlanoModulos';
 import DraggableModal from 'components/common/DraggableModal';
 import { DeletarButton, FormField, Loading, ModalFormActions, NovoButton } from 'components/ui';
@@ -81,7 +80,6 @@ const emptyForm = (): CreateRotinaData => ({
 
 const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose, rotinaId = null, onSuccess }) => {
   const { t } = useI18n();
-  const isMobile = useIsMobile();
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
   const queryClient = useQueryClient();
@@ -259,11 +257,10 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
         id={formId}
         onSubmit={handleSubmit}
         className="form-modal-simple"
-        style={{ padding: isMobile ? '0' : '16px', paddingBottom: isMobile ? 0 : 24 }}
       >
         <div className="d-flex flex-column gap-2">
           <div className="row g-2">
-            <div className="col-12 col-md-6">
+            <div className="col-12">
               <FormField
                 name="alvo"
                 label={t('scheduler.scope')}
@@ -285,7 +282,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
                 options={ALVO_OPTIONS}
               />
             </div>
-            <div className="col-12 col-md-6">
+            <div className="col-12">
               <FormField
                 name="tipo"
                 label={t('scheduler.type')}

@@ -7,6 +7,7 @@ import { DiasVencimento } from 'services/diasVencimentoService';
 import { TipoCobrancaContrato } from 'services/tipoCobrancaContratoService';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import FormField from 'components/ui/FormField';
+import AtivoInativoField from 'components/ui/AtivoInativoField';
 import { LabelWithHelp } from 'components/ui/LabelWithHelp';
 import { ContratoForm } from '../types';
 
@@ -322,35 +323,21 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
       </div>
 
       {/* Data Validade Desconto e Isento Mensalidade lado a lado */}
-      <div className="d-flex gap-2 align-items-end">
-        <div className="flex-fill">
-          <FormField
-            name="data_validade_desconto"
-            type="date"
-            label={t('form.discountValidity')}
-            size="md"
-            value={formData.data_validade_desconto}
-            onChange={(value) => handleInputChange('data_validade_desconto', value as string)}
-          />
-        </div>
-        <div className="flex-fill">
-          <div className="form-check form-switch">
-            <input
-              className="form-check-input"
-              type="checkbox"
-              role="switch"
-              id="isento_mensalidade"
-              name="isento_mensalidade"
-              checked={formData.isento_mensalidade}
-              onChange={(e) => handleInputChange('isento_mensalidade', e.target.checked)}
-              style={{ cursor: 'pointer' }}
-            />
-            <label className="form-check-label" htmlFor="isento_mensalidade" style={{ cursor: 'pointer' }}>
-              {t('form.exemptFromMonthlyFee')}
-            </label>
-          </div>
-        </div>
-      </div>
+      <FormField
+        name="data_validade_desconto"
+        type="date"
+        label={t('form.discountValidity')}
+        size="md"
+        value={formData.data_validade_desconto}
+        onChange={(value) => handleInputChange('data_validade_desconto', value as string)}
+      />
+
+      <AtivoInativoField
+        value={!!formData.isento_mensalidade}
+        onChange={(v) => handleInputChange('isento_mensalidade', v)}
+        label={t('form.exemptFromMonthlyFee')}
+        name="isento_mensalidade"
+      />
 
       {/* Modelo de Contrato */}
       <EntitySelectField

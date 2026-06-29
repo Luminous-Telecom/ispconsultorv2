@@ -15,7 +15,7 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
   return (
     <>
       <div className="row">
-        <div className="col-md-12">
+        <div className="col-12">
           <div className="mb-0">
             <FormField
               name="nome"
@@ -37,7 +37,7 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
       </div>
 
       <div className="row g-2">
-        <div className="col-md-6">
+        <div className="col-12">
           <div className="mb-0">
             <FormField
               name="tipo_banco"
@@ -57,7 +57,7 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
           </div>
         </div>
 
-        <div className="col-md-6">
+        <div className="col-12">
           <div className="mb-0">
             <AtivoInativoField
               value={formData.ativo}

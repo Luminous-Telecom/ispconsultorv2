@@ -23,7 +23,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
         }
       >
           <div className="row g-2">
-            <div className="col-md-6">
+            <div className="col-12">
               <FormField
                 name="host"
                 type="text"
@@ -35,7 +35,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                 onChange={(value) => onChange('host', String(value ?? ''))}
               />
             </div>
-            <div className="col-md-6">
+            <div className="col-12">
               <FormField
                 name="porta"
                 type="number"
@@ -50,7 +50,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
           </div>
           
           <div className="row g-2">
-            <div className="col-md-6">
+            <div className="col-12">
               <FormField
                 name="usuario"
                 type="email"
@@ -63,7 +63,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                 autoComplete="username"
               />
             </div>
-            <div className="col-md-6">
+            <div className="col-12">
               <FormField
                 name="senha"
                 type="password"
@@ -80,7 +80,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
           </div>
 
           <div className="row g-2">
-            <div className="col-md-6">
+            <div className="col-12">
               <FormField
                 name="nome_remetente"
                 type="text"
@@ -92,7 +92,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                 onChange={(value) => onChange('nome_remetente', String(value ?? ''))}
               />
             </div>
-            <div className="col-md-6">
+            <div className="col-12">
               <FormField
                 name="email_remetente"
                 type="email"
@@ -107,23 +107,30 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
           </div>
           
           <div className="row g-2">
-            <div className="col-md-4">
-              <Checkbox
-                name="ssl"
-                label={t('emailServer.useSsl')}
-                checked={formData.ssl}
-                onChange={(e) => onChange('ssl', e.value)}
-              />
+            <div className="col-12">
+              <div className="form-field">
+                <label className="form-label small">{t('emailServer.security')}</label>
+                <div className="form-field-control">
+                  <div className="d-flex flex-wrap gap-3 align-items-center">
+                    <Checkbox
+                      inline
+                      name="ssl"
+                      label={t('emailServer.useSsl')}
+                      checked={formData.ssl}
+                      onChange={(e) => onChange('ssl', e.value)}
+                    />
+                    <Checkbox
+                      inline
+                      name="tls"
+                      label={t('emailServer.useTls')}
+                      checked={formData.tls}
+                      onChange={(e) => onChange('tls', e.value)}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="col-md-4">
-              <Checkbox
-                name="tls"
-                label={t('emailServer.useTls')}
-                checked={formData.tls}
-                onChange={(e) => onChange('tls', e.value)}
-              />
-            </div>
-            <div className="col-md-4">
+            <div className="col-12">
               <FormField
                 name="timeout"
                 type="number"

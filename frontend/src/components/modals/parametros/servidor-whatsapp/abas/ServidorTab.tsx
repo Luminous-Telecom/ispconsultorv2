@@ -162,7 +162,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
               {t('settings.test.title')}
             </small>
             <div className="row g-2">
-              <div className="col-md-6">
+              <div className="col-12">
                 <FormField
                   name="testPhone"
                   type="text"
@@ -174,7 +174,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                   helpText={t('settings.test.helper')}
                 />
               </div>
-              <div className="col-md-6">
+              <div className="col-12">
                 <FormField
                   name="testMessage"
                   type="text"

@@ -25,7 +25,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
   return (
     <>
       <div className="row g-2">
-        <div className="col-md-6">
+        <div className="col-12">
           <div className="mb-0">
             <FormField
               name="nome_plano"
@@ -46,7 +46,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
           </div>
         </div>
 
-        <div className="col-md-6">
+        <div className="col-12">
           <div className="mb-0">
             <FormField
               name="tipo_servico"
@@ -86,7 +86,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
       </div>
 
       <div className="row g-2">
-        <div className="col-md-6">
+        <div className="col-12">
           <div className="mb-0">
             <FormField
               name="valor_mensal"
@@ -109,7 +109,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
           </div>
         </div>
 
-        <div className="col-md-6">
+        <div className="col-12">
           <div className="mb-0">
             <FormField
               name="quantidade_usuarios"
@@ -130,7 +130,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
       </div>
 
       <div className="row g-2">
-        <div className="col-md-6">
+        <div className="col-12">
           <div className="mb-0">
             <FormField
               name="data_inicio"
@@ -150,7 +150,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
           </div>
         </div>
 
-        <div className="col-md-6">
+        <div className="col-12">
           <div className="mb-0">
             <FormField
               name="data_fim"
@@ -169,7 +169,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
       </div>
 
       <div className="row g-2">
-        <div className="col-md-6">
+        <div className="col-12">
           <div className="mb-0">
             <AtivoInativoField
               value={formData.status === 'ativo'}
@@ -179,15 +179,12 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
           </div>
         </div>
 
-        <div className="col-md-6">
+        <div className="col-12">
           <div className="mb-0">
-            <FormField
-              name="renovacao_automatica"
-              type="checkbox"
-              label={t('form.autoRenewal')}
+            <AtivoInativoField
               value={formData.renovacao_automatica}
-              onChange={(value: FormValue) => handleInputChange('renovacao_automatica', !!value)}
-              switch
+              onChange={(v) => handleInputChange('renovacao_automatica', v)}
+              label={t('form.autoRenewal')}
               disabled={isSubmitting}
             />
           </div>

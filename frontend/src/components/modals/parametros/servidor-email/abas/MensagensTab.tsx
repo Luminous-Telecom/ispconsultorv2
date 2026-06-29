@@ -23,10 +23,10 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
   return (
     <div>
       <div className="row g-0 mb-0">
-        <div className="col-md-6">
+        <div className="col-12">
           <MensagemTypeSelect value={mensagemType} onChange={onMensagemTypeChange} />
         </div>
-        <div className="col-md-6">
+        <div className="col-12">
           {mensagemType && (
             <MensagemTipoEnvioRadio
               idPrefix="email"

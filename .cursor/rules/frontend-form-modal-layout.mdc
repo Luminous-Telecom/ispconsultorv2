@@ -1,0 +1,86 @@
+---
+description: Layout horizontal de formulários em modais (label à esquerda, input alinhado)
+globs: frontend/src/components/modals/**/*.tsx,frontend/src/components/forms/**/*.tsx,frontend/src/components/ui/FormField.tsx,frontend/src/components/ui/AtivoInativoField.tsx,frontend/src/components/ui/ComunicacaoPreferenciasField.tsx
+alwaysApply: false
+---
+
+# Formulários em modais — layout horizontal
+
+Padrão estilo IXC/Login: **label à direita na coluna fixa**, **controles alinhados**, **uma linha por campo**.
+
+## CSS (já aplicado)
+
+- Abas com `*-tab-content-padded` e forms `form-modal-simple` usam mixin `form-modal-tab-padding`
+- Variáveis em `_variables.scss`: `--form-label-width`, `--form-input-max-width`, `--form-block-padding-left`
+- Classe `.form-field` → label + `.form-field-control`
+
+## Estrutura obrigatória
+
+```tsx
+// ✅ Um campo por linha
+<div className="row g-2">
+  <div className="col-12">
+    <FormField name="email" type="email" label={t('form.email')} ... />
+  </div>
+</div>
+
+// ❌ Não usar col-md-6/4 em modais (quebra o alinhamento vertical)
+<div className="col-md-6"><FormField ... /></div>
+```
+
+- **`col-12`** em todos os campos de modal (inclui `AddressFields`, `ContactFields`)
+- Formulário simples no modal: `className="form-modal-simple"` no `<form>`
+- Seções (h6, botões auxiliares): `form-modal-input-col` para alinhar à coluna dos inputs
+
+## Booleanos — Sim/Não inline
+
+```tsx
+// ✅ Ativo/inativo ou qualquer sim-não
+<AtivoInativoField
+  value={form.ativo}
+  onChange={(v) => onChange('ativo', v)}
+  label={t('form.autoRenewal')}  // label customizado quando necessário
+/>
+
+// ❌ Switch em modais
+<FormField type="checkbox" switch ... />
+<div className="form-check form-switch">...</div>
+```
+
+## Múltiplas opções na mesma linha
+
+```tsx
+// ✅ Várias flags independentes (ex.: Email + WhatsApp)
+<ComunicacaoPreferenciasField
+  recebeEmail={form.recebe_email}
+  recebeWhatsApp={form.recebe_whatsapp}
+  onRecebeEmailChange={...}
+  onRecebeWhatsAppChange={...}
+/>
+
+// ✅ Radios inline (ex.: tipo pessoa)
+<div className="form-field">
+  <label className="form-label small">{label}<RequiredMark /></label>
+  <div className="form-field-control">
+    <div className="d-flex flex-wrap gap-3">
+      <div className="form-check form-check-inline">...</div>
+    </div>
+  </div>
+</div>
+```
+
+## Componentes a usar
+
+| Caso | Componente |
+|------|------------|
+| Campo padrão | `FormField` |
+| Ativo/Inativo ou Sim/Não | `AtivoInativoField` |
+| Preferências de comunicação | `ComunicacaoPreferenciasField` |
+| Entidade com busca | `EntitySelectField` |
+
+Novos campos inline reutilizáveis: copiar estrutura de `AtivoInativoField` ou `ComunicacaoPreferenciasField` — não duplicar CSS.
+
+## Exceções (não forçar col-12)
+
+- Grids especiais (dias de vencimento, templates Meta, filtros de tabela)
+- Dashboard e layouts de detalhe somente leitura (`DetailFieldGrid`)

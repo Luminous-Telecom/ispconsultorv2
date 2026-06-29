@@ -36,6 +36,7 @@ alwaysApply: false
 ## Formulários
 - Valide campos obrigatórios antes do submit
 - Use `FormField` / blocos em `components/forms/` em vez de `form-control` cru
+- **Modais**: layout horizontal — `col-12`, `AtivoInativoField` para booleanos, sem `switch` (ver `frontend-form-modal-layout.mdc`)
 - Campos obrigatórios: `required` no `FormField` ou `LabelWithHelp` (asterisco vermelho)
 - NÃO duplique `<span className="text-danger">*</span>` — use `LabelWithHelp required` ou `FormField required`
 - Use estado `errors` para armazenar erros por campo

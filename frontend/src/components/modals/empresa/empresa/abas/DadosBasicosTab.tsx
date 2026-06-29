@@ -24,7 +24,7 @@ const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: Fi
   return (
     <div className="mb-0">
       <div className="row">
-        <div className="col-md-6">
+        <div className="col-12">
           <FormField
             name="razao_social"
             type="text"
@@ -37,7 +37,7 @@ const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: Fi
             disabled={isPending}
           />
         </div>
-        <div className="col-md-6">
+        <div className="col-12">
           <FormField
             name="nome_fantasia"
             type="text"
@@ -52,7 +52,7 @@ const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: Fi
       </div>
 
       <div className="row">
-        <div className="col-md-4">
+        <div className="col-12">
           <FormField
             name="cnpj"
             type="text"
@@ -65,7 +65,7 @@ const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: Fi
             disabled={isPending}
           />
         </div>
-        <div className="col-md-4">
+        <div className="col-12">
           <FormField
             name="inscricao_estadual"
             type="text"
@@ -77,7 +77,7 @@ const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: Fi
             disabled={isPending}
           />
         </div>
-        <div className="col-md-4">
+        <div className="col-12">
           <FormField
             name="inscricao_municipal"
             type="text"
@@ -93,7 +93,7 @@ const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: Fi
 
       {/* Logo da Empresa */}
       <div className="row mt-4 pt-3 border-top">
-        <div className="col-md-12">
+        <div className="col-12">
           <label htmlFor="logo" className="form-label small fw-bold">{t('company.logo')}</label>
           <div className="d-flex align-items-start gap-3">
             <div style={{ minWidth: '200px' }}>

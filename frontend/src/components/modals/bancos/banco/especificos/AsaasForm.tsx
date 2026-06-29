@@ -1,7 +1,7 @@
 import React from 'react';
 import { FormValue } from 'types/common';
 import FormField from 'components/ui/FormField';
-import { CopiarButton, GerarTokenButton } from 'components/ui';
+import { AtivoInativoField, CopiarButton, GerarTokenButton } from 'components/ui';
 import { BancoForm } from '../types';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -31,7 +31,7 @@ const AsaasForm: React.FC<AsaasFormProps> = ({
   return (
     <>
       <div className="row">
-        <div className="col-md-12">
+        <div className="col-12">
           <div className="mb-3">
             <FormField
               name="api_key"
@@ -51,7 +51,7 @@ const AsaasForm: React.FC<AsaasFormProps> = ({
       </div>
 
       <div className="row">
-        <div className="col-md-12">
+        <div className="col-12">
           <div className="mb-3">
             <FormField
               name="webhook_secret"
@@ -82,7 +82,7 @@ const AsaasForm: React.FC<AsaasFormProps> = ({
       </div>
 
       <div className="row">
-        <div className="col-md-6">
+        <div className="col-12">
           <div className="mb-3">
             <FormField
               name="percentual_multa"
@@ -97,7 +97,7 @@ const AsaasForm: React.FC<AsaasFormProps> = ({
             />
           </div>
         </div>
-        <div className="col-md-6">
+        <div className="col-12">
           <div className="mb-3">
             <FormField
               name="percentual_juros"
@@ -115,17 +115,14 @@ const AsaasForm: React.FC<AsaasFormProps> = ({
       </div>
 
       <div className="row">
-        <div className="col-md-6">
+        <div className="col-12">
           <div className="mt-4">
-            <FormField
-              name="incluir_taxa"
-              type="checkbox"
+            <AtivoInativoField
+              value={!!formData.incluir_taxa}
+              onChange={(v) => handleInputChange('incluir_taxa', v)}
               label={t('form.includeFee')}
-              value={formData.incluir_taxa}
-              onChange={(value) => handleInputChange('incluir_taxa', value)}
+              name={formPrefix ? `${formPrefix}-incluir-taxa` : 'banco-incluir-taxa'}
               disabled={isPending}
-              formPrefix={formPrefix}
-              switch={true}
             />
           </div>
         </div>

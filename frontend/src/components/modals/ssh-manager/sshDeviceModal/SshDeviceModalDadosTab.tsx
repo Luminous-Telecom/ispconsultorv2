@@ -109,7 +109,7 @@ const SshDeviceModalDadosTab: React.FC<SshDeviceModalDadosTabProps> = ({
           helpText="Deixe vazio para conexão SSH direta ao host."
         />
       </div>
-      <div className="col-12 col-md-8">
+      <div className="col-12">
         <FormField
           name="name"
           type="text"
@@ -122,14 +122,14 @@ const SshDeviceModalDadosTab: React.FC<SshDeviceModalDadosTabProps> = ({
           placeholder="Ex: Router Matriz"
         />
       </div>
-      <div className="col-12 col-md-4">
+      <div className="col-12">
         <AtivoInativoField
           value={!!formData.is_active}
           onChange={(v) => onFieldChange('is_active')(v)}
           name="ssh-device-is-active"
         />
       </div>
-      <div className="col-12 col-md-6">
+      <div className="col-12">
         <label className="form-label form-label-sm fw-semibold">Tipo de dispositivo</label>
         <select
           className="form-select form-select-sm"
@@ -143,7 +143,7 @@ const SshDeviceModalDadosTab: React.FC<SshDeviceModalDadosTabProps> = ({
           ))}
         </select>
       </div>
-      <div className="col-12 col-md-8">
+      <div className="col-12">
         <FormField
           name="host"
           type="text"
@@ -156,7 +156,7 @@ const SshDeviceModalDadosTab: React.FC<SshDeviceModalDadosTabProps> = ({
           placeholder="Ex: 192.168.1.1"
         />
       </div>
-      <div className="col-12 col-md-4">
+      <div className="col-12">
         <FormField
           name="port"
           type="number"
@@ -168,7 +168,7 @@ const SshDeviceModalDadosTab: React.FC<SshDeviceModalDadosTabProps> = ({
           size="sm"
         />
       </div>
-      <div className="col-12 col-md-6">
+      <div className="col-12">
         <FormField
           name="username"
           type="text"
@@ -181,7 +181,7 @@ const SshDeviceModalDadosTab: React.FC<SshDeviceModalDadosTabProps> = ({
           placeholder="Ex: admin"
         />
       </div>
-      <div className="col-12 col-md-6">
+      <div className="col-12">
         <FormField
           name="password"
           type="password"
@@ -225,22 +225,15 @@ const SshDeviceModalDadosTab: React.FC<SshDeviceModalDadosTabProps> = ({
         />
       </div>
       <div className="col-12">
-        <div className="d-flex align-items-center gap-1 flex-wrap">
-          <div className="form-check form-switch mb-0">
-            <input
-              className="form-check-input"
-              type="checkbox"
-              role="switch"
-              id="dev-backup-enabled"
-              checked={formData.backup_enabled}
-              onChange={(e) => onFieldChange('backup_enabled')(e.target.checked)}
-            />
-            <label className="form-check-label" htmlFor="dev-backup-enabled">
-              {t('sshDevice.backupEnabled')}
-              {renderBackupAgendamentoHint(agendamentoBackup, t)}
-            </label>
-          </div>
+        <AtivoInativoField
+          value={formData.backup_enabled}
+          onChange={(v) => onFieldChange('backup_enabled')(v)}
+          label={t('sshDevice.backupEnabled')}
+          name="dev-backup-enabled"
+        />
+        <div className="form-modal-input-col d-flex align-items-center gap-1 flex-wrap small text-muted">
           <LabelWithHelp as="span" helpText={t('sshDevice.backupEnabledHint')} helpIconClassName="ms-0" />
+          {renderBackupAgendamentoHint(agendamentoBackup, t)}
         </div>
       </div>
     </div>

@@ -175,17 +175,6 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
   );
 };
 
-const getColumnClass = (fieldName: string): string => {
-  // CEP e Estado em colunas menores
-  if (fieldName.includes('cep') || fieldName.includes('estado')) {
-    return 'col-md-3';
-  }
-  // Número e Complemento em colunas menores
-  if (fieldName.includes('numero') || fieldName.includes('complemento')) {
-    return 'col-md-3';
-  }
-  // Endereço, Bairro e Cidade ocupam mais espaço
-  return 'col-md-6';
-};
+const getColumnClass = (_fieldName: string): string => 'col-12';
 
 export default AddressFields;

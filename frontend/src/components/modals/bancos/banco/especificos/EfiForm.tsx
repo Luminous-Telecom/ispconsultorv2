@@ -16,7 +16,7 @@ const EfiForm: React.FC<EfiFormProps> = ({ formData, isPending, handleInputChang
   return (
     <>
       <div className="row">
-        <div className="col-md-12">
+        <div className="col-12">
           <div className="mb-3">
             <FormField
               name="identificador_conta"
@@ -36,7 +36,7 @@ const EfiForm: React.FC<EfiFormProps> = ({ formData, isPending, handleInputChang
       </div>
 
       <div className="row">
-        <div className="col-md-6">
+        <div className="col-12">
           <div className="mb-3">
             <FormField
               name="percentual_multa"
@@ -52,7 +52,7 @@ const EfiForm: React.FC<EfiFormProps> = ({ formData, isPending, handleInputChang
           </div>
         </div>
 
-        <div className="col-md-6">
+        <div className="col-12">
           <div className="mb-3">
             <FormField
               name="percentual_juros"
@@ -70,7 +70,7 @@ const EfiForm: React.FC<EfiFormProps> = ({ formData, isPending, handleInputChang
       </div>
 
       <div className="row">
-        <div className="col-md-12">
+        <div className="col-12">
           <div className="mb-3">
             <FormField
               name="local_pagamento"

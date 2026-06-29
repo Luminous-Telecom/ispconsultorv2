@@ -31,7 +31,7 @@ const SaasTituloFormFields: React.FC<SaasTituloFormFieldsProps> = ({
 
   return (
     <div className="row g-2">
-      <div className="col-md-12">
+      <div className="col-12">
         <FormField
           name="plano_id"
           type="select"
@@ -45,7 +45,7 @@ const SaasTituloFormFields: React.FC<SaasTituloFormFieldsProps> = ({
           disabled={disabled}
         />
       </div>
-      <div className="col-md-12">
+      <div className="col-12">
         <FormField
           name="banco_id"
           type="select"
@@ -59,7 +59,7 @@ const SaasTituloFormFields: React.FC<SaasTituloFormFieldsProps> = ({
           disabled={disabled}
         />
       </div>
-      <div className="col-md-6">
+      <div className="col-12">
         <FormField
           name="valor"
           type="number"
@@ -74,7 +74,7 @@ const SaasTituloFormFields: React.FC<SaasTituloFormFieldsProps> = ({
           disabled={disabled}
         />
       </div>
-      <div className="col-md-6">
+      <div className="col-12">
         <FormField
           name="data_vencimento"
           type="date"
@@ -87,7 +87,7 @@ const SaasTituloFormFields: React.FC<SaasTituloFormFieldsProps> = ({
           disabled={disabled}
         />
       </div>
-      <div className="col-md-12">
+      <div className="col-12">
         <FormField
           name="descricao"
           type="text"

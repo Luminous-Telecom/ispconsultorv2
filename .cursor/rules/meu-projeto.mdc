@@ -48,3 +48,4 @@ Use sempre os primitivos do projeto em vez de reinventar UI. Detalhes em `.curso
 | Botões de ação | `components/ui/buttons` + `ModalFormActions` | botões HTML crus com spinner |
 | Modais | `DraggableModal`, `ListModal` | modais Bootstrap/dialog custom |
 | Erros de API | `showApiError(err, CONTEXT_ERROR_MESSAGES.*)` | parse manual de `response.data` |
+| Layout de form em modal | `FormField` + `col-12` + `AtivoInativoField` | `col-md-6`, `switch`, switches HTML |
