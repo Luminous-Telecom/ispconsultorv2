@@ -1,5 +1,11 @@
 /* Variáveis CSS para temas */
 :root {
+  /* Tipografia — mesma stack do menu lateral (fonte nativa do SO) */
+  --font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Helvetica Neue', sans-serif;
+  --font-family-mono: ui-monospace, 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono',
+    'Courier New', monospace;
+
   /* Border radius, transições e font sizes (comuns aos temas) */
   --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);

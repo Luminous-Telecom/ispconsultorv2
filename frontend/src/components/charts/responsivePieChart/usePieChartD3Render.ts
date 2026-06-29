@@ -4,6 +4,7 @@ import * as d3Shape from 'd3-shape';
 import * as d3Ease from 'd3-ease';
 import * as d3Interpolate from 'd3-interpolate';
 import { ChartDataItem } from '../types';
+import { FONT_FAMILY_BASE } from 'constants/typography';
 import {
   hideFloatingChartTooltip,
   moveFloatingChartTooltip,
@@ -203,7 +204,7 @@ export function usePieChartD3Render({
         .attr('fill', centerLabel.color)
         .attr('font-weight', '500')
         .attr('font-size', `${fontPx}px`)
-        .attr('font-family', 'system-ui, -apple-system, sans-serif')
+        .attr('font-family', FONT_FAMILY_BASE)
         .attr('letter-spacing', '0.02em')
         .style('pointer-events', 'none')
         .text(centerLabel.text);

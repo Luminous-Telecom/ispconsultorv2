@@ -9,6 +9,7 @@ import { ApiResponse } from 'types/api';
 import { API_CONFIG } from 'config/api';
 import { useI18n } from 'contexts/I18nContext';
 import { waitForBackendHealth } from 'utils/healthCheck';
+import { FONT_FAMILY_MONO } from 'constants/typography';
 
 interface Atualizacao {
   versao: string;
@@ -350,7 +351,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
                     padding: '0.5rem', 
                     borderRadius: '0.25rem', 
                     fontSize: '0.7rem', 
-                    fontFamily: 'monospace',
+                    fontFamily: FONT_FAMILY_MONO,
                     border: '1px solid var(--border-color)'
                   }}>
                     {updateLogs.map((log, index) => (

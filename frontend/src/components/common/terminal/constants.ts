@@ -1,4 +1,5 @@
 import type { ITerminalOptions } from '@xterm/xterm';
+import { FONT_FAMILY_MONO } from 'constants/typography';
 
 export const TERMINAL_INIT_DELAY_MS = 200;
 
@@ -31,7 +32,7 @@ export const XTERM_OPTIONS: ITerminalOptions = {
   allowTransparency: false,
   cursorBlink: true,
   fontSize: 14,
-  fontFamily: '"JetBrains Mono", "Fira Code", "Cascadia Code", monospace',
+  fontFamily: FONT_FAMILY_MONO,
   convertEol: true,
   scrollback: 5000,
   theme: XTERM_THEME,

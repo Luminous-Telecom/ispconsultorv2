@@ -1,12 +1,4 @@
-/* Apenas no site — não sobrescreve sistema (Login, /adm, /saas) */
-body[data-app="site"],
-body:not([data-app]) {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-}
-
+/* Herda --font-family-base do body; code usa mono centralizada */
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: var(--font-family-mono);
 }

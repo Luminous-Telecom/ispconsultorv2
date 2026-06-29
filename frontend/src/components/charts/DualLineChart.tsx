@@ -5,6 +5,7 @@ import { ChartEmptyState } from './ChartEmptyState';
 import { ChartTitleWithInfo } from './ChartTitleWithInfo';
 import { useI18n } from 'contexts/I18nContext';
 import { clampTooltipNearPoint, createD3ChartTooltipShell } from './chartTooltip';
+import { FONT_FAMILY_BASE } from 'constants/typography';
 
 interface DualChartDataItem extends ChartDataItem {
   receber: number;
@@ -136,7 +137,7 @@ d3
       .call(yAxis)
       .selectAll('text')
       .attr('font-size', '10px')
-      .attr('font-family', 'system-ui, -apple-system, sans-serif')
+      .attr('font-family', FONT_FAMILY_BASE)
       .attr('fill', textColor);
     g.select('.y-axis .domain').attr('stroke', 'none');
     g.selectAll('.y-axis .tick line').attr('stroke', gridColor).attr('x2', chartWidth);
@@ -219,7 +220,7 @@ d3
         .append('text')
         .attr('font-size', '10px')
         .attr('font-weight', '700')
-        .attr('font-family', 'system-ui, -apple-system, sans-serif')
+        .attr('font-family', FONT_FAMILY_BASE)
         .attr('fill', color)
         .attr('dominant-baseline', 'central')
         .attr('text-anchor', 'middle')
@@ -271,7 +272,7 @@ d3
           .attr('text-anchor', 'middle')
           .attr('dominant-baseline', 'central')
           .attr('font-size', '11px')
-          .attr('font-family', 'system-ui, -apple-system, sans-serif')
+          .attr('font-family', FONT_FAMILY_BASE)
           .attr('fill', textColor)
           .attr('transform', 'rotate(-45, 0, 28)')
           .text(d.name);
@@ -326,7 +327,7 @@ d3
       .attr('y', legendY)
       .attr('dy', '0.35em')
       .attr('font-size', '10px')
-      .attr('font-family', 'system-ui, -apple-system, sans-serif')
+      .attr('font-family', FONT_FAMILY_BASE)
       .attr('fill', textColor)
       .text(t('financial.toReceive').toUpperCase());
 
@@ -344,7 +345,7 @@ d3
       .attr('y', legendY)
       .attr('dy', '0.35em')
       .attr('font-size', '10px')
-      .attr('font-family', 'system-ui, -apple-system, sans-serif')
+      .attr('font-family', FONT_FAMILY_BASE)
       .attr('fill', textColor)
       .text(t('financial.toPayLabel').toUpperCase());
 
@@ -352,13 +353,13 @@ d3
     if (!tooltip) return;
 
     const { content: tooltipContent } = tooltip;
-    tooltipContent.append('text').attr('class', 'tooltip-label').attr('font-family', 'system-ui, -apple-system, sans-serif').attr('font-size', '10px').attr('font-weight', '500').attr('fill', 'var(--text-muted)').attr('y', 0);
+    tooltipContent.append('text').attr('class', 'tooltip-label').attr('font-family', FONT_FAMILY_BASE).attr('font-size', '10px').attr('font-weight', '500').attr('fill', 'var(--text-muted)').attr('y', 0);
     const receberRow = tooltipContent.append('g').attr('transform', 'translate(0,14)');
     receberRow.append('rect').attr('x', 0).attr('y', -5).attr('width', 6).attr('height', 6).attr('rx', 1).attr('fill', 'var(--chart-color-2)');
-    receberRow.append('text').attr('class', 'tooltip-receber').attr('font-family', 'system-ui, -apple-system, sans-serif').attr('font-size', '10px').attr('font-weight', '600').attr('fill', 'var(--text-primary)').attr('x', 12).attr('y', 0);
+    receberRow.append('text').attr('class', 'tooltip-receber').attr('font-family', FONT_FAMILY_BASE).attr('font-size', '10px').attr('font-weight', '600').attr('fill', 'var(--text-primary)').attr('x', 12).attr('y', 0);
     const pagarRow = tooltipContent.append('g').attr('transform', 'translate(0,28)');
     pagarRow.append('rect').attr('x', 0).attr('y', -5).attr('width', 6).attr('height', 6).attr('rx', 1).attr('fill', 'var(--chart-color-4)');
-    pagarRow.append('text').attr('class', 'tooltip-pagar').attr('font-family', 'system-ui, -apple-system, sans-serif').attr('font-size', '10px').attr('font-weight', '600').attr('fill', 'var(--text-primary)').attr('x', 12).attr('y', 0);
+    pagarRow.append('text').attr('class', 'tooltip-pagar').attr('font-family', FONT_FAMILY_BASE).attr('font-size', '10px').attr('font-weight', '600').attr('fill', 'var(--text-primary)').attr('x', 12).attr('y', 0);
 
     const container = containerRef.current;
     if (!container) return;

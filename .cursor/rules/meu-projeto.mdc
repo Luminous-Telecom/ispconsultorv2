@@ -51,3 +51,8 @@ Use sempre os primitivos do projeto em vez de reinventar UI. Detalhes em `.curso
 | Erros de API | `showApiError(err, CONTEXT_ERROR_MESSAGES.*)` | parse manual de `response.data` |
 | Layout de form em modal | `FormField` + `col-12` + `AtivoInativoField` | `col-md-6`, `switch`, switches HTML |
 | Filtro on/off em tabela | `TableFilterCheckbox` | `form-switch`, select sim/não |
+
+## Tipografia
+- Fonte padrão = stack nativa do SO (menu lateral): `var(--font-family-base)` / `FONT_FAMILY_BASE`
+- Mono (terminal, logs, código): `var(--font-family-mono)` / `FONT_FAMILY_MONO`
+- Detalhes em `.cursor/rules/frontend-tipografia.mdc` — **não** usar Inter, Poppins ou Google Fonts

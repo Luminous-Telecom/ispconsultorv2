@@ -4883,7 +4883,7 @@ input[type="week"]::-moz-calendar-picker-indicator {
   padding: 0.25rem 0.5rem;
   background: rgba(0, 0, 0, 0.15);
   border-bottom: 1px solid var(--border-color);
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-family: var(--font-family-mono);
   font-size: var(--font-size-xs);
   color: var(--text-muted);
 }
@@ -4905,7 +4905,7 @@ input[type="week"]::-moz-calendar-picker-indicator {
   width: 100%;
   min-height: 140px;
   padding: 0.25rem 0.5rem;
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-family: var(--font-family-mono);
   font-size: var(--font-size-sm);
   line-height: 1.6;
   background: transparent;
@@ -5027,7 +5027,7 @@ input[type="week"]::-moz-calendar-picker-indicator {
   align-items: center;
   padding: 4px 10px;
   font-size: var(--font-size-xs);
-  font-family: 'SF Mono', 'Monaco', monospace;
+  font-family: var(--font-family-mono);
   background: var(--ilb-accent);
   color: var(--text-primary);
   border-radius: var(--border-radius);

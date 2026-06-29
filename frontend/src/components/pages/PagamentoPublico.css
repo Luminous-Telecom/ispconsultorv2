@@ -6,7 +6,7 @@
   align-items: center;
   justify-content: center;
   color: #e2e8f0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--font-family-base);
 }
 
 .pagamento-publico-card {
@@ -224,7 +224,7 @@
 }
 
 .pagamento-publico-code-text {
-  font-family: 'Courier New', monospace;
+  font-family: var(--font-family-mono);
   font-size: 11px;
   color: #e2e8f0;
   word-break: break-all;

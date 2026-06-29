@@ -1,6 +1,6 @@
 import { DadosEmpresaService } from '../../sistema/DadosEmpresaService';
 import { converterLogoParaBase64 } from '../../../controllers/titulos/TituloHelpers';
-import { formatDate } from '../../../utils/dateUtils';
+import { FONT_FAMILY_BASE } from '../../../constants/typography';
 
 export class AuditoriaPDFService {
   /**
@@ -149,7 +149,7 @@ export class AuditoriaPDFService {
   <title>Relatórios de logs</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: ${FONT_FAMILY_BASE};
       font-size: 10pt !important;
       margin: 0;
       padding: 10px;

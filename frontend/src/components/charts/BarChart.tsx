@@ -4,6 +4,7 @@ import { ChartDataItem, ChartFormat } from './types';
 import { ChartEmptyState } from './ChartEmptyState';
 import { ChartTitleWithInfo } from './ChartTitleWithInfo';
 import { createD3ChartTooltip } from './chartTooltip';
+import { FONT_FAMILY_BASE } from 'constants/typography';
 
 interface BarChartProps {
   data: ChartDataItem[];
@@ -70,7 +71,7 @@ const BarChart: React.FC<BarChartProps> = memo(({ data, title, titleInfo, format
     const tempSvg = d3.select(svg);
     const testText = tempSvg.append('text')
       .attr('font-size', '10px')
-      .attr('font-family', 'system-ui, -apple-system, sans-serif')
+      .attr('font-family', FONT_FAMILY_BASE)
       .attr('visibility', 'hidden');
 
     let maxLabelWidth = 0;
@@ -120,7 +121,7 @@ const BarChart: React.FC<BarChartProps> = memo(({ data, title, titleInfo, format
     xAxisG.selectAll('.tick text')
       .attr('fill', textColor)
       .attr('font-size', '9px')
-      .attr('font-family', 'system-ui, -apple-system, sans-serif');
+      .attr('font-family', FONT_FAMILY_BASE);
 
     // Barras
     const barGroups = g
@@ -150,7 +151,7 @@ const BarChart: React.FC<BarChartProps> = memo(({ data, title, titleInfo, format
         .attr('dy', '0.35em')
         .attr('text-anchor', insideBar ? 'end' : 'start')
         .attr('font-size', '10px').attr('font-weight', '700')
-        .attr('font-family', 'system-ui, -apple-system, sans-serif')
+        .attr('font-family', FONT_FAMILY_BASE)
         .attr('fill', insideBar ? '#fff' : 'var(--text-secondary)')
         .text(valueText);
 
@@ -159,7 +160,7 @@ const BarChart: React.FC<BarChartProps> = memo(({ data, title, titleInfo, format
         .attr('x', -8).attr('y', y + barHeight / 2)
         .attr('dy', '0.35em').attr('text-anchor', 'end')
         .attr('font-size', '10px')
-        .attr('font-family', 'system-ui, -apple-system, sans-serif')
+        .attr('font-family', FONT_FAMILY_BASE)
         .attr('fill', 'var(--text-primary)')
         .text(d.label);
     });

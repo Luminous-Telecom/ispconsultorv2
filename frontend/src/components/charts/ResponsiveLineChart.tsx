@@ -4,6 +4,7 @@ import { LineChartProps } from './types';
 import { ChartEmptyState } from './ChartEmptyState';
 import { ChartTitleWithInfo } from './ChartTitleWithInfo';
 import { clampTooltipNearPoint, createD3ChartTooltip } from './chartTooltip';
+import { FONT_FAMILY_BASE } from 'constants/typography';
 
 const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, titleInfo, format = 'number', onPointClick }) => {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -119,7 +120,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, title
       .call(yAxis)
       .selectAll('text')
       .attr('font-size', '10px')
-      .attr('font-family', 'system-ui, -apple-system, sans-serif')
+      .attr('font-family', FONT_FAMILY_BASE)
       .attr('fill', textColor);
     g.select('.y-axis .domain').attr('stroke', 'none');
     g.selectAll('.y-axis .tick line').attr('stroke', gridColor).attr('x2', chartWidth);
@@ -191,7 +192,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, title
         .append('text')
         .attr('font-size', '10px')
         .attr('font-weight', '700')
-        .attr('font-family', 'system-ui, -apple-system, sans-serif')
+        .attr('font-family', FONT_FAMILY_BASE)
         .attr('fill', 'var(--chart-color-1)')
         .attr('dominant-baseline', 'central')
         .attr('text-anchor', 'middle')
@@ -234,7 +235,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, title
           .attr('text-anchor', 'middle')
           .attr('dominant-baseline', 'central')
           .attr('font-size', '11px')
-          .attr('font-family', 'system-ui, -apple-system, sans-serif')
+          .attr('font-family', FONT_FAMILY_BASE)
           .attr('fill', textColor)
           .attr('transform', 'rotate(-45, 0, 28)')
           .text(d.name);

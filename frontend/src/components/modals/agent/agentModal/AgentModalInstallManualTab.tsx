@@ -1,6 +1,7 @@
 import React from 'react';
 import { CopiarButton, Loading } from 'components/ui';
 import { REQUIREMENTS } from './constants';
+import { FONT_FAMILY_MONO } from 'constants/typography';
 
 interface AgentModalInstallManualTabProps {
   generating: boolean;
@@ -40,8 +41,8 @@ const AgentModalInstallManualTab: React.FC<AgentModalInstallManualTabProps> = ({
           background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
           borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px',
         }}>
-          <span style={{ color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: '13px', flexShrink: 0 }}>$</span>
-          <span style={{ fontFamily: '"JetBrains Mono", "Fira Code", monospace', fontSize: '12px', color: 'var(--text-primary)', wordBreak: 'break-all', flex: 1 }}>
+          <span style={{ color: 'var(--text-secondary)', fontFamily: FONT_FAMILY_MONO, fontSize: '13px', flexShrink: 0 }}>$</span>
+          <span style={{ fontFamily: FONT_FAMILY_MONO, fontSize: '12px', color: 'var(--text-primary)', wordBreak: 'break-all', flex: 1 }}>
             {generatedCmd}
           </span>
           <CopiarButton

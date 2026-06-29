@@ -8,6 +8,7 @@ import FormField from 'components/ui/FormField';
 import { defaultApiClient } from 'services/core';
 import { AgentService } from 'services/agentService';
 import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
+import { FONT_FAMILY_MONO } from 'constants/typography';
 
 interface AgentInstallModalProps {
   show: boolean;
@@ -321,7 +322,7 @@ const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
             </div>
             <div style={{
               background: '#0d1117', color: '#e6edf3',
-              fontFamily: '"JetBrains Mono", "Fira Code", monospace',
+              fontFamily: FONT_FAMILY_MONO,
               fontSize: '12px', padding: '12px', borderRadius: '6px',
               height: '320px', overflowY: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all',
             }}>
@@ -368,9 +369,9 @@ const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
               gap: '8px',
               padding: '10px 12px',
             }}>
-              <span style={{ color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: '13px', flexShrink: 0 }}>$</span>
+              <span style={{ color: 'var(--text-secondary)', fontFamily: FONT_FAMILY_MONO, fontSize: '13px', flexShrink: 0 }}>$</span>
               <span style={{
-                fontFamily: '"JetBrains Mono", "Fira Code", monospace',
+                fontFamily: FONT_FAMILY_MONO,
                 fontSize: '12px',
                 color: 'var(--text-primary)',
                 wordBreak: 'break-all',

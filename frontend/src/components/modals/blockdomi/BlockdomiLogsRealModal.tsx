@@ -5,6 +5,7 @@ import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
 import SearchBar from 'components/ui/SearchBar';
 import { getSocketToken } from 'services/core';
+import { FONT_FAMILY_MONO } from 'constants/typography';
 import type { BlockdomiLogAcessoItem } from 'services/blockdomiLogAcessoService';
 
 const INITIAL_LIMIT = 80;
@@ -141,7 +142,7 @@ const BlockdomiLogsRealModal: React.FC<BlockdomiLogsRealModalProps> = ({ show, o
           ref={containerRef}
           className="p-3 rounded bg-dark text-light"
           style={{
-            fontFamily: 'ui-monospace, monospace',
+            fontFamily: FONT_FAMILY_MONO,
             fontSize: '13px',
             minHeight: '300px',
             flex: 1,

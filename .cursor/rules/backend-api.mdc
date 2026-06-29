@@ -45,7 +45,12 @@ export class EntityService {
 - NUNCA envie o email do cliente ao banco
 - Removida lógica `repassar_email_cliente`
 
-## Mensagens ao usuário (API → toast)
+## Tipografia (PDFs e HTML server-side)
+
+- UI: `FONT_FAMILY_BASE` de `backend/src/constants/typography.ts`
+- Mono (código em PDF): `FONT_FAMILY_MONO`
+- Deve coincidir com o frontend — ver `.cursor/rules/frontend-tipografia.mdc`
+- **Não** usar `Arial, sans-serif` hardcoded em novos relatórios PDF
 - Campo `message` nas respostas: texto curto para toast (ex.: `Sincronização concluída.`)
 - Detalhes (contagens, breakdown, IDs) ficam em logs/auditoria — não no `message`
 - Erros: `message` clara e acionável; stack trace só no `logger`

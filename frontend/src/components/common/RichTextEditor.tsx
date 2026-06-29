@@ -2,6 +2,7 @@ import React, { useRef, forwardRef, useImperativeHandle } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
 import type { Editor as TinyMCEEditor } from 'tinymce';
 import { useI18n } from '../../contexts/I18nContext';
+import { FONT_FAMILY_BASE } from 'constants/typography';
 import 'tinymce/tinymce';
 import 'tinymce/themes/silver';
 import 'tinymce/icons/default';
@@ -119,7 +120,7 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
             width: 'auto'
           },
           placeholder: safePlaceholder,
-          content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:16px }',
+          content_style: `body { font-family:${FONT_FAMILY_BASE}; font-size:16px }`,
           entity_encoding: 'raw',
           setup: (editor) => {
             // Interface para variáveis

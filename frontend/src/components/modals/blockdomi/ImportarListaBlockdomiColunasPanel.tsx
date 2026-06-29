@@ -5,6 +5,7 @@ import {
   SelecionarButton,
 } from 'components/ui';
 import type { BlockdomiImportTranslateFn } from './importarListaBlockdomiTypes';
+import { FONT_FAMILY_MONO } from 'constants/typography';
 
 interface ImportarListaBlockdomiColunasPanelProps {
   colunasDisponiveis: Record<string, string[]>;
@@ -99,7 +100,7 @@ const ImportarListaBlockdomiColunasPanel: React.FC<ImportarListaBlockdomiColunas
                 maxHeight: 120,
                 overflowY: 'auto',
                 padding: '4px 8px',
-                fontFamily: 'monospace',
+                fontFamily: FONT_FAMILY_MONO,
                 fontSize: '0.7rem',
                 color: 'var(--text-muted)',
                 lineHeight: 1.6

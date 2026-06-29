@@ -1,7 +1,9 @@
 import * as d3 from 'd3';
 
+import { FONT_FAMILY_BASE } from 'constants/typography';
+
 const PADDING = { x: 16, y: 12 };
-const TOOLTIP_FONT = 'system-ui, -apple-system, sans-serif';
+const TOOLTIP_FONT = FONT_FAMILY_BASE;
 
 export interface D3ChartTooltipBounds {
   width: number;

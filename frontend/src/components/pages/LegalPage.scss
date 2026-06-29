@@ -10,7 +10,6 @@ $background: #ffffff;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  font-family: 'Inter', system-ui, sans-serif;
   background: $background;
   color: $foreground;
 }
@@ -101,7 +100,6 @@ $background: #ffffff;
 }
 
 .legal-title {
-  font-family: 'Poppins', system-ui, sans-serif;
   font-size: 2rem;
   font-weight: 700;
   color: $foreground;

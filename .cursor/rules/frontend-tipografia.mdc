@@ -1,0 +1,60 @@
+---
+description: Padrão tipográfico do BackNet — mesma fonte do menu lateral em todo o sistema
+globs: frontend/**/*
+alwaysApply: false
+---
+
+# Tipografia — BackNet
+
+Fonte padrão do sistema = **stack nativa do SO** (mesma do menu lateral).
+
+## Fonte única (CSS)
+
+Definida em `frontend/src/styles/_variables.scss`:
+
+- **`--font-family-base`** — UI geral (ERP, site, modais, tabelas, gráficos)
+- **`--font-family-mono`** — código, terminal, logs, comandos SSH
+
+```scss
+// ✅ SCSS / CSS
+font-family: var(--font-family-base);
+font-family: var(--font-family-mono);
+```
+
+```tsx
+// ✅ TypeScript (D3, inline style, TinyMCE)
+import { FONT_FAMILY_BASE, FONT_FAMILY_MONO } from 'constants/typography';
+```
+
+## Proibido
+
+- Google Fonts (Inter, Poppins, etc.) no frontend
+- `font-family` hardcoded diferente da stack padrão
+- Arial/Helvetica isolados fora de `--font-family-base`
+- JetBrains Mono ou outras fontes externas para mono — usar `FONT_FAMILY_MONO`
+
+## Onde aplicar
+
+| Contexto | Usar |
+|----------|------|
+| body, forms, modais, site | `var(--font-family-base)` ou herdar do body |
+| Terminal xterm, logs, comandos | `FONT_FAMILY_MONO` / `var(--font-family-mono)` |
+| Gráficos D3 / SVG | `FONT_FAMILY_BASE` de `constants/typography.ts` |
+| TinyMCE `content_style` | `FONT_FAMILY_BASE` |
+
+## Manter sincronizado
+
+Ao alterar a stack, atualizar **os dois**:
+
+1. `--font-family-base` / `--font-family-mono` em `_variables.scss`
+2. `FONT_FAMILY_BASE` / `FONT_FAMILY_MONO` em `constants/typography.ts`
+
+Bootstrap (`$font-family-base` em `bootstrap-custom.scss`) deve usar a mesma stack.
+
+## Backend (PDFs e HTML para Puppeteer)
+
+```typescript
+import { FONT_FAMILY_BASE, FONT_FAMILY_MONO } from '../../../constants/typography';
+```
+
+Relatórios PDF (auditoria, etc.) devem usar `FONT_FAMILY_BASE` no CSS do HTML gerado — não `Arial`.

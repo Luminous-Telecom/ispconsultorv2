@@ -3,6 +3,7 @@ import FormField from 'components/ui/FormField';
 import { Loading } from 'components/ui';
 import { REQUIREMENTS } from './constants';
 import { InstallStatus, SshFormData } from './types';
+import { FONT_FAMILY_MONO } from 'constants/typography';
 
 interface AgentModalInstallAutoTabProps {
   installStatus: InstallStatus;
@@ -114,7 +115,7 @@ const AgentModalInstallAutoTab: React.FC<AgentModalInstallAutoTabProps> = ({
         </div>
         <div style={{
           background: '#0d1117', color: '#e6edf3',
-          fontFamily: '"JetBrains Mono", "Fira Code", monospace',
+          fontFamily: FONT_FAMILY_MONO,
           fontSize: '12px', padding: '12px', borderRadius: '6px',
           height: '280px', overflowY: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all',
         }}>
