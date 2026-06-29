@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import {
   EstruturaLookupService,
   FilialLookupService,
@@ -7,8 +7,10 @@ import {
   SetorLookupService,
   IxcIntegracaoStatusService,
   type LookupFilters,
+  type LookupItem,
 } from '../services/ixcLookupService';
 import { CACHE_CONFIG } from '../config/api';
+import type { PaginatedResponse } from '../types';
 
 const { DEFAULT_CACHE_TIME } = CACHE_CONFIG;
 
@@ -23,45 +25,40 @@ function lookupQueryOptions(filters: LookupFilters, operadorScoped = false) {
   };
 }
 
-export const useEstruturas = (filters: LookupFilters = {}) => {
-  return useQuery({
-    queryKey: ['ixc-estruturas', filters],
-    queryFn: () => EstruturaLookupService.list(filters),
-    ...lookupQueryOptions(filters),
-  });
-};
+function createLookupHook(
+  key: string,
+  list: (filters: LookupFilters) => Promise<PaginatedResponse<LookupItem>>
+) {
+  return (filters: LookupFilters = {}): UseQueryResult<PaginatedResponse<LookupItem>> =>
+    useQuery({
+      queryKey: [key, filters],
+      queryFn: () => list(filters),
+      ...lookupQueryOptions(filters),
+    });
+}
 
-export const useFiliais = (filters: LookupFilters = {}) => {
-  return useQuery({
-    queryKey: ['ixc-filiais', filters],
-    queryFn: () => FilialLookupService.list(filters),
-    ...lookupQueryOptions(filters),
-  });
-};
-
-export const useTecnicos = (filters: LookupFilters = {}) => {
-  return useQuery({
-    queryKey: ['ixc-tecnicos', filters],
-    queryFn: () => TecnicoLookupService.list(filters),
-    ...lookupQueryOptions(filters, true),
-  });
-};
-
-export const useAssuntos = (filters: LookupFilters = {}) => {
-  return useQuery({
-    queryKey: ['ixc-assuntos', filters],
-    queryFn: () => AssuntoLookupService.list(filters),
-    ...lookupQueryOptions(filters, Boolean(filters.setor_id)),
-  });
-};
-
-export const useSetores = (filters: LookupFilters = {}) => {
-  return useQuery({
+export const useEstruturas = createLookupHook('ixc-estruturas', EstruturaLookupService.list);
+export const useFiliais = createLookupHook('ixc-filiais', FilialLookupService.list);
+export const useSetores = (filters: LookupFilters = {}) =>
+  useQuery({
     queryKey: ['ixc-setores', filters],
     queryFn: () => SetorLookupService.list(filters),
     ...lookupQueryOptions(filters, true),
   });
-};
+
+export const useTecnicos = (filters: LookupFilters = {}) =>
+  useQuery({
+    queryKey: ['ixc-tecnicos', filters],
+    queryFn: () => TecnicoLookupService.list(filters),
+    ...lookupQueryOptions(filters, Boolean(filters.setor_id)),
+  });
+
+export const useAssuntos = (filters: LookupFilters = {}) =>
+  useQuery({
+    queryKey: ['ixc-assuntos', filters],
+    queryFn: () => AssuntoLookupService.list(filters),
+    ...lookupQueryOptions(filters, Boolean(filters.setor_id)),
+  });
 
 export const useClienteIxcIntegracao = (clienteId: number, enabled = true) => {
   return useQuery({

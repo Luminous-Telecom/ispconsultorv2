@@ -40,10 +40,66 @@ async function fetchApiOperadorUsuario(): Promise<Record<string, string> | null>
   return fetchRegistroIxcPorId(IXC_USUARIOS_RESOURCE, operadorId);
 }
 
-function parseSetorId(value: string | undefined): string | null {
+function parseIxcId(value: string | undefined): string | null {
   const id = String(value ?? '').trim();
   if (!id || id === '0' || !/^\d+$/.test(id)) return null;
   return id;
+}
+
+function normalizeSetorIds(setorIds: string[]): string[] {
+  return [...new Set(setorIds.map((id) => String(id).trim()).filter((id) => id && id !== '0'))];
+}
+
+async function fetchLinkedIdsBySetor(
+  resource: string,
+  setorField: string,
+  setorIds: string[],
+  linkedIdField: string,
+  denyOnError: boolean
+): Promise<string[] | null> {
+  const uniqueSetores = normalizeSetorIds(setorIds);
+  if (uniqueSetores.length === 0) return [];
+
+  const linkedIds = new Set<string>();
+  let denied = false;
+
+  for (const setorId of uniqueSetores) {
+    try {
+      const data = await ixcListar<{ type?: string; registros?: Record<string, string>[] }>(
+        resource,
+        {
+          qtype: `${resource}.${setorField}`,
+          query: setorId,
+          oper: '=',
+          page: '1',
+          rp: '500',
+          sortname: `${resource}.id`,
+          sortorder: 'asc',
+        }
+      );
+
+      if (data?.type === 'error') {
+        if (denyOnError) {
+          denied = true;
+          break;
+        }
+        continue;
+      }
+
+      for (const registro of filterRegistrosAtivos(data.registros ?? [])) {
+        const linkedId = parseIxcId(registro[linkedIdField]);
+        if (linkedId) linkedIds.add(linkedId);
+      }
+    } catch {
+      if (denyOnError) {
+        denied = true;
+        break;
+      }
+    }
+  }
+
+  if (denied) return null;
+  return [...linkedIds];
 }
 
 async function fetchSetorIdsFromFuncionarioVinculos(funcionarioId: string): Promise<string[]> {
@@ -65,7 +121,7 @@ async function fetchSetorIdsFromFuncionarioVinculos(funcionarioId: string): Prom
 
     const setorIds = new Set<string>();
     for (const registro of filterRegistrosAtivos(data.registros ?? [])) {
-      const setorId = parseSetorId(registro.setor);
+      const setorId = parseIxcId(registro.setor);
       if (setorId) setorIds.add(setorId);
     }
     return [...setorIds];
@@ -74,46 +130,20 @@ async function fetchSetorIdsFromFuncionarioVinculos(funcionarioId: string): Prom
   }
 }
 
-/** Assuntos vinculados ao setor via setor_assunto. `null` = API sem permissão para listar setor_assunto. */
+export async function fetchFuncionarioIdsBySetores(setorIds: string[]): Promise<string[]> {
+  const ids = await fetchLinkedIdsBySetor(
+    IXC_FUNCIONARIO_SETORES_RESOURCE,
+    'setor',
+    setorIds,
+    'usuario',
+    false
+  );
+  return ids ?? [];
+}
+
+/** `null` = API sem permissão para listar setor_assunto. */
 export async function fetchAssuntoIdsBySetores(setorIds: string[]): Promise<string[] | null> {
-  const uniqueSetores = [...new Set(setorIds.map((id) => String(id).trim()).filter((id) => id && id !== '0'))];
-  if (uniqueSetores.length === 0) return [];
-
-  const assuntoIds = new Set<string>();
-  let denied = false;
-
-  for (const setorId of uniqueSetores) {
-    try {
-      const data = await ixcListar<{ type?: string; registros?: Record<string, string>[] }>(
-        IXC_SETOR_ASSUNTO_RESOURCE,
-        {
-          qtype: `${IXC_SETOR_ASSUNTO_RESOURCE}.id_setor`,
-          query: setorId,
-          oper: '=',
-          page: '1',
-          rp: '500',
-          sortname: `${IXC_SETOR_ASSUNTO_RESOURCE}.id`,
-          sortorder: 'asc',
-        }
-      );
-
-      if (data?.type === 'error') {
-        denied = true;
-        break;
-      }
-
-      for (const registro of filterRegistrosAtivos(data.registros ?? [])) {
-        const assuntoId = parseSetorId(registro.id_assunto);
-        if (assuntoId) assuntoIds.add(assuntoId);
-      }
-    } catch {
-      denied = true;
-      break;
-    }
-  }
-
-  if (denied) return null;
-  return [...assuntoIds];
+  return fetchLinkedIdsBySetor(IXC_SETOR_ASSUNTO_RESOURCE, 'id_setor', setorIds, 'id_assunto', true);
 }
 
 export async function resolveApiOperadorContext(): Promise<ApiOperadorContext> {
@@ -130,20 +160,12 @@ export async function resolveApiOperadorContext(): Promise<ApiOperadorContext> {
     }
 
     const funcionario = await fetchRegistroIxcPorId(IXC_FUNCIONARIOS_RESOURCE, validFuncionario);
-    const padrao = parseSetorId(funcionario?.id_setor_padrao);
+    const padrao = parseIxcId(funcionario?.id_setor_padrao);
     return { setorIds: padrao ? [padrao] : [], funcionarioId: validFuncionario };
   }
 
-  const setorUsuario = parseSetorId(usuario.setor) ?? parseSetorId(usuario.id_setor);
+  const setorUsuario = parseIxcId(usuario.setor) ?? parseIxcId(usuario.id_setor);
   return { setorIds: setorUsuario ? [setorUsuario] : [], funcionarioId: null };
-}
-
-export async function resolveApiOperadorSetorIds(): Promise<string[]> {
-  return (await resolveApiOperadorContext()).setorIds;
-}
-
-export async function resolveApiOperadorFuncionarioId(): Promise<string | null> {
-  return (await resolveApiOperadorContext()).funcionarioId;
 }
 
 export async function fetchLookupItemsByIxcIds(

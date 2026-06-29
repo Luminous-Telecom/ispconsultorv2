@@ -40,7 +40,7 @@ export interface ListOssChamadosFilters {
   searchField?: string;
   sortColumn?: string;
   sortDirection?: 'asc' | 'desc';
-  /** Filtra assuntos vinculados ao setor (empresa_setor) no IXC. */
+  /** Filtra assuntos e colaboradores pelo setor selecionado no formulário. */
   setor_id?: string;
 }
 

@@ -13,7 +13,6 @@ export class IxcOssChamadoController {
     try {
       const { page, limit, search, searchField, sortColumn, sortDirection } = parseListQuery(req.query);
       const empresaId = getEmpresaIdOrNull(req);
-      const usuarioId = getUsuarioIdOrNull(req);
 
       const result = await IxcOssChamadoService.list({
         page,
@@ -22,7 +21,7 @@ export class IxcOssChamadoController {
         searchField,
         sortColumn,
         sortDirection,
-      }, empresaId, usuarioId);
+      }, empresaId);
 
       sendSuccess(res, result);
     } catch (error) {
@@ -38,7 +37,7 @@ export class IxcOssChamadoController {
     try {
       const { id } = req.params;
       const empresaId = getEmpresaIdOrNull(req);
-      const chamado = await IxcOssChamadoService.getById(id, empresaId, getUsuarioIdOrNull(req));
+      const chamado = await IxcOssChamadoService.getById(id, empresaId);
 
       if (!chamado) {
         sendNotFound(res, 'Ordem de serviço não encontrada');

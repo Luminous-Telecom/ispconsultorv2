@@ -21,7 +21,7 @@ import OrdemServicoFormFields, {
 import OrdemServicoMensagensList from './OrdemServicoMensagensList';
 import OrdemServicoArquivosList from './OrdemServicoArquivosList';
 import IxcLookupSelectModal from './IxcLookupSelectModal';
-import { isOrdemServicoExcluivel, isOrdemServicoLocal } from './ordemServicoAcoes';
+import { clearDependentesAoMudarSetor, isOrdemServicoExcluivel, isOrdemServicoLocal } from './ordemServicoAcoes';
 import { ixcToDatetimeLocal, datetimeLocalToIxc } from 'utils/ixcDateTime';
 
 interface OrdemServicoModalProps {
@@ -440,6 +440,7 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
         show={showTecnicoModal}
         onClose={() => setShowTecnicoModal(false)}
         clienteId={clienteId}
+        setorId={formData.setor || undefined}
         onSelect={(item) => {
           handleChange('id_tecnico', item.id);
           setTecnicoNome(item.nome);
@@ -470,10 +471,10 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
         onSelect={(item) => {
           handleChange('setor', item.id);
           setSetorNome(item.nome);
-          if (formData.id_assunto) {
-            handleChange('id_assunto', '');
-            setAssuntoNome('');
-          }
+          clearDependentesAoMudarSetor(formData, handleChange, {
+            assunto: () => setAssuntoNome(''),
+            tecnico: () => setTecnicoNome(''),
+          });
         }}
         title="Setor"
         nomeLabel="Setor"

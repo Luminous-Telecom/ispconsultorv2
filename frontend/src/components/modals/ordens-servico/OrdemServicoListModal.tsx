@@ -73,8 +73,6 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
     if (isOrdemServicoLocal(ordem) && acao !== 'registrar_mensagem' && acao !== 'finalizar') {
       return;
     }
-    const config = ORDEM_SERVICO_ACOES.find((a) => a.key === acao);
-    if (!config?.needsForm) return;
     setAcaoModal({ acao, ordem });
   }, []);
 

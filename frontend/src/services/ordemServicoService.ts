@@ -255,5 +255,3 @@ export class OrdemServicoService {
     return response.data?.data ?? (response.data as { type?: string; message?: string; id?: string });
   }
 }
-
-export const ordemServicoService = ordemServicoServiceInstance;

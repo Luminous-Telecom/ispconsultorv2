@@ -6,7 +6,7 @@ import type { OrdemServico } from 'services/ordemServicoService';
 import DraggableModal from 'components/common/DraggableModal';
 import { EntitySelectField, FormField, ModalFormActions, LabelWithHelp } from 'components/ui';
 import IxcLookupSelectModal from './IxcLookupSelectModal';
-import { type OrdemServicoAcao } from './ordemServicoAcoes';
+import { clearDependentesAoMudarSetor, type OrdemServicoAcao } from './ordemServicoAcoes';
 import { ixcToDatetimeLocal, datetimeLocalToIxc } from 'utils/ixcDateTime';
 
 interface OrdemServicoAcaoModalProps {
@@ -389,6 +389,7 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
         show={showTecnicoModal}
         onClose={() => setShowTecnicoModal(false)}
         clienteId={clienteId}
+        setorId={form.setor || undefined}
         onSelect={(item) => {
           handleChange('id_tecnico', item.id);
           setTecnicoNome(item.nome);
@@ -405,10 +406,10 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
         onSelect={(item) => {
           handleChange('setor', item.id);
           setSetorNome(item.nome);
-          if (form.id_assunto) {
-            handleChange('id_assunto', '');
-            setAssuntoNome('');
-          }
+          clearDependentesAoMudarSetor(form, handleChange, {
+            assunto: () => setAssuntoNome(''),
+            tecnico: () => setTecnicoNome(''),
+          });
         }}
         title="Setor"
         nomeLabel="Setor"

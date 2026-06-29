@@ -9,16 +9,15 @@ export type OrdemServicoAcao =
 export interface OrdemServicoAcaoConfig {
   key: OrdemServicoAcao;
   label: string;
-  needsForm: boolean;
 }
 
 export const ORDEM_SERVICO_ACOES: OrdemServicoAcaoConfig[] = [
-  { key: 'agendar', label: 'Agendar', needsForm: true },
-  { key: 'encaminhar', label: 'Encaminhar', needsForm: true },
-  { key: 'executar', label: 'Executar', needsForm: true },
-  { key: 'finalizar', label: 'Finalizar', needsForm: true },
-  { key: 'reabrir', label: 'Reabrir', needsForm: true },
-  { key: 'registrar_mensagem', label: 'Registrar mensagem', needsForm: true },
+  { key: 'agendar', label: 'Agendar' },
+  { key: 'encaminhar', label: 'Encaminhar' },
+  { key: 'executar', label: 'Executar' },
+  { key: 'finalizar', label: 'Finalizar' },
+  { key: 'reabrir', label: 'Reabrir' },
+  { key: 'registrar_mensagem', label: 'Registrar mensagem' },
 ];
 
 /** OS criada apenas no BackNet, sem vínculo IXC. */
@@ -29,5 +28,18 @@ export const isOrdemServicoLocal = (
 export const isOrdemServicoExcluivel = (ordem?: { status?: string } | null): boolean =>
   ordem != null && ordem.status !== 'F';
 
-export const labelAcaoOrdemServico = (acao: OrdemServicoAcao): string =>
-  ORDEM_SERVICO_ACOES.find((a) => a.key === acao)?.label ?? acao;
+/** Limpa assunto e colaborador ao trocar o setor no formulário. */
+export function clearDependentesAoMudarSetor(
+  values: { id_assunto?: string; id_tecnico?: string },
+  onFieldChange: (field: 'id_assunto' | 'id_tecnico', value: string) => void,
+  clearNames: { assunto?: () => void; tecnico?: () => void }
+): void {
+  if (values.id_assunto) {
+    onFieldChange('id_assunto', '');
+    clearNames.assunto?.();
+  }
+  if (values.id_tecnico) {
+    onFieldChange('id_tecnico', '');
+    clearNames.tecnico?.();
+  }
+}

@@ -11,6 +11,7 @@ import {
 } from '../../externos/IxcOssChamadoService/constants';
 import {
   fetchAssuntoIdsBySetores,
+  fetchFuncionarioIdsBySetores,
   fetchLookupItemsByIxcIds,
   resolveApiOperadorContext,
 } from '../../externos/IxcOssChamadoService/ossUsuarioContext';
@@ -152,6 +153,17 @@ async function probeAssuntosPorSetorOperador(): Promise<{ ok: boolean; total: nu
   }
 }
 
+/** Colaboradores do setor do operador API (funcionario_setores). */
+async function probeFuncionariosPorSetorOperador(): Promise<{ ok: boolean; total: number | null }> {
+  try {
+    const { setorIds } = await resolveApiOperadorContext();
+    const ids = await fetchFuncionarioIdsBySetores(setorIds);
+    return { ok: true, total: ids.length };
+  } catch {
+    return { ok: false, total: null };
+  }
+}
+
 /** Setores do operador API via funcionario_setores (ativo), como no picker de OS. */
 async function probeSetoresOperador(): Promise<{ ok: boolean; total: number | null }> {
   try {
@@ -202,6 +214,7 @@ export class IxcApiPermissionsService {
       setor,
       setorOperador,
       funcionarios,
+      funcionariosPorSetor,
       assunto,
       assuntoPorSetor,
       estrutura,
@@ -213,6 +226,7 @@ export class IxcApiPermissionsService {
       probeList(IXC_SETOR_RESOURCE),
       probeSetoresOperador(),
       probeList(IXC_FUNCIONARIOS_RESOURCE),
+      probeFuncionariosPorSetorOperador(),
       probeList(IXC_ASSUNTO_RESOURCE),
       probeAssuntosPorSetorOperador(),
       probeList(IXC_ESTRUTURA_RESOURCE),
@@ -223,6 +237,8 @@ export class IxcApiPermissionsService {
 
     const setorCells = listCells(setor, true);
     setorCells.dados = setorOperador.total;
+    const funcionariosCells = listCells(funcionarios, true);
+    funcionariosCells.dados = funcionariosPorSetor.total;
     const assuntoCells = listCells(assunto, true);
     assuntoCells.dados = assuntoPorSetor.total;
 
@@ -234,7 +250,12 @@ export class IxcApiPermissionsService {
         'Configurações > Empresa > Setores (do operador API)',
         setorCells
       ),
-      buildRow('funcionarios', 'Cadastros OS', 'Sistema > Folha de pagamento > Colaboradores', listCells(funcionarios, true)),
+      buildRow(
+        'funcionarios',
+        'Cadastros OS',
+        'Sistema > Folha de pagamento > Colaboradores (do setor do operador)',
+        funcionariosCells
+      ),
       buildRow(
         'su_oss_assunto',
         'Cadastros OS',
@@ -268,6 +289,32 @@ export class IxcApiPermissionsService {
         total: null,
         items: [],
         message: 'Formulário não reconhecido',
+      };
+    }
+
+    if (resourceId === 'funcionarios') {
+      const { setorIds } = await resolveApiOperadorContext();
+      const funcionarioIds = await fetchFuncionarioIdsBySetores(setorIds);
+      const lookupItems = await fetchLookupItemsByIxcIds(
+        IXC_FUNCIONARIOS_RESOURCE,
+        'funcionario',
+        funcionarioIds
+      );
+      const items = lookupItems.map((item) => ({
+        id: item.id,
+        texto: `id: ${item.id} | funcionario: ${item.nome}`,
+      }));
+
+      return {
+        resourceId,
+        resource: config.resource,
+        ok: true,
+        total: items.length,
+        items,
+        message:
+          items.length === 0
+            ? 'Nenhum colaborador vinculado aos setores do operador API.'
+            : 'Colaboradores do setor do operador API (funcionario_setores).',
       };
     }
 

@@ -62,6 +62,7 @@ import {
 import {
   fetchLookupItemsByIxcIds,
   fetchAssuntoIdsBySetores,
+  fetchFuncionarioIdsBySetores,
   resolveApiOperadorContext,
 } from './ossUsuarioContext';
 import type {
@@ -88,12 +89,6 @@ export type {
   OssChamadoInput,
 };
 export { OSS_CHAMADO_ACOES };
-
-async function fetchClienteNomeForLog(clienteId: number): Promise<string> {
-  const cliente = await Cliente.findByPk(clienteId, { attributes: ['razao_social', 'nome_fantasia'] });
-  if (!cliente) return String(clienteId);
-  return clienteNomeParaOrdemServico(cliente, clienteId);
-}
 
 export class IxcOssChamadoService {
   private static async requireOrdemRecord(
@@ -150,8 +145,7 @@ export class IxcOssChamadoService {
 
   static async list(
     filters: ListOssChamadosFilters = {},
-    empresaId: number | null = null,
-    _usuarioId: number | null = null
+    empresaId: number | null = null
   ): Promise<ListOssChamadosResponse> {
     return OrdemServicoLocalService.list(filters, empresaId);
   }
@@ -217,7 +211,8 @@ export class IxcOssChamadoService {
       return runWithIxcCredentials(
         empresaId,
         async () => {
-          const itens = await IxcOssChamadoService.fetchFuncionariosForApiOperador(nomeCampo, 'lookup');
+          const setorIds = await IxcOssChamadoService.resolveSetorIdsForLookup(filters);
+          const itens = await IxcOssChamadoService.fetchFuncionariosForSetores(nomeCampo, setorIds);
           return IxcOssChamadoService.paginateLookup(
             IxcOssChamadoService.filterLookupItems(itens, filters),
             filters
@@ -231,8 +226,8 @@ export class IxcOssChamadoService {
       return runWithIxcCredentials(
         empresaId,
         async () => {
-          const setorIds = await IxcOssChamadoService.resolveSetorIdsForAssuntoLookup(filters);
-          const itens = await IxcOssChamadoService.fetchAssuntosForSetores(nomeCampo, setorIds, 'lookup');
+          const setorIds = await IxcOssChamadoService.resolveSetorIdsForLookup(filters);
+          const itens = await IxcOssChamadoService.fetchAssuntosForSetores(nomeCampo, setorIds);
           return IxcOssChamadoService.paginateLookup(
             IxcOssChamadoService.filterLookupItems(itens, filters),
             filters
@@ -281,8 +276,7 @@ export class IxcOssChamadoService {
     resource: string,
     nomeCampo: string,
     filters: ListOssChamadosFilters = {},
-    additionalFilters: Record<string, string> = {},
-    mode: 'lookup' | 'sync' = 'lookup'
+    additionalFilters: Record<string, string> = {}
   ): Promise<ListLookupResponse> {
     const page = filters.page && filters.page > 0 ? filters.page : 1;
     const limit = filters.limit && filters.limit > 0 ? filters.limit : 15;
@@ -366,8 +360,7 @@ export class IxcOssChamadoService {
   static async fetchAllLookupResource(
     resource: string,
     nomeCampo: string,
-    additionalFilters: Record<string, string> = {},
-    mode: 'lookup' | 'sync' = 'lookup'
+    additionalFilters: Record<string, string> = {}
   ): Promise<LookupItem[]> {
     const limit = 500;
     let page = 1;
@@ -379,8 +372,7 @@ export class IxcOssChamadoService {
         resource,
         nomeCampo,
         { page, limit, sortColumn: 'id', sortDirection: 'asc' },
-        additionalFilters,
-        mode
+        additionalFilters
       );
       all.push(...result.data);
       lastPage = result.pagination.last_page;
@@ -405,9 +397,7 @@ export class IxcOssChamadoService {
     return fetchLookupItemsByIxcIds(IXC_SETOR_RESOURCE, nomeCampo, setorIds);
   }
 
-  private static async resolveSetorIdsForAssuntoLookup(
-    filters: ListOssChamadosFilters
-  ): Promise<string[]> {
+  private static async resolveSetorIdsForLookup(filters: ListOssChamadosFilters): Promise<string[]> {
     const setorId = String(filters.setor_id ?? '').trim();
     if (setorId && setorId !== '0') return [setorId];
     return (await resolveApiOperadorContext()).setorIds;
@@ -415,8 +405,7 @@ export class IxcOssChamadoService {
 
   static async fetchAssuntosForSetores(
     nomeCampo: string,
-    setorIds: string[],
-    mode: 'lookup' | 'sync'
+    setorIds: string[]
   ): Promise<LookupItem[]> {
     const assuntoIds = await fetchAssuntoIdsBySetores(setorIds);
     if (assuntoIds === null) {
@@ -428,37 +417,10 @@ export class IxcOssChamadoService {
     return fetchLookupItemsByIxcIds(IXC_ASSUNTO_RESOURCE, nomeCampo, assuntoIds);
   }
 
-  static async fetchFuncionariosForApiOperador(
-    nomeCampo: string,
-    mode: 'lookup' | 'sync'
-  ): Promise<LookupItem[]> {
-    const { setorIds, funcionarioId } = await resolveApiOperadorContext();
-    const mapa = new Map<string, LookupItem>();
-
-    for (const setorId of setorIds) {
-      const batch = await IxcOssChamadoService.fetchAllLookupResource(
-        IXC_FUNCIONARIOS_RESOURCE,
-        nomeCampo,
-        { id_setor_padrao: setorId },
-        mode
-      );
-      for (const item of batch) {
-        mapa.set(String(item.id), item);
-      }
-    }
-
-    if (funcionarioId) {
-      const operadorItens = await fetchLookupItemsByIxcIds(
-        IXC_FUNCIONARIOS_RESOURCE,
-        nomeCampo,
-        [funcionarioId]
-      );
-      for (const item of operadorItens) {
-        mapa.set(String(item.id), item);
-      }
-    }
-
-    return [...mapa.values()];
+  static async fetchFuncionariosForSetores(nomeCampo: string, setorIds: string[]): Promise<LookupItem[]> {
+    const funcionarioIds = await fetchFuncionarioIdsBySetores(setorIds);
+    if (funcionarioIds.length === 0) return [];
+    return fetchLookupItemsByIxcIds(IXC_FUNCIONARIOS_RESOURCE, nomeCampo, funcionarioIds);
   }
 
   static async fetchCadastrosForSync(
@@ -470,12 +432,13 @@ export class IxcOssChamadoService {
     }
     if (resource === IXC_ASSUNTO_RESOURCE) {
       const setorIds = (await resolveApiOperadorContext()).setorIds;
-      return IxcOssChamadoService.fetchAssuntosForSetores(nomeCampo, setorIds, 'sync');
+      return IxcOssChamadoService.fetchAssuntosForSetores(nomeCampo, setorIds);
     }
     if (resource === IXC_FUNCIONARIOS_RESOURCE) {
-      return IxcOssChamadoService.fetchFuncionariosForApiOperador(nomeCampo, 'sync');
+      const setorIds = (await resolveApiOperadorContext()).setorIds;
+      return IxcOssChamadoService.fetchFuncionariosForSetores(nomeCampo, setorIds);
     }
-    return IxcOssChamadoService.fetchAllLookupResource(resource, nomeCampo, {}, 'sync');
+    return IxcOssChamadoService.fetchAllLookupResource(resource, nomeCampo);
   }
 
   static async listResource(
@@ -495,8 +458,7 @@ export class IxcOssChamadoService {
 
   static async getById(
     id: string | number,
-    empresaId: number | null = null,
-    _usuarioId: number | null = null
+    empresaId: number | null = null
   ): Promise<IxcOssChamado | null> {
     return OrdemServicoLocalService.getChamado(id, empresaId);
   }
@@ -699,7 +661,8 @@ export class IxcOssChamadoService {
           clienteId!,
           empresaId
         );
-        const clienteNome = await fetchClienteNomeForLog(clienteId!);
+        const cliente = await Cliente.findByPk(clienteId!, { attributes: ['razao_social', 'nome_fantasia'] });
+        const clienteNome = cliente ? clienteNomeParaOrdemServico(cliente, clienteId!) : String(clienteId);
         const { IxcOsSchedulerRoutineService } = await import('../../ordens/IxcOsSchedulerRoutineService');
         await IxcOsSchedulerRoutineService.registrarAberturaBacknet({
           record: linked,

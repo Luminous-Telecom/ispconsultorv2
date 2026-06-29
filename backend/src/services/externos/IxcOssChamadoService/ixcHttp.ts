@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, isAxiosError } from 'axios';
 import { getIxcApiCredentials } from '../ixcApiContext';
-import type { IxcActionResponse, ListOssChamadosResponse } from './types';
+import type { IxcActionResponse } from './types';
 
 function ixcBaseUrl(): string {
   return getIxcApiCredentials().apiUrl;
@@ -34,20 +34,6 @@ export async function ixcListar<T>(resource: string, body: Record<string, string
     data: body,
   });
   return response.data as T;
-}
-
-export function paginaVazia(page: number, limit: number): ListOssChamadosResponse {
-  return {
-    data: [],
-    pagination: {
-      current_page: page,
-      per_page: limit,
-      total: 0,
-      last_page: 1,
-      from: 0,
-      to: 0,
-    },
-  };
 }
 
 export function sanitizeInput(payload: Record<string, string | number | null | undefined>): Record<string, string> {

@@ -43,14 +43,6 @@ function empresaWhere(empresaId: number | null): WhereOptions<OrdemServicoLocal>
   return { empresa_id: empresaId };
 }
 
-async function fetchClienteNome(clienteId: number): Promise<string> {
-  const cliente = await Cliente.findByPk(clienteId, {
-    attributes: ['razao_social', 'nome_fantasia'],
-  });
-  if (!cliente) return '';
-  return clienteNomeParaOrdemServico(cliente, clienteId);
-}
-
 function toIxcOssChamado(record: OrdemServicoLocal, clienteNome: string): IxcOssChamado {
   const isIxc = Boolean(record.ixc_id?.trim());
 
@@ -465,21 +457,6 @@ export class OrdemServicoLocalService {
     return record != null && !record.ixc_id?.trim();
   }
 
-  static async getOperadorAbertura(
-    id: string | number,
-    empresaId: number | null = null
-  ): Promise<string> {
-    const record = await this.findRecord(id, empresaId);
-    if (!record) return '';
-
-    const operadorPorOrdem = await fetchOperadorAberturaPorOrdemIds([record.id]);
-    return operadorPorOrdem.get(record.id) ?? '';
-  }
-
-  static async exists(id: string | number, empresaId: number | null = null): Promise<boolean> {
-    return (await this.findRecord(id, empresaId)) != null;
-  }
-
   static async createRecord(
     payload: OssChamadoInput,
     empresaId: number | null = null,
@@ -724,37 +701,6 @@ export class OrdemServicoLocalService {
     });
 
     return { type: 'success', id: String(record.id) };
-  }
-
-  static async deleteMensagem(
-    id: string | number,
-    mensagemId: string | number,
-    empresaId: number | null = null
-  ): Promise<IxcActionResponse> {
-    const record = await this.findRecord(id, empresaId);
-    if (!record) {
-      throw new Error('Ordem de serviço não encontrada');
-    }
-
-    const mensagem = await OrdemServicoMensagem.findOne({
-      where: {
-        id: Number(mensagemId),
-        ordem_servico_id: record.id,
-      },
-    });
-
-    if (!mensagem) {
-      throw new Error('Mensagem não encontrada');
-    }
-
-    await mensagem.destroy();
-    return { type: 'success' };
-  }
-
-  static async assertAccessible(id: string | number, empresaId: number | null = null): Promise<void> {
-    if (!(await this.findRecord(id, empresaId))) {
-      throw new Error('Ordem de serviço não encontrada');
-    }
   }
 
   private static async findPureLocalRecord(
