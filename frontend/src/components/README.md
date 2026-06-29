@@ -221,13 +221,21 @@ const { logError, handleAsyncError } = useErrorHandler();
 ```
 
 ### useNotificationContext
-Hook para notificações do sistema.
+Hook para notificações toast centralizadas do sistema (não use `alert()` nem libs externas).
 
 ```tsx
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { useApiError } from '@/hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from '@/constants/ErrorMessages';
 
 const { success, error, warning, info } = useNotificationContext();
+const { showApiError } = useApiError();
+
+success('Salvo com sucesso.');
+onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.ENTITY_UPDATE_ERROR),
 ```
+
+Mensagens de sucesso curtas; erros de API via `showApiError` (extrai `response.data.message`).
 
 ## 🎨 Sistema de Tema
 

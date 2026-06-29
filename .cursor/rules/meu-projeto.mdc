@@ -35,3 +35,16 @@ alwaysApply: true
 
 ## Confirmações Destrutivas
 - Use `window.confirm()` — nunca modais customizados para confirmação
+
+## Componentes centralizados (não duplicar)
+Use sempre os primitivos do projeto em vez de reinventar UI. Detalhes em `.cursor/rules/frontend-ui-centralizado.mdc`.
+
+| Necessidade | Usar | Não usar |
+|-------------|------|----------|
+| Loading em UI | `Loading` (`components/ui`) | `Spinner` em modais, `spinner-border`, texto "Carregando..." |
+| Barra topo (API) | `LoadingBar` + `LoadingContext` | `LoadingDots` direto |
+| Toast / feedback | `useNotificationContext` + `useApiError` | `alert()`, toast custom, `console.log` para usuário |
+| Ajuda no label | `LabelWithHelp` / `FormField helpText` | `alert-info`, ícone `i` manual |
+| Botões de ação | `components/ui/buttons` + `ModalFormActions` | botões HTML crus com spinner |
+| Modais | `DraggableModal`, `ListModal` | modais Bootstrap/dialog custom |
+| Erros de API | `showApiError(err, CONTEXT_ERROR_MESSAGES.*)` | parse manual de `response.data` |

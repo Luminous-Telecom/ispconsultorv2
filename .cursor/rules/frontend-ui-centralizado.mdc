@@ -1,0 +1,80 @@
+---
+description: Componentes UI centralizados do BackNet — evitar duplicação
+globs: frontend/**/*.tsx,frontend/**/*.ts
+alwaysApply: false
+---
+
+# UI centralizada — BackNet
+
+Antes de criar spinner, toast, modal ou botão custom, use o que já existe em `components/ui` e `components/common`.
+
+## Loading
+
+```tsx
+import { Loading, LoadingBar } from 'components/ui';
+
+// Modal / formulário
+<Loading variant="modal" />
+<Loading variant="centered" message="Carregando dados..." />
+
+// Linha, tabela, status inline
+<Loading variant="inline" size="sm" message="Consultando..." />
+<Loading variant="inline" size="sm" showMessage={false} /> // só spinner (aria-label padrão)
+
+// Página / Suspense
+<Loading variant="page" />
+<Loading variant="fullscreen" size="lg" />
+```
+
+- **Barra global** (requisições HTTP): `LoadingBar` no layout + `useApiLoading()` — não importe `LoadingDots`.
+- **Spinner**: primitivo interno; só em casos excepcionais (ex.: `ResponsiveDialog` inline).
+- **Proibido** em loading de conteúdo: `spinner-border`, `<div>Carregando...</div>`, `*LoadingState` com markup próprio (use `Loading`).
+
+## Notificações (toast)
+
+```tsx
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
+
+const { success, warning, info } = useNotificationContext();
+const { showApiError } = useApiError();
+
+// Sucesso
+success('Operação concluída.');
+
+// Erro de API (mutations / catch)
+onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.ENTITY_CREATE_ERROR),
+```
+
+- Mensagens curtas no toast; detalhes em logs/modais de auditoria.
+- **Proibido**: `alert()`, bibliotecas de toast externas, notificação HTML custom.
+
+## Formulários e labels
+
+- Campos: `FormField`, `EntitySelectField`, `AtivoInativoField`
+- Obrigatório: `required` no `FormField` ou `LabelWithHelp` (`RequiredMark`)
+- Ajuda (ícone i): `helpText` no `FormField` ou `LabelWithHelp` — não `alert-info` para hints
+- Ações de modal: `ModalFormActions` + botões de `components/ui/buttons`
+
+## Listagens e modais
+
+- CRUD em modal: `ListModal` + `useEntityListModal`
+- Tabela em aba: `EmbeddedTablePanel`
+- Modal base: `DraggableModal`
+- Abas com overflow: `ModalTabsOverflow`
+- Status: `StatusBadge` / `renderStatusBadge`
+
+## Hooks e dados
+
+- Servidor: React Query (`staleTime: 0`), `invalidateQueries` + `refetch` após mutation
+- i18n: `useI18n().t()` — não strings fixas em português quando já existe chave
+- Erros: constantes em `constants/ErrorMessages.ts`
+
+## Checklist ao implementar
+
+1. Existe componente em `components/ui` ou `components/common`?
+2. Loading → `Loading` com variante correta
+3. Feedback → `success` / `showApiError`
+4. Novo modal → `DraggableModal` ou `ListModal`
+5. Não copiar markup de outro modal — extrair só se virar padrão reutilizável em `ui/`

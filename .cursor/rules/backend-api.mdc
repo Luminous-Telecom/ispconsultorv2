@@ -45,6 +45,11 @@ export class EntityService {
 - NUNCA envie o email do cliente ao banco
 - Removida lógica `repassar_email_cliente`
 
+## Mensagens ao usuário (API → toast)
+- Campo `message` nas respostas: texto curto para toast (ex.: `Sincronização concluída.`)
+- Detalhes (contagens, breakdown, IDs) ficam em logs/auditoria — não no `message`
+- Erros: `message` clara e acionável; stack trace só no `logger`
+
 ## Tratamento de Erros (frontend)
-- Extraia mensagens: `error?.response?.data?.message`
-- Mostre mensagens específicas ao usuário via notificações
+- Use `useApiError().showApiError(err, CONTEXT_ERROR_MESSAGES.*)` — nunca parse manual repetido
+- Extração centralizada: `utils/apiErrorHelper.ts`

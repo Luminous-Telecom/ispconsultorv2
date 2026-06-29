@@ -15,7 +15,12 @@ alwaysApply: false
 ## State Management
 - Use React Query para dados do servidor com `staleTime: 0`
 - Após mutations: `queryClient.invalidateQueries()` + `refetch()`
-- Use `useNotificationContext` para feedback: `success()`, `error()`, `warning()`, `info()`
+- Feedback: ver seção **Notificações** em `frontend-ui-centralizado.mdc`
+
+## Componentes centralizados
+- **Loading**: `Loading` de `components/ui` — ver `frontend-ui-centralizado.mdc`
+- **Toast**: `useNotificationContext` + `useApiError` — nunca `alert()` ou toast custom
+- **Ajuda**: `LabelWithHelp` / `FormField helpText` — nunca `alert-info` para hints de campo
 
 ## Modais
 - Use `DraggableModal` para TODOS os modais (exceto Dashboard `/`)
