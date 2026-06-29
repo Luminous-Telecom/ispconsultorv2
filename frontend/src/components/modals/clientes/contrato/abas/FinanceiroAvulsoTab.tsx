@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useEffect, useRef } from 'react';
 import { Titulo } from 'types/entities';
 import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
+import { TableFilterCheckbox } from 'components/ui';
 import { BulkAction } from '../types';
 import { TableColumn } from 'components/tables/types';
 import { useIsMobile } from 'hooks/useMediaQuery';
@@ -162,23 +163,16 @@ const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
               className: 'no-padding',
               bulkActions: memoizedBulkActions,
               customControls: (
-                <div className="form-check form-switch">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    role="switch"
-                    id="showCanceladosContratoAvulso"
-                    checked={showCancelados}
-                    onChange={(e) => {
-                      setShowCancelados(e.target.checked);
-                      setPage(1);
-                    }}
-                    style={{ cursor: 'pointer' }}
-                  />
-                  <label className="form-check-label" htmlFor="showCanceladosContratoAvulso" style={{ cursor: 'pointer' }}>
-                    {t('filter.showCanceled')}
-                  </label>
-                </div>
+                <TableFilterCheckbox
+                  id="showCanceladosContratoAvulso"
+                  name="showCanceladosContratoAvulso"
+                  label={t('filter.showCanceled')}
+                  checked={showCancelados}
+                  onChange={(checked) => {
+                    setShowCancelados(checked);
+                    setPage(1);
+                  }}
+                />
               )
             }}
             onSelectionChange={setSelectedItems}

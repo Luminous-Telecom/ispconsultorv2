@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import DraggableModal from './DraggableModal';
 import Table from '../tables/Table';
 import { formatDateTime } from 'utils/formatters';
-import { Loading } from 'components/ui';
+import { Loading, TableFilterCheckbox } from 'components/ui';
 
 interface RotinaLogsModalProps {
   show: boolean;
@@ -168,21 +168,13 @@ const RotinaLogsModal: React.FC<RotinaLogsModalProps> = ({
           {/* Filtro para mostrar apenas erros */}
           {logs.some((log: LogEntry) => log.status === 'erro') && (
             <div className="mb-3">
-              <div className="form-check form-switch">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  role="switch"
-                  id="showOnlyErrors"
-                  name="showOnlyErrors"
-                  checked={showOnlyErrors}
-                  onChange={(e) => setShowOnlyErrors(e.target.checked)}
-                  style={{ cursor: 'pointer' }}
-                />
-                <label className="form-check-label" htmlFor="showOnlyErrors" style={{ cursor: 'pointer' }}>
-                  Mostrar apenas logs com erro
-                </label>
-              </div>
+              <TableFilterCheckbox
+                id="showOnlyErrors"
+                name="showOnlyErrors"
+                label="Mostrar apenas logs com erro"
+                checked={showOnlyErrors}
+                onChange={setShowOnlyErrors}
+              />
             </div>
           )}
           

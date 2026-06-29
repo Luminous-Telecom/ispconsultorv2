@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
+import { TableFilterCheckbox } from 'components/ui';
 import type { BulkAction } from 'components/tables/types';
 import { formatCurrency } from 'utils/formatters';
 import type { SaasContrato } from 'services/saas/saasCrudService';
@@ -70,20 +71,13 @@ const ContratosSection: React.FC<ContratosSectionProps> = ({
           bulkActions: contratosBulkActions,
           className: 'no-padding',
           customControls: (
-            <div className="form-check form-switch">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                role="switch"
-                id="showInativosSaasContratos"
-                checked={showInativosContratos}
-                onChange={(e) => setShowInativosContratos(e.target.checked)}
-                style={{ cursor: 'pointer' }}
-              />
-              <label className="form-check-label" htmlFor="showInativosSaasContratos" style={{ cursor: 'pointer' }}>
-                {t('filter.showInactive')}
-              </label>
-            </div>
+            <TableFilterCheckbox
+              id="showInativosSaasContratos"
+              name="showInativosSaasContratos"
+              label={t('filter.showInactive')}
+              checked={showInativosContratos}
+              onChange={setShowInativosContratos}
+            />
           ),
         }}
         onRowDoubleClick={onRowDoubleClick}

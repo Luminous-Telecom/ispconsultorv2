@@ -1,6 +1,6 @@
 ---
 description: Layout horizontal de formulários em modais (label à esquerda, input alinhado)
-globs: frontend/src/components/modals/**/*.tsx,frontend/src/components/forms/**/*.tsx,frontend/src/components/ui/FormField.tsx,frontend/src/components/ui/AtivoInativoField.tsx,frontend/src/components/ui/ComunicacaoPreferenciasField.tsx
+globs: frontend/src/components/modals/**/*.tsx,frontend/src/components/forms/**/*.tsx,frontend/src/components/ui/FormField.tsx,frontend/src/components/ui/AtivoInativoField.tsx,frontend/src/components/ui/ComunicacaoPreferenciasField.tsx,frontend/src/components/ui/TableFilterCheckbox.tsx
 alwaysApply: false
 ---
 
@@ -76,7 +76,26 @@ Padrão estilo IXC/Login: **label à direita na coluna fixa**, **controles alinh
 | Campo padrão | `FormField` |
 | Ativo/Inativo ou Sim/Não | `AtivoInativoField` |
 | Preferências de comunicação | `ComunicacaoPreferenciasField` |
+| Filtro booleano em tabela/lista | `TableFilterCheckbox` |
 | Entidade com busca | `EntitySelectField` |
+
+## Filtros de tabela (mostrar inativos, cancelados, etc.)
+
+```tsx
+// ✅ Checkbox padrão em customControls / barra de filtros
+<TableFilterCheckbox
+  id="showInativosContratos"
+  label={t('filter.showInactive')}
+  checked={showInativos}
+  onChange={setShowInativos}
+/>
+
+// ❌ Switch ou select para filtros on/off
+<div className="form-check form-switch">...</div>
+<FormField type="select" options={[{ value: 'sim' }, { value: 'nao' }]} />
+```
+
+Substituir **todos** os filtros booleanos de listagem (inativos, cancelados, erros) por `TableFilterCheckbox`.
 
 Novos campos inline reutilizáveis: copiar estrutura de `AtivoInativoField` ou `ComunicacaoPreferenciasField` — não duplicar CSS.
 

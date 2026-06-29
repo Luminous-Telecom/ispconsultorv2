@@ -4,6 +4,7 @@ import { TituloItem } from 'types/cliente';
 import { useI18n } from 'contexts/I18nContext';
 import { formatCurrency } from 'utils/formatters';
 import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
+import { TableFilterCheckbox } from 'components/ui';
 import { FinanceiroTabProps } from '../types';
 import { TableColumn } from 'components/tables/types';
 import { useIsMobile } from 'hooks/useMediaQuery';
@@ -86,20 +87,13 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
             emptyMessage: t('empty.noTitles'),
             className: 'no-padding',
             customControls: (
-              <div className="form-check form-switch">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  role="switch"
-                  id="showCancelados"
-                  checked={showCancelados}
-                  onChange={(e) => setShowCancelados(e.target.checked)}
-                  style={{ cursor: 'pointer' }}
-                />
-                <label className="form-check-label" htmlFor="showCancelados" style={{ cursor: 'pointer' }}>
-                  {t('filter.showCanceled')}
-                </label>
-              </div>
+              <TableFilterCheckbox
+                id="showCancelados"
+                name="showCancelados"
+                label={t('filter.showCanceled')}
+                checked={showCancelados}
+                onChange={setShowCancelados}
+              />
             )
           }}
           onSelectionChange={(items: CarneParcela[]) => {

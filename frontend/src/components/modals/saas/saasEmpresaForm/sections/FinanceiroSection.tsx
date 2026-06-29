@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
+import { TableFilterCheckbox } from 'components/ui';
 import type { BulkAction } from 'components/tables/types';
 import { formatCurrency } from 'utils/formatters';
 import type { SaasTitulo } from 'services/saas/saasCrudService';
@@ -67,20 +68,13 @@ const FinanceiroSection: React.FC<FinanceiroSectionProps> = ({
           bulkActions: titulosBulkActions,
           className: 'no-padding',
           customControls: (
-            <div className="form-check form-switch">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                role="switch"
-                id="showCanceladosSaasTitulos"
-                checked={showCanceladosTitulos}
-                onChange={(e) => setShowCanceladosTitulos(e.target.checked)}
-                style={{ cursor: 'pointer' }}
-              />
-              <label className="form-check-label" htmlFor="showCanceladosSaasTitulos" style={{ cursor: 'pointer' }}>
-                {t('filter.showCanceled')}
-              </label>
-            </div>
+            <TableFilterCheckbox
+              id="showCanceladosSaasTitulos"
+              name="showCanceladosSaasTitulos"
+              label={t('filter.showCanceled')}
+              checked={showCanceladosTitulos}
+              onChange={setShowCanceladosTitulos}
+            />
           ),
         }}
         onRefresh={onRefresh}

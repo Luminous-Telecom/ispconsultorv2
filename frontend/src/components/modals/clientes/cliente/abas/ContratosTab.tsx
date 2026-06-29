@@ -3,6 +3,7 @@ import { Contrato } from 'hooks/useContratos';
 import { useI18n } from 'contexts/I18nContext';
 import { formatDate, formatDateTime, formatCurrency } from 'utils/formatters';
 import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
+import { TableFilterCheckbox } from 'components/ui';
 import { ContratosTabProps } from '../types';
 import { useIsMobile } from 'hooks/useMediaQuery';
 
@@ -268,20 +269,13 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
             emptyMessage: t('empty.noContracts'),
             className: 'no-padding',
             customControls: (
-              <div className="form-check form-switch">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  role="switch"
-                  id="showInativosContratos"
-                  checked={showInativosContratos}
-                  onChange={(e) => setShowInativosContratos(e.target.checked)}
-                  style={{ cursor: 'pointer' }}
-                />
-                <label className="form-check-label" htmlFor="showInativosContratos" style={{ cursor: 'pointer' }}>
-                  {t('filter.showInactive')}
-                </label>
-              </div>
+              <TableFilterCheckbox
+                id="showInativosContratos"
+                name="showInativosContratos"
+                label={t('filter.showInactive')}
+                checked={showInativosContratos}
+                onChange={setShowInativosContratos}
+              />
             )
           }}
           onSelectionChange={setSelectedContratosItems}

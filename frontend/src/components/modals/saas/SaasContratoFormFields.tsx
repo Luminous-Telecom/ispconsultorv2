@@ -1,6 +1,7 @@
 import React from 'react';
 import FormField from 'components/ui/FormField';
 import EntitySelectField from 'components/ui/EntitySelectField';
+import AtivoInativoField from 'components/ui/AtivoInativoField';
 import { LabelWithHelp } from 'components/ui/LabelWithHelp';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -192,39 +193,21 @@ const SaasContratoFormFields: React.FC<SaasContratoFormFieldsProps> = ({
           />
         </div>
       </div>
-      <div className="d-flex gap-2 align-items-end">
-        <div className="flex-fill">
-          <FormField
-            name="data_validade_desconto"
-            type="date"
-            label={t('form.discountValidity')}
-            size="md"
-            value={form.data_validade_desconto}
-            onChange={(v) => onFieldChange('data_validade_desconto', String(v ?? ''))}
-          />
-        </div>
-        <div className="flex-fill">
-          <div className="form-check form-switch">
-            <input
-              className="form-check-input"
-              type="checkbox"
-              role="switch"
-              id="saas_contrato_isento"
-              name="isento_mensalidade"
-              checked={form.isento_mensalidade}
-              onChange={(e) => onFieldChange('isento_mensalidade', e.target.checked)}
-              style={{ cursor: 'pointer' }}
-            />
-            <label
-              className="form-check-label"
-              htmlFor="saas_contrato_isento"
-              style={{ cursor: 'pointer' }}
-            >
-              {t('form.exemptFromMonthlyFee')}
-            </label>
-          </div>
-        </div>
-      </div>
+      <FormField
+        name="data_validade_desconto"
+        type="date"
+        label={t('form.discountValidity')}
+        size="md"
+        value={form.data_validade_desconto}
+        onChange={(v) => onFieldChange('data_validade_desconto', String(v ?? ''))}
+      />
+
+      <AtivoInativoField
+        value={!!form.isento_mensalidade}
+        onChange={(v) => onFieldChange('isento_mensalidade', v)}
+        label={t('form.exemptFromMonthlyFee')}
+        name="saas-contrato-isento-mensalidade"
+      />
       <FormField
         name="observacoes"
         type="textarea"

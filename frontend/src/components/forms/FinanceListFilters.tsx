@@ -1,5 +1,6 @@
 import React from 'react';
 import DateRangeFilter from 'components/ui/DateRangeFilter';
+import { TableFilterCheckbox } from 'components/ui';
 
 export interface FinanceListFiltersProps {
   dataVencimentoInicio: string;
@@ -24,24 +25,13 @@ const FinanceListFilters: React.FC<FinanceListFiltersProps> = ({
 }) => (
   <div className="d-flex align-items-center flex-wrap gap-2">
     {onShowCanceladosChange != null && showCanceledLabel != null && (
-      <div className="form-check form-switch mb-0">
-        <input
-          className="form-check-input"
-          type="checkbox"
-          role="switch"
-          id={`${idPrefix}-show-canceled`}
-          checked={!!showCancelados}
-          onChange={(e) => onShowCanceladosChange(e.target.checked)}
-          style={{ cursor: 'pointer' }}
-        />
-        <label
-          className="form-check-label"
-          htmlFor={`${idPrefix}-show-canceled`}
-          style={{ cursor: 'pointer' }}
-        >
-          {showCanceledLabel}
-        </label>
-      </div>
+      <TableFilterCheckbox
+        id={`${idPrefix}-show-canceled`}
+        name={`${idPrefix}-show-canceled`}
+        label={showCanceledLabel}
+        checked={!!showCancelados}
+        onChange={onShowCanceladosChange}
+      />
     )}
     <DateRangeFilter
       variant="table"
