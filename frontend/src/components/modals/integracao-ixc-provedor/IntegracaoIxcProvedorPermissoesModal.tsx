@@ -156,9 +156,9 @@ const IntegracaoIxcProvedorPermissoesModal: React.FC<IntegracaoIxcProvedorPermis
   const columns = useMemo((): TableConfig<IxcPermissionFormRow>['columns'] => [
     {
       key: 'formulario',
-      label: 'Formulário',
+      label: 'Cadastro',
       sortable: true,
-      width: '240px',
+      width: '160px',
       render: (item) => <span className="small">{item.formulario}</span>,
     },
     {
@@ -203,12 +203,9 @@ const IntegracaoIxcProvedorPermissoesModal: React.FC<IntegracaoIxcProvedorPermis
                   data: rows,
                   loading: isLoading,
                   searchable: true,
-                  searchPlaceholder: 'Buscar formulário...',
+                  searchPlaceholder: 'Buscar cadastro...',
                   searchField: tableFilters.searchField || 'formulario',
-                  searchFields: [
-                    { key: 'grupo', label: 'Grupo' },
-                    { key: 'formulario', label: 'Formulário' },
-                  ],
+                  searchFields: [{ key: 'formulario', label: 'Cadastro' }],
                   sortable: true,
                   sortColumn: tableFilters.sortColumn,
                   sortDirection: tableFilters.sortDirection,

@@ -34,10 +34,11 @@ const IntegracaoIxcProvedorPermissoesDadosModal: React.FC<IntegracaoIxcProvedorP
   });
 
   const sampleLines = useMemo(() => {
-    if (!sampleData) return '';
-    if (sampleData.items.length === 0) return sampleData.message ?? 'Sem registros.';
+    if (!sampleData || sampleData.items.length === 0) return '';
     return sampleData.items.map((item) => `${item.id} — ${item.texto}`).join('\n');
   }, [sampleData]);
+
+  const infoMessage = sampleData?.message;
 
   if (!row) return null;
 
@@ -58,28 +59,6 @@ const IntegracaoIxcProvedorPermissoesDadosModal: React.FC<IntegracaoIxcProvedorP
     >
       <div className="p-3 logs-auditoria-details">
         <div className="row g-2">
-          <div className="col-md-6">
-            <FormField
-              name="ixc_perm_grupo"
-              type="text"
-              label="Grupo"
-              value={row.grupo}
-              onChange={noopChange}
-              size="sm"
-              readOnly
-            />
-          </div>
-          <div className="col-md-6">
-            <FormField
-              name="ixc_perm_formulario"
-              type="text"
-              label="Formulário"
-              value={row.formulario}
-              onChange={noopChange}
-              size="sm"
-              readOnly
-            />
-          </div>
           <div className="col-md-4">
             <FormField
               name="ixc_perm_resource"
@@ -138,18 +117,17 @@ const IntegracaoIxcProvedorPermissoesDadosModal: React.FC<IntegracaoIxcProvedorP
           </div>
         ) : (
           <div className="mt-3">
-            {sampleData?.message && (
-              <p className="small mb-2">{sampleData.message}</p>
-            )}
             <FormField
               name="ixc_perm_dados_amostra"
               type="textarea"
               label="Registros retornados"
+              helpText={infoMessage}
               value={sampleLines}
               onChange={noopChange}
               size="sm"
               readOnly
               rows={Math.min(12, Math.max(4, sampleData?.items.length ?? 4))}
+              placeholder={infoMessage && !sampleLines ? 'Sem registros para exibir.' : undefined}
             />
           </div>
         )}

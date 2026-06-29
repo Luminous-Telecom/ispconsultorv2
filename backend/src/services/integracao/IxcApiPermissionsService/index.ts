@@ -83,6 +83,7 @@ function cellFromOk(ok: boolean): IxcPermissionCellValue {
 
 function formatSampleText(registro: Record<string, string>, labelFields: string[]): string {
   const partes = labelFields
+    .filter((field) => field !== 'id')
     .map((field) => {
       const valor = String(registro[field] ?? '').trim();
       if (!valor || valor === '0') return '';
@@ -188,14 +189,13 @@ function listCells(
 
 function buildRow(
   id: string,
-  grupo: string,
-  formulario: string,
+  label: string,
   cells: Partial<IxcPermissionFormRow>
 ): IxcPermissionFormRow {
   return {
     id,
-    grupo,
-    formulario,
+    grupo: '',
+    formulario: label,
     dados: null,
     menu: null,
     listar: null,
@@ -243,34 +243,14 @@ export class IxcApiPermissionsService {
     assuntoCells.dados = assuntoPorSetor.total;
 
     const items: IxcPermissionFormRow[] = [
-      buildRow('filial', 'Cadastros OS', 'Configurações > Empresa > Filiais', listCells(filial, true)),
-      buildRow(
-        'empresa_setor',
-        'Cadastros OS',
-        'Configurações > Empresa > Setores (do operador API)',
-        setorCells
-      ),
-      buildRow(
-        'funcionarios',
-        'Cadastros OS',
-        'Sistema > Folha de pagamento > Colaboradores (do setor do operador)',
-        funcionariosCells
-      ),
-      buildRow(
-        'su_oss_assunto',
-        'Cadastros OS',
-        'Suporte > OS > Assuntos (do setor do operador)',
-        assuntoCells
-      ),
-      buildRow('estrutura', 'Cadastros OS', 'Sistema > Cadastros > Estruturas', listCells(estrutura, true)),
-      buildRow('cidade', 'Cadastros OS', 'Cadastros > Cidade', listCells(cidade, true)),
-      buildRow('su_oss_chamado', 'Ordens de serviço', 'Suporte > OS > Chamados', listCells(osList, true)),
-      buildRow(
-        'su_oss_chamado_mensagem',
-        'Ordens de serviço',
-        'Suporte > OS > Mensagens',
-        listCells(mensagemList, true)
-      ),
+      buildRow('filial', 'Filiais', listCells(filial, true)),
+      buildRow('empresa_setor', 'Setores', setorCells),
+      buildRow('funcionarios', 'Colaboradores', funcionariosCells),
+      buildRow('su_oss_assunto', 'Assuntos', assuntoCells),
+      buildRow('estrutura', 'Estruturas', listCells(estrutura, true)),
+      buildRow('cidade', 'Cidades', listCells(cidade, true)),
+      buildRow('su_oss_chamado', 'Chamados', listCells(osList, true)),
+      buildRow('su_oss_chamado_mensagem', 'Mensagens', listCells(mensagemList, true)),
     ];
 
     return {
@@ -302,7 +282,7 @@ export class IxcApiPermissionsService {
       );
       const items = lookupItems.map((item) => ({
         id: item.id,
-        texto: `id: ${item.id} | funcionario: ${item.nome}`,
+        texto: item.nome,
       }));
 
       return {
@@ -314,7 +294,7 @@ export class IxcApiPermissionsService {
         message:
           items.length === 0
             ? 'Nenhum colaborador vinculado aos setores do operador API.'
-            : 'Colaboradores do setor do operador API (funcionario_setores).',
+            : 'Colaboradores do setor do operador API.',
       };
     }
 
@@ -323,7 +303,7 @@ export class IxcApiPermissionsService {
       const lookupItems = await fetchLookupItemsByIxcIds(IXC_SETOR_RESOURCE, 'setor', setorIds);
       const items = lookupItems.map((item) => ({
         id: item.id,
-        texto: `id: ${item.id} | setor: ${item.nome}`,
+        texto: item.nome,
       }));
 
       return {
@@ -334,8 +314,8 @@ export class IxcApiPermissionsService {
         items,
         message:
           items.length === 0
-            ? 'Nenhum setor vinculado ao operador API em funcionario_setores (ativo).'
-            : 'Setores do operador API (funcionario_setores).',
+            ? 'Nenhum setor vinculado ao operador API.'
+            : 'Setores do operador API.',
       };
     }
 
@@ -356,7 +336,7 @@ export class IxcApiPermissionsService {
       const lookupItems = await fetchLookupItemsByIxcIds(IXC_ASSUNTO_RESOURCE, 'assunto', assuntoIds);
       const items = lookupItems.map((item) => ({
         id: item.id,
-        texto: `id: ${item.id} | assunto: ${item.nome}`,
+        texto: item.nome,
       }));
 
       return {
@@ -397,7 +377,7 @@ export class IxcApiPermissionsService {
       total > items.length
         ? `Exibindo ${items.length} de ${total} registros retornados pela API.`
         : total === 0
-          ? 'A API não retornou registros para este formulário.'
+          ? 'A API não retornou registros para este cadastro.'
           : undefined;
 
     return {
