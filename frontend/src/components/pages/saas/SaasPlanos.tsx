@@ -6,6 +6,7 @@ import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import AtivoInativoField from 'components/ui/AtivoInativoField';
 import {
+  Loading,
   RecarregarButton,
   NovoButton,
   SalvarButton,
@@ -201,7 +202,7 @@ const SaasPlanos: React.FC = () => {
       <div className="row g-3">
         {isLoading ? (
           <div className="col-12 text-center py-4">
-            <span className="spinner-border spinner-border-sm me-2"></span>Carregando...
+            <Loading variant="inline" size="sm" message={t('messages.loading')} />
           </div>
         ) : planos.length === 0 ? (
           <div className="col-12 text-center py-4 text-muted">Nenhum plano cadastrado</div>

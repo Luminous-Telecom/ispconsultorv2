@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { TranslationKeys } from 'contexts/I18nContext';
-import Spinner from '../ui/Spinner';
+import Loading from '../ui/Loading';
 import { drainPossiblePromise } from './tableUtils';
 import { BulkAction, TableAction, TableColumn } from './types';
 import {
@@ -83,7 +83,7 @@ function TableMobileView<T extends { id: number | string }>({
     if (loading) {
       return (
         <div className="table-mobile-loading">
-          <Spinner size="sm" variant="primary" aria-label={loadingMessage} />
+          <Loading variant="inline" size="sm" message={loadingMessage} showMessage={false} />
         </div>
       );
     }

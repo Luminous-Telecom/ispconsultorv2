@@ -1,5 +1,6 @@
 import React from 'react';
 import FormField from 'components/ui/FormField';
+import { Loading } from 'components/ui';
 import { REQUIREMENTS } from './constants';
 import { InstallStatus, SshFormData } from './types';
 
@@ -106,10 +107,7 @@ const AgentModalInstallAutoTab: React.FC<AgentModalInstallAutoTabProps> = ({
       <div>
         <div className="d-flex align-items-center gap-2 mb-2">
           {isRunning && (
-            <>
-              <div className="spinner-border spinner-border-sm text-primary" role="status" />
-              <span className="small text-muted">Instalando...</span>
-            </>
+            <Loading variant="inline" size="sm" message="Instalando..." />
           )}
           {installStatus === 'success' && <span className="badge bg-success">Instalação concluída!</span>}
           {installStatus === 'error' && <span className="badge bg-danger">Falha na instalação</span>}

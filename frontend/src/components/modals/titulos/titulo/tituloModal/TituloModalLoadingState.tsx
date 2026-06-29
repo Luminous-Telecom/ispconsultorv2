@@ -1,6 +1,6 @@
 import React from 'react';
 import DraggableModal from 'components/common/DraggableModal';
-import { Spinner } from 'components/ui';
+import { Loading } from 'components/ui';
 
 interface TituloModalLoadingStateProps {
   show: boolean;
@@ -16,9 +16,7 @@ const TituloModalLoadingState: React.FC<TituloModalLoadingStateProps> = ({
   onClose,
 }) => (
   <DraggableModal show={show} onClose={onClose} title={title}>
-    <div className="d-flex justify-content-center p-4">
-      <Spinner size="md" variant="primary" aria-label={loadingLabel} />
-    </div>
+    <Loading variant="modal" message={loadingLabel} />
   </DraggableModal>
 );
 

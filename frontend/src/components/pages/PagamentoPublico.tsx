@@ -5,7 +5,7 @@ import { defaultApiClient } from 'services/core';
 import { formatDate } from 'utils/formatters';
 import { ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
-import { Spinner } from 'components/ui';
+import { Loading } from 'components/ui';
 import './PagamentoPublico.css';
 
 interface TituloPublico {
@@ -103,7 +103,7 @@ const PagamentoPublico: React.FC = () => {
     return (
       <div className="pagamento-publico-container">
         <div className="pagamento-publico-loading">
-          <Spinner size="md" variant="primary" aria-label="Carregando..." />
+          <Loading variant="page" showMessage={false} />
         </div>
       </div>
     );

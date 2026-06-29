@@ -13,7 +13,7 @@ import { useFiliais, useEstruturas, useTecnicos, useAssuntos, useSetores, useCli
 import ClienteListModal from 'components/modals/clientes/ClienteListModal';
 import DraggableModal from 'components/common/DraggableModal';
 import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
-import { DeletarButton, ModalFormActions, Spinner } from 'components/ui';
+import { DeletarButton, Loading, ModalFormActions } from 'components/ui';
 import OrdemServicoFormFields, {
   initialOrdemServicoForm,
   type OrdemServicoFormData,
@@ -300,10 +300,7 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
   const renderContent = () => {
     if (isEdit && isLoadingOrdem) {
       return (
-        <div className="text-center p-4">
-          <Spinner size="md" variant="primary" aria-label="Carregando" />
-          <p className="mt-2">Carregando dados da ordem de serviço...</p>
-        </div>
+        <Loading variant="centered" message="Carregando dados da ordem de serviço..." />
       );
     }
 

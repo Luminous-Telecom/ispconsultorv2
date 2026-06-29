@@ -1,4 +1,5 @@
 import React from 'react';
+import { Loading } from 'components/ui';
 import type { BlockdomiImportTranslateFn } from './importarListaBlockdomiTypes';
 import type { ClassifiedList } from './importarListaBlockdomiTypes';
 import ImportarListaBlockdomiVersaoHeader from './ImportarListaBlockdomiVersaoHeader';
@@ -178,8 +179,7 @@ const ImportarListaBlockdomiContent: React.FC<ImportarListaBlockdomiContentProps
 
       {isAnalyzing && (
         <div className="ilb-processing mt-1">
-          <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
-          <span>{t('blockdomi.classifying')}</span>
+          <Loading variant="inline" size="sm" message={t('blockdomi.classifying')} />
         </div>
       )}
 

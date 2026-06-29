@@ -1,5 +1,5 @@
 import React, { RefObject } from 'react';
-import Spinner from '../ui/Spinner';
+import Loading from '../ui/Loading';
 import TableColumn from './TableColumn';
 import {
   ACTIONS_COLUMN_WIDTH_PX,
@@ -154,7 +154,7 @@ function TableDesktopView<T extends { id: number | string }>({
           <tbody>
             <tr>
               <td colSpan={colSpan} className="text-center">
-                <Spinner size="sm" variant="primary" aria-label={loadingMessage} />
+                <Loading variant="inline" size="sm" message={loadingMessage} showMessage={false} />
               </td>
             </tr>
           </tbody>

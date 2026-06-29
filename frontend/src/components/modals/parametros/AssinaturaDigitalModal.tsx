@@ -6,7 +6,7 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { AssinaturaDigitalProviderService, AssinaturaDigitalProviderType } from 'services/assinaturaDigitalProviderService';
 import DraggableModal from 'components/common/DraggableModal';
-import { CancelarButton, SalvarButton, LabelWithHelp } from 'components/ui';
+import { CancelarButton, SalvarButton, LabelWithHelp, Loading } from 'components/ui';
 import Button from 'components/ui/Button';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -183,11 +183,7 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
   const modalContent = (
     <>
       {(isLoading || isLoadingEnabled) ? (
-        <div className="text-center p-4">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">{t('ui.loading')}</span>
-          </div>
-        </div>
+        <Loading variant="centered" message={t('ui.loading')} />
       ) : (
       <form id="assinatura-digital-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }} autoComplete="off" data-form-type="other">
         <div className="card mb-3">

@@ -8,7 +8,7 @@ import {
 import { useFormReset } from 'hooks/useFormReset';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
-import { ModalFormActions, Spinner } from 'components/ui';
+import { Loading, ModalFormActions } from 'components/ui';
 import IntegracaoIxcProvedorFormFields, {
   type IntegracaoIxcProvedorFormData,
 } from './IntegracaoIxcProvedorFormFields';
@@ -130,9 +130,7 @@ const IntegracaoIxcProvedorModal: React.FC<IntegracaoIxcProvedorModalProps> = ({
       }
     >
       {isLoadingIntegracao && isEdit ? (
-        <div className="d-flex justify-content-center p-4">
-          <Spinner />
-        </div>
+        <Loading variant="modal" />
       ) : (
         <form
           id="integracao-ixc-provedor-form"

@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import DraggableModal from 'components/common/DraggableModal';
-import { FecharButton, FormField, Spinner } from 'components/ui';
+import { FecharButton, FormField, Loading } from 'components/ui';
 import {
   IntegracaoIxcProvedorService,
   type IxcPermissionFormRow,
@@ -107,9 +107,8 @@ const IntegracaoIxcProvedorPermissoesDadosModal: React.FC<IntegracaoIxcProvedorP
         </div>
 
         {isLoading ? (
-          <div className="d-flex align-items-center gap-2 py-3">
-            <Spinner size="sm" />
-            <span className="small">Consultando dados na API IXC...</span>
+          <div className="py-3">
+            <Loading variant="inline" size="sm" message="Consultando dados na API IXC..." />
           </div>
         ) : sampleError ? (
           <div className="alert alert-danger mt-3 mb-0 py-2 small">

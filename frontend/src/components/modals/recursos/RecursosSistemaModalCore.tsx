@@ -6,7 +6,7 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useFormReset } from 'hooks/useFormReset';
 import DraggableModal from 'components/common/DraggableModal';
-import { ModalFormActions, LabelWithHelp } from 'components/ui';
+import { LabelWithHelp, Loading, ModalFormActions } from 'components/ui';
 import { useI18n } from 'contexts/I18nContext';
 import type { SaasParametros } from 'services/saas/saasParametrosService';
 import {
@@ -133,11 +133,7 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
   const modalContent = (
     <>
       {isLoading ? (
-        <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Carregando...</span>
-          </div>
-        </div>
+        <Loading variant="modal" />
       ) : (
         <form
           id={config.formId}

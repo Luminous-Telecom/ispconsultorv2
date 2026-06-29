@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { Agent } from 'types';
 import DraggableModal from 'components/common/DraggableModal';
 import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
-import { CancelarButton, CopiarButton, FecharButton, GerarButton, InstalarAgenteButton } from 'components/ui';
+import { CancelarButton, CopiarButton, FecharButton, GerarButton, InstalarAgenteButton, Loading } from 'components/ui';
 import { useI18n } from 'contexts/I18nContext';
 import FormField from 'components/ui/FormField';
 import { defaultApiClient } from 'services/core';
@@ -314,10 +314,7 @@ const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
           <div>
             <div className="d-flex align-items-center gap-2 mb-2">
               {isRunning && (
-                <>
-                  <div className="spinner-border spinner-border-sm text-primary" role="status" />
-                  <span className="small text-muted">Instalando...</span>
-                </>
+                <Loading variant="inline" size="sm" message="Instalando..." />
               )}
               {status === 'success' && <span className="badge bg-success">Instalação concluída!</span>}
               {status === 'error'   && <span className="badge bg-danger">Falha na instalação</span>}

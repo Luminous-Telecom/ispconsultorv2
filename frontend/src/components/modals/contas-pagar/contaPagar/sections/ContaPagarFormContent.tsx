@@ -1,6 +1,6 @@
 import React from 'react';
 import { useI18n } from 'contexts/I18nContext';
-import { Spinner } from 'components/ui';
+import { Loading } from 'components/ui';
 import ContaPagarFornecedorSection from './ContaPagarFornecedorSection';
 import ContaPagarVencimentoSection from './ContaPagarVencimentoSection';
 import ContaPagarValorTipoPagamentoSection from './ContaPagarValorTipoPagamentoSection';
@@ -43,10 +43,7 @@ const ContaPagarFormContent: React.FC<ContaPagarFormContentProps> = ({
 
   if (isLoading && isEditing) {
     return (
-      <div className="text-center p-4">
-        <Spinner size="md" variant="primary" aria-label={t('messages.loading')} />
-        <p className="mt-2">{t('messages.loadingAccountData')}</p>
-      </div>
+      <Loading variant="centered" message={t('messages.loadingAccountData')} />
     );
   }
 

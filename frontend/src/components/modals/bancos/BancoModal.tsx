@@ -12,7 +12,7 @@ import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
 import { Banco } from 'types';
 import DraggableModal from 'components/common/DraggableModal';
 import ModalTabsOverflow from 'components/common/ModalTabsOverflow';
-import { ModalFormActions, Spinner, TestarConexaoButton } from 'components/ui';
+import { Loading, ModalFormActions, TestarConexaoButton } from 'components/ui';
 import { InformacoesBasicasTab, ConfiguracoesApiTab } from './banco';
 import { BancoForm } from './banco/types';
 import AsaasForm from './banco/especificos/AsaasForm';
@@ -199,10 +199,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
     // Estado de loading
     if (isEdit && isLoading) {
       return (
-        <div className="text-center p-4">
-          <Spinner size="md" variant="primary" aria-label={t('messages.loading')} />
-          <p className="mt-2">{t('messages.loading')}</p>
-        </div>
+        <Loading variant="centered" message={t('messages.loading')} />
       );
     }
 

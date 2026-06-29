@@ -13,7 +13,7 @@ import { useFormReset } from 'hooks/useFormReset';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
 import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
-import { CancelarButton, NovoButton, SalvarButton } from 'components/ui';
+import { CancelarButton, Loading, NovoButton, SalvarButton } from 'components/ui';
 import { DadosEmpresaForm, DadosEmpresaModalProps } from './types';
 import DadosBasicosTab from './abas/DadosBasicosTab';
 import EnderecoTab from './abas/EnderecoTab';
@@ -415,7 +415,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   if (isSaasEdit && isLoadingSaas) {
     return (
       <DraggableModal show={show} onClose={onClose} title="Empresa" size="xl" modalId={modalId}>
-        <div className="p-3 text-muted">Carregando...</div>
+        <Loading variant="modal" />
       </DraggableModal>
     );
   }

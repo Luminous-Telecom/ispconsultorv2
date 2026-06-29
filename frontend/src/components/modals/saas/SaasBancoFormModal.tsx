@@ -6,7 +6,7 @@ import { useSaasBancoForm } from 'hooks/useSaasBancoForm';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
 import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
-import { ModalFormActions, Spinner, TestarConexaoButton } from 'components/ui';
+import { Loading, ModalFormActions, TestarConexaoButton } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
@@ -178,10 +178,7 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
       }
     >
       {isEdit && isLoading ? (
-        <div className="text-center p-4">
-          <Spinner size="md" variant="primary" aria-label={t('messages.loading')} />
-          <p className="mt-2">{t('messages.loading')}</p>
-        </div>
+        <Loading variant="centered" message={t('messages.loading')} />
       ) : (
         <form id="saas-banco-form-id" onSubmit={formHook.handleSubmit}>
           <div className="banco-modal-content">

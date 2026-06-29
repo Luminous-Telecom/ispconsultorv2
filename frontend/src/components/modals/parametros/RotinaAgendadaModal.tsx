@@ -7,7 +7,7 @@ import { SaasSchedulerService, type CreateRotinaData, type UpdateRotinaData } fr
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { usePlanoModulos } from 'hooks/usePlanoModulos';
 import DraggableModal from 'components/common/DraggableModal';
-import { DeletarButton, FormField, ModalFormActions, NovoButton } from 'components/ui';
+import { DeletarButton, FormField, Loading, ModalFormActions, NovoButton } from 'components/ui';
 import CronFieldSection from './CronFieldSection';
 import { useI18n } from 'contexts/I18nContext';
 import {
@@ -226,11 +226,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
   if (isLoading) {
     return (
       <DraggableModal show={show} onClose={handleClose} title={t('scheduler.formModalTitle')} size="lg">
-        <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Carregando...</span>
-          </div>
-        </div>
+        <Loading variant="modal" />
       </DraggableModal>
     );
   }

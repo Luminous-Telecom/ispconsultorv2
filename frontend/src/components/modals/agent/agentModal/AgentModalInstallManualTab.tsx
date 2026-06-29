@@ -1,5 +1,5 @@
 import React from 'react';
-import { CopiarButton } from 'components/ui';
+import { CopiarButton, Loading } from 'components/ui';
 import { REQUIREMENTS } from './constants';
 
 interface AgentModalInstallManualTabProps {
@@ -19,10 +19,7 @@ const AgentModalInstallManualTab: React.FC<AgentModalInstallManualTabProps> = ({
 }) => (
   <div>
     {generating && (
-      <div className="d-flex align-items-center gap-2 text-muted small">
-        <div className="spinner-border spinner-border-sm" role="status" />
-        Gerando comando...
-      </div>
+      <Loading variant="inline" size="sm" message="Gerando comando..." />
     )}
 
     {!generatedCmd && !generating && (

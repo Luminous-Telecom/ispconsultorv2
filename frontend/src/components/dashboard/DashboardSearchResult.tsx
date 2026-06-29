@@ -3,8 +3,7 @@ import { useClientes } from 'hooks/useClientes';
 import { Cliente, Contrato, Plano } from 'types';
 import { useModal } from 'contexts/ModalContext';
 import { useTableHeader } from 'contexts/TableHeaderContext';
-import { Spinner } from 'components/ui';
-import { useI18n } from 'contexts/I18nContext';
+import { Loading } from 'components/ui';
 
 const DASHBOARD_SEARCH_HEADER_FIELDS = [
   { id: 'todos', label: 'Todos' },
@@ -36,7 +35,6 @@ interface DashboardSearchResultProps {
 }
 
 const DashboardSearchResult: React.FC<DashboardSearchResultProps> = ({ searchTerm, searchField }) => {
-  const { t } = useI18n();
   const { openModal } = useModal();
   const { setAvailableSearchFields, setSearchPlaceholder } = useTableHeader();
 
@@ -73,9 +71,7 @@ const DashboardSearchResult: React.FC<DashboardSearchResultProps> = ({ searchTer
       )}
 
       {isLoading && clientes.length === 0 ? (
-        <div className="dashboard-search-loading py-5 text-center">
-          <Spinner size="md" variant="primary" aria-label={t('messages.loading')} />
-        </div>
+        <Loading variant="centered" showMessage={false} className="dashboard-search-loading py-5" />
       ) : clientes.length === 0 ? (
         <div className="dashboard-search-empty text-muted text-center py-5 rounded border border-secondary border-opacity-25">
           Nenhum cliente encontrado para esta busca.

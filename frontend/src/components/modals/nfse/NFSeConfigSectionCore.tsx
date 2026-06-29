@@ -5,6 +5,7 @@ import { useNotificationContext } from 'components/notifications/NotificationPro
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useI18n } from 'contexts/I18nContext';
+import { Loading } from 'components/ui';
 import { NFSE_CONFIG_BY_VARIANT, type NFSeConfigVariant } from './nfseConfigVariants';
 
 export interface NFSeConfigSectionCoreProps {
@@ -202,11 +203,7 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
           <h6 className="mb-0">{t('nfse.title')}</h6>
         </div>
         <div className="card-body">
-          <div className="text-center p-3">
-            <div className="spinner-border spinner-border-sm text-primary" role="status">
-              <span className="visually-hidden">{t('ui.loading')}</span>
-            </div>
-          </div>
+          <Loading variant="centered" size="sm" message={t('ui.loading')} />
         </div>
       </div>
     );

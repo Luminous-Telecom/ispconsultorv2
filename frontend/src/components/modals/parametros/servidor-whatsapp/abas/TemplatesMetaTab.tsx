@@ -7,7 +7,7 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { defaultApiClient } from 'services/core';
 import { TemplateWhatsAppService, type TemplateWhatsApp } from 'services/templateWhatsAppService';
 import type { ApiResponse } from 'types';
-import { RecarregarButton, Spinner, SystemButton } from 'components/ui';
+import { Loading, RecarregarButton, SystemButton } from 'components/ui';
 
 interface Template {
   name: string;
@@ -210,9 +210,7 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
       </div>
 
       {isLoading && (
-        <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
-          <Spinner size="md" variant="primary" aria-label="Carregando templates..." />
-        </div>
+        <Loading variant="modal" message="Carregando templates..." />
       )}
 
       {error && (

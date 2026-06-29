@@ -18,6 +18,8 @@ export interface SpinnerProps {
   className?: string;
   'aria-label'?: string;
   text?: string;
+  /** inline: só o spinner (uso em linha/tabelas). block: coluna com texto opcional. */
+  layout?: 'inline' | 'block';
 }
 
 const sizeStyles: Record<SpinnerSize, React.CSSProperties | undefined> = {
@@ -36,6 +38,7 @@ const Spinner: React.FC<SpinnerProps> = ({
   className,
   'aria-label': ariaLabel,
   text,
+  layout = 'block',
 }) => {
   const resolvedAriaLabel = ariaLabel ?? text ?? 'Carregando...';
 
@@ -48,20 +51,25 @@ const Spinner: React.FC<SpinnerProps> = ({
     .filter(Boolean)
     .join(' ');
 
+  const spinnerEl = (
+    <div
+      className={classes}
+      role="status"
+      aria-label={resolvedAriaLabel}
+      style={sizeStyles[size]}
+    >
+      <span className="visually-hidden">{resolvedAriaLabel}</span>
+    </div>
+  );
+
+  if (layout === 'inline') {
+    return spinnerEl;
+  }
+
   return (
     <div className="d-flex flex-column align-items-center">
-      <div
-        className={classes}
-        role="status"
-        aria-label={resolvedAriaLabel}
-        style={sizeStyles[size]}
-      >
-        <span className="visually-hidden">{resolvedAriaLabel}</span>
-      </div>
-
-      {text && (
-        <span className="mt-2 small text-muted">{text}</span>
-      )}
+      {spinnerEl}
+      {text && <span className="mt-2 small text-muted">{text}</span>}
     </div>
   );
 };

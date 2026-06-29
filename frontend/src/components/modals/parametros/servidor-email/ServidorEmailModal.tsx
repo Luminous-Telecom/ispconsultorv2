@@ -8,7 +8,7 @@ import { useI18n } from 'contexts/I18nContext';
 import { ServidorEmailService, MensagemEmail } from 'services/servidorEmailService';
 import DraggableModal from 'components/common/DraggableModal';
 import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
-import { FecharButton, LimparButton, RemoverButton, SalvarButton, Spinner } from 'components/ui';
+import { FecharButton, LimparButton, Loading, RemoverButton, SalvarButton } from 'components/ui';
 import { ServidorEmailForm, ServidorEmailModalProps } from './types';
 import ServidorTab from './abas/ServidorTab';
 import MensagensTab from './abas/MensagensTab';
@@ -331,9 +331,7 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
   const modalContent = (
     <>
       {isLoading ? (
-        <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
-          <Spinner size="md" variant="primary" aria-label="Carregando..." />
-        </div>
+        <Loading variant="modal" />
       ) : (
       <div className="email-modal-content">
         {/* Conteúdo das Abas */}

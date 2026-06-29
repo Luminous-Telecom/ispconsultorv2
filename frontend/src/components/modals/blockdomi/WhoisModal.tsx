@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
 import DetailFieldGrid from 'components/common/DetailFieldGrid';
-import Spinner from 'components/ui/Spinner';
+import { Loading } from 'components/ui';
 import { BlockdomiWhoisService, type WhoisResult } from 'services/blockdomiWhoisService';
 import { extractApiErrorMessageSync } from 'utils/apiErrorHelper';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
@@ -153,9 +153,7 @@ const WhoisModal: React.FC<WhoisModalProps> = ({ show, onClose, ip }) => {
   const renderContent = () => {
     if (loading) {
       return (
-        <div className="p-3 d-flex justify-content-center align-items-center py-5">
-          <Spinner size="lg" />
-        </div>
+        <Loading variant="modal" size="lg" />
       );
     }
     if (whoisError) {

@@ -13,7 +13,7 @@ import { useIsMobile } from 'hooks/useMediaQuery';
 import { useAuditoria } from 'hooks/useAuditoria';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
-import { Spinner } from 'components/ui';
+import { Loading } from 'components/ui';
 import ContratoModalHeader from './ContratoModalHeader';
 import ContratoModalSubModals from './ContratoModalSubModals';
 import ContratoModalTabPanels from './ContratoModalTabPanels';
@@ -465,9 +465,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         size="lg"
         modalId="contrato-modal-loading"
       >
-        <div className="text-center p-4">
-          <Spinner size="md" variant="primary" aria-label="Carregando..." />
-        </div>
+        <Loading variant="modal" showMessage={false} />
       </DraggableModal>
     );
   }

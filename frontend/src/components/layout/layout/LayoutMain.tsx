@@ -8,7 +8,7 @@ import { useModal } from 'contexts/ModalContext';
 import { useLoading } from 'contexts/LoadingContext';
 import { useApiLoading } from 'hooks/useApiLoading';
 import { usePlanoModulos } from 'hooks/usePlanoModulos';
-import LoadingDots from '../../common/LoadingDots';
+import { LoadingBar } from 'components/ui';
 import SingleModalWrapper from '../../common/SingleModalWrapper';
 import BloqueioAtrasoOverlayComponent from '../../common/BloqueioAtrasoOverlay';
 import ServerUnavailableScreen from './ServerUnavailableScreen';
@@ -123,7 +123,7 @@ const LayoutMain: React.FC = () => {
 
         {isLoading && (
           <div className="layout-loading-bar">
-            <LoadingDots />
+            <LoadingBar />
           </div>
         )}
 

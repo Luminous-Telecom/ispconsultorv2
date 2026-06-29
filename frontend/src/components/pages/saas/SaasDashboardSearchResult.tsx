@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { saasEmpresasService, type SaasEmpresa, type SaasConfigListResponse } from 'services/saas/saasEmpresasService';
 import { useModal } from 'contexts/ModalContext';
 import { useTableHeader } from 'contexts/TableHeaderContext';
-import { Spinner } from 'components/ui';
+import { Loading } from 'components/ui';
 import { useI18n } from 'contexts/I18nContext';
 
 interface SaasDashboardSearchResultProps {
@@ -66,9 +66,7 @@ const SaasDashboardSearchResult: React.FC<SaasDashboardSearchResultProps> = ({ s
       )}
 
       {isLoading && empresas.length === 0 ? (
-        <div className="dashboard-search-loading py-5 text-center">
-          <Spinner size="md" variant="primary" aria-label={t('messages.loading')} />
-        </div>
+        <Loading variant="centered" showMessage={false} className="dashboard-search-loading py-5" />
       ) : empresas.length === 0 ? (
         <div className="dashboard-search-empty text-muted text-center py-5 rounded border border-secondary border-opacity-25">
           Nenhum cliente tenant encontrado para esta busca.

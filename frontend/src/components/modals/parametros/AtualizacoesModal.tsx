@@ -4,7 +4,7 @@ import { formatDate } from 'utils/formatters';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { apiService } from 'services/api';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
-import { AtualizarSistemaButton, FecharButton } from 'components/ui';
+import { AtualizarSistemaButton, FecharButton, Loading } from 'components/ui';
 import { ApiResponse } from 'types/api';
 import { API_CONFIG } from 'config/api';
 import { useI18n } from 'contexts/I18nContext';
@@ -248,12 +248,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
     <>
     <div style={{ padding: isMobile ? '0' : '12px' }}>
         {isLoading && (
-          <div className="text-center py-4">
-            <div className="spinner-border spinner-border-sm text-primary" role="status">
-              <span className="visually-hidden">{t('messages.loading')}</span>
-            </div>
-            <p className="mt-2 mb-0 small text-muted">{t('updates.searching')}</p>
-          </div>
+          <Loading variant="centered" size="sm" message={t('updates.searching')} />
         )}
 
         {error && (

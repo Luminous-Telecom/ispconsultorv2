@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useTableHeader } from 'contexts/TableHeaderContext';
 import { useIsMobile } from 'hooks/useMediaQuery';
-import { RecarregarButton, Spinner, VoltarButton } from 'components/ui';
+import { RecarregarButton, Loading, VoltarButton } from 'components/ui';
 import Button from 'components/ui/Button';
 import SearchBar from 'components/ui/SearchBar';
 import { useI18n } from 'contexts/I18nContext';
@@ -242,7 +242,7 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
                             >
                               {isLoading ? (
                                 <>
-                                  <Spinner size="sm" variant="primary" className="me-2" />
+                                  <Loading variant="inline" size="sm" className="me-2" showMessage={false} />
                                   <span>{props.children}</span>
                                 </>
                               ) : (
@@ -277,7 +277,7 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
                           >
                             {isLoading ? (
                               <>
-                                <Spinner size="sm" variant="primary" className="me-2" />
+                                <Loading variant="inline" size="sm" className="me-2" showMessage={false} />
                                 <span>{props.children}</span>
                               </>
                             ) : (

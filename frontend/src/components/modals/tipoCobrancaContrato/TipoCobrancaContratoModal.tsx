@@ -4,7 +4,7 @@ import { useCreateTipoCobrancaContrato, useUpdateTipoCobrancaContrato, useTipoCo
 import { useFormReset } from 'hooks/useFormReset';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
-import { ModalFormActions, Spinner } from 'components/ui';
+import { Loading, ModalFormActions } from 'components/ui';
 import type { TipoCobrancaContrato } from 'services/tipoCobrancaContratoService';
 import TipoCobrancaFormFields, { type TipoCobrancaFormData } from './TipoCobrancaFormFields';
 import { validateTipoCobrancaForm } from 'utils/tipoCobrancaFormValidation';
@@ -115,9 +115,7 @@ const TipoCobrancaContratoModal: React.FC<TipoCobrancaContratoModalProps> = ({
       }
     >
       {isLoadingTipo && isEdit ? (
-        <div className="d-flex justify-content-center p-4">
-          <Spinner />
-        </div>
+        <Loading variant="modal" />
       ) : (
         <form
           id="tipo-cobranca-form"

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import DraggableModal from './DraggableModal';
 import Table from '../tables/Table';
 import { formatDateTime } from 'utils/formatters';
-import { Spinner } from 'components/ui';
+import { Loading } from 'components/ui';
 
 interface RotinaLogsModalProps {
   show: boolean;
@@ -156,10 +156,7 @@ const RotinaLogsModal: React.FC<RotinaLogsModalProps> = ({
       size="xl"
     >
       {loading ? (
-        <div className="text-center">
-          <Spinner size="md" variant="primary" aria-label="Carregando..." />
-          <p className="mt-2">Carregando logs de execução...</p>
-        </div>
+        <Loading variant="centered" message="Carregando logs de execução..." />
       ) : logs.length === 0 ? (
         <div className="text-center text-muted">
           <i className="bi bi-info-circle fs-1"></i>

@@ -7,7 +7,7 @@ import { useTableHeader } from 'contexts/TableHeaderContext';
 import { useModal } from 'contexts/ModalContext';
 import { useLoading } from 'contexts/LoadingContext';
 import { useApiLoading } from 'hooks/useApiLoading';
-import LoadingDots from 'components/common/LoadingDots';
+import { LoadingBar } from 'components/ui';
 import SingleModalWrapper from 'components/common/SingleModalWrapper';
 import SidebarOverlay from 'components/layout/layout/SidebarOverlay';
 import { useSidebarState } from 'components/layout/layout/hooks/useSidebarState';
@@ -76,7 +76,7 @@ const SaasLayoutMain: React.FC = () => {
 
         {isLoading && (
           <div className="layout-loading-bar">
-            <LoadingDots />
+            <LoadingBar />
           </div>
         )}
 

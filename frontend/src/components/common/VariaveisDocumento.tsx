@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { Spinner, LabelWithHelp } from 'components/ui';
+import { Loading, LabelWithHelp } from 'components/ui';
 import SearchBar from 'components/ui/SearchBar';
 import { useI18n } from 'contexts/I18nContext';
 import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
@@ -54,9 +54,7 @@ const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariav
 
   if (isLoading) {
     return (
-      <div className="text-center p-3">
-        <Spinner size="sm" variant="primary" aria-label={t('messages.loading')} />
-      </div>
+      <Loading variant="centered" size="sm" showMessage={false} className="p-3" />
     );
   }
 

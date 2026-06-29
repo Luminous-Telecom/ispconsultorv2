@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormField, NovoButton } from 'components/ui';
+import { FormField, NovoButton, Loading } from 'components/ui';
 import type { CaItem } from './types';
 import type { useRpkiKrillConfig } from './useRpkiKrillConfig';
 
@@ -48,7 +48,9 @@ const CasSection: React.FC<CasSectionProps> = ({
           <tbody>
             {isLoadingCas && (
               <tr>
-                <td className="text-muted">Carregando...</td>
+                <td>
+                  <Loading variant="inline" size="sm" showMessage={false} />
+                </td>
               </tr>
             )}
             {(cas as CaItem[]).map((ca) => (

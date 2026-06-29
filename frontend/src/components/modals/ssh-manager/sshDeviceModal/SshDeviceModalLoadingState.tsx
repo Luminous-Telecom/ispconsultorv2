@@ -1,7 +1,6 @@
 import React from 'react';
+import { Loading } from 'components/ui';
 
-const SshDeviceModalLoadingState: React.FC = () => (
-  <div className="text-center p-4">Carregando...</div>
-);
+const SshDeviceModalLoadingState: React.FC = () => <Loading variant="centered" />;
 
 export default SshDeviceModalLoadingState;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Spinner } from 'components/ui';
+import { Loading } from 'components/ui';
 import ServidorTab from '../abas/ServidorTab';
 import MensagensTab from '../abas/MensagensTab';
 import TemplatesTab from '../abas/TemplatesTab';
@@ -95,9 +95,7 @@ const ServidorWhatsappModalBody: React.FC<ServidorWhatsappModalBodyProps> = ({
 }) => (
   <>
     {isLoading ? (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
-        <Spinner size="md" variant="primary" aria-label={loadingLabel} />
-      </div>
+      <Loading variant="modal" message={loadingLabel} />
     ) : (
       <div className="whatsapp-modal-content">
         <div

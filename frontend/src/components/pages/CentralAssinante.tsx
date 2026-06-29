@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCentralAssinanteAuth } from 'hooks/useCentralAssinanteAuth';
-import { Spinner, AlterarSenhaButton, SairButton, VoltarButton } from 'components/ui';
+import { Loading, AlterarSenhaButton, SairButton, VoltarButton } from 'components/ui';
 import CentralAssinanteLoginView from './centralAssinante/CentralAssinanteLoginView';
 import CentralAssinanteRecuperarSenhaView from './centralAssinante/CentralAssinanteRecuperarSenhaView';
 import CentralAssinanteNav from './centralAssinante/CentralAssinanteNav';
@@ -120,9 +120,7 @@ const CentralAssinante: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-vh-100 d-flex align-items-center justify-content-center central-assinante-container central-assinante-loading">
-        <Spinner size="lg" variant="primary" aria-label="Carregando..." />
-      </div>
+      <Loading variant="fullscreen" className="central-assinante-container central-assinante-loading" />
     );
   }
 

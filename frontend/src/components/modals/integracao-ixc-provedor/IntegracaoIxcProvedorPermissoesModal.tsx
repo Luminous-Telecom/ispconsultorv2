@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import DraggableModal from 'components/common/DraggableModal';
 import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
-import { Spinner, useBulkBtn } from 'components/ui';
+import { Loading, useBulkBtn } from 'components/ui';
 import { TableConfig } from 'components/tables/types';
 import { useI18n } from 'contexts/I18nContext';
 import { useTableFilters } from 'hooks/useTableFilters';
@@ -186,9 +186,7 @@ const IntegracaoIxcProvedorPermissoesModal: React.FC<IntegracaoIxcProvedorPermis
         className="no-padding list-modal-no-body-scroll"
       >
         {isInitialLoading ? (
-          <div className="d-flex justify-content-center align-items-center py-5">
-            <Spinner size="md" />
-          </div>
+          <Loading variant="modal" />
         ) : error && !result ? (
           <div className="alert alert-danger m-3 mb-0">{error}</div>
         ) : result ? (

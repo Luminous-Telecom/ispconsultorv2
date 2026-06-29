@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Viewer from 'viewerjs';
 import 'viewerjs/dist/viewer.css';
 import DraggableModal from './DraggableModal';
-import { Spinner } from 'components/ui';
+import { Loading } from 'components/ui';
 
 interface ImageViewerModalProps {
   show: boolean;
@@ -104,8 +104,7 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
             zIndex: 1 
           }}>
             <div className="text-center text-white">
-              <Spinner size="md" variant="light" aria-label="Carregando..." />
-              <p className="mt-2">Carregando imagem...</p>
+              <Loading variant="centered" message="Carregando imagem..." spinnerVariant="light" />
             </div>
           </div>
         )}

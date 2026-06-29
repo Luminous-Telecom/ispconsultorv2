@@ -4,9 +4,8 @@ import { DadosEmpresaService } from 'services/dadosEmpresaService';
 import type { SaasTitulo } from 'services/saas/saasCrudService';
 import { formatDate, formatCurrency } from 'utils/formatters';
 import { useI18n } from 'contexts/I18nContext';
-import { useBulkBtn } from 'components/ui';
+import { Loading, useBulkBtn } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
-import Spinner from 'components/ui/Spinner';
 import SearchBar from 'components/ui/SearchBar';
 import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import { TableConfig, BulkAction, SortDirection } from 'components/tables/types';
@@ -224,9 +223,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({ empresaId, tipo }) => {
 
   if (isLoading) {
     return (
-      <div className="d-flex justify-content-center align-items-center py-5">
-        <Spinner />
-      </div>
+      <Loading variant="centered" showMessage={false} className="py-5" />
     );
   }
 

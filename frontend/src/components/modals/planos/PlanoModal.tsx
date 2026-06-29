@@ -4,7 +4,7 @@ import { useIsMobile } from 'hooks/useMediaQuery';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
 import ModalTabsOverflow from 'components/common/ModalTabsOverflow';
-import { ModalFormActions, Spinner } from 'components/ui';
+import { Loading, ModalFormActions } from 'components/ui';
 import { InformacoesBasicasTab, ServicosObservacoesTab } from './plano';
 
 interface PlanoModalProps {
@@ -54,10 +54,7 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
     // Estado de loading
     if (formHook.isLoadingPlano && formHook.isEditing) {
       return (
-        <div className="text-center p-4">
-          <Spinner size="md" variant="primary" aria-label={t('messages.loading')} />
-          <p className="mt-2">{t('messages.loadingPlanData')}</p>
-        </div>
+        <Loading variant="centered" message={t('messages.loadingPlanData')} />
       );
     }
 

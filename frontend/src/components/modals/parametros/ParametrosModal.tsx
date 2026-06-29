@@ -8,7 +8,7 @@ import { useIsMobile } from 'hooks/useMediaQuery';
 import { ParametrosService } from 'services/parametrosService';
 import { useFormReset } from 'hooks/useFormReset';
 import DraggableModal from 'components/common/DraggableModal';
-import { ModalFormActions, LabelWithHelp } from 'components/ui';
+import { ModalFormActions, LabelWithHelp, Loading } from 'components/ui';
 interface ParametrosModalProps {
   show: boolean;
   onClose: () => void;
@@ -120,11 +120,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
       }
     >
       {isLoading ? (
-        <div className="text-center p-4">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">{t('ui.loading')}</span>
-          </div>
-        </div>
+        <Loading variant="centered" message={t('ui.loading')} />
       ) : (
       <form id="parametros-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
         <div>

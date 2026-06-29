@@ -52,11 +52,43 @@ import Badge from '@/components/ui/Badge';
 - `pill`: `boolean` (formato arredondado)
 - `clickable`: `boolean` (com cursor pointer)
 
-### Spinner
-Componente de loading padronizado.
+### Loading
+Componente padrão para estados de carregamento em modais, páginas e trechos inline.
 
 ```tsx
-import Spinner from '@/components/ui/Spinner';
+import { Loading } from 'components/ui';
+
+// Modal / corpo de modal
+<Loading variant="modal" />
+
+// Com mensagem customizada
+<Loading variant="centered" message="Carregando dados..." />
+
+// Inline (ex.: dentro de formulário)
+<Loading variant="inline" size="sm" message="Consultando..." />
+
+// Página inteira
+<Loading variant="page" />
+
+// Tela cheia (ex.: autenticação)
+<Loading variant="fullscreen" />
+```
+
+**Props:**
+- `variant`: `'inline' | 'centered' | 'modal' | 'page' | 'fullscreen'`
+- `size`: `'sm' | 'md' | 'lg'`
+- `message`: `string` (opcional; usa i18n `messages.loading` por padrão)
+- `showMessage`: `boolean` (inline: padrão só se `message` foi passado; demais variantes: `true`)
+- `spinnerVariant`: cor do spinner (mesmas opções de `Spinner`)
+- `className`: classes extras no container
+
+Use `Loading` em modais, páginas e listagens. Não use `Spinner` ou `spinner-border` diretamente para loading de conteúdo.
+
+### Spinner
+Primitivo de baixo nível usado internamente por `Loading` e botões com `isPending`. Evite usar diretamente em modais/páginas.
+
+```tsx
+import { Spinner } from 'components/ui';
 
 <Spinner size="md" variant="primary" aria-label="Carregando..." />
 ```
@@ -155,15 +187,6 @@ import ErrorBoundary from '@/components/common/ErrorBoundary';
 <ErrorBoundary fallback={<div>Erro!</div>}>
   <ComponenteQuePodeFalhar />
 </ErrorBoundary>
-```
-
-### Loading
-Componentes de loading consistentes.
-
-```tsx
-import Loading from '@/components/common/Loading';
-
-<Loading message="Carregando dados..." />
 ```
 
 ### LanguageSelector

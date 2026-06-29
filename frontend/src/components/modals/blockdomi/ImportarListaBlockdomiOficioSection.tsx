@@ -4,6 +4,7 @@ import {
   ExtrairPlanilhaUrlButton,
   ExtrairSeiAnatelButton,
   LabelWithHelp,
+  Loading,
 } from 'components/ui';
 import Button from 'components/ui/Button';
 import type { BlockdomiImportTranslateFn } from './importarListaBlockdomiTypes';
@@ -163,10 +164,7 @@ const ImportarListaBlockdomiOficioSection: React.FC<ImportarListaBlockdomiOficio
           />
         )}
         {isExtractingPdf && (
-          <span className="d-inline-flex align-items-center gap-1 small text-muted">
-            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
-            <span className="text-nowrap">{t('blockdomi.extractingPdf')}</span>
-          </span>
+          <Loading variant="inline" size="sm" message={t('blockdomi.extractingPdf')} />
         )}
       </div>
 

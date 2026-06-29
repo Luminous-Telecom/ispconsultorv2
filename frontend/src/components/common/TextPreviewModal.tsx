@@ -1,6 +1,6 @@
 import React from 'react';
 import DraggableModal from './DraggableModal';
-import { Spinner } from 'components/ui';
+import { Loading } from 'components/ui';
 
 interface TextPreviewModalProps {
   show: boolean;
@@ -41,9 +41,7 @@ const TextPreviewModal: React.FC<TextPreviewModalProps> = ({
         }}
       >
         {isLoading ? (
-          <div className="d-flex justify-content-center align-items-center py-5">
-            <Spinner size="md" />
-          </div>
+          <Loading variant="modal" />
         ) : error ? (
           <div className="alert alert-danger mb-0 m-3">{error}</div>
         ) : content != null ? (
