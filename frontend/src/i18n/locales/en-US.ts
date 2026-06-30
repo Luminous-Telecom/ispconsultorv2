@@ -252,6 +252,8 @@ const enUS: TranslationKeys = {
     'layout.parameters': 'Parameters',
     'layout.search': 'Search',
     'layout.searchPlaceholder': 'Search...',
+    'layout.sidebarMenuSearchPlaceholder': 'Search menu...',
+    'layout.sidebarMenuSearchEmpty': 'No options found.',
     'layout.openMenu': 'Open sidebar menu',
     'layout.closeMenu': 'Close menu',
     'layout.folderCadastros': 'Registers',

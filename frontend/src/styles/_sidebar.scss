@@ -54,6 +54,70 @@
   border-bottom: 1px solid var(--border-color) !important;
 }
 
+.sidebar-menu-search {
+  width: 100%;
+  padding: 0.85rem 0.75rem 0.75rem;
+  flex-shrink: 0;
+}
+
+.sidebar-menu-search-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  width: 100%;
+  padding: 0 0.55rem;
+  background: color-mix(in srgb, var(--sidebar-bg) 88%, var(--sidebar-text) 12%);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+
+  &:focus-within {
+    border-color: var(--sidebar-section-accent, var(--primary-color));
+    background: color-mix(in srgb, var(--sidebar-bg) 82%, var(--sidebar-text) 18%);
+  }
+}
+
+.sidebar-menu-search-icon {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.sidebar-menu-search-input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  padding: 0.42rem 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  color: var(--sidebar-text);
+  outline: none;
+
+  &::placeholder {
+    color: var(--text-muted);
+    opacity: 0.85;
+  }
+}
+
+.sidebar-menu-search-empty {
+  color: var(--text-muted) !important;
+  text-align: center;
+}
+
+.sidebar-nav-scrollable--searching {
+  padding-top: 0.25rem;
+}
+
+/* Busca: cabeçalho de pasta aberta (somente visual, sem toggle) */
+.sidebar-nav-scrollable--searching .sidebar-accordion > .accordion-item > .accordion-header .accordion-button {
+  pointer-events: none;
+  cursor: default;
+}
+
 .sidebar-nav-scrollable {
   overflow-y: auto;
   overflow-x: hidden;
@@ -116,6 +180,7 @@
   font-weight: 500;
   color: var(--sidebar-text) !important;
   margin-top: 0.75rem;
+  margin-bottom: 0.15rem;
   padding: 0 0.75rem;
   white-space: nowrap;
   letter-spacing: 0.01em;
@@ -661,7 +726,8 @@
 [data-theme="dark"] .sidebar-accordion .accordion-button .folder-icon,
 [data-theme="dark"] .sidebar-folder-item i,
 [data-theme="dark"] .sidebar .nav-link i.bi-folder,
-[data-theme="dark"] .sidebar .nav-link i.bi-folder-open {
+[data-theme="dark"] .sidebar .nav-link i.bi-folder-open,
+[data-theme="dark"] .sidebar .nav-link i.bi-folder2-open {
   color: var(--sidebar-text) !important;
 }
 

@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import SidebarAccordionFolder from '../layout/SidebarAccordionFolder';
+import SidebarMenuSearch from '../sidebar/SidebarMenuSearch';
+import SidebarMenuSearchResults from '../sidebar/SidebarMenuSearchResults';
+import { buildSearchMenuGroups } from '../sidebar/sidebarMenuSearchUtils';
 import type { SidebarFolderConfig, SidebarMenuItem, TranslateFn } from '../layout/types';
 
 export interface AppSidebarProps {
@@ -23,8 +26,22 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
   header,
   shouldRenderFolder = defaultShouldRenderFolder,
 }) => {
+  const [menuSearch, setMenuSearch] = useState('');
+  const isSearching = menuSearch.trim().length > 0;
+
+  const visibleFolders = useMemo(
+    () => folders.filter(shouldRenderFolder),
+    [folders, shouldRenderFolder]
+  );
+
+  const searchGroups = useMemo(
+    () => buildSearchMenuGroups(visibleFolders, menuSearch, t),
+    [visibleFolders, menuSearch, t]
+  );
+
   const handleItemClick = (item: SidebarMenuItem) => {
     item.onClick();
+    setMenuSearch('');
     onCloseSidebar();
   };
 
@@ -33,11 +50,25 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
       ref={sidebarRef}
       className={`d-flex flex-column flex-shrink-0 sidebar ${sidebarOpen ? 'open' : ''}`}
     >
-      {header}
-      <div className="sidebar-nav-scrollable flex-grow-1">
+      <div className="sidebar-header-fixed d-flex flex-column">
+        {header}
+        <SidebarMenuSearch
+          value={menuSearch}
+          onChange={setMenuSearch}
+          placeholder={t('layout.sidebarMenuSearchPlaceholder')}
+        />
+      </div>
+      <div className={`sidebar-nav-scrollable flex-grow-1${isSearching ? ' sidebar-nav-scrollable--searching' : ''}`}>
         <nav className="sidebar-nav nav nav-pills flex-column mb-auto px-2">
-          {folders.map((folder) =>
-            shouldRenderFolder(folder) ? (
+          {isSearching ? (
+            <SidebarMenuSearchResults
+              groups={searchGroups}
+              emptyMessage={t('layout.sidebarMenuSearchEmpty')}
+              t={t}
+              onItemClick={handleItemClick}
+            />
+          ) : (
+            visibleFolders.map((folder) => (
               <SidebarAccordionFolder
                 key={folder.accordionId}
                 accordionId={folder.accordionId}
@@ -49,7 +80,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                 t={t}
                 onItemClick={handleItemClick}
               />
-            ) : null
+            ))
           )}
         </nav>
       </div>

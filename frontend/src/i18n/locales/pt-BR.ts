@@ -252,6 +252,8 @@ const ptBR: TranslationKeys = {
     'layout.parameters': 'Parâmetros',
     'layout.search': 'Buscar',
     'layout.searchPlaceholder': 'Buscar...',
+    'layout.sidebarMenuSearchPlaceholder': 'Buscar no menu...',
+    'layout.sidebarMenuSearchEmpty': 'Nenhuma opção encontrada.',
     'layout.openMenu': 'Abrir menu lateral',
     'layout.closeMenu': 'Recolher menu',
     'layout.folderCadastros': 'Cadastros',

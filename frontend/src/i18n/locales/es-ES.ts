@@ -252,6 +252,8 @@ const esES: TranslationKeys = {
     'layout.parameters': 'Parámetros',
     'layout.search': 'Buscar',
     'layout.searchPlaceholder': 'Buscar...',
+    'layout.sidebarMenuSearchPlaceholder': 'Buscar en el menú...',
+    'layout.sidebarMenuSearchEmpty': 'Ninguna opción encontrada.',
     'layout.openMenu': 'Abrir menú lateral',
     'layout.closeMenu': 'Cerrar menú',
     'layout.folderCadastros': 'Registros',

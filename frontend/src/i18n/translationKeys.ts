@@ -237,6 +237,8 @@ export interface TranslationKeys {
   'layout.parameters': string;
   'layout.search': string;
   'layout.searchPlaceholder': string;
+  'layout.sidebarMenuSearchPlaceholder': string;
+  'layout.sidebarMenuSearchEmpty': string;
   'layout.openMenu': string;
   'layout.closeMenu': string;
   'layout.folderCadastros': string;

@@ -10,7 +10,7 @@ interface SaasSidebarHeaderProps {
 }
 
 const SaasSidebarHeader: React.FC<SaasSidebarHeaderProps> = ({ isMobile, t, onCloseSidebar }) => (
-  <div className="sidebar-header-fixed d-flex flex-column align-items-center justify-content-center p-3 mb-0 position-relative">
+  <div className="d-flex flex-column align-items-center justify-content-center p-3 pb-0 mb-0 position-relative w-100">
     <div className="sidebar-logo-wrapper w-100 d-flex flex-column align-items-center">
       <BackNetLogo width={200} height={65} />
       <div className="sidebar-title-wrapper overflow-hidden w-100 d-flex justify-content-center">
