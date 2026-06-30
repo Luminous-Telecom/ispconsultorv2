@@ -30,7 +30,7 @@ const OrdemServicoMensagemDetalhesModal: React.FC<OrdemServicoMensagemDetalhesMo
       size="lg"
       modalId="ordem-servico-mensagem-detalhes-modal"
     >
-      <div className="p-3">
+      <div className="p-3 logs-auditoria-details">
         <div className="row g-2">
           <div className="col-md-4">
             <FormField

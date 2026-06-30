@@ -1,6 +1,7 @@
 import React from 'react';
 import DraggableModal from 'components/common/DraggableModal';
 import DetailFieldGrid, { DetailFieldItem } from 'components/common/DetailFieldGrid';
+import FormField from 'components/ui/FormField';
 import { useI18n } from 'contexts/I18nContext';
 import { useLogsAuditoriaFormatters } from 'components/modals/logs/logsModal/hooks/useLogsAuditoriaFormatters';
 import type { AuditoriaLog } from 'services/auditoriaService';
@@ -14,6 +15,8 @@ export interface AuditoriaDetalhesModalProps {
   empresaNomeFieldLabel?: string;
   showClienteColumn?: boolean;
 }
+
+const noopChange = () => undefined;
 
 const AuditoriaDetalhesModal: React.FC<AuditoriaDetalhesModalProps> = ({
   show,
@@ -54,6 +57,16 @@ const AuditoriaDetalhesModal: React.FC<AuditoriaDetalhesModalProps> = ({
   );
   if (d.rota) fields.push({ label: t('audit.route'), value: d.rota });
 
+  const dadosJson = (d.dados_anteriores || d.dados_novos)
+    ? JSON.stringify(
+        d.dados_anteriores && d.dados_novos
+          ? { anterior: d.dados_anteriores, novo: d.dados_novos }
+          : d.dados_novos || d.dados_anteriores,
+        null,
+        2
+      )
+    : '';
+
   return (
     <DraggableModal
       show={show}
@@ -64,47 +77,49 @@ const AuditoriaDetalhesModal: React.FC<AuditoriaDetalhesModalProps> = ({
     >
       <div className="p-3 logs-auditoria-details">
         <DetailFieldGrid fields={fields} />
-        {d.user_agent && (
+        {d.user_agent ? (
           <div className="mt-3">
-            <label className="form-label small text-muted mb-1">{t('audit.userAgent')}</label>
-            <textarea
-              className="form-control form-control-sm bg-secondary bg-opacity-10 small"
+            <FormField
+              name="auditoria_user_agent"
+              type="textarea"
+              label={t('audit.userAgent')}
               value={d.user_agent}
+              onChange={noopChange}
+              size="sm"
               readOnly
               rows={2}
             />
           </div>
-        )}
-        {d.observacoes && (
+        ) : null}
+        {d.observacoes ? (
           <div className="mt-3">
-            <label className="form-label small text-muted mb-1">{t('table.observations')}</label>
-            <textarea
-              className="form-control form-control-sm bg-secondary bg-opacity-10 small"
+            <FormField
+              name="auditoria_observacoes"
+              type="textarea"
+              label={t('table.observations')}
               value={d.observacoes}
+              onChange={noopChange}
+              size="sm"
               readOnly
               rows={Math.min(18, Math.max(4, d.observacoes.split('\n').length + 1))}
-              style={{ resize: 'vertical', minHeight: '5rem' }}
             />
           </div>
-        )}
-        {(d.dados_anteriores || d.dados_novos) && (
+        ) : null}
+        {dadosJson ? (
           <div className="mt-3">
-            <h6 className="mb-2">{t('audit.data')}</h6>
-            <textarea
-              className="form-control font-monospace small bg-secondary bg-opacity-10"
-              value={JSON.stringify(
-                d.dados_anteriores && d.dados_novos
-                  ? { anterior: d.dados_anteriores, novo: d.dados_novos }
-                  : d.dados_novos || d.dados_anteriores,
-                null,
-                2
-              )}
+            <FormField
+              name="auditoria_dados"
+              type="textarea"
+              label={t('audit.data')}
+              value={dadosJson}
+              onChange={noopChange}
+              size="sm"
               readOnly
+              className="font-monospace"
               rows={12}
-              style={{ resize: 'none' }}
             />
           </div>
-        )}
+        ) : null}
       </div>
     </DraggableModal>
   );

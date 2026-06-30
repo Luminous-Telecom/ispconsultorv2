@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
 import DetailFieldGrid from 'components/common/DetailFieldGrid';
+import FormField from 'components/ui/FormField';
 import { Loading } from 'components/ui';
 import { BlockdomiWhoisService, type WhoisResult } from 'services/blockdomiWhoisService';
 import { extractApiErrorMessageSync } from 'utils/apiErrorHelper';
@@ -175,10 +176,10 @@ const WhoisModal: React.FC<WhoisModalProps> = ({ show, onClose, ip }) => {
     }
 
     return (
-      <div className="p-3">
+      <div className="p-3 logs-auditoria-details">
         <DetailFieldGrid
           fields={[
-            { label: 'IP', value: <span className="font-monospace">{ip}</span>, colClassName: 'col-12' },
+            { label: 'IP', value: ip, inputClassName: 'font-monospace', colClassName: 'col-12' },
             ...infoItems.map(({ key, label, value }) => ({ label, value, key })),
           ]}
           className="mb-3"
@@ -186,14 +187,16 @@ const WhoisModal: React.FC<WhoisModalProps> = ({ show, onClose, ip }) => {
 
         {blocos.length > 0 && (
           <div className="mb-3">
-            <h6 className="small text-muted mb-2">{t('blockdomi.whoisBlocos')}</h6>
-            <textarea
-              className="form-control form-control-sm bg-secondary bg-opacity-10 font-monospace small"
+            <FormField
+              name="whois_blocos"
+              type="textarea"
+              label={t('blockdomi.whoisBlocos')}
               value={blocos.join('\n')}
+              onChange={() => undefined}
+              size="sm"
               readOnly
+              className="font-monospace"
               rows={Math.min(blocos.length + 1, 8)}
-              style={{ resize: 'none' }}
-              autoComplete="off"
             />
           </div>
         )}

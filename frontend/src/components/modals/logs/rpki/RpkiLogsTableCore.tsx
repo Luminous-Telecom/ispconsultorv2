@@ -8,6 +8,7 @@ import { useTableFilters } from 'hooks/useTableFilters';
 import { useModalSelect } from 'hooks/useModalSelect';
 import DraggableModal from 'components/common/DraggableModal';
 import DetailFieldGrid, { DetailFieldItem } from 'components/common/DetailFieldGrid';
+import FormField from 'components/ui/FormField';
 import { defaultApiClient } from 'services/core';
 import { formatDateTime } from 'utils/formatters';
 import { useI18n } from 'contexts/I18nContext';
@@ -274,11 +275,8 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
 
     fields.push({
       label: 'Status',
-      value: (
-        <span className={selectedLog.status === 'failed' ? 'text-danger' : 'text-success'}>
-          {selectedLog.status === 'success' ? 'Sucesso' : 'Falha'}
-        </span>
-      ),
+      value: selectedLog.status === 'success' ? 'Sucesso' : 'Falha',
+      inputClassName: selectedLog.status === 'failed' ? 'text-danger' : 'text-success',
       colClassName: config.showTypeColumn ? 'col-md-3' : 'col-md-4',
     });
 
@@ -297,7 +295,8 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
 
     fields.push({
       label: config.remoteHostColumnLabel,
-      value: <span className="font-monospace">{selectedLog.remote_host ?? '—'}</span>,
+      value: selectedLog.remote_host ?? '—',
+      inputClassName: 'font-monospace',
       colClassName: 'col-12',
     });
 
@@ -355,16 +354,19 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
           size="lg"
           modalId={config.detailsModalId}
         >
-          <div className="p-3">
+          <div className="p-3 logs-auditoria-details">
             <DetailFieldGrid fields={detailFields} />
             <div className="mt-3">
-              <label className="form-label small text-muted mb-1">Mensagem</label>
-              <textarea
-                className={`form-control form-control-sm bg-secondary bg-opacity-10 small ${selectedLog.status === 'failed' ? 'text-danger' : ''}`}
+              <FormField
+                name="rpki_log_message"
+                type="textarea"
+                label="Mensagem"
                 value={selectedLog.message ?? '—'}
+                onChange={() => undefined}
+                size="sm"
                 readOnly
+                className={selectedLog.status === 'failed' ? 'text-danger' : undefined}
                 rows={Math.min(12, Math.max(3, (selectedLog.message ?? '').split('\n').length + 1))}
-                style={{ resize: 'vertical', minHeight: '4rem' }}
               />
             </div>
           </div>

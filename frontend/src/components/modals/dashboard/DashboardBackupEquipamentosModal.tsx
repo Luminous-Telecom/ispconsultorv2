@@ -5,6 +5,7 @@ import { useModalSelect } from 'hooks/useModalSelect';
 import { formatDateTime } from 'utils/formatters';
 import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import DetailFieldGrid, { DetailFieldItem } from 'components/common/DetailFieldGrid';
+import FormField from 'components/ui/FormField';
 import DraggableModal from 'components/common/DraggableModal';
 import type { SortDirection, TableConfig } from 'components/tables/types';
 
@@ -217,15 +218,13 @@ const DashboardBackupEquipamentosModal: React.FC<DashboardBackupEquipamentosModa
         { label: t('sshDevice.backupDeviceColumn'), value: detailRow.deviceName || '—' },
         {
           label: t('table.id'),
-          value: <span className="font-monospace small">{detailRow.deviceId}</span>,
+          value: detailRow.deviceId,
+          inputClassName: 'font-monospace small',
         },
         {
           label: t('sshDevice.backupFileColumn'),
-          value: (
-            <span className="font-monospace small">
-              {detailRow.fileName?.trim() ? detailRow.fileName : '—'}
-            </span>
-          ),
+          value: detailRow.fileName?.trim() ? detailRow.fileName : '—',
+          inputClassName: 'font-monospace small',
           colClassName: 'col-12',
         },
         { label: t('sshDevice.backupSizeColumn'), value: formatBytes(detailRow.sizeBytes) },
@@ -293,19 +292,19 @@ const DashboardBackupEquipamentosModal: React.FC<DashboardBackupEquipamentosModa
           size="lg"
           modalId="dashboard-backup-log-details"
         >
-          <div className="p-3">
+          <div className="p-3 logs-auditoria-details">
             <DetailFieldGrid fields={detailFields} />
             {detailRow?.detail?.trim() ? (
               <div className="mt-3">
-                <label className="form-label small text-muted mb-1">
-                  {t('dashboard.backupStatusDetailColumn')}
-                </label>
-                <textarea
-                  className="form-control form-control-sm bg-secondary bg-opacity-10 small"
+                <FormField
+                  name="backup_log_detail"
+                  type="textarea"
+                  label={t('dashboard.backupStatusDetailColumn')}
                   value={detailRow.detail}
+                  onChange={() => undefined}
+                  size="sm"
                   readOnly
                   rows={Math.min(12, Math.max(3, detailRow.detail.split('\n').length + 2))}
-                  style={{ resize: 'vertical', minHeight: '4.5rem' }}
                 />
               </div>
             ) : null}
