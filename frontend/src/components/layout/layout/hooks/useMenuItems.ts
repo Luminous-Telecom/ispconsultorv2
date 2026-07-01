@@ -66,10 +66,10 @@ export const useMenuItems = ({ t, openModal, hasModulo }: UseMenuItemsParams) =>
   const sshManagerFolderItems = useMemo(
     () =>
       [
-        { id: 'agents', modalId: 'agents', label: 'Túneis (Agentes)', icon: 'bi-plugin', onClick: () => handleOpenModal('agents') },
-        { id: 'ssh-devices', modalId: 'ssh-devices', label: 'Equipamentos', icon: 'bi-terminal', onClick: () => handleOpenModal('ssh-devices') },
+        { id: 'agents', modalId: 'agents', label: t('menu.tunnelsAgents'), icon: 'bi-plugin', onClick: () => handleOpenModal('agents') },
+        { id: 'ssh-devices', modalId: 'ssh-devices', label: t('menu.equipment'), icon: 'bi-terminal', onClick: () => handleOpenModal('ssh-devices') },
       ].filter(filterItem),
-    [handleOpenModal, filterItem]
+    [t, handleOpenModal, filterItem]
   );
 
   const blockdomiFolderItems = useMemo(
@@ -89,20 +89,20 @@ export const useMenuItems = ({ t, openModal, hasModulo }: UseMenuItemsParams) =>
       [
         { id: 'rpki-cas', modalId: 'rpki-cas', label: 'CAs', icon: 'bi-diagram-3', onClick: () => handleOpenModal('rpki-cas') },
         { id: 'rpki-cas-pai', modalId: 'rpki-cas-pai', label: 'CAs-pai', icon: 'bi-diagram-2', onClick: () => handleOpenModal('rpki-cas-pai') },
-        { id: 'rpki-repositorios', modalId: 'rpki-repositorios', label: 'Repositórios', icon: 'bi-hdd-network', onClick: () => handleOpenModal('rpki-repositorios') },
+        { id: 'rpki-repositorios', modalId: 'rpki-repositorios', label: t('menu.repositories'), icon: 'bi-hdd-network', onClick: () => handleOpenModal('rpki-repositorios') },
         { id: 'rpki-roas', modalId: 'rpki-roas', label: 'ROAs', icon: 'bi-list-check', onClick: () => handleOpenModal('rpki-roas') },
         { id: 'rpki-aspas', modalId: 'rpki-aspas', label: 'ASPAs', icon: 'bi-shield-check', onClick: () => handleOpenModal('rpki-aspas') },
-        { id: 'rpki-validar-rota', modalId: 'rpki-validar-rota', label: 'Validar Rota', icon: 'bi-search', onClick: () => handleOpenModal('rpki-validar-rota') },
+        { id: 'rpki-validar-rota', modalId: 'rpki-validar-rota', label: t('menu.validateRoute'), icon: 'bi-search', onClick: () => handleOpenModal('rpki-validar-rota') },
       ].filter(filterItem),
-    [handleOpenModal, filterItem]
+    [t, handleOpenModal, filterItem]
   );
 
   const suporteFolderItems = useMemo(
     () =>
       [
-        { id: 'ordens-servico', modalId: 'ordens-servico', label: 'Ordens de Serviço', icon: 'bi-headset', onClick: () => handleOpenModal('ordens-servico') },
+        { id: 'ordens-servico', modalId: 'ordens-servico', label: t('menu.serviceOrders'), icon: 'bi-headset', onClick: () => handleOpenModal('ordens-servico') },
       ].filter(filterItem),
-    [handleOpenModal, filterItem]
+    [t, handleOpenModal, filterItem]
   );
 
   const integracoesFolderItems = useMemo(
@@ -193,7 +193,7 @@ export const useMenuItems = ({ t, openModal, hasModulo }: UseMenuItemsParams) =>
         accordionId: 'sshManagerAccordion',
         collapseId: 'sshManagerCollapse',
         headingId: 'sshManagerHeading',
-        title: 'Equipamentos',
+        title: t('layout.folderEquipamentos'),
         items: sshManagerFolderItems,
         requireModulosLoaded: true,
       },
@@ -223,7 +223,7 @@ export const useMenuItems = ({ t, openModal, hasModulo }: UseMenuItemsParams) =>
         accordionId: 'suporteAccordion',
         collapseId: 'suporteCollapse',
         headingId: 'suporteHeading',
-        title: 'Suporte',
+        title: t('layout.folderSupport'),
         items: suporteFolderItems,
       },
       {

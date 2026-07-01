@@ -243,6 +243,11 @@ export interface TranslationKeys {
   'layout.closeMenu': string;
   'layout.folderCadastros': string;
   'layout.folderFinanceiro': string;
+  'layout.folderEquipamentos': string;
+  'layout.folderSupport': string;
+  'layout.folderCadastrosSaas': string;
+  'layout.folderFinanceiroSaas': string;
+  'layout.folderConfiguracoes': string;
   'layout.folderIntegracoes': string;
   'layout.folderLogs': string;
   'layout.folderLogsEquipamentos': string;
@@ -284,6 +289,16 @@ export interface TranslationKeys {
   'menu.companyData': string;
   'menu.whatsappHistory': string;
   'menu.emailHistory': string;
+  'menu.tunnelsAgents': string;
+  'menu.equipment': string;
+  'menu.repositories': string;
+  'menu.validateRoute': string;
+  'menu.serviceOrders': string;
+  'menu.usersSaas': string;
+  'menu.emailServers': string;
+  'menu.whatsappServers': string;
+  'menu.audit': string;
+  'menu.backups': string;
 
   // Modal Titles
   'modal.clients': string;
