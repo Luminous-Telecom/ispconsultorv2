@@ -15,11 +15,17 @@ export interface ServerDiskStats {
   usedPercent: number;
 }
 
+export interface ServerCpuStats {
+  usedPercent: number;
+  cores: number;
+}
+
 export interface ServerStats {
   ram: ServerRamStats;
   disk: ServerDiskStats;
   uptime: number;
   cpuLoad: number[];
+  cpu: ServerCpuStats;
 }
 
 export class SaasServerStatsService {

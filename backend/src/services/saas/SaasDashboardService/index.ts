@@ -128,9 +128,13 @@ export class SaasDashboardService {
     disk: { total: number; free: number; used: number; usedPercent: number };
     uptime: number;
     cpuLoad: number[];
+    cpu: { usedPercent: number; cores: number };
   }> {
     const os = await import('os');
     const { execSync } = await import('child_process');
+
+    const cores = os.cpus().length;
+    const cpuUsedPercent = await SaasDashboardService.getCpuUsagePercent(os);
 
     const totalRam = os.totalmem();
     const freeRam = os.freemem();
@@ -165,7 +169,32 @@ export class SaasDashboardService {
       },
       uptime: os.uptime(),
       cpuLoad: os.loadavg(),
+      cpu: { usedPercent: cpuUsedPercent, cores },
     };
+  }
+
+  private static async getCpuUsagePercent(os: typeof import('os')): Promise<number> {
+    const snapshot = () => {
+      let idle = 0;
+      let total = 0;
+      for (const cpu of os.cpus()) {
+        const { user, nice, sys, idle: idleTime, irq } = cpu.times;
+        idle += idleTime;
+        total += user + nice + sys + idleTime + irq;
+      }
+      return { idle, total };
+    };
+
+    const start = snapshot();
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    const end = snapshot();
+
+    const idleDiff = end.idle - start.idle;
+    const totalDiff = end.total - start.total;
+    if (totalDiff <= 0) return 0;
+
+    const usage = (1 - idleDiff / totalDiff) * 100;
+    return Math.max(0, Math.min(100, Math.round(usage)));
   }
 
   private static async getQueueStats(): Promise<{ queueSize: number; queueRunning: number; queueConcurrency: number }> {

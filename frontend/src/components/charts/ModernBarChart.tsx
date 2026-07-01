@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState, memo } from 'react';
 import { ChartDataItem, ChartFormat } from './types';
 import { ChartEmptyState } from './ChartEmptyState';
 import { ChartTitleWithInfo } from './ChartTitleWithInfo';
+import { hexToRgba } from './chartColors';
 
 interface ModernBarChartProps {
   data: ChartDataItem[];
@@ -12,17 +13,6 @@ interface ModernBarChartProps {
 }
 
 const PALETTE = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#a855f7', '#14b8a6', '#ec4899'];
-
-const hexToRgba = (hex: string, alpha: number): string => {
-  const clean = hex.replace('#', '');
-  const full = clean.length === 3 ? clean.split('').map((c) => c + c).join('') : clean;
-  const num = parseInt(full, 16);
-  if (Number.isNaN(num)) return hex;
-  const r = (num >> 16) & 255;
-  const g = (num >> 8) & 255;
-  const b = num & 255;
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-};
 
 /**
  * Gráfico de barras horizontais moderno: trilho de fundo, preenchimento com

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { formatCurrency } from 'utils/formatters';
 import { useI18n } from 'contexts/I18nContext';
+import { hexToRgba } from './chartColors';
 
 export interface TicketMedioMes {
   mes: string;
@@ -18,17 +19,6 @@ export interface TicketMedioCardProps {
 }
 
 const DEFAULT_BAR_COLOR = '#6366f1';
-
-const hexToRgba = (hex: string, alpha: number): string => {
-  const clean = hex.replace('#', '');
-  const full = clean.length === 3 ? clean.split('').map((c) => c + c).join('') : clean;
-  const num = parseInt(full, 16);
-  if (Number.isNaN(num)) return hex;
-  const r = (num >> 16) & 255;
-  const g = (num >> 8) & 255;
-  const b = num & 255;
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-};
 
 const HorizontalRanking: React.FC<{ series: TicketMedioMes[] }> = ({ series }) => {
   const max = Math.max(...series.map((s) => s.valor), 1);
