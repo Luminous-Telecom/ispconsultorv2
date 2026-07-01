@@ -37,6 +37,15 @@ export interface AppUserMenuProps {
   onSelectLanguage?: (code: Language) => void;
 }
 
+const getInitials = (name?: string | null, fallback = 'U'): string => {
+  if (!name) return fallback;
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return fallback;
+  const first = parts[0][0] ?? '';
+  const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
+  return (first + last).toUpperCase() || fallback;
+};
+
 const AppUserMenu: React.FC<AppUserMenuProps> = ({
   currentUser,
   showUserMenu,
@@ -57,7 +66,11 @@ const AppUserMenu: React.FC<AppUserMenuProps> = ({
   languageDropdownPosition = { top: 0, left: 0 },
   onToggleLanguageDropdown,
   onSelectLanguage,
-}) => (
+}) => {
+  const displayName = currentUser?.nome || userTitleFallback;
+  const initials = getInitials(currentUser?.nome, userTitleFallback.charAt(0).toUpperCase() || 'U');
+
+  return (
   <div className="layout-user-area d-flex align-items-center justify-content-end">
     <div className="layout-user-menu text-end" ref={userMenuRef}>
       <button
@@ -66,23 +79,19 @@ const AppUserMenu: React.FC<AppUserMenuProps> = ({
         onClick={onToggleUserMenu}
         aria-expanded={showUserMenu}
         aria-haspopup="true"
-        title={currentUser?.nome || userTitleFallback}
+        title={displayName}
       >
         <span className="layout-user-trigger__avatar" aria-hidden>
-          <i className="bi bi-person" />
+          {initials}
         </span>
       </button>
       {showUserMenu && (
         <ul className="layout-user-dropdown layout-table-dropdown">
           <li className="layout-user-dropdown__header">
-            <div className="layout-user-dropdown__name text-truncate">
-              {currentUser?.nome || userTitleFallback}
-            </div>
+            <div className="layout-user-dropdown__name text-truncate">{displayName}</div>
             <small className="layout-user-dropdown__email text-truncate">{currentUser?.email}</small>
             {currentUser?.nivel_acesso && (
-              <small className="d-block mt-1 text-warning text-uppercase" style={{ fontSize: '0.65rem' }}>
-                {currentUser.nivel_acesso}
-              </small>
+              <small className="layout-user-dropdown__role">{currentUser.nivel_acesso}</small>
             )}
           </li>
           <li>
@@ -129,7 +138,7 @@ const AppUserMenu: React.FC<AppUserMenuProps> = ({
               )}
             </li>
           )}
-          <li>
+          <li className="layout-user-dropdown__footer">
             <button
               type="button"
               className="layout-user-dropdown__row layout-user-dropdown__row--danger"
@@ -154,6 +163,7 @@ const AppUserMenu: React.FC<AppUserMenuProps> = ({
       )}
     </div>
   </div>
-);
+  );
+};
 
 export default AppUserMenu;
