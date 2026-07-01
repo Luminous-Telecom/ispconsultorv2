@@ -53,7 +53,7 @@ const DashboardPieChartsRow: React.FC<DashboardPieChartsRowProps> = ({
   clicks,
   ticketMedioCardData,
 }) => (
-  <div className="row g-2 align-items-stretch">
+  <div className="row align-items-stretch">
     <div className="col-auto dashboard-col--compact">
       <PieStatusCard
         data={charts.clientesChartData}

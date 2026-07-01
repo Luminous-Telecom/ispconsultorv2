@@ -24,7 +24,7 @@ const DashboardLineChartsRow: React.FC<DashboardLineChartsRowProps> = ({
   t,
   clicks,
 }) => (
-  <div className="row g-2 align-items-stretch">
+  <div className="row align-items-stretch">
     <div className="col-12 col-md-6">
       <LineChartCard
         data={charts.recebidosPeriodoChartData}

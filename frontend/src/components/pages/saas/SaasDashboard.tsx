@@ -110,7 +110,7 @@ const SaasDashboard: React.FC = () => {
   return (
     <div className="dashboard-container">
       <div className="container-fluid px-0">
-        <div className="row g-2 align-items-stretch">
+        <div className="row align-items-stretch">
           <div className="col-auto dashboard-col--compact">
             <PieStatusCard
               data={charts.clientesChartData}
@@ -160,7 +160,7 @@ const SaasDashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="row g-2">
+        <div className="row">
           {serverStats && (
             <>
               <div className="col-12 col-sm-6 col-md-4">
@@ -233,7 +233,7 @@ const SaasDashboard: React.FC = () => {
           )}
         </div>
 
-        <div className="row g-2">
+        <div className="row">
           <div className="col-12 col-md-6">
             <LineChartCard
               data={charts.recebidosPeriodoChartData}

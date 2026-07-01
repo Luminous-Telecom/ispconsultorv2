@@ -5,6 +5,57 @@
 /* Raio um pouco maior que o global (--border-radius 8px); herdado pelos cards da área */
 .dashboard-container {
   --dashboard-chart-radius: 0.625rem;
+  --dashboard-card-gap: 12px;
+
+  /* Gap vertical entre linhas de cards */
+  > .container-fluid:has(> .row) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dashboard-card-gap);
+  }
+
+  /* Gap horizontal/vertical entre cards na mesma linha (substitui gutter g-2) */
+  > .container-fluid > .row {
+    --bs-gutter-x: 0;
+    --bs-gutter-y: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--dashboard-card-gap);
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+
+    > [class*='col'] {
+      padding-left: 0;
+      padding-right: 0;
+      margin-top: 0 !important;
+    }
+
+    > .col-md-6 {
+      @media (min-width: 768px) {
+        flex: 0 0 calc(50% - calc(var(--dashboard-card-gap) / 2));
+        width: calc(50% - calc(var(--dashboard-card-gap) / 2));
+        max-width: calc(50% - calc(var(--dashboard-card-gap) / 2));
+      }
+    }
+
+    > .col-sm-6 {
+      @media (min-width: 576px) and (max-width: 767.98px) {
+        flex: 0 0 calc(50% - calc(var(--dashboard-card-gap) / 2));
+        width: calc(50% - calc(var(--dashboard-card-gap) / 2));
+        max-width: calc(50% - calc(var(--dashboard-card-gap) / 2));
+      }
+    }
+
+    > .col-md-4 {
+      @media (min-width: 768px) {
+        flex: 0 0 calc(33.333333% - calc(var(--dashboard-card-gap) * 2 / 3));
+        width: calc(33.333333% - calc(var(--dashboard-card-gap) * 2 / 3));
+        max-width: calc(33.333333% - calc(var(--dashboard-card-gap) * 2 / 3));
+      }
+    }
+  }
 
   /*
    * Iguala altura dos cards na mesma linha: col = pilha flex; chart-card ocupa todo o alto
@@ -409,8 +460,8 @@
   width: 15rem;
   max-width: 15rem;
   height: 8rem;
-  padding-left: 2px;
-  padding-right: 2px;
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .dashboard-container .chart-card-pie--compact {
