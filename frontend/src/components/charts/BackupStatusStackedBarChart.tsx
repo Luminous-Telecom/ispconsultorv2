@@ -35,14 +35,8 @@ export interface BackupStatusStackedBarChartProps {
   /** Chaves ocultas via legenda (mesmo padrão do ResponsivePieChart). */
   hiddenKeys?: ReadonlySet<string>;
   onLegendToggle?: (key: BackupStatusKey) => void;
-  /** Badge de período (ex.: mês) quando não há falhas para destacar. */
-  headerPeriodBadge?: string;
-  /** Texto do alerta de falhas (ex.: "2 falhas detectadas"); se ausente e sem período, sem badge. */
-  failureBadgeText?: string | null;
   /** True se existir backup em algum dia do período filtrado (evita vazio quando só a janela dos últimos 7 dias está zerada). */
   periodHasBackupEvents: boolean;
-  /** Texto do tooltip do ícone de informação ao lado do título */
-  headerInfo?: string;
 }
 
 const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = memo(
@@ -57,7 +51,6 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
     periodHasBackupEvents,
   }) => {
     const svgRef = useRef<SVGSVGElement>(null);
-    const wrapRef = useRef<HTMLDivElement>(null);
     const chartBoxRef = useRef<HTMLDivElement>(null);
     const [{ width, height: boxHeight }, setSize] = useState({ width: 300, height: 90 });
 
@@ -296,7 +289,6 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
 
     return (
       <div
-        ref={wrapRef}
         className="backup-status-card chart-radial-style"
         style={{ height: '100%', position: 'relative' }}
       >

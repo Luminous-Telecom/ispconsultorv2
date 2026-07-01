@@ -130,9 +130,7 @@ const DashboardPieChartsRow: React.FC<DashboardPieChartsRowProps> = ({
           onSegmentClick={backupStatus.handleBackupStatusSegmentClick}
           hiddenKeys={hiddenItems.hiddenBackupStatus}
           onLegendToggle={(key) => toggles.toggleBackupStatus(key)}
-          failureBadgeText={backupStatus.backupStatusDashboardSummary.failureBadgeText}
           periodHasBackupEvents={backupStatus.backupStatusPeriodoTemEventos}
-          headerInfo={t('dashboard.backupStatusInfo')}
         />
       </div>
     </div>

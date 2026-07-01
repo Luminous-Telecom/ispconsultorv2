@@ -230,7 +230,7 @@
   border-radius: var(--border-radius-sm);
   transition: background-color 0.15s ease, color 0.15s ease;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 400;
   padding: 8px !important;
   color: var(--text-secondary) !important;
 }
@@ -640,7 +640,7 @@
   margin-bottom: 0.1rem;
   margin-left: 1.35rem;
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 400;
   border-radius: var(--border-radius-sm);
   display: block !important;
   width: calc(100% - 1.35rem) !important; /* acima do w-100 + margin-left */
