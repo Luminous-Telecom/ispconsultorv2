@@ -92,8 +92,8 @@
 
 .chart-title {
   font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-weight: 700;
+  color: var(--text-secondary);
   margin-bottom: 0.5rem;
   letter-spacing: -0.01em;
   line-height: 1.2;
@@ -185,8 +185,8 @@
 
 .chart-title-pie {
   font-size: 0.625rem;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-weight: 700;
+  color: var(--text-secondary);
   margin-bottom: 0.25rem;
   text-align: center;
   overflow: hidden;
@@ -371,8 +371,8 @@
 .pie-metric-header__title {
   flex: 1;
   font-size: 12px;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-weight: 700;
+  color: var(--text-secondary);
   letter-spacing: -0.01em;
   line-height: 1.2;
   min-width: 0;
@@ -395,6 +395,84 @@
 
   @media (min-width: 768px) {
     padding: 0.45rem 0.5rem 0.4rem;
+  }
+}
+
+/* Variante compacta dos cards de pizza: sem rodapé, header/paddings menores e
+   altura ajustada ao conteúdo (não acompanha a altura igualada da linha) — donut maior. */
+.dashboard-container
+  > .container-fluid
+  > .row
+  > [class*='col'].dashboard-col--compact {
+  align-self: flex-start;
+  flex: 0 0 15rem;
+  width: 15rem;
+  max-width: 15rem;
+  height: 8rem;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+.dashboard-container .chart-card-pie--compact {
+  height: auto;
+  min-height: 0;
+  flex: 0 0 auto;
+  align-self: flex-start;
+  width: 15rem;
+  max-width: 15rem;
+  padding: 0.5rem;
+
+  @media (min-width: 768px) {
+    padding: 0.5rem;
+  }
+
+  .chart-container-pie {
+    gap: 0;
+  }
+
+  .chart-title-pie {
+    margin-bottom: 1px;
+  }
+
+  .pie-chart-body {
+    min-height: 100px;
+    gap: 4px;
+
+    @media (min-width: 576px) {
+      gap: 6px;
+    }
+  }
+
+  .pie-sidebar-legend li {
+    padding: 1px 2px;
+  }
+}
+
+/* Ticket médio e Backup em versão reduzida (menor e mais estreito que os cards métricos padrão). */
+.dashboard-container .chart-card-pie--sm {
+  min-height: 0;
+  height: auto;
+  flex: 0 0 auto;
+  align-self: flex-start;
+  width: 15rem;
+  max-width: 15rem;
+  padding: 0.5rem;
+
+  @media (min-width: 768px) {
+    min-height: 0;
+    padding: 0.5rem;
+  }
+
+  .pie-metric-header {
+    margin-bottom: 2px;
+  }
+
+  /* Título com a mesma fonte dos cards de pizza (.chart-title-pie). */
+  .pie-metric-header__title {
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: none;
+    letter-spacing: normal;
   }
 }
 

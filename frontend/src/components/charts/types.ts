@@ -55,5 +55,7 @@ export interface PieChartProps {
   metricHeaderIcon?: 'contracts' | 'payments' | 'clients' | 'plans';
   /** Tooltip do ícone de informação ao lado do título (layout métrico) */
   metricHeaderInfo?: string;
+  /** Reduz a margem interna do donut para ocupar melhor o SVG (cards compactos) */
+  compact?: boolean;
 }
 

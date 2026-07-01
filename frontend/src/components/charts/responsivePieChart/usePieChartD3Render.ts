@@ -43,6 +43,7 @@ interface UsePieChartD3RenderParams {
   onToggleItemRef: MutableRefObject<(index: number) => void>;
   onSliceClick?: (item: ChartDataItem, index: number) => void;
   centerLabel: PieCenterLabel | null;
+  compact?: boolean;
 }
 
 export function usePieChartD3Render({
@@ -62,6 +63,7 @@ export function usePieChartD3Render({
   onToggleItemRef,
   onSliceClick,
   centerLabel,
+  compact = false,
 }: UsePieChartD3RenderParams): void {
   useEffect(() => {
     if (!svgRef.current) return;
@@ -71,11 +73,12 @@ export function usePieChartD3Render({
     }
 
     const { width, height } = dimensions;
-    const padding = 16;
+    const padding = compact ? 6 : 16;
+    const radiusInset = compact ? 4 : 12;
     const centerX = width / 2;
     const centerY = height / 2;
     const minDim = Math.min(width, height) - padding * 2;
-    const outerRadius = minDim / 2 - 12;
+    const outerRadius = minDim / 2 - radiusInset;
     const innerRadius = outerRadius * 0.45;
 
     const pieData: PieDatum[] = visibleData.map(({ item, index }) => {
@@ -248,6 +251,7 @@ export function usePieChartD3Render({
     onToggleItem,
     onSliceClick,
     centerLabel,
+    compact,
     svgRef,
     tooltipRef,
     onToggleItemRef,

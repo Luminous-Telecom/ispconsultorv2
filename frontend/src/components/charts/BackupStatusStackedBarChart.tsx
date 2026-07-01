@@ -1,7 +1,6 @@
 import React, { useRef, useLayoutEffect, useEffect, useState, useMemo, memo, useCallback } from 'react';
 import * as d3 from 'd3';
 import { ChartEmptyState } from './ChartEmptyState';
-import { LabelWithHelp } from 'components/ui/LabelWithHelp';
 import { clampTooltipNearPoint, createD3ChartTooltip } from './chartTooltip';
 
 export type BackupStatusKey = 'sucesso' | 'somente_local' | 'falha_envio' | 'verificado' | 'falha';
@@ -26,16 +25,6 @@ const STATUS_COLORS: Record<BackupStatusKey, string> = {
   verificado: '#3b82f6',
   falha: '#ef4444',
 };
-
-function BackupStatusHeaderIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <rect x="4" y="4" width="16" height="6" rx="1.5" stroke="#534AB7" strokeWidth="2" />
-      <rect x="4" y="12" width="10" height="8" rx="1.5" stroke="#534AB7" strokeWidth="2" />
-      <path d="M16 14v6M13 17h6" stroke="#534AB7" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
 
 export interface BackupStatusStackedBarChartProps {
   days: BackupStatusDayDatum[];
@@ -65,14 +54,12 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
     onSegmentClick,
     hiddenKeys,
     onLegendToggle,
-    headerPeriodBadge,
-    failureBadgeText,
     periodHasBackupEvents,
-    headerInfo,
   }) => {
     const svgRef = useRef<SVGSVGElement>(null);
     const wrapRef = useRef<HTMLDivElement>(null);
-    const [width, setWidth] = useState(400);
+    const chartBoxRef = useRef<HTMLDivElement>(null);
+    const [{ width, height: boxHeight }, setSize] = useState({ width: 300, height: 90 });
 
     const chartData = useMemo(
       () =>
@@ -133,16 +120,17 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
       chartData.length > 0 && (hasCountsInWindow || periodHasBackupEvents);
 
     useLayoutEffect(() => {
-      const el = wrapRef.current;
+      const el = chartBoxRef.current;
       if (!el) return;
-      const ro = new ResizeObserver(() => {
-        const w = el.getBoundingClientRect().width;
-        setWidth(Math.max(160, w || 300));
-      });
+      const measure = () => {
+        const r = el.getBoundingClientRect();
+        setSize({ width: Math.max(160, r.width || 300), height: Math.max(48, r.height || 90) });
+      };
+      const ro = new ResizeObserver(measure);
       ro.observe(el);
-      setWidth(Math.max(160, el.getBoundingClientRect().width || 300));
+      measure();
       return () => ro.disconnect();
-    }, []);
+    }, [showChartBody]);
 
     const textMuted = useCallback(() => {
       if (typeof window === 'undefined') return '#94a3b8';
@@ -156,14 +144,14 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
 
       const isCompact = width < 300;
       const margin = {
-        top: 6,
-        right: isCompact ? 4 : 12,
-        left: isCompact ? 22 : 36,
-        bottom: isCompact ? 20 : 28,
+        top: 4,
+        right: isCompact ? 4 : 10,
+        left: isCompact ? 20 : 30,
+        bottom: isCompact ? 16 : 22,
       };
-      const height = isCompact ? 140 : 200;
+      const height = Math.max(56, boxHeight);
       const innerW = Math.max(1, width - margin.left - margin.right);
-      const innerH = height - margin.top - margin.bottom;
+      const innerH = Math.max(1, height - margin.top - margin.bottom);
 
       const stackKeys = visibleKeys.length > 0 ? visibleKeys : [];
       const series =
@@ -187,41 +175,71 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
       svgSel.selectAll('*').remove();
       svgSel.attr('width', width).attr('height', height);
 
+      const defs = svgSel.append('defs');
+      (visibleKeys.length > 0 ? visibleKeys : STACK_KEYS).forEach((k) => {
+        const color = STATUS_COLORS[k] ?? '#64748b';
+        const grad = defs
+          .append('linearGradient')
+          .attr('id', `backup-grad-${k}`)
+          .attr('x1', '0')
+          .attr('y1', '0')
+          .attr('x2', '0')
+          .attr('y2', '1');
+        grad.append('stop').attr('offset', '0%').attr('stop-color', color).attr('stop-opacity', 1);
+        grad.append('stop').attr('offset', '100%').attr('stop-color', color).attr('stop-opacity', 0.6);
+      });
+
       const g = svgSel.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
       const axisColor = textMuted();
       const axisFontSize = isCompact ? '8px' : '10px';
 
-      const gAxis = g.append('g').attr('class', 'y-axis').call(d3.axisLeft(y).ticks(isCompact ? 3 : 4).tickSize(-innerW));
-      gAxis.selectAll('.tick line').attr('stroke', axisColor).attr('stroke-opacity', 0.35);
-      gAxis.select('.domain').attr('stroke', axisColor);
-      gAxis.selectAll('.tick text').attr('fill', axisColor).attr('font-size', axisFontSize);
+      // Gridlines discretas (sem linha de domínio) para um visual mais limpo.
+      const gAxis = g
+        .append('g')
+        .attr('class', 'y-axis')
+        .call(d3.axisLeft(y).ticks(isCompact ? 3 : 4).tickSize(-innerW).tickPadding(6));
+      gAxis
+        .selectAll('.tick line')
+        .attr('stroke', axisColor)
+        .attr('stroke-opacity', 0.12)
+        .attr('stroke-dasharray', '2 4');
+      gAxis.select('.domain').remove();
+      gAxis.selectAll('.tick text').attr('fill', axisColor).attr('font-size', axisFontSize).attr('opacity', 0.7);
 
-      const gx = g.append('g').attr('transform', `translate(0,${innerH})`).call(d3.axisBottom(x));
-      gx.selectAll('text').attr('fill', axisColor).attr('font-size', axisFontSize);
-      gx.select('.domain').attr('stroke', axisColor);
+      const gx = g.append('g').attr('transform', `translate(0,${innerH})`).call(d3.axisBottom(x).tickSize(0).tickPadding(8));
+      gx.selectAll('text').attr('fill', axisColor).attr('font-size', axisFontSize).attr('opacity', 0.7);
+      gx.select('.domain').remove();
+
+      const barWidth = Math.min(x.bandwidth(), isCompact ? 16 : 22);
+      const barOffset = (x.bandwidth() - barWidth) / 2;
+      const SEG_GAP = 2;
 
       series.forEach((serie) => {
         const statusKey = serie.key as BackupStatusKey;
-        const color = STATUS_COLORS[statusKey] ?? '#64748b';
         g.append('g')
           .selectAll('rect')
           .data(serie)
           .join('rect')
           .attr('data-status-key', statusKey)
-          .attr('x', (d) => x(d.data.label) ?? 0)
-          .attr('y', (d) => y(d[1]))
-          .attr('height', (d) => Math.max(0, y(d[0]) - y(d[1])))
-          .attr('width', x.bandwidth())
-          .attr('fill', color)
-          .attr('rx', 2)
+          .attr('x', (d) => (x(d.data.label) ?? 0) + barOffset)
+          .attr('width', barWidth)
+          .attr('fill', `url(#backup-grad-${statusKey})`)
+          .attr('rx', 4)
           .style('cursor', (d) => (onSegmentClick && y(d[0]) - y(d[1]) > 0.5 ? 'pointer' : 'default'))
+          .attr('y', innerH)
+          .attr('height', 0)
           .on('click', (event, d) => {
             event.stopPropagation();
             const h = y(d[0]) - y(d[1]);
             if (h < 0.5 || !onSegmentClick) return;
             onSegmentClick(d.data.dataISO, statusKey);
-          });
+          })
+          .transition()
+          .duration(650)
+          .ease(d3.easeCubicOut)
+          .attr('y', (d) => y(d[1]))
+          .attr('height', (d) => Math.max(0, y(d[0]) - y(d[1]) - SEG_GAP));
       });
 
       const tooltip = createD3ChartTooltip(svg);
@@ -255,6 +273,7 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
     }, [
       chartData,
       width,
+      boxHeight,
       maxTotal,
       maxTotalAll,
       hasCountsInWindow,
@@ -275,45 +294,30 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
       );
     }
 
-    const headerBadge =
-      failureBadgeText != null && failureBadgeText !== ''
-        ? { className: 'backup-status-card__alert-badge', text: failureBadgeText }
-        : headerPeriodBadge
-          ? { className: 'pie-metric-header__badge', text: headerPeriodBadge }
-          : null;
-
     return (
       <div
         ref={wrapRef}
         className="backup-status-card chart-radial-style"
         style={{ height: '100%', position: 'relative' }}
       >
-        <div className="pie-metric-header">
-          <div className="pie-metric-header__icon" aria-hidden>
-            <BackupStatusHeaderIcon />
-          </div>
-          {headerInfo ? (
-            <div className="pie-metric-header__title-with-help">
-              <LabelWithHelp
-                as="span"
-                className="pie-metric-header__title backup-status-card__title mb-0"
-                helpText={headerInfo}
-              >
-                {title}
-              </LabelWithHelp>
-            </div>
-          ) : (
-            <h6 className="pie-metric-header__title backup-status-card__title">{title}</h6>
-          )}
-          {headerBadge ? (
-            <span className={headerBadge.className}>{headerBadge.text}</span>
-          ) : null}
+        <div className="pie-metric-header" style={{ justifyContent: 'center' }}>
+          <span
+            className="pie-metric-header__title backup-status-card__title"
+            style={{ flex: '0 0 auto', textAlign: 'center' }}
+          >
+            {title}
+          </span>
         </div>
 
-        <svg
-          ref={svgRef}
-          style={{ display: 'block', maxWidth: '100%', overflow: 'visible', flex: '1 1 auto', minHeight: 0 }}
-        />
+        <div
+          ref={chartBoxRef}
+          style={{ flex: '1 1 auto', minHeight: 0, width: '100%', position: 'relative' }}
+        >
+          <svg
+            ref={svgRef}
+            style={{ display: 'block', maxWidth: '100%', overflow: 'visible' }}
+          />
+        </div>
         <ul className="backup-status-card__legend">
           {STACK_KEYS.map((k) => {
             const isHidden = hiddenKeys?.has(k) ?? false;

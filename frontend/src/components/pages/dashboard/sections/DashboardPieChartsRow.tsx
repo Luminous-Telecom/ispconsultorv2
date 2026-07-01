@@ -54,8 +54,8 @@ const DashboardPieChartsRow: React.FC<DashboardPieChartsRowProps> = ({
   ticketMedioCardData,
 }) => (
   <div className="row g-2 align-items-stretch">
-    <div className="col-12 col-sm-6 col-md-4">
-      <div className="chart-card chart-card-pie chart-card-pie--metric">
+    <div className="col-auto dashboard-col--compact">
+      <div className="chart-card chart-card-pie chart-card-pie--compact">
         <ResponsivePieChart
           data={charts.clientesChartData}
           title={t('dashboard.clientStatus')}
@@ -64,23 +64,43 @@ const DashboardPieChartsRow: React.FC<DashboardPieChartsRowProps> = ({
           onSliceClick={clicks.handleClienteSliceClick}
           centerHighlightFilterValue
           chartLeading
-          metricLayout
-          metricHeaderIcon="clients"
-          metricHeaderInfo={t('dashboard.clientStatusInfo')}
-          footerLeft={metrics.clientesMetricFooter.left}
-          footerRight={metrics.clientesMetricFooter.right}
+          compact
         />
       </div>
     </div>
 
-    <div className="col-12 col-sm-6 col-md-4">
-      <div className="chart-card chart-card-pie chart-card-pie--metric">
-        <TicketMedioCard data={ticketMedioCardData} />
+    <div className="col-auto dashboard-col--compact">
+      <div className="chart-card chart-card-pie chart-card-pie--compact">
+        <ResponsivePieChart
+          data={charts.contratosChartData}
+          title={t('dashboard.contractStatus')}
+          hiddenItems={hiddenItems.hiddenContratos}
+          onToggleItem={toggles.toggleContratos}
+          onSliceClick={clicks.handleContratoSliceClick}
+          centerHighlightFilterValue="ativo"
+          chartLeading
+          compact
+        />
       </div>
     </div>
 
-    <div className="col-12 col-sm-6 col-md-4">
-      <div className="chart-card chart-card-pie chart-card-pie--metric">
+    <div className="col-auto dashboard-col--compact">
+      <div className="chart-card chart-card-pie chart-card-pie--compact">
+        <ResponsivePieChart
+          data={charts.statusPagamentoData}
+          title={t('dashboard.paymentStatus')}
+          hiddenItems={hiddenItems.hiddenPagamentos}
+          onToggleItem={toggles.togglePagamento}
+          onSliceClick={clicks.handleStatusPagamentoSliceClick}
+          centerHighlightFilterValue="pendente"
+          chartLeading
+          compact
+        />
+      </div>
+    </div>
+
+    <div className="col-auto dashboard-col--compact">
+      <div className="chart-card chart-card-pie chart-card-pie--compact">
         <ResponsivePieChart
           data={charts.distribuicaoPlanos}
           title={t('dashboard.planDistribution')}
@@ -89,17 +109,19 @@ const DashboardPieChartsRow: React.FC<DashboardPieChartsRowProps> = ({
           onSliceClick={clicks.handleDistribuicaoPlanoSliceClick}
           centerHighlightFilterValue={metrics.distribuicaoPlanoMetric.centerFv}
           chartLeading
-          metricLayout
-          metricHeaderIcon="plans"
-          metricHeaderInfo={t('dashboard.planDistributionInfo')}
-          footerLeft={metrics.distribuicaoPlanoMetric.footerLeft}
-          footerRight={metrics.distribuicaoPlanoMetric.footerRight}
+          compact
         />
       </div>
     </div>
 
-    <div className="col-12 col-sm-6 col-md-4">
-      <div className="chart-card chart-card-pie chart-card-pie--metric">
+    <div className="col-auto dashboard-col--compact">
+      <div className="chart-card chart-card-pie chart-card-pie--metric chart-card-pie--sm">
+        <TicketMedioCard data={ticketMedioCardData} />
+      </div>
+    </div>
+
+    <div className="col-auto dashboard-col--compact">
+      <div className="chart-card chart-card-pie chart-card-pie--metric chart-card-pie--sm">
         <BackupStatusStackedBarChart
           days={backupStatus.backupStatusGraficoUltimos7Dias}
           title={t('dashboard.backupStatusTitle')}
@@ -111,44 +133,6 @@ const DashboardPieChartsRow: React.FC<DashboardPieChartsRowProps> = ({
           failureBadgeText={backupStatus.backupStatusDashboardSummary.failureBadgeText}
           periodHasBackupEvents={backupStatus.backupStatusPeriodoTemEventos}
           headerInfo={t('dashboard.backupStatusInfo')}
-        />
-      </div>
-    </div>
-
-    <div className="col-12 col-sm-6 col-md-4">
-      <div className="chart-card chart-card-pie chart-card-pie--metric">
-        <ResponsivePieChart
-          data={charts.contratosChartData}
-          title={t('dashboard.contractStatus')}
-          hiddenItems={hiddenItems.hiddenContratos}
-          onToggleItem={toggles.toggleContratos}
-          onSliceClick={clicks.handleContratoSliceClick}
-          centerHighlightFilterValue="ativo"
-          chartLeading
-          metricLayout
-          metricHeaderIcon="contracts"
-          metricHeaderInfo={t('dashboard.contractStatusInfo')}
-          footerLeft={metrics.contratosMetricFooter.left}
-          footerRight={metrics.contratosMetricFooter.right}
-        />
-      </div>
-    </div>
-
-    <div className="col-12 col-sm-6 col-md-4">
-      <div className="chart-card chart-card-pie chart-card-pie--metric">
-        <ResponsivePieChart
-          data={charts.statusPagamentoData}
-          title={t('dashboard.paymentStatus')}
-          hiddenItems={hiddenItems.hiddenPagamentos}
-          onToggleItem={toggles.togglePagamento}
-          onSliceClick={clicks.handleStatusPagamentoSliceClick}
-          centerHighlightFilterValue="pendente"
-          chartLeading
-          metricLayout
-          metricHeaderIcon="payments"
-          metricHeaderInfo={t('dashboard.paymentStatusInfo')}
-          footerLeft={metrics.pagamentosMetricFooter.left}
-          footerRight={metrics.pagamentosMetricFooter.right}
         />
       </div>
     </div>

@@ -23,6 +23,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(
     metricHeaderBadge,
     metricHeaderIcon = 'contracts',
     metricHeaderInfo,
+    compact = false,
   }) => {
     const titleId = useId();
     const svgRef = useRef<SVGSVGElement>(null);
@@ -147,6 +148,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(
       onToggleItemRef,
       onSliceClick,
       centerLabel,
+      compact,
     });
 
     const hasNoData =

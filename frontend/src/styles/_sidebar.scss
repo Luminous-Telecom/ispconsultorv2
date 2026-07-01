@@ -230,9 +230,9 @@
   border-radius: var(--border-radius-sm);
   transition: background-color 0.15s ease, color 0.15s ease;
   font-size: 0.75rem;
-  font-weight: 400;
+  font-weight: 700;
   padding: 8px !important;
-  color: var(--sidebar-text) !important;
+  color: var(--text-secondary) !important;
 }
 
 .sidebar .nav-link:hover {
@@ -284,9 +284,9 @@
   box-shadow: none !important;
   padding: 0.5rem 0.65rem !important;
   font-size: 0.75rem !important;
-  font-weight: 400 !important;
+  font-weight: 700 !important;
   letter-spacing: 0.01em;
-  color: var(--sidebar-text) !important;
+  color: var(--text-secondary) !important;
   border-radius: var(--border-radius-sm) !important;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
@@ -583,7 +583,7 @@
 
 .sidebar .sidebar-accordion .accordion-body .sidebar-accordion .accordion-button {
   padding: 0.45rem 0.65rem 0.45rem 0.35rem !important;
-  font-weight: 400 !important;
+  font-weight: 700 !important;
   font-size: 0.72rem !important;
 }
 
@@ -640,14 +640,14 @@
   margin-bottom: 0.1rem;
   margin-left: 1.35rem;
   font-size: 0.72rem;
-  font-weight: 400;
+  font-weight: 700;
   border-radius: var(--border-radius-sm);
   display: block !important;
   width: calc(100% - 1.35rem) !important; /* acima do w-100 + margin-left */
   text-align: left;
   background: transparent !important;
   border: none !important;
-  color: var(--sidebar-text) !important;
+  color: var(--text-secondary) !important;
   position: relative !important;
   float: none !important;
   clear: both !important;
@@ -716,12 +716,15 @@
 }
 
 /* Modo escuro - textos da sidebar voltam para as cores originais */
-[data-theme="dark"] .sidebar .nav-link,
-[data-theme="dark"] .sidebar-accordion .accordion-button,
-[data-theme="dark"] .sidebar-folder-item,
 [data-theme="dark"] .sidebar-company-name,
 [data-theme="dark"] .sidebar-title {
   color: var(--sidebar-text) !important;
+}
+
+[data-theme="dark"] .sidebar .nav-link,
+[data-theme="dark"] .sidebar-accordion .accordion-button,
+[data-theme="dark"] .sidebar-folder-item {
+  color: var(--text-secondary) !important;
 }
 
 [data-theme="dark"] .sidebar .nav-link:hover,
@@ -779,7 +782,7 @@
     padding: 12px 8px !important;
     min-height: 44px !important;
     font-size: 0.875rem !important;
-    font-weight: 400 !important;
+    font-weight: 700 !important;
   }
 
   .sidebar-folder-item {
