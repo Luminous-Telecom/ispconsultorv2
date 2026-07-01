@@ -1,0 +1,141 @@
+/* ============================================
+   Login moderno — compartilhado CRM + SaaS
+   ============================================ */
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  font-family: var(--font-family-base);
+  background:
+    radial-gradient(1100px 520px at 50% -12%, rgba(99, 102, 241, 0.22), transparent 62%),
+    radial-gradient(900px 480px at 100% 110%, rgba(14, 165, 233, 0.16), transparent 60%),
+    var(--bg-primary);
+}
+
+.login-card {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.38);
+  overflow: hidden;
+  animation: login-card-in 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes login-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-card__accent {
+  height: 4px;
+  background: linear-gradient(90deg, #6366f1 0%, #0ea5e9 50%, #10b981 100%);
+}
+
+.login-card__body {
+  padding: 2rem 1.85rem 1.5rem;
+}
+
+.login-brand {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.login-brand__logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+}
+
+.login-badge {
+  display: inline-block;
+  padding: 0.28rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #fff;
+  background: linear-gradient(90deg, #6366f1 0%, #0ea5e9 100%);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+}
+
+.login-subtitle {
+  margin: 0.85rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.3;
+}
+
+.login-field {
+  margin-bottom: 1rem;
+}
+
+.login-page .login-input {
+  display: block;
+  width: 100%;
+  height: 48px;
+  padding: 0 1rem;
+  background: var(--bg-tertiary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 0.65rem !important;
+  color: var(--text-primary) !important;
+  caret-color: var(--text-primary);
+  font-size: 0.9rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.login-page .login-input::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.85;
+}
+
+.login-page .login-input:focus {
+  outline: none;
+  border-color: var(--primary-color, #6b9bd1) !important;
+  box-shadow: 0 0 0 0.2rem rgba(107, 155, 209, 0.22) !important;
+  background: var(--bg-tertiary) !important;
+}
+
+.login-submit {
+  margin-top: 1.25rem;
+}
+
+.login-submit .btn {
+  width: 100%;
+  height: 46px;
+  border-radius: 0.65rem;
+  font-weight: 600;
+}
+
+.login-footer {
+  margin-top: 1.35rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.login-footer .text-muted,
+.login-footer small {
+  color: var(--text-muted) !important;
+}
+
+.login-ip-copy {
+  cursor: pointer;
+  text-decoration: underline dotted;
+}
+
+.login-ip-copy:hover {
+  color: var(--text-primary) !important;
+}
