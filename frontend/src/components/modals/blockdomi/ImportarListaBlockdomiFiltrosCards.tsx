@@ -33,9 +33,10 @@ const ImportarListaBlockdomiFiltrosCards: React.FC<ImportarListaBlockdomiFiltros
             renderList(dominiosBruto)
           )}
         </div>
-        <div className="card-footer py-2">
+        <div className="card-footer py-2 d-flex justify-content-center">
           <CopiarButton
             type="button"
+            iconOnly
             onClick={() => onCopy(dominiosBruto)}
             disabled={dominiosBruto.length === 0}
           />
@@ -61,9 +62,10 @@ const ImportarListaBlockdomiFiltrosCards: React.FC<ImportarListaBlockdomiFiltros
             </ul>
           )}
         </div>
-        <div className="card-footer py-2">
+        <div className="card-footer py-2 d-flex justify-content-center">
           <CopiarButton
             type="button"
+            iconOnly
             variant="outline-dark"
             onClick={() => onCopy(dominiosFiltrados.map((x) => x.fixed))}
             disabled={dominiosFiltrados.length === 0}
@@ -84,9 +86,10 @@ const ImportarListaBlockdomiFiltrosCards: React.FC<ImportarListaBlockdomiFiltros
             renderList(dominiosValidos)
           )}
         </div>
-        <div className="card-footer py-2">
+        <div className="card-footer py-2 d-flex justify-content-center">
           <CopiarButton
             type="button"
+            iconOnly
             variant="outline-light"
             onClick={() => onCopy(dominiosValidos)}
             disabled={dominiosValidos.length === 0}

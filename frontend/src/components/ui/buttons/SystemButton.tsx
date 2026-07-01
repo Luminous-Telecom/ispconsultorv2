@@ -48,7 +48,7 @@ const SystemButton: React.FC<SystemButtonProps> = ({
     isLoading,
     className: mergedClassName || undefined,
     iconOnly: iconOnly && action === 'copiar',
-    iconClassName: iconOnly && action === 'copiar' ? 'bi bi-clipboard' : undefined,
+    iconClassName: iconOnly && action === 'copiar' ? 'bi bi-copy' : undefined,
     ...rest,
   });
 };

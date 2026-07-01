@@ -5,7 +5,7 @@ import { defaultApiClient } from 'services/core';
 import { formatDate } from 'utils/formatters';
 import { ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
-import { Loading } from 'components/ui';
+import { Loading, CopiarButton } from 'components/ui';
 import './PagamentoPublico.css';
 
 interface TituloPublico {
@@ -33,12 +33,11 @@ const PagamentoPublico: React.FC = () => {
   const navigate = useNavigate();
   const [sessionReady, setSessionReady] = useState<boolean>(!token);
   const sessionInitRef = useRef(false);
-  const { copy: copyToClipboard, copiedKey } = useCopyToClipboard({
+  const { copy: copyToClipboard } = useCopyToClipboard({
     resetAfterMs: 2000,
     useFallback: true,
     errorMessage: ERROR_MESSAGES.COPY_ERROR,
   });
-  const copiedField = copiedKey;
 
   // Quando tem token na URL: trocar por cookie e remover token da URL (evita token em logs/histórico)
   useEffect(() => {
@@ -197,13 +196,15 @@ const PagamentoPublico: React.FC = () => {
               <div className="pagamento-publico-code-text" id="codigoPix">
                 {titulo.qrcode}
               </div>
-              <button
-                className={`pagamento-publico-copy-btn ${copiedField === 'pix' ? 'copied' : ''}`}
-                onClick={() => copiarCodigo(titulo.qrcode!, 'pix')}
-              >
-                <i className="bi bi-clipboard"></i>
-                <span>{copiedField === 'pix' ? 'Copiado!' : 'Copiar Código PIX'}</span>
-              </button>
+              <div className="d-flex justify-content-center mt-2">
+                <CopiarButton
+                  type="button"
+                  iconOnly
+                  variant="secondary"
+                  label="Copiar Código PIX"
+                  onClick={() => copiarCodigo(titulo.qrcode!, 'pix')}
+                />
+              </div>
             </div>
           </div>
         )}
@@ -218,13 +219,15 @@ const PagamentoPublico: React.FC = () => {
               <div className="pagamento-publico-code-text" id="linhaDigitavel">
                 {titulo.linha_digitavel}
               </div>
-              <button
-                className={`pagamento-publico-copy-btn ${copiedField === 'linha' ? 'copied' : ''}`}
-                onClick={() => copiarCodigo(titulo.linha_digitavel!, 'linha')}
-              >
-                <i className="bi bi-clipboard"></i>
-                <span>{copiedField === 'linha' ? 'Copiado!' : 'Copiar Linha Digitável'}</span>
-              </button>
+              <div className="d-flex justify-content-center mt-2">
+                <CopiarButton
+                  type="button"
+                  iconOnly
+                  variant="secondary"
+                  label="Copiar Linha Digitável"
+                  onClick={() => copiarCodigo(titulo.linha_digitavel!, 'linha')}
+                />
+              </div>
             </div>
           </div>
         )}

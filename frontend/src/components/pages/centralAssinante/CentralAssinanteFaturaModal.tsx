@@ -2,15 +2,13 @@ import React from 'react';
 import {
   VoltarButton,
   BaixarButton,
-  CopiarCodigoBarrasButton,
-  CopiarPixButton,
+  CopiarButton,
 } from 'components/ui';
 import { formatCurrency, formatDate } from 'utils/formatters';
 import { FaturaVisualizar } from './centralAssinanteUtils';
 
 interface CentralAssinanteFaturaModalProps {
   faturaVisualizar: FaturaVisualizar;
-  copiedField: string | null;
   baixandoBoletoId: number | null;
   onClose: () => void;
   copiarCodigo: (text: string, fieldName: string) => void;
@@ -19,7 +17,6 @@ interface CentralAssinanteFaturaModalProps {
 
 const CentralAssinanteFaturaModal: React.FC<CentralAssinanteFaturaModalProps> = ({
   faturaVisualizar,
-  copiedField,
   baixandoBoletoId,
   onClose,
   copiarCodigo,
@@ -68,13 +65,15 @@ const CentralAssinanteFaturaModal: React.FC<CentralAssinanteFaturaModalProps> = 
                   ))}
                 </div>
               </div>
-              <CopiarCodigoBarrasButton
-                variant="secondary"
-                size="sm"
-                className="w-100"
-                label={copiedField === 'linha' ? 'Copiado!' : undefined}
-                onClick={() => copiarCodigo(faturaVisualizar.linha_digitavel!, 'linha')}
-              />
+              <div className="d-flex justify-content-center mt-1">
+                <CopiarButton
+                  type="button"
+                  iconOnly
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => copiarCodigo(faturaVisualizar.linha_digitavel!, 'linha')}
+                />
+              </div>
             </div>
           )}
 
@@ -87,13 +86,15 @@ const CentralAssinanteFaturaModal: React.FC<CentralAssinanteFaturaModalProps> = 
                   className="img-fluid central-assinante-modal-qr-img"
                 />
               </div>
-              <CopiarPixButton
-                variant="secondary"
-                size="sm"
-                className="w-100"
-                label={copiedField === 'pix' ? 'Copiado!' : undefined}
-                onClick={() => copiarCodigo(faturaVisualizar.qrcode!, 'pix')}
-              />
+              <div className="d-flex justify-content-center mt-1">
+                <CopiarButton
+                  type="button"
+                  iconOnly
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => copiarCodigo(faturaVisualizar.qrcode!, 'pix')}
+                />
+              </div>
             </div>
           )}
 

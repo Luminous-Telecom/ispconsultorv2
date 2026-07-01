@@ -20,7 +20,7 @@ alwaysApply: true
 - URLs SEMPRE em variáveis de ambiente (.env), nunca hardcoded no código
 - Nunca especifique nome do banco no código
 - NÃO rode `pm2 restart`, `pm2 logs` em dev (hot reload automático)
-- **Após alterar frontend**: rode `npm run build` e corrija erros antes de concluir — ver `.cursor/rules/frontend-verificacao-pos-alteracao.mdc`
+- **Build do frontend**: rode `npm run build` **somente antes de push/PR**, se alterou `frontend/` — ver `.cursor/rules/frontend-verificacao-pos-alteracao.mdc`
 
 ## Git
 - Nunca faça commit sem antes o usuário pedir

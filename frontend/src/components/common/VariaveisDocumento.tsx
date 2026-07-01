@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { Loading, LabelWithHelp } from 'components/ui';
+import { Loading, LabelWithHelp, CopiarButton } from 'components/ui';
 import SearchBar from 'components/ui/SearchBar';
 import { useI18n } from 'contexts/I18nContext';
 import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
@@ -102,20 +102,28 @@ const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariav
                 <div className="accordion-body p-0">
                   <div className="list-group list-group-flush">
                     {variaveisFiltradas.map((variavel: Variavel) => (
-                      <button
+                      <div
                         key={variavel.variavel}
-                        type="button"
-                        className="list-group-item list-group-item-action py-2 px-3"
-                        onClick={() => handleInserirVariavel(variavel.variavel)}
+                        className="list-group-item py-2 px-3 d-flex align-items-start gap-2"
                       >
-                        <div className="d-flex w-100 justify-content-between align-items-start">
-                          <div>
-                            <code className="small">{variavel.variavel}</code>
-                            <div className="text-muted small">{variavel.descricao}</div>
-                          </div>
-                          <i className="bi bi-clipboard text-muted"></i>
-                        </div>
-                      </button>
+                        <button
+                          type="button"
+                          className="flex-grow-1 border-0 bg-transparent text-start p-0"
+                          onClick={() => handleInserirVariavel(variavel.variavel)}
+                        >
+                          <code className="small">{variavel.variavel}</code>
+                          <div className="text-muted small">{variavel.descricao}</div>
+                        </button>
+                        <CopiarButton
+                          type="button"
+                          iconOnly
+                          variant="ghost"
+                          className="p-0 text-muted flex-shrink-0"
+                          style={{ fontSize: '0.75rem' }}
+                          onClick={() => void copyToClipboard(variavel.variavel)}
+                          title={t('buttons.copy')}
+                        />
+                      </div>
                     ))}
                   </div>
                 </div>

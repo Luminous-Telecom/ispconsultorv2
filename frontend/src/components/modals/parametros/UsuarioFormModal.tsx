@@ -233,6 +233,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
                   />
                   <CopiarButton
                     type="button"
+                    iconOnly
                     onClick={handleCopyWebhookSecret}
                     disabled={!webhookSecret}
                   />

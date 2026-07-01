@@ -1,23 +1,16 @@
 ---
-description: Verificações obrigatórias após alterações no frontend (build, i18n, types)
+description: Verificações do frontend (i18n, types no dev; build só antes de push)
 globs: frontend/**/*
 alwaysApply: false
 ---
 
-# Verificação pós-alteração — Frontend
+# Verificação frontend — BackNet
 
-**Antes de concluir qualquer tarefa que altere o frontend**, execute as verificações abaixo.
+## Durante o desenvolvimento
 
-## 1. Build de produção (obrigatório)
+Ao alterar o frontend, aplique na hora o que couber abaixo. **Não** rode `npm run build` ao concluir cada tarefa.
 
-```bash
-cd frontend && npm run build
-```
-
-- Corrija **todos** os erros de compilação antes de encerrar
-- Não considere a tarefa concluída com build falhando
-
-## 2. i18n com `t()`
+### i18n com `t()`
 
 Ao adicionar ou usar chave em `t('...')`:
 
@@ -26,7 +19,7 @@ Ao adicionar ou usar chave em `t('...')`:
 3. `frontend/src/i18n/locales/es-ES.ts`
 4. **`frontend/src/i18n/translationKeys.ts`** — sem isso o CI quebra com `TS2345`
 
-## 3. Tipos de formulário
+### Tipos de formulário
 
 Novo campo em formulário → atualizar **todos** os tipos relacionados:
 
@@ -36,18 +29,32 @@ Novo campo em formulário → atualizar **todos** os tipos relacionados:
 
 Ex.: `errors.central_assinante_senha` exige `central_assinante_senha` em `ClienteFormErrors`.
 
-## 4. Services (`BaseService`)
+### Services (`BaseService`)
 
 - **Nunca** `new BaseService(...)` — classe abstrata
 - Criar classe concreta: `class XService extends BaseService<...> {}`
 
-## 5. Imports e exports
+### Imports e exports
 
 - Novo componente em `components/ui/` → exportar em `components/ui/index.ts`
 - Verificar imports faltando (`useI18n`, hooks, tipos)
 
+## Antes de push (obrigatório)
+
+Rode o build **somente** quando for fazer `git push` ou abrir PR — e **somente se** houve alteração em `frontend/`:
+
+```bash
+cd frontend && npm run build
+```
+
+- Corrija **todos** os erros de compilação antes do push
+- Não faça push com build falhando
+
 ## Checklist rápido
 
+**Durante dev:**
 - [ ] Chaves i18n nos 3 locales + `translationKeys.ts`
 - [ ] Tipos/schemas alinhados com campos novos
-- [ ] `npm run build` passou sem erro
+
+**Antes de push:**
+- [ ] `npm run build` passou sem erro (se alterou frontend)

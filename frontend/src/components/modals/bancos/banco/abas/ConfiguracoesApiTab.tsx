@@ -99,6 +99,7 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
                   />
                   <CopiarButton
                     type="button"
+                    iconOnly
                     onClick={handleCopyWebhookUrl}
                     disabled={isPending}
                   />
@@ -152,6 +153,7 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
                   />
                   <CopiarButton
                     type="button"
+                    iconOnly
                     onClick={handleCopyWebhookUrl}
                     disabled={isPending}
                   />

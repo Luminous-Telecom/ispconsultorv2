@@ -38,7 +38,7 @@ alwaysApply: false
 - Use `FormField` / blocos em `components/forms/` em vez de `form-control` cru
 - **Modais**: layout horizontal — `col-12`, `AtivoInativoField` para booleanos, sem `switch` (ver `frontend-form-modal-layout.mdc`)
 - Campos obrigatórios: `required` no `FormField` ou `LabelWithHelp` (asterisco vermelho)
-- **Ao concluir**: build + i18n + types — ver `frontend-verificacao-pos-alteracao.mdc`
+- **Ao concluir**: i18n + types na hora; build só antes de push — ver `frontend-verificacao-pos-alteracao.mdc`
 - NÃO duplique `<span className="text-danger">*</span>` — use `LabelWithHelp required` ou `FormField required`
 - Use estado `errors` para armazenar erros por campo
 - Limpe erros quando usuário começar a digitar

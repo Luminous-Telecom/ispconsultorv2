@@ -62,7 +62,6 @@ const CentralAssinante: React.FC = () => {
   const {
     faturaVisualizar,
     setFaturaVisualizar,
-    copiedField,
     baixandoBoletoId,
     baixandoContratoId,
     baixandoTermoId,
@@ -216,7 +215,6 @@ const CentralAssinante: React.FC = () => {
       {faturaVisualizar ? (
         <CentralAssinanteFaturaModal
           faturaVisualizar={faturaVisualizar}
-          copiedField={copiedField}
           baixandoBoletoId={baixandoBoletoId}
           onClose={() => setFaturaVisualizar(null)}
           copiarCodigo={copiarCodigo}

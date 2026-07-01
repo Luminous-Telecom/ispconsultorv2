@@ -73,6 +73,7 @@ const AsaasForm: React.FC<AsaasFormProps> = ({
               />
               <CopiarButton
                 type="button"
+                iconOnly
                 onClick={onCopyWebhookSecret}
                 disabled={!formData.webhook_secret}
               />

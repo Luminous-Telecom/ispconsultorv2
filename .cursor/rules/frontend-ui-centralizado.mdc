@@ -79,4 +79,4 @@ onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.ENTITY_CREATE_ERROR),
 3. Feedback → `success` / `showApiError`
 4. Novo modal → `DraggableModal` ou `ListModal`
 5. Não copiar markup de outro modal — extrair só se virar padrão reutilizável em `ui/`
-6. Após alterações: verificar build e i18n — `frontend-verificacao-pos-alteracao.mdc`
+6. Após alterações: i18n/types na hora; build só antes de push — `frontend-verificacao-pos-alteracao.mdc`

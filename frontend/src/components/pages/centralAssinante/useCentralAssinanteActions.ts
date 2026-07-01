@@ -22,14 +22,13 @@ export const useCentralAssinanteActions = ({
   showApiError,
   setActiveTab,
 }: UseCentralAssinanteActionsParams) => {
-  const { copy: copyToClipboard, copiedKey } = useCopyToClipboard({
+  const { copy: copyToClipboard } = useCopyToClipboard({
     resetAfterMs: 2000,
     useFallback: true,
     successMessage: 'Código copiado!',
     errorMessage: ERROR_MESSAGES.COPY_ERROR,
   });
   const [faturaVisualizar, setFaturaVisualizar] = useState<FaturaVisualizar | null>(null);
-  const copiedField = copiedKey;
   const [baixandoBoletoId, setBaixandoBoletoId] = useState<number | null>(null);
   const [baixandoContratoId, setBaixandoContratoId] = useState<number | null>(null);
   const [baixandoTermoId, setBaixandoTermoId] = useState<number | null>(null);
@@ -98,7 +97,6 @@ export const useCentralAssinanteActions = ({
   return {
     faturaVisualizar,
     setFaturaVisualizar,
-    copiedField,
     baixandoBoletoId,
     baixandoContratoId,
     baixandoTermoId,
