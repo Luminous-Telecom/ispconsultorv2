@@ -6,353 +6,309 @@ import { ChartTitleWithInfo } from './ChartTitleWithInfo';
 import { clampTooltipNearPoint, createD3ChartTooltip } from './chartTooltip';
 import { FONT_FAMILY_BASE } from 'constants/typography';
 
-const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, titleInfo, format = 'number', onPointClick }) => {
-  const svgRef = useRef<SVGSVGElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
+const LINE_COLOR = 'var(--chart-color-1)';
 
-  const formatDateLabel = useCallback((label: string): string => {
-    if (!label) return '';
-    const ddmmyyyy = label.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
-    if (ddmmyyyy) return `${ddmmyyyy[1].padStart(2, '0')}/${ddmmyyyy[2].padStart(2, '0')}`;
-    const mmyy = label.match(/^(\d{1,2})\/(\d{2})$/);
-    if (mmyy) return `${mmyy[1].padStart(2, '0')}/${mmyy[2]}`;
-    return label;
-  }, []);
+/**
+ * Gráfico de linha moderno: área com gradiente, linha suave, grid horizontal
+ * discreto, rótulos por ponto, animação de entrada e hover com foco.
+ */
+const ResponsiveLineChart: React.FC<LineChartProps> = memo(
+  ({ data, title, titleInfo, format = 'number', onPointClick }) => {
+    const svgRef = useRef<SVGSVGElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const gradientId = useMemo(() => `line-grad-${Math.random().toString(36).slice(2)}`, []);
+    const [dimensions, setDimensions] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
 
-  const chartData = useMemo(
-    () =>
-      data.map((item) => ({
-        name: formatDateLabel(item.mes || item.name || ''),
-        value: item.valor ?? item.value ?? 0,
-      })),
-    [data, formatDateLabel]
-  );
+    const formatDateLabel = useCallback((label: string): string => {
+      if (!label) return '';
+      const ddmmyyyy = label.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+      if (ddmmyyyy) return `${ddmmyyyy[1].padStart(2, '0')}/${ddmmyyyy[2].padStart(2, '0')}`;
+      const mmyy = label.match(/^(\d{1,2})\/(\d{2})$/);
+      if (mmyy) return `${mmyy[1].padStart(2, '0')}/${mmyy[2]}`;
+      return label;
+    }, []);
 
-  const formatValue = useCallback(
-    (value: number) => {
-      if (format === 'currency') {
-        return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-      }
+    const chartData = useMemo(
+      () =>
+        data.map((item) => ({
+          name: formatDateLabel(item.mes || item.name || ''),
+          value: item.valor ?? item.value ?? 0,
+        })),
+      [data, formatDateLabel]
+    );
+
+    const formatValue = useCallback(
+      (value: number) =>
+        format === 'currency'
+          ? value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })
+          : value.toLocaleString('pt-BR'),
+      [format]
+    );
+
+    const formatPointLabel = useCallback(
+      (value: number) =>
+        format === 'currency'
+          ? value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 })
+          : value.toLocaleString('pt-BR'),
+      [format]
+    );
+
+    const formatAxis = useCallback((value: number) => {
+      const abs = Math.abs(value);
+      if (abs >= 1_000_000) return `${(value / 1_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}M`;
+      if (abs >= 1_000) return `${(value / 1_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}k`;
       return value.toLocaleString('pt-BR');
-    },
-    [format]
-  );
+    }, []);
 
-  const formatLabel = useCallback(
-    (value: number) => {
-      if (format === 'currency') {
-        const hasCents = value % 1 !== 0;
-        return value.toLocaleString('pt-BR', { minimumFractionDigits: hasCents ? 2 : 0, maximumFractionDigits: 2 });
-      }
-      return value.toLocaleString('pt-BR');
-    },
-    [format]
-  );
+    useLayoutEffect(() => {
+      const update = () => {
+        if (containerRef.current) {
+          const rect = containerRef.current.getBoundingClientRect();
+          setDimensions({ width: rect.width || 160, height: rect.height || 220 });
+        }
+      };
+      update();
+      const ro = new ResizeObserver(update);
+      if (containerRef.current) ro.observe(containerRef.current);
+      return () => ro.disconnect();
+    }, []);
 
-  useLayoutEffect(() => {
-    const updateDimensions = () => {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        setDimensions({
-          width: rect.width || 160,
-          height: rect.height || 220,
-        });
-      }
-    };
+    useEffect(() => {
+      const svg = svgRef.current;
+      if (!svg || dimensions.width === 0 || dimensions.height === 0 || chartData.length === 0) return;
 
-    updateDimensions();
-    const resizeObserver = new ResizeObserver(updateDimensions);
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current);
-    }
+      const sel = d3.select(svg);
+      sel.selectAll('*').remove();
+      sel.attr('width', dimensions.width).attr('height', dimensions.height);
 
-    return () => resizeObserver.disconnect();
-  }, []);
+      const margin = { top: 14, right: 16, left: 44, bottom: 34 };
+      const chartWidth = Math.max(1, dimensions.width - margin.left - margin.right);
+      const chartHeight = Math.max(1, dimensions.height - margin.top - margin.bottom);
 
-  useEffect(() => {
-    const svg = svgRef.current;
-    if (!svg || dimensions.width === 0 || dimensions.height === 0 || chartData.length === 0) return;
+      const values = chartData.map((d) => d.value);
+      const maxValue = Math.max(...values, 0);
 
-    d3.select(svg).selectAll('*').remove();
+      const xScale = d3.scaleLinear().domain([0, Math.max(1, chartData.length - 1)]).range([0, chartWidth]);
+      const yScale = d3.scaleLinear().domain([0, maxValue * 1.15 || 1]).nice().range([chartHeight, 0]);
 
-    const margin = { top: 16, right: 20, left: 48, bottom: 50 };
-    const chartWidth = dimensions.width - margin.left - margin.right;
-    const chartHeight = dimensions.height - margin.top - margin.bottom;
+      const textColor = 'var(--text-muted)';
+      const gridColor = 'var(--border-color)';
 
-    const values = chartData.map((d) => d.value);
-    const maxValue = Math.max(...values, 0);
-    const minValue = Math.min(...values, 0);
-    const valueRange = maxValue - minValue || 1;
+      const defs = sel.append('defs');
+      const grad = defs
+        .append('linearGradient')
+        .attr('id', gradientId)
+        .attr('x1', '0')
+        .attr('y1', '0')
+        .attr('x2', '0')
+        .attr('y2', '1');
+      grad.append('stop').attr('offset', '0%').attr('stop-color', LINE_COLOR).attr('stop-opacity', 0.35);
+      grad.append('stop').attr('offset', '100%').attr('stop-color', LINE_COLOR).attr('stop-opacity', 0);
 
-    const yAxisFormat = (v: number) =>
-      format === 'currency' ? v.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : v.toLocaleString('pt-BR');
+      const g = sel.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
-    const xScale = d3
-      .scaleLinear()
-      .domain([0, chartData.length - 1])
-      .range([0, chartWidth]);
-
-    const yMin = Math.max(0, minValue - valueRange * 0.05);
-    const yScale = d3
-      .scaleLinear()
-      .domain([yMin, maxValue + valueRange * 0.1])
-      .range([chartHeight, 0]);
-
-    const lineGenerator = d3
-      .line<{ name: string; value: number }>()
-      .x((_, i) => xScale(i))
-      .y((d) => yScale(Math.max(yMin, d.value)))
-      .curve(d3.curveCatmullRom.alpha(0.5));
-
-    const g = d3.select(svg).attr('width', dimensions.width).attr('height', dimensions.height).append('g').attr('transform', `translate(${margin.left},${margin.top})`);
-
-    const textColor = 'var(--text-muted)';
-    const gridColor = 'var(--border-color)';
-
-    const yAxisTicks = yScale.ticks(5).filter((t) => t >= 0);
-    const yAxis = d3
-      .axisLeft(yScale)
-      .tickValues(yAxisTicks.length > 0 ? yAxisTicks : [0])
-      .tickFormat((d) => yAxisFormat(Number(d)));
-    g.append('g')
-      .attr('class', 'y-axis')
-      .call(yAxis)
-      .selectAll('text')
-      .attr('font-size', '10px')
-      .attr('font-family', FONT_FAMILY_BASE)
-      .attr('fill', textColor);
-    g.select('.y-axis .domain').attr('stroke', 'none');
-    g.selectAll('.y-axis .tick line').attr('stroke', gridColor).attr('x2', chartWidth);
-
-    chartData.forEach((_, i) => {
-      const x = xScale(i);
-      g.append('line')
-        .attr('x1', x)
-        .attr('x2', x)
-        .attr('y1', 0)
-        .attr('y2', chartHeight)
+      // Grid horizontal discreto + labels do eixo Y
+      const yTicks = yScale.ticks(4);
+      g.append('g')
+        .selectAll('line')
+        .data(yTicks)
+        .join('line')
+        .attr('x1', 0)
+        .attr('x2', chartWidth)
+        .attr('y1', (d) => yScale(d))
+        .attr('y2', (d) => yScale(d))
         .attr('stroke', gridColor)
-        .attr('stroke-width', 1);
-    });
+        .attr('stroke-opacity', 0.4)
+        .attr('stroke-dasharray', '2 5');
 
-    const defs = d3.select(svg).append('defs');
-    const gradientId = `line-gradient-${svgRef.current?.id || Math.random().toString(36).slice(2)}`;
-    const gradient = defs
-      .append('linearGradient')
-      .attr('id', gradientId)
-      .attr('gradientUnits', 'userSpaceOnUse')
-      .attr('x1', 0)
-      .attr('y1', 0)
-      .attr('x2', chartWidth)
-      .attr('y2', 0);
-    gradient.append('stop').attr('offset', '0%').attr('stop-color', 'var(--chart-color-1)');
-    gradient.append('stop').attr('offset', '100%').attr('stop-color', 'var(--chart-color-6)');
+      g.append('g')
+        .selectAll('text')
+        .data(yTicks)
+        .join('text')
+        .attr('x', -8)
+        .attr('y', (d) => yScale(d))
+        .attr('text-anchor', 'end')
+        .attr('dominant-baseline', 'central')
+        .attr('font-size', '10px')
+        .attr('font-family', FONT_FAMILY_BASE)
+        .attr('fill', textColor)
+        .attr('opacity', 0.75)
+        .text((d) => formatAxis(Number(d)));
 
-    const linePath = lineGenerator(chartData);
-    if (linePath) {
-      g.append('path')
-        .attr('d', linePath)
+      const area = d3
+        .area<{ name: string; value: number }>()
+        .x((_, i) => xScale(i))
+        .y0(chartHeight)
+        .y1((d) => yScale(d.value))
+        .curve(d3.curveMonotoneX);
+
+      const line = d3
+        .line<{ name: string; value: number }>()
+        .x((_, i) => xScale(i))
+        .y((d) => yScale(d.value))
+        .curve(d3.curveMonotoneX);
+
+      const areaPath = g
+        .append('path')
+        .datum(chartData)
+        .attr('d', area)
+        .attr('fill', `url(#${gradientId})`)
+        .attr('opacity', 0);
+      areaPath.transition().duration(700).ease(d3.easeCubicOut).attr('opacity', 1);
+
+      const linePath = g
+        .append('path')
+        .datum(chartData)
+        .attr('d', line)
         .attr('fill', 'none')
-        .attr('stroke', `url(#${gradientId})`)
-        .attr('stroke-width', 4)
+        .attr('stroke', LINE_COLOR)
+        .attr('stroke-width', 2.5)
         .attr('stroke-linecap', 'round')
         .attr('stroke-linejoin', 'round');
+
+      const totalLen = (linePath.node() as SVGPathElement)?.getTotalLength?.() ?? 0;
+      if (totalLen > 0) {
+        linePath
+          .attr('stroke-dasharray', `${totalLen} ${totalLen}`)
+          .attr('stroke-dashoffset', totalLen)
+          .transition()
+          .duration(800)
+          .ease(d3.easeCubicInOut)
+          .attr('stroke-dashoffset', 0);
+      }
+
+      // Rótulos pequenos com o valor em cada ponto
+      g.append('g')
+        .selectAll('text')
+        .data(chartData)
+        .join('text')
+        .attr('x', (_, i) => xScale(i))
+        .attr('y', (d) => yScale(d.value) - 8)
+        .attr('text-anchor', 'middle')
+        .attr('dominant-baseline', 'central')
+        .attr('font-size', '9px')
+        .attr('font-weight', '600')
+        .attr('font-family', FONT_FAMILY_BASE)
+        .attr('fill', LINE_COLOR)
+        .attr('opacity', 0)
+        .text((d) => (d.value > 0 ? formatPointLabel(d.value) : ''))
+        .transition()
+        .delay(600)
+        .duration(400)
+        .attr('opacity', 0.9);
+
+      // Foco (linha vertical + ponto) escondido até o hover
+      const focus = g.append('g').style('opacity', 0);
+      focus
+        .append('line')
+        .attr('class', 'focus-line')
+        .attr('y1', 0)
+        .attr('y2', chartHeight)
+        .attr('stroke', LINE_COLOR)
+        .attr('stroke-width', 1)
+        .attr('stroke-opacity', 0.35)
+        .attr('stroke-dasharray', '3 3');
+      const focusDot = focus
+        .append('circle')
+        .attr('r', 5)
+        .attr('fill', LINE_COLOR)
+        .attr('stroke', 'var(--bg-tertiary)')
+        .attr('stroke-width', 2.5);
+
+      // Eixo X — labels espaçados
+      const labelStep = Math.max(1, Math.ceil(chartData.length / Math.max(1, Math.floor(chartWidth / 42))));
+      g.append('g')
+        .attr('transform', `translate(0,${chartHeight + 6})`)
+        .selectAll('text')
+        .data(chartData)
+        .join('text')
+        .attr('x', (_, i) => xScale(i))
+        .attr('y', 8)
+        .attr('text-anchor', 'middle')
+        .attr('dominant-baseline', 'central')
+        .attr('font-size', '10px')
+        .attr('font-family', FONT_FAMILY_BASE)
+        .attr('fill', textColor)
+        .attr('opacity', 0.8)
+        .text((d, i) => (i % labelStep === 0 || i === chartData.length - 1 ? d.name : ''));
+
+      const tooltip = createD3ChartTooltip(svg);
+      const container = containerRef.current;
+      if (!tooltip || !container) return;
+
+      const overlay = g
+        .append('rect')
+        .attr('width', chartWidth)
+        .attr('height', chartHeight)
+        .attr('fill', 'transparent')
+        .style('cursor', onPointClick ? 'pointer' : 'default');
+
+      const nearestIndex = (clientX: number): number => {
+        const rect = container.getBoundingClientRect();
+        const x = clientX - rect.left - margin.left;
+        let idx = 0;
+        let best = Infinity;
+        for (let i = 0; i < chartData.length; i++) {
+          const dist = Math.abs(x - xScale(i));
+          if (dist < best) {
+            best = dist;
+            idx = i;
+          }
+        }
+        return idx;
+      };
+
+      overlay
+        .on('mousemove', (event: MouseEvent) => {
+          const i = nearestIndex(event.clientX);
+          const point = chartData[i];
+          const px = xScale(i);
+          const py = yScale(point.value);
+          focus.style('opacity', 1);
+          focus.select('.focus-line').attr('x1', px).attr('x2', px);
+          focusDot.attr('cx', px).attr('cy', py);
+          tooltip.setLabelValue(point.name, formatValue(point.value));
+          const { width: w, height: h } = tooltip.measure();
+          const { tx, ty } = clampTooltipNearPoint(margin.left + px, margin.top + py, w, h, dimensions, 16);
+          tooltip.group.attr('transform', `translate(${tx},${ty})`);
+          tooltip.show();
+        })
+        .on('mouseleave', () => {
+          focus.style('opacity', 0);
+          tooltip.hide();
+        })
+        .on('click', (event: MouseEvent) => {
+          if (!onPointClick) return;
+          const i = nearestIndex(event.clientX);
+          onPointClick(data[i], i);
+        });
+    }, [chartData, dimensions, format, onPointClick, data, formatValue, formatAxis, formatPointLabel, gradientId]);
+
+    if (!data || data.length === 0) {
+      return <ChartEmptyState title={title} />;
     }
 
-    const pointsG = g.append('g').attr('class', 'line-points');
-    chartData.forEach((d, i) => {
-      const x = xScale(i);
-      const y = yScale(Math.max(yMin, d.value));
-      pointsG
-        .append('circle')
-        .attr('cx', x)
-        .attr('cy', y)
-        .attr('r', 4)
-        .attr('fill', 'var(--chart-color-1)')
-        .attr('stroke', 'var(--bg-tertiary)')
-        .attr('stroke-width', 2);
-    });
-
-    const avgValue = values.reduce((a, b) => a + b, 0) / values.length;
-    const badgeH = 16;
-    const padX = 5;
-
-    chartData.forEach((d, i) => {
-      if (d.value === 0) return;
-
-      const px = xScale(i);
-      const py = yScale(Math.max(yMin, d.value));
-      const isAbove = d.value >= avgValue;
-      const nearBottom = py > chartHeight * 0.7;
-      const rawDy = nearBottom ? -(badgeH / 2 + 6) : isAbove ? -(badgeH / 2 + 6) : (badgeH / 2 + 6);
-
-      const badgeG = g.append('g');
-      const textEl = badgeG
-        .append('text')
-        .attr('font-size', '10px')
-        .attr('font-weight', '700')
-        .attr('font-family', FONT_FAMILY_BASE)
-        .attr('fill', 'var(--chart-color-1)')
-        .attr('dominant-baseline', 'central')
-        .attr('text-anchor', 'middle')
-        .text(formatLabel(d.value));
-
-      const bbox = (textEl.node() as SVGTextElement)?.getBBox();
-      const badgeW = (bbox?.width ?? 24) + padX * 2;
-      const bx = Math.max(badgeW / 2, Math.min(chartWidth - badgeW / 2, px));
-      const by = Math.max(badgeH / 2 + 2, Math.min(chartHeight - badgeH / 2 - 2, py + rawDy));
-
-      badgeG.attr('transform', `translate(${bx},${by})`);
-      badgeG.insert('rect', 'text')
-        .attr('x', -badgeW / 2).attr('y', -badgeH / 2)
-        .attr('width', badgeW).attr('height', badgeH)
-        .attr('rx', 3)
-        .attr('fill', 'var(--bg-secondary)')
-        .attr('stroke', 'var(--chart-color-1)')
-        .attr('stroke-width', 1);
-    });
-
-    const xAxisG = g
-      .append('g')
-      .attr('transform', `translate(0,${chartHeight})`)
-      .attr('class', 'x-axis');
-
-    const labelStep = Math.max(1, Math.ceil(chartData.length / Math.floor(chartWidth / 38)));
-
-    xAxisG
-      .selectAll('.tick')
-      .data(chartData)
-      .join('g')
-      .attr('class', 'tick')
-      .attr('transform', (_, i) => `translate(${xScale(i)},0)`)
-      .each(function (d, i) {
-        if (i % labelStep !== 0 && i !== chartData.length - 1) return;
-        d3.select(this)
-          .append('text')
-          .attr('x', 0)
-          .attr('y', 28)
-          .attr('text-anchor', 'middle')
-          .attr('dominant-baseline', 'central')
-          .attr('font-size', '11px')
-          .attr('font-family', FONT_FAMILY_BASE)
-          .attr('fill', textColor)
-          .attr('transform', 'rotate(-45, 0, 28)')
-          .text(d.name);
-      });
-
-    g.append('g')
-      .attr('class', 'click-zones')
-      .selectAll('rect')
-      .data(chartData)
-      .join('rect')
-      .attr('x', (_, i) => (i > 0 ? (xScale(i - 1) + xScale(i)) / 2 : 0))
-      .attr('y', 0)
-      .attr('width', (_, i) => {
-        const x0 = i > 0 ? (xScale(i - 1) + xScale(i)) / 2 : 0;
-        const x1 = i < chartData.length - 1 ? (xScale(i) + xScale(i + 1)) / 2 : chartWidth;
-        return x1 - x0;
-      })
-      .attr('height', chartHeight)
-      .attr('fill', 'transparent')
-      .attr('cursor', onPointClick ? 'pointer' : 'default')
-      .on('click', (event, d) => {
-        const index = chartData.indexOf(d);
-        if (onPointClick && index >= 0) {
-          onPointClick(data[index], index);
-        }
-      });
-
-    const tooltip = createD3ChartTooltip(svg);
-    if (!tooltip) return;
-
-    const container = containerRef.current;
-    if (!container) return;
-    d3.select(container).on('mousemove.tooltip', function (event: MouseEvent) {
-      if (chartData.length === 0) return;
-      const rect = container.getBoundingClientRect();
-      if (!rect) return;
-      const x = event.clientX - rect.left - margin.left;
-      let closestIndex = 0;
-      let minDistance = Infinity;
-      for (let i = 0; i < chartData.length; i++) {
-        const pointX = xScale(i);
-        if (Math.abs(x - pointX) < minDistance) {
-          minDistance = Math.abs(x - pointX);
-          closestIndex = i;
-        }
-      }
-      if (minDistance >= 40) {
-        tooltip.hide();
-        pointsG
-          .selectAll('circle')
-          .transition()
-          .duration(120)
-          .ease(d3.easeCubicOut)
-          .attr('r', 4);
-        return;
-      }
-      pointsG
-        .selectAll('circle')
-        .transition()
-        .duration(120)
-        .ease(d3.easeCubicOut)
-        .attr('r', (_, i) => (i === closestIndex ? 6 : 4));
-      const point = chartData[closestIndex];
-      tooltip.setLabelValue(point.name, formatValue(point.value));
-      const { width: w, height: h } = tooltip.measure();
-      const pointX = margin.left + xScale(closestIndex);
-      const pointY = margin.top + yScale(Math.max(yMin, point.value));
-      const { tx, ty } = clampTooltipNearPoint(pointX, pointY, w, h, dimensions, 16);
-      tooltip.group.attr('transform', `translate(${tx},${ty})`);
-      tooltip.show();
-    }).on('mouseleave.tooltip', () => {
-      tooltip.hide();
-      pointsG
-        .selectAll('circle')
-        .transition()
-        .duration(120)
-        .ease(d3.easeCubicOut)
-        .attr('r', 4);
-    });
-
-    return () => {
-      d3.select(container).on('mousemove.tooltip', null).on('mouseleave.tooltip', null);
-    };
-  }, [chartData, dimensions, format, onPointClick, data, formatLabel, formatValue]);
-
-  if (!data || data.length === 0) {
-    return <ChartEmptyState title={title} />;
-  }
-
-  return (
-    <div className="chart-container">
-      <ChartTitleWithInfo title={title} titleInfo={titleInfo} />
-      <div
-        ref={containerRef}
-        style={{
-          width: '100%',
-          height: '180px',
-          minWidth: '160px',
-          minHeight: '160px',
-          position: 'relative',
-          overflow: 'visible',
-          alignSelf: 'stretch',
-        }}
-      >
-        <svg
-          ref={svgRef}
+    return (
+      <div className="chart-container">
+        <ChartTitleWithInfo title={title} titleInfo={titleInfo} />
+        <div
+          ref={containerRef}
           style={{
-            display: 'block',
             width: '100%',
-            height: '100%',
+            height: '180px',
+            minWidth: '160px',
+            minHeight: '160px',
+            position: 'relative',
             overflow: 'visible',
+            alignSelf: 'stretch',
           }}
-        />
+        >
+          <svg ref={svgRef} style={{ display: 'block', width: '100%', height: '100%', overflow: 'visible' }} />
+        </div>
       </div>
-    </div>
-  );
-});
+    );
+  }
+);
 
 ResponsiveLineChart.displayName = 'ResponsiveLineChart';
 

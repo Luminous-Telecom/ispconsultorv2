@@ -1,10 +1,10 @@
 import React from 'react';
+import type { TicketMedioData } from 'components/charts';
 import {
-  ResponsivePieChart,
-  BackupStatusStackedBarChart,
-  TicketMedioCard,
-  type TicketMedioData,
-} from 'components/charts';
+  PieStatusCard,
+  AverageTicketCard,
+  BackupStatusCard,
+} from 'components/dashboard/cards';
 import type { useDashboardCharts } from 'hooks/useDashboardCharts';
 import type { TranslationKeys } from 'contexts/I18nContext';
 import type { useDashboardBackupStatus } from '../hooks/useDashboardBackupStatus';
@@ -55,84 +55,64 @@ const DashboardPieChartsRow: React.FC<DashboardPieChartsRowProps> = ({
 }) => (
   <div className="row g-2 align-items-stretch">
     <div className="col-auto dashboard-col--compact">
-      <div className="chart-card chart-card-pie chart-card-pie--compact">
-        <ResponsivePieChart
-          data={charts.clientesChartData}
-          title={t('dashboard.clientStatus')}
-          hiddenItems={hiddenItems.hiddenClientes}
-          onToggleItem={toggles.toggleCliente}
-          onSliceClick={clicks.handleClienteSliceClick}
-          centerHighlightFilterValue
-          chartLeading
-          compact
-        />
-      </div>
+      <PieStatusCard
+        data={charts.clientesChartData}
+        title={t('dashboard.clientStatus')}
+        hiddenItems={hiddenItems.hiddenClientes}
+        onToggleItem={toggles.toggleCliente}
+        onSliceClick={clicks.handleClienteSliceClick}
+        centerHighlightFilterValue
+      />
     </div>
 
     <div className="col-auto dashboard-col--compact">
-      <div className="chart-card chart-card-pie chart-card-pie--compact">
-        <ResponsivePieChart
-          data={charts.contratosChartData}
-          title={t('dashboard.contractStatus')}
-          hiddenItems={hiddenItems.hiddenContratos}
-          onToggleItem={toggles.toggleContratos}
-          onSliceClick={clicks.handleContratoSliceClick}
-          centerHighlightFilterValue="ativo"
-          chartLeading
-          compact
-        />
-      </div>
+      <PieStatusCard
+        data={charts.contratosChartData}
+        title={t('dashboard.contractStatus')}
+        hiddenItems={hiddenItems.hiddenContratos}
+        onToggleItem={toggles.toggleContratos}
+        onSliceClick={clicks.handleContratoSliceClick}
+        centerHighlightFilterValue="ativo"
+      />
     </div>
 
     <div className="col-auto dashboard-col--compact">
-      <div className="chart-card chart-card-pie chart-card-pie--compact">
-        <ResponsivePieChart
-          data={charts.statusPagamentoData}
-          title={t('dashboard.paymentStatus')}
-          hiddenItems={hiddenItems.hiddenPagamentos}
-          onToggleItem={toggles.togglePagamento}
-          onSliceClick={clicks.handleStatusPagamentoSliceClick}
-          centerHighlightFilterValue="pendente"
-          chartLeading
-          compact
-        />
-      </div>
+      <PieStatusCard
+        data={charts.statusPagamentoData}
+        title={t('dashboard.paymentStatus')}
+        hiddenItems={hiddenItems.hiddenPagamentos}
+        onToggleItem={toggles.togglePagamento}
+        onSliceClick={clicks.handleStatusPagamentoSliceClick}
+        centerHighlightFilterValue="pendente"
+      />
     </div>
 
     <div className="col-auto dashboard-col--compact">
-      <div className="chart-card chart-card-pie chart-card-pie--compact">
-        <ResponsivePieChart
-          data={charts.distribuicaoPlanos}
-          title={t('dashboard.planDistribution')}
-          hiddenItems={hiddenItems.hiddenDistribuicao}
-          onToggleItem={toggles.toggleDistribuicao}
-          onSliceClick={clicks.handleDistribuicaoPlanoSliceClick}
-          centerHighlightFilterValue={metrics.distribuicaoPlanoMetric.centerFv}
-          chartLeading
-          compact
-        />
-      </div>
+      <PieStatusCard
+        data={charts.distribuicaoPlanos}
+        title={t('dashboard.planDistribution')}
+        hiddenItems={hiddenItems.hiddenDistribuicao}
+        onToggleItem={toggles.toggleDistribuicao}
+        onSliceClick={clicks.handleDistribuicaoPlanoSliceClick}
+        centerHighlightFilterValue={metrics.distribuicaoPlanoMetric.centerFv}
+      />
     </div>
 
     <div className="col-auto dashboard-col--compact">
-      <div className="chart-card chart-card-pie chart-card-pie--metric chart-card-pie--sm">
-        <TicketMedioCard data={ticketMedioCardData} />
-      </div>
+      <AverageTicketCard data={ticketMedioCardData} />
     </div>
 
     <div className="col-auto dashboard-col--compact">
-      <div className="chart-card chart-card-pie chart-card-pie--metric chart-card-pie--sm">
-        <BackupStatusStackedBarChart
-          days={backupStatus.backupStatusGraficoUltimos7Dias}
-          title={t('dashboard.backupStatusTitle')}
-          legendLabels={backupStatus.backupStatusLegendLabels}
-          emptyMessage={t('dashboard.backupStatusEmpty')}
-          onSegmentClick={backupStatus.handleBackupStatusSegmentClick}
-          hiddenKeys={hiddenItems.hiddenBackupStatus}
-          onLegendToggle={(key) => toggles.toggleBackupStatus(key)}
-          periodHasBackupEvents={backupStatus.backupStatusPeriodoTemEventos}
-        />
-      </div>
+      <BackupStatusCard
+        days={backupStatus.backupStatusGraficoUltimos7Dias}
+        title={t('dashboard.backupStatusTitle')}
+        legendLabels={backupStatus.backupStatusLegendLabels}
+        emptyMessage={t('dashboard.backupStatusEmpty')}
+        onSegmentClick={backupStatus.handleBackupStatusSegmentClick}
+        hiddenKeys={hiddenItems.hiddenBackupStatus}
+        onLegendToggle={(key) => toggles.toggleBackupStatus(key)}
+        periodHasBackupEvents={backupStatus.backupStatusPeriodoTemEventos}
+      />
     </div>
   </div>
 );

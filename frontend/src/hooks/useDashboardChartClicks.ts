@@ -131,24 +131,9 @@ export const useDashboardChartClicks = () => {
     handleLineChartPointClick(item, 'clientes');
   }, [handleLineChartPointClick]);
 
-  const handleDualLineChartPointClick = useCallback((
-    item: ChartDataItem & { data_inicio?: string; data_fim?: string },
-    _index: number,
-    lineType: 'receber' | 'pagar'
-  ) => {
-    const dataInicio = item.data_inicio;
-    const dataFim = item.data_fim;
-    if (!dataInicio || !dataFim) return;
-    if (lineType === 'receber') {
-      openModal('contas-receber' as ModalType, {
-        initialFilters: { data_vencimento_inicio: dataInicio, data_vencimento_fim: dataFim }
-      });
-    } else {
-      openModal('contas-pagar' as ModalType, {
-        initialFilters: { data_inicio: dataInicio, data_fim: dataFim }
-      });
-    }
-  }, [openModal]);
+  const handleContasPagarPointClick = useCallback((item: ChartDataItem) => {
+    handleLineChartPointClick(item, 'contas-pagar');
+  }, [handleLineChartPointClick]);
 
   return {
     handleClienteSliceClick,
@@ -161,6 +146,6 @@ export const useDashboardChartClicks = () => {
     handleReceberPeriodoPointClick,
     handleReceitaMensalPointClick,
     handleCrescimentoClientesPointClick,
-    handleDualLineChartPointClick,
+    handleContasPagarPointClick,
   };
 };

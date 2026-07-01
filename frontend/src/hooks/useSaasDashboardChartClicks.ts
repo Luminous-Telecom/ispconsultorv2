@@ -104,21 +104,6 @@ export const useSaasDashboardChartClicks = () => {
     handleLineChartPointClick(item, 'clientes');
   }, [handleLineChartPointClick]);
 
-  const handleDualLineChartPointClick = useCallback((
-    item: ChartDataItem & { data_inicio?: string; data_fim?: string },
-    _index: number,
-    lineType: 'receber' | 'pagar'
-  ) => {
-    const dataInicio = item.data_inicio;
-    const dataFim = item.data_fim;
-    if (!dataInicio || !dataFim) return;
-    if (lineType === 'receber') {
-      openModal('saas-titulos' as ModalType, {
-        initialFilters: { data_vencimento_inicio: dataInicio, data_vencimento_fim: dataFim }
-      });
-    }
-  }, [openModal]);
-
   return {
     handleClienteSliceClick,
     handleStatusPagamentoSliceClick,
@@ -129,6 +114,5 @@ export const useSaasDashboardChartClicks = () => {
     handleReceberPeriodoPointClick,
     handleReceitaMensalPointClick,
     handleCrescimentoClientesPointClick,
-    handleDualLineChartPointClick,
   };
 };

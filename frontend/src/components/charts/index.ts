@@ -2,11 +2,9 @@
  * Exportações centralizadas dos componentes de gráficos
  */
 
-export { BarChart } from './BarChart';
-export { ValueChart } from './ValueChart';
+export { ModernBarChart } from './ModernBarChart';
 export { ChartEmptyState } from './ChartEmptyState';
 export { default as ResponsiveLineChart } from './ResponsiveLineChart';
-export { default as DualLineChart } from './DualLineChart';
 export { default as ResponsivePieChart } from './ResponsivePieChart';
 export { DonutChart } from './DonutChart';
 export { PolarAreaChart } from './PolarAreaChart';

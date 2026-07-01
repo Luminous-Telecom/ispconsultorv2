@@ -4,24 +4,18 @@ import { ChartDataItem } from '../components/charts/types';
 import type { useDashboardStats } from './useDashboardStats';
 import type { TranslationKeys } from '../contexts/I18nContext';
 
-interface DualChartDataItem extends ChartDataItem {
-  receber: number;
-  pagar: number;
-}
-
 interface DashboardCharts {
   clientesChartData: ChartDataItem[];
   planosChartData: ChartDataItem[];
   statusPagamentoData: ChartDataItem[];
   distribuicaoPlanos: ChartDataItem[];
   contratosChartData: ChartDataItem[];
-  ticketMedioChartData: ChartDataItem[];
   receitaMensalChartData: ChartDataItem[];
   recebidosPeriodoChartData: ChartDataItem[];
   receberPeriodoChartData: ChartDataItem[];
   crescimentoClientes: ChartDataItem[];
   clientesPorPlano: ChartDataItem[];
-  contasReceberPagarChartData: DualChartDataItem[];
+  contasPagarChartData: ChartDataItem[];
   totalRecebidosPeriodo: number;
   totalReceberPeriodo: number;
   totalReceitaMensal: number;
@@ -161,11 +155,6 @@ export const useDashboardCharts = (
     stats.contratosEmAtraso,
     t,
   ]);
-
-  const ticketMedioChartData = useMemo(
-    () => [{ label: 'Ticket Médio', value: stats.ticketMedio }],
-    [stats.ticketMedio]
-  );
 
   const parseMesAnoToRange = useCallback((mesAno: string): { data_inicio: string; data_fim: string } => {
     const [mm, yy] = mesAno.split('/');
@@ -348,6 +337,17 @@ export const useDashboardCharts = (
     });
   }, [sg, receitaUltimosMeses, contasPagarUltimosMeses, parseMesAnoToRange]);
 
+  const contasPagarChartData = useMemo(
+    () =>
+      contasReceberPagarChartData.map((row) => ({
+        mes: row.mes,
+        valor: row.pagar,
+        data_inicio: row.data_inicio,
+        data_fim: row.data_fim,
+      })),
+    [contasReceberPagarChartData]
+  );
+
   const totalRecebidosPeriodo = useMemo(
     () =>
       sg?.totais?.totalRecebidosPeriodo ??
@@ -386,13 +386,12 @@ export const useDashboardCharts = (
     statusPagamentoData,
     distribuicaoPlanos,
     contratosChartData,
-    ticketMedioChartData,
     receitaMensalChartData,
     recebidosPeriodoChartData,
     receberPeriodoChartData,
     crescimentoClientes,
     clientesPorPlano,
-    contasReceberPagarChartData,
+    contasPagarChartData,
     totalRecebidosPeriodo,
     totalReceberPeriodo,
     totalReceitaMensal,
