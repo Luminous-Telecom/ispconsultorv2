@@ -190,9 +190,21 @@ interface BackNetLogoImgProps extends React.ImgHTMLAttributes<HTMLImageElement> 
   maxHeight?: number;
 }
 
-export const BackNetLogoImg: React.FC<BackNetLogoImgProps> = ({ maxHeight = 40, className, ...rest }) => {
+export const BackNetLogoImg: React.FC<BackNetLogoImgProps> = ({
+  maxHeight = 40,
+  className,
+  alt = 'BackNet',
+  ...rest
+}) => {
   const ref = useRef<HTMLImageElement>(null);
   useElementProperties(ref, { '--logo-max-height': `${maxHeight}px` }, [maxHeight]);
 
-  return <img ref={ref} className={`backnet-logo-img ${className ?? ''}`.trim()} {...rest} />;
+  return (
+    <img
+      ref={ref}
+      className={`backnet-logo-img ${className ?? ''}`.trim()}
+      alt={alt}
+      {...rest}
+    />
+  );
 };
