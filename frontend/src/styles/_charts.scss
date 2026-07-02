@@ -59,6 +59,7 @@
 
 /* --- Modern bar chart --- */
 .modern-bar-chart-list {
+  --modern-bar-label-width: 6.75rem;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -66,36 +67,34 @@
 }
 
 .modern-bar-row {
-  min-width: 0;
-}
-
-.modern-bar-row-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 3px;
+  display: grid;
+  grid-template-columns: var(--modern-bar-label-width) minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 8px;
   min-width: 0;
 }
 
 .modern-bar-label {
+  min-width: 0;
   font-size: 11px;
   font-weight: 600;
   color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-align: start;
 }
 
 .modern-bar-value {
   font-size: 11px;
   font-weight: 700;
   color: var(--text-primary);
-  flex-shrink: 0;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .modern-bar-track {
+  min-width: 0;
   height: 8px;
   border-radius: 5px;
   overflow: hidden;

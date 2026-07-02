@@ -1,6 +1,6 @@
 import React from 'react';
 import SidebarFolderItemButton from '../SidebarFolderItemButton';
-import { handleSidebarAccordionFolderIconClick } from '../sidebar/toggleAccordionFolderIcon';
+import SidebarFolderIconSlot from '../SidebarFolderIconSlot';
 import type { SidebarMenuItem, SidebarNestedFolderConfig, TranslateFn } from './types';
 
 interface SidebarNestedFolderProps {
@@ -25,9 +25,8 @@ const SidebarNestedFolder: React.FC<SidebarNestedFolderProps> = ({ folder, t, on
             data-bs-target={`#${folder.collapseId}`}
             aria-expanded="false"
             aria-controls={folder.collapseId}
-            onClick={handleSidebarAccordionFolderIconClick}
           >
-            <i className="bi bi-folder folder-icon me-2"></i>
+            <SidebarFolderIconSlot />
             <span>{t(folder.titleKey)}</span>
           </button>
         </h2>
@@ -83,9 +82,8 @@ const SidebarAccordionFolder: React.FC<SidebarAccordionFolderProps> = ({
           data-bs-target={`#${collapseId}`}
           aria-expanded="false"
           aria-controls={collapseId}
-          onClick={handleSidebarAccordionFolderIconClick}
         >
-          <i className="bi bi-folder folder-icon me-2"></i>
+          <SidebarFolderIconSlot />
           <span>{title}</span>
         </button>
       </h2>

@@ -1,5 +1,4 @@
 import React from 'react';
-import SidebarFolderItemBullet from './SidebarFolderItemBullet';
 import type { SidebarMenuItem } from './layout/types';
 
 interface SidebarFolderItemButtonProps {
@@ -13,7 +12,6 @@ const SidebarFolderItemButton: React.FC<SidebarFolderItemButtonProps> = ({ item,
     onClick={onItemClick}
     type="button"
   >
-    <SidebarFolderItemBullet />
     <span>{item.label}</span>
   </button>
 );

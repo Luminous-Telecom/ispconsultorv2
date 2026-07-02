@@ -279,6 +279,8 @@
 }
 
 .sidebar-accordion .accordion-button {
+  position: relative;
+  isolation: isolate;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
@@ -310,16 +312,15 @@
   display: none !important;
 }
 
-/*
- * Hover na área rolável: cor em largem total (pseudo atrás; sem mudar padding/margem do conteúdo).
- * Pastas fechadas usam .collapsed::before (aberta usa barra no ::before — só quando :not(.collapsed)).
- */
-.sidebar-nav-scrollable .sidebar-nav > .sidebar-accordion > .accordion-item > .accordion-header .accordion-button.collapsed > *,
-.sidebar-nav-scrollable .sidebar-nav > .sidebar-accordion .accordion-body .sidebar-accordion > .accordion-item > .accordion-header .accordion-button.collapsed > * {
+/* Conteúdo do botão sempre acima dos pseudo-elementos de hover/fundo */
+.sidebar-accordion .accordion-button > * {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
+/*
+ * Hover na área rolável: cor em largura total (pseudo atrás; sem mudar padding/margem do conteúdo).
+ */
 .sidebar-nav-scrollable .sidebar-nav > .sidebar-accordion > .accordion-item > .accordion-header .accordion-button.collapsed:hover::before {
   content: '';
   position: absolute;
@@ -328,9 +329,30 @@
   bottom: 0;
   left: calc(-1 * var(--sidebar-nav-pad-x, 0.5rem));
   width: calc(100% + 2 * var(--sidebar-nav-pad-x, 0.5rem));
+  height: auto;
+  transform: none;
   background-color: var(--sidebar-hover);
+  box-shadow: none;
   border-radius: 0;
   pointer-events: none;
+  animation: none;
+}
+
+.sidebar-nav-scrollable .sidebar-nav > .sidebar-accordion > .accordion-item > .accordion-header .accordion-button:not(.collapsed):hover::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  bottom: 0;
+  left: calc(-1 * var(--sidebar-nav-pad-x, 0.5rem));
+  width: calc(100% + 2 * var(--sidebar-nav-pad-x, 0.5rem));
+  height: auto;
+  transform: none;
+  background-color: var(--sidebar-hover);
+  box-shadow: none;
+  border-radius: 0;
+  pointer-events: none;
+  animation: none;
 }
 
 .sidebar-nav-scrollable .sidebar-nav > .sidebar-accordion .accordion-body .sidebar-accordion > .accordion-item > .accordion-header .accordion-button.collapsed:hover::before {
@@ -339,11 +361,32 @@
   z-index: 0;
   top: 0;
   bottom: 0;
-  left: calc(-1 * (var(--sidebar-nav-pad-x, 0.5rem) + 0.35rem + 1.35rem));
-  width: calc(100% + var(--sidebar-nav-pad-x, 0.5rem) + 0.35rem + 1.35rem + var(--sidebar-nav-pad-x, 0.5rem));
+  left: calc(-1 * (var(--sidebar-nav-pad-x, 0.5rem) + 0.35rem + 0.5rem));
+  width: calc(100% + var(--sidebar-nav-pad-x, 0.5rem) + 0.35rem + 0.5rem + var(--sidebar-nav-pad-x, 0.5rem));
+  height: auto;
+  transform: none;
   background-color: var(--sidebar-hover);
+  box-shadow: none;
   border-radius: 0;
   pointer-events: none;
+  animation: none;
+}
+
+.sidebar-nav-scrollable .sidebar-nav > .sidebar-accordion .accordion-body .sidebar-accordion > .accordion-item > .accordion-header .accordion-button:not(.collapsed):hover::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  bottom: 0;
+  left: calc(-1 * (var(--sidebar-nav-pad-x, 0.5rem) + 0.35rem + 0.5rem));
+  width: calc(100% + var(--sidebar-nav-pad-x, 0.5rem) + 0.35rem + 0.5rem + var(--sidebar-nav-pad-x, 0.5rem));
+  height: auto;
+  transform: none;
+  background-color: var(--sidebar-hover);
+  box-shadow: none;
+  border-radius: 0;
+  pointer-events: none;
+  animation: none;
 }
 
 .sidebar-nav-scrollable .sidebar-nav > .sidebar-accordion .accordion-collapse > .accordion-body > .sidebar-folder-item > *,
@@ -358,8 +401,8 @@
   z-index: 0;
   top: 0;
   bottom: 0;
-  left: calc(-1 * (var(--sidebar-nav-pad-x, 0.5rem) + 0.35rem + 1.35rem));
-  width: calc(100% + var(--sidebar-nav-pad-x, 0.5rem) + 0.35rem + 1.35rem + var(--sidebar-nav-pad-x, 0.5rem));
+  left: calc(-1 * (var(--sidebar-nav-pad-x, 0.5rem) + 0.5rem));
+  width: calc(100% + var(--sidebar-nav-pad-x, 0.5rem) + 0.5rem + var(--sidebar-nav-pad-x, 0.5rem));
   background-color: var(--sidebar-hover);
   border-radius: 0;
   pointer-events: none;
@@ -372,7 +415,7 @@
   top: 0;
   bottom: 0;
   /* nav pad + body pai + margin .sidebar-accordion interno + body da subpasta 0.35 + margin do item */
-  left: calc(-1 * (var(--sidebar-nav-pad-x, 0.5rem) + 0.35rem + 1.35rem + 0.35rem + 0.65rem));
+  left: calc(-1 * (var(--sidebar-nav-pad-x, 0.5rem) + 0.35rem + 0.5rem + 0.35rem + 0.65rem));
   right: calc(-1 * var(--sidebar-nav-pad-x, 0.5rem));
   width: auto;
   background-color: var(--sidebar-hover);
@@ -384,6 +427,16 @@
 .sidebar-nav-scrollable .sidebar-nav .sidebar-accordion .accordion-button:not(.collapsed):hover,
 .sidebar-nav-scrollable .sidebar-nav .sidebar-folder-item:hover {
   background-color: transparent !important;
+  color: var(--sidebar-text) !important;
+}
+
+.sidebar-nav-scrollable .sidebar-nav .sidebar-accordion .accordion-button:hover .folder-icon,
+.sidebar-nav-scrollable .sidebar-nav .sidebar-accordion .accordion-button:not(.collapsed):hover .folder-icon {
+  color: var(--sidebar-text) !important;
+}
+
+.sidebar-nav-scrollable .sidebar-nav .sidebar-accordion .accordion-button:not(.collapsed):hover .folder-icon--open {
+  opacity: 1;
 }
 
 .sidebar-accordion .accordion-button:focus {
@@ -391,17 +444,49 @@
   border-color: transparent !important;
 }
 
-.sidebar-accordion .accordion-button .folder-icon {
-  font-size: 0.95rem !important;
-  color: var(--sidebar-text) !important;
-  display: inline-block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  margin-right: 0.5rem !important;
+/* Slot fixo: dois ícones sobrepostos; troca via .collapsed do Bootstrap (sem JS, sem deslocar o texto) */
+.sidebar-accordion .accordion-button .sidebar-folder-icon-slot {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 1.25rem;
+  width: 1.25rem;
+  min-width: 1.25rem;
+  max-width: 1.25rem;
+  height: 1.25rem;
+  margin-right: 0.5rem;
+  flex-shrink: 0;
 }
 
-.sidebar-accordion .accordion-button:not(.collapsed) .folder-icon {
+.sidebar-accordion .accordion-button .sidebar-folder-icon-slot .folder-icon {
+  position: absolute;
+  inset: 0;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem !important;
   color: var(--sidebar-text) !important;
+  visibility: visible !important;
+  margin-right: 0 !important;
+  flex: none;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  line-height: 1;
+  transition: opacity 0.2s ease;
+}
+
+.sidebar-accordion .accordion-button.collapsed .folder-icon--open {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sidebar-accordion .accordion-button:not(.collapsed) .folder-icon--closed {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sidebar-accordion .accordion-button:not(.collapsed) .folder-icon--open {
+  opacity: 1;
 }
 
 .sidebar-accordion .accordion-body {
@@ -410,14 +495,28 @@
   background: transparent;
 }
 
-/* Pasta aberta/colapsando: fundo transparente; sem transição de altura no .collapsing (evita overflow:hidden recortando o hover). */
+/* Abertura/fechamento: altura animada empurra as pastas abaixo (Bootstrap .collapsing) */
+.sidebar-accordion {
+  --sidebar-folder-collapse-duration: 0.45s;
+  --sidebar-folder-collapse-easing: cubic-bezier(0.33, 1, 0.68, 1);
+}
+
 .sidebar .sidebar-accordion .accordion-collapse.show,
 .sidebar .sidebar-accordion .accordion-collapse.collapsing {
   background-color: transparent !important;
 }
 
+.sidebar .sidebar-accordion .accordion-collapse {
+  transition: height var(--sidebar-folder-collapse-duration) var(--sidebar-folder-collapse-easing);
+}
+
 .sidebar .sidebar-accordion .accordion-collapse.collapsing {
-  transition: none !important;
+  overflow: hidden;
+  transition: height var(--sidebar-folder-collapse-duration) var(--sidebar-folder-collapse-easing) !important;
+}
+
+.sidebar .sidebar-accordion .accordion-collapse.show {
+  overflow: visible;
 }
 
 .sidebar .sidebar-accordion .accordion-collapse.show > .accordion-body,
@@ -429,7 +528,33 @@
   padding-left: 0.35rem !important;
   border: none;
   box-shadow: none;
-  transition: none;
+}
+
+@keyframes sidebar-folder-accent-in {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) scaleY(0.35);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(-50%) scaleY(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-accordion {
+    --sidebar-folder-collapse-duration: 0.01ms;
+  }
+
+  .sidebar .sidebar-accordion .accordion-collapse,
+  .sidebar .sidebar-accordion .accordion-collapse.collapsing {
+    transition: none !important;
+  }
+
+  .sidebar .sidebar-accordion > .accordion-item > .accordion-header .accordion-button:not(.collapsed)::after {
+    animation: none !important;
+  }
 }
 
 /* Faixa de fundo do painel no .accordion-item (1º nível) */
@@ -449,21 +574,6 @@
   left: calc(-1 * var(--sidebar-nav-pad-x, 0.5rem));
   width: calc(100% + 2 * var(--sidebar-nav-pad-x, 0.5rem));
   background-color: color-mix(in srgb, var(--bg-tertiary) 86%, #000 14%);
-  pointer-events: none;
-}
-
-/* Hover só na faixa do título da pasta aberta (header), não no painel inteiro */
-.sidebar-nav-scrollable .sidebar-nav > .sidebar-accordion > .accordion-item:has(> .accordion-collapse.show) > .accordion-header:hover::before,
-.sidebar-nav-scrollable .sidebar-nav > .sidebar-accordion > .accordion-item:has(> .accordion-collapse.collapsing) > .accordion-header:hover::before {
-  content: '';
-  position: absolute;
-  z-index: 0;
-  top: 0;
-  bottom: 0;
-  left: calc(-1 * var(--sidebar-nav-pad-x, 0.5rem));
-  width: calc(100% + 2 * var(--sidebar-nav-pad-x, 0.5rem));
-  background-color: var(--sidebar-hover);
-  border-radius: 0;
   pointer-events: none;
 }
 
@@ -490,8 +600,8 @@
  * mantendo accordion + ícone de pasta.
  */
 .sidebar .sidebar-accordion .accordion-body .sidebar-accordion {
-  margin-left: 1.35rem;
-  width: calc(100% - 1.35rem);
+  margin-left: 0.5rem;
+  width: calc(100% - 0.5rem);
   padding-left: 0;
   border-left: none;
 }
@@ -510,23 +620,9 @@
   z-index: 0;
   top: 0;
   bottom: 0;
-  left: calc(-1 * (var(--sidebar-nav-pad-x, 0.5rem) + 0.35rem + 1.35rem));
-  width: calc(100% + var(--sidebar-nav-pad-x, 0.5rem) + 0.35rem + 1.35rem + var(--sidebar-nav-pad-x, 0.5rem));
+  left: calc(-1 * (var(--sidebar-nav-pad-x, 0.5rem) + 0.5rem));
+  width: calc(100% + var(--sidebar-nav-pad-x, 0.5rem) + 0.5rem + var(--sidebar-nav-pad-x, 0.5rem));
   background-color: color-mix(in srgb, var(--bg-tertiary) 74%, #000 26%);
-  pointer-events: none;
-}
-
-.sidebar-nav-scrollable .sidebar-nav > .sidebar-accordion .accordion-body .sidebar-accordion > .accordion-item:has(> .accordion-collapse.show) > .accordion-header:hover::before,
-.sidebar-nav-scrollable .sidebar-nav > .sidebar-accordion .accordion-body .sidebar-accordion > .accordion-item:has(> .accordion-collapse.collapsing) > .accordion-header:hover::before {
-  content: '';
-  position: absolute;
-  z-index: 0;
-  top: 0;
-  bottom: 0;
-  left: calc(-1 * (var(--sidebar-nav-pad-x, 0.5rem) + 0.35rem + 1.35rem));
-  width: calc(100% + var(--sidebar-nav-pad-x, 0.5rem) + 0.35rem + 1.35rem + var(--sidebar-nav-pad-x, 0.5rem));
-  background-color: var(--sidebar-hover);
-  border-radius: 0;
   pointer-events: none;
 }
 
@@ -555,17 +651,17 @@
 }
 
 .sidebar .sidebar-accordion > .accordion-item > .accordion-header .accordion-button:not(.collapsed) {
-  position: relative;
   /* Fundo vem do ::before do header quando :has é suportado; fallback sólido se não */
   background-color: color-mix(in srgb, var(--bg-tertiary) 86%, #000 14%) !important;
   box-shadow: none !important;
   color: var(--sidebar-text) !important;
 }
 
-.sidebar .sidebar-accordion > .accordion-item > .accordion-header .accordion-button:not(.collapsed)::before {
+.sidebar .sidebar-accordion > .accordion-item > .accordion-header .accordion-button:not(.collapsed)::after {
   content: '';
+  display: block !important;
   position: absolute;
-  z-index: 2;
+  z-index: 1;
   left: 4px;
   top: 50%;
   transform: translateY(-50%);
@@ -574,6 +670,8 @@
   border-radius: 2px;
   background: var(--sidebar-section-accent);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--sidebar-section-accent) 35%, transparent);
+  pointer-events: none;
+  animation: sidebar-folder-accent-in 0.22s ease;
 }
 
 .sidebar .sidebar-accordion > .accordion-item > .accordion-header .accordion-button:not(.collapsed):hover {
@@ -599,25 +697,19 @@
 }
 
 /* Subpasta: sem barra lateral de acento (só nas pastas de primeiro nível) */
-.sidebar .sidebar-accordion .accordion-body .sidebar-accordion .accordion-item > .accordion-header .accordion-button:not(.collapsed)::before {
+.sidebar .sidebar-accordion .accordion-body .sidebar-accordion .accordion-item > .accordion-header .accordion-button:not(.collapsed)::after {
   content: none;
-  display: none;
+  display: none !important;
 }
 
 .sidebar .sidebar-accordion .accordion-body .sidebar-accordion .accordion-item > .accordion-header .accordion-button:not(.collapsed):hover {
   background-color: transparent !important;
 }
 
-/* Itens dentro da pasta aberta: texto e bullet mais legíveis sobre o painel */
+/* Itens dentro da pasta aberta */
 .sidebar .sidebar-accordion .accordion-collapse.show .sidebar-folder-item,
 .sidebar .sidebar-accordion .accordion-collapse.collapsing .sidebar-folder-item {
   color: color-mix(in srgb, var(--sidebar-text) 96%, #fff 4%) !important;
-}
-
-.sidebar .sidebar-accordion .accordion-collapse.show .sidebar-folder-item-bullet,
-.sidebar .sidebar-accordion .accordion-collapse.collapsing .sidebar-folder-item-bullet {
-  background: color-mix(in srgb, var(--sidebar-text) 90%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--sidebar-text) 24%, transparent);
 }
 
 .sidebar .sidebar-accordion .accordion-collapse.show .accordion-button,
@@ -625,25 +717,16 @@
   color: color-mix(in srgb, var(--sidebar-text) 96%, #fff 4%) !important;
 }
 
-.sidebar-folder-item-bullet {
-  width: 1.15rem;
-  height: 1.15rem;
-  min-width: 1.15rem;
-  margin-right: 0.45rem;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--sidebar-text) 70%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--sidebar-text) 14%, transparent);
-}
-
+/* Subitens: só texto com recuo */
 .sidebar-folder-item {
-  padding: 0.45rem 0.65rem 0.45rem 0.35rem !important;
+  padding: 0.45rem 0.65rem 0.45rem 1.75rem !important;
   margin-bottom: 0.1rem;
-  margin-left: 1.35rem;
+  margin-left: 0.5rem;
   font-size: 0.72rem;
   font-weight: 400;
   border-radius: var(--border-radius-sm);
   display: block !important;
-  width: calc(100% - 1.35rem) !important; /* acima do w-100 + margin-left */
+  width: calc(100% - 0.5rem) !important;
   text-align: left;
   background: transparent !important;
   border: none !important;
@@ -786,10 +869,18 @@
   }
 
   .sidebar-folder-item {
-    padding: 12px 12px !important;
+    padding: 12px 12px 12px 2rem !important;
     min-height: 44px;
     font-size: 0.875rem !important;
     display: flex !important;
     align-items: center;
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  .sidebar-nav-scrollable .sidebar-nav > .sidebar-accordion .accordion-collapse > .accordion-body > .sidebar-folder-item:hover::before,
+  .sidebar-nav-scrollable .sidebar-nav .accordion-body .sidebar-accordion .accordion-body .sidebar-folder-item:hover::before {
+    left: calc(-1 * var(--sidebar-nav-pad-x, 0.5rem));
+    width: calc(100% + 2 * var(--sidebar-nav-pad-x, 0.5rem));
   }
 }

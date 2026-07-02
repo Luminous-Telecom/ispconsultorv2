@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, memo } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState, memo } from 'react';
 import { DynamicStyledElement } from 'components/ui';
 import { ChartDataItem, ChartFormat } from './types';
 import { ChartEmptyState } from './ChartEmptyState';
@@ -14,6 +14,31 @@ interface ModernBarChartProps {
 }
 
 const PALETTE = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#a855f7', '#14b8a6', '#ec4899'];
+
+const ModernBarLabel: React.FC<{ label: string }> = ({ label }) => {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [tooltip, setTooltip] = useState<string | undefined>(undefined);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const syncTooltip = () => {
+      setTooltip(el.scrollWidth > el.clientWidth ? label : undefined);
+    };
+
+    syncTooltip();
+    const observer = new ResizeObserver(syncTooltip);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [label]);
+
+  return (
+    <span ref={ref} className="modern-bar-label" title={tooltip}>
+      {label}
+    </span>
+  );
+};
 
 const ModernBarChart: React.FC<ModernBarChartProps> = memo(
   ({ data, title, titleInfo, format = 'number', onBarClick }) => {
@@ -63,12 +88,7 @@ const ModernBarChart: React.FC<ModernBarChartProps> = memo(
                 onClick={onBarClick ? () => onBarClick(d.raw, i) : undefined}
                 className={`modern-bar-row min-w-0 ${onBarClick ? 'cursor-pointer' : ''}`}
               >
-                <div className="modern-bar-row-header">
-                  <span className="modern-bar-label" title={d.label}>
-                    {d.label}
-                  </span>
-                  <span className="modern-bar-value">{formatValue(d.value)}</span>
-                </div>
+                <ModernBarLabel label={d.label} />
                 <DynamicStyledElement
                   className="modern-bar-track"
                   properties={{ background: hexToRgba(d.color, 0.14) }}
@@ -83,6 +103,7 @@ const ModernBarChart: React.FC<ModernBarChartProps> = memo(
                     deps={[width, d.color]}
                   />
                 </DynamicStyledElement>
+                <span className="modern-bar-value">{formatValue(d.value)}</span>
               </div>
             );
           })}

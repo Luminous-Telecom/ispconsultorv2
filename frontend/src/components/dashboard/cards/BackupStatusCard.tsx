@@ -18,7 +18,7 @@ export interface BackupStatusCardProps {
 
 /** Card de status de backup (barras empilhadas dos últimos dias). */
 const BackupStatusCard: React.FC<BackupStatusCardProps> = (props) => (
-  <div className="chart-card chart-card-pie chart-card-pie--metric chart-card-pie--sm">
+  <div className="chart-card chart-card-pie chart-card-pie--compact">
     <BackupStatusStackedBarChart {...props} />
   </div>
 );

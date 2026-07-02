@@ -1,6 +1,6 @@
 import React from 'react';
 import SidebarFolderItemButton from '../SidebarFolderItemButton';
-import { SIDEBAR_FOLDER_ICON_OPEN } from './sidebarFolderIcons';
+import SidebarFolderIconSlot from '../SidebarFolderIconSlot';
 import type { SidebarMenuItem, TranslateFn } from '../layout/types';
 import type { SidebarMenuSearchGroup, SidebarMenuSearchNestedGroup } from './sidebarMenuSearchUtils';
 
@@ -27,7 +27,7 @@ const SidebarMenuSearchNestedFolder: React.FC<SidebarMenuSearchNestedFolderProps
             aria-expanded="true"
             tabIndex={-1}
           >
-            <i className={SIDEBAR_FOLDER_ICON_OPEN} />
+            <SidebarFolderIconSlot />
             <span>{t(folder.titleKey)}</span>
           </button>
         </h2>
@@ -74,7 +74,7 @@ const SidebarMenuSearchFolder: React.FC<SidebarMenuSearchFolderProps> = ({
             aria-expanded="true"
             tabIndex={-1}
           >
-            <i className={SIDEBAR_FOLDER_ICON_OPEN} />
+            <SidebarFolderIconSlot />
             <span>{folder.title}</span>
           </button>
         </h2>

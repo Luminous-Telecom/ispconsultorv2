@@ -1,7 +1,6 @@
 import React, { useRef, useLayoutEffect, useEffect, useState, useMemo, memo, useCallback } from 'react';
 import { PieLegendDot } from 'components/ui';
 import * as d3 from 'd3';
-import { ChartEmptyState } from './ChartEmptyState';
 import { clampTooltipNearPoint, createD3ChartTooltip } from './chartTooltip';
 
 export type BackupStatusKey = 'sucesso' | 'somente_local' | 'falha_envio' | 'verificado' | 'falha';
@@ -280,38 +279,26 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
 
     if (!showChartBody) {
       return (
-        <ChartEmptyState
-          title={title}
-          message={emptyMessage}
-          containerClassName="chart-container-pie"
-        />
+        <div className="chart-container-pie">
+          <h6 className="chart-title-pie chart-title-pie-tight">{title}</h6>
+          <div className="backup-status-card__body backup-status-card__body--empty">
+            <div className="chart-empty-state chart-empty-state--compact">
+              <p className="text-muted">{emptyMessage ?? 'Sem dados para exibir'}</p>
+            </div>
+          </div>
+        </div>
       );
     }
 
     return (
-      <div
-        className="backup-status-card chart-radial-style chart-container-full-relative"
-        
-      >
-        <div className="pie-metric-header pie-metric-header-center" >
-          <span
-            className="pie-metric-header__title backup-status-card__title pie-metric-title-center"
-            
-          >
-            {title}
-          </span>
-        </div>
+      <div className="chart-container-pie chart-radial-style backup-status-card">
+        <h6 className="chart-title-pie chart-title-pie-tight">{title}</h6>
 
-        <div
-          ref={chartBoxRef}
-          className="chart-area-relative"
-        >
-          <svg
-            ref={svgRef}
-            className="chart-svg-overflow"
-          />
-        </div>
-        <ul className="backup-status-card__legend">
+        <div className="backup-status-card__body">
+          <div ref={chartBoxRef} className="backup-status-card__chart chart-area-relative">
+            <svg ref={svgRef} className="chart-svg-overflow" />
+          </div>
+          <ul className="backup-status-card__legend">
           {STACK_KEYS.map((k) => {
             const isHidden = hiddenKeys?.has(k) ?? false;
             return (
@@ -345,6 +332,7 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
             );
           })}
         </ul>
+        </div>
       </div>
     );
   }
