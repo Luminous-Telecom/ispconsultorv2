@@ -91,12 +91,13 @@ const SaasUsuariosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false
         key: 'nome',
         label: 'Nome',
         sortable: true,
-        render: (item) => (
-          <div>
-            <div className="fw-semibold">{item.nome}</div>
-            <small className="text-muted">{item.email}</small>
-          </div>
-        ),
+        render: (item) => item.nome,
+      },
+      {
+        key: 'email',
+        label: 'Email',
+        sortable: true,
+        render: (item) => <span className="text-nowrap">{item.email}</span>,
       },
       {
         key: 'nivel_acesso',
