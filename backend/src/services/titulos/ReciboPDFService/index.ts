@@ -8,7 +8,6 @@ import { ModeloDocumentoService } from '../../documentos/ModeloDocumentoService'
 import { VariaveisDocumentoService } from '../../documentos/VariaveisDocumentoService';
 import { PDFGenerationService } from '../../pdf-generation/PDFGenerationService';
 import { ContratoService } from '../../contratos/ContratoService';
-import type { ModeloDocumento } from '../../../models/documentos/ModeloDocumento';
 
 interface ReciboPDFParams {
   titulo: InferAttributes<Titulo> | Titulo;
@@ -17,99 +16,108 @@ interface ReciboPDFParams {
   baseUrl?: string;
 }
 
+const RECIBO_FALLBACK_STYLES = `
+  h1 { color: #333; text-align: center; margin-bottom: 30px; }
+  .recibo-box { border: 2px solid #333; padding: 30px; margin: 20px 0; }
+  table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+  th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+  th { background-color: #f2f2f2; font-weight: bold; width: 30%; }
+  .valor { font-size: 18px; font-weight: bold; color: #10b981; }
+  .assinatura { margin-top: 60px; border-top: 1px solid #333; padding-top: 20px; }
+`;
+
 /**
- * Gera PDF do recibo de pagamento (reutilizado no envio por email/WhatsApp e na central do assinante).
+ * Gera PDF do recibo de pagamento a partir da aba Recibos do modelo de contrato.
  */
 export class ReciboPDFService {
   /**
-   * Gera o HTML do recibo e retorna o PDF em base64.
-   * Retorna null em caso de erro.
+   * Retorna o HTML processado do recibo (fragmento embedável em documento maior).
+   * Usa exclusivamente `conteudo_recibo` de modelo tipo contrato.
    */
-  static async gerarReciboBase64(params: ReciboPDFParams): Promise<string | null> {
+  static async gerarReciboConteudo(params: ReciboPDFParams): Promise<string | null> {
     const { titulo, cliente, baseUrl } = params;
     let contrato = params.contrato;
     if (!contrato && titulo.contrato_id) {
       contrato = await ContratoService.getById(titulo.contrato_id) ?? undefined;
     }
+
     try {
-      const empresaId = (cliente as { empresa_id?: number | null }).empresa_id ?? (titulo as { empresa_id?: number | null }).empresa_id ?? null;
-      let modelos = await ModeloDocumentoService.getByType('recibo', true, empresaId);
-      if (modelos.length === 0) {
-        const todosModelos = await ModeloDocumentoService.list({ ativo: true, empresa_id: empresaId ?? undefined });
-        modelos = todosModelos.data.filter(
-          (m: ModeloDocumento & { conteudo_recibo?: string }) => m.conteudo_recibo && m.conteudo_recibo.trim().length > 0
-        );
+      const empresaId =
+        (cliente as { empresa_id?: number | null }).empresa_id ??
+        (titulo as { empresa_id?: number | null }).empresa_id ??
+        null;
+      const modeloDocumentoId =
+        (contrato as Contrato | undefined)?.modelo_documento_id ?? null;
+
+      const modelo = await ModeloDocumentoService.resolveModeloReciboContrato({
+        empresaId,
+        modeloDocumentoId,
+      });
+
+      const conteudoTemplate = modelo?.conteudo_recibo?.trim();
+      if (!conteudoTemplate) {
+        logger.warn('ReciboPDFService - Modelo de recibo não configurado no modelo de contrato', {
+          titulo_id: titulo.id,
+          empresa_id: empresaId,
+          modelo_documento_id: modeloDocumentoId,
+        });
+        return null;
       }
 
-      let conteudoProcessado: string;
+      return await VariaveisDocumentoService.processarVariaveis(
+        conteudoTemplate,
+        {
+          cliente,
+          contrato: contrato ? (contrato as Contrato | (Partial<Contrato> & { id: number })) : undefined,
+          titulo: titulo as Titulo | TituloComRelacoes,
+        },
+        baseUrl
+      );
+    } catch (error) {
+      logger.error('ReciboPDFService.gerarReciboConteudo - Erro ao processar HTML do recibo', {
+        titulo_id: titulo.id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return null;
+    }
+  }
 
-      if (modelos.length > 0) {
-        const modelo = modelos[0] as ModeloDocumento & { conteudo_recibo?: string };
-        const conteudoTemplate = modelo.conteudo_recibo || modelo.conteudo;
-        conteudoProcessado = await VariaveisDocumentoService.processarVariaveis(
-          conteudoTemplate,
-          {
-            cliente,
-            contrato: contrato ? (contrato as Contrato | (Partial<Contrato> & { id: number })) : undefined,
-            titulo: titulo as Titulo | TituloComRelacoes
-          },
-          baseUrl
-        );
-      } else {
-        conteudoProcessado = `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="UTF-8">
-            <style>
-              body { font-family: Arial, sans-serif; padding: 40px; }
-              h1 { color: #333; text-align: center; margin-bottom: 30px; }
-              .recibo-box { border: 2px solid #333; padding: 30px; margin: 20px 0; }
-              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-              th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-              th { background-color: #f2f2f2; font-weight: bold; width: 30%; }
-              .valor { font-size: 18px; font-weight: bold; color: #10b981; }
-              .assinatura { margin-top: 60px; border-top: 1px solid #333; padding-top: 20px; }
-            </style>
-          </head>
-          <body>
-            <h1>RECIBO DE PAGAMENTO</h1>
-            <div class="recibo-box">
-              <table>
-                <tr><th>Número do Título:</th><td>${titulo.numero_titulo || titulo.id}</td></tr>
-                <tr><th>Cliente:</th><td>${cliente.razao_social || cliente.nome_fantasia || '-'}</td></tr>
-                <tr><th>CNPJ:</th><td>${cliente.cnpj || '-'}</td></tr>
-                <tr><th>Valor Pago:</th><td class="valor">R$ ${Number(titulo.valor_pago || titulo.valor_final || titulo.valor).toFixed(2).replace('.', ',')}</td></tr>
-                <tr><th>Data de Vencimento:</th><td>${titulo.data_vencimento ? new Date(titulo.data_vencimento).toLocaleDateString('pt-BR') : '-'}</td></tr>
-                <tr><th>Data de Pagamento:</th><td>${titulo.data_pagamento ? new Date(titulo.data_pagamento).toLocaleDateString('pt-BR') : '-'}</td></tr>
-                <tr><th>Status:</th><td>${titulo.status === 'pago' ? 'Pago' : 'Pago com Atraso'}</td></tr>
-              </table>
-              <div class="assinatura">
-                <p>Recebido de: ${cliente.razao_social || cliente.nome_fantasia || '-'}</p>
-                <p style="margin-top: 40px;">_________________________________</p>
-                <p>Assinatura</p>
-              </div>
-            </div>
-          </body>
-          </html>
-        `;
-      }
+  static getReciboFallbackStyles(): string {
+    return RECIBO_FALLBACK_STYLES;
+  }
 
-      const pdfBuffer = await PDFGenerationService.generateFromContent(
+  /**
+   * Gera o PDF do recibo em Buffer.
+   */
+  static async gerarReciboPdfBuffer(params: ReciboPDFParams): Promise<Buffer | null> {
+    const conteudoProcessado = await this.gerarReciboConteudo(params);
+    if (!conteudoProcessado) {
+      return null;
+    }
+
+    try {
+      return await PDFGenerationService.generateFromContent(
         conteudoProcessado,
         {
           format: 'A4',
           margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },
-          printBackground: true
+          printBackground: true,
         }
       );
-      return pdfBuffer.toString('base64');
     } catch (error) {
-      logger.error('ReciboPDFService.gerarReciboBase64 - Erro ao gerar PDF do recibo', {
-        titulo_id: titulo.id,
-        error: error instanceof Error ? error.message : String(error)
+      logger.error('ReciboPDFService.gerarReciboPdfBuffer - Erro ao gerar PDF do recibo', {
+        titulo_id: params.titulo.id,
+        error: error instanceof Error ? error.message : String(error),
       });
       return null;
     }
+  }
+
+  /**
+   * Gera o PDF do recibo e retorna em base64.
+   */
+  static async gerarReciboBase64(params: ReciboPDFParams): Promise<string | null> {
+    const pdfBuffer = await this.gerarReciboPdfBuffer(params);
+    return pdfBuffer ? pdfBuffer.toString('base64') : null;
   }
 }

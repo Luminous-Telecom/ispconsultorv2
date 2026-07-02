@@ -50,6 +50,17 @@ module.exports = function(app) {
     })
   );
 
+  // Proxy para recibos
+  app.use(
+    '/recibo',
+    createProxyMiddleware({
+      target: backendUrl,
+      changeOrigin: true,
+      secure: false,
+      logLevel: 'silent',
+    })
+  );
+
   // Proxy para uploads
   app.use(
     '/uploads',

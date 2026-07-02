@@ -20,8 +20,27 @@ const TIPOS_ALVO_ERP_GLOBAL = [
   'rpki_sync_repositories',
   'consulta_titulos_asaas',
   'consulta_titulos_efi',
+  'ixc_sync_ordens_servico',
   'outros'
 ] as const;
+
+function mensagemValidacaoAlvoTipo(body: { tipo?: string; alvo?: string }): string | null {
+  const tipo = body.tipo;
+  if (!tipo) return null;
+
+  const alvo =
+    body.alvo === 'erp_global' ? 'erp_global' : body.alvo === 'saas' ? 'saas' : null;
+  if (!alvo) return null;
+
+  if (alvo === 'saas') {
+    if (!(TIPOS_ALVO_SAAS as readonly string[]).includes(tipo)) {
+      return 'No alvo Cobrança SaaS, use geração/envio/remessa do produto ou bloquear por atraso.';
+    }
+  } else if (!(TIPOS_ALVO_ERP_GLOBAL as readonly string[]).includes(tipo)) {
+    return 'No alvo ERP (todos os clientes), use faturamento ERP, verificar vencimentos, consulta de títulos, desbloquear domínios, rotinas RPKI ou sincronização IXC.';
+  }
+  return null;
+}
 
 function proximaExecucaoDateParaSaasStore(routineData: Record<string, unknown>): Date {
   const p = routineData.proxima_execucao;
@@ -38,20 +57,6 @@ function proximaExecucaoDateParaSaasStore(routineData: Record<string, unknown>):
     hora_execucao: syntheticHoraExecucaoFromSaasBody(routineData),
     frequencia: 'personalizada'
   });
-}
-
-function mensagemValidacaoAlvoTipo(body: { tipo?: string; alvo?: string }): string | null {
-  const alvo = body.alvo === 'erp_global' ? 'erp_global' : 'saas';
-  const tipo = body.tipo;
-  if (!tipo) return null;
-  if (alvo === 'saas') {
-    if (!(TIPOS_ALVO_SAAS as readonly string[]).includes(tipo)) {
-      return 'No alvo Cobrança SaaS, use geração/envio/remessa do produto ou bloquear por atraso.';
-    }
-  } else if (!(TIPOS_ALVO_ERP_GLOBAL as readonly string[]).includes(tipo)) {
-    return 'No alvo ERP (todos os clientes), use faturamento ERP, verificar vencimentos, consulta de títulos, desbloquear domínios ou rotinas RPKI.';
-  }
-  return null;
 }
 
 export class SaasSchedulerController {
@@ -143,17 +148,17 @@ export class SaasSchedulerController {
       const updateData = saasRoutineBodyFromRequest(req.body);
 
       const routineAntiga = await SaasScheduledRoutineService.getById(Number(id));
-      const tipoParaValidacao =
-        typeof updateData.tipo === 'string' ? updateData.tipo : routineAntiga?.tipo;
-      const alvoParaValidacao =
-        typeof updateData.alvo === 'string' ? updateData.alvo : routineAntiga?.alvo;
-      const msgAlvo = mensagemValidacaoAlvoTipo({
-        tipo: tipoParaValidacao,
-        alvo: alvoParaValidacao
-      });
-      if (msgAlvo) {
-        sendValidationError(res, msgAlvo);
-        return;
+      const tipoMudou = typeof updateData.tipo === 'string';
+      const alvoMudou = typeof updateData.alvo === 'string';
+      if (tipoMudou || alvoMudou) {
+        const msgAlvo = mensagemValidacaoAlvoTipo({
+          tipo: tipoMudou ? (updateData.tipo as string) : routineAntiga?.tipo,
+          alvo: alvoMudou ? (updateData.alvo as string) : routineAntiga?.alvo,
+        });
+        if (msgAlvo) {
+          sendValidationError(res, msgAlvo);
+          return;
+        }
       }
       if (updateData.alvo !== undefined) {
         (updateData as { alvo?: string }).alvo = updateData.alvo === 'erp_global' ? 'erp_global' : 'saas';

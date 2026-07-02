@@ -5,6 +5,7 @@ import bancoRoutes from './bancoRoutes';
 import usuarioRoutes from './usuarioRoutes';
 import tituloRoutes from './titulos';
 import boletoRoutes from './boletoRoutes';
+import reciboRoutes from './reciboRoutes';
 import dadosEmpresaRoutes from './dadosEmpresaRoutes';
 import planoModulosRoutes from './planoModulosRoutes';
 import dashboardRoutes from './dashboardRoutes';
@@ -85,6 +86,8 @@ const routes = [
     { path: '/api/workers', route: workerRoutes },
     { path: '/api/parametros', route: parametrosRoutes },
     { path: '/boleto', route: boletoRoutes },
+    { path: '/recibo', route: reciboRoutes },
+    { path: '/api/recibo', route: reciboRoutes },
     
     // Rotas dos servidores e configurações
     { path: '/api/servidores-email', route: servidorEmailRoutes },

@@ -11,6 +11,7 @@ import { ModeloDocumentoService } from '../../../services/documentos/ModeloDocum
 import { VariaveisDocumentoService } from '../../../services/documentos/VariaveisDocumentoService';
 import { PDFGenerationService } from '../../../services/pdf-generation/PDFGenerationService';
 import { TituloPDFService } from '../../../services/titulos/TituloPDFService';
+import { ReciboPDFService } from '../../../services/titulos/ReciboPDFService';
 import { BancoApiService } from '../../../services/bancos/BancoApiService';
 import { logger } from '../../../utils/logger';
 import crypto from 'crypto';
@@ -791,104 +792,31 @@ export class CentralAssinanteController {
         return;
       }
 
-      // Tentar buscar modelo de recibo
-      const empresaId = (titulo as { empresa_id?: number | null }).empresa_id ?? (cliente as { empresa_id?: number | null }).empresa_id ?? null;
-      let modelos = await ModeloDocumentoService.getByType('recibo', true, empresaId);
-      logger.info('Modelos de recibo encontrados (tipo recibo)', { quantidade: modelos.length });
-      
-      // Se não encontrar, buscar qualquer modelo de documento que tenha conteudo_recibo
-      if (modelos.length === 0) {
-        logger.info('Buscando modelos de documento com conteudo_recibo');
-        const todosModelos = await ModeloDocumentoService.list({ ativo: true, empresa_id: empresaId ?? undefined });
-        modelos = todosModelos.data.filter((m: any) => m.conteudo_recibo && m.conteudo_recibo.trim().length > 0);
-        logger.info('Modelos com conteudo_recibo encontrados', { quantidade: modelos.length });
-      }
-
-      let conteudoProcessado: string;
       const baseUrl = req.get('host') ? `${req.protocol}://${req.get('host')}` : undefined;
+      const pdfBuffer = await ReciboPDFService.gerarReciboPdfBuffer({
+        titulo,
+        cliente,
+        contrato,
+        baseUrl,
+      });
 
-      if (modelos.length > 0) {
-        const modelo = modelos[0];
-        logger.info('Usando modelo de recibo', { 
-          modeloId: modelo.id, 
-          modeloNome: modelo.nome,
-          temConteudoRecibo: !!(modelo as any).conteudo_recibo
-        });
-        
-        // Usar conteudo_recibo se disponível, senão usar conteudo
-        const conteudoTemplate = (modelo as any).conteudo_recibo || modelo.conteudo;
-        
-        conteudoProcessado = await VariaveisDocumentoService.processarVariaveis(
-          conteudoTemplate,
-          {
-            cliente,
-            contrato: contrato || undefined,
-            titulo: titulo as any
-          },
-          baseUrl
+      if (!pdfBuffer) {
+        sendValidationError(
+          res,
+          'Modelo de recibo não configurado. Cadastre a aba Recibos em Documentos do Sistema → Contratos.'
         );
-      } else {
-        // Gerar HTML simples se não houver modelo
-        logger.warn('Nenhum modelo encontrado, gerando recibo simples');
-        conteudoProcessado = `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="UTF-8">
-            <style>
-              body { font-family: Arial, sans-serif; padding: 40px; }
-              h1 { color: #333; text-align: center; margin-bottom: 30px; }
-              .recibo-box { border: 2px solid #333; padding: 30px; margin: 20px 0; }
-              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-              th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-              th { background-color: #f2f2f2; font-weight: bold; width: 30%; }
-              .valor { font-size: 18px; font-weight: bold; color: #10b981; }
-              .assinatura { margin-top: 60px; border-top: 1px solid #333; padding-top: 20px; }
-            </style>
-          </head>
-          <body>
-            <h1>RECIBO DE PAGAMENTO</h1>
-            <div class="recibo-box">
-              <table>
-                <tr><th>Número do Título:</th><td>${titulo.numero_titulo || tituloIdNum}</td></tr>
-                <tr><th>Cliente:</th><td>${cliente.razao_social || cliente.nome_fantasia || '-'}</td></tr>
-                <tr><th>CNPJ:</th><td>${cliente.cnpj || '-'}</td></tr>
-                <tr><th>Valor Pago:</th><td class="valor">R$ ${Number(titulo.valor_pago || titulo.valor_final || titulo.valor).toFixed(2).replace('.', ',')}</td></tr>
-                <tr><th>Data de Vencimento:</th><td>${titulo.data_vencimento ? new Date(titulo.data_vencimento).toLocaleDateString('pt-BR') : '-'}</td></tr>
-                <tr><th>Data de Pagamento:</th><td>${titulo.data_pagamento ? new Date(titulo.data_pagamento).toLocaleDateString('pt-BR') : '-'}</td></tr>
-                <tr><th>Status:</th><td>${titulo.status === 'pago' ? 'Pago' : 'Pago com Atraso'}</td></tr>
-              </table>
-              <div class="assinatura">
-                <p>Recebido de: ${cliente.razao_social || cliente.nome_fantasia || '-'}</p>
-                <p style="margin-top: 40px;">_________________________________</p>
-                <p>Assinatura</p>
-              </div>
-            </div>
-          </body>
-          </html>
-        `;
+        return;
       }
-
-      logger.info('Gerando PDF do recibo');
-      
-      const pdfBuffer = await PDFGenerationService.generateFromContent(
-        conteudoProcessado,
-        {
-          format: 'A4',
-          margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },
-          printBackground: true
-        }
-      );
 
       logger.info('PDF do recibo gerado com sucesso', {
         tamanho: pdfBuffer.length,
-        tituloId: tituloIdNum
+        tituloId: tituloIdNum,
       });
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename="recibo-${titulo.numero_titulo || tituloIdNum}.pdf"`);
       res.send(pdfBuffer);
-      
+
       logger.info('PDF do recibo enviado com sucesso para o cliente', { tituloId: tituloIdNum });
     } catch (error) {
       logger.error('Erro ao gerar PDF do recibo na central do assinante', {

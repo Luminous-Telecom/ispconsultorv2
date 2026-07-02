@@ -78,8 +78,8 @@ body[data-app="system"] {
 
   .card *,
   .card-body *,
-  .draggable-modal-container-custom *,
-  .draggable-modal-body-custom *:not(.xterm):not(.xterm *) {
+  .draggable-modal-container-custom *:not(.tinymce-wrapper):not(.tinymce-wrapper *),
+  .draggable-modal-body-custom *:not(.xterm):not(.xterm *):not(.tinymce-wrapper):not(.tinymce-wrapper *) {
     color: inherit;
   }
 

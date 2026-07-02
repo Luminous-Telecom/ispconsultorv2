@@ -364,6 +364,12 @@ $truncate-widths: (
 .tinymce-wrapper-full { height: 100%; }
 .rich-text-editor-fallback { min-height: 120px; }
 
+/* TinyMCE usa skin claro (oxide); menus auxiliares ficam no body fora do modal */
+body[data-app="system"] .tox-tinymce-aux,
+body[data-app="system"] .tox-tinymce-aux .tox {
+  color: #222f3e;
+}
+
 /* --- Imprimir modal --- */
 .imprimir-modal-frame {
   height: 80vh;

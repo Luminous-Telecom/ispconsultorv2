@@ -84,6 +84,30 @@ export class ModeloDocumentoService {
   }
 
   /**
+   * Modelo de contrato com aba Recibos preenchida (única fonte do PDF de recibo).
+   * Prioriza o modelo vinculado ao contrato; senão, o primeiro contrato ativo da empresa.
+   */
+  static async resolveModeloReciboContrato(params: {
+    empresaId?: number | null;
+    modeloDocumentoId?: number | null;
+  }): Promise<ModeloDocumento | null> {
+    const { empresaId, modeloDocumentoId } = params;
+
+    const temRecibo = (modelo: ModeloDocumento): boolean =>
+      Boolean(modelo.conteudo_recibo?.trim());
+
+    if (modeloDocumentoId) {
+      const vinculado = await this.getById(modeloDocumentoId);
+      if (vinculado?.tipo === 'contrato' && vinculado.ativo && temRecibo(vinculado)) {
+        return vinculado;
+      }
+    }
+
+    const modelosContrato = await this.getByType('contrato', true, empresaId);
+    return modelosContrato.find(temRecibo) ?? null;
+  }
+
+  /**
    * Buscar modelo por ID
    */
   static async getById(id: string | number): Promise<ModeloDocumento | null> {

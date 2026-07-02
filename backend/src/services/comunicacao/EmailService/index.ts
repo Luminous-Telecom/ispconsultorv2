@@ -412,7 +412,7 @@ export class EmailService {
 
   /**
    * Envia email de recibo de pagamento quando o título é marcado como pago.
-   * Se tipo_envio === 'pdf', anexa o PDF do recibo (modelo de documento tipo recibo).
+   * Se tipo_envio === 'pdf', anexa o PDF do recibo (aba Recibos do modelo de contrato).
    */
   static async enviarReciboPagamento(titulo: TituloComRelacoes): Promise<boolean> {
     try {

@@ -483,7 +483,7 @@ export class WhatsAppBoletoService {
 
   /**
    * Envia mensagem de recibo de pagamento por WhatsApp.
-   * Se tipo_envio === 'pdf', envia o PDF do recibo (modelo de documento tipo recibo) com a mensagem como descrição.
+   * Se tipo_envio === 'pdf', envia o PDF do recibo (aba Recibos do modelo de contrato) com a mensagem como descrição.
    */
   static async enviarReciboPagamento(titulo: Titulo, cliente: Cliente): Promise<boolean> {
     try {
