@@ -226,6 +226,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         {inputEl}
         <IconOnlyButton
           type="button"
+          variant="ghost"
           className={iconClass}
           onClick={() => onSearch(value)}
           label={placeholder}
