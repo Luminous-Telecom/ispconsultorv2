@@ -35,7 +35,8 @@ alwaysApply: false
 
 ## Formulários
 - Valide campos obrigatórios antes do submit
-- Use `FormField` / blocos em `components/forms/` em vez de `form-control` cru
+- Use `FormField` em modais; em telas avulsas (login, filtros simples) use `Input` de `components/ui` — **nunca** `<input className="...">` com estilo próprio
+- Tamanho padrão: `form-control` global (`padding`, `--font-size-sm`, `--border-radius` em `_components.scss`); largura máxima `--form-input-max-width`
 - **Modais**: layout horizontal — `col-12`, `AtivoInativoField` para booleanos, sem `switch` (ver `frontend-form-modal-layout.mdc`)
 - Campos obrigatórios: `required` no `FormField` ou `LabelWithHelp` (asterisco vermelho)
 - **Ao concluir**: i18n + types na hora; build só antes de push — ver `frontend-verificacao-pos-alteracao.mdc`

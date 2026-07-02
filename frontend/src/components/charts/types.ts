@@ -26,6 +26,8 @@ export interface LineChartProps {
   /** Texto do tooltip do ícone de informação ao lado do título */
   titleInfo?: string;
   format?: 'currency' | 'number';
+  /** Cor padrão da linha e da área (pontos podem sobrescrever com `color` no item) */
+  lineColor?: string;
   onPointClick?: (item: ChartDataItem, index: number) => void;
 }
 

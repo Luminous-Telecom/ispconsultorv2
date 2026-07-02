@@ -7,6 +7,7 @@ export interface LineChartCardProps {
   title: string;
   titleInfo?: string;
   format?: 'currency' | 'number';
+  lineColor?: string;
   onPointClick?: (item: ChartDataItem, index: number) => void;
 }
 
@@ -16,6 +17,7 @@ const LineChartCard: React.FC<LineChartCardProps> = ({
   title,
   titleInfo,
   format = 'number',
+  lineColor,
   onPointClick,
 }) => (
   <div className="chart-card chart-card-line">
@@ -24,6 +26,7 @@ const LineChartCard: React.FC<LineChartCardProps> = ({
       title={title}
       titleInfo={titleInfo}
       format={format}
+      lineColor={lineColor}
       onPointClick={onPointClick}
     />
   </div>

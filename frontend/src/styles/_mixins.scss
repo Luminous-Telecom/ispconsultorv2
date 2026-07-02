@@ -89,8 +89,7 @@
 /* Mixin para inputs */
 @mixin input-focus($color: #0d6efd) {
   &:focus {
-    border-color: $color;
-    box-shadow: 0 0 0 0.2rem rgba($color, 0.25);
+    box-shadow: none;
   }
 }
 

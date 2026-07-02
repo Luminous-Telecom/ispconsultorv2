@@ -54,6 +54,8 @@ onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.ENTITY_CREATE_ERROR),
 
 - Campos: `FormField`, `EntitySelectField`, `AtivoInativoField`, `ComunicacaoPreferenciasField`, `TableFilterCheckbox`
 - **Layout em modais**: ver `.cursor/rules/frontend-form-modal-layout.mdc` (`col-12`, label à esquerda, sem `switch`)
+- **Inputs de texto** (login, filtros, telas avulsas): `Input` de `components/ui` — classe `form-control`, tamanho global em `_components.scss` (`--font-size-sm`, padding padrão, `--border-radius`). **Não** criar classes CSS com `height` fixo (ex.: 48px) nem estilos duplicados de borda/foco
+- Largura máxima de campo em formulários: `--form-input-max-width` (420px)
 - Obrigatório: `required` no `FormField` ou `LabelWithHelp` (`RequiredMark`)
 - Ajuda (ícone i): `helpText` no `FormField` ou `LabelWithHelp` — não `alert-info` para hints
 - Ações de modal: `ModalFormActions` + botões de `components/ui/buttons`

@@ -18,7 +18,7 @@
 .login-card {
   position: relative;
   width: 100%;
-  max-width: 400px;
+  max-width: var(--form-input-max-width);
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 1rem;
@@ -79,44 +79,15 @@
 }
 
 .login-field {
-  margin-bottom: 1rem;
-}
-
-.login-page .login-input {
-  display: block;
-  width: 100%;
-  height: 48px;
-  padding: 0 1rem;
-  background: var(--bg-tertiary) !important;
-  border: 1px solid var(--border-color) !important;
-  border-radius: 0.65rem !important;
-  color: var(--text-primary) !important;
-  caret-color: var(--text-primary);
-  font-size: 0.9rem;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.login-page .login-input::placeholder {
-  color: var(--text-muted) !important;
-  opacity: 0.85;
-}
-
-.login-page .login-input:focus {
-  outline: none;
-  border-color: var(--primary-color, #6b9bd1) !important;
-  box-shadow: 0 0 0 0.2rem rgba(107, 155, 209, 0.22) !important;
-  background: var(--bg-tertiary) !important;
+  margin-bottom: 0.75rem;
 }
 
 .login-submit {
-  margin-top: 1.25rem;
+  margin-top: 1rem;
 }
 
 .login-submit .btn {
   width: 100%;
-  height: 46px;
-  border-radius: 0.65rem;
-  font-weight: 600;
 }
 
 .login-footer {

@@ -104,7 +104,6 @@
 
     &:focus {
       background-color: var(--ca-bg-secondary) !important;
-      border-color: var(--ca-border-focus) !important;
       box-shadow: none !important;
       outline: none !important;
     }
@@ -947,7 +946,6 @@ body[data-theme="light"] .central-assinante-container {
 
   &:focus-visible {
     outline: none;
-    border-color: var(--ca-border-focus);
   }
 }
 

@@ -17,6 +17,7 @@ import {
   StatTilesCard,
   GaugeCard,
 } from 'components/dashboard/cards';
+import { CHART_FINANCE_COLORS } from 'components/charts/chartColors';
 import Loading from 'components/common/Loading';
 import { useModal } from 'contexts/ModalContext';
 import { useI18n } from 'contexts/I18nContext';
@@ -240,6 +241,7 @@ const SaasDashboard: React.FC = () => {
               title={`${t('dashboard.received')} (${t('dashboard.chartCurrentMonth')}): ${formatCurrency(charts.totalRecebidosPeriodo || 0)}`}
               titleInfo={t('dashboard.chartReceivedInfo')}
               format="currency"
+              lineColor={CHART_FINANCE_COLORS.received}
               onPointClick={handleRecebidosPeriodoPointClick}
             />
           </div>
@@ -250,6 +252,7 @@ const SaasDashboard: React.FC = () => {
               title={`${t('dashboard.toReceive')} (${t('dashboard.chartCurrentMonth')}): ${formatCurrency(charts.totalReceberPeriodo || 0)}`}
               titleInfo={t('dashboard.chartToReceiveInfo')}
               format="currency"
+              lineColor={CHART_FINANCE_COLORS.toReceive}
               onPointClick={handleReceberPeriodoPointClick}
             />
           </div>

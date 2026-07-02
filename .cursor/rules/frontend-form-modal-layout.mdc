@@ -104,6 +104,13 @@ Substituir **todos** os filtros booleanos de listagem (inativos, cancelados, err
 
 Novos campos inline reutilizáveis: copiar estrutura de `AtivoInativoField` ou `ComunicacaoPreferenciasField` — não duplicar CSS.
 
+## Tamanho de inputs (padrão global)
+
+- Classe: `form-control` via `Input` ou `FormField` — **não** classes custom (`login-input`, etc.) nem `height` fixo
+- Estilos globais em `_components.scss`: `font-size: var(--font-size-sm)`, padding `0.5rem 0.875rem`, `border-radius: var(--border-radius)`
+- Largura máxima do controle: `--form-input-max-width` (420px); bloco label+input: `--form-block-max-width`
+- Telas sem label lateral (login, busca): `Input` direto; modais com label: `FormField` + `.form-field`
+
 ## Exceções (grids multi-coluna)
 
 Use `form-modal-multi-col` na `.row` quando o layout **não** for cadastro campo-a-campo:

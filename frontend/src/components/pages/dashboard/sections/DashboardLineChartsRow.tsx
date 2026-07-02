@@ -1,5 +1,6 @@
 import React from 'react';
 import { formatCurrency, formatNumber } from 'utils/formatters';
+import { CHART_FINANCE_COLORS } from 'components/charts/chartColors';
 import { LineChartCard, ClientsByPlanCard } from 'components/dashboard/cards';
 import type { useDashboardCharts } from 'hooks/useDashboardCharts';
 import type { TranslationKeys } from 'contexts/I18nContext';
@@ -30,6 +31,7 @@ const DashboardLineChartsRow: React.FC<DashboardLineChartsRowProps> = ({
         data={charts.recebidosPeriodoChartData}
         title={`${t('dashboard.received')} (${t('dashboard.chartCurrentMonth')}): ${formatCurrency(charts.totalRecebidosPeriodo || 0)}`}
         format="currency"
+        lineColor={CHART_FINANCE_COLORS.received}
         onPointClick={clicks.handleRecebidosPeriodoPointClick}
       />
     </div>
@@ -39,6 +41,7 @@ const DashboardLineChartsRow: React.FC<DashboardLineChartsRowProps> = ({
         data={charts.receberPeriodoChartData}
         title={`${t('dashboard.toReceive')} (${t('dashboard.chartCurrentMonth')}): ${formatCurrency(charts.totalReceberPeriodo || 0)}`}
         format="currency"
+        lineColor={CHART_FINANCE_COLORS.toReceive}
         onPointClick={clicks.handleReceberPeriodoPointClick}
       />
     </div>
@@ -66,6 +69,7 @@ const DashboardLineChartsRow: React.FC<DashboardLineChartsRowProps> = ({
         data={charts.contasPagarChartData}
         title={`${t('financial.toPay')} (${t('dashboard.months12')})`}
         format="currency"
+        lineColor={CHART_FINANCE_COLORS.toPay}
         onPointClick={clicks.handleContasPagarPointClick}
       />
     </div>

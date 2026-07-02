@@ -66,8 +66,8 @@ $btn-border-radius-lg: $border-radius-lg !default;
 
 // Inputs
 $input-border-radius: $border-radius !default;
-$input-focus-border-color: $primary !default;
-$input-focus-box-shadow: 0 0 0 0.2rem rgba($primary, 0.25) !default;
+$input-focus-border-color: $border-color !default;
+$input-focus-box-shadow: none !default;
 
 // Form Select - usar seta nativa do Bootstrap com cor visível
 $form-select-bg-size: 16px 12px !default;

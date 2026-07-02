@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { EntrarButton } from 'components/ui';
+import { EntrarButton, Input } from 'components/ui';
 import BackNetLogo from 'components/common/BackNetLogo';
 import './LoginScreen.scss';
 
@@ -72,30 +72,30 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
 
           <form onSubmit={handleSubmit}>
             <div className="login-field">
-              <input
+              <Input
                 type="email"
-                className="login-input"
                 id={emailId}
                 name="email"
                 autoComplete="username email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setEmail(String(e.value))}
                 required
+                disabled={isLoading}
                 aria-label={emailLabel || emailPlaceholder}
                 placeholder={emailPlaceholder}
               />
             </div>
 
             <div className="login-field">
-              <input
+              <Input
                 type="password"
-                className="login-input"
                 id={passwordId}
                 name="password"
                 autoComplete="current-password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => setPassword(String(e.value))}
                 required
+                disabled={isLoading}
                 aria-label={passwordLabel || passwordPlaceholder}
                 placeholder={passwordPlaceholder}
               />
