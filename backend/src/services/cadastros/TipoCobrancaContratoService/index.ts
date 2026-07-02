@@ -107,16 +107,15 @@ export class TipoCobrancaContratoService {
     return await TipoCobrancaContrato.findByPk(id);
   }
 
-  static async findAtivos(empresaId?: number | null): Promise<{ success: boolean; data: TipoCobrancaContrato[] }> {
+  static async findAtivos(empresaId?: number | null): Promise<TipoCobrancaContrato[]> {
     const where: WhereOptions<TipoCobrancaContrato> =
       empresaId != null
         ? { ativo: true, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
         : { ativo: true };
-    const data = await TipoCobrancaContrato.findAll({
+    return TipoCobrancaContrato.findAll({
       where,
       order: [['nome', 'ASC']]
     });
-    return { success: true, data };
   }
 
   static async create(dados: Partial<TipoCobrancaContrato>): Promise<TipoCobrancaContrato> {

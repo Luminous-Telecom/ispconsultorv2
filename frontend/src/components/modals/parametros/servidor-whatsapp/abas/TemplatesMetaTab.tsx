@@ -234,7 +234,7 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
             </div>
           ) : (
             <>
-              <div className="row g-2 mb-3" style={{ maxHeight: '380px', overflowY: 'auto' }}>
+              <div className="row g-2 mb-3 form-modal-multi-col" style={{ maxHeight: '380px', overflowY: 'auto' }}>
                 {data.templates.map((template: Template, index: number) => {
                   const key = `${template.name}-${template.language}-${index}`;
                   const isExpanded = expandedKey === key;
@@ -300,7 +300,7 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
                       </div>
                       <div>
                         <label className="form-label fw-bold">Variáveis (mesmas para todos os templates)</label>
-                        <div className="row g-2">
+                        <div className="row g-2 form-modal-multi-col">
                           {Array.from({ length: numVars }, (_, i) => (
                             <div key={i} className="col-12 col-md-6 col-lg-4">
                               <label className="form-label small mb-0">{`{{${i + 1}}}`}</label>

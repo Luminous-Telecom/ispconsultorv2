@@ -31,7 +31,7 @@ const BlockdomiOficioFormFields: React.FC<BlockdomiOficioFormFieldsProps> = ({
         />
       </div>
       {afterNomeOficio}
-      <div className="col-12 col-md-6">
+      <div className="col-12">
         <FormField
           name="data_inicio_bloqueio"
           type="date"
@@ -41,7 +41,7 @@ const BlockdomiOficioFormFields: React.FC<BlockdomiOficioFormFieldsProps> = ({
           size="sm"
         />
       </div>
-      <div className="col-12 col-md-6">
+      <div className="col-12">
         <FormField
           name="data_fim_bloqueio"
           type="date"
@@ -62,7 +62,7 @@ const BlockdomiOficioFormFields: React.FC<BlockdomiOficioFormFieldsProps> = ({
           placeholder="https://..."
         />
       </div>
-      <div className="col-12 col-md-6">
+      <div className="col-12">
         <FormField
           name="numero_sei_anatel"
           type="text"

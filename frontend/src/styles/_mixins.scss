@@ -279,12 +279,26 @@
     max-width: var(--form-input-max-width);
     min-width: 0;
 
-    .form-control,
-    .form-select,
-    textarea.form-control,
-    .input-group,
-    .input-wrapper {
+    > .form-control,
+    > .form-select,
+    > textarea.form-control,
+    > .input-group,
+    > .input-wrapper {
       width: 100%;
+    }
+
+    .input-group {
+      flex-wrap: nowrap;
+
+      .form-control {
+        width: 1%;
+        flex: 1 1 auto;
+      }
+
+      .id-field {
+        width: auto;
+        flex: 0 0 auto;
+      }
     }
 
     > .form-check {
@@ -297,10 +311,7 @@
 @mixin form-modal-tab-padding {
   padding: 20px 24px 20px var(--form-block-padding-left);
 
-  .row > [class*='col-'] {
-    flex: 0 0 100%;
-    max-width: var(--form-block-max-width);
-  }
+  /* Uma coluna por linha — regra global em .draggable-modal-body-custom */
 
   .form-field {
     @include form-modal-field;

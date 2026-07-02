@@ -78,7 +78,7 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = (props) => {
   };
 
   return (
-    <div className="form-field mb-1">
+    <div className="form-field">
       <LabelWithHelp htmlFor={fieldId} className="form-label small" helpText={helpText} required={required}>
         {label}
       </LabelWithHelp>

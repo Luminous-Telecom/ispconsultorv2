@@ -2,7 +2,7 @@
  * ContratoService - Serviço refatorado usando BaseService
  * Mantém compatibilidade com código existente através de métodos estáticos
  */
-import { BaseService, defaultApiClient, BaseFilters } from './core';
+import { BaseService, defaultApiClient, BaseFilters, unwrapArrayResponse } from './core';
 import { PaginatedResponse, ApiResponse } from '../types';
 import { Contrato, CreateContratoData, UpdateContratoData } from '../hooks/useContratos';
 
@@ -94,10 +94,7 @@ export class ContratoService {
    */
   static async getByCliente(clienteId: number, options?: { sortColumn?: string; sortDirection?: 'asc' | 'desc' }): Promise<Contrato[]> {
     const response = await contratoServiceInstance.getByCliente(clienteId, options);
-    if (response.data && Array.isArray(response.data)) {
-      return response.data;
-    }
-    return [];
+    return unwrapArrayResponse<Contrato>(response, { fallback: [], throwOnFailure: false });
   }
 
   /**
@@ -105,10 +102,7 @@ export class ContratoService {
    */
   static async getAtivos(): Promise<Contrato[]> {
     const response = await contratoServiceInstance.getAtivos();
-    if (response.data && Array.isArray(response.data)) {
-      return response.data;
-    }
-    return [];
+    return unwrapArrayResponse<Contrato>(response, { fallback: [], throwOnFailure: false });
   }
 
   /**

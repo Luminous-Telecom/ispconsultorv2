@@ -1,4 +1,5 @@
 import { apiService } from './api';
+import { unwrapArrayResponse } from './core';
 
 export interface IntegracaoIxcProvedor {
   id: number;
@@ -125,15 +126,8 @@ export class IntegracaoIxcProvedorService {
   }
 
   static async findAtivos(): Promise<IntegracaoIxcProvedor[]> {
-    const response = await apiService.get<IntegracaoIxcProvedor[] | { data?: IntegracaoIxcProvedor[] | { data?: IntegracaoIxcProvedor[] } }>(
-      '/integracao-ixc-provedor/ativos'
-    );
-    const raw = response as unknown as { data?: IntegracaoIxcProvedor[] | { data?: IntegracaoIxcProvedor[] } };
-    const inner = raw?.data;
-    if (Array.isArray(inner)) return inner;
-    if (inner && typeof inner === 'object' && Array.isArray(inner.data)) return inner.data;
-    if (Array.isArray(response)) return response;
-    return [];
+    const response = await apiService.get<IntegracaoIxcProvedor[]>('/integracao-ixc-provedor/ativos');
+    return unwrapArrayResponse<IntegracaoIxcProvedor>(response, { fallback: [], throwOnFailure: false });
   }
 
   static async create(data: UpsertIntegracaoIxcProvedor): Promise<IntegracaoIxcProvedor> {

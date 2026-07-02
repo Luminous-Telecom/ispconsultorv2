@@ -59,3 +59,40 @@ export const unwrapResponse = <T>(
   return response as T;
 };
 
+type ArrayPayload<T> = T[] | { success?: boolean; data?: T[] };
+
+/**
+ * Extrai arrays de endpoints /ativos e similares.
+ * Suporta array direto, ApiResponse<T[]> e duplo aninhamento { data: { data: T[] } }.
+ */
+export const unwrapArrayResponse = <T>(
+  response: ApiResponse<ArrayPayload<T>> | ArrayPayload<T> | T[] | null | undefined,
+  options: UnwrapResponseOptions<T[]> = {}
+): T[] => {
+  const fallback = options.fallback ?? [];
+
+  if (response == null) {
+    return fallback;
+  }
+
+  if (Array.isArray(response)) {
+    return response;
+  }
+
+  const payload = unwrapResponse<ArrayPayload<T>>(response, {
+    ...options,
+    fallback: fallback as ArrayPayload<T>,
+    throwOnFailure: options.throwOnFailure ?? false,
+  });
+
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (isObject(payload) && Array.isArray(payload.data)) {
+    return payload.data as T[];
+  }
+
+  return fallback;
+};
+

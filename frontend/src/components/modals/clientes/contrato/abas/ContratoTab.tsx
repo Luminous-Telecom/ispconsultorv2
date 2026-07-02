@@ -8,7 +8,6 @@ import { TipoCobrancaContrato } from 'services/tipoCobrancaContratoService';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import FormField from 'components/ui/FormField';
 import AtivoInativoField from 'components/ui/AtivoInativoField';
-import { LabelWithHelp } from 'components/ui/LabelWithHelp';
 import { ContratoForm } from '../types';
 
 interface ContratoTabProps {
@@ -80,6 +79,10 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
     () => (Array.isArray(planosData) ? planosData : (planosData?.data ?? [])),
     [planosData]
   );
+  const bancosList = useMemo(
+    () => (Array.isArray(bancosData) ? bancosData : bancosData?.data ?? []),
+    [bancosData]
+  );
   const planosEntities = useMemo(() => {
     const base = planosList.map((p: Plano) => ({ id: p.id, nome: p.nome_plano }));
     if (planoSelecionado?.id && !base.some((e) => e.id === planoSelecionado.id)) {
@@ -88,17 +91,60 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
     return base;
   }, [planosList, planoSelecionado?.id, planoSelecionado?.nome_plano]);
 
+  const tipoCobrancaEntities = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const item of tiposCobrancaContratoData) {
+      map.set(item.id, `${item.nome} (${item.quantidade_titulos}x)`);
+    }
+    if (tipoCobrancaContratoSelecionado && !map.has(tipoCobrancaContratoSelecionado.id)) {
+      map.set(
+        tipoCobrancaContratoSelecionado.id,
+        `${tipoCobrancaContratoSelecionado.nome} (${tipoCobrancaContratoSelecionado.quantidade_titulos}x)`
+      );
+    }
+    if (tipoCobrancaContratoFromContrato && !map.has(tipoCobrancaContratoFromContrato.id)) {
+      map.set(
+        tipoCobrancaContratoFromContrato.id,
+        `${tipoCobrancaContratoFromContrato.nome} (${tipoCobrancaContratoFromContrato.quantidade_titulos}x)`
+      );
+    }
+    return Array.from(map.entries()).map(([id, nome]) => ({ id, nome }));
+  }, [tiposCobrancaContratoData, tipoCobrancaContratoSelecionado, tipoCobrancaContratoFromContrato]);
+
+  const resolveTipoCobranca = (value: number): TipoCobrancaContrato | null => {
+    const fromList = tiposCobrancaContratoData.find((item) => item.id === value);
+    if (fromList) return fromList;
+    if (tipoCobrancaContratoSelecionado?.id === value) return tipoCobrancaContratoSelecionado;
+    if (tipoCobrancaContratoFromContrato?.id === value) {
+      return tipoCobrancaContratoFromContrato as TipoCobrancaContrato;
+    }
+    return null;
+  };
+
+  const diaVencimentoOptions = useMemo(
+    () => [
+      { value: 0, label: t('ui.selectOption') },
+      ...diasVencimento
+        .filter((item) => item.ativo)
+        .map((item) => ({
+          value: item.id,
+          label: `${t('other.day')} ${String(item.dia).padStart(2, '0')}`,
+        })),
+    ],
+    [diasVencimento, t]
+  );
+
   const handleDescontoPercentualChange = (value: FormValue) => {
     const stringValue = String(value || '');
     setDescontoPercentualDisplay(stringValue);
-    
+
     if (!stringValue.trim()) {
       handleInputChange('desconto_percentual', 0);
       handleInputChange('desconto_valor', 0);
       setDescontoValorDisplay('');
       return;
     }
-    
+
     const percentual = Number(stringValue);
     if (isNaN(percentual)) {
       handleInputChange('desconto_percentual', 0);
@@ -106,10 +152,10 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
       setDescontoValorDisplay('');
       return;
     }
-    
+
     const percentualArredondado = Math.round(percentual * 100) / 100;
     handleInputChange('desconto_percentual', percentualArredondado);
-    
+
     if (percentualArredondado > 0 && valorPlano > 0) {
       const valorEquivalente = Math.round((valorPlano * percentualArredondado / 100) * 100) / 100;
       handleInputChange('desconto_valor', valorEquivalente);
@@ -123,14 +169,14 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
   const handleDescontoValorChange = (value: FormValue) => {
     const stringValue = String(value || '');
     setDescontoValorDisplay(stringValue);
-    
+
     if (!stringValue.trim()) {
       handleInputChange('desconto_valor', 0);
       handleInputChange('desconto_percentual', 0);
       setDescontoPercentualDisplay('');
       return;
     }
-    
+
     const valor = Number(stringValue);
     if (isNaN(valor)) {
       handleInputChange('desconto_valor', 0);
@@ -138,10 +184,10 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
       setDescontoPercentualDisplay('');
       return;
     }
-    
+
     const valorArredondado = Math.round(valor * 100) / 100;
     handleInputChange('desconto_valor', valorArredondado);
-    
+
     if (valorArredondado > 0 && valorPlano > 0) {
       const percentualEquivalente = Math.round((valorArredondado / valorPlano * 100) * 100) / 100;
       handleInputChange('desconto_percentual', percentualEquivalente);
@@ -151,225 +197,227 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
       setDescontoPercentualDisplay('');
     }
   };
+
   return (
-    <div className="d-flex flex-column gap-2">
-      {/* Plano */}
-      <EntitySelectField
-        value={planoSelecionado?.id || 0}
-        onChange={(value) => {
-          const plano = planosList.find((p: Plano) => p.id === value) ?? (planoSelecionado?.id === value ? planoSelecionado : null);
-          if (plano) {
-            onPlanoSelect(plano);
-          }
-        }}
-        onShowModal={onShowPlanoModal}
-        entities={planosEntities}
-        label={t('form.plan')}
-        idFieldTitle={t('form.enterClientId')}
-        error={errors.plano_id}
-        required
-      />
+    <div className="row g-2">
+      <div className="col-12">
+        <EntitySelectField
+          value={formData.plano_id || planoSelecionado?.id || 0}
+          onChange={(value) => {
+            if (!value) {
+              handleInputChange('plano_id', 0);
+              return;
+            }
+            handleInputChange('plano_id', value);
+            const plano = planosList.find((p: Plano) => p.id === value) ?? (planoSelecionado?.id === value ? planoSelecionado : null);
+            if (plano) {
+              onPlanoSelect(plano);
+            }
+          }}
+          onShowModal={onShowPlanoModal}
+          entities={planosEntities}
+          label={t('form.plan')}
+          idFieldTitle={t('form.enterClientId')}
+          error={errors.plano_id}
+          required
+        />
+      </div>
 
-      {/* Status */}
-      <div>
-        <LabelWithHelp htmlFor="status" className="form-label" required>
-          {t('form.status')}
-        </LabelWithHelp>
-        <select
-          id="status"
+      <div className="col-12">
+        <FormField
           name="status"
-          className={`form-select ${errors.status ? 'is-invalid' : ''}`}
+          type="select"
+          label={t('form.status')}
+          required
+          size="md"
           value={formData.status}
-          onChange={(e) => handleInputChange('status', e.target.value as 'ativo' | 'inativo' | 'suspenso')}
-        >
-          <option value="ativo">{t('status.active')}</option>
-          <option value="inativo">{t('status.inactive')}</option>
-          <option value="suspenso">{t('status.suspended')}</option>
-        </select>
-        {errors.status && <div className="invalid-feedback">{errors.status}</div>}
+          onChange={(value) => handleInputChange('status', value as 'ativo' | 'inativo' | 'suspenso')}
+          error={errors.status}
+          isInvalid={!!errors.status}
+          options={[
+            { value: 'ativo', label: t('status.active') },
+            { value: 'inativo', label: t('status.inactive') },
+            { value: 'suspenso', label: t('status.suspended') },
+          ]}
+        />
       </div>
 
-      {/* Data de Início e Data de Fim lado a lado */}
-      <div className="d-flex gap-2">
-        <div className="flex-fill">
-          <FormField
-            name="data_inicio"
-            type="date"
-            label={t('form.startDate')}
-            required={true}
-            size="md"
-            value={formData.data_inicio}
-            onChange={(value) => handleInputChange('data_inicio', value as string)}
-            error={errors.data_inicio}
-            isInvalid={!!errors.data_inicio}
-          />
-        </div>
-        <div className="flex-fill">
-          <FormField
-            name="data_fim"
-            type="date"
-            label={t('form.endDate')}
-            size="md"
-            value={formData.data_fim}
-            onChange={(value) => handleInputChange('data_fim', value as string)}
-          />
-        </div>
+      <div className="col-12">
+        <FormField
+          name="data_inicio"
+          type="date"
+          label={t('form.startDate')}
+          required
+          size="md"
+          value={formData.data_inicio}
+          onChange={(value) => handleInputChange('data_inicio', value as string)}
+          error={errors.data_inicio}
+          isInvalid={!!errors.data_inicio}
+        />
       </div>
 
-      {/* Dia de Vencimento e Banco lado a lado */}
-      <div className="d-flex gap-2">
-        <div className="flex-fill">
-          <LabelWithHelp htmlFor="dia_vencimento_id" className="form-label" required>
-            {t('form.dueDay')}
-          </LabelWithHelp>
-          <select
-            id="dia_vencimento_id"
-            name="dia_vencimento_id"
-            className={`form-select ${errors.dia_vencimento_id ? 'is-invalid' : ''}`}
-            value={formData.dia_vencimento_id || 0}
-            onChange={(e) => handleInputChange('dia_vencimento_id', parseInt(e.target.value))}
-          >
-            <option value={0}>{t('ui.selectOption')}</option>
-            {diasVencimento
-              .filter((item) => item.ativo)
-              .map((item) => (
-                <option key={item.id} value={item.id}>
-                  {t('other.day')} {String(item.dia).padStart(2, '0')}
-                </option>
-              ))}
-          </select>
-          {errors.dia_vencimento_id && <div className="invalid-feedback">{errors.dia_vencimento_id}</div>}
-        </div>
-        <div className="flex-fill">
-          <EntitySelectField
-            value={bancoSelecionado?.id || 0}
-            onChange={(value) => {
-              const banco = (Array.isArray(bancosData) ? bancosData : bancosData?.data || []).find((b) => b.id === value);
-              if (banco) {
-                onBancoSelect(banco);
-              }
-            }}
-            onShowModal={onShowBancoModal}
-            entities={(Array.isArray(bancosData) ? bancosData : bancosData?.data || []).map((b) => ({
-              id: b.id,
-              nome: b.nome
-            }))}
-            label={t('form.bank')}
-            required
-          />
-
-          <EntitySelectField
-            value={(tipoCobrancaContratoSelecionado?.id ?? formData.tipo_cobranca_contrato_id) || 0}
-            onChange={(value) => {
-              if (value === 0) {
-                handleInputChange('tipo_cobranca_contrato_id', null);
-              } else {
-                const tipo = tiposCobrancaContratoData.find((t) => t.id === value)
-                  ?? (tipoCobrancaContratoSelecionado?.id === value ? tipoCobrancaContratoSelecionado : null);
-                if (tipo) onTipoCobrancaContratoSelect(tipo);
-              }
-            }}
-            onShowModal={onShowTipoCobrancaContratoModal}
-            entities={[
-              { id: 0, nome: t('ui.selectOption') },
-              ...tiposCobrancaContratoData.map((t) => ({ id: t.id, nome: `${t.nome} (${t.quantidade_titulos}x)` })),
-              ...(tipoCobrancaContratoSelecionado && !tiposCobrancaContratoData.some((t) => t.id === tipoCobrancaContratoSelecionado!.id)
-                ? [{ id: tipoCobrancaContratoSelecionado.id, nome: `${tipoCobrancaContratoSelecionado.nome} (${tipoCobrancaContratoSelecionado.quantidade_titulos}x)` }]
-                : []),
-              ...(tipoCobrancaContratoFromContrato && formData.tipo_cobranca_contrato_id === tipoCobrancaContratoFromContrato.id
-                && !tiposCobrancaContratoData.some((t) => t.id === tipoCobrancaContratoFromContrato!.id)
-                ? [{ id: tipoCobrancaContratoFromContrato.id, nome: `${tipoCobrancaContratoFromContrato.nome} (${tipoCobrancaContratoFromContrato.quantidade_titulos}x)` }]
-                : [])
-            ]}
-            label={t('modal.billingType')}
-            required
-          />
-        </div>
+      <div className="col-12">
+        <FormField
+          name="data_fim"
+          type="date"
+          label={t('form.endDate')}
+          size="md"
+          value={formData.data_fim}
+          onChange={(value) => handleInputChange('data_fim', value as string)}
+        />
       </div>
 
-      {/* Descontos lado a lado */}
-      <div className="d-flex gap-2">
-        <div className="flex-fill">
-          <FormField
-            name="desconto_percentual"
-            type="number"
-            label={t('form.discountPercent')}
-            placeholder="0.00"
-            size="md"
-            value={descontoPercentualDisplay}
-            onChange={handleDescontoPercentualChange}
-            error={errors.desconto_percentual?.toString()}
-            isInvalid={!!errors.desconto_percentual}
-            min={0}
-            max={100}
-            step="any"
-          />
-        </div>
-        <div className="flex-fill">
-          <FormField
-            name="desconto_valor"
-            type="number"
-            label={t('form.discountValue')}
-            placeholder={t('placeholder.discountValue')}
-            size="md"
-            value={descontoValorDisplay}
-            onChange={handleDescontoValorChange}
-            error={errors.desconto_valor?.toString()}
-            isInvalid={!!errors.desconto_valor}
-            min={0}
-            step={0.01}
-          />
-        </div>
+      <div className="col-12">
+        <FormField
+          name="dia_vencimento_id"
+          type="select"
+          label={t('form.dueDay')}
+          required
+          size="md"
+          value={formData.dia_vencimento_id || 0}
+          onChange={(value) => handleInputChange('dia_vencimento_id', parseInt(String(value), 10))}
+          error={errors.dia_vencimento_id?.toString()}
+          isInvalid={!!errors.dia_vencimento_id}
+          options={diaVencimentoOptions}
+        />
       </div>
 
-      {/* Data Validade Desconto e Isento Mensalidade lado a lado */}
-      <FormField
-        name="data_validade_desconto"
-        type="date"
-        label={t('form.discountValidity')}
-        size="md"
-        value={formData.data_validade_desconto}
-        onChange={(value) => handleInputChange('data_validade_desconto', value as string)}
-      />
+      <div className="col-12">
+        <EntitySelectField
+          value={formData.conta_boleto || bancoSelecionado?.id || 0}
+          onChange={(value) => {
+            if (!value) {
+              handleInputChange('conta_boleto', 0);
+              return;
+            }
+            handleInputChange('conta_boleto', value);
+            const banco = bancosList.find((b) => b.id === value);
+            if (banco) {
+              onBancoSelect(banco);
+            }
+          }}
+          onShowModal={onShowBancoModal}
+          entities={bancosList.map((b) => ({
+            id: b.id,
+            nome: b.nome
+          }))}
+          label={t('form.bank')}
+          required
+        />
+      </div>
 
-      <AtivoInativoField
-        value={!!formData.isento_mensalidade}
-        onChange={(v) => handleInputChange('isento_mensalidade', v)}
-        label={t('form.exemptFromMonthlyFee')}
-        name="isento_mensalidade"
-      />
+      <div className="col-12">
+        <EntitySelectField
+          value={(formData.tipo_cobranca_contrato_id ?? tipoCobrancaContratoSelecionado?.id) || 0}
+          onChange={(value) => {
+            if (!value) {
+              handleInputChange('tipo_cobranca_contrato_id', null);
+              return;
+            }
+            handleInputChange('tipo_cobranca_contrato_id', value);
+            const tipo = resolveTipoCobranca(value);
+            if (tipo) {
+              onTipoCobrancaContratoSelect(tipo);
+            }
+          }}
+          onShowModal={onShowTipoCobrancaContratoModal}
+          entities={tipoCobrancaEntities}
+          label={t('modal.billingType')}
+          required
+        />
+      </div>
 
-      {/* Modelo de Contrato */}
-      <EntitySelectField
-        value={modeloContratoSelecionado?.id || 0}
-        onChange={(value) => {
-          const modelo = (Array.isArray(modelosContratoData) ? modelosContratoData : modelosContratoData?.data || []).find((m) => m.id === value);
-          if (modelo) {
-            onModeloContratoSelect(modelo);
-          }
-        }}
-        onShowModal={onShowModeloContratoModal}
-        entities={(Array.isArray(modelosContratoData) ? modelosContratoData : modelosContratoData?.data || []).map((m) => ({
-          id: m.id,
-          nome: m.nome
-        }))}
-        label={t('form.contractModel')}
-        idFieldTitle={t('form.enterContractModelId')}
-        helpText={t('form.selectContractModelHelp')}
-        error={errors.modelo_documento_id}
-        required
-      />
+      <div className="col-12">
+        <FormField
+          name="desconto_percentual"
+          type="number"
+          label={t('form.discountPercent')}
+          placeholder="0.00"
+          size="md"
+          value={descontoPercentualDisplay}
+          onChange={handleDescontoPercentualChange}
+          error={errors.desconto_percentual?.toString()}
+          isInvalid={!!errors.desconto_percentual}
+          min={0}
+          max={100}
+          step="any"
+        />
+      </div>
 
-      {/* Observações */}
-      <FormField
-        name="observacoes"
-        type="textarea"
-        label={t('form.observations')}
-        size="md"
-        value={formData.observacoes}
-        onChange={(value) => handleInputChange('observacoes', value as string)}
-        rows={3}
-      />
+      <div className="col-12">
+        <FormField
+          name="desconto_valor"
+          type="number"
+          label={t('form.discountValue')}
+          placeholder={t('placeholder.discountValue')}
+          size="md"
+          value={descontoValorDisplay}
+          onChange={handleDescontoValorChange}
+          error={errors.desconto_valor?.toString()}
+          isInvalid={!!errors.desconto_valor}
+          min={0}
+          step={0.01}
+        />
+      </div>
+
+      <div className="col-12">
+        <FormField
+          name="data_validade_desconto"
+          type="date"
+          label={t('form.discountValidity')}
+          size="md"
+          value={formData.data_validade_desconto}
+          onChange={(value) => handleInputChange('data_validade_desconto', value as string)}
+        />
+      </div>
+
+      <div className="col-12">
+        <AtivoInativoField
+          value={!!formData.isento_mensalidade}
+          onChange={(v) => handleInputChange('isento_mensalidade', v)}
+          label={t('form.exemptFromMonthlyFee')}
+          name="isento_mensalidade"
+        />
+      </div>
+
+      <div className="col-12">
+        <EntitySelectField
+          value={formData.modelo_documento_id || modeloContratoSelecionado?.id || 0}
+          onChange={(value) => {
+            if (!value) {
+              handleInputChange('modelo_documento_id', 0);
+              return;
+            }
+            handleInputChange('modelo_documento_id', value);
+            const modelo = (Array.isArray(modelosContratoData) ? modelosContratoData : modelosContratoData?.data || []).find((m) => m.id === value);
+            if (modelo) {
+              onModeloContratoSelect(modelo);
+            }
+          }}
+          onShowModal={onShowModeloContratoModal}
+          entities={(Array.isArray(modelosContratoData) ? modelosContratoData : modelosContratoData?.data || []).map((m) => ({
+            id: m.id,
+            nome: m.nome
+          }))}
+          label={t('form.contractModel')}
+          idFieldTitle={t('form.enterContractModelId')}
+          helpText={t('form.selectContractModelHelp')}
+          error={errors.modelo_documento_id}
+          required
+        />
+      </div>
+
+      <div className="col-12">
+        <FormField
+          name="observacoes"
+          type="textarea"
+          label={t('form.observations')}
+          size="md"
+          value={formData.observacoes}
+          onChange={(value) => handleInputChange('observacoes', value as string)}
+          rows={3}
+        />
+      </div>
     </div>
   );
 };

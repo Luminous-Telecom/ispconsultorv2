@@ -1,4 +1,5 @@
 import { apiService } from './api';
+import { unwrapArrayResponse } from './core';
 
 export interface TipoCobrancaContrato {
   id: number;
@@ -70,11 +71,8 @@ export class TipoCobrancaContratoService {
   }
 
   static async findAtivos(): Promise<TipoCobrancaContrato[]> {
-    const response = await apiService.get<{ success: boolean; data: TipoCobrancaContrato[] }>(
-      '/tipos-cobranca-contrato/ativos'
-    );
-    const data = response as unknown as { data?: TipoCobrancaContrato[] };
-    return data?.data ?? [];
+    const response = await apiService.get<TipoCobrancaContrato[]>('/tipos-cobranca-contrato/ativos');
+    return unwrapArrayResponse<TipoCobrancaContrato>(response, { fallback: [], throwOnFailure: false });
   }
 
   static async create(data: Partial<TipoCobrancaContrato>): Promise<TipoCobrancaContrato> {

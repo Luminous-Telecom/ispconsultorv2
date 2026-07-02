@@ -83,7 +83,7 @@ const ImportarListaBlockdomiOficioSection: React.FC<ImportarListaBlockdomiOficio
   onPdfMainFileChange,
 }) => (
   <div className="mb-2">
-    <div className="row g-2 mb-2 align-items-end">
+    <div className="row g-2 mb-2 align-items-end form-modal-multi-col">
       <div className="col-12 col-lg-3 col-md-4">
         <LabelWithHelp
           htmlFor="ilb-numero-sei-anatel"

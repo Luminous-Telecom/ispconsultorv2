@@ -6,7 +6,7 @@ import { useTipoCobrancaContratosAtivos } from 'hooks/useTipoCobrancaContratos';
 import { useSelectedEntity } from 'hooks/useSelectedEntity';
 import DocumentoSistemaService, { DocumentoSistema } from 'services/documentoSistemaService';
 import { DiasVencimentoService, type DiasVencimento } from 'services/diasVencimentoService';
-import { TipoCobrancaContrato } from 'services/tipoCobrancaContratoService';
+import { TipoCobrancaContrato, TipoCobrancaContratoService } from 'services/tipoCobrancaContratoService';
 import { Contrato } from 'hooks/useContratos';
 import { Banco, Plano } from 'types';
 import { ContratoForm } from './types';
@@ -100,6 +100,38 @@ export function useContratoModalFormResources({
     tiposCobrancaContrato,
     contratoData?.tipoCobrancaContrato,
     tipoCobrancaContratoSelecionado,
+    setTipoCobrancaContratoSelecionado,
+  ]);
+
+  useEffect(() => {
+    const id = formData.tipo_cobranca_contrato_id;
+    if (!id) return;
+
+    const alreadyResolved =
+      tiposCobrancaContrato.some((tipo) => tipo.id === id) ||
+      tipoCobrancaContratoSelecionado?.id === id ||
+      (contratoData?.tipoCobrancaContrato?.id === id);
+
+    if (alreadyResolved) return;
+
+    let cancelled = false;
+
+    TipoCobrancaContratoService.getById(id)
+      .then((tipo) => {
+        if (!cancelled && tipo?.id === id) {
+          setTipoCobrancaContratoSelecionado(tipo);
+        }
+      })
+      .catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    formData.tipo_cobranca_contrato_id,
+    tiposCobrancaContrato,
+    tipoCobrancaContratoSelecionado?.id,
+    contratoData?.tipoCobrancaContrato?.id,
     setTipoCobrancaContratoSelecionado,
   ]);
 

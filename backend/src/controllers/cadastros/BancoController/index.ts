@@ -27,9 +27,9 @@ export class BancoController {
   static async findAtivos(req: Request, res: Response): Promise<void> {
     try {
       const empresaId = getEmpresaIdOrNull(req);
-      const result = await BancoService.findAtivos(empresaId ?? undefined);
-      const maskedData = result.data.map(b => BancoController.maskSensitiveFields(b.toJSON() as Record<string, unknown>));
-      sendSuccess(res, { ...result, data: maskedData });
+      const bancos = await BancoService.findAtivos(empresaId ?? undefined);
+      const maskedData = bancos.map(b => BancoController.maskSensitiveFields(b.toJSON() as Record<string, unknown>));
+      sendSuccess(res, maskedData);
     } catch (error: unknown) {
       sendError(res, error, 'Erro ao buscar bancos ativos', 500, true);
     }

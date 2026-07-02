@@ -1,4 +1,5 @@
 import { apiService } from './api';
+import { unwrapArrayResponse } from './core';
 import { Contrato } from '../types';
 import { resolveServiceErrorMessage, CONTEXT_ERROR_MESSAGES, ERROR_MESSAGES } from '../utils/apiErrorHelper';
 
@@ -50,7 +51,7 @@ export class TermoContratoService {
     const queryString = params.toString();
     const url = `/termos-contrato/contrato/${contratoId}${queryString ? `?${queryString}` : ''}`;
     const response = await apiService.get<TermoContrato[]>(url);
-    return response.data ?? [];
+    return unwrapArrayResponse<TermoContrato>(response, { fallback: [], throwOnFailure: false });
   }
 
   static async getById(id: number): Promise<TermoContrato> {
@@ -95,6 +96,6 @@ export class TermoContratoService {
 
   static async getAtivos(): Promise<TermoContrato[]> {
     const response = await apiService.get<TermoContrato[]>('/termos-contrato/ativos');
-    return response.data ?? [];
+    return unwrapArrayResponse<TermoContrato>(response, { fallback: [], throwOnFailure: false });
   }
 }

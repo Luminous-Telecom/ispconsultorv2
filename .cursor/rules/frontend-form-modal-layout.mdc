@@ -10,6 +10,8 @@ Padrão estilo IXC/Login: **label à direita na coluna fixa**, **controles alinh
 
 ## CSS (já aplicado)
 
+- `.draggable-modal-body-custom`: uma coluna por linha em `.row` (sobrescreve `col-md-6` etc.)
+- Exceção: `.row.form-modal-multi-col` mantém grid Bootstrap
 - Abas com `*-tab-content-padded` e forms `form-modal-simple` usam mixin `form-modal-tab-padding`
 - Variáveis em `_variables.scss`: `--form-label-width`, `--form-input-max-width`, `--form-block-padding-left`
 - Classe `.form-field` → label + `.form-field-control`
@@ -26,6 +28,9 @@ Padrão estilo IXC/Login: **label à direita na coluna fixa**, **controles alinh
 
 // ❌ Não usar col-md-6/4 em modais (quebra o alinhamento vertical)
 <div className="col-md-6"><FormField ... /></div>
+
+// ✅ Grids especiais (dias de vencimento, templates Meta, filtros de tabela): `form-modal-multi-col` na `.row`
+<div className="row g-0 form-modal-multi-col">...</div>
 ```
 
 - **`col-12`** em todos os campos de modal (inclui `AddressFields`, `ContactFields`)
@@ -99,7 +104,9 @@ Substituir **todos** os filtros booleanos de listagem (inativos, cancelados, err
 
 Novos campos inline reutilizáveis: copiar estrutura de `AtivoInativoField` ou `ComunicacaoPreferenciasField` — não duplicar CSS.
 
-## Exceções (não forçar col-12)
+## Exceções (grids multi-coluna)
 
-- Grids especiais (dias de vencimento, templates Meta, filtros de tabela)
-- Dashboard e layouts de detalhe somente leitura (`DetailFieldGrid`)
+Use `form-modal-multi-col` na `.row` quando o layout **não** for cadastro campo-a-campo:
+
+- Dias de vencimento, templates Meta, filtros Blockdomi, cards de variáveis WhatsApp
+- Dashboard e layouts de detalhe somente leitura (`DetailFieldGrid`) — empilham por padrão; use `form-modal-multi-col` se precisar de duas colunas

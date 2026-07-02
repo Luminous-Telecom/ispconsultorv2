@@ -248,7 +248,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                         </small>
                       </div>
                       <div className="card-body p-3" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                        <div className="row g-0">
+                        <div className="row g-0 form-modal-multi-col">
                           {Object.entries(variaveisData).map(([chave, grupo], index, array) => {
                             const isLastInRow = (index + 1) % 3 === 0;
                             const isLastItem = index === array.length - 1;

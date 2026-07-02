@@ -2,7 +2,7 @@
  * ClienteService - Serviço refatorado usando BaseService
  * Mantém compatibilidade com código existente através de métodos estáticos
  */
-import { BaseService, defaultApiClient } from './core';
+import { BaseService, defaultApiClient, unwrapArrayResponse } from './core';
 import { Cliente, CreateCliente, UpdateCliente, ClienteFilters, PaginatedResponse, CepData, ApiResponse } from '../types';
 import { formatCNPJ, formatCEP, formatPhone } from '../utils/formatters';
 import { isValidCNPJ, isValidEmail } from '../utils/validators';
@@ -81,10 +81,7 @@ export class ClienteService {
    */
   static async listAtivos(): Promise<Cliente[]> {
     const response = await clienteServiceInstance.getAtivos();
-    if (response.data && Array.isArray(response.data)) {
-      return response.data;
-    }
-    return [];
+    return unwrapArrayResponse<Cliente>(response, { fallback: [], throwOnFailure: false });
   }
 
   /**

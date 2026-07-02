@@ -87,7 +87,7 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({
       <div className="d-flex justify-content-start align-items-center mb-3">
         {saveButton}
       </div>
-      <div className="row g-0">
+      <div className="row g-0 form-modal-multi-col">
         {Array.from({ length: 30 }, (_, i) => i + 1).map((dia) => (
           <div key={dia} className="col-12 col-sm-6 col-md-4 col-lg-3">
             <div className="form-check form-switch">

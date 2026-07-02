@@ -15,7 +15,7 @@ const ImportarListaBlockdomiVersaoHeader: React.FC<ImportarListaBlockdomiVersaoH
   onGerarVersao,
   t,
 }) => (
-  <div className="row g-2 align-items-end mb-2">
+  <div className="row g-2 align-items-end mb-2 form-modal-multi-col">
     <div className="col-6 col-md-3 col-lg-2">
       <label className="form-label small mb-1">{t('blockdomi.versao')} atual</label>
       <input

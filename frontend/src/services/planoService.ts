@@ -2,7 +2,7 @@
  * PlanoService - Serviço refatorado usando BaseService
  * Mantém compatibilidade com código existente através de métodos estáticos
  */
-import { BaseService, defaultApiClient } from './core';
+import { BaseService, defaultApiClient, unwrapArrayResponse } from './core';
 import { Plano, CreatePlano, UpdatePlano, PlanoFilters, PaginatedResponse, ApiResponse } from '../types';
 
 /**
@@ -96,10 +96,7 @@ export class PlanoService {
    */
   static async findAtivos(): Promise<Plano[]> {
     const response = await planoServiceInstance.findAtivos();
-    if (response.data && Array.isArray(response.data)) {
-      return response.data;
-    }
-    return [];
+    return unwrapArrayResponse<Plano>(response, { fallback: [], throwOnFailure: false });
   }
 
   /**
@@ -107,10 +104,7 @@ export class PlanoService {
    */
   static async findByCliente(clienteId: number): Promise<Plano[]> {
     const response = await planoServiceInstance.findByCliente(clienteId);
-    if (response.data && Array.isArray(response.data)) {
-      return response.data;
-    }
-    return [];
+    return unwrapArrayResponse<Plano>(response, { fallback: [], throwOnFailure: false });
   }
 
   /**

@@ -19,7 +19,7 @@ const ImportarListaBlockdomiFiltrosCards: React.FC<ImportarListaBlockdomiFiltros
   onCopy,
   renderList,
 }) => (
-  <div className="row g-2 mb-2 mt-1">
+  <div className="row g-2 mb-2 mt-1 form-modal-multi-col">
     <div className="col-12 col-md-4">
       <div className="card h-100 ilb-filtro-card">
         <div className="card-header py-2 bg-light d-flex justify-content-between align-items-center">

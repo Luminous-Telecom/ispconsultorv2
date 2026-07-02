@@ -2,7 +2,7 @@
  * BancoService - Servico refatorado usando BaseService
  * Mantem compatibilidade com codigo existente atraves de metodos estaticos
  */
-import { BaseService, defaultApiClient, unwrapResponse } from './core';
+import { BaseService, defaultApiClient, unwrapResponse, unwrapArrayResponse } from './core';
 import { ResponseTransformer } from './core/ResponseTransformer';
 import { ErrorHandler } from './core/ErrorHandler';
 import { Banco, CreateBanco, UpdateBanco, BancoFilters, PaginatedResponse, ApiResponse } from '../types';
@@ -108,7 +108,7 @@ export class BancoService {
    */
   static async findAtivos(): Promise<Banco[]> {
     const response = await bancoServiceInstance.findAtivos();
-    return unwrapResponse<Banco[]>(response, { fallback: [], throwOnFailure: false });
+    return unwrapArrayResponse<Banco>(response, { fallback: [], throwOnFailure: false });
   }
 
   /**

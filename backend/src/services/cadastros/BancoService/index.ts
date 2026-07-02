@@ -40,12 +40,12 @@ export class BancoService {
   /**
    * Buscar bancos ativos
    */
-  static async findAtivos(empresaId?: number): Promise<{ success: boolean; data: Banco[] }> {
+  static async findAtivos(empresaId?: number): Promise<Banco[]> {
     const cacheKey = `bancos:ativos:${empresaId || 0}`;
     const cached = cache.get(cacheKey);
-    
+
     if (cached) {
-      return cached as { success: boolean; data: Banco[] };
+      return cached as Banco[];
     }
 
     const where: WhereOptions = { ativo: true };
@@ -61,13 +61,8 @@ export class BancoService {
       order: [['nome', 'ASC']]
     });
 
-    const response = {
-      success: true,
-      data: bancos
-    };
-
-    cache.set(cacheKey, response, 600000);
-    return response;
+    cache.set(cacheKey, bancos, 600000);
+    return bancos;
   }
 
   /**
