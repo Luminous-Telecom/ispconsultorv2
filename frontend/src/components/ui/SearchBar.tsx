@@ -142,7 +142,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             className={selectClass}
             value={effectiveSearchField}
             onChange={(e) => onSearchFieldChange?.(e.target.value)}
-            aria-label={placeholder}
+            aria-label="Campo de busca"
           >
             {normalizedFields.map((f) => (
               <option key={f.key} value={f.key}>
@@ -151,16 +151,20 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             ))}
           </select>
         )}
-        <form
-          className="mb-0 flex-grow-1"
-          role="search"
-          onSubmit={handleSubmit}
-        >
+        <form className="navbar-search-form" role="search" onSubmit={handleSubmit}>
+          <i className="bi bi-search navbar-search-form__icon" aria-hidden />
           {inputEl}
+          {value.trim() ? (
+            <button
+              type="button"
+              className="navbar-search-form__clear"
+              onClick={() => onChange('')}
+              aria-label="Limpar busca"
+            >
+              <i className="bi bi-x-lg" aria-hidden />
+            </button>
+          ) : null}
         </form>
-        {!value.trim() && (
-          <i className="bi bi-search navbar-search-icon" aria-hidden />
-        )}
       </div>
     );
   }
@@ -170,6 +174,16 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       <div className={`${containerClass} ${className}`.trim()}>
         <i className="bi bi-search navbar-inline-search-icon" aria-hidden />
         {inputEl}
+        {value.trim() ? (
+          <button
+            type="button"
+            className="navbar-inline-search-clear"
+            onClick={() => onChange('')}
+            aria-label="Limpar busca"
+          >
+            <i className="bi bi-x-lg" aria-hidden />
+          </button>
+        ) : null}
       </div>
     );
   }
