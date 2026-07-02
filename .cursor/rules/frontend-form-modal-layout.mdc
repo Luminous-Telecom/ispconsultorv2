@@ -110,6 +110,7 @@ Novos campos inline reutilizáveis: copiar estrutura de `AtivoInativoField` ou `
 - Estilos globais em `_components.scss`: `font-size: var(--font-size-sm)`, padding `0.5rem 0.875rem`, `border-radius: var(--border-radius)`
 - Largura máxima do controle: `--form-input-max-width` (420px); bloco label+input: `--form-block-max-width`
 - Telas sem label lateral (login, busca): `Input` direto; modais com label: `FormField` + `.form-field`
+- **Foco**: mesma borda (`var(--border-color)`), **sem** `box-shadow` nem halo azul — regra global em `_components.scss`; detalhes em `.cursor/rules/frontend-ui-centralizado.mdc`
 
 ## Exceções (grids multi-coluna)
 

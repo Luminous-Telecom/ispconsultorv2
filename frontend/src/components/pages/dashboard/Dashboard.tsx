@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useDebouncedValue } from 'hooks/useDebouncedValue';
 import { useDashboard } from 'hooks/useDashboard';
 import { useDashboardFilters } from 'contexts/DashboardFiltersContext';
@@ -11,6 +11,10 @@ import { useTableHeader } from 'contexts/TableHeaderContext';
 import { useModal } from 'contexts/ModalContext';
 import { useI18n } from 'contexts/I18nContext';
 import DashboardSearchResult from '../../dashboard/DashboardSearchResult';
+import {
+  DASHBOARD_SEARCH_HEADER_FIELDS,
+  DASHBOARD_SEARCH_PLACEHOLDER,
+} from '../../dashboard/dashboardSearchConfig';
 import { DASHBOARD_SEARCH_DEBOUNCE_MS } from './constants';
 import { useDashboardBackupStatus } from './hooks/useDashboardBackupStatus';
 import { useDashboardMetrics } from './hooks/useDashboardMetrics';
@@ -18,8 +22,15 @@ import DashboardContent from './DashboardContent';
 
 const Dashboard: React.FC = () => {
   const { t } = useI18n();
-  const { searchValue, searchField } = useTableHeader();
+  const { searchValue, searchField, setAvailableSearchFields, setSearchPlaceholder } = useTableHeader();
   const debouncedSearch = useDebouncedValue(searchValue.trim(), DASHBOARD_SEARCH_DEBOUNCE_MS);
+
+  useEffect(() => {
+    setAvailableSearchFields(
+      DASHBOARD_SEARCH_HEADER_FIELDS.map((f) => ({ id: f.key ?? '', label: f.label }))
+    );
+    setSearchPlaceholder(DASHBOARD_SEARCH_PLACEHOLDER);
+  }, [setAvailableSearchFields, setSearchPlaceholder]);
   const { activeModal, openModal } = useModal();
   const { startDate, endDate } = useDashboardFilters();
 

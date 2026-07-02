@@ -60,17 +60,14 @@ const SaasDashboard: React.FC = () => {
     hiddenClientes,
     hiddenPagamentos,
     hiddenContratos,
-    hiddenDistribuicao,
     toggleCliente,
     togglePagamento,
     toggleContratos,
-    toggleDistribuicao,
   } = useChartHiddenItems();
 
   const {
     handleClienteSliceClick,
     handleStatusPagamentoSliceClick,
-    handleDistribuicaoPlanoSliceClick,
     handleContratoSliceClick,
     handleClientesPorPlanoBarClick,
     handleRecebidosPeriodoPointClick,
@@ -111,7 +108,7 @@ const SaasDashboard: React.FC = () => {
   return (
     <div className="dashboard-container">
       <div className="container-fluid px-0">
-        <div className="row align-items-stretch">
+        <div className="row align-items-stretch dashboard-pie-charts-row">
           <div className="col-auto dashboard-col--compact">
             <PieStatusCard
               data={charts.clientesChartData}
@@ -142,17 +139,6 @@ const SaasDashboard: React.FC = () => {
               onToggleItem={togglePagamento}
               onSliceClick={handleStatusPagamentoSliceClick}
               centerHighlightFilterValue="pendente"
-            />
-          </div>
-
-          <div className="col-auto dashboard-col--compact">
-            <PieStatusCard
-              data={charts.distribuicaoPlanos}
-              title={t('dashboard.planDistribution')}
-              hiddenItems={hiddenDistribuicao}
-              onToggleItem={toggleDistribuicao}
-              onSliceClick={handleDistribuicaoPlanoSliceClick}
-              centerHighlightFilterValue={metrics.distribuicaoPlanoMetric.centerFv}
             />
           </div>
 

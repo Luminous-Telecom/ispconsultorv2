@@ -20,7 +20,13 @@ alwaysApply: true
 - URLs SEMPRE em variáveis de ambiente (.env), nunca hardcoded no código
 - Nunca especifique nome do banco no código
 - NÃO rode `pm2 restart`, `pm2 logs` em dev (hot reload automático)
-- **Build do frontend**: rode `npm run build` **somente antes de push/PR**, se alterou `frontend/` — ver `.cursor/rules/frontend-verificacao-pos-alteracao.mdc`
+
+## Build do frontend — **NUNCA automático**
+- **Proibido** rodar `npm run build` (ou `cd frontend && npm run build`) ao terminar uma tarefa, corrigir bug, refatorar UI ou “validar” alterações
+- **Só rode build** quando o usuário **pedir explicitamente** push, PR, deploy ou commit que vá para o remoto — e **somente se** houve alteração em `frontend/`
+- Durante dev, confie no hot reload (`npm run dev`) e em `read_lints`; build completo demora ~2 min e não deve ser gasto sem pedido
+- Se o usuário pedir só commit (sem push), **não** rode build a menos que ele também peça push/PR
+- Detalhes: `.cursor/rules/frontend-verificacao-pos-alteracao.mdc`
 
 ## Git
 - Nunca faça commit sem antes o usuário pedir
@@ -51,6 +57,7 @@ Use sempre os primitivos do projeto em vez de reinventar UI. Detalhes em `.curso
 | Erros de API | `showApiError(err, CONTEXT_ERROR_MESSAGES.*)` | parse manual de `response.data` |
 | Layout de form em modal | `FormField` + `col-12` + `AtivoInativoField` | `col-md-6`, `switch`, switches HTML |
 | Campo de texto/select | `Input` / `FormField` (`form-control`) | `<input>` custom, classes próprias, altura fixa |
+| Foco em inputs | Borda igual + `box-shadow: none` (global) | Halo azul, `border-color` primary no `:focus` |
 | Filtro on/off em tabela | `TableFilterCheckbox` | `form-switch`, select sim/não |
 
 ## Tipografia

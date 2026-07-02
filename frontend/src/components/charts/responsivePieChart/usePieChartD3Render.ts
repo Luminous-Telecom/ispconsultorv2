@@ -73,8 +73,8 @@ export function usePieChartD3Render({
     }
 
     const { width, height } = dimensions;
-    const padding = compact ? 6 : 16;
-    const radiusInset = compact ? 4 : 12;
+    const padding = compact ? 3 : 16;
+    const radiusInset = compact ? 2 : 12;
     const centerX = width / 2;
     const centerY = height / 2;
     const minDim = Math.min(width, height) - padding * 2;

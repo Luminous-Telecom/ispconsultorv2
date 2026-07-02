@@ -20,7 +20,10 @@ export interface TicketMedioCardProps {
 
 const DEFAULT_BAR_COLOR = '#6366f1';
 
-const HorizontalRanking: React.FC<{ series: TicketMedioMes[] }> = ({ series }) => {
+const HorizontalRanking: React.FC<{ series: TicketMedioMes[]; className?: string }> = ({
+  series,
+  className,
+}) => {
   const max = Math.max(...series.map((s) => s.valor), 1);
   const [grown, setGrown] = useState(false);
   const ordered = [...series].sort((a, b) => b.valor - a.valor);
@@ -31,17 +34,7 @@ const HorizontalRanking: React.FC<{ series: TicketMedioMes[] }> = ({ series }) =
   }, []);
 
   return (
-    <div
-      style={{
-        flex: '1 1 auto',
-        minHeight: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        gap: 5,
-        overflow: 'hidden',
-      }}
-    >
+    <div className={className}>
       {ordered.map((item, i) => {
         const pct = max > 0 ? (item.valor / max) * 100 : 0;
         const color = item.color || DEFAULT_BAR_COLOR;
@@ -109,34 +102,20 @@ const TicketMedioCard: React.FC<TicketMedioCardProps> = ({ data }) => {
   const { t } = useI18n();
 
   return (
-    <div
-      className="ticket-medio-card"
-      style={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}
-    >
-      <div className="pie-metric-header" style={{ justifyContent: 'center' }}>
-        <span
-          className="pie-metric-header__title"
-          style={{ flex: '0 0 auto', textAlign: 'center' }}
-        >
+    <div className="ticket-medio-card">
+      <div className="pie-metric-header ticket-medio-card__header">
+        <span className="pie-metric-header__title ticket-medio-card__title">
           {t('dashboard.averageTicket')}
         </span>
       </div>
 
-      <div style={{ textAlign: 'center', marginBottom: 4, flexShrink: 0 }}>
-        <span
-          style={{
-            fontSize: 17,
-            fontWeight: 700,
-            color: 'var(--text-primary)',
-            letterSpacing: '-0.03em',
-            lineHeight: 1.1,
-          }}
-        >
-          {formatCurrency(data.ticketMedio)}
-        </span>
-      </div>
+      <div className="ticket-medio-card__body">
+        <div className="ticket-medio-card__value">{formatCurrency(data.ticketMedio)}</div>
 
-      {data.seriesMensal.length > 0 && <HorizontalRanking series={data.seriesMensal} />}
+        {data.seriesMensal.length > 0 && (
+          <HorizontalRanking series={data.seriesMensal} className="ticket-medio-card__ranking" />
+        )}
+      </div>
     </div>
   );
 };

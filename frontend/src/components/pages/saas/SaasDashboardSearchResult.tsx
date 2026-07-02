@@ -4,7 +4,7 @@ import { saasEmpresasService, type SaasEmpresa, type SaasConfigListResponse } fr
 import { useModal } from 'contexts/ModalContext';
 import { useI18n } from 'contexts/I18nContext';
 import { useTableHeader } from 'contexts/TableHeaderContext';
-import { Loading } from 'components/ui';
+import DashboardSearchResultsShell from '../../dashboard/DashboardSearchResultsShell';
 
 interface SaasDashboardSearchResultProps {
   searchTerm: string;
@@ -46,8 +46,6 @@ const SaasDashboardSearchResult: React.FC<SaasDashboardSearchResultProps> = ({ s
     () => (empresasResponse?.data as SaasConfigListResponse<SaasEmpresa> | undefined)?.data ?? [],
     [empresasResponse?.data]
   );
-  const pagination = (empresasResponse?.data as SaasConfigListResponse<SaasEmpresa> | undefined)?.pagination;
-  const total = Math.max(pagination?.total ?? 0, empresas.length);
 
   const handleOpenTenant = useCallback(
     (empresaId: number) => {
@@ -57,27 +55,15 @@ const SaasDashboardSearchResult: React.FC<SaasDashboardSearchResultProps> = ({ s
   );
 
   return (
-    <div className="dashboard-search-results animate__animated animate__fadeIn">
-      {total > 0 && (
-        <div className="dashboard-search-results-header d-flex justify-content-end mb-2">
-          <span className="badge bg-primary">{total} encontrados</span>
-        </div>
-      )}
-
-      {isLoading && empresas.length === 0 ? (
-        <Loading variant="centered" showMessage={false} className="dashboard-search-loading py-5" />
-      ) : empresas.length === 0 ? (
-        <div className="dashboard-search-empty text-muted text-center py-5 rounded border border-secondary border-opacity-25">
-          Nenhum cliente tenant encontrado para esta busca.
-        </div>
-      ) : (
-        <div className="dashboard-search-card-list d-flex flex-column gap-2">
-          {empresas.map((e) => (
-            <SaasDashboardTenantCard key={e.id} empresa={e} onOpen={() => handleOpenTenant(e.id)} />
-          ))}
-        </div>
-      )}
-    </div>
+    <DashboardSearchResultsShell
+      isLoading={isLoading}
+      hasItems={empresas.length > 0}
+      emptyMessage="Nenhum cliente tenant encontrado para esta busca."
+    >
+      {empresas.map((e) => (
+        <SaasDashboardTenantCard key={e.id} empresa={e} onOpen={() => handleOpenTenant(e.id)} />
+      ))}
+    </DashboardSearchResultsShell>
   );
 };
 
@@ -112,52 +98,61 @@ const SaasDashboardTenantCard: React.FC<{ empresa: SaasEmpresa; onOpen: () => vo
         }
       }}
     >
-      <div className="dashboard-search-client-card-main d-flex flex-column flex-md-row gap-3 gap-md-4 align-items-stretch">
-        <div className="dashboard-search-client-avatar flex-shrink-0 d-flex align-items-center justify-content-center">
+      <div className="dashboard-search-client-card-main">
+        <div className="dashboard-search-client-avatar">
           <i
-            className={`bi bi-person-fill dashboard-search-client-avatar-icon ${isAtivo ? 'text-success' : 'text-danger'}`}
+            className={`bi bi-building dashboard-search-client-avatar-icon ${isAtivo ? 'text-success' : 'text-danger'}`}
             aria-hidden
           />
         </div>
 
-        <div className="dashboard-search-client-identity flex-grow-1 min-w-0">
-          <div className="dashboard-search-client-id text-muted small">#{empresa.id}</div>
-          <div className="dashboard-search-client-name fw-bold text-custom-primary text-uppercase text-break">
-            {empresa.razao_social}
-          </div>
-          <div className="dashboard-search-client-fantasia text-muted small text-break">
-            {empresa.nome_fantasia?.trim() || '—'}
-          </div>
-        </div>
-
-        <div className="dashboard-search-client-meta flex-grow-1 min-w-0 small">
-          <div className="text-nowrap text-truncate" title={empresa.cnpj}>
-            {empresa.cnpj}
-          </div>
-          <div className="text-nowrap text-truncate" title={empresa.email}>
-            {empresa.email}
-          </div>
-          <div className="text-break text-muted">{formatEnderecoTenant(empresa)}</div>
-        </div>
-
-        <div className="dashboard-search-client-phones flex-shrink-0 text-md-end small">
-          {telefones.length === 0 ? (
-            <span className="text-muted">—</span>
-          ) : (
-            telefones.map((tel) => (
-              <div key={tel} className="text-nowrap">
-                {tel}
+        <div className="dashboard-search-client-body">
+          <div className="dashboard-search-client-top">
+            <div className="dashboard-search-client-identity">
+              <div className="dashboard-search-client-id">#{empresa.id}</div>
+              <div className="dashboard-search-client-name">{empresa.razao_social}</div>
+              <div className="dashboard-search-client-fantasia">
+                {empresa.nome_fantasia?.trim() || '—'}
               </div>
-            ))
-          )}
+            </div>
+            <span
+              className={`dashboard-search-client-status ${isAtivo ? 'is-ativo' : 'is-inativo'}`}
+            >
+              {isAtivo ? t('status.active') : t('status.inArrears')}
+            </span>
+          </div>
+
+          <div className="dashboard-search-client-details">
+            <div className="dashboard-search-client-meta">
+              <div className="text-truncate" title={empresa.cnpj}>
+                {empresa.cnpj}
+              </div>
+              <div className="text-truncate" title={empresa.email}>
+                {empresa.email}
+              </div>
+              <div className="text-break text-muted">{formatEnderecoTenant(empresa)}</div>
+            </div>
+
+            <div className="dashboard-search-client-phones">
+              {telefones.length === 0 ? (
+                <span className="text-muted">—</span>
+              ) : (
+                telefones.map((tel) => (
+                  <div key={tel} className="text-nowrap">
+                    {tel}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="dashboard-search-client-subrows mt-2 pt-2 border-top border-secondary border-opacity-25">
+      <div className="dashboard-search-client-subrows">
         {subRows.map((row) => (
-          <div key={row.key} className="dashboard-search-client-subrow d-flex align-items-center gap-2 small">
+          <div key={row.key} className="dashboard-search-client-subrow">
             <i
-              className={`bi ${row.ok ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger'} flex-shrink-0`}
+              className={`bi ${row.ok ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger'}`}
               aria-hidden
             />
             <span className="text-break text-muted">{row.text}</span>

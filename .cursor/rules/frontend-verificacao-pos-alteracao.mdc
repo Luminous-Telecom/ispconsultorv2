@@ -1,14 +1,25 @@
 ---
-description: Verificações do frontend (i18n, types no dev; build só antes de push)
+description: Verificações do frontend (i18n, types no dev; build SOMENTE quando usuário pedir push/PR)
 globs: frontend/**/*
 alwaysApply: false
 ---
 
 # Verificação frontend — BackNet
 
+## ⛔ Build — quando NÃO rodar
+
+**Nunca** execute `npm run build` nestes casos:
+
+- Ao concluir implementação, correção ou refatoração no frontend
+- Para “confirmar que compila” depois de editar TS/TSX/SCSS
+- Por iniciativa própria ao final da resposta
+- Quando o usuário pedir apenas commit (sem push)
+
+O agente **não deve** incluir build no fluxo padrão de trabalho. Hot reload + linter bastam em dev.
+
 ## Durante o desenvolvimento
 
-Ao alterar o frontend, aplique na hora o que couber abaixo. **Não** rode `npm run build` ao concluir cada tarefa.
+Ao alterar o frontend, aplique na hora o que couber abaixo. **Não** rode `npm run build`.
 
 ### i18n com `t()`
 
@@ -39,9 +50,12 @@ Ex.: `errors.central_assinante_senha` exige `central_assinante_senha` em `Client
 - Novo componente em `components/ui/` → exportar em `components/ui/index.ts`
 - Verificar imports faltando (`useI18n`, hooks, tipos)
 
-## Antes de push (obrigatório)
+## Build — somente quando o usuário pedir push/PR
 
-Rode o build **somente** quando for fazer `git push` ou abrir PR — e **somente se** houve alteração em `frontend/`:
+Rode o build **apenas** se **todas** forem verdadeiras:
+
+1. O usuário pediu **push**, **PR** ou equivalente (“subir pro remoto”, “abrir pull request”)
+2. Houve alteração em `frontend/`
 
 ```bash
 cd frontend && npm run build
@@ -49,12 +63,14 @@ cd frontend && npm run build
 
 - Corrija **todos** os erros de compilação antes do push
 - Não faça push com build falhando
+- Se o usuário não pediu push/PR, **pare sem rodar build** — avise que ele pode pedir push quando quiser validar
 
 ## Checklist rápido
 
-**Durante dev:**
+**Durante dev (sem build):**
 - [ ] Chaves i18n nos 3 locales + `translationKeys.ts`
 - [ ] Tipos/schemas alinhados com campos novos
+- [ ] Linter ok nos arquivos alterados
 
-**Antes de push:**
+**Quando usuário pedir push/PR:**
 - [ ] `npm run build` passou sem erro (se alterou frontend)

@@ -55,7 +55,39 @@ onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.ENTITY_CREATE_ERROR),
 - Campos: `FormField`, `EntitySelectField`, `AtivoInativoField`, `ComunicacaoPreferenciasField`, `TableFilterCheckbox`
 - **Layout em modais**: ver `.cursor/rules/frontend-form-modal-layout.mdc` (`col-12`, label à esquerda, sem `switch`)
 - **Inputs de texto** (login, filtros, telas avulsas): `Input` de `components/ui` — classe `form-control`, tamanho global em `_components.scss` (`--font-size-sm`, padding padrão, `--border-radius`). **Não** criar classes CSS com `height` fixo (ex.: 48px) nem estilos duplicados de borda/foco
+- **Foco de inputs** (padrão global — ver seção abaixo): sem `box-shadow`, sem mudar `border-color` no `:focus`
 - Largura máxima de campo em formulários: `--form-input-max-width` (420px)
+
+## Foco de inputs — sem box-shadow (padrão do projeto)
+
+Ao criar ou estilizar campos (`input`, `textarea`, `select`, `.form-control`, `.form-select`):
+
+- **Proibido** no `:focus` / `:focus-within`: `box-shadow`, halo azul Bootstrap (`0 0 0 0.2rem rgba(...)`), `outline` colorido, mudar `border-color` para primary/azul
+- **Permitido**: manter `border-color: var(--border-color)`; `outline: none`; `box-shadow: none`
+- **Componentes**: usar `Input` / `FormField` (`form-control`) — não reinventar estilos de foco por tela
+- **SCSS existente** (não duplicar; estender se faltar seletor):
+  - `frontend/src/styles/_components.scss` — bloco `/* Foco: mesma borda, sem box-shadow */` (`.form-control:focus`, `.form-select:focus`, buscas, modais, central assinante)
+  - `frontend/src/styles/bootstrap-custom.scss` — `$input-focus-box-shadow: none`, `$input-focus-border-color: $border-color`
+  - `frontend/src/styles/_mixins.scss` — `@mixin input-focus` (só `box-shadow: none`)
+  - `frontend/src/styles/_base.scss` — `body[data-app="system"] input:focus` etc.
+- **Novos contextos** (ex.: barra de busca, painel novo): incluir o campo na regra global ou repetir `border-color: var(--border-color) !important; box-shadow: none !important; outline: none !important;` — **nunca** glow no focus
+
+```scss
+// ✅ Padrão ao adicionar foco em contexto novo
+.meu-campo:focus,
+.meu-campo:focus-within {
+  border-color: var(--border-color) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+// ❌ Proibido
+.meu-campo:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+```
+
 - Obrigatório: `required` no `FormField` ou `LabelWithHelp` (`RequiredMark`)
 - Ajuda (ícone i): `helpText` no `FormField` ou `LabelWithHelp` — não `alert-info` para hints
 - Ações de modal: `ModalFormActions` + botões de `components/ui/buttons`
