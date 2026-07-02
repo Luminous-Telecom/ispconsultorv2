@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
-import { useIsMobile } from 'hooks/useMediaQuery';
 import { ContratoPlanoAdicional, CreateContratoPlanoAdicional, UpdateContratoPlanoAdicional } from 'services/contratoPlanoAdicionalService';
 import { useCreateContratoPlanoAdicional, useUpdateContratoPlanoAdicional } from 'hooks/useContratoPlanosAdicionais';
 import { usePlanos } from 'hooks/usePlanos';
@@ -30,7 +29,6 @@ const ServicoAdicionalModal: React.FC<ServicoAdicionalModalProps> = ({
   onSuccess,
   onShowPlanoModal
 }) => {
-  const isMobile = useIsMobile();
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
   const createMutation = useCreateContratoPlanoAdicional();

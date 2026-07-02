@@ -4,7 +4,6 @@ import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import { TableFilterCheckbox } from 'components/ui';
 import { BulkAction } from '../types';
 import { TableColumn } from 'components/tables/types';
-import { useIsMobile } from 'hooks/useMediaQuery';
 import { useI18n } from 'contexts/I18nContext';
 
 import { SortDirection } from 'components/tables/types';
@@ -50,7 +49,6 @@ const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
   sortDirection,
   onSort,
 }) => {
-  const isMobile = useIsMobile();
   const { t } = useI18n();
 
   // Limpar seleção de itens cancelados quando o filtro de ocultar cancelados for desativado

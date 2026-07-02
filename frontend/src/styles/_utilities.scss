@@ -557,11 +557,19 @@ body[data-app="system"] .tox-tinymce-aux .tox {
   padding: 0;
 }
 
-/* --- Documento modal mobile --- */
+/* --- Documento modal --- */
 .documento-editor-layout {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 180px);
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+@media (max-width: 767.98px) {
+  .documento-editor-layout {
+    flex: none;
+    height: calc(100vh - 180px);
+  }
 }
 
 /* --- Table --- */

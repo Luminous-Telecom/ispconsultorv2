@@ -4,7 +4,6 @@ import type { Terminal } from '@xterm/xterm';
 import type { FitAddon } from '@xterm/addon-fit';
 import DraggableModal from 'components/common/DraggableModal';
 import '@xterm/xterm/css/xterm.css';
-import { TERMINAL_BACKGROUND } from './constants';
 import { useSocketTerminalSession } from './useSocketTerminalSession';
 import type { TerminalStatus } from './types';
 

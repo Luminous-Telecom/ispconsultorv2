@@ -13,6 +13,27 @@ import ResponsiveDialog from './ResponsiveDialog';
 const MODAL_EDGE_MARGIN_PX = 8;
 const MODAL_EDGE_MARGIN_RIGHT_MIN_PX = 12;
 
+function hasHeaderUnifiedClass(node: React.ReactNode): boolean {
+  if (node == null || typeof node === 'boolean') return false;
+  if (Array.isArray(node)) return node.some(hasHeaderUnifiedClass);
+  if (!React.isValidElement(node)) return false;
+
+  const props = node.props as { className?: string; children?: React.ReactNode };
+  if (
+    typeof props.className === 'string'
+    && props.className.split(/\s+/).some((token) => token.includes('-header-unified'))
+  ) {
+    return true;
+  }
+
+  return hasHeaderUnifiedClass(props.children);
+}
+
+function wrapHeaderActions(actions: React.ReactNode): React.ReactNode {
+  if (hasHeaderUnifiedClass(actions)) return actions;
+  return <div className="modal-header-unified">{actions}</div>;
+}
+
 interface DraggableModalProps {
   show: boolean;
   onClose: () => void;
@@ -337,7 +358,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           {/* Ações do header (botões e filtros) */}
           {headerActions && (
             <div onMouseDown={(e) => e.stopPropagation()}>
-              {headerActions}
+              {wrapHeaderActions(headerActions)}
             </div>
           )}
         </div>

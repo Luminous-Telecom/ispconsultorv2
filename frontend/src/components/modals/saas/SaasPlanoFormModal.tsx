@@ -206,8 +206,8 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
         </div>
       }
     >
-      <form id="saas-plano-form" onSubmit={handleSubmit} className="form-modal-simple">
-        <div className="plano-modal-content">
+      <div className="plano-modal-content">
+        <form id="saas-plano-form" onSubmit={handleSubmit} className="form-modal-simple">
           <div className="tab-content plano-tab-content plano-tab-content-padded">
             {activeTab === 'geral' && (
               <SaasPlanoGeralFormFields
@@ -224,8 +224,8 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
               />
             )}
           </div>
-        </div>
-      </form>
+        </form>
+      </div>
     </DraggableModal>
   );
 };

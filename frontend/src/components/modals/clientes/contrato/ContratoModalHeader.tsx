@@ -70,7 +70,7 @@ function ContratoModalHeader({
           tabs={tabs}
           activeTab={activeTab}
           onTabChange={handleTabChange}
-          tabsClassName={`contrato-tabs-unified ${isMobile ? 'contrato-tabs-mobile' : ''}`}
+          tabsClassName={`contrato-tabs contrato-tabs-unified ${isMobile ? 'contrato-tabs-mobile' : ''}`}
           disabledClassName="contrato-tab-disabled"
           isMobile={isMobile}
           id="contratoTab"

@@ -19,7 +19,6 @@ interface ModalTabsOverflowProps<T extends string = string> {
 }
 
 const OVERFLOW_BUTTON_WIDTH = 44;
-const DROPDOWN_Z_INDEX = 100001;
 
 function ModalTabsOverflow<T extends string = string>({
   tabs,

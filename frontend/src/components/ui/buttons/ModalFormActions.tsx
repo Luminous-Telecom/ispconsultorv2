@@ -8,7 +8,7 @@ const ModalFormActions: React.FC<ModalFormActionsProps> = ({
   isPending = false,
   onSave,
   saveType = 'submit',
-  className = 'd-flex gap-2 modal-header-actions',
+  className = 'modal-header-buttons d-flex gap-2 modal-header-actions',
 }) => (
   <div className={className}>
     <CancelarButton type="button" onClick={onCancel} isPending={isPending} />

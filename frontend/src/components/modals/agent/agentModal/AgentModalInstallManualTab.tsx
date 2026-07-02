@@ -1,7 +1,6 @@
 import React from 'react';
 import { CopiarButton, Loading } from 'components/ui';
 import { REQUIREMENTS } from './constants';
-import { getTerminalLogLineClass } from 'constants/designTokens';
 
 interface AgentModalInstallManualTabProps {
   generating: boolean;

@@ -491,21 +491,19 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
           />
         }
       >
-        {isContratoFormTab ? (
-          <form id="contrato-form" onSubmit={handleSubmit} className="form-modal-simple">
-            <div className="contrato-modal-content">
+        <div className="contrato-modal-content">
+          {isContratoFormTab ? (
+            <form id="contrato-form" onSubmit={handleSubmit} className="form-modal-simple">
               <div className={`tab-content contrato-tab-content ${tabContentClass}`}>
                 {tabPanels}
               </div>
-            </div>
-          </form>
-        ) : (
-          <div className="contrato-modal-content">
+            </form>
+          ) : (
             <div className={`tab-content contrato-tab-content ${tabContentClass}`}>
               {tabPanels}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </DraggableModal>
 
       <ContratoModalSubModals

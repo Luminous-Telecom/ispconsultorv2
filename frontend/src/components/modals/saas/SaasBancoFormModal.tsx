@@ -180,8 +180,8 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
       {isEdit && isLoading ? (
         <Loading variant="centered" message={t('messages.loading')} />
       ) : (
-        <form id="saas-banco-form-id" onSubmit={formHook.handleSubmit} className="form-modal-simple">
-          <div className="banco-modal-content">
+        <div className="banco-modal-content">
+          <form id="saas-banco-form-id" onSubmit={formHook.handleSubmit} className="form-modal-simple">
             <div className="tab-content banco-tab-content banco-tab-content-padded">
               {activeTab === 'informacoes-basicas' && (
                 <>
@@ -206,8 +206,8 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
                 />
               )}
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
       )}
     </DraggableModal>
   );

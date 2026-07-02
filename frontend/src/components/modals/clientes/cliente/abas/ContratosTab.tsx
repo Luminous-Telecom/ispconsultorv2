@@ -5,7 +5,6 @@ import { formatDate, formatDateTime, formatCurrency } from 'utils/formatters';
 import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import { TableFilterCheckbox } from 'components/ui';
 import { ContratosTabProps } from '../types';
-import { useIsMobile } from 'hooks/useMediaQuery';
 
 const ContratosTab: React.FC<ContratosTabProps> = ({
   clienteId,
@@ -23,8 +22,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
   onSort
 }) => {
   const { t } = useI18n();
-  const isMobile = useIsMobile();
-  
+
   const mappedData = (sortedContratosData || []).map((contrato: Contrato) => ({
     ...contrato,
     plano_nome: contrato.plano?.nome_plano || '',

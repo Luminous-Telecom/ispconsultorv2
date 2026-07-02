@@ -212,7 +212,7 @@ body .draggable-modal-container-custom .modal-body.draggable-modal-body-custom:h
   overflow: hidden !important;
 }
 
-/* Form que envolve cliente-modal-content (ex: SaasEmpresaFormModal): preencher todo o modal */
+/* Form que envolve *-modal-content (ex: SaasEmpresaFormModal, BancoModal): preencher todo o modal */
 .draggable-modal-body-custom > form {
   flex: 1 1 0 !important;
   min-height: 0 !important;
@@ -222,18 +222,78 @@ body .draggable-modal-container-custom .modal-body.draggable-modal-body-custom:h
 }
 
 /* Formulários simples (cards/params): permitir scroll e evitar corte de conteúdo */
-.draggable-modal-body-custom > form.form-modal-simple {
+.draggable-modal-body-custom > form.form-modal-simple:not(:has(> [class*="-modal-content"])) {
   flex: none !important;
   min-height: auto !important;
   overflow: visible !important;
   display: block !important;
 }
 
-.draggable-modal-body-custom > form > .cliente-modal-content,
-.draggable-modal-body-custom > form > .contrato-modal-content {
+/* Formulários com abas (*-modal-content): manter layout flex como ClienteModal */
+.draggable-modal-body-custom > form.form-modal-simple:has(> [class*="-modal-content"]) {
   flex: 1 1 0 !important;
   min-height: 0 !important;
   overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 0 !important;
+}
+
+.draggable-modal-body-custom > form > [class*="-modal-content"] {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Form dentro de abas (ex: DadosEmpresaModal): preencher área da aba */
+[class*="-modal-content"] > form.form-modal-simple,
+[class*="-modal-content"] > .tab-content > form.form-modal-simple {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 0 !important;
+}
+
+/*
+ * Modais com botões de ação (Salvar/Cancelar) e sem abas:
+ * header claro (bg-modal) + faixa de respiro + conteúdo escuro (bg-primary).
+ */
+.draggable-modal-container-custom:not(:has(.modal-tabs-overflow-container)):has(
+    > .draggable-modal-header-custom .modal-header-actions
+  ):not(:has(.list-modal-table-wrapper)):not(.no-padding) {
+  > .draggable-modal-header-custom {
+    background-color: var(--bg-modal) !important;
+    border-bottom: none !important;
+  }
+
+  > .draggable-modal-body-custom:not(.no-scroll):not(.list-modal-no-body-scroll):not(
+      :has(.table-container-custom)
+    ):not(:has(.list-modal-table-wrapper)):not(:has(> [class*='-modal-content'])) {
+    background-color: var(--bg-modal) !important;
+    padding-top: 8px !important;
+
+    > form.form-modal-simple:not(:has([class*='-tab-content'])):not(
+        :has(> [class*='-modal-content'])
+      ),
+    > .form-modal-simple:not(:has([class*='-tab-content'])):not(:has(> [class*='-modal-content'])) {
+      flex: 1 1 auto !important;
+      min-height: 0 !important;
+      display: block !important;
+      background-color: var(--bg-primary) !important;
+    }
+
+    > .modal-inner-padding,
+    > .modal-inner-padding-fixed,
+    > .modal-inner-padding-sm,
+    > .modal-inner-padding-audit,
+    > .modal-inner-padding-recursos {
+      flex: 1 1 auto !important;
+      min-height: 0 !important;
+      background-color: var(--bg-primary) !important;
+    }
+  }
 }
 
 /* TextPreviewModal: preencher todo o espaço do modal */
@@ -429,6 +489,26 @@ body .draggable-modal-container-custom .modal-body.draggable-modal-body-custom:h
   padding: 0 !important;
   min-height: 0 !important;
   background-color: var(--bg-secondary) !important;
+}
+
+/* Mobile: formulário sem abas — header claro + faixa + conteúdo escuro */
+.responsive-dialog-mobile-custom:not(:has(.modal-tabs-overflow-container)):not(.no-padding):not(
+    :has(.table-container-custom)
+  ):has(.form-modal-simple:not(:has([class*='-tab-content']))) {
+  .responsive-dialog-header-custom {
+    background-color: var(--bg-modal) !important;
+  }
+
+  .responsive-dialog-content-custom {
+    background-color: var(--bg-modal) !important;
+    padding-top: 8px !important;
+  }
+
+  .responsive-dialog-mobile-content {
+    padding: 0 !important;
+    background-color: var(--bg-primary) !important;
+    min-height: 100% !important;
+  }
 }
 
 .responsive-dialog-mobile-content {
@@ -1340,32 +1420,16 @@ button,
   }
 }
 
-/* Botões de ação no header do modal */
+/* Botões de ação no header do modal (fallback fora do DraggableModal) */
 .modal-header-actions {
   padding: 10px !important;
 }
 
-/* Exceção: dentro de header unificado (botões + abas), alinhar com as abas */
-[class*="-header-unified"] .modal-header-actions {
-  padding: 0 !important;
-}
-
-/* Global: layout header unificado (botões acima das abas, alinhados ao início da primeira aba) */
-[class*="-header-unified"] {
+/* Header draggable: mesmo layout dos modais com abas (com ou sem tabs) */
+.draggable-modal-header-custom .modal-header-actions,
+.draggable-modal-header-custom [class*="-header-buttons"] {
   display: flex !important;
-  flex-direction: column !important;
-  align-items: stretch !important;
-  width: 100% !important;
-  gap: 0.25rem !important;
-  /* Horizontal vem do .draggable-modal-header-custom (8px) — evita duplicar inset */
-  padding: 0.25rem 0 0 0 !important;
-  margin: 0 !important;
-  box-sizing: border-box !important;
-}
-
-[class*="-header-unified"] .modal-header-actions,
-[class*="-header-unified"] [class*="-header-buttons"] {
-  display: flex !important;
+  flex-wrap: wrap !important;
   justify-content: flex-start !important;
   align-items: center !important;
   gap: 0.5rem !important;
@@ -1373,6 +1437,32 @@ button,
   padding: 0 !important;
   margin: 0 !important;
   align-self: flex-start !important;
+}
+
+/* Global: layout header unificado (botões acima das abas) */
+[class*="-header-unified"] {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  gap: 12px !important;
+  /* Horizontal vem do .draggable-modal-header-custom (8px) — evita duplicar inset */
+  padding: 0.25rem 0 0 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Botões no header: mesmo tamanho/raio das tabs (sem forçar cor da borda) */
+.draggable-modal-header-custom [class*="-header-unified"] .btn:not(.btn-close):not(.nav-link):not(.modal-tabs-overflow-trigger),
+.draggable-modal-header-custom [class*="-header-buttons"] .btn:not(.btn-close),
+.draggable-modal-header-custom [class*="-header-buttons"] .dropdown > .btn:not(.btn-close) {
+  border-radius: var(--border-radius-sm) !important;
+  padding: 0.5rem 0.75rem !important;
+  font-weight: 400 !important;
+  font-size: var(--font-size-sm) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  line-height: 1.25 !important;
 }
 
 [class*="-header-tabs"] {
@@ -2152,10 +2242,7 @@ textarea:focus {
     flex-shrink: 0 !important;
   }
 
-  .nav-link,
-  .nav-link:hover,
-  .nav-link:focus,
-  .nav-link:active {
+  .nav-link {
     background-color: var(--bg-secondary) !important;
     border: 1px solid var(--border-color) !important;
     color: var(--text-primary) !important;
@@ -2171,18 +2258,21 @@ textarea:focus {
     outline: none !important;
   }
 
-  .nav-link:hover,
-  .nav-link:focus {
+  .nav-link:hover:not(.active),
+  .nav-link:focus:not(.active) {
     background-color: var(--bg-tertiary) !important;
     color: var(--text-primary) !important;
     cursor: pointer !important;
   }
 
-  .nav-link.active {
+  .nav-link.active,
+  .nav-link.active:hover,
+  .nav-link.active:focus {
     background-color: var(--bg-primary) !important;
     color: var(--text-primary) !important;
     border: 1px solid var(--border-color) !important;
     border-bottom-color: var(--bg-primary) !important;
+    font-weight: 600 !important;
   }
 
   .nav-link:disabled,
@@ -3055,18 +3145,21 @@ textarea:focus {
     cursor: pointer !important;
   }
 
-  .nav-link:hover,
-  .nav-link:focus {
+  .nav-link:hover:not(.active),
+  .nav-link:focus:not(.active) {
     background-color: var(--bg-tertiary) !important;
     color: var(--text-primary) !important;
     cursor: pointer !important;
   }
 
-  .nav-link.active {
+  .nav-link.active,
+  .nav-link.active:hover,
+  .nav-link.active:focus {
     background-color: var(--bg-primary) !important;
     color: var(--text-primary) !important;
     border: 1px solid var(--border-color) !important;
     border-bottom-color: var(--bg-primary) !important;
+    font-weight: 600 !important;
   }
 
   .nav-link:disabled,
@@ -3870,6 +3963,7 @@ textarea:focus {
 }
 
 [data-theme="dark"] .contrato-tabs .nav-link.active,
+[data-theme="dark"] .contrato-tabs-unified .nav-link.active,
 [data-theme="dark"] .plano-tabs .nav-link.active,
 [data-theme="dark"] .fornecedor-tabs .nav-link.active,
 [data-theme="dark"] .banco-tabs .nav-link.active,
@@ -3957,18 +4051,21 @@ textarea:focus {
     cursor: pointer !important;
   }
 
-  .nav-link:hover,
-  .nav-link:focus {
+  .nav-link:hover:not(.active),
+  .nav-link:focus:not(.active) {
     background-color: var(--bg-tertiary) !important;
     color: var(--text-primary) !important;
     cursor: pointer !important;
   }
 
-  .nav-link.active {
+  .nav-link.active,
+  .nav-link.active:hover,
+  .nav-link.active:focus {
     background-color: var(--bg-primary) !important;
     color: var(--text-primary) !important;
     border: 1px solid var(--border-color) !important;
     border-bottom-color: var(--bg-primary) !important;
+    font-weight: 600 !important;
   }
 
   .nav-link:disabled,
@@ -3999,8 +4096,37 @@ textarea:focus {
   }
 }
 
+/* Modo escuro — abas unificadas nos modais */
+[data-theme="dark"] {
+  .cliente-tabs-unified,
+  .contrato-tabs-unified,
+  .plano-tabs-unified,
+  .fornecedor-tabs-unified,
+  .banco-tabs-unified,
+  .documento-tabs-unified,
+  .empresa-tabs-unified,
+  .whatsapp-tabs-unified,
+  .email-tabs-unified,
+  .sistema-tabs-unified,
+  .ordem-servico-tabs-unified {
+    .nav-link:not(.active):not(:disabled):not(.disabled) {
+      color: var(--text-secondary) !important;
+      background-color: var(--bg-secondary) !important;
+    }
+
+    .nav-link.active,
+    .nav-link.active:hover,
+    .nav-link.active:focus {
+      color: var(--text-primary) !important;
+      background-color: var(--bg-primary) !important;
+      border-bottom-color: var(--bg-primary) !important;
+      font-weight: 600 !important;
+    }
+  }
+}
+
 /* Hover unificado para abas de modais: só cor, sem movimento nem sombra */
-.modal-tab-hover:hover {
+.modal-tab-hover:hover:not(.active) {
   background-color: var(--bg-tertiary) !important;
   color: var(--text-primary) !important;
   cursor: pointer !important;
@@ -4048,6 +4174,7 @@ textarea:focus {
   height: 100%;
   display: flex;
   flex-direction: column;
+  background-color: var(--bg-primary);
 }
 
 /* ContratoModal - Navegação por abas */
@@ -4175,7 +4302,7 @@ textarea:focus {
   font-weight: 500;
 }
 
-.draggable-modal-body-custom form.form-modal-simple {
+.draggable-modal-body-custom form.form-modal-simple:not(:has([class*="-tab-content"])) {
   @include form-modal-tab-padding;
 }
 

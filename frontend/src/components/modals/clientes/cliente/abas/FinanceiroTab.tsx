@@ -7,7 +7,6 @@ import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import { TableFilterCheckbox } from 'components/ui';
 import { FinanceiroTabProps } from '../types';
 import { TableColumn } from 'components/tables/types';
-import { useIsMobile } from 'hooks/useMediaQuery';
 
 const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
   sortedData,
@@ -25,7 +24,6 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
   onSort
 }) => {
   const { t } = useI18n();
-  const isMobile = useIsMobile();
 
   return (
     <>

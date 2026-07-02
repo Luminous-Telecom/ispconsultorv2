@@ -1,4 +1,4 @@
-import { CarneParcela, Cliente, Plano, Titulo } from 'types';
+import { CarneParcela, Plano, Titulo } from 'types';
 
 export const calcularProximaDataVencimento = (diaVencimento: number): string => {
   const hoje = new Date();

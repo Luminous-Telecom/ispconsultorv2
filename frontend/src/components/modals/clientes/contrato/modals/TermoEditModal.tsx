@@ -1,6 +1,5 @@
 import React from 'react';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
-import { useIsMobile } from 'hooks/useMediaQuery';
 import { TermoContrato } from 'services/termoContratoService';
 import { useCreateTermoContrato, useUpdateTermoContrato } from 'hooks/useTermosContrato';
 import { useModelosTermo } from 'hooks/useModelosTermo';
@@ -30,7 +29,6 @@ const TermoEditModal: React.FC<TermoEditModalProps> = ({
   onSuccess,
   onShowSelecionarTermo
 }) => {
-  const isMobile = useIsMobile();
   const { error } = useNotificationContext();
   const createTermoMutation = useCreateTermoContrato();
   const updateTermoMutation = useUpdateTermoContrato();

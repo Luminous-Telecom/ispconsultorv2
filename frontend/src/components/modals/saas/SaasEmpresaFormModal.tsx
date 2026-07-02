@@ -129,8 +129,8 @@ const SaasEmpresaFormModal: React.FC<SaasEmpresaFormModalProps> = ({ show, onClo
       modalId="saas-empresa-form"
       headerActions={headerActionsContent}
     >
-      <form id="saas-empresa-form-id" onSubmit={onFormSubmit} className="form-modal-simple">
-        <div className="cliente-modal-content">
+      <div className="cliente-modal-content">
+        <form id="saas-empresa-form-id" onSubmit={onFormSubmit} className="form-modal-simple">
           <SaasEmpresaFormContent
             activeTab={activeTab}
             empresaId={empresaId}
@@ -176,8 +176,8 @@ const SaasEmpresaFormModal: React.FC<SaasEmpresaFormModalProps> = ({ show, onClo
             refetchLogs={tabData.refetchLogs}
             onViewLog={logsState.handleViewLog}
           />
-        </div>
-      </form>
+        </form>
+      </div>
       <SaasEmpresaFormSubModals
         empresaId={empresaId}
         form={form}

@@ -54,7 +54,9 @@ function DocumentoModalBody({
   const editorKeyPrefix = `${isEditing ? currentDocumento?.id : 'create'}`;
 
   return (
-    <form onSubmit={onSubmit} className="form-modal-simple">
+    <div className="documento-modal-content">
+      <form onSubmit={onSubmit} className="form-modal-simple">
+        <div className="tab-content documento-tab-content documento-tab-content-padded">
         <div className="row g-2 mb-0">
           <div className="col-12">
             <FormField
@@ -149,7 +151,9 @@ function DocumentoModalBody({
             />
           )}
         </div>
+        </div>
       </form>
+    </div>
   );
 }
 

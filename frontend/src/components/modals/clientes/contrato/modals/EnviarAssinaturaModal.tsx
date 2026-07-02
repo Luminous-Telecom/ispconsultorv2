@@ -10,7 +10,6 @@ import { CancelarButton, EnviarButton } from 'components/ui';
 import FormField from 'components/ui/FormField';
 import { useI18n } from 'contexts/I18nContext';
 import { useQueryClient } from '@tanstack/react-query';
-import { useIsMobile } from 'hooks/useMediaQuery';
 
 interface EnviarAssinaturaModalProps {
   show: boolean;
@@ -27,7 +26,6 @@ const EnviarAssinaturaModal: React.FC<EnviarAssinaturaModalProps> = ({
   cliente,
   onSuccess
 }) => {
-  const isMobile = useIsMobile();
   const { t } = useI18n();
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();

@@ -27,7 +27,7 @@ interface ContaPagarFormContentProps {
 const ContaPagarFormContent: React.FC<ContaPagarFormContentProps> = ({
   isEditing,
   isLoading,
-  isMobile,
+  isMobile: _isMobile,
   formData,
   errors,
   fornecedores,

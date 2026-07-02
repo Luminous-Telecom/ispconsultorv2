@@ -1,7 +1,7 @@
 import React, { useRef, useMemo, memo, useState, useLayoutEffect, useCallback, useId } from 'react';
 import { PieChartProps } from '../types';
 import { ChartEmptyState } from '../ChartEmptyState';
-import { LabelWithHelp, DynamicStyledElement, PieLegendDot } from 'components/ui';
+import { LabelWithHelp, DynamicStyledElement } from 'components/ui';
 import { ChartFloatingTooltipHost } from '../ChartFloatingTooltip';
 import { formatPieValue, getItemValue, resolveHighlightItem } from './utils';
 import { MetricPieHeaderIcon } from './MetricPieHeaderIcon';

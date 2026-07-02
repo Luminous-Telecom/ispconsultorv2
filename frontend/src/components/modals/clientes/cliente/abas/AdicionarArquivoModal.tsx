@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useI18n } from 'contexts/I18nContext';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
-import { useIsMobile } from 'hooks/useMediaQuery';
 import { useClienteArquivos } from 'hooks/useClienteArquivos';
 import DraggableModal from 'components/common/DraggableModal';
 import { ModalFormActions } from 'components/ui';
@@ -22,7 +21,6 @@ const AdicionarArquivoModal: React.FC<AdicionarArquivoModalProps> = ({
   onSuccess
 }) => {
   const { t } = useI18n();
-  const isMobile = useIsMobile();
   const { success, error } = useNotificationContext();
   const { createMutation } = useClienteArquivos({ clienteId });
 

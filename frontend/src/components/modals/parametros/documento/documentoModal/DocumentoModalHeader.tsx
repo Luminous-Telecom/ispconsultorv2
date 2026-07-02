@@ -126,7 +126,7 @@ function DocumentoModalHeader({
             tabs={tabs}
             activeTab={activeTab}
             onTabChange={setActiveTab}
-            tabsClassName={`documento-tabs-unified ${isMobile ? 'documento-tabs-mobile' : ''}`}
+            tabsClassName={`documento-tabs documento-tabs-unified ${isMobile ? 'documento-tabs-mobile' : ''}`}
             isMobile={isMobile}
             id="documentoTab"
           />
