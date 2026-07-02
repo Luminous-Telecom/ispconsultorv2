@@ -2,6 +2,7 @@ import React, { useRef, useLayoutEffect, useEffect, useState, useMemo, memo, use
 import { PieLegendDot } from 'components/ui';
 import * as d3 from 'd3';
 import { clampTooltipNearPoint, createD3ChartTooltip } from './chartTooltip';
+import { HIDE_ANIMATION_MS } from './responsivePieChart/utils';
 
 export type BackupStatusKey = 'sucesso' | 'somente_local' | 'falha_envio' | 'verificado' | 'falha';
 
@@ -52,7 +53,25 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
   }) => {
     const svgRef = useRef<SVGSVGElement>(null);
     const chartBoxRef = useRef<HTMLDivElement>(null);
+    const layoutKeyRef = useRef('');
+    const onLegendToggleRef = useRef(onLegendToggle);
+    onLegendToggleRef.current = onLegendToggle;
     const [{ width, height: boxHeight }, setSize] = useState({ width: 300, height: 90 });
+    const [animatingOut, setAnimatingOut] = useState<Set<BackupStatusKey>>(new Set());
+    const [animatingIn, setAnimatingIn] = useState<Set<BackupStatusKey>>(new Set());
+
+    const handleLegendToggle = useCallback(
+      (key: BackupStatusKey) => {
+        if (!onLegendToggle || animatingOut.has(key) || animatingIn.has(key)) return;
+        if (hiddenKeys?.has(key)) {
+          setAnimatingIn((prev) => new Set(prev).add(key));
+          onLegendToggle(key);
+        } else {
+          setAnimatingOut((prev) => new Set(prev).add(key));
+        }
+      },
+      [hiddenKeys, onLegendToggle, animatingOut, animatingIn]
+    );
 
     const chartData = useMemo(
       () =>
@@ -69,8 +88,8 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
     );
 
     const visibleKeys = useMemo(
-      () => STACK_KEYS.filter((k) => !hiddenKeys?.has(k)),
-      [hiddenKeys]
+      () => STACK_KEYS.filter((k) => !hiddenKeys?.has(k) || animatingOut.has(k)),
+      [hiddenKeys, animatingOut]
     );
 
     const maxTotalAll = useMemo(
@@ -146,6 +165,10 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
       const innerW = Math.max(1, width - margin.left - margin.right);
       const innerH = Math.max(1, height - margin.top - margin.bottom);
 
+      const layoutKey = `${chartData.length}-${width}-${boxHeight}-${hasCountsInWindow}-${periodHasBackupEvents}`;
+      const isHardRefresh = layoutKeyRef.current !== layoutKey;
+      if (isHardRefresh) layoutKeyRef.current = layoutKey;
+
       const stackKeys = visibleKeys.length > 0 ? visibleKeys : [];
       const series =
         stackKeys.length > 0
@@ -208,9 +231,13 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
       const barOffset = (x.bandwidth() - barWidth) / 2;
       const SEG_GAP = 2;
 
+      const shouldEnterFromZero = isHardRefresh;
+
       series.forEach((serie) => {
         const statusKey = serie.key as BackupStatusKey;
-        g.append('g')
+        const isAnimatingIn = animatingIn.has(statusKey);
+        const rects = g
+          .append('g')
           .selectAll('rect')
           .data(serie)
           .join('rect')
@@ -220,19 +247,66 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
           .attr('fill', `url(#backup-grad-${statusKey})`)
           .attr('rx', 4)
           .style('cursor', (d) => (onSegmentClick && y(d[0]) - y(d[1]) > 0.5 ? 'pointer' : 'default'))
-          .attr('y', innerH)
-          .attr('height', 0)
           .on('click', (event, d) => {
             event.stopPropagation();
             const h = y(d[0]) - y(d[1]);
             if (h < 0.5 || !onSegmentClick) return;
             onSegmentClick(d.data.dataISO, statusKey);
-          })
+          });
+
+        if (shouldEnterFromZero || isAnimatingIn) {
+          const duration = isAnimatingIn ? HIDE_ANIMATION_MS : 650;
+          const transition = rects
+            .attr('y', innerH)
+            .attr('height', 0)
+            .transition()
+            .duration(duration)
+            .ease(d3.easeCubicOut)
+            .attr('y', (d) => y(d[1]))
+            .attr('height', (d) => Math.max(0, y(d[0]) - y(d[1]) - SEG_GAP));
+
+          if (isAnimatingIn) {
+            let animInEnded = 0;
+            transition.on('end', () => {
+              animInEnded += 1;
+              if (animInEnded < serie.length) return;
+              setAnimatingIn((prev) => {
+                const next = new Set(prev);
+                next.delete(statusKey);
+                return next;
+              });
+            });
+          }
+        } else {
+          rects
+            .attr('y', (d) => y(d[1]))
+            .attr('height', (d) => Math.max(0, y(d[0]) - y(d[1]) - SEG_GAP));
+        }
+      });
+
+      animatingOut.forEach((statusKey) => {
+        const rects = g.selectAll<SVGRectElement, d3.SeriesPoint<(typeof chartData)[0]>>(
+          `rect[data-status-key="${statusKey}"]`
+        );
+        const count = rects.size();
+        if (count === 0) return;
+        let ended = 0;
+        rects
           .transition()
-          .duration(650)
-          .ease(d3.easeCubicOut)
-          .attr('y', (d) => y(d[1]))
-          .attr('height', (d) => Math.max(0, y(d[0]) - y(d[1]) - SEG_GAP));
+          .duration(HIDE_ANIMATION_MS)
+          .ease(d3.easeCubicInOut)
+          .attr('y', innerH)
+          .attr('height', 0)
+          .on('end', () => {
+            ended += 1;
+            if (ended < count) return;
+            onLegendToggleRef.current?.(statusKey);
+            setAnimatingOut((prev) => {
+              const next = new Set(prev);
+              next.delete(statusKey);
+              return next;
+            });
+          });
       });
 
       const tooltip = createD3ChartTooltip(svg);
@@ -275,6 +349,8 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
       textMuted,
       legendLabels,
       visibleKeys,
+      animatingOut,
+      animatingIn,
     ]);
 
     if (!showChartBody) {
@@ -311,7 +387,7 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
                   onLegendToggle
                     ? (e) => {
                         e.stopPropagation();
-                        onLegendToggle(k);
+                        handleLegendToggle(k);
                       }
                     : undefined
                 }
@@ -320,7 +396,7 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
                     ? (e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault();
-                          onLegendToggle(k);
+                          handleLegendToggle(k);
                         }
                       }
                     : undefined
