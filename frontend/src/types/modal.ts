@@ -1,5 +1,8 @@
 import type { ButtonVariant } from 'components/ui/Button';
 
+/** Variantes permitidas em bulk actions de modais (sem `unstyled`). */
+type ListModalBulkActionVariant = Exclude<ButtonVariant, 'unstyled'>;
+
 export interface ListModalColumn<T> {
   key: string;
   label: string;
@@ -65,7 +68,7 @@ export interface ListModalProps<T> {
   refreshQueryFn?: () => void;
   bulkActions?: Array<{
     label: string;
-    variant?: ButtonVariant;
+    variant?: ListModalBulkActionVariant;
     requiresSelection?: boolean;
     disabled?: boolean | (() => boolean) | ((selectedItems: T[]) => boolean);
     action?: (() => void) | ((selectedItems: T[]) => void);

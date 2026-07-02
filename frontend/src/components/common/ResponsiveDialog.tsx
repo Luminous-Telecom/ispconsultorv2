@@ -2,8 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useTableHeader } from 'contexts/TableHeaderContext';
 import { useIsMobile } from 'hooks/useMediaQuery';
-import { RecarregarButton, Loading, VoltarButton } from 'components/ui';
-import Button from 'components/ui/Button';
+import { RecarregarButton, Loading, VoltarButton, IconOnlyButton, NavLinkButton } from 'components/ui';
 import SearchBar from 'components/ui/SearchBar';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -121,15 +120,15 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
             className="d-flex align-items-center flex-shrink-0 position-relative responsive-dialog-menu-container"
             ref={menuRef}
           >
-            <Button
+            <IconOnlyButton
               type="button"
               variant="ghost"
               className="p-0 responsive-dialog-menu-btn responsive-dialog-btn-auto"
               onClick={() => setShowMenu(!showMenu)}
-              aria-label={t('layout.openMenu')}
+              label={t('layout.openMenu')}
             >
               <i className="bi bi-three-dots-vertical" aria-hidden />
-            </Button>
+            </IconOnlyButton>
 
             {/* Dropdown Menu */}
             {showMenu && (
@@ -138,16 +137,17 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
               >
                 {/* Search Action */}
                 {tableHeader.showSearch && (
-                  <button
+                  <NavLinkButton
                     className="dropdown-item d-flex align-items-center gap-2 py-2 responsive-dialog-text-primary"
                     onClick={() => {
                       tableHeader.setShowMobileSearch(!tableHeader.showMobileSearch);
                       setShowMenu(false);
                     }}
+                    ariaLabel={t('buttons.search')}
                   >
                     <i className="bi bi-search"></i>
                     <span>{t('buttons.search')}</span>
-                  </button>
+                  </NavLinkButton>
                 )}
 
                 {/* Reload Action */}
@@ -220,7 +220,7 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
                         // Se for type="submit" com form, usar o comportamento nativo do formulário
                         if (buttonType === 'submit' && props.form) {
                           return (
-                            <button
+                            <NavLinkButton
                               key={props.key || Math.random()}
                               type="submit"
                               form={props.form}
@@ -228,11 +228,11 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
                               disabled={isLoading || props.disabled}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // Fechar o menu após processar o evento
                                 setTimeout(() => {
                                   setShowMenu(false);
                                 }, 0);
                               }}
+                              ariaLabel={typeof props.children === 'string' ? props.children : 'Enviar'}
                             >
                               {isLoading ? (
                                 <>
@@ -245,29 +245,26 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
                                   <span>{props.children}</span>
                                 </>
                               )}
-                            </button>
+                            </NavLinkButton>
                           );
                         }
-                        
-                        // Para type="button" com onClick, passar o evento diretamente
+
                         return (
-                          <button
+                          <NavLinkButton
                             key={props.key || Math.random()}
                             type={buttonType}
                             className="dropdown-item d-flex align-items-center gap-2 py-2 responsive-dialog-text-primary"
                             onClick={(e) => {
                               e.stopPropagation();
-                              // Processar o evento antes de fechar o menu
                               if (props.onClick && !isLoading && !props.disabled) {
-                                // Passar o evento diretamente - handleSubmit aceita qualquer evento com preventDefault
                                 props.onClick(e as React.MouseEvent & React.FormEvent);
                               }
-                              // Fechar o menu após processar o evento
                               setTimeout(() => {
                                 setShowMenu(false);
                               }, 0);
                             }}
                             disabled={isLoading || props.disabled}
+                            ariaLabel={typeof props.children === 'string' ? props.children : 'Ação'}
                           >
                             {isLoading ? (
                               <>
@@ -280,7 +277,7 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
                                 <span>{props.children}</span>
                               </>
                             )}
-                          </button>
+                          </NavLinkButton>
                         );
                       };
                       
@@ -332,16 +329,16 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
             searchFields={tableHeader.availableSearchFields}
             className="flex-grow-1"
           />
-          <Button
+          <IconOnlyButton
             type="button"
             variant="ghost"
             size="sm"
             className="text-primary p-1 responsive-dialog-btn-auto"
             onClick={() => tableHeader.setShowMobileSearch(false)}
-            aria-label={t('actions.cancel')}
+            label={t('actions.cancel')}
           >
             <i className="bi bi-x-lg" aria-hidden />
-          </Button>
+          </IconOnlyButton>
         </div>
       )}
 

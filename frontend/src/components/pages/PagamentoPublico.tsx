@@ -5,7 +5,7 @@ import { defaultApiClient } from 'services/core';
 import { formatDate } from 'utils/formatters';
 import { ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
-import { Loading, CopiarButton } from 'components/ui';
+import { Loading, CopiarButton, NavLinkButton } from 'components/ui';
 import './PagamentoPublico.css';
 
 interface TituloPublico {
@@ -175,10 +175,14 @@ const PagamentoPublico: React.FC = () => {
             <span>Baixar Boleto</span>
           </div>
           <div className="pagamento-publico-action-buttons">
-            <button className="pagamento-publico-btn pagamento-publico-btn-primary" onClick={downloadPdf}>
+            <NavLinkButton
+              className="pagamento-publico-btn pagamento-publico-btn-primary"
+              onClick={downloadPdf}
+              ariaLabel="Baixar PDF do Boleto"
+            >
               <i className="bi bi-download"></i>
               <span>Baixar PDF do Boleto</span>
-            </button>
+            </NavLinkButton>
           </div>
         </div>
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import { IconOnlyButton } from 'components/ui';
 import { useTheme } from 'contexts/ThemeContext';
 
 const CentralAssinanteThemeToggle: React.FC = () => {
@@ -6,15 +7,14 @@ const CentralAssinanteThemeToggle: React.FC = () => {
   const label = theme === 'light' ? 'Modo escuro' : 'Modo claro';
 
   return (
-    <button
-      type="button"
+    <IconOnlyButton
       className="central-assinante-theme-toggle"
       onClick={toggleTheme}
       title={label}
-      aria-label={label}
+      label={label}
     >
       <i className={`bi ${theme === 'light' ? 'bi-moon' : 'bi-sun'}`} aria-hidden="true"></i>
-    </button>
+    </IconOnlyButton>
   );
 };
 

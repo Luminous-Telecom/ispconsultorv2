@@ -6,6 +6,7 @@ import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import AtivoInativoField from 'components/ui/AtivoInativoField';
 import {
+  CloseIconButton,
   Loading,
   RecarregarButton,
   NovoButton,
@@ -120,7 +121,7 @@ const SaasPlanos: React.FC = () => {
         <div className="card mb-4 border-primary">
           <div className="card-header d-flex align-items-center justify-content-between">
             <h6 className="mb-0">{t('modal.editPlan')}</h6>
-            <button type="button" className="btn-close" onClick={() => setShowForm(false)} />
+            <CloseIconButton onClick={() => setShowForm(false)} />
           </div>
           <div className="card-body">
             <form onSubmit={handleSave}>

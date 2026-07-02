@@ -4,7 +4,8 @@ import { ButtonHTMLAttributes } from 'react';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useI18n } from 'contexts/I18nContext';
 
-export type ButtonVariant = 
+export type ButtonVariant =
+  | 'unstyled'
   | 'primary' 
   | 'secondary' 
   | 'danger' 
@@ -109,7 +110,8 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
  * </Button>
  * ```
  */
-const Button: React.FC<ButtonProps> = ({
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+  {
   variant = 'primary',
   size = 'md',
   type = 'button',
@@ -126,7 +128,9 @@ const Button: React.FC<ButtonProps> = ({
   title,
   'aria-label': ariaLabel,
   ...rest
-}) => {
+  },
+  ref,
+) {
   const isMobile = useIsMobile();
   const { t } = useI18n();
   
@@ -135,17 +139,19 @@ const Button: React.FC<ButtonProps> = ({
   
   // Construir classes CSS do Bootstrap
   const getButtonClasses = (): string => {
-    const classes: string[] = ['btn'];
-    
+    const classes: string[] = variant === 'unstyled' ? [] : ['btn'];
+
     // Variant
-    if (variant === 'ghost') {
+    if (variant === 'unstyled') {
+      // Apenas className customizada (accordion, nav-link, page-link, etc.)
+    } else if (variant === 'ghost') {
       classes.push('btn-link');
     } else {
       classes.push(`btn-${variant}`);
     }
     
     // Size
-    if (size !== 'md') {
+    if (variant !== 'unstyled' && size !== 'md') {
       classes.push(`btn-${size}`);
     }
     
@@ -223,6 +229,7 @@ const Button: React.FC<ButtonProps> = ({
   }
   return (
     <button
+      ref={ref}
       type={type}
       className={getButtonClasses()}
       disabled={isDisabled}
@@ -233,6 +240,6 @@ const Button: React.FC<ButtonProps> = ({
       {renderContent()}
     </button>
   );
-};
+});
 
 export default Button;

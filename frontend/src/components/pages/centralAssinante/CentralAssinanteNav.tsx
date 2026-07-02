@@ -1,5 +1,5 @@
 import React from 'react';
-import { Badge } from 'components/ui';
+import { Badge, NavLinkButton } from 'components/ui';
 import { DadosCentralAssinante } from 'services/centralAssinanteService';
 import { CentralAssinanteTab, getFinanceiroNavBadgeVariant, getFinanceiroPagoNavBadgeVariant } from './centralAssinanteUtils';
 
@@ -24,20 +24,22 @@ const CentralAssinanteNav: React.FC<CentralAssinanteNavProps> = ({
     return (
     <aside className="d-none d-md-block central-assinante-sidebar">
       <nav className="nav nav-pills flex-column p-2 central-assinante-nav">
-        <button
+        <NavLinkButton
           className={`nav-link d-flex flex-column align-items-center justify-content-center position-relative p-3 central-assinante-nav-button ${activeTab === 'resumo' ? 'active' : ''}`}
           onClick={() => {
             onTabChange('resumo');
           }}
+          ariaLabel="Resumo"
         >
           <i className="bi bi-house-door central-assinante-nav-icon"></i>
           <small className="small mt-1 central-assinante-nav-text">Resumo</small>
-        </button>
-        <button
+        </NavLinkButton>
+        <NavLinkButton
           className={`nav-link d-flex flex-column align-items-center justify-content-center position-relative p-3 central-assinante-nav-button ${activeTab === 'contratos' ? 'active' : ''}`}
           onClick={() => {
             onTabChange('contratos');
           }}
+          ariaLabel="Contratos"
         >
           <i className="bi bi-file-earmark-text central-assinante-nav-icon position-relative">
             <span className="position-absolute top-0 end-0 central-assinante-badge-wrapper">
@@ -53,12 +55,13 @@ const CentralAssinanteNav: React.FC<CentralAssinanteNavProps> = ({
             </span>
           </i>
           <small className="small mt-1 central-assinante-nav-text">Contratos</small>
-        </button>
-        <button
+        </NavLinkButton>
+        <NavLinkButton
           className={`nav-link d-flex flex-column align-items-center justify-content-center position-relative p-3 central-assinante-nav-button ${activeTab === 'financeiro' ? 'active' : ''}`}
           onClick={() => {
             onTabChange('financeiro');
           }}
+          ariaLabel="A Pagar"
         >
           <i className="bi bi-wallet central-assinante-nav-icon position-relative">
             <span className="position-absolute top-0 end-0 central-assinante-badge-wrapper">
@@ -68,12 +71,13 @@ const CentralAssinanteNav: React.FC<CentralAssinanteNavProps> = ({
             </span>
           </i>
           <small className="small mt-1 central-assinante-nav-text">A Pagar</small>
-        </button>
-        <button
+        </NavLinkButton>
+        <NavLinkButton
           className={`nav-link d-flex flex-column align-items-center justify-content-center position-relative p-3 central-assinante-nav-button central-assinante-nav-button-pago ${activeTab === 'financeiro_pago' ? 'active' : ''}`}
           onClick={() => {
             onTabChange('financeiro_pago');
           }}
+          ariaLabel="Pago"
         >
           <i className="bi bi-check-circle central-assinante-nav-icon position-relative">
             <span className="position-absolute top-0 end-0 central-assinante-badge-wrapper">
@@ -83,12 +87,13 @@ const CentralAssinanteNav: React.FC<CentralAssinanteNavProps> = ({
             </span>
           </i>
           <small className="small mt-1 central-assinante-nav-text">Pago</small>
-        </button>
-        <button
+        </NavLinkButton>
+        <NavLinkButton
           className={`nav-link d-flex flex-column align-items-center justify-content-center position-relative p-3 central-assinante-nav-button ${activeTab === 'termos' ? 'active' : ''}`}
           onClick={() => {
             onTabChange('termos');
           }}
+          ariaLabel="Termos"
         >
           <i className="bi bi-file-check central-assinante-nav-icon position-relative">
             <span className="position-absolute top-0 end-0 central-assinante-badge-wrapper">
@@ -98,7 +103,7 @@ const CentralAssinanteNav: React.FC<CentralAssinanteNavProps> = ({
             </span>
           </i>
           <small className="small mt-1 central-assinante-nav-text">Termos</small>
-        </button>
+        </NavLinkButton>
       </nav>
     </aside>
     );
@@ -107,22 +112,24 @@ const CentralAssinanteNav: React.FC<CentralAssinanteNavProps> = ({
   return (
     <div className="d-md-none fixed-bottom central-assinante-mobile-nav">
       <div className="d-flex justify-content-around align-items-center py-1 central-assinante-mobile-nav-inner">
-        <button
+        <NavLinkButton
           className={`btn text-decoration-none central-assinante-mobile-button ${activeTab === 'resumo' ? 'active text-white' : 'text-white-50'}`}
           onClick={() => {
             onTabChange('resumo');
           }}
+          ariaLabel="Resumo"
         >
           <div className="d-flex flex-column align-items-center">
             <i className={`bi bi-house-door central-assinante-nav-icon ${activeTab === 'resumo' ? 'text-white' : 'text-white-50'}`}></i>
             <small className="small">Resumo</small>
           </div>
-        </button>
-        <button
+        </NavLinkButton>
+        <NavLinkButton
           className={`btn text-decoration-none central-assinante-mobile-button ${activeTab === 'contratos' ? 'active text-white' : 'text-white-50'}`}
           onClick={() => {
             onTabChange('contratos');
           }}
+          ariaLabel="Contratos"
         >
           <div className="d-flex flex-column align-items-center">
             <i className={`bi bi-file-earmark-text central-assinante-nav-icon position-relative ${activeTab === 'contratos' ? 'text-white' : 'text-white-50'}`}>
@@ -134,12 +141,13 @@ const CentralAssinanteNav: React.FC<CentralAssinanteNavProps> = ({
             </i>
             <small className="small">Contratos</small>
           </div>
-        </button>
-        <button
+        </NavLinkButton>
+        <NavLinkButton
           className={`btn text-decoration-none central-assinante-mobile-button ${activeTab === 'financeiro' ? 'active text-white' : 'text-white-50'}`}
           onClick={() => {
             onTabChange('financeiro');
           }}
+          ariaLabel="A Pagar"
         >
           <div className="d-flex flex-column align-items-center">
             <i className={`bi bi-wallet central-assinante-nav-icon position-relative ${activeTab === 'financeiro' ? 'text-white' : 'text-white-50'}`}>
@@ -151,12 +159,13 @@ const CentralAssinanteNav: React.FC<CentralAssinanteNavProps> = ({
             </i>
             <small className="small">A Pagar</small>
           </div>
-        </button>
-        <button
+        </NavLinkButton>
+        <NavLinkButton
           className={`btn text-decoration-none central-assinante-mobile-button ${activeTab === 'financeiro_pago' ? 'active text-white' : 'text-white-50'}`}
           onClick={() => {
             onTabChange('financeiro_pago');
           }}
+          ariaLabel="Pago"
         >
           <div className="d-flex flex-column align-items-center">
             <i className={`bi bi-check-circle central-assinante-nav-icon position-relative ${activeTab === 'financeiro_pago' ? 'text-white' : 'text-white-50'}`}>
@@ -168,12 +177,13 @@ const CentralAssinanteNav: React.FC<CentralAssinanteNavProps> = ({
             </i>
             <small className="small">Pago</small>
           </div>
-        </button>
-        <button
+        </NavLinkButton>
+        <NavLinkButton
           className={`btn text-decoration-none central-assinante-mobile-button ${activeTab === 'termos' ? 'active text-white' : 'text-white-50'}`}
           onClick={() => {
             onTabChange('termos');
           }}
+          ariaLabel="Termos"
         >
           <div className="d-flex flex-column align-items-center">
             <i className={`bi bi-file-check central-assinante-nav-icon position-relative ${activeTab === 'termos' ? 'text-white' : 'text-secondary'}`}>
@@ -185,7 +195,7 @@ const CentralAssinanteNav: React.FC<CentralAssinanteNavProps> = ({
             </i>
             <small className="small">Termos</small>
           </div>
-        </button>
+        </NavLinkButton>
       </div>
     </div>
   );

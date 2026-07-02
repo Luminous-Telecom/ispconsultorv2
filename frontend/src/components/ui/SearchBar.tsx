@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import Button from './Button';
+import { IconOnlyButton } from 'components/ui';
 
 export interface SearchFieldOption {
   key?: string;
@@ -130,6 +130,16 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     />
   );
 
+  const clearButton = value.trim() ? (
+    <IconOnlyButton
+      type="button"
+      className={isNavbar ? 'navbar-search-form__clear' : 'navbar-inline-search-clear'}
+      onClick={() => onChange('')}
+      label="Limpar busca"
+      iconClassName="bi bi-x-lg"
+    />
+  ) : null;
+
   if (isNavbar) {
     return (
       <div className={`${containerClass} ${className}`.trim()}>
@@ -153,16 +163,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         <form className="navbar-search-form" role="search" onSubmit={handleSubmit}>
           <i className="bi bi-search navbar-search-form__icon" aria-hidden />
           {inputEl}
-          {value.trim() ? (
-            <button
-              type="button"
-              className="navbar-search-form__clear"
-              onClick={() => onChange('')}
-              aria-label="Limpar busca"
-            >
-              <i className="bi bi-x-lg" aria-hidden />
-            </button>
-          ) : null}
+          {clearButton}
         </form>
       </div>
     );
@@ -173,16 +174,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       <div className={`${containerClass} ${className}`.trim()}>
         <i className="bi bi-search navbar-inline-search-icon" aria-hidden />
         {inputEl}
-        {value.trim() ? (
-          <button
-            type="button"
-            className="navbar-inline-search-clear"
-            onClick={() => onChange('')}
-            aria-label="Limpar busca"
-          >
-            <i className="bi bi-x-lg" aria-hidden />
-          </button>
-        ) : null}
+        {clearButton}
       </div>
     );
   }
@@ -230,28 +222,15 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           ))}
         </select>
       )}
-      <div className="position-relative flex-fill-min-w-0" >
+      <div className="position-relative flex-fill-min-w-0">
         {inputEl}
-        {isNavbar ? (
-          <button
-            type="button"
-            className={iconClass}
-            onClick={() => onSearch(value)}
-            aria-label={placeholder}
-          >
-            <i className="bi bi-search text-muted" aria-hidden />
-          </button>
-        ) : (
-          <Button
-            type="button"
-            variant="ghost"
-            className={iconClass}
-            onClick={() => onSearch(value)}
-            aria-label={placeholder}
-          >
-            <i className="bi bi-search text-muted" aria-hidden />
-          </Button>
-        )}
+        <IconOnlyButton
+          type="button"
+          className={iconClass}
+          onClick={() => onSearch(value)}
+          label={placeholder}
+          iconClassName="bi bi-search text-muted"
+        />
       </div>
     </div>
   );

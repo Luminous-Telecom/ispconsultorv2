@@ -1,6 +1,6 @@
 import React, { RefObject } from 'react';
 import { useElementProperties } from 'hooks/useElementProperties';
-import { ColWithWidth, DynamicStyledElement } from '../ui';
+import { ColWithWidth, DynamicStyledElement, IconOnlyButton, NavLinkButton } from '../ui';
 import Loading from '../ui/Loading';
 import TableColumn from './TableColumn';
 import {
@@ -259,14 +259,13 @@ function TableDesktopView<T extends { id: number | string }>({
                   {actions.length > 0 && (
                     <td className="text-center col-actions" onClick={(e) => e.stopPropagation()}>
                       <div className="table-actions-desktop">
-                        <button
-                          type="button"
+                        <IconOnlyButton
                           className="table-action-menu-btn"
                           onClick={(e) => {
                             e.stopPropagation();
                             onOpenActionDropdown(openActionDropdown === item.id ? null : item.id);
                           }}
-                          aria-label={actionsMenuLabel}
+                          label={actionsMenuLabel}
                         >
                           <svg
                             width="16"
@@ -282,7 +281,7 @@ function TableDesktopView<T extends { id: number | string }>({
                             <circle cx="12" cy="5" r="1" />
                             <circle cx="12" cy="19" r="1" />
                           </svg>
-                        </button>
+                        </IconOnlyButton>
                         {openActionDropdown === item.id && (
                           <>
                             <div
@@ -305,9 +304,8 @@ function TableDesktopView<T extends { id: number | string }>({
                                       ? action.disabled(item)
                                       : action.disabled;
                                   return (
-                                    <button
+                                    <NavLinkButton
                                       key={action.key}
-                                      type="button"
                                       className={`table-dropdown-item ${action.variant === 'danger' ? 'danger' : ''}`}
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -319,10 +317,11 @@ function TableDesktopView<T extends { id: number | string }>({
                                         }
                                       }}
                                       disabled={isDisabled}
+                                      ariaLabel={action.label}
                                     >
                                       {action.icon && <i className={action.icon} />}
                                       <span>{action.label}</span>
-                                    </button>
+                                    </NavLinkButton>
                                   );
                                 })}
                             </div>

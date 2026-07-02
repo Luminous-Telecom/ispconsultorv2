@@ -1,5 +1,6 @@
 import React from 'react';
 import BackNetLogo from 'components/common/BackNetLogo';
+import { AppButton, IconOnlyButton, NavLinkButton } from 'components/ui';
 import { Theme } from 'contexts/ThemeContext';
 import { NAV_ITEMS, SHOW_WIKI } from './homeConstants';
 
@@ -17,9 +18,15 @@ const HomeNavLinks: React.FC<{
 }> = ({ scrollTo, onWikiClick }) => (
   <>
     {NAV_ITEMS.map((item) => (
-      <button key={item.id} type="button" className="home-nav-link" onClick={() => scrollTo(item.id)}>
+      <NavLinkButton
+        key={item.id}
+        type="button"
+        className="home-nav-link"
+        onClick={() => scrollTo(item.id)}
+        ariaLabel={item.label}
+      >
         {item.label}
-      </button>
+      </NavLinkButton>
     ))}
     {SHOW_WIKI && (
       <a
@@ -49,33 +56,43 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
         <HomeNavLinks scrollTo={scrollTo} />
       </nav>
       <div className="home-header-actions">
-        <button
+        <IconOnlyButton
           type="button"
           className="home-theme-toggle"
           onClick={toggleTheme}
           title={theme === 'light' ? 'Modo escuro' : 'Modo claro'}
+          label={theme === 'light' ? 'Modo escuro' : 'Modo claro'}
         >
           <span className={`bi ${theme === 'light' ? 'bi-moon' : 'bi-sun'}`} />
-        </button>
-        <button type="button" className="home-btn home-btn-accent" onClick={() => window.open('/login', '_blank', 'noopener,noreferrer')}>
-          Acessar Sistema
-        </button>
+        </IconOnlyButton>
+        <AppButton
+          type="button"
+          label="Acessar Sistema"
+          variant="unstyled"
+          className="home-btn home-btn-accent"
+          onClick={() => window.open('/login', '_blank', 'noopener,noreferrer')}
+        />
       </div>
-      <button
+      <IconOnlyButton
         type="button"
         className="home-menu-toggle"
         onClick={() => setIsMenuOpen(!isMenuOpen)}
         aria-expanded={isMenuOpen}
+        label={isMenuOpen ? 'Fechar menu' : 'Abrir menu'}
       >
         <span className={`bi ${isMenuOpen ? 'bi-x-lg' : 'bi-list'}`} />
-      </button>
+      </IconOnlyButton>
     </div>
     {isMenuOpen && (
       <div className="home-nav-mobile">
         <HomeNavLinks scrollTo={scrollTo} onWikiClick={() => setIsMenuOpen(false)} />
-        <button type="button" className="home-btn home-btn-accent home-btn-full" onClick={() => window.open('/login', '_blank', 'noopener,noreferrer')}>
-          Acessar Sistema
-        </button>
+        <AppButton
+          type="button"
+          label="Acessar Sistema"
+          variant="unstyled"
+          className="home-btn home-btn-accent home-btn-full"
+          onClick={() => window.open('/login', '_blank', 'noopener,noreferrer')}
+        />
       </div>
     )}
   </header>

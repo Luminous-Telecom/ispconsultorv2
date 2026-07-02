@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Input, CancelarButton, AlterarSenhaButton } from 'components/ui';
+import { Card, Input, CancelarButton, AlterarSenhaButton, NavLinkButton } from 'components/ui';
 
 interface TrocarSenhaForm {
   senhaAtual: string;
@@ -73,14 +73,14 @@ const CentralAssinanteTrocarSenhaModal: React.FC<CentralAssinanteTrocarSenhaModa
                     disabled={isPending}
                     className="central-assinante-input-with-toggle-field"
                   />
-                  <button
-                    type="button"
+                  <NavLinkButton
                     className="central-assinante-password-toggle"
                     onClick={() => setMostrarNovaSenha((v) => !v)}
                     disabled={isPending}
+                    ariaLabel={mostrarNovaSenha ? 'Ocultar' : 'Mostrar'}
                   >
                     {mostrarNovaSenha ? 'Ocultar' : 'Mostrar'}
-                  </button>
+                  </NavLinkButton>
                 </div>
               </div>
 
@@ -97,14 +97,14 @@ const CentralAssinanteTrocarSenhaModal: React.FC<CentralAssinanteTrocarSenhaModa
                     disabled={isPending}
                     className="central-assinante-input-with-toggle-field"
                   />
-                  <button
-                    type="button"
+                  <NavLinkButton
                     className="central-assinante-password-toggle"
                     onClick={() => setMostrarNovaSenha((v) => !v)}
                     disabled={isPending}
+                    ariaLabel={mostrarNovaSenha ? 'Ocultar' : 'Mostrar'}
                   >
                     {mostrarNovaSenha ? 'Ocultar' : 'Mostrar'}
-                  </button>
+                  </NavLinkButton>
                 </div>
               </div>
 

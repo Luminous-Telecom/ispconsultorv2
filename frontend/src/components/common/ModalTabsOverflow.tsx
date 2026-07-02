@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { PositionedFixed } from 'components/ui';
+import { PositionedFixed, NavLinkButton } from 'components/ui';
 
 export interface ModalTabItem<T extends string = string> {
   id: T;
@@ -184,21 +184,21 @@ function ModalTabsOverflow<T extends string = string>({
   };
 
   const renderTabButton = (tab: ModalTabItem<T>) => (
-    <button
+    <NavLinkButton
       className={`nav-link modal-tab-hover ${activeTab === tab.id ? 'active' : ''} ${tab.disabled && disabledClassName ? disabledClassName : ''}`}
-      type="button"
       onClick={() => handleTabClick(tab)}
       disabled={tab.disabled}
+      ariaLabel={tab.label}
     >
       {tab.label}
-    </button>
+    </NavLinkButton>
   );
 
   const renderMeasureTab = (tab: ModalTabItem<T>) => (
     <li key={tab.id} className="nav-item" role="presentation" data-tab-measure>
-      <button type="button" className="nav-link" tabIndex={-1}>
+      <NavLinkButton className="nav-link" tabIndex={-1} ariaLabel={tab.label}>
         {tab.label}
-      </button>
+      </NavLinkButton>
     </li>
   );
 
@@ -228,17 +228,16 @@ function ModalTabsOverflow<T extends string = string>({
 
       {hasOverflow && (
         <div className="modal-tabs-overflow-menu">
-          <button
+          <NavLinkButton
             ref={triggerRef}
-            type="button"
             className={`nav-link modal-tab-hover modal-tabs-overflow-trigger ${isOverflowActive ? 'active' : ''} ${showDropdown ? 'open' : ''}`}
             onClick={handleToggleDropdown}
             aria-expanded={showDropdown}
             aria-haspopup="menu"
-            aria-label="Mais abas"
+            ariaLabel="Mais abas"
           >
             ⋮
-          </button>
+          </NavLinkButton>
 
           {showDropdown && createPortal(
             <PositionedFixed
@@ -249,16 +248,16 @@ function ModalTabsOverflow<T extends string = string>({
             >
               <div ref={dropdownRef} role="menu">
                 {overflowTabs.map((tab) => (
-                  <button
+                  <NavLinkButton
                     key={tab.id}
-                    type="button"
                     className={`modal-tabs-overflow-dropdown-item ${activeTab === tab.id ? 'active' : ''}`}
                     onClick={() => handleTabClick(tab)}
                     disabled={tab.disabled}
                     role="menuitem"
+                    ariaLabel={tab.label}
                   >
                     {tab.label}
-                  </button>
+                  </NavLinkButton>
                 ))}
               </div>
             </PositionedFixed>,

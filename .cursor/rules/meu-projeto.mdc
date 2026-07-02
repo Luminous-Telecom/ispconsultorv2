@@ -35,7 +35,11 @@ alwaysApply: true
 - Nunca use commits genéricos
 
 ## Botões (regra crítica)
-- SEM ícones nos botões, exceto ações de `Copiar` (pode usar botão só com ícone)
+
+Detalhes completos: `.cursor/rules/frontend-botoes.mdc`
+
+- **Proibido** `<button>` HTML e import de `components/ui/Button` — usar `components/ui/buttons`
+- SEM ícones nos botões, exceto `CopiarButton iconOnly` e exceções estruturais (`IconOnlyButton`, paginação, `btn-close`)
 - Texto FIXO mesmo durante `isPending` — nunca mude o texto
 - Botão salvar: sempre "Salvar" | Criar: "Criar [Entidade]"
 - Mantém `disabled={isPending}` mas texto não muda

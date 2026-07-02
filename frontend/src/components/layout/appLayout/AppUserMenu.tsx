@@ -1,4 +1,5 @@
 import React from 'react';
+import { NavLinkButton } from 'components/ui';
 import type { Language } from 'contexts/I18nContext';
 import LanguageDropdown from '../layout/LanguageDropdown';
 import type { TranslateFn } from '../layout/types';
@@ -73,18 +74,18 @@ const AppUserMenu: React.FC<AppUserMenuProps> = ({
   return (
   <div className="layout-user-area d-flex align-items-center justify-content-end">
     <div className="layout-user-menu text-end" ref={userMenuRef}>
-      <button
-        type="button"
+      <NavLinkButton
         className="layout-user-trigger"
         onClick={onToggleUserMenu}
         aria-expanded={showUserMenu}
         aria-haspopup="true"
         title={displayName}
+        ariaLabel={displayName}
       >
         <span className="layout-user-trigger__avatar" aria-hidden>
           {initials}
         </span>
-      </button>
+      </NavLinkButton>
       {showUserMenu && (
         <ul className="layout-user-dropdown layout-table-dropdown">
           <li className="layout-user-dropdown__header">
@@ -95,28 +96,28 @@ const AppUserMenu: React.FC<AppUserMenuProps> = ({
             )}
           </li>
           <li>
-            <button
-              type="button"
+            <NavLinkButton
               className="layout-user-dropdown__row"
               onClick={(e) => {
                 e.stopPropagation();
                 onToggleTheme();
               }}
+              ariaLabel={theme === 'light' ? t('layout.darkMode') : t('layout.lightMode')}
             >
               <i className="bi bi-circle-half" aria-hidden />
               <span>{theme === 'light' ? t('layout.darkMode') : t('layout.lightMode')}</span>
-            </button>
+            </NavLinkButton>
           </li>
           {showLanguage && onToggleLanguageDropdown && onSelectLanguage && languageTriggerRef && (
             <li>
-              <button
-                type="button"
+              <NavLinkButton
                 ref={languageTriggerRef}
                 className="layout-user-dropdown__row"
                 onClick={(e) => {
                   e.stopPropagation();
                   onToggleLanguageDropdown();
                 }}
+                ariaLabel={t('layout.language')}
               >
                 <i className="bi bi-translate" aria-hidden />
                 <span>{t('layout.language')}</span>
@@ -124,7 +125,7 @@ const AppUserMenu: React.FC<AppUserMenuProps> = ({
                   className={`bi layout-user-dropdown__chevron ${showLanguageDropdown ? 'bi-chevron-down' : 'bi-chevron-right'}`}
                   aria-hidden
                 />
-              </button>
+              </NavLinkButton>
               {isMobile && languageDropdownRef && language && (
                 <LanguageDropdown
                   isMobile={isMobile}
@@ -139,14 +140,14 @@ const AppUserMenu: React.FC<AppUserMenuProps> = ({
             </li>
           )}
           <li className="layout-user-dropdown__footer">
-            <button
-              type="button"
+            <NavLinkButton
               className="layout-user-dropdown__row layout-user-dropdown__row--danger"
               onClick={onLogout}
+              ariaLabel={t('nav.logout')}
             >
               <i className="bi bi-box-arrow-right" aria-hidden />
               <span>{t('nav.logout')}</span>
-            </button>
+            </NavLinkButton>
           </li>
         </ul>
       )}

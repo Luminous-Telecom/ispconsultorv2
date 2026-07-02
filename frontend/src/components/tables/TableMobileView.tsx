@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { TranslationKeys } from 'contexts/I18nContext';
 import Loading from '../ui/Loading';
+import { IconOnlyButton, NavLinkButton } from '../ui';
 import { drainPossiblePromise } from './tableUtils';
 import { BulkAction, TableAction, TableColumn } from './types';
 import {
@@ -147,11 +148,10 @@ function TableMobileView<T extends { id: number | string }>({
 
                 <div className="table-mobile-card-header-right">
                   {hiddenFields.length > 0 && (
-                    <button
-                      type="button"
+                    <IconOnlyButton
                       className="table-mobile-expand-btn"
                       onClick={toggleExpand}
-                      aria-label={isExpanded ? t('ui.hide') : t('ui.show')}
+                      label={isExpanded ? t('ui.hide') : t('ui.show')}
                     >
                       <svg
                         width="20"
@@ -169,11 +169,11 @@ function TableMobileView<T extends { id: number | string }>({
                           <polyline points="6 9 12 15 18 9"></polyline>
                         )}
                       </svg>
-                    </button>
+                    </IconOnlyButton>
                   )}
 
                   <div className="table-mobile-actions">
-                    <button
+                    <IconOnlyButton
                       ref={(el) => {
                         if (el) {
                           buttonRefs.current.set(item.id, el);
@@ -181,13 +181,12 @@ function TableMobileView<T extends { id: number | string }>({
                           buttonRefs.current.delete(item.id);
                         }
                       }}
-                      type="button"
                       className="table-mobile-menu-btn"
                       onClick={(e) => {
                         e.stopPropagation();
                         setOpenActionDropdown(openActionDropdown === item.id ? null : item.id);
                       }}
-                      aria-label={t('ui.actionsMenu')}
+                      label={t('ui.actionsMenu')}
                     >
                       <svg
                         width="20"
@@ -203,7 +202,7 @@ function TableMobileView<T extends { id: number | string }>({
                         <circle cx="12" cy="5" r="1"></circle>
                         <circle cx="12" cy="19" r="1"></circle>
                       </svg>
-                    </button>
+                    </IconOnlyButton>
 
                     {openActionDropdown === item.id &&
                       typeof document !== 'undefined' &&
@@ -241,9 +240,8 @@ function TableMobileView<T extends { id: number | string }>({
                                         : action.disabled;
 
                                     return (
-                                      <button
+                                      <NavLinkButton
                                         key={action.key}
-                                        type="button"
                                         className={`table-mobile-dropdown-item ${action.variant === 'danger' ? 'danger' : ''}`}
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -255,10 +253,11 @@ function TableMobileView<T extends { id: number | string }>({
                                           }
                                         }}
                                         disabled={isDisabled}
+                                        ariaLabel={action.label}
                                       >
                                         {action.icon && <i className={action.icon}></i>}
                                         <span>{action.label}</span>
-                                      </button>
+                                      </NavLinkButton>
                                     );
                                   })
                               : bulkActions
@@ -288,9 +287,8 @@ function TableMobileView<T extends { id: number | string }>({
                                             ? subItem.disabled([item])
                                             : Boolean(subItem.disabled);
                                         return (
-                                          <button
+                                          <NavLinkButton
                                             key={`${actionKey}-dd-${subIdx}`}
-                                            type="button"
                                             className={`table-mobile-dropdown-item ${bulkAction.variant === 'danger' ? 'danger' : ''}`}
                                             onClick={(e) => {
                                               e.stopPropagation();
@@ -299,9 +297,10 @@ function TableMobileView<T extends { id: number | string }>({
                                               drainPossiblePromise(subItem.action([item]));
                                             }}
                                             disabled={isItemDisabled}
+                                            ariaLabel={subItem.label}
                                           >
                                             <span>{subItem.label}</span>
-                                          </button>
+                                          </NavLinkButton>
                                         );
                                       });
                                     }
@@ -310,9 +309,8 @@ function TableMobileView<T extends { id: number | string }>({
                                         ? bulkAction.disabled([item])
                                         : Boolean(bulkAction.disabled);
                                     return [
-                                      <button
+                                      <NavLinkButton
                                         key={actionKey}
-                                        type="button"
                                         className={`table-mobile-dropdown-item ${bulkAction.variant === 'danger' ? 'danger' : ''}`}
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -325,9 +323,10 @@ function TableMobileView<T extends { id: number | string }>({
                                           }
                                         }}
                                         disabled={isBulkDisabled}
+                                        ariaLabel={bulkAction.label}
                                       >
                                         <span>{bulkAction.label}</span>
-                                      </button>,
+                                      </NavLinkButton>,
                                     ];
                                   })}
                           </div>
@@ -385,14 +384,13 @@ function TableMobileView<T extends { id: number | string }>({
 
     return (
       <div ref={fabContainerRef} className="table-mobile-fab-container">
-        <button
-          type="button"
+        <IconOnlyButton
           className="table-mobile-fab-btn"
           onClick={(e) => {
             e.stopPropagation();
             setIsFabOpen(!isFabOpen);
           }}
-          aria-label={t('ui.actionsMenu')}
+          label={t('ui.actionsMenu')}
         >
           <svg
             width="24"
@@ -408,7 +406,7 @@ function TableMobileView<T extends { id: number | string }>({
             <line x1="3" y1="12" x2="21" y2="12"></line>
             <line x1="3" y1="18" x2="21" y2="18"></line>
           </svg>
-        </button>
+        </IconOnlyButton>
 
         {isFabOpen && (
           <div ref={fabDropdownRef} className="table-mobile-fab-dropdown">
@@ -420,9 +418,8 @@ function TableMobileView<T extends { id: number | string }>({
               const icon = bulkAction.icon || 'plus-circle';
 
               return (
-                <button
+                <NavLinkButton
                   key={index}
-                  type="button"
                   className="dropdown-item d-flex align-items-center gap-2 py-2 table-text-primary"
                   onClick={(e) => {
                     e.preventDefault();
@@ -433,10 +430,11 @@ function TableMobileView<T extends { id: number | string }>({
                     }
                   }}
                   disabled={isDisabled}
+                  ariaLabel={bulkAction.label}
                 >
                   <i className={`bi bi-${icon}`}></i>
                   <span>{bulkAction.label}</span>
-                </button>
+                </NavLinkButton>
               );
             })}
           </div>

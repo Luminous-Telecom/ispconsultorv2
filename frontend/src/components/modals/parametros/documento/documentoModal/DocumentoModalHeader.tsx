@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import type { TranslationKeys } from 'contexts/I18nContext';
-import { CancelarButton, ImprimirButton, SalvarButton } from 'components/ui';
+import { CancelarButton, ImprimirButton, SalvarButton, DropdownItemButton } from 'components/ui';
 import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
 import { useI18n } from 'contexts/I18nContext';
 import { DocumentoModalProps } from '../types';
@@ -88,26 +88,20 @@ function DocumentoModalHeader({
           {tipo === 'contrato'
             ? CONTRATO_PRINT_OPTIONS.map(({ tipo: docTipo, labelKey }) => (
                 <li key={docTipo}>
-                  <button
-                    className="dropdown-item"
-                    type="button"
+                  <DropdownItemButton
+                    label={t(labelKey)}
                     onClick={(e) => handlePrintOption(e, docTipo)}
                     disabled={!isEditing}
-                  >
-                    {t(labelKey)}
-                  </button>
+                  />
                 </li>
               ))
             : (
                 <li>
-                  <button
-                    className="dropdown-item"
-                    type="button"
+                  <DropdownItemButton
+                    label={tipoLabel}
                     onClick={(e) => handlePrintOption(e)}
                     disabled={!isEditing}
-                  >
-                    {tipoLabel}
-                  </button>
+                  />
                 </li>
               )}
         </ul>

@@ -3,7 +3,7 @@ import { TituloService } from 'services/tituloService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
-import { CancelarButton, CriarTituloButton, SalvarButton } from 'components/ui';
+import { CancelarButton, CriarTituloButton, SalvarButton, AppButton, DropdownItemButton } from 'components/ui';
 
 interface TituloModalHeaderProps {
   isEditMode: boolean;
@@ -65,25 +65,20 @@ const TituloModalHeader: React.FC<TituloModalHeaderProps> = ({
     <div className="d-flex gap-2 modal-header-actions">
       {isEditMode && internalTituloId && (
         <div className="btn-group">
-          <button
-            type="button"
-            className="btn btn-primary btn-sm dropdown-toggle"
+          <AppButton
+            label={sendLabel}
+            variant="primary"
+            className="dropdown-toggle"
             data-bs-toggle="dropdown"
             aria-expanded="false"
             disabled={isPending}
-          >
-            {sendLabel}
-          </button>
+          />
           <ul className="dropdown-menu">
             <li>
-              <button className="dropdown-item" type="button" onClick={handleEnviarWhatsApp}>
-                {sendViaWhatsAppLabel}
-              </button>
+              <DropdownItemButton label={sendViaWhatsAppLabel} onClick={handleEnviarWhatsApp} />
             </li>
             <li>
-              <button className="dropdown-item" type="button" onClick={handleEnviarEmail}>
-                {sendViaEmailLabel}
-              </button>
+              <DropdownItemButton label={sendViaEmailLabel} onClick={handleEnviarEmail} />
             </li>
           </ul>
         </div>

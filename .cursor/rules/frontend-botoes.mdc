@@ -1,0 +1,153 @@
+---
+description: Sistema centralizado de botões do BackNet — API, variantes e regras
+globs: frontend/**/*.tsx,frontend/**/*.ts
+alwaysApply: false
+---
+
+# Botões — BackNet
+
+**Proibido** usar `<button>` HTML ou importar `components/ui/Button` fora de `components/ui/buttons/`.
+
+Import padrão:
+
+```tsx
+import {
+  SalvarButton,
+  CancelarButton,
+  ModalFormActions,
+  AppButton,
+  NavLinkButton,
+  IconOnlyButton,
+  CloseIconButton,
+  DropdownItemButton,
+  PaginationNavButton,
+} from 'components/ui';
+```
+
+## Hierarquia
+
+| Camada | Onde | Uso |
+|--------|------|-----|
+| Primitivo | `components/ui/Button.tsx` | **Interno** — só instanciado por `renderButton.tsx` |
+| Render | `buttons/renderButton.tsx` | Único lugar que cria `<Button>` |
+| Ações nomeadas | `buttons/config.ts` + `buttons.tsx` | `SalvarButton`, `NovoButton`, `CopiarButton`, … |
+| Genéricos | `AppButton`, `NavLinkButton`, … | Casos sem ação no config ou layout estrutural |
+
+## Quando usar cada um
+
+### `*Button` (SystemButton)
+
+Ações de negócio com texto i18n fixo — **preferir sempre**:
+
+```tsx
+<SalvarButton type="submit" form="meu-form" isPending={isPending} />
+<CancelarButton type="button" onClick={onClose} />
+<NovoButton entity="Cliente" onClick={handleNew} />
+<CopiarButton iconOnly onClick={handleCopy} />
+```
+
+Novas ações recorrentes → adicionar em `config.ts` (`SystemButtonAction` + `SYSTEM_BUTTON_CONFIG` + export em `buttons.tsx`).
+
+### `ModalFormActions`
+
+Rodapé padrão de modal (Cancelar + Salvar):
+
+```tsx
+<ModalFormActions onCancel={onClose} formId="meu-form" isPending={isPending} />
+```
+
+### `AppButton`
+
+Label custom ou classes de marketing quando não há `*Button`:
+
+```tsx
+<AppButton label="Agendar Demonstração" variant="unstyled" className="home-btn home-btn-cta-outline" />
+<AppButton label={sendLabel} variant="primary" className="dropdown-toggle" data-bs-toggle="dropdown" />
+```
+
+### `NavLinkButton`
+
+Botões **sem** classes Bootstrap `btn` — nav, accordion, sidebar, home:
+
+```tsx
+<NavLinkButton className="nav-link sidebar-folder-item" ariaLabel={item.label} onClick={...}>
+  {item.label}
+</NavLinkButton>
+```
+
+### `IconOnlyButton`
+
+Só ícone + `aria-label` — **exceções documentadas**:
+
+- `CopiarButton iconOnly` (preferir para copiar)
+- Limpar busca, fechar painel, paginação, theme toggle, menu hamburger
+- **Não** usar em ações CRUD com texto
+
+```tsx
+<IconOnlyButton label="Limpar busca" iconClassName="bi bi-x-lg" className="navbar-search-form__clear" />
+```
+
+### `CloseIconButton`
+
+Fechar modal (`btn-close`):
+
+```tsx
+<CloseIconButton className="btn-close position-absolute end-0" onClick={onClose} />
+```
+
+### `DropdownItemButton` / `DropdownToggleButton`
+
+Itens e toggle de menus dropdown:
+
+```tsx
+<DropdownItemButton label={t('buttons.search')} className="d-flex align-items-center gap-2 py-2" />
+```
+
+### `PaginationNavButton`
+
+Paginação (`page-link`):
+
+```tsx
+<PaginationNavButton label={t('ui.nextPage')} onClick={() => onGoToPage(n + 1)}>
+  <i className="bi bi-chevron-right" />
+</PaginationNavButton>
+```
+
+## Variante `unstyled`
+
+- Não adiciona classes `btn` / `btn-*`
+- Use com `NavLinkButton`, `AppButton`, `IconOnlyButton`, `PaginationNavButton`
+- Para ações Bootstrap normais: `primary`, `outline-primary`, `ghost`, etc.
+
+## Regras críticas (UX)
+
+1. **Sem ícones** nos botões de ação, exceto `CopiarButton iconOnly` e exceções estruturais (`IconOnlyButton`, paginação, `btn-close`)
+2. **Texto fixo** durante `isPending` — nunca "Salvando...", "Carregando..."
+3. **Salvar** → sempre chave `buttons.save` | **Criar** → `buttons.createEntity`
+4. `disabled={isPending}` — texto permanece igual
+5. **i18n** — labels via `*Button` / `t()`; evitar string fixa em português em telas internas
+6. **Confirmação destrutiva** → `window.confirm()` (não modal custom)
+
+## Bulk actions
+
+- Toolbar / seleção em massa: `BulkActionButton` + `useBulkBtn`
+- Variante bulk: `BulkBtnVariant` (sem `unstyled`)
+
+## Checklist
+
+1. Precisa de ação padrão? → `*Button` de `buttons.tsx`
+2. Rodapé de modal? → `ModalFormActions`
+3. Nav / accordion / home? → `NavLinkButton` ou `AppButton variant="unstyled"`
+4. Só ícone? → `IconOnlyButton` ou `CopiarButton iconOnly`
+5. Fechar modal? → `CloseIconButton`
+6. Nova ação repetida no sistema? → estender `config.ts`, não criar `<button>`
+
+## Proibido
+
+```tsx
+// ❌ HTML cru
+<button type="button" className="btn btn-primary" onClick={...}>Salvar</button>
+
+// ❌ Primitivo direto
+import Button from 'components/ui/Button';
+```

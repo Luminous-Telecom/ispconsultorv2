@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useElementProperties } from 'hooks/useElementProperties';
 import { NotificationState, NotificationAction } from './types';
-import { BulkActionButton, toBulkVariant } from '../ui';
+import { BulkActionButton, IconOnlyButton, toBulkVariant } from '../ui';
 import type { ButtonVariant } from '../ui';
 import { usePrefersRealHover } from '../../hooks/usePrefersRealHover';
 
@@ -247,14 +247,13 @@ const Notification: React.FC<NotificationProps> = ({
 
         {config.dismissible !== false && (
           <div className="notification-close">
-            <button
-              type="button"
+            <IconOnlyButton
               className="notification-close-btn"
               onClick={handleClose}
-              aria-label="Fechar"
+              label="Fechar"
             >
               <i className="bi bi-x-lg" aria-hidden="true" />
-            </button>
+            </IconOnlyButton>
           </div>
         )}
       </div>

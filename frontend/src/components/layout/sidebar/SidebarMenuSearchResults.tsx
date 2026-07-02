@@ -1,6 +1,7 @@
 import React from 'react';
 import SidebarFolderItemButton from '../SidebarFolderItemButton';
 import SidebarFolderIconSlot from '../SidebarFolderIconSlot';
+import { NavLinkButton } from 'components/ui';
 import type { SidebarMenuItem, TranslateFn } from '../layout/types';
 import type { SidebarMenuSearchGroup, SidebarMenuSearchNestedGroup } from './sidebarMenuSearchUtils';
 
@@ -21,15 +22,16 @@ const SidebarMenuSearchNestedFolder: React.FC<SidebarMenuSearchNestedFolderProps
     <div className="accordion sidebar-accordion border-0" id={folder.accordionId}>
       <div className="accordion-item border-0 bg-transparent">
         <h2 className="accordion-header" id={folder.headingId}>
-          <button
+          <NavLinkButton
             type="button"
             className="accordion-button nav-link text-start w-100 d-flex align-items-center"
             aria-expanded="true"
             tabIndex={-1}
+            ariaLabel={t(folder.titleKey)}
           >
             <SidebarFolderIconSlot />
             <span>{t(folder.titleKey)}</span>
-          </button>
+          </NavLinkButton>
         </h2>
         <div
           id={folder.collapseId}
@@ -68,15 +70,16 @@ const SidebarMenuSearchFolder: React.FC<SidebarMenuSearchFolderProps> = ({
     <div className="accordion sidebar-accordion" id={folder.accordionId}>
       <div className="accordion-item border-0 bg-transparent">
         <h2 className="accordion-header" id={folder.headingId}>
-          <button
+          <NavLinkButton
             type="button"
             className="accordion-button nav-link text-start w-100 d-flex align-items-center"
             aria-expanded="true"
             tabIndex={-1}
+            ariaLabel={folder.title}
           >
             <SidebarFolderIconSlot />
             <span>{folder.title}</span>
-          </button>
+          </NavLinkButton>
         </h2>
         <div
           id={folder.collapseId}

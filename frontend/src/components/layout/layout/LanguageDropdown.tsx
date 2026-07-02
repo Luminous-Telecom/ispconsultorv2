@@ -1,4 +1,5 @@
 import React from 'react';
+import { NavLinkButton } from 'components/ui';
 import { useElementProperties } from 'hooks/useElementProperties';
 import type { Language } from 'contexts/I18nContext';
 
@@ -46,22 +47,22 @@ const LanguageDropdown: React.FC<LanguageDropdownProps> = ({
     return (
       <div ref={languageDropdownRef} data-language-dropdown>
         {availableLanguages.map((lang) => (
-          <button
+          <NavLinkButton
             key={lang.code}
-            type="button"
             className={`layout-user-dropdown__subrow ${language === lang.code ? 'active' : ''}`}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
               onSelectLanguage(lang.code);
             }}
+            ariaLabel={lang.name}
           >
             <span className="me-2">{lang.flag}</span>
             <span>{lang.name}</span>
             {language === lang.code && (
               <i className="bi bi-check-lg ms-auto text-primary" aria-hidden />
             )}
-          </button>
+          </NavLinkButton>
         ))}
       </div>
     );
@@ -75,21 +76,21 @@ const LanguageDropdown: React.FC<LanguageDropdownProps> = ({
     >
       {availableLanguages.map((lang) => (
         <div key={lang.code}>
-          <button
-            type="button"
+          <NavLinkButton
             className={`layout-user-dropdown__subrow ${language === lang.code ? 'active' : ''}`}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
               onSelectLanguage(lang.code);
             }}
+            ariaLabel={lang.name}
           >
             <span className="me-2">{lang.flag}</span>
             <span>{lang.name}</span>
             {language === lang.code && (
               <i className="bi bi-check-lg ms-auto text-primary"></i>
             )}
-          </button>
+          </NavLinkButton>
         </div>
       ))}
     </div>

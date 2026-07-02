@@ -6,8 +6,8 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useElementProperties } from 'hooks/useElementProperties';
-import { useI18n } from 'contexts/I18nContext';
 import { modalStack } from 'utils/modalStack';
+import { CloseIconButton } from 'components/ui';
 import ResponsiveDialog from './ResponsiveDialog';
 
 const MODAL_EDGE_MARGIN_PX = 8;
@@ -36,7 +36,6 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   modalId: propModalId,
   isLoading: _isLoading = false, // Mantido para compatibilidade, mas não usado
 }) => {
-  const { t } = useI18n();
   const checkIsMobile = (): boolean => {
     if (typeof window === 'undefined') return false;
     return window.innerWidth < 768;
@@ -328,13 +327,11 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
             </h6>
 
             {/* Botão fechar à extrema direita */}
-            <button
-              type="button"
+            <CloseIconButton
               className="btn-close position-absolute end-0 top-50 translate-middle-y"
               onClick={onClose}
               onMouseDown={(e) => e.stopPropagation()}
-              aria-label={t('ui.close')}
-            ></button>
+            />
           </div>
 
           {/* Ações do header (botões e filtros) */}

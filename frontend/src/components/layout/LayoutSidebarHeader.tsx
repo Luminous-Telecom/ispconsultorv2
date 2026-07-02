@@ -1,6 +1,6 @@
 import React from 'react';
 import BackNetLogo from '../common/BackNetLogo';
-import Button from '../ui/Button';
+import { IconOnlyButton } from 'components/ui';
 import { useI18n } from 'contexts/I18nContext';
 
 interface LayoutSidebarHeaderProps {
@@ -30,17 +30,16 @@ const LayoutSidebarHeader: React.FC<LayoutSidebarHeaderProps> = ({
         )}
       </div>
       {isMobile && (
-        <Button
+        <IconOnlyButton
           type="button"
           variant="ghost"
           size="sm"
           className="p-0 position-absolute top-0 end-0 m-2 sidebar-header-back-btn"
           onClick={onCloseSidebar}
           title={t('layout.closeMenu')}
-          aria-label={t('layout.closeMenu')}
-        >
-          <i className="bi bi-arrow-left fs-4" aria-hidden />
-        </Button>
+          label={t('layout.closeMenu')}
+          iconClassName="bi bi-arrow-left fs-4"
+        />
       )}
     </div>
   );

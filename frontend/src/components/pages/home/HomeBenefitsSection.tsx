@@ -1,4 +1,5 @@
 import React from 'react';
+import { NavLinkButton } from 'components/ui';
 import { BENEFITS } from './homeConstants';
 
 interface HomeBenefitsSectionProps {
@@ -10,9 +11,14 @@ const HomeBenefitsSection: React.FC<HomeBenefitsSectionProps> = ({ onOpenLightbo
     <div className="home-section-inner home-benefits-inner">
       <div className="home-benefits-visual">
         <div className="home-benefits-glow" />
-        <button type="button" className="home-benefits-visual-link" onClick={() => onOpenLightbox('/dashboard%20clara.png')}>
+        <NavLinkButton
+          type="button"
+          className="home-benefits-visual-link"
+          onClick={() => onOpenLightbox('/dashboard%20clara.png')}
+          ariaLabel="Ampliar imagem do dashboard"
+        >
           <img src="/dashboard%20clara.png" alt="BackNet Dashboard" className="home-benefits-img" />
-        </button>
+        </NavLinkButton>
       </div>
       <div className="home-benefits-content">
         <h2 className="home-section-title">Por que escolher BackNet?</h2>

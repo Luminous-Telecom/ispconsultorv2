@@ -1,6 +1,7 @@
 import React from 'react';
 import { useI18n } from 'contexts/I18nContext';
 import { LabelWithHelp } from './LabelWithHelp';
+import { IconOnlyButton } from './buttons';
 
 export interface EntityItem {
   id: number;
@@ -105,9 +106,14 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = (props) => {
             name={`${fieldKey}_nome_field`}
             value={selectedNome || ''}
           />
-          <button type="button" onClick={onShowModal} title={searchButtonTitle} className="search-button">
+          <IconOnlyButton
+            onClick={onShowModal}
+            title={searchButtonTitle}
+            label={searchButtonTitle}
+            className="search-button"
+          >
             {SEARCH_ICON}
-          </button>
+          </IconOnlyButton>
         </div>
         {error && <div className="invalid-feedback entity-select-error">{error}</div>}
       </div>

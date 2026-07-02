@@ -1,4 +1,5 @@
 import React from 'react';
+import { IconOnlyButton } from 'components/ui';
 import LayoutSearchBar, { type SearchFieldOption } from '../layout/LayoutSearchBar';
 import AppUserMenu, { type AppUserMenuProps, type AppUserMenuUser } from './AppUserMenu';
 import type { TranslateFn } from '../layout/types';
@@ -55,14 +56,13 @@ const AppLayoutHeader: React.FC<AppLayoutHeaderProps> = ({
       <div className="d-flex flex-wrap align-items-center justify-content-between w-100">
         <div className="d-flex align-items-center">
           {isMobile && (
-            <button
+            <IconOnlyButton
               className="navbar-toggler d-block border-0 p-0"
-              type="button"
               onClick={onToggleSidebar}
-              aria-label={menuAriaLabel}
+              label={menuAriaLabel}
             >
               <span className="navbar-toggler-icon" />
-            </button>
+            </IconOnlyButton>
           )}
         </div>
 

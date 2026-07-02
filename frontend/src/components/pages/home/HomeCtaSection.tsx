@@ -1,4 +1,5 @@
 import React from 'react';
+import { AppButton } from 'components/ui';
 import { CONTATO } from './homeConstants';
 
 interface HomeCtaSectionProps {
@@ -20,9 +21,13 @@ const HomeCtaSection: React.FC<HomeCtaSectionProps> = ({
       </p>
       <div className="home-cta-buttons" ref={ctaButtonsRef}>
         {!showContato ? (
-          <button type="button" className="home-btn home-btn-cta-outline" onClick={() => setShowContato(true)}>
-            Agendar Demonstração
-          </button>
+          <AppButton
+            type="button"
+            label="Agendar Demonstração"
+            variant="unstyled"
+            className="home-btn home-btn-cta-outline"
+            onClick={() => setShowContato(true)}
+          />
         ) : (
           <>
             <a href={CONTATO.whatsapp} target="_blank" rel="noopener noreferrer" className="home-btn home-btn-contato">

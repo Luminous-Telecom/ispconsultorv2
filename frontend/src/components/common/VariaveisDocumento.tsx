@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { Loading, LabelWithHelp, CopiarButton } from 'components/ui';
+import { Loading, LabelWithHelp, CopiarButton, NavLinkButton } from 'components/ui';
 import SearchBar from 'components/ui/SearchBar';
 import { useI18n } from 'contexts/I18nContext';
 import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
@@ -88,14 +88,14 @@ const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariav
           return (
             <div className="accordion-item" key={chave}>
               <h2 className="accordion-header">
-                <button
+                <NavLinkButton
                   className={`accordion-button variavel-tab-btn ${grupoExpandido === chave ? '' : 'collapsed'}`}
-                  type="button"
                   onClick={() => toggleGrupo(chave)}
+                  ariaLabel={grupoTyped.titulo}
                 >
                   {grupoTyped.titulo}
                   <span className="badge bg-secondary ms-2">{variaveisFiltradas.length}</span>
-                </button>
+                </NavLinkButton>
               </h2>
               <div className={`accordion-collapse collapse ${grupoExpandido === chave ? 'show' : ''}`}>
                 <div className="accordion-body p-0">
@@ -105,14 +105,14 @@ const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariav
                         key={variavel.variavel}
                         className="list-group-item py-2 px-3 d-flex align-items-start gap-2"
                       >
-                        <button
-                          type="button"
+                        <NavLinkButton
                           className="flex-grow-1 border-0 bg-transparent text-start p-0"
                           onClick={() => handleInserirVariavel(variavel.variavel)}
+                          ariaLabel={variavel.variavel}
                         >
                           <code className="small">{variavel.variavel}</code>
                           <div className="text-muted small">{variavel.descricao}</div>
-                        </button>
+                        </NavLinkButton>
                         <CopiarButton
                           type="button"
                           iconOnly

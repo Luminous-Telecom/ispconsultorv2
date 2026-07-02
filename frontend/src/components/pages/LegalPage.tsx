@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import BackNetLogo from 'components/common/BackNetLogo';
+import { IconOnlyButton } from 'components/ui';
 import { useTheme } from 'contexts/ThemeContext';
 import './LegalPage.scss';
 
@@ -24,14 +25,14 @@ const LegalPage: React.FC<LegalPageProps> = ({ title, children }) => {
             <BackNetLogo width={120} height={38} className="legal-logo" />
           </Link>
           <div className="legal-header-actions">
-            <button
-              type="button"
+            <IconOnlyButton
               className="legal-theme-toggle"
               onClick={toggleTheme}
               title={theme === 'light' ? 'Modo escuro' : 'Modo claro'}
+              label={theme === 'light' ? 'Modo escuro' : 'Modo claro'}
             >
               <span className={`bi ${theme === 'light' ? 'bi-moon' : 'bi-sun'}`} />
-            </button>
+            </IconOnlyButton>
             <Link to="/" className="legal-btn legal-btn-outline">
               Voltar ao site
             </Link>

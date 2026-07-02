@@ -1,6 +1,7 @@
 import React from 'react';
 import SidebarFolderItemButton from '../SidebarFolderItemButton';
 import SidebarFolderIconSlot from '../SidebarFolderIconSlot';
+import { NavLinkButton } from 'components/ui';
 import type { SidebarMenuItem, SidebarNestedFolderConfig, TranslateFn } from './types';
 
 interface SidebarNestedFolderProps {
@@ -18,17 +19,18 @@ const SidebarNestedFolder: React.FC<SidebarNestedFolderProps> = ({ folder, t, on
     <div className="accordion sidebar-accordion border-0" id={folder.accordionId}>
       <div className="accordion-item border-0 bg-transparent">
         <h2 className="accordion-header" id={folder.headingId}>
-          <button
+          <NavLinkButton
             className="accordion-button collapsed nav-link text-start w-100 d-flex align-items-center"
             type="button"
             data-bs-toggle="collapse"
             data-bs-target={`#${folder.collapseId}`}
             aria-expanded="false"
             aria-controls={folder.collapseId}
+            ariaLabel={t(folder.titleKey)}
           >
             <SidebarFolderIconSlot />
             <span>{t(folder.titleKey)}</span>
-          </button>
+          </NavLinkButton>
         </h2>
         <div
           id={folder.collapseId}
@@ -75,17 +77,18 @@ const SidebarAccordionFolder: React.FC<SidebarAccordionFolderProps> = ({
   <div className="accordion sidebar-accordion" id={accordionId}>
     <div className="accordion-item border-0 bg-transparent">
       <h2 className="accordion-header">
-        <button
+        <NavLinkButton
           className="accordion-button collapsed nav-link text-start w-100 d-flex align-items-center"
           type="button"
           data-bs-toggle="collapse"
           data-bs-target={`#${collapseId}`}
           aria-expanded="false"
           aria-controls={collapseId}
+          ariaLabel={title}
         >
           <SidebarFolderIconSlot />
           <span>{title}</span>
-        </button>
+        </NavLinkButton>
       </h2>
       <div
         id={collapseId}

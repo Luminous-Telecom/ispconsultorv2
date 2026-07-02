@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { DropdownToggleButton, NavLinkButton } from 'components/ui';
 
 interface DropdownItem {
   id: string;
@@ -53,28 +54,25 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
 
   return (
     <div className={`dropdown-menu-container ${className}`} ref={dropdownRef}>
-      <button
-        className={`dropdown-toggle w-100 text-start d-flex align-items-center gap-2 ${isActive ? 'active' : ''}`}
-        onClick={handleToggle}
-        type="button"
-      >
+      <DropdownToggleButton isActive={isActive} onClick={handleToggle}>
         <i className={`bi ${icon}`}></i>
         <span className="flex-grow-1">{label}</span>
         <i className={`bi bi-chevron-down ms-auto dropdown-arrow ${isOpen ? 'open' : ''}`}></i>
-      </button>
-      
+      </DropdownToggleButton>
+
       {isOpen && (
         <div className="dropdown-content">
           {items.map((item) => (
-            <button
+            <NavLinkButton
               key={item.id}
-              className={`dropdown-item ${item.disabled ? 'disabled opacity-50' : ''}`}
+              className={`dropdown-item d-flex align-items-center gap-2 ${item.disabled ? 'disabled opacity-50' : ''}`}
               onClick={() => handleItemClick(item)}
               disabled={item.disabled}
+              ariaLabel={item.label}
             >
               <i className={`bi ${item.icon}`}></i>
               <span>{item.label}</span>
-            </button>
+            </NavLinkButton>
           ))}
         </div>
       )}

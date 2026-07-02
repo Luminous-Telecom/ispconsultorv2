@@ -6,8 +6,7 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { AssinaturaDigitalProviderService, AssinaturaDigitalProviderType } from 'services/assinaturaDigitalProviderService';
 import DraggableModal from 'components/common/DraggableModal';
-import { CancelarButton, SalvarButton, LabelWithHelp, Loading } from 'components/ui';
-import Button from 'components/ui/Button';
+import { CancelarButton, SalvarButton, LabelWithHelp, Loading, IconOnlyButton } from 'components/ui';
 import { useI18n } from 'contexts/I18nContext';
 
 interface AssinaturaDigitalModalProps {
@@ -267,15 +266,15 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
                   disabled={updateMutation.isPending}
                   placeholder={t('placeholder.apiKey')}
                 />
-                <Button
+                <IconOnlyButton
                   type="button"
                   variant="outline-primary"
                   onClick={() => setShowApiKey(!showApiKey)}
                   disabled={updateMutation.isPending}
-                  aria-label={showApiKey ? 'Ocultar chave' : 'Mostrar chave'}
+                  label={showApiKey ? 'Ocultar chave' : 'Mostrar chave'}
                 >
                   <i className={`bi ${showApiKey ? 'bi-eye-slash' : 'bi-eye'}`} aria-hidden />
-                </Button>
+                </IconOnlyButton>
               </div>
               {formData.apiProvider === 'assinafy' && (
                 <small className="form-text form-hint text-muted">

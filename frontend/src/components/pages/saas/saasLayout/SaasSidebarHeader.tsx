@@ -1,6 +1,6 @@
 import React from 'react';
 import BackNetLogo from 'components/common/BackNetLogo';
-import Button from 'components/ui/Button';
+import { IconOnlyButton } from 'components/ui';
 import type { TranslateFn } from 'components/layout/layout/types';
 
 interface SaasSidebarHeaderProps {
@@ -21,17 +21,16 @@ const SaasSidebarHeader: React.FC<SaasSidebarHeaderProps> = ({ isMobile, t, onCl
       </div>
     </div>
     {isMobile ? (
-      <Button
+      <IconOnlyButton
         type="button"
         variant="ghost"
         size="sm"
         className="p-0 position-absolute top-0 end-0 m-2 sidebar-header-back-btn"
         onClick={onCloseSidebar}
         title={t('layout.closeMenu')}
-        aria-label={t('layout.closeMenu')}
-      >
-        <i className="bi bi-arrow-left fs-4" aria-hidden />
-      </Button>
+        label={t('layout.closeMenu')}
+        iconClassName="bi bi-arrow-left fs-4"
+      />
     ) : null}
   </div>
 );

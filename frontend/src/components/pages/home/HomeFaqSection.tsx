@@ -1,4 +1,5 @@
 import React from 'react';
+import { NavLinkButton } from 'components/ui';
 import { FAQ_ITEMS } from './homeConstants';
 
 interface HomeFaqSectionProps {
@@ -18,15 +19,16 @@ const HomeFaqSection: React.FC<HomeFaqSectionProps> = ({ faqOpen, setFaqOpen }) 
       <div className="home-faq-list">
         {FAQ_ITEMS.map((item, i) => (
           <div key={item.question} className="home-faq-item">
-            <button
+            <NavLinkButton
               type="button"
               className="home-faq-question"
               onClick={() => setFaqOpen(faqOpen === i ? null : i)}
               aria-expanded={faqOpen === i}
+              ariaLabel={item.question}
             >
               <span>{item.question}</span>
               <span className={`bi ${faqOpen === i ? 'bi-chevron-up' : 'bi-chevron-down'}`} />
-            </button>
+            </NavLinkButton>
             {faqOpen === i && <p className="home-faq-answer">{item.answer}</p>}
           </div>
         ))}

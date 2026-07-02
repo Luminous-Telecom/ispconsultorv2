@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { PagarButton, ElementWithZIndex } from 'components/ui';
+import { CloseIconButton, PagarButton, ElementWithZIndex } from 'components/ui';
 import { defaultApiClient } from 'services/core';
-import { useI18n } from 'contexts/I18nContext';
 
 interface BloqueioAtrasoData {
   code?: string;
@@ -13,7 +12,6 @@ interface BloqueioAtrasoData {
 }
 
 const BloqueioAtrasoOverlay: React.FC = () => {
-  const { t } = useI18n();
   const [info, setInfo] = useState<BloqueioAtrasoData | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -68,11 +66,9 @@ const BloqueioAtrasoOverlay: React.FC = () => {
         <div className="modal-header-draggable draggable-modal-header-custom">
           <div className="d-flex align-items-center justify-content-center position-relative w-100">
             <h5 className="modal-title mb-0 draggable-modal-title-custom">Acesso Bloqueado</h5>
-            <button
-              type="button"
+            <CloseIconButton
               className="btn-close position-absolute end-0 top-50 translate-middle-y"
               onClick={() => setDismissed(true)}
-              aria-label={t('ui.close')}
             />
           </div>
         </div>

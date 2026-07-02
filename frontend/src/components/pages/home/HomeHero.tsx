@@ -1,4 +1,5 @@
 import React from 'react';
+import { AppButton, NavLinkButton } from 'components/ui';
 
 interface HomeHeroProps {
   scrollTo: (id: string) => void;
@@ -29,16 +30,25 @@ const HomeHero: React.FC<HomeHeroProps> = ({ scrollTo, onOpenLightbox }) => (
         </div>
       </div>
       <div className="home-hero-buttons">
-        <button type="button" className="home-btn home-btn-outline" onClick={() => scrollTo('recursos')}>
-          Saiba mais
-        </button>
+        <AppButton
+          type="button"
+          label="Saiba mais"
+          variant="unstyled"
+          className="home-btn home-btn-outline"
+          onClick={() => scrollTo('recursos')}
+        />
       </div>
     </div>
     <div className="home-hero-visual">
       <div className="home-hero-visual-glow" />
-      <button type="button" className="home-hero-visual-link" onClick={() => onOpenLightbox('/dashboard.png')}>
+      <NavLinkButton
+        type="button"
+        className="home-hero-visual-link"
+        onClick={() => onOpenLightbox('/dashboard.png')}
+        ariaLabel="Ampliar imagem do dashboard"
+      >
         <img src="/dashboard.png" alt="BackNet Dashboard" className="home-hero-visual-img" />
-      </button>
+      </NavLinkButton>
     </div>
   </section>
 );

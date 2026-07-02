@@ -1,6 +1,5 @@
 import React from 'react';
-import { Card, Input, EntrarButton } from 'components/ui';
-import Button from 'components/ui/Button';
+import { Card, Input, EntrarButton, NavLinkButton } from 'components/ui';
 import type { LoginCentralAssinanteRequest } from 'services/centralAssinanteService';
 
 import CentralAssinanteThemeToggle from './CentralAssinanteThemeToggle';
@@ -78,15 +77,14 @@ const CentralAssinanteLoginView: React.FC<CentralAssinanteLoginViewProps> = ({
                 <EntrarButton type="submit" disabled={isPending} isPending={isPending} />
               </div>
               <div className="text-center mt-3">
-                <Button
+                <NavLinkButton
                   type="button"
-                  variant="ghost"
                   className="text-white-50 text-decoration-none p-0 small fs-lg"
                   onClick={onForgotPassword}
-                  
+                  ariaLabel="Esqueci minha senha"
                 >
                   Esqueci minha senha
-                </Button>
+                </NavLinkButton>
               </div>
             </form>
           </div>

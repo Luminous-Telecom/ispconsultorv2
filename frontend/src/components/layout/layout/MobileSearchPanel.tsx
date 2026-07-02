@@ -1,4 +1,5 @@
 import React from 'react';
+import { IconOnlyButton } from 'components/ui';
 import SearchBar, { type SearchFieldOption } from '../../ui/SearchBar';
 import type { TranslateFn } from './types';
 
@@ -39,14 +40,12 @@ const MobileSearchPanel: React.FC<MobileSearchPanelProps> = ({
         searchFields={availableSearchFields}
         className="flex-grow-1"
       />
-      <button
-        type="button"
+      <IconOnlyButton
         className="navbar-mobile-search-close"
         onClick={onClose}
-        aria-label={t('layout.closeSearch')}
-      >
-        <i className="bi bi-x"></i>
-      </button>
+        label={t('layout.closeSearch')}
+        iconClassName="bi bi-x"
+      />
     </div>
   </div>
 );

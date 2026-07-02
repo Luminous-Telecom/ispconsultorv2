@@ -1,5 +1,5 @@
 import React from 'react';
-import { BulkActionButton } from 'components/ui';
+import { BulkActionButton, DropdownItemButton } from 'components/ui';
 import { BulkAction } from './types';
 import { drainPossiblePromise } from './tableUtils';
 
@@ -73,9 +73,8 @@ function TableBulkActionsRow<T>({
                         : item.disabled || false;
                     return (
                       <li key={itemIndex}>
-                        <button
-                          type="button"
-                          className="dropdown-item"
+                        <DropdownItemButton
+                          label={item.label}
                           disabled={isItemDisabled}
                           onClick={(e) => {
                             e.preventDefault();
@@ -85,9 +84,7 @@ function TableBulkActionsRow<T>({
                               onOpenDropdownChange(null);
                             }
                           }}
-                        >
-                          {item.label}
-                        </button>
+                        />
                       </li>
                     );
                   })}

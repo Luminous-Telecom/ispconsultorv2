@@ -6,8 +6,8 @@ import {
   ExtrairSeiAnatelButton,
   LabelWithHelp,
   Loading,
+  IconOnlyButton,
 } from 'components/ui';
-import Button from 'components/ui/Button';
 import type { BlockdomiImportTranslateFn } from './importarListaBlockdomiTypes';
 
 interface ImportarListaBlockdomiOficioSectionProps {
@@ -187,7 +187,7 @@ const ImportarListaBlockdomiOficioSection: React.FC<ImportarListaBlockdomiOficio
               accept=".pdf,application/pdf"
               onChange={(e) => onPdfAnatelFileChange(e.target.files?.[0] ?? null)}
             />
-            <Button
+            <IconOnlyButton
               type="button"
               size="sm"
               variant="outline-danger"
@@ -195,10 +195,9 @@ const ImportarListaBlockdomiOficioSection: React.FC<ImportarListaBlockdomiOficio
               onClick={onClearPdfAnatel}
               disabled={!pdfOficioAnatel || isExtractingSei}
               title={t('blockdomi.removePdfFile')}
-              aria-label={t('blockdomi.removePdfFile')}
-            >
-              <i className="bi bi-trash" aria-hidden />
-            </Button>
+              label={t('blockdomi.removePdfFile')}
+              iconClassName="bi bi-trash"
+            />
           </div>
         </div>
       </div>
@@ -223,7 +222,7 @@ const ImportarListaBlockdomiOficioSection: React.FC<ImportarListaBlockdomiOficio
               accept=".pdf,application/pdf"
               onChange={(e) => onPdfJusticaFileChange(e.target.files?.[0] ?? null)}
             />
-            <Button
+            <IconOnlyButton
               type="button"
               size="sm"
               variant="outline-danger"
@@ -231,10 +230,9 @@ const ImportarListaBlockdomiOficioSection: React.FC<ImportarListaBlockdomiOficio
               onClick={onClearPdfJustica}
               disabled={!pdfOficioJustica}
               title={t('blockdomi.removePdfFile')}
-              aria-label={t('blockdomi.removePdfFile')}
-            >
-              <i className="bi bi-trash" aria-hidden />
-            </Button>
+              label={t('blockdomi.removePdfFile')}
+              iconClassName="bi bi-trash"
+            />
           </div>
         </div>
       </div>
@@ -257,7 +255,7 @@ const ImportarListaBlockdomiOficioSection: React.FC<ImportarListaBlockdomiOficio
               accept=".pdf,application/pdf"
               onChange={(e) => onPdfMainFileChange(e.target.files?.[0] ?? null)}
             />
-            <Button
+            <IconOnlyButton
               type="button"
               size="sm"
               variant="outline-danger"
@@ -265,10 +263,9 @@ const ImportarListaBlockdomiOficioSection: React.FC<ImportarListaBlockdomiOficio
               onClick={onClearPdfMain}
               disabled={!pdfFile || isExtractingPdf}
               title={t('blockdomi.removePdfFile')}
-              aria-label={t('blockdomi.removePdfFile')}
-            >
-              <i className="bi bi-trash" aria-hidden />
-            </Button>
+              label={t('blockdomi.removePdfFile')}
+              iconClassName="bi bi-trash"
+            />
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { PaginationNavButton } from 'components/ui';
 import { useI18n } from 'contexts/I18nContext';
 import { TablePaginationValues } from './tablePaginationUtils';
 
@@ -30,26 +31,22 @@ const TablePaginationNav: React.FC<TablePaginationNavProps> = ({
         <nav aria-label={t('ui.actionsMenu')} className="d-flex justify-content-center">
           <ul className="pagination pagination-sm mb-0">
             <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-              <button
-                type="button"
-                className="page-link"
+              <PaginationNavButton
+                label={t('ui.firstPage')}
                 onClick={() => onGoToPage(1)}
                 disabled={currentPage === 1}
-                aria-label={t('ui.firstPage')}
               >
                 <i className="bi bi-chevron-double-left" />
-              </button>
+              </PaginationNavButton>
             </li>
             <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-              <button
-                type="button"
-                className="page-link"
+              <PaginationNavButton
+                label={t('ui.previousPage')}
                 onClick={() => onGoToPage(currentPage - 1)}
                 disabled={currentPage === 1}
-                aria-label={t('ui.previousPage')}
               >
                 <i className="bi bi-chevron-left" />
-              </button>
+              </PaginationNavButton>
             </li>
             <li className="page-item active">
               <span className="page-link">
@@ -57,26 +54,22 @@ const TablePaginationNav: React.FC<TablePaginationNavProps> = ({
               </span>
             </li>
             <li className={`page-item ${currentPage >= lastPage ? 'disabled' : ''}`}>
-              <button
-                type="button"
-                className="page-link"
+              <PaginationNavButton
+                label={t('ui.nextPage')}
                 onClick={() => onGoToPage(currentPage + 1)}
                 disabled={currentPage >= lastPage}
-                aria-label={t('ui.nextPage')}
               >
                 <i className="bi bi-chevron-right" />
-              </button>
+              </PaginationNavButton>
             </li>
             <li className={`page-item ${currentPage >= lastPage ? 'disabled' : ''}`}>
-              <button
-                type="button"
-                className="page-link"
+              <PaginationNavButton
+                label={t('ui.lastPage')}
                 onClick={() => onGoToPage(lastPage)}
                 disabled={currentPage >= lastPage}
-                aria-label={t('ui.lastPage')}
               >
                 <i className="bi bi-chevron-double-right" />
-              </button>
+              </PaginationNavButton>
             </li>
           </ul>
         </nav>
@@ -95,26 +88,22 @@ const TablePaginationNav: React.FC<TablePaginationNavProps> = ({
       <nav aria-label={t('ui.actionsMenu')}>
         <ul className="pagination pagination-sm mb-0">
           <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-            <button
-              type="button"
-              className="page-link"
+            <PaginationNavButton
+              label={t('ui.firstPage')}
               onClick={() => onGoToPage(1)}
               disabled={currentPage === 1}
-              aria-label={t('ui.firstPage')}
             >
               <i className="bi bi-chevron-double-left" />
-            </button>
+            </PaginationNavButton>
           </li>
           <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-            <button
-              type="button"
-              className="page-link"
+            <PaginationNavButton
+              label={t('ui.previousPage')}
               onClick={() => onGoToPage(currentPage - 1)}
               disabled={currentPage === 1}
-              aria-label={t('ui.previousPage')}
             >
               <i className="bi bi-chevron-left" />
-            </button>
+            </PaginationNavButton>
           </li>
           {visiblePages.map((page, index) => {
             if (page === '...') {
@@ -128,39 +117,33 @@ const TablePaginationNav: React.FC<TablePaginationNavProps> = ({
             const isActive = pageNumber === currentPage;
             return (
               <li key={pageNumber} className={`page-item ${isActive ? 'active' : ''}`}>
-                <button
-                  type="button"
-                  className="page-link"
+                <PaginationNavButton
+                  label={`${t('ui.page')} ${pageNumber}`}
                   onClick={() => onGoToPage(pageNumber)}
-                  aria-label={`${t('ui.page')} ${pageNumber}`}
                   aria-current={isActive ? 'page' : undefined}
                 >
                   {pageNumber}
-                </button>
+                </PaginationNavButton>
               </li>
             );
           })}
           <li className={`page-item ${currentPage >= lastPage ? 'disabled' : ''}`}>
-            <button
-              type="button"
-              className="page-link"
+            <PaginationNavButton
+              label={t('ui.nextPage')}
               onClick={() => onGoToPage(currentPage + 1)}
               disabled={currentPage >= lastPage}
-              aria-label={t('ui.nextPage')}
             >
               <i className="bi bi-chevron-right" />
-            </button>
+            </PaginationNavButton>
           </li>
           <li className={`page-item ${currentPage >= lastPage ? 'disabled' : ''}`}>
-            <button
-              type="button"
-              className="page-link"
+            <PaginationNavButton
+              label={t('ui.lastPage')}
               onClick={() => onGoToPage(lastPage)}
               disabled={currentPage >= lastPage}
-              aria-label={t('ui.lastPage')}
             >
               <i className="bi bi-chevron-double-right" />
-            </button>
+            </PaginationNavButton>
           </li>
         </ul>
       </nav>

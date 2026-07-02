@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { PositionedFixed } from 'components/ui';
+import { PositionedFixed, NavLinkButton } from 'components/ui';
 import { useI18n } from 'contexts/I18nContext';
 import { useIsMobile } from 'hooks/useMediaQuery';
 
@@ -86,17 +86,18 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ usePortal = true })
     <ul className="table-dropdown-menu shadow position-absolute mt-1 dropdown-menu-min-w-160" >
       {availableLanguages.map((lang) => (
         <li key={lang.code}>
-          <button
+          <NavLinkButton
             className={`table-dropdown-item d-flex align-items-center w-100 dropdown-item-plain ${
               language === lang.code ? 'active' : ''
             }`}
+            ariaLabel={lang.name}
           >
             <span className="me-2">{lang.flag}</span>
             <span>{lang.name}</span>
             {(language === lang.code && isMobile) && (
               <i className="bi bi-check-lg ms-auto text-primary"></i>
             )}
-          </button>
+          </NavLinkButton>
         </li>
       ))}
     </ul>
