@@ -64,7 +64,7 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
       label: 'Descrição',
       sortable: true,
       render: (item: DocumentoSistema) => (
-        <span className="text-truncate" style={{ maxWidth: '300px' }} title={item.descricao || ''}>
+        <span className="text-truncate truncate-max-300"  title={item.descricao || ''}>
           {item.descricao || '-'}
         </span>
       )

@@ -136,7 +136,7 @@ const EnviarAssinaturaModal: React.FC<EnviarAssinaturaModalProps> = ({
       size="lg"
       headerActions={headerActions}
     >
-      <form id="enviar-assinatura-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }} autoComplete="off" data-form-type="other">
+      <form id="enviar-assinatura-form" onSubmit={handleSubmit} className="modal-inner-padding" autoComplete="off" data-form-type="other">
         <div className="d-flex flex-column gap-2">
           <div>
             <label className="form-label">Termo</label>

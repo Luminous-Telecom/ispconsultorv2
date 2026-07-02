@@ -206,8 +206,7 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
           return (
             <span>
               <span
-                className={`badge ${agent.online ? 'bg-success' : 'bg-secondary'} me-1`}
-                style={{ fontSize: '0.65rem' }}
+                className={`badge ${agent.online ? 'bg-success' : 'bg-secondary'} fs-compact me-1`}
               >
                 {agent.online ? 'Online' : 'Offline'}
               </span>

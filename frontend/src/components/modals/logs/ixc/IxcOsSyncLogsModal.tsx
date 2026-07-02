@@ -171,7 +171,7 @@ const IxcOsSyncLogsModal: React.FC<IxcOsSyncLogsModalProps> = ({ show }) => {
       sortable: false,
       width: '160px',
       render: (item) => (
-        <span className="small text-truncate d-inline-block" style={{ maxWidth: 150 }} title={item.cliente_nome ?? ''}>
+        <span className="small text-truncate d-inline-block truncate-max-150"  title={item.cliente_nome ?? ''}>
           {item.cliente_nome ?? '—'}
         </span>
       ),
@@ -200,7 +200,7 @@ const IxcOsSyncLogsModal: React.FC<IxcOsSyncLogsModalProps> = ({ show }) => {
       sortable: false,
       width: '140px',
       render: (item) => (
-        <span className="small text-truncate d-inline-block" style={{ maxWidth: 130 }} title={item.integracao_nome ?? ''}>
+        <span className="small text-truncate d-inline-block truncate-max-130"  title={item.integracao_nome ?? ''}>
           {item.integracao_nome ?? '—'}
         </span>
       ),
@@ -221,7 +221,7 @@ const IxcOsSyncLogsModal: React.FC<IxcOsSyncLogsModalProps> = ({ show }) => {
       label: 'Mensagem',
       sortable: false,
       render: (item) => (
-        <span className="small text-truncate d-inline-block" style={{ maxWidth: 280 }} title={item.message ?? ''}>
+        <span className="small text-truncate d-inline-block truncate-max-280"  title={item.message ?? ''}>
           {item.message ?? '—'}
         </span>
       ),

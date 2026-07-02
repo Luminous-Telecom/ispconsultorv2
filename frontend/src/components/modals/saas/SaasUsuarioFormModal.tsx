@@ -154,7 +154,7 @@ const SaasUsuarioFormModal: React.FC<SaasUsuarioFormModalProps> = ({
         <ModalFormActions onCancel={onClose} formId="saas-usuario-form" isPending={isPending} />
       }
     >
-      <form id="saas-usuario-form" onSubmit={handleSubmit} style={{ padding: '16px' }}>
+      <form id="saas-usuario-form" onSubmit={handleSubmit} className="modal-inner-padding-fixed">
         <SaasUsuarioFormFields
           form={form}
           errors={errors}

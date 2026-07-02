@@ -60,20 +60,10 @@ const SocketTerminalModal: React.FC<SocketTerminalModalProps> = ({
       title={title}
       size="xl"
       modalId={modalId}
-      className="no-padding"
-      headerActions={<div className="ms-2">{statusBadge}</div>}
+      className="no-padding ms-2"
+      headerActions={<div >{statusBadge}</div>}
     >
-      <div
-        className="terminal-modal-dark"
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          flex: 1,
-          minHeight: 0,
-          background: TERMINAL_BACKGROUND,
-          padding: '8px',
-        }}
-      >
+      <div className="terminal-modal-dark">
         {errorMsg && status === 'error' && (
           <div className="alert alert-danger m-2 py-2 small flex-shrink-0">
             <i className="bi bi-exclamation-triangle-fill me-1" />
@@ -82,7 +72,7 @@ const SocketTerminalModal: React.FC<SocketTerminalModalProps> = ({
         )}
         <div
           ref={termRef}
-          style={{ flex: 1, minHeight: 0, width: '100%', overflow: 'hidden' }}
+          className="terminal-host"
         />
       </div>
     </DraggableModal>

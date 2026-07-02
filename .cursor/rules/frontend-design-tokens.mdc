@@ -1,0 +1,81 @@
+---
+description: Design tokens e estilos centralizados — proibido style inline no JSX
+globs: frontend/**/*.tsx,frontend/**/*.ts,frontend/**/*.scss
+alwaysApply: false
+---
+
+# Design tokens — BackNet
+
+Estilos vivem em SCSS/CSS. **Proibido** `style={{ ... }}` ou `style={variavel}` em JSX/TSX.
+
+## Onde definir
+
+| Tipo | Arquivo |
+|------|---------|
+| Variáveis globais (cores, fontes, raios) | `frontend/src/styles/_variables.scss` |
+| Classes utilitárias reutilizáveis | `frontend/src/styles/_utilities.scss` |
+| Gráficos / dashboard | `frontend/src/styles/_charts.scss` |
+| Central do Assinante | `frontend/src/styles/CentralAssinante.scss` (`--ca-*`) |
+| Fontes em TS (D3, TinyMCE) | `frontend/src/constants/typography.ts` |
+| Classes de log terminal | `frontend/src/constants/designTokens.ts` → `getTerminalLogLineClass()` |
+
+Tipografia: ver também `.cursor/rules/frontend-tipografia.mdc`.
+
+## Proibido no JSX
+
+```tsx
+// ❌
+<div style={{ fontSize: '12px', padding: '16px', color: '#fff' }} />
+<div style={{ padding: isMobile ? 0 : 16 }} />
+
+// ✅ Estático — classe SCSS
+<div className="modal-inner-padding fs-sm" />
+
+// ✅ Dinâmico — componente/hook (sem style no JSX)
+<DynamicProgressBar percent={pct} />
+<PositionedFixed left={x} top={y} className="chart-floating-tooltip" />
+<DynamicStyledElement properties={{ width: `${pct}%` }} className="gauge-fill" deps={[pct]} />
+```
+
+Imports: `components/ui/DynamicStyleElements.tsx`, `hooks/useElementProperties.ts`.
+
+## Classes comuns (`_utilities.scss`)
+
+- Tipografia: `fs-sm`, `fs-md`, `fs-compact`, `fs-icon-lg`, …
+- Modal: `modal-inner-padding`, `modal-inner-padding-fixed`
+- Código/terminal: `mono-code-block`, `terminal-log-panel`, `terminal-log-panel--320`
+- Truncate: `truncate-max-150`, `truncate-max-200`, …
+- Cursor: `cursor-pointer`, `cursor-help`
+
+## Valores dinâmicos
+
+Só quando o valor **só existe em runtime** (%, px do mouse, z-index da pilha de modais):
+
+1. Preferir `DynamicStyledElement` / `DynamicProgressBar` / `PositionedFixed` / `ElementWithMaxWidth`
+2. Ou `useElementProperties(ref, { width: `${n}%` }, [n])` + `ref` no elemento
+
+**Não** voltar a `style={{}}` no JSX.
+
+## Exceções (fora do JSX)
+
+Manipulação imperativa permitida **somente** para medição DOM ou libs externas:
+
+- `SearchBar` (medir largura do select)
+- `ChartFloatingTooltip` (`showFloatingChartTooltip` via ref)
+- `useTableMobileLayout`
+
+Novas exceções: documentar no PR e preferir `useElementProperties`.
+
+## Ao adicionar estilo novo
+
+1. Existe classe em `_utilities.scss` ou `_charts.scss`? **Use.**
+2. Será reutilizado? **Adicione** em `_utilities.scss` com `var(--*)`.
+3. Central Assinante? **Prefixo `--ca-*`**, não misturar com `--bg-primary` do ERP.
+4. Cor/tamanho novo global? **Token** em `_variables.scss`, depois classe ou `var()`.
+
+## Checklist
+
+- [ ] Zero `style={` no TSX alterado
+- [ ] Cores/tamanhos via `var(--*)` ou classes utilitárias
+- [ ] Dinâmico via `DynamicStyleElements` / `useElementProperties`
+- [ ] Novo token documentado em `_variables.scss` se for global

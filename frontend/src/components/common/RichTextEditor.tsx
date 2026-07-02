@@ -77,7 +77,7 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
   }));
 
   return (
-    <div className="tinymce-wrapper" style={{ height: '100%' }}>
+    <div className="tinymce-wrapper h-100" >
       <Editor
         licenseKey="gpl"
         onInit={(evt, editor) => {

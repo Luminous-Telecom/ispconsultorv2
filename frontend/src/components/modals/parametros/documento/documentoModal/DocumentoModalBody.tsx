@@ -54,7 +54,7 @@ function DocumentoModalBody({
   const editorKeyPrefix = `${isEditing ? currentDocumento?.id : 'create'}`;
 
   return (
-    <div style={{ padding: isMobile ? '0' : '16px' }}>
+    <div className="modal-inner-padding">
       <form onSubmit={onSubmit}>
         <div className="row g-2 mb-0">
           <div className="col-md-6">
@@ -96,7 +96,7 @@ function DocumentoModalBody({
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 180px)' }}>
+        <div className="documento-editor-layout">
           <div className="d-flex justify-content-between align-items-center mb-1">
             <LabelWithHelp id="conteudo-label" as="span" className="form-label small mb-0" required>
               {tipo === 'contrato' ? t('document.contractContent') : t('document.content')}

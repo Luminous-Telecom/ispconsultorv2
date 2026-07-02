@@ -92,7 +92,6 @@ const Badge: React.FC<BadgeProps> = ({
     <span
       className={getBadgeClasses()}
       onClick={clickable ? onClick : undefined}
-      style={clickable ? { cursor: 'pointer' } : undefined}
       role={clickable ? 'button' : undefined}
       tabIndex={clickable ? 0 : undefined}
       onKeyDown={clickable && onClick ? (e) => {

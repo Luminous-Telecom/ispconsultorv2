@@ -81,9 +81,9 @@ const CentralAssinanteLoginView: React.FC<CentralAssinanteLoginViewProps> = ({
                 <Button
                   type="button"
                   variant="ghost"
-                  className="text-white-50 text-decoration-none p-0 small"
+                  className="text-white-50 text-decoration-none p-0 small fs-lg"
                   onClick={onForgotPassword}
-                  style={{ fontSize: '0.85rem' }}
+                  
                 >
                   Esqueci minha senha
                 </Button>

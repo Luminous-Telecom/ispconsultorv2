@@ -18,11 +18,7 @@ const BackNetLogo: React.FC<BackNetLogoProps> = ({
       alt="BackNet Logo"
       width={width}
       height={height}
-      className={className}
-      style={{
-        objectFit: 'contain',
-        display: 'block'
-      }}
+    className={`${className} backnet-logo-block`.trim()}
     />
   );
 };

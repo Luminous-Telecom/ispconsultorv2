@@ -67,28 +67,15 @@ const ImprimirModal: React.FC<ImprimirModalProps> = ({
       size="xl"
       modalId={modalId}
     >
-      <div style={{ height: '80vh', width: '100%', position: 'relative' }}>
+      <div className="imprimir-modal-frame">
         {isGenerating || !pdfUrl ? (
-          <div className="d-flex align-items-center justify-content-center h-100" style={{ minHeight: 0 }}>
+          <div className="d-flex align-items-center justify-content-center h-100 imprimir-modal-loading">
             <Loading message="Carregando documento..." variant="modal" />
           </div>
         ) : (
           <>
             {isLoading && (
-              <div
-                className="d-flex align-items-center justify-content-center"
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  zIndex: 1,
-                  backgroundColor: 'var(--bg-primary)',
-                  opacity: 0.95,
-                  minHeight: 0,
-                }}
-              >
+              <div className="d-flex align-items-center justify-content-center imprimir-modal-overlay">
                 <Loading message="Carregando documento..." variant="modal" />
               </div>
             )}
@@ -116,11 +103,7 @@ const ImprimirModal: React.FC<ImprimirModalProps> = ({
               <iframe
                 id={`pdf-iframe-${modalId}`}
                 src={pdfUrl}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  border: 'none'
-                }}
+                className="imprimir-modal-iframe"
                 title="Documento PDF"
                 onLoad={handleIframeLoad}
                 onError={handleIframeError}

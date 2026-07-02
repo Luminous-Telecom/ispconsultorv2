@@ -119,7 +119,7 @@ const DominioModal: React.FC<DominioModalProps> = ({
         />
       }
     >
-      <div style={{ padding: '16px' }}>
+      <div className="modal-inner-padding-fixed">
         {isLoading && isEditing ? (
           <div className="text-center p-4">
             <p>{t('messages.loading')}</p>

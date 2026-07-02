@@ -1,4 +1,5 @@
 import React, { memo } from 'react';
+import { PieLegendDot } from 'components/ui';
 import { ChartDataItem } from '../types';
 import { formatPieValue } from './utils';
 
@@ -28,6 +29,7 @@ export const PieSidebarLegend = memo(function PieSidebarLegend({
             key={index}
             role="button"
             tabIndex={0}
+            className={`pie-legend-item ${isHidden ? 'pie-legend-item--hidden' : ''}`}
             onClick={(e) => {
               e.stopPropagation();
               onToggleItem(index);
@@ -38,27 +40,8 @@ export const PieSidebarLegend = memo(function PieSidebarLegend({
                 onToggleItem(index);
               }
             }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '2px 4px',
-              cursor: 'pointer',
-              opacity: isHidden ? 0.5 : 1,
-              borderRadius: 'var(--border-radius, 8px)',
-              fontSize: '0.625rem',
-              textDecoration: isHidden ? 'line-through' : 'none',
-            }}
           >
-            <span
-              style={{
-                width: 8,
-                height: 8,
-                flexShrink: 0,
-                backgroundColor: item.color || '#64748b',
-                borderRadius: 2,
-              }}
-            />
+            <PieLegendDot color={item.color || '#64748b'} />
             <span className="pie-sidebar-legend__text">
               {item.label || ''} {formatPieValue(value)}
             </span>

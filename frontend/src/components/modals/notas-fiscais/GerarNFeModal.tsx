@@ -184,7 +184,7 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
         </div>
       }
     >
-      <form id="nfe-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
+      <form id="nfe-form" onSubmit={handleSubmit} className="modal-inner-padding">
         {Object.keys(formErrors).length > 0 && (
           <div className="alert alert-danger mb-3" role="alert">
             <strong>{t('form.validationErrors')}</strong>

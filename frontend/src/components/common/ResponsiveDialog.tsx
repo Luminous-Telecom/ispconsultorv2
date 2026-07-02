@@ -134,13 +134,7 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
             {/* Dropdown Menu */}
             {showMenu && (
               <div
-                className="dropdown-menu show responsive-dialog-menu-dropdown"
-                style={{
-                  top: 'calc(100% + 0.5rem)',
-                  minWidth: '200px',
-                  maxWidth: 'calc(100vw - 32px)',
-                  zIndex: 100001,
-                }}
+                className="dropdown-menu show responsive-dialog-menu-dropdown responsive-dialog-menu-dropdown-position"
               >
                 {/* Search Action */}
                 {tableHeader.showSearch && (
@@ -353,13 +347,7 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
 
       {/* Conteúdo com scroll */}
       <div
-        className={`responsive-dialog-mobile-content responsive-dialog-content-custom ${className}`}
-        style={{
-          WebkitOverflowScrolling: 'touch',
-          padding: className?.includes('no-padding') ? 0 : '0.5rem',
-          position: 'relative',
-          zIndex: 1,
-        }}
+        className={`responsive-dialog-mobile-content responsive-dialog-content-custom ${className?.includes('no-padding') ? 'responsive-dialog-content-no-padding' : ''} ${className ?? ''}`}
       >
         {children}
       </div>

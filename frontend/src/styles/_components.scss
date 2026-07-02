@@ -431,6 +431,24 @@ body .draggable-modal-container-custom .modal-body.draggable-modal-body-custom:h
   background-color: var(--bg-secondary) !important;
 }
 
+.responsive-dialog-mobile-content {
+  -webkit-overflow-scrolling: touch;
+  padding: 0.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.responsive-dialog-content-no-padding {
+  padding: 0 !important;
+}
+
+.responsive-dialog-menu-dropdown-position {
+  top: calc(100% + 0.5rem);
+  min-width: 200px;
+  max-width: calc(100vw - 32px);
+  z-index: 100001;
+}
+
 /* Search container */
 .responsive-dialog-search-container {
   position: sticky !important;
@@ -4678,17 +4696,17 @@ input[type="week"]::-moz-calendar-picker-indicator {
    ============================================ */
 .importar-lista-blockdomi {
   --ilb-spacing: 10px;
-  --ilb-radius: 10px;
+  --ilb-radius: var(--radius-card);
 }
 
 .importar-lista-blockdomi .row.g-3 > [class*='col-'] {
   min-width: 0;
-  --ilb-radius-sm: 6px;
-  --ilb-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  --ilb-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.2);
+  --ilb-radius-sm: var(--border-radius-md);
+  --ilb-shadow: var(--shadow-card);
+  --ilb-shadow-hover: var(--shadow-card-hover);
   --ilb-transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  --ilb-accent: rgba(6, 182, 212, 0.15);
-  --ilb-accent-border: rgba(6, 182, 212, 0.4);
+  --ilb-accent: var(--accent-cyan-bg);
+  --ilb-accent-border: var(--accent-cyan-border);
 }
 
 .importar-lista-blockdomi .ilb-section {
@@ -5180,9 +5198,9 @@ input[type="week"]::-moz-calendar-picker-indicator {
    DOMÍNIOS EXTRAÍDOS - Visualização Profissional
    ============================================ */
 .dominios-extraidos-visualizacao {
-  --dev-radius: 10px;
-  --dev-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  --dev-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.2);
+  --dev-radius: var(--radius-card);
+  --dev-shadow: var(--shadow-card);
+  --dev-shadow-hover: var(--shadow-card-hover);
   --dev-accent: rgba(6, 182, 212, 0.12);
   --dev-accent-border: rgba(6, 182, 212, 0.35);
 }

@@ -152,7 +152,7 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
             />
           </div>
           <div className="col-12">
-            <div style={{ position: 'relative' }}>
+            <div className="position-relative">
               <FormField
                 name="rpki_repository_publisher_request_xml"
                 type="textarea"
@@ -164,7 +164,7 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
               />
               <CopiarButton
                 iconOnly
-                style={{ position: 'absolute', top: 30, right: 18, zIndex: 2, minWidth: 36, padding: '4px 8px' }}
+                className="rpki-field-copy-overlay"
                 disabled={!publisherRequestXml.trim()}
                 onClick={() => {
                   if (!publisherRequestXml.trim()) return;

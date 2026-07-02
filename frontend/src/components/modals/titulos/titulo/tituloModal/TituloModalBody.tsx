@@ -70,7 +70,7 @@ const TituloModalBody: React.FC<TituloModalBodyProps> = ({
   );
 
   return (
-    <form id="titulo-form" onSubmit={onSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
+    <form id="titulo-form" onSubmit={onSubmit} className="modal-inner-padding">
       {Object.keys(errors).length > 0 && (
         <div className="alert alert-danger mb-3" role="alert">
           <strong>{labels.validationErrors}</strong>
@@ -91,10 +91,10 @@ const TituloModalBody: React.FC<TituloModalBodyProps> = ({
               <label className="form-label">{labels.client}</label>
               <input
                 type="text"
-                className="form-control form-control-sm"
+                className="form-control form-control-sm cursor-not-allowed"
                 value={clienteDisplayLabel}
                 readOnly
-                style={{ cursor: 'not-allowed' }}
+                
               />
               <small className="text-muted form-hint">{labels.clientCannotBeChanged}</small>
             </div>
@@ -102,10 +102,7 @@ const TituloModalBody: React.FC<TituloModalBodyProps> = ({
               <label className="form-label">{labels.plan}</label>
               <input
                 type="text"
-                className="form-control form-control-sm"
-                value={planos?.data?.find((p) => p.id === formData.plano_id)?.nome_plano || labels.loading}
-                readOnly
-                style={{ cursor: 'not-allowed' }}
+                className="form-control form-control-sm cursor-not-allowed"
               />
               <small className="text-muted form-hint">{labels.planoCannotBeChanged}</small>
             </div>
@@ -137,10 +134,10 @@ const TituloModalBody: React.FC<TituloModalBodyProps> = ({
                 <label className="form-label">{labels.value}</label>
                 <input
                   type="text"
-                  className="form-control form-control-sm"
+                  className="form-control form-control-sm cursor-not-allowed"
                   value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTitulo)}
                   readOnly
-                  style={{ cursor: 'not-allowed' }}
+                  
                 />
                 <small className="text-muted form-hint">{labels.valorCannotBeChanged}</small>
               </>

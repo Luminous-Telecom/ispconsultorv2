@@ -100,9 +100,9 @@ function TableToolbar<T>({
                 onChange={onSelectAllPages}
               />
               <label
-                className="form-check-label small text-muted"
+                className="form-check-label small text-muted whitespace-nowrap"
                 htmlFor={`select-all-pages-${uniqueTableId}`}
-                style={{ whiteSpace: 'nowrap' }}
+                
               >
                 {isLoadingSelectAllPages ? t('ui.loading') : t('ui.selectAllPages')}
               </label>

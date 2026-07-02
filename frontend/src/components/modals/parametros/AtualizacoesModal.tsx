@@ -8,8 +8,8 @@ import { AtualizarSistemaButton, FecharButton, Loading } from 'components/ui';
 import { ApiResponse } from 'types/api';
 import { API_CONFIG } from 'config/api';
 import { useI18n } from 'contexts/I18nContext';
+import { DynamicProgressBar } from 'components/ui';
 import { waitForBackendHealth } from 'utils/healthCheck';
-import { FONT_FAMILY_MONO } from 'constants/typography';
 
 interface Atualizacao {
   versao: string;
@@ -247,7 +247,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
 
   const modalContent = (
     <>
-    <div style={{ padding: isMobile ? '0' : '12px' }}>
+    <div className="modal-inner-padding-sm">
         {isLoading && (
           <Loading variant="centered" size="sm" message={t('updates.searching')} />
         )}
@@ -283,77 +283,34 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
         {!isLoading && !error && atualizacoes && atualizacoes.length > 0 && (
           <div>
             <div className="d-flex justify-content-center mb-2">
-              <div className="border text-center" style={{ 
-                borderRadius: '0.375rem', 
-                backgroundColor: 'var(--bg-tertiary)', 
-                borderColor: 'var(--border-color)', 
-                padding: '0.5rem 1rem',
-                minWidth: '180px'
-              }}>
-                <span className="text-muted d-block mb-1" style={{ fontSize: '0.7rem' }}>{t('updates.currentVersion')}</span>
-                <div className="fw-bold text-primary" style={{ fontSize: '0.9rem' }}>
-                  <i className="bi bi-check-circle-fill text-success me-1" style={{ fontSize: '0.75rem' }}></i>
+              <div className="border text-center updates-version-box">
+                <span className="text-muted d-block mb-1 fs-md">{t('updates.currentVersion')}</span>
+                <div className="fw-bold text-primary fs-lg">
+                  <i className="bi bi-check-circle-fill text-success me-1 fs-sm"></i>
                   v{versaoAtual}
                 </div>
               </div>
             </div>
 
-            {/* Progresso da Atualização */}
             {isUpdating && updateProgress && (
-              <div 
-                className="mb-2" 
-                role="alert"
-                style={{
-                  backgroundColor: 'var(--bg-secondary)',
-                  border: '1px solid var(--info-color)',
-                  borderRadius: '0.375rem',
-                  padding: '0.75rem',
-                  color: 'var(--text-primary)'
-                }}
-              >
+              <div className="mb-2 updates-progress-alert" role="alert">
                 <div className="d-flex align-items-center mb-2">
                   <div className="flex-grow-1">
-                    <strong className="small" style={{ color: 'var(--info-color)' }}>{t('updates.updating')}</strong>
-                    <p className="mb-0 small mt-1" style={{ color: 'var(--text-secondary)' }}>{updateProgress}</p>
-                  </div>
-                </div>
-                
-                {/* Barra de Progresso */}
-                <div className="mb-2">
-                  <div 
-                    className="progress" 
-                    style={{ 
-                      height: '20px', 
-                      borderRadius: '0.25rem',
-                      backgroundColor: 'var(--bg-tertiary)'
-                    }}
-                  >
-                    <div 
-                      className="progress-bar progress-bar-striped progress-bar-animated bg-primary" 
-                      role="progressbar" 
-                      style={{ width: `${updateProgressPercent}%` }}
-                      aria-valuenow={updateProgressPercent} 
-                      aria-valuemin={0} 
-                      aria-valuemax={100}
-                    >
-                      <span className="small fw-semibold" style={{ color: '#ffffff', fontSize: '0.7rem' }}>{updateProgressPercent}%</span>
-                    </div>
+                    <strong className="small text-info-color">{t('updates.updating')}</strong>
+                    <p className="mb-0 small mt-1 text-secondary-color">{updateProgress}</p>
                   </div>
                 </div>
 
-                {/* Logs da atualização */}
+                <div className="mb-2">
+                  <div className="progress updates-progress-bar">
+                    <DynamicProgressBar percent={updateProgressPercent}>
+                      <span className="small fw-semibold text-primary-color fs-md">{updateProgressPercent}%</span>
+                    </DynamicProgressBar>
+                  </div>
+                </div>
+
                 {updateLogs.length > 0 && (
-                  <div style={{ 
-                    maxHeight: '150px', 
-                    overflowY: 'auto', 
-                    backgroundColor: 'var(--bg-tertiary)', 
-                    color: 'var(--text-primary)',
-                    padding: '0.5rem', 
-                    borderRadius: '0.25rem', 
-                    fontSize: '0.7rem', 
-                    fontFamily: FONT_FAMILY_MONO,
-                    border: '1px solid var(--border-color)'
-                  }}>
+                  <div className="logs-update-panel">
                     {updateLogs.map((log, index) => (
                       <div key={index} className={log.startsWith('✗') ? 'text-danger' : log.startsWith('✓') ? 'text-success' : log.startsWith('⚠') ? 'text-warning' : 'text-muted'}>
                         {log}
@@ -364,46 +321,31 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
               </div>
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div className="flex-col-gap-sm">
               {atualizacoes.map((atualizacao: Atualizacao) => {
                 const badge = getTipoBadge(atualizacao.tipo);
                 return (
-                  <div key={atualizacao.versao} className="border" style={{ 
-                    borderRadius: '0.375rem',
-                    border: '1px solid var(--border-color)',
-                    backgroundColor: 'var(--bg-tertiary)',
-                    padding: '0.625rem',
-                    transition: 'all 0.2s ease'
-                  }}>
+                  <div key={atualizacao.versao} className="border updates-item-card">
                     <div className="d-flex align-items-start">
-                      <div className={`me-2 d-flex align-items-center justify-content-center ${badge.bgClass}`} style={{ 
-                        width: '24px', 
-                        height: '24px', 
-                        borderRadius: '0.25rem',
-                        fontSize: '0.75rem',
-                        flexShrink: 0
-                      }}>
+                      <div className={`me-2 d-flex align-items-center justify-content-center updates-item-badge-icon ${badge.bgClass}`}>
                         <i className={`bi ${badge.icon} ${badge.class}`}></i>
                       </div>
-                      <div className="flex-grow-1" style={{ fontSize: '0.875rem', minWidth: 0 }}>
+                      <div className="flex-grow-1 fs-lg min-w-0">
                         <div className="d-flex justify-content-between align-items-start mb-1">
                           <div className="flex-grow-1">
-                            <div className="fw-semibold d-inline-block me-2" style={{ fontSize: '0.875rem' }}>
+                            <div className="fw-semibold d-inline-block me-2 fs-lg">
                               v{atualizacao.versao}
                             </div>
-                            <small className="text-muted d-inline-flex align-items-center" style={{ fontSize: '0.7rem' }}>
+                            <small className="text-muted d-inline-flex align-items-center fs-md">
                               <i className="bi bi-calendar3 me-1"></i>
                               {formatDate(atualizacao.data)}
                             </small>
                           </div>
-                          <span className={`badge ${badge.bgClass} ${badge.class} border-0`} style={{ fontSize: '0.65rem', padding: '0.2rem 0.4rem' }}>
+                          <span className={`badge updates-item-badge-label ${badge.bgClass} ${badge.class} border-0`}>
                             {badge.label}
                           </span>
                         </div>
-                        <ul
-                          className="mb-0 text-secondary ps-3"
-                          style={{ fontSize: '0.8rem', lineHeight: '1.5' }}
-                        >
+                        <ul className="mb-0 text-secondary ps-3 fs-body-sm lh-15 updates-item-changelog">
                           {(atualizacao.itens?.length ? atualizacao.itens : [atualizacao.descricao]).map((item) => (
                             <li key={`${atualizacao.versao}-${item}`} className="mb-1">
                               {item}

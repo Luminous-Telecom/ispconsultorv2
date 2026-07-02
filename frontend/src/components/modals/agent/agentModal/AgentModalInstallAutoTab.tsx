@@ -3,7 +3,7 @@ import FormField from 'components/ui/FormField';
 import { Loading } from 'components/ui';
 import { REQUIREMENTS } from './constants';
 import { InstallStatus, SshFormData } from './types';
-import { FONT_FAMILY_MONO } from 'constants/typography';
+import { getTerminalLogLineClass } from 'constants/designTokens';
 
 interface AgentModalInstallAutoTabProps {
   installStatus: InstallStatus;
@@ -32,7 +32,7 @@ const AgentModalInstallAutoTab: React.FC<AgentModalInstallAutoTabProps> = ({
         {sshErrors.cliente_id && (
           <div className="text-danger small mb-2">{sshErrors.cliente_id}</div>
         )}
-        <div className="alert alert-info mb-3 py-1 px-2" style={{ fontSize: '11px' }}>
+        <div className="alert alert-info mb-3 py-1 px-2 alert-compact">
           <strong>Requisitos do servidor:</strong>
           <ul className="mb-0 mt-1 ps-3">
             {REQUIREMENTS.map((r) => <li key={r}>{r}</li>)}
@@ -113,22 +113,11 @@ const AgentModalInstallAutoTab: React.FC<AgentModalInstallAutoTabProps> = ({
           {installStatus === 'success' && <span className="badge bg-success">Instalação concluída!</span>}
           {installStatus === 'error' && <span className="badge bg-danger">Falha na instalação</span>}
         </div>
-        <div style={{
-          background: '#0d1117', color: '#e6edf3',
-          fontFamily: FONT_FAMILY_MONO,
-          fontSize: '12px', padding: '12px', borderRadius: '6px',
-          height: '280px', overflowY: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all',
-        }}>
+        <div className="terminal-log-panel terminal-log-panel--280">
           {logs.map((line, i) => (
             <div
               key={i}
-              style={{
-                color: line.startsWith('❌') ? '#ff7b72'
-                  : line.startsWith('✅') ? '#3fb950'
-                  : line.startsWith('🎉') ? '#58a6ff'
-                  : line.startsWith('---') ? '#484f58'
-                  : '#e6edf3',
-              }}
+              className={getTerminalLogLineClass(line)}
             >
               {line}
             </div>

@@ -16,7 +16,7 @@ const ClientsByPlanCard: React.FC<ClientsByPlanCardProps> = ({
   titleInfo,
   onBarClick,
 }) => (
-  <div className="chart-card" style={{ height: 'auto', minHeight: 0 }}>
+  <div className="chart-card chart-card-auto-height" >
     <ModernBarChart
       data={data}
       title={title}

@@ -1,5 +1,6 @@
 import React, { type RefObject } from 'react';
 import {
+  DynamicProgressBar,
   ExtrairDominiosPdfButton,
   ExtrairPlanilhaUrlButton,
   ExtrairSeiAnatelButton,
@@ -288,15 +289,14 @@ const ImportarListaBlockdomiOficioSection: React.FC<ImportarListaBlockdomiOficio
               </span>
             )}
           </div>
-          <div className="progress" style={{ height: 4 }}>
-            <div
+          <div className="progress progress-thin">
+            <DynamicProgressBar
+              percent={
+                pdfExtractProgress && pdfExtractProgress.total > 0
+                  ? Math.round((pdfExtractProgress.current / pdfExtractProgress.total) * 100)
+                  : 0
+              }
               className="progress-bar progress-bar-striped progress-bar-animated"
-              style={{
-                width:
-                  pdfExtractProgress && pdfExtractProgress.total > 0
-                    ? `${Math.round((pdfExtractProgress.current / pdfExtractProgress.total) * 100)}%`
-                    : '0%'
-              }}
             />
           </div>
         </div>

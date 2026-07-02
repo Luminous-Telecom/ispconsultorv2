@@ -247,7 +247,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                           {t('settings.messages.variablesHelper')}
                         </small>
                       </div>
-                      <div className="card-body p-3" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                      <div className="card-body p-3 scroll-max-400">
                         <div className="row g-0 form-modal-multi-col">
                           {Object.entries(variaveisData).map(([chave, grupo], index, array) => {
                             const isLastInRow = (index + 1) % 3 === 0;
@@ -255,13 +255,9 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                             const showBorder = !isLastInRow && !isLastItem;
                             
                             return (
-                            <div 
-                              key={chave} 
-                              className="col-md-6 col-lg-4"
-                              style={{
-                                borderRight: showBorder ? '1px solid var(--border-color)' : 'none',
-                                paddingRight: showBorder ? '1rem' : '0'
-                              }}
+                            <div
+                              key={chave}
+                              className={`col-md-6 col-lg-4 ${showBorder ? 'variavel-col-border' : ''}`}
                             >
                               <h6 className="fw-bold mb-2 text-primary">
                                 <i className="bi bi-tag me-1"></i>
@@ -271,23 +267,9 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                                 {grupo.variaveis.map((variavel) => (
                                   <div key={variavel.variavel} className="d-flex align-items-center gap-2">
                                     <span
-                                      className="badge bg-info text-dark"
-                                      style={{ 
-                                        cursor: 'pointer', 
-                                        fontSize: '0.75rem', 
-                                        padding: '0.35rem 0.65rem',
-                                        transition: 'all 0.2s ease'
-                                      }}
+                                      className="badge bg-info text-dark whatsapp-var-badge"
                                       onClick={() => handleVariableClick(variavel.variavel)}
-                                      onMouseEnter={(e) => {
-                                        e.currentTarget.style.transform = 'scale(1.05)';
-                                        e.currentTarget.style.backgroundColor = '#0dcaf0';
-                                      }}
-                                      onMouseLeave={(e) => {
-                                        e.currentTarget.style.transform = 'scale(1)';
-                                        e.currentTarget.style.backgroundColor = '';
-                                      }}
-                                        title={`${variavel.descricao}. Clique para inserir.`}
+                                      title={`${variavel.descricao}. Clique para inserir.`}
                                     >
                                       {variavel.variavel}
                                     </span>

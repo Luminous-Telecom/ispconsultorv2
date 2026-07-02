@@ -1,4 +1,3 @@
-import React from 'react';
 
 export interface LabelWithHelpProps {
   children?: React.ReactNode;
@@ -20,8 +19,7 @@ export const RequiredMark: React.FC = () => (
 
 const HelpIcon: React.FC<{ text: string; className?: string }> = ({ text, className = 'ms-1' }) => (
   <i
-    className={`bi bi-info-circle text-muted flex-shrink-0 ${className}`.trim()}
-    style={{ cursor: 'help', fontSize: '0.85rem' }}
+    className={`bi bi-info-circle text-muted flex-shrink-0 label-help-icon ${className}`.trim()}
     title={text}
     role="img"
     aria-label={text}

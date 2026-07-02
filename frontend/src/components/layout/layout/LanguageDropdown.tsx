@@ -1,4 +1,5 @@
 import React from 'react';
+import { useElementProperties } from 'hooks/useElementProperties';
 import type { Language } from 'contexts/I18nContext';
 
 interface LanguageOption {
@@ -26,6 +27,17 @@ const LanguageDropdown: React.FC<LanguageDropdownProps> = ({
   languageDropdownPosition,
   onSelectLanguage,
 }) => {
+  useElementProperties(
+    languageDropdownRef,
+    isMobile
+      ? {}
+      : {
+          top: `${languageDropdownPosition.top}px`,
+          left: `${languageDropdownPosition.left}px`,
+        },
+    [isMobile, languageDropdownPosition.top, languageDropdownPosition.left],
+  );
+
   if (!showLanguageDropdown) {
     return null;
   }
@@ -59,13 +71,7 @@ const LanguageDropdown: React.FC<LanguageDropdownProps> = ({
     <div
       ref={languageDropdownRef}
       data-language-dropdown
-      className="layout-language-dropdown-menu shadow"
-      style={{
-        top: `${languageDropdownPosition.top}px`,
-        left: `${languageDropdownPosition.left}px`,
-        minWidth: '160px',
-        zIndex: 10001,
-      }}
+      className="layout-language-dropdown-menu shadow dropdown-menu-min-w-160"
     >
       {availableLanguages.map((lang) => (
         <div key={lang.code}>

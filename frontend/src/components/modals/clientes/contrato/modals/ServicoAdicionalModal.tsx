@@ -164,7 +164,7 @@ const ServicoAdicionalModal: React.FC<ServicoAdicionalModalProps> = ({
         size="lg"
         headerActions={headerActions}
       >
-        <form id="servico-adicional-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
+        <form id="servico-adicional-form" onSubmit={handleSubmit} className="modal-inner-padding">
           <div className="d-flex flex-column gap-2">
             <EntitySelectField
               value={planoId}

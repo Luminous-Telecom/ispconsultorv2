@@ -195,7 +195,7 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
         <form
           id="ordem-servico-acao-form"
           onSubmit={handleSubmit}
-          style={{ padding: isMobile ? '0' : '16px' }}
+          className="modal-inner-padding"
         >
           <div className="row g-2">
             {acao === 'agendar' && (

@@ -44,7 +44,7 @@ export function getSaasServidorWhatsappColumns(): ListModalColumn<SaasServidorWh
       label: 'URL API',
       sortable: true,
       render: (i) => (
-        <span className="text-truncate" style={{ maxWidth: 200, display: 'block' }}>
+        <span className="text-truncate truncate-max-200-block" >
           {i.url_api}
         </span>
       ),

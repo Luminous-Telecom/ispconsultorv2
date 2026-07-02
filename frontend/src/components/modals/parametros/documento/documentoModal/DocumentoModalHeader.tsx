@@ -84,7 +84,7 @@ function DocumentoModalHeader({
         disabled={!isEditing}
       />
       {showImprimirDropdown && (
-        <ul className="dropdown-menu show" style={{ display: 'block', position: 'absolute', zIndex: 1050 }}>
+        <ul className="dropdown-menu show dropdown-menu-block" >
           {tipo === 'contrato'
             ? CONTRATO_PRINT_OPTIONS.map(({ tipo: docTipo, labelKey }) => (
                 <li key={docTipo}>

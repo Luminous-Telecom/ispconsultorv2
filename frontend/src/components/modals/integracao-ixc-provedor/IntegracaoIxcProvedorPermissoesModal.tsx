@@ -26,14 +26,14 @@ interface IntegracaoIxcProvedorPermissoesModalProps {
 function permissionCell(value: IxcPermissionCellValue) {
   if (value === 'liberado') {
     return (
-      <span className="badge bg-success d-block w-100 py-1" style={{ fontSize: '0.7rem' }}>
+      <span className="badge bg-success d-block w-100 py-1 fs-md" >
         Liberado
       </span>
     );
   }
   if (value === 'bloqueado') {
     return (
-      <span className="badge bg-danger d-block w-100 py-1" style={{ fontSize: '0.7rem' }}>
+      <span className="badge bg-danger d-block w-100 py-1 fs-md" >
         Bloqueado
       </span>
     );

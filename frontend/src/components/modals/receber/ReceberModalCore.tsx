@@ -130,7 +130,7 @@ const ReceberModalCore: React.FC<ReceberModalCoreProps> = ({
       size="lg"
       modalId={variant === 'saas' ? 'saas-receber-modal' : 'receber-modal'}
     >
-      <form onSubmit={rhfHandleSubmit(handleSubmit)} style={{ padding: isMobile ? '0' : '16px' }}>
+      <form onSubmit={rhfHandleSubmit(handleSubmit)} className="modal-inner-padding">
         <div className="card mb-3">
           <div className="card-header py-2">
             <h6 className="mb-0">{t('financial.parcelInfo')}</h6>
@@ -181,7 +181,7 @@ const ReceberModalCore: React.FC<ReceberModalCoreProps> = ({
                 {t('financial.amountPaid')}
               </LabelWithHelp>
               <div className="input-group has-validation">
-                <span className="input-group-text" style={{ padding: '0 0.75rem' }}>
+                <span className="input-group-text input-group-text-compact" >
                   R$
                 </span>
                 <input

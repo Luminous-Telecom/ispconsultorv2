@@ -89,10 +89,9 @@ const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariav
             <div className="accordion-item" key={chave}>
               <h2 className="accordion-header">
                 <button
-                  className={`accordion-button ${grupoExpandido === chave ? '' : 'collapsed'}`}
+                  className={`accordion-button variavel-tab-btn ${grupoExpandido === chave ? '' : 'collapsed'}`}
                   type="button"
                   onClick={() => toggleGrupo(chave)}
-                  style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
                 >
                   {grupoTyped.titulo}
                   <span className="badge bg-secondary ms-2">{variaveisFiltradas.length}</span>
@@ -118,8 +117,8 @@ const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariav
                           type="button"
                           iconOnly
                           variant="ghost"
-                          className="p-0 text-muted flex-shrink-0"
-                          style={{ fontSize: '0.75rem' }}
+                          className="p-0 text-muted flex-shrink-0 fs-sm"
+                          
                           onClick={() => void copyToClipboard(variavel.variavel)}
                           title={t('buttons.copy')}
                         />

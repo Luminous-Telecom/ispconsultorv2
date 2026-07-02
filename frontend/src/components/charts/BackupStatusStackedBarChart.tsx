@@ -1,4 +1,5 @@
 import React, { useRef, useLayoutEffect, useEffect, useState, useMemo, memo, useCallback } from 'react';
+import { PieLegendDot } from 'components/ui';
 import * as d3 from 'd3';
 import { ChartEmptyState } from './ChartEmptyState';
 import { clampTooltipNearPoint, createD3ChartTooltip } from './chartTooltip';
@@ -289,13 +290,13 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
 
     return (
       <div
-        className="backup-status-card chart-radial-style"
-        style={{ height: '100%', position: 'relative' }}
+        className="backup-status-card chart-radial-style chart-container-full-relative"
+        
       >
-        <div className="pie-metric-header" style={{ justifyContent: 'center' }}>
+        <div className="pie-metric-header pie-metric-header-center" >
           <span
-            className="pie-metric-header__title backup-status-card__title"
-            style={{ flex: '0 0 auto', textAlign: 'center' }}
+            className="pie-metric-header__title backup-status-card__title pie-metric-title-center"
+            
           >
             {title}
           </span>
@@ -303,11 +304,11 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
 
         <div
           ref={chartBoxRef}
-          style={{ flex: '1 1 auto', minHeight: 0, width: '100%', position: 'relative' }}
+          className="chart-area-relative"
         >
           <svg
             ref={svgRef}
-            style={{ display: 'block', maxWidth: '100%', overflow: 'visible' }}
+            className="chart-svg-overflow"
           />
         </div>
         <ul className="backup-status-card__legend">
@@ -316,7 +317,7 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
             return (
               <li
                 key={k}
-                className="backup-status-card__legend-item"
+                className={`backup-status-card__legend-item backup-legend-item ${onLegendToggle ? 'cursor-pointer' : ''} ${isHidden ? 'pie-legend-item--hidden' : ''}`}
                 role={onLegendToggle ? 'button' : undefined}
                 tabIndex={onLegendToggle ? 0 : undefined}
                 onClick={
@@ -337,19 +338,9 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
                       }
                     : undefined
                 }
-                style={{
-                  cursor: onLegendToggle ? 'pointer' : 'default',
-                  opacity: isHidden ? 0.5 : 1,
-                  textDecoration: isHidden ? 'line-through' : 'none',
-                  padding: onLegendToggle ? '2px 4px' : undefined,
-                  borderRadius: onLegendToggle ? 'var(--border-radius, 8px)' : undefined,
-                }}
               >
-                <span
-                  className="backup-status-card__legend-swatch"
-                  style={{ backgroundColor: STATUS_COLORS[k] }}
-                />
-                <span style={{ color: 'var(--text-muted, #94a3b8)' }}>{legendLabels[k]}</span>
+                <PieLegendDot color={STATUS_COLORS[k]} />
+                <span className="backup-legend-label">{legendLabels[k]}</span>
               </li>
             );
           })}

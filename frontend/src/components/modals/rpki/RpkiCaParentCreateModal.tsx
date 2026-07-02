@@ -125,7 +125,7 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
             />
           </div>
           <div className="col-12">
-            <div style={{ position: 'relative' }}>
+            <div className="position-relative">
               <FormField
                 name="rpki_child_request_preview"
                 type="textarea"
@@ -138,7 +138,7 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
               />
               <CopiarButton
                 iconOnly
-                style={{ position: 'absolute', top: 30, right: 18, zIndex: 2, minWidth: 36, padding: '4px 8px' }}
+                className="rpki-field-copy-overlay"
                 disabled={!childRequestXml.trim()}
                 onClick={() => {
                   if (!childRequestXml.trim()) return;

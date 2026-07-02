@@ -27,16 +27,16 @@ const TemplatesModal: React.FC<TemplatesModalProps> = ({ show, onClose, mensagem
       title={t('settings.messages.activeTemplatesWhatsApp')}
       size="xl"
       modalId="templates-modal"
-      className="no-padding"
+      className="no-padding d-flex gap-2 modal-header-actions"
       headerActions={
-        <div className="d-flex gap-2 modal-header-actions">
+        <div >
           <RecarregarButton type="button" onClick={handleAtualizar} />
           <FecharButton type="button" onClick={onClose} />
         </div>
       }
     >
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0, padding: '16px' }}>
+      <div className="templates-modal-layout">
+        <div className="templates-modal-scroll">
           <TemplatesMetaTab
             enabled={show}
             mensagemType={mensagemType}

@@ -23,14 +23,7 @@ export const ContratoListResumo: React.FC<ContratoListResumoProps> = ({
 
   return (
     <div
-      className="p-3 bg-light rounded contrato-totais-resumo"
-      style={{
-        flexShrink: 0,
-        marginTop: isMobile ? '0.25rem' : '0.5rem',
-        marginBottom: 0,
-        marginLeft: isMobile ? '0.5rem' : '1rem',
-        marginRight: isMobile ? '0.5rem' : '1rem',
-      }}
+      className="p-3 bg-light rounded contrato-totais-resumo financeiro-resumo-adaptive"
     >
       <div className="d-flex flex-wrap gap-2 gap-md-4 justify-content-end">
         <div className="text-end">

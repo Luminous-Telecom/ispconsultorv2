@@ -122,7 +122,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
       {isLoading ? (
         <Loading variant="centered" message={t('ui.loading')} />
       ) : (
-      <form id="parametros-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
+      <form id="parametros-form" onSubmit={handleSubmit} className="modal-inner-padding">
         <div>
           <div className="card mb-3">
             <div className="card-header">

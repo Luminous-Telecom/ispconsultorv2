@@ -9,7 +9,7 @@ interface ServerUnavailableScreenProps {
 const ServerUnavailableScreen: React.FC<ServerUnavailableScreenProps> = ({ t }) => (
   <div className="app-layout d-flex align-items-center justify-content-center min-vh-100">
     <div className="text-center p-4">
-      <i className="bi bi-cloud-off text-danger" style={{ fontSize: '4rem' }}></i>
+      <i className="bi bi-cloud-off text-danger fs-icon-xl" ></i>
       <h4 className="mt-3 text-danger">{t('ui.serverUnavailable')}</h4>
       <RecarregarButton
         type="button"

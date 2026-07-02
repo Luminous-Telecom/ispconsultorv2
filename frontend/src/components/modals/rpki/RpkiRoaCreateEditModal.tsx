@@ -232,7 +232,7 @@ const RpkiRoaCreateEditModal: React.FC<RpkiRoaCreateEditModalProps> = ({
         </div>
       }
     >
-      <div style={{ padding: '16px' }}>
+      <div className="modal-inner-padding-fixed">
         <form onSubmit={handleSubmit}>
           <div className="row g-3">
             <div className="col-12">

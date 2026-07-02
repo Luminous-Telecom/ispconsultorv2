@@ -63,7 +63,7 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({
         </div>
       }
     >
-      <div style={{ padding: isMobile ? '0' : '16px' }}>
+      <div className="modal-inner-padding">
         <div className="row">
           <div className="col-md-6 mb-1">
             <FormField

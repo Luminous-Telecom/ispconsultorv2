@@ -237,10 +237,10 @@ const RotinaLogsModal: React.FC<RotinaLogsModalProps> = ({
                           </small>
                           {log.stack_trace && (
                             <details className="mt-1">
-                              <summary className="text-warning" style={{ cursor: 'pointer', fontSize: '0.7rem' }}>
+                              <summary className="text-warning summary-log-md" >
                                 Ver detalhes técnicos
                               </summary>
-                              <pre className="text-danger mt-1" style={{ fontSize: '0.6rem', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                              <pre className="text-danger mt-1 fs-2xs pre-wrap" >
                                 {log.stack_trace}
                               </pre>
                             </details>

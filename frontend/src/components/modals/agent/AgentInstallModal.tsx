@@ -8,7 +8,8 @@ import FormField from 'components/ui/FormField';
 import { defaultApiClient } from 'services/core';
 import { AgentService } from 'services/agentService';
 import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
-import { FONT_FAMILY_MONO } from 'constants/typography';
+import { getTerminalLogLineClass } from 'constants/designTokens';
+
 
 interface AgentInstallModalProps {
   show: boolean;
@@ -273,7 +274,7 @@ const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
 
         {/* ── Requisitos ── */}
         {(status === 'idle' || (mode === 'manual' && !generatedCmd)) && (
-          <div className="alert alert-info mb-3 py-1 px-2" style={{ fontSize: '11px' }}>
+          <div className="alert alert-info mb-3 py-1 px-2 alert-compact">
             <strong>Requisitos do servidor:</strong>
             <ul className="mb-0 mt-1 ps-3">
               {REQUIREMENTS.map((r) => <li key={r}>{r}</li>)}
@@ -320,20 +321,9 @@ const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
               {status === 'success' && <span className="badge bg-success">Instalação concluída!</span>}
               {status === 'error'   && <span className="badge bg-danger">Falha na instalação</span>}
             </div>
-            <div style={{
-              background: '#0d1117', color: '#e6edf3',
-              fontFamily: FONT_FAMILY_MONO,
-              fontSize: '12px', padding: '12px', borderRadius: '6px',
-              height: '320px', overflowY: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all',
-            }}>
+            <div className="terminal-log-panel terminal-log-panel--320">
               {logs.map((line, i) => (
-                <div key={i} style={{
-                  color: line.startsWith('❌') ? '#ff7b72'
-                    : line.startsWith('✅') ? '#3fb950'
-                    : line.startsWith('🎉') ? '#58a6ff'
-                    : line.startsWith('---') ? '#484f58'
-                    : '#e6edf3',
-                }}>
+                <div key={i} className={getTerminalLogLineClass(line)}>
                   {line}
                 </div>
               ))}
@@ -360,23 +350,9 @@ const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
             <p className="small text-muted mb-2">
               Execute o seguinte comando <strong>como root</strong> no servidor:
             </p>
-            <div style={{
-              background: 'var(--bg-secondary)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '6px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '10px 12px',
-            }}>
-              <span style={{ color: 'var(--text-secondary)', fontFamily: FONT_FAMILY_MONO, fontSize: '13px', flexShrink: 0 }}>$</span>
-              <span style={{
-                fontFamily: FONT_FAMILY_MONO,
-                fontSize: '12px',
-                color: 'var(--text-primary)',
-                wordBreak: 'break-all',
-                flex: 1,
-              }}>
+            <div className="mono-code-block">
+              <span className="mono-code-prompt">$</span>
+              <span className="mono-code-text">
                 {generatedCmd}
               </span>
               <CopiarButton
@@ -385,7 +361,7 @@ const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
                 label={isCmdCopied('cmd') ? t('blockdomi.copiedToClipboard') : undefined}
               />
             </div>
-            <div className="alert alert-warning small mt-3 py-2 mb-0" style={{ fontSize: '11px' }}>
+            <div className="alert alert-warning small mt-3 py-2 mb-0 alert-compact">
               <strong>Atenção:</strong> este comando inclui o token do agente. Não compartilhe em locais públicos.
             </div>
           </div>

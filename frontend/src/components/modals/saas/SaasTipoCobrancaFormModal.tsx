@@ -86,7 +86,7 @@ const SaasTipoCobrancaFormModal: React.FC<SaasTipoCobrancaFormModalProps> = ({
         />
       }
     >
-      <form id="saas-tipo-cobranca-form-id" onSubmit={handleSubmit} style={{ padding: '16px' }}>
+      <form id="saas-tipo-cobranca-form-id" onSubmit={handleSubmit} className="modal-inner-padding-fixed">
         <TipoCobrancaFormFields
           form={form}
           errors={errors}

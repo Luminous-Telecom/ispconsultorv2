@@ -262,7 +262,7 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
         ref={fileInputRef}
         type="file"
         accept=".sql,.tar.gz,.ndjson,.txt"
-        style={{ display: 'none' }}
+        className="visually-hidden-input"
         onChange={handleFileChange}
       />
       <Table

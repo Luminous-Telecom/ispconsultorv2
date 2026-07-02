@@ -7,7 +7,7 @@ export type { RichTextEditorRef, RichTextEditorProps } from './RichTextEditor';
 
 export function RichTextEditorFallback() {
   return (
-    <div className="d-flex align-items-center justify-content-center p-3 text-muted" style={{ minHeight: 120 }}>
+    <div className="d-flex align-items-center justify-content-center p-3 text-muted rich-text-editor-fallback" >
       Carregando editor...
     </div>
   );

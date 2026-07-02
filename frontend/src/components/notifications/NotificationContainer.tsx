@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import ReactDOM from 'react-dom';
+import { useElementProperties } from 'hooks/useElementProperties';
 import { NotificationContainerProps, NotificationState, NotificationAction } from './types';
 import Notification from './Notification';
 
@@ -10,6 +11,17 @@ interface NotificationContainerComponentProps extends NotificationContainerProps
   onResume: (id: string) => void;
   onActionClick: (action: NotificationAction) => void;
 }
+
+const NotificationStackItem: React.FC<{
+  spacing: number;
+  isFirst: boolean;
+  children: React.ReactNode;
+}> = ({ spacing, isFirst, children }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  useElementProperties(ref, { marginTop: isFirst ? undefined : `${spacing}px` }, [spacing, isFirst]);
+
+  return <div ref={ref}>{children}</div>;
+};
 
 const NotificationContainer: React.FC<NotificationContainerComponentProps> = ({
   position,
@@ -23,94 +35,31 @@ const NotificationContainer: React.FC<NotificationContainerComponentProps> = ({
   onResume,
   onActionClick,
 }) => {
-  // Filtrar notificações por posição
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const filteredNotifications = notifications
-    .filter(notification => notification.config.position === position)
+    .filter((notification) => notification.config.position === position)
     .slice(0, maxNotifications);
 
-  // Se não há notificações, não renderizar
+  useElementProperties(containerRef, style as Record<string, string | number | undefined>, [style]);
+
   if (filteredNotifications.length === 0) {
     return null;
   }
 
-  // Obter classes CSS baseadas na posição
   const getContainerClasses = () => {
     const classes = ['notification-container'];
-    
     classes.push(`notification-container-${position}`);
-    
     if (className) {
       classes.push(className);
     }
-    
     return classes.join(' ');
   };
 
-  // Obter estilos baseados na posição
-  const getContainerStyles = (): React.CSSProperties => {
-    const styles: React.CSSProperties = {
-      position: 'fixed',
-      zIndex: 999999, // Maior que ResponsiveDialog (99999) para aparecer acima dos modais no mobile
-      ...style,
-    };
-
-    // Posicionamento baseado na posição
-    switch (position) {
-      case 'top-left':
-        styles.top = '1rem';
-        styles.left = '1rem';
-        break;
-      case 'top-center':
-        styles.top = '1rem';
-        styles.left = '50%';
-        styles.transform = 'translateX(-50%)';
-        break;
-      case 'top-right':
-        styles.top = '1rem';
-        styles.right = '1rem';
-        break;
-      case 'bottom-left':
-        styles.bottom = '1rem';
-        styles.left = '1rem';
-        break;
-      case 'bottom-center':
-        styles.bottom = '1rem';
-        styles.left = '50%';
-        styles.transform = 'translateX(-50%)';
-        break;
-      case 'bottom-right':
-        styles.bottom = '1rem';
-        styles.right = '1rem';
-        break;
-      default:
-        styles.top = '1rem';
-        styles.right = '1rem';
-    }
-
-    return styles;
-  };
-
-  // Obter estilos para cada notificação
-  const getNotificationStyles = (index: number): React.CSSProperties => {
-    const styles: React.CSSProperties = {};
-    
-    if (index > 0) {
-      styles.marginTop = `${spacing}px`;
-    }
-    
-    return styles;
-  };
-
   const containerContent = (
-    <div
-      className={getContainerClasses()}
-      style={getContainerStyles()}
-    >
+    <div ref={containerRef} className={getContainerClasses()}>
       {filteredNotifications.map((notification, index) => (
-        <div
-          key={notification.id}
-          style={getNotificationStyles(index)}
-        >
+        <NotificationStackItem key={notification.id} spacing={spacing} isFirst={index === 0}>
           <Notification
             notification={notification}
             onRemove={onRemove}
@@ -118,12 +67,11 @@ const NotificationContainer: React.FC<NotificationContainerComponentProps> = ({
             onResume={onResume}
             onActionClick={onActionClick}
           />
-        </div>
+        </NotificationStackItem>
       ))}
     </div>
   );
 
-  // Renderizar usando portal para garantir que apareça acima de modais e outros elementos
   return ReactDOM.createPortal(containerContent, document.body);
 };
 

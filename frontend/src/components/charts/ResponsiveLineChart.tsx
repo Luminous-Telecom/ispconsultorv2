@@ -289,17 +289,9 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(
         <ChartTitleWithInfo title={title} titleInfo={titleInfo} />
         <div
           ref={containerRef}
-          style={{
-            width: '100%',
-            height: '180px',
-            minWidth: '160px',
-            minHeight: '160px',
-            position: 'relative',
-            overflow: 'visible',
-            alignSelf: 'stretch',
-          }}
+          className="line-chart-container"
         >
-          <svg ref={svgRef} style={{ display: 'block', width: '100%', height: '100%', overflow: 'visible' }} />
+          <svg ref={svgRef} className="chart-svg-host" />
         </div>
       </div>
     );

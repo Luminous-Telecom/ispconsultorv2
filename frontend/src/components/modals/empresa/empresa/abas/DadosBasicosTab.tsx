@@ -96,21 +96,21 @@ const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: Fi
         <div className="col-12">
           <label htmlFor="logo" className="form-label small fw-bold">{t('company.logo')}</label>
           <div className="d-flex align-items-start gap-3">
-            <div style={{ minWidth: '200px' }}>
+            <div className="empresa-logo-wrap">
               {dados.logo ? (
                 <img 
                   src={dados.logo} 
                   alt={t('company.logo')} 
-                  style={{ maxWidth: '200px', maxHeight: '100px', objectFit: 'contain' }}
-                  className="border rounded p-2 bg-light"
+                  className="empresa-logo-img border rounded p-2 bg-light"
+                  
                 />
               ) : (
                 <div 
-                  className="border rounded p-2 bg-light text-center text-secondary"
-                  style={{ width: '200px', height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  className="border rounded p-2 bg-light text-center text-secondary empresa-logo-placeholder"
+                  
                 >
                   <div>
-                    <i className="bi bi-image" style={{ fontSize: '2rem' }}></i>
+                    <i className="bi bi-image fs-icon-md" ></i>
                     <div className="small">{t('company.noLogo')}</div>
                   </div>
                 </div>

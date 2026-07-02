@@ -121,7 +121,6 @@ const Card: React.FC<CardProps> = ({
     <div
       className={getCardClasses()}
       onClick={clickable ? onClick : undefined}
-      style={clickable ? { cursor: 'pointer' } : undefined}
       role={clickable ? 'button' : undefined}
       tabIndex={clickable ? 0 : undefined}
       onKeyDown={clickable && onClick ? (e) => {

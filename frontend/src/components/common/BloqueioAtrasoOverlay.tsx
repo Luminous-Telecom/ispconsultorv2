@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { PagarButton } from 'components/ui';
+import { PagarButton, ElementWithZIndex } from 'components/ui';
 import { defaultApiClient } from 'services/core';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -60,17 +60,11 @@ const BloqueioAtrasoOverlay: React.FC = () => {
   };
 
   return (
-    <div
-      className="position-fixed top-0 start-0 w-100 vh-100 d-flex align-items-center justify-content-center"
-      style={{
-        zIndex: 9999,
-        backgroundColor: 'rgba(0,0,0,0.7)',
-      }}
+    <ElementWithZIndex
+      zIndex={9999}
+      className="position-fixed top-0 start-0 w-100 vh-100 d-flex align-items-center justify-content-center modal-backdrop-layer--strong"
     >
-      <div
-        className="bloqueio-atraso-modal-box modal-content draggable-modal-container draggable-modal-container-custom"
-        style={{ maxWidth: '480px', margin: '1rem' }}
-      >
+      <div className="bloqueio-atraso-box modal-content draggable-modal-container draggable-modal-container-custom">
         <div className="modal-header-draggable draggable-modal-header-custom">
           <div className="d-flex align-items-center justify-content-center position-relative w-100">
             <h5 className="modal-title mb-0 draggable-modal-title-custom">Acesso Bloqueado</h5>
@@ -84,7 +78,7 @@ const BloqueioAtrasoOverlay: React.FC = () => {
         </div>
         <div className="modal-body draggable-modal-body-custom text-center">
           <div className="mb-3">
-            <span className="bi bi-exclamation-triangle-fill text-warning" style={{ fontSize: '3rem' }} />
+            <span className="bi bi-exclamation-triangle-fill text-warning fs-icon-lg" />
           </div>
           <p className="text-muted mb-4">{mensagem}</p>
           {podePagar ? (
@@ -105,7 +99,7 @@ const BloqueioAtrasoOverlay: React.FC = () => {
           )}
         </div>
       </div>
-    </div>
+    </ElementWithZIndex>
   );
 };
 

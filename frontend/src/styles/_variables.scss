@@ -10,12 +10,29 @@
   --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   --border-radius: 8px;
   --border-radius-sm: 4px;
+  --border-radius-md: 6px;
   --border-radius-lg: 12px;
+  --font-size-2xs: 0.625rem;
+  --font-size-compact: 0.65rem;
   --font-size-xs: 0.6875rem;
+  --font-size-md: 0.7rem;
   --font-size-sm: 0.75rem;
   --font-size-base: 0.8125rem;
+  --font-size-body-sm: 0.8rem;
   --font-size-lg: 0.875rem;
   --font-size-xl: 1rem;
+  --font-size-icon-sm: 1.25rem;
+  --font-size-icon-md: 2rem;
+  --font-size-icon-lg: 3rem;
+  --font-size-icon-xl: 4rem;
+  --spacing-code-block: 0.75rem;
+  --modal-backdrop: rgba(0, 0, 0, 0.5);
+  --modal-backdrop-strong: rgba(0, 0, 0, 0.7);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.2);
+  --radius-card: 10px;
+  --accent-cyan-bg: rgba(6, 182, 212, 0.15);
+  --accent-cyan-border: rgba(6, 182, 212, 0.4);
 
   /* Formulários em modais */
   --form-label-width: 200px;
@@ -86,9 +103,13 @@
 /* mobile fix: P9 - font sizes */
 @media (max-width: 767.98px) {
   :root {
+    --font-size-2xs: 0.6875rem;
+    --font-size-compact: 0.75rem;
     --font-size-xs: 0.75rem;
+    --font-size-md: 0.8125rem;
     --font-size-sm: 0.8125rem;
     --font-size-base: 0.875rem;
+    --font-size-body-sm: 0.875rem;
     --font-size-lg: 1rem;
     --font-size-xl: 1.125rem;
   }

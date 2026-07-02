@@ -71,8 +71,8 @@ const LogsModalTable: React.FC<LogsModalTableProps> = ({
 
   const equipamentosAgentesDateControls = isEquipamentosOuAgentes && (
     <div
-      className="d-flex flex-nowrap align-items-center justify-content-center small filter-compact"
-      style={{ gap: 2 }}
+      className="d-flex flex-nowrap align-items-center justify-content-center small filter-compact gap-2px"
+      
     >
       <DateRangeFilter
         startDate={filterStartDate}
@@ -89,8 +89,8 @@ const LogsModalTable: React.FC<LogsModalTableProps> = ({
       <LimparButton
         type="button"
         size="sm"
-        className="table-toolbar-btn"
-        style={{ fontSize: '0.65rem', height: '1.25rem' }}
+        className="table-toolbar-btn fs-compact h-input-compact"
+        
         onClick={handleClearFilters}
       />
     </div>

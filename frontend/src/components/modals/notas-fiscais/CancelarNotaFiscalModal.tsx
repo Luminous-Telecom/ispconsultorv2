@@ -127,7 +127,7 @@ const CancelarNotaFiscalModal: React.FC<CancelarNotaFiscalModalProps> = ({
       modalId="cancelar-nf-modal"
       headerActions={headerActionsContent}
     >
-      <div style={{ padding: isMobile ? '0' : '16px' }}>
+      <div className="modal-inner-padding">
         <div className="alert alert-warning mb-3">
           <i className="fas fa-exclamation-triangle me-2"></i>
           <strong>{t('messages.warning')}!</strong> {t('messages.actionCannotBeUndone')}

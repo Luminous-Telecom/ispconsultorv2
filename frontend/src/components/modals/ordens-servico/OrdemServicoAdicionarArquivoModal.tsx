@@ -92,7 +92,7 @@ const OrdemServicoAdicionarArquivoModal: React.FC<OrdemServicoAdicionarArquivoMo
       <form id="ordem-servico-adicionar-arquivo-form" onSubmit={handleSubmit}>
         <div className="row">
           <div className="col-md-12">
-            <div style={{ padding: isMobile ? '0' : '16px' }}>
+            <div className="modal-inner-padding">
               <FormField
                 name="arquivo"
                 type="file"

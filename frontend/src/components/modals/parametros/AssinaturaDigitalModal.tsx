@@ -185,7 +185,7 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
       {(isLoading || isLoadingEnabled) ? (
         <Loading variant="centered" message={t('ui.loading')} />
       ) : (
-      <form id="assinatura-digital-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }} autoComplete="off" data-form-type="other">
+      <form id="assinatura-digital-form" onSubmit={handleSubmit} className="modal-inner-padding" autoComplete="off" data-form-type="other">
         <div className="card mb-3">
           <div className="card-header">
             <h6 className="mb-0">{t('digitalSignature.generalSettings')}</h6>

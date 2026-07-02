@@ -351,8 +351,8 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
         {companyOptions && companyOptions.length > 0 && onCompanyChange && (
           <div className="mb-1">
             <select
-              className="form-select form-select-sm"
-              style={{ maxWidth: 280 }}
+              className="form-select form-select-sm truncate-max-280"
+              
               value={selectedCompanyId ?? ''}
               onChange={(e) => onCompanyChange(e.target.value ? Number(e.target.value) : null)}
             >

@@ -120,14 +120,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       type="search"
       id={`${id}-input`}
       name="search"
-      className={inputClass}
+      className={`${inputClass}${!isNavbar && !isMobile && !isInline ? ' search-bar-min-w-120' : ''}`}
       placeholder={placeholder}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       onKeyDown={handleKeyDown}
       autoComplete={autoComplete}
       aria-label={placeholder}
-      style={!isNavbar && !isMobile && !isInline ? { minWidth: '120px' } : undefined}
     />
   );
 
@@ -231,7 +230,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           ))}
         </select>
       )}
-      <div className="position-relative" style={{ flex: 1, minWidth: 0 }}>
+      <div className="position-relative flex-fill-min-w-0" >
         {inputEl}
         {isNavbar ? (
           <button

@@ -22,16 +22,6 @@ export interface SpinnerProps {
   layout?: 'inline' | 'block';
 }
 
-const sizeStyles: Record<SpinnerSize, React.CSSProperties | undefined> = {
-  sm: undefined,
-  md: undefined,
-  lg: {
-    width: '3rem',
-    height: '3rem',
-    borderWidth: '0.25rem',
-  },
-};
-
 const Spinner: React.FC<SpinnerProps> = ({
   size = 'md',
   variant = 'primary',
@@ -45,6 +35,7 @@ const Spinner: React.FC<SpinnerProps> = ({
   const classes = [
     'spinner-border',
     size === 'sm' && 'spinner-border-sm',
+    size === 'lg' && 'spinner-border-lg-custom',
     `text-${variant}`,
     className,
   ]
@@ -56,7 +47,6 @@ const Spinner: React.FC<SpinnerProps> = ({
       className={classes}
       role="status"
       aria-label={resolvedAriaLabel}
-      style={sizeStyles[size]}
     >
       <span className="visually-hidden">{resolvedAriaLabel}</span>
     </div>

@@ -61,8 +61,8 @@ export function useLogsModalColumns({
               sortValue: (log: AuditoriaLog) => log.empresa_nome?.trim() ?? '',
               render: (log: AuditoriaLog) => (
                 <span
-                  className="small text-truncate d-inline-block"
-                  style={{ maxWidth: '160px' }}
+                  className="small text-truncate d-inline-block truncate-max-160"
+                  
                   title={log.empresa_nome ?? undefined}
                 >
                   {log.empresa_nome?.trim() || '—'}
@@ -78,8 +78,8 @@ export function useLogsModalColumns({
                 const cn = (log.cliente_nome ?? '').trim();
                 return (
                   <span
-                    className="small text-truncate d-inline-block"
-                    style={{ maxWidth: '150px' }}
+                    className="small text-truncate d-inline-block truncate-max-150"
+                    
                     title={cn || undefined}
                   >
                     {cn || '—'}
@@ -136,8 +136,8 @@ export function useLogsModalColumns({
                 const { display, title } = formatOperacionalPayloadPreview(log.payload, log.observacoes);
                 return (
                   <span
-                    className="small font-monospace text-muted text-truncate d-inline-block"
-                    style={{ maxWidth: 232 }}
+                    className="small font-monospace text-muted text-truncate d-inline-block truncate-max-232"
+                    
                     title={title || undefined}
                   >
                     {display}
@@ -178,8 +178,8 @@ export function useLogsModalColumns({
                 const nome = (i.empresa_nome ?? '').trim();
                 return (
                   <span
-                    className="small text-truncate d-inline-block"
-                    style={{ maxWidth: '150px' }}
+                    className="small text-truncate d-inline-block truncate-max-150"
+                    
                     title={nome || undefined}
                   >
                     {nome || '—'}
@@ -228,8 +228,8 @@ export function useLogsModalColumns({
         minWidth: '280px',
         render: (i) => (
           <span
-            className="text-break text-muted small d-block"
-            style={{ maxWidth: 520, whiteSpace: 'pre-line' }}
+            className="text-break text-muted small d-block truncate-max-520 pre-line"
+            
             title={i.mensagem_erro ?? undefined}
           >
             {i.mensagem_erro ?? '-'}
@@ -268,8 +268,8 @@ export function useLogsModalColumns({
                 const text = formatMensagemEmpresaNome(i);
                 return (
                   <span
-                    className="small text-truncate d-inline-block"
-                    style={{ maxWidth: '160px' }}
+                    className="small text-truncate d-inline-block truncate-max-160"
+                    
                     title={text === '—' ? undefined : text}
                   >
                     {text}
@@ -297,7 +297,7 @@ export function useLogsModalColumns({
               sortable: true,
               width: '200px',
               render: (i: MensagemItem) => (
-                <div className="text-truncate" style={{ maxWidth: '250px' }} title={i.titulo}>
+                <div className="text-truncate truncate-max-250"  title={i.titulo}>
                   {i.titulo || <span className="text-muted">-</span>}
                 </div>
               ),
@@ -324,7 +324,7 @@ export function useLogsModalColumns({
         sortable: true,
         width: '200px',
         render: (i: MensagemItem) => (
-          <div className="text-truncate" style={{ maxWidth: '300px' }} title={i.mensagem}>
+          <div className="text-truncate truncate-max-300"  title={i.mensagem}>
             {i.mensagem.length > 50 ? `${i.mensagem.substring(0, 50)}...` : i.mensagem}
           </div>
         ),
@@ -347,8 +347,8 @@ export function useLogsModalColumns({
         render: (i: MensagemItem) =>
           i.erro_mensagem ? (
             <small
-              className="text-danger text-truncate d-inline-block"
-              style={{ maxWidth: '200px' }}
+              className="text-danger text-truncate d-inline-block truncate-max-200"
+              
               title={i.erro_mensagem}
             >
               {i.erro_mensagem}

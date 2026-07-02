@@ -19,6 +19,8 @@
 
 /* Estilos do SISTEMA (Login, /adm, /saas) - isolado do site */
 body[data-app="system"] {
+  @import 'utilities';
+  @import 'charts';
   @import 'sidebar';
   @import 'layout';
   @import 'components';

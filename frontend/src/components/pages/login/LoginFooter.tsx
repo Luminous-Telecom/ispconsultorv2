@@ -14,7 +14,7 @@ const LoginFooter: React.FC = () => {
           <i className="bi bi-globe me-1"></i> IP: {clientIp}
         </p>
       )}
-      <p className="text-muted mb-0" style={{ fontSize: '0.75rem' }}>
+      <p className="text-muted mb-0 fs-sm" >
         © {new Date().getFullYear()} BackNet. {t('login.allRightsReserved')}
       </p>
     </>

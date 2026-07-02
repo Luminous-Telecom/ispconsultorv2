@@ -339,7 +339,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
 
   const modalContent = (
     <>
-        <div style={{ padding: '16px', paddingBottom: '8px', flexShrink: 0 }}>
+        <div className="modal-inner-padding-audit">
           {customFilters}
         </div>
         <Table

@@ -51,7 +51,7 @@ const ContaPagarFormContent: React.FC<ContaPagarFormContentProps> = ({
     <form
       id={isEditing ? 'conta-pagar-edit-form' : 'conta-pagar-create-form'}
       onSubmit={onSubmit}
-      style={{ padding: isMobile ? '0' : '16px' }}
+      className="modal-inner-padding"
     >
       <div className="d-flex flex-column gap-2">
         <ContaPagarFornecedorSection

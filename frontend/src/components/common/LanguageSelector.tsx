@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { PositionedFixed } from 'components/ui';
 import { useI18n } from 'contexts/I18nContext';
 import { useIsMobile } from 'hooks/useMediaQuery';
 
@@ -82,25 +83,13 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ usePortal = true })
   }, [showDropdown, calculatePosition]);
 
   const dropdownContent = (
-    <ul className="table-dropdown-menu shadow position-absolute mt-1" style={{ minWidth: '160px' }}>
+    <ul className="table-dropdown-menu shadow position-absolute mt-1 dropdown-menu-min-w-160" >
       {availableLanguages.map((lang) => (
         <li key={lang.code}>
           <button
-            className={`table-dropdown-item d-flex align-items-center w-100 ${
+            className={`table-dropdown-item d-flex align-items-center w-100 dropdown-item-plain ${
               language === lang.code ? 'active' : ''
             }`}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (language !== lang.code) {
-                setLanguage(lang.code);
-              }
-              // Usar setTimeout para garantir que o setLanguage seja processado antes de fechar
-              setTimeout(() => {
-                setShowDropdown(false);
-              }, 0);
-            }}
-            style={{ border: 'none', background: 'none' }}
           >
             <span className="me-2">{lang.flag}</span>
             <span>{lang.name}</span>
@@ -116,9 +105,9 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ usePortal = true })
   return (
     <div className="position-relative" ref={triggerRef}>
       <div
-        className="d-flex align-items-center justify-content-between w-100"
+        className="d-flex align-items-center justify-content-between w-100 cursor-pointer"
         onClick={handleToggleDropdown}
-        style={{ cursor: 'pointer' }}
+        
       >
         <div className="d-flex align-items-center gap-2">
           <span>
@@ -128,35 +117,23 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ usePortal = true })
             {availableLanguages.find(lang => lang.code === language)?.name}
           </span>
         </div>
-        <i className="bi bi-chevron-down" style={{ fontSize: '0.75rem', opacity: 0.6 }}></i>
+        <i className="bi bi-chevron-down fs-sm opacity-60"></i>
       </div>
       {showDropdown && usePortal && createPortal(
-        <div
-          ref={dropdownRef}
-          data-language-dropdown
-          style={{
-            position: 'fixed',
-            top: `${dropdownPosition.top}px`,
-            left: `${dropdownPosition.left}px`,
-            zIndex: 99999,
-            transform: 'translateZ(0)', // Forçar novo stacking context
-            willChange: 'transform' // Otimização de performance
-          }}
+        <PositionedFixed
+          left={dropdownPosition.left}
+          top={dropdownPosition.top}
+          transform="translateZ(0)"
+          className="language-dropdown-fixed-host"
         >
-          {dropdownContent}
-        </div>,
+          <div ref={dropdownRef} data-language-dropdown>
+            {dropdownContent}
+          </div>
+        </PositionedFixed>,
         document.body
       )}
       {showDropdown && !usePortal && (
-        <div
-          ref={dropdownRef}
-          style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            zIndex: 99999
-          }}
-        >
+        <div ref={dropdownRef} className="language-dropdown-absolute-host">
           {dropdownContent}
         </div>
       )}

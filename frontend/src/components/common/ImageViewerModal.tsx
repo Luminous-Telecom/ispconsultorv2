@@ -16,8 +16,8 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
   show,
   onClose,
   imageUrl,
-  title = "Imagem",
-  modalId = "image-viewer-modal"
+  title = 'Imagem',
+  modalId = 'image-viewer-modal',
 }) => {
   const imageRef = useRef<HTMLImageElement>(null);
   const viewerRef = useRef<Viewer | null>(null);
@@ -26,7 +26,6 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
 
   useEffect(() => {
     if (show && imageUrl && imageRef.current) {
-      // Inicializar ViewerJS
       if (viewerRef.current) {
         viewerRef.current.destroy();
       }
@@ -84,25 +83,9 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
       size="xl"
       modalId={modalId}
     >
-      <div style={{ 
-        height: '80vh', 
-        width: '100%', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        backgroundColor: '#1a1a1a',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
+      <div className="image-viewer-frame">
         {isLoading && (
-          <div className="d-flex align-items-center justify-content-center" style={{ 
-            position: 'absolute', 
-            top: 0, 
-            left: 0, 
-            right: 0, 
-            bottom: 0, 
-            zIndex: 1 
-          }}>
+          <div className="d-flex align-items-center justify-content-center image-viewer-loading-overlay">
             <div className="text-center text-white">
               <Loading variant="centered" message="Carregando imagem..." spinnerVariant="light" />
             </div>
@@ -118,7 +101,7 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
             </div>
           </div>
         ) : (
-          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="image-viewer-center">
             <img
               ref={imageRef}
               src={imageUrl}
@@ -128,13 +111,7 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
                 setIsLoading(false);
                 setHasError(true);
               }}
-              style={{
-                maxWidth: '100%',
-                maxHeight: '100%',
-                objectFit: 'contain',
-                cursor: 'zoom-in',
-                display: isLoading ? 'none' : 'block'
-              }}
+              className={`image-viewer-img${isLoading ? ' image-viewer-img--loading' : ''}`}
             />
           </div>
         )}
@@ -144,4 +121,3 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
 };
 
 export default ImageViewerModal;
-

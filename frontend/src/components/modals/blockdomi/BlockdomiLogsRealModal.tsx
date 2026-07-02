@@ -5,7 +5,6 @@ import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
 import SearchBar from 'components/ui/SearchBar';
 import { getSocketToken } from 'services/core';
-import { FONT_FAMILY_MONO } from 'constants/typography';
 import type { BlockdomiLogAcessoItem } from 'services/blockdomiLogAcessoService';
 
 const INITIAL_LIMIT = 80;
@@ -119,7 +118,7 @@ const BlockdomiLogsRealModal: React.FC<BlockdomiLogsRealModalProps> = ({ show, o
       size="xl"
       modalId="blockdomi-logs-real-modal"
     >
-      <div className="p-3 d-flex flex-column gap-2" style={{ minHeight: 0, flex: 1 }}>
+      <div className="p-3 d-flex flex-column gap-2 flex-fill-min-h-0" >
         <SearchBar
           id="blockdomi-logs-real-search"
           variant="table"
@@ -138,19 +137,7 @@ const BlockdomiLogsRealModal: React.FC<BlockdomiLogsRealModalProps> = ({ show, o
           ]}
           className="flex-shrink-0"
         />
-        <div
-          ref={containerRef}
-          className="p-3 rounded bg-dark text-light"
-          style={{
-            fontFamily: FONT_FAMILY_MONO,
-            fontSize: '13px',
-            minHeight: '300px',
-            flex: 1,
-            overflow: 'auto',
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-all'
-          }}
-        >
+        <div ref={containerRef} className="p-3 rounded bg-dark text-light blockdomi-logs-panel">
         {isLoading && lines.length === 0 && (
           <span className="text-info">{t('ui.loading')}...</span>
         )}
@@ -160,8 +147,7 @@ const BlockdomiLogsRealModal: React.FC<BlockdomiLogsRealModalProps> = ({ show, o
         {filteredLines.map((item) => (
           <div
             key={item.id}
-            className={item.sucesso ? 'text-success' : 'text-danger'}
-            style={{ lineHeight: 1.5 }}
+            className={`${item.sucesso ? 'text-success' : 'text-danger'} lh-15`}
           >
             {formatLogLine(item)}
           </div>

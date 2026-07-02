@@ -5,7 +5,6 @@ import {
   SelecionarButton,
 } from 'components/ui';
 import type { BlockdomiImportTranslateFn } from './importarListaBlockdomiTypes';
-import { FONT_FAMILY_MONO } from 'constants/typography';
 
 interface ImportarListaBlockdomiColunasPanelProps {
   colunasDisponiveis: Record<string, string[]>;
@@ -26,7 +25,7 @@ const ImportarListaBlockdomiColunasPanel: React.FC<ImportarListaBlockdomiColunas
   onAplicar,
   t,
 }) => (
-  <div className="mb-3 border rounded" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
+  <div className="mb-3 border rounded blockdomi-panel">
     <div className="d-flex align-items-center justify-content-between px-2 pt-2 pb-1">
       <span className="small fw-semibold">{t('blockdomi.colunasDetectadas')}</span>
       <div className="d-flex gap-2 align-items-center">
@@ -35,8 +34,7 @@ const ImportarListaBlockdomiColunasPanel: React.FC<ImportarListaBlockdomiColunas
           label={t('blockdomi.colunasSelecAll')}
           variant="ghost"
           size="sm"
-          className="p-0 text-muted"
-          style={{ fontSize: '0.75rem' }}
+          className="p-0 text-muted fs-sm"
           onClick={onSelectAll}
         />
         <LimparButton
@@ -44,14 +42,12 @@ const ImportarListaBlockdomiColunasPanel: React.FC<ImportarListaBlockdomiColunas
           label={t('blockdomi.colunasSelecNone')}
           variant="ghost"
           size="sm"
-          className="p-0 text-muted"
-          style={{ fontSize: '0.75rem' }}
+          className="p-0 text-muted fs-sm"
           onClick={onSelectNone}
         />
         <AplicarSelecaoButton
           type="button"
-          className="py-0 px-2"
-          style={{ fontSize: '0.75rem' }}
+          className="py-0 px-2 fs-sm"
           onClick={onAplicar}
         />
       </div>
@@ -62,52 +58,23 @@ const ImportarListaBlockdomiColunasPanel: React.FC<ImportarListaBlockdomiColunas
         return (
           <div
             key={header}
-            className="rounded"
-            style={{
-              minWidth: 160,
-              maxWidth: 260,
-              flex: '1 1 160px',
-              border: '1px solid',
-              borderColor: selecionada ? 'var(--bs-primary)' : 'var(--border-color)',
-              backgroundColor: 'var(--bg-primary)',
-              overflow: 'hidden',
-              transition: 'border-color 0.15s'
-            }}
+            className={`blockdomi-column-card ${selecionada ? 'blockdomi-column-card--selected' : ''}`}
           >
             <label
-              className="d-flex align-items-center gap-2 px-2 py-1"
-              style={{
-                cursor: 'pointer',
-                backgroundColor: selecionada ? 'var(--bs-primary)' : 'var(--bg-tertiary)',
-                color: selecionada ? '#fff' : 'var(--text-primary)',
-                userSelect: 'none',
-                transition: 'background-color 0.15s, color 0.15s',
-                margin: 0
-              }}
+              className={`blockdomi-column-header ${selecionada ? 'blockdomi-column-header--selected' : ''}`}
             >
               <input
                 type="checkbox"
                 className="form-check-input m-0 flex-shrink-0"
-                style={{ width: '0.8rem', height: '0.8rem' }}
                 checked={selecionada}
                 onChange={() => onColunaToggle(header)}
               />
               <span className="small fw-semibold text-truncate flex-grow-1" title={header}>{header}</span>
-              <span className="small flex-shrink-0" style={{ opacity: 0.8 }}>{items.length}</span>
+              <span className="small flex-shrink-0 opacity-80">{items.length}</span>
             </label>
-            <div
-              style={{
-                maxHeight: 120,
-                overflowY: 'auto',
-                padding: '4px 8px',
-                fontFamily: FONT_FAMILY_MONO,
-                fontSize: '0.7rem',
-                color: 'var(--text-muted)',
-                lineHeight: 1.6
-              }}
-            >
+            <div className="blockdomi-column-items">
               {items.length === 0 ? (
-                <span style={{ opacity: 0.5 }}>{t('blockdomi.none')}</span>
+                <span className="opacity-50">{t('blockdomi.none')}</span>
               ) : (
                 items.map((item, i) => (
                   <div key={i} className="text-truncate" title={item}>{item}</div>

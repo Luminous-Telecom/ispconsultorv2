@@ -60,7 +60,7 @@ const NFSeModalCore: React.FC<NFSeModalCoreProps> = ({ variant, show, onClose })
         </div>
       }
     >
-      <div style={{ padding: isMobile ? '0' : '16px' }}>
+      <div className="modal-inner-padding">
         <NFSeConfigSectionCore
           variant={variant}
           onSaveReady={handleSaveReady}

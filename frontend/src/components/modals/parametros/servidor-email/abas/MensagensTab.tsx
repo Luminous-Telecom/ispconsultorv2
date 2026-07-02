@@ -41,21 +41,14 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
       {mensagemType && tipoEnvio === 'pdf' && (
         <>
           {mensagemType === 'envio_manual' ? (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                height: 'calc(100vh - 300px)',
-                minHeight: '400px',
-              }}
-            >
+            <div className="mensagem-editor-layout">
               <div className="d-flex justify-content-between align-items-center mb-1">
                 <LabelWithHelp id="mensagem-manual-label" as="span" className="form-label small mb-0" required>
                   {t('settings.messages.manualLabel')}
                 </LabelWithHelp>
               </div>
               <small className="text-muted form-hint d-block mb-1">{t('settings.messages.manualHelper')}</small>
-              <div style={{ flex: 1, minHeight: 0 }}>
+              <div className="flex-fill-min-h-0">
                 <Suspense fallback={<RichTextEditorFallback />}>
                   <RichTextEditor
                     key={`mensagem-manual-email-${mensagemType || 'none'}-${editorKey}`}
@@ -71,20 +64,13 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
               </div>
             </div>
           ) : (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                height: 'calc(100vh - 300px)',
-                minHeight: '400px',
-              }}
-            >
+            <div className="mensagem-editor-layout">
               <div className="d-flex justify-content-between align-items-center mb-1">
                 <LabelWithHelp id="mensagem-label" as="span" className="form-label small mb-0" required>
                   {t('settings.messages.emailLabel')}
                 </LabelWithHelp>
               </div>
-              <div style={{ flex: 1, minHeight: 0 }}>
+              <div className="flex-fill-min-h-0">
                 <Suspense fallback={<RichTextEditorFallback />}>
                   <RichTextEditor
                     key={`mensagem-email-${mensagemType || 'none'}-${editorKey}`}

@@ -1,7 +1,7 @@
 import React, { useRef, useMemo, memo, useState, useLayoutEffect, useCallback, useId } from 'react';
 import { PieChartProps } from '../types';
 import { ChartEmptyState } from '../ChartEmptyState';
-import { LabelWithHelp } from 'components/ui/LabelWithHelp';
+import { LabelWithHelp, DynamicStyledElement, PieLegendDot } from 'components/ui';
 import { ChartFloatingTooltipHost } from '../ChartFloatingTooltip';
 import { formatPieValue, getItemValue, resolveHighlightItem } from './utils';
 import { MetricPieHeaderIcon } from './MetricPieHeaderIcon';
@@ -173,7 +173,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(
     const useMetricChromeHeader = Boolean(metricLayout);
 
     return (
-      <div className={containerClass} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div className={`${containerClass} chart-flex-col-full`.trim()}>
         {useMetricChromeHeader ? (
           <div className="pie-metric-header">
             <div className="pie-metric-header__icon" aria-hidden>
@@ -195,7 +195,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(
             ) : null}
           </div>
         ) : (
-          <h6 id={titleId} className="chart-title-pie" style={{ marginBottom: '2px' }}>
+          <h6 id={titleId} className="chart-title-pie chart-title-pie-tight" >
             {title} ({formatPieValue(total)})
           </h6>
         )}
@@ -205,21 +205,12 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(
             hiddenItems={hiddenItems}
             onToggleItem={handleToggleItem}
           />
-          <div
-            ref={containerRef}
-            className="pie-chart-svg-wrap"
-            style={{
-              flex: 1,
-              minWidth: 0,
-              position: 'relative',
-              overflow: 'visible',
-            }}
-          >
+          <div ref={containerRef} className="pie-chart-svg-wrap">
             <svg
               ref={svgRef}
               width={dimensions.width}
               height={dimensions.height}
-              style={{ display: 'block', overflow: 'visible', maxWidth: '100%', maxHeight: '100%' }}
+              className="chart-svg-overflow"
             />
             <ChartFloatingTooltipHost ref={tooltipRef} />
           </div>
@@ -235,12 +226,13 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(
             </div>
             <div className="pie-metric-footer__box">
               <div className="pie-metric-footer__label">{footerRight.label}</div>
-              <div
+              <DynamicStyledElement
                 className="pie-metric-footer__value pie-metric-footer__value--accent"
-                style={footerRight.accentColor ? { color: footerRight.accentColor } : undefined}
+                properties={footerRight.accentColor ? { color: footerRight.accentColor } : {}}
+                deps={[footerRight.accentColor]}
               >
                 {typeof footerRight.value === 'number' ? formatPieValue(footerRight.value) : footerRight.value}
-              </div>
+              </DynamicStyledElement>
             </div>
           </div>
         )}

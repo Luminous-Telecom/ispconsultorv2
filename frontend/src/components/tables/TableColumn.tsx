@@ -1,4 +1,5 @@
 import React, { useMemo, useCallback, useRef, useEffect } from 'react';
+import { useElementProperties } from 'hooks/useElementProperties';
 import { useI18n } from 'contexts/I18nContext';
 import { getColumnMinWidth, ID_COLUMN_MIN_WIDTH_PX } from './columnWidthUtils';
 import { TableColumn as TableColumnType, SortDirection } from './types';
@@ -63,11 +64,7 @@ const TableColumn = <T extends { id: number | string }>({
   }, [column.label]);
 
   const columnStyles = useMemo(() => {
-    const styles: React.CSSProperties = {
-      textTransform: 'none',
-      padding: '0.25rem 0.5rem',
-      fontSize: '0.75rem',
-    };
+    const styles: Record<string, string> = {};
 
     let effectiveWidth: number | string | undefined;
     if (columnWidth !== undefined) {
@@ -111,6 +108,15 @@ const TableColumn = <T extends { id: number | string }>({
     return styles;
   }, [column.key, column.label, column.minWidth, column.maxWidth, column.badgeLabels, column.width, columnWidth, minWidthFromTitle]);
 
+  useElementProperties(columnRef, columnStyles, [
+    column.key,
+    column.minWidth,
+    column.maxWidth,
+    column.width,
+    columnWidth,
+    minWidthFromTitle,
+  ]);
+
   const columnClasses = useMemo(() => {
     const classes: string[] = [];
     if (column.key === 'id') classes.push('col-id');
@@ -141,8 +147,7 @@ const TableColumn = <T extends { id: number | string }>({
   return (
     <th
       ref={columnRef}
-      className={`${columnClasses} ${isSortable ? 'sortable' : ''}`}
-      style={columnStyles}
+      className={`table-col-header ${columnClasses} ${isSortable ? 'sortable' : ''}`}
       onClick={handleSort}
       title={column.tooltip}
       data-sortable={isSortable ? 'true' : 'false'}

@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useSaasPortalPath } from 'hooks/useSaasPortalPath';
 import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import { TableConfig } from 'components/tables/types';
-import { Badge } from 'components/ui';
+import { Badge, ElementWithMaxWidth } from 'components/ui';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { useModalSelect } from 'hooks/useModalSelect';
 import DraggableModal from 'components/common/DraggableModal';
@@ -125,8 +125,8 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
             width: '200px',
             render: (item) => (
               <span
-                className="small text-truncate d-inline-block"
-                style={{ maxWidth: 190 }}
+                className="small text-truncate d-inline-block truncate-max-190"
+                
                 title={item.empresa_saas ?? undefined}
               >
                 {item.empresa_saas ?? '—'}
@@ -142,8 +142,8 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
             width: '160px',
             render: (item) => (
               <span
-                className="small text-truncate d-inline-block"
-                style={{ maxWidth: 150 }}
+                className="small text-truncate d-inline-block truncate-max-150"
+                
                 title={item.ca_nome ?? undefined}
               >
                 {item.ca_nome ?? '—'}
@@ -157,8 +157,8 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
             width: '200px',
             render: (item) => (
               <span
-                className="small text-truncate d-inline-block"
-                style={{ maxWidth: 190 }}
+                className="small text-truncate d-inline-block truncate-max-190"
+                
                 title={item.cliente_nome ?? undefined}
               >
                 {item.cliente_nome ?? '—'}
@@ -221,13 +221,13 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
         sortable: true,
         width: config.showTypeColumn ? '220px' : '240px',
         render: (item) => (
-          <span
+          <ElementWithMaxWidth
+            maxWidth={config.showTypeColumn ? 210 : 230}
             className="small font-monospace text-muted text-truncate d-inline-block"
-            style={{ maxWidth: config.showTypeColumn ? 210 : 230 }}
             title={item.remote_host ?? undefined}
           >
             {item.remote_host ?? '—'}
-          </span>
+          </ElementWithMaxWidth>
         ),
       },
       {
@@ -235,13 +235,13 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
         label: 'Mensagem',
         sortable: false,
         render: (item) => (
-          <span
+          <ElementWithMaxWidth
+            maxWidth={config.messageMaxWidth}
             className={`small text-truncate d-inline-block ${item.status === 'failed' ? 'text-danger' : 'text-muted'}`}
-            style={{ maxWidth: config.messageMaxWidth }}
             title={item.message ?? undefined}
           >
             {item.message ?? '—'}
-          </span>
+          </ElementWithMaxWidth>
         ),
       }
     );

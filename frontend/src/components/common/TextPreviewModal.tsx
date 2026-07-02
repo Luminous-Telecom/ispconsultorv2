@@ -30,35 +30,13 @@ const TextPreviewModal: React.FC<TextPreviewModalProps> = ({
       modalId={modalId}
       className="no-padding text-preview-modal"
     >
-      <div
-        className="text-preview-content"
-        style={{
-          flex: 1,
-          minHeight: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-        }}
-      >
+      <div className="text-preview-content text-preview-container">
         {isLoading ? (
           <Loading variant="modal" />
         ) : error ? (
           <div className="alert alert-danger mb-0 m-3">{error}</div>
         ) : content != null ? (
-          <pre
-            className="mb-0 p-3 font-monospace"
-            style={{
-              flex: 1,
-              minHeight: 0,
-              overflow: 'auto',
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
-              backgroundColor: 'var(--bg-secondary)',
-              borderRadius: 0,
-              fontSize: '11px',
-              lineHeight: 1.4,
-            }}
-          >
+          <pre className="mb-0 p-3 font-monospace text-preview-body">
             {content}
           </pre>
         ) : (

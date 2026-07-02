@@ -90,7 +90,7 @@ const TermoEditModal: React.FC<TermoEditModalProps> = ({
       size="lg"
       headerActions={headerActions}
     >
-      <form id="termo-edit-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
+      <form id="termo-edit-form" onSubmit={handleSubmit} className="modal-inner-padding">
         <div className="d-flex flex-column gap-2">
           <EntitySelectField
             value={termoFormData.termoCadastradoId || 0}

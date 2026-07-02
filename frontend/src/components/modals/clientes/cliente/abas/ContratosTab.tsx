@@ -287,7 +287,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
 
       {/* Resumo de Contratos - Fixo no final */}
       {sortedContratosData.length > 0 && (
-        <div className="d-flex justify-content-between align-items-center p-3 bg-light financeiro-resumo" style={{ flexShrink: 0, marginTop: isMobile ? '0.25rem' : '0.5rem', marginBottom: 0, marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
+        <div className="d-flex justify-content-between align-items-center p-3 bg-light financeiro-resumo financeiro-resumo-adaptive" >
           <div className="d-flex align-items-center">
             <i className="bi bi-info-circle text-muted me-2"></i>
             <span className="small text-muted">{t('summary.contractSummary')}</span>

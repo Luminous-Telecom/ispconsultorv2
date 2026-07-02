@@ -137,9 +137,8 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
       ) : (
         <form
           id={config.formId}
-          className="form-modal-simple"
+          className={`form-modal-simple modal-inner-padding-recursos${isSaas ? ' is-saas' : ''}`}
           onSubmit={handleSubmit}
-          style={{ padding: isMobile ? '0' : '16px', paddingBottom: isMobile ? 0 : isSaas ? 24 : 16 }}
         >
           <div className="card mb-3">
             <div className="card-header py-1 px-2">
@@ -248,22 +247,7 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
                       </label>
                       <input
                         type="number"
-                        className="form-control form-control-sm"
-                        id="saas_quantidade_titulos_manter"
-                        min={1}
-                        max={24}
-                        value={formData.quantidade_titulos_manter}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            quantidade_titulos_manter: Math.min(
-                              24,
-                              Math.max(1, parseInt(e.target.value, 10) || 12)
-                            ),
-                          }))
-                        }
-                        disabled={updateMutation.isPending}
-                        style={{ maxWidth: '80px' }}
+                        className="form-control form-control-sm input-max-w-80"
                       />
                     </div>
                   )}
@@ -313,7 +297,7 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
                   </LabelWithHelp>
                   <input
                     type="number"
-                    className="form-control form-control-sm"
+                    className="form-control form-control-sm input-max-w-140"
                     id="saas_dias_atraso_bloqueio"
                     min={0}
                     max={365}
@@ -328,7 +312,6 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
                       }));
                     }}
                     disabled={updateMutation.isPending}
-                    style={{ maxWidth: '140px', minWidth: '80px' }}
                   />
                   <small className="text-muted form-hint d-block mt-1">{t('params.overdueDaysBlockDisabledHint')}</small>
                 </div>
@@ -342,7 +325,7 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
                   </LabelWithHelp>
                   <input
                     type="number"
-                    className="form-control form-control-sm"
+                    className="form-control form-control-sm input-max-w-140"
                     id="saas_dias_desbloqueio_manual"
                     min={0}
                     max={365}
@@ -357,7 +340,6 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
                       }));
                     }}
                     disabled={updateMutation.isPending}
-                    style={{ maxWidth: '140px', minWidth: '80px' }}
                   />
                   <small className="text-muted form-hint d-block mt-1">{t('params.overdueDaysBlockDisabledHint')}</small>
                 </div>

@@ -83,7 +83,7 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({
   );
 
   const content = (
-    <div style={{ padding: isMobile ? '0' : '16px' }}>
+    <div className="modal-inner-padding">
       <div className="d-flex justify-content-start align-items-center mb-3">
         {saveButton}
       </div>
@@ -92,18 +92,17 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({
           <div key={dia} className="col-12 col-sm-6 col-md-4 col-lg-3">
             <div className="form-check form-switch">
               <input
-                className="form-check-input"
+                className="form-check-input cursor-pointer"
                 type="checkbox"
                 role="switch"
                 id={`dia-${variant}-${dia}`}
                 checked={diasAtivos.includes(dia)}
                 onChange={() => toggleDia(dia)}
-                style={{ cursor: 'pointer' }}
               />
               <label
-                className="form-check-label"
+                className="form-check-label cursor-pointer"
                 htmlFor={`dia-${variant}-${dia}`}
-                style={{ cursor: 'pointer' }}
+                
               >
                 Ativar dia {String(dia).padStart(2, '0')}
               </label>

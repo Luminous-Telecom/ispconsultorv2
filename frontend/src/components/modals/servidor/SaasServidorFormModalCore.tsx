@@ -184,7 +184,7 @@ const SaasServidorFormModalCore: React.FC<SaasServidorFormModalCoreProps> = ({
         />
       }
     >
-      <form id={config.formId} onSubmit={handleSubmit} style={{ padding: '16px' }}>
+      <form id={config.formId} onSubmit={handleSubmit} className="modal-inner-padding-fixed">
         {channel === 'email' ? (
           <SaasServidorFormEmailFields
             form={form as SaasServidorEmailFormState}

@@ -135,7 +135,7 @@ const TemplateSelectModal: React.FC<TemplateSelectModalProps> = ({
       modalId="template-select-modal"
       className="no-padding"
     >
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: '300px' }}>
+      <div className="templates-modal-layout terminal-log-panel--300">
         {error && (
           <div className="alert alert-danger m-3">
             Erro ao buscar templates: {error instanceof Error ? error.message : 'Erro desconhecido'}

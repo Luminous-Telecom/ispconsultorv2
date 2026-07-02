@@ -204,7 +204,7 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
   };
 
   return (
-    <div style={{ padding: isMobile ? '0' : '16px' }}>
+    <div className="modal-inner-padding">
       <div className="d-flex gap-2 mb-3">
         <RecarregarButton type="button" onClick={() => refetch()} isPending={isLoading} />
       </div>
@@ -234,27 +234,26 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
             </div>
           ) : (
             <>
-              <div className="row g-2 mb-3 form-modal-multi-col" style={{ maxHeight: '380px', overflowY: 'auto' }}>
+              <div className="row g-2 mb-3 form-modal-multi-col scroll-max-380" >
                 {data.templates.map((template: Template, index: number) => {
                   const key = `${template.name}-${template.language}-${index}`;
                   const isExpanded = expandedKey === key;
                   return (
                     <div key={key} className="col-6 col-md-4 col-lg-3">
                       <div
-                        className={`card h-100 ${isExpanded ? 'border-primary' : ''}`}
-                        style={{ cursor: 'pointer', minHeight: 90 }}
+                        className={`card h-100 template-meta-card ${isExpanded ? 'border-primary' : ''}`}
                         onClick={() => setExpandedKey(isExpanded ? null : key)}
                       >
                         <div className="card-body d-flex flex-column align-items-center position-relative p-2">
                           <div className="mb-1 mt-1">
-                            <i className="bi bi-chat-dots text-secondary" style={{ fontSize: '1.25rem' }}></i>
+                            <i className="bi bi-chat-dots text-secondary fs-icon-sm" ></i>
                           </div>
                           <div className="text-center flex-grow-1 small">
-                            <div className="fw-bold text-break" style={{ fontSize: '0.75rem' }}>{template.name}</div>
-                            <div className="text-muted" style={{ fontSize: '0.65rem' }}>{template.language}</div>
+                            <div className="fw-bold text-break fs-sm" >{template.name}</div>
+                            <div className="text-muted fs-compact" >{template.language}</div>
                           </div>
                           <div className="mt-1">
-                            <i className="bi bi-database text-success" style={{ fontSize: '0.9rem' }}></i>
+                            <i className="bi bi-database text-success fs-lg" ></i>
                           </div>
                         </div>
                       </div>
@@ -279,22 +278,22 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
                       <div className="mb-3">
                         <label className="form-label fw-bold">Mensagem</label>
                         <textarea
-                          className="form-control form-control-sm font-monospace"
+                          className="form-control form-control-sm font-monospace textarea-no-resize-sm"
                           rows={1}
                           readOnly
                           value={textoMeta}
-                          style={{ resize: 'none', minHeight: '2.5rem' }}
+                          
                         />
                         <small className="text-muted">Template da Meta (variáveis numeradas)</small>
                       </div>
                       <div className="mb-3">
                         <label className="form-label fw-bold">Pré-visualização</label>
                         <textarea
-                          className="form-control form-control-sm font-monospace"
+                          className="form-control form-control-sm font-monospace textarea-no-resize-sm"
                           rows={1}
                           readOnly
                           value={preview}
-                          style={{ resize: 'none', minHeight: '2.5rem' }}
+                          
                         />
                         <small className="text-muted">Mensagem com as variáveis selecionadas</small>
                       </div>

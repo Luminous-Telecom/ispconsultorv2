@@ -354,16 +354,15 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
               <div className="mb-3">
                 <div className="form-check form-switch">
                   <input
-                    className="form-check-input"
+                    className="form-check-input cursor-pointer"
                     type="checkbox"
                     role="switch"
                     id="nfse_asaas_sandbox"
                     checked={formData.asaas_sandbox}
                     onChange={(e) => handleInputChange('asaas_sandbox', e.target.checked)}
                     disabled={disabled || saveMutation.isPending}
-                    style={{ cursor: 'pointer' }}
                   />
-                  <label className="form-check-label" htmlFor="nfse_asaas_sandbox" style={{ cursor: 'pointer' }}>
+                  <label className="form-check-label cursor-pointer" htmlFor="nfse_asaas_sandbox" >
                     {t('nfse.useSandbox')}
                   </label>
                 </div>

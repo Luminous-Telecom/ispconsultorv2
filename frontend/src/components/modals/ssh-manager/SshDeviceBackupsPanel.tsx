@@ -323,7 +323,7 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
   if (variant === 'tab') {
     return (
       <React.Fragment>
-        <div className={rootClass} style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        <div className={`${rootClass} ssh-backups-root`}>
           {inner}
         </div>
         <TextPreviewModal
@@ -342,7 +342,7 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
   return (
     <React.Fragment>
       <div className={rootClass}>
-        <div className="row" style={{ margin: 0, padding: 0 }}>
+        <div className="row ssh-backups-row-flush" >
           <div className="col-12 px-0">{inner}</div>
         </div>
       </div>

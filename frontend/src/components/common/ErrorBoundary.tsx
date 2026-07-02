@@ -37,7 +37,7 @@ class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="error-boundary text-center p-4">
           <div className="mb-3">
-            <i className="bi bi-exclamation-triangle text-danger" style={{ fontSize: '3rem' }}></i>
+            <i className="bi bi-exclamation-triangle text-danger fs-icon-lg" ></i>
           </div>
           <h4 className="text-danger mb-3">Ops! Algo deu errado</h4>
           <p className="text-muted mb-4">

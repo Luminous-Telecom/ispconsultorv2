@@ -54,22 +54,20 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
   }
 
   return (
-    <div className={`d-flex align-items-center filter-compact ${className}`} style={{ gap: 2 }}>
-      <span className="text-muted" style={{ fontSize: '0.65rem', lineHeight: 1 }}>{t('filter.date')}:</span>
+    <div className={`d-flex align-items-center filter-compact gap-2px ${className}`}>
+      <span className="text-muted filter-date-label" >{t('filter.date')}:</span>
       <input
         type="date"
-        className="form-control form-control-sm"
+        className="form-control form-control-sm filter-date-input"
         value={startDate}
         onChange={(e) => onStartDateChange(e.target.value)}
-        style={{ width: '6.5rem', fontSize: '0.65rem', height: '1.25rem', lineHeight: 1, boxSizing: 'border-box' }}
       />
-      <span className="text-muted" style={{ fontSize: '0.65rem', lineHeight: 1 }}>{t('filter.until')}</span>
+      <span className="text-muted filter-date-label">{t('filter.until')}</span>
       <input
         type="date"
-        className="form-control form-control-sm"
+        className="form-control form-control-sm filter-date-input"
         value={endDate}
         onChange={(e) => onEndDateChange(e.target.value)}
-        style={{ width: '6.5rem', fontSize: '0.65rem', height: '1.25rem', lineHeight: 1, boxSizing: 'border-box' }}
       />
     </div>
   );

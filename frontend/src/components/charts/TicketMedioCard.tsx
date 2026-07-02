@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { DynamicStyledElement } from 'components/ui';
 import { formatCurrency } from 'utils/formatters';
 import { useI18n } from 'contexts/I18nContext';
 import { hexToRgba } from './chartColors';
@@ -38,59 +39,27 @@ const HorizontalRanking: React.FC<{ series: TicketMedioMes[]; className?: string
       {ordered.map((item, i) => {
         const pct = max > 0 ? (item.valor / max) * 100 : 0;
         const color = item.color || DEFAULT_BAR_COLOR;
+        const width = grown ? `${Math.max(pct, 4)}%` : '0%';
         return (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-            <span
-              style={{
-                fontSize: 9,
-                fontWeight: 600,
-                color: 'var(--text-secondary, rgba(255,255,255,0.65))',
-                width: '30%',
-                flexShrink: 0,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-              title={item.mes}
-            >
+          <div key={i} className="ticket-medio-ranking-item">
+            <span className="ticket-medio-ranking-label" title={item.mes}>
               {item.mes}
             </span>
-            <div
-              style={{
-                flex: 1,
-                minWidth: 0,
-                height: 9,
-                borderRadius: 5,
-                background: hexToRgba(color, 0.14),
-                position: 'relative',
-                overflow: 'hidden',
-              }}
+            <DynamicStyledElement
+              className="ticket-medio-ranking-track"
+              properties={{ background: hexToRgba(color, 0.14) }}
+              deps={[color]}
             >
-              <div
-                style={{
-                  position: 'absolute',
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: grown ? `${Math.max(pct, 4)}%` : '0%',
+              <DynamicStyledElement
+                className="ticket-medio-ranking-fill"
+                properties={{
+                  width,
                   background: `linear-gradient(90deg, ${hexToRgba(color, 0.7)} 0%, ${color} 100%)`,
-                  borderRadius: 5,
-                  transition: 'width 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
                 }}
+                deps={[width, color]}
               />
-            </div>
-            <span
-              style={{
-                fontSize: 9,
-                fontWeight: 700,
-                color: 'var(--text-primary)',
-                flexShrink: 0,
-                fontVariantNumeric: 'tabular-nums',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {formatCurrency(item.valor)}
-            </span>
+            </DynamicStyledElement>
+            <span className="ticket-medio-ranking-value">{formatCurrency(item.valor)}</span>
           </div>
         );
       })}

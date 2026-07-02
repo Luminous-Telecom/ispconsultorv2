@@ -1,4 +1,5 @@
 import React from 'react';
+import { DynamicStyledElement } from 'components/ui';
 import { hexToRgba } from 'components/charts/chartColors';
 
 export interface StatTile {
@@ -24,61 +25,37 @@ const StatTilesCard: React.FC<StatTilesCardProps> = ({ title, tiles, columns }) 
   return (
     <div className="chart-card d-flex flex-column">
       <h6 className="chart-title mb-2">{title}</h6>
-      <div
-        className="mt-auto"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-          gap: 8,
-        }}
+      <DynamicStyledElement
+        className="mt-auto stat-tiles-grid-dynamic"
+        properties={{ '--stat-tiles-cols': cols }}
+        deps={[cols]}
       >
         {tiles.map((tile) => {
           const accent = tile.accent || DEFAULT_ACCENT;
           return (
-            <div
+            <DynamicStyledElement
               key={tile.label}
-              style={{
-                minWidth: 0,
-                borderRadius: 10,
-                padding: '0.5rem 0.6rem',
+              className="stat-tile-dynamic"
+              properties={{
+                '--stat-tile-accent': accent,
                 background: hexToRgba(accent, 0.1),
                 borderLeft: `3px solid ${accent}`,
               }}
+              deps={[accent]}
             >
               <div
-                style={{
-                  fontSize: 18,
-                  fontWeight: 700,
-                  color: 'var(--text-primary)',
-                  lineHeight: 1.1,
-                  letterSpacing: '-0.02em',
-                  fontVariantNumeric: 'tabular-nums',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}
+                className="stat-tile-value-dynamic"
                 title={typeof tile.value === 'string' || typeof tile.value === 'number' ? String(tile.value) : undefined}
               >
                 {tile.value}
               </div>
-              <div
-                style={{
-                  fontSize: 10.5,
-                  fontWeight: 600,
-                  color: 'var(--text-secondary)',
-                  marginTop: 2,
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}
-                title={tile.label}
-              >
+              <div className="stat-tile-label-dynamic" title={tile.label}>
                 {tile.label}
               </div>
-            </div>
+            </DynamicStyledElement>
           );
         })}
-      </div>
+      </DynamicStyledElement>
     </div>
   );
 };

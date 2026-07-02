@@ -28,6 +28,18 @@ export { default as LoadingBar } from './LoadingBar';
 export { LabelWithHelp, RequiredMark } from './LabelWithHelp';
 export type { LabelWithHelpProps } from './LabelWithHelp';
 export { getBootstrapTooltipProps } from './tooltipProps';
+export {
+  DynamicStyledElement,
+  DynamicProgressBar,
+  PositionedFixed,
+  ElementWithMaxWidth,
+  ElementWithZIndex,
+  ElementWithCssVars,
+  ColWithWidth,
+  LoadingBarFill,
+  PieLegendDot,
+  BackNetLogoImg,
+} from './DynamicStyleElements';
 
 // Exportar tipos
 export * from './types';

@@ -101,7 +101,7 @@ const FornecedorModalEnderecoTab: React.FC<FornecedorModalEnderecoTabProps> = ({
           formPrefix={formPrefix}
         />
       </div>
-      <div style={{ width: '80px' }}>
+      <div className="input-max-w-80">
         <FormField
           name="estado"
           type="text"

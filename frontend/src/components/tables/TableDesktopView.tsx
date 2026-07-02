@@ -1,4 +1,6 @@
 import React, { RefObject } from 'react';
+import { useElementProperties } from 'hooks/useElementProperties';
+import { ColWithWidth, DynamicStyledElement } from '../ui';
 import Loading from '../ui/Loading';
 import TableColumn from './TableColumn';
 import {
@@ -11,6 +13,21 @@ import {
 } from './columnWidthUtils';
 import { drainPossiblePromise } from './tableUtils';
 import { SortDirection, TableAction, TableColumn as TableColumnType } from './types';
+
+const TableCellWithWidth: React.FC<{
+  className: string;
+  widthStyle?: Record<string, string | undefined>;
+  children: React.ReactNode;
+}> = ({ className, widthStyle, children }) => {
+  const ref = React.useRef<HTMLTableCellElement>(null);
+  useElementProperties(ref, widthStyle ?? {}, [widthStyle]);
+
+  return (
+    <td ref={ref} className={className}>
+      {children}
+    </td>
+  );
+};
 
 interface TableDesktopViewProps<T extends { id: number | string }> {
   tableRef: RefObject<HTMLTableElement | null>;
@@ -79,39 +96,39 @@ function TableDesktopView<T extends { id: number | string }>({
 }: TableDesktopViewProps<T>) {
   const colSpan = visibleColumns.length + (selectable ? 1 : 0) + (actions.length > 0 ? 1 : 0);
 
+  useElementProperties(tableRef, { '--table-min-width': `${tableMinWidth}px` }, [tableMinWidth]);
+
   return (
     <div ref={tableScrollRef} className="table-responsive table-responsive-custom">
       {resizeGuideStyle != null && (
-        <div
+        <DynamicStyledElement
           className="table-resize-guide"
-          style={{
+          properties={{
             left: `${resizeGuideStyle.left}px`,
             top: `${resizeGuideStyle.top}px`,
             height: `${resizeGuideStyle.height}px`,
           }}
+          deps={[resizeGuideStyle.left, resizeGuideStyle.top, resizeGuideStyle.height]}
           aria-hidden
         />
       )}
       <table
         ref={tableRef}
-        className={`table table-striped table-sm table-custom table-resizable table-resizable-enabled ${isResizing ? 'resizing' : ''} ${hasCustomWidths ? 'table-columns-locked' : ''}`}
-        style={{ ['--table-min-width' as string]: `${tableMinWidth}px` }}
+        className={`table table-striped table-sm table-custom table-resizable table-resizable-enabled ${isResizing ? 'resizing' : ''} ${hasCustomWidths ? 'table-columns-locked' : ''} table-min-width-host`}
       >
         <colgroup>
-          {selectable && (
-            <col className="col-checkbox" style={{ width: CHECKBOX_COLUMN_WIDTH_PX }} />
-          )}
+          {selectable && <ColWithWidth width={CHECKBOX_COLUMN_WIDTH_PX} className="col-checkbox table-col-checkbox" />}
           {visibleColumns.map((column) => {
             const widthPx = resolveColumnWidthPx(column, columnWidths, hasCustomWidths);
             return (
-              <col
+              <ColWithWidth
                 key={column.key}
+                width={widthPx ?? 'auto'}
                 className={column.key === 'id' ? 'col-id' : undefined}
-                style={widthPx != null ? { width: widthPx } : undefined}
               />
             );
           })}
-          {actions.length > 0 && <col style={{ width: ACTIONS_COLUMN_WIDTH_PX }} />}
+          {actions.length > 0 && <ColWithWidth width={ACTIONS_COLUMN_WIDTH_PX} className="table-col-actions" />}
         </colgroup>
 
         <thead>
@@ -198,12 +215,11 @@ function TableDesktopView<T extends { id: number | string }>({
                   )}
                   {visibleColumns.map((column) => {
                     const widthPx = resolveColumnWidthPx(column, columnWidths, hasCustomWidths);
-                    let widthStyle: React.CSSProperties | undefined;
-
+                    const widthProps: Record<string, string | undefined> = {};
                     if (hasCustomWidths && widthPx != null) {
-                      widthStyle = fixedWidthStyle(widthPx);
+                      Object.assign(widthProps, fixedWidthStyle(widthPx));
                     } else if (columnWidths[column.key] != null) {
-                      widthStyle = fixedWidthStyle(columnWidths[column.key]);
+                      Object.assign(widthProps, fixedWidthStyle(columnWidths[column.key]));
                     } else {
                       const colMinWidth = getColumnMinWidth(column);
                       const widthCss = parseColumnWidthPx(column.width);
@@ -217,11 +233,13 @@ function TableDesktopView<T extends { id: number | string }>({
                           : column.badgeLabels?.length && widthVal
                             ? widthVal
                             : undefined;
-                      widthStyle = { width: widthVal, minWidth: minCss, maxWidth: maxVal };
+                      if (widthVal) widthProps.width = widthVal;
+                      if (minCss) widthProps.minWidth = minCss;
+                      if (maxVal) widthProps.maxWidth = maxVal;
                     }
 
                     return (
-                      <td
+                      <TableCellWithWidth
                         key={column.key}
                         className={[
                           column.key === 'id' ? 'col-id' : '',
@@ -230,12 +248,12 @@ function TableDesktopView<T extends { id: number | string }>({
                         ]
                           .filter(Boolean)
                           .join(' ')}
-                        style={widthStyle}
+                        widthStyle={widthProps}
                       >
                         {column.render
                           ? column.render(item, index)
                           : String(item[column.key as keyof T] || '')}
-                      </td>
+                      </TableCellWithWidth>
                     );
                   })}
                   {actions.length > 0 && (

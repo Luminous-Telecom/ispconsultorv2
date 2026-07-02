@@ -3,8 +3,9 @@
  * Mantém a API original do DraggableModal para compatibilidade total
  * Agora usa ResponsiveDialog que adapta automaticamente para mobile/desktop
  */
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import ReactDOM from 'react-dom';
+import { useElementProperties } from 'hooks/useElementProperties';
 import { useI18n } from 'contexts/I18nContext';
 import { modalStack } from 'utils/modalStack';
 import ResponsiveDialog from './ResponsiveDialog';
@@ -235,6 +236,47 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     return MODAL_BASE_Z_INDEX + (index * 10);
   }, [modalId, isMobile]);
 
+  const backdropRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+
+  const noScrollBody =
+    className?.includes('no-padding') || className?.includes('list-modal-no-body-scroll');
+
+  useElementProperties(backdropRef, { zIndex: zIndex - 1 }, [zIndex]);
+  useElementProperties(
+    overlayRef,
+    { zIndex: isDragging ? zIndex + 100 : -1 },
+    [zIndex, isDragging],
+  );
+  useElementProperties(
+    containerRef,
+    {
+      left: `${position.x}px`,
+      top: `${position.y}px`,
+      width: `${modalSize.width}px`,
+      height: modalSize.height > 0 ? `${modalSize.height}px` : 'auto',
+      maxHeight: `${typeof window !== 'undefined' ? window.innerHeight - MODAL_EDGE_MARGIN_PX * 2 : 0}px`,
+      zIndex,
+      opacity: isVisible ? 1 : 0,
+      transform: isVisible ? 'scale(1)' : 'scale(0.95)',
+    },
+    [position.x, position.y, modalSize.width, modalSize.height, zIndex, isVisible],
+  );
+  useElementProperties(
+    bodyRef,
+    noScrollBody
+      ? {
+          overflow: 'hidden',
+          overflowY: 'hidden',
+          overflowX: 'hidden',
+          padding: 0,
+        }
+      : {},
+    [noScrollBody],
+  );
+
   // Em mobile, usar ResponsiveDialog diretamente
   if (isMobile && show) {
     return (
@@ -260,33 +302,16 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     <>
 
       {/* Backdrop customizado - overlay escuro semitransparente, não cobre a sidebar */}
-      <div
-        className="draggable-modal-backdrop"
-        style={{
-          zIndex: zIndex - 1,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        }}
-      />
+      <div ref={backdropRef} className="draggable-modal-backdrop modal-backdrop-layer" />
 
-      {/* Overlay para manter eventos de arraste mesmo sobre iframes/PDFs */}
       <div
+        ref={overlayRef}
         className={`draggable-modal-overlay ${isDragging ? 'dragging' : ''}`}
-        style={{ zIndex: isDragging ? zIndex + 100 : -1 }}
       />
 
-      {/* Modal */}
       <div
+        ref={containerRef}
         className={`modal-content draggable-modal-container draggable-modal-container-custom ${className}`}
-        style={{
-          left: `${position.x}px`,
-          top: `${position.y}px`,
-          width: `${modalSize.width}px`,
-          height: modalSize.height > 0 ? `${modalSize.height}px` : 'auto',
-          maxHeight: `${window.innerHeight - MODAL_EDGE_MARGIN_PX * 2}px`,
-          zIndex,
-          opacity: isVisible ? 1 : 0,
-          transform: isVisible ? 'scale(1)' : 'scale(0.95)',
-        }}
       >
         {/* Header arrastável */}
         <div
@@ -322,12 +347,8 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
 
         {/* Body com scroll */}
         <div
-          className={`modal-body draggable-modal-body-custom ${className?.includes('no-padding') ? 'no-scroll' : ''} ${className?.includes('list-modal-no-body-scroll') ? 'list-modal-no-body-scroll' : ''}`}
-          style={{
-            ...(className?.includes('no-padding') || className?.includes('list-modal-no-body-scroll') 
-              ? { overflow: 'hidden', overflowY: 'hidden', overflowX: 'hidden', padding: 0 } 
-              : {})
-          }}
+          ref={bodyRef}
+          className={`modal-body draggable-modal-body-custom ${className?.includes('no-padding') ? 'no-scroll' : ''} ${className?.includes('list-modal-no-body-scroll') ? 'list-modal-no-body-scroll' : ''} ${noScrollBody ? 'draggable-modal-body-no-padding' : ''}`}
         >
           {children}
         </div>

@@ -119,7 +119,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
 
       {/* Resumo Financeiro - Fixo no final */}
       {sortedData.length > 0 && (
-        <div className="d-flex justify-content-end align-items-center p-3 bg-light financeiro-resumo" style={{ flexShrink: 0, marginTop: isMobile ? '0.25rem' : '0.5rem', marginBottom: 0, marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
+        <div className="d-flex justify-content-end align-items-center p-3 bg-light financeiro-resumo financeiro-resumo-adaptive" >
           <div className="d-flex flex-wrap gap-2 gap-md-4 justify-content-end">
             <div className="text-end">
               <div className="small text-muted">{t('summary.value')}</div>

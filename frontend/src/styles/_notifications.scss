@@ -5,6 +5,40 @@
   max-width: 280px;
   width: 100%;
   pointer-events: none;
+  position: fixed;
+  z-index: 999999;
+}
+
+.notification-container-top-left {
+  top: 1rem;
+  left: 1rem;
+}
+
+.notification-container-top-center {
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.notification-container-top-right {
+  top: 1rem;
+  right: 1rem;
+}
+
+.notification-container-bottom-left {
+  bottom: 1rem;
+  left: 1rem;
+}
+
+.notification-container-bottom-center {
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.notification-container-bottom-right {
+  bottom: 1rem;
+  right: 1rem;
 }
 
 .notification-container * {

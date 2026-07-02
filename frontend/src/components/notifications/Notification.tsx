@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useElementProperties } from 'hooks/useElementProperties';
 import { NotificationState, NotificationAction } from './types';
 import { BulkActionButton, toBulkVariant } from '../ui';
 import type { ButtonVariant } from '../ui';
@@ -23,11 +24,35 @@ const Notification: React.FC<NotificationProps> = ({
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const notificationRef = useRef<HTMLDivElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
 
   const { config } = notification;
   const prefersRealHover = usePrefersRealHover();
   const shouldPauseOnHover = Boolean(config.pauseOnHover && prefersRealHover);
   const { onShown } = config;
+
+  const notificationProperties = {
+    zIndex: config.zIndex != null ? String(config.zIndex) : undefined,
+    maxWidth: config.maxWidth != null
+      ? typeof config.maxWidth === 'number'
+        ? `${config.maxWidth}px`
+        : config.maxWidth
+      : undefined,
+    maxHeight: config.maxHeight != null
+      ? typeof config.maxHeight === 'number'
+        ? `${config.maxHeight}px`
+        : config.maxHeight
+      : undefined,
+    ...(config.style ?? {}),
+  };
+
+  useElementProperties(notificationRef, notificationProperties, [
+    config.zIndex,
+    config.maxWidth,
+    config.maxHeight,
+    config.style,
+  ]);
 
   useEffect(() => {
     requestAnimationFrame(() => {
@@ -37,7 +62,16 @@ const Notification: React.FC<NotificationProps> = ({
     });
   }, [onShown]);
 
-  // Handlers de mouse
+  const duration = config.duration ?? 0;
+  useElementProperties(
+    progressRef,
+    {
+      ...(config.progressColor ? { backgroundColor: config.progressColor } : {}),
+      '--notification-duration': duration > 0 ? `${duration}ms` : undefined,
+    },
+    [config.progressColor, duration],
+  );
+
   const handleMouseEnter = () => {
     if (shouldPauseOnHover) {
       onPause(notification.id);
@@ -80,8 +114,7 @@ const Notification: React.FC<NotificationProps> = ({
   };
 
   const notificationType = config.type || 'info';
-  
-  // Obter ícone baseado no tipo
+
   const getIcon = () => {
     if (config.icon) {
       return config.icon;
@@ -103,59 +136,36 @@ const Notification: React.FC<NotificationProps> = ({
     }
   };
 
-  // Obter classes CSS
   const getNotificationClasses = (): string[] => {
     const classes = ['notification'];
-    
+
     classes.push(`notification-${notificationType}`);
     classes.push(`notification-${config.size}`);
     classes.push(`notification-${config.animation}`);
-    
+
     if (isVisible) {
       classes.push('notification-visible');
     }
-    
+
     if (isAnimating) {
       classes.push('notification-animating');
     }
-    
+
     if (notification.isPaused) {
       classes.push('notification-paused');
     }
-    
+
     if (config.closeOnClick) {
       classes.push('notification-clickable');
     }
-    
+
     if (className) {
       classes.push(className);
     }
-    
+
     return classes;
   };
 
-  // Obter estilos
-  const getNotificationStyles = (): React.CSSProperties => {
-    const styles: React.CSSProperties = {
-      zIndex: config.zIndex,
-    };
-    
-    if (config.maxWidth) {
-      styles.maxWidth = typeof config.maxWidth === 'number' ? `${config.maxWidth}px` : config.maxWidth;
-    }
-    
-    if (config.maxHeight) {
-      styles.maxHeight = typeof config.maxHeight === 'number' ? `${config.maxHeight}px` : config.maxHeight;
-    }
-    
-    if (config.style) {
-      Object.assign(styles, config.style);
-    }
-    
-    return styles;
-  };
-
-  // Renderizar ações
   const renderActions = () => {
     if (!config.actions || config.actions.length === 0) {
       return null;
@@ -176,9 +186,7 @@ const Notification: React.FC<NotificationProps> = ({
     );
   };
 
-  // Barra de progresso por CSS (sem setInterval): duração = tempo até fechar; pausa com .notification-paused
   const renderProgress = () => {
-    const duration = config.duration ?? 0;
     if (!config.showProgress || duration <= 0) {
       return null;
     }
@@ -186,19 +194,13 @@ const Notification: React.FC<NotificationProps> = ({
     return (
       <div className="notification-progress">
         <div
+          ref={progressRef}
           className="notification-progress-bar notification-progress-bar--animated"
-          style={
-            {
-              ...(config.progressColor ? { backgroundColor: config.progressColor } : {}),
-              '--notification-duration': `${duration}ms`,
-            } as React.CSSProperties
-          }
         />
       </div>
     );
   };
 
-  // Renderizar imagem
   const renderImage = () => {
     if (!config.image) {
       return null;
@@ -213,8 +215,8 @@ const Notification: React.FC<NotificationProps> = ({
 
   return (
     <div
+      ref={notificationRef}
       className={getNotificationClasses().join(' ')}
-      style={getNotificationStyles()}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onFocus={handleFocus}
@@ -226,7 +228,6 @@ const Notification: React.FC<NotificationProps> = ({
       data-notification-type={notificationType}
     >
       <div className="notification-content">
-        {/* Ícone */}
         <div className="notification-icon">
           {notificationType === 'loading' ? (
             <i className={`bi bi-${getIcon()} notification-loading-icon`}></i>
@@ -235,32 +236,13 @@ const Notification: React.FC<NotificationProps> = ({
           )}
         </div>
 
-        {/* Conteúdo principal */}
         <div className="notification-body">
-          {/* Título */}
-          {config.title && (
-            <div className="notification-title">
-              {config.title}
-            </div>
-          )}
-
-          {/* Mensagem */}
-          <div className="notification-message">
-            {config.message}
-          </div>
-
-          {/* Descrição */}
-          {config.description && (
-            <div className="notification-description">
-              {config.description}
-            </div>
-          )}
-
-          {/* Ações */}
+          {config.title && <div className="notification-title">{config.title}</div>}
+          <div className="notification-message">{config.message}</div>
+          {config.description && <div className="notification-description">{config.description}</div>}
           {renderActions()}
         </div>
 
-        {/* Imagem */}
         {renderImage()}
 
         {config.dismissible !== false && (
@@ -277,7 +259,6 @@ const Notification: React.FC<NotificationProps> = ({
         )}
       </div>
 
-      {/* Barra de progresso */}
       {renderProgress()}
     </div>
   );
