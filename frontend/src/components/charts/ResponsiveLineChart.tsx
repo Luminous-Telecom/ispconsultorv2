@@ -33,25 +33,8 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(
         data.map((item) => ({
           name: formatDateLabel(item.mes || item.name || ''),
           value: item.valor ?? item.value ?? 0,
-          color: typeof item.color === 'string' ? item.color : undefined,
         })),
       [data, formatDateLabel]
-    );
-
-    const resolvePointColor = useCallback(
-      (index: number) => chartData[index]?.color || lineColor,
-      [chartData, lineColor]
-    );
-
-    const resolveSegmentColor = useCallback(
-      (fromIndex: number, toIndex: number) => {
-        const toColor = resolvePointColor(toIndex);
-        const fromColor = resolvePointColor(fromIndex);
-        if (toColor !== lineColor) return toColor;
-        if (fromColor !== lineColor) return fromColor;
-        return lineColor;
-      },
-      [lineColor, resolvePointColor]
     );
 
     const formatValue = useCallback(
@@ -124,7 +107,6 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(
 
       const g = sel.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
-      // Grid horizontal discreto + labels do eixo Y
       const yTicks = yScale.ticks(4);
       g.append('g')
         .selectAll('line')
@@ -159,6 +141,12 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(
         .y1((d) => yScale(d.value))
         .curve(d3.curveMonotoneX);
 
+      const line = d3
+        .line<{ name: string; value: number }>()
+        .x((_, i) => xScale(i))
+        .y((d) => yScale(d.value))
+        .curve(d3.curveMonotoneX);
+
       const areaPath = g
         .append('path')
         .datum(chartData)
@@ -167,40 +155,27 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(
         .attr('opacity', 0);
       areaPath.transition().duration(700).ease(d3.easeCubicOut).attr('opacity', 1);
 
-      const lineGroup = g.append('g').attr('class', 'line-segments');
-      for (let i = 1; i < chartData.length; i++) {
-        const fromIndex = i - 1;
-        const toIndex = i;
-        const segmentLine = d3
-          .line<number>()
-          .x((index) => xScale(index))
-          .y((index) => yScale(chartData[index].value))
-          .curve(d3.curveMonotoneX);
+      const linePath = g
+        .append('path')
+        .datum(chartData)
+        .attr('d', line)
+        .attr('fill', 'none')
+        .attr('stroke', lineColor)
+        .attr('stroke-width', 2.5)
+        .attr('stroke-linecap', 'round')
+        .attr('stroke-linejoin', 'round');
 
-        const segmentPath = lineGroup
-          .append('path')
-          .datum([fromIndex, toIndex])
-          .attr('d', segmentLine)
-          .attr('fill', 'none')
-          .attr('stroke', resolveSegmentColor(fromIndex, toIndex))
-          .attr('stroke-width', 2.5)
-          .attr('stroke-linecap', 'round')
-          .attr('stroke-linejoin', 'round');
-
-        const totalLen = (segmentPath.node() as SVGPathElement)?.getTotalLength?.() ?? 0;
-        if (totalLen > 0) {
-          segmentPath
-            .attr('stroke-dasharray', `${totalLen} ${totalLen}`)
-            .attr('stroke-dashoffset', totalLen)
-            .transition()
-            .duration(800)
-            .delay(i * 40)
-            .ease(d3.easeCubicInOut)
-            .attr('stroke-dashoffset', 0);
-        }
+      const totalLen = (linePath.node() as SVGPathElement)?.getTotalLength?.() ?? 0;
+      if (totalLen > 0) {
+        linePath
+          .attr('stroke-dasharray', `${totalLen} ${totalLen}`)
+          .attr('stroke-dashoffset', totalLen)
+          .transition()
+          .duration(800)
+          .ease(d3.easeCubicInOut)
+          .attr('stroke-dashoffset', 0);
       }
 
-      // Rótulos pequenos com o valor em cada ponto
       g.append('g')
         .selectAll('text')
         .data(chartData)
@@ -212,7 +187,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(
         .attr('font-size', '9px')
         .attr('font-weight', '600')
         .attr('font-family', FONT_FAMILY_BASE)
-        .attr('fill', (_, i) => resolvePointColor(i))
+        .attr('fill', lineColor)
         .attr('opacity', 0)
         .text((d) => (d.value > 0 ? formatPointLabel(d.value) : ''))
         .transition()
@@ -220,24 +195,6 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(
         .duration(400)
         .attr('opacity', 0.9);
 
-      g.append('g')
-        .attr('class', 'line-points')
-        .selectAll('circle')
-        .data(chartData)
-        .join('circle')
-        .attr('cx', (_, i) => xScale(i))
-        .attr('cy', (d) => yScale(d.value))
-        .attr('r', 3)
-        .attr('fill', (_, i) => resolvePointColor(i))
-        .attr('stroke', 'var(--bg-tertiary)')
-        .attr('stroke-width', 1.5)
-        .attr('opacity', 0)
-        .transition()
-        .delay(650)
-        .duration(350)
-        .attr('opacity', 0.95);
-
-      // Foco (linha vertical + ponto) escondido até o hover
       const focus = g.append('g').style('opacity', 0);
       focus
         .append('line')
@@ -255,7 +212,6 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(
         .attr('stroke', 'var(--bg-tertiary)')
         .attr('stroke-width', 2.5);
 
-      // Eixo X — labels espaçados
       const labelStep = Math.max(1, Math.ceil(chartData.length / Math.max(1, Math.floor(chartWidth / 42))));
       g.append('g')
         .attr('transform', `translate(0,${chartHeight + 6})`)
@@ -306,9 +262,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(
           const py = yScale(point.value);
           focus.style('opacity', 1);
           focus.select('.focus-line').attr('x1', px).attr('x2', px);
-          const pointColor = resolvePointColor(i);
-          focus.select('.focus-line').attr('stroke', pointColor);
-          focusDot.attr('cx', px).attr('cy', py).attr('fill', pointColor);
+          focusDot.attr('cx', px).attr('cy', py);
           tooltip.setLabelValue(point.name, formatValue(point.value));
           const { width: w, height: h } = tooltip.measure();
           const { tx, ty } = clampTooltipNearPoint(margin.left + px, margin.top + py, w, h, dimensions, 16);
@@ -324,7 +278,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(
           const i = nearestIndex(event.clientX);
           onPointClick(data[i], i);
         });
-    }, [chartData, dimensions, format, onPointClick, data, formatValue, formatAxis, formatPointLabel, gradientId, lineColor, resolvePointColor, resolveSegmentColor]);
+    }, [chartData, dimensions, format, onPointClick, data, formatValue, formatAxis, formatPointLabel, gradientId, lineColor]);
 
     if (!data || data.length === 0) {
       return <ChartEmptyState title={title} />;

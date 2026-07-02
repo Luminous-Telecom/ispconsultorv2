@@ -1,8 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { DashboardData } from '../services/dashboardService';
 import { ChartDataItem } from '../components/charts/types';
-import { CHART_FINANCE_COLORS } from '../components/charts/chartColors';
-import { toISODateString } from '../utils/dateUtils';
 import type { useDashboardStats } from './useDashboardStats';
 import type { TranslationKeys } from '../contexts/I18nContext';
 
@@ -23,32 +21,6 @@ interface DashboardCharts {
   totalReceitaMensal: number;
   totalNovosClientes: number;
 }
-
-const isDateBeforeToday = (isoDate?: string): boolean => {
-  if (!isoDate) return false;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const pointDate = new Date(`${isoDate}T12:00:00`);
-  if (Number.isNaN(pointDate.getTime())) return false;
-  pointDate.setHours(0, 0, 0, 0);
-  return pointDate < today;
-};
-
-const buildPagoAtrasoDays = (
-  titulos: DashboardData['titulosTodos'] | undefined
-): Set<string> => {
-  const days = new Set<string>();
-  if (!titulos?.length) return days;
-  for (const titulo of titulos) {
-    if (titulo.status !== 'pago_atraso' || !titulo.data_pagamento) continue;
-    const iso = toISODateString(titulo.data_pagamento);
-    if (iso) days.add(iso);
-  }
-  return days;
-};
-
-const pointColorWithOverdue = (baseColor: string, isOverdue: boolean): string =>
-  isOverdue ? CHART_FINANCE_COLORS.overdue : baseColor;
 
 /**
  * Montagem de dados para gráficos. Agregações numéricas vêm de `statsGraficos` (backend) quando disponível.
@@ -233,14 +205,10 @@ export const useDashboardCharts = (
   }, [sg, dashboardData, parseMesAnoToRange]);
 
   const recebidosPeriodoChartData = useMemo(() => {
-    const pagoAtrasoDays = buildPagoAtrasoDays(titulosTodos);
-    const baseColor = CHART_FINANCE_COLORS.received;
-
     if (sg?.series?.recebidosPeriodo?.length) {
       return sg.series.recebidosPeriodo.map((row) => ({
         mes: row.mes,
         valor: row.valor,
-        color: pointColorWithOverdue(baseColor, pagoAtrasoDays.has(row.data_inicio)),
         data_inicio: row.data_inicio,
         data_fim: row.data_fim,
       }));
@@ -248,24 +216,19 @@ export const useDashboardCharts = (
     if (!dashboardData?.recebidosPeriodo) return [];
     return dashboardData.recebidosPeriodo.labels.map((label, index) => {
       const range = parseDataLabelToRange(label);
-      const iso = range?.data_inicio;
       return {
         mes: label,
         valor: dashboardData.recebidosPeriodo?.data?.[index] ?? 0,
-        color: pointColorWithOverdue(baseColor, iso ? pagoAtrasoDays.has(iso) : false),
         ...(range || {}),
       };
     });
-  }, [sg, dashboardData, parseDataLabelToRange, titulosTodos]);
+  }, [sg, dashboardData, parseDataLabelToRange]);
 
   const receberPeriodoChartData = useMemo(() => {
-    const baseColor = CHART_FINANCE_COLORS.toReceive;
-
     if (sg?.series?.receberPeriodo?.length) {
       return sg.series.receberPeriodo.map((row) => ({
         mes: row.mes,
         valor: row.valor,
-        color: pointColorWithOverdue(baseColor, isDateBeforeToday(row.data_inicio)),
         data_inicio: row.data_inicio,
         data_fim: row.data_fim,
       }));
@@ -273,11 +236,9 @@ export const useDashboardCharts = (
     if (!dashboardData?.aReceberPeriodo) return [];
     return dashboardData.aReceberPeriodo.labels.map((label, index) => {
       const range = parseDataLabelToRange(label);
-      const iso = range?.data_inicio;
       return {
         mes: label,
         valor: dashboardData.aReceberPeriodo.data[index] ?? 0,
-        color: pointColorWithOverdue(baseColor, isDateBeforeToday(iso)),
         ...(range || {}),
       };
     });
@@ -377,7 +338,6 @@ export const useDashboardCharts = (
       contasReceberPagarChartData.map((row) => ({
         mes: row.mes,
         valor: row.pagar,
-        color: CHART_FINANCE_COLORS.toPay,
         data_inicio: row.data_inicio,
         data_fim: row.data_fim,
       })),
