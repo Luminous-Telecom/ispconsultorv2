@@ -56,5 +56,5 @@ export class EntityService {
 - Erros: `message` clara e acionável; stack trace só no `logger`
 
 ## Tratamento de Erros (frontend)
-- Use `useApiError().showApiError(err, CONTEXT_ERROR_MESSAGES.*)` — nunca parse manual repetido
+- Use `useApiError().showApiError(err, CONTEXT_ERROR_MESSAGES.*)` — ver `frontend-erros-api.mdc`
 - Extração centralizada: `utils/apiErrorHelper.ts`

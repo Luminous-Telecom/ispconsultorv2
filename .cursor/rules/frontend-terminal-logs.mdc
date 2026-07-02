@@ -1,0 +1,32 @@
+---
+description: Terminal socket, logs de rotina e estilos mono de log
+globs: frontend/**/*.tsx,frontend/**/*.ts,frontend/**/*.scss
+alwaysApply: false
+---
+
+# Terminal e logs — BackNet
+
+## Terminal SSH / socket
+
+- Componentes e hooks do módulo SSH manager / agent
+- Sessão socket: hooks dedicados (ex.: `useSocketTerminalSession`) — não reinventar xterm + WebSocket
+
+## Logs de rotina
+
+```tsx
+import RotinaLogsModal from 'components/common/RotinaLogsModal';
+```
+
+Registro central: `logsModalRegistry` — registrar tipo de rotina uma vez.
+
+## Estilo de linhas de log
+
+```tsx
+import { getTerminalLogLineClass } from 'constants/designTokens';
+```
+
+Classes SCSS: `terminal-log-panel`, `terminal-log-*` — fonte `FONT_FAMILY_MONO` / `var(--font-family-mono)`.
+
+**Proibido** cores inline por linha de log; **proibido** fonte mono externa (JetBrains, etc.).
+
+Ver `frontend-tipografia.mdc` e `frontend-design-tokens.mdc`.

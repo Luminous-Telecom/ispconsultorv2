@@ -1,0 +1,69 @@
+---
+description: Formulários CRUD — hooks, blocos reutilizáveis e seleção de entidade
+globs: frontend/**/*.tsx,frontend/**/*.ts
+alwaysApply: false
+---
+
+# Formulários CRUD — BackNet
+
+Complementa layout horizontal: `frontend-form-modal-layout.mdc`.
+
+## Hooks
+
+| Hook | Uso |
+|------|-----|
+| `useEntityFormModal` | Abrir/fechar form modal + id selecionado |
+| `useFormReset` | Reset ao fechar modal |
+| `useFormPrefix` | IDs únicos em forms aninhados |
+| `useEntitySelectField` | Estado do `EntitySelectField` |
+| `useSelectModal` / `useModalSelect` | Modal de seleção + item escolhido |
+
+## Blocos reutilizáveis (`components/forms/`)
+
+| Componente | Uso |
+|------------|-----|
+| `AddressFields` | Endereço completo (CEP, logradouro, …) |
+| `ContactFields` | Telefone, email, contato |
+| `CentralAssinanteFields` | Campos portal assinante |
+| `UsuarioAccountFormFields` | Conta de usuário |
+
+**Proibido** duplicar campos de endereço/contato inline no modal.
+
+## EntitySelectField
+
+```tsx
+<EntitySelectField
+  label={t('form.client')}
+  value={clienteId}
+  onChange={setClienteId}
+  entities={clientes}
+  onShowModal={() => setShowClienteList(true)}
+  required
+/>
+```
+
+- Modal de listagem para escolher → `ListModal` + `onSelect`
+- Ícone busca: `IconOnlyButton` interno — não `<button>` cru
+
+## Validação
+
+- Estado `errors: Record<string, string>` por campo
+- Limpar erro do campo quando usuário digitar
+- Obrigatório: `required` no `FormField` / `LabelWithHelp` (`RequiredMark`)
+- **Proibido** `<span className="text-danger">*</span>` manual
+
+## Campos
+
+| Tipo | Componente |
+|------|------------|
+| Texto, email, number, date, select, textarea | `FormField` |
+| Ativo/inativo, sim/não | `AtivoInativoField` |
+| Email + WhatsApp flags | `ComunicacaoPreferenciasField` |
+| Upload | `FormField type="file"` — `frontend-file-input.mdc` |
+| Filtro booleano em lista | `TableFilterCheckbox` |
+
+`Input` / `Select` / `Checkbox` diretos só quando **não** couber em `FormField` (ex.: login sem label lateral).
+
+## CEP
+
+`hooks/useCep.ts` — busca automática; não chamar API de CEP ad hoc.

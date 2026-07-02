@@ -5,6 +5,7 @@ import { useI18n } from 'contexts/I18nContext';
 import Input from './Input';
 import Select from './Select';
 import Checkbox from './Checkbox';
+import { FileInput } from './FileInput';
 import { LabelWithHelp } from './LabelWithHelp';
 import { getBootstrapTooltipProps } from './tooltipProps';
 
@@ -267,12 +268,11 @@ const FormField: React.FC<FormFieldProps> = ({
 
       case 'file':
         return (
-          <input
+          <FileInput
             id={fieldId}
             name={name}
-            type="file"
-            onChange={(e) => {
-              const file = e.target.files?.[0] || null;
+            size={size}
+            onFileChange={(file) => {
               if (onChange && file) {
                 onChange(file, name);
               }
@@ -281,7 +281,7 @@ const FormField: React.FC<FormFieldProps> = ({
             disabled={disabled}
             accept={accept}
             multiple={multiple}
-            className={`form-control ${className}`}
+            className={className}
             autoFocus={autoFocus}
           />
         );

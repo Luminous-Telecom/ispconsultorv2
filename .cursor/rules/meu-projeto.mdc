@@ -48,7 +48,8 @@ Detalhes completos: `.cursor/rules/frontend-botoes.mdc`
 - Use `window.confirm()` — nunca modais customizados para confirmação
 
 ## Componentes centralizados (não duplicar)
-Use sempre os primitivos do projeto em vez de reinventar UI. Detalhes em `.cursor/rules/frontend-ui-centralizado.mdc`.
+
+Use sempre os primitivos do projeto. **Índice completo:** `frontend-ui-centralizado.mdc` (seção Índice de rules).
 
 | Necessidade | Usar | Não usar |
 |-------------|------|----------|
@@ -58,9 +59,18 @@ Use sempre os primitivos do projeto em vez de reinventar UI. Detalhes em `.curso
 | Ajuda no label | `LabelWithHelp` / `FormField helpText` | `alert-info`, ícone `i` manual |
 | Botões de ação | `components/ui/buttons` + `ModalFormActions` | botões HTML crus com spinner |
 | Modais | `DraggableModal`, `ListModal` | modais Bootstrap/dialog custom |
+| Tabelas / CRUD lista | `Table`, `ListModal`, `useEntityListModal` | `<table>` custom, paginação local ad hoc |
+| Busca | `SearchBar` (variants) | `<input type="search">` custom |
 | Erros de API | `showApiError(err, CONTEXT_ERROR_MESSAGES.*)` | parse manual de `response.data` |
+| Textos UI | `useI18n().t()` | strings PT fixas em telas internas |
 | Layout de form em modal | `FormField` + `col-12` + `AtivoInativoField` | `col-md-6`, `switch`, switches HTML |
 | Campo de texto/select | `Input` / `FormField` (`form-control`) | `<input>` custom, classes próprias, altura fixa |
+| Escolher ficheiro | `FileInput` / `FormField type="file"` | `<input type="file">` cru |
+| Status em tabela | `StatusBadge`, `renderStatusBadge` | `badge bg-*` manual |
+| Endereço / contato | `AddressFields`, `ContactFields` | campos duplicados inline |
+| Impressão PDF | `useImprimir`, `ImprimirModal` | URL hardcoded, iframe custom |
+| Rich text | `RichTextEditorLazy` + `Suspense` | TinyMCE import direto |
+| Estilos dinâmicos | `DynamicStyleElements`, `useElementProperties` | `style={{}}` no JSX |
 | Foco em inputs | Borda igual + `box-shadow: none` (global) | Halo azul, `border-color` primary no `:focus` |
 | Filtro on/off em tabela | `TableFilterCheckbox` | `form-switch`, select sim/não |
 
@@ -68,3 +78,29 @@ Use sempre os primitivos do projeto em vez de reinventar UI. Detalhes em `.curso
 - Fonte padrão = stack nativa do SO (menu lateral): `var(--font-family-base)` / `FONT_FAMILY_BASE`
 - Mono (terminal, logs, código): `var(--font-family-mono)` / `FONT_FAMILY_MONO`
 - Detalhes em `.cursor/rules/frontend-tipografia.mdc` — **não** usar Inter, Poppins ou Google Fonts
+
+## Índice de rules Cursor (`.cursor/rules/`)
+
+| Rule | Conteúdo |
+|------|----------|
+| `meu-projeto.mdc` | Global (este arquivo) |
+| `frontend-ui-centralizado.mdc` | Hub UI + índice |
+| `frontend-botoes.mdc` | Sistema de botões |
+| `frontend-file-input.mdc` | Upload / FileInput |
+| `frontend-form-modal-layout.mdc` | Layout horizontal modal |
+| `frontend-formularios-crud.mdc` | Hooks form, AddressFields, EntitySelect |
+| `frontend-tabelas.mdc` | Table, ListModal, busca, bulk |
+| `frontend-modais.mdc` | DraggableModal, ModalContext |
+| `frontend-i18n.mdc` | Locales e translationKeys |
+| `frontend-erros-api.mdc` | ErrorMessages, showApiError |
+| `frontend-contextos.mdc` | Loading, Theme, Modal, TableHeader |
+| `frontend-impressao-auditoria.mdc` | useImprimir, auditoria |
+| `frontend-rich-text-documentos.mdc` | TinyMCE, VariaveisDocumento |
+| `frontend-design-tokens.mdc` | Sem inline styles |
+| `frontend-tipografia.mdc` | Fontes |
+| `frontend-hooks-utilitarios.mdc` | Clipboard, media query, debounce |
+| `frontend-terminal-logs.mdc` | Terminal e logs |
+| `frontend-react.mdc` | React Query, padrões gerais |
+| `frontend-verificacao-pos-alteracao.mdc` | Build, i18n pós-edit |
+| `backend-api.mdc` | Controllers, services, API |
+| `database-migrations.mdc` | Migrações DB |

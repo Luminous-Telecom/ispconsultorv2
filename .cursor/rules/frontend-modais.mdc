@@ -1,0 +1,82 @@
+---
+description: Modais — DraggableModal, ListModal, contexto e abas
+globs: frontend/**/*.tsx,frontend/**/*.ts
+alwaysApply: false
+---
+
+# Modais — BackNet
+
+## Hierarquia
+
+| Componente | Uso |
+|------------|-----|
+| `DraggableModal` | **Padrão** — formulários, detalhes, qualquer modal ERP |
+| `ListModal` | CRUD listagem + seleção (`useEntityListModal`) |
+| `SingleModalWrapper` | Um modal por tipo via `ModalContext` |
+| `ModalTabsOverflow` | Abas com overflow em mobile |
+| `ResponsiveDialog` | **Interno** — shell mobile de listagens (não criar modais novos com ele) |
+| `ImageViewerModal` / `TextPreviewModal` | Preview de imagem/texto |
+| `ImprimirModal` | Preview PDF impressão |
+
+```tsx
+import DraggableModal from 'components/common/DraggableModal';
+import { ModalFormActions } from 'components/ui';
+```
+
+## DraggableModal (formulários)
+
+```tsx
+<DraggableModal
+  show={show}
+  onClose={onClose}
+  title={t('modal.editClient')}
+  size="lg"
+  modalId="cliente-modal"
+  headerActions={
+    <ModalFormActions onCancel={onClose} formId="cliente-form" isPending={isPending} />
+  }
+>
+  <form id="cliente-form" onSubmit={handleSubmit}>...</form>
+</DraggableModal>
+```
+
+- **`modalId`**: empilhamento e z-index (`modalStack`)
+- **`onClose`**: sempre implementar; limpar form (`useFormReset` ou reset manual)
+- **`onSuccess`**: callback após save (invalidar queries, fechar)
+- Ações no header: `ModalFormActions` ou `*Button` de `components/ui/buttons`
+- **Proibido** `Modal` Bootstrap / `<dialog>` custom
+
+## ModalContext (modais globais)
+
+```tsx
+import { useModal } from 'contexts/ModalContext';
+
+const { openModal, closeModal } = useModal();
+openModal('clientes');
+```
+
+Tipos em `ModalType` — usar quando a listagem abre de vários lugares (menu, dashboard search).
+
+Estado local (`useState show`) quando o modal pertence a **um** componente pai.
+
+## Confirmação destrutiva
+
+```tsx
+if (!window.confirm(t('messages.confirmDelete'))) return;
+```
+
+**Proibido** modal custom de confirmação.
+
+## Abas
+
+- Várias abas + overflow mobile → `ModalTabsOverflow`
+- Conteúdo de aba com tabela → `EmbeddedTablePanel`
+- Padding de aba: classes `*-tab-content-padded` + `form-modal-simple`
+
+## Checklist
+
+1. Form/detalhe → `DraggableModal`
+2. Listagem CRUD → `ListModal`
+3. Abrir do menu global → `ModalContext`
+4. Fechar → limpar estado e seleção
+5. Botões → `ModalFormActions` + rule `frontend-botoes.mdc`

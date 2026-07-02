@@ -4,7 +4,7 @@ import { useNotificationContext } from 'components/notifications/NotificationPro
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useI18n } from 'contexts/I18nContext';
-import { useBulkBtn } from 'components/ui';
+import { FileInput, useBulkBtn } from 'components/ui';
 import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
@@ -258,9 +258,8 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
 
   const modalContent = (
     <>
-      <input
+      <FileInput
         ref={fileInputRef}
-        type="file"
         accept=".sql,.tar.gz,.ndjson,.txt"
         className="visually-hidden-input"
         onChange={handleFileChange}

@@ -1,0 +1,100 @@
+---
+description: Tabelas, listagens, busca, filtros e bulk actions — padrão centralizado
+globs: frontend/**/*.tsx,frontend/**/*.ts
+alwaysApply: false
+---
+
+# Tabelas e listagens — BackNet
+
+## Componentes
+
+```tsx
+import Table from 'components/tables/Table';
+import { EmbeddedTablePanel } from 'components/common/EmbeddedTablePanel';
+import ListModal from 'components/common/ListModal';
+import { SearchBar, DateRangeFilter, TableFilterCheckbox, BulkActionButton } from 'components/ui';
+import { useEntityListModal } from 'hooks/useEntityListModal';
+import { useTableFilters } from 'hooks/useTableFilters';
+import { normalizeListPagination } from 'utils/pagination';
+```
+
+| Caso | Usar |
+|------|------|
+| Listagem CRUD em modal | `ListModal` + `useEntityListModal` |
+| Tabela em aba de modal | `EmbeddedTablePanel` + `Table` |
+| Tabela standalone / página | `Table` com `config` |
+| Busca em toolbar | `SearchBar` variant `table` ou `navbar` |
+| Filtro booleano (inativos, etc.) | `TableFilterCheckbox` |
+| Filtro por período | `DateRangeFilter` |
+| Ações em massa | `bulkActions` + `BulkActionButton` / `useBulkBtn` |
+| Paginação backend | `normalizeListPagination` + props `pagination` |
+
+## ListModal + useEntityListModal
+
+```tsx
+const list = useEntityListModal<Cliente>({ onClose, initialSearchField: 'razao_social' });
+
+<ListModal
+  show={show}
+  onClose={list.handleModalClose}
+  config={{ title, columns, searchFields, emptyMessage }}
+  data={data?.data ?? []}
+  loading={isLoading}
+  search={list.tableFilters.search}
+  onSearchChange={list.handleSearchChange}
+  sortColumn={list.tableFilters.sortColumn}
+  sortDirection={list.tableFilters.sortDirection}
+  onSortChange={list.tableFilters.setSort}
+  pagination={list.buildPagination(data?.pagination)}
+  onPageChange={list.tableFilters.setPage}
+  onLimitChange={list.tableFilters.setLimit}
+  onRefresh={refetch}
+  bulkActions={bulkActions}
+  onSelectionChange={list.handleSelectionChange}
+/>
+```
+
+- Ordenação: **sempre no backend** (`sortColumn` / `sortDirection` na query)
+- Delete em lote: loop `for...of` com `await` item a item, depois `refetch`
+- RPKI paginação client-side: `useRpkiListModal`
+
+## SearchBar
+
+| Variant | Uso |
+|---------|-----|
+| `table` | Toolbar de tabela/modal |
+| `navbar` | Header do layout |
+| `mobile` | Busca expandida mobile |
+| `inline` | Busca compacta com ícone |
+
+**Proibido** `<input type="search">` custom com classes próprias.
+
+## TableHeaderContext
+
+Listagens na **página** (não modal) com busca/recarregar no header:
+
+- `Table` com `syncWithHeader={true}`
+- Provider `TableHeaderContext` no layout
+- Mobile: `ResponsiveDialog` consome o contexto
+
+## Status em colunas
+
+```tsx
+import { renderStatusBadge, createStatusBadgeRenderer } from 'components/ui';
+
+// ✅
+render: createStatusBadgeRenderer(STATUS_MAP)
+
+// ❌
+<span className="badge bg-success">Ativo</span>
+```
+
+Ver badges em `frontend-ui-centralizado.mdc`.
+
+## Proibido
+
+- `<table>` HTML custom para CRUD
+- Paginação/busca/ordenação só no frontend (exceto RPKI client-side documentado)
+- `form-switch` ou select sim/não para filtros booleanos
+- Toolbar duplicada fora de `Table` / `TableToolbar`
+- `LoadingDots` em células — usar `Loading variant="inline"`

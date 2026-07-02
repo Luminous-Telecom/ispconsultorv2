@@ -1,0 +1,102 @@
+---
+description: Input de ficheiro centralizado — FileInput, FormField e estilos de tema
+globs: frontend/**/*.tsx,frontend/**/*.ts,frontend/**/*.scss
+alwaysApply: false
+---
+
+# File input — BackNet
+
+**Proibido** usar `<input type="file">` HTML cru visível em formulários. Use `FileInput` ou `FormField type="file"`.
+
+Import padrão:
+
+```tsx
+import { FileInput, FormField } from 'components/ui';
+```
+
+## Hierarquia
+
+| Camada | Onde | Uso |
+|--------|------|-----|
+| Componente | `components/ui/FileInput.tsx` | Único lugar que renderiza `<input type="file">` visível |
+| Formulário | `FormField type="file"` | Modais e forms com label, helpText, validação |
+| Estilos | `frontend/src/styles/_components.scss` | Bloco `input[type='file'].form-control` (tema claro/escuro) |
+
+## Quando usar cada um
+
+### `FormField type="file"` (preferir em modais)
+
+```tsx
+<FormField
+  name="arquivo"
+  type="file"
+  size="sm"
+  label={t('form.file')}
+  accept="*/*"
+  required
+  onChange={(file) => setArquivo(file as File)}
+  helpText={nomeArquivo ? `${t('form.fileSelected')}: ${nomeArquivo}` : undefined}
+/>
+```
+
+- Em modais: **`size="sm"`** (igual blockdomi e demais `form-control-sm`)
+- `onChange` recebe `File` (primeiro ficheiro selecionado)
+
+### `FileInput` direto
+
+Layout custom (ex.: blockdomi com URL + ficheiro + lixeira):
+
+```tsx
+<FileInput
+  ref={pdfInputRef}
+  size="sm"
+  className="ilb-pdf-file"
+  accept=".pdf,application/pdf"
+  onFileChange={(file) => setPdfFile(file)}
+/>
+```
+
+- Suporta `forwardRef` (limpar com `ref.current.value = ''`)
+- Props: `size`, `accept`, `multiple`, `disabled`, `onFileChange`, `onChange`
+
+## Visual (tema)
+
+Estilos globais em `_components.scss` — **não duplicar** por tela:
+
+- Campo: `--bg-secondary`, `--text-primary`, `--border-color`
+- Botão nativo "Escolher ficheiro": `--bg-tertiary`
+- Foco: mesma borda, `box-shadow: none` (padrão do projeto)
+
+Classes de **layout** específicas (ex.: `.ilb-pdf-file-cell` no blockdomi) podem existir, mas **cores** vêm do global `input[type='file'].form-control`.
+
+## Exceção: input oculto
+
+Input `type="file"` com classe utilitária oculta (`visually-hidden-input`) — só quando outro botão dispara o picker:
+
+```tsx
+<FileInput
+  ref={fileInputRef}
+  className="visually-hidden-input"
+  accept=".sql,.tar.gz"
+  onChange={handleFileChange}
+/>
+```
+
+Não estilizar nem exibir esse input; o utilizador interage via botão dedicado.
+
+## Checklist
+
+1. Upload em modal com label? → `FormField type="file"` + `size="sm"`
+2. Linha custom (URL + file + ação)? → `FileInput` + classes de layout do contexto
+3. Picker acionado por botão externo? → `FileInput` oculto + `ref`
+4. Novo estilo de botão "Escolher ficheiro"? → alterar só `_components.scss` global, não SCSS por módulo
+
+## Proibido
+
+```tsx
+// ❌ HTML cru visível
+<input type="file" className="form-control" onChange={...} />
+
+// ❌ Estilos duplicados de ::file-selector-button por tela
+.meu-modulo input[type='file']::file-selector-button { background: #fff; }
+```

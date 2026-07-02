@@ -1,0 +1,59 @@
+---
+description: Contextos React globais — loading, tema, modais, header de tabela
+globs: frontend/**/*.tsx,frontend/**/*.ts
+alwaysApply: false
+---
+
+# Contextos globais — BackNet
+
+## LoadingContext + LoadingBar
+
+```tsx
+import { useApiLoading } from 'hooks/useApiLoading';
+import { LoadingBar } from 'components/ui';
+```
+
+- HTTP: `ApiClient` integra loading global automaticamente
+- **`LoadingBar`** no layout — barra no topo durante requests
+- **`Loading`** (`components/ui`) para estados locais (modal, tabela, inline)
+- **`setExtractionLoading`**: operações longas (ex.: extração PDF blockdomi)
+
+**Proibido** `LoadingDots` em UI de conteúdo; spinner manual por request HTTP.
+
+## ThemeContext
+
+```tsx
+import { useTheme } from 'contexts/ThemeContext';
+```
+
+- `RouteAwareThemeProvider`: site (`theme-site`) vs ERP (`theme-system`)
+- `storageKey`: `'system'` | `'site'` — não misturar
+- Toggle: `IconOnlyButton` / item menu — não botão cru
+
+## ModalContext
+
+```tsx
+import { useModal } from 'contexts/ModalContext';
+```
+
+Modais globais abertos do menu/dashboard — ver `frontend-modais.mdc`.
+
+## TableHeaderContext
+
+Sincroniza busca/recarregar entre `Table` (`syncWithHeader`) e header da página + `ResponsiveDialog` mobile.
+
+## DashboardFiltersContext
+
+Filtros compartilhados dashboard ERP / SaaS — não duplicar estado de filtro fora do provider.
+
+## I18nProvider
+
+```tsx
+import { useI18n } from 'contexts/I18nContext';
+```
+
+Ver `frontend-i18n.mdc`.
+
+## SaasAuthContext
+
+Autenticação SuperAdmin — só rotas `/saas/*`.

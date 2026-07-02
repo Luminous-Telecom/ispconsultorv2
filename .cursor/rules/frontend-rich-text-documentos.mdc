@@ -1,0 +1,43 @@
+---
+description: Editor rich text (TinyMCE) e variáveis de documento
+globs: frontend/**/*.tsx,frontend/**/*.ts
+alwaysApply: false
+---
+
+# Rich text e documentos — BackNet
+
+## Editor (TinyMCE)
+
+```tsx
+import React, { Suspense } from 'react';
+import { RichTextEditor, RichTextEditorFallback } from 'components/common/RichTextEditorLazy';
+
+<Suspense fallback={<RichTextEditorFallback />}>
+  <RichTextEditor ref={editorRef} value={html} onChange={setHtml} />
+</Suspense>
+```
+
+- **Sempre lazy** via `RichTextEditorLazy` — não importar `RichTextEditor` direto sem `Suspense`
+- Fonte do conteúdo: `FONT_FAMILY_BASE` de `constants/typography.ts` no `content_style`
+- Ver `frontend-tipografia.mdc`
+
+## Variáveis de documento
+
+```tsx
+import VariaveisDocumento from 'components/common/VariaveisDocumento';
+```
+
+- Painel accordion com variáveis disponíveis
+- Inserir: callback `onInserirVariavel` | copiar: `CopiarButton` + `useCopyToClipboard`
+- Busca: `SearchBar variant="table"`
+
+**Proibido** painel de variáveis custom duplicado.
+
+## Copiar variável/código
+
+```tsx
+import { CopiarButton } from 'components/ui';
+import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
+```
+
+Preferir `CopiarButton iconOnly` — ver `frontend-botoes.mdc`.

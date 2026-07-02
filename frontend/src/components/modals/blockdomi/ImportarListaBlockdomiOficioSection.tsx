@@ -7,6 +7,7 @@ import {
   LabelWithHelp,
   Loading,
   IconOnlyButton,
+  FileInput,
 } from 'components/ui';
 import type { BlockdomiImportTranslateFn } from './importarListaBlockdomiTypes';
 
@@ -180,12 +181,12 @@ const ImportarListaBlockdomiOficioSection: React.FC<ImportarListaBlockdomiOficio
             onChange={(e) => onLinkOficioAnatelChange(e.target.value)}
           />
           <div className="ilb-pdf-file-cell">
-            <input
+            <FileInput
               ref={pdfAnatelInputRef}
-              type="file"
-              className="form-control form-control-sm ilb-pdf-file"
+              size="sm"
+              className="ilb-pdf-file"
               accept=".pdf,application/pdf"
-              onChange={(e) => onPdfAnatelFileChange(e.target.files?.[0] ?? null)}
+              onFileChange={onPdfAnatelFileChange}
             />
             <IconOnlyButton
               type="button"
@@ -215,12 +216,12 @@ const ImportarListaBlockdomiOficioSection: React.FC<ImportarListaBlockdomiOficio
             onChange={(e) => onLinkOficioJusticaChange(e.target.value)}
           />
           <div className="ilb-pdf-file-cell">
-            <input
+            <FileInput
               ref={pdfJusticaInputRef}
-              type="file"
-              className="form-control form-control-sm ilb-pdf-file"
+              size="sm"
+              className="ilb-pdf-file"
               accept=".pdf,application/pdf"
-              onChange={(e) => onPdfJusticaFileChange(e.target.files?.[0] ?? null)}
+              onFileChange={onPdfJusticaFileChange}
             />
             <IconOnlyButton
               type="button"
@@ -248,12 +249,12 @@ const ImportarListaBlockdomiOficioSection: React.FC<ImportarListaBlockdomiOficio
             onChange={(e) => onLinkPlanilhaDominiosChange(e.target.value)}
           />
           <div className="ilb-pdf-file-cell">
-            <input
+            <FileInput
               ref={pdfFileInputRef}
-              type="file"
-              className="form-control form-control-sm ilb-pdf-file"
+              size="sm"
+              className="ilb-pdf-file"
               accept=".pdf,application/pdf"
-              onChange={(e) => onPdfMainFileChange(e.target.files?.[0] ?? null)}
+              onFileChange={onPdfMainFileChange}
             />
             <IconOnlyButton
               type="button"

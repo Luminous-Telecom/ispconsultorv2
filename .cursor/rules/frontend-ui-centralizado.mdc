@@ -8,6 +8,28 @@ alwaysApply: false
 
 Antes de criar spinner, toast, modal ou botão custom, use o que já existe em `components/ui` e `components/common`.
 
+## Índice de rules especializadas
+
+| Tema | Rule |
+|------|------|
+| Botões | `frontend-botoes.mdc` |
+| File input | `frontend-file-input.mdc` |
+| Layout form modal | `frontend-form-modal-layout.mdc` |
+| Form CRUD / blocos | `frontend-formularios-crud.mdc` |
+| Tabelas / listagens | `frontend-tabelas.mdc` |
+| Modais | `frontend-modais.mdc` |
+| i18n | `frontend-i18n.mdc` |
+| Erros API | `frontend-erros-api.mdc` |
+| Contextos globais | `frontend-contextos.mdc` |
+| Impressão / auditoria | `frontend-impressao-auditoria.mdc` |
+| Rich text / documentos | `frontend-rich-text-documentos.mdc` |
+| Design tokens / sem inline | `frontend-design-tokens.mdc` |
+| Tipografia | `frontend-tipografia.mdc` |
+| Hooks utilitários | `frontend-hooks-utilitarios.mdc` |
+| Terminal / logs | `frontend-terminal-logs.mdc` |
+| React geral | `frontend-react.mdc` |
+| Pós-alteração / build | `frontend-verificacao-pos-alteracao.mdc` |
+
 ## Loading
 
 ```tsx
@@ -53,6 +75,7 @@ onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.ENTITY_CREATE_ERROR),
 ## Formulários e labels
 
 - Campos: `FormField`, `EntitySelectField`, `AtivoInativoField`, `ComunicacaoPreferenciasField`, `TableFilterCheckbox`
+- **Ficheiro / upload**: `FormField type="file"` ou `FileInput` — ver `.cursor/rules/frontend-file-input.mdc`
 - **Layout em modais**: ver `.cursor/rules/frontend-form-modal-layout.mdc` (`col-12`, label à esquerda, sem `switch`)
 - **Inputs de texto** (login, filtros, telas avulsas): `Input` de `components/ui` — classe `form-control`, tamanho global em `_components.scss` (`--font-size-sm`, padding padrão, `--border-radius`). **Não** criar classes CSS com `height` fixo (ex.: 48px) nem estilos duplicados de borda/foco
 - **Foco de inputs** (padrão global — ver seção abaixo): sem `box-shadow`, sem mudar `border-color` no `:focus`
@@ -94,17 +117,35 @@ Ao criar ou estilizar campos (`input`, `textarea`, `select`, `.form-control`, `.
 
 ## Listagens e modais
 
-- CRUD em modal: `ListModal` + `useEntityListModal`
+- CRUD em modal: `ListModal` + `useEntityListModal` — ver `frontend-tabelas.mdc`, `frontend-modais.mdc`
 - Tabela em aba: `EmbeddedTablePanel`
 - Modal base: `DraggableModal`
 - Abas com overflow: `ModalTabsOverflow`
-- Status: `StatusBadge` / `renderStatusBadge`
+- Detalhe somente leitura: `DetailFieldGrid` (grid multi-col com `form-modal-multi-col` se necessário)
+- Card container: `Card` de `components/ui` — não reinventar card Bootstrap
+
+## Status e badges
+
+```tsx
+import { StatusBadge, renderStatusBadge, createStatusBadgeRenderer, Badge } from 'components/ui';
+
+// Coluna de tabela
+render: createStatusBadgeRenderer({ ativo: 'success', inativo: 'secondary' })
+
+// Inline
+<StatusBadge variant="success" label={t('status.active')} />
+```
+
+- **`StatusBadge` / `renderStatusBadge`**: status de entidade (ativo, pago, pendente…)
+- **`Badge`**: contadores, etiquetas genéricas
+- **Proibido** `<span className="badge bg-*">` ad hoc em colunas
 
 ## Hooks e dados
 
 - Servidor: React Query (`staleTime: 0`), `invalidateQueries` + `refetch` após mutation
-- i18n: `useI18n().t()` — não strings fixas em português quando já existe chave
-- Erros: constantes em `constants/ErrorMessages.ts`
+- i18n: `useI18n().t()` — ver `frontend-i18n.mdc`
+- Erros: `showApiError` + `CONTEXT_ERROR_MESSAGES` — ver `frontend-erros-api.mdc`
+- Loading HTTP: `LoadingBar` + `useApiLoading` — ver `frontend-contextos.mdc`
 
 ## Checklist ao implementar
 

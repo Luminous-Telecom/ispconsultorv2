@@ -1,0 +1,58 @@
+---
+description: Hooks utilitários reutilizáveis — clipboard, media query, debounce, DOM dinâmico
+globs: frontend/**/*.tsx,frontend/**/*.ts
+alwaysApply: false
+---
+
+# Hooks utilitários — BackNet
+
+## Clipboard
+
+```tsx
+import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
+import { CopiarButton } from 'components/ui';
+```
+
+**Proibido** `navigator.clipboard` / `document.execCommand` espalhado — use o hook.
+
+## Responsivo
+
+```tsx
+import { useIsMobile, useMediaQuery } from 'hooks/useMediaQuery';
+```
+
+**Proibido** `window.innerWidth` / listeners manuais de resize.
+
+## Debounce
+
+```tsx
+import { useDebouncedValue } from 'hooks/useDebouncedValue';
+```
+
+Busca com debounce: preferir `useTableFilters` (já inclui debounce) — `useDebouncedValue` só fora de tabelas.
+
+## Estilos dinâmicos (sem inline JSX)
+
+```tsx
+import { useElementProperties } from 'hooks/useElementProperties';
+import { DynamicProgressBar, PositionedFixed } from 'components/ui';
+```
+
+Ver `frontend-design-tokens.mdc` — **proibido** `style={{}}` no JSX.
+
+## Hover real (touch)
+
+`usePrefersRealHover` — gráficos/tooltips que diferenciam touch de mouse.
+
+## Form helpers
+
+| Hook | Uso |
+|------|-----|
+| `useFormId` | ID único de form |
+| `useFormReset` | Reset ao fechar modal |
+| `useFormPrefix` | Prefixo de campos aninhados |
+
+## Listagens especializadas
+
+- `useRpkiListModal` — listagens RPKI (paginação client-side)
+- `useSelectModal` — seleção única em ListModal

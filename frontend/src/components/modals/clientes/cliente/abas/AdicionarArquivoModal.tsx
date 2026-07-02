@@ -124,6 +124,7 @@ const AdicionarArquivoModal: React.FC<AdicionarArquivoModalProps> = ({
               <FormField
                 name="arquivo"
                 type="file"
+                size="sm"
                 label={t('form.file')}
                 required
                 accept="*/*"

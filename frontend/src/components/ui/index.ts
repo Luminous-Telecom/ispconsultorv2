@@ -2,6 +2,8 @@
 export * from './buttons';
 export type { ButtonVariant, ButtonSize } from './Button';
 export { default as Input } from './Input';
+export { FileInput } from './FileInput';
+export type { FileInputProps, FileInputSize } from './FileInput';
 export { default as Select } from './Select';
 export { default as Checkbox } from './Checkbox';
 export { default as FormField } from './FormField';

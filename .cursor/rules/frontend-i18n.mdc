@@ -1,0 +1,58 @@
+---
+description: Internacionalização — useI18n, chaves e locales
+globs: frontend/**/*.tsx,frontend/**/*.ts
+alwaysApply: false
+---
+
+# i18n — BackNet
+
+## Uso obrigatório em UI interna
+
+```tsx
+import { useI18n } from 'contexts/I18nContext';
+
+const { t, language, setLanguage } = useI18n();
+
+<label>{t('form.email')}</label>
+<NovoButton entity={t('entities.client')} onClick={...} />
+t('messages.itemsDeleted', { count: 3 });
+```
+
+**Proibido** strings fixas em português em labels, botões, toasts e placeholders de telas internas (ERP, SaaS, central assinante).
+
+## Ao adicionar chave nova
+
+1. `frontend/src/i18n/translationKeys.ts` — tipo `TranslationKeys`
+2. `frontend/src/i18n/locales/pt-BR.ts`
+3. `frontend/src/i18n/locales/en-US.ts`
+4. `frontend/src/i18n/locales/es-ES.ts`
+
+**Proibido** chave só em um locale ou só no `.ts` sem `translationKeys.ts`.
+
+## Parâmetros
+
+```tsx
+t('buttons.createEntity', { entity: 'Cliente' });
+t('pagination.showing', { from, to, total });
+```
+
+## Exceções (podem ficar em português fixo)
+
+- `constants/ErrorMessages.ts` — fallbacks de erro (toast via `showApiError`)
+- Páginas marketing `/` (home) — copy estático permitido
+- Logs de desenvolvimento (`console.debug`) — nunca para usuário
+
+## Seletor de idioma
+
+- Layout ERP: `LanguageSelector` / `LanguageDropdown` via `AppUserMenu`
+- Não reinventar dropdown de idioma
+
+## Botões do sistema
+
+Labels de `*Button` vêm de `SYSTEM_BUTTON_CONFIG.i18nKey` — não passar `label` salvo override pontual (`ConfirmModal` dinâmico).
+
+## Checklist
+
+- [ ] Texto visível ao usuário → `t('...')`
+- [ ] Chave nos 3 locales + `translationKeys.ts`
+- [ ] Build/typecheck após keys novas (ver `frontend-verificacao-pos-alteracao.mdc`)

@@ -1,0 +1,71 @@
+---
+description: Erros de API, toasts e constantes ErrorMessages
+globs: frontend/**/*.tsx,frontend/**/*.ts
+alwaysApply: false
+---
+
+# Erros de API — BackNet
+
+## Padrão obrigatório
+
+```tsx
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
+
+const { showApiError } = useApiError();
+
+// Mutation
+onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CLIENT_CREATE_ERROR),
+
+// try/catch
+catch (err) {
+  showApiError(err, CONTEXT_ERROR_MESSAGES.ENTITY_SAVE_ERROR);
+}
+```
+
+- Extração centralizada: `utils/apiErrorHelper.ts` (`extractApiErrorMessageSync`)
+- Toast: `useNotificationContext().error` — **nunca** chamado direto para erro de API (use `showApiError`)
+
+## Constantes
+
+| Arquivo | Uso |
+|---------|-----|
+| `ERROR_MESSAGES.*` | Erros genéricos (rede, 500, validação) |
+| `CONTEXT_ERROR_MESSAGES.*` | Erro por domínio/ação (`CLIENT_LOAD_ERROR`, `TITULO_SEND_EMAIL_ERROR`, …) |
+
+Ao criar fluxo novo com mutation, **adicione** constante contextual se não existir equivalente.
+
+## Sucesso
+
+```tsx
+const { success } = useNotificationContext();
+success(response.message || t('messages.savedSuccess'));
+```
+
+Mensagem curta no toast; detalhes (contagens, IDs) em logs/auditoria — não no toast.
+
+## useErrorHandler
+
+`hooks/useErrorHandler.ts` — log interno / localStorage para debug.
+
+**Não** usar para feedback ao usuário — use `showApiError`.
+
+## Proibido
+
+```tsx
+// ❌ Parse manual
+catch (e) {
+  error((e as AxiosError).response?.data?.message ?? 'Erro');
+}
+
+// ❌ Feedback ao usuário
+console.log('Erro ao salvar');
+alert('Falhou');
+
+// ❌ String hardcoded em onError
+onError: () => error('Erro ao criar cliente');
+```
+
+## Backend
+
+Respostas `{ success, message, data }` — ver `backend-api.mdc`. Campo `message` = texto curto para toast.

@@ -4413,6 +4413,34 @@ body[data-app="system"] select:focus,
   outline: none !important;
 }
 
+/* File input — botão "Escolher ficheiro" alinhado ao tema */
+input[type='file'].form-control {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+input[type='file'].form-control::file-selector-button {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+  border-right: 1px solid var(--border-color) !important;
+}
+
+input[type='file'].form-control::-webkit-file-upload-button {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+  border-right: 1px solid var(--border-color) !important;
+}
+
+input[type='file'].form-control:focus,
+input[type='file'].form-control:focus-visible {
+  border-color: var(--border-color) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
 .central-assinante-container .form-control:focus,
 .central-assinante-container .form-select:focus,
 .central-assinante-container input:focus,
@@ -4765,29 +4793,6 @@ input[type="week"]::-moz-calendar-picker-indicator {
   line-height: 1.25;
 }
 
-/* File input no importar lista: mesmo visual no input-group e nas linhas em grid */
-.importar-lista-blockdomi .input-group input[type='file'].form-control,
-.importar-lista-blockdomi .ilb-pdf-url-file-row .ilb-pdf-file {
-  background-color: var(--bg-secondary) !important;
-  color: var(--text-primary) !important;
-  border-color: var(--border-color) !important;
-}
-
-.importar-lista-blockdomi .input-group input[type='file'].form-control::file-selector-button,
-.importar-lista-blockdomi .ilb-pdf-url-file-row .ilb-pdf-file::file-selector-button {
-  background-color: var(--bg-tertiary) !important;
-  color: var(--text-primary) !important;
-  border-color: var(--border-color) !important;
-  border-right: 1px solid var(--border-color) !important;
-}
-
-.importar-lista-blockdomi .input-group input[type='file'].form-control::-webkit-file-upload-button,
-.importar-lista-blockdomi .ilb-pdf-url-file-row .ilb-pdf-file::-webkit-file-upload-button {
-  background-color: var(--bg-tertiary) !important;
-  color: var(--text-primary) !important;
-  border-color: var(--border-color) !important;
-  border-right: 1px solid var(--border-color) !important;
-}
 .importar-lista-blockdomi .input-group.input-group-sm .btn {
   align-self: stretch !important;
   display: inline-flex !important;

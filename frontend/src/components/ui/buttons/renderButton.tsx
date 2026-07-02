@@ -34,43 +34,30 @@ export function renderSystemButton({
   ...rest
 }: RenderSystemButtonProps): React.ReactElement {
   const loading = isPending ?? isLoading ?? false;
+
+  if (iconOnly) {
+    return (
+      <Button
+        ref={ref}
+        type={type}
+        variant={variant}
+        size={size}
+        isLoading={loading}
+        className={className}
+        aria-label={label}
+        title={label}
+        {...rest}
+      >
+        {iconClassName ? (
+          <i className={iconClassName} aria-hidden="true" />
+        ) : (
+          children ?? null
+        )}
+      </Button>
+    );
+  }
+
   const content = children ?? label;
-
-  if (iconOnly && iconClassName) {
-    return (
-      <Button
-        ref={ref}
-        type={type}
-        variant={variant}
-        size={size}
-        isLoading={loading}
-        className={className}
-        aria-label={label}
-        title={label}
-        {...rest}
-      >
-        <i className={iconClassName} aria-hidden="true" />
-      </Button>
-    );
-  }
-
-  if (iconOnly && !iconClassName && children) {
-    return (
-      <Button
-        ref={ref}
-        type={type}
-        variant={variant}
-        size={size}
-        isLoading={loading}
-        className={className}
-        aria-label={label}
-        title={label}
-        {...rest}
-      >
-        {children}
-      </Button>
-    );
-  }
 
   return (
     <Button
