@@ -206,7 +206,7 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
         </div>
       }
     >
-      <form id="saas-plano-form" onSubmit={handleSubmit}>
+      <form id="saas-plano-form" onSubmit={handleSubmit} className="form-modal-simple">
         <div className="plano-modal-content">
           <div className="tab-content plano-tab-content plano-tab-content-padded">
             {activeTab === 'geral' && (

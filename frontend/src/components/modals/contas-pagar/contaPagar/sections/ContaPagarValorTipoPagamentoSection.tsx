@@ -22,50 +22,46 @@ const ContaPagarValorTipoPagamentoSection: React.FC<ContaPagarValorTipoPagamento
   const { t } = useI18n();
 
   return (
-    <div className="d-flex gap-2">
-      <div className="flex-fill">
-        <FormField
-          name="valor"
-          type="text"
-          label={t('form.value')}
-          value={formData.valor}
-          onChange={(value) => {
-            const cleaned = String(value || '').replace(/\D/g, '');
-            if (cleaned === '') {
-              onFieldChange('valor', '');
-              return;
-            }
-            const num = parseInt(cleaned, 10) / 100;
-            const formatted = formatCurrency(num, false);
-            onFieldChange('valor', formatted);
-            onClearError('valor');
-          }}
-          placeholder="0,00"
-          required
-          size="sm"
-          error={errors.valor}
-        />
-      </div>
-      <div className="flex-fill">
-        <FormField
-          name="tipo_pagamento"
-          type="select"
-          label={t('form.paymentType')}
-          value={formData.tipo_pagamento}
-          onChange={(value) => onTipoPagamentoChange(value as ContaPagarFormData['tipo_pagamento'])}
-          options={[
-            { value: 'PIX', label: t('form.paymentTypePix') },
-            { value: 'DINHEIRO', label: t('form.paymentTypeCash') },
-            { value: 'BOLETO', label: t('form.paymentTypeBoleto') },
-            { value: 'CARTAO', label: t('form.paymentTypeCard') },
-            { value: 'DEPOSITO', label: t('form.paymentTypeDeposit') },
-            { value: 'DEBITO_CONTA', label: t('form.paymentTypeDebit') },
-            { value: 'TRANSFERENCIA', label: t('form.paymentTypeTransfer') }
-          ]}
-          size="sm"
-        />
-      </div>
-    </div>
+    <>
+      <FormField
+        name="valor"
+        type="text"
+        label={t('form.value')}
+        value={formData.valor}
+        onChange={(value) => {
+          const cleaned = String(value || '').replace(/\D/g, '');
+          if (cleaned === '') {
+            onFieldChange('valor', '');
+            return;
+          }
+          const num = parseInt(cleaned, 10) / 100;
+          const formatted = formatCurrency(num, false);
+          onFieldChange('valor', formatted);
+          onClearError('valor');
+        }}
+        placeholder="0,00"
+        required
+        size="sm"
+        error={errors.valor}
+      />
+      <FormField
+        name="tipo_pagamento"
+        type="select"
+        label={t('form.paymentType')}
+        value={formData.tipo_pagamento}
+        onChange={(value) => onTipoPagamentoChange(value as ContaPagarFormData['tipo_pagamento'])}
+        options={[
+          { value: 'PIX', label: t('form.paymentTypePix') },
+          { value: 'DINHEIRO', label: t('form.paymentTypeCash') },
+          { value: 'BOLETO', label: t('form.paymentTypeBoleto') },
+          { value: 'CARTAO', label: t('form.paymentTypeCard') },
+          { value: 'DEPOSITO', label: t('form.paymentTypeDeposit') },
+          { value: 'DEBITO_CONTA', label: t('form.paymentTypeDebit') },
+          { value: 'TRANSFERENCIA', label: t('form.paymentTypeTransfer') }
+        ]}
+        size="sm"
+      />
+    </>
   );
 };
 

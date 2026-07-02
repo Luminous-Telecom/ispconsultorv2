@@ -106,8 +106,8 @@ const DominioBulkEditModal: React.FC<DominioBulkEditModalProps> = ({
         <p className="text-muted form-hint small mb-3">
           {t('blockdomi.bulkEditIntro').replace('{count}', String(count))}
         </p>
-        <form onSubmit={handleSubmit}>
-          <div className="row g-3">
+        <form onSubmit={handleSubmit} className="form-modal-simple">
+          <div className="row g-2">
             <BlockdomiOficioFormFields
               value={pickBlockdomiOficioFormFields(formData)}
               onChange={(patch) => setFormData((prev) => ({ ...prev, ...patch }))}

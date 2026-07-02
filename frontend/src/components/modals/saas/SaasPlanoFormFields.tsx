@@ -125,29 +125,33 @@ export const SaasPlanoGeralFormFields: React.FC<SaasPlanoGeralFormFieldsProps> =
             />
           </div>
         </div>
-      </div>
-      <div className="mb-2">
-        <LabelWithHelp className="form-label small" helpText={t('saas.planModulesHelp')}>
-          {t('saas.planModules')}
-        </LabelWithHelp>
-        <div className="d-flex flex-wrap gap-3">
-          {PLANO_MODULOS.map((mod) => (
-            <label key={mod.id} className="d-flex align-items-center gap-2 small">
-              <input
-                type="checkbox"
-                checked={form.modulos.includes(mod.id)}
-                onChange={(e) => {
-                  onFieldChange(
-                    'modulos',
-                    e.target.checked
-                      ? [...form.modulos, mod.id]
-                      : form.modulos.filter((m) => m !== mod.id)
-                  );
-                }}
-              />
-              <span>{mod.label}</span>
-            </label>
-          ))}
+        <div className="col-12">
+          <div className="form-field mb-0">
+            <LabelWithHelp className="form-label small" helpText={t('saas.planModulesHelp')}>
+              {t('saas.planModules')}
+            </LabelWithHelp>
+            <div className="form-field-control">
+              <div className="d-flex flex-wrap gap-3">
+                {PLANO_MODULOS.map((mod) => (
+                  <label key={mod.id} className="d-flex align-items-center gap-2 small">
+                    <input
+                      type="checkbox"
+                      checked={form.modulos.includes(mod.id)}
+                      onChange={(e) => {
+                        onFieldChange(
+                          'modulos',
+                          e.target.checked
+                            ? [...form.modulos, mod.id]
+                            : form.modulos.filter((m) => m !== mod.id)
+                        );
+                      }}
+                    />
+                    <span>{mod.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </>

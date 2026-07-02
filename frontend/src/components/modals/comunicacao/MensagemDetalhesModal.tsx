@@ -77,7 +77,7 @@ const MensagemDetalhesModal: React.FC<MensagemDetalhesModalProps> = ({
     >
       <div className="p-3 logs-auditoria-details">
         <div className="row g-2">
-          <div className="col-md-6">
+          <div className="col-12">
             <FormField
               name="mensagem_id"
               type="text"
@@ -88,7 +88,7 @@ const MensagemDetalhesModal: React.FC<MensagemDetalhesModalProps> = ({
               readOnly
             />
           </div>
-          <div className="col-md-6">
+          <div className="col-12">
             <FormField
               name="mensagem_tipo"
               type="text"
@@ -99,7 +99,7 @@ const MensagemDetalhesModal: React.FC<MensagemDetalhesModalProps> = ({
               readOnly
             />
           </div>
-          <div className="col-md-6">
+          <div className="col-12">
             <FormField
               name="mensagem_status"
               type="text"
@@ -111,7 +111,7 @@ const MensagemDetalhesModal: React.FC<MensagemDetalhesModalProps> = ({
               className={mensagem.status === 'erro' ? 'text-danger' : undefined}
             />
           </div>
-          <div className="col-md-6">
+          <div className="col-12">
             <FormField
               name="mensagem_created_at"
               type="text"
@@ -122,7 +122,7 @@ const MensagemDetalhesModal: React.FC<MensagemDetalhesModalProps> = ({
               readOnly
             />
           </div>
-          <div className="col-md-6">
+          <div className="col-12">
             <FormField
               name="mensagem_cliente"
               type="text"
@@ -134,7 +134,7 @@ const MensagemDetalhesModal: React.FC<MensagemDetalhesModalProps> = ({
             />
           </div>
           {empresaText ? (
-            <div className="col-md-6">
+            <div className="col-12">
               <FormField
                 name="mensagem_empresa"
                 type="text"
@@ -146,7 +146,7 @@ const MensagemDetalhesModal: React.FC<MensagemDetalhesModalProps> = ({
               />
             </div>
           ) : null}
-          <div className="col-md-6">
+          <div className="col-12">
             <FormField
               name="mensagem_destinatario"
               type="text"
@@ -159,7 +159,7 @@ const MensagemDetalhesModal: React.FC<MensagemDetalhesModalProps> = ({
             />
           </div>
           {mensagem.tipo === 'email' ? (
-            <div className="col-md-6">
+            <div className="col-12">
               <FormField
                 name="mensagem_titulo"
                 type="text"
@@ -172,7 +172,7 @@ const MensagemDetalhesModal: React.FC<MensagemDetalhesModalProps> = ({
             </div>
           ) : null}
           {(mensagem.entidade_tipo || mensagem.entidade_id) ? (
-            <div className="col-md-6">
+            <div className="col-12">
               <FormField
                 name="mensagem_entidade"
                 type="text"
@@ -184,7 +184,7 @@ const MensagemDetalhesModal: React.FC<MensagemDetalhesModalProps> = ({
               />
             </div>
           ) : null}
-          <div className="col-md-6">
+          <div className="col-12">
             <FormField
               name="mensagem_usuario"
               type="text"

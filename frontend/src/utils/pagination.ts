@@ -29,13 +29,14 @@ export function normalizeListPagination(
   fallbackLimit: number
 ): ListPagination {
   if (!pagination || typeof pagination !== 'object') {
+    const lastPage = Math.max(1, fallbackPage);
     return {
       current_page: fallbackPage,
-      last_page: 1,
+      last_page: lastPage,
       per_page: fallbackLimit,
       total: 0,
-      from: 0,
-      to: 0,
+      from: fallbackPage > 1 ? (fallbackPage - 1) * fallbackLimit + 1 : 0,
+      to: fallbackPage * fallbackLimit,
     };
   }
 
@@ -49,6 +50,7 @@ export function normalizeListPagination(
   } else if (!lastPage) {
     lastPage = 1;
   }
+  lastPage = Math.max(lastPage, fallbackPage);
 
   const safePage = Math.min(Math.max(1, currentPage), lastPage);
 

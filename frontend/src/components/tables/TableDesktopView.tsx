@@ -99,7 +99,15 @@ function TableDesktopView<T extends { id: number | string }>({
   useElementProperties(tableRef, { '--table-min-width': `${tableMinWidth}px` }, [tableMinWidth]);
 
   return (
-    <div ref={tableScrollRef} className="table-responsive table-responsive-custom">
+    <div
+      ref={tableScrollRef}
+      className={`table-responsive table-responsive-custom${loading ? ' table-responsive-custom--loading' : ''}`.trim()}
+    >
+      {loading && (
+        <div className="table-loading-overlay" aria-busy="true" aria-live="polite">
+          <Loading variant="centered" size="sm" message={loadingMessage} showMessage={false} />
+        </div>
+      )}
       {resizeGuideStyle != null && (
         <DynamicStyledElement
           className="table-resize-guide"
@@ -169,10 +177,8 @@ function TableDesktopView<T extends { id: number | string }>({
 
         {loading ? (
           <tbody>
-            <tr>
-              <td colSpan={colSpan} className="text-center">
-                <Loading variant="inline" size="sm" message={loadingMessage} showMessage={false} />
-              </td>
+            <tr className="table-body-loading-spacer">
+              <td colSpan={colSpan} className="table-body-loading-spacer-cell" aria-hidden="true" />
             </tr>
           </tbody>
         ) : paginatedData.length === 0 ? (

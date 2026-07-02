@@ -22,7 +22,7 @@ const AspasSection: React.FC<AspasSectionProps> = ({
     <div className="card-header">ASPAs</div>
     <div className="card-body">
       <div className="row g-2 mb-2">
-        <div className="col-md-3">
+        <div className="col-12">
           <FormField
             name="aspa_ca_id"
             type="select"
@@ -33,7 +33,7 @@ const AspasSection: React.FC<AspasSectionProps> = ({
             onChange={(value) => setAspaCaId(String(value ?? ''))}
           />
         </div>
-        <div className="col-md-3">
+        <div className="col-12">
           <FormField
             name="customer_asn"
             label="Customer ASN"
@@ -42,7 +42,7 @@ const AspasSection: React.FC<AspasSectionProps> = ({
             onChange={(value) => setCustomerAsn(String(value ?? ''))}
           />
         </div>
-        <div className="col-md-4">
+        <div className="col-12">
           <FormField
             name="providers"
             label="Providers ASN (csv)"
@@ -51,8 +51,10 @@ const AspasSection: React.FC<AspasSectionProps> = ({
             onChange={(value) => setProviders(String(value ?? ''))}
           />
         </div>
-        <div className="col-md-2 d-flex align-items-end">
-          <SalvarButton type="button" onClick={handleSaveAspa} />
+        <div className="col-12">
+          <div className="form-modal-input-col">
+            <SalvarButton type="button" onClick={handleSaveAspa} />
+          </div>
         </div>
       </div>
       <div className="table-responsive">

@@ -4,7 +4,7 @@ import { useExecutarAcaoOrdemServico } from 'hooks/useOrdensServico';
 import { useTecnicos, useSetores, useAssuntos } from 'hooks/useIxcLookups';
 import type { OrdemServico } from 'services/ordemServicoService';
 import DraggableModal from 'components/common/DraggableModal';
-import { EntitySelectField, FormField, ModalFormActions, LabelWithHelp } from 'components/ui';
+import { EntitySelectField, FormField, ModalFormActions, AtivoInativoField } from 'components/ui';
 import IxcLookupSelectModal from './IxcLookupSelectModal';
 import { clearDependentesAoMudarSetor, type OrdemServicoAcao } from './ordemServicoAcoes';
 import { ixcToDatetimeLocal, datetimeLocalToIxc } from 'utils/ixcDateTime';
@@ -195,12 +195,12 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
         <form
           id="ordem-servico-acao-form"
           onSubmit={handleSubmit}
-          className="modal-inner-padding"
+          className="form-modal-simple"
         >
           <div className="row g-2">
             {acao === 'agendar' && (
               <>
-                <div className="col-md-6">
+                <div className="col-12">
                   <FormField
                     name="data_agenda"
                     type="datetime-local"
@@ -213,7 +213,7 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
                     disabled={isPending}
                   />
                 </div>
-                <div className="col-md-6">
+                <div className="col-12">
                   <FormField
                     name="data_agenda_final"
                     type="datetime-local"
@@ -245,44 +245,27 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
             {acao === 'encaminhar' && (
               <>
                 <div className="col-12">
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      id="altera-setor-encaminhamento"
-                      checked={form.alteraSetorEncaminhamento === 'S'}
-                      onChange={(e) => handleAlteraSetorToggle(e.target.checked)}
-                      disabled={isPending}
-                    />
-                    <label className="form-check-label" htmlFor="altera-setor-encaminhamento">
-                      Alterar setor do encaminhamento
-                    </label>
-                  </div>
+                  <AtivoInativoField
+                    value={form.alteraSetorEncaminhamento === 'S'}
+                    onChange={(v) => handleAlteraSetorToggle(v)}
+                    label="Alterar setor do encaminhamento"
+                    name="altera-setor-encaminhamento"
+                    disabled={isPending}
+                  />
                 </div>
                 <div className="col-12">
                   {setorEncaminhamentoDesabilitado ? (
-                    <div className="mb-1">
-                      <LabelWithHelp className="form-label small" required>
-                        Setor
-                      </LabelWithHelp>
-                      <div className="input-group">
-                        <input
-                          readOnly
-                          type="text"
-                          className="form-control text-center id-field"
-                          value={form.setor}
-                        />
-                        <input
-                          readOnly
-                          type="text"
-                          className="form-control entity-select-input"
-                          value={setorNome}
-                        />
-                      </div>
-                      {errors.setor && (
-                        <div className="invalid-feedback entity-select-error d-block">{errors.setor}</div>
-                      )}
-                    </div>
+                    <FormField
+                      name="setor_readonly"
+                      type="text"
+                      label="Setor"
+                      value={setorNome || form.setor}
+                      onChange={() => {}}
+                      readOnly
+                      error={errors.setor}
+                      isInvalid={!!errors.setor}
+                      size="sm"
+                    />
                   ) : (
                     <EntitySelectField
                       stringIdMode

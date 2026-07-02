@@ -121,7 +121,7 @@ Ao criar ou estilizar campos (`input`, `textarea`, `select`, `.form-control`, `.
 - Tabela em aba: `EmbeddedTablePanel`
 - Modal base: `DraggableModal`
 - Abas com overflow: `ModalTabsOverflow`
-- Detalhe somente leitura: `DetailFieldGrid` (grid multi-col com `form-modal-multi-col` se necessário)
+- Detalhe somente leitura: `DetailFieldGrid` (campos em `col-12` + `FormField` readOnly)
 - Card container: `Card` de `components/ui` — não reinventar card Bootstrap
 
 ## Status e badges

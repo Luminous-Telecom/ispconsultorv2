@@ -54,10 +54,9 @@ function DocumentoModalBody({
   const editorKeyPrefix = `${isEditing ? currentDocumento?.id : 'create'}`;
 
   return (
-    <div className="modal-inner-padding">
-      <form onSubmit={onSubmit}>
+    <form onSubmit={onSubmit} className="form-modal-simple">
         <div className="row g-2 mb-0">
-          <div className="col-md-6">
+          <div className="col-12">
             <FormField
               name="nome"
               type="text"
@@ -69,7 +68,7 @@ function DocumentoModalBody({
               size="sm"
             />
           </div>
-          <div className="col-md-6">
+          <div className="col-12">
             <FormField
               name="descricao"
               type="text"
@@ -80,7 +79,7 @@ function DocumentoModalBody({
               size="sm"
             />
           </div>
-          <div className="col-md-12">
+          <div className="col-12">
             <EntitySelectField
               value={clienteTesteId || 0}
               onChange={(value) => setClienteTesteId(value)}
@@ -151,7 +150,6 @@ function DocumentoModalBody({
           )}
         </div>
       </form>
-    </div>
   );
 }
 

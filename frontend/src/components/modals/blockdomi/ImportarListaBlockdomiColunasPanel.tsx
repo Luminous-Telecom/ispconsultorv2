@@ -3,6 +3,7 @@ import {
   AplicarSelecaoButton,
   LimparButton,
   SelecionarButton,
+  TableFilterCheckbox,
 } from 'components/ui';
 import type { BlockdomiImportTranslateFn } from './importarListaBlockdomiTypes';
 
@@ -52,35 +53,30 @@ const ImportarListaBlockdomiColunasPanel: React.FC<ImportarListaBlockdomiColunas
         />
       </div>
     </div>
-    <div className="d-flex flex-wrap gap-2 p-2">
+    <div className="row g-2 p-2">
       {Object.entries(colunasDisponiveis).map(([header, items]) => {
         const selecionada = colunasSeleccionadas.has(header);
         return (
-          <div
-            key={header}
-            className={`blockdomi-column-card ${selecionada ? 'blockdomi-column-card--selected' : ''}`}
-          >
-            <label
-              className={`blockdomi-column-header ${selecionada ? 'blockdomi-column-header--selected' : ''}`}
-            >
-              <input
-                type="checkbox"
-                className="form-check-input m-0 flex-shrink-0"
-                checked={selecionada}
-                onChange={() => onColunaToggle(header)}
-              />
-              <span className="small fw-semibold text-truncate flex-grow-1" title={header}>{header}</span>
-              <span className="small flex-shrink-0 opacity-80">{items.length}</span>
-            </label>
-            <div className="blockdomi-column-items">
-              {items.length === 0 ? (
-                <span className="opacity-50">{t('blockdomi.none')}</span>
-              ) : (
-                items.map((item, i) => (
+          <div key={header} className="col-12">
+            <TableFilterCheckbox
+              id={`blockdomi-coluna-${header}`}
+              name={`blockdomi-coluna-${header}`}
+              label={`${header} (${items.length})`}
+              checked={selecionada}
+              onChange={(checked) => {
+                if (checked !== selecionada) onColunaToggle(header);
+              }}
+            />
+            {items.length > 0 && (
+              <div className="form-modal-input-col small text-muted mt-1">
+                {items.slice(0, 5).map((item, i) => (
                   <div key={i} className="text-truncate" title={item}>{item}</div>
-                ))
-              )}
-            </div>
+                ))}
+                {items.length > 5 && (
+                  <div className="opacity-75">+{items.length - 5}</div>
+                )}
+              </div>
+            )}
           </div>
         );
       })}

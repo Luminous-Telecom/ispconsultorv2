@@ -124,9 +124,9 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
 
   return (
     <DraggableModal show={show} onClose={onClose} title="Repositório" size="lg" modalId="rpki-repository-create-modal">
-      <div className="p-2">
+      <div className="form-modal-simple modal-inner-padding">
         <div className="row g-2">
-          <div className="col-md-4">
+          <div className="col-12">
             <FormField
               name="rpki_repository_ca_id"
               type="select"
@@ -140,7 +140,7 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
               }}
             />
           </div>
-          <div className="col-md-8">
+          <div className="col-12">
             <FormField
               name="rpki_repository_parent_id"
               type="select"
@@ -185,7 +185,7 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
             />
           </div>
         </div>
-        <div className="d-flex justify-content-end gap-2 mt-3">
+        <div className="d-flex justify-content-end gap-2 mt-3 form-modal-input-col">
           <CancelarButton type="button" onClick={onClose} isPending={importMutation.isPending} />
           <NovoButton
             type="button"

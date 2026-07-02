@@ -7,7 +7,7 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { defaultApiClient } from 'services/core';
 import { TemplateWhatsAppService, type TemplateWhatsApp } from 'services/templateWhatsAppService';
 import type { ApiResponse } from 'types';
-import { Loading, RecarregarButton, SystemButton } from 'components/ui';
+import { FormField, Loading, RecarregarButton, SystemButton } from 'components/ui';
 
 interface Template {
   name: string;
@@ -234,12 +234,12 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
             </div>
           ) : (
             <>
-              <div className="row g-2 mb-3 form-modal-multi-col scroll-max-380" >
+              <div className="row g-2 mb-3 scroll-max-380">
                 {data.templates.map((template: Template, index: number) => {
                   const key = `${template.name}-${template.language}-${index}`;
                   const isExpanded = expandedKey === key;
                   return (
-                    <div key={key} className="col-6 col-md-4 col-lg-3">
+                    <div key={key} className="col-12">
                       <div
                         className={`card h-100 template-meta-card ${isExpanded ? 'border-primary' : ''}`}
                         onClick={() => setExpandedKey(isExpanded ? null : key)}
@@ -273,53 +273,69 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
                 const varsCompletas = Array.from({ length: numVars }, (_, i) => vars[i] ?? '');
                 const preview = previewComVariaveis(textoMeta, varsCompletas);
                 return (
-                  <div ref={expandedCardRef} className="card bg-light mb-0">
+                  <div ref={expandedCardRef} className="card bg-light mb-0 form-modal-simple">
                     <div className="card-body small">
-                      <div className="mb-3">
-                        <label className="form-label fw-bold">Mensagem</label>
-                        <textarea
-                          className="form-control form-control-sm font-monospace textarea-no-resize-sm"
-                          rows={1}
-                          readOnly
-                          value={textoMeta}
-                          
-                        />
-                        <small className="text-muted">Template da Meta (variáveis numeradas)</small>
-                      </div>
-                      <div className="mb-3">
-                        <label className="form-label fw-bold">Pré-visualização</label>
-                        <textarea
-                          className="form-control form-control-sm font-monospace textarea-no-resize-sm"
-                          rows={1}
-                          readOnly
-                          value={preview}
-                          
-                        />
-                        <small className="text-muted">Mensagem com as variáveis selecionadas</small>
-                      </div>
-                      <div>
-                        <label className="form-label fw-bold">Variáveis (mesmas para todos os templates)</label>
-                        <div className="row g-2 form-modal-multi-col">
-                          {Array.from({ length: numVars }, (_, i) => (
-                            <div key={i} className="col-12 col-md-6 col-lg-4">
-                              <label className="form-label small mb-0">{`{{${i + 1}}}`}</label>
-                              <select
-                                className="form-select form-select-sm"
-                                value={varsCompletas[i] ?? ''}
-                                onChange={(e) => setVarParaPlaceholder(expandedKey, i, e.target.value, varsCompletas)}
-                              >
-                                <option value="">Selecione...</option>
-                                {VARIAVEIS_DISPONIVEIS.map((v) => (
-                                  <option key={v.value} value={v.value}>
-                                    {v.label} ({v.value})
-                                  </option>
+                      <div className="row g-2">
+                        <div className="col-12">
+                          <FormField
+                            name="template_meta_mensagem"
+                            type="textarea"
+                            size="sm"
+                            label="Mensagem"
+                            rows={1}
+                            readOnly
+                            disabled
+                            value={textoMeta}
+                            helpText="Template da Meta (variáveis numeradas)"
+                            className="font-monospace textarea-no-resize-sm"
+                          />
+                        </div>
+                        <div className="col-12">
+                          <FormField
+                            name="template_meta_preview"
+                            type="textarea"
+                            size="sm"
+                            label="Pré-visualização"
+                            rows={1}
+                            readOnly
+                            disabled
+                            value={preview}
+                            helpText="Mensagem com as variáveis selecionadas"
+                            className="font-monospace textarea-no-resize-sm"
+                          />
+                        </div>
+                        <div className="col-12">
+                          <div className="form-field">
+                            <label className="form-label fw-bold">Variáveis (mesmas para todos os templates)</label>
+                            <div className="form-field-control">
+                              <div className="row g-2">
+                                {Array.from({ length: numVars }, (_, i) => (
+                                  <div key={i} className="col-12">
+                                    <FormField
+                                      name={`template_var_${i + 1}`}
+                                      type="select"
+                                      size="sm"
+                                      label={`{{${i + 1}}}`}
+                                      value={varsCompletas[i] ?? ''}
+                                      options={[
+                                        { value: '', label: 'Selecione...' },
+                                        ...VARIAVEIS_DISPONIVEIS.map((v) => ({
+                                          value: v.value,
+                                          label: `${v.label} (${v.value})`,
+                                        })),
+                                      ]}
+                                      onChange={(value) =>
+                                        setVarParaPlaceholder(expandedKey, i, String(value ?? ''), varsCompletas)
+                                      }
+                                    />
+                                  </div>
                                 ))}
-                              </select>
+                              </div>
                             </div>
-                          ))}
+                          </div>
                         </div>
                       </div>
-                      <div className="mt-3 pt-3 border-top">
+                      <div className="mt-3 pt-3 border-top form-modal-input-col">
                         {mensagemType && onSalvarVincular ? (
                           <SystemButton
                             action="salvar"

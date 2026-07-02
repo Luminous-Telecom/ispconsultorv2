@@ -32,7 +32,7 @@ const OrdemServicoMensagemDetalhesModal: React.FC<OrdemServicoMensagemDetalhesMo
     >
       <div className="p-3 logs-auditoria-details">
         <div className="row g-2">
-          <div className="col-md-4">
+          <div className="col-12">
             <FormField
               name="data"
               type="text"
@@ -43,7 +43,7 @@ const OrdemServicoMensagemDetalhesModal: React.FC<OrdemServicoMensagemDetalhesMo
               readOnly
             />
           </div>
-          <div className="col-md-4">
+          <div className="col-12">
             <FormField
               name="evento"
               type="text"
@@ -54,7 +54,7 @@ const OrdemServicoMensagemDetalhesModal: React.FC<OrdemServicoMensagemDetalhesMo
               readOnly
             />
           </div>
-          <div className="col-md-4">
+          <div className="col-12">
             <FormField
               name="operador"
               type="text"

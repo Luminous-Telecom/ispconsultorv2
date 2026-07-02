@@ -63,9 +63,9 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({
         </div>
       }
     >
-      <div className="modal-inner-padding">
-        <div className="row">
-          <div className="col-md-6 mb-1">
+      <div className="form-modal-simple">
+        <div className="row g-2">
+          <div className="col-12">
             <FormField
               name="data_pagamento"
               type="date"
@@ -79,7 +79,7 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({
             />
           </div>
 
-          <div className="col-md-6 mb-1">
+          <div className="col-12">
             <FormField
               name="tipo_pagamento_pagamento"
               type="select"
@@ -105,19 +105,19 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({
             />
           </div>
 
-          <div className="col-md-12 mb-1">
+          <div className="col-12">
             <FormField
               name="valor_aberto"
               type="text"
               label={t('table.openValue')}
               value={formatCurrency(valorAberto, false)}
               onChange={() => {}}
-              disabled
+              readOnly
               size="sm"
             />
           </div>
 
-          <div className="col-md-6 mb-1">
+          <div className="col-12">
             <FormField
               name="desconto_percentual"
               type="text"
@@ -132,7 +132,7 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({
             />
           </div>
 
-          <div className="col-md-6 mb-1">
+          <div className="col-12">
             <FormField
               name="desconto_valor"
               type="text"
@@ -153,7 +153,7 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({
             />
           </div>
 
-          <div className="col-md-6 mb-1">
+          <div className="col-12">
             <FormField
               name="acrescimo_percentual"
               type="text"
@@ -168,7 +168,7 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({
             />
           </div>
 
-          <div className="col-md-6 mb-1">
+          <div className="col-12">
             <FormField
               name="acrescimo_valor"
               type="text"
@@ -189,19 +189,19 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({
             />
           </div>
 
-          <div className="col-md-6 mb-1">
+          <div className="col-12">
             <FormField
               name="valor_baixado"
               type="text"
               label={t('form.baixadoValue')}
               value={formatCurrency(valorTotal, false)}
               onChange={() => {}}
-              disabled
+              readOnly
               size="sm"
             />
           </div>
 
-          <div className="col-md-6 mb-1">
+          <div className="col-12">
             <FormField
               name="valor_total"
               type="text"
@@ -228,7 +228,7 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({
             />
           </div>
 
-          <div className="col-md-12 mb-1">
+          <div className="col-12">
             <FormField
               name="observacao_pagamento"
               type="textarea"

@@ -13,7 +13,10 @@ import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { formatCNPJ, formatCEP } from 'utils/formatters';
 import { isValidCNPJ } from 'utils/validators';
-import { CancelarButton, NovoButton, SalvarButton, RequiredMark } from 'components/ui';
+import { CancelarButton, FormField, NovoButton, SalvarButton } from 'components/ui';
+import AddressFields from 'components/forms/AddressFields';
+import ContactFields from 'components/forms/ContactFields';
+import { FormValue } from 'types/common';
 import { normalizeListPagination } from 'utils/pagination';
 
 interface EmpresasModalProps {
@@ -49,7 +52,6 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
   const { success, info } = useNotificationContext();
   const { showApiError } = useApiError();
   const lastCnpjConsulted = useRef<string>('');
-  const lastCepConsulted = useRef<string>('');
 
   const { data: parametros } = useQuery({
     queryKey: ['parametros'],
@@ -136,6 +138,10 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
     setErrors(prev => ({ ...prev, [field]: undefined }));
   }, []);
 
+  const handleFieldChange = useCallback((name: string, value: FormValue) => {
+    handleChange(name as keyof CreateEmpresa, String(value ?? ''));
+  }, [handleChange]);
+
   // Buscar CNPJ ao digitar 14 dígitos válidos
   useEffect(() => {
     if (!showForm || editingId || !parametros?.data?.validar_cpf_cnpj) return;
@@ -176,36 +182,9 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
       });
   }, [form.cnpj, form.razao_social, form.nome_fantasia, form.endereco, showForm, editingId, parametros?.data?.validar_cpf_cnpj, success, info, showApiError]);
 
-  // Buscar CEP ao digitar 8 dígitos
-  useEffect(() => {
-    if (!showForm || !parametros?.data?.validar_cep) return;
-    const cepLimpo = form.cep.replace(/\D/g, '');
-    if (cepLimpo.length !== 8 || lastCepConsulted.current === cepLimpo) return;
-    const camposVazios = !form.endereco && !form.bairro && !form.cidade && !form.estado;
-    if (!camposVazios) return;
-
-    lastCepConsulted.current = cepLimpo;
-    ClienteService.buscarCep(cepLimpo)
-      .then((data) => {
-        if (data) {
-          setForm(prev => ({
-            ...prev,
-            endereco: data.logradouro || prev.endereco,
-            bairro: data.bairro || prev.bairro,
-            cidade: data.localidade || prev.cidade,
-            estado: data.uf || prev.estado,
-            complemento: data.complemento || prev.complemento
-          }));
-          success('Dados do CEP preenchidos automaticamente!');
-        }
-      })
-      .catch(() => { /* Não resetar em erro — evita loop infinito ao re-tentar o mesmo CEP */ });
-  }, [form.cep, form.endereco, form.bairro, form.cidade, form.estado, showForm, parametros?.data?.validar_cep, success]);
-
   useEffect(() => {
     if (showForm) {
       lastCnpjConsulted.current = '';
-      lastCepConsulted.current = '';
     }
   }, [showForm, editingId]);
 
@@ -280,29 +259,6 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
 
   const isPending = createEmpresa.isPending || updateEmpresa.isPending;
 
-  const Field = ({ label, field, required, placeholder, maxLength }: {
-    label: string;
-    field: keyof CreateEmpresa;
-    required?: boolean;
-    placeholder?: string;
-    maxLength?: number;
-  }) => (
-    <div className="mb-2">
-      <label className="form-label mb-1 small fw-semibold">
-        {label} {required && <RequiredMark />}
-      </label>
-      <input
-        type="text"
-        className={`form-control form-control-sm ${errors[field] ? 'is-invalid' : ''}`}
-        value={String(form[field] ?? '')}
-        onChange={e => handleChange(field, e.target.value)}
-        placeholder={placeholder}
-        maxLength={maxLength}
-      />
-      {errors[field] && <div className="invalid-feedback">{errors[field]}</div>}
-    </div>
-  );
-
   const content = (
     <div>
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -328,60 +284,109 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
           title="Empresa"
           size="lg"
         >
-          <div className="p-3">
+          <form className="form-modal-simple modal-inner-padding" onSubmit={(e) => { e.preventDefault(); void handleSubmit(); }}>
             <div className="row g-2">
-              <div className="col-md-8">
-                <Field label="Razão Social" field="razao_social" required />
+              <div className="col-12">
+                <FormField
+                  name="razao_social"
+                  label="Razão Social"
+                  size="sm"
+                  value={form.razao_social}
+                  onChange={(v) => handleChange('razao_social', String(v ?? ''))}
+                  error={errors.razao_social}
+                  required
+                />
               </div>
-              <div className="col-md-4">
-                <Field label="Nome Fantasia" field="nome_fantasia" />
+              <div className="col-12">
+                <FormField
+                  name="nome_fantasia"
+                  label="Nome Fantasia"
+                  size="sm"
+                  value={form.nome_fantasia}
+                  onChange={(v) => handleChange('nome_fantasia', String(v ?? ''))}
+                  error={errors.nome_fantasia}
+                />
               </div>
-              <div className="col-md-4">
-                <Field label="CNPJ" field="cnpj" required placeholder="00.000.000/0000-00" maxLength={18} />
+              <div className="col-12">
+                <FormField
+                  name="cnpj"
+                  label="CNPJ"
+                  size="sm"
+                  value={form.cnpj}
+                  onChange={(v) => handleChange('cnpj', String(v ?? ''))}
+                  error={errors.cnpj}
+                  placeholder="00.000.000/0000-00"
+                  maxLength={18}
+                  required
+                />
               </div>
-              <div className="col-md-4">
-                <Field label="E-mail" field="email" required />
+            </div>
+            <ContactFields
+              formData={form}
+              onChange={handleFieldChange}
+              errors={errors}
+              includeWhatsApp={false}
+              required
+              size="sm"
+            />
+            <div className="row g-2">
+              <div className="col-12">
+                <FormField
+                  name="celular"
+                  type="tel"
+                  label="Celular"
+                  size="sm"
+                  value={form.celular}
+                  onChange={(v) => handleChange('celular', String(v ?? ''))}
+                  error={errors.celular}
+                  placeholder="(11) 99999-9999"
+                />
               </div>
-              <div className="col-md-2">
-                <Field label="Telefone" field="telefone" />
-              </div>
-              <div className="col-md-2">
-                <Field label="Celular" field="celular" />
-              </div>
-              <div className="col-md-2">
-                <Field label="CEP" field="cep" required maxLength={9} />
-              </div>
-              <div className="col-md-6">
-                <Field label="Endereço" field="endereco" required />
-              </div>
-              <div className="col-md-2">
-                <Field label="Número" field="numero" required />
-              </div>
-              <div className="col-md-2">
-                <Field label="Complemento" field="complemento" />
-              </div>
-              <div className="col-md-3">
-                <Field label="Bairro" field="bairro" required />
-              </div>
-              <div className="col-md-4">
-                <Field label="Cidade" field="cidade" required />
-              </div>
-              <div className="col-md-2">
-                <Field label="Estado (UF)" field="estado" required maxLength={2} />
-              </div>
+            </div>
+            <AddressFields
+              formData={form}
+              onChange={handleFieldChange}
+              errors={errors}
+              required
+              size="sm"
+            />
+            <div className="row g-2">
               <div className="col-12"><hr className="my-1" /></div>
-              <div className="col-md-5">
-                <Field label="Responsável" field="responsavel_nome" required />
+              <div className="col-12">
+                <FormField
+                  name="responsavel_nome"
+                  label="Responsável"
+                  size="sm"
+                  value={form.responsavel_nome}
+                  onChange={(v) => handleChange('responsavel_nome', String(v ?? ''))}
+                  error={errors.responsavel_nome}
+                  required
+                />
               </div>
-              <div className="col-md-3">
-                <Field label="CPF do Responsável" field="responsavel_cpf" maxLength={14} />
+              <div className="col-12">
+                <FormField
+                  name="responsavel_cpf"
+                  label="CPF do Responsável"
+                  size="sm"
+                  value={form.responsavel_cpf}
+                  onChange={(v) => handleChange('responsavel_cpf', String(v ?? ''))}
+                  error={errors.responsavel_cpf}
+                  maxLength={14}
+                />
               </div>
-              <div className="col-md-4">
-                <Field label="Cargo" field="responsavel_cargo" />
+              <div className="col-12">
+                <FormField
+                  name="responsavel_cargo"
+                  label="Cargo"
+                  size="sm"
+                  value={form.responsavel_cargo}
+                  onChange={(v) => handleChange('responsavel_cargo', String(v ?? ''))}
+                  error={errors.responsavel_cargo}
+                />
               </div>
             </div>
 
-            <div className="d-flex gap-2 justify-content-end mt-3">
+            <div className="d-flex gap-2 justify-content-end mt-3 form-modal-input-col">
               <CancelarButton type="button" onClick={handleCloseForm} isPending={isPending} />
               {editingId ? (
                 <SalvarButton type="button" onClick={handleSubmit} isPending={isPending} />
@@ -389,7 +394,7 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
                 <NovoButton entity="Empresa" type="button" onClick={handleSubmit} isPending={isPending} />
               )}
             </div>
-          </div>
+          </form>
         </DraggableModal>
       )}
     </div>

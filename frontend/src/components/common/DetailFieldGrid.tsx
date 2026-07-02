@@ -1,4 +1,5 @@
 import React from 'react';
+import FormField from 'components/ui/FormField';
 
 export interface DetailFieldItem {
   label: string;
@@ -23,20 +24,28 @@ const DetailFieldGrid: React.FC<DetailFieldGridProps> = ({ fields, className = '
   <div className={`row g-2 ${className}`.trim()}>
     {fields.map((field) => {
       const inputText = resolveInputText(field.value);
+      const fieldName = `detail-${field.label.toLowerCase().replace(/\s+/g, '_')}`;
 
       return (
-        <div key={field.label} className={field.colClassName ?? 'col-md-6'}>
-          <label className="form-label text-muted small mb-1">{field.label}</label>
+        <div key={field.label} className={field.colClassName ?? 'col-12'}>
           {inputText != null ? (
-            <input
+            <FormField
+              name={fieldName}
               type="text"
-              className={`form-control form-control-sm bg-secondary bg-opacity-10 small ${field.inputClassName ?? ''}`.trim()}
+              label={field.label}
               value={inputText}
+              onChange={() => undefined}
               readOnly
-              aria-readonly
+              size="sm"
+              className={field.inputClassName}
             />
           ) : (
-            <div className="form-control-plaintext">{field.value ?? '—'}</div>
+            <div className="form-field">
+              <label className="form-label small">{field.label}</label>
+              <div className="form-field-control">
+                <div className="form-control-plaintext small">{field.value ?? '—'}</div>
+              </div>
+            </div>
           )}
         </div>
       );

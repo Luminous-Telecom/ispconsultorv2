@@ -120,7 +120,7 @@ const TipoCobrancaContratoModal: React.FC<TipoCobrancaContratoModalProps> = ({
         <form
           id="tipo-cobranca-form"
           onSubmit={handleSubmit}
-          className="modal-inner-padding"
+          className="form-modal-simple"
         >
           <TipoCobrancaFormFields
             form={formData}

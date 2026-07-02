@@ -135,7 +135,7 @@ const IntegracaoIxcProvedorModal: React.FC<IntegracaoIxcProvedorModalProps> = ({
         <form
           id="integracao-ixc-provedor-form"
           onSubmit={handleSubmit}
-          className="modal-inner-padding"
+          className="form-modal-simple"
         >
           <IntegracaoIxcProvedorFormFields
             form={formData}

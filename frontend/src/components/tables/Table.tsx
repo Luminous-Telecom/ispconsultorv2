@@ -33,6 +33,10 @@ const MODAL_AUTO_ROWS_BUFFER_DEFAULT = 1;
 /** Tabela principal (header): uma linha a menos para evitar scroll aparente. */
 const HEADER_AUTO_ROWS_BUFFER = 1;
 const HEADER_AUTO_ROWS_MAX = 30;
+/** Tempo mínimo do loading ao trocar de página (primeira troca). */
+const TABLE_PAGE_LOADING_MIN_MS = 400;
+/** Acréscimo sobre a duração medida — próximas trocas mantêm loading um pouco mais longo. */
+const TABLE_PAGE_LOADING_EXTRA_MS = 120;
 
 const TABLE_SUMMARY_SELECTORS = '.financeiro-resumo, .contrato-totais-resumo';
 
@@ -127,6 +131,7 @@ function Table<T extends { id: number | string }>({
     columns,
     data,
     loading = false,
+    fetching = false,
     pagination: configPagination,
     filters = [],
     actions: tableActionsList = [],
@@ -189,6 +194,66 @@ function Table<T extends { id: number | string }>({
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
   const [openActionDropdown, setOpenActionDropdown] = useState<number | string | null>(null);
   const [isLoadingSelectAllPages, setIsLoadingSelectAllPages] = useState(false);
+  const [isPageChanging, setIsPageChanging] = useState(false);
+  const isPageChangingRef = useRef(false);
+  const pageChangeStartedAtRef = useRef<number | null>(null);
+  const pageChangeMinMsRef = useRef(TABLE_PAGE_LOADING_MIN_MS);
+  const pageChangeClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const paginatedDataFingerprintRef = useRef('');
+  const pageFetchStartedRef = useRef(false);
+
+  useEffect(() => {
+    isPageChangingRef.current = isPageChanging;
+  }, [isPageChanging]);
+
+  useEffect(
+    () => () => {
+      if (pageChangeClearTimerRef.current) {
+        clearTimeout(pageChangeClearTimerRef.current);
+      }
+    },
+    []
+  );
+
+  const finishPageChangeLoading = useCallback(() => {
+    if (!isPageChangingRef.current || pageChangeStartedAtRef.current == null) return;
+
+    if (pageChangeClearTimerRef.current) {
+      clearTimeout(pageChangeClearTimerRef.current);
+      pageChangeClearTimerRef.current = null;
+    }
+
+    const startedAt = pageChangeStartedAtRef.current;
+    if (startedAt == null) {
+      setIsPageChanging(false);
+      return;
+    }
+
+    const elapsed = Date.now() - startedAt;
+    const minMs = pageChangeMinMsRef.current;
+    const remaining = Math.max(0, minMs - elapsed);
+
+    const complete = () => {
+      if (pageChangeStartedAtRef.current != null) {
+        const totalMs = Date.now() - pageChangeStartedAtRef.current;
+        pageChangeMinMsRef.current = Math.max(
+          TABLE_PAGE_LOADING_MIN_MS,
+          totalMs + TABLE_PAGE_LOADING_EXTRA_MS
+        );
+        pageChangeStartedAtRef.current = null;
+      }
+      pageChangeClearTimerRef.current = null;
+      pageFetchStartedRef.current = false;
+      setIsPageChanging(false);
+    };
+
+    if (remaining <= 0) {
+      complete();
+      return;
+    }
+
+    pageChangeClearTimerRef.current = setTimeout(complete, remaining);
+  }, []);
 
   const filteredData = useMemo(() => {
     if (!customFilters) return data;
@@ -300,13 +365,55 @@ function Table<T extends { id: number | string }>({
   const handleGoToPage = useCallback(
     (page: number) => {
       if (normalizedPagination) {
+        if (page !== paginationValues.currentPage) {
+          if (pageChangeClearTimerRef.current) {
+            clearTimeout(pageChangeClearTimerRef.current);
+            pageChangeClearTimerRef.current = null;
+          }
+          pageChangeStartedAtRef.current = Date.now();
+          pageFetchStartedRef.current = false;
+          setIsPageChanging(true);
+        }
         onPageChange?.(page);
       } else {
         tableActions.setPage(page);
       }
     },
-    [normalizedPagination, onPageChange, tableActions]
+    [normalizedPagination, onPageChange, tableActions, paginationValues.currentPage]
   );
+
+  const isTableContentLoading = loading || fetching || isPageChanging;
+
+  const paginatedDataFingerprint = useMemo(
+    () => paginatedData.map((item) => item.id).join('|'),
+    [paginatedData]
+  );
+
+  useEffect(() => {
+    if (loading || fetching) {
+      if (isPageChangingRef.current) {
+        pageFetchStartedRef.current = true;
+      }
+      return;
+    }
+    if (!isPageChangingRef.current) {
+      pageFetchStartedRef.current = false;
+      return;
+    }
+    if (pageFetchStartedRef.current) {
+      finishPageChangeLoading();
+    }
+  }, [loading, fetching, finishPageChangeLoading]);
+
+  useEffect(() => {
+    if (!isPageChangingRef.current) {
+      paginatedDataFingerprintRef.current = paginatedDataFingerprint;
+      return;
+    }
+    if (paginatedDataFingerprint === paginatedDataFingerprintRef.current) return;
+    paginatedDataFingerprintRef.current = paginatedDataFingerprint;
+    finishPageChangeLoading();
+  }, [paginatedDataFingerprint, finishPageChangeLoading]);
 
   const handleSelectAllPages = useCallback(async () => {
     if (!onSelectAllPages || !tableActions.setSelectedItems) return;
@@ -515,7 +622,7 @@ function Table<T extends { id: number | string }>({
         <TableMobileView
           columns={columns}
           paginatedData={paginatedData}
-          loading={loading}
+          loading={isTableContentLoading}
           loadingMessage={defaultLoadingMessage}
           emptyMessage={defaultEmptyMessage}
           bulkActions={bulkActions}
@@ -556,7 +663,7 @@ function Table<T extends { id: number | string }>({
           onSort={tableActions.setSort}
           onResizeStart={handleColumnResizeStart}
           actions={tableActionsList}
-          loading={loading}
+          loading={isTableContentLoading}
           loadingMessage={defaultLoadingMessage}
           emptyMessage={defaultEmptyMessage}
           paginatedData={paginatedData}

@@ -41,7 +41,7 @@ const RepositoriosSection: React.FC<RepositoriosSectionProps> = ({
         Após atualizar o sistema, <strong>importe de novo</strong> o XML da CA-pai para gravar o referral.
       </p>
       <div className="row g-2 mb-2">
-        <div className="col-md-3">
+        <div className="col-12">
           <FormField
             name="repository_ca_id"
             type="select"
@@ -52,7 +52,7 @@ const RepositoriosSection: React.FC<RepositoriosSectionProps> = ({
             onChange={(value) => handleRepositoryCaChange(String(value ?? ''))}
           />
         </div>
-        <div className="col-md-5">
+        <div className="col-12">
           <FormField
             name="repository_referral_parent_id"
             type="select"
@@ -63,7 +63,7 @@ const RepositoriosSection: React.FC<RepositoriosSectionProps> = ({
             onChange={(value) => setRepositoryReferralParentId(String(value ?? ''))}
           />
         </div>
-        <div className="col-md-12">
+        <div className="col-12">
           <FormField
             name="repository_parent_response_snippet"
             type="textarea"
@@ -74,16 +74,18 @@ const RepositoriosSection: React.FC<RepositoriosSectionProps> = ({
             onChange={(value) => setRepositoryParentResponseSnippet(String(value ?? ''))}
           />
         </div>
-        <div className="col-12 d-flex align-items-end">
-          <GerarButton
-            type="button"
-            label="Gerar Requisicao de Repositorio"
-            disabled={!repositoryCaId.trim() || generatePublisherRequestMutation.isPending}
-            isPending={generatePublisherRequestMutation.isPending}
-            onClick={handleGeneratePublisherRequest}
-          />
+        <div className="col-12">
+          <div className="form-modal-input-col">
+            <GerarButton
+              type="button"
+              label="Gerar Requisicao de Repositorio"
+              disabled={!repositoryCaId.trim() || generatePublisherRequestMutation.isPending}
+              isPending={generatePublisherRequestMutation.isPending}
+              onClick={handleGeneratePublisherRequest}
+            />
+          </div>
         </div>
-        <div className="col-md-12">
+        <div className="col-12">
           <FormField
             name="repository_request_xml"
             type="textarea"
@@ -97,7 +99,7 @@ const RepositoriosSection: React.FC<RepositoriosSectionProps> = ({
       </div>
 
       <div className="row g-2 mb-2">
-        <div className="col-md-10">
+        <div className="col-12">
           <FormField
             name="repository_response_xml"
             type="textarea"
@@ -108,18 +110,20 @@ const RepositoriosSection: React.FC<RepositoriosSectionProps> = ({
             onChange={(value) => setRepositoryResponseXml(String(value ?? ''))}
           />
         </div>
-        <div className="col-md-2 d-flex align-items-end">
-          <ConfirmarButton
-            type="button"
-            label="Vincular Repositorio"
-            disabled={
-              !repositoryCaId.trim() ||
-              !repositoryResponseXml.trim() ||
-              importRepositoryResponseMutation.isPending
-            }
-            isPending={importRepositoryResponseMutation.isPending}
-            onClick={handleImportRepositoryResponse}
-          />
+        <div className="col-12">
+          <div className="form-modal-input-col">
+            <ConfirmarButton
+              type="button"
+              label="Vincular Repositorio"
+              disabled={
+                !repositoryCaId.trim() ||
+                !repositoryResponseXml.trim() ||
+                importRepositoryResponseMutation.isPending
+              }
+              isPending={importRepositoryResponseMutation.isPending}
+              onClick={handleImportRepositoryResponse}
+            />
+          </div>
         </div>
       </div>
       <div className="table-responsive">

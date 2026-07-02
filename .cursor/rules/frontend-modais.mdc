@@ -36,7 +36,7 @@ import { ModalFormActions } from 'components/ui';
     <ModalFormActions onCancel={onClose} formId="cliente-form" isPending={isPending} />
   }
 >
-  <form id="cliente-form" onSubmit={handleSubmit}>...</form>
+  <form id="cliente-form" onSubmit={handleSubmit} className="form-modal-simple">...</form>
 </DraggableModal>
 ```
 
@@ -72,6 +72,7 @@ if (!window.confirm(t('messages.confirmDelete'))) return;
 - Várias abas + overflow mobile → `ModalTabsOverflow`
 - Conteúdo de aba com tabela → `EmbeddedTablePanel`
 - Padding de aba: classes `*-tab-content-padded` + `form-modal-simple`
+- Layout de campos: ver `frontend-form-modal-layout.mdc` — label à esquerda, input à direita, `col-12` por campo (cadastro, edição e visualização)
 
 ## Checklist
 

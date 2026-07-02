@@ -1,4 +1,5 @@
 import React from 'react';
+import { FormField } from 'components/ui';
 
 interface RpkiDashboardModalProps {
   show: boolean;
@@ -8,39 +9,51 @@ interface RpkiDashboardModalProps {
 
 const RpkiDashboardModal: React.FC<RpkiDashboardModalProps> = () => {
   return (
-    <div className="p-3">
-      <div className="row g-3">
-        <div className="col-md-3">
-          <div className="card">
-            <div className="card-body">
-              <div className="text-muted small">ROAs ativos</div>
-              <div className="h4 mb-0">0</div>
-            </div>
-          </div>
+    <div className="form-modal-simple p-3">
+      <div className="row g-2">
+        <div className="col-12">
+          <FormField
+            name="rpki_roas_ativos"
+            type="text"
+            size="sm"
+            label="ROAs ativos"
+            value="0"
+            readOnly
+            disabled
+          />
         </div>
-        <div className="col-md-3">
-          <div className="card">
-            <div className="card-body">
-              <div className="text-muted small">Validacoes 24h</div>
-              <div className="h4 mb-0">0</div>
-            </div>
-          </div>
+        <div className="col-12">
+          <FormField
+            name="rpki_validacoes_24h"
+            type="text"
+            size="sm"
+            label="Validacoes 24h"
+            value="0"
+            readOnly
+            disabled
+          />
         </div>
-        <div className="col-md-3">
-          <div className="card">
-            <div className="card-body">
-              <div className="text-muted small">Alertas abertos</div>
-              <div className="h4 mb-0">0</div>
-            </div>
-          </div>
+        <div className="col-12">
+          <FormField
+            name="rpki_alertas_abertos"
+            type="text"
+            size="sm"
+            label="Alertas abertos"
+            value="0"
+            readOnly
+            disabled
+          />
         </div>
-        <div className="col-md-3">
-          <div className="card">
-            <div className="card-body">
-              <div className="text-muted small">Ultima sincronizacao</div>
-              <div className="small mb-0">Nao executada</div>
-            </div>
-          </div>
+        <div className="col-12">
+          <FormField
+            name="rpki_ultima_sincronizacao"
+            type="text"
+            size="sm"
+            label="Ultima sincronizacao"
+            value="Nao executada"
+            readOnly
+            disabled
+          />
         </div>
       </div>
 
@@ -57,4 +70,3 @@ const RpkiDashboardModal: React.FC<RpkiDashboardModalProps> = () => {
 };
 
 export default RpkiDashboardModal;
-

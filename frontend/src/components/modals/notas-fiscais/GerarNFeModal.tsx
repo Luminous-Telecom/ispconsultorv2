@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DraggableModal from 'components/common/DraggableModal';
-import { CancelarButton, GerarNFSeAvulsaButton, LabelWithHelp } from 'components/ui';
-import { useIsMobile } from 'hooks/useMediaQuery';
+import { CancelarButton, FormField, GerarNFSeAvulsaButton } from 'components/ui';
 import { useI18n } from 'contexts/I18nContext';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
@@ -29,13 +28,11 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
   onSuccess
 }) => {
   const { t } = useI18n();
-  const isMobile = useIsMobile();
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Buscar configuração da NFSe
   const { data: nfseConfig } = useQuery({
     queryKey: ['nfse-config'],
     queryFn: async () => {
@@ -45,7 +42,7 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
       }
       return response.data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 5 * 60 * 1000,
     retry: false
   });
 
@@ -122,7 +119,6 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      // Adicionar titulo_id se disponível
       const payload = {
         ...formData,
         ...(titulo?.id ? { titulo_id: titulo.id } : {})
@@ -151,7 +147,6 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
       ...prev,
       [field]: value
     }));
-    // Limpar erro do campo quando o usuário começar a digitar
     if (formErrors[field]) {
       setFormErrors(prev => {
         const newErrors = { ...prev };
@@ -184,7 +179,7 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
         </div>
       }
     >
-      <form id="nfe-form" onSubmit={handleSubmit} className="modal-inner-padding">
+      <form id="nfe-form" onSubmit={handleSubmit} className="form-modal-simple modal-inner-padding">
         {Object.keys(formErrors).length > 0 && (
           <div className="alert alert-danger mb-3" role="alert">
             <strong>{t('form.validationErrors')}</strong>
@@ -196,155 +191,141 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
           </div>
         )}
 
-        {cliente && (
-          <div className="mb-3">
-            <label className="form-label">{t('form.client')}</label>
-            <input
-              type="text"
-              className="form-control"
-              value={cliente.razao_social}
-              disabled
-            />
-          </div>
-        )}
+        <div className="row g-2">
+          {cliente && (
+            <div className="col-12">
+              <FormField
+                name="cliente_display"
+                type="text"
+                label={t('form.client')}
+                value={cliente.razao_social}
+                disabled
+                readOnly
+                onChange={() => {}}
+              />
+            </div>
+          )}
 
-        <div className="row">
-          <div className="col-md-6 mb-3">
-            <LabelWithHelp className="form-label" required>
-              {t('form.operationNature')}
-            </LabelWithHelp>
-            <input
+          <div className="col-12">
+            <FormField
+              name="natureza_operacao"
               type="text"
-              className={`form-control ${formErrors.natureza_operacao ? 'is-invalid' : ''}`}
+              label={t('form.operationNature')}
               value={formData.natureza_operacao || ''}
-              onChange={(e) => handleInputChange('natureza_operacao', e.target.value)}
+              onChange={(v) => handleInputChange('natureza_operacao', String(v ?? ''))}
+              error={formErrors.natureza_operacao}
               required
             />
-            {formErrors.natureza_operacao && (
-              <div className="invalid-feedback">{formErrors.natureza_operacao}</div>
-            )}
           </div>
 
-          <div className="col-md-6 mb-3">
-            <label className="form-label">{t('form.model')}</label>
-            <select
-              className="form-control"
+          <div className="col-12">
+            <FormField
+              name="modelo"
+              type="select"
+              label={t('form.model')}
               value={formData.modelo || 55}
-              onChange={(e) => handleInputChange('modelo', parseInt(e.target.value, 10))}
-            >
-              <option value={55}>NFS-e</option>
-            </select>
+              onChange={(v) => handleInputChange('modelo', parseInt(String(v), 10))}
+              options={[{ value: 55, label: 'NFS-e' }]}
+            />
           </div>
-        </div>
 
-        <div className="row">
-          <div className="col-md-6 mb-3">
-            <label className="form-label">{t('form.issueDate')}</label>
-            <input
+          <div className="col-12">
+            <FormField
+              name="data_emissao"
               type="date"
-              className="form-control"
+              label={t('form.issueDate')}
               value={formData.data_emissao ? new Date(formData.data_emissao).toISOString().split('T')[0] : ''}
-              onChange={(e) => handleInputChange('data_emissao', e.target.value)}
+              onChange={(v) => handleInputChange('data_emissao', String(v ?? ''))}
             />
           </div>
 
-          <div className="col-md-6 mb-3">
-            <label className="form-label">{t('form.dueDate')}</label>
-            <input
+          <div className="col-12">
+            <FormField
+              name="data_vencimento"
               type="date"
-              className="form-control"
+              label={t('form.dueDate')}
               value={formData.data_vencimento ? new Date(formData.data_vencimento).toISOString().split('T')[0] : ''}
-              onChange={(e) => handleInputChange('data_vencimento', e.target.value)}
+              onChange={(v) => handleInputChange('data_vencimento', String(v ?? ''))}
             />
           </div>
-        </div>
 
-        <div className="row">
-          <div className="col-md-6 mb-3">
-            <LabelWithHelp className="form-label" required>
-              {t('form.totalValue')}
-            </LabelWithHelp>
-            <input
+          <div className="col-12">
+            <FormField
+              name="valor_total"
               type="text"
-              className={`form-control ${formErrors.valor_total ? 'is-invalid' : ''}`}
+              label={t('form.totalValue')}
               value={formatCurrency(formData.valor_total || 0)}
-              onChange={(e) => handleCurrencyChange('valor_total', e.target.value)}
+              onChange={(v) => handleCurrencyChange('valor_total', String(v ?? ''))}
+              error={formErrors.valor_total}
               required
             />
-            {formErrors.valor_total && (
-              <div className="invalid-feedback">{formErrors.valor_total}</div>
-            )}
           </div>
 
-          <div className="col-md-6 mb-3">
-            <label className="form-label">{t('form.servicesValue')}</label>
-            <input
+          <div className="col-12">
+            <FormField
+              name="valor_servicos"
               type="text"
-              className="form-control"
+              label={t('form.servicesValue')}
               value={formatCurrency(formData.valor_servicos || 0)}
-              onChange={(e) => handleCurrencyChange('valor_servicos', e.target.value)}
+              onChange={(v) => handleCurrencyChange('valor_servicos', String(v ?? ''))}
             />
           </div>
-        </div>
 
-        <div className="row">
-          <div className="col-md-6 mb-3">
-            <label className="form-label">{t('form.productsValue')}</label>
-            <input
+          <div className="col-12">
+            <FormField
+              name="valor_produtos"
               type="text"
-              className="form-control"
+              label={t('form.productsValue')}
               value={formatCurrency(formData.valor_produtos || 0)}
-              onChange={(e) => handleCurrencyChange('valor_produtos', e.target.value)}
+              onChange={(v) => handleCurrencyChange('valor_produtos', String(v ?? ''))}
             />
           </div>
 
-          <div className="col-md-6 mb-3">
-            <label className="form-label">{t('form.discountValueInvoice')}</label>
-            <input
+          <div className="col-12">
+            <FormField
+              name="valor_desconto"
               type="text"
-              className="form-control"
+              label={t('form.discountValueInvoice')}
               value={formatCurrency(formData.valor_desconto || 0)}
-              onChange={(e) => handleCurrencyChange('valor_desconto', e.target.value)}
+              onChange={(v) => handleCurrencyChange('valor_desconto', String(v ?? ''))}
             />
           </div>
-        </div>
 
-        <div className="row">
-          <div className="col-md-6 mb-3">
-            <label className="form-label">{t('form.issRateShort')}</label>
-            <input
+          <div className="col-12">
+            <FormField
+              name="aliquota_iss"
               type="number"
-              className={`form-control ${formErrors.aliquota_iss ? 'is-invalid' : ''}`}
+              label={t('form.issRateShort')}
               value={formData.aliquota_iss || 0}
-              onChange={(e) => handleInputChange('aliquota_iss', parseFloat(e.target.value) || 0)}
-              min="0"
-              max="100"
-              step="0.01"
+              onChange={(v) => handleInputChange('aliquota_iss', parseFloat(String(v)) || 0)}
+              error={formErrors.aliquota_iss}
+              min={0}
+              max={100}
+              step={0.01}
             />
-            {formErrors.aliquota_iss && (
-              <div className="invalid-feedback">{formErrors.aliquota_iss}</div>
-            )}
           </div>
-        </div>
 
-        <div className="mb-3">
-          <label className="form-label">{t('table.description')}</label>
-          <textarea
-            className="form-control"
-            rows={3}
-            value={formData.descricao || ''}
-            onChange={(e) => handleInputChange('descricao', e.target.value)}
-          />
-        </div>
+          <div className="col-12">
+            <FormField
+              name="descricao"
+              type="textarea"
+              label={t('table.description')}
+              rows={3}
+              value={formData.descricao || ''}
+              onChange={(v) => handleInputChange('descricao', String(v ?? ''))}
+            />
+          </div>
 
-        <div className="mb-3">
-          <label className="form-label">{t('form.observations')}</label>
-          <textarea
-            className="form-control"
-            rows={3}
-            value={formData.observacoes || ''}
-            onChange={(e) => handleInputChange('observacoes', e.target.value)}
-          />
+          <div className="col-12">
+            <FormField
+              name="observacoes"
+              type="textarea"
+              label={t('form.observations')}
+              rows={3}
+              value={formData.observacoes || ''}
+              onChange={(v) => handleInputChange('observacoes', String(v ?? ''))}
+            />
+          </div>
         </div>
       </form>
     </DraggableModal>
@@ -352,4 +333,3 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
 };
 
 export default GerarNFeModal;
-

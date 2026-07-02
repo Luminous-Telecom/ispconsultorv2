@@ -180,7 +180,7 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
       {isEdit && isLoading ? (
         <Loading variant="centered" message={t('messages.loading')} />
       ) : (
-        <form id="saas-banco-form-id" onSubmit={formHook.handleSubmit}>
+        <form id="saas-banco-form-id" onSubmit={formHook.handleSubmit} className="form-modal-simple">
           <div className="banco-modal-content">
             <div className="tab-content banco-tab-content banco-tab-content-padded">
               {activeTab === 'informacoes-basicas' && (

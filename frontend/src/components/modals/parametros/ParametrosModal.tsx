@@ -4,11 +4,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
-import { useIsMobile } from 'hooks/useMediaQuery';
 import { ParametrosService } from 'services/parametrosService';
 import { useFormReset } from 'hooks/useFormReset';
 import DraggableModal from 'components/common/DraggableModal';
-import { ModalFormActions, LabelWithHelp, Loading } from 'components/ui';
+import { ModalFormActions, FormField, AtivoInativoField, Loading } from 'components/ui';
+
 interface ParametrosModalProps {
   show: boolean;
   onClose: () => void;
@@ -24,12 +24,10 @@ interface ParametrosForm {
 
 const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
   const { t } = useI18n();
-  const isMobile = useIsMobile();
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
   const queryClient = useQueryClient();
 
-  // Dados iniciais do formulário
   const initialFormData: ParametrosForm = {
     validar_cpf_cnpj: true,
     validar_cep: false,
@@ -43,11 +41,10 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
   const { data: parametros, isLoading } = useQuery({
     queryKey: ['parametros'],
     queryFn: () => ParametrosService.get(),
-    staleTime: 60 * 1000, // 60 segundos
+    staleTime: 60 * 1000,
     refetchOnMount: false,
   });
 
-  // Dados customizados dos parâmetros (quando editando)
   const customFormData = useMemo(() => {
     if (!parametros?.data) return undefined;
     
@@ -60,7 +57,6 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
     };
   }, [parametros?.data]);
 
-  // Usar hook personalizado para reset do formulário
   useFormReset({
     show,
     initialData: initialFormData,
@@ -73,24 +69,9 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
     onSuccess: () => {
       success(t('params.successUpdate'));
       queryClient.invalidateQueries({ queryKey: ['parametros'] });
-      // Não fecha o modal para permitir múltiplas edições
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.PARAMS_UPDATE_ERROR),
   });
-
-  const handleCheckboxChange = (field: keyof ParametrosForm) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: !prev[field]
-    }));
-  };
-
-  const handleSelectChange = (field: keyof ParametrosForm, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,6 +85,8 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
     onClose();
   };
 
+  const isPending = updateParametrosMutation.isPending;
+
   return (
     <DraggableModal
       show={show}
@@ -115,115 +98,95 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
         <ModalFormActions
           onCancel={handleCancel}
           formId="parametros-form"
-          isPending={updateParametrosMutation.isPending}
+          isPending={isPending}
         />
       }
     >
       {isLoading ? (
         <Loading variant="centered" message={t('ui.loading')} />
       ) : (
-      <form id="parametros-form" onSubmit={handleSubmit} className="modal-inner-padding">
-        <div>
-          <div className="card mb-3">
-            <div className="card-header">
-              <h6 className="mb-0">{t('params.validations')}</h6>
-            </div>
-            <div className="card-body">
-              <div className="form-check mb-3">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id="validar_cpf_cnpj"
+      <form id="parametros-form" onSubmit={handleSubmit} className="form-modal-simple modal-inner-padding">
+        <div className="card mb-3">
+          <div className="card-header">
+            <h6 className="mb-0">{t('params.validations')}</h6>
+          </div>
+          <div className="card-body">
+            <div className="row g-2">
+              <div className="col-12">
+                <AtivoInativoField
                   name="validar_cpf_cnpj"
-                  checked={formData.validar_cpf_cnpj}
-                  onChange={() => handleCheckboxChange('validar_cpf_cnpj')}
-                  disabled={updateParametrosMutation.isPending}
+                  label={t('params.validateCpfCnpj')}
+                  value={formData.validar_cpf_cnpj}
+                  onChange={(v) => setFormData(prev => ({ ...prev, validar_cpf_cnpj: v }))}
+                  disabled={isPending}
                 />
-                <LabelWithHelp htmlFor="validar_cpf_cnpj" className="form-check-label" helpText={t('params.validateCpfCnpjHelp')}>
-                  {t('params.validateCpfCnpj')}
-                </LabelWithHelp>
               </div>
-
-              <div className="form-check mb-3">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id="validar_cep"
+              <div className="col-12">
+                <AtivoInativoField
                   name="validar_cep"
-                  checked={formData.validar_cep}
-                  onChange={() => handleCheckboxChange('validar_cep')}
-                  disabled={updateParametrosMutation.isPending}
+                  label={t('params.validateCep')}
+                  value={formData.validar_cep}
+                  onChange={(v) => setFormData(prev => ({ ...prev, validar_cep: v }))}
+                  disabled={isPending}
                 />
-                <LabelWithHelp htmlFor="validar_cep" className="form-check-label" helpText={t('params.validateCepHelp')}>
-                  {t('params.validateCep')}
-                </LabelWithHelp>
               </div>
             </div>
           </div>
-
-          <div className="card mb-3">
-            <div className="card-header">
-              <h6 className="mb-0">{t('params.titleGeneration')}</h6>
-            </div>
-            <div className="card-body">
-              <div className="form-check mb-3">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id="titulos_vence_sabado"
-                  name="titulos_vence_sabado"
-                  checked={formData.titulos_vence_sabado}
-                  onChange={() => handleCheckboxChange('titulos_vence_sabado')}
-                  disabled={updateParametrosMutation.isPending}
-                />
-                <LabelWithHelp htmlFor="titulos_vence_sabado" className="form-check-label" helpText={t('params.titlesDueSaturdayHelp')}>
-                  {t('params.titlesDueSaturday')}
-                </LabelWithHelp>
-              </div>
-
-              <div className="form-check mb-3">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id="titulos_vence_domingo"
-                  name="titulos_vence_domingo"
-                  checked={formData.titulos_vence_domingo}
-                  onChange={() => handleCheckboxChange('titulos_vence_domingo')}
-                  disabled={updateParametrosMutation.isPending}
-                />
-                <LabelWithHelp htmlFor="titulos_vence_domingo" className="form-check-label" helpText={t('params.titlesDueSundayHelp')}>
-                  {t('params.titlesDueSunday')}
-                </LabelWithHelp>
-              </div>
-            </div>
-          </div>
-
-          <div className="card mb-3">
-            <div className="card-header">
-              <h6 className="mb-0">{t('params.subscriberCenter')}</h6>
-            </div>
-            <div className="card-body">
-              <div className="mb-3">
-                <LabelWithHelp htmlFor="central_assinante_metodo_login" className="form-label" helpText={t('params.loginMethodHelp')}>
-                  {t('params.loginMethod')}
-                </LabelWithHelp>
-                <select
-                  className="form-select"
-                  id="central_assinante_metodo_login"
-                  name="central_assinante_metodo_login"
-                  value={formData.central_assinante_metodo_login}
-                  onChange={(e) => handleSelectChange('central_assinante_metodo_login', e.target.value)}
-                  disabled={updateParametrosMutation.isPending}
-                >
-                  <option value="cnpj">CNPJ</option>
-                  <option value="email">Email</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
         </div>
 
+        <div className="card mb-3">
+          <div className="card-header">
+            <h6 className="mb-0">{t('params.titleGeneration')}</h6>
+          </div>
+          <div className="card-body">
+            <div className="row g-2">
+              <div className="col-12">
+                <AtivoInativoField
+                  name="titulos_vence_sabado"
+                  label={t('params.titlesDueSaturday')}
+                  value={formData.titulos_vence_sabado}
+                  onChange={(v) => setFormData(prev => ({ ...prev, titulos_vence_sabado: v }))}
+                  disabled={isPending}
+                />
+              </div>
+              <div className="col-12">
+                <AtivoInativoField
+                  name="titulos_vence_domingo"
+                  label={t('params.titlesDueSunday')}
+                  value={formData.titulos_vence_domingo}
+                  onChange={(v) => setFormData(prev => ({ ...prev, titulos_vence_domingo: v }))}
+                  disabled={isPending}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="card mb-3">
+          <div className="card-header">
+            <h6 className="mb-0">{t('params.subscriberCenter')}</h6>
+          </div>
+          <div className="card-body">
+            <div className="row g-2">
+              <div className="col-12">
+                <FormField
+                  name="central_assinante_metodo_login"
+                  type="select"
+                  label={t('params.loginMethod')}
+                  helpText={t('params.loginMethodHelp')}
+                  value={formData.central_assinante_metodo_login}
+                  onChange={(v) => setFormData(prev => ({ ...prev, central_assinante_metodo_login: String(v ?? 'cnpj') }))}
+                  disabled={isPending}
+                  options={[
+                    { value: 'cnpj', label: 'CNPJ' },
+                    { value: 'email', label: 'Email' },
+                  ]}
+                  size="sm"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </form>
       )}
     </DraggableModal>
@@ -231,4 +194,3 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
 };
 
 export default ParametrosModal;
-

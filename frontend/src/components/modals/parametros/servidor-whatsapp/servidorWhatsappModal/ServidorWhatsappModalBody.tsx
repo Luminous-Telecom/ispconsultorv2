@@ -105,7 +105,7 @@ const ServidorWhatsappModalBody: React.FC<ServidorWhatsappModalBodyProps> = ({
           id="whatsappTabContent"
         >
           {activeTab === 'servidor' && (
-            <form id="servidor-whatsapp-form" onSubmit={onSubmit}>
+            <form id="servidor-whatsapp-form" onSubmit={onSubmit} className="form-modal-simple">
               <ServidorTab
                 formData={formData}
                 onChange={onFormFieldChange}

@@ -63,7 +63,7 @@ Use sempre os primitivos do projeto. **Índice completo:** `frontend-ui-centrali
 | Busca | `SearchBar` (variants) | `<input type="search">` custom |
 | Erros de API | `showApiError(err, CONTEXT_ERROR_MESSAGES.*)` | parse manual de `response.data` |
 | Textos UI | `useI18n().t()` | strings PT fixas em telas internas |
-| Layout de form em modal | `FormField` + `col-12` + `AtivoInativoField` | `col-md-6`, `switch`, switches HTML |
+| Layout de form em modal | `FormField` + `row g-2` + `col-12` + `form-modal-simple` + `AtivoInativoField` | `col-md-*`, label acima do input, `flex-fill` side-by-side, `switch` |
 | Campo de texto/select | `Input` / `FormField` (`form-control`) | `<input>` custom, classes próprias, altura fixa |
 | Escolher ficheiro | `FileInput` / `FormField type="file"` | `<input type="file">` cru |
 | Status em tabela | `StatusBadge`, `renderStatusBadge` | `badge bg-*` manual |

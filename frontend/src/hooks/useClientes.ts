@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { ClienteService } from '../services/clienteService';
 import { UpdateCliente, ClienteFilters, PaginatedResponse, Cliente } from '../types';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
@@ -16,6 +16,7 @@ export const useClientes = (filters: ClienteFilters = {}) => {
     queryFn: () => ClienteService.list(filters),
     staleTime: 0, // Sempre considerar dados como stale para permitir refresh manual
     gcTime: DEFAULT_CACHE_TIME,
+    placeholderData: keepPreviousData,
     refetchOnWindowFocus: false,
     refetchOnMount: true, // Refetch ao montar para garantir dados atualizados
   });

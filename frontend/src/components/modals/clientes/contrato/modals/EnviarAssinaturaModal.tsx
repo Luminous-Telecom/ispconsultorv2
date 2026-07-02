@@ -6,7 +6,8 @@ import { TermoContrato } from 'services/termoContratoService';
 import { Cliente } from 'types';
 import { AssinaturaDigitalService, EnviarAssinaturaRequest } from 'services/assinaturaDigitalService';
 import DraggableModal from 'components/common/DraggableModal';
-import { CancelarButton, EnviarButton, LabelWithHelp } from 'components/ui';
+import { CancelarButton, EnviarButton } from 'components/ui';
+import FormField from 'components/ui/FormField';
 import { useI18n } from 'contexts/I18nContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { useIsMobile } from 'hooks/useMediaQuery';
@@ -94,7 +95,6 @@ const EnviarAssinaturaModal: React.FC<EnviarAssinaturaModalProps> = ({
       
       success('Documento enviado para assinatura digital com sucesso!');
       
-      // Invalidar queries relacionadas
       queryClient.invalidateQueries({ queryKey: ['assinaturas-digital'] });
       queryClient.invalidateQueries({ queryKey: ['termos-contrato'] });
       
@@ -108,11 +108,10 @@ const EnviarAssinaturaModal: React.FC<EnviarAssinaturaModalProps> = ({
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+  const handleFieldChange = (field: keyof EnviarAssinaturaRequest, value: string | number) => {
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [field]: value
     }));
   };
 
@@ -136,84 +135,75 @@ const EnviarAssinaturaModal: React.FC<EnviarAssinaturaModalProps> = ({
       size="lg"
       headerActions={headerActions}
     >
-      <form id="enviar-assinatura-form" onSubmit={handleSubmit} className="modal-inner-padding" autoComplete="off" data-form-type="other">
-        <div className="d-flex flex-column gap-2">
-          <div>
-            <label className="form-label">Termo</label>
-            <input
+      <form id="enviar-assinatura-form" onSubmit={handleSubmit} className="form-modal-simple" autoComplete="off" data-form-type="other">
+        <div className="row g-2">
+          <div className="col-12">
+            <FormField
+              name="termo_readonly"
               type="text"
-              className="form-control"
+              label="Termo"
               value={termo ? `Termo #${termo.id} - ${termo.modeloDocumento?.nome || 'Sem nome'}` : ''}
-              disabled
+              onChange={() => {}}
+              readOnly
             />
           </div>
 
-          <div>
-            <LabelWithHelp className="form-label" required>
-              Email do Assinante
-            </LabelWithHelp>
-            <input
-              type="email"
+          <div className="col-12">
+            <FormField
               name="email_assinante"
-              className="form-control"
+              type="email"
+              label="Email do Assinante"
               value={formData.email_assinante}
-              onChange={handleInputChange}
+              onChange={(value) => handleFieldChange('email_assinante', String(value ?? ''))}
               required
               disabled={isSubmitting}
             />
           </div>
 
-          <div>
-            <LabelWithHelp className="form-label" required>
-              Nome do Assinante
-            </LabelWithHelp>
-            <input
-              type="text"
+          <div className="col-12">
+            <FormField
               name="nome_assinante"
-              className="form-control"
+              type="text"
+              label="Nome do Assinante"
               value={formData.nome_assinante}
-              onChange={handleInputChange}
+              onChange={(value) => handleFieldChange('nome_assinante', String(value ?? ''))}
               required
               disabled={isSubmitting}
             />
           </div>
 
-          <div>
-            <label className="form-label">CPF/CNPJ do Assinante</label>
-            <input
-              type="text"
+          <div className="col-12">
+            <FormField
               name="cpf_cnpj_assinante"
-              className="form-control"
+              type="text"
+              label="CPF/CNPJ do Assinante"
               value={formData.cpf_cnpj_assinante}
-              onChange={handleInputChange}
+              onChange={(value) => handleFieldChange('cpf_cnpj_assinante', String(value ?? ''))}
               placeholder="11 dígitos para CPF ou 14 dígitos para CNPJ"
               disabled={isSubmitting}
             />
           </div>
 
-          <div>
-            <label className="form-label">Mensagem</label>
-            <textarea
+          <div className="col-12">
+            <FormField
               name="mensagem"
-              className="form-control"
-              rows={3}
+              type="textarea"
+              label="Mensagem"
               value={formData.mensagem}
-              onChange={handleInputChange}
+              onChange={(value) => handleFieldChange('mensagem', String(value ?? ''))}
+              rows={3}
               disabled={isSubmitting}
             />
           </div>
 
-          <div>
-            <LabelWithHelp htmlFor="dias_expiracao" className="form-label" helpText={t('contract.signatureExpirationDaysHelp')}>
-              {t('digitalSignature.expirationDays')}
-            </LabelWithHelp>
-            <input
-              type="number"
-              id="dias_expiracao"
+          <div className="col-12">
+            <FormField
               name="dias_expiracao"
-              className="form-control"
+              type="number"
+              label={t('digitalSignature.expirationDays')}
+              helpText={t('contract.signatureExpirationDaysHelp')}
               value={formData.dias_expiracao}
-              onChange={handleInputChange}
+              onChange={(value) => handleFieldChange('dias_expiracao', parseInt(String(value ?? '30'), 10) || 30)}
               min={1}
               max={365}
               disabled={isSubmitting}

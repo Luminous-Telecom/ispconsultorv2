@@ -51,12 +51,10 @@ const AdicionarArquivoModal: React.FC<AdicionarArquivoModalProps> = ({
     setArquivo(file);
     setNomeArquivo(file.name);
     
-    // Se nome não foi preenchido, usar nome do arquivo
     if (!nome) {
       setNome(file.name);
     }
 
-    // Detectar tipo automaticamente se for imagem
     if (file.type.startsWith('image/')) {
       setTipo('foto');
     }
@@ -117,59 +115,63 @@ const AdicionarArquivoModal: React.FC<AdicionarArquivoModalProps> = ({
       headerActions={headerActions}
       modalId="adicionar-arquivo-modal"
     >
-      <form id="adicionar-arquivo-form" onSubmit={handleSubmit}>
-        <div className="row">
-          <div className="col-md-12">
-            <div className="modal-inner-padding">
-              <FormField
-                name="arquivo"
-                type="file"
-                size="sm"
-                label={t('form.file')}
-                required
-                accept="*/*"
-                onChange={handleFileSelect}
-                disabled={isSubmitting}
-                helpText={nomeArquivo ? `${t('form.fileSelected')}: ${nomeArquivo}` : undefined}
-              />
+      <form id="adicionar-arquivo-form" onSubmit={handleSubmit} className="form-modal-simple">
+        <div className="row g-2">
+          <div className="col-12">
+            <FormField
+              name="arquivo"
+              type="file"
+              size="sm"
+              label={t('form.file')}
+              required
+              accept="*/*"
+              onChange={handleFileSelect}
+              disabled={isSubmitting}
+              helpText={nomeArquivo ? `${t('form.fileSelected')}: ${nomeArquivo}` : undefined}
+            />
+          </div>
 
-              <FormField
-                name="nome"
-                type="text"
-                label={t('form.name')}
-                value={nome}
-                onChange={(value) => setNome(String(value || ''))}
-                placeholder={t('placeholder.fileName')}
-                required
-                disabled={isSubmitting}
-              />
+          <div className="col-12">
+            <FormField
+              name="nome"
+              type="text"
+              label={t('form.name')}
+              value={nome}
+              onChange={(value) => setNome(String(value || ''))}
+              placeholder={t('placeholder.fileName')}
+              required
+              disabled={isSubmitting}
+            />
+          </div>
 
-              <FormField
-                name="tipo"
-                type="select"
-                label={t('form.fileType')}
-                value={tipo}
-                onChange={(value) => setTipo(value as 'documento' | 'foto' | 'assinatura' | 'outro')}
-                options={[
-                  { value: 'documento', label: t('form.fileTypeDocument') },
-                  { value: 'foto', label: t('form.fileTypePhoto') },
-                  { value: 'assinatura', label: t('form.fileTypeSignature') },
-                  { value: 'outro', label: t('form.fileTypeOther') }
-                ]}
-                disabled={isSubmitting}
-              />
+          <div className="col-12">
+            <FormField
+              name="tipo"
+              type="select"
+              label={t('form.fileType')}
+              value={tipo}
+              onChange={(value) => setTipo(value as 'documento' | 'foto' | 'assinatura' | 'outro')}
+              options={[
+                { value: 'documento', label: t('form.fileTypeDocument') },
+                { value: 'foto', label: t('form.fileTypePhoto') },
+                { value: 'assinatura', label: t('form.fileTypeSignature') },
+                { value: 'outro', label: t('form.fileTypeOther') }
+              ]}
+              disabled={isSubmitting}
+            />
+          </div>
 
-              <FormField
-                name="descricao"
-                type="textarea"
-                label={t('form.description')}
-                value={descricao}
-                onChange={(value) => setDescricao(String(value || ''))}
-                placeholder={t('placeholder.description')}
-                rows={3}
-                disabled={isSubmitting}
-              />
-            </div>
+          <div className="col-12">
+            <FormField
+              name="descricao"
+              type="textarea"
+              label={t('form.description')}
+              value={descricao}
+              onChange={(value) => setDescricao(String(value || ''))}
+              placeholder={t('placeholder.description')}
+              rows={3}
+              disabled={isSubmitting}
+            />
           </div>
         </div>
       </form>

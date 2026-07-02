@@ -25,8 +25,8 @@ const SaasServidorFormWhatsappFields: React.FC<SaasServidorFormWhatsappFieldsPro
   errors,
   onFieldChange,
 }) => (
-  <div className="row g-1">
-    <div className="col-md-12">
+  <div className="row g-2">
+    <div className="col-12">
       <FormField
         name="nome"
         type="text"
@@ -50,7 +50,7 @@ const SaasServidorFormWhatsappFields: React.FC<SaasServidorFormWhatsappFieldsPro
         error={errors.url_api}
       />
     </div>
-    <div className="col-md-6">
+    <div className="col-12">
       <FormField
         name="token"
         type="text"
@@ -60,7 +60,7 @@ const SaasServidorFormWhatsappFields: React.FC<SaasServidorFormWhatsappFieldsPro
         size="sm"
       />
     </div>
-    <div className="col-md-6">
+    <div className="col-12">
       <FormField
         name="numero"
         type="text"
@@ -70,7 +70,7 @@ const SaasServidorFormWhatsappFields: React.FC<SaasServidorFormWhatsappFieldsPro
         size="sm"
       />
     </div>
-    <div className="col-md-4">
+    <div className="col-12">
       <FormField
         name="status"
         type="select"
@@ -81,7 +81,7 @@ const SaasServidorFormWhatsappFields: React.FC<SaasServidorFormWhatsappFieldsPro
         size="sm"
       />
     </div>
-    <div className="col-md-4">
+    <div className="col-12">
       <FormField
         name="limite_mensagens"
         type="number"

@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { DiasVencimentoService, type DiasVencimento } from 'services/diasVencimentoService';
 import { saasDiasVencimentoService } from 'services/saas/saasCrudService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
-import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
+import AtivoInativoField from 'components/ui/AtivoInativoField';
 import { SalvarButton } from 'components/ui';
 
 interface DiasVencimentoModalProps {
@@ -20,7 +20,6 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({
   variant = 'erp',
   skipWrapper = false,
 }) => {
-  const isMobile = useIsMobile();
   const [diasAtivos, setDiasAtivos] = useState<number[]>([]);
   const { success, error } = useNotificationContext();
 
@@ -55,10 +54,13 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({
     }
   }, [show, variant, loadDiasAtivosErp, loadDiasAtivosSaas]);
 
-  const toggleDia = (dia: number) => {
-    setDiasAtivos((prev) =>
-      prev.includes(dia) ? prev.filter((d) => d !== dia) : [...prev, dia].sort((a, b) => a - b)
-    );
+  const setDiaAtivo = (dia: number, ativo: boolean) => {
+    setDiasAtivos((prev) => {
+      const has = prev.includes(dia);
+      if (ativo && !has) return [...prev, dia].sort((a, b) => a - b);
+      if (!ativo && has) return prev.filter((d) => d !== dia);
+      return prev;
+    });
   };
 
   const handleSave = useCallback(async () => {
@@ -76,37 +78,20 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({
     }
   }, [variant, diasAtivos, success, error, loadDiasAtivosSaas]);
 
-  const canSave = true;
-
-  const saveButton = (
-    <SalvarButton type="button" onClick={handleSave} disabled={!canSave} />
-  );
-
   const content = (
-    <div className="modal-inner-padding">
+    <div className="form-modal-simple">
       <div className="d-flex justify-content-start align-items-center mb-3">
-        {saveButton}
+        <SalvarButton type="button" onClick={handleSave} />
       </div>
-      <div className="row g-0 form-modal-multi-col">
+      <div className="row g-2">
         {Array.from({ length: 30 }, (_, i) => i + 1).map((dia) => (
-          <div key={dia} className="col-12 col-sm-6 col-md-4 col-lg-3">
-            <div className="form-check form-switch">
-              <input
-                className="form-check-input cursor-pointer"
-                type="checkbox"
-                role="switch"
-                id={`dia-${variant}-${dia}`}
-                checked={diasAtivos.includes(dia)}
-                onChange={() => toggleDia(dia)}
-              />
-              <label
-                className="form-check-label cursor-pointer"
-                htmlFor={`dia-${variant}-${dia}`}
-                
-              >
-                Ativar dia {String(dia).padStart(2, '0')}
-              </label>
-            </div>
+          <div key={dia} className="col-12">
+            <AtivoInativoField
+              value={diasAtivos.includes(dia)}
+              onChange={(ativo) => setDiaAtivo(dia, ativo)}
+              label={`Ativar dia ${String(dia).padStart(2, '0')}`}
+              name={`dia-${variant}-${dia}`}
+            />
           </div>
         ))}
       </div>

@@ -258,9 +258,8 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
         onSubmit={handleSubmit}
         className="form-modal-simple"
       >
-        <div className="d-flex flex-column gap-2">
-          <div className="row g-2">
-            <div className="col-12">
+        <div className="row g-2">
+          <div className="col-12">
               <FormField
                 name="alvo"
                 label={t('scheduler.scope')}
@@ -301,7 +300,6 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
                 options={tipoOptions}
               />
             </div>
-          </div>
           {cronRowLabels.map((label, idx) => (
             <CronFieldSection
               key={`cron-part-${idx}`}

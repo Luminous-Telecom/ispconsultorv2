@@ -356,7 +356,7 @@ const SaasContratoFormModal: React.FC<Props> = ({
           <ModalFormActions onCancel={onClose} formId="saas-contrato-form-id" isPending={isPending} />
         }
       >
-        <form id="saas-contrato-form-id" onSubmit={handleSubmit} className="p-3">
+        <form id="saas-contrato-form-id" onSubmit={handleSubmit} className="form-modal-simple">
           <SaasContratoFormFields
             form={form}
             errors={errors}

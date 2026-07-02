@@ -305,7 +305,7 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
     }
 
     return (
-      <form id={formId} onSubmit={handleSubmit}>
+      <form id={formId} onSubmit={handleSubmit} className="form-modal-simple">
         <div className="ordem-servico-modal-content">
           <div
             className={`tab-content ordem-servico-tab-content ${

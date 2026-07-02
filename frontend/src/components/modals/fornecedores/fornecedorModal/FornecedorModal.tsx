@@ -32,7 +32,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = (props) => {
     }
 
     return (
-      <form id={modal.formId} onSubmit={modal.handleSubmit}>
+      <form id={modal.formId} onSubmit={modal.handleSubmit} className="form-modal-simple">
         <div className="fornecedor-modal-content">
           <div
             className="tab-content fornecedor-tab-content fornecedor-tab-content-padded"

@@ -48,16 +48,17 @@ const SshDeviceModalDadosTab: React.FC<SshDeviceModalDadosTabProps> = ({
   const { t } = useI18n();
 
   return (
-    <div className="row g-3">
+    <div className="row g-2">
       {isEditing && (
         <div className="col-12">
-          <label className="form-label form-label-sm fw-semibold text-muted">{t('table.client')}</label>
-          <input
+          <FormField
+            name="cliente_readonly"
             type="text"
-            className="form-control form-control-sm"
-            readOnly
-            disabled
+            label={t('table.client')}
             value={clienteEdicaoLabel}
+            onChange={() => {}}
+            readOnly
+            size="sm"
           />
         </div>
       )}
@@ -82,17 +83,18 @@ const SshDeviceModalDadosTab: React.FC<SshDeviceModalDadosTabProps> = ({
       )}
       {!isEditing && !isAdmin && me && (
         <div className="col-12">
-          <label className="form-label form-label-sm fw-semibold text-muted">Empresa</label>
-          <input
+          <FormField
+            name="empresa_readonly"
             type="text"
-            className="form-control form-control-sm"
-            readOnly
-            disabled
+            label="Empresa"
             value={
               dadosEmpresaTenant
                 ? (dadosEmpresaTenant.nome_fantasia?.trim() || dadosEmpresaTenant.razao_social)
                 : 'Carregando…'
             }
+            onChange={() => {}}
+            readOnly
+            size="sm"
           />
         </div>
       )}
@@ -130,18 +132,19 @@ const SshDeviceModalDadosTab: React.FC<SshDeviceModalDadosTabProps> = ({
         />
       </div>
       <div className="col-12">
-        <label className="form-label form-label-sm fw-semibold">Tipo de dispositivo</label>
-        <select
-          className="form-select form-select-sm"
+        <FormField
+          name="device_type"
+          type="select"
+          label="Tipo de dispositivo"
           value={formData.device_type}
-          onChange={(e) => onDeviceTypeChange(e.target.value as SshDeviceFormData['device_type'])}
-        >
-          {DEVICE_TYPE_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value} disabled={opt.disabled}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+          onChange={(value) => onDeviceTypeChange(value as SshDeviceFormData['device_type'])}
+          options={DEVICE_TYPE_OPTIONS.map((opt) => ({
+            value: opt.value,
+            label: opt.label,
+            disabled: opt.disabled,
+          }))}
+          size="sm"
+        />
       </div>
       <div className="col-12">
         <FormField

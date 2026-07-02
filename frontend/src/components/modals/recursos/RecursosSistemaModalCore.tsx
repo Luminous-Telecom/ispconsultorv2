@@ -6,7 +6,7 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useFormReset } from 'hooks/useFormReset';
 import DraggableModal from 'components/common/DraggableModal';
-import { LabelWithHelp, Loading, ModalFormActions } from 'components/ui';
+import { AtivoInativoField, FormField, Loading, ModalFormActions } from 'components/ui';
 import { useI18n } from 'contexts/I18nContext';
 import type { SaasParametros } from 'services/saas/saasParametrosService';
 import {
@@ -105,10 +105,6 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
     updateMutation.mutate(erpPayload);
   };
 
-  const handleCheckboxChange = (field: keyof RecursosSistemaFormSaas) => {
-    setFormData((prev) => ({ ...prev, [field]: !prev[field] }));
-  };
-
   const handleSelectChange = (field: keyof RecursosSistemaFormBase, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -145,39 +141,25 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
               <small className="fw-bold mb-0">{t('params.validations')}</small>
             </div>
             <div className={`card-body p-2${isSaas ? ' overflow-visible' : ''}`}>
-              <div className="form-check mb-3">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id={`${idPrefix}validar_cpf_cnpj`}
-                  checked={formData.validar_cpf_cnpj}
-                  onChange={() => handleCheckboxChange('validar_cpf_cnpj')}
-                  disabled={updateMutation.isPending}
-                />
-                <LabelWithHelp
-                  htmlFor={`${idPrefix}validar_cpf_cnpj`}
-                  className="form-check-label"
-                  helpText={t(isSaas ? 'params.validateCpfCnpjHelpSaas' : 'params.validateCpfCnpjHelp')}
-                >
-                  {t('params.validateCpfCnpj')}
-                </LabelWithHelp>
-              </div>
-              <div className="form-check mb-3">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id={`${idPrefix}validar_cep`}
-                  checked={formData.validar_cep}
-                  onChange={() => handleCheckboxChange('validar_cep')}
-                  disabled={updateMutation.isPending}
-                />
-                <LabelWithHelp
-                  htmlFor={`${idPrefix}validar_cep`}
-                  className="form-check-label"
-                  helpText={t(isSaas ? 'params.validateCepHelpSaas' : 'params.validateCepHelp')}
-                >
-                  {t('params.validateCep')}
-                </LabelWithHelp>
+              <div className="row g-2">
+                <div className="col-12">
+                  <AtivoInativoField
+                    value={formData.validar_cpf_cnpj}
+                    onChange={(v) => setFormData((prev) => ({ ...prev, validar_cpf_cnpj: v }))}
+                    label={t('params.validateCpfCnpj')}
+                    name={`${idPrefix}validar_cpf_cnpj`}
+                    disabled={updateMutation.isPending}
+                  />
+                </div>
+                <div className="col-12">
+                  <AtivoInativoField
+                    value={formData.validar_cep}
+                    onChange={(v) => setFormData((prev) => ({ ...prev, validar_cep: v }))}
+                    label={t('params.validateCep')}
+                    name={`${idPrefix}validar_cep`}
+                    disabled={updateMutation.isPending}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -187,72 +169,59 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
               <small className="fw-bold mb-0">{t('params.titleGeneration')}</small>
             </div>
             <div className={`card-body p-2${isSaas ? ' overflow-visible' : ''}`}>
-              <div className="form-check mb-3">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id={`${idPrefix}titulos_vence_sabado`}
-                  checked={formData.titulos_vence_sabado}
-                  onChange={() => handleCheckboxChange('titulos_vence_sabado')}
-                  disabled={updateMutation.isPending}
-                />
-                <LabelWithHelp
-                  htmlFor={`${idPrefix}titulos_vence_sabado`}
-                  className="form-check-label"
-                  helpText={t('params.titlesDueSaturdayHelp')}
-                >
-                  {t('params.titlesDueSaturday')}
-                </LabelWithHelp>
-              </div>
-              <div className="form-check mb-3">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id={`${idPrefix}titulos_vence_domingo`}
-                  checked={formData.titulos_vence_domingo}
-                  onChange={() => handleCheckboxChange('titulos_vence_domingo')}
-                  disabled={updateMutation.isPending}
-                />
-                <LabelWithHelp
-                  htmlFor={`${idPrefix}titulos_vence_domingo`}
-                  className="form-check-label"
-                  helpText={t('params.titlesDueSundayHelp')}
-                >
-                  {t('params.titlesDueSunday')}
-                </LabelWithHelp>
-              </div>
-              {isSaas && (
-                <>
-                  <div className="form-check mb-3">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="saas_manter_numeros_titulos"
-                      checked={formData.manter_numeros_titulos}
-                      onChange={() => handleCheckboxChange('manter_numeros_titulos')}
-                      disabled={updateMutation.isPending}
-                    />
-                    <LabelWithHelp
-                      htmlFor="saas_manter_numeros_titulos"
-                      className="form-check-label"
-                      helpText={t('params.keepTitleNumbersHelp')}
-                    >
-                      {t('params.keepTitleNumbers')}
-                    </LabelWithHelp>
-                  </div>
-                  {formData.manter_numeros_titulos && (
-                    <div className="mb-3">
-                      <label htmlFor="saas_quantidade_titulos_manter" className="form-label small mb-1">
-                        Quantidade de Títulos a Manter (1 a 24)
-                      </label>
-                      <input
-                        type="number"
-                        className="form-control form-control-sm input-max-w-80"
+              <div className="row g-2">
+                <div className="col-12">
+                  <AtivoInativoField
+                    value={formData.titulos_vence_sabado}
+                    onChange={(v) => setFormData((prev) => ({ ...prev, titulos_vence_sabado: v }))}
+                    label={t('params.titlesDueSaturday')}
+                    name={`${idPrefix}titulos_vence_sabado`}
+                    disabled={updateMutation.isPending}
+                  />
+                </div>
+                <div className="col-12">
+                  <AtivoInativoField
+                    value={formData.titulos_vence_domingo}
+                    onChange={(v) => setFormData((prev) => ({ ...prev, titulos_vence_domingo: v }))}
+                    label={t('params.titlesDueSunday')}
+                    name={`${idPrefix}titulos_vence_domingo`}
+                    disabled={updateMutation.isPending}
+                  />
+                </div>
+                {isSaas && (
+                  <>
+                    <div className="col-12">
+                      <AtivoInativoField
+                        value={formData.manter_numeros_titulos}
+                        onChange={(v) => setFormData((prev) => ({ ...prev, manter_numeros_titulos: v }))}
+                        label={t('params.keepTitleNumbers')}
+                        name="saas_manter_numeros_titulos"
+                        disabled={updateMutation.isPending}
                       />
                     </div>
-                  )}
-                </>
-              )}
+                    {formData.manter_numeros_titulos && (
+                      <div className="col-12">
+                        <FormField
+                          name="saas_quantidade_titulos_manter"
+                          type="number"
+                          label="Quantidade de Títulos a Manter (1 a 24)"
+                          value={formData.quantidade_titulos_manter}
+                          onChange={(v) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              quantidade_titulos_manter: Math.min(24, Math.max(1, Number(v) || 1)),
+                            }))
+                          }
+                          min={1}
+                          max={24}
+                          size="sm"
+                          disabled={updateMutation.isPending}
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
@@ -261,23 +230,24 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
               <small className="fw-bold mb-0">{t('params.subscriberCenter')}</small>
             </div>
             <div className={`card-body p-2${isSaas ? ' overflow-visible' : ''}`}>
-              <LabelWithHelp
-                htmlFor={`${idPrefix}central_metodo`}
-                className="form-label small mb-1"
-                helpText={t('params.loginMethodHelp')}
-              >
-                {t('params.loginMethod')}
-              </LabelWithHelp>
-              <select
-                className={`form-select form-select-sm`}
-                id={`${idPrefix}central_metodo`}
-                value={formData.central_assinante_metodo_login}
-                onChange={(e) => handleSelectChange('central_assinante_metodo_login', e.target.value)}
-                disabled={updateMutation.isPending}
-              >
-                <option value="cnpj">CNPJ</option>
-                <option value="email">Email</option>
-              </select>
+              <div className="row g-2">
+                <div className="col-12">
+                  <FormField
+                    name={`${idPrefix}central_metodo`}
+                    type="select"
+                    label={t('params.loginMethod')}
+                    helpText={t('params.loginMethodHelp')}
+                    value={formData.central_assinante_metodo_login}
+                    onChange={(v) => handleSelectChange('central_assinante_metodo_login', String(v ?? 'cnpj'))}
+                    options={[
+                      { value: 'cnpj', label: 'CNPJ' },
+                      { value: 'email', label: 'Email' },
+                    ]}
+                    size="sm"
+                    disabled={updateMutation.isPending}
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -287,61 +257,51 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
                 <small className="fw-bold mb-0">{t('params.overdueBlockSection')}</small>
               </div>
               <div className="card-body p-2 overflow-visible">
-                <div className="mb-3">
-                  <LabelWithHelp
-                    htmlFor="saas_dias_atraso_bloqueio"
-                    className="form-label small mb-1"
-                    helpText={t('params.overdueDaysBlockHelp')}
-                  >
-                    {t('params.overdueDaysBlock')}
-                  </LabelWithHelp>
-                  <input
-                    type="number"
-                    className="form-control form-control-sm input-max-w-140"
-                    id="saas_dias_atraso_bloqueio"
-                    min={0}
-                    max={365}
-                    placeholder="Ex: 15"
-                    value={formData.dias_atraso_bloqueio ?? ''}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setFormData((prev) => ({
-                        ...prev,
-                        dias_atraso_bloqueio:
-                          v === '' ? null : Math.min(365, Math.max(0, parseInt(v, 10) || 0)),
-                      }));
-                    }}
-                    disabled={updateMutation.isPending}
-                  />
-                  <small className="text-muted form-hint d-block mt-1">{t('params.overdueDaysBlockDisabledHint')}</small>
-                </div>
-                <div className="mb-3">
-                  <LabelWithHelp
-                    htmlFor="saas_dias_desbloqueio_manual"
-                    className="form-label small mb-1"
-                    helpText={t('params.manualUnlockDaysHelp')}
-                  >
-                    {t('params.manualUnlockDays')}
-                  </LabelWithHelp>
-                  <input
-                    type="number"
-                    className="form-control form-control-sm input-max-w-140"
-                    id="saas_dias_desbloqueio_manual"
-                    min={0}
-                    max={365}
-                    placeholder="Ex: 7"
-                    value={formData.dias_desbloqueio_manual ?? ''}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setFormData((prev) => ({
-                        ...prev,
-                        dias_desbloqueio_manual:
-                          v === '' ? null : Math.min(365, Math.max(0, parseInt(v, 10) || 0)),
-                      }));
-                    }}
-                    disabled={updateMutation.isPending}
-                  />
-                  <small className="text-muted form-hint d-block mt-1">{t('params.overdueDaysBlockDisabledHint')}</small>
+                <div className="row g-2">
+                  <div className="col-12">
+                    <FormField
+                      name="saas_dias_atraso_bloqueio"
+                      type="number"
+                      label={t('params.overdueDaysBlock')}
+                      helpText={t('params.overdueDaysBlockHelp')}
+                      placeholder="Ex: 15"
+                      value={formData.dias_atraso_bloqueio ?? ''}
+                      onChange={(v) => {
+                        const raw = String(v ?? '');
+                        setFormData((prev) => ({
+                          ...prev,
+                          dias_atraso_bloqueio:
+                            raw === '' ? null : Math.min(365, Math.max(0, parseInt(raw, 10) || 0)),
+                        }));
+                      }}
+                      min={0}
+                      max={365}
+                      size="sm"
+                      disabled={updateMutation.isPending}
+                    />
+                  </div>
+                  <div className="col-12">
+                    <FormField
+                      name="saas_dias_desbloqueio_manual"
+                      type="number"
+                      label={t('params.manualUnlockDays')}
+                      helpText={t('params.manualUnlockDaysHelp')}
+                      placeholder="Ex: 7"
+                      value={formData.dias_desbloqueio_manual ?? ''}
+                      onChange={(v) => {
+                        const raw = String(v ?? '');
+                        setFormData((prev) => ({
+                          ...prev,
+                          dias_desbloqueio_manual:
+                            raw === '' ? null : Math.min(365, Math.max(0, parseInt(raw, 10) || 0)),
+                        }));
+                      }}
+                      min={0}
+                      max={365}
+                      size="sm"
+                      disabled={updateMutation.isPending}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

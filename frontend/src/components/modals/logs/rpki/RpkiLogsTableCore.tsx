@@ -262,14 +262,14 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
     if (!selectedLog) return [];
 
     const fields: DetailFieldItem[] = [
-      { label: 'Data', value: formatDateTime(selectedLog.created_at), colClassName: config.showTypeColumn ? 'col-md-6' : 'col-md-8' },
+      { label: 'Data', value: formatDateTime(selectedLog.created_at), colClassName: 'col-12' },
     ];
 
     if (config.showTypeColumn) {
       fields.push({
         label: 'Tipo',
         value: TYPE_LABEL[selectedLog.type] ?? selectedLog.type,
-        colClassName: 'col-md-3',
+        colClassName: 'col-12',
       });
     }
 
@@ -277,7 +277,7 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
       label: 'Status',
       value: selectedLog.status === 'success' ? 'Sucesso' : 'Falha',
       inputClassName: selectedLog.status === 'failed' ? 'text-danger' : 'text-success',
-      colClassName: config.showTypeColumn ? 'col-md-3' : 'col-md-4',
+      colClassName: 'col-12',
     });
 
     if (isSaasPortal) {

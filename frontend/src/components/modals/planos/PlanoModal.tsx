@@ -60,7 +60,7 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
 
     // Conteúdo normal do formulário
     return (
-      <form id={formHook.isEditing ? 'plano-edit-form' : 'plano-create-form'} onSubmit={formHook.handleSubmit}>
+      <form id={formHook.isEditing ? 'plano-edit-form' : 'plano-create-form'} onSubmit={formHook.handleSubmit} className="form-modal-simple">
         <div className="plano-modal-content">
           {/* Conteúdo das Abas */}
           <div

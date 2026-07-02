@@ -1,5 +1,6 @@
 import React from 'react';
 import FormField from 'components/ui/FormField';
+import AtivoInativoField from 'components/ui/AtivoInativoField';
 import {
   SAAS_SERVIDOR_STATUS_OPTIONS,
   type SaasServidorStatus,
@@ -26,8 +27,8 @@ const SaasServidorFormEmailFields: React.FC<SaasServidorFormEmailFieldsProps> = 
   errors,
   onFieldChange,
 }) => (
-  <div className="row g-1">
-    <div className="col-md-12">
+  <div className="row g-2">
+    <div className="col-12">
       <FormField
         name="nome"
         type="text"
@@ -39,7 +40,7 @@ const SaasServidorFormEmailFields: React.FC<SaasServidorFormEmailFieldsProps> = 
         error={errors.nome}
       />
     </div>
-    <div className="col-md-8">
+    <div className="col-12">
       <FormField
         name="host_smtp"
         type="text"
@@ -51,7 +52,7 @@ const SaasServidorFormEmailFields: React.FC<SaasServidorFormEmailFieldsProps> = 
         error={errors.host_smtp}
       />
     </div>
-    <div className="col-md-4">
+    <div className="col-12">
       <FormField
         name="porta"
         type="number"
@@ -87,21 +88,15 @@ const SaasServidorFormEmailFields: React.FC<SaasServidorFormEmailFieldsProps> = 
         error={errors.senha_criptografada}
       />
     </div>
-    <div className="col-md-4">
-      <FormField
-        name="ssl"
-        type="select"
+    <div className="col-12">
+      <AtivoInativoField
+        value={form.ssl}
+        onChange={(v) => onFieldChange('ssl', v)}
         label="SSL"
-        value={form.ssl ? 'true' : 'false'}
-        onChange={(v) => onFieldChange('ssl', v === 'true')}
-        options={[
-          { value: 'true', label: 'Sim' },
-          { value: 'false', label: 'Não' },
-        ]}
-        size="sm"
+        name="saas-servidor-email-ssl"
       />
     </div>
-    <div className="col-md-4">
+    <div className="col-12">
       <FormField
         name="status"
         type="select"

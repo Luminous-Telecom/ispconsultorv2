@@ -291,7 +291,7 @@ const IxcOsSyncLogsModal: React.FC<IxcOsSyncLogsModalProps> = ({ show }) => {
         >
           <div className="p-3 logs-auditoria-details">
             <div className="row g-2">
-              <div className="col-md-6">
+              <div className="col-12">
                 <FormField
                   name="created_at"
                   type="text"
@@ -302,7 +302,7 @@ const IxcOsSyncLogsModal: React.FC<IxcOsSyncLogsModalProps> = ({ show }) => {
                   readOnly
                 />
               </div>
-              <div className="col-md-6">
+              <div className="col-12">
                 <FormField
                   name="event_type"
                   type="text"
@@ -316,7 +316,7 @@ const IxcOsSyncLogsModal: React.FC<IxcOsSyncLogsModalProps> = ({ show }) => {
                   readOnly
                 />
               </div>
-              <div className="col-md-6">
+              <div className="col-12">
                 <FormField
                   name="status"
                   type="text"
@@ -337,7 +337,7 @@ const IxcOsSyncLogsModal: React.FC<IxcOsSyncLogsModalProps> = ({ show }) => {
                   }
                 />
               </div>
-              <div className="col-md-6">
+              <div className="col-12">
                 <FormField
                   name="trigger_type"
                   type="text"
@@ -352,7 +352,7 @@ const IxcOsSyncLogsModal: React.FC<IxcOsSyncLogsModalProps> = ({ show }) => {
                   readOnly
                 />
               </div>
-              <div className="col-md-6">
+              <div className="col-12">
                 <FormField
                   name="protocolo"
                   type="text"
@@ -363,7 +363,7 @@ const IxcOsSyncLogsModal: React.FC<IxcOsSyncLogsModalProps> = ({ show }) => {
                   readOnly
                 />
               </div>
-              <div className="col-md-6">
+              <div className="col-12">
                 <FormField
                   name="ixc_os_id"
                   type="text"
@@ -374,7 +374,7 @@ const IxcOsSyncLogsModal: React.FC<IxcOsSyncLogsModalProps> = ({ show }) => {
                   readOnly
                 />
               </div>
-              <div className="col-md-6">
+              <div className="col-12">
                 <FormField
                   name="cliente_nome"
                   type="text"
@@ -385,7 +385,7 @@ const IxcOsSyncLogsModal: React.FC<IxcOsSyncLogsModalProps> = ({ show }) => {
                   readOnly
                 />
               </div>
-              <div className="col-md-6">
+              <div className="col-12">
                 <FormField
                   name="origem_abertura"
                   type="text"
@@ -400,7 +400,7 @@ const IxcOsSyncLogsModal: React.FC<IxcOsSyncLogsModalProps> = ({ show }) => {
                   readOnly
                 />
               </div>
-              <div className="col-md-6">
+              <div className="col-12">
                 <FormField
                   name="operador_nome"
                   type="text"
@@ -411,7 +411,7 @@ const IxcOsSyncLogsModal: React.FC<IxcOsSyncLogsModalProps> = ({ show }) => {
                   readOnly
                 />
               </div>
-              <div className="col-md-6">
+              <div className="col-12">
                 <FormField
                   name="integracao_nome"
                   type="text"
@@ -423,7 +423,7 @@ const IxcOsSyncLogsModal: React.FC<IxcOsSyncLogsModalProps> = ({ show }) => {
                 />
               </div>
               {selectedLog.status_anterior && (
-                <div className="col-md-6">
+                <div className="col-12">
                   <FormField
                     name="status_anterior"
                     type="text"
@@ -436,7 +436,7 @@ const IxcOsSyncLogsModal: React.FC<IxcOsSyncLogsModalProps> = ({ show }) => {
                 </div>
               )}
               {selectedLog.status_novo && (
-                <div className="col-md-6">
+                <div className="col-12">
                   <FormField
                     name="status_novo"
                     type="text"

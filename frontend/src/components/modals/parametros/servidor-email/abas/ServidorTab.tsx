@@ -47,9 +47,6 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                 onChange={(value) => onChange('porta', parseInt(value as string) || 587)}
               />
             </div>
-          </div>
-          
-          <div className="row g-2">
             <div className="col-12">
               <FormField
                 name="usuario"
@@ -77,9 +74,6 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                 helpText={servidorAtivo?.data ? t('emailServer.passwordHelp') : undefined}
               />
             </div>
-          </div>
-
-          <div className="row g-2">
             <div className="col-12">
               <FormField
                 name="nome_remetente"
@@ -104,9 +98,6 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                 onChange={(value) => onChange('email_remetente', String(value ?? ''))}
               />
             </div>
-          </div>
-          
-          <div className="row g-2">
             <div className="col-12">
               <div className="form-field">
                 <label className="form-label small">{t('emailServer.security')}</label>

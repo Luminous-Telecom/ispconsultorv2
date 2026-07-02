@@ -51,44 +51,54 @@ const ContaPagarFormContent: React.FC<ContaPagarFormContentProps> = ({
     <form
       id={isEditing ? 'conta-pagar-edit-form' : 'conta-pagar-create-form'}
       onSubmit={onSubmit}
-      className="modal-inner-padding"
+      className="form-modal-simple"
     >
-      <div className="d-flex flex-column gap-2">
-        <ContaPagarFornecedorSection
-          formData={formData}
-          errors={errors}
-          fornecedores={fornecedores}
-          isEditing={isEditing}
-          onFornecedorChange={onFornecedorChange}
-          onShowFornecedorModal={onShowFornecedorModal}
-          onTipoCriacaoChange={onTipoCriacaoChange}
-        />
+      <div className="row g-2">
+        <div className="col-12">
+          <ContaPagarFornecedorSection
+            formData={formData}
+            errors={errors}
+            fornecedores={fornecedores}
+            isEditing={isEditing}
+            onFornecedorChange={onFornecedorChange}
+            onShowFornecedorModal={onShowFornecedorModal}
+            onTipoCriacaoChange={onTipoCriacaoChange}
+          />
+        </div>
 
-        <ContaPagarVencimentoSection
-          formData={formData}
-          errors={errors}
-          isEditing={isEditing}
-          onFieldChange={onFieldChange}
-          onClearError={onClearError}
-        />
+        <div className="col-12">
+          <ContaPagarVencimentoSection
+            formData={formData}
+            errors={errors}
+            isEditing={isEditing}
+            onFieldChange={onFieldChange}
+            onClearError={onClearError}
+          />
+        </div>
 
-        <ContaPagarValorTipoPagamentoSection
-          formData={formData}
-          errors={errors}
-          onFieldChange={onFieldChange}
-          onClearError={onClearError}
-          onTipoPagamentoChange={onTipoPagamentoChange}
-        />
+        <div className="col-12">
+          <ContaPagarValorTipoPagamentoSection
+            formData={formData}
+            errors={errors}
+            onFieldChange={onFieldChange}
+            onClearError={onClearError}
+            onTipoPagamentoChange={onTipoPagamentoChange}
+          />
+        </div>
 
-        <ContaPagarPixBoletoSection
-          formData={formData}
-          onFieldChange={onFieldChange}
-        />
+        <div className="col-12">
+          <ContaPagarPixBoletoSection
+            formData={formData}
+            onFieldChange={onFieldChange}
+          />
+        </div>
 
-        <ContaPagarDocumentoDescricaoSection
-          formData={formData}
-          onFieldChange={onFieldChange}
-        />
+        <div className="col-12">
+          <ContaPagarDocumentoDescricaoSection
+            formData={formData}
+            onFieldChange={onFieldChange}
+          />
+        </div>
       </div>
     </form>
   );

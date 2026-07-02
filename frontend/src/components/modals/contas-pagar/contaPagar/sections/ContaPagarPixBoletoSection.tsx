@@ -35,63 +35,59 @@ const ContaPagarPixBoletoSection: React.FC<ContaPagarPixBoletoSectionProps> = ({
       )}
 
       {formData.tipo_pagamento === 'PIX' && (
-        <div className="d-flex gap-2">
-          <div className="flex-fill">
-            <FormField
-              name="tipo_chave_pix"
-              type="select"
-              label={t('form.pixKeyType')}
-              value={formData.tipo_chave_pix}
-              onChange={(value) => {
-                onFieldChange('tipo_chave_pix', value as ContaPagarFormData['tipo_chave_pix']);
-                onFieldChange('chave_pix', '');
-              }}
-              options={[
-                { value: 'CPF_CNPJ', label: 'CPF/CNPJ' },
-                { value: 'CELULAR', label: t('form.phone') },
-                { value: 'EMAIL', label: t('form.email') },
-                { value: 'ALEATORIA', label: 'Aleatória' },
-                { value: 'QRCODE', label: t('form.qrCodeCopiaECola') }
-              ]}
-              size="sm"
-            />
-          </div>
-          <div className="flex-fill">
-            <FormField
-              name="chave_pix"
-              type="text"
-              label={formData.tipo_chave_pix === 'QRCODE' ? t('form.qrCodeCopiaECola') : t('form.pixKey')}
-              value={formData.chave_pix}
-              onChange={(value) => {
-                const inputValue = String(value || '');
-                let formatted = inputValue;
+        <>
+          <FormField
+            name="tipo_chave_pix"
+            type="select"
+            label={t('form.pixKeyType')}
+            value={formData.tipo_chave_pix}
+            onChange={(value) => {
+              onFieldChange('tipo_chave_pix', value as ContaPagarFormData['tipo_chave_pix']);
+              onFieldChange('chave_pix', '');
+            }}
+            options={[
+              { value: 'CPF_CNPJ', label: 'CPF/CNPJ' },
+              { value: 'CELULAR', label: t('form.phone') },
+              { value: 'EMAIL', label: t('form.email') },
+              { value: 'ALEATORIA', label: 'Aleatória' },
+              { value: 'QRCODE', label: t('form.qrCodeCopiaECola') }
+            ]}
+            size="sm"
+          />
+          <FormField
+            name="chave_pix"
+            type="text"
+            label={formData.tipo_chave_pix === 'QRCODE' ? t('form.qrCodeCopiaECola') : t('form.pixKey')}
+            value={formData.chave_pix}
+            onChange={(value) => {
+              const inputValue = String(value || '');
+              let formatted = inputValue;
 
-                if (formData.tipo_chave_pix === 'CPF_CNPJ') {
-                  const cleaned = inputValue.replace(/\D/g, '');
-                  formatted = cleaned.length <= 11 ? formatCPF(cleaned) : formatCNPJ(cleaned);
-                } else if (formData.tipo_chave_pix === 'CELULAR') {
-                  const cleaned = inputValue.replace(/\D/g, '').slice(0, 11);
-                  formatted = cleaned && cleaned.length >= 10
-                    ? `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`
-                    : inputValue;
-                } else if (formData.tipo_chave_pix === 'EMAIL') {
-                  formatted = inputValue.toLowerCase().trim();
-                }
-
-                onFieldChange('chave_pix', formatted);
-              }}
-              placeholder={
-                formData.tipo_chave_pix === 'CPF_CNPJ' ? t('placeholder.enterCpfCnpj') :
-                formData.tipo_chave_pix === 'CELULAR' ? t('placeholder.enterCellPhone') :
-                formData.tipo_chave_pix === 'EMAIL' ? t('placeholder.enterEmail') :
-                formData.tipo_chave_pix === 'ALEATORIA' ? t('placeholder.enterRandomKey') :
-                formData.tipo_chave_pix === 'QRCODE' ? t('placeholder.pasteQrCode') :
-                t('placeholder.enterPixKey')
+              if (formData.tipo_chave_pix === 'CPF_CNPJ') {
+                const cleaned = inputValue.replace(/\D/g, '');
+                formatted = cleaned.length <= 11 ? formatCPF(cleaned) : formatCNPJ(cleaned);
+              } else if (formData.tipo_chave_pix === 'CELULAR') {
+                const cleaned = inputValue.replace(/\D/g, '').slice(0, 11);
+                formatted = cleaned && cleaned.length >= 10
+                  ? `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`
+                  : inputValue;
+              } else if (formData.tipo_chave_pix === 'EMAIL') {
+                formatted = inputValue.toLowerCase().trim();
               }
-              size="sm"
-            />
-          </div>
-        </div>
+
+              onFieldChange('chave_pix', formatted);
+            }}
+            placeholder={
+              formData.tipo_chave_pix === 'CPF_CNPJ' ? t('placeholder.enterCpfCnpj') :
+              formData.tipo_chave_pix === 'CELULAR' ? t('placeholder.enterCellPhone') :
+              formData.tipo_chave_pix === 'EMAIL' ? t('placeholder.enterEmail') :
+              formData.tipo_chave_pix === 'ALEATORIA' ? t('placeholder.enterRandomKey') :
+              formData.tipo_chave_pix === 'QRCODE' ? t('placeholder.pasteQrCode') :
+              t('placeholder.enterPixKey')
+            }
+            size="sm"
+          />
+        </>
       )}
     </>
   );

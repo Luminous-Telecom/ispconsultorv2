@@ -20,7 +20,7 @@ const CasSection: React.FC<CasSectionProps> = ({
     <div className="card-header">CAs</div>
     <div className="card-body">
       <div className="row g-2 mb-2">
-        <div className="col-md-8">
+        <div className="col-12">
           <FormField
             name="ca_nome"
             label="Nome da CA"
@@ -29,13 +29,15 @@ const CasSection: React.FC<CasSectionProps> = ({
             onChange={(value) => setCaNome(String(value ?? ''))}
           />
         </div>
-        <div className="col-md-4 d-flex align-items-end">
-          <NovoButton
-            type="button"
-            disabled={createCaMutation.isPending}
-            isPending={createCaMutation.isPending}
-            onClick={handleCreateCa}
-          />
+        <div className="col-12">
+          <div className="form-modal-input-col">
+            <NovoButton
+              type="button"
+              disabled={createCaMutation.isPending}
+              isPending={createCaMutation.isPending}
+              onClick={handleCreateCa}
+            />
+          </div>
         </div>
       </div>
       <div className="table-responsive">

@@ -36,79 +36,87 @@ const FornecedorModalDadosBasicosTab: React.FC<FornecedorModalDadosBasicosTabPro
   onInputChange,
   onTipoPessoaChange,
 }) => (
-  <div className="d-flex flex-column gap-2">
-    <div className="form-field">
-      <label className="form-label small">
-        {personTypeLabel}
-        <RequiredMark />
-      </label>
-      <div className="form-field-control">
-        <div className="d-flex flex-wrap gap-3">
-          <div className="form-check form-check-inline">
-            <input
-              className="form-check-input"
-              type="radio"
-              name={`${formPrefix}-tipo_pessoa`}
-              id={`${formPrefix}-tipo_pessoa_fisica`}
-              value="FISICA"
-              checked={formData.tipo_pessoa === 'FISICA'}
-              onChange={() => onTipoPessoaChange('FISICA')}
-            />
-            <label className="form-check-label" htmlFor={`${formPrefix}-tipo_pessoa_fisica`}>
-              {personTypePhysicalLabel}
-            </label>
+  <div className="row g-2">
+    <div className="col-12">
+      <div className="form-field">
+        <label className="form-label small">
+          {personTypeLabel}
+          <RequiredMark />
+        </label>
+        <div className="form-field-control">
+          <div className="d-flex flex-wrap gap-3">
+            <div className="form-check form-check-inline">
+              <input
+                className="form-check-input"
+                type="radio"
+                name={`${formPrefix}-tipo_pessoa`}
+                id={`${formPrefix}-tipo_pessoa_fisica`}
+                value="FISICA"
+                checked={formData.tipo_pessoa === 'FISICA'}
+                onChange={() => onTipoPessoaChange('FISICA')}
+              />
+              <label className="form-check-label" htmlFor={`${formPrefix}-tipo_pessoa_fisica`}>
+                {personTypePhysicalLabel}
+              </label>
+            </div>
+            <div className="form-check form-check-inline">
+              <input
+                className="form-check-input"
+                type="radio"
+                name={`${formPrefix}-tipo_pessoa`}
+                id={`${formPrefix}-tipo_pessoa_juridica`}
+                value="JURIDICA"
+                checked={formData.tipo_pessoa === 'JURIDICA'}
+                onChange={() => onTipoPessoaChange('JURIDICA')}
+              />
+              <label className="form-check-label" htmlFor={`${formPrefix}-tipo_pessoa_juridica`}>
+                {personTypeLegalLabel}
+              </label>
+            </div>
           </div>
-          <div className="form-check form-check-inline">
-            <input
-              className="form-check-input"
-              type="radio"
-              name={`${formPrefix}-tipo_pessoa`}
-              id={`${formPrefix}-tipo_pessoa_juridica`}
-              value="JURIDICA"
-              checked={formData.tipo_pessoa === 'JURIDICA'}
-              onChange={() => onTipoPessoaChange('JURIDICA')}
-            />
-            <label className="form-check-label" htmlFor={`${formPrefix}-tipo_pessoa_juridica`}>
-              {personTypeLegalLabel}
-            </label>
-          </div>
+          {errors.tipo_pessoa && <div className="form-text form-hint text-danger">{errors.tipo_pessoa}</div>}
         </div>
-        {errors.tipo_pessoa && <div className="form-text form-hint text-danger">{errors.tipo_pessoa}</div>}
       </div>
     </div>
 
-    <FormField
-      name="cpf_cnpj"
-      type="text"
-      label={formData.tipo_pessoa === 'FISICA' ? cpfLabel : cnpjLabel}
-      value={formData.cpf_cnpj}
-      onChange={(value) => onInputChange('cpf_cnpj', value as string)}
-      placeholder={formData.tipo_pessoa === 'FISICA' ? '000.000.000-00' : cnpjPlaceholder}
-      required
-      error={errors.cpf_cnpj}
-      formPrefix={formPrefix}
-    />
+    <div className="col-12">
+      <FormField
+        name="cpf_cnpj"
+        type="text"
+        label={formData.tipo_pessoa === 'FISICA' ? cpfLabel : cnpjLabel}
+        value={formData.cpf_cnpj}
+        onChange={(value) => onInputChange('cpf_cnpj', value as string)}
+        placeholder={formData.tipo_pessoa === 'FISICA' ? '000.000.000-00' : cnpjPlaceholder}
+        required
+        error={errors.cpf_cnpj}
+        formPrefix={formPrefix}
+      />
+    </div>
 
-    <FormField
-      name="nome_razao_social"
-      type="text"
-      label={formData.tipo_pessoa === 'FISICA' ? nameLabel : companyNameLabel}
-      value={formData.nome_razao_social}
-      onChange={(value) => onInputChange('nome_razao_social', value as string)}
-      required
-      error={errors.nome_razao_social}
-      formPrefix={formPrefix}
-    />
+    <div className="col-12">
+      <FormField
+        name="nome_razao_social"
+        type="text"
+        label={formData.tipo_pessoa === 'FISICA' ? nameLabel : companyNameLabel}
+        value={formData.nome_razao_social}
+        onChange={(value) => onInputChange('nome_razao_social', value as string)}
+        required
+        error={errors.nome_razao_social}
+        formPrefix={formPrefix}
+      />
+    </div>
 
-    <FormField
-      name="nome_fantasia"
-      type="text"
-      label={tradeNameLabel}
-      value={formData.nome_fantasia}
-      onChange={(value) => onInputChange('nome_fantasia', value as string)}
-      error={errors.nome_fantasia}
-      formPrefix={formPrefix}
-    />
+    <div className="col-12">
+      <FormField
+        name="nome_fantasia"
+        type="text"
+        label={tradeNameLabel}
+        value={formData.nome_fantasia}
+        onChange={(value) => onInputChange('nome_fantasia', value as string)}
+        error={errors.nome_fantasia}
+        formPrefix={formPrefix}
+      />
+    </div>
   </div>
 );
 

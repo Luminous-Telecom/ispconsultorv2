@@ -21,14 +21,14 @@ const TablePaginationNav: React.FC<TablePaginationNavProps> = ({
 
   if (variant === 'mobile-compact') {
     return (
-      <div className={`d-flex flex-column gap-2 w-100 ${className}`.trim()}>
+      <div className={`d-flex flex-column gap-2 w-100 table-pagination-nav table-pagination-nav--mobile ${className}`.trim()}>
         <div className="text-center">
-          <span className="small text-muted">
+          <span className="small text-muted table-pagination-nav__info table-pagination-nav__info--center">
             <strong>{from}</strong> {t('pagination.to')} <strong>{to}</strong> {t('pagination.of')}{' '}
             <strong>{total}</strong>
           </span>
         </div>
-        <nav aria-label={t('ui.actionsMenu')} className="d-flex justify-content-center">
+        <nav aria-label={t('ui.actionsMenu')} className="d-flex justify-content-center table-pagination-nav__pages">
           <ul className="pagination pagination-sm mb-0">
             <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
               <PaginationNavButton
@@ -49,7 +49,7 @@ const TablePaginationNav: React.FC<TablePaginationNavProps> = ({
               </PaginationNavButton>
             </li>
             <li className="page-item active">
-              <span className="page-link">
+              <span className="page-link table-pagination-nav__current">
                 {currentPage} / {lastPage}
               </span>
             </li>
@@ -78,14 +78,12 @@ const TablePaginationNav: React.FC<TablePaginationNavProps> = ({
   }
 
   return (
-    <div className={`d-flex align-items-center gap-3 ${className}`.trim()}>
-      <div className="d-flex align-items-center gap-2">
-        <span className="text-muted small">
-          <strong>{from}</strong> {t('pagination.to')} <strong>{to}</strong> {t('pagination.of')}{' '}
-          <strong>{total}</strong>
-        </span>
-      </div>
-      <nav aria-label={t('ui.actionsMenu')}>
+    <div className={`table-pagination-nav ${className}`.trim()}>
+      <span className="text-muted small table-pagination-nav__info">
+        <strong>{from}</strong> {t('pagination.to')} <strong>{to}</strong> {t('pagination.of')}{' '}
+        <strong>{total}</strong>
+      </span>
+      <nav aria-label={t('ui.actionsMenu')} className="table-pagination-nav__pages">
         <ul className="pagination pagination-sm mb-0">
           <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
             <PaginationNavButton
@@ -108,7 +106,7 @@ const TablePaginationNav: React.FC<TablePaginationNavProps> = ({
           {visiblePages.map((page, index) => {
             if (page === '...') {
               return (
-                <li key={`dots-${index}`} className="page-item disabled">
+                <li key={`dots-${index}`} className="page-item disabled table-pagination-nav__slot">
                   <span className="page-link">...</span>
                 </li>
               );
@@ -116,7 +114,7 @@ const TablePaginationNav: React.FC<TablePaginationNavProps> = ({
             const pageNumber = page as number;
             const isActive = pageNumber === currentPage;
             return (
-              <li key={pageNumber} className={`page-item ${isActive ? 'active' : ''}`}>
+              <li key={pageNumber} className={`page-item table-pagination-nav__slot ${isActive ? 'active' : ''}`}>
                 <PaginationNavButton
                   label={`${t('ui.page')} ${pageNumber}`}
                   onClick={() => onGoToPage(pageNumber)}

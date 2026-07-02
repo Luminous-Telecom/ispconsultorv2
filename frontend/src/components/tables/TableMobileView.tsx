@@ -83,8 +83,8 @@ function TableMobileView<T extends { id: number | string }>({
   const renderCards = () => {
     if (loading) {
       return (
-        <div className="table-mobile-loading">
-          <Loading variant="inline" size="sm" message={loadingMessage} showMessage={false} />
+        <div className="table-mobile-loading table-mobile-loading--centered">
+          <Loading variant="centered" size="sm" message={loadingMessage} showMessage={false} />
         </div>
       );
     }

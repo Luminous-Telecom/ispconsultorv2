@@ -233,8 +233,8 @@ const RpkiRoaCreateEditModal: React.FC<RpkiRoaCreateEditModalProps> = ({
       }
     >
       <div className="modal-inner-padding-fixed">
-        <form onSubmit={handleSubmit}>
-          <div className="row g-3">
+        <form onSubmit={handleSubmit} className="form-modal-simple">
+          <div className="row g-2">
             <div className="col-12">
               <FormField
                 name="ca_id"
@@ -270,7 +270,7 @@ const RpkiRoaCreateEditModal: React.FC<RpkiRoaCreateEditModalProps> = ({
               />
             </div>
 
-            <div className="col-12 col-md-4">
+            <div className="col-12">
               <FormField
                 name="asn"
                 type="text"
@@ -287,7 +287,7 @@ const RpkiRoaCreateEditModal: React.FC<RpkiRoaCreateEditModalProps> = ({
               />
             </div>
 
-            <div className="col-12 col-md-4">
+            <div className="col-12">
               <FormField
                 name="max_length"
                 type="text"
@@ -304,7 +304,7 @@ const RpkiRoaCreateEditModal: React.FC<RpkiRoaCreateEditModalProps> = ({
               />
             </div>
 
-            <div className="col-12 col-md-6">
+            <div className="col-12">
               <FormField
                 name="not_before"
                 type="date"
@@ -317,7 +317,7 @@ const RpkiRoaCreateEditModal: React.FC<RpkiRoaCreateEditModalProps> = ({
               />
             </div>
 
-            <div className="col-12 col-md-6">
+            <div className="col-12">
               <FormField
                 name="not_after"
                 type="date"

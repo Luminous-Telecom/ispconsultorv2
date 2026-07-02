@@ -89,32 +89,33 @@ const OrdemServicoAdicionarArquivoModal: React.FC<OrdemServicoAdicionarArquivoMo
       }
       modalId="ordem-servico-adicionar-arquivo-modal"
     >
-      <form id="ordem-servico-adicionar-arquivo-form" onSubmit={handleSubmit}>
-        <div className="row">
-          <div className="col-md-12">
-            <div className="modal-inner-padding">
-              <FormField
-                name="arquivo"
-                type="file"
-                label="Arquivo"
-                required
-                accept="*/*"
-                onChange={handleFileSelect}
-                disabled={isPending}
-                helpText={nomeArquivo ? `Arquivo selecionado: ${nomeArquivo}` : undefined}
-              />
+      <form id="ordem-servico-adicionar-arquivo-form" onSubmit={handleSubmit} className="form-modal-simple">
+        <div className="row g-2">
+          <div className="col-12">
+            <FormField
+              name="arquivo"
+              type="file"
+              size="sm"
+              label="Arquivo"
+              required
+              accept="*/*"
+              onChange={handleFileSelect}
+              disabled={isPending}
+              helpText={nomeArquivo ? `Arquivo selecionado: ${nomeArquivo}` : undefined}
+            />
+          </div>
 
-              <FormField
-                name="descricao"
-                type="text"
-                label="Descrição"
-                value={descricao}
-                onChange={(value) => setDescricao(String(value || ''))}
-                placeholder="Descrição do arquivo"
-                required
-                disabled={isPending}
-              />
-            </div>
+          <div className="col-12">
+            <FormField
+              name="descricao"
+              type="text"
+              label="Descrição"
+              value={descricao}
+              onChange={(value) => setDescricao(String(value || ''))}
+              placeholder="Descrição do arquivo"
+              required
+              disabled={isPending}
+            />
           </div>
         </div>
       </form>

@@ -19,8 +19,8 @@ const ImportarListaBlockdomiFiltrosCards: React.FC<ImportarListaBlockdomiFiltros
   onCopy,
   renderList,
 }) => (
-  <div className="row g-2 mb-2 mt-1 form-modal-multi-col">
-    <div className="col-12 col-md-4">
+  <div className="row g-2 mb-2 mt-1">
+    <div className="col-12">
       <div className="card h-100 ilb-filtro-card">
         <div className="card-header py-2 bg-light d-flex justify-content-between align-items-center">
           <strong>{t('blockdomi.raw')}</strong>
@@ -43,7 +43,7 @@ const ImportarListaBlockdomiFiltrosCards: React.FC<ImportarListaBlockdomiFiltros
         </div>
       </div>
     </div>
-    <div className="col-12 col-md-4">
+    <div className="col-12">
       <div className="card h-100 ilb-filtro-card border-warning">
         <div className="card-header py-2 bg-warning text-dark d-flex justify-content-between align-items-center">
           <strong>{t('blockdomi.filtered')}</strong>
@@ -73,7 +73,7 @@ const ImportarListaBlockdomiFiltrosCards: React.FC<ImportarListaBlockdomiFiltros
         </div>
       </div>
     </div>
-    <div className="col-12 col-md-4">
+    <div className="col-12">
       <div className="card h-100 ilb-filtro-card border-success">
         <div className="card-header py-2 bg-success text-white d-flex justify-content-between align-items-center">
           <strong>{t('blockdomi.valid')}</strong>

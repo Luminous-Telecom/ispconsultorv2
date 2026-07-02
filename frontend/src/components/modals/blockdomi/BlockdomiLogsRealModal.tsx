@@ -118,25 +118,28 @@ const BlockdomiLogsRealModal: React.FC<BlockdomiLogsRealModalProps> = ({ show, o
       size="xl"
       modalId="blockdomi-logs-real-modal"
     >
-      <div className="p-3 d-flex flex-column gap-2 flex-fill-min-h-0" >
-        <SearchBar
-          id="blockdomi-logs-real-search"
-          variant="table"
-          value={search}
-          onChange={setSearch}
-          onSearch={setSearch}
-          onSearchFieldChange={setSearchField}
-          placeholder={t('layout.searchPlaceholder')}
-          searchField={searchField || 'ip'}
-          searchFields={[
-            { key: 'ip', label: t('blockdomi.logsIp') },
-            { key: 'rota', label: t('blockdomi.logsRota') },
-            { key: 'metodo', label: t('blockdomi.logsMetodo') },
-            { key: 'mensagem_erro', label: t('blockdomi.logsMensagemErro') },
-            { key: 'status_http', label: t('blockdomi.logsStatus') },
-          ]}
-          className="flex-shrink-0"
-        />
+      <div className="form-modal-simple p-3 flex-fill-min-h-0">
+        <div className="row g-2 mb-2">
+          <div className="col-12">
+            <SearchBar
+              id="blockdomi-logs-real-search"
+              variant="table"
+              value={search}
+              onChange={setSearch}
+              onSearch={setSearch}
+              onSearchFieldChange={setSearchField}
+              placeholder={t('layout.searchPlaceholder')}
+              searchField={searchField || 'ip'}
+              searchFields={[
+                { key: 'ip', label: t('blockdomi.logsIp') },
+                { key: 'rota', label: t('blockdomi.logsRota') },
+                { key: 'metodo', label: t('blockdomi.logsMetodo') },
+                { key: 'mensagem_erro', label: t('blockdomi.logsMensagemErro') },
+                { key: 'status_http', label: t('blockdomi.logsStatus') },
+              ]}
+            />
+          </div>
+        </div>
         <div ref={containerRef} className="p-3 rounded bg-dark text-light blockdomi-logs-panel">
         {isLoading && lines.length === 0 && (
           <span className="text-info">{t('ui.loading')}...</span>

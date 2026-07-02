@@ -32,7 +32,7 @@ const SshDeviceModal: React.FC<SshDeviceModalProps> = (props) => {
     }
 
     return (
-      <form id={modal.formId} onSubmit={modal.handleSubmit}>
+      <form id={modal.formId} onSubmit={modal.handleSubmit} className="form-modal-simple">
         <div className="plano-modal-content">
           <div
             className={`tab-content plano-tab-content ${

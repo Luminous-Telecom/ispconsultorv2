@@ -29,7 +29,7 @@ const TipoCobrancaFormFields: React.FC<TipoCobrancaFormFieldsProps> = ({
   const periodicityOptions = getTipoCobrancaPeriodicityOptions(t);
 
   return (
-    <div className="row g-1">
+    <div className="row g-2">
       <div className="col-12">
         <FormField
           name="nome"

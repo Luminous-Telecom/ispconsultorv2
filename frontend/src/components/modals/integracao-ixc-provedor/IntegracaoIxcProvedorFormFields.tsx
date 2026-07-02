@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormField } from 'components/ui';
+import { FormField, AtivoInativoField } from 'components/ui';
 
 export interface IntegracaoIxcProvedorFormData {
   nome: string;
@@ -40,14 +40,12 @@ const IntegracaoIxcProvedorFormFields: React.FC<IntegracaoIxcProvedorFormFieldsP
     </div>
 
     <div className="col-12">
-      <FormField
-        name="ixc_ativo"
-        type="checkbox"
-        label="Integração ativa"
+      <AtivoInativoField
         value={form.ativo}
-        onChange={(v) => onChange('ativo', Boolean(v))}
+        onChange={(v) => onChange('ativo', v)}
+        label="Integração ativa"
+        name="ixc_ativo"
         disabled={disabled}
-        size="sm"
       />
     </div>
 

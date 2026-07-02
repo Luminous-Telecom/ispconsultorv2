@@ -87,8 +87,8 @@ function TableToolbar<T>({
         </div>
       )}
 
-      <div className="d-flex align-items-center justify-content-between flex-nowrap table-pagination-header">
-        <div className="d-flex align-items-center gap-3 flex-nowrap flex-shrink-0">
+      <div className="table-pagination-header">
+        <div className="table-pagination-header__start">
           {showSelectAllPagesCheckbox && (
             <div className="d-flex align-items-center gap-2">
               <input
@@ -125,11 +125,13 @@ function TableToolbar<T>({
           {customControls && <div className="table-custom-controls">{customControls}</div>}
         </div>
 
-        {showPagination && (
-          <TablePaginationNav values={paginationValues} variant="desktop" onGoToPage={onGoToPage} />
-        )}
+        <div className="table-pagination-header__center">
+          {showPagination && (
+            <TablePaginationNav values={paginationValues} variant="desktop" onGoToPage={onGoToPage} />
+          )}
+        </div>
 
-        <div className="d-flex align-items-center gap-2">
+        <div className="table-pagination-header__end">
           {onAudit && auditEntity && (
             <AuditarButton
               onClick={onAudit}

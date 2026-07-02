@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Formulários CRUD — BackNet
 
-Complementa layout horizontal: `frontend-form-modal-layout.mdc`.
+Complementa layout horizontal: `frontend-form-modal-layout.mdc` — **referência Cliente/Contrato**.
 
 ## Hooks
 

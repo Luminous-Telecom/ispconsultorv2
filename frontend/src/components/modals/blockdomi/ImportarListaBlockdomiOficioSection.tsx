@@ -4,6 +4,7 @@ import {
   ExtrairDominiosPdfButton,
   ExtrairPlanilhaUrlButton,
   ExtrairSeiAnatelButton,
+  FormField,
   LabelWithHelp,
   Loading,
   IconOnlyButton,
@@ -85,65 +86,62 @@ const ImportarListaBlockdomiOficioSection: React.FC<ImportarListaBlockdomiOficio
   onPdfMainFileChange,
 }) => (
   <div className="mb-2">
-    <div className="row g-2 mb-2 align-items-end form-modal-multi-col">
-      <div className="col-12 col-lg-3 col-md-4">
-        <LabelWithHelp
-          htmlFor="ilb-numero-sei-anatel"
-          className="form-label small mb-1"
+    <div className="row g-2 mb-2">
+      <div className="col-12">
+        <FormField
+          id="ilb-numero-sei-anatel"
+          name="numeroSeiAnatel"
+          type="text"
+          size="sm"
+          label={t('blockdomi.numeroSeiAnatel')}
           helpText={t('blockdomi.seiAnatelHelp')}
           required
-        >
-          {t('blockdomi.numeroSeiAnatel')}
-        </LabelWithHelp>
-        <input
-          id="ilb-numero-sei-anatel"
-          type="text"
-          className="form-control form-control-sm"
-          inputMode="numeric"
-          autoComplete="off"
           placeholder="15497675"
           value={numeroSeiAnatel}
-          onChange={(e) => onNumeroSeiAnatelChange(e.target.value.replace(/\D/g, '').slice(0, 20))}
+          onChange={(value) =>
+            onNumeroSeiAnatelChange(String(value ?? '').replace(/\D/g, '').slice(0, 20))
+          }
         />
       </div>
-      <div className="col-12 col-lg-5 col-md-8">
-        <LabelWithHelp htmlFor="ilb-nome-oficio" className="form-label small mb-1" required>
-          {t('blockdomi.nomeOficio')}
-        </LabelWithHelp>
-        <input
+      <div className="col-12">
+        <FormField
           id="ilb-nome-oficio"
+          name="nomeOficio"
           type="text"
-          className="form-control form-control-sm"
+          size="sm"
+          label={t('blockdomi.nomeOficio')}
+          required
           placeholder={t('blockdomi.placeholderOficio')}
           value={nomeOficio}
-          onChange={(e) => onNomeOficioChange(e.target.value)}
+          onChange={(value) => onNomeOficioChange(String(value ?? ''))}
         />
       </div>
-      <div className="col-6 col-lg-2 col-md-6">
-        <LabelWithHelp htmlFor="ilb-data-inicio-bloqueio" className="form-label small mb-1" required>
-          {t('blockdomi.dataInicioBloqueio')}
-        </LabelWithHelp>
-        <input
+      <div className="col-12">
+        <FormField
           id="ilb-data-inicio-bloqueio"
+          name="dataInicioBloqueio"
           type="date"
-          className="form-control form-control-sm"
+          size="sm"
+          label={t('blockdomi.dataInicioBloqueio')}
+          required
           value={dataInicioBloqueio}
-          onChange={(e) => onDataInicioBloqueioChange(e.target.value)}
+          onChange={(value) => onDataInicioBloqueioChange(String(value ?? ''))}
         />
       </div>
-      <div className="col-6 col-lg-2 col-md-6">
-        <label className="form-label small mb-1">{t('blockdomi.dataFimBloqueioOptional')}</label>
-        <input
+      <div className="col-12">
+        <FormField
+          name="dataFimBloqueio"
           type="date"
-          className="form-control form-control-sm"
+          size="sm"
+          label={t('blockdomi.dataFimBloqueioOptional')}
           value={dataFimBloqueio}
-          onChange={(e) => onDataFimBloqueioChange(e.target.value)}
+          onChange={(value) => onDataFimBloqueioChange(String(value ?? ''))}
         />
       </div>
     </div>
 
     <div className="pt-2 mt-2 border-top border-secondary pb-2 mb-2 border-bottom border-secondary">
-      <div className="ilb-actions mb-2">
+      <div className="ilb-actions mb-2 form-modal-input-col">
         <ExtrairSeiAnatelButton
           type="button"
           onClick={onExtractSeiAnatel}
@@ -170,112 +168,124 @@ const ImportarListaBlockdomiOficioSection: React.FC<ImportarListaBlockdomiOficio
         )}
       </div>
 
-      <label className="form-label small mb-1">{t('blockdomi.linkOficioAnatelOptional')}</label>
-      <div className="ilb-pdf-field-group mb-2">
-        <div className="ilb-pdf-url-file-row">
-          <input
+      <div className="row g-2">
+        <div className="col-12">
+          <FormField
+            name="linkOficioAnatel"
             type="text"
-            className="form-control form-control-sm ilb-pdf-url"
+            size="sm"
+            label={t('blockdomi.linkOficioAnatelOptional')}
             placeholder="https://... ou arquivo PDF"
             value={linkOficioAnatel}
-            onChange={(e) => onLinkOficioAnatelChange(e.target.value)}
+            onChange={(value) => onLinkOficioAnatelChange(String(value ?? ''))}
           />
-          <div className="ilb-pdf-file-cell">
-            <FileInput
-              ref={pdfAnatelInputRef}
-              size="sm"
-              className="ilb-pdf-file"
-              accept=".pdf,application/pdf"
-              onFileChange={onPdfAnatelFileChange}
-            />
-            <IconOnlyButton
-              type="button"
-              size="sm"
-              variant="outline-danger"
-              className="ilb-pdf-remove-btn"
-              onClick={onClearPdfAnatel}
-              disabled={!pdfOficioAnatel || isExtractingSei}
-              title={t('blockdomi.removePdfFile')}
-              label={t('blockdomi.removePdfFile')}
-              iconClassName="bi bi-trash"
-            />
+        </div>
+        <div className="col-12">
+          <div className="form-modal-input-col">
+            <div className="ilb-pdf-file-cell">
+              <FileInput
+                ref={pdfAnatelInputRef}
+                size="sm"
+                className="ilb-pdf-file"
+                accept=".pdf,application/pdf"
+                onFileChange={onPdfAnatelFileChange}
+              />
+              <IconOnlyButton
+                type="button"
+                size="sm"
+                variant="outline-danger"
+                className="ilb-pdf-remove-btn"
+                onClick={onClearPdfAnatel}
+                disabled={!pdfOficioAnatel || isExtractingSei}
+                title={t('blockdomi.removePdfFile')}
+                label={t('blockdomi.removePdfFile')}
+                iconClassName="bi bi-trash"
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      <LabelWithHelp className="form-label small mb-1" helpText={t('blockdomi.separateLinksHelp')}>
-        {t('blockdomi.linkOficioJusticaOptional')}
-      </LabelWithHelp>
-      <div className="ilb-pdf-field-group mb-2">
-        <div className="ilb-pdf-url-file-row">
-          <input
+        <div className="col-12">
+          <FormField
+            name="linkOficioJustica"
             type="text"
-            className="form-control form-control-sm ilb-pdf-url"
+            size="sm"
+            label={t('blockdomi.linkOficioJusticaOptional')}
+            helpText={t('blockdomi.separateLinksHelp')}
             placeholder="https://exemplo1.com, https://exemplo2.com ou arquivo PDF"
             value={linkOficioJustica}
-            onChange={(e) => onLinkOficioJusticaChange(e.target.value)}
+            onChange={(value) => onLinkOficioJusticaChange(String(value ?? ''))}
           />
-          <div className="ilb-pdf-file-cell">
-            <FileInput
-              ref={pdfJusticaInputRef}
-              size="sm"
-              className="ilb-pdf-file"
-              accept=".pdf,application/pdf"
-              onFileChange={onPdfJusticaFileChange}
-            />
-            <IconOnlyButton
-              type="button"
-              size="sm"
-              variant="outline-danger"
-              className="ilb-pdf-remove-btn"
-              onClick={onClearPdfJustica}
-              disabled={!pdfOficioJustica}
-              title={t('blockdomi.removePdfFile')}
-              label={t('blockdomi.removePdfFile')}
-              iconClassName="bi bi-trash"
-            />
+        </div>
+        <div className="col-12">
+          <div className="form-modal-input-col">
+            <div className="ilb-pdf-file-cell">
+              <FileInput
+                ref={pdfJusticaInputRef}
+                size="sm"
+                className="ilb-pdf-file"
+                accept=".pdf,application/pdf"
+                onFileChange={onPdfJusticaFileChange}
+              />
+              <IconOnlyButton
+                type="button"
+                size="sm"
+                variant="outline-danger"
+                className="ilb-pdf-remove-btn"
+                onClick={onClearPdfJustica}
+                disabled={!pdfOficioJustica}
+                title={t('blockdomi.removePdfFile')}
+                label={t('blockdomi.removePdfFile')}
+                iconClassName="bi bi-trash"
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      <label className="form-label small mb-1">{t('blockdomi.linkPlanilhaDominiosOptional')}</label>
-      <div className="ilb-pdf-field-group">
-        <div className="ilb-pdf-url-file-row">
-          <input
+        <div className="col-12">
+          <FormField
+            name="linkPlanilhaDominios"
             type="text"
-            className="form-control form-control-sm ilb-pdf-url"
+            size="sm"
+            label={t('blockdomi.linkPlanilhaDominiosOptional')}
             placeholder="https://... ou arquivo PDF"
             value={linkPlanilhaDominios}
-            onChange={(e) => onLinkPlanilhaDominiosChange(e.target.value)}
+            onChange={(value) => onLinkPlanilhaDominiosChange(String(value ?? ''))}
           />
-          <div className="ilb-pdf-file-cell">
-            <FileInput
-              ref={pdfFileInputRef}
-              size="sm"
-              className="ilb-pdf-file"
-              accept=".pdf,application/pdf"
-              onFileChange={onPdfMainFileChange}
-            />
-            <IconOnlyButton
-              type="button"
-              size="sm"
-              variant="outline-danger"
-              className="ilb-pdf-remove-btn"
-              onClick={onClearPdfMain}
-              disabled={!pdfFile || isExtractingPdf}
-              title={t('blockdomi.removePdfFile')}
-              label={t('blockdomi.removePdfFile')}
-              iconClassName="bi bi-trash"
-            />
+        </div>
+        <div className="col-12">
+          <div className="form-modal-input-col">
+            <div className="ilb-pdf-file-cell">
+              <FileInput
+                ref={pdfFileInputRef}
+                size="sm"
+                className="ilb-pdf-file"
+                accept=".pdf,application/pdf"
+                onFileChange={onPdfMainFileChange}
+              />
+              <IconOnlyButton
+                type="button"
+                size="sm"
+                variant="outline-danger"
+                className="ilb-pdf-remove-btn"
+                onClick={onClearPdfMain}
+                disabled={!pdfFile || isExtractingPdf}
+                title={t('blockdomi.removePdfFile')}
+                label={t('blockdomi.removePdfFile')}
+                iconClassName="bi bi-trash"
+              />
+            </div>
           </div>
         </div>
       </div>
 
       {hasPdfUrl && (
-        <p className="text-muted form-hint small mt-1 mb-0">{t('blockdomi.extractFromPlanilhaUrlHelp')}</p>
+        <p className="text-muted form-hint small mt-1 mb-0 form-modal-input-col">
+          {t('blockdomi.extractFromPlanilhaUrlHelp')}
+        </p>
       )}
       {isExtractingPdf && (
-        <div className="mt-2">
+        <div className="mt-2 form-modal-input-col">
           <div className="d-flex align-items-center justify-content-between mb-1">
             <span className="small text-muted">{t('blockdomi.extractingPdf')}</span>
             {pdfExtractProgress && pdfExtractProgress.total > 0 && (

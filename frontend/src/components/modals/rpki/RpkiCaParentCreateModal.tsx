@@ -102,9 +102,9 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
 
   return (
     <DraggableModal show={show} onClose={onClose} title="CA-pai" size="lg" modalId="rpki-ca-parent-create-modal">
-      <div className="p-2">
+      <div className="form-modal-simple modal-inner-padding">
         <div className="row g-2">
-          <div className="col-md-4">
+          <div className="col-12">
             <FormField
               name="rpki_parent_ca_id"
               type="select"
@@ -115,7 +115,7 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
               onChange={(v) => setCaId(String(v ?? ''))}
             />
           </div>
-          <div className="col-md-8">
+          <div className="col-12">
             <FormField
               name="rpki_parent_name"
               label="Nome da CA-pai"
@@ -159,7 +159,7 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
             />
           </div>
         </div>
-        <div className="d-flex justify-content-end gap-2 mt-3">
+        <div className="d-flex justify-content-end gap-2 mt-3 form-modal-input-col">
           <CancelarButton type="button" onClick={onClose} isPending={createMutation.isPending} />
           <NovoButton
             type="button"

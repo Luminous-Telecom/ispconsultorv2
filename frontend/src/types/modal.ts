@@ -42,6 +42,8 @@ export interface ListModalProps<T> {
   config: ListModalConfig<T>;
   data: T[];
   loading?: boolean;
+  /** Refetch em background (ex.: `isFetching` do React Query). */
+  fetching?: boolean;
   selectedItems?: T[];
   onSelectionChange?: (items: T[]) => void;
   onRowDoubleClick?: (item: T) => void;

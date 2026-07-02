@@ -53,7 +53,7 @@ function AgentModalConfigTab({
   onRegenerate,
 }: AgentModalConfigTabProps) {
   return (
-    <form onSubmit={onFormSubmit} className="row g-3">
+    <form onSubmit={onFormSubmit} className="form-modal-simple row g-2">
       <>
       {isEditing && (
         <div className="col-12">
@@ -94,10 +94,11 @@ function AgentModalConfigTab({
       )}
       {!isEditing && !isAdmin && me && (
         <div className="col-12">
-          <label className="form-label form-label-sm fw-semibold text-muted">Empresa</label>
-          <input
+          <FormField
+            name="empresa_display"
             type="text"
-            className="form-control form-control-sm"
+            label="Empresa"
+            size="sm"
             readOnly
             disabled
             value={
@@ -105,6 +106,7 @@ function AgentModalConfigTab({
                 ? (dadosEmpresaTenant.nome_fantasia?.trim() || dadosEmpresaTenant.razao_social)
                 : 'Carregando…'
             }
+            onChange={() => {}}
           />
         </div>
       )}

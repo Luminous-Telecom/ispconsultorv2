@@ -27,8 +27,9 @@ const ContatoTab: React.FC<ClienteTabProps> = ({
     : `${window.location.origin}/central-assinante`;
 
   return (
-    <div className="d-flex flex-column gap-2">
-      <ContactFields
+    <div className="row g-2">
+      <div className="col-12">
+        <ContactFields
         required={true}
         size="md"
         includeEmail={true}
@@ -40,16 +41,20 @@ const ContatoTab: React.FC<ClienteTabProps> = ({
         }}
         errors={errors as unknown as Record<string, string>}
       />
+      </div>
 
-      <ComunicacaoPreferenciasField
+      <div className="col-12">
+        <ComunicacaoPreferenciasField
         recebeEmail={formData.recebe_email}
         recebeWhatsApp={formData.recebe_whatsapp}
         onRecebeEmailChange={(value) => handleInputChange('recebe_email', value)}
         onRecebeWhatsAppChange={(value) => handleInputChange('recebe_whatsapp', value)}
         formPrefix={formPrefix}
       />
+      </div>
 
-      <CentralAssinanteFields
+      <div className="col-12">
+        <CentralAssinanteFields
         senha={formData.central_assinante_senha || ''}
         onSenhaChange={(value) => handleInputChange('central_assinante_senha', value)}
         centralUrl={centralUrl}
@@ -57,6 +62,7 @@ const ContatoTab: React.FC<ClienteTabProps> = ({
         disabled={isSubmitting}
         senhaError={errors.central_assinante_senha}
       />
+      </div>
     </div>
   );
 };

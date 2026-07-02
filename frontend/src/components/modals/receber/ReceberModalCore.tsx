@@ -11,7 +11,7 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { formatDate } from 'utils/formatters';
 import { receberSchema, ReceberFormData } from 'schemas/receber.schema';
 import DraggableModal from 'components/common/DraggableModal';
-import { CancelarButton, ReceberButton, LabelWithHelp } from 'components/ui';
+import { CancelarButton, ReceberButton } from 'components/ui';
 import FormField from 'components/ui/FormField';
 import { saasTituloService } from 'services/saas/saasCrudService';
 import type { ReceberModalVariant, ReceberTarget } from './receberModalTypes';
@@ -130,95 +130,97 @@ const ReceberModalCore: React.FC<ReceberModalCoreProps> = ({
       size="lg"
       modalId={variant === 'saas' ? 'saas-receber-modal' : 'receber-modal'}
     >
-      <form onSubmit={rhfHandleSubmit(handleSubmit)} className="modal-inner-padding">
+      <form onSubmit={rhfHandleSubmit(handleSubmit)} className="form-modal-simple">
         <div className="card mb-3">
           <div className="card-header py-2">
             <h6 className="mb-0">{t('financial.parcelInfo')}</h6>
           </div>
           <div className="card-body py-2">
-            <div className="row g-0">
-              <div className="col-md-6">
-                <small className="text-muted">{t('table.client')}:</small>
-                <br />
-                <span className="text-secondary">{target.clienteLabel || '—'}</span>
-              </div>
-              <div className="col-md-6">
-                <small className="text-muted">{t('table.dueDate')}:</small>
-                <br />
-                <span className="text-secondary">{formatDate(target.data_vencimento)}</span>
-              </div>
-            </div>
-            <div className="row g-2 mt-2">
-              <div className="col-md-6">
-                <small className="text-muted">{t('financial.originalValue')}:</small>
-                <br />
-                <span className="text-secondary">R$ {(Number(target.valor) || 0).toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="row">
-          <div className="col-md-6">
-            <div className="mb-3">
-              <FormField
-                name="data_pagamento"
-                type="date"
-                label={t('financial.paymentDate')}
-                required
-                size="md"
-                value={formData.data_pagamento || ''}
-                onChange={(value) => setValue('data_pagamento', String(value ?? ''), { shouldValidate: true })}
-                error={errors.data_pagamento?.message}
-                isInvalid={!!errors.data_pagamento}
-                disabled={isPending}
-              />
-            </div>
-          </div>
-          <div className="col-md-6">
-            <div className="mb-3">
-              <LabelWithHelp htmlFor="valor_pago_receber" className="form-label" required>
-                {t('financial.amountPaid')}
-              </LabelWithHelp>
-              <div className="input-group has-validation">
-                <span className="input-group-text input-group-text-compact" >
-                  R$
-                </span>
-                <input
-                  id="valor_pago_receber"
-                  name="valor_pago"
+            <div className="row g-2">
+              <div className="col-12">
+                <FormField
+                  name="info_cliente"
                   type="text"
-                  className={`form-control ${errors.valor_pago ? 'is-invalid' : ''}`}
-                  placeholder="0,00"
-                  required
-                  value={formData.valor_pago}
-                  onChange={(e) => handleValorChange(e.target.value)}
-                  disabled={isPending}
+                  label={t('table.client')}
+                  value={target.clienteLabel || '—'}
+                  onChange={() => {}}
+                  readOnly
+                  size="md"
                 />
-                {errors.valor_pago && (
-                  <div className="invalid-feedback">{errors.valor_pago.message}</div>
-                )}
+              </div>
+              <div className="col-12">
+                <FormField
+                  name="info_vencimento"
+                  type="text"
+                  label={t('table.dueDate')}
+                  value={formatDate(target.data_vencimento)}
+                  onChange={() => {}}
+                  readOnly
+                  size="md"
+                />
+              </div>
+              <div className="col-12">
+                <FormField
+                  name="info_valor"
+                  type="text"
+                  label={t('financial.originalValue')}
+                  value={`R$ ${(Number(target.valor) || 0).toFixed(2)}`}
+                  onChange={() => {}}
+                  readOnly
+                  size="md"
+                />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mb-2">
-          <FormField
-            name="observacoes"
-            type="textarea"
-            label={t('form.observations')}
-            placeholder={t('placeholder.paymentObservations')}
-            size="md"
-            value={formData.observacoes || ''}
-            onChange={(value) => setValue('observacoes', String(value ?? ''), { shouldValidate: true })}
-            error={errors.observacoes?.message}
-            isInvalid={!!errors.observacoes}
-            disabled={isPending}
-            rows={3}
-          />
-          <div className="text-secondary mt-2">
-            {(formData.observacoes || '').length}/500 {t('financial.characters')}
+        <div className="row g-2">
+          <div className="col-12">
+            <FormField
+              name="data_pagamento"
+              type="date"
+              label={t('financial.paymentDate')}
+              required
+              size="md"
+              value={formData.data_pagamento || ''}
+              onChange={(value) => setValue('data_pagamento', String(value ?? ''), { shouldValidate: true })}
+              error={errors.data_pagamento?.message}
+              isInvalid={!!errors.data_pagamento}
+              disabled={isPending}
+            />
+          </div>
+          <div className="col-12">
+            <FormField
+              name="valor_pago"
+              type="text"
+              label={t('financial.amountPaid')}
+              required
+              size="md"
+              placeholder="0,00"
+              value={formData.valor_pago}
+              onChange={(value) => handleValorChange(String(value ?? ''))}
+              error={errors.valor_pago?.message}
+              isInvalid={!!errors.valor_pago}
+              disabled={isPending}
+            />
+          </div>
+          <div className="col-12">
+            <FormField
+              name="observacoes"
+              type="textarea"
+              label={t('form.observations')}
+              placeholder={t('placeholder.paymentObservations')}
+              size="md"
+              value={formData.observacoes || ''}
+              onChange={(value) => setValue('observacoes', String(value ?? ''), { shouldValidate: true })}
+              error={errors.observacoes?.message}
+              isInvalid={!!errors.observacoes}
+              disabled={isPending}
+              rows={3}
+            />
+            <div className="text-secondary mt-2 form-modal-input-col">
+              {(formData.observacoes || '').length}/500 {t('financial.characters')}
+            </div>
           </div>
         </div>
 

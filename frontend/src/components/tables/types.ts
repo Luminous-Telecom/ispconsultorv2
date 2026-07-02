@@ -127,6 +127,8 @@ export interface TableConfig<T = Record<string, unknown>> {
   columns: TableColumn<T>[];
   data: T[];
   loading?: boolean;
+  /** Refetch em background (ex.: `isFetching` do React Query) — exibe loading na área da tabela. */
+  fetching?: boolean;
   pagination?: TablePagination | {
     current_page?: number;
     last_page?: number;

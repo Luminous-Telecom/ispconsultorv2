@@ -129,7 +129,7 @@ const SaasEmpresaFormModal: React.FC<SaasEmpresaFormModalProps> = ({ show, onClo
       modalId="saas-empresa-form"
       headerActions={headerActionsContent}
     >
-      <form id="saas-empresa-form-id" onSubmit={onFormSubmit}>
+      <form id="saas-empresa-form-id" onSubmit={onFormSubmit} className="form-modal-simple">
         <div className="cliente-modal-content">
           <SaasEmpresaFormContent
             activeTab={activeTab}

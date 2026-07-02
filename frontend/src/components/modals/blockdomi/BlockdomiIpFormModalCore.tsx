@@ -143,8 +143,8 @@ const BlockdomiIpFormModalCore: React.FC<BlockdomiIpFormModalCoreProps> = ({
             <p>{t('messages.loading')}</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit}>
-            <div className="row g-3">
+          <form onSubmit={handleSubmit} className="form-modal-simple">
+            <div className="row g-2">
               <div className="col-12">
                 <FormField
                   name="ip"

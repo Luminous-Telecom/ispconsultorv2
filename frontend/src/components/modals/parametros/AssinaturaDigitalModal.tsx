@@ -3,10 +3,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
-import { useIsMobile } from 'hooks/useMediaQuery';
 import { AssinaturaDigitalProviderService, AssinaturaDigitalProviderType } from 'services/assinaturaDigitalProviderService';
 import DraggableModal from 'components/common/DraggableModal';
-import { CancelarButton, SalvarButton, LabelWithHelp, Loading, IconOnlyButton } from 'components/ui';
+import { CancelarButton, SalvarButton, FormField, AtivoInativoField, Loading, IconOnlyButton } from 'components/ui';
 import { useI18n } from 'contexts/I18nContext';
 
 interface AssinaturaDigitalModalProps {
@@ -34,7 +33,6 @@ const initialFormData: AssinaturaDigitalForm = {
 
 const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, onClose, skipWrapper = false, onHeaderActionsReady }) => {
   const { t } = useI18n();
-  const isMobile = useIsMobile();
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
   const queryClient = useQueryClient();
@@ -184,60 +182,56 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
       {(isLoading || isLoadingEnabled) ? (
         <Loading variant="centered" message={t('ui.loading')} />
       ) : (
-      <form id="assinatura-digital-form" onSubmit={handleSubmit} className="modal-inner-padding" autoComplete="off" data-form-type="other">
+      <form id="assinatura-digital-form" onSubmit={handleSubmit} className="form-modal-simple modal-inner-padding" autoComplete="off" data-form-type="other">
         <div className="card mb-3">
           <div className="card-header">
             <h6 className="mb-0">{t('digitalSignature.generalSettings')}</h6>
           </div>
           <div className="card-body">
-            <div className="form-check mb-3">
-              <input
-                type="checkbox"
-                className="form-check-input"
-                id="habilitado"
-                checked={formData.habilitado}
-                onChange={(e) => setFormData(prev => ({ ...prev, habilitado: e.target.checked }))}
-                disabled={updateMutation.isPending}
-              />
-              <LabelWithHelp htmlFor="habilitado" className="form-check-label" helpText={t('digitalSignature.enableHelp')}>
-                {t('digitalSignature.enable')}
-              </LabelWithHelp>
-            </div>
-
-            <div className="mb-3">
-              <LabelWithHelp htmlFor="apiProvider" className="form-label" helpText={t('digitalSignature.providerHelp')}>
-                {t('digitalSignature.provider')}
-              </LabelWithHelp>
-              <select
-                className="form-select"
-                id="apiProvider"
-                value={formData.apiProvider}
-                onChange={(e) => {
-                  const newProvider = e.target.value as AssinaturaDigitalProviderType;
-                  setSelectedProvider(newProvider);
-                  setFormData(prev => ({ ...prev, apiProvider: newProvider }));
-                }}
-                disabled={updateMutation.isPending}
-              >
-                <option value="assinafy">Assinafy (100 assinaturas/mês grátis)</option>
-                <option value="zapsign">ZapSign (5 assinaturas/mês grátis)</option>
-              </select>
-            </div>
-
-            <div className="mb-3">
-              <LabelWithHelp htmlFor="diasExpiracaoPadrao" className="form-label" helpText={t('digitalSignature.expirationDaysHelp')}>
-                {t('digitalSignature.expirationDays')}
-              </LabelWithHelp>
-              <input
-                type="number"
-                className="form-control"
-                id="diasExpiracaoPadrao"
-                min="1"
-                max="365"
-                value={formData.diasExpiracaoPadrao}
-                onChange={(e) => setFormData(prev => ({ ...prev, diasExpiracaoPadrao: parseInt(e.target.value) || 30 }))}
-                disabled={updateMutation.isPending}
-              />
+            <div className="row g-2">
+              <div className="col-12">
+                <AtivoInativoField
+                  name="habilitado"
+                  label={t('digitalSignature.enable')}
+                  value={formData.habilitado}
+                  onChange={(v) => setFormData(prev => ({ ...prev, habilitado: v }))}
+                  disabled={updateMutation.isPending}
+                />
+              </div>
+              <div className="col-12">
+                <FormField
+                  name="apiProvider"
+                  type="select"
+                  label={t('digitalSignature.provider')}
+                  helpText={t('digitalSignature.providerHelp')}
+                  value={formData.apiProvider}
+                  onChange={(v) => {
+                    const newProvider = String(v ?? '') as AssinaturaDigitalProviderType;
+                    setSelectedProvider(newProvider);
+                    setFormData(prev => ({ ...prev, apiProvider: newProvider }));
+                  }}
+                  disabled={updateMutation.isPending}
+                  options={[
+                    { value: 'assinafy', label: 'Assinafy (100 assinaturas/mês grátis)' },
+                    { value: 'zapsign', label: 'ZapSign (5 assinaturas/mês grátis)' },
+                  ]}
+                  size="sm"
+                />
+              </div>
+              <div className="col-12">
+                <FormField
+                  name="diasExpiracaoPadrao"
+                  type="number"
+                  label={t('digitalSignature.expirationDays')}
+                  helpText={t('digitalSignature.expirationDaysHelp')}
+                  min={1}
+                  max={365}
+                  value={formData.diasExpiracaoPadrao}
+                  onChange={(v) => setFormData(prev => ({ ...prev, diasExpiracaoPadrao: parseInt(String(v), 10) || 30 }))}
+                  disabled={updateMutation.isPending}
+                  size="sm"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -247,62 +241,58 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
             <h6 className="mb-0">{t('digitalSignature.apiSettings')}</h6>
           </div>
           <div className="card-body">
-            <div className="mb-3">
-              <LabelWithHelp
-                htmlFor="apiKey"
-                className="form-label"
-                helpText={formData.apiProvider === 'assinafy' ? t('digitalSignature.assinafyHelp') : t('digitalSignature.zapsignHelp')}
-              >
-                {t('digitalSignature.apiKey')}
-              </LabelWithHelp>
-              <div className="input-group">
-                <input
+            <div className="row g-2">
+              <div className="col-12">
+                <FormField
+                  name="apiKey"
                   type={showApiKey ? 'text' : 'password'}
-                  className="form-control"
-                  id="apiKey"
+                  label={t('digitalSignature.apiKey')}
+                  helpText={formData.apiProvider === 'assinafy' ? t('digitalSignature.assinafyHelp') : t('digitalSignature.zapsignHelp')}
                   value={formData.apiKey}
                   autoComplete="new-password"
-                  onChange={(e) => setFormData(prev => ({ ...prev, apiKey: e.target.value }))}
+                  onChange={(v) => setFormData(prev => ({ ...prev, apiKey: String(v ?? '') }))}
                   disabled={updateMutation.isPending}
                   placeholder={t('placeholder.apiKey')}
+                  size="sm"
                 />
-                <IconOnlyButton
-                  type="button"
-                  variant="outline-primary"
-                  onClick={() => setShowApiKey(!showApiKey)}
-                  disabled={updateMutation.isPending}
-                  label={showApiKey ? 'Ocultar chave' : 'Mostrar chave'}
-                >
-                  <i className={`bi ${showApiKey ? 'bi-eye-slash' : 'bi-eye'}`} aria-hidden />
-                </IconOnlyButton>
+                <div className="form-modal-input-col mt-2">
+                  <IconOnlyButton
+                    type="button"
+                    variant="outline-primary"
+                    onClick={() => setShowApiKey(!showApiKey)}
+                    disabled={updateMutation.isPending}
+                    label={showApiKey ? 'Ocultar chave' : 'Mostrar chave'}
+                  >
+                    <i className={`bi ${showApiKey ? 'bi-eye-slash' : 'bi-eye'}`} aria-hidden />
+                  </IconOnlyButton>
+                </div>
+                {formData.apiProvider === 'assinafy' && (
+                  <small className="form-text form-hint text-muted form-modal-input-col d-block mt-1">
+                    <a href="https://assinafy.com.br" target="_blank" rel="noopener noreferrer">
+                      assinafy.com.br
+                    </a>
+                  </small>
+                )}
               </div>
+
               {formData.apiProvider === 'assinafy' && (
-                <small className="form-text form-hint text-muted">
-                  <a href="https://assinafy.com.br" target="_blank" rel="noopener noreferrer">
-                    assinafy.com.br
-                  </a>
-                </small>
+                <div className="col-12">
+                  <FormField
+                    name="accountId"
+                    type="text"
+                    label={t('digitalSignature.workspaceId')}
+                    helpText={t('digitalSignature.workspaceIdHelp')}
+                    value={formData.accountId}
+                    autoComplete="off"
+                    onChange={(v) => setFormData(prev => ({ ...prev, accountId: String(v ?? '') }))}
+                    disabled={updateMutation.isPending}
+                    placeholder={t('placeholder.workspaceId')}
+                    required
+                    size="sm"
+                  />
+                </div>
               )}
             </div>
-
-            {formData.apiProvider === 'assinafy' && (
-              <div className="mb-3">
-                <LabelWithHelp htmlFor="accountId" className="form-label" helpText={t('digitalSignature.workspaceIdHelp')} required>
-                  {t('digitalSignature.workspaceId')}
-                </LabelWithHelp>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="accountId"
-                  value={formData.accountId}
-                  autoComplete="off"
-                  onChange={(e) => setFormData(prev => ({ ...prev, accountId: e.target.value }))}
-                  disabled={updateMutation.isPending}
-                  placeholder={t('placeholder.workspaceId')}
-                  required
-                />
-              </div>
-            )}
           </div>
         </div>
       </form>

@@ -40,7 +40,7 @@ const CasPaiSection: React.FC<CasPaiSectionProps> = ({
     <div className="card-header">CAs-pai</div>
     <div className="card-body">
       <div className="row g-2 mb-2">
-        <div className="col-md-4">
+        <div className="col-12">
           <FormField
             name="parent_ca_id"
             type="select"
@@ -51,15 +51,17 @@ const CasPaiSection: React.FC<CasPaiSectionProps> = ({
             onChange={(value) => setParentCaId(String(value ?? ''))}
           />
         </div>
-        <div className="col-md-2 d-flex align-items-end">
-          <GerarRequisicaoCaFilhaButton
-            type="button"
-            disabled={generateChildRequestMutation.isPending}
-            isPending={generateChildRequestMutation.isPending}
-            onClick={handleGenerateChildRequest}
-          />
+        <div className="col-12">
+          <div className="form-modal-input-col">
+            <GerarRequisicaoCaFilhaButton
+              type="button"
+              disabled={generateChildRequestMutation.isPending}
+              isPending={generateChildRequestMutation.isPending}
+              onClick={handleGenerateChildRequest}
+            />
+          </div>
         </div>
-        <div className="col-md-6">
+        <div className="col-12">
           <FormField
             name="parent_child_request_xml"
             type="textarea"
@@ -73,7 +75,7 @@ const CasPaiSection: React.FC<CasPaiSectionProps> = ({
       </div>
 
       <div className="row g-2 mb-2">
-        <div className="col-md-12">
+        <div className="col-12">
           <FormField
             name="parent_response_xml"
             type="textarea"
@@ -87,7 +89,7 @@ const CasPaiSection: React.FC<CasPaiSectionProps> = ({
       </div>
 
       <div className="row g-2 mb-2">
-        <div className="col-md-10">
+        <div className="col-12">
           <FormField
             name="parent_nome"
             label="Nome da CA-pai"
@@ -96,13 +98,15 @@ const CasPaiSection: React.FC<CasPaiSectionProps> = ({
             onChange={(value) => setParentNome(String(value ?? ''))}
           />
         </div>
-        <div className="col-md-2 d-flex align-items-end">
-          <ConfirmarButton
-            type="button"
-            disabled={importParentResponseMutation.isPending}
-            isPending={importParentResponseMutation.isPending}
-            onClick={handleImportParentResponse}
-          />
+        <div className="col-12">
+          <div className="form-modal-input-col">
+            <ConfirmarButton
+              type="button"
+              disabled={importParentResponseMutation.isPending}
+              isPending={importParentResponseMutation.isPending}
+              onClick={handleImportParentResponse}
+            />
+          </div>
         </div>
       </div>
       <div className="table-responsive">

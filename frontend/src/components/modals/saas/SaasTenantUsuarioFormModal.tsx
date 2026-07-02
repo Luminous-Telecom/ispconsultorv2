@@ -159,7 +159,7 @@ const SaasTenantUsuarioFormModal: React.FC<Props> = ({
         />
       }
     >
-      <form id="saas-tenant-usuario-form-id" onSubmit={handleSubmit} className="p-3">
+      <form id="saas-tenant-usuario-form-id" onSubmit={handleSubmit} className="form-modal-simple">
         <SaasTenantUsuarioFormFields
           form={form}
           errors={errors}

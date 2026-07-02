@@ -1,5 +1,5 @@
 import React from 'react';
-import { GerarButton } from 'components/ui';
+import { FormField, GerarButton } from 'components/ui';
 import type { BlockdomiImportTranslateFn } from './importarListaBlockdomiTypes';
 
 interface ImportarListaBlockdomiVersaoHeaderProps {
@@ -15,20 +15,22 @@ const ImportarListaBlockdomiVersaoHeader: React.FC<ImportarListaBlockdomiVersaoH
   onGerarVersao,
   t,
 }) => (
-  <div className="row g-2 align-items-end mb-2 form-modal-multi-col">
-    <div className="col-6 col-md-3 col-lg-2">
-      <label className="form-label small mb-1">{t('blockdomi.versao')} atual</label>
-      <input
+  <div className="row g-2 mb-2">
+    <div className="col-12">
+      <FormField
+        name="versaoAtual"
         type="text"
-        className="form-control form-control-sm"
+        size="sm"
+        label={`${t('blockdomi.versao')} atual`}
         value={versaoAtual || '-'}
         readOnly
-        aria-readonly
-        tabIndex={-1}
+        disabled
       />
     </div>
-    <div className="col-auto pb-1">
-      <GerarButton variant="secondary" onClick={onGerarVersao} disabled={isGerandoVersao} isPending={isGerandoVersao} />
+    <div className="col-12">
+      <div className="form-modal-input-col">
+        <GerarButton variant="secondary" onClick={onGerarVersao} disabled={isGerandoVersao} isPending={isGerandoVersao} />
+      </div>
     </div>
   </div>
 );

@@ -152,7 +152,7 @@ const SaasTituloFormModal: React.FC<Props> = ({ show, onClose, onSuccess, empres
         <ModalFormActions onCancel={onClose} formId="saas-titulo-form-id" isPending={isPending} />
       }
     >
-      <form id="saas-titulo-form-id" onSubmit={handleSubmit} className="modal-inner-padding-fixed">
+      <form id="saas-titulo-form-id" onSubmit={handleSubmit} className="form-modal-simple">
         <SaasTituloFormFields
           form={form}
           errors={errors}

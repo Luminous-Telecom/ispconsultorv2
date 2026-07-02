@@ -16,30 +16,25 @@ const ContaPagarDocumentoDescricaoSection: React.FC<ContaPagarDocumentoDescricao
 
   return (
     <>
-      <div className="d-flex gap-2">
-        <div className="flex-fill">
-          <FormField
-            name="numero_documento"
-            type="text"
-            label={t('table.documentNumber')}
-            value={formData.numero_documento}
-            onChange={(value) => onFieldChange('numero_documento', String(value || ''))}
-            placeholder={t('table.documentNumber')}
-            size="sm"
-          />
-        </div>
-        <div className="flex-fill">
-          <FormField
-            name="nota_fiscal"
-            type="text"
-            label={t('form.invoiceNumber')}
-            value={formData.nota_fiscal}
-            onChange={(value) => onFieldChange('nota_fiscal', String(value || ''))}
-            placeholder={t('form.invoiceNumber')}
-            size="sm"
-          />
-        </div>
-      </div>
+      <FormField
+        name="numero_documento"
+        type="text"
+        label={t('table.documentNumber')}
+        value={formData.numero_documento}
+        onChange={(value) => onFieldChange('numero_documento', String(value || ''))}
+        placeholder={t('table.documentNumber')}
+        size="sm"
+      />
+
+      <FormField
+        name="nota_fiscal"
+        type="text"
+        label={t('form.invoiceNumber')}
+        value={formData.nota_fiscal}
+        onChange={(value) => onFieldChange('nota_fiscal', String(value || ''))}
+        placeholder={t('form.invoiceNumber')}
+        size="sm"
+      />
 
       <FormField
         name="descricao"

@@ -205,7 +205,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
 
     // Conteúdo normal do formulário
     return (
-      <form id="banco-form" onSubmit={formHook.handleSubmit}>
+      <form id="banco-form" onSubmit={formHook.handleSubmit} className="form-modal-simple">
         <div className="banco-modal-content">
           {/* Conteúdo das Abas */}
           <div

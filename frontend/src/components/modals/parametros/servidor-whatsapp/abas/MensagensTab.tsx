@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { FormField, LabelWithHelp } from 'components/ui';
+import { FormField } from 'components/ui';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import {
   MensagemTypeSelect,
@@ -82,8 +82,8 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
 
 
   return (
-    <div className="whatsapp-messages-container" ref={containerRef}>
-      <div className="row g-0">
+    <div className="whatsapp-messages-container form-modal-simple" ref={containerRef}>
+      <div className="row g-2">
         <div className="col-12">
           <MensagemTypeSelect value={mensagemType} onChange={onMensagemTypeChange} />
         </div>
@@ -91,9 +91,8 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
 
       {mensagemType && (
             <>
-              {/* WhatsApp Cloud API - Vincular template via modal */}
               {isWhatsAppCloud && onShowTemplates ? (
-                <div className="row g-0 mt-3">
+                <div className="row g-2 mt-2">
                   <div className="col-12">
                     <EntitySelectField
                       value={templateId ?? 0}
@@ -108,7 +107,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                 </div>
               ) : (
                 <>
-                  <div className="row g-0 mt-3">
+                  <div className="row g-2 mt-2">
                     <div className="col-12">
                       <MensagemTipoEnvioRadio
                         idPrefix="whatsapp"
@@ -119,46 +118,34 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                     </div>
                   </div>
 
-                  {/* Mensagem Padrão - Apenas para Evolution API */}
-                  <div className="row g-0 mt-3">
+                  <div className="row g-2 mt-2">
                     <div className="col-12">
-                      <div className="mb-2">
-                        <LabelWithHelp className="form-label" required={mensagemType !== 'envio_manual'}>
-                          <i className="bi bi-chat-text me-2"></i>
-                          {t('settings.messages.defaultMessage')}
-                        </LabelWithHelp>
-                      </div>
                       <FormField
                         name="mensagemPadrao"
                         type="textarea"
-                        label=""
+                        label={t('settings.messages.defaultMessage')}
                         placeholder={t('placeholder.defaultMessage')}
                         rows={10}
                         size="sm"
+                        required={mensagemType !== 'envio_manual'}
                         value={mensagemPadrao}
                         onChange={(value) => onMensagemPadraoChange(String(value ?? ''))}
                       />
                     </div>
                   </div>
 
-                  {/* Mensagem Manual - Apenas para tipo envio_manual */}
                   {mensagemType === 'envio_manual' && (
-                    <div className="row g-0 mt-3">
+                    <div className="row g-2 mt-2">
                       <div className="col-12">
-                        <div className="mb-2">
-                          <LabelWithHelp className="form-label" required>
-                            <i className="bi bi-send me-2"></i>
-                            {t('settings.messages.manualLabel')}
-                          </LabelWithHelp>
-                          <small className="text-muted form-hint d-block">{t('settings.messages.manualHelper')}</small>
-                        </div>
                         <FormField
                           name="mensagemManual"
                           type="textarea"
-                          label=""
+                          label={t('settings.messages.manualLabel')}
+                          helpText={t('settings.messages.manualHelper')}
                           placeholder={t('placeholder.manualSend')}
                           rows={10}
                           size="sm"
+                          required
                           value={mensagemManual}
                           onChange={(value) => onMensagemManualChange?.(String(value ?? ''))}
                         />
@@ -166,20 +153,13 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                     </div>
                   )}
 
-                  {/* Interações (opcionais) - Apenas para Evolution API */}
-                  <div className="row g-0 mt-3">
+                  <div className="row g-2 mt-2">
                     <div className="col-12">
-                      <div className="mb-2">
-                        <label className="form-label">
-                          <i className="bi bi-chat-left-text me-2"></i>
-                          {t('settings.messages.interaction1')}
-                        </label>
-                        <small className="text-muted form-hint d-block">{t('settings.messages.interaction1Helper')}</small>
-                      </div>
                       <FormField
                         name="interacao1"
                         type="textarea"
-                        label=""
+                        label={t('settings.messages.interaction1')}
+                        helpText={t('settings.messages.interaction1Helper')}
                         placeholder={t('placeholder.firstInteraction')}
                         rows={3}
                         size="sm"
@@ -189,19 +169,13 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                     </div>
                   </div>
 
-                  <div className="row g-0 mt-2">
+                  <div className="row g-2 mt-2">
                     <div className="col-12">
-                      <div className="mb-2">
-                        <label className="form-label">
-                          <i className="bi bi-chat-left-text me-2"></i>
-                          {t('settings.messages.interaction2')}
-                        </label>
-                        <small className="text-muted form-hint d-block">{t('settings.messages.interaction2Helper')}</small>
-                      </div>
                       <FormField
                         name="interacao2"
                         type="textarea"
-                        label=""
+                        label={t('settings.messages.interaction2')}
+                        helpText={t('settings.messages.interaction2Helper')}
                         placeholder={t('placeholder.secondInteraction')}
                         rows={3}
                         size="sm"
@@ -211,19 +185,13 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                     </div>
                   </div>
 
-                  <div className="row g-0 mt-2">
+                  <div className="row g-2 mt-2">
                     <div className="col-12">
-                      <div className="mb-2">
-                        <label className="form-label">
-                          <i className="bi bi-chat-left-text me-2"></i>
-                          {t('settings.messages.interaction3')}
-                        </label>
-                        <small className="text-muted form-hint d-block">{t('settings.messages.interaction3Helper')}</small>
-                      </div>
                       <FormField
                         name="interacao3"
                         type="textarea"
-                        label=""
+                        label={t('settings.messages.interaction3')}
+                        helpText={t('settings.messages.interaction3Helper')}
                         placeholder={t('placeholder.thirdInteraction')}
                         rows={3}
                         size="sm"
@@ -233,9 +201,8 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                     </div>
                   </div>
 
-                  {/* Container de Variáveis - Apenas para Evolution API */}
                   {variaveisData && (
-                <div className="row g-0 mt-3">
+                <div className="row g-2 mt-2">
                   <div className="col-12">
                     <div className="card border-primary">
                       <div className="card-header py-2 px-3 bg-primary bg-opacity-10">
@@ -248,24 +215,17 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                         </small>
                       </div>
                       <div className="card-body p-3 scroll-max-400">
-                        <div className="row g-0 form-modal-multi-col">
-                          {Object.entries(variaveisData).map(([chave, grupo], index, array) => {
-                            const isLastInRow = (index + 1) % 3 === 0;
-                            const isLastItem = index === array.length - 1;
-                            const showBorder = !isLastInRow && !isLastItem;
-                            
-                            return (
-                            <div
-                              key={chave}
-                              className={`col-md-6 col-lg-4 ${showBorder ? 'variavel-col-border' : ''}`}
-                            >
+                        <div className="row g-2">
+                          {Object.entries(variaveisData).map(([chave, grupo]) => (
+                            <div key={chave} className="col-12">
                               <h6 className="fw-bold mb-2 text-primary">
                                 <i className="bi bi-tag me-1"></i>
                                 {grupo.titulo}
                               </h6>
-                              <div className="d-flex flex-column gap-2">
+                              <div className="row g-2">
                                 {grupo.variaveis.map((variavel) => (
-                                  <div key={variavel.variavel} className="d-flex align-items-center gap-2">
+                                  <div key={variavel.variavel} className="col-12">
+                                    <div className="d-flex align-items-center gap-2">
                                     <span
                                       className="badge bg-info text-dark whatsapp-var-badge"
                                       onClick={() => handleVariableClick(variavel.variavel)}
@@ -281,12 +241,12 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                                         title={t('settings.messages.copyVariable')}
                                       />
                                     )}
+                                    </div>
                                   </div>
                                 ))}
                               </div>
                             </div>
-                            );
-                          })}
+                          ))}
                         </div>
                       </div>
                     </div>

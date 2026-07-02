@@ -339,7 +339,7 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
           className={`tab-content email-tab-content email-tab-content-padded`}
           id="emailTabContent"
         >
-          <form id="servidor-email-form" onSubmit={handleSubmit}>
+          <form id="servidor-email-form" onSubmit={handleSubmit} className="form-modal-simple">
             {/* Conteúdo da Aba Servidor */}
             {activeTab === 'servidor' && (
               <ServidorTab

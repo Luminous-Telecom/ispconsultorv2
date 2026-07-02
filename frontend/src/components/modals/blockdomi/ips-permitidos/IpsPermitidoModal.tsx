@@ -3,7 +3,8 @@ import { useCreateIpPermitido, useUpdateIpPermitido } from 'hooks/useIpsPermitid
 import { IpsPermitidosService, type IpPermitido } from 'services/ipsPermitidosService';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
-import { ModalFormActions, LabelWithHelp } from 'components/ui';
+import { ModalFormActions } from 'components/ui';
+import FormField from 'components/ui/FormField';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import ClienteListModal from 'components/modals/clientes/ClienteListModal';
 
@@ -112,43 +113,49 @@ const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
         size="md"
         headerActions={headerActions}
       >
-        <form id="ips-permitido-form" onSubmit={handleSubmit} className="p-3">
-          <div className="mb-3">
-            {isEditing ? (
-              <>
-                <label className="form-label">{t('blockdomi.cliente')}</label>
-                <input type="text" className="form-control" value={clienteNome} readOnly disabled />
-              </>
-            ) : (
-              <EntitySelectField
-                value={clienteId || 0}
-                onChange={(id) => {
-                  setClienteId(id || null);
-                  if (!id) setClienteNome('');
-                }}
-                onShowModal={() => setShowClienteSelect(true)}
-                entities={clienteId && clienteNome ? [{ id: clienteId, nome: clienteNome }] : []}
-                label={t('blockdomi.cliente')}
-                placeholder={t('blockdomi.selectCliente')}
+        <form id="ips-permitido-form" onSubmit={handleSubmit} className="form-modal-simple">
+          <div className="row g-2">
+            <div className="col-12">
+              {isEditing ? (
+                <FormField
+                  name="cliente"
+                  type="text"
+                  label={t('blockdomi.cliente')}
+                  value={clienteNome}
+                  onChange={() => {}}
+                  readOnly
+                />
+              ) : (
+                <EntitySelectField
+                  value={clienteId || 0}
+                  onChange={(id) => {
+                    setClienteId(id || null);
+                    if (!id) setClienteNome('');
+                  }}
+                  onShowModal={() => setShowClienteSelect(true)}
+                  entities={clienteId && clienteNome ? [{ id: clienteId, nome: clienteNome }] : []}
+                  label={t('blockdomi.cliente')}
+                  placeholder={t('blockdomi.selectCliente')}
+                  required
+                  error={errors.cliente}
+                />
+              )}
+            </div>
+            <div className="col-12">
+              <FormField
+                name="faixa_ips"
+                type="textarea"
+                label={t('blockdomi.faixaIps')}
+                value={faixaIps}
+                onChange={(value) => setFaixaIps(String(value ?? ''))}
+                placeholder="192.168.1.1; 10.0.0.0/24; 2001:db8::1"
+                helpText={t('blockdomi.faixaIpsHelp')}
                 required
-                error={errors.cliente}
+                rows={4}
+                disabled={isSubmitting}
+                error={errors.faixa_ips}
               />
-            )}
-          </div>
-          <div className="mb-3">
-            <LabelWithHelp className="form-label" required>
-              {t('blockdomi.faixaIps')}
-            </LabelWithHelp>
-            <textarea
-              className="form-control"
-              rows={4}
-              value={faixaIps}
-              onChange={(e) => setFaixaIps(e.target.value)}
-              placeholder="192.168.1.1; 10.0.0.0/24; 2001:db8::1"
-              disabled={isSubmitting}
-            />
-            <span className="text-muted form-hint small">{t('blockdomi.faixaIpsHelp')}</span>
-            {errors.faixa_ips && <div className="text-danger small mt-1">{errors.faixa_ips}</div>}
+            </div>
           </div>
         </form>
       </DraggableModal>

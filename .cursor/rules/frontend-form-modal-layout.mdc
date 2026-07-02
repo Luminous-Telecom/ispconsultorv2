@@ -1,69 +1,89 @@
 ---
-description: Layout horizontal de formulários em modais (label à esquerda, input alinhado)
-globs: frontend/src/components/modals/**/*.tsx,frontend/src/components/forms/**/*.tsx,frontend/src/components/ui/FormField.tsx,frontend/src/components/ui/AtivoInativoField.tsx,frontend/src/components/ui/ComunicacaoPreferenciasField.tsx,frontend/src/components/ui/TableFilterCheckbox.tsx
+description: Layout horizontal de formulários em modais (label à esquerda, input alinhado) — padrão Cliente/Contrato
+globs: frontend/src/components/modals/**/*.tsx,frontend/src/components/forms/**/*.tsx,frontend/src/components/common/DetailFieldGrid.tsx,frontend/src/components/ui/FormField.tsx,frontend/src/components/ui/AtivoInativoField.tsx,frontend/src/components/ui/ComunicacaoPreferenciasField.tsx,frontend/src/components/ui/TableFilterCheckbox.tsx
 alwaysApply: false
 ---
 
-# Formulários em modais — layout horizontal
+# Formulários em modais — layout horizontal (padrão Cliente/Contrato)
 
-Padrão estilo IXC/Login: **label à direita na coluna fixa**, **controles alinhados**, **uma linha por campo**.
+**Referência obrigatória:** `clientes/cliente/abas/DadosBasicosTab.tsx`, `clientes/contrato/abas/ContratoTab.tsx`.
+
+Estilo IXC: **label à esquerda (coluna fixa)**, **input/control à direita**, **uma linha por campo** — em cadastro, edição **e visualização** (campos read-only).
+
+**Sem exceções** — todo modal (ADM, SaaS, blockdomi, RPKI, logs, auditoria, parâmetros) segue o mesmo padrão.
 
 ## CSS (já aplicado)
 
 - `.draggable-modal-body-custom`: uma coluna por linha em `.row` (sobrescreve `col-md-6` etc.)
-- Exceção: `.row.form-modal-multi-col` mantém grid Bootstrap
 - Abas com `*-tab-content-padded` e forms `form-modal-simple` usam mixin `form-modal-tab-padding`
 - Variáveis em `_variables.scss`: `--form-label-width`, `--form-input-max-width`, `--form-block-padding-left`
 - Classe `.form-field` → label + `.form-field-control`
 
-## Estrutura obrigatória
+## Estrutura obrigatória em TODO modal
 
 ```tsx
-// ✅ Um campo por linha
-<div className="row g-2">
-  <div className="col-12">
-    <FormField name="email" type="email" label={t('form.email')} ... />
+// ✅ Form pai
+<form id="entidade-form" onSubmit={handleSubmit} className="form-modal-simple">
+  <div className="row g-2">
+    <div className="col-12">
+      <FormField name="razao_social" type="text" label={t('form.companyName')} ... />
+    </div>
+    <div className="col-12">
+      <AtivoInativoField value={form.ativo} onChange={...} />
+    </div>
   </div>
+</form>
+
+// ✅ Campo somente leitura (visualização/edição bloqueada)
+<div className="col-12">
+  <FormField name="numero_titulo" type="text" label={t('form.titleNumber')}
+    value={display} readOnly disabled />
 </div>
 
-// ❌ Não usar col-md-6/4 em modais (quebra o alinhamento vertical)
+// ✅ Detalhe em grid (logs, auditoria)
+<DetailFieldGrid fields={[{ label: t('...'), value: '...' }]} />
+
+// ❌ Label acima do input (layout vertical)
+<div>
+  <label className="form-label">{label}</label>
+  <input className="form-control" ... />
+</div>
+
+// ❌ Dois campos na mesma linha com flex-fill ou col-md-*
+<div className="d-flex gap-2">
+  <div className="flex-fill"><FormField ... /></div>
+  <div className="flex-fill"><FormField ... /></div>
+</div>
 <div className="col-md-6"><FormField ... /></div>
 
-// ✅ Grids especiais (dias de vencimento, templates Meta, filtros de tabela): `form-modal-multi-col` na `.row`
-<div className="row g-0 form-modal-multi-col">...</div>
+// ❌ Grid multi-coluna ou form-modal-multi-col
+<div className="row form-modal-multi-col">...</div>
+
+// ❌ Switch em modais
+<div className="form-check form-switch">...</div>
 ```
 
-- **`col-12`** em todos os campos de modal (inclui `AddressFields`, `ContactFields`)
-- Formulário simples no modal: `className="form-modal-simple"` no `<form>`
+- **`col-12`** em todos os campos de modal (inclui `AddressFields`, `ContactFields`, `EntitySelectField`, `DetailFieldGrid`)
+- Formulário no modal: **`className="form-modal-simple"`** no `<form>` (substituir `modal-inner-padding`, `p-3` isolado)
 - Seções (h6, botões auxiliares): `form-modal-input-col` para alinhar à coluna dos inputs
+- **`FormField`** para todo input/select/textarea — **proibido** `<input>`, `<select>`, `<textarea>` cru
+- Campos read-only: `FormField` com `readOnly` (e `disabled` se não editável)
 
 ## Booleanos — Sim/Não inline
 
 ```tsx
-// ✅ Ativo/inativo ou qualquer sim-não
-<AtivoInativoField
-  value={form.ativo}
-  onChange={(v) => onChange('ativo', v)}
-  label={t('form.autoRenewal')}  // label customizado quando necessário
-/>
-
-// ❌ Switch em modais
-<FormField type="checkbox" switch ... />
-<div className="form-check form-switch">...</div>
+<AtivoInativoField value={form.ativo} onChange={...} label={t('form.active')} />
 ```
+
+Para listas de flags independentes (ex.: dias de vencimento, colunas blockdomi): um `AtivoInativoField` ou `TableFilterCheckbox` por item, cada um em `col-12`.
 
 ## Múltiplas opções na mesma linha
 
 ```tsx
 // ✅ Várias flags independentes (ex.: Email + WhatsApp)
-<ComunicacaoPreferenciasField
-  recebeEmail={form.recebe_email}
-  recebeWhatsApp={form.recebe_whatsapp}
-  onRecebeEmailChange={...}
-  onRecebeWhatsAppChange={...}
-/>
+<ComunicacaoPreferenciasField ... />
 
-// ✅ Radios inline (ex.: tipo pessoa)
+// ✅ Radios inline (ex.: tipo pessoa PF/PJ)
 <div className="form-field">
   <label className="form-label small">{label}<RequiredMark /></label>
   <div className="form-field-control">
@@ -81,40 +101,38 @@ Padrão estilo IXC/Login: **label à direita na coluna fixa**, **controles alinh
 | Campo padrão | `FormField` |
 | Ativo/Inativo ou Sim/Não | `AtivoInativoField` |
 | Preferências de comunicação | `ComunicacaoPreferenciasField` |
-| Filtro booleano em tabela/lista | `TableFilterCheckbox` |
+| Endereço completo | `AddressFields` |
+| Telefone/email/contato | `ContactFields` |
 | Entidade com busca | `EntitySelectField` |
+| Filtro booleano em tabela/lista | `TableFilterCheckbox` |
+| Detalhe somente leitura (vários campos) | `DetailFieldGrid` |
+
+**Proibido** duplicar campos de endereço/contato inline — usar `AddressFields` / `ContactFields`.
+
+## ADM e SaaS
+
+O mesmo padrão vale para **ERP (adm)** e **SaaS** — não usar layout diferente entre os dois.
 
 ## Filtros de tabela (mostrar inativos, cancelados, etc.)
 
 ```tsx
-// ✅ Checkbox padrão em customControls / barra de filtros
-<TableFilterCheckbox
-  id="showInativosContratos"
-  label={t('filter.showInactive')}
-  checked={showInativos}
-  onChange={setShowInativos}
-/>
-
-// ❌ Switch ou select para filtros on/off
-<div className="form-check form-switch">...</div>
-<FormField type="select" options={[{ value: 'sim' }, { value: 'nao' }]} />
+<TableFilterCheckbox id="showInativos" label={t('filter.showInactive')} ... />
 ```
 
-Substituir **todos** os filtros booleanos de listagem (inativos, cancelados, erros) por `TableFilterCheckbox`.
+## Rich text / editores especiais
 
-Novos campos inline reutilizáveis: copiar estrutura de `AtivoInativoField` ou `ComunicacaoPreferenciasField` — não duplicar CSS.
+TinyMCE e editores grandes: wrapper `.form-field` com label à esquerda e editor em `.form-field-control` (mesma coluna dos inputs).
 
 ## Tamanho de inputs (padrão global)
 
-- Classe: `form-control` via `Input` ou `FormField` — **não** classes custom (`login-input`, etc.) nem `height` fixo
-- Estilos globais em `_components.scss`: `font-size: var(--font-size-sm)`, padding `0.5rem 0.875rem`, `border-radius: var(--border-radius)`
-- Largura máxima do controle: `--form-input-max-width` (420px); bloco label+input: `--form-block-max-width`
-- Telas sem label lateral (login, busca): `Input` direto; modais com label: `FormField` + `.form-field`
-- **Foco**: mesma borda (`var(--border-color)`), **sem** `box-shadow` nem halo azul — regra global em `_components.scss`; detalhes em `.cursor/rules/frontend-ui-centralizado.mdc`
+- Classe: `form-control` via `Input` ou `FormField`
+- Largura máxima: `--form-input-max-width` (420px)
+- **Foco**: mesma borda, **sem** `box-shadow`
 
-## Exceções (grids multi-coluna)
+## Proibido globalmente em modais
 
-Use `form-modal-multi-col` na `.row` quando o layout **não** for cadastro campo-a-campo:
-
-- Dias de vencimento, templates Meta, filtros Blockdomi, cards de variáveis WhatsApp
-- Dashboard e layouts de detalhe somente leitura (`DetailFieldGrid`) — empilham por padrão; use `form-modal-multi-col` se precisar de duas colunas
+- `col-md-*`, `col-lg-*` em campos de formulário
+- `form-modal-multi-col`
+- `form-switch`
+- Layout vertical label-acima-input
+- Campos side-by-side (`flex-fill`, dois `FormField` na mesma linha)

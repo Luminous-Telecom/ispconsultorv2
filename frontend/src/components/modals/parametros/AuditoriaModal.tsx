@@ -4,7 +4,7 @@ import { useModalSelect } from 'hooks/useModalSelect';
 import { useTableFilters } from 'hooks/useTableFilters';
 import DraggableModal from 'components/common/DraggableModal';
 import SearchBar from 'components/ui/SearchBar';
-import { LimparButton } from 'components/ui';
+import { FormField, LimparButton } from 'components/ui';
 import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
 import { auditoriaService, AuditoriaLog, AuditoriaFilters } from 'services/auditoriaService';
@@ -261,76 +261,94 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
     }
   ], [t, selectedItem, handleViewDetails]);
 
-  // Filtros customizados
+  const acaoFilterOptions = useMemo(
+    () => [
+      { value: '', label: t('audit.actions.all') },
+      { value: 'create', label: t('audit.actions.create') },
+      { value: 'update', label: t('audit.actions.update') },
+      { value: 'delete', label: t('audit.actions.delete') },
+      { value: 'login', label: t('audit.actions.login') },
+      { value: 'logout', label: t('audit.actions.logout') },
+      { value: 'executar', label: t('audit.actions.executar') },
+    ],
+    [t]
+  );
+
+  const entidadeFilterOptions = useMemo(
+    () => [
+      { value: '', label: t('audit.entities.all') },
+      { value: 'Cliente', label: t('table.client') },
+      { value: 'Plano', label: t('table.plan') },
+      { value: 'Contrato', label: t('table.contract') },
+      { value: 'Usuario', label: t('audit.user') },
+      { value: 'Titulo', label: t('form.title') },
+      { value: 'Banco', label: t('table.bank') },
+      { value: 'ScheduledRoutine', label: t('modal.scheduledRoutine') },
+      { value: 'Agent', label: t('modal.agents') },
+      { value: 'SshDevice', label: t('modal.sshDevices') },
+      { value: 'SshDeviceBackup', label: t('sshDevice.manualBackup') },
+    ],
+    [t]
+  );
+
   const customFilters = (
-    <div className="row mb-1">
-      <div className="col-md-4">
-        <SearchBar
-          id="auditoria-search"
-          variant="table"
-          value={tableFilters.search}
-          onChange={(v) => handleSearchChange(v)}
-          onSearch={(v) => handleSearchChange(v)}
-          placeholder={t('buttons.search')}
-          searchField={searchField || 'usuario_email'}
-          searchFields={[
-            { key: 'id', label: t('table.id') },
-            { key: 'usuario_email', label: t('emailServer.userEmail') },
-            { key: 'usuario_nome', label: t('audit.user') },
-            { key: 'acao', label: t('table.action') },
-            { key: 'entidade', label: t('audit.entity') },
-            { key: 'ip_address', label: t('audit.ip') },
-            { key: 'rota', label: t('audit.route') },
-            { key: 'timestamp', label: t('audit.timestamp') }
-          ]}
-          onSearchFieldChange={(f) => { setSearchField(f); tableFilters.setPage(1); }}
-          className="flex-grow-1"
-        />
-      </div>
-      <div className="col-md-3">
-        <label className="form-label small">{t('table.action')}</label>
-        <select
-          className="form-select form-select-sm"
-          value={acaoFilter}
-          onChange={(e) => {
-            setAcaoFilter(e.target.value);
-            tableFilters.setPage(1);
-          }}
-        >
-          <option value="">{t('audit.actions.all')}</option>
-          <option value="create">{t('audit.actions.create')}</option>
-          <option value="update">{t('audit.actions.update')}</option>
-          <option value="delete">{t('audit.actions.delete')}</option>
-          <option value="login">{t('audit.actions.login')}</option>
-          <option value="logout">{t('audit.actions.logout')}</option>
-          <option value="executar">{t('audit.actions.executar')}</option>
-        </select>
-      </div>
-      <div className="col-md-3">
-        <label className="form-label small">{t('audit.entity')}</label>
-        <select
-          className="form-select form-select-sm"
-          value={entidadeFilter}
-          onChange={(e) => {
-            setEntidadeFilter(e.target.value);
-            tableFilters.setPage(1);
-          }}
-        >
-          <option value="">{t('audit.entities.all')}</option>
-          <option value="Cliente">{t('table.client')}</option>
-          <option value="Plano">{t('table.plan')}</option>
-          <option value="Contrato">{t('table.contract')}</option>
-          <option value="Usuario">{t('audit.user')}</option>
-          <option value="Titulo">{t('form.title')}</option>
-          <option value="Banco">{t('table.bank')}</option>
-          <option value="ScheduledRoutine">{t('modal.scheduledRoutine')}</option>
-          <option value="Agent">{t('modal.agents')}</option>
-          <option value="SshDevice">{t('modal.sshDevices')}</option>
-          <option value="SshDeviceBackup">{t('sshDevice.manualBackup')}</option>
-        </select>
-      </div>
-      <div className="col-md-2 d-flex align-items-end">
-        <LimparButton type="button" className="w-100" onClick={handleClearFilters} />
+    <div className="form-modal-simple">
+      <div className="row g-2 mb-1">
+        <div className="col-12">
+          <SearchBar
+            id="auditoria-search"
+            variant="table"
+            value={tableFilters.search}
+            onChange={(v) => handleSearchChange(v)}
+            onSearch={(v) => handleSearchChange(v)}
+            placeholder={t('buttons.search')}
+            searchField={searchField || 'usuario_email'}
+            searchFields={[
+              { key: 'id', label: t('table.id') },
+              { key: 'usuario_email', label: t('emailServer.userEmail') },
+              { key: 'usuario_nome', label: t('audit.user') },
+              { key: 'acao', label: t('table.action') },
+              { key: 'entidade', label: t('audit.entity') },
+              { key: 'ip_address', label: t('audit.ip') },
+              { key: 'rota', label: t('audit.route') },
+              { key: 'timestamp', label: t('audit.timestamp') }
+            ]}
+            onSearchFieldChange={(f) => { setSearchField(f); tableFilters.setPage(1); }}
+          />
+        </div>
+        <div className="col-12">
+          <FormField
+            name="auditoria_acao_filter"
+            type="select"
+            size="sm"
+            label={t('table.action')}
+            value={acaoFilter}
+            options={acaoFilterOptions}
+            onChange={(value) => {
+              setAcaoFilter(String(value ?? ''));
+              tableFilters.setPage(1);
+            }}
+          />
+        </div>
+        <div className="col-12">
+          <FormField
+            name="auditoria_entidade_filter"
+            type="select"
+            size="sm"
+            label={t('audit.entity')}
+            value={entidadeFilter}
+            options={entidadeFilterOptions}
+            onChange={(value) => {
+              setEntidadeFilter(String(value ?? ''));
+              tableFilters.setPage(1);
+            }}
+          />
+        </div>
+        <div className="col-12">
+          <div className="form-modal-input-col">
+            <LimparButton type="button" onClick={handleClearFilters} />
+          </div>
+        </div>
       </div>
     </div>
   );

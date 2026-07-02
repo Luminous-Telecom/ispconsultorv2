@@ -39,8 +39,8 @@ const ContaPagarVencimentoSection: React.FC<ContaPagarVencimentoSectionProps> = 
   }
 
   return (
-    <div className="d-flex gap-2">
-      <div className="flex-fill">
+    <div className="row g-2">
+      <div className="col-12">
         <FormField
           name="data_vencimento_inicial"
           type="date"
@@ -55,7 +55,7 @@ const ContaPagarVencimentoSection: React.FC<ContaPagarVencimentoSectionProps> = 
           error={errors.data_vencimento_inicial}
         />
       </div>
-      <div className="flex-fill">
+      <div className="col-12">
         <FormField
           name="data_vencimento_final"
           type="date"

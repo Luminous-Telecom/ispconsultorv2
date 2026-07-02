@@ -21,8 +21,8 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
   const { t } = useI18n();
 
   return (
-    <div>
-      <div className="row g-0 mb-0">
+    <div className="form-modal-simple">
+      <div className="row g-2">
         <div className="col-12">
           <MensagemTypeSelect value={mensagemType} onChange={onMensagemTypeChange} />
         </div>
@@ -41,48 +41,56 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
       {mensagemType && tipoEnvio === 'pdf' && (
         <>
           {mensagemType === 'envio_manual' ? (
-            <div className="mensagem-editor-layout">
-              <div className="d-flex justify-content-between align-items-center mb-1">
-                <LabelWithHelp id="mensagem-manual-label" as="span" className="form-label small mb-0" required>
-                  {t('settings.messages.manualLabel')}
-                </LabelWithHelp>
-              </div>
-              <small className="text-muted form-hint d-block mb-1">{t('settings.messages.manualHelper')}</small>
-              <div className="flex-fill-min-h-0">
-                <Suspense fallback={<RichTextEditorFallback />}>
-                  <RichTextEditor
-                    key={`mensagem-manual-email-${mensagemType || 'none'}-${editorKey}`}
-                    id="mensagem_manual_email"
-                    name="mensagem_manual_email"
-                    ariaLabelledBy="mensagem-manual-label"
-                    value={mensagemManual || '<p></p>'}
-                    onChange={onMensagemManualChange || (() => {})}
-                    placeholder={t('placeholder.manualSend')}
-                    height="100%"
-                  />
-                </Suspense>
+            <div className="row g-2 mt-2">
+              <div className="col-12">
+                <div className="form-field mensagem-editor-layout">
+                  <LabelWithHelp id="mensagem-manual-label" className="form-label small" required>
+                    {t('settings.messages.manualLabel')}
+                  </LabelWithHelp>
+                  <div className="form-field-control">
+                    <small className="text-muted form-hint d-block mb-1">{t('settings.messages.manualHelper')}</small>
+                    <div className="flex-fill-min-h-0">
+                      <Suspense fallback={<RichTextEditorFallback />}>
+                        <RichTextEditor
+                          key={`mensagem-manual-email-${mensagemType || 'none'}-${editorKey}`}
+                          id="mensagem_manual_email"
+                          name="mensagem_manual_email"
+                          ariaLabelledBy="mensagem-manual-label"
+                          value={mensagemManual || '<p></p>'}
+                          onChange={onMensagemManualChange || (() => {})}
+                          placeholder={t('placeholder.manualSend')}
+                          height="100%"
+                        />
+                      </Suspense>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           ) : (
-            <div className="mensagem-editor-layout">
-              <div className="d-flex justify-content-between align-items-center mb-1">
-                <LabelWithHelp id="mensagem-label" as="span" className="form-label small mb-0" required>
-                  {t('settings.messages.emailLabel')}
-                </LabelWithHelp>
-              </div>
-              <div className="flex-fill-min-h-0">
-                <Suspense fallback={<RichTextEditorFallback />}>
-                  <RichTextEditor
-                    key={`mensagem-email-${mensagemType || 'none'}-${editorKey}`}
-                    id="mensagem_texto_email"
-                    name="mensagem_texto_email"
-                    ariaLabelledBy="mensagem-label"
-                    value={mensagemTexto || '<p></p>'}
-                    onChange={onMensagemTextoChange}
-                    placeholder={t('placeholder.defaultEmail')}
-                    height="100%"
-                  />
-                </Suspense>
+            <div className="row g-2 mt-2">
+              <div className="col-12">
+                <div className="form-field mensagem-editor-layout">
+                  <LabelWithHelp id="mensagem-label" className="form-label small" required>
+                    {t('settings.messages.emailLabel')}
+                  </LabelWithHelp>
+                  <div className="form-field-control">
+                    <div className="flex-fill-min-h-0">
+                      <Suspense fallback={<RichTextEditorFallback />}>
+                        <RichTextEditor
+                          key={`mensagem-email-${mensagemType || 'none'}-${editorKey}`}
+                          id="mensagem_texto_email"
+                          name="mensagem_texto_email"
+                          ariaLabelledBy="mensagem-label"
+                          value={mensagemTexto || '<p></p>'}
+                          onChange={onMensagemTextoChange}
+                          placeholder={t('placeholder.defaultEmail')}
+                          height="100%"
+                        />
+                      </Suspense>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}

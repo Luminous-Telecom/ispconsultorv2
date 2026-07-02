@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useTableFilters } from './useTableFilters';
 import { useModalSelect } from './useModalSelect';
 import { useAuditoria } from './useAuditoria';
@@ -107,9 +107,19 @@ export function useEntityListModal<T extends { id: number | string }>({
     setSelectedEntityId(null);
   }, []);
 
+  const lastBackendPaginationRef = useRef<BackendPaginationShape | undefined>(undefined);
+
   const buildPagination = useCallback(
-    (backendPagination: BackendPaginationShape | undefined | null) =>
-      normalizeListPagination(backendPagination, tableFilters.page, tableFilters.limit),
+    (backendPagination: BackendPaginationShape | undefined | null) => {
+      if (backendPagination && typeof backendPagination === 'object') {
+        lastBackendPaginationRef.current = backendPagination;
+      }
+      return normalizeListPagination(
+        backendPagination ?? lastBackendPaginationRef.current,
+        tableFilters.page,
+        tableFilters.limit
+      );
+    },
     [tableFilters.page, tableFilters.limit]
   );
 

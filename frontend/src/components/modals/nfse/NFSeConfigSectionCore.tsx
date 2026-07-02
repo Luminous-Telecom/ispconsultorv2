@@ -5,7 +5,7 @@ import { useNotificationContext } from 'components/notifications/NotificationPro
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useI18n } from 'contexts/I18nContext';
-import { Loading } from 'components/ui';
+import { FormField, AtivoInativoField, Loading } from 'components/ui';
 import { NFSE_CONFIG_BY_VARIANT, type NFSeConfigVariant } from './nfseConfigVariants';
 
 export interface NFSeConfigSectionCoreProps {
@@ -196,6 +196,8 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
     if (onTestReady) onTestReady(handleTest, testAuthMutation.isPending, canTest);
   }, [onTestReady, testAuthMutation.isPending, canTest, handleTest]);
 
+  const isFieldDisabled = disabled || saveMutation.isPending;
+
   if (isLoading) {
     return (
       <div className="card mb-3">
@@ -215,237 +217,207 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
         <h6 className="mb-0">{t('nfse.title')}</h6>
       </div>
       <div className="card-body">
-        <form id={formId} onSubmit={handleSave}>
-          <div className="row">
-            <div className="col-md-6 mb-3">
-              <label htmlFor="nfse_codigo_servico" className="form-label">
-                {t('nfse.municipalServiceCode')}
-              </label>
-              <input
+        <form id={formId} onSubmit={handleSave} className="form-modal-simple">
+          <div className="row g-2">
+            <div className="col-12">
+              <FormField
+                name="nfse_codigo_servico"
                 type="text"
-                className="form-control"
-                id="nfse_codigo_servico"
+                label={t('nfse.municipalServiceCode')}
                 value={formData.codigo_servico_municipal}
-                onChange={(e) => handleInputChange('codigo_servico_municipal', e.target.value)}
-                disabled={disabled || saveMutation.isPending}
+                onChange={(v) => handleInputChange('codigo_servico_municipal', String(v ?? ''))}
+                disabled={isFieldDisabled}
                 placeholder={t('placeholder.serviceCode')}
+                helpText={t('nfse.municipalServiceCodeHelp')}
+                size="sm"
               />
-              <small className="text-muted form-hint d-block mt-1">{t('nfse.municipalServiceCodeHelp')}</small>
             </div>
 
-            <div className="col-md-6 mb-3">
-              <label htmlFor="nfse_aliquota_iss" className="form-label">
-                {t('nfse.issRate')}
-              </label>
-              <input
+            <div className="col-12">
+              <FormField
+                name="nfse_aliquota_iss"
                 type="number"
-                className="form-control"
-                id="nfse_aliquota_iss"
+                label={t('nfse.issRate')}
                 value={formData.aliquota_iss}
-                onChange={(e) => handleInputChange('aliquota_iss', e.target.value)}
-                disabled={disabled || saveMutation.isPending}
-                min="0"
-                max="100"
-                step="0.01"
+                onChange={(v) => handleInputChange('aliquota_iss', String(v ?? ''))}
+                disabled={isFieldDisabled}
+                min={0}
+                max={100}
+                step={0.01}
                 placeholder="0.00"
+                helpText={t('nfse.issRateHelp')}
+                size="sm"
               />
-              <small className="text-muted form-hint d-block mt-1">{t('nfse.issRateHelp')}</small>
             </div>
-          </div>
 
-          <div className="mb-3">
-            <label htmlFor="nfse_descricao_servico" className="form-label">
-              {t('nfse.serviceDescription')}
-            </label>
-            <textarea
-              className="form-control"
-              id="nfse_descricao_servico"
-              rows={3}
-              value={formData.descricao_servico}
-              onChange={(e) => handleInputChange('descricao_servico', e.target.value)}
-              disabled={disabled || saveMutation.isPending}
-              placeholder="Ex: Prestação de serviços de desenvolvimento de software"
-            />
-            <small className="text-muted form-hint d-block mt-1">{t('nfse.serviceDescriptionHelp')}</small>
-          </div>
+            <div className="col-12">
+              <FormField
+                name="nfse_descricao_servico"
+                type="textarea"
+                label={t('nfse.serviceDescription')}
+                rows={3}
+                value={formData.descricao_servico}
+                onChange={(v) => handleInputChange('descricao_servico', String(v ?? ''))}
+                disabled={isFieldDisabled}
+                placeholder="Ex: Prestação de serviços de desenvolvimento de software"
+                helpText={t('nfse.serviceDescriptionHelp')}
+                size="sm"
+              />
+            </div>
 
-          <div className="row">
-            <div className="col-md-6 mb-3">
-              <label htmlFor="nfse_serie_nf" className="form-label">
-                {t('nfse.nfSerie')}
-              </label>
-              <input
+            <div className="col-12">
+              <FormField
+                name="nfse_serie_nf"
                 type="text"
-                className="form-control"
-                id="nfse_serie_nf"
+                label={t('nfse.nfSerie')}
                 value={formData.serie_nf}
-                onChange={(e) => handleInputChange('serie_nf', e.target.value)}
-                disabled={disabled || saveMutation.isPending}
+                onChange={(v) => handleInputChange('serie_nf', String(v ?? ''))}
+                disabled={isFieldDisabled}
                 placeholder="80000"
                 maxLength={10}
+                helpText={t('nfse.nfSerieHelp')}
+                size="sm"
               />
-              <small className="text-muted form-hint d-block mt-1">{t('nfse.nfSerieHelp')}</small>
             </div>
 
-            <div className="col-md-6 mb-3">
-              <label htmlFor="nfse_numero_dps" className="form-label">
-                {t('nfse.dpsNumber')}
-              </label>
-              <input
+            <div className="col-12">
+              <FormField
+                name="nfse_numero_dps"
                 type="number"
-                className="form-control"
-                id="nfse_numero_dps"
+                label={t('nfse.dpsNumber')}
                 value={formData.numero_dps}
-                onChange={(e) => handleInputChange('numero_dps', e.target.value)}
-                disabled={disabled || saveMutation.isPending}
-                min="1"
+                onChange={(v) => handleInputChange('numero_dps', String(v ?? ''))}
+                disabled={isFieldDisabled}
+                min={1}
                 placeholder="1"
+                helpText={t('nfse.dpsNumberHelp')}
+                size="sm"
               />
-              <small className="text-muted form-hint d-block mt-1">{t('nfse.dpsNumberHelp')}</small>
             </div>
-          </div>
 
-          <div className="mb-3">
-            <label htmlFor="nfse_provider" className="form-label">
-              {t('nfse.provider')}
-            </label>
-            <select
-              className="form-control"
-              id="nfse_provider"
-              value={formData.provider}
-              onChange={(e) => handleInputChange('provider', e.target.value as 'PORTAL_NACIONAL' | 'ASAAS')}
-              disabled={disabled || saveMutation.isPending}
-            >
-              <option value="ASAAS">Asaas</option>
-              <option value="PORTAL_NACIONAL" disabled>
-                Portal Nacional (em breve)
-              </option>
-            </select>
-            <small className="text-muted form-hint d-block mt-1">{t('nfse.providerHelp')}</small>
-          </div>
+            <div className="col-12">
+              <FormField
+                name="nfse_provider"
+                type="select"
+                label={t('nfse.provider')}
+                value={formData.provider}
+                onChange={(v) => handleInputChange('provider', String(v ?? '') as 'PORTAL_NACIONAL' | 'ASAAS')}
+                disabled={isFieldDisabled}
+                options={[
+                  { value: 'ASAAS', label: 'Asaas' },
+                  { value: 'PORTAL_NACIONAL', label: 'Portal Nacional (em breve)', disabled: true },
+                ]}
+                helpText={t('nfse.providerHelp')}
+                size="sm"
+              />
+            </div>
 
-          {formData.provider === 'ASAAS' && (
-            <>
-              <div className="mb-3">
-                <label htmlFor="nfse_asaas_api_key" className="form-label">
-                  {t('nfse.asaasApiKey')}
-                </label>
-                <input
-                  type="password"
-                  className="form-control"
-                  id="nfse_asaas_api_key"
-                  value={formData.asaas_api_key}
-                  onChange={(e) => handleInputChange('asaas_api_key', e.target.value)}
-                  disabled={disabled || saveMutation.isPending}
-                  placeholder={
-                    formData.has_asaas_api_key
-                      ? 'Chave configurada — deixe em branco para manter'
-                      : t('placeholder.apiToken')
-                  }
-                  autoComplete="off"
-                />
-                <small className="text-muted form-hint d-block mt-1">
-                  {formData.has_asaas_api_key && !formData.asaas_api_key
-                    ? 'Chave de API salva. Preencha apenas para alterar.'
-                    : t('nfse.asaasApiKeyHelp')}
-                </small>
-              </div>
-
-              <div className="mb-3">
-                <div className="form-check form-switch">
-                  <input
-                    className="form-check-input cursor-pointer"
-                    type="checkbox"
-                    role="switch"
-                    id="nfse_asaas_sandbox"
-                    checked={formData.asaas_sandbox}
-                    onChange={(e) => handleInputChange('asaas_sandbox', e.target.checked)}
-                    disabled={disabled || saveMutation.isPending}
-                  />
-                  <label className="form-check-label cursor-pointer" htmlFor="nfse_asaas_sandbox" >
-                    {t('nfse.useSandbox')}
-                  </label>
-                </div>
-                <small className="text-muted form-hint d-block mt-1">{t('nfse.useSandboxHelp')}</small>
-              </div>
-            </>
-          )}
-
-          {formData.provider === 'PORTAL_NACIONAL' && (
-            <>
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label htmlFor="nfse_portal_username" className="form-label">
-                    {t('nfse.username')}
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="nfse_portal_username"
-                    value={formData.portal_nacional_username}
-                    onChange={(e) => handleInputChange('portal_nacional_username', e.target.value)}
-                    disabled={disabled || saveMutation.isPending}
-                    placeholder={t('nfse.username')}
-                  />
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label htmlFor="nfse_portal_password" className="form-label">
-                    {t('nfse.password')}
-                  </label>
-                  <input
+            {formData.provider === 'ASAAS' && (
+              <>
+                <div className="col-12">
+                  <FormField
+                    name="nfse_asaas_api_key"
                     type="password"
-                    className="form-control"
-                    id="nfse_portal_password"
+                    label={t('nfse.asaasApiKey')}
+                    value={formData.asaas_api_key}
+                    onChange={(v) => handleInputChange('asaas_api_key', String(v ?? ''))}
+                    disabled={isFieldDisabled}
+                    placeholder={
+                      formData.has_asaas_api_key
+                        ? 'Chave configurada — deixe em branco para manter'
+                        : t('placeholder.apiToken')
+                    }
+                    autoComplete="off"
+                    helpText={
+                      formData.has_asaas_api_key && !formData.asaas_api_key
+                        ? 'Chave de API salva. Preencha apenas para alterar.'
+                        : t('nfse.asaasApiKeyHelp')
+                    }
+                    size="sm"
+                  />
+                </div>
+
+                <div className="col-12">
+                  <AtivoInativoField
+                    name="nfse_asaas_sandbox"
+                    label={t('nfse.useSandbox')}
+                    value={formData.asaas_sandbox}
+                    onChange={(v) => handleInputChange('asaas_sandbox', v)}
+                    disabled={isFieldDisabled}
+                  />
+                  <small className="text-muted form-hint d-block form-modal-input-col mt-1">
+                    {t('nfse.useSandboxHelp')}
+                  </small>
+                </div>
+              </>
+            )}
+
+            {formData.provider === 'PORTAL_NACIONAL' && (
+              <>
+                <div className="col-12">
+                  <FormField
+                    name="nfse_portal_username"
+                    type="text"
+                    label={t('nfse.username')}
+                    value={formData.portal_nacional_username}
+                    onChange={(v) => handleInputChange('portal_nacional_username', String(v ?? ''))}
+                    disabled={isFieldDisabled}
+                    placeholder={t('nfse.username')}
+                    size="sm"
+                  />
+                </div>
+
+                <div className="col-12">
+                  <FormField
+                    name="nfse_portal_password"
+                    type="password"
+                    label={t('nfse.password')}
                     value={formData.portal_nacional_password}
-                    onChange={(e) => handleInputChange('portal_nacional_password', e.target.value)}
-                    disabled={disabled || saveMutation.isPending}
+                    onChange={(v) => handleInputChange('portal_nacional_password', String(v ?? ''))}
+                    disabled={isFieldDisabled}
                     placeholder={
                       formData.has_portal_nacional_password
                         ? 'Senha configurada — deixe em branco para manter'
                         : t('nfse.password')
                     }
                     autoComplete="off"
+                    size="sm"
                   />
                 </div>
-              </div>
 
-              <div className="row">
-                <div className="col-md-8 mb-3">
-                  <label htmlFor="nfse_portal_base_url" className="form-label">
-                    {t('nfse.baseUrl')}
-                  </label>
-                  <input
+                <div className="col-12">
+                  <FormField
+                    name="nfse_portal_base_url"
                     type="url"
-                    className="form-control"
-                    id="nfse_portal_base_url"
+                    label={t('nfse.baseUrl')}
                     value={formData.portal_nacional_base_url}
-                    onChange={(e) => handleInputChange('portal_nacional_base_url', e.target.value)}
-                    disabled={disabled || saveMutation.isPending}
+                    onChange={(v) => handleInputChange('portal_nacional_base_url', String(v ?? ''))}
+                    disabled={isFieldDisabled}
                     placeholder="https://sefin.producaorestrita.nfse.gov.br/API/SefinNacional"
+                    size="sm"
                   />
                 </div>
 
-                <div className="col-md-4 mb-3">
-                  <label htmlFor="nfse_portal_ambiente" className="form-label">
-                    {t('nfse.environment')}
-                  </label>
-                  <select
-                    className="form-control"
-                    id="nfse_portal_ambiente"
+                <div className="col-12">
+                  <FormField
+                    name="nfse_portal_ambiente"
+                    type="select"
+                    label={t('nfse.environment')}
                     value={formData.portal_nacional_ambiente}
-                    onChange={(e) =>
-                      handleInputChange('portal_nacional_ambiente', e.target.value as 'HOMOLOGACAO' | 'PRODUCAO')
+                    onChange={(v) =>
+                      handleInputChange('portal_nacional_ambiente', String(v ?? '') as 'HOMOLOGACAO' | 'PRODUCAO')
                     }
-                    disabled={disabled || saveMutation.isPending}
-                  >
-                    <option value="HOMOLOGACAO">{t('nfse.homologation')}</option>
-                    <option value="PRODUCAO">{t('nfse.production')}</option>
-                  </select>
+                    disabled={isFieldDisabled}
+                    options={[
+                      { value: 'HOMOLOGACAO', label: t('nfse.homologation') },
+                      { value: 'PRODUCAO', label: t('nfse.production') },
+                    ]}
+                    size="sm"
+                  />
                 </div>
-              </div>
-            </>
-          )}
+              </>
+            )}
+          </div>
         </form>
       </div>
     </div>

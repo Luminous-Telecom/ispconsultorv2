@@ -90,49 +90,55 @@ const TermoEditModal: React.FC<TermoEditModalProps> = ({
       size="lg"
       headerActions={headerActions}
     >
-      <form id="termo-edit-form" onSubmit={handleSubmit} className="modal-inner-padding">
-        <div className="d-flex flex-column gap-2">
-          <EntitySelectField
-            value={termoFormData.termoCadastradoId || 0}
-            onChange={(value) => setTermoFormData({ ...termoFormData, termoCadastradoId: value })}
-            onShowModal={onShowSelecionarTermo}
-            entities={termosSistema || []}
-            label="Termo Cadastrado"
-            idFieldTitle="Digite o ID do termo cadastrado"
-            helpText="Selecione um termo cadastrado no sistema"
-            required
-          />
+      <form id="termo-edit-form" onSubmit={handleSubmit} className="form-modal-simple">
+        <div className="row g-2">
+          <div className="col-12">
+            <EntitySelectField
+              value={termoFormData.termoCadastradoId || 0}
+              onChange={(value) => setTermoFormData({ ...termoFormData, termoCadastradoId: value })}
+              onShowModal={onShowSelecionarTermo}
+              entities={termosSistema || []}
+              label="Termo Cadastrado"
+              idFieldTitle="Digite o ID do termo cadastrado"
+              helpText="Selecione um termo cadastrado no sistema"
+              required
+            />
+          </div>
 
-          <div>
-            <label className="form-label">Assinado</label>
-            <div className="d-flex gap-3 mt-2">
-              <div className="form-check">
-                <input
-                  className="form-check-input"
-                  type="radio"
-                  name="assinado"
-                  id="assinadoSim"
-                  value="SIM"
-                  checked={termoFormData.assinado === 'SIM'}
-                  onChange={() => setTermoFormData({ ...termoFormData, assinado: 'SIM' })}
-                />
-                <label className="form-check-label" htmlFor="assinadoSim">
-                  Sim
-                </label>
-              </div>
-              <div className="form-check">
-                <input
-                  className="form-check-input"
-                  type="radio"
-                  name="assinado"
-                  id="assinadoNao"
-                  value="NAO"
-                  checked={termoFormData.assinado === 'NAO'}
-                  onChange={() => setTermoFormData({ ...termoFormData, assinado: 'NAO' })}
-                />
-                <label className="form-check-label" htmlFor="assinadoNao">
-                  Não
-                </label>
+          <div className="col-12">
+            <div className="form-field">
+              <label className="form-label small">Assinado</label>
+              <div className="form-field-control">
+                <div className="d-flex flex-wrap gap-3">
+                  <div className="form-check form-check-inline">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="assinado"
+                      id="assinadoSim"
+                      value="SIM"
+                      checked={termoFormData.assinado === 'SIM'}
+                      onChange={() => setTermoFormData({ ...termoFormData, assinado: 'SIM' })}
+                    />
+                    <label className="form-check-label" htmlFor="assinadoSim">
+                      Sim
+                    </label>
+                  </div>
+                  <div className="form-check form-check-inline">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="assinado"
+                      id="assinadoNao"
+                      value="NAO"
+                      checked={termoFormData.assinado === 'NAO'}
+                      onChange={() => setTermoFormData({ ...termoFormData, assinado: 'NAO' })}
+                    />
+                    <label className="form-check-label" htmlFor="assinadoNao">
+                      Não
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
