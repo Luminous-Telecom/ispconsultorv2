@@ -21,7 +21,6 @@ interface ContratosSectionProps {
   showInativosContratos: boolean;
   setShowInativosContratos: (show: boolean) => void;
   contratosBulkActions: BulkAction<SaasContrato>[];
-  isMobile: boolean;
   t: SaasEmpresaTranslateFn;
   onRowDoubleClick: (i: SaasContrato) => void;
   onRefresh: () => void;
@@ -38,7 +37,6 @@ const ContratosSection: React.FC<ContratosSectionProps> = ({
   showInativosContratos,
   setShowInativosContratos,
   contratosBulkActions,
-  isMobile,
   t,
   onRowDoubleClick,
   onRefresh,

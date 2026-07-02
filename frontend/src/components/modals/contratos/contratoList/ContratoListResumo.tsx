@@ -7,7 +7,6 @@ interface ContratoListResumoProps {
   hasData: boolean;
   valorTotalMensal: number;
   valorTotalDescontos: number;
-  isMobile: boolean;
   t: ContratoTranslateFn;
 }
 
@@ -16,7 +15,6 @@ export const ContratoListResumo: React.FC<ContratoListResumoProps> = ({
   hasData,
   valorTotalMensal,
   valorTotalDescontos,
-  isMobile,
   t,
 }) => {
   if (!show || !hasData) return null;

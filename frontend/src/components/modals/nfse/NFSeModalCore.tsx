@@ -1,5 +1,4 @@
 import React, { useState, useRef } from 'react';
-import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
 import { FecharButton, SalvarButton, TestarConexaoButton } from 'components/ui';
 import NFSeConfigSectionCore from './NFSeConfigSectionCore';
@@ -13,7 +12,6 @@ interface NFSeModalCoreProps {
 
 const NFSeModalCore: React.FC<NFSeModalCoreProps> = ({ variant, show, onClose }) => {
   const { formId, modalId } = NFSE_CONFIG_BY_VARIANT[variant];
-  const isMobile = useIsMobile();
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [canTest, setCanTest] = useState(false);

@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
-import { useIsMobile } from 'hooks/useMediaQuery';
 import { useFormReset } from 'hooks/useFormReset';
 import DraggableModal from 'components/common/DraggableModal';
 import { AtivoInativoField, FormField, Loading, ModalFormActions } from 'components/ui';
@@ -37,7 +36,6 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
   const isSaas = variant === 'saas';
   const config = RECURSOS_SISTEMA_BY_VARIANT[variant];
   const { t } = useI18n();
-  const isMobile = useIsMobile();
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
   const queryClient = useQueryClient();

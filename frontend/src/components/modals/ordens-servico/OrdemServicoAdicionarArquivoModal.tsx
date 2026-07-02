@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
-import { useIsMobile } from 'hooks/useMediaQuery';
 import { useUploadOrdemServicoArquivo } from 'hooks/useOrdensServico';
 import DraggableModal from 'components/common/DraggableModal';
 import { ModalFormActions } from 'components/ui';
@@ -20,7 +19,6 @@ const OrdemServicoAdicionarArquivoModal: React.FC<OrdemServicoAdicionarArquivoMo
   ordemServicoId,
   onSuccess,
 }) => {
-  const isMobile = useIsMobile();
   const { error } = useNotificationContext();
   const uploadMutation = useUploadOrdemServicoArquivo();
 

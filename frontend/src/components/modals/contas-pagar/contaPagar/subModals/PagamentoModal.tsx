@@ -1,6 +1,5 @@
 import React from 'react';
 import { useI18n } from 'contexts/I18nContext';
-import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
 import { CancelarButton, ConfirmarPagamentoButton } from 'components/ui';
 import FormField from 'components/ui/FormField';
@@ -34,7 +33,6 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({
   onPagamentoDataChange
 }) => {
   const { t } = useI18n();
-  const isMobile = useIsMobile();
 
   if (!show || !contaPagar) {
     return null;

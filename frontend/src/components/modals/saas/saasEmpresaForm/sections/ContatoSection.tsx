@@ -1,6 +1,7 @@
 import React from 'react';
 import FormField from 'components/ui/FormField';
 import ContactFields from 'components/forms/ContactFields';
+import type { FormValue } from 'types/common';
 import type { SaasEmpresaForm, SaasEmpresaFormErrors, SaasEmpresaTranslateFn } from '../types';
 
 interface ContatoSectionProps {
@@ -20,8 +21,8 @@ const ContatoSection: React.FC<ContatoSectionProps> = ({
 }) => (
   <>
     <ContactFields
-      formData={form}
-      errors={errors}
+      formData={form as unknown as Record<string, FormValue>}
+      errors={errors as Record<string, string>}
       size="md"
       required
       includeWhatsApp={false}

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useI18n } from 'contexts/I18nContext';
 import { useCreateTipoCobrancaContrato, useUpdateTipoCobrancaContrato, useTipoCobrancaContrato } from 'hooks/useTipoCobrancaContratos';
 import { useFormReset } from 'hooks/useFormReset';
-import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
 import { Loading, ModalFormActions } from 'components/ui';
 import type { TipoCobrancaContrato } from 'services/tipoCobrancaContratoService';
@@ -30,7 +29,6 @@ const TipoCobrancaContratoModal: React.FC<TipoCobrancaContratoModalProps> = ({
   onSuccess,
 }) => {
   const { t } = useI18n();
-  const isMobile = useIsMobile();
   const isEdit = !!tipoId;
 
   const [formData, setFormData] = useState<TipoCobrancaFormData>(initialForm);

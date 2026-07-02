@@ -7,6 +7,7 @@ import { useIsMobile } from 'hooks/useMediaQuery';
 import { useEntitySelectField } from 'hooks/useEntitySelectField';
 import { useTituloForm } from 'hooks/useTituloForm';
 import { useI18n } from 'contexts/I18nContext';
+import type { Contrato } from 'types';
 import { TituloModalProps } from '../types';
 import {
   calcularProximaDataVencimento,
@@ -122,7 +123,7 @@ export function useTituloModal({
     }
 
     if (!enriched.contrato && contratoTituloData) {
-      enriched = { ...enriched, contrato: contratoTituloData };
+      enriched = { ...enriched, contrato: contratoTituloData as Contrato };
     }
 
     return enriched;

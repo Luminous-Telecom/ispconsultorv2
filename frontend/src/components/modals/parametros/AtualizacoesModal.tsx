@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { formatDate } from 'utils/formatters';
-import { useIsMobile } from 'hooks/useMediaQuery';
 import { apiService } from 'services/api';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { AtualizarSistemaButton, FecharButton, Loading } from 'components/ui';
@@ -34,7 +33,6 @@ const listarAtualizacoesTimeoutMs = 130_000;
 
 const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, onHeaderActionsReady }) => {
   const { t } = useI18n();
-  const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateProgress, setUpdateProgress] = useState<string>('');

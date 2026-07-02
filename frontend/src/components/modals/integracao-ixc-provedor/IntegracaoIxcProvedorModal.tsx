@@ -6,7 +6,6 @@ import {
   useUpdateIntegracaoIxcProvedor,
 } from 'hooks/useIntegracaoIxcProvedor';
 import { useFormReset } from 'hooks/useFormReset';
-import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
 import { Loading, ModalFormActions } from 'components/ui';
 import IntegracaoIxcProvedorFormFields, {
@@ -34,7 +33,6 @@ const IntegracaoIxcProvedorModal: React.FC<IntegracaoIxcProvedorModalProps> = ({
   onSuccess,
 }) => {
   const { t } = useI18n();
-  const isMobile = useIsMobile();
   const isEdit = !!integracaoId;
 
   const [formData, setFormData] = useState<IntegracaoIxcProvedorFormData>(initialForm);

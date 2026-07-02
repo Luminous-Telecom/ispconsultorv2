@@ -18,7 +18,6 @@ interface ClienteOption {
 }
 
 interface DocumentoModalBodyProps {
-  isMobile: boolean;
   tipo: DocumentoModalProps['tipo'];
   formData: DocumentoForm;
   setFormData: React.Dispatch<React.SetStateAction<DocumentoForm>>;
@@ -35,7 +34,6 @@ interface DocumentoModalBodyProps {
 }
 
 function DocumentoModalBody({
-  isMobile,
   tipo,
   formData,
   setFormData,

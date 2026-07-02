@@ -261,14 +261,14 @@ $card-box-shadow: $box-shadow !default;
   color: var(--text-primary) !important;
   background-color: var(--bg-secondary) !important;
   border-color: var(--primary-color) !important;
-  box-shadow: 0 0 0 0.2rem rgba(var(--primary-color), 0.25) !important;
+  box-shadow: none !important;
 }
 
 .page-link:focus {
   color: var(--text-primary) !important;
   background-color: var(--bg-secondary) !important;
   border-color: var(--primary-color) !important;
-  box-shadow: 0 0 0 0.2rem rgba(var(--primary-color), 0.25) !important;
+  box-shadow: none !important;
   outline: none !important;
 }
 
@@ -283,7 +283,7 @@ $card-box-shadow: $box-shadow !default;
   color: white !important;
   background-color: var(--primary-color) !important;
   border-color: var(--primary-color) !important;
-  box-shadow: 0 0 0 0.2rem rgba(var(--primary-color), 0.25) !important;
+  box-shadow: none !important;
 }
 
 .page-item.active .page-link:hover,

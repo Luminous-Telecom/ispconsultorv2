@@ -1,4 +1,4 @@
-import { CarneParcela, Plano, Titulo } from 'types';
+import { CarneParcela, Contrato, Plano, Titulo } from 'types';
 
 export const calcularProximaDataVencimento = (diaVencimento: number): string => {
   const hoje = new Date();
@@ -10,11 +10,12 @@ export const calcularProximaDataVencimento = (diaVencimento: number): string => 
   return dataFinal.toISOString().split('T')[0];
 };
 
-export const getValorTitulo = (titulo?: CarneParcela): number => {
+export const getValorTitulo = (titulo?: CarneParcela | Titulo): number => {
   if (!titulo) {
     return 0;
   }
-  return titulo.valor_final || titulo.valor || titulo.valor_parcela || 0;
+  const valorParcela = 'valor_parcela' in titulo ? titulo.valor_parcela : undefined;
+  return titulo.valor_final || titulo.valor || valorParcela || 0;
 };
 
 type TituloComCliente = (CarneParcela | Titulo) & {

@@ -166,8 +166,8 @@ body[data-app="system"] {
   }
 }
 
-/* Focus outlines — sistema */
-body[data-app="system"] *:focus-visible {
+/* Focus outlines — sistema (botões usam regra própria em _components.scss) */
+body[data-app="system"] *:focus-visible:not(.btn):not(.page-link):not(.nav-link) {
   outline: 2px solid var(--focus-color, #0d6efd);
   outline-offset: 2px;
 }

@@ -139,7 +139,6 @@ const SaasEmpresaFormModal: React.FC<SaasEmpresaFormModalProps> = ({ show, onClo
             isEditing={isEditing}
             formDataForAddress={formDataForAddress}
             validarCep={parametros?.data?.validar_cep}
-            isMobile={isMobile}
             t={t}
             onInputChange={handleInputChange}
             onFieldChange={handleFieldChange}

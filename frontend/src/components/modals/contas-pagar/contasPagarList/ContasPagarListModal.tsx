@@ -2,7 +2,6 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { ContaPagar } from 'types';
 import { useEntityListModal } from 'hooks/useEntityListModal';
 import { useI18n } from 'contexts/I18nContext';
-import { useIsMobile } from 'hooks/useMediaQuery';
 import ListModal from 'components/common/ListModal';
 import { ContasPagarListModalProps } from './contasPagarListTypes';
 import { createGetStatusBadge, createGetTipoPagamentoBadge } from './contasPagarListUtils';
@@ -24,7 +23,6 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
 }) => {
   const { t } = useI18n();
   const defaultTitle = title || t('financial.accountsPayable');
-  const isMobile = useIsMobile();
 
   const list = useEntityListModal<ContaPagar>({
     onClose,
@@ -166,7 +164,6 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
       {hasResumo && (
         <ContasPagarListResumo
           resumoFinanceiro={resumoFinanceiro}
-          isMobile={isMobile}
           t={t}
         />
       )}

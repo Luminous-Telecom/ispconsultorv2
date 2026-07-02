@@ -2,7 +2,6 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { Contrato } from 'hooks/useContratos';
 import { useEntityListModal } from 'hooks/useEntityListModal';
 import { useI18n } from 'contexts/I18nContext';
-import { useIsMobile } from 'hooks/useMediaQuery';
 import ListModal from 'components/common/ListModal';
 import { ContratoListModalProps, ContratoRow } from './contratoListTypes';
 import { buildDisplayTitle } from './contratoListUtils';
@@ -22,7 +21,6 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   initialFilters,
 }) => {
   const { t } = useI18n();
-  const isMobile = useIsMobile();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -142,7 +140,6 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
         hasData={dataWithVirtualFields.length > 0}
         valorTotalMensal={valorTotalMensal}
         valorTotalDescontos={valorTotalDescontos}
-        isMobile={isMobile}
         t={t}
       />
 

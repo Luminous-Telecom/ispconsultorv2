@@ -17,6 +17,9 @@ const MensagemVariavelCopyButton: React.FC<MensagemVariavelCopyButtonProps> = ({
     size="sm"
     variant="ghost"
     className="p-0 text-muted ms-auto fs-sm"
+    iconOnly
+    title={title}
+    onClick={() => onCopy(variable)}
   />
 );
 

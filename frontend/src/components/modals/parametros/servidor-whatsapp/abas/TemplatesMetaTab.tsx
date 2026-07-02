@@ -1,6 +1,5 @@
 import React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useIsMobile } from 'hooks/useMediaQuery';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
@@ -80,7 +79,6 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
   onSalvarVincular,
   onClose
 }) => {
-  const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();

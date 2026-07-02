@@ -17,7 +17,6 @@ interface FinanceiroSectionProps {
   showCanceladosTitulos: boolean;
   setShowCanceladosTitulos: (show: boolean) => void;
   titulosBulkActions: BulkAction<SaasTitulo>[];
-  isMobile: boolean;
   t: SaasEmpresaTranslateFn;
   onRefresh: () => void;
   onSelectionChange: (items: SaasTitulo[]) => void;
@@ -34,7 +33,6 @@ const FinanceiroSection: React.FC<FinanceiroSectionProps> = ({
   showCanceladosTitulos,
   setShowCanceladosTitulos,
   titulosBulkActions,
-  isMobile,
   t,
   onRefresh,
   onSelectionChange,

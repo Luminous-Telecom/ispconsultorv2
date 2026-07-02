@@ -28,7 +28,6 @@ interface SaasEmpresaFormContentProps {
   isEditing: boolean;
   formDataForAddress: ReturnType<typeof getFormDataForAddress>;
   validarCep?: boolean;
-  isMobile: boolean;
   t: SaasEmpresaTranslateFn;
   onInputChange: (field: keyof SaasEmpresaForm, value: string) => void;
   onFieldChange: (field: keyof SaasEmpresaForm, value: string) => void;
@@ -77,7 +76,6 @@ const SaasEmpresaFormContent: React.FC<SaasEmpresaFormContentProps> = ({
   isEditing,
   formDataForAddress,
   validarCep,
-  isMobile,
   t,
   onInputChange,
   onFieldChange,
@@ -159,7 +157,6 @@ const SaasEmpresaFormContent: React.FC<SaasEmpresaFormContentProps> = ({
           showInativosContratos={showInativosContratos}
           setShowInativosContratos={setShowInativosContratos}
           contratosBulkActions={contratosBulkActions}
-          isMobile={isMobile}
           t={t}
           onRowDoubleClick={onContratoRowDoubleClick}
           onRefresh={refetchContratos}
@@ -190,7 +187,6 @@ const SaasEmpresaFormContent: React.FC<SaasEmpresaFormContentProps> = ({
           showCanceladosTitulos={showCanceladosTitulos}
           setShowCanceladosTitulos={setShowCanceladosTitulos}
           titulosBulkActions={titulosBulkActions}
-          isMobile={isMobile}
           t={t}
           onRefresh={refetchTitulos}
           onSelectionChange={onTituloSelectionChange}

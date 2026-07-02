@@ -4,13 +4,11 @@ import { ContasPagarResumoFinanceiro, ContasPagarTranslateFn } from './contasPag
 
 interface ContasPagarListResumoProps {
   resumoFinanceiro: ContasPagarResumoFinanceiro;
-  isMobile: boolean;
   t: ContasPagarTranslateFn;
 }
 
 export const ContasPagarListResumo: React.FC<ContasPagarListResumoProps> = ({
   resumoFinanceiro,
-  isMobile,
   t,
 }) => (
   <div

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useIsMobile } from 'hooks/useMediaQuery';
 import { useExecutarAcaoOrdemServico } from 'hooks/useOrdensServico';
 import { useTecnicos, useSetores, useAssuntos } from 'hooks/useIxcLookups';
 import type { OrdemServico } from 'services/ordemServicoService';
@@ -46,7 +45,6 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
   acao,
   onSuccess,
 }) => {
-  const isMobile = useIsMobile();
   const executarMutation = useExecutarAcaoOrdemServico();
   const isPending = executarMutation.isPending;
 

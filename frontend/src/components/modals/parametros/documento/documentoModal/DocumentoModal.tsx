@@ -42,7 +42,6 @@ const DocumentoModal: React.FC<DocumentoModalProps> = (props) => {
         headerActions={headerActions}
       >
         <DocumentoModalBody
-          isMobile={modal.isMobile}
           tipo={modal.tipo}
           formData={modal.formData}
           setFormData={modal.setFormData}
