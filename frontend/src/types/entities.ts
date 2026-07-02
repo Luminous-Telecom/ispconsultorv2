@@ -140,6 +140,7 @@ export interface Titulo {
   cliente?: Cliente;
   plano?: Plano;
   banco?: Banco;
+  contrato?: Contrato;
 }
 
 export interface TituloFilters extends Record<string, string | number | boolean | null | undefined> {
@@ -322,6 +323,10 @@ export interface CarneParcela {
   // Relacionamentos
   carne?: Carne;
   plano?: Plano;
+  cliente_id?: number;
+  contrato_id?: number;
+  cliente?: Cliente;
+  contrato?: Contrato;
 }
 
 // ============================================

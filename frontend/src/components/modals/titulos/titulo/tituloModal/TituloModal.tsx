@@ -41,6 +41,12 @@ const TituloModal: React.FC<TituloModalProps> = (props) => {
     additionValue: modal.t('titulo.additionValue'),
     clientNotFound: modal.t('titulo.clientNotFound'),
     loading: modal.t('ui.loading'),
+    titleNumber: modal.t('table.titleNumber'),
+    ourNumber: modal.t('table.ourNumber'),
+    contract: modal.t('table.contract'),
+    statusActive: modal.t('status.active'),
+    statusInactive: modal.t('status.inactive'),
+    statusSuspended: modal.t('status.suspended'),
   };
 
   return (

@@ -14,7 +14,7 @@ import { TituloService } from '../services/tituloService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { useApiError } from './useApiError';
 import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
-import { CarneParcela, CreateCarneParcela } from '../types';
+import { CarneParcela, CreateCarneParcela, Titulo } from '../types';
 import { TituloForm, TituloFormErrors } from '../components/modals/titulos/titulo/types';
 import { tituloSchema } from '../schemas/titulo.schema';
 import type { TituloFormData as ZodTituloFormData } from '../schemas/titulo.schema';
@@ -43,7 +43,7 @@ interface UseTituloFormReturn {
   validateForm: () => boolean;
   
   // Dados do título (quando editando)
-  titulo: CarneParcela | undefined;
+  titulo: Titulo | undefined;
   
   // Flag de edição
   isEditing: boolean;
@@ -53,6 +53,7 @@ interface UseTituloFormReturn {
 }
 
 const initialFormData: TituloForm = {
+  cliente_id: undefined,
   plano_id: 0,
   contrato_id: undefined,
   data_vencimento: '',
@@ -135,7 +136,7 @@ export const useTituloForm = ({
     refetchOnMount: false,
   });
 
-  const titulo = tituloResponse?.success ? tituloResponse.data : undefined;
+  const titulo = tituloResponse?.success ? (tituloResponse.data as Titulo) : undefined;
   
   // Verificar se o título foi registrado no banco emissor
   // Um título está registrado no banco se tiver algum dos campos: nosso_numero, codigo_barras, linha_digitavel, charge_id, url_boleto
@@ -157,8 +158,9 @@ export const useTituloForm = ({
       : '';
 
     return {
+      cliente_id: titulo.cliente_id,
       plano_id: titulo.plano_id || 0,
-      contrato_id: undefined, // CarneParcela não tem contrato_id
+      contrato_id: titulo.contrato_id,
       data_vencimento: dataVencimento,
       valor: (() => {
         if (titulo.valor_final) {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { PlanoService } from 'services/planoService';
 import { ClienteService } from 'services/clienteService';
@@ -92,7 +92,43 @@ export function useTituloModal({
     enabled: !isEditMode && !!contratoId,
   });
 
-  const tituloData = formHook.titulo ? { success: true, data: formHook.titulo } : undefined;
+  const tituloRecord = formHook.titulo;
+
+  const { data: clienteTituloData } = useQuery({
+    queryKey: ['cliente-titulo', tituloRecord?.cliente_id],
+    queryFn: () => ClienteService.getById(tituloRecord!.cliente_id),
+    enabled: isEditMode && !!tituloRecord?.cliente_id && !tituloRecord?.cliente,
+    staleTime: 60 * 1000,
+    refetchOnMount: false,
+  });
+
+  const { data: contratoTituloData } = useQuery({
+    queryKey: ['contrato-titulo', tituloRecord?.contrato_id],
+    queryFn: () => ContratoService.getById(tituloRecord!.contrato_id!),
+    enabled: isEditMode && !!tituloRecord?.contrato_id && !tituloRecord?.contrato,
+    staleTime: 60 * 1000,
+    refetchOnMount: false,
+  });
+
+  const tituloEnriquecido = useMemo(() => {
+    if (!tituloRecord) {
+      return undefined;
+    }
+
+    let enriched = tituloRecord;
+
+    if (!enriched.cliente && clienteTituloData) {
+      enriched = { ...enriched, cliente: clienteTituloData };
+    }
+
+    if (!enriched.contrato && contratoTituloData) {
+      enriched = { ...enriched, contrato: contratoTituloData };
+    }
+
+    return enriched;
+  }, [tituloRecord, clienteTituloData, contratoTituloData]);
+
+  const tituloData = tituloEnriquecido ? { success: true, data: tituloEnriquecido } : undefined;
   const isLoadingTitulo = formHook.isLoadingTitulo;
   const tituloRegistradoNoBanco = formHook.tituloRegistradoNoBanco;
   const valorTitulo = getValorTitulo(tituloData?.data);
