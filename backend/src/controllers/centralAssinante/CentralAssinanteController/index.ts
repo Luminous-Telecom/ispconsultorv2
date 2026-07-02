@@ -10,7 +10,7 @@ import { TermoContratoService } from '../../../services/contratos/TermoContratoS
 import { ModeloDocumentoService } from '../../../services/documentos/ModeloDocumentoService';
 import { VariaveisDocumentoService } from '../../../services/documentos/VariaveisDocumentoService';
 import { PDFGenerationService } from '../../../services/pdf-generation/PDFGenerationService';
-import { TituloPDFService } from '../../../services/titulos/TituloPDFService';
+import { TituloPDFService, BOLETO_PDF_OPTIONS } from '../../../services/titulos/TituloPDFService';
 import { ReciboPDFService } from '../../../services/titulos/ReciboPDFService';
 import { BancoApiService } from '../../../services/bancos/BancoApiService';
 import { logger } from '../../../utils/logger';
@@ -681,11 +681,7 @@ export class CentralAssinanteController {
       try {
         pdfBuffer = await PDFGenerationService.generateFromContent(
           boletoHtml,
-          {
-            format: 'A4',
-            margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },
-            printBackground: true
-          }
+          BOLETO_PDF_OPTIONS
         );
         logger.info('PDF do boleto gerado com sucesso', { 
           tamanho: pdfBuffer.length,

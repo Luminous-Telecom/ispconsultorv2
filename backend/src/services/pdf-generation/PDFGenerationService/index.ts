@@ -83,8 +83,8 @@ export class PDFGenerationService {
         <meta charset="UTF-8">
         ${baseHref ? `<base href="${normalizedBase}">` : ''}
       </head>
-      <body>
-        <div>${content}</div>
+      <body style="margin:0;padding:0;width:100%;">
+        <div style="width:100%;max-width:100%;box-sizing:border-box;">${content}</div>
       </body>
       </html>
     `;

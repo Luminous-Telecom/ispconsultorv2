@@ -198,11 +198,8 @@ export class AsaasTituloService {
           }
         }
 
-        const linhaDigitavelFormatada = linhaDigitavelRaw
-          ? BarcodeService.formatarLinhaDigitavel(linhaDigitavelRaw)
-          : null;
-        
-        const codigoBarrasFinal = barcode ? BarcodeService.converterLinhaDigitavelParaCodigoBarras(barcode.replace(/\D/g, '')) : null;
+        const { codigo_barras: codigoBarrasFinal, linha_digitavel: linhaDigitavelFormatada } =
+          BarcodeService.normalizarCodigosBoleto(barcode, linhaDigitavelRaw);
 
         const pixQrCodeImageNormalized = pixQrCodeImage && !pixQrCodeImage.startsWith('data:image/')
           ? `data:image/png;base64,${pixQrCodeImage}`

@@ -161,7 +161,8 @@ export class EfiTituloService {
     const linhaDigitavelPath = efiConfig.api_response_mapping.boleto.linha_digitavel || '';
     const linhaDigitavelRaw = linhaDigitavelPath ? EfiHelpers.getNestedValue(dados, linhaDigitavelPath) : null;
     const linhaDigitavel = (typeof linhaDigitavelRaw === 'string' ? linhaDigitavelRaw : null) || (typeof barcode === 'string' ? barcode : null);
-    const linhaDigitavelFormatada = linhaDigitavel ? BarcodeService.formatarLinhaDigitavel(linhaDigitavel) : null;
+    const { codigo_barras: codigoBarrasFinal, linha_digitavel: linhaDigitavelFormatada } =
+      BarcodeService.normalizarCodigosBoleto(barcode, linhaDigitavel);
     const pdfUrl = EfiHelpers.getNestedValue(dados, efiConfig.api_response_mapping.boleto.pdf);
     const pixQrcode = EfiHelpers.getNestedValue(dados, efiConfig.api_response_mapping.boleto.pix_qrcode);
     const pixQrcodeImage = EfiHelpers.getNestedValue(dados, efiConfig.api_response_mapping.boleto.pix_qrcode_image);
@@ -175,12 +176,6 @@ export class EfiTituloService {
       : nossoNumeroRaw != null
         ? String(nossoNumeroRaw)
         : null;
-
-    let codigoBarrasFinal: string | null = null;
-    if (barcode && typeof barcode === 'string') {
-      const barcodeLimpo = barcode.replace(/\D/g, '');
-      codigoBarrasFinal = BarcodeService.converterLinhaDigitavelParaCodigoBarras(barcodeLimpo);
-    }
 
     const tituloModel = titulo as unknown as Titulo & { __skipTituloUpdate?: boolean };
     if (!tituloModel.__skipTituloUpdate && typeof tituloModel.update === 'function') {
@@ -215,9 +210,9 @@ export class EfiTituloService {
       message: 'Título gerado com sucesso',
       data: {
         charge_id: chargeIdString ?? undefined,
-        codigo_barras: typeof barcode === 'string' ? barcode : null,
+        codigo_barras: codigoBarrasFinal,
         url_boleto: typeof url === 'string' ? url : null,
-        linha_digitavel: linhaDigitavel,
+        linha_digitavel: linhaDigitavelFormatada,
         pdf_url: pdfUrl,
         qrcode: pixQrcode,
         qrcode_image: pixQrcodeImage,
