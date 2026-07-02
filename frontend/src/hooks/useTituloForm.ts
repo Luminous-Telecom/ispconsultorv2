@@ -14,7 +14,7 @@ import { TituloService } from '../services/tituloService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { useApiError } from './useApiError';
 import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
-import { CarneParcela, CreateCarneParcela, Titulo } from '../types';
+import { CarneParcela, CreateCarneParcela } from '../types';
 import { TituloForm, TituloFormErrors } from '../components/modals/titulos/titulo/types';
 import { tituloSchema } from '../schemas/titulo.schema';
 import type { TituloFormData as ZodTituloFormData } from '../schemas/titulo.schema';
@@ -43,7 +43,7 @@ interface UseTituloFormReturn {
   validateForm: () => boolean;
   
   // Dados do título (quando editando)
-  titulo: Titulo | undefined;
+  titulo: CarneParcela | undefined;
   
   // Flag de edição
   isEditing: boolean;
@@ -136,7 +136,7 @@ export const useTituloForm = ({
     refetchOnMount: false,
   });
 
-  const titulo = tituloResponse?.success ? (tituloResponse.data as Titulo) : undefined;
+  const titulo = tituloResponse?.success ? tituloResponse.data : undefined;
   
   // Verificar se o título foi registrado no banco emissor
   // Um título está registrado no banco se tiver algum dos campos: nosso_numero, codigo_barras, linha_digitavel, charge_id, url_boleto

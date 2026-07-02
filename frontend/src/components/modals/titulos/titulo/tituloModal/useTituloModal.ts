@@ -97,7 +97,7 @@ export function useTituloModal({
 
   const { data: clienteTituloData } = useQuery({
     queryKey: ['cliente-titulo', tituloRecord?.cliente_id],
-    queryFn: () => ClienteService.getById(tituloRecord!.cliente_id),
+    queryFn: () => ClienteService.getById(tituloRecord!.cliente_id!),
     enabled: isEditMode && !!tituloRecord?.cliente_id && !tituloRecord?.cliente,
     staleTime: 60 * 1000,
     refetchOnMount: false,
