@@ -59,7 +59,7 @@ export const PieSidebarLegend = memo(function PieSidebarLegend({
                 borderRadius: 2,
               }}
             />
-            <span style={{ overflow: 'visible', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+            <span className="pie-sidebar-legend__text">
               {item.label || ''} {formatPieValue(value)}
             </span>
           </li>
