@@ -732,7 +732,7 @@ button {
   font-weight: 600 !important;
 }
 
-.btn:hover {
+.btn:hover:not(:disabled) {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
@@ -999,10 +999,11 @@ button {
 
 .btn-primary:disabled {
   background-color: var(--btn-primary-disabled) !important;
-  color: rgba(255, 255, 255, 0.85) !important;
-  border-color: var(--btn-primary-disabled) !important;
+  color: var(--btn-disabled-color) !important;
+  border-color: var(--btn-disabled-border) !important;
   opacity: 1 !important;
   cursor: not-allowed !important;
+  box-shadow: none !important;
 }
 
 .btn-secondary {
@@ -1027,10 +1028,11 @@ button {
 
 .btn-secondary:disabled {
   background-color: var(--btn-primary-disabled) !important;
-  color: rgba(255, 255, 255, 0.85) !important;
-  border-color: var(--btn-primary-disabled) !important;
+  color: var(--btn-disabled-color) !important;
+  border-color: var(--btn-disabled-border) !important;
   opacity: 1 !important;
   cursor: not-allowed !important;
+  box-shadow: none !important;
 }
 
 .btn-outline-primary {
@@ -1068,10 +1070,11 @@ button {
 
 .btn-success:disabled {
   background-color: var(--btn-primary-disabled) !important;
-  color: rgba(255, 255, 255, 0.85) !important;
-  border-color: var(--btn-primary-disabled) !important;
+  color: var(--btn-disabled-color) !important;
+  border-color: var(--btn-disabled-border) !important;
   opacity: 1 !important;
   cursor: not-allowed !important;
+  box-shadow: none !important;
 }
 
 .btn-danger {
@@ -1088,10 +1091,11 @@ button {
 
 .btn-danger:disabled {
   background-color: var(--btn-primary-disabled) !important;
-  color: rgba(255, 255, 255, 0.85) !important;
-  border-color: var(--btn-primary-disabled) !important;
+  color: var(--btn-disabled-color) !important;
+  border-color: var(--btn-disabled-border) !important;
   opacity: 1 !important;
   cursor: not-allowed !important;
+  box-shadow: none !important;
 }
 
 .btn-info {
@@ -1108,10 +1112,11 @@ button {
 
 .btn-info:disabled {
   background-color: var(--btn-primary-disabled) !important;
-  color: rgba(255, 255, 255, 0.85) !important;
-  border-color: var(--btn-primary-disabled) !important;
+  color: var(--btn-disabled-color) !important;
+  border-color: var(--btn-disabled-border) !important;
   opacity: 1 !important;
   cursor: not-allowed !important;
+  box-shadow: none !important;
 }
 
 .btn-warning {
@@ -1128,13 +1133,14 @@ button {
 
 .btn-warning:disabled {
   background-color: var(--btn-primary-disabled) !important;
-  color: rgba(255, 255, 255, 0.85) !important;
-  border-color: var(--btn-primary-disabled) !important;
+  color: var(--btn-disabled-color) !important;
+  border-color: var(--btn-disabled-border) !important;
   opacity: 1 !important;
   cursor: not-allowed !important;
+  box-shadow: none !important;
 }
 
-/* Botões outline - quando desabilitados: azul mais escuro */
+/* Botões outline — desabilitados: tom escuro neutro, bem distinto do ativo */
 .btn-outline-primary:disabled,
 .btn-outline-success:disabled,
 .btn-outline-danger:disabled,
@@ -1142,10 +1148,11 @@ button {
 .btn-outline-info:disabled,
 .btn-outline-secondary:disabled {
   background-color: var(--btn-primary-disabled) !important;
-  color: rgba(255, 255, 255, 0.85) !important;
-  border-color: var(--btn-primary-disabled) !important;
+  color: var(--btn-disabled-color) !important;
+  border-color: var(--btn-disabled-border) !important;
   opacity: 1 !important;
   cursor: not-allowed !important;
+  box-shadow: none !important;
 }
 
 /* Formulários */

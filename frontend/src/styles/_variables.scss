@@ -50,7 +50,9 @@
   --primary-hover: #5A8BC1;
   --btn-primary-color: #6B9BD1;
   --btn-primary-hover: #5A8BC1;
-  --btn-primary-disabled: #4A7AB1;
+  --btn-primary-disabled: #2f4352;
+  --btn-disabled-color: rgba(255, 255, 255, 0.42);
+  --btn-disabled-border: #3a4f60;
   --secondary-color: #6c757d;
   --success-color: #198754;
   --danger-color: #dc3545;
@@ -152,7 +154,9 @@
   --primary-hover: #5a8bc1;
   --btn-primary-color: #6b9bd1;
   --btn-primary-hover: #5a8bc1;
-  --btn-primary-disabled: #4a7ab1;
+  --btn-primary-disabled: #182230;
+  --btn-disabled-color: rgba(197, 206, 217, 0.4);
+  --btn-disabled-border: #243040;
   --success-color: #25cff2;
   --danger-color: #ea868f;
   --warning-color: #ffda6a;

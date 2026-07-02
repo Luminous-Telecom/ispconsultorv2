@@ -1885,11 +1885,12 @@ colgroup col.col-checkbox {
 }
 
 .table-pagination-header .btn-outline-primary:disabled {
-  color: rgba(255, 255, 255, 0.85) !important;
+  color: var(--btn-disabled-color) !important;
   background-color: var(--btn-primary-disabled) !important;
-  border-color: var(--btn-primary-disabled) !important;
+  border-color: var(--btn-disabled-border) !important;
   cursor: not-allowed !important;
   opacity: 1 !important;
+  box-shadow: none !important;
 }
 
 /* Table pagination flex */
