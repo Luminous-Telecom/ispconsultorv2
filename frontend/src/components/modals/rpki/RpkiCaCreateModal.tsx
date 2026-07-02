@@ -54,7 +54,7 @@ const RpkiCaCreateModal: React.FC<RpkiCaCreateModalProps> = ({ show, onClose, de
 
   return (
     <DraggableModal show={show} onClose={onClose} title="CA" size="sm" modalId="rpki-ca-create-modal">
-      <div className="p-2">
+      <form className="form-modal-simple" onSubmit={(event) => event.preventDefault()}>
         <FormField
           name="rpki_ca_nome"
           label="Nome da CA"
@@ -106,7 +106,7 @@ const RpkiCaCreateModal: React.FC<RpkiCaCreateModalProps> = ({ show, onClose, de
             }
           />
         </div>
-      </div>
+      </form>
       <ClienteListModal
         show={showClienteSelector}
         onClose={() => setShowClienteSelector(false)}

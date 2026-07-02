@@ -30,7 +30,7 @@ const RpkiKrillConfigModal: React.FC<RpkiKrillConfigModalProps> = ({ initialSect
   );
 
   return (
-    <div className="p-3">
+    <form className="form-modal-simple" onSubmit={(event) => event.preventDefault()}>
       {sectionVisibility.showCasSection && (
         <CasSection cardRef={refs.casCardRef} {...casSection} />
       )}
@@ -46,7 +46,7 @@ const RpkiKrillConfigModal: React.FC<RpkiKrillConfigModalProps> = ({ initialSect
       {sectionVisibility.showAspasSection && (
         <AspasSection cardRef={refs.aspasCardRef} {...aspasSection} />
       )}
-    </div>
+    </form>
   );
 };
 

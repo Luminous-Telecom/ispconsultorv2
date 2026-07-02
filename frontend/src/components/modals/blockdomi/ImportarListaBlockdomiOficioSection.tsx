@@ -6,9 +6,8 @@ import {
   ExtrairSeiAnatelButton,
   FormField,
   Loading,
-  IconOnlyButton,
-  FileInput,
 } from 'components/ui';
+import BlockdomiPdfUrlFileField from './BlockdomiPdfUrlFileField';
 import type { BlockdomiImportTranslateFn } from './importarListaBlockdomiTypes';
 
 interface ImportarListaBlockdomiOficioSectionProps {
@@ -168,114 +167,51 @@ const ImportarListaBlockdomiOficioSection: React.FC<ImportarListaBlockdomiOficio
       </div>
 
       <div className="row g-2">
-        <div className="col-12">
-          <FormField
-            name="linkOficioAnatel"
-            type="text"
-            size="sm"
-            label={t('blockdomi.linkOficioAnatelOptional')}
-            placeholder="https://... ou arquivo PDF"
-            value={linkOficioAnatel}
-            onChange={(value) => onLinkOficioAnatelChange(String(value ?? ''))}
-          />
-        </div>
-        <div className="col-12">
-          <div className="form-modal-input-col">
-            <div className="ilb-pdf-file-cell">
-              <FileInput
-                ref={pdfAnatelInputRef}
-                size="sm"
-                className="ilb-pdf-file"
-                accept=".pdf,application/pdf"
-                onFileChange={onPdfAnatelFileChange}
-              />
-              <IconOnlyButton
-                type="button"
-                size="sm"
-                variant="outline-danger"
-                className="ilb-pdf-remove-btn"
-                onClick={onClearPdfAnatel}
-                disabled={!pdfOficioAnatel || isExtractingSei}
-                title={t('blockdomi.removePdfFile')}
-                label={t('blockdomi.removePdfFile')}
-                iconClassName="bi bi-trash"
-              />
-            </div>
-          </div>
-        </div>
+        <BlockdomiPdfUrlFileField
+          id="ilb-link-oficio-anatel"
+          name="linkOficioAnatel"
+          label={t('blockdomi.linkOficioAnatelOptional')}
+          placeholder="https://... ou arquivo PDF"
+          urlValue={linkOficioAnatel}
+          onUrlChange={onLinkOficioAnatelChange}
+          fileInputRef={pdfAnatelInputRef}
+          selectedFile={pdfOficioAnatel}
+          onFileChange={onPdfAnatelFileChange}
+          onClear={onClearPdfAnatel}
+          clearDisabled={isExtractingSei}
+          clearTitle={t('blockdomi.removePdfFile')}
+        />
 
-        <div className="col-12">
-          <FormField
-            name="linkOficioJustica"
-            type="text"
-            size="sm"
-            label={t('blockdomi.linkOficioJusticaOptional')}
-            helpText={t('blockdomi.separateLinksHelp')}
-            placeholder="https://exemplo1.com, https://exemplo2.com ou arquivo PDF"
-            value={linkOficioJustica}
-            onChange={(value) => onLinkOficioJusticaChange(String(value ?? ''))}
-          />
-        </div>
-        <div className="col-12">
-          <div className="form-modal-input-col">
-            <div className="ilb-pdf-file-cell">
-              <FileInput
-                ref={pdfJusticaInputRef}
-                size="sm"
-                className="ilb-pdf-file"
-                accept=".pdf,application/pdf"
-                onFileChange={onPdfJusticaFileChange}
-              />
-              <IconOnlyButton
-                type="button"
-                size="sm"
-                variant="outline-danger"
-                className="ilb-pdf-remove-btn"
-                onClick={onClearPdfJustica}
-                disabled={!pdfOficioJustica}
-                title={t('blockdomi.removePdfFile')}
-                label={t('blockdomi.removePdfFile')}
-                iconClassName="bi bi-trash"
-              />
-            </div>
-          </div>
-        </div>
+        <BlockdomiPdfUrlFileField
+          id="ilb-link-oficio-justica"
+          name="linkOficioJustica"
+          label={t('blockdomi.linkOficioJusticaOptional')}
+          helpText={t('blockdomi.separateLinksHelp')}
+          placeholder="https://exemplo1.com, https://exemplo2.com ou arquivo PDF"
+          urlValue={linkOficioJustica}
+          onUrlChange={onLinkOficioJusticaChange}
+          fileInputRef={pdfJusticaInputRef}
+          selectedFile={pdfOficioJustica}
+          onFileChange={onPdfJusticaFileChange}
+          onClear={onClearPdfJustica}
+          clearTitle={t('blockdomi.removePdfFile')}
+        />
 
-        <div className="col-12">
-          <FormField
-            name="linkPlanilhaDominios"
-            type="text"
-            size="sm"
-            label={t('blockdomi.linkPlanilhaDominiosOptional')}
-            placeholder="https://... ou arquivo PDF"
-            value={linkPlanilhaDominios}
-            onChange={(value) => onLinkPlanilhaDominiosChange(String(value ?? ''))}
-          />
-        </div>
-        <div className="col-12">
-          <div className="form-modal-input-col">
-            <div className="ilb-pdf-file-cell">
-              <FileInput
-                ref={pdfFileInputRef}
-                size="sm"
-                className="ilb-pdf-file"
-                accept=".pdf,application/pdf"
-                onFileChange={onPdfMainFileChange}
-              />
-              <IconOnlyButton
-                type="button"
-                size="sm"
-                variant="outline-danger"
-                className="ilb-pdf-remove-btn"
-                onClick={onClearPdfMain}
-                disabled={!pdfFile || isExtractingPdf}
-                title={t('blockdomi.removePdfFile')}
-                label={t('blockdomi.removePdfFile')}
-                iconClassName="bi bi-trash"
-              />
-            </div>
-          </div>
-        </div>
+        <BlockdomiPdfUrlFileField
+          id="ilb-link-planilha-dominios"
+          name="linkPlanilhaDominios"
+          label={t('blockdomi.linkPlanilhaDominios')}
+          required
+          placeholder="https://... ou arquivo PDF"
+          urlValue={linkPlanilhaDominios}
+          onUrlChange={onLinkPlanilhaDominiosChange}
+          fileInputRef={pdfFileInputRef}
+          selectedFile={pdfFile}
+          onFileChange={onPdfMainFileChange}
+          onClear={onClearPdfMain}
+          clearDisabled={isExtractingPdf}
+          clearTitle={t('blockdomi.removePdfFile')}
+        />
       </div>
 
       {hasPdfUrl && (

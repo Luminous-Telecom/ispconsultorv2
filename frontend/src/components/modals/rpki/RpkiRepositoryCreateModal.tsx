@@ -124,7 +124,7 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
 
   return (
     <DraggableModal show={show} onClose={onClose} title="Repositório" size="lg" modalId="rpki-repository-create-modal">
-      <div className="form-modal-simple modal-inner-padding">
+      <form className="form-modal-simple modal-inner-padding" onSubmit={(event) => event.preventDefault()}>
         <div className="row g-2">
           <div className="col-12">
             <FormField
@@ -199,7 +199,7 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
             }
           />
         </div>
-      </div>
+      </form>
     </DraggableModal>
   );
 };

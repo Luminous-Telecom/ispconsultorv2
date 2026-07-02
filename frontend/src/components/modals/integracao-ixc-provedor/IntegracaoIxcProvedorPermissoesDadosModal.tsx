@@ -57,7 +57,7 @@ const IntegracaoIxcProvedorPermissoesDadosModal: React.FC<IntegracaoIxcProvedorP
         </div>
       }
     >
-      <div className="p-3 logs-auditoria-details">
+      <div className="form-modal-simple logs-auditoria-details">
         <div className="row g-2">
           <div className="col-12">
             <FormField

@@ -5,6 +5,7 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import type { BlockdomiImportTranslateFn } from './importarListaBlockdomiTypes';
 import type { ClassifiedList } from './importarListaBlockdomiTypes';
 import type { PendingPdfFiles } from './importarListaBlockdomiTypes';
+import { hasPlanilhaDominiosFonte } from './importarListaBlockdomiUtils';
 
 interface UseImportarListaBlockdomiCadastrarParams {
   classified: ClassifiedList | null;
@@ -70,6 +71,16 @@ export function useImportarListaBlockdomiCadastrar({
       }
       if (!dataInicioBloqueio.trim()) {
         showApiError(t('blockdomi.dataInicioRequired'));
+        return;
+      }
+      if (
+        !hasPlanilhaDominiosFonte(
+          linkPlanilhaDominios,
+          pdfFile,
+          pendingPdfFilesRef.current.main
+        )
+      ) {
+        showApiError(t('blockdomi.pdfUrlOrLinkRequired'));
         return;
       }
     }

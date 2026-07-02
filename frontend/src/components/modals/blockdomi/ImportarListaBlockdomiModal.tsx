@@ -10,12 +10,14 @@ import { useImportarListaBlockdomiAnalyze } from './useImportarListaBlockdomiAna
 import { useImportarListaBlockdomiPdfExtract } from './useImportarListaBlockdomiPdfExtract';
 import { useImportarListaBlockdomiCadastrar } from './useImportarListaBlockdomiCadastrar';
 import { useImportarListaBlockdomiVersao } from './useImportarListaBlockdomiVersao';
+import { hasPlanilhaDominiosFonte } from './importarListaBlockdomiUtils';
 import ImportarListaBlockdomiContent from './ImportarListaBlockdomiContent';
 
 export {
   classifyLine,
   parseListItems,
   classifyLines,
+  hasPlanilhaDominiosFonte,
 } from './importarListaBlockdomiUtils';
 export type { ClassifiedList } from './importarListaBlockdomiTypes';
 
@@ -100,6 +102,12 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
 
   const versao = useImportarListaBlockdomiVersao({ show, showApiError, success, t });
 
+  const hasPlanilhaDominios = hasPlanilhaDominiosFonte(
+    state.linkPlanilhaDominios,
+    state.pdfFile,
+    state.pendingPdfFilesRef.current.main
+  );
+
   const canCadastrar =
     !!analyze.classified &&
     analyze.totalValid > 0 &&
@@ -107,7 +115,8 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       Boolean(
         state.numeroSeiAnatel.trim() &&
           state.nomeOficio.trim() &&
-          state.dataInicioBloqueio.trim()
+          state.dataInicioBloqueio.trim() &&
+          hasPlanilhaDominios
       ));
 
   const content = (

@@ -9,7 +9,7 @@ interface RpkiDashboardModalProps {
 
 const RpkiDashboardModal: React.FC<RpkiDashboardModalProps> = () => {
   return (
-    <div className="form-modal-simple p-3">
+    <form className="form-modal-simple p-3" onSubmit={(event) => event.preventDefault()}>
       <div className="row g-2">
         <div className="col-12">
           <FormField
@@ -65,7 +65,7 @@ const RpkiDashboardModal: React.FC<RpkiDashboardModalProps> = () => {
           </p>
         </div>
       </div>
-    </div>
+    </form>
   );
 };
 

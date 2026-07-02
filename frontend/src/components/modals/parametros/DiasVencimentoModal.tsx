@@ -79,7 +79,7 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({
   }, [variant, diasAtivos, success, error, loadDiasAtivosSaas]);
 
   const content = (
-    <div className="form-modal-simple">
+    <form className="form-modal-simple" onSubmit={(event) => event.preventDefault()}>
       <div className="d-flex justify-content-start align-items-center mb-3">
         <SalvarButton type="button" onClick={handleSave} />
       </div>
@@ -95,7 +95,7 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({
           </div>
         ))}
       </div>
-    </div>
+    </form>
   );
 
   if (skipWrapper) return content;

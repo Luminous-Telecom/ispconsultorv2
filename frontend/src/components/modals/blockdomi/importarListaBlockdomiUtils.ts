@@ -79,6 +79,14 @@ export function emptyPendingPdfFiles(): PendingPdfFiles {
   return { main: null, anatel: null, justica: null };
 }
 
+export function hasPlanilhaDominiosFonte(
+  linkPlanilhaDominios: string,
+  pdfFile: File | null,
+  pendingMain?: File | null
+): boolean {
+  return Boolean(linkPlanilhaDominios.trim() || pdfFile || pendingMain);
+}
+
 export function buildTextFromColunas(colunas: Record<string, string[]>, selecionadas: Set<string>): string {
   const merged = new Set<string>();
   Array.from(selecionadas).forEach((key) => {

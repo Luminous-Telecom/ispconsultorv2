@@ -92,7 +92,10 @@ const ImportarListaBlockdomiContent: React.FC<ImportarListaBlockdomiContentProps
   } = props;
 
   return (
-    <div className="p-3 importar-lista-blockdomi">
+    <form
+      className="form-modal-simple importar-lista-blockdomi"
+      onSubmit={(event) => event.preventDefault()}
+    >
       <ImportarListaBlockdomiVersaoHeader
         versaoAtual={versaoAtual}
         isGerandoVersao={isGerandoVersao}
@@ -186,7 +189,7 @@ const ImportarListaBlockdomiContent: React.FC<ImportarListaBlockdomiContentProps
       {classified && !isAnalyzing && (
         <ImportarListaBlockdomiClassificationCards t={t} classified={classified} />
       )}
-    </div>
+    </form>
   );
 };
 

@@ -75,7 +75,7 @@ const AuditoriaDetalhesModal: React.FC<AuditoriaDetalhesModalProps> = ({
       size="lg"
       modalId={modalId}
     >
-      <div className="p-3 logs-auditoria-details">
+      <div className="form-modal-simple logs-auditoria-details">
         <DetailFieldGrid fields={fields} />
         {d.user_agent ? (
           <div className="mt-3">

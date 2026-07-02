@@ -102,7 +102,7 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
 
   return (
     <DraggableModal show={show} onClose={onClose} title="CA-pai" size="lg" modalId="rpki-ca-parent-create-modal">
-      <div className="form-modal-simple modal-inner-padding">
+      <form className="form-modal-simple modal-inner-padding" onSubmit={(event) => event.preventDefault()}>
         <div className="row g-2">
           <div className="col-12">
             <FormField
@@ -174,7 +174,7 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
             }
           />
         </div>
-      </div>
+      </form>
     </DraggableModal>
   );
 };

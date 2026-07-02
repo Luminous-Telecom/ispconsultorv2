@@ -354,7 +354,7 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
           size="lg"
           modalId={config.detailsModalId}
         >
-          <div className="p-3 logs-auditoria-details">
+          <div className="form-modal-simple logs-auditoria-details">
             <DetailFieldGrid fields={detailFields} />
             <div className="mt-3">
               <FormField

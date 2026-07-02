@@ -1,5 +1,5 @@
 import React from 'react';
-import { BulkActionButton, LabelWithHelp } from 'components/ui';
+import { BulkActionButton, FormField } from 'components/ui';
 import type { BlockdomiImportTranslateFn } from './importarListaBlockdomiTypes';
 import type { ClassifiedList } from './importarListaBlockdomiTypes';
 
@@ -37,34 +37,25 @@ const ImportarListaBlockdomiEditorSection: React.FC<ImportarListaBlockdomiEditor
   isCadastrando,
 }) => (
   <>
-    <div className={`ilb-editor-wrapper mb-3 ${rawText.trim() ? 'has-content' : ''}`}>
-      <div className="ilb-editor-header">
-        <LabelWithHelp as="span" helpText={t('blockdomi.importIntro')}>
-          {t('blockdomi.inputListLabel')}
-        </LabelWithHelp>
-        {domainCount > 0 && (
-          <span className="ilb-editor-counter">
-            {domainCount} {t('blockdomi.domainsDetected')}
-          </span>
-        )}
-      </div>
-      <div className="position-relative">
-        <textarea
-          className="ilb-editor-textarea"
-          placeholder="meusite.com&#10;10.0.0.1&#10;2001:db8::1&#10;https://outro.dominio.com/caminho"
-          value={rawText}
-          onChange={(e) => onRawTextChange(e.target.value)}
-        />
-        {!rawText.trim() && (
-          <div className="ilb-editor-empty-state">
-            <i className="bi bi-clipboard2-plus ilb-empty-icon d-block mb-2"></i>
-            {t('blockdomi.pasteListHint')}
-          </div>
-        )}
-      </div>
+    <div className="col-12">
+      <FormField
+        name="rawText"
+        type="textarea"
+        size="sm"
+        label={t('blockdomi.inputListLabel')}
+        helpText={
+          domainCount > 0
+            ? `${t('blockdomi.importIntro')} — ${domainCount} ${t('blockdomi.domainsDetected')}`
+            : t('blockdomi.importIntro')
+        }
+        placeholder={t('blockdomi.pasteListHint')}
+        value={rawText}
+        onChange={(value) => onRawTextChange(String(value ?? ''))}
+        rows={8}
+      />
     </div>
 
-    <div className="ilb-actions">
+    <div className="ilb-actions form-modal-input-col">
       <BulkActionButton
         type="button"
         label={t('blockdomi.paste')}

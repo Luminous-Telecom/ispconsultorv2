@@ -61,7 +61,7 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({
         </div>
       }
     >
-      <div className="form-modal-simple">
+      <form className="form-modal-simple" onSubmit={(event) => event.preventDefault()}>
         <div className="row g-2">
           <div className="col-12">
             <FormField
@@ -241,7 +241,7 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({
             />
           </div>
         </div>
-      </div>
+      </form>
     </DraggableModal>
   );
 };

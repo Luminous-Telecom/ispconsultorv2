@@ -176,7 +176,7 @@ const WhoisModal: React.FC<WhoisModalProps> = ({ show, onClose, ip }) => {
     }
 
     return (
-      <div className="p-3 logs-auditoria-details">
+      <div className="form-modal-simple logs-auditoria-details">
         <DetailFieldGrid
           fields={[
             { label: 'IP', value: ip, inputClassName: 'font-monospace', colClassName: 'col-12' },

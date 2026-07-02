@@ -292,7 +292,7 @@ const DashboardBackupEquipamentosModal: React.FC<DashboardBackupEquipamentosModa
           size="lg"
           modalId="dashboard-backup-log-details"
         >
-          <div className="p-3 logs-auditoria-details">
+          <div className="form-modal-simple logs-auditoria-details">
             <DetailFieldGrid fields={detailFields} />
             {detailRow?.detail?.trim() ? (
               <div className="mt-3">

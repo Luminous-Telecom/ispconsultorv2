@@ -128,7 +128,7 @@ const RpkiValidateRouteModal: React.FC<RpkiValidateRouteModalProps> = ({
   };
 
   return (
-    <div className="form-modal-simple p-3">
+    <form className="form-modal-simple p-3" onSubmit={(event) => event.preventDefault()}>
       <div className="row g-2 mb-3">
         <div className="col-12">
           <FormField
@@ -192,7 +192,7 @@ const RpkiValidateRouteModal: React.FC<RpkiValidateRouteModalProps> = ({
           </div>
         </div>
       )}
-    </div>
+    </form>
   );
 };
 

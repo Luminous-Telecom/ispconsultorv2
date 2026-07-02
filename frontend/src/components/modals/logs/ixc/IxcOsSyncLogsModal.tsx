@@ -289,7 +289,7 @@ const IxcOsSyncLogsModal: React.FC<IxcOsSyncLogsModalProps> = ({ show }) => {
           size="lg"
           modalId="ixc-os-sync-log-details"
         >
-          <div className="p-3 logs-auditoria-details">
+          <div className="form-modal-simple logs-auditoria-details">
             <div className="row g-2">
               <div className="col-12">
                 <FormField

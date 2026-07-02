@@ -53,7 +53,7 @@ const RpkiAspaCreateModal: React.FC<RpkiAspaCreateModalProps> = ({
 
   return (
     <DraggableModal show={show} onClose={onClose} title="ASPA" size="sm" modalId="rpki-aspa-create-modal">
-      <div className="p-2">
+      <form className="form-modal-simple" onSubmit={(event) => event.preventDefault()}>
         <FormField
           name="rpki_aspa_ca_id"
           type="select"
@@ -95,7 +95,7 @@ const RpkiAspaCreateModal: React.FC<RpkiAspaCreateModalProps> = ({
             }
           />
         </div>
-      </div>
+      </form>
     </DraggableModal>
   );
 };

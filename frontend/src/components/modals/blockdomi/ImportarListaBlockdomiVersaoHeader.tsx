@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormField, GerarButton } from 'components/ui';
+import { GerarButton, LabelWithHelp } from 'components/ui';
 import type { BlockdomiImportTranslateFn } from './importarListaBlockdomiTypes';
 
 interface ImportarListaBlockdomiVersaoHeaderProps {
@@ -17,19 +17,31 @@ const ImportarListaBlockdomiVersaoHeader: React.FC<ImportarListaBlockdomiVersaoH
 }) => (
   <div className="row g-2 mb-2">
     <div className="col-12">
-      <FormField
-        name="versaoAtual"
-        type="text"
-        size="sm"
-        label={`${t('blockdomi.versao')} atual`}
-        value={versaoAtual || '-'}
-        readOnly
-        disabled
-      />
-    </div>
-    <div className="col-12">
-      <div className="form-modal-input-col">
-        <GerarButton variant="secondary" onClick={onGerarVersao} disabled={isGerandoVersao} isPending={isGerandoVersao} />
+      <div className="form-field">
+        <LabelWithHelp htmlFor="ilb-versao-atual" className="form-label">
+          {t('blockdomi.versao')}
+        </LabelWithHelp>
+        <div className="form-field-control">
+          <div className="input-group input-group-sm ilb-versao-atual-group">
+            <input
+              id="ilb-versao-atual"
+              name="versaoAtual"
+              type="text"
+              className="form-control text-center ilb-versao-numero-field"
+              value={versaoAtual || '-'}
+              readOnly
+              tabIndex={-1}
+              aria-readonly="true"
+            />
+            <GerarButton
+              type="button"
+              variant="secondary"
+              onClick={onGerarVersao}
+              disabled={isGerandoVersao}
+              isPending={isGerandoVersao}
+            />
+          </div>
+        </div>
       </div>
     </div>
   </div>
