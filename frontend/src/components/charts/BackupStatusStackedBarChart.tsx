@@ -359,7 +359,7 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
           <h6 className="chart-title-pie chart-title-pie-tight">{title}</h6>
           <div className="backup-status-card__body backup-status-card__body--empty">
             <div className="chart-empty-state chart-empty-state--compact">
-              <p className="text-muted">{emptyMessage ?? 'Sem dados para exibir'}</p>
+              <p className="chart-empty-state__message">{emptyMessage ?? 'Sem dados para exibir'}</p>
             </div>
           </div>
         </div>

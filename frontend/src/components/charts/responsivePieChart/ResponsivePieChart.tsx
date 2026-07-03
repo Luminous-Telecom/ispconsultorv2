@@ -157,7 +157,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(
       legendData.length === 0 ||
       legendData.every((d) => (d.value ?? 0) === 0);
     if (hasNoData) {
-      return <ChartEmptyState title={title} containerClassName="chart-container-pie" />;
+      return <ChartEmptyState title={title} containerClassName="chart-container-pie" compact={compact} />;
     }
 
     const containerClass = [

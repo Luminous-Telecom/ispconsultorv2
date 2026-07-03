@@ -1713,13 +1713,36 @@ button {
   height: 220px !important;
   min-width: 200px !important;
   min-height: 220px !important;
+  padding: 0.75rem !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  text-align: center !important;
+
+  &__message {
+    max-width: 18rem !important;
+    margin: 0 !important;
+    color: var(--text-muted) !important;
+    font-size: var(--font-size-sm) !important;
+    font-weight: 500 !important;
+    line-height: 1.35 !important;
+  }
 
   &--compact {
     height: 80px !important;
+    min-width: 0 !important;
     min-height: 80px !important;
+    padding: 0.35rem !important;
+
+    .chart-empty-state__message {
+      max-width: 13rem !important;
+      padding: 0.35rem 0.55rem !important;
+      border: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent) !important;
+      border-radius: 999px !important;
+      background: color-mix(in srgb, var(--bg-secondary) 64%, transparent) !important;
+      color: color-mix(in srgb, var(--text-muted) 84%, transparent) !important;
+      font-size: var(--font-size-xs) !important;
+    }
   }
 }
 

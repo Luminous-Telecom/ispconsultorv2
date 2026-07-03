@@ -17,7 +17,7 @@ export const ChartEmptyState: React.FC<ChartEmptyStateProps> = ({
     <div className={containerClassName}>
       <h6 className="chart-title">{title}</h6>
       <div className={`chart-empty-state ${compact ? 'chart-empty-state--compact' : ''}`}>
-        <p className="text-muted">{message}</p>
+        <p className="chart-empty-state__message">{message}</p>
       </div>
     </div>
   );

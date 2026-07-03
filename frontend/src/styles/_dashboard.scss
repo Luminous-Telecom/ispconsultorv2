@@ -999,24 +999,30 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  padding: 3rem 1.5rem;
+  gap: 0.5rem;
+  padding: 2rem 1.25rem;
   text-align: center;
-  border: 1px dashed var(--border-color, rgba(0, 0, 0, 0.12));
+  border: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
   border-radius: var(--dashboard-chart-radius, var(--border-radius));
-  background: var(--bg-secondary);
+  background: color-mix(in srgb, var(--bg-secondary) 72%, transparent);
 }
 
 .dashboard-search-empty-icon {
-  font-size: 1.75rem;
-  color: var(--text-muted);
-  opacity: 0.65;
+  font-size: 1.35rem;
+  color: color-mix(in srgb, var(--text-muted) 76%, transparent);
+  opacity: 0.72;
 }
 
 .dashboard-search-empty-text {
-  max-width: 22rem;
-  font-size: 0.875rem;
-  color: var(--text-muted);
+  max-width: 20rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--border-color) 64%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg-tertiary) 50%, transparent);
+  color: color-mix(in srgb, var(--text-muted) 84%, transparent);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  line-height: 1.35;
 }
 
 .dashboard-search-card-list {
