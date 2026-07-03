@@ -1,6 +1,5 @@
 import React from 'react';
-import FormField from 'components/ui/FormField';
-import { RequiredMark } from 'components/ui/LabelWithHelp';
+import { AtivoInativoField, FormField } from 'components/ui';
 import { FornecedorFormData, FornecedorFormErrors } from './types';
 
 interface FornecedorModalDadosBasicosTabProps {
@@ -38,45 +37,15 @@ const FornecedorModalDadosBasicosTab: React.FC<FornecedorModalDadosBasicosTabPro
 }) => (
   <div className="row g-2">
     <div className="col-12">
-      <div className="form-field">
-        <label className="form-label small">
-          {personTypeLabel}
-          <RequiredMark />
-        </label>
-        <div className="form-field-control">
-          <div className="d-flex flex-wrap gap-3">
-            <div className="form-check form-check-inline">
-              <input
-                className="form-check-input"
-                type="radio"
-                name={`${formPrefix}-tipo_pessoa`}
-                id={`${formPrefix}-tipo_pessoa_fisica`}
-                value="FISICA"
-                checked={formData.tipo_pessoa === 'FISICA'}
-                onChange={() => onTipoPessoaChange('FISICA')}
-              />
-              <label className="form-check-label" htmlFor={`${formPrefix}-tipo_pessoa_fisica`}>
-                {personTypePhysicalLabel}
-              </label>
-            </div>
-            <div className="form-check form-check-inline">
-              <input
-                className="form-check-input"
-                type="radio"
-                name={`${formPrefix}-tipo_pessoa`}
-                id={`${formPrefix}-tipo_pessoa_juridica`}
-                value="JURIDICA"
-                checked={formData.tipo_pessoa === 'JURIDICA'}
-                onChange={() => onTipoPessoaChange('JURIDICA')}
-              />
-              <label className="form-check-label" htmlFor={`${formPrefix}-tipo_pessoa_juridica`}>
-                {personTypeLegalLabel}
-              </label>
-            </div>
-          </div>
-          {errors.tipo_pessoa && <div className="form-text form-hint text-danger">{errors.tipo_pessoa}</div>}
-        </div>
-      </div>
+      <AtivoInativoField
+        value={formData.tipo_pessoa === 'FISICA'}
+        onChange={(value) => onTipoPessoaChange(value ? 'FISICA' : 'JURIDICA')}
+        label={personTypeLabel}
+        trueLabel={personTypePhysicalLabel}
+        falseLabel={personTypeLegalLabel}
+        name={`${formPrefix}-tipo-pessoa`}
+        required
+      />
     </div>
 
     <div className="col-12">

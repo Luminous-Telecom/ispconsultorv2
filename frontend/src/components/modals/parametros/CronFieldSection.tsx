@@ -1,6 +1,6 @@
 import React from 'react';
 import type { CronPartMode } from 'utils/cronFieldForm';
-import { FormField } from 'components/ui';
+import { AtivoInativoField, FormField } from 'components/ui';
 
 export interface CronFieldSectionProps {
   /** Prefixo único para `id` dos controles (ex.: `saas-rotina-cron-0`). */
@@ -30,9 +30,6 @@ const CronFieldSection: React.FC<CronFieldSectionProps> = ({
   labelTipo,
   labelValorField,
 }) => {
-  const idTodos = `${idPrefix}-todos`;
-  const idValorCheck = `${idPrefix}-valor`;
-
   return (
     <div className="mb-3">
       <div className="form-section-heading-row">
@@ -41,43 +38,16 @@ const CronFieldSection: React.FC<CronFieldSectionProps> = ({
       </div>
       <div className="row g-2">
         <div className="col-12">
-          <div className="form-field">
-            <label className="form-label small">{labelTipo}</label>
-            <div className="form-field-control">
-              <div className="d-flex flex-wrap gap-3 align-items-center">
-                <div className="form-check form-check-inline mb-0">
-                  <input
-                    type="checkbox"
-                    className="form-check-input"
-                    id={idTodos}
-                    checked={mode === 'todos'}
-                    disabled={disabled}
-                    onChange={(e) => {
-                      if (e.target.checked) onModeChange('todos');
-                    }}
-                  />
-                  <label className="form-check-label" htmlFor={idTodos}>
-                    {labelTodos}
-                  </label>
-                </div>
-                <div className="form-check form-check-inline mb-0">
-                  <input
-                    type="checkbox"
-                    className="form-check-input"
-                    id={idValorCheck}
-                    checked={mode === 'valor'}
-                    disabled={disabled}
-                    onChange={(e) => {
-                      if (e.target.checked) onModeChange('valor');
-                    }}
-                  />
-                  <label className="form-check-label" htmlFor={idValorCheck}>
-                    {labelValor}
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
+          <AtivoInativoField
+            id={`${idPrefix}-modo`}
+            name={`${idPrefix}-modo`}
+            value={mode === 'todos'}
+            onChange={(value) => onModeChange(value ? 'todos' : 'valor')}
+            label={labelTipo}
+            trueLabel={labelTodos}
+            falseLabel={labelValor}
+            disabled={disabled}
+          />
         </div>
         <div className="col-12">
           <FormField

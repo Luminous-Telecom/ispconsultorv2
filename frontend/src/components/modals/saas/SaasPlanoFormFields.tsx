@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormField, AtivoInativoField, LabelWithHelp } from 'components/ui';
+import { AtivoInativoField, Checkbox, FormField, LabelWithHelp } from 'components/ui';
 import { useI18n } from 'contexts/I18nContext';
 import { PLANO_MODULOS } from 'constants/planoModulos';
 import type { PlanoModuloId } from 'services/planoModulosService';
@@ -133,21 +133,20 @@ export const SaasPlanoGeralFormFields: React.FC<SaasPlanoGeralFormFieldsProps> =
             <div className="form-field-control">
               <div className="d-flex flex-wrap gap-3">
                 {PLANO_MODULOS.map((mod) => (
-                  <label key={mod.id} className="d-flex align-items-center gap-2 small">
-                    <input
-                      type="checkbox"
-                      checked={form.modulos.includes(mod.id)}
-                      onChange={(e) => {
+                  <Checkbox
+                    key={mod.id}
+                    checked={form.modulos.includes(mod.id)}
+                    onChange={({ value }) => {
                         onFieldChange(
                           'modulos',
-                          e.target.checked
+                          value
                             ? [...form.modulos, mod.id]
                             : form.modulos.filter((m) => m !== mod.id)
                         );
                       }}
-                    />
-                    <span>{mod.label}</span>
-                  </label>
+                    label={mod.label}
+                    inline
+                  />
                 ))}
               </div>
             </div>

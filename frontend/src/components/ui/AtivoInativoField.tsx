@@ -7,6 +7,8 @@ export interface AtivoInativoFieldProps extends BaseComponentProps {
   value: boolean;
   onChange: (value: boolean) => void;
   label?: string;
+  trueLabel?: string;
+  falseLabel?: string;
   name?: string;
   required?: boolean;
 }
@@ -15,6 +17,8 @@ const AtivoInativoField: React.FC<AtivoInativoFieldProps> = ({
   value,
   onChange,
   label,
+  trueLabel,
+  falseLabel,
   name = 'ativo-inativo',
   required = false,
   disabled = false,
@@ -47,7 +51,7 @@ const AtivoInativoField: React.FC<AtivoInativoFieldProps> = ({
               disabled={disabled}
             />
             <label className="form-check-label" htmlFor={idSim}>
-              {t('ui.yes')}
+              {trueLabel ?? t('ui.yes')}
             </label>
           </div>
           <div className="form-check form-check-inline">
@@ -62,7 +66,7 @@ const AtivoInativoField: React.FC<AtivoInativoFieldProps> = ({
               disabled={disabled}
             />
             <label className="form-check-label" htmlFor={idNao}>
-              {t('ui.no')}
+              {falseLabel ?? t('ui.no')}
             </label>
           </div>
         </div>

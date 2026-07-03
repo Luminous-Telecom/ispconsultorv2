@@ -5,7 +5,7 @@ import { useCreateTermoContrato, useUpdateTermoContrato } from 'hooks/useTermosC
 import { useModelosTermo } from 'hooks/useModelosTermo';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import DraggableModal from 'components/common/DraggableModal';
-import { ModalFormActions } from 'components/ui';
+import { AtivoInativoField, ModalFormActions } from 'components/ui';
 import { TermoFormData } from '../types';
 
 interface TermoEditModalProps {
@@ -104,41 +104,12 @@ const TermoEditModal: React.FC<TermoEditModalProps> = ({
           </div>
 
           <div className="col-12">
-            <div className="form-field">
-              <label className="form-label small">Assinado</label>
-              <div className="form-field-control">
-                <div className="d-flex flex-wrap gap-3">
-                  <div className="form-check form-check-inline">
-                    <input
-                      className="form-check-input"
-                      type="radio"
-                      name="assinado"
-                      id="assinadoSim"
-                      value="SIM"
-                      checked={termoFormData.assinado === 'SIM'}
-                      onChange={() => setTermoFormData({ ...termoFormData, assinado: 'SIM' })}
-                    />
-                    <label className="form-check-label" htmlFor="assinadoSim">
-                      Sim
-                    </label>
-                  </div>
-                  <div className="form-check form-check-inline">
-                    <input
-                      className="form-check-input"
-                      type="radio"
-                      name="assinado"
-                      id="assinadoNao"
-                      value="NAO"
-                      checked={termoFormData.assinado === 'NAO'}
-                      onChange={() => setTermoFormData({ ...termoFormData, assinado: 'NAO' })}
-                    />
-                    <label className="form-check-label" htmlFor="assinadoNao">
-                      Não
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <AtivoInativoField
+              value={termoFormData.assinado === 'SIM'}
+              onChange={(value) => setTermoFormData({ ...termoFormData, assinado: value ? 'SIM' : 'NAO' })}
+              label="Assinado"
+              name="termo-assinado"
+            />
           </div>
         </div>
       </form>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useI18n } from 'contexts/I18nContext';
+import { AtivoInativoField } from 'components/ui';
 import type { MensagemTipoEnvio } from './mensagemTypesOptions';
 
 export interface MensagemTipoEnvioRadioProps {
@@ -17,52 +18,18 @@ const MensagemTipoEnvioRadio: React.FC<MensagemTipoEnvioRadioProps> = ({
   variant = 'compact',
 }) => {
   const { t } = useI18n();
-  const desativadoId = `envio-desativado-${idPrefix}`;
-  const pdfId = `envio-pdf-${idPrefix}`;
-
-  const label =
-    variant === 'full' ? (
-      <label className="form-label mb-2">
-        <i className="bi bi-send me-2" />
-        {t('settings.messages.sendType')}
-      </label>
-    ) : (
-      <div className="form-label small">{t('settings.messages.sendType')}</div>
-    );
 
   return (
-    <div>
-      {label}
-      <div className="btn-group w-100" role="group">
-        <input
-          type="radio"
-          className="btn-check"
-          name={`tipoEnvio-${idPrefix}`}
-          id={desativadoId}
-          value="desativado"
-          checked={value === 'desativado'}
-          onChange={(e) => onChange(e.target.value as MensagemTipoEnvio)}
-        />
-        <label className="btn btn-outline-primary" htmlFor={desativadoId}>
-          {variant === 'full' && <i className="bi bi-x-circle me-1" />}
-          {t('messages.sendTypes.disabled')}
-        </label>
-
-        <input
-          type="radio"
-          className="btn-check"
-          name={`tipoEnvio-${idPrefix}`}
-          id={pdfId}
-          value="pdf"
-          checked={value === 'pdf'}
-          onChange={(e) => onChange(e.target.value as MensagemTipoEnvio)}
-        />
-        <label className="btn btn-outline-primary" htmlFor={pdfId}>
-          {variant === 'full' && <i className="bi bi-file-pdf me-1" />}
-          {t('messages.sendTypes.pdf')}
-        </label>
-      </div>
-    </div>
+    <AtivoInativoField
+      id={`tipo-envio-${idPrefix}`}
+      name={`tipoEnvio-${idPrefix}`}
+      value={value === 'desativado'}
+      onChange={(isDisabled) => onChange(isDisabled ? 'desativado' : 'pdf')}
+      label={t('settings.messages.sendType')}
+      trueLabel={t('messages.sendTypes.disabled')}
+      falseLabel={t('messages.sendTypes.pdf')}
+      className={variant === 'full' ? 'mb-0' : ''}
+    />
   );
 };
 
