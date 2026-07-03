@@ -160,7 +160,7 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
       });
     }
     cols.push(
-    { key: 'parent_name', label: 'Nome da CA-pai', sortable: true, width: '220px', render: (item) => item.parent_name || '-' },
+    { key: 'parent_name', label: 'CA-PAI', sortable: true, width: '220px', render: (item) => item.parent_name || '-' },
     {
       key: 'asn',
       label: 'ASN',
