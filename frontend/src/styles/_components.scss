@@ -1361,7 +1361,7 @@ button {
 
 .form-select {
   border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
+  border-radius: var(--border-radius-sm);
   background-color: var(--bg-secondary) !important;
   color: var(--text-primary) !important;
   font-size: var(--font-size-sm);
@@ -1378,7 +1378,7 @@ button {
   display: flex !important;
   align-items: stretch !important;
   border: 1px solid var(--border-color) !important;
-  border-radius: var(--border-radius) !important;
+  border-radius: var(--border-radius-sm) !important;
   overflow: hidden !important;
   background: var(--bg-secondary) !important;
   flex: 1 1 auto;
@@ -2009,7 +2009,7 @@ textarea {
   padding: 0.5rem 0.875rem !important;
   font-size: var(--font-size-sm) !important;
   line-height: 1.25 !important;
-  border-radius: var(--border-radius) !important;
+  border-radius: var(--border-radius-sm) !important;
   border: 1px solid var(--border-color) !important;
   resize: vertical !important;
 }
@@ -2076,7 +2076,7 @@ textarea:focus {
   background-color: var(--bg-secondary) !important;
   color: var(--text-primary) !important;
   border-color: var(--border-color) !important;
-  border-radius: var(--border-radius) !important;
+  border-radius: var(--border-radius-sm) !important;
 }
 
 .form-control:focus,
