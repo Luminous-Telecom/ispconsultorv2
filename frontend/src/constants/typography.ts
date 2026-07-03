@@ -1,6 +1,6 @@
 /** Deve coincidir com --font-family-base em styles/_variables.scss */
 export const FONT_FAMILY_BASE =
-  "'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', arial, sans-serif";
+  "'Open Sans', system-ui, -apple-system, 'Segoe UI', arial, sans-serif";
 
 /** Deve coincidir com --font-family-mono em styles/_variables.scss */
 export const FONT_FAMILY_MONO =
