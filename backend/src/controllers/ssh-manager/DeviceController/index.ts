@@ -64,6 +64,21 @@ async function validateDeviceModule(device: SshDevice): Promise<string | null> {
     : SaasPlanoLimitesService.validateEquipamentosModule(device.empresa_id);
 }
 
+async function validateDeviceAgent(agentId: number | null, empresaId: number | null): Promise<string | null> {
+  if (agentId == null) return null;
+
+  const agent = await Agent.findByPk(agentId);
+  if (!agent) {
+    return 'Agente não encontrado';
+  }
+
+  if (empresaId != null && agent.empresa_id != null && agent.empresa_id !== empresaId) {
+    return 'Agente não pertence à empresa do equipamento.';
+  }
+
+  return null;
+}
+
 const createSchema = Joi.object({
   agent_id: optionalAgentId,
   cliente_id: Joi.number().integer().positive().allow(null).optional(),
@@ -201,7 +216,6 @@ export class DeviceController {
       if (empresaId != null) {
         const limitError = await SaasPlanoLimitesService.validateEquipamentoCreate({
           empresaId,
-          hasTunel: normalizeOptionalAgentId(value.agent_id) != null,
           hasBackup: value.backup_enabled === true,
         });
         if (limitError) {
@@ -211,6 +225,11 @@ export class DeviceController {
       }
       const { empresa_id: _e, agent_id: _agentRaw, ...restValue } = value;
       const agent_id = normalizeOptionalAgentId(value.agent_id);
+      const agentError = await validateDeviceAgent(agent_id, resolved.empresa_id);
+      if (agentError) {
+        sendValidationError(res, agentError);
+        return;
+      }
       const device = await SshDevice.create({
         ...restValue,
         empresa_id: resolved.empresa_id,
@@ -255,18 +274,12 @@ export class DeviceController {
 
       const devEmpresaId = device.empresa_id;
       if (devEmpresaId != null) {
-        const willHaveTunel =
-          value.agent_id !== undefined
-            ? normalizeOptionalAgentId(value.agent_id) != null
-            : device.agent_id != null;
         const willHaveBackup = value.backup_enabled !== undefined
           ? value.backup_enabled === true
           : !!device.backup_enabled;
         const limitError = await SaasPlanoLimitesService.validateEquipamentoUpdate({
           empresaId: devEmpresaId,
-          hasTunel: willHaveTunel,
           hasBackup: willHaveBackup,
-          currentHasTunel: device.agent_id != null,
           currentHasBackup: !!device.backup_enabled,
         });
         if (limitError) {
@@ -279,7 +292,13 @@ export class DeviceController {
       if (value.agent_id === undefined) {
         delete (updateData as { agent_id?: unknown }).agent_id;
       } else {
-        (updateData as { agent_id?: number | null }).agent_id = normalizeOptionalAgentId(value.agent_id);
+        const nextAgentId = normalizeOptionalAgentId(value.agent_id);
+        const agentError = await validateDeviceAgent(nextAgentId, device.empresa_id);
+        if (agentError) {
+          sendValidationError(res, agentError);
+          return;
+        }
+        (updateData as { agent_id?: number | null }).agent_id = nextAgentId;
       }
       if (value.password) updateData.password = encrypt(value.password);
       if (value.private_key) updateData.private_key = encrypt(normalizeSshPrivateKeyPem(value.private_key));

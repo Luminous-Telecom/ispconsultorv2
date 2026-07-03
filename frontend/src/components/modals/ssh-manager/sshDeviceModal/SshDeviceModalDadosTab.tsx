@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormField, AtivoInativoField, LabelWithHelp } from 'components/ui';
+import { FormField, AtivoInativoField } from 'components/ui';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import { useI18n } from 'contexts/I18nContext';
 import { DEVICE_TYPE_OPTIONS } from './constants';
@@ -46,6 +46,7 @@ const SshDeviceModalDadosTab: React.FC<SshDeviceModalDadosTabProps> = ({
   onShowAgentPicker,
 }) => {
   const { t } = useI18n();
+  const backupAgendamentoHint = renderBackupAgendamentoHint(agendamentoBackup, t);
 
   return (
     <div className="row g-2">
@@ -232,12 +233,14 @@ const SshDeviceModalDadosTab: React.FC<SshDeviceModalDadosTabProps> = ({
           value={formData.backup_enabled}
           onChange={(v) => onFieldChange('backup_enabled')(v)}
           label={t('sshDevice.backupEnabled')}
+          helpText={t('sshDevice.backupEnabledHint')}
           name="dev-backup-enabled"
         />
-        <div className="form-helper-message form-modal-input-col d-flex align-items-center justify-content-center gap-1 flex-wrap">
-          <LabelWithHelp as="span" helpText={t('sshDevice.backupEnabledHint')} helpIconClassName="ms-0" />
-          {renderBackupAgendamentoHint(agendamentoBackup, t)}
-        </div>
+        {backupAgendamentoHint && (
+          <div className="form-helper-message form-modal-input-col d-flex align-items-center justify-content-center gap-1 flex-wrap">
+            {backupAgendamentoHint}
+          </div>
+        )}
       </div>
     </div>
   );

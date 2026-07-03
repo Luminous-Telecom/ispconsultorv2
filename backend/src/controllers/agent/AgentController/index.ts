@@ -18,6 +18,7 @@ import {
   installAgent,
 } from '../../../services/agent/AgentInstallService';
 import { generateInstallScript } from '../../../services/agent/AgentInstallScript';
+import { SaasPlanoLimitesService } from '../../../services/saas/SaasPlanoLimitesService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
@@ -138,6 +139,13 @@ export class AgentController {
       if (!resolved.ok) {
         sendValidationError(res, resolved.message);
         return;
+      }
+      if (resolved.empresa_id != null) {
+        const limitError = await SaasPlanoLimitesService.validateAgentCreate(resolved.empresa_id);
+        if (limitError) {
+          sendValidationError(res, limitError);
+          return;
+        }
       }
       const token = randomBytes(32).toString('hex');
       const tokenHash = hashToken(token);

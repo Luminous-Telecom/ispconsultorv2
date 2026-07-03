@@ -15,6 +15,7 @@ import { registrarExecucaoParaSocket } from '../services/sistema/AuditoriaServic
 import { logger } from '../utils/logger';
 import { isSshTerminalLatencyDebugEnabled } from '../utils/terminalLatencyDebug';
 import { getClientIpFromHandshake } from '../utils/requestUtils';
+import { SaasPlanoLimitesService } from '../services/saas/SaasPlanoLimitesService';
 
 function verifySocketToken(token: string): JwtPayload | null {
   const secret = process.env.JWT_SECRET;
@@ -28,6 +29,24 @@ function verifySocketToken(token: string): JwtPayload | null {
 
 function getSocketIp(socket: Socket): string {
   return getClientIpFromHandshake(socket.handshake) ?? socket.handshake.address ?? '0.0.0.0';
+}
+
+function getUserEmpresaId(user: JwtPayload): number | null {
+  const raw = (user as { empresa_id?: number | string | null }).empresa_id;
+  const empresaId = Number(raw);
+  return Number.isFinite(empresaId) && empresaId > 0 ? empresaId : null;
+}
+
+function canAccessDevice(device: SshDevice, userEmpresaId: number | null): boolean {
+  if (device.empresa_id === null) return true;
+  if (userEmpresaId === null) return true;
+  return device.empresa_id === userEmpresaId;
+}
+
+async function validateDeviceModule(device: SshDevice): Promise<string | null> {
+  return device.empresa_id == null
+    ? null
+    : SaasPlanoLimitesService.validateEquipamentosModule(device.empresa_id);
 }
 
 /**
@@ -96,6 +115,7 @@ function registerTerminalNamespace(ns: Namespace): void {
   ns.on('connection', (socket: Socket) => {
     const user = (socket as Socket & { data: { user: JwtPayload } }).data.user;
     const userId = String(user.sub ?? 'unknown');
+    const userEmpresaId = getUserEmpresaId(user);
     const ip = getSocketIp(socket);
 
     logger.info('SSH terminal: cliente conectado', { socketId: socket.id, userId });
@@ -112,6 +132,17 @@ function registerTerminalNamespace(ns: Namespace): void {
         const device = await SshDevice.findByPk(deviceId);
         if (!device) {
           socket.emit('terminal:error', { message: 'Device SSH não encontrado' });
+          return;
+        }
+
+        if (!canAccessDevice(device, userEmpresaId)) {
+          socket.emit('terminal:error', { message: 'Device SSH não encontrado' });
+          return;
+        }
+
+        const moduleError = await validateDeviceModule(device);
+        if (moduleError) {
+          socket.emit('terminal:error', { message: moduleError });
           return;
         }
 

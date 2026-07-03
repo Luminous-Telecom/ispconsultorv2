@@ -13,15 +13,21 @@ const ROTAS_IGNORADAS = [
   '/api/health',
 ];
 
-function pathRequerModulo(path: string): PlanoModuloId | null {
+function pathMatchesPrefix(path: string, prefix: string): boolean {
+  return path === prefix || path.startsWith(`${prefix}/`);
+}
+
+function modulosRequeridosPorPath(path: string): PlanoModuloId[] {
+  const modulos: PlanoModuloId[] = [];
   for (const [moduloId, prefixes] of Object.entries(MODULO_ROTAS)) {
     for (const prefix of prefixes) {
-      if (path.startsWith(prefix) || path === prefix) {
-        return moduloId as PlanoModuloId;
+      if (pathMatchesPrefix(path, prefix)) {
+        modulos.push(moduloId as PlanoModuloId);
+        break;
       }
     }
   }
-  return null;
+  return modulos;
 }
 
 export async function planoModuloMiddleware(
@@ -42,8 +48,8 @@ export async function planoModuloMiddleware(
     return;
   }
 
-  const moduloRequerido = pathRequerModulo(path);
-  if (!moduloRequerido) {
+  const modulosRequeridos = modulosRequeridosPorPath(path);
+  if (modulosRequeridos.length === 0) {
     next();
     return;
   }
@@ -54,7 +60,7 @@ export async function planoModuloMiddleware(
       next();
       return;
     }
-    if (modulos.includes(moduloRequerido)) {
+    if (modulosRequeridos.every((moduloRequerido) => modulos.includes(moduloRequerido))) {
       next();
       return;
     }

@@ -10,6 +10,13 @@ import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { buildPagination } from '../../../utils/pagination';
 import { ativoFilterForService, parseListQuery } from '../../../utils/listQuery';
 import { SaasPlanoLimitesService } from '../../../services/saas/SaasPlanoLimitesService';
+import { Usuario } from '../../../models/cadastros/Usuario';
+
+function canAccessUsuario(usuario: Usuario, empresaId: number | null): boolean {
+  if (usuario.empresa_id === null) return true;
+  if (empresaId === null) return true;
+  return usuario.empresa_id === empresaId;
+}
 
 export class UsuarioController {
   private static createSchema = Joi.object({
@@ -62,8 +69,9 @@ export class UsuarioController {
     try {
       const { id } = req.params;
       const usuario = await UsuarioService.getById(id);
+      const empresaId = getEmpresaIdOrNull(req);
 
-      if (!usuario) {
+      if (!usuario || !canAccessUsuario(usuario, empresaId)) {
         sendNotFound(res, 'Usuário não encontrado');
         return;
       }
@@ -142,8 +150,9 @@ export class UsuarioController {
       }
 
       const usuario = await UsuarioService.getById(id);
+      const empresaId = getEmpresaIdOrNull(req);
 
-      if (!usuario) {
+      if (!usuario || !canAccessUsuario(usuario, empresaId)) {
         sendNotFound(res, 'Usuário não encontrado');
         return;
       }
@@ -208,8 +217,9 @@ export class UsuarioController {
       const { id } = req.params;
 
       const usuario = await UsuarioService.getById(id);
+      const empresaId = getEmpresaIdOrNull(req);
 
-      if (!usuario) {
+      if (!usuario || !canAccessUsuario(usuario, empresaId)) {
         sendNotFound(res, 'Usuário não encontrado');
         return;
       }
@@ -245,8 +255,9 @@ export class UsuarioController {
       const { id } = req.params;
 
       const usuario = await UsuarioService.getById(id);
+      const empresaId = getEmpresaIdOrNull(req);
 
-      if (!usuario) {
+      if (!usuario || !canAccessUsuario(usuario, empresaId)) {
         sendNotFound(res, 'Usuário não encontrado');
         return;
       }

@@ -28,6 +28,17 @@ import {
 } from '../utils/terminalLatencyDebug';
 import { getClientIpFromHandshake } from '../utils/requestUtils';
 
+const ANSI_ESCAPE_REGEX = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*[a-zA-Z]`, 'g');
+
+function stripControlChars(value: string): string {
+  return Array.from(value)
+    .filter((char) => {
+      const code = char.charCodeAt(0);
+      return code >= 32 && code !== 127;
+    })
+    .join('');
+}
+
 function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
@@ -256,6 +267,7 @@ import {
 import { SshDevice } from '../models/ssh-manager/SshDevice';
 import { decryptSshCredential } from '../utils/encryption';
 import { privateKeyPemForSsh2 } from '../utils/sshPrivateKey';
+import { SaasPlanoLimitesService } from '../services/saas/SaasPlanoLimitesService';
 
 function verifyJwt(token: string): JwtPayload | null {
   const secret = process.env.JWT_SECRET;
@@ -271,6 +283,23 @@ function canAccessAgent(agent: Agent, userEmpresaId: number | null | undefined):
   if (agent.empresa_id === null) return true;
   if (userEmpresaId === null || userEmpresaId === undefined) return true;
   return agent.empresa_id === userEmpresaId;
+}
+
+function canAccessDevice(device: SshDevice, userEmpresaId: number | null | undefined): boolean {
+  if (device.empresa_id === null) return true;
+  if (userEmpresaId === null || userEmpresaId === undefined) return true;
+  return device.empresa_id === userEmpresaId;
+}
+
+function canAgentServeDevice(agent: Agent, device: SshDevice): boolean {
+  if (device.empresa_id == null || agent.empresa_id == null) return true;
+  return agent.empresa_id === device.empresa_id;
+}
+
+async function validateEquipamentosModule(empresaId: number | null | undefined): Promise<string | null> {
+  return empresaId == null
+    ? null
+    : SaasPlanoLimitesService.validateEquipamentosModule(empresaId);
 }
 
 export function registerAgentTerminalNamespace(io: SocketIOServer): void {
@@ -321,6 +350,11 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
       const userEmpresaId = (user as { empresa_id?: number }).empresa_id;
       if (!canAccessAgent(agent, userEmpresaId)) {
         socket.emit('terminal:error', { message: 'Sem permissão para acessar este agente' });
+        return;
+      }
+      const moduleError = await validateEquipamentosModule(agent.empresa_id);
+      if (moduleError) {
+        socket.emit('terminal:error', { message: moduleError });
         return;
       }
 
@@ -377,9 +411,13 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
         return;
       }
       const userEmpresaId = (user as { empresa_id?: number }).empresa_id;
-      const canAccessDevice = device.empresa_id === null || userEmpresaId == null || device.empresa_id === userEmpresaId;
-      if (!canAccessDevice) {
+      if (!canAccessDevice(device, userEmpresaId)) {
         socket.emit('terminal:error', { message: 'Sem permissão para acessar este device' });
+        return;
+      }
+      const moduleError = await validateEquipamentosModule(device.empresa_id);
+      if (moduleError) {
+        socket.emit('terminal:error', { message: moduleError });
         return;
       }
       if (!device.agent_id) {
@@ -394,6 +432,10 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
       const agent = await Agent.findByPk(device.agent_id);
       if (!agent || !agent.is_active) {
         socket.emit('terminal:error', { message: 'Agente não encontrado ou inativo' });
+        return;
+      }
+      if (!canAgentServeDevice(agent, device)) {
+        socket.emit('terminal:error', { message: 'Agente não pertence à empresa do device' });
         return;
       }
 
@@ -492,7 +534,7 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
             } else {
               agentCommandBuffers.set(sessionId, buf);
             }
-            const stripAnsi = (s: string) => s.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '').replace(/[\x00-\x1f\x7f]/g, '').trim();
+            const stripAnsi = (s: string) => stripControlChars(s.replace(ANSI_ESCAPE_REGEX, '')).trim();
             for (const line of lines) {
               const cmd = stripAnsi(line);
               if (cmd.length > 0 && cmd.length < 2000) {

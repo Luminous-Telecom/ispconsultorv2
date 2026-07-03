@@ -1,5 +1,6 @@
-import { Op, literal } from 'sequelize';
+import { Op } from 'sequelize';
 import { Usuario } from '../../../models/cadastros/Usuario';
+import { Agent } from '../../../models/agent/Agent';
 import { SshDevice } from '../../../models/ssh-manager/SshDevice';
 import { SaasContrato } from '../../../models/saas/SaasContrato';
 import { SaasPlano } from '../../../models/saas/SaasPlano';
@@ -16,12 +17,10 @@ export interface SaasPlanoLimitesContext {
 
 export interface EquipamentoLimitCheck {
   empresaId: number;
-  hasTunel?: boolean;
   hasBackup?: boolean;
 }
 
 export interface EquipamentoUpdateLimitCheck extends EquipamentoLimitCheck {
-  currentHasTunel?: boolean;
   currentHasBackup?: boolean;
 }
 
@@ -136,9 +135,26 @@ export class SaasPlanoLimitesService {
       : 'O plano não inclui o módulo de equipamentos.';
   }
 
+  static async validateAgentCreate(empresaId: number): Promise<string | null> {
+    const context = await this.getContext(empresaId);
+    if (!context) return null;
+
+    if (!context.modulos.includes('equipamentos')) {
+      return 'O plano não inclui o módulo de equipamentos.';
+    }
+
+    if (context.limiteTuneis > 0) {
+      const countAgents = await Agent.count({ where: { empresa_id: empresaId } });
+      if (countAgents >= context.limiteTuneis) {
+        return `Limite de agentes do plano atingido (${context.limiteTuneis}).`;
+      }
+    }
+
+    return null;
+  }
+
   static async validateEquipamentoCreate({
     empresaId,
-    hasTunel = false,
     hasBackup = false,
   }: EquipamentoLimitCheck): Promise<string | null> {
     const context = await this.getContext(empresaId);
@@ -155,15 +171,6 @@ export class SaasPlanoLimitesService {
       }
     }
 
-    if (hasTunel && context.limiteTuneis > 0) {
-      const countTuneis = await SshDevice.count({
-        where: { [Op.and]: [{ empresa_id: empresaId }, literal('agent_id IS NOT NULL')] },
-      });
-      if (countTuneis >= context.limiteTuneis) {
-        return `Limite de túneis do plano atingido (${context.limiteTuneis}).`;
-      }
-    }
-
     if (hasBackup && context.limiteBackups > 0) {
       const countBackups = await SshDevice.count({ where: { empresa_id: empresaId, backup_enabled: true } });
       if (countBackups >= context.limiteBackups) {
@@ -176,9 +183,7 @@ export class SaasPlanoLimitesService {
 
   static async validateEquipamentoUpdate({
     empresaId,
-    hasTunel = false,
     hasBackup = false,
-    currentHasTunel = false,
     currentHasBackup = false,
   }: EquipamentoUpdateLimitCheck): Promise<string | null> {
     const context = await this.getContext(empresaId);
@@ -186,16 +191,6 @@ export class SaasPlanoLimitesService {
 
     if (!context.modulos.includes('equipamentos')) {
       return 'O plano não inclui o módulo de equipamentos.';
-    }
-
-    const isAddingTunel = !currentHasTunel && hasTunel;
-    if (isAddingTunel && context.limiteTuneis > 0) {
-      const countTuneis = await SshDevice.count({
-        where: { [Op.and]: [{ empresa_id: empresaId }, literal('agent_id IS NOT NULL')] },
-      });
-      if (countTuneis >= context.limiteTuneis) {
-        return `Limite de túneis do plano atingido (${context.limiteTuneis}).`;
-      }
     }
 
     const isEnablingBackup = !currentHasBackup && hasBackup;

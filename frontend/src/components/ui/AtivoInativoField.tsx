@@ -1,7 +1,7 @@
 import React from 'react';
 import { useI18n } from 'contexts/I18nContext';
 import { BaseComponentProps } from './types';
-import { RequiredMark } from './LabelWithHelp';
+import { LabelWithHelp } from './LabelWithHelp';
 
 export interface AtivoInativoFieldProps extends BaseComponentProps {
   value: boolean;
@@ -11,6 +11,7 @@ export interface AtivoInativoFieldProps extends BaseComponentProps {
   falseLabel?: string;
   name?: string;
   required?: boolean;
+  helpText?: string;
 }
 
 const AtivoInativoField: React.FC<AtivoInativoFieldProps> = ({
@@ -21,6 +22,7 @@ const AtivoInativoField: React.FC<AtivoInativoFieldProps> = ({
   falseLabel,
   name = 'ativo-inativo',
   required = false,
+  helpText,
   disabled = false,
   id: propId,
   className = '',
@@ -33,10 +35,9 @@ const AtivoInativoField: React.FC<AtivoInativoFieldProps> = ({
 
   return (
     <div className={`form-field ${className}`.trim()}>
-      <label className="form-label small">
+      <LabelWithHelp as="span" className="form-label small" helpText={helpText} required={required}>
         {label ?? t('status.active')}
-        {required && <RequiredMark />}
-      </label>
+      </LabelWithHelp>
       <div className="form-field-control">
         <div className="d-flex flex-wrap gap-3">
           <div className="form-check form-check-inline">
