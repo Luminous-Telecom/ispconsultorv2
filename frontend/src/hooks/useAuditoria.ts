@@ -37,7 +37,7 @@ interface UseAuditoriaReturn {
 }
 
 export const useAuditoria = (): UseAuditoriaReturn => {
-  const { success, error } = useNotificationContext();
+  const { success, error, info } = useNotificationContext();
   const [showPreview, setShowPreview] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -63,12 +63,20 @@ export const useAuditoria = (): UseAuditoriaReturn => {
       setIsGeneratingPdf(false);
       success('PDF de auditoria gerado com sucesso!');
     } catch (err) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 404) {
+        info('Nenhum log de auditoria encontrado para este registro.');
+        setShowPreview(false);
+        setIsGeneratingPdf(false);
+        return;
+      }
+
       const errorMessage = err instanceof Error ? err.message : 'Erro ao gerar PDF de auditoria';
       error(errorMessage);
       setShowPreview(false);
       setIsGeneratingPdf(false);
     }
-  }, [success, error]);
+  }, [success, error, info]);
 
   const handleClosePreview = useCallback(() => {
     setShowPreview(false);
