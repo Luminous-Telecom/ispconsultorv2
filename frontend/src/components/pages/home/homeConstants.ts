@@ -44,6 +44,12 @@ export const FEATURES = [
     title: 'Backup na Rede',
     description: 'Integração com a rede do cliente para backups automáticos dos equipamentos compatíveis.',
   },
+  {
+    icon: 'bi-shield-check',
+    title: 'RPKI',
+    description:
+      'Infraestrutura de Chaves Públicas integrada: gestão de CAs, ROAs, ASPAs, repositórios e validação de origem de rotas BGP.',
+  },
 ];
 
 export const COMPARE_ANTES = [
@@ -62,7 +68,8 @@ export const COMPARE_DEPOIS = [
   'NFS-e e assinatura digital automáticas',
   'Relatórios financeiros — inadimplentes, pagamentos em dia e contas a pagar/receber',
   'Auditoria completa de todas as operações na plataforma',
-  'Em breve: Calculadora IP, Teste de Portas e RPKI — ferramentas de telecom integradas',
+  'RPKI integrado — ROAs, ASPAs, validação de rotas BGP e gestão de CAs',
+  'Em breve: Calculadora IP e Teste de Portas — ferramentas de telecom integradas',
 ];
 
 export const INTEGRATIONS = [
@@ -80,12 +87,6 @@ export const AUTOATENDIMENTO = [
 ];
 
 export const FUTURE_FEATURES = [
-  {
-    icon: 'bi-shield-check',
-    title: 'RPKI',
-    description:
-      'Suporte à Infraestrutura de Chaves Públicas para recursos de Internet: validação de origem de rotas BGP e gestão alinhada a boas práticas de roteamento seguro.',
-  },
   {
     icon: 'bi-calculator',
     title: 'Calculadora IP',
