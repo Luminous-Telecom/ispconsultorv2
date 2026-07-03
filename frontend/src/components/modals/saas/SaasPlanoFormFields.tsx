@@ -169,66 +169,66 @@ export const SaasPlanoEquipamentosFormFields: React.FC<SaasPlanoEquipamentosForm
   const { t } = useI18n();
 
   return (
-  <>
-    <div className="mb-2">
-      <LabelWithHelp as="span" helpText={t('saas.planLimitZeroHelp')} helpIconClassName="ms-0" />
-    </div>
-    <div className="row g-2">
-      <div className="col-12">
-        <div className="mb-0">
-          <FormField
-            name="equipamentos_limite_equipamentos"
-            type="number"
-            label="Limite de equipamentos"
-            value={equipamentos.limite_equipamentos}
-            onChange={(v) =>
-              onEquipamentosChange({
-                ...equipamentos,
-                limite_equipamentos: Number(v ?? 0),
-              })
-            }
-            min={0}
-            size="sm"
-          />
+    <>
+      <div className="form-modal-input-col mb-2">
+        <small className="form-hint text-muted d-block">{t('saas.planLimitZeroHelp')}</small>
+      </div>
+      <div className="row g-2">
+        <div className="col-12">
+          <div className="mb-0">
+            <FormField
+              name="equipamentos_limite_equipamentos"
+              type="number"
+              label="Limite de equipamentos"
+              value={equipamentos.limite_equipamentos}
+              onChange={(v) =>
+                onEquipamentosChange({
+                  ...equipamentos,
+                  limite_equipamentos: Number(v ?? 0),
+                })
+              }
+              min={0}
+              size="sm"
+            />
+          </div>
+        </div>
+        <div className="col-12">
+          <div className="mb-0">
+            <FormField
+              name="equipamentos_limite_tuneis"
+              type="number"
+              label="Limite de túneis"
+              value={equipamentos.limite_tuneis}
+              onChange={(v) =>
+                onEquipamentosChange({
+                  ...equipamentos,
+                  limite_tuneis: Number(v ?? 0),
+                })
+              }
+              min={0}
+              size="sm"
+            />
+          </div>
+        </div>
+        <div className="col-12">
+          <div className="mb-0">
+            <FormField
+              name="equipamentos_limite_backups"
+              type="number"
+              label="Limite de backups"
+              value={equipamentos.limite_backups}
+              onChange={(v) =>
+                onEquipamentosChange({
+                  ...equipamentos,
+                  limite_backups: Number(v ?? 0),
+                })
+              }
+              min={0}
+              size="sm"
+            />
+          </div>
         </div>
       </div>
-      <div className="col-12">
-        <div className="mb-0">
-          <FormField
-            name="equipamentos_limite_tuneis"
-            type="number"
-            label="Limite de túneis"
-            value={equipamentos.limite_tuneis}
-            onChange={(v) =>
-              onEquipamentosChange({
-                ...equipamentos,
-                limite_tuneis: Number(v ?? 0),
-              })
-            }
-            min={0}
-            size="sm"
-          />
-        </div>
-      </div>
-      <div className="col-12">
-        <div className="mb-0">
-          <FormField
-            name="equipamentos_limite_backups"
-            type="number"
-            label="Limite de backups"
-            value={equipamentos.limite_backups}
-            onChange={(v) =>
-              onEquipamentosChange({
-                ...equipamentos,
-                limite_backups: Number(v ?? 0),
-              })
-            }
-            min={0}
-            size="sm"
-          />
-        </div>
-      </div>
-    </div>
-  </>
+    </>
   );
 };
