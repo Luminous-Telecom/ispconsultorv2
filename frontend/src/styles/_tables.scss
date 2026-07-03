@@ -1516,12 +1516,15 @@ colgroup col.col-checkbox {
   box-sizing: border-box !important;
 }
 
-/* Colunas redimensionadas pelo usuário: exibir conteúdo completo */
-.table.table-columns-locked th.column-has-custom-width,
-.table.table-columns-locked td.column-has-custom-width {
+/* Colunas redimensionadas pelo usuário: manter conteúdo limitado à largura definida */
+.table.table-columns-locked th.column-has-custom-width {
   overflow: visible !important;
-  text-overflow: clip !important;
-  max-width: none !important;
+}
+
+.table.table-columns-locked td.column-has-custom-width {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
 }
 
 /* Table pagination header */
