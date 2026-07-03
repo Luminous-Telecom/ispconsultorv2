@@ -341,6 +341,7 @@ jobs:
           [ -f "../ecosystem.config.js" ] && cp ../ecosystem.config.js ecosystem.config.js
           [ -f "../.gitignore" ]          && cp ../.gitignore          .gitignore
           [ -f "../package.json" ]        && cp ../package.json        package.json
+          [ -f "../README.md" ]           && cp ../README.md           README.md
 
           echo "✓ Arquivos raiz sincronizados"
 
