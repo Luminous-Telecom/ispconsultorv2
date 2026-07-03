@@ -85,16 +85,16 @@
   user-select: none;
 }
 
-/* Um handle por coluna — borda direita (divisória com a próxima coluna) */
+/* Um handle por coluna — na divisória com a próxima coluna */
 .resize-handle {
   position: absolute;
   top: 0;
   right: 0;
   bottom: 0;
-  width: 6px;
+  width: 8px;
   background-color: transparent;
   cursor: col-resize;
-  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
   z-index: 2;
   opacity: 0;
   border-right: 2px solid transparent;
@@ -102,7 +102,6 @@
 
 .table-resizable th:hover .resize-handle {
   opacity: 1;
-  background-color: rgba(var(--btn-primary-color-rgb, 13, 110, 253), 0.1);
   border-right-color: var(--btn-primary-color);
   box-shadow: 0 0 4px rgba(var(--btn-primary-color-rgb, 13, 110, 253), 0.3);
 }
@@ -110,10 +109,8 @@
 .resize-handle:hover,
 .resize-handle:active {
   opacity: 1;
-  background-color: rgba(var(--btn-primary-color-rgb, 13, 110, 253), 0.2);
   border-right-color: var(--btn-primary-color);
   box-shadow: 0 0 8px rgba(var(--btn-primary-color-rgb, 13, 110, 253), 0.5);
-  width: 8px;
 }
 
 /* Durante arraste: só a guia (.table-resize-guide) — handles das outras colunas ficam ocultos */

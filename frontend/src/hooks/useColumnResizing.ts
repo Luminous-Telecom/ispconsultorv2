@@ -80,7 +80,7 @@ export function useColumnResizing<T = Record<string, unknown>>({
     const hasSnapshot = snapshot != null && Object.keys(snapshot).length > 0;
 
     if (hasSnapshot) {
-      setColumnWidths({ ...snapshot, [columnKey]: startWidth });
+      setColumnWidths(snapshot);
     }
 
     activeResizeRef.current = {
@@ -92,30 +92,29 @@ export function useColumnResizing<T = Record<string, unknown>>({
     setIsResizing(true);
     setResizeGuideX(startEdgeX);
 
-    const applyPendingWidth = (pendingWidth: number) => {
-      const active = activeResizeRef.current;
-      if (!active) return;
-      active.pendingWidth = pendingWidth;
-      setColumnWidths((prev) => ({ ...prev, [active.columnKey]: pendingWidth }));
-    };
-
     const handleMouseMove = (e: MouseEvent) => {
       const active = activeResizeRef.current;
       if (!active) return;
 
       const diff = e.clientX - active.startX;
-      const colMin = getMinWidthForColumn ? getMinWidthForColumn(active.columnKey) : minColumnWidth;
-      const floor =
-        active.columnKey === 'id' ? Math.max(ID_COLUMN_MIN_WIDTH_PX, colMin) : colMin;
-      const pendingWidth = Math.max(floor, Math.min(maxColumnWidth, active.startWidth + diff));
-      applyPendingWidth(pendingWidth);
-      setResizeGuideX(e.clientX);
+      const columnMin = getMinWidthForColumn?.(active.columnKey) ?? minColumnWidth;
+      const floor = active.columnKey === 'id'
+        ? Math.max(ID_COLUMN_MIN_WIDTH_PX, columnMin)
+        : columnMin;
+      active.pendingWidth = Math.max(
+        floor,
+        Math.min(maxColumnWidth, active.startWidth + diff)
+      );
+      setResizeGuideX(active.startX + active.pendingWidth - active.startWidth);
     };
 
     const handleMouseUp = () => {
       const active = activeResizeRef.current;
       if (active) {
-        applyPendingWidth(active.pendingWidth);
+        setColumnWidths((prev) => ({
+          ...prev,
+          [active.columnKey]: active.pendingWidth,
+        }));
       }
 
       activeResizeRef.current = null;
@@ -129,7 +128,7 @@ export function useColumnResizing<T = Record<string, unknown>>({
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
     document.body.classList.add('resizing-columns');
-  }, [minColumnWidth, maxColumnWidth, getMinWidthForColumn]);
+  }, [getMinWidthForColumn, maxColumnWidth, minColumnWidth]);
 
   return {
     columnWidths,
