@@ -1,28 +1,22 @@
 import { API_CONFIG } from '../config/api';
-import { slugify } from './stringUtils';
 
-/**
- * Gera URL de callback webhook para ERP (com razão social na URL).
- * Ex: https://dominio.com/webhook/efi/minha-empresa-isp
- */
-export function buildWebhookUrlErp(
-  tipo: 'efi' | 'asaas',
-  razaoSocial?: string | null,
-  nomeFantasia?: string | null
-): string {
+function absoluteWebhookPath(path: string): string {
+  if (/^https?:\/\//i.test(path)) return path;
   const base = API_CONFIG.WEBHOOK_BASE_URL;
-  if (!base) return `/webhook/${tipo}`;
-  const slug = slugify(String(razaoSocial || nomeFantasia || 'empresa').trim());
-  const ident = slug || 'erp';
-  return `${base}/webhook/${tipo}/${ident}`;
+  const normalized = path.startsWith('/') ? path : `/${path}`;
+  return base ? `${base}${normalized}` : normalized;
 }
 
-/**
- * Gera URL de callback webhook para SaaS.
- * Ex: https://dominio.com/webhook/efi/saas
- */
+/** Ex: https://dominio.com/webhook/efi/42 */
+export function buildWebhookUrlErp(
+  tipo: 'efi' | 'asaas',
+  bancoId?: number | null
+): string {
+  const suffix = bancoId != null ? `/${bancoId}` : '';
+  return absoluteWebhookPath(`/webhook/${tipo}${suffix}`);
+}
+
+/** Ex: https://dominio.com/webhook/efi/saas */
 export function buildWebhookUrlSaas(tipo: 'efi' | 'asaas'): string {
-  const base = API_CONFIG.WEBHOOK_BASE_URL;
-  if (!base) return `/webhook/${tipo}/saas`;
-  return `${base}/webhook/${tipo}/saas`;
+  return absoluteWebhookPath(`/webhook/${tipo}/saas`);
 }

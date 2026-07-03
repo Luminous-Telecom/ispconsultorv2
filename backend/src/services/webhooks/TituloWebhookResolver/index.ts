@@ -10,14 +10,14 @@ export type ResolvedTitulo = {
 };
 
 export type WebhookEmpresaScope = {
-  /** 'saas' = só saas_titulos; slug (ex: minha-empresa-isp) = só titulos admin; undefined = ambos */
+  /** 'saas' = só saas_titulos; ID do banco (ex: 42) = só titulos admin; undefined = ambos */
   empresaIdentifier?: string;
 };
 
 /**
  * Centraliza a resolução de títulos para webhooks.
  * Busca em titulos (admin) e saas_titulos (SaaS).
- * @param scope.empresaIdentifier - 'saas' para só SaaS; slug da razão social para só ERP; undefined para buscar em ambos
+ * @param scope.empresaIdentifier - 'saas' para só SaaS; ID do banco para só ERP; undefined para buscar em ambos
  */
 export class TituloWebhookResolver {
   /**

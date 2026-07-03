@@ -10,7 +10,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { BancoService } from '../services/bancoService';
-import { DadosEmpresaService } from '../services/dadosEmpresaService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { useApiError } from './useApiError';
 import { CONTEXT_ERROR_MESSAGES, ERROR_MESSAGES } from '../constants/ErrorMessages';
@@ -109,7 +108,10 @@ const mapBancoToForm = (banco: Banco): BancoForm => ({
   identificador_conta: banco.identificador_conta || '',
   client_id_producao: banco.client_id_producao || '',
   client_secret_producao: banco.client_secret_producao || '',
-  url_retorno: banco.url_retorno || '/webhook/efi',
+  url_retorno:
+    banco.tipo_banco === 'efi' || banco.tipo_banco === 'asaas'
+      ? buildWebhookUrlErp(banco.tipo_banco, banco.id)
+      : banco.url_retorno || buildWebhookUrlErp('efi'),
   repassar_email_cliente: banco.repassar_email_cliente ?? false,
   percentual_multa: typeof banco.percentual_multa === 'number' ? banco.percentual_multa : parseFloat(String(banco.percentual_multa || 2)) || 2,
   percentual_juros: typeof banco.percentual_juros === 'number' ? banco.percentual_juros : parseFloat(String(banco.percentual_juros || 0.03)) || 0.03,
@@ -196,14 +198,6 @@ export const useBancoForm = ({
     refetchOnMount: false,
   });
 
-  // Buscar dados da empresa para pré-preencher URL de webhook (ERP)
-  const { data: dadosEmpresa } = useQuery({
-    queryKey: ['dados-empresa'],
-    queryFn: () => DadosEmpresaService.get(),
-    enabled: show && !isEditing,
-    staleTime: 60 * 1000,
-  });
-
   // Dados customizados do banco (quando editando)
   const customFormData = useMemo(() => {
     if (!banco || typeof banco !== 'object') return undefined;
@@ -222,17 +216,12 @@ export const useBancoForm = ({
     if (isEditing && customFormData) {
       reset(customFormData);
     } else if (!isEditing) {
-      const base = { ...initialFormData } as ZodBancoFormData;
-      if (dadosEmpresa && (base.tipo_banco === 'efi' || base.tipo_banco === 'asaas')) {
-        base.url_retorno = buildWebhookUrlErp(
-          base.tipo_banco,
-          dadosEmpresa.razao_social,
-          dadosEmpresa.nome_fantasia
-        );
-      }
-      reset(base);
+      reset({
+        ...initialFormData,
+        url_retorno: buildWebhookUrlErp('efi'),
+      } as ZodBancoFormData);
     }
-  }, [show, customFormData, isEditing, reset, dadosEmpresa]);
+  }, [show, customFormData, isEditing, reset]);
 
   // Mutation para atualizar banco (aceita id explícito para uso após create)
   const updateBancoMutation = useMutation({
@@ -311,8 +300,8 @@ export const useBancoForm = ({
       setValue('has_api_key', !!normalizedValue, { shouldValidate: false });
     }
     
-    // Atualizar código e url_retorno quando tipo_banco mudar (apenas em criação)
-    if (field === 'tipo_banco' && !isEditing) {
+    // Atualizar código e url_retorno quando tipo_banco mudar (fluxo de criação)
+    if (field === 'tipo_banco' && !bancoId) {
       const codigos: Record<string, string> = {
         'efi': '364',
         'asaas': '461',
@@ -324,7 +313,7 @@ export const useBancoForm = ({
       const tipo = normalizedValue as 'efi' | 'asaas';
       const url =
         tipo === 'efi' || tipo === 'asaas'
-          ? buildWebhookUrlErp(tipo, dadosEmpresa?.razao_social, dadosEmpresa?.nome_fantasia)
+          ? buildWebhookUrlErp(tipo, effectiveBancoId)
           : `/webhook/${normalizedValue}`;
       setValue('url_retorno', url, { shouldValidate: false });
     }

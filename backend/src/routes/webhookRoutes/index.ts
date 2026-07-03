@@ -9,13 +9,13 @@ const router = Router();
 const efiRouter = Router();
 efiRouter.use(ValidateEfiWebhook.validate);
 
-// Webhook Efí: /webhook/efi (retrocompatível) e /webhook/efi/:empresaIdentifier (ex: /saas ou slug razão social)
+// Webhook Efí: /webhook/efi (retrocompatível) e /webhook/efi/:empresaIdentifier (ex: /saas ou ID do banco)
 efiRouter.post('/', EfiWebhookController.handle);
 efiRouter.post('/:empresaIdentifier', EfiWebhookController.handle);
 
 router.use('/efi', efiRouter);
 
-// Webhook Asaas: /webhook/asaas (retrocompatível) e /webhook/asaas/:empresaIdentifier (ex: /saas ou slug razão social)
+// Webhook Asaas: /webhook/asaas (retrocompatível) e /webhook/asaas/:empresaIdentifier (ex: /saas ou ID do banco)
 const asaasRouter = Router();
 asaasRouter.post('/', AsaasWebhookController.handle);
 asaasRouter.post('/:empresaIdentifier', AsaasWebhookController.handle);

@@ -129,7 +129,7 @@ export class PaymentCommonService {
   }
 
   /**
-   * Extrai scope de empresa do request (empresaIdentifier na URL: saas, slug razão social, ou undefined)
+   * Extrai scope de empresa do request (empresaIdentifier na URL: saas, ID do banco, ou undefined)
    */
   static getWebhookScope(req?: Request): WebhookEmpresaScope | undefined {
     const id = (req as { webhookEmpresaIdentifier?: string })?.webhookEmpresaIdentifier;
