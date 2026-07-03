@@ -181,7 +181,8 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       dominiosBruto={state.dominiosBruto}
       dominiosFiltrados={state.dominiosFiltrados}
       dominiosValidos={state.dominiosValidos}
-      onCopy={state.handleCopy}
+      onCopied={state.handleCopySucceeded}
+      onCopyFailed={state.handleCopyFailed}
     />
   );
 

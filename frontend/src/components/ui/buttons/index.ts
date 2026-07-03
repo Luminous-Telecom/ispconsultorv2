@@ -18,6 +18,8 @@ export type { DropdownToggleButtonProps } from './DropdownToggleButton';
 export { PaginationNavButton } from './PaginationNavButton';
 export type { PaginationNavButtonProps } from './PaginationNavButton';
 export { default as ModalFormActions } from './ModalFormActions';
+export { default as CopiarIconButton } from './CopiarIconButton';
+export type { CopiarIconButtonProps } from './CopiarIconButton';
 export { useBulkBtn } from './useBulkBtn';
 export type { BulkBtnProps } from './useBulkBtn';
 export { toBulkVariant, type BulkBtnVariant, type SystemButtonAction } from './config';

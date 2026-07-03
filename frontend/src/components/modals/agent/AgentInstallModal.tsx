@@ -24,7 +24,8 @@ type InstallMode  = 'auto' | 'manual';
 const REQUIREMENTS = [
   'Linux (Debian, Ubuntu, CentOS, AlmaLinux, Rocky)',
   'Acesso root ou sudo',
-  'Conexão com a internet (para baixar Docker)',
+  'Conexão com a internet (para baixar Node.js e dependências)',
+  'Node.js 18+ (instalado automaticamente se ausente)',
   'Mínimo: 256 MB RAM, 500 MB disco',
 ];
 
@@ -357,6 +358,7 @@ const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
               </span>
               <CopiarButton
                 iconOnly
+                isCopied={isCmdCopied('cmd')}
                 onClick={handleCopy}
                 label={isCmdCopied('cmd') ? t('blockdomi.copiedToClipboard') : undefined}
               />

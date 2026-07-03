@@ -8,7 +8,6 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useFormPrefix } from 'hooks/useFormId';
 import { useBancoForm } from 'hooks/useBancoForm';
 import { useIsMobile } from 'hooks/useMediaQuery';
-import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
 import { Banco } from 'types';
 import DraggableModal from 'components/common/DraggableModal';
 import ModalTabsOverflow from 'components/common/ModalTabsOverflow';
@@ -61,7 +60,6 @@ const BancoModal: React.FC<BancoModalProps> = ({
   const [isGeneratingSecret, setIsGeneratingSecret] = useState(false);
   const { success, warning } = useNotificationContext();
   const { showApiError } = useApiError();
-  const { copy: copyToClipboard } = useCopyToClipboard();
   const queryClient = useQueryClient();
 
   const handleCancel = () => {
@@ -152,20 +150,6 @@ const BancoModal: React.FC<BancoModalProps> = ({
     }
   };
 
-  const handleCopyWebhookSecret = async () => {
-    if (!formData.webhook_secret) {
-      warning(t('messages.noTokenToCopy'));
-      return;
-    }
-    const ok = await copyToClipboard(formData.webhook_secret);
-    if (ok) {
-      success(t('messages.webhookTokenCopied'));
-    } else {
-      warning(t('messages.copyManual'));
-    }
-  };
-
-  // Renderizar campos específicos de cada tipo de banco
   const renderBancoEspecificoCampos = () => {
     switch (formData.tipo_banco) {
       case 'efi':
@@ -184,7 +168,6 @@ const BancoModal: React.FC<BancoModalProps> = ({
             formPrefix={formPrefix}
             handleInputChange={formHook.handleInputChange}
             onGenerateWebhookSecret={handleGenerateWebhookSecret}
-            onCopyWebhookSecret={handleCopyWebhookSecret}
             isGeneratingSecret={isGeneratingSecret}
             isBancoPersisted={!!bancoId}
           />

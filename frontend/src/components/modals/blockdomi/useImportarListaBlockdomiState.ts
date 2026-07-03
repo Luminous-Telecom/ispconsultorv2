@@ -28,7 +28,7 @@ export function useImportarListaBlockdomiState({
   success,
   t,
 }: UseImportarListaBlockdomiStateParams) {
-  const { copy: copyToClipboard, readText } = useCopyToClipboard();
+  const { readText } = useCopyToClipboard();
   const [rawText, setRawText] = useState('');
   const [nomeOficio, setNomeOficio] = useState('');
   const [dataInicioBloqueio, setDataInicioBloqueio] = useState('');
@@ -132,19 +132,13 @@ export function useImportarListaBlockdomiState({
     setClassifiedRef.current(null);
   }, [setClassifiedRef]);
 
-  const handleCopy = useCallback(
-    async (items: string[]) => {
-      if (items.length === 0) return;
-      const texto = items.join('\n');
-      const ok = await copyToClipboard(texto);
-      if (ok) {
-        success(t('blockdomi.copiedToClipboard'));
-      } else {
-        showApiError(CONTEXT_ERROR_MESSAGES.BLOCKDOMI_COPY_ERROR);
-      }
-    },
-    [copyToClipboard, success, showApiError, t]
-  );
+  const handleCopySucceeded = useCallback(() => {
+    success(t('blockdomi.copiedToClipboard'));
+  }, [success, t]);
+
+  const handleCopyFailed = useCallback(() => {
+    showApiError(CONTEXT_ERROR_MESSAGES.BLOCKDOMI_COPY_ERROR);
+  }, [showApiError]);
 
   const handleColunaToggle = useCallback((header: string) => {
     setColunasSeleccionadas((prev) => {
@@ -242,7 +236,8 @@ export function useImportarListaBlockdomiState({
     showFiltrosExtract,
     handlePaste,
     handleClear,
-    handleCopy,
+    handleCopySucceeded,
+    handleCopyFailed,
     handleColunaToggle,
     handleColunasSelectAll,
     handleColunasSelectNone,

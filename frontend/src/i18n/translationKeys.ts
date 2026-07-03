@@ -1287,7 +1287,6 @@ export interface TranslationKeys {
   'user.newPassword': string;
   'user.passwordPlaceholder': string;
   'user.newPasswordPlaceholder': string;
-  'user.webhookHelp': string;
   'user.generateWebhookHelp': string;
   'user.webhookSecret': string;
   'user.generateToken': string;

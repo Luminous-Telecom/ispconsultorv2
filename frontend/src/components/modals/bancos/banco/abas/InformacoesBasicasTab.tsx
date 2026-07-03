@@ -14,75 +14,68 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
 
   return (
     <>
-      <div className="row">
-        <div className="col-12">
-          <div className="mb-0">
-            <FormField
-              name="nome"
-              type="text"
-              label={t('table.bankName')}
-              description={t('form.bankNameHelp')}
-              placeholder={t('placeholder.bankName')}
-              required={true}
-              size="sm"
-              value={formData.nome}
-              onChange={(value) => handleInputChange('nome', value)}
-              error={errors.nome}
-              isInvalid={!!errors.nome}
-              disabled={isPending}
-              autoComplete="organization"
-            />
-          </div>
-        </div>
-      </div>
-
       <div className="row g-2">
         <div className="col-12">
-          <div className="mb-0">
-            <FormField
-              name="tipo_banco"
-              type="select"
-              label={t('table.bankType')}
-              description={t('form.bankTypeHelp')}
-              size="sm"
-              value={formData.tipo_banco}
-              onChange={(value) => handleInputChange('tipo_banco', value)}
-              disabled={isPending}
-              formPrefix={formPrefix}
-              options={[
-                { value: 'efi', label: 'EFI (Código: 364)' },
-                { value: 'asaas', label: 'Asaas (Código: 461)' }
-              ]}
-            />
-          </div>
+          <FormField
+            name="nome"
+            type="text"
+            label={t('table.bankName')}
+            description={t('form.bankNameHelp')}
+            placeholder={t('placeholder.bankName')}
+            required={true}
+            size="sm"
+            value={formData.nome}
+            onChange={(value) => handleInputChange('nome', value)}
+            error={errors.nome}
+            isInvalid={!!errors.nome}
+            disabled={isPending}
+            autoComplete="organization"
+            formPrefix={formPrefix}
+          />
         </div>
 
         <div className="col-12">
-          <div className="mb-0">
-            <AtivoInativoField
-              value={formData.ativo}
-              onChange={(v) => handleInputChange('ativo', v)}
-              name={formPrefix ? `${formPrefix}-ativo` : 'banco-ativo'}
-              disabled={isPending}
-            />
-          </div>
+          <FormField
+            name="tipo_banco"
+            type="select"
+            label={t('table.bankType')}
+            description={t('form.bankTypeHelp')}
+            size="sm"
+            value={formData.tipo_banco}
+            onChange={(value) => handleInputChange('tipo_banco', value)}
+            disabled={isPending}
+            formPrefix={formPrefix}
+            options={[
+              { value: 'efi', label: 'EFI (Código: 364)' },
+              { value: 'asaas', label: 'Asaas (Código: 461)' }
+            ]}
+          />
+        </div>
+
+        <div className="col-12">
+          <AtivoInativoField
+            value={formData.ativo}
+            onChange={(v) => handleInputChange('ativo', v)}
+            name={formPrefix ? `${formPrefix}-ativo` : 'banco-ativo'}
+            disabled={isPending}
+          />
+        </div>
+
+        <div className="col-12">
+          <FormField
+            name="descricao"
+            type="textarea"
+            label={t('table.description')}
+            placeholder={t('placeholder.bankDescription')}
+            size="sm"
+            value={formData.descricao}
+            onChange={(value) => handleInputChange('descricao', value)}
+            disabled={isPending}
+            rows={3}
+            formPrefix={formPrefix}
+          />
         </div>
       </div>
-
-      <div className="mb-2">
-        <FormField
-          name="descricao"
-          type="textarea"
-          label={t('table.description')}
-          placeholder={t('placeholder.bankDescription')}
-          size="sm"
-          value={formData.descricao}
-          onChange={(value) => handleInputChange('descricao', value)}
-          disabled={isPending}
-          rows={3}
-        />
-      </div>
-
     </>
   );
 };

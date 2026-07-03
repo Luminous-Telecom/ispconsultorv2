@@ -31,6 +31,7 @@ async function writeTextWithFallback(text: string, useFallback: boolean): Promis
 }
 
 export function useCopyToClipboard(options: UseCopyToClipboardOptions = {}) {
+  const resetAfterMs = options.resetAfterMs ?? 2000;
   const { success, error } = useNotificationContext();
   const [copiedValue, setCopiedValue] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -44,13 +45,12 @@ export function useCopyToClipboard(options: UseCopyToClipboardOptions = {}) {
   );
 
   const scheduleReset = useCallback(() => {
-    if (!options.resetAfterMs) return;
     if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
     resetTimerRef.current = setTimeout(() => {
       setCopiedValue(null);
       setCopiedKey(null);
-    }, options.resetAfterMs);
-  }, [options.resetAfterMs]);
+    }, resetAfterMs);
+  }, [resetAfterMs]);
 
   const copy = useCallback(
     async (text: string, key?: string) => {

@@ -22,7 +22,7 @@ export const useCentralAssinanteActions = ({
   showApiError,
   setActiveTab,
 }: UseCentralAssinanteActionsParams) => {
-  const { copy: copyToClipboard } = useCopyToClipboard({
+  const { copy: copyToClipboard, isCopied } = useCopyToClipboard({
     resetAfterMs: 2000,
     useFallback: true,
     successMessage: 'Código copiado!',
@@ -107,6 +107,7 @@ export const useCentralAssinanteActions = ({
     handleImprimirRecibo,
     handleVisualizarFatura,
     copiarCodigo,
+    isCopyFieldCopied: isCopied,
     handleCardClick,
   };
 };

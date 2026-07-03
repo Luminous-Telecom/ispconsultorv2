@@ -12,6 +12,7 @@ interface CentralAssinanteFaturaModalProps {
   baixandoBoletoId: number | null;
   onClose: () => void;
   copiarCodigo: (text: string, fieldName: string) => void;
+  isCopyFieldCopied: (fieldName: string) => boolean;
   handleImprimirFatura: (tituloId: number) => void;
 }
 
@@ -20,6 +21,7 @@ const CentralAssinanteFaturaModal: React.FC<CentralAssinanteFaturaModalProps> = 
   baixandoBoletoId,
   onClose,
   copiarCodigo,
+  isCopyFieldCopied,
   handleImprimirFatura,
 }) => (
   <div className="modal fade show d-block central-assinante-modal-backdrop" onClick={onClose}>
@@ -71,6 +73,7 @@ const CentralAssinanteFaturaModal: React.FC<CentralAssinanteFaturaModalProps> = 
                   iconOnly
                   variant="secondary"
                   size="sm"
+                  isCopied={isCopyFieldCopied('linha')}
                   onClick={() => copiarCodigo(faturaVisualizar.linha_digitavel!, 'linha')}
                 />
               </div>
@@ -92,6 +95,7 @@ const CentralAssinanteFaturaModal: React.FC<CentralAssinanteFaturaModalProps> = 
                   iconOnly
                   variant="secondary"
                   size="sm"
+                  isCopied={isCopyFieldCopied('pix')}
                   onClick={() => copiarCodigo(faturaVisualizar.qrcode!, 'pix')}
                 />
               </div>

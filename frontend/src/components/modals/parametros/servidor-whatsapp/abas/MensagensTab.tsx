@@ -237,7 +237,6 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                                     {onCopyVariable && (
                                       <MensagemVariavelCopyButton
                                         variable={variavel.variavel}
-                                        onCopy={onCopyVariable}
                                         title={t('settings.messages.copyVariable')}
                                       />
                                     )}

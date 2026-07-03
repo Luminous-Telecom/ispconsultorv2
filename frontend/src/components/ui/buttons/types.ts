@@ -5,6 +5,8 @@ import type { SystemButtonAction } from './config';
 export interface SystemActionButtonProps
   extends Omit<ButtonProps, 'children' | 'leftIcon' | 'rightIcon' | 'icon' | 'iconOnlyOnMobile' | 'alwaysShowIcon'> {
   isPending?: boolean;
+  /** Feedback visual no CopiarButton iconOnly — exibe ✓ verde sobre o botão. */
+  isCopied?: boolean;
   entity?: string;
   iconOnly?: boolean;
   /** Sobrescreve o texto (ex.: ConfirmModal com mensagem dinâmica). */

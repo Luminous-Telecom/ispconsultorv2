@@ -72,7 +72,8 @@ export interface ImportarListaBlockdomiContentProps {
   dominiosBruto: string[];
   dominiosFiltrados: { raw: string; fixed: string }[];
   dominiosValidos: string[];
-  onCopy: (items: string[]) => void;
+  onCopied?: () => void;
+  onCopyFailed?: () => void;
 }
 
 const ImportarListaBlockdomiContent: React.FC<ImportarListaBlockdomiContentProps> = (props) => {
@@ -88,7 +89,8 @@ const ImportarListaBlockdomiContent: React.FC<ImportarListaBlockdomiContentProps
     dominiosBruto,
     dominiosFiltrados,
     dominiosValidos,
-    onCopy,
+    onCopied,
+    onCopyFailed,
   } = props;
 
   return (
@@ -175,7 +177,8 @@ const ImportarListaBlockdomiContent: React.FC<ImportarListaBlockdomiContentProps
           dominiosBruto={dominiosBruto}
           dominiosFiltrados={dominiosFiltrados}
           dominiosValidos={dominiosValidos}
-          onCopy={onCopy}
+          onCopied={onCopied}
+          onCopyFailed={onCopyFailed}
           renderList={renderImportarListaBlockdomiList}
         />
       )}

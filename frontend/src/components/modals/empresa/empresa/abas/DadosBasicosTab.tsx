@@ -22,8 +22,8 @@ const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: Fi
   };
 
   return (
-    <div className="mb-0">
-      <div className="row">
+    <>
+      <div className="row g-2">
         <div className="col-12">
           <FormField
             name="razao_social"
@@ -49,9 +49,6 @@ const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: Fi
             disabled={isPending}
           />
         </div>
-      </div>
-
-      <div className="row">
         <div className="col-12">
           <FormField
             name="cnpj"
@@ -137,7 +134,7 @@ const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: Fi
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

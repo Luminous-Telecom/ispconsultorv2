@@ -1300,7 +1300,6 @@ const ptBR: TranslationKeys = {
     'user.newPassword': 'Nova Senha (deixe em branco para manter)',
     'user.passwordPlaceholder': 'Mínimo 6 caracteres',
     'user.newPasswordPlaceholder': 'Deixe em branco para manter a senha atual',
-    'user.webhookHelp': 'Use como Bearer na API (clientes, contratos, títulos, dados-empresa).',
     'user.generateWebhookHelp': 'Clique em "Gerar token" para obter o token de API.',
     'user.webhookSecret': 'Token de API',
     'user.generateToken': 'Gerar Token',

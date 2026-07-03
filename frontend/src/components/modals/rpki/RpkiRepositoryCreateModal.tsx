@@ -1,11 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from 'components/common/DraggableModal';
-import { CancelarButton, CopiarButton, FormField, NovoButton } from 'components/ui';
+import { CancelarButton, CopiarIconButton, FormField, NovoButton } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
-import { CONTEXT_ERROR_MESSAGES, ERROR_MESSAGES } from 'constants/ErrorMessages';
-import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { RpkiCaService, type RpkiCa, type RpkiCaParent } from 'services/rpkiCaService';
 
 interface RpkiRepositoryCreateModalProps {
@@ -28,10 +27,6 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
   const queryClient = useQueryClient();
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
-  const { copy: copyToClipboard } = useCopyToClipboard({
-    successMessage: 'publisher_request copiado',
-    errorMessage: ERROR_MESSAGES.COPY_ERROR,
-  });
   const showApiErrorRef = useRef(showApiError);
 
   const { data: cas = [] as RpkiCa[] } = useQuery<RpkiCa[]>({
@@ -162,14 +157,10 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
                 value={publisherRequestXml}
                 onChange={(v) => setPublisherRequestXml(String(v ?? ''))}
               />
-              <CopiarButton
-                iconOnly
+              <CopiarIconButton
+                text={publisherRequestXml}
+                copyKey="rpki-publisher-request"
                 className="rpki-field-copy-overlay"
-                disabled={!publisherRequestXml.trim()}
-                onClick={() => {
-                  if (!publisherRequestXml.trim()) return;
-                  void copyToClipboard(publisherRequestXml);
-                }}
               />
             </div>
           </div>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { Loading, LabelWithHelp, CopiarButton, NavLinkButton } from 'components/ui';
+import { Loading, LabelWithHelp, CopiarIconButton, NavLinkButton } from 'components/ui';
 import SearchBar from 'components/ui/SearchBar';
 import { useI18n } from 'contexts/I18nContext';
 import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
@@ -113,13 +113,12 @@ const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariav
                           <code className="small">{variavel.variavel}</code>
                           <div className="text-muted small">{variavel.descricao}</div>
                         </NavLinkButton>
-                        <CopiarButton
+                        <CopiarIconButton
+                          text={variavel.variavel}
+                          copyKey={variavel.variavel}
                           type="button"
-                          iconOnly
                           variant="ghost"
                           className="p-0 text-muted flex-shrink-0 fs-sm"
-                          
-                          onClick={() => void copyToClipboard(variavel.variavel)}
                           title={t('buttons.copy')}
                         />
                       </div>

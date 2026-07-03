@@ -1302,7 +1302,6 @@ const esES: TranslationKeys = {
     'user.newPassword': 'Nueva Contraseña (dejar en blanco para mantener)',
     'user.passwordPlaceholder': 'Mínimo 6 caracteres',
     'user.newPasswordPlaceholder': 'Dejar en blanco para mantener la contraseña actual',
-    'user.webhookHelp': 'Use como Bearer en la API (clientes, contratos, títulos, datos empresa).',
     'user.generateWebhookHelp': 'Haga clic en "Generar token" para obtener el token de API.',
     'user.webhookSecret': 'Token de API',
     'user.generateToken': 'Generar Token',

@@ -43,11 +43,12 @@ const AgentModalInstallManualTab: React.FC<AgentModalInstallManualTabProps> = ({
           </span>
           <CopiarButton
             iconOnly
+            isCopied={cmdCopied}
             onClick={onCopy}
             label={cmdCopied ? copiedLabel : undefined}
           />
         </div>
-        <p className="small text-muted mt-2 mb-1">Sem Docker instalado? Use a aba <strong>Instalar Automático</strong> para instalar via SSH.</p>
+        <p className="small text-muted mt-2 mb-1">Prefere instalar via SSH a partir do painel? Use a aba <strong>Instalar Automático</strong>.</p>
         <div className="alert alert-warning small py-2 mb-0 alert-compact">
           <strong>Atenção:</strong> este comando inclui o token do agente. Não compartilhe em locais públicos.
         </div>

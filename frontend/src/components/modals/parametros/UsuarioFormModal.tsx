@@ -7,10 +7,9 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useFormReset } from 'hooks/useFormReset';
 import { useUsuario, useGerarWebhookSecret } from 'hooks/useUsuarios';
 import DraggableModal from 'components/common/DraggableModal';
-import { CopiarButton, FormField, AtivoInativoField, GerarTokenButton, ModalFormActions } from 'components/ui';
+import { CopyableFormField, FormField, AtivoInativoField, GerarTokenButton, ModalFormActions } from 'components/ui';
 import UsuarioAccountFormFields from 'components/forms/UsuarioAccountFormFields';
 import { useI18n } from 'contexts/I18nContext';
-import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
 
 interface UsuarioForm {
   nome: string;
@@ -48,9 +47,6 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
   const [webhookSecret, setWebhookSecret] = useState<string>('');
   const [isGeneratingSecret, setIsGeneratingSecret] = useState(false);
   const { success } = useNotificationContext();
-  const { copy: copyToClipboard } = useCopyToClipboard({
-    successMessage: t('messages.webhookTokenCopied'),
-  });
   const { showApiError } = useApiError();
   const queryClient = useQueryClient();
 
@@ -156,12 +152,6 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
     }
   };
 
-  const handleCopyWebhookSecret = () => {
-    if (webhookSecret) {
-      void copyToClipboard(webhookSecret);
-    }
-  };
-
   const isPending = createUsuarioMutation.isPending || updateUsuarioMutation.isPending;
 
   return (
@@ -213,37 +203,32 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
         {isEditing && (
           <div className="row g-1 mb-0">
             <div className="col-12">
-              <div className="mb-3">
-                <FormField
-                  name="webhook_secret"
-                  type="text"
-                  label={t('user.webhookSecret')}
-                  placeholder={t('user.generateWebhookHelp')}
-                  size="sm"
-                  value={webhookSecret}
-                  readOnly
-                  autoComplete="off"
-                />
-                <div className="d-flex flex-wrap gap-2 mt-2">
+              <CopyableFormField
+                name="webhook_secret"
+                type="text"
+                label={t('user.webhookSecret')}
+                placeholder={t('user.generateWebhookHelp')}
+                size="sm"
+                value={webhookSecret}
+                readOnly
+                autoComplete="off"
+                copyKey="usuario-webhook-secret"
+                footerActions={
                   <GerarTokenButton
                     type="button"
                     onClick={handleGenerateWebhookSecret}
                     isPending={isPending || isGeneratingSecret}
                     disabled={isPending || isGeneratingSecret}
                   />
-                  <CopiarButton
-                    type="button"
-                    iconOnly
-                    onClick={handleCopyWebhookSecret}
-                    disabled={!webhookSecret}
-                  />
-                </div>
-                <small className="text-secondary d-block mt-1">
-                  {webhookSecret
-                    ? t('user.webhookHelp')
-                    : t('user.generateWebhookHelp')}
-                </small>
-              </div>
+                }
+                footerHint={
+                  !webhookSecret ? (
+                    <small className="text-secondary d-block mt-1">
+                      {t('user.generateWebhookHelp')}
+                    </small>
+                  ) : undefined
+                }
+              />
             </div>
           </div>
         )}

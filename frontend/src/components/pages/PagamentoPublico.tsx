@@ -33,7 +33,7 @@ const PagamentoPublico: React.FC = () => {
   const navigate = useNavigate();
   const [sessionReady, setSessionReady] = useState<boolean>(!token);
   const sessionInitRef = useRef(false);
-  const { copy: copyToClipboard } = useCopyToClipboard({
+  const { copy: copyToClipboard, isCopied } = useCopyToClipboard({
     resetAfterMs: 2000,
     useFallback: true,
     errorMessage: ERROR_MESSAGES.COPY_ERROR,
@@ -206,6 +206,7 @@ const PagamentoPublico: React.FC = () => {
                   iconOnly
                   variant="secondary"
                   label="Copiar Código PIX"
+                  isCopied={isCopied('pix')}
                   onClick={() => copiarCodigo(titulo.qrcode!, 'pix')}
                 />
               </div>
@@ -229,6 +230,7 @@ const PagamentoPublico: React.FC = () => {
                   iconOnly
                   variant="secondary"
                   label="Copiar Linha Digitável"
+                  isCopied={isCopied('linha')}
                   onClick={() => copiarCodigo(titulo.linha_digitavel!, 'linha')}
                 />
               </div>

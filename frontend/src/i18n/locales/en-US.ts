@@ -1300,7 +1300,6 @@ const enUS: TranslationKeys = {
     'user.newPassword': 'New Password (leave blank to keep)',
     'user.passwordPlaceholder': 'Minimum 6 characters',
     'user.newPasswordPlaceholder': 'Leave blank to keep current password',
-    'user.webhookHelp': 'Use as Bearer in API (clients, contracts, titles, company data).',
     'user.generateWebhookHelp': 'Click "Generate token" to get the API token.',
     'user.webhookSecret': 'API Token',
     'user.generateToken': 'Generate Token',

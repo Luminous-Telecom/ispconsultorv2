@@ -15,7 +15,6 @@ import { BancoForm } from '../bancos/banco/types';
 import AsaasForm from '../bancos/banco/especificos/AsaasForm';
 import EfiForm from '../bancos/banco/especificos/EfiForm';
 import { saasBancoService } from 'services/saas/saasConfigService';
-import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
 
 interface Props { show: boolean; onClose: () => void; onSuccess?: () => void; itemId?: number | null; }
 
@@ -33,7 +32,6 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
   const [activeTab, setActiveTab] = useState('informacoes-basicas');
   const [isGeneratingSecret, setIsGeneratingSecret] = useState(false);
   const { success, warning } = useNotificationContext();
-  const { copy: copyToClipboard } = useCopyToClipboard();
   const { showApiError } = useApiError();
   const queryClient = useQueryClient();
 
@@ -96,19 +94,6 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
     }
   };
 
-  const handleCopyWebhookSecret = async () => {
-    if (!formData.webhook_secret) {
-      warning(t('messages.noTokenToCopy'));
-      return;
-    }
-    const ok = await copyToClipboard(formData.webhook_secret);
-    if (ok) {
-      success(t('messages.webhookTokenCopied'));
-    } else {
-      warning(t('messages.copyManual'));
-    }
-  };
-
   const renderBancoEspecificoCampos = () => {
     switch (formData.tipo_banco) {
       case 'efi':
@@ -121,7 +106,6 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
             formPrefix={formPrefix}
             handleInputChange={formHook.handleInputChange}
             onGenerateWebhookSecret={handleGenerateWebhookSecret}
-            onCopyWebhookSecret={handleCopyWebhookSecret}
             isGeneratingSecret={isGeneratingSecret}
             isBancoPersisted={formHook.effectiveBancoId != null}
           />

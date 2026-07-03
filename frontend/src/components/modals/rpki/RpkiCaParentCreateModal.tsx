@@ -1,11 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from 'components/common/DraggableModal';
-import { CancelarButton, CopiarButton, FormField, NovoButton } from 'components/ui';
+import { CancelarButton, CopiarIconButton, FormField, NovoButton } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
-import { CONTEXT_ERROR_MESSAGES, ERROR_MESSAGES } from 'constants/ErrorMessages';
-import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { RpkiCaService, type RpkiCa } from 'services/rpkiCaService';
 
 interface RpkiCaParentCreateModalProps {
@@ -28,10 +27,6 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
   const queryClient = useQueryClient();
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
-  const { copy: copyToClipboard } = useCopyToClipboard({
-    successMessage: 'Requisição da CA-filha copiada',
-    errorMessage: ERROR_MESSAGES.COPY_ERROR,
-  });
 
   const { data: cas = [] as RpkiCa[] } = useQuery<RpkiCa[]>({
     queryKey: ['rpki-cas'],
@@ -136,14 +131,10 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
                 onChange={() => undefined}
                 disabled
               />
-              <CopiarButton
-                iconOnly
+              <CopiarIconButton
+                text={childRequestXml}
+                copyKey="rpki-child-request"
                 className="rpki-field-copy-overlay"
-                disabled={!childRequestXml.trim()}
-                onClick={() => {
-                  if (!childRequestXml.trim()) return;
-                  void copyToClipboard(childRequestXml);
-                }}
               />
             </div>
           </div>

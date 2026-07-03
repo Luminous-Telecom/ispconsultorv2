@@ -1,5 +1,5 @@
 import React from 'react';
-import { CopiarButton } from 'components/ui';
+import { CopiarIconButton } from 'components/ui';
 import type { BlockdomiImportTranslateFn } from './importarListaBlockdomiTypes';
 
 interface ImportarListaBlockdomiFiltrosCardsProps {
@@ -7,7 +7,8 @@ interface ImportarListaBlockdomiFiltrosCardsProps {
   dominiosBruto: string[];
   dominiosFiltrados: { raw: string; fixed: string }[];
   dominiosValidos: string[];
-  onCopy: (items: string[]) => void;
+  onCopied?: () => void;
+  onCopyFailed?: () => void;
   renderList: (items: string[]) => React.ReactNode;
 }
 
@@ -16,7 +17,8 @@ const ImportarListaBlockdomiFiltrosCards: React.FC<ImportarListaBlockdomiFiltros
   dominiosBruto,
   dominiosFiltrados,
   dominiosValidos,
-  onCopy,
+  onCopied,
+  onCopyFailed,
   renderList,
 }) => (
   <div className="row g-2 mb-2 mt-1">
@@ -34,11 +36,12 @@ const ImportarListaBlockdomiFiltrosCards: React.FC<ImportarListaBlockdomiFiltros
           )}
         </div>
         <div className="card-footer py-2 d-flex justify-content-center">
-          <CopiarButton
-            type="button"
-            iconOnly
-            onClick={() => onCopy(dominiosBruto)}
+          <CopiarIconButton
+            text={dominiosBruto.join('\n')}
+            copyKey="blockdomi-raw"
             disabled={dominiosBruto.length === 0}
+            onCopied={onCopied}
+            onCopyFailed={onCopyFailed}
           />
         </div>
       </div>
@@ -63,12 +66,13 @@ const ImportarListaBlockdomiFiltrosCards: React.FC<ImportarListaBlockdomiFiltros
           )}
         </div>
         <div className="card-footer py-2 d-flex justify-content-center">
-          <CopiarButton
-            type="button"
-            iconOnly
+          <CopiarIconButton
+            text={dominiosFiltrados.map((x) => x.fixed).join('\n')}
+            copyKey="blockdomi-filtered"
             variant="outline-dark"
-            onClick={() => onCopy(dominiosFiltrados.map((x) => x.fixed))}
             disabled={dominiosFiltrados.length === 0}
+            onCopied={onCopied}
+            onCopyFailed={onCopyFailed}
           />
         </div>
       </div>
@@ -87,12 +91,13 @@ const ImportarListaBlockdomiFiltrosCards: React.FC<ImportarListaBlockdomiFiltros
           )}
         </div>
         <div className="card-footer py-2 d-flex justify-content-center">
-          <CopiarButton
-            type="button"
-            iconOnly
+          <CopiarIconButton
+            text={dominiosValidos.join('\n')}
+            copyKey="blockdomi-valid"
             variant="outline-light"
-            onClick={() => onCopy(dominiosValidos)}
             disabled={dominiosValidos.length === 0}
+            onCopied={onCopied}
+            onCopyFailed={onCopyFailed}
           />
         </div>
       </div>

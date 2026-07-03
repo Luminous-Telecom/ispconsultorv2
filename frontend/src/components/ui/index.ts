@@ -2,6 +2,10 @@
 export * from './buttons';
 export type { ButtonVariant, ButtonSize } from './Button';
 export { default as Input } from './Input';
+export { default as CopyableInput } from './CopyableInput';
+export type { CopyableInputProps } from './CopyableInput';
+export { default as CopyableFormField } from './CopyableFormField';
+export type { CopyableFormFieldProps } from './CopyableFormField';
 export { FileInput } from './FileInput';
 export type { FileInputProps, FileInputSize } from './FileInput';
 export { default as Select } from './Select';

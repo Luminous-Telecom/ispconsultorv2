@@ -10,6 +10,7 @@ export interface RenderSystemButtonProps
   type?: 'button' | 'submit' | 'reset';
   isPending?: boolean;
   isLoading?: boolean;
+  isCopied?: boolean;
   className?: string;
   iconOnly?: boolean;
   iconClassName?: string;
@@ -26,6 +27,7 @@ export function renderSystemButton({
   type = 'button',
   isPending,
   isLoading,
+  isCopied = false,
   className,
   iconOnly,
   iconClassName,
@@ -36,6 +38,13 @@ export function renderSystemButton({
   const loading = isPending ?? isLoading ?? false;
 
   if (iconOnly) {
+    const mergedClassName = ['btn-copy-icon-only', className, isCopied ? 'btn-copy-feedback--copied' : '']
+      .filter(Boolean)
+      .join(' ');
+    const activeIconClass = isCopied
+      ? 'bi bi-check btn-copy-feedback-check'
+      : iconClassName;
+
     return (
       <Button
         ref={ref}
@@ -43,13 +52,13 @@ export function renderSystemButton({
         variant={variant}
         size={size}
         isLoading={loading}
-        className={className}
+        className={mergedClassName || undefined}
         aria-label={label}
         title={label}
         {...rest}
       >
-        {iconClassName ? (
-          <i className={iconClassName} aria-hidden="true" />
+        {activeIconClass ? (
+          <i className={activeIconClass} aria-hidden="true" />
         ) : (
           children ?? null
         )}
