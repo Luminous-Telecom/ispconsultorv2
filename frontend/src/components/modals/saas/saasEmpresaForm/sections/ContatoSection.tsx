@@ -1,7 +1,5 @@
 import React from 'react';
 import FormField from 'components/ui/FormField';
-import ContactFields from 'components/forms/ContactFields';
-import type { FormValue } from 'types/common';
 import type { SaasEmpresaForm, SaasEmpresaFormErrors, SaasEmpresaTranslateFn } from '../types';
 
 interface ContatoSectionProps {
@@ -19,44 +17,57 @@ const ContatoSection: React.FC<ContatoSectionProps> = ({
   onInputChange,
   onFieldChange,
 }) => (
-  <>
-    <ContactFields
-      formData={form as unknown as Record<string, FormValue>}
-      errors={errors as Record<string, string>}
-      size="md"
-      required
-      includeWhatsApp={false}
-      onChange={(name, value) => {
-        if (name === 'email') {
-          onInputChange('email', String(value ?? ''));
-        } else {
-          onFieldChange(name as keyof SaasEmpresaForm, String(value ?? ''));
-        }
-      }}
-    />
-    <div className="row g-2">
-      <div className="col-12">
-        <FormField
-          name="celular"
-          type="tel"
-          label={t('form.cell')}
-          value={form.celular}
-          onChange={(v) => onFieldChange('celular', String(v ?? ''))}
-          size="md"
-        />
-      </div>
-      <div className="col-12">
-        <FormField
-          name="site"
-          type="url"
-          label={t('form.site')}
-          value={form.site}
-          onChange={(v) => onFieldChange('site', String(v ?? ''))}
-          size="md"
-        />
-      </div>
+  <div className="row g-2">
+    <div className="col-12">
+      <FormField
+        name="email"
+        type="email"
+        label={t('form.email')}
+        placeholder={t('placeholder.email')}
+        value={form.email}
+        onChange={(v) => onInputChange('email', String(v ?? ''))}
+        error={errors.email}
+        required
+        size="md"
+      />
     </div>
-  </>
+    <div className="col-12">
+      <FormField
+        name="telefone"
+        type="tel"
+        label={t('form.phone')}
+        placeholder="(11) 99999-9999"
+        value={form.telefone}
+        onChange={(v) => onInputChange('telefone', String(v ?? ''))}
+        error={errors.telefone}
+        size="md"
+      />
+    </div>
+    <div className="col-12">
+      <FormField
+        name="celular"
+        type="tel"
+        label={t('form.cell')}
+        placeholder="(11) 99999-9999"
+        value={form.celular}
+        onChange={(v) => onInputChange('celular', String(v ?? ''))}
+        error={errors.celular}
+        size="md"
+      />
+    </div>
+    <div className="col-12">
+      <FormField
+        name="site"
+        type="url"
+        label={t('form.site')}
+        placeholder="https://www.empresa.com"
+        value={form.site}
+        onChange={(v) => onFieldChange('site', String(v ?? ''))}
+        error={errors.site}
+        size="md"
+      />
+    </div>
+  </div>
 );
 
 export default ContatoSection;

@@ -8,6 +8,7 @@ interface ContactFieldsProps {
   required?: boolean;
   size?: 'sm' | 'md' | 'lg';
   includeWhatsApp?: boolean;
+  includeCelular?: boolean;
   includeEmail?: boolean;
   formData?: Record<string, FormValue>;
   onChange?: (name: string, value: FormValue) => void;
@@ -19,6 +20,7 @@ const ContactFields: React.FC<ContactFieldsProps> = ({
   required = false, 
   size = 'sm',
   includeWhatsApp = true,
+  includeCelular = false,
   includeEmail = true,
   formData = {},
   onChange,
@@ -65,6 +67,19 @@ const ContactFields: React.FC<ContactFieldsProps> = ({
       { type: 'pattern', value: /^\(\d{2}\)\s\d{4,5}-\d{4}$/, message: t('form.invalidPhone') }
     ]
   });
+
+  if (includeCelular) {
+    contactFields.push({
+      name: 'celular',
+      type: 'tel' as const,
+      label: t('form.cell'),
+      placeholder: '(11) 99999-9999',
+      fieldRequired: false,
+      validation: [
+        { type: 'pattern', value: /^\(\d{2}\)\s\d{4,5}-\d{4}$/, message: t('form.invalidPhone') }
+      ]
+    });
+  }
 
   // WhatsApp
   if (includeWhatsApp) {

@@ -11,7 +11,7 @@ import { ClienteService } from 'services/clienteService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
-import { formatCNPJ, formatCEP } from 'utils/formatters';
+import { formatCNPJ, formatCEP, formatPhone } from 'utils/formatters';
 import { isValidCNPJ } from 'utils/validators';
 import { CancelarButton, FormField, NovoButton, SalvarButton } from 'components/ui';
 import AddressFields from 'components/forms/AddressFields';
@@ -134,6 +134,7 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
     let formattedValue = value;
     if (field === 'cnpj') formattedValue = formatCNPJ(value);
     if (field === 'cep') formattedValue = formatCEP(value);
+    if (field === 'telefone' || field === 'celular') formattedValue = formatPhone(value);
     setForm(prev => ({ ...prev, [field]: formattedValue }));
     setErrors(prev => ({ ...prev, [field]: undefined }));
   }, []);
@@ -326,23 +327,10 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
               onChange={handleFieldChange}
               errors={errors}
               includeWhatsApp={false}
+              includeCelular
               required
               size="sm"
             />
-            <div className="row g-2">
-              <div className="col-12">
-                <FormField
-                  name="celular"
-                  type="tel"
-                  label="Celular"
-                  size="sm"
-                  value={form.celular}
-                  onChange={(v) => handleChange('celular', String(v ?? ''))}
-                  error={errors.celular}
-                  placeholder="(11) 99999-9999"
-                />
-              </div>
-            </div>
             <AddressFields
               formData={form}
               onChange={handleFieldChange}

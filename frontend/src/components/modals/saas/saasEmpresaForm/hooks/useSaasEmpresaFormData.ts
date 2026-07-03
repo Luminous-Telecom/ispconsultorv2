@@ -8,7 +8,7 @@ import { useI18n } from 'contexts/I18nContext';
 import { SaasParametrosService } from 'services/saas/saasParametrosService';
 import { ClienteService } from 'services/clienteService';
 import { saasEmpresasService } from 'services/saas/saasEmpresasService';
-import { formatCNPJ, formatCEP } from 'utils/formatters';
+import { formatCNPJ, formatCEP, formatPhone } from 'utils/formatters';
 import { isValidCNPJ } from 'utils/validators';
 import {
   INITIAL_SAAS_EMPRESA_FORM,
@@ -81,6 +81,7 @@ export function useSaasEmpresaFormData({ show, itemId }: UseSaasEmpresaFormDataP
     let formatted = value;
     if (field === 'cnpj') formatted = formatCNPJ(value);
     if (field === 'cep') formatted = formatCEP(value);
+    if (field === 'telefone' || field === 'celular') formatted = formatPhone(value);
     setForm((p) => ({ ...p, [field]: formatted }));
     setErrors((e) => (e[field] ? { ...e, [field]: undefined } : e));
   }, []);
