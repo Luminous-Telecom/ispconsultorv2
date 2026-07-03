@@ -1351,6 +1351,17 @@ colgroup col.col-checkbox {
   margin: 0 !important;
 }
 
+.table-header-flex > .table-dropdown-relative {
+  display: inline-flex !important;
+  align-items: center !important;
+  line-height: 1 !important;
+}
+
+.table-header-flex > .table-dropdown-relative > .btn {
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
 /* Dropdown com mesmo estilo dos botões normais */
 .table-header-flex .btn-sm.dropdown-toggle-custom,
 .table-header-content .btn-sm.dropdown-toggle-custom {
@@ -1380,6 +1391,7 @@ colgroup col.col-checkbox {
 /* Estilizar dropdown-menu aberto */
 .table-header-flex .dropdown-menu,
 .table-header-content .dropdown-menu {
+  position: absolute !important;
   min-width: 140px !important;
   padding: 0.25rem 0 !important;
   margin-top: 0.25rem !important;

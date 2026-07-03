@@ -1495,6 +1495,25 @@ button {
   align-self: flex-start !important;
 }
 
+.modal-header-actions > .dropdown,
+.modal-header-actions > .btn-group {
+  display: inline-flex !important;
+  align-items: center !important;
+  flex: 0 0 auto !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+}
+
+.modal-header-actions > .dropdown > .btn,
+.modal-header-actions > .btn-group > .btn {
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.modal-header-actions .dropdown-menu {
+  position: absolute !important;
+}
+
 /* Global: layout header unificado (botões acima das abas) */
 [class*="-header-unified"] {
   display: flex !important;
