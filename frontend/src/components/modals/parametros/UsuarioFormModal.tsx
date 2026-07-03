@@ -7,7 +7,7 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useFormReset } from 'hooks/useFormReset';
 import { useUsuario, useGerarWebhookSecret } from 'hooks/useUsuarios';
 import DraggableModal from 'components/common/DraggableModal';
-import { CopyableFormField, FormField, AtivoInativoField, GerarTokenButton, ModalFormActions } from 'components/ui';
+import { CopyableFormField, AtivoInativoField, GerarTokenButton, ModalFormActions } from 'components/ui';
 import UsuarioAccountFormFields from 'components/forms/UsuarioAccountFormFields';
 import { useI18n } from 'contexts/I18nContext';
 
