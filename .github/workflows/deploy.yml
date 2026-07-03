@@ -17,7 +17,7 @@ jobs:
     # Runtime das actions (checkout/setup-node); build da app usa node-version abaixo.
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-      PROD_REPO: Luminous-Telecom/ispconsultor.prod
+      PROD_REPO: Luminous-Telecom/ispconsultor
 
     steps:
       - name: Checkout Código Fonte
@@ -444,8 +444,8 @@ jobs:
           echo "=== Último commit no repositório de produção ==="
           git log -1 --oneline
 
-      # Repositório privado: diagnóstico via API (o workflow roda em ispconsultor, não em ispconsultor.prod).
-      - name: Confirmar ispconsultor.prod na API GitHub
+      # Repositório privado: diagnóstico via API (o workflow roda no fonte, não no repositório ispconsultor).
+      - name: Confirmar ispconsultor na API GitHub
         if: success()
         env:
           GITHUB_TOKEN: ${{ secrets.PROD_PAT }}
@@ -462,8 +462,8 @@ jobs:
           node -e "
             const fs=require('fs');
             const d=JSON.parse(fs.readFileSync('/tmp/prod-repo.json','utf8'));
-            console.log('ispconsultor.prod default_branch=', d.default_branch);
-            console.log('ispconsultor.prod pushed_at=', d.pushed_at);
+            console.log('ispconsultor default_branch=', d.default_branch);
+            console.log('ispconsultor pushed_at=', d.pushed_at);
             if (d.default_branch !== 'main') {
               console.log('::warning::A branch **padrão** no GitHub é \"' + d.default_branch + '\". O deploy só faz push em **main** — abra **main** no repositório prod para ver os commits de deploy.');
             }

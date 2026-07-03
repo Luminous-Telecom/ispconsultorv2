@@ -853,9 +853,9 @@ server {
     # Arquivos estáticos do frontend
     # ⚠️ IMPORTANTE: Ajuste o caminho abaixo conforme seu ambiente!
     # Desenvolvimento: /home/projetos/ISP Consultor/frontend/build
-    # Produção: /opt/ispconsultor.prod/frontend/build (ou o caminho onde está seu frontend)
+    # Produção: /opt/ispconsultor/frontend/build (ou o caminho onde está seu frontend)
     location / {
-        root /opt/ispconsultor.prod/frontend/build;  # ⚠️ AJUSTE ESTE CAMINHO!
+        root /opt/ispconsultor/frontend/build;  # ⚠️ AJUSTE ESTE CAMINHO!
         try_files $uri $uri/ /index.html;
         
         # Cache para arquivos estáticos
@@ -877,7 +877,7 @@ server {
 **⚠️ Nota Importante sobre o caminho:**
 - O caminho `root` deve apontar para onde o frontend foi buildado em produção
 - Se você fez o build localmente e copiou, ajuste para o caminho correto
-- Se o frontend está integrado no backend (`backend/dist/frontend`), use: `root /opt/ispconsultor.prod/backend/dist/frontend;`
+- Se o frontend está integrado no backend (`backend/dist/frontend`), use: `root /opt/ispconsultor/backend/dist/frontend;`
 
 #### Opção B: HTTPS com SSL (Recomendado para Produção)
 
@@ -1006,9 +1006,9 @@ server {
     # Arquivos estáticos do frontend
     # ⚠️ IMPORTANTE: Ajuste o caminho abaixo conforme seu ambiente!
     # Desenvolvimento: /home/projetos/ISP Consultor/frontend/build
-    # Produção: /opt/ispconsultor.prod/frontend/build (ou o caminho onde está seu frontend)
+    # Produção: /opt/ispconsultor/frontend/build (ou o caminho onde está seu frontend)
     location / {
-        root /opt/ispconsultor.prod/frontend/build;  # ⚠️ AJUSTE ESTE CAMINHO!
+        root /opt/ispconsultor/frontend/build;  # ⚠️ AJUSTE ESTE CAMINHO!
         try_files $uri $uri/ /index.html;
         
         # Cache para arquivos estáticos
@@ -1030,7 +1030,7 @@ server {
 **⚠️ Nota Importante sobre o caminho:**
 - O caminho `root` deve apontar para onde o frontend foi buildado em produção
 - Se você fez o build localmente e copiou, ajuste para o caminho correto
-- Se o frontend está integrado no backend (`backend/dist/frontend`), use: `root /opt/ispconsultor.prod/backend/dist/frontend;`
+- Se o frontend está integrado no backend (`backend/dist/frontend`), use: `root /opt/ispconsultor/backend/dist/frontend;`
 
 ### 4. Habilitar Site
 

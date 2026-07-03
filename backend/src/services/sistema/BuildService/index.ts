@@ -17,7 +17,7 @@ const frontendSourcePath = (root: string) => path.join(root, 'frontend', 'src');
 /**
  * Self-update no servidor após `git pull`.
  *
- * Em **ispconsultor.prod** não há `backend/src` nem `frontend/src` — só `dist` e `build/`
+ * Em **ispconsultor** (repo de produção) não há `backend/src` nem `frontend/src` — só `dist` e `build/`
  * commitados pelo CI. Aí não roda `tsc`/CRA no servidor: o pull já trouxe os artefatos.
  *
  * Em clone **completo** (fonte), recompila backend e/ou frontend quando as pastas existem.
