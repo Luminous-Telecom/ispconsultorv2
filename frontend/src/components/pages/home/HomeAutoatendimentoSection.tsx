@@ -15,7 +15,7 @@ const HomeAutoatendimentoSection: React.FC<HomeAutoatendimentoSectionProps> = ({
       <div className="home-section-header">
         <h2 className="home-section-title">Autoatendimento para clientes</h2>
         <p className="home-section-desc">
-          Acesse rapidamente os recursos disponíveis no BackNet
+          Acesse rapidamente os recursos disponíveis no ISP Consultor
         </p>
       </div>
       <div className="home-autoatendimento-grid">

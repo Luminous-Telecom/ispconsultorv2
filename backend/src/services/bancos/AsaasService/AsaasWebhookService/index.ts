@@ -5,6 +5,7 @@ import asaasConfig from '../../../../config/bancos/asaas';
 import type { ApiResponse } from '../../types';
 import type { JsonValue } from '../../../../types/index';
 import { AsaasHelpers } from '../AsaasHelpers';
+import { SYSTEM_NAME } from '../../../../constants/systemBrand';
 
 export class AsaasWebhookService {
   /**
@@ -146,7 +147,7 @@ export class AsaasWebhookService {
           event: evento,
           target: urlRetorno,
           apiVersion: 3,
-          name: `BackNet - ${evento}`,
+          name: `${SYSTEM_NAME} - ${evento}`,
           enabled: true
         };
 

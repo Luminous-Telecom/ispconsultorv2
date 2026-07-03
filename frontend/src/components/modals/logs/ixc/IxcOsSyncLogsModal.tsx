@@ -40,7 +40,7 @@ const EVENT_LABELS: Record<string, string> = {
 };
 
 const ORIGEM_LABELS: Record<string, string> = {
-  backnet: 'BackNet',
+  ispconsultor: 'ISP Consultor',
   ixc: 'IXC Provedor',
 };
 

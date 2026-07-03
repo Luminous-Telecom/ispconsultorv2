@@ -1,6 +1,6 @@
 /**
  * Provisioning RPKI (RFC 8183) — certificados, chaves e CMS são gerenciados pelo Krill.
- * BackNet apenas parseia XML, persiste metadados no banco e delega operações à API Krill.
+ * ISP Consultor apenas parseia XML, persiste metadados no banco e delega operações à API Krill.
  */
 import { RpkiCa } from '../../../models/rpki/RpkiCa';
 import { RpkiCaParent } from '../../../models/rpki/RpkiCaParent';

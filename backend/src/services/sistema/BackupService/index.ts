@@ -142,7 +142,7 @@ export class BackupService {
           const arquivosPath = path.join(tempDir, 'arquivos.tar.gz');
           const host = process.env.DB_HOST || 'localhost';
           const port = process.env.DB_PORT || '3306';
-          const db = process.env.DB_NAME || 'backnet';
+          const db = process.env.DB_NAME || 'ispconsultor';
           const user = process.env.DB_USER || '';
           const pass = process.env.DB_PASSWORD || '';
           const cmds = process.platform === 'win32' ? ['mysql.exe', 'mariadb.exe'] : ['mysql', 'mariadb'];
@@ -183,7 +183,7 @@ export class BackupService {
       if (lower.includes('mariadb') || lower.endsWith('.sql')) {
         const host = process.env.DB_HOST || 'localhost';
         const port = process.env.DB_PORT || '3306';
-        const db = process.env.DB_NAME || 'backnet';
+        const db = process.env.DB_NAME || 'ispconsultor';
         const user = process.env.DB_USER || '';
         const pass = process.env.DB_PASSWORD || '';
         const cmds = process.platform === 'win32' ? ['mysql.exe', 'mariadb.exe'] : ['mysql', 'mariadb'];
@@ -254,7 +254,7 @@ export class BackupService {
       const outFile = path.join(outDir, 'dump.sql');
       const host = process.env.DB_HOST || 'localhost';
       const port = process.env.DB_PORT || '3306';
-      const db = process.env.DB_NAME || 'backnet';
+      const db = process.env.DB_NAME || 'ispconsultor';
       const user = process.env.DB_USER || '';
       const pass = process.env.DB_PASSWORD || '';
       const cmds = process.platform === 'win32' ? ['mysqldump.exe', 'mariadb-dump.exe'] : ['mysqldump', 'mariadb-dump'];

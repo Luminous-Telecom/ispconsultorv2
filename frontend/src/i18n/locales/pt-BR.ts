@@ -1522,7 +1522,7 @@ const ptBR: TranslationKeys = {
     'placeholder.responsibleName': 'Nome do responsável',
     'placeholder.responsibleRole': 'Cargo do responsável',
     'placeholder.paymentObservations': 'Observações sobre o pagamento (opcional)',
-    'placeholder.testMessage': 'Mensagem de teste do sistema BackNet',
+    'placeholder.testMessage': 'Mensagem de teste do sistema ISP Consultor',
     'placeholder.termContent': 'Digite o conteúdo do termo...',
 
     // Message Types

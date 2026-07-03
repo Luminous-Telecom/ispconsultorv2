@@ -1,6 +1,6 @@
-# Componentes BackNet
+# Componentes ISP Consultor
 
-Este documento descreve os componentes principais do sistema BackNet.
+Este documento descreve os componentes principais do sistema ISP Consultor.
 
 ## 📁 Estrutura de Pastas
 

@@ -63,8 +63,8 @@ module.exports = {
     // Insere o usuário administrador padrão
     await queryInterface.bulkInsert('usuarios', [
       {
-        nome: 'Administrador BackNet',
-        email: 'admin@backnet.com.br',
+        nome: 'Administrador ISP Consultor',
+        email: 'admin@ispconsultor.com.br',
         password_hash: passwordHash,
         role: 'admin',
         ativo: true,

@@ -7,6 +7,9 @@ import '@fontsource/ibm-plex-sans/700.css';
 import './styles/index.scss';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import App from './App';
+import { applySystemBrandHead } from './utils/applySystemBrandHead';
+
+applySystemBrandHead();
 
 window.addEventListener('error', (event) => {
   event.preventDefault();

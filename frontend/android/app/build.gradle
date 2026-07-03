@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.backnet.erp"
+    namespace "com.ispconsultor.erp"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.backnet.erp"
+        applicationId "com.ispconsultor.erp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

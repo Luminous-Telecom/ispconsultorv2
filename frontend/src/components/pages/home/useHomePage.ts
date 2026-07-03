@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { SYSTEM_NAME, SYSTEM_TAGLINE } from 'constants/systemBrand';
 import { useTheme } from 'contexts/ThemeContext';
 
 export const useHomePage = () => {
@@ -30,10 +30,10 @@ export const useHomePage = () => {
   }, [showContato]);
 
   useEffect(() => {
-    document.title = 'BackNet';
+    document.title = SYSTEM_NAME;
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
-      metaDescription.setAttribute('content', 'BackNet — Gestão para consultores de telecomunicações');
+      metaDescription.setAttribute('content', `${SYSTEM_NAME} — ${SYSTEM_TAGLINE}`);
     }
   }, []);
 

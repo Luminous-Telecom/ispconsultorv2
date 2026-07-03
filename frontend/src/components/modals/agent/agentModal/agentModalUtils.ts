@@ -7,6 +7,6 @@ export function getAgentImageTag(): 'dev' | 'prod' {
 
 export function buildDockerRunCommand(token: string): string {
   const tag = getAgentImageTag();
-  const name = tag === 'dev' ? 'backnet-agent-dev' : 'backnet-agent';
+  const name = tag === 'dev' ? 'ispconsultor-agent-dev' : 'ispconsultor-agent';
   return `docker rm -f ${name} 2>/dev/null; docker run -d --name ${name} --restart unless-stopped ${DOCKER_IMAGE}:${tag} --token ${token}`;
 }

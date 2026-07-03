@@ -2,6 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import type { Socket } from 'socket.io-client';
 import type { Terminal } from '@xterm/xterm';
 import type { FitAddon } from '@xterm/addon-fit';
+import { SYSTEM_NAME } from 'constants/systemBrand';
 import { Agent } from 'types';
 import { SocketTerminalModal } from 'components/common/terminal';
 
@@ -34,7 +35,7 @@ const AgentTerminalModal: React.FC<AgentTerminalModalProps> = ({
   const writeBanner = useCallback(
     (xterm: Terminal) => {
       xterm.writeln('\x1b[1;36m╔══════════════════════════════════════╗\x1b[0m');
-      xterm.writeln('\x1b[1;36m║\x1b[0m  Backnet Agent Terminal               \x1b[1;36m║\x1b[0m');
+      xterm.writeln(`\x1b[1;36m║\x1b[0m  ${`${SYSTEM_NAME} Agent Terminal`.padEnd(36)}\x1b[1;36m║\x1b[0m`);
       xterm.writeln(`\x1b[1;36m║\x1b[0m  ${bannerTitle.padEnd(36)}\x1b[1;36m║\x1b[0m`);
       xterm.writeln('\x1b[1;36m╚══════════════════════════════════════╝\x1b[0m');
       xterm.writeln('');

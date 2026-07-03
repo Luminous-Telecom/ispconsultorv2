@@ -37,7 +37,7 @@ function getAgentIp(socket: Socket): string {
 }
 
 export function registerAgentNamespace(io: SocketIOServer): void {
-  const ns: Namespace = io.of('/backnet-agent');
+  const ns: Namespace = io.of('/ispconsultor-agent');
 
   // Middleware de autenticação por token
   ns.use(async (socket, next) => {

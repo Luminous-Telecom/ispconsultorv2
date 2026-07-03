@@ -7,7 +7,7 @@ const HomeIntegrationsSection: React.FC = () => (
       <div className="home-section-header">
         <h2 className="home-section-title">Integração com API</h2>
         <p className="home-section-desc">
-          Conecte seus sistemas através da API do BackNet
+          Conecte seus sistemas através da API do ISP Consultor
         </p>
       </div>
       <div className="home-integrations-grid">

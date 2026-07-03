@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { EntrarButton, Input } from 'components/ui';
-import BackNetLogo from 'components/common/BackNetLogo';
+import IspConsultorLogo from 'components/common/IspConsultorLogo';
 import './LoginScreen.scss';
 
 export interface LoginCredentials {
@@ -64,7 +64,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
         <div className="login-card__body">
           <div className="login-brand">
             <div className="login-brand__logo">
-              <BackNetLogo width={logoWidth} height={logoHeight} />
+              <IspConsultorLogo width={logoWidth} height={logoHeight} />
             </div>
             {badge && <span className="login-badge">{badge}</span>}
             <p className="login-subtitle">{subtitle}</p>

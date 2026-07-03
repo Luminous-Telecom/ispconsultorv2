@@ -4,7 +4,7 @@ globs: frontend/**/*.tsx,frontend/**/*.ts
 alwaysApply: false
 ---
 
-# Erros de API — BackNet
+# Erros de API — ISP Consultor
 
 ## Padrão obrigatório
 

@@ -7,12 +7,12 @@ const Cookies: React.FC = () => (
       <strong>Última atualização:</strong> {new Date().toLocaleDateString('pt-BR')}
     </p>
     <p>
-      Esta política explica como o BackNet usa cookies e armazenamento no navegador.
+      Esta política explica como o ISP Consultor usa cookies e armazenamento no navegador.
     </p>
 
     <h2>1. O que utilizamos</h2>
     <p>
-      O BackNet usa duas tecnologias no seu navegador:
+      O ISP Consultor usa duas tecnologias no seu navegador:
     </p>
     <ul>
       <li><strong>Cookie de sessão:</strong> Definido pelo servidor para manter você logado. É um cookie seguro (HttpOnly) que o navegador envia automaticamente em cada requisição.</li>

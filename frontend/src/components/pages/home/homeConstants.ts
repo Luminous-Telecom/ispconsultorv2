@@ -74,7 +74,7 @@ export const INTEGRATIONS = [
 export const AUTOATENDIMENTO = [
   { icon: 'bi-box-arrow-in-right', title: 'Acessar Sistema', desc: 'Entre no painel com seu login e senha para gerenciar sua operação' },
   { icon: 'bi-receipt', title: '2ª via da fatura', desc: 'Consulte e baixe suas faturas pelo painel ou Central do Assinante' },
-  { icon: 'bi-question-circle', title: 'Central de ajuda', desc: 'Documentação e tutoriais para tirar o máximo do BackNet' },
+  { icon: 'bi-question-circle', title: 'Central de ajuda', desc: 'Documentação e tutoriais para tirar o máximo do ISP Consultor' },
   { icon: 'bi-headset', title: 'Suporte', desc: 'Entre em contato pelo WhatsApp ou Telegram para suporte dedicado' },
   { icon: 'bi-file-earmark-text', title: 'Contratos', desc: 'Visualize e assine contratos digitalmente na Central do Assinante' },
 ];
@@ -130,7 +130,7 @@ export const FAQ_ITEMS = [
   },
   {
     question: 'Preciso de cartão de crédito para começar?',
-    answer: 'Não. O teste gratuito não exige cartão. Você pode experimentar o BackNet e decidir a assinatura depois.',
+    answer: 'Não. O teste gratuito não exige cartão. Você pode experimentar o ISP Consultor e decidir a assinatura depois.',
   },
   {
     question: 'O sistema é seguro?',
@@ -159,7 +159,7 @@ export const FAQ_ITEMS = [
 ];
 
 export const CONTATO = {
-  whatsapp: 'https://wa.me/5584998667245?text=Olá,%20queria%20acesso%20de%2060%20dias%20ao%20sistema%20BackNet',
+  whatsapp: 'https://wa.me/5584998667245?text=Olá,%20queria%20acesso%20de%2060%20dias%20ao%20sistema%20ISP Consultor',
   telegram: 'https://t.me/LucasMidia',
 };
 

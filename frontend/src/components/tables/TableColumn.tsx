@@ -11,6 +11,7 @@ interface TableColumnProps<T = Record<string, unknown>> {
   onSort?: (column: string, direction: SortDirection) => void;
   className?: string;
   columnWidth?: number;
+  isUserResized?: boolean;
   onResizeStart?: (columnKey: string, startEdgeX: number, currentWidth: number) => void;
   isResizing?: boolean;
 }
@@ -22,6 +23,7 @@ const TableColumn = <T extends { id: number | string }>({
   onSort,
   className = '',
   columnWidth,
+  isUserResized = false,
   onResizeStart,
   isResizing = false,
 }: TableColumnProps<T>) => {
@@ -54,8 +56,7 @@ const TableColumn = <T extends { id: number | string }>({
     if (!columnRef.current || !onResizeStart) return;
 
     const rect = columnRef.current.getBoundingClientRect();
-    const currentWidth = Math.round(rect.width);
-    onResizeStart(column.key, rect.right, currentWidth);
+    onResizeStart(column.key, rect.right, Math.round(rect.width));
   }, [column.key, onResizeStart]);
 
   const minWidthFromTitle = useMemo(() => {
@@ -65,9 +66,10 @@ const TableColumn = <T extends { id: number | string }>({
 
   const columnStyles = useMemo(() => {
     const styles: Record<string, string> = {};
+    const isLockedWidth = columnWidth !== undefined;
 
     let effectiveWidth: number | string | undefined;
-    if (columnWidth !== undefined) {
+    if (isLockedWidth) {
       effectiveWidth = columnWidth;
     } else if (column.width !== undefined) {
       effectiveWidth = typeof column.width === 'string'
@@ -87,7 +89,9 @@ const TableColumn = <T extends { id: number | string }>({
       const widthValue = `${clampedPx}px`;
       styles.width = widthValue;
       styles.minWidth = widthValue;
-      styles.maxWidth = widthValue;
+      if (isLockedWidth) {
+        styles.maxWidth = widthValue;
+      }
     } else {
       const colMin = getColumnMinWidth({
         key: column.key,
@@ -125,15 +129,20 @@ const TableColumn = <T extends { id: number | string }>({
       classes.push(`text-${column.headerAlign || column.align}`);
     }
     if (className) classes.push(className);
-    if (columnWidth) classes.push('column-has-custom-width');
+    if (isUserResized) classes.push('column-has-custom-width');
     return classes.join(' ');
-  }, [column.key, column.className, column.align, column.headerAlign, className, columnWidth]);
+  }, [column.key, column.className, column.align, column.headerAlign, className, isUserResized]);
 
   const sortIconClass = useMemo(() => {
     if (!isSortable) return '';
     if (!isSorted) return 'bi bi-chevron-expand';
     return sortDirection === 'asc' ? 'bi bi-chevron-up' : 'bi bi-chevron-down';
   }, [isSortable, isSorted, sortDirection]);
+
+  const resizeTitle = useMemo(
+    () => (column.label ? `${t('other.resizeColumn')}: ${column.label}` : t('other.resizeColumn')),
+    [column.label, t]
+  );
 
   useEffect(() => {
     if (!isResizing) {
@@ -154,6 +163,7 @@ const TableColumn = <T extends { id: number | string }>({
       data-sorted={isSorted ? 'true' : 'false'}
       data-sort-direction={sortDirection || ''}
       data-resizable={isResizable ? 'true' : 'false'}
+      data-column-key={column.key}
       data-column-width={columnWidth || ''}
     >
       <div className="d-flex align-items-center table-column-header-content">
@@ -164,7 +174,7 @@ const TableColumn = <T extends { id: number | string }>({
         <div
           className="resize-handle"
           onMouseDown={handleResizeMouseDown}
-          title={t('other.resizeColumn')}
+          title={resizeTitle}
         />
       )}
     </th>

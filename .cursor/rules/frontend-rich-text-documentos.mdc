@@ -4,7 +4,7 @@ globs: frontend/**/*.tsx,frontend/**/*.ts
 alwaysApply: false
 ---
 
-# Rich text e documentos — BackNet
+# Rich text e documentos — ISP Consultor
 
 ## Editor (TinyMCE)
 

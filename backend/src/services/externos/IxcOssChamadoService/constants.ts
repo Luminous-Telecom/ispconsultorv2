@@ -41,7 +41,7 @@ export const OSS_CHAMADO_ACOES: OssChamadoAcao[] = [
   'registrar_mensagem',
 ];
 
-export const CAMPOS_BACKNET = ['cliente_id'];
+export const CAMPOS_ISPCONSULTOR = ['cliente_id'];
 
 export const CAMPOS_ENRIQUECIDOS = [
   'estrutura_nome',

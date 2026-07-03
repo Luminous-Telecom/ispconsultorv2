@@ -5,6 +5,7 @@
  */
 import axios from 'axios';
 import { logger } from '../../../utils/logger';
+import { SYSTEM_NAME } from '../../../constants/systemBrand';
 
 /** Base URL até `/ip` (ex.: https://rdap-bootstrap.arin.net/bootstrap/ip). Configurável em RDAP_IP_BOOTSTRAP_BASE_URL. */
 function getRdapIpBootstrapBaseUrl(): string {
@@ -183,7 +184,7 @@ export class BlockdomiWhoisService {
         maxRedirects: 15,
         headers: {
           Accept: 'application/rdap+json',
-          'User-Agent': 'BackNet/1.0'
+          'User-Agent': `${SYSTEM_NAME.replace(/\s+/g, '-')}/1.0`
         }
       });
 

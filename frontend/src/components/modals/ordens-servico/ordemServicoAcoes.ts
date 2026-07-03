@@ -20,10 +20,10 @@ export const ORDEM_SERVICO_ACOES: OrdemServicoAcaoConfig[] = [
   { key: 'registrar_mensagem', label: 'Registrar mensagem' },
 ];
 
-/** OS criada apenas no BackNet, sem vínculo IXC. */
+/** OS criada apenas no ISP Consultor, sem vínculo IXC. */
 export const isOrdemServicoLocal = (
   ordem?: { origem?: string; ixc_id?: string } | null
-): boolean => ordem?.origem === 'backnet';
+): boolean => ordem?.origem === 'ispconsultor';
 
 export const isOrdemServicoExcluivel = (ordem?: { status?: string } | null): boolean =>
   ordem != null && ordem.status !== 'F';

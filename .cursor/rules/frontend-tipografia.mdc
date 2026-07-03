@@ -1,10 +1,10 @@
 ---
-description: Padrão tipográfico do BackNet — mesma fonte do menu lateral em todo o sistema
+description: Padrão tipográfico do ISP Consultor — mesma fonte do menu lateral em todo o sistema
 globs: frontend/**/*
 alwaysApply: false
 ---
 
-# Tipografia — BackNet
+# Tipografia — ISP Consultor
 
 Fonte padrão do sistema = **stack nativa do SO** (mesma do menu lateral).
 

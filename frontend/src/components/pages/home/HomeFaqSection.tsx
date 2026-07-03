@@ -13,7 +13,7 @@ const HomeFaqSection: React.FC<HomeFaqSectionProps> = ({ faqOpen, setFaqOpen }) 
       <div className="home-section-header">
         <h2 className="home-section-title">Perguntas Frequentes</h2>
         <p className="home-section-desc">
-          Tire suas dúvidas sobre o BackNet
+          Tire suas dúvidas sobre o ISP Consultor
         </p>
       </div>
       <div className="home-faq-list">

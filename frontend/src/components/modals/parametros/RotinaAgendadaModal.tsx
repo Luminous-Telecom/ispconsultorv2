@@ -62,7 +62,7 @@ function buildTipoOptionsSaaS(alvo: 'saas' | 'erp_global', hasBlockdomi: boolean
 
 const ALVO_OPTIONS = [
   { value: 'saas', label: 'SaaS' },
-  { value: 'erp_global', label: 'BackNet' },
+  { value: 'erp_global', label: 'ISP Consultor' },
 ];
 
 interface RotinaAgendadaModalProps {

@@ -47,7 +47,7 @@ const HomeHero: React.FC<HomeHeroProps> = ({ scrollTo, onOpenLightbox }) => (
         onClick={() => onOpenLightbox('/dashboard.png')}
         ariaLabel="Ampliar imagem do dashboard"
       >
-        <img src="/dashboard.png" alt="BackNet Dashboard" className="home-hero-visual-img" />
+        <img src="/dashboard.png" alt="ISP Consultor Dashboard" className="home-hero-visual-img" />
       </NavLinkButton>
     </div>
   </section>

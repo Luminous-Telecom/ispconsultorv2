@@ -4,7 +4,7 @@ globs: frontend/**/*.tsx,frontend/**/*.ts
 alwaysApply: false
 ---
 
-# Tabelas e listagens — BackNet
+# Tabelas e listagens — ISP Consultor
 
 ## Componentes
 

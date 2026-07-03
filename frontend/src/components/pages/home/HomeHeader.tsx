@@ -1,5 +1,5 @@
 import React from 'react';
-import BackNetLogo from 'components/common/BackNetLogo';
+import IspConsultorLogo from 'components/common/IspConsultorLogo';
 import { AppButton, IconOnlyButton, NavLinkButton } from 'components/ui';
 import { Theme } from 'contexts/ThemeContext';
 import { NAV_ITEMS, SHOW_WIKI } from './homeConstants';
@@ -30,7 +30,7 @@ const HomeNavLinks: React.FC<{
     ))}
     {SHOW_WIKI && (
       <a
-        href="https://wiki.backnet.app/"
+        href="https://wiki.ispconsultor.com.br/"
         target="_blank"
         rel="noopener noreferrer"
         className="home-nav-link home-nav-link-external"
@@ -51,7 +51,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
 }) => (
   <header className="home-header">
     <div className="home-header-inner">
-      <BackNetLogo width={120} height={38} className="home-logo" />
+      <IspConsultorLogo width={120} height={38} className="home-logo" />
       <nav className="home-nav home-nav-desktop">
         <HomeNavLinks scrollTo={scrollTo} />
       </nav>

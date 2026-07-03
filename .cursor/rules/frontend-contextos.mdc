@@ -4,7 +4,7 @@ globs: frontend/**/*.tsx,frontend/**/*.ts
 alwaysApply: false
 ---
 
-# Contextos globais — BackNet
+# Contextos globais — ISP Consultor
 
 ## LoadingContext + LoadingBar
 

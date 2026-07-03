@@ -10,6 +10,7 @@ import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddl
 import { registrarCriacao } from '../../../services/sistema/AuditoriaService/index';
 import { sendSuccess, sendError, sendValidationError, sendNotFound, sendForbidden } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { SYSTEM_NAME } from '../../../constants/systemBrand';
 
 function findDirWith(startPath: string, target: string): string | null {
   let cur = startPath;
@@ -134,7 +135,7 @@ export class AtualizacoesController {
     }
 
     try {
-      const headers: Record<string, string> = { 'Accept': 'application/vnd.github+json', 'User-Agent': 'BackNet' };
+      const headers: Record<string, string> = { 'Accept': 'application/vnd.github+json', 'User-Agent': SYSTEM_NAME.replace(/\s+/g, '-') };
       if (process.env.GITHUB_TOKEN) headers['Authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`;
 
       const githubTimeoutMs = parseInt(process.env.GITHUB_API_TIMEOUT_MS || '110000', 10);

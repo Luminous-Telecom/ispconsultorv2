@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">BackNet</string>
-    <string name="title_activity_main">BackNet</string>
-    <string name="package_name">com.backnet.erp</string>
-    <string name="custom_url_scheme">com.backnet.erp</string>
+    <string name="app_name">ISP Consultor</string>
+    <string name="title_activity_main">ISP Consultor</string>
+    <string name="package_name">com.ispconsultor.erp</string>
+    <string name="custom_url_scheme">com.ispconsultor.erp</string>
 </resources>

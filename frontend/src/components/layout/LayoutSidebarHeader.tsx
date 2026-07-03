@@ -1,5 +1,5 @@
 import React from 'react';
-import BackNetLogo from '../common/BackNetLogo';
+import IspConsultorLogo from '../common/IspConsultorLogo';
 import { IconOnlyButton } from 'components/ui';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -19,7 +19,7 @@ const LayoutSidebarHeader: React.FC<LayoutSidebarHeaderProps> = ({
   return (
     <div className="d-flex flex-column align-items-center justify-content-center p-3 pb-0 mb-0 position-relative w-100">
       <div className="sidebar-logo-wrapper w-100 d-flex flex-column align-items-center">
-        <BackNetLogo width={200} height={65} />
+        <IspConsultorLogo width={200} height={65} />
         {companyName && (
           <div className="sidebar-title-wrapper overflow-hidden w-100 d-flex justify-content-center">
             <div className="sidebar-company-name text-truncate d-flex align-items-center justify-content-center gap-1">

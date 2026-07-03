@@ -7,6 +7,7 @@ import path from 'path';
 import { Op, WhereOptions, Order } from 'sequelize';
 import { sanitizeDominio } from '../../../utils/sanitize';
 import { logger } from '../../../utils/logger';
+import { SYSTEM_NAME } from '../../../constants/systemBrand';
 import { DOMINIO_SORT_CONFIG } from '../../../config/sortConfigs';
 import {
   BLOCKDOMI_LIST_INCLUDES,
@@ -74,7 +75,7 @@ function resolvePdfUrlParaDownload(link: string, publicBaseUrl: string): string 
 }
 
 async function baixarPdfParaArquivoTemporario(fullUrl: string): Promise<string> {
-  const tmpDir = '/tmp/backnet-sei-sync';
+  const tmpDir = '/tmp/ispconsultor-sei-sync';
   await fs.mkdir(tmpDir, { recursive: true });
   const tmpPath = path.join(tmpDir, `sei-${Date.now()}-${Math.random().toString(36).slice(2, 10)}.pdf`);
   const controller = new AbortController();
@@ -82,7 +83,7 @@ async function baixarPdfParaArquivoTemporario(fullUrl: string): Promise<string> 
   const to = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch(fullUrl, {
-      headers: { 'User-Agent': 'BackNet/1.0' },
+      headers: { 'User-Agent': `${SYSTEM_NAME.replace(/\s+/g, '-')}/1.0` },
       signal: controller.signal
     });
     if (!response.ok) {

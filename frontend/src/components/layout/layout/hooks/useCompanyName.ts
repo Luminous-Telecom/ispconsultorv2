@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react';
+import { SYSTEM_NAME } from 'constants/systemBrand';
 import { useQuery } from '@tanstack/react-query';
 import { DadosEmpresaService } from 'services/dadosEmpresaService';
 
@@ -14,7 +15,7 @@ export const useCompanyName = () => {
   );
 
   useEffect(() => {
-    document.title = companyName || 'BackNet';
+    document.title = companyName || SYSTEM_NAME;
   }, [companyName]);
 
   return companyName;

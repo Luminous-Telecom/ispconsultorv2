@@ -1,10 +1,10 @@
 ---
-description: Regras de componentes React, UI/UX e estado no frontend BackNet
+description: Regras de componentes React, UI/UX e estado no frontend ISP Consultor
 globs: frontend/**/*.tsx,frontend/**/*.ts
 alwaysApply: false
 ---
 
-# Frontend React - BackNet
+# Frontend React - ISP Consultor
 
 ## Componentes
 - Use componentes funcionais com `React.FC<Props>`, máximo 300 linhas

@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
+import { SYSTEM_NAME } from 'constants/systemBrand';
 import { Link } from 'react-router-dom';
-import BackNetLogo from 'components/common/BackNetLogo';
+import IspConsultorLogo from 'components/common/IspConsultorLogo';
 import { IconOnlyButton } from 'components/ui';
 import { useTheme } from 'contexts/ThemeContext';
 import './LegalPage.scss';
@@ -14,7 +15,7 @@ const LegalPage: React.FC<LegalPageProps> = ({ title, children }) => {
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
-    document.title = `${title} — BackNet`;
+    document.title = `${title} — ${SYSTEM_NAME}`;
   }, [title]);
 
   return (
@@ -22,7 +23,7 @@ const LegalPage: React.FC<LegalPageProps> = ({ title, children }) => {
       <header className="legal-header">
         <div className="legal-header-inner">
           <Link to="/" className="legal-logo-link">
-            <BackNetLogo width={120} height={38} className="legal-logo" />
+            <IspConsultorLogo width={120} height={38} className="legal-logo" />
           </Link>
           <div className="legal-header-actions">
             <IconOnlyButton
@@ -49,7 +50,7 @@ const LegalPage: React.FC<LegalPageProps> = ({ title, children }) => {
 
       <footer className="legal-footer">
         <div className="legal-footer-inner">
-          <p>© {new Date().getFullYear()} BackNet. Todos os direitos reservados.</p>
+          <p>© {new Date().getFullYear()} {SYSTEM_NAME}. Todos os direitos reservados.</p>
           <div className="legal-footer-links">
             <Link to="/privacidade">Privacidade</Link>
             <Link to="/termos">Termos</Link>

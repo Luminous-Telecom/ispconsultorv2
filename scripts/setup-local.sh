@@ -11,8 +11,8 @@ ENV_FILE="$PROJECT_ROOT/backend/.env"
 [ -f "$ENV_FILE" ] || ENV_FILE="$PROJECT_ROOT/backend/.env.example"
 
 # Carrega variáveis do .env
-DB_NAME="backnet"
-DB_USER="backnet"
+DB_NAME="ispconsultor"
+DB_USER="ispconsultor"
 DB_PASSWORD=""
 REDIS_PASSWORD=""
 KRILL_API_URL="https://127.0.0.1:3100"
@@ -39,7 +39,7 @@ fi
 
 export DB_NAME DB_USER DB_PASSWORD REDIS_PASSWORD
 
-echo "=== BackNet: instalação local (MariaDB, Redis, Elasticsearch, Krill) ==="
+echo "=== ISP Consultor: instalação local (MariaDB, Redis, Elasticsearch, Krill) ==="
 
 # Detecta gerenciador de pacotes
 if command -v apt-get &>/dev/null; then

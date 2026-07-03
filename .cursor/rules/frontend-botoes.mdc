@@ -1,10 +1,10 @@
 ---
-description: Sistema centralizado de botões do BackNet — API, variantes e regras
+description: Sistema centralizado de botões do ISP Consultor — API, variantes e regras
 globs: frontend/**/*.tsx,frontend/**/*.ts
 alwaysApply: false
 ---
 
-# Botões — BackNet
+# Botões — ISP Consultor
 
 **Proibido** usar `<button>` HTML ou importar `components/ui/Button` fora de `components/ui/buttons/`.
 

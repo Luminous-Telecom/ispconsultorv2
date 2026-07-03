@@ -1,6 +1,6 @@
 import {
   CAMPOS_AUTOGERADOS_CRIACAO,
-  CAMPOS_BACKNET,
+  CAMPOS_ISPCONSULTOR,
   CAMPOS_ENRIQUECIDOS,
   OSS_DEFAULTS,
 } from './constants';
@@ -22,8 +22,8 @@ export function stripCamposEnriquecidos(registro: IxcOssChamado): Record<string,
   return result;
 }
 
-export function applyBacknetCliente(payload: OssChamadoInput, body: Record<string, string>): void {
-  for (const campo of CAMPOS_BACKNET) {
+export function applyIspconsultorCliente(payload: OssChamadoInput, body: Record<string, string>): void {
+  for (const campo of CAMPOS_ISPCONSULTOR) {
     delete body[campo];
   }
 
@@ -46,11 +46,11 @@ export function prepareCreateBody(payload: OssChamadoInput): Record<string, stri
   for (const campo of CAMPOS_AUTOGERADOS_CRIACAO) {
     delete body[campo];
   }
-  applyBacknetCliente(payload, body);
+  applyIspconsultorCliente(payload, body);
   return body;
 }
 
-export function applyBacknetProtocoloAbertura(body: Record<string, string>, protocolo: string): void {
+export function applyIspconsultorProtocoloAbertura(body: Record<string, string>, protocolo: string): void {
   const normalized = protocolo.trim();
   if (normalized) {
     body.protocolo = normalized;

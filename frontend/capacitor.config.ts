@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.backnet.erp',
-  appName: 'BackNet',
+  appId: 'com.ispconsultor.erp',
+  appName: 'ISP Consultor',
   webDir: 'build',
   server: {
     // Usar https://localhost evita problemas de CORS com capacitor://

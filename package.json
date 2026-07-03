@@ -1,5 +1,5 @@
 {
-  "name": "backnet",
+  "name": "isp-consultor",
   "version": "1.0.0",
   "description": "Sistema ERP para assessoria técnica em provedores de internet - React + TypeScript",
   "main": "index.js",

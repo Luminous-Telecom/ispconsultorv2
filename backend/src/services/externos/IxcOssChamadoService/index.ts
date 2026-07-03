@@ -52,8 +52,8 @@ import {
 } from './ossData';
 import {
   applyApiOperadorAbertura,
-  applyBacknetProtocoloAbertura,
-  applyBacknetCliente,
+  applyIspconsultorProtocoloAbertura,
+  applyIspconsultorCliente,
   buildActionBody,
   parseClienteId,
   prepareCreateBody,
@@ -126,7 +126,7 @@ export class IxcOssChamadoService {
     await OrdemServicoLocalService.syncMensagensFromIxc(record, mensagens, empresaId, usuarioId);
   }
 
-  private static async payloadComOperadorBacknet(
+  private static async payloadComOperadorIspconsultor(
     payload: OssChamadoInput,
     usuarioId: number | null
   ): Promise<OssChamadoInput> {
@@ -518,7 +518,7 @@ export class IxcOssChamadoService {
       throw new Error('Mensagem não encontrada');
     }
 
-    if (await OrdemServicoLocalService.isPureBacknet(ordemId, empresaId)) {
+    if (await OrdemServicoLocalService.isOrdemServicoLocal(ordemId, empresaId)) {
       await mensagemLocal.destroy();
       return { type: 'success' };
     }
@@ -630,9 +630,9 @@ export class IxcOssChamadoService {
     }
 
     return runWithIxcCredentials(empresaId, async () => {
-      const payloadComOperador = await IxcOssChamadoService.payloadComOperadorBacknet(payload, usuarioId);
+      const payloadComOperador = await IxcOssChamadoService.payloadComOperadorIspconsultor(payload, usuarioId);
       const body = prepareCreateBody(payloadComOperador);
-      applyBacknetProtocoloAbertura(body, record.protocolo);
+      applyIspconsultorProtocoloAbertura(body, record.protocolo);
       applyApiOperadorAbertura(body);
 
       try {
@@ -664,7 +664,7 @@ export class IxcOssChamadoService {
         const cliente = await Cliente.findByPk(clienteId!, { attributes: ['razao_social', 'nome_fantasia'] });
         const clienteNome = cliente ? clienteNomeParaOrdemServico(cliente, clienteId!) : String(clienteId);
         const { IxcOsSchedulerRoutineService } = await import('../../ordens/IxcOsSchedulerRoutineService');
-        await IxcOsSchedulerRoutineService.registrarAberturaBacknet({
+        await IxcOsSchedulerRoutineService.registrarAberturaIspconsultor({
           record: linked,
           integracaoId: integracao?.id,
           integracaoNome: integracao?.nome,
@@ -691,7 +691,7 @@ export class IxcOssChamadoService {
     empresaId: number | null = null,
     usuarioId: number | null = null
   ): Promise<IxcActionResponse> {
-    if (await OrdemServicoLocalService.isPureBacknet(id, empresaId)) {
+    if (await OrdemServicoLocalService.isOrdemServicoLocal(id, empresaId)) {
       return OrdemServicoLocalService.update(id, payload, empresaId);
     }
 
@@ -707,7 +707,7 @@ export class IxcOssChamadoService {
         ...stripCamposEnriquecidos(atual),
         ...sanitizeInput(payload),
       };
-      applyBacknetCliente(payload, body);
+      applyIspconsultorCliente(payload, body);
 
       try {
         const response = await createIxcClient().put<IxcActionResponse>(`/${IXC_RESOURCE}/${ixcId}`, body);
@@ -731,7 +731,7 @@ export class IxcOssChamadoService {
     empresaId: number | null = null,
     usuarioId: number | null = null
   ): Promise<IxcActionResponse> {
-    if (await OrdemServicoLocalService.isPureBacknet(id, empresaId)) {
+    if (await OrdemServicoLocalService.isOrdemServicoLocal(id, empresaId)) {
       if (acao === 'finalizar') {
         return OrdemServicoLocalService.finalizar(id, payload, empresaId, usuarioId);
       }
@@ -744,7 +744,7 @@ export class IxcOssChamadoService {
     const ixcId = await IxcOssChamadoService.resolveIxcOsId(id, empresaId);
     const clienteId = parseClienteId(payload.cliente_id);
     return runWithIxcCredentials(empresaId, async () => {
-      const payloadIx = await IxcOssChamadoService.payloadComOperadorBacknet(payload, usuarioId);
+      const payloadIx = await IxcOssChamadoService.payloadComOperadorIspconsultor(payload, usuarioId);
 
       if (acao === 'registrar_mensagem') {
         const resultado = await registrarMensagemOs(ixcId, payloadIx);

@@ -50,7 +50,7 @@ function toIxcOssChamado(record: OrdemServicoLocal, clienteNome: string): IxcOss
     id: isIxc ? String(record.ixc_id) : String(record.id),
     id_local: String(record.id),
     ixc_id: isIxc ? String(record.ixc_id) : '',
-    origem: isIxc ? 'ixc' : 'backnet',
+    origem: isIxc ? 'ixc' : 'ispconsultor',
     cliente_id: String(record.cliente_id),
     cliente_nome: clienteNome,
     prioridade: record.prioridade,
@@ -452,7 +452,7 @@ export class OrdemServicoLocalService {
     return chamado ?? null;
   }
 
-  static async isPureBacknet(id: string | number, empresaId: number | null = null): Promise<boolean> {
+  static async isOrdemServicoLocal(id: string | number, empresaId: number | null = null): Promise<boolean> {
     const record = await this.findRecord(id, empresaId);
     return record != null && !record.ixc_id?.trim();
   }

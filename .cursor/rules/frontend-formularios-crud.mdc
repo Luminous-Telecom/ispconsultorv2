@@ -4,7 +4,7 @@ globs: frontend/**/*.tsx,frontend/**/*.ts
 alwaysApply: false
 ---
 
-# Formulários CRUD — BackNet
+# Formulários CRUD — ISP Consultor
 
 Complementa layout horizontal: `frontend-form-modal-layout.mdc` — **referência Cliente/Contrato**.
 

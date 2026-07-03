@@ -1,5 +1,5 @@
 /**
- * Tipos para o sistema BackNet - Frontend
+ * Tipos para o sistema ISP Consultor - Frontend
  * 
  * Este arquivo serve como ponto central de exportação de todos os tipos.
  * 

@@ -1,7 +1,7 @@
 {
-  "name": "backnet-agent",
+  "name": "isp-consultor-agent",
   "version": "1.0.0",
-  "description": "Agente Backnet — túnel reverso para acesso seguro sem portas SSH expostas",
+  "description": "Agente ISP Consultor — túnel reverso para acesso seguro sem portas SSH expostas",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"

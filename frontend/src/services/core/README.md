@@ -1,6 +1,6 @@
 # Core Services - Sistema de API Unificado
 
-Este diretório contém a estrutura base para serviços de API unificados do BackNet.
+Este diretório contém a estrutura base para serviços de API unificados do ISP Consultor.
 
 ## 📁 Estrutura
 

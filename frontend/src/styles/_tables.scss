@@ -24,6 +24,11 @@
 
 .table-resizable-enabled th[data-resizable="true"] {
   padding-right: 0.75rem !important;
+  overflow: visible !important;
+}
+
+.table-resizable th[data-resizable="true"] {
+  overflow: visible !important;
 }
 
 .table-sort-icon {
@@ -63,19 +68,11 @@
   max-width: 35px !important;
 }
 
-.table-resizable-enabled th:last-child .resize-handle {
-  display: none; /* Última coluna não pode ser redimensionada */
-}
-
 .table-resizable th {
   position: relative;
   min-width: 30px; /* Muito reduzido para permitir colunas minúsculas */
   box-sizing: border-box;
   user-select: none;
-}
-
-.table-resizable th:last-child .resize-handle {
-  display: none; /* Última coluna não pode ser redimensionada */
 }
 
 .table-resizable.resizing {
@@ -88,18 +85,17 @@
   user-select: none;
 }
 
-/* Handle para redimensionamento */
+/* Um handle por coluna — borda direita (divisória com a próxima coluna) */
 .resize-handle {
   position: absolute;
   top: 0;
   right: 0;
   bottom: 0;
-  width: 8px;
+  width: 6px;
   background-color: transparent;
   cursor: col-resize;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   z-index: 2;
-  margin-right: -4px;
   opacity: 0;
   border-right: 2px solid transparent;
 }
@@ -117,8 +113,7 @@
   background-color: rgba(var(--btn-primary-color-rgb, 13, 110, 253), 0.2);
   border-right-color: var(--btn-primary-color);
   box-shadow: 0 0 8px rgba(var(--btn-primary-color-rgb, 13, 110, 253), 0.5);
-  width: 10px;
-  margin-right: -5px;
+  width: 8px;
 }
 
 /* Durante arraste: só a guia (.table-resize-guide) — handles das outras colunas ficam ocultos */
@@ -1504,6 +1499,7 @@ colgroup col.col-checkbox {
 .table-responsive-custom .table.table-resizable-enabled.table-columns-locked {
   width: var(--table-min-width, 100%) !important;
   min-width: var(--table-min-width, 0px) !important;
+  max-width: var(--table-min-width, none) !important;
 }
 
 .table-resizable-enabled.table-custom:not(.table-columns-locked) {
@@ -1518,6 +1514,14 @@ colgroup col.col-checkbox {
 .table-resizable-enabled th,
 .table-resizable-enabled td {
   box-sizing: border-box !important;
+}
+
+/* Colunas redimensionadas pelo usuário: exibir conteúdo completo */
+.table.table-columns-locked th.column-has-custom-width,
+.table.table-columns-locked td.column-has-custom-width {
+  overflow: visible !important;
+  text-overflow: clip !important;
+  max-width: none !important;
 }
 
 /* Table pagination header */

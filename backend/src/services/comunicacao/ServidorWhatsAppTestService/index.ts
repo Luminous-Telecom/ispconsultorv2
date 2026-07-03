@@ -2,6 +2,7 @@ import { logger } from '../../../utils/logger';
 import { ServidorWhatsAppService } from '../ServidorWhatsAppService';
 import { WhatsAppCloudService } from '../WhatsAppCloudService';
 import { WhatsAppService } from '../WhatsAppService';
+import { SYSTEM_NAME } from '../../../constants/systemBrand';
 
 export class ServidorWhatsAppTestService {
   /**
@@ -44,7 +45,7 @@ export class ServidorWhatsAppTestService {
       };
     }
 
-    const mensagemTexto = mensagem || 'Mensagem de teste do BackNet';
+    const mensagemTexto = mensagem || `Mensagem de teste do ${SYSTEM_NAME}`;
 
     try {
       if (servidor.tipo_api === 'whatsapp_cloud') {

@@ -40,7 +40,7 @@ export {
   ColWithWidth,
   LoadingBarFill,
   PieLegendDot,
-  BackNetLogoImg,
+  IspConsultorLogoImg,
 } from './DynamicStyleElements';
 
 // Exportar tipos

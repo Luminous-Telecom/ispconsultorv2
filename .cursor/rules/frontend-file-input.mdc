@@ -4,7 +4,7 @@ globs: frontend/**/*.tsx,frontend/**/*.ts,frontend/**/*.scss
 alwaysApply: false
 ---
 
-# File input — BackNet
+# File input — ISP Consultor
 
 **Proibido** usar `<input type="file">` HTML cru visível em formulários. Use `FileInput` ou `FormField type="file"`.
 

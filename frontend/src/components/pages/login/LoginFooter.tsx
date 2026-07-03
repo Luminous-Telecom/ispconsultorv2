@@ -1,4 +1,4 @@
-import React from 'react';
+import { SYSTEM_NAME } from 'constants/systemBrand';
 import { useI18n } from 'contexts/I18nContext';
 import { useClientIp } from './useClientIp';
 
@@ -15,7 +15,7 @@ const LoginFooter: React.FC = () => {
         </p>
       )}
       <p className="text-muted mb-0 fs-sm" >
-        © {new Date().getFullYear()} BackNet. {t('login.allRightsReserved')}
+        © {new Date().getFullYear()} {SYSTEM_NAME}. {t('login.allRightsReserved')}
       </p>
     </>
   );

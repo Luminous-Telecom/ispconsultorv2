@@ -466,13 +466,12 @@ function Table<T extends { id: number | string }>({
 
   const handleColumnResizeStart = useCallback(
     (columnKey: string, startX: number, currentWidth: number) => {
-      const snapshot =
-        !hasCustomWidths && tableRef.current
-          ? measureColumnWidths(tableRef.current, visibleColumns, selectable)
-          : undefined;
+      const snapshot = tableRef.current
+        ? measureColumnWidths(tableRef.current, visibleColumns, selectable)
+        : undefined;
       handleResizeStart(columnKey, startX, currentWidth, snapshot);
     },
-    [hasCustomWidths, handleResizeStart, visibleColumns, selectable]
+    [handleResizeStart, visibleColumns, selectable]
   );
 
   useLayoutEffect(() => {

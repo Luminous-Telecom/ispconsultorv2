@@ -186,14 +186,14 @@ export const PieLegendDot: React.FC<PieLegendDotProps> = ({ color }) => {
   return <span ref={ref} className="pie-legend-dot" />;
 };
 
-interface BackNetLogoImgProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+interface IspConsultorLogoImgProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   maxHeight?: number;
 }
 
-export const BackNetLogoImg: React.FC<BackNetLogoImgProps> = ({
+export const IspConsultorLogoImg: React.FC<IspConsultorLogoImgProps> = ({
   maxHeight = 40,
   className,
-  alt = 'BackNet',
+  alt = 'ISP Consultor',
   ...rest
 }) => {
   const ref = useRef<HTMLImageElement>(null);
@@ -202,7 +202,7 @@ export const BackNetLogoImg: React.FC<BackNetLogoImgProps> = ({
   return (
     <img
       ref={ref}
-      className={`backnet-logo-img ${className ?? ''}`.trim()}
+      className={`ispconsultor-logo-img ${className ?? ''}`.trim()}
       alt={alt}
       {...rest}
     />

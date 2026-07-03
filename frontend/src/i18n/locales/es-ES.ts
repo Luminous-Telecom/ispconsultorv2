@@ -1520,7 +1520,7 @@ const esES: TranslationKeys = {
     'placeholder.responsibleName': 'Nombre del responsable',
     'placeholder.responsibleRole': 'Cargo del responsable',
     'placeholder.paymentObservations': 'Observaciones sobre el pago (opcional)',
-    'placeholder.testMessage': 'Mensaje de prueba del sistema BackNet',
+    'placeholder.testMessage': 'Mensaje de prueba del sistema ISP Consultor',
     'placeholder.termContent': 'Ingrese el contenido del término...',
 
     // Message Types

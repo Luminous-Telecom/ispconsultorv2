@@ -1,9 +1,9 @@
 ---
-description: Regras core do projeto BackNet - sempre aplicadas
+description: Regras core do projeto ISP Consultor - sempre aplicadas
 alwaysApply: true
 ---
 
-# BackNet - Regras Globais do Projeto
+# ISP Consultor - Regras Globais do Projeto
 
 ## Resposta e Contexto
 - Vá direto ao código/correção, sem repetir o que já está no código

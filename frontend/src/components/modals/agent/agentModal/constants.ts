@@ -1,7 +1,7 @@
 import { AgentFormData, SshFormData } from './types';
 
 export const DEV_URL = 'dev.luminoustelecom.com.br';
-export const DOCKER_IMAGE = 'midia181/backnet-tunnel';
+export const DOCKER_IMAGE = 'midia181/ispconsultor-tunnel';
 
 export const REQUIREMENTS = [
   'Linux (Debian, Ubuntu, CentOS, AlmaLinux, Rocky)',

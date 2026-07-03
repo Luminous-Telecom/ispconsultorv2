@@ -12,7 +12,12 @@ interface UseColumnResizingOptions<T = Record<string, unknown>> {
 
 interface UseColumnResizingReturn {
   columnWidths: { [columnKey: string]: number };
-  handleResizeStart: (columnKey: string, startEdgeX: number, currentWidth: number, snapshot?: Record<string, number>) => void;
+  handleResizeStart: (
+    columnKey: string,
+    startEdgeX: number,
+    currentWidth: number,
+    snapshot?: Record<string, number>
+  ) => void;
   isResizing: boolean;
   resizeGuideX: number | null;
 }
@@ -33,7 +38,6 @@ export function useColumnResizing<T = Record<string, unknown>>({
     startX: number;
     startWidth: number;
     pendingWidth: number;
-    snapshot: Record<string, number> | null;
   } | null>(null);
 
   useEffect(() => {
@@ -66,17 +70,34 @@ export function useColumnResizing<T = Record<string, unknown>>({
     }
   }, [columnWidths, storageKey]);
 
-  const handleResizeStart = useCallback((columnKey: string, startEdgeX: number, currentWidth: number, snapshot?: Record<string, number>) => {
+  const handleResizeStart = useCallback((
+    columnKey: string,
+    startEdgeX: number,
+    currentWidth: number,
+    snapshot?: Record<string, number>
+  ) => {
     const startWidth = Math.round(currentWidth);
+    const hasSnapshot = snapshot != null && Object.keys(snapshot).length > 0;
+
+    if (hasSnapshot) {
+      setColumnWidths({ ...snapshot, [columnKey]: startWidth });
+    }
+
     activeResizeRef.current = {
       columnKey,
       startX: startEdgeX,
       startWidth,
       pendingWidth: startWidth,
-      snapshot: snapshot ?? null,
     };
     setIsResizing(true);
     setResizeGuideX(startEdgeX);
+
+    const applyPendingWidth = (pendingWidth: number) => {
+      const active = activeResizeRef.current;
+      if (!active) return;
+      active.pendingWidth = pendingWidth;
+      setColumnWidths((prev) => ({ ...prev, [active.columnKey]: pendingWidth }));
+    };
 
     const handleMouseMove = (e: MouseEvent) => {
       const active = activeResizeRef.current;
@@ -86,18 +107,15 @@ export function useColumnResizing<T = Record<string, unknown>>({
       const colMin = getMinWidthForColumn ? getMinWidthForColumn(active.columnKey) : minColumnWidth;
       const floor =
         active.columnKey === 'id' ? Math.max(ID_COLUMN_MIN_WIDTH_PX, colMin) : colMin;
-      active.pendingWidth = Math.max(floor, Math.min(maxColumnWidth, active.startWidth + diff));
+      const pendingWidth = Math.max(floor, Math.min(maxColumnWidth, active.startWidth + diff));
+      applyPendingWidth(pendingWidth);
       setResizeGuideX(e.clientX);
     };
 
     const handleMouseUp = () => {
       const active = activeResizeRef.current;
       if (active) {
-        const { columnKey: key, pendingWidth, snapshot: snap } = active;
-        setColumnWidths((prev) => ({
-          ...(snap ?? prev),
-          [key]: pendingWidth,
-        }));
+        applyPendingWidth(active.pendingWidth);
       }
 
       activeResizeRef.current = null;

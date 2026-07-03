@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { SYSTEM_NAME } from 'constants/systemBrand';
 import { useNavigate } from 'react-router-dom';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useSaasAuth } from 'contexts/SaasAuthContext';
@@ -9,7 +10,7 @@ export const useSaasLayoutAuth = () => {
   const { currentUser, logout, isAuthenticated, isLoading: authLoading } = useSaasAuth();
 
   useEffect(() => {
-    document.title = 'SuperAdmin — BackNet SaaS';
+    document.title = `SuperAdmin — ${SYSTEM_NAME} SaaS`;
   }, []);
 
   useEffect(() => {

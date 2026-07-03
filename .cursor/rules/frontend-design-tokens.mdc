@@ -4,7 +4,7 @@ globs: frontend/**/*.tsx,frontend/**/*.ts,frontend/**/*.scss
 alwaysApply: false
 ---
 
-# Design tokens — BackNet
+# Design tokens — ISP Consultor
 
 Estilos vivem em SCSS/CSS. **Proibido** `style={{ ... }}` ou `style={variavel}` em JSX/TSX.
 

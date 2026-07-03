@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react';
+import { SYSTEM_NAME } from 'constants/systemBrand';
 import { useQuery } from '@tanstack/react-query';
 import { CentralAssinanteService, DadosCentralAssinante } from 'services/centralAssinanteService';
 import { DadosEmpresaService } from 'services/dadosEmpresaService';
@@ -80,7 +81,7 @@ export const useCentralAssinantePageData = ({
     }
 
     return () => {
-      document.title = 'BackNet';
+      document.title = SYSTEM_NAME;
       const metaDescriptionCleanup = document.querySelector('meta[name="description"]');
       if (metaDescriptionCleanup) {
         metaDescriptionCleanup.setAttribute('content', '');

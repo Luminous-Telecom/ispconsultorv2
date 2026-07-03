@@ -12,6 +12,7 @@ import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../..
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { SYSTEM_NAME } from '../../../constants/systemBrand';
 
 export class ServidorEmailController {
   /**
@@ -299,10 +300,10 @@ export class ServidorEmailController {
       const mailOptions = {
         from: `"${servidor.nome_remetente}" <${servidor.email_remetente}>`,
         to: email_teste,
-        subject: 'Teste de Configuração - BackNet',
+        subject: `Teste de Configuração - ${SYSTEM_NAME}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #007bff;">Teste de Configuração - BackNet</h2>
+            <h2 style="color: #007bff;">Teste de Configuração - ${SYSTEM_NAME}</h2>
             <p>Este é um e-mail de teste enviado para verificar se as configurações do servidor de e-mail estão funcionando corretamente.</p>
             <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
               <h4>Informações do Servidor:</h4>
@@ -316,7 +317,7 @@ export class ServidorEmailController {
             </div>
             <p style="color: #28a745; font-weight: bold;">✅ Configuração funcionando corretamente!</p>
             <hr style="border: none; border-top: 1px solid #dee2e6; margin: 20px 0;">
-            <p style="font-size: 12px; color: #6c757d;">Este é um e-mail automático do sistema BackNet.</p>
+            <p style="font-size: 12px; color: #6c757d;">Este é um e-mail automático do sistema ${SYSTEM_NAME}.</p>
           </div>
         `
       };

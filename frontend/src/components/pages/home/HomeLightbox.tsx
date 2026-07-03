@@ -11,7 +11,7 @@ const HomeLightbox: React.FC<HomeLightboxProps> = ({ lightboxSrc, onClose }) => 
     onClick={onClose}
     aria-label="Fechar imagem (clique fora)"
   >
-    <img src={lightboxSrc} alt="BackNet Dashboard" onClick={(e) => e.stopPropagation()} />
+    <img src={lightboxSrc} alt="ISP Consultor Dashboard" onClick={(e) => e.stopPropagation()} />
   </div>
 );
 

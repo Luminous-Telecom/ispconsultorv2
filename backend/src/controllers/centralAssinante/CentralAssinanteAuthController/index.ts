@@ -12,6 +12,7 @@ import { CentralAssinanteController } from '../CentralAssinanteController';
 import { DadosEmpresaService } from '../../../services/sistema/DadosEmpresaService';
 import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
 import nodemailer from 'nodemailer';
+import { SYSTEM_NAME } from '../../../constants/systemBrand';
 
 const loginSchema = Joi.object({
   login: Joi.string().required().messages({
@@ -272,7 +273,7 @@ export class CentralAssinanteAuthController {
           </p>
           <hr style="border: none; border-top: 1px solid #dee2e6; margin: 20px 0;">
           <p style="font-size: 12px; color: #6c757d;">
-            Este é um e-mail automático do sistema BackNet. Por favor, não responda este e-mail.
+            Este é um e-mail automático do sistema ${SYSTEM_NAME}. Por favor, não responda este e-mail.
           </p>
         </div>
       `;

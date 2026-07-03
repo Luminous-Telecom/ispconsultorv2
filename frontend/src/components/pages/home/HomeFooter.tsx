@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import BackNetLogo from 'components/common/BackNetLogo';
+import IspConsultorLogo from 'components/common/IspConsultorLogo';
 import { FOOTER_LINKS } from './homeConstants';
 
 interface HomeFooterProps {
@@ -12,8 +12,8 @@ const HomeFooter: React.FC<HomeFooterProps> = ({ scrollTo }) => (
     <div className="home-footer-grid">
       <div className="home-footer-brand">
         <div className="home-footer-logo-wrap">
-          <BackNetLogo width={32} height={32} className="home-footer-logo" />
-          <span className="home-footer-brand-name">BackNet</span>
+          <IspConsultorLogo width={32} height={32} className="home-footer-logo" />
+          <span className="home-footer-brand-name">ISP Consultor</span>
         </div>
         <p className="home-footer-tagline">Gestão completa para consultores de telecomunicações</p>
       </div>
@@ -34,7 +34,7 @@ const HomeFooter: React.FC<HomeFooterProps> = ({ scrollTo }) => (
       </div>
     </div>
     <div className="home-footer-bottom">
-      <p>© {new Date().getFullYear()} BackNet. Todos os direitos reservados.</p>
+      <p>© {new Date().getFullYear()} ISP Consultor. Todos os direitos reservados.</p>
       <div className="home-footer-legal">
         <Link to="/privacidade" className="home-footer-legal-link">Privacidade</Link>
         <Link to="/termos" className="home-footer-legal-link">Termos</Link>

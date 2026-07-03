@@ -4,7 +4,7 @@ globs: frontend/**/*.tsx,frontend/**/*.ts
 alwaysApply: false
 ---
 
-# Hooks utilitários — BackNet
+# Hooks utilitários — ISP Consultor
 
 ## Clipboard
 

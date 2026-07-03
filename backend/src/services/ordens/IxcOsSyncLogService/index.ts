@@ -1,4 +1,5 @@
 import { SistemaLogOperacionalService } from '../../sistema/SistemaLogOperacionalService';
+import { SYSTEM_NAME } from '../../../constants/systemBrand';
 
 export type IxcOsSyncEventType =
   | 'sync_batch'
@@ -9,7 +10,7 @@ export type IxcOsSyncEventType =
   | 'os_sync';
 
 export type IxcOsSyncTriggerType = 'scheduled' | 'manual' | 'create';
-export type IxcOsSyncOrigemAbertura = 'backnet' | 'ixc';
+export type IxcOsSyncOrigemAbertura = 'ispconsultor' | 'ixc';
 
 export interface RegistrarIxcOsSyncInput {
   empresaId?: number | null;
@@ -46,7 +47,10 @@ function buildMensagemResumo(input: RegistrarIxcOsSyncInput): string {
   const osRef = protocolo ? `OS ${protocolo}` : input.ixcOsId ? `OS IXC #${input.ixcOsId}` : '';
 
   if (input.eventType === 'os_abertura') {
-    const origem = input.origemAbertura === 'backnet' ? 'BackNet' : 'IXC Provedor';
+    const origem =
+      input.origemAbertura === 'ixc'
+        ? 'IXC Provedor'
+        : SYSTEM_NAME;
     const operador = input.operadorNome?.trim();
     return `${evento}: ${osRef} via ${origem}${operador ? ` (${operador})` : ''}`;
   }

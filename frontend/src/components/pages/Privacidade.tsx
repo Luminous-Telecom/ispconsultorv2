@@ -7,7 +7,7 @@ const Privacidade: React.FC = () => (
       <strong>Última atualização:</strong> {new Date().toLocaleDateString('pt-BR')}
     </p>
     <p>
-      A BackNet está comprometida em proteger sua privacidade. Esta política descreve como coletamos, usamos e protegemos suas informações pessoais.
+      A ISP Consultor está comprometida em proteger sua privacidade. Esta política descreve como coletamos, usamos e protegemos suas informações pessoais.
     </p>
 
     <h2>1. Informações que coletamos</h2>

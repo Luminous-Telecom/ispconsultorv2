@@ -1,4 +1,4 @@
-package com.backnet.erp;
+package com.ispconsultor.erp;
 
 import com.getcapacitor.BridgeActivity;
 

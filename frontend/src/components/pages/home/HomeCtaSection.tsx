@@ -17,7 +17,7 @@ const HomeCtaSection: React.FC<HomeCtaSectionProps> = ({
     <div className="home-cta-inner">
       <h2 className="home-cta-title">Pronto para transformar sua gestão?</h2>
       <p className="home-cta-desc">
-        Comece a gerenciar seu negócio com eficiência usando o BackNet
+        Comece a gerenciar seu negócio com eficiência usando o ISP Consultor
       </p>
       <div className="home-cta-buttons" ref={ctaButtonsRef}>
         {!showContato ? (

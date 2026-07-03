@@ -9,7 +9,7 @@ O script lê `backend/.env` (ou `.env.example` se `.env` não existir) e cria as
 ```bash
 # 1. Configure backend/.env com DB_PASSWORD (e opcionalmente REDIS_PASSWORD)
 # 2. Execute o script
-cd /home/lucas/projetos/BackNet
+cd /home/lucas/projetos/ispconsultor
 sudo bash scripts/setup-local.sh
 ```
 
@@ -26,9 +26,9 @@ sudo systemctl enable mariadb && sudo systemctl start mariadb
 
 # Criar banco e usuário (troque 'sua_senha' pela DB_PASSWORD do .env)
 sudo mysql -e "
-  CREATE DATABASE IF NOT EXISTS backnet CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-  CREATE USER IF NOT EXISTS 'backnet'@'localhost' IDENTIFIED BY 'sua_senha';
-  GRANT ALL ON backnet.* TO 'backnet'@'localhost';
+  CREATE DATABASE IF NOT EXISTS ispconsultor CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+  CREATE USER IF NOT EXISTS 'ispconsultor'@'localhost' IDENTIFIED BY 'sua_senha';
+  GRANT ALL ON ispconsultor.* TO 'ispconsultor'@'localhost';
   FLUSH PRIVILEGES;
 "
 ```
@@ -70,15 +70,15 @@ Exemplo para uso local:
 ```
 DB_HOST=localhost
 DB_PORT=3306
-DB_NAME=backnet
-DB_USER=backnet
+DB_NAME=ispconsultor
+DB_USER=ispconsultor
 DB_PASSWORD=sua_senha
 
 REDIS_URL=redis://localhost:6379
 # ou com senha: REDIS_URL=redis://:senha@localhost:6379
 
 ELASTICSEARCH_NODE=http://localhost:9200
-ELASTICSEARCH_INDEX_NAME=backnet-auditoria
+ELASTICSEARCH_INDEX_NAME=ispconsultor-auditoria
 ELASTICSEARCH_USERNAME=
 ELASTICSEARCH_PASSWORD=
 ```

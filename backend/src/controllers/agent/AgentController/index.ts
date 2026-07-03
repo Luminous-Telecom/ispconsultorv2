@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { SYSTEM_NAME } from '../../../constants/systemBrand';
 import { createHash, randomBytes } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -396,8 +397,10 @@ export class AgentController {
 
       const serverUrl = (process.env.BASE_URL || process.env.APP_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
       const containerName = getAgentContainerName(serverUrl);
-      const imageTag = containerName === 'backnet-agent-dev' ? 'dev' : 'prod';
-      const imageName = process.env.BACKNET_AGENT_IMAGE || `midia181/backnet-tunnel:${imageTag}`;
+      const imageTag = containerName === 'ispconsultor-agent-dev' ? 'dev' : 'prod';
+      const imageName =
+        process.env.ISPCONSULTOR_AGENT_IMAGE ||
+        `midia181/ispconsultor-tunnel:${imageTag}`;
 
       const script = `#!/bin/bash
 set -e
@@ -407,11 +410,11 @@ IMAGE_NAME="${imageName}"
 CONTAINER_NAME="${containerName}"
 
 RED='\\033[0;31m'; GREEN='\\033[0;32m'; YELLOW='\\033[1;33m'; NC='\\033[0m'
-log()   { echo -e "\${GREEN}[BackNet]\${NC} \$1"; }
-warn()  { echo -e "\${YELLOW}[BackNet]\${NC} \$1"; }
-error() { echo -e "\${RED}[BackNet]\${NC} \$1"; exit 1; }
+log()   { echo -e "\${GREEN}[${SYSTEM_NAME}]\${NC} \$1"; }
+warn()  { echo -e "\${YELLOW}[${SYSTEM_NAME}]\${NC} \$1"; }
+error() { echo -e "\${RED}[${SYSTEM_NAME}]\${NC} \$1"; exit 1; }
 
-log "Iniciando instalação do agente BackNet..."
+log "Iniciando instalação do agente ${SYSTEM_NAME}..."
 echo ""
 
 # ── Docker ────────────────────────────────────────────────────────────────────

@@ -4,8 +4,9 @@ import https from 'https';
 import { SistemaLogOperacionalService } from '../../sistema/SistemaLogOperacionalService';
 import { RpkiClientError } from '../../../utils/errorUtils';
 import { normalizeAsn, parseCidr } from '../RpkiRouteValidationCore';
+import { SYSTEM_NAME } from '../../../constants/systemBrand';
 
-const ROUTINATOR_HEADERS = { 'User-Agent': 'BackNet-RPKI/1.0 (Routinator)' };
+const ROUTINATOR_HEADERS = { 'User-Agent': `${SYSTEM_NAME.replace(/\s+/g, '-')}-RPKI/1.0 (Routinator)` };
 
 /** API HTTP pública NLnet Labs — validação de rota (GET /validity). Documentação: https://routinator.docs.nlnetlabs.nl/ */
 const ROUTINATOR_PUBLIC_HTTP_BASE = 'https://routinator.nlnetlabs.nl';

@@ -1,6 +1,6 @@
 /**
  * Tipos e Interfaces das Entidades do Sistema
- * BackNet
+ * ISP Consultor
  */
 
 // ============================================

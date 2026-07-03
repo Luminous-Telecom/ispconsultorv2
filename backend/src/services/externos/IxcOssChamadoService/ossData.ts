@@ -44,7 +44,7 @@ export async function fetchOsListIxc(maxPages = 20): Promise<IxcOssChamado[]> {
   return fetchOsListPaginated(`${IXC_RESOURCE}.id`, '0', '>', maxPages);
 }
 
-/** OS de estrutura vinculadas ao cliente BackNet (`idx`). Contorna filtro de setor da listagem geral. */
+/** OS de estrutura vinculadas ao cliente ISP Consultor (`idx`). Contorna filtro de setor da listagem geral. */
 export async function fetchOsListByClienteIdx(
   clienteId: number,
   maxPages = 10

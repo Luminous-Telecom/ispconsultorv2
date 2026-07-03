@@ -1,10 +1,10 @@
 ---
-description: Regras de backend, controllers, services e API no BackNet
+description: Regras de backend, controllers, services e API no ISP Consultor
 globs: backend/**/*.ts
 alwaysApply: false
 ---
 
-# Backend API - BackNet
+# Backend API - ISP Consultor
 
 ## Controllers
 - Valide dados de entrada (use Joi)

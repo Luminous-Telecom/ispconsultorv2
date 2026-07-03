@@ -74,7 +74,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
         key: 'alvo',
         label: list.t('scheduler.scope'),
         sortable: true,
-        render: (item) => <span>{item.alvo === 'saas' ? 'SaaS' : 'BackNet'}</span>,
+        render: (item) => <span>{item.alvo === 'saas' ? 'SaaS' : 'ISP Consultor'}</span>,
       },
       {
         key: 'cron_minuto',

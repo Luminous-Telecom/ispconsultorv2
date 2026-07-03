@@ -26,7 +26,7 @@ export function prefixarMensagemOperador(
   return `${operador}: ${texto}`;
 }
 
-export function mapMensagensIxcOperadorBacknet(
+export function mapMensagensIxcOperadorIspconsultor(
   mensagens: IxcOssMensagem[],
   operadorAbertura = ''
 ): IxcOssMensagem[] {

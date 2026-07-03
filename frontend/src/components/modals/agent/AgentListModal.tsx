@@ -10,6 +10,7 @@ import { ListModalConfig } from 'types/modal';
 import AgentModal from './AgentModal';
 import AgentTerminalModal from './AgentTerminalModal';
 import ImprimirModal from 'components/common/ImprimirModal';
+import { SYSTEM_NAME } from 'constants/systemBrand';
 import { formatDateTime } from 'utils/formatters';
 
 interface AgentListModalProps {
@@ -402,7 +403,7 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
       modalSize="xl"
       wrapperTitle={modalTitle}
       config={{
-        title: tableTitle ?? modalTitle ?? 'Agentes Backnet',
+        title: tableTitle ?? modalTitle ?? `Agentes ${SYSTEM_NAME}`,
         columns,
         searchPlaceholder: t('layout.searchPlaceholder'),
         searchField: 'name',

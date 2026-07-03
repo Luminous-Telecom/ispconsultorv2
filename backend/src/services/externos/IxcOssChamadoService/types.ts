@@ -61,7 +61,7 @@ export interface ListOssChamadosResponse {
 export interface LookupItem {
   id: string;
   nome: string;
-  /** Registro vinculado ao IXC (1) ou cadastro local BackNet (0). */
+  /** Registro vinculado ao IXC (1) ou cadastro local ISP Consultor (0). */
   ixc?: boolean;
   id_local?: string;
   ixc_id?: string;

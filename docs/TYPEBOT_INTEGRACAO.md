@@ -1,8 +1,8 @@
-# Integração Typebot ↔ BackNet (URLs atuais)
+# Integração Typebot ↔ ISP Consultor (URLs atuais)
 
 ## Visão Geral
 
-Integração do Typebot com o BackNet usando as rotas **existentes** da API. É necessário ter o **token de API** gerado em **Parâmetros** → **Usuários** → **Gerar token**.
+Integração do Typebot com o ISP Consultor usando as rotas **existentes** da API. É necessário ter o **token de API** gerado em **Parâmetros** → **Usuários** → **Gerar token**.
 
 > **Nota:** No Typebot não existe bloco "Webhook" separado — todas as chamadas externas são feitas pelo bloco **HTTP Request**.
 
@@ -15,16 +15,16 @@ Integração do Typebot com o BackNet usando as rotas **existentes** da API. É 
 ### URL
 
 ```
-GET https://backnet.app/api/clientes/cnpj/{cnpj}
+GET https://ispconsultor.com.br/api/clientes/cnpj/{cnpj}
 ```
 
-Exemplo: `https://backnet.app/api/clientes/cnpj/37143069000184`
+Exemplo: `https://ispconsultor.com.br/api/clientes/cnpj/37143069000184`
 
 ### Configuração no Typebot
 
 1. Gere o token em **Parâmetros** → **Usuários** → **Gerar token**
 2. No bloco **HTTP Request**:
-   - **URL:** `https://backnet.app/api/clientes/cnpj/{{Cnpj}}`
+   - **URL:** `https://ispconsultor.com.br/api/clientes/cnpj/{{Cnpj}}`
    - **Método:** `GET`
    - **Headers:** `Authorization: Bearer SEU_TOKEN`
 
@@ -56,7 +56,7 @@ Token inválido ou ausente.
 Se você já tem o `id` do cliente (por exemplo, da etapa anterior), pode consultar os contratos:
 
 ```
-GET https://backnet.app/api/contratos/cliente/{clienteId}
+GET https://ispconsultor.com.br/api/contratos/cliente/{clienteId}
 ```
 
 **Headers:** `Authorization: Bearer SEU_TOKEN`
@@ -68,36 +68,36 @@ GET https://backnet.app/api/contratos/cliente/{clienteId}
 Para listar os títulos de um cliente:
 
 ```
-GET https://backnet.app/api/titulos?cliente_id={clienteId}
+GET https://ispconsultor.com.br/api/titulos?cliente_id={clienteId}
 ```
 
 **Headers:** `Authorization: Bearer SEU_TOKEN`
 
-Exemplo: `https://backnet.app/api/titulos?cliente_id=123`
+Exemplo: `https://ispconsultor.com.br/api/titulos?cliente_id=123`
 
 ---
 
-# 4. Criar cliente (enviar dados ao BackNet)
+# 4. Criar cliente (enviar dados ao ISP Consultor)
 
-Quando o bot coleta dados do visitante e deve criar o cliente no BackNet:
+Quando o bot coleta dados do visitante e deve criar o cliente no ISP Consultor:
 
 ### URL
 
 ```
-POST https://backnet.app/api/clientes
+POST https://ispconsultor.com.br/api/clientes
 ```
 
 ### Configuração no Typebot
 
 1. No bloco **HTTP Request**:
-   - **URL:** `https://backnet.app/api/clientes`
+   - **URL:** `https://ispconsultor.com.br/api/clientes`
    - **Método:** `POST`
    - **Headers:** `Authorization: Bearer SEU_TOKEN`
-   - **Body (JSON):** mapeie as variáveis para os campos do BackNet
+   - **Body (JSON):** mapeie as variáveis para os campos do ISP Consultor
 
 ### Campos obrigatórios
 
-| Campo BackNet   | Exemplo no body         |
+| Campo ISP Consultor   | Exemplo no body         |
 |-----------------|-------------------------|
 | `cnpj`          | `"{{Cnpj}}"`            |
 | `razao_social`  | `"{{RazaoSocial}}"`     |

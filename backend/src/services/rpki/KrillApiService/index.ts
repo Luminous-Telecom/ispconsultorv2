@@ -1,7 +1,7 @@
 /**
  * Cliente HTTP para a API REST do Krill (NLnet Labs).
  * Certificados, chaves BPKI, CMS, ROAs, ASPAs e publicação RFC 8181 são executados pelo Krill.
- * BackNet usa este serviço como único ponto de integração com o motor RPKI.
+ * ISP Consultor usa este serviço como único ponto de integração com o motor RPKI.
  */
 import https from 'https';
 import axios, { type AxiosInstance } from 'axios';

@@ -2,29 +2,29 @@
 'use strict';
 
 /**
- * Backnet Agent
+ * ISP Consultor Agent
  *
- * Conecta ao servidor Backnet via WebSocket (outbound),
+ * Conecta ao servidor ISP Consultor via WebSocket (outbound),
  * sem necessidade de abrir portas SSH no servidor.
  *
  * Uso (token único, formato Cloudflare):
- *   BACKNET_TOKEN=<base64({"s":"https://...","t":"..."})> node index.js
+ *   ISPCONSULTOR_TOKEN=<base64({"s":"https://...","t":"..."})> node index.js
  *
  * Uso (separado):
- *   BACKNET_SERVER=https://... BACKNET_TOKEN=<token> node index.js
+ *   ISPCONSULTOR_SERVER=https://... ISPCONSULTOR_TOKEN=<token> node index.js
  *
- * Canal dev/prod: defina BACKNET_AGENT_CHANNEL ou BACKNET_SERVER conforme a tabela abaixo.
+ * Canal dev/prod: defina ISPCONSULTOR_AGENT_CHANNEL ou ISPCONSULTOR_SERVER conforme a tabela abaixo.
  *
  * Variáveis de ambiente:
  * | Variável                  | Padrão   | Descrição                                                                    |
  * |---------------------------|----------|------------------------------------------------------------------------------|
- * | BACKNET_TOKEN             | —        | Token de autenticação (formato Cloudflare base64 {s,t})                      |
- * | BACKNET_SERVER            | —        | URL do servidor Backnet                                                      |
- * | BACKNET_AGENT_CHANNEL     | —        | dev ou prod (define URL automaticamente)                                     |
- * | BACKNET_ALLOWED_BASE_PATH | /tmp     | Caminhos permitidos para file transfer (separados por vírgula)               |
- * | BACKNET_MAX_SHELLS        | 10       | Máximo de sessões de shell simultâneas                                       |
- * | BACKNET_SSH_STRICT_HOST   | false    | true = bloqueia conexões SSH sem fingerprint verificado                      |
- * | BACKNET_SSH_WARN_LEGACY   | true     | false = suprime aviso de algoritmos SSH legados                              |
+ * | ISPCONSULTOR_TOKEN             | —        | Token de autenticação (formato Cloudflare base64 {s,t})                      |
+ * | ISPCONSULTOR_SERVER            | —        | URL do servidor ISP Consultor                                                      |
+ * | ISPCONSULTOR_AGENT_CHANNEL     | —        | dev ou prod (define URL automaticamente)                                     |
+ * | ISPCONSULTOR_ALLOWED_BASE_PATH | /tmp     | Caminhos permitidos para file transfer (separados por vírgula)               |
+ * | ISPCONSULTOR_MAX_SHELLS        | 10       | Máximo de sessões de shell simultâneas                                       |
+ * | ISPCONSULTOR_SSH_STRICT_HOST   | false    | true = bloqueia conexões SSH sem fingerprint verificado                      |
+ * | ISPCONSULTOR_SSH_WARN_LEGACY   | true     | false = suprime aviso de algoritmos SSH legados                              |
  *
  * Proxy SSH: o servidor envia deviceType (mikrotik, huawei, cisco, …) em proxy:ssh:test|exec|open;
  * sem campo, usa perfil base. Cisco adiciona KEX group15/16/18 e host key ssh-dss.
@@ -145,10 +145,10 @@ async function httpGetWithDigestAuth(urlStr, username, password, timeoutMs) {
 
 // ── Configuração ───────────────────────────────────────────────────────────────
 
-/** URLs do Backnet por ambiente (imagem :dev ou :prod define o canal no build). */
-const BACKNET_URL_BY_CHANNEL = {
+/** URLs do ISP Consultor por ambiente (imagem :dev ou :prod define o canal no build). */
+const ISPCONSULTOR_URL_BY_CHANNEL = {
   dev: 'https://dev.luminoustelecom.com.br',
-  prod: 'https://backnet.app',
+  prod: 'https://ispconsultor.com.br',
 };
 
 function getConfig() {
@@ -158,12 +158,12 @@ function getConfig() {
     return i !== -1 ? args[i + 1] : null;
   };
 
-  let server = get('--server') || process.env.BACKNET_SERVER || null;
-  let token  = get('--token')  || process.env.BACKNET_TOKEN;
+  let server = get('--server') || process.env.ISPCONSULTOR_SERVER || null;
+  let token  = get('--token')  || process.env.ISPCONSULTOR_TOKEN;
 
-  const channel = (process.env.BACKNET_AGENT_CHANNEL || '').toLowerCase();
+  const channel = (process.env.ISPCONSULTOR_AGENT_CHANNEL || '').toLowerCase();
   if (!server && (channel === 'dev' || channel === 'prod')) {
-    server = BACKNET_URL_BY_CHANNEL[channel];
+    server = ISPCONSULTOR_URL_BY_CHANNEL[channel];
   }
 
   // Token combinado base64({"s":"url","t":"token"}) — sobrescreve servidor embutido
@@ -180,13 +180,13 @@ function getConfig() {
 
   if (!server) {
     console.error(
-      '[backnet-agent] Servidor não definido. Imagem deve ter BACKNET_AGENT_CHANNEL=dev ou prod no build ' +
-        '(tags :dev / :prod), ou use --server / BACKNET_SERVER / token base64 {s,t}.'
+      '[ispconsultor-agent] Servidor não definido. Imagem deve ter ISPCONSULTOR_AGENT_CHANNEL=dev ou prod no build ' +
+        '(tags :dev / :prod), ou use --server / ISPCONSULTOR_SERVER / token base64 {s,t}.'
     );
     process.exit(1);
   }
   if (!token) {
-    console.error('[backnet-agent] BACKNET_TOKEN não definido');
+    console.error('[ispconsultor-agent] ISPCONSULTOR_TOKEN não definido');
     process.exit(1);
   }
 
@@ -195,9 +195,9 @@ function getConfig() {
 
 const config = getConfig();
 
-const SSH_STRICT_HOST = process.env.BACKNET_SSH_STRICT_HOST === 'true';
-const SSH_WARN_LEGACY = process.env.BACKNET_SSH_WARN_LEGACY !== 'false';
-const MAX_CONCURRENT_SHELLS = parseInt(process.env.BACKNET_MAX_SHELLS || '10', 10);
+const SSH_STRICT_HOST = process.env.ISPCONSULTOR_SSH_STRICT_HOST === 'true';
+const SSH_WARN_LEGACY = process.env.ISPCONSULTOR_SSH_WARN_LEGACY !== 'false';
+const MAX_CONCURRENT_SHELLS = parseInt(process.env.ISPCONSULTOR_MAX_SHELLS || '10', 10);
 
 /** Diagnóstico de latência (eco após stdin) — mesmo nome do backend: SSH_TERMINAL_LATENCY_DEBUG=1 */
 const SSH_TERMINAL_LATENCY_DEBUG =
@@ -218,7 +218,7 @@ function logFirstShellDataAfterWrite(sessionId, label) {
   if (t0 === undefined) return;
   const ms = Number(process.hrtime.bigint() - t0) / 1e6;
   console.info(
-    `[backnet-agent] latência terminal (${label}) sessão=${String(sessionId).slice(0, 8)}… delayMs=${ms.toFixed(2)} (1º chunk após shell:write)`
+    `[ispconsultor-agent] latência terminal (${label}) sessão=${String(sessionId).slice(0, 8)}… delayMs=${ms.toFixed(2)} (1º chunk após shell:write)`
   );
   pendingShellWriteHr.delete(sessionId);
 }
@@ -228,7 +228,7 @@ function clearAgentShellWritePending(sessionId) {
 }
 
 /** Base paths permitidos para file transfer (segurança: evita path traversal). Ex: /tmp,/home/user/dados */
-const ALLOWED_BASE_PATHS = (process.env.BACKNET_ALLOWED_BASE_PATH || '/tmp')
+const ALLOWED_BASE_PATHS = (process.env.ISPCONSULTOR_ALLOWED_BASE_PATH || '/tmp')
   .split(',')
   .map((p) => p.trim())
   .filter(Boolean)
@@ -282,12 +282,12 @@ let pty;
 try {
   pty = require('node-pty');
 } catch {
-  console.warn('[backnet-agent] node-pty não disponível — usando fallback (child_process)');
+  console.warn('[ispconsultor-agent] node-pty não disponível — usando fallback (child_process)');
   pty = null;
 }
 
 const SENSITIVE_ENV_KEYS = new Set([
-  'BACKNET_TOKEN', 'BACKNET_SERVER', 'PATH', 'LD_PRELOAD', 'LD_LIBRARY_PATH',
+  'ISPCONSULTOR_TOKEN', 'ISPCONSULTOR_SERVER', 'PATH', 'LD_PRELOAD', 'LD_LIBRARY_PATH',
   'NODE_OPTIONS', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'SSH_AUTH_SOCK',
 ]);
 
@@ -301,7 +301,7 @@ function getSafeEnv() {
   };
   for (const key of Object.keys(env)) {
     const upper = key.toUpperCase();
-    if (SENSITIVE_ENV_KEYS.has(key) || SENSITIVE_ENV_KEYS.has(upper) || upper.startsWith('BACKNET_')) {
+    if (SENSITIVE_ENV_KEYS.has(key) || SENSITIVE_ENV_KEYS.has(upper) || upper.startsWith('ISPCONSULTOR_')) {
       delete env[key];
     }
   }
@@ -363,12 +363,12 @@ function spawnShell(cols, rows) {
 
 // ── Conexão Socket.IO ─────────────────────────────────────────────────────────
 
-console.log(`[backnet-agent] Conectando a ${config.server}...`);
+console.log(`[ispconsultor-agent] Conectando a ${config.server}...`);
 
-const socket = io(`${config.server}/backnet-agent`, {
+const socket = io(`${config.server}/ispconsultor-agent`, {
   path: '/socket.io',
   auth: { token: config.token },
-  /** WebSocket primeiro: menos RTT que long-polling em links lentos até o Backnet. */
+  /** WebSocket primeiro: menos RTT que long-polling em links lentos até o ISP Consultor. */
   transports: ['websocket', 'polling'],
   reconnection: true,
   reconnectionDelay: 3000,
@@ -425,8 +425,8 @@ function scheduleReconnect(logLine) {
       try {
         socket.connect();
       } catch (e) {
-        console.error('[backnet-agent] Erro ao chamar connect():', e?.message || e);
-        scheduleReconnect(`[backnet-agent] Nova tentativa em ${RECONNECT_DELAY_MS / 1000}s...`);
+        console.error('[ispconsultor-agent] Erro ao chamar connect():', e?.message || e);
+        scheduleReconnect(`[ispconsultor-agent] Nova tentativa em ${RECONNECT_DELAY_MS / 1000}s...`);
       }
     }
   }, RECONNECT_DELAY_MS);
@@ -443,7 +443,7 @@ socket.on('agent:session-ended', (payload) => {
       reconnectTimer = null;
     }
     console.log(
-      '[backnet-agent] Token revogado no Backnet. Recrie o container com o novo --token (sem tentativas automáticas).'
+      '[ispconsultor-agent] Token revogado no ISP Consultor. Recrie o container com o novo --token (sem tentativas automáticas).'
     );
     return;
   }
@@ -451,9 +451,9 @@ socket.on('agent:session-ended', (payload) => {
   awaitingPanelReactivation = r === 'inactive';
   loggedShortUnauthorizedHint = false;
   if (r === 'inactive') {
-    console.log('[backnet-agent] Túnel desativado no Backnet. Reconexão automática ao reativar o agente.');
+    console.log('[ispconsultor-agent] Túnel desativado no ISP Consultor. Reconexão automática ao reativar o agente.');
   } else if (r) {
-    console.log('[backnet-agent] Sessão encerrada pelo servidor:', r);
+    console.log('[ispconsultor-agent] Sessão encerrada pelo servidor:', r);
   }
 });
 
@@ -465,7 +465,7 @@ socket.on('connect', () => {
     clearTimeout(reconnectTimer);
     reconnectTimer = null;
   }
-  console.log('[backnet-agent] Conectado ao servidor. Socket ID:', socket.id);
+  console.log('[ispconsultor-agent] Conectado ao servidor. Socket ID:', socket.id);
 
   socket.emit('agent:info', {
     hostname: os.hostname(),
@@ -475,34 +475,34 @@ socket.on('connect', () => {
 });
 
 socket.on('agent:ready', () => {
-  console.log('[backnet-agent] Agente pronto e registrado.');
+  console.log('[ispconsultor-agent] Agente pronto e registrado.');
 });
 
 socket.on('connect_error', (err) => {
   const msg = err?.message || String(err);
-  console.error('[backnet-agent] Erro de conexão:', msg);
+  console.error('[ispconsultor-agent] Erro de conexão:', msg);
   if (pauseAutoReconnect) return;
   if (/unauthorized/i.test(msg)) {
     if (awaitingPanelReactivation) {
       if (!loggedShortUnauthorizedHint) {
         console.log(
-          '[backnet-agent] Aguardando reativação no painel (ou token válido). Tentando a cada 3s.'
+          '[ispconsultor-agent] Aguardando reativação no painel (ou token válido). Tentando a cada 3s.'
         );
         loggedShortUnauthorizedHint = true;
       }
     } else {
       console.error(
-        '[backnet-agent] O servidor recusou o token. Verifique: (1) agente "Ativo" no Backnet, (2) --token igual ao token atual do agente (se regenerou, rode o container de novo com o novo token), (3) URL dev/prod correta na imagem (:dev vs :prod).'
+        '[ispconsultor-agent] O servidor recusou o token. Verifique: (1) agente "Ativo" no ISP Consultor, (2) --token igual ao token atual do agente (se regenerou, rode o container de novo com o novo token), (3) URL dev/prod correta na imagem (:dev vs :prod).'
       );
     }
   }
   scheduleReconnect(
-    `[backnet-agent] Próxima tentativa de conexão em ${RECONNECT_DELAY_MS / 1000}s...`
+    `[ispconsultor-agent] Próxima tentativa de conexão em ${RECONNECT_DELAY_MS / 1000}s...`
   );
 });
 
 socket.on('disconnect', (reason) => {
-  console.warn('[backnet-agent] Desconectado:', reason);
+  console.warn('[ispconsultor-agent] Desconectado:', reason);
   for (const [, shell] of shells) {
     try { shell.kill(); } catch { /* ignora */ }
   }
@@ -516,7 +516,7 @@ socket.on('disconnect', (reason) => {
 
   if (reason === 'io server disconnect') {
     scheduleReconnect(
-      '[backnet-agent] Conexão encerrada pelo servidor; nova tentativa em 3s...'
+      '[ispconsultor-agent] Conexão encerrada pelo servidor; nova tentativa em 3s...'
     );
   }
 });
@@ -534,11 +534,11 @@ setInterval(() => {
 
 socket.on('shell:open', ({ sessionId, cols, rows }) => {
   if (shells.size + proxySessions.size >= MAX_CONCURRENT_SHELLS) {
-    console.warn(`[backnet-agent] Limite de sessões atingido (${MAX_CONCURRENT_SHELLS}). Rejeitando sessão ${sessionId}.`);
+    console.warn(`[ispconsultor-agent] Limite de sessões atingido (${MAX_CONCURRENT_SHELLS}). Rejeitando sessão ${sessionId}.`);
     socket.emit('shell:exit', { sessionId, code: 1 });
     return;
   }
-  console.log(`[backnet-agent] Abrindo shell — sessão ${sessionId}`);
+  console.log(`[ispconsultor-agent] Abrindo shell — sessão ${sessionId}`);
 
   try {
     const shell = spawnShell(cols, rows);
@@ -551,14 +551,14 @@ socket.on('shell:open', ({ sessionId, cols, rows }) => {
     shell.onExit(({ exitCode }) => {
       clearAgentShellWritePending(sessionId);
       flushShellDataNow(sessionId);
-      console.log(`[backnet-agent] Shell encerrado (${exitCode}) — sessão ${sessionId}`);
+      console.log(`[ispconsultor-agent] Shell encerrado (${exitCode}) — sessão ${sessionId}`);
       shells.delete(sessionId);
       socket.emit('shell:exit', { sessionId, code: exitCode });
     });
 
     shells.set(sessionId, shell);
   } catch (err) {
-    console.error('[backnet-agent] Erro ao abrir shell:', err.message);
+    console.error('[ispconsultor-agent] Erro ao abrir shell:', err.message);
     flushShellDataNow(sessionId);
     socket.emit('shell:exit', { sessionId, code: 1 });
   }
@@ -583,7 +583,7 @@ socket.on('shell:write', ({ sessionId, data }) => {
     return;
   }
 
-  console.warn(`[backnet-agent] shell:write ignorado: sessão desconhecida ${sessionId}`);
+  console.warn(`[ispconsultor-agent] shell:write ignorado: sessão desconhecida ${sessionId}`);
 });
 
 socket.on('shell:resize', ({ sessionId, cols, rows }) => {
@@ -600,7 +600,7 @@ socket.on('shell:close', ({ sessionId }) => {
   if (shell) {
     try { shell.kill(); } catch { /* ignora */ }
     shells.delete(sessionId);
-    console.log(`[backnet-agent] Shell encerrado pelo servidor — sessão ${sessionId}`);
+    console.log(`[ispconsultor-agent] Shell encerrado pelo servidor — sessão ${sessionId}`);
   }
 });
 
@@ -718,19 +718,19 @@ function makeSshHostVerifier(host, port, hostFingerprint) {
       const match = fingerprint === hostFingerprint;
       if (!match) {
         console.error(
-          `[backnet-agent] SSH fingerprint mismatch para ${host}: esperado ${hostFingerprint}, recebido ${fingerprint}`
+          `[ispconsultor-agent] SSH fingerprint mismatch para ${host}: esperado ${hostFingerprint}, recebido ${fingerprint}`
         );
       }
       return match;
     }
     if (SSH_STRICT_HOST) {
       console.error(
-        `[backnet-agent] Conexão SSH bloqueada: fingerprint ausente e BACKNET_SSH_STRICT_HOST=true (host: ${host})`
+        `[ispconsultor-agent] Conexão SSH bloqueada: fingerprint ausente e ISPCONSULTOR_SSH_STRICT_HOST=true (host: ${host})`
       );
       return false;
     }
     console.warn(
-      `[backnet-agent] SSH: fingerprint não verificado para ${host}:${port}. Defina BACKNET_SSH_STRICT_HOST=true para bloquear conexões sem fingerprint.`
+      `[ispconsultor-agent] SSH: fingerprint não verificado para ${host}:${port}. Defina ISPCONSULTOR_SSH_STRICT_HOST=true para bloquear conexões sem fingerprint.`
     );
     return true;
   };
@@ -798,8 +798,8 @@ socket.on(
   const p = Number(port) || 22;
   if (SSH_WARN_LEGACY) {
     console.warn(
-      `[backnet-agent] Conexão SSH para ${host}:${p} usa algoritmos legados (inclui DH group1, 3DES, MD5). ` +
-      'Defina BACKNET_SSH_WARN_LEGACY=false para suprimir este aviso.'
+      `[ispconsultor-agent] Conexão SSH para ${host}:${p} usa algoritmos legados (inclui DH group1, 3DES, MD5). ` +
+      'Defina ISPCONSULTOR_SSH_WARN_LEGACY=false para suprimir este aviso.'
     );
   }
   const start = Date.now();
@@ -833,7 +833,7 @@ socket.on(
   'proxy:ssh:exec',
   ({ execId, host, port, username, password, privateKey, command, timeoutMs, hostFingerprint, deviceType }) => {
     if (!execId || !host || !username || !command) {
-      console.warn('[backnet-agent] proxy:ssh:exec parâmetros inválidos', {
+      console.warn('[ispconsultor-agent] proxy:ssh:exec parâmetros inválidos', {
         hasExecId: Boolean(execId),
         hasHost: Boolean(host),
         hasUsername: Boolean(username),
@@ -854,12 +854,12 @@ socket.on(
     const useKey = keyPem.length > 0;
     if (SSH_WARN_LEGACY) {
       console.warn(
-        `[backnet-agent] Conexão SSH para ${host}:${p} usa algoritmos legados (inclui DH group1, 3DES, MD5). ` +
-        'Defina BACKNET_SSH_WARN_LEGACY=false para suprimir este aviso.'
+        `[ispconsultor-agent] Conexão SSH para ${host}:${p} usa algoritmos legados (inclui DH group1, 3DES, MD5). ` +
+        'Defina ISPCONSULTOR_SSH_WARN_LEGACY=false para suprimir este aviso.'
       );
     }
     console.log(
-      `[backnet-agent] proxy:ssh:exec início execId=${execId} → ${host}:${p} user=${username} auth=${useKey ? 'key' : 'password'} timeout=${timeout}ms cmd=${JSON.stringify(command)}`
+      `[ispconsultor-agent] proxy:ssh:exec início execId=${execId} → ${host}:${p} user=${username} auth=${useKey ? 'key' : 'password'} timeout=${timeout}ms cmd=${JSON.stringify(command)}`
     );
     const conn = new SshClient();
     let settled = false;
@@ -868,7 +868,7 @@ socket.on(
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      console.warn(`[backnet-agent] proxy:ssh:exec falha execId=${execId}`, String(error));
+      console.warn(`[ispconsultor-agent] proxy:ssh:exec falha execId=${execId}`, String(error));
       try {
         conn.destroy();
       } catch {
@@ -882,7 +882,7 @@ socket.on(
     }, timeout);
 
     conn.on('ready', () => {
-      console.log(`[backnet-agent] proxy:ssh:exec SSH ready execId=${execId} → executando comando`);
+      console.log(`[ispconsultor-agent] proxy:ssh:exec SSH ready execId=${execId} → executando comando`);
       conn.exec(command, (err, stream) => {
         if (err) {
           fail(err.message);
@@ -907,7 +907,7 @@ socket.on(
           const ok = exitCode === 0;
           const outBytes = Buffer.byteLength(combined, 'utf8');
           console.log(
-            `[backnet-agent] proxy:ssh:exec fim execId=${execId} exit=${exitCode} ok=${ok} outputBytes=${outBytes}`
+            `[ispconsultor-agent] proxy:ssh:exec fim execId=${execId} exit=${exitCode} ok=${ok} outputBytes=${outBytes}`
           );
           socket.emit('proxy:ssh:exec:result', {
             execId,
@@ -953,18 +953,18 @@ socket.on(
   'proxy:ssh:open',
   ({ sessionId, host, port, username, password, privateKey, cols, rows, hostFingerprint, deviceType }) => {
   if (shells.size + proxySessions.size >= MAX_CONCURRENT_SHELLS) {
-    console.warn(`[backnet-agent] Limite de sessões atingido (${MAX_CONCURRENT_SHELLS}). Rejeitando sessão ${sessionId}.`);
+    console.warn(`[ispconsultor-agent] Limite de sessões atingido (${MAX_CONCURRENT_SHELLS}). Rejeitando sessão ${sessionId}.`);
     socket.emit('shell:exit', { sessionId, code: 1 });
     return;
   }
   const p = Number(port) || 22;
   if (SSH_WARN_LEGACY) {
     console.warn(
-      `[backnet-agent] Conexão SSH para ${host}:${p} usa algoritmos legados (inclui DH group1, 3DES, MD5). ` +
-      'Defina BACKNET_SSH_WARN_LEGACY=false para suprimir este aviso.'
+      `[ispconsultor-agent] Conexão SSH para ${host}:${p} usa algoritmos legados (inclui DH group1, 3DES, MD5). ` +
+      'Defina ISPCONSULTOR_SSH_WARN_LEGACY=false para suprimir este aviso.'
     );
   }
-  console.log(`[backnet-agent] Proxy SSH → ${host}:${p} (${username}) — sessão ${sessionId}`);
+  console.log(`[ispconsultor-agent] Proxy SSH → ${host}:${p} (${username}) — sessão ${sessionId}`);
 
   const c = Math.min(Math.max(Number(cols) || 80, 8), 500);
   const r = Math.min(Math.max(Number(rows) || 24, 4), 200);
@@ -973,7 +973,7 @@ socket.on(
   conn.on('ready', () => {
     conn.shell({ term: 'xterm-256color', cols: c, rows: r }, (err, stream) => {
       if (err) {
-        console.error('[backnet-agent] Erro ao abrir shell SSH:', err.message);
+        console.error('[ispconsultor-agent] Erro ao abrir shell SSH:', err.message);
         flushShellDataNow(sessionId);
         socket.emit('shell:exit', { sessionId, code: 1 });
         conn.end();
@@ -1005,7 +1005,7 @@ socket.on(
   conn.on('error', (err) => {
     clearAgentShellWritePending(sessionId);
     flushShellDataNow(sessionId);
-    console.error('[backnet-agent] Erro SSH:', err.message);
+    console.error('[ispconsultor-agent] Erro SSH:', err.message);
     socket.emit('shell:data', {
       sessionId,
       data: `\r\n\x1b[1;31m[Erro SSH] ${err.message}\x1b[0m\r\n`,
@@ -1049,7 +1049,7 @@ socket.on('proxy:ssh:close', ({ sessionId }) => {
 socket.on('file:download:request', ({ transferId, path }) => {
   const fs = require('fs');
   if (!isPathAllowed(path)) {
-    console.warn('[backnet-agent] Download bloqueado: path fora da área permitida', { path });
+    console.warn('[ispconsultor-agent] Download bloqueado: path fora da área permitida', { path });
     socket.emit('file:chunk', { transferId, chunk: '', done: true, error: 'Caminho não permitido' });
     return;
   }
@@ -1073,7 +1073,7 @@ socket.on('file:download:request', ({ transferId, path }) => {
       socket.emit('file:chunk', { transferId, chunk: '', done: true });
     }
   } catch (err) {
-    console.error('[backnet-agent] Erro no download:', err.message);
+    console.error('[ispconsultor-agent] Erro no download:', err.message);
     socket.emit('file:chunk', { transferId, chunk: '', done: true, error: err.message });
   }
 });
@@ -1084,14 +1084,14 @@ const uploadBuffers = new Map();
 
 socket.on('file:upload:start', ({ transferId, path, size }) => {
   if (!isPathAllowed(path)) {
-    console.warn('[backnet-agent] Upload bloqueado: path fora da área permitida', { path });
+    console.warn('[ispconsultor-agent] Upload bloqueado: path fora da área permitida', { path });
     return;
   }
   if (size > 100 * 1024 * 1024) {
-    console.warn('[backnet-agent] Upload bloqueado: tamanho excede 100MB', { size });
+    console.warn('[ispconsultor-agent] Upload bloqueado: tamanho excede 100MB', { size });
     return;
   }
-  console.log(`[backnet-agent] Upload iniciado: ${path} (${size} bytes)`);
+  console.log(`[ispconsultor-agent] Upload iniciado: ${path} (${size} bytes)`);
   uploadBuffers.set(transferId, { path, chunks: [], size });
 });
 
@@ -1111,7 +1111,7 @@ socket.on('file:upload:chunk', ({ transferId, chunk, done }) => {
   buf.chunks.push(decoded);
   const total = buf.chunks.reduce((acc, c) => acc + c.length, 0);
   if (total > MAX_UPLOAD_BYTES) {
-    console.warn('[backnet-agent] Upload abortado: excede 100MB');
+    console.warn('[ispconsultor-agent] Upload abortado: excede 100MB');
     uploadBuffers.delete(transferId);
     return;
   }
@@ -1120,9 +1120,9 @@ socket.on('file:upload:chunk', ({ transferId, chunk, done }) => {
     const fs = require('fs');
     try {
       fs.writeFileSync(buf.path, Buffer.concat(buf.chunks));
-      console.log(`[backnet-agent] Upload concluído: ${buf.path}`);
+      console.log(`[ispconsultor-agent] Upload concluído: ${buf.path}`);
     } catch (err) {
-      console.error('[backnet-agent] Erro no upload:', err.message);
+      console.error('[ispconsultor-agent] Erro no upload:', err.message);
     }
     uploadBuffers.delete(transferId);
   }
@@ -1131,15 +1131,15 @@ socket.on('file:upload:chunk', ({ transferId, chunk, done }) => {
 // ── Tratamento de erros não capturados ─────────────────────────────────────────
 
 process.on('uncaughtException', (err) => {
-  console.error('[backnet-agent] Erro não capturado:', err.message);
+  console.error('[ispconsultor-agent] Erro não capturado:', err.message);
 });
 
 process.on('unhandledRejection', (reason) => {
-  console.error('[backnet-agent] Promise rejeitada:', reason);
+  console.error('[ispconsultor-agent] Promise rejeitada:', reason);
 });
 
 process.on('SIGINT', () => {
-  console.log('\n[backnet-agent] Encerrando...');
+  console.log('\n[ispconsultor-agent] Encerrando...');
   socket.disconnect();
   process.exit(0);
 });

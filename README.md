@@ -1,4 +1,4 @@
-# BackNet
+# ISP Consultor
 
 Sistema ERP completo para gestão de clientes, contratos e cobrança com integração direta aos gateways **Asaas** e **Efí (Gerencianet)**. O projeto inclui backend em Node.js/Express, frontend em React e suporte para deploy com Nginx.
 
@@ -161,7 +161,7 @@ Adicione as seguintes variáveis no arquivo `backend/.env`:
 ```env
 # Configurações do Elasticsearch (Auditoria)
 ELASTICSEARCH_NODE=http://localhost:9200
-ELASTICSEARCH_INDEX_NAME=backnet-auditoria
+ELASTICSEARCH_INDEX_NAME=ispconsultor-auditoria
 ELASTICSEARCH_USERNAME=elastic
 ELASTICSEARCH_PASSWORD=<senha_gerada_acima>
 ```
@@ -514,8 +514,8 @@ PING
 ### 1. Clonar o Repositório
 
 ```bash
-git clone https://github.com/Luminous-Telecom/BackNet.git
-cd BackNet
+git clone https://github.com/Luminous-Telecom/ISP Consultor.git
+cd ISP Consultor
 ```
 
 ### 2. Instalar Dependências
@@ -547,20 +547,20 @@ mysql -u root -p
 **Criar banco de dados e usuário:**
 ```sql
 -- Criar banco de dados
-CREATE DATABASE backnet CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE ispconsultor CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- Criar usuário (substitua 'sua-senha-aqui' por uma senha segura)
-CREATE USER 'backnet'@'localhost' IDENTIFIED BY 'sua-senha-aqui';
+CREATE USER 'ispconsultor'@'localhost' IDENTIFIED BY 'sua-senha-aqui';
 
 -- Conceder privilégios
-GRANT ALL PRIVILEGES ON backnet.* TO 'backnet'@'localhost';
+GRANT ALL PRIVILEGES ON ispconsultor.* TO 'ispconsultor'@'localhost';
 
 -- Aplicar alterações
 FLUSH PRIVILEGES;
 
 -- Verificar criação
 SHOW DATABASES;
-SELECT user, host FROM mysql.user WHERE user = 'backnet';
+SELECT user, host FROM mysql.user WHERE user = 'ispconsultor';
 
 -- Sair do MySQL
 EXIT;
@@ -568,7 +568,7 @@ EXIT;
 
 **Testar conexão:**
 ```bash
-mysql -u backnet -p backnet
+mysql -u ispconsultor -p ispconsultor
 # Digite a senha configurada
 # Se conectar com sucesso, digite EXIT para sair
 ```
@@ -607,8 +607,8 @@ REACT_APP_API_URL=/api
 # Configurações do Banco de Dados
 DB_HOST=localhost
 DB_PORT=3306
-DB_NAME=backnet
-DB_USER=backnet
+DB_NAME=ispconsultor
+DB_USER=ispconsultor
 DB_PASSWORD=sua-senha-aqui
 DB_DIALECT=mysql
 
@@ -745,7 +745,7 @@ sudo yum install nginx -y
 Crie o arquivo de configuração do Nginx:
 
 ```bash
-sudo nano /etc/nginx/sites-available/backnet
+sudo nano /etc/nginx/sites-available/ispconsultor
 ```
 
 ### 3. Configuração do Nginx
@@ -769,8 +769,8 @@ server {
     server_name seu-dominio.com.br www.seu-dominio.com.br;
 
     # Logs
-    access_log /var/log/nginx/backnet-access.log;
-    error_log /var/log/nginx/backnet-error.log;
+    access_log /var/log/nginx/ispconsultor-access.log;
+    error_log /var/log/nginx/ispconsultor-error.log;
 
     # Tamanho máximo de upload
     client_max_body_size 10M;
@@ -852,10 +852,10 @@ server {
 
     # Arquivos estáticos do frontend
     # ⚠️ IMPORTANTE: Ajuste o caminho abaixo conforme seu ambiente!
-    # Desenvolvimento: /home/projetos/BackNet/frontend/build
-    # Produção: /opt/backnet.prod/frontend/build (ou o caminho onde está seu frontend)
+    # Desenvolvimento: /home/projetos/ISP Consultor/frontend/build
+    # Produção: /opt/ispconsultor.prod/frontend/build (ou o caminho onde está seu frontend)
     location / {
-        root /opt/backnet.prod/frontend/build;  # ⚠️ AJUSTE ESTE CAMINHO!
+        root /opt/ispconsultor.prod/frontend/build;  # ⚠️ AJUSTE ESTE CAMINHO!
         try_files $uri $uri/ /index.html;
         
         # Cache para arquivos estáticos
@@ -877,7 +877,7 @@ server {
 **⚠️ Nota Importante sobre o caminho:**
 - O caminho `root` deve apontar para onde o frontend foi buildado em produção
 - Se você fez o build localmente e copiou, ajuste para o caminho correto
-- Se o frontend está integrado no backend (`backend/dist/frontend`), use: `root /opt/backnet.prod/backend/dist/frontend;`
+- Se o frontend está integrado no backend (`backend/dist/frontend`), use: `root /opt/ispconsultor.prod/backend/dist/frontend;`
 
 #### Opção B: HTTPS com SSL (Recomendado para Produção)
 
@@ -922,8 +922,8 @@ server {
     ssl_session_timeout 10m;
 
     # Logs
-    access_log /var/log/nginx/backnet-access.log;
-    error_log /var/log/nginx/backnet-error.log;
+    access_log /var/log/nginx/ispconsultor-access.log;
+    error_log /var/log/nginx/ispconsultor-error.log;
 
     # Tamanho máximo de upload
     client_max_body_size 10M;
@@ -1005,10 +1005,10 @@ server {
 
     # Arquivos estáticos do frontend
     # ⚠️ IMPORTANTE: Ajuste o caminho abaixo conforme seu ambiente!
-    # Desenvolvimento: /home/projetos/BackNet/frontend/build
-    # Produção: /opt/backnet.prod/frontend/build (ou o caminho onde está seu frontend)
+    # Desenvolvimento: /home/projetos/ISP Consultor/frontend/build
+    # Produção: /opt/ispconsultor.prod/frontend/build (ou o caminho onde está seu frontend)
     location / {
-        root /opt/backnet.prod/frontend/build;  # ⚠️ AJUSTE ESTE CAMINHO!
+        root /opt/ispconsultor.prod/frontend/build;  # ⚠️ AJUSTE ESTE CAMINHO!
         try_files $uri $uri/ /index.html;
         
         # Cache para arquivos estáticos
@@ -1030,13 +1030,13 @@ server {
 **⚠️ Nota Importante sobre o caminho:**
 - O caminho `root` deve apontar para onde o frontend foi buildado em produção
 - Se você fez o build localmente e copiou, ajuste para o caminho correto
-- Se o frontend está integrado no backend (`backend/dist/frontend`), use: `root /opt/backnet.prod/backend/dist/frontend;`
+- Se o frontend está integrado no backend (`backend/dist/frontend`), use: `root /opt/ispconsultor.prod/backend/dist/frontend;`
 
 ### 4. Habilitar Site
 
 ```bash
 # Criar link simbólico
-sudo ln -s /etc/nginx/sites-available/backnet /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/ispconsultor /etc/nginx/sites-enabled/
 
 # Remover site padrão (opcional)
 sudo rm /etc/nginx/sites-enabled/default
@@ -1170,7 +1170,7 @@ sudo apt install -y python3 python3-pip
 ### Estrutura de Deploy
 
 ```
-/home/projetos/BackNet/
+/home/projetos/ISP Consultor/
 ├── backend/
 │   ├── dist/              # Código compilado do backend
 │   │   └── scripts/       # Scripts Python (extrair-dominios.py)
@@ -1311,13 +1311,13 @@ pm2 startup
 | `REACT_APP_API_URL` | URL da API para o frontend (opcional; config.js usa `/api` por padrão) | `/api` (relativo) |
 | `DB_HOST` | Host do banco de dados | `localhost` |
 | `DB_PORT` | Porta do banco de dados | `3306` |
-| `DB_NAME` | Nome do banco de dados | `backnet` |
-| `DB_USER` | Usuário do banco de dados | `backnet` |
+| `DB_NAME` | Nome do banco de dados | `ispconsultor` |
+| `DB_USER` | Usuário do banco de dados | `ispconsultor` |
 | `DB_PASSWORD` | Senha do banco de dados | `sua-senha` |
 | `JWT_SECRET` | Segredo para tokens JWT | `string-aleatoria` |
 | `INTERNAL_WEBHOOK_SECRET` | Token fallback para webhooks | `string-aleatoria` |
 | `ELASTICSEARCH_NODE` | URL do nó Elasticsearch (opcional) | `http://localhost:9200` |
-| `ELASTICSEARCH_INDEX_NAME` | Nome do índice de auditoria | `backnet-auditoria` |
+| `ELASTICSEARCH_INDEX_NAME` | Nome do índice de auditoria | `ispconsultor-auditoria` |
 | `ELASTICSEARCH_USERNAME` | Usuário do Elasticsearch (opcional) | `elastic` |
 | `ELASTICSEARCH_PASSWORD` | Senha do Elasticsearch (opcional) | `changeme` |
 | `ELASTICSEARCH_SSL` | Habilitar SSL/TLS (opcional) | `false` |
@@ -1360,7 +1360,7 @@ Em produção, as configurações vêm do backend via `window.__APP_CONFIG__`.
 
 - Verifique se o build foi executado: `cd frontend && npm run build`
 - Verifique as permissões da pasta `build/`
-- Verifique os logs do Nginx: `sudo tail -f /var/log/nginx/backnet-error.log`
+- Verifique os logs do Nginx: `sudo tail -f /var/log/nginx/ispconsultor-error.log`
 
 ### Erro 502 Bad Gateway
 

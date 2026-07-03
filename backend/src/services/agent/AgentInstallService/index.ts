@@ -122,13 +122,14 @@ function isAgentDevServerUrl(serverUrl: string): boolean {
 }
 
 function getDockerImage(serverUrl: string): string {
-  if (process.env.BACKNET_AGENT_IMAGE) return process.env.BACKNET_AGENT_IMAGE;
+  const customImage = process.env.ISPCONSULTOR_AGENT_IMAGE;
+  if (customImage) return customImage;
   const tag = isAgentDevServerUrl(serverUrl) ? 'dev' : 'prod';
-  return `midia181/backnet-tunnel:${tag}`;
+  return `midia181/ispconsultor-tunnel:${tag}`;
 }
 
 export function getAgentContainerName(serverUrl: string): string {
-  return isAgentDevServerUrl(serverUrl) ? 'backnet-agent-dev' : 'backnet-agent';
+  return isAgentDevServerUrl(serverUrl) ? 'ispconsultor-agent-dev' : 'ispconsultor-agent';
 }
 
 // ── Pull e run do container (imagem do Docker Hub) ─────────────────────────────

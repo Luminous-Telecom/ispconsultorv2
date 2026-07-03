@@ -96,6 +96,8 @@ function TableDesktopView<T extends { id: number | string }>({
 }: TableDesktopViewProps<T>) {
   const colSpan = visibleColumns.length + (selectable ? 1 : 0) + (actions.length > 0 ? 1 : 0);
 
+  const columnsLocked = hasCustomWidths || isResizing;
+
   useElementProperties(tableRef, { '--table-min-width': `${tableMinWidth}px` }, [tableMinWidth]);
 
   return (
@@ -122,12 +124,12 @@ function TableDesktopView<T extends { id: number | string }>({
       )}
       <table
         ref={tableRef}
-        className={`table table-striped table-sm table-custom table-resizable table-resizable-enabled ${isResizing ? 'resizing' : ''} ${hasCustomWidths ? 'table-columns-locked' : ''} table-min-width-host`}
+        className={`table table-striped table-sm table-custom table-resizable table-resizable-enabled ${isResizing ? 'resizing' : ''} ${columnsLocked ? 'table-columns-locked' : ''} table-min-width-host`}
       >
         <colgroup>
           {selectable && <ColWithWidth width={CHECKBOX_COLUMN_WIDTH_PX} className="col-checkbox table-col-checkbox" />}
           {visibleColumns.map((column) => {
-            const widthPx = resolveColumnWidthPx(column, columnWidths, hasCustomWidths);
+            const widthPx = resolveColumnWidthPx(column, columnWidths, columnsLocked);
             return (
               <ColWithWidth
                 key={column.key}
@@ -155,9 +157,10 @@ function TableDesktopView<T extends { id: number | string }>({
               </th>
             )}
             {visibleColumns.map((column) => {
-              const rawWidth = columnWidths[column.key];
-              const effectiveHeaderWidth =
-                rawWidth !== undefined ? rawWidth : parseColumnWidthPx(column.width);
+              const savedWidth = columnWidths[column.key];
+              const lockedHeaderWidth = columnsLocked
+                ? (savedWidth ?? resolveColumnWidthPx(column, columnWidths, columnsLocked))
+                : savedWidth;
               return (
                 <TableColumn
                   key={column.key}
@@ -165,7 +168,8 @@ function TableDesktopView<T extends { id: number | string }>({
                   sortColumn={sortColumn}
                   sortDirection={sortDirection}
                   onSort={onSort}
-                  columnWidth={effectiveHeaderWidth}
+                  columnWidth={lockedHeaderWidth}
+                  isUserResized={savedWidth != null}
                   onResizeStart={onResizeStart}
                   isResizing={isResizing}
                 />
@@ -220,11 +224,12 @@ function TableDesktopView<T extends { id: number | string }>({
                     </td>
                   )}
                   {visibleColumns.map((column) => {
-                    const widthPx = resolveColumnWidthPx(column, columnWidths, hasCustomWidths);
+                    const widthPx = resolveColumnWidthPx(column, columnWidths, columnsLocked);
+                    const isUserResized = columnWidths[column.key] != null;
                     const widthProps: Record<string, string | undefined> = {};
-                    if (hasCustomWidths && widthPx != null) {
+                    if (columnsLocked && widthPx != null) {
                       Object.assign(widthProps, fixedWidthStyle(widthPx));
-                    } else if (columnWidths[column.key] != null) {
+                    } else if (isUserResized) {
                       Object.assign(widthProps, fixedWidthStyle(columnWidths[column.key]));
                     } else {
                       const colMinWidth = getColumnMinWidth(column);
@@ -250,6 +255,7 @@ function TableDesktopView<T extends { id: number | string }>({
                         className={[
                           column.key === 'id' ? 'col-id' : '',
                           column.align ? `text-${column.align}` : '',
+                          isUserResized ? 'column-has-custom-width' : '',
                           column.className,
                         ]
                           .filter(Boolean)

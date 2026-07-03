@@ -17,11 +17,11 @@ const HomeBenefitsSection: React.FC<HomeBenefitsSectionProps> = ({ onOpenLightbo
           onClick={() => onOpenLightbox('/dashboard%20clara.png')}
           ariaLabel="Ampliar imagem do dashboard"
         >
-          <img src="/dashboard%20clara.png" alt="BackNet Dashboard" className="home-benefits-img" />
+          <img src="/dashboard%20clara.png" alt="ISP Consultor Dashboard" className="home-benefits-img" />
         </NavLinkButton>
       </div>
       <div className="home-benefits-content">
-        <h2 className="home-section-title">Por que escolher BackNet?</h2>
+        <h2 className="home-section-title">Por que escolher ISP Consultor?</h2>
         <p className="home-benefits-intro">
           Desenvolvido especificamente para consultores de telecomunicações que buscam eficiência e crescimento
         </p>

@@ -22,7 +22,8 @@ import {
   resolveClienteIdFromOs,
 } from '../../externos/IxcOssChamadoService/ossData';
 import type { IxcOssChamado } from '../../externos/IxcOssChamadoService/types';
-import { mapMensagensIxcOperadorBacknet } from '../ordemServicoMensagemFormat';
+import { mapMensagensIxcOperadorIspconsultor } from '../ordemServicoMensagemFormat';
+import { SYSTEM_NAME } from '../../../constants/systemBrand';
 import { OrdemServicoLocalService, fetchUsuarioNomeById } from '../OrdemServicoLocalService';
 import { IxcOsSyncLogService } from '../IxcOsSyncLogService';
 
@@ -226,7 +227,7 @@ export class IxcOsSchedulerRoutineService {
           importadas++;
           sucesso++;
 
-          const ixcMensagens = mapMensagensIxcOperadorBacknet(await fetchMensagensOs(ixcId));
+          const ixcMensagens = mapMensagensIxcOperadorIspconsultor(await fetchMensagensOs(ixcId));
 
           IxcOsSyncLogService.registrar({
             empresaId: cliente.empresaId,
@@ -396,7 +397,7 @@ export class IxcOsSchedulerRoutineService {
         clienteNome,
         origemAbertura: 'ixc',
         operadorNome:
-          mapMensagensIxcOperadorBacknet(ixcMensagens).find(
+          mapMensagensIxcOperadorIspconsultor(ixcMensagens).find(
             (m) => String(m.id_evento) === IXC_EVENTO_FINALIZAR
           )?.operador_nome ?? '',
         message: `OS finalizada no IXC (${record.protocolo})`,
@@ -406,7 +407,7 @@ export class IxcOsSchedulerRoutineService {
     return 'synced';
   }
 
-  static async registrarAberturaBacknet(params: {
+  static async registrarAberturaIspconsultor(params: {
     record: OrdemServicoLocal;
     integracaoId?: number | null;
     integracaoNome?: string | null;
@@ -425,9 +426,9 @@ export class IxcOsSchedulerRoutineService {
       ixcOsId: params.record.ixc_id,
       protocolo: params.record.protocolo,
       clienteNome: params.clienteNome,
-      origemAbertura: 'backnet',
+      origemAbertura: 'ispconsultor' as const,
       operadorNome,
-      message: `OS aberta pelo BackNet (${params.record.protocolo})`,
+      message: `OS aberta pelo ${SYSTEM_NAME} (${params.record.protocolo})`,
     });
   }
 }

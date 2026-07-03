@@ -4,8 +4,11 @@ import path from 'path';
 import fs from 'fs/promises';
 import { sendError, sendSuccess } from '../../../utils/responseUtils';
 import { logger } from '../../../utils/logger';
+import { SYSTEM_NAME } from '../../../constants/systemBrand';
 import { isRedisAvailable } from '../../../config/redis';
 import { setPdfExtractJob, getPdfExtractJob } from '../../../services/pdfExtractJobService';
+
+const USER_AGENT = `${SYSTEM_NAME.replace(/\s+/g, '-')}/1.0`;
 
 /** Clientes SSE ativos por jobId (progresso em tempo real). */
 const sseClients = new Map<string, Set<Response>>();
@@ -56,7 +59,7 @@ const relativeToRoot = isDist ? '../../../' : '../../../../';
  * Função no nível do módulo para não depender de `this` no callback do setImmediate.
  */
 async function runExtractFromUrlBackground(jobId: string, url: string): Promise<void> {
-  const uploadsDir = '/tmp/backnet-pdf';
+  const uploadsDir = '/tmp/ispconsultor-pdf';
   await fs.mkdir(uploadsDir, { recursive: true });
   const tempFilePath = path.join(uploadsDir, `job-${jobId}.pdf`);
 
@@ -64,7 +67,7 @@ async function runExtractFromUrlBackground(jobId: string, url: string): Promise<
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 120000);
     const response = await fetch(url, {
-      headers: { 'User-Agent': 'BackNet/1.0' },
+      headers: { 'User-Agent': USER_AGENT },
       signal: controller.signal
     });
     clearTimeout(timeoutId);
@@ -315,7 +318,7 @@ class PdfExtractController {
       }
 
       const jobId = `pdf-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
-      const uploadsDir = '/tmp/backnet-pdf';
+      const uploadsDir = '/tmp/ispconsultor-pdf';
       await fs.mkdir(uploadsDir, { recursive: true });
       const tempFileName = `job-${jobId}.pdf`;
       const tempFilePath = path.join(uploadsDir, tempFileName);

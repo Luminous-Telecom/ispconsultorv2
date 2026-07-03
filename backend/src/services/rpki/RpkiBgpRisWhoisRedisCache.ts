@@ -3,8 +3,8 @@ import { gzipSync, gunzipSync } from 'zlib';
 import { getRedisClient } from '../../config/redis';
 
 /** Chave valor v1 gzip (lista compacta prefix|asn); prefixo filt v1 por URL + fingerprint recursos da CA */
-const PREFIX_TABLE = 'backnet:rpki:riswhois:t:v1:';
-const PREFIX_FILT = 'backnet:rpki:riswhois:f:v1:';
+const PREFIX_TABLE = 'ispconsultor:rpki:riswhois:t:v1:';
+const PREFIX_FILT = 'ispconsultor:rpki:riswhois:f:v1:';
 
 function isRisRedisCacheEnabledEnv(): boolean {
   const v = process.env.RPKI_BGP_RISWHOIS_REDIS_CACHE?.trim().toLowerCase();

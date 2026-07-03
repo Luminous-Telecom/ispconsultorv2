@@ -7,17 +7,17 @@ const Termos: React.FC = () => (
       <strong>Última atualização:</strong> {new Date().toLocaleDateString('pt-BR')}
     </p>
     <p>
-      Ao acessar e usar os serviços da BackNet, você concorda com os seguintes termos de uso.
+      Ao acessar e usar os serviços da ISP Consultor, você concorda com os seguintes termos de uso.
     </p>
 
     <h2>1. Aceitação dos termos</h2>
     <p>
-      O uso da plataforma BackNet implica aceitação integral destes termos. Se não concordar, não utilize nossos serviços.
+      O uso da plataforma ISP Consultor implica aceitação integral destes termos. Se não concordar, não utilize nossos serviços.
     </p>
 
     <h2>2. Descrição do serviço</h2>
     <p>
-      A BackNet oferece sistema de gestão para consultores de telecomunicações, incluindo gestão de clientes, contratos, cobrança, NFS-e e funcionalidades correlatas.
+      A ISP Consultor oferece sistema de gestão para consultores de telecomunicações, incluindo gestão de clientes, contratos, cobrança, NFS-e e funcionalidades correlatas.
     </p>
 
     <h2>3. Cadastro e responsabilidade</h2>
@@ -27,17 +27,17 @@ const Termos: React.FC = () => (
 
     <h2>4. Uso adequado</h2>
     <p>
-      É vedado o uso da plataforma para fins ilegais, ofensivos ou que prejudiquem terceiros. A BackNet reserva-se o direito de suspender ou encerrar contas que violem estas condições.
+      É vedado o uso da plataforma para fins ilegais, ofensivos ou que prejudiquem terceiros. A ISP Consultor reserva-se o direito de suspender ou encerrar contas que violem estas condições.
     </p>
 
     <h2>5. Propriedade intelectual</h2>
     <p>
-      O software, marcas e demais conteúdos da plataforma são de propriedade da BackNet e estão protegidos por leis de propriedade intelectual.
+      O software, marcas e demais conteúdos da plataforma são de propriedade da ISP Consultor e estão protegidos por leis de propriedade intelectual.
     </p>
 
     <h2>6. Cancelamento</h2>
     <p>
-      O usuário pode cancelar sua assinatura a qualquer momento, sem fidelidade. A BackNet pode interromper o serviço em caso de inadimplência ou violação dos termos.
+      O usuário pode cancelar sua assinatura a qualquer momento, sem fidelidade. A ISP Consultor pode interromper o serviço em caso de inadimplência ou violação dos termos.
     </p>
 
     <h2>7. Contato</h2>

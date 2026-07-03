@@ -1077,7 +1077,7 @@ export class SistemaLogOperacionalService {
     ixcOsId?: string | null;
     protocolo?: string | null;
     clienteNome?: string | null;
-    origemAbertura?: 'backnet' | 'ixc' | null;
+    origemAbertura?: 'ispconsultor' | 'ixc' | null;
     operadorNome?: string | null;
     statusAnterior?: string | null;
     statusNovo?: string | null;

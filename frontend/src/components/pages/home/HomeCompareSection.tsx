@@ -7,7 +7,7 @@ const HomeCompareSection: React.FC = () => (
       <div className="home-section-header">
         <h2 className="home-section-title">É para você?</h2>
         <p className="home-section-desc">
-          Se você se identificou com "Planilha ou sistema descentralizado", o BackNet foi feito para sua consultoria.
+          Se você se identificou com "Planilha ou sistema descentralizado", o ISP Consultor foi feito para sua consultoria.
         </p>
       </div>
       <div className="home-compare-grid">
@@ -28,7 +28,7 @@ const HomeCompareSection: React.FC = () => (
         <div className="home-compare-col home-compare-novo">
           <h3 className="home-compare-col-title">
             <span className="bi bi-check-circle-fill" />
-            Com o BackNet
+            Com o ISP Consultor
           </h3>
           <ul className="home-compare-list">
             {COMPARE_DEPOIS.map((item) => (

@@ -1522,7 +1522,7 @@ const enUS: TranslationKeys = {
     'placeholder.responsibleName': 'Responsible name',
     'placeholder.responsibleRole': 'Responsible role',
     'placeholder.paymentObservations': 'Payment observations (optional)',
-    'placeholder.testMessage': 'BackNet system test message',
+    'placeholder.testMessage': 'ISP Consultor system test message',
     'placeholder.termContent': 'Enter term content...',
 
     // Message Types

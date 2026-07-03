@@ -1,10 +1,10 @@
 ---
-description: Regras de banco de dados, migrations e models Sequelize no BackNet
+description: Regras de banco de dados, migrations e models Sequelize no ISP Consultor
 globs: backend/migrations/**/*.js,backend/src/models/**/*.ts
 alwaysApply: false
 ---
 
-# Banco de Dados e Migrations - BackNet
+# Banco de Dados e Migrations - ISP Consultor
 
 ## Migrations
 - SEMPRE em JavaScript (`.js`), nunca TypeScript
