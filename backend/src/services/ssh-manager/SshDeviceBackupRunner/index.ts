@@ -13,6 +13,7 @@ import { registerSshDeviceBackupRow } from '../SshDeviceBackupStorageService';
 import { recordSshDeviceBackupEvent } from '../SshDeviceBackupEventService';
 import { executeHttpFetchThroughAgent, executeSshCommandThroughAgent, isAgentOnline } from '../../agent/AgentService';
 import { httpGetWithDigestAuth } from '../../../utils/httpDigestGet';
+import { SaasPlanoLimitesService } from '../../saas/SaasPlanoLimitesService';
 import * as routeros from './models/routeros';
 import * as vrp from './models/vrp';
 
@@ -269,6 +270,25 @@ export async function runSshDeviceBackup(
       detail: 'Backup desabilitado para este device.',
     });
     return { success: false, message: 'Backup desabilitado para este device.' };
+  }
+
+  if (device.empresa_id != null) {
+    const limitError = await SaasPlanoLimitesService.validateBackupExecution(device.empresa_id, !!device.backup_enabled);
+    if (limitError) {
+      logger.warn('Backup SSH bloqueado pelo plano SaaS', {
+        context: 'SshDeviceBackupRunner',
+        deviceId,
+        name: device.name,
+        reason: limitError,
+      });
+      void recordSshDeviceBackupEvent({
+        sshDeviceId: device.id,
+        empresaId: device.empresa_id,
+        status: 'falha',
+        detail: limitError,
+      });
+      return { success: false, message: limitError };
+    }
   }
 
   if (device.device_type === 'swos') {

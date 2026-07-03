@@ -6,6 +6,7 @@ import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../..
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
 import { ativoFilterForService, parseListQuery } from '../../../utils/listQuery';
 import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
+import { SaasPlanoLimitesService } from '../../../services/saas/SaasPlanoLimitesService';
 
 const createSchema = Joi.object({
   empresa_id: Joi.number().integer().required(),
@@ -76,6 +77,13 @@ export class SaasTenantUsuarioController {
         sendValidationError(res, 'Email já cadastrado');
         return;
       }
+      const limitError = await SaasPlanoLimitesService.validateUsuarioAtivoLimit(value.empresa_id, {
+        willBeActive: value.ativo !== false,
+      });
+      if (limitError) {
+        sendValidationError(res, limitError);
+        return;
+      }
       const usuario = await UsuarioService.create({
         nome: value.nome,
         email: value.email,
@@ -117,6 +125,16 @@ export class SaasTenantUsuarioController {
         const existente = await UsuarioService.existsByEmail(value.email, usuario.id);
         if (existente) {
           sendValidationError(res, 'Email já cadastrado');
+          return;
+        }
+      }
+      if (value.ativo === true && usuario.ativo !== true && usuario.empresa_id != null) {
+        const limitError = await SaasPlanoLimitesService.validateUsuarioAtivoLimit(usuario.empresa_id, {
+          willBeActive: true,
+          excludeUsuarioId: usuario.id,
+        });
+        if (limitError) {
+          sendValidationError(res, limitError);
           return;
         }
       }

@@ -23,7 +23,7 @@ import {
   sendValidationError,
   sendNotFound,
 } from '../../../utils/responseUtils';
-import { Op, WhereOptions, literal } from 'sequelize';
+import { Op, WhereOptions } from 'sequelize';
 import { AuthenticatedRequest } from '../../../types/auth';
 import { JwtPayload } from 'jsonwebtoken';
 import {
@@ -32,7 +32,7 @@ import {
   resolveEmpresaScopeForList,
   resolveEmpresaIdForScopedCreate,
 } from '../../../utils/tenantUtils';
-import { getEquipamentosLimites } from '../../../services/saas/PlanoModulosService';
+import { SaasPlanoLimitesService } from '../../../services/saas/SaasPlanoLimitesService';
 import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import SaasScheduledRoutine from '../../../models/saas/SaasScheduledRoutine';
@@ -56,6 +56,12 @@ function canAccessDevice(device: SshDevice, userEmpresaId: number | null): boole
   if (device.empresa_id === null) return true;
   if (userEmpresaId === null) return true;
   return device.empresa_id === userEmpresaId;
+}
+
+async function validateDeviceModule(device: SshDevice): Promise<string | null> {
+  return device.empresa_id == null
+    ? null
+    : SaasPlanoLimitesService.validateEquipamentosModule(device.empresa_id);
 }
 
 const createSchema = Joi.object({
@@ -98,6 +104,11 @@ export class DeviceController {
       const clienteId = parseEmpresaIdQuery(req.query.cliente_id);
       const parts: WhereOptions<SshDevice>[] = [];
       if (scopeEmpresaId != null) {
+        const moduleError = await SaasPlanoLimitesService.validateEquipamentosModule(scopeEmpresaId);
+        if (moduleError) {
+          sendValidationError(res, moduleError);
+          return;
+        }
         parts.push({ [Op.or]: [{ empresa_id: scopeEmpresaId }, { empresa_id: null }] });
       }
       if (clienteId != null) {
@@ -159,6 +170,11 @@ export class DeviceController {
         sendNotFound(res, 'Device SSH não encontrado');
         return;
       }
+      const moduleError = await validateDeviceModule(device);
+      if (moduleError) {
+        sendValidationError(res, moduleError);
+        return;
+      }
       sendSuccess(res, device);
     } catch (error) {
       sendError(res, error, 'Erro ao buscar device SSH', 500, true, { context: 'DeviceController.show' });
@@ -183,37 +199,14 @@ export class DeviceController {
       }
       const empresaId = resolved.empresa_id;
       if (empresaId != null) {
-        const limites = await getEquipamentosLimites(empresaId);
-        if (limites !== null) {
-          if (!limites.temModulo) {
-            sendValidationError(res, 'O plano não inclui o módulo de equipamentos.');
-            return;
-          }
-          if (limites.limite_equipamentos > 0) {
-            const count = await SshDevice.count({ where: { empresa_id: empresaId } });
-            if (count >= limites.limite_equipamentos) {
-              sendValidationError(res, `Limite de equipamentos do plano atingido (${limites.limite_equipamentos}).`);
-              return;
-            }
-          }
-          const willHaveTunel = normalizeOptionalAgentId(value.agent_id) != null;
-          if (willHaveTunel && limites.limite_tuneis > 0) {
-            const countTuneis = await SshDevice.count({
-              where: { [Op.and]: [{ empresa_id: empresaId }, literal('agent_id IS NOT NULL')] },
-            });
-            if (countTuneis >= limites.limite_tuneis) {
-              sendValidationError(res, `Limite de túneis do plano atingido (${limites.limite_tuneis}).`);
-              return;
-            }
-          }
-          const willHaveBackup = value.backup_enabled === true;
-          if (willHaveBackup && limites.limite_backups > 0) {
-            const countBackups = await SshDevice.count({ where: { empresa_id: empresaId, backup_enabled: true } });
-            if (countBackups >= limites.limite_backups) {
-              sendValidationError(res, `Limite de backups do plano atingido (${limites.limite_backups}).`);
-              return;
-            }
-          }
+        const limitError = await SaasPlanoLimitesService.validateEquipamentoCreate({
+          empresaId,
+          hasTunel: normalizeOptionalAgentId(value.agent_id) != null,
+          hasBackup: value.backup_enabled === true,
+        });
+        if (limitError) {
+          sendValidationError(res, limitError);
+          return;
         }
       }
       const { empresa_id: _e, agent_id: _agentRaw, ...restValue } = value;
@@ -261,32 +254,24 @@ export class DeviceController {
       }
 
       const devEmpresaId = device.empresa_id;
-      if (devEmpresaId != null && (value.agent_id !== undefined || value.backup_enabled !== undefined)) {
-        const limites = await getEquipamentosLimites(devEmpresaId);
-        if (limites !== null && limites.temModulo) {
-            const willHaveTunel =
-              value.agent_id !== undefined
-                ? normalizeOptionalAgentId(value.agent_id) != null
-                : device.agent_id != null;
-          if (willHaveTunel && limites.limite_tuneis > 0) {
-            const countTuneis = await SshDevice.count({
-              where: { [Op.and]: [{ empresa_id: devEmpresaId }, literal('agent_id IS NOT NULL')] },
-            });
-            const isAddingTunel = !device.agent_id && willHaveTunel;
-            if (isAddingTunel && countTuneis >= limites.limite_tuneis) {
-              sendValidationError(res, `Limite de túneis do plano atingido (${limites.limite_tuneis}).`);
-              return;
-            }
-          }
-          const willHaveBackup = value.backup_enabled !== undefined ? value.backup_enabled === true : !!device.backup_enabled;
-          if (willHaveBackup && limites.limite_backups > 0) {
-            const countBackups = await SshDevice.count({ where: { empresa_id: devEmpresaId, backup_enabled: true } });
-            const isEnablingBackup = !device.backup_enabled && willHaveBackup;
-            if (isEnablingBackup && countBackups >= limites.limite_backups) {
-              sendValidationError(res, `Limite de backups do plano atingido (${limites.limite_backups}).`);
-              return;
-            }
-          }
+      if (devEmpresaId != null) {
+        const willHaveTunel =
+          value.agent_id !== undefined
+            ? normalizeOptionalAgentId(value.agent_id) != null
+            : device.agent_id != null;
+        const willHaveBackup = value.backup_enabled !== undefined
+          ? value.backup_enabled === true
+          : !!device.backup_enabled;
+        const limitError = await SaasPlanoLimitesService.validateEquipamentoUpdate({
+          empresaId: devEmpresaId,
+          hasTunel: willHaveTunel,
+          hasBackup: willHaveBackup,
+          currentHasTunel: device.agent_id != null,
+          currentHasBackup: !!device.backup_enabled,
+        });
+        if (limitError) {
+          sendValidationError(res, limitError);
+          return;
         }
       }
 
@@ -334,6 +319,11 @@ export class DeviceController {
         sendNotFound(res, 'Device SSH não encontrado');
         return;
       }
+      const moduleError = await validateDeviceModule(device);
+      if (moduleError) {
+        sendValidationError(res, moduleError);
+        return;
+      }
 
       const backupCount = await SshDeviceBackup.count({ where: { ssh_device_id: device.id } });
       if (backupCount > 0) {
@@ -373,6 +363,11 @@ export class DeviceController {
       const empresaId = getEmpresaIdOrNull(req);
       if (!canAccessDevice(device, empresaId)) {
         sendNotFound(res, 'Device SSH não encontrado');
+        return;
+      }
+      const moduleError = await validateDeviceModule(device);
+      if (moduleError) {
+        sendValidationError(res, moduleError);
         return;
       }
 
@@ -631,6 +626,11 @@ export class DeviceController {
         sendNotFound(res, 'Device SSH não encontrado');
         return;
       }
+      const moduleError = await validateDeviceModule(device);
+      if (moduleError) {
+        sendValidationError(res, moduleError);
+        return;
+      }
 
       const { command } = req.body as { command?: string };
       if (!command?.trim()) {
@@ -689,6 +689,13 @@ export class DeviceController {
       const empresaId = getEmpresaIdOrNull(req);
       if (!canAccessDevice(device, empresaId)) {
         sendNotFound(res, 'Device SSH não encontrado');
+        return;
+      }
+      const backupLimitError = device.empresa_id == null
+        ? null
+        : await SaasPlanoLimitesService.validateBackupExecution(device.empresa_id, !!device.backup_enabled);
+      if (backupLimitError) {
+        sendValidationError(res, backupLimitError);
         return;
       }
 
@@ -768,6 +775,11 @@ export class DeviceController {
         sendNotFound(res, 'Device SSH não encontrado');
         return;
       }
+      const moduleError = await validateDeviceModule(device);
+      if (moduleError) {
+        sendValidationError(res, moduleError);
+        return;
+      }
       const items = await listBackupsForDevice(device.id);
       sendSuccess(res, items);
     } catch (error) {
@@ -788,6 +800,11 @@ export class DeviceController {
       const empresaId = getEmpresaIdOrNull(req);
       if (!canAccessDevice(device, empresaId)) {
         sendNotFound(res, 'Device SSH não encontrado');
+        return;
+      }
+      const moduleError = await validateDeviceModule(device);
+      if (moduleError) {
+        sendValidationError(res, moduleError);
         return;
       }
       const nome = queryString(req.query.nome) ?? '';
@@ -819,6 +836,11 @@ export class DeviceController {
       const empresaId = getEmpresaIdOrNull(req);
       if (!canAccessDevice(device, empresaId)) {
         sendNotFound(res, 'Device SSH não encontrado');
+        return;
+      }
+      const moduleError = await validateDeviceModule(device);
+      if (moduleError) {
+        sendValidationError(res, moduleError);
         return;
       }
       const nome = queryString(req.query.nome) ?? '';
@@ -858,6 +880,11 @@ export class DeviceController {
       const scopeEmpresaId = resolveEmpresaScopeForList(req, parseEmpresaIdQuery(req.query.empresa_id));
       const parts: WhereOptions<SshDevice>[] = [{ cliente_id: clienteId }];
       if (scopeEmpresaId != null) {
+        const moduleError = await SaasPlanoLimitesService.validateEquipamentosModule(scopeEmpresaId);
+        if (moduleError) {
+          sendValidationError(res, moduleError);
+          return;
+        }
         parts.push({ [Op.or]: [{ empresa_id: scopeEmpresaId }, { empresa_id: null }] });
       }
       const where: WhereOptions<SshDevice> =

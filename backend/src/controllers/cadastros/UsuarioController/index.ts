@@ -9,6 +9,7 @@ import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../..
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { buildPagination } from '../../../utils/pagination';
 import { ativoFilterForService, parseListQuery } from '../../../utils/listQuery';
+import { SaasPlanoLimitesService } from '../../../services/saas/SaasPlanoLimitesService';
 
 export class UsuarioController {
   private static createSchema = Joi.object({
@@ -90,6 +91,15 @@ export class UsuarioController {
       }
 
       const empresaId = getEmpresaIdOrNull(req);
+      if (empresaId != null) {
+        const limitError = await SaasPlanoLimitesService.validateUsuarioAtivoLimit(empresaId, {
+          willBeActive: value.ativo !== false,
+        });
+        if (limitError) {
+          sendValidationError(res, limitError);
+          return;
+        }
+      }
 
       const usuario = await UsuarioService.create({
         nome: value.nome,
@@ -146,6 +156,16 @@ export class UsuarioController {
 
         if (emailExistente) {
           sendValidationError(res, 'Email já cadastrado');
+          return;
+        }
+      }
+      if (value.ativo === true && usuario.ativo !== true && usuario.empresa_id != null) {
+        const limitError = await SaasPlanoLimitesService.validateUsuarioAtivoLimit(usuario.empresa_id, {
+          willBeActive: true,
+          excludeUsuarioId: usuario.id,
+        });
+        if (limitError) {
+          sendValidationError(res, limitError);
           return;
         }
       }

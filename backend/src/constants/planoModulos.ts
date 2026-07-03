@@ -21,7 +21,7 @@ export const MODULO_ROTAS: Record<PlanoModuloId, string[]> = {
   cadastros: ['/api/clientes', '/api/contratos', '/api/planos', '/api/bancos', '/api/tipos-cobranca-contrato', '/api/fornecedores'],
   financeiro: ['/api/titulos', '/api/contas-pagar', '/api/notas-fiscais', '/boleto'],
   blockdomi: ['/api/dominios', '/api/ipv4', '/api/ipv6', '/api/blockdomi', '/api/ips-permitidos', '/api/logs-acesso', '/api/blockdomi-listas', '/api/pdf-extract'],
-  equipamentos: [], // Apenas controle de UI; APIs acessíveis com aviso
+  equipamentos: ['/api/agents', '/api/ssh-manager'],
   rpki: ['/api/rpki'],
   envio_notificacoes: ['/api/servidores-whatsapp', '/api/servidores-email', '/api/mensagens-whatsapp', '/api/mensagens-email', '/api/mensagens-historico', '/api/templates-whatsapp'],
   assinatura_digital: ['/api/assinatura-digital', '/api/assinatura-digital-providers'],
