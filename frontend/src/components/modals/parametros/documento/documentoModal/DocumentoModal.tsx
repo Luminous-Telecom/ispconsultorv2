@@ -39,6 +39,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = (props) => {
         onClose={modal.handleClose}
         title={tipoLabel}
         size="xl"
+        className="documento-modal no-padding"
         headerActions={headerActions}
       >
         <DocumentoModalBody

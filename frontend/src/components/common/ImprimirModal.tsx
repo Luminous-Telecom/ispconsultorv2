@@ -65,6 +65,7 @@ const ImprimirModal: React.FC<ImprimirModalProps> = ({
       onClose={handleClose}
       title={title}
       size="xl"
+      className="imprimir-modal no-padding"
       modalId={modalId}
     >
       <div className="imprimir-modal-frame">
