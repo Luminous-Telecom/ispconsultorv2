@@ -215,7 +215,7 @@ const ImportarListaBlockdomiOficioSection: React.FC<ImportarListaBlockdomiOficio
       </div>
 
       {hasPdfUrl && (
-        <p className="text-muted form-hint small mt-1 mb-0 form-modal-input-col">
+        <p className="form-helper-message form-modal-input-col">
           {t('blockdomi.extractFromPlanilhaUrlHelp')}
         </p>
       )}

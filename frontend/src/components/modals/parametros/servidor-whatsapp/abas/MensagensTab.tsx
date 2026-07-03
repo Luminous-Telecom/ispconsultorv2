@@ -209,7 +209,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                           <i className="bi bi-code-square me-2"></i>
                           {t('settings.messages.variablesTitle')}
                         </h6>
-                        <small className="text-muted form-hint d-block mt-1">
+                        <small className="form-helper-message mt-1">
                           {t('settings.messages.variablesHelper')}
                         </small>
                       </div>

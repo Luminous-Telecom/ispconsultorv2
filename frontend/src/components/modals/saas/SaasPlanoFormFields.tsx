@@ -171,7 +171,7 @@ export const SaasPlanoEquipamentosFormFields: React.FC<SaasPlanoEquipamentosForm
   return (
     <>
       <div className="form-modal-input-col mb-2">
-        <small className="form-hint text-muted d-block">{t('saas.planLimitZeroHelp')}</small>
+        <small className="form-helper-message">{t('saas.planLimitZeroHelp')}</small>
       </div>
       <div className="row g-2">
         <div className="col-12">

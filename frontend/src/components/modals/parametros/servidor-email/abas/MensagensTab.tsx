@@ -48,7 +48,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                     {t('settings.messages.manualLabel')}
                   </LabelWithHelp>
                   <div className="form-field-control">
-                    <small className="text-muted form-hint d-block mb-1">{t('settings.messages.manualHelper')}</small>
+                    <small className="form-helper-message mb-1">{t('settings.messages.manualHelper')}</small>
                     <div className="flex-fill-min-h-0">
                       <Suspense fallback={<RichTextEditorFallback />}>
                         <RichTextEditor

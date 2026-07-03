@@ -136,22 +136,31 @@ function AgentModalConfigTab({
           />
         </div>
         {isEditing && (
-          <div className="col-12">
-            <hr className="my-1" />
-            <div className="d-flex align-items-center justify-content-between">
-              <div>
-                <div className="small fw-semibold">Token atual</div>
-                <div className="text-muted form-hint small">{agentData?.token_hint ?? '(gerado na criação)'}</div>
-              </div>
-              <GerarTokenButton
-                type="button"
-                variant="outline-danger"
-                onClick={onRegenerate}
-                disabled={regeneratePending}
-                isPending={regeneratePending}
+          <>
+            <div className="col-12">
+              <FormField
+                name="token_hint"
+                type="text"
+                label="Token"
+                value={agentData?.token_hint ?? 'Gerado na criação'}
+                readOnly
+                disabled
+                size="sm"
+                onChange={() => {}}
               />
             </div>
-          </div>
+            <div className="col-12">
+              <div className="form-modal-input-col">
+                <GerarTokenButton
+                  type="button"
+                  variant="outline-danger"
+                  onClick={onRegenerate}
+                  disabled={regeneratePending}
+                  isPending={regeneratePending}
+                />
+              </div>
+            </div>
+          </>
         )}
       </div>
     </form>

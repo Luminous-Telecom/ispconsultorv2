@@ -113,6 +113,7 @@ Ao criar ou estilizar campos (`input`, `textarea`, `select`, `.form-control`, `.
 
 - Obrigatório: `required` no `FormField` ou `LabelWithHelp` (`RequiredMark`)
 - Ajuda (ícone i): `helpText` no `FormField` ou `LabelWithHelp` — não `alert-info` para hints
+- Mensagens auxiliares curtas abaixo de campos/ações: usar `form-helper-message` (centralizada, `--font-size-xs`)
 - Ações de modal: `ModalFormActions` + botões de `components/ui/buttons` — ver `.cursor/rules/frontend-botoes.mdc`
 
 ## Listagens e modais

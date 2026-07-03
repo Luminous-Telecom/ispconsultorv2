@@ -234,7 +234,7 @@ const SshDeviceModalDadosTab: React.FC<SshDeviceModalDadosTabProps> = ({
           label={t('sshDevice.backupEnabled')}
           name="dev-backup-enabled"
         />
-        <div className="form-modal-input-col d-flex align-items-center gap-1 flex-wrap small text-muted">
+        <div className="form-helper-message form-modal-input-col d-flex align-items-center justify-content-center gap-1 flex-wrap">
           <LabelWithHelp as="span" helpText={t('sshDevice.backupEnabledHint')} helpIconClassName="ms-0" />
           {renderBackupAgendamentoHint(agendamentoBackup, t)}
         </div>

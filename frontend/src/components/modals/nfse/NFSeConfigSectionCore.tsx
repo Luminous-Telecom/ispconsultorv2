@@ -345,7 +345,7 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
                     onChange={(v) => handleInputChange('asaas_sandbox', v)}
                     disabled={isFieldDisabled}
                   />
-                  <small className="text-muted form-hint d-block form-modal-input-col mt-1">
+                  <small className="form-helper-message form-modal-input-col">
                     {t('nfse.useSandboxHelp')}
                   </small>
                 </div>

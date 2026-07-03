@@ -41,7 +41,7 @@ const AgentModalInstallManualTab: React.FC<AgentModalInstallManualTabProps> = ({
           />
         </div>
         <div className="col-12">
-          <p className="text-muted fs-xs mb-0 form-modal-input-col">
+          <p className="form-helper-message form-modal-input-col">
             Prefere instalar via SSH a partir do painel? Use a aba Instalar Automático.
           </p>
         </div>
