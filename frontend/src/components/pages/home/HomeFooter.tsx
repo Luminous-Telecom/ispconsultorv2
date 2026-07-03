@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import IspConsultorLogo from 'components/common/IspConsultorLogo';
+import IspConsultorIcon from 'components/common/IspConsultorIcon';
 import { FOOTER_LINKS } from './homeConstants';
 
 interface HomeFooterProps {
@@ -12,7 +12,7 @@ const HomeFooter: React.FC<HomeFooterProps> = ({ scrollTo }) => (
     <div className="home-footer-grid">
       <div className="home-footer-brand">
         <div className="home-footer-logo-wrap">
-          <IspConsultorLogo width={32} height={32} className="home-footer-logo" />
+          <IspConsultorIcon size={32} className="home-footer-logo" />
           <span className="home-footer-brand-name">ISP Consultor</span>
         </div>
         <p className="home-footer-tagline">Gestão completa para consultores de telecomunicações</p>

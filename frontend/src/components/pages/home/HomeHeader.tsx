@@ -51,7 +51,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
 }) => (
   <header className="home-header">
     <div className="home-header-inner">
-      <IspConsultorLogo width={120} height={38} className="home-logo" />
+      <IspConsultorLogo width={120} className="home-logo" />
       <nav className="home-nav home-nav-desktop">
         <HomeNavLinks scrollTo={scrollTo} />
       </nav>

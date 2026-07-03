@@ -712,6 +712,12 @@ body[data-app="system"] .tox-tinymce-aux .tox {
   display: block;
 }
 
+.ispconsultor-icon-block {
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+}
+
 /* --- Chart containers (posição via ref) --- */
 .chart-svg-host {
   display: block;

@@ -10,7 +10,7 @@ interface IspConsultorLogoProps {
 
 const IspConsultorLogo: React.FC<IspConsultorLogoProps> = ({
   width = 200,
-  height = 60,
+  height,
   className = '',
 }) => {
   return (
@@ -18,7 +18,7 @@ const IspConsultorLogo: React.FC<IspConsultorLogoProps> = ({
       src={ispConsultorLogo}
       alt={`${SYSTEM_NAME} Logo`}
       width={width}
-      height={height}
+      {...(height != null ? { height } : {})}
       className={`${className} ispconsultor-logo-block`.trim()}
     />
   );

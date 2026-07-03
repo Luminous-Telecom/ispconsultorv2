@@ -51,6 +51,10 @@ $secondary: #f3f4f6;
 .home-logo {
   display: block;
   flex-shrink: 0;
+  width: 120px;
+  max-width: 120px;
+  height: auto;
+  object-fit: contain;
 }
 
 .home-nav-desktop {
@@ -1078,6 +1082,11 @@ $faixa-accent: #1e3a8a; /* azul escuro do tema do site */
 
   .home-footer-logo {
     display: block;
+    width: 32px;
+    height: 32px;
+    max-width: 32px;
+    max-height: 32px;
+    object-fit: contain;
   }
 
   .home-footer-brand-name {
