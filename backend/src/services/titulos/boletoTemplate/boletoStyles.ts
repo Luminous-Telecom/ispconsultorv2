@@ -2,12 +2,10 @@ export function getBoletoStyles(): string {
   return `<style type="text/css">
 :root {
   --b-text: #1f2937;
-  --b-text-muted: #6b7280;
-  --b-border: #d1d5db;
-  --b-border-light: #e5e7eb;
+  --b-text-muted: #4b5563;
+  --b-border: #9ca3af;
+  --b-border-light: #cbd5e1;
   --b-bg: #ffffff;
-  --b-bg-section: #f3f4f6;
-  --b-bg-row-alt: #f9fafb;
 }
 
 html, body {
@@ -33,6 +31,7 @@ table {
 .boleto-fatura {
   width: 100% !important;
   max-width: 100% !important;
+  min-height: 92mm;
   border: 1px solid var(--b-border);
   background: var(--b-bg);
   margin-bottom: 6px;
@@ -46,7 +45,7 @@ table {
 
 .boleto-fatura__header td {
   vertical-align: middle;
-  padding: 7px 14px;
+  padding: 6px 14px;
 }
 
 .boleto-fatura__header-logo {
@@ -58,11 +57,12 @@ table {
 
 .boleto-fatura__header-company {
   padding-right: 14px;
+  text-align: center;
 }
 
 .boleto-fatura__header-logo img {
-  width: 84px;
-  height: 46px;
+  width: 100px;
+  height: 54px;
   object-fit: contain;
 }
 
@@ -81,67 +81,62 @@ table {
   line-height: 1.4;
 }
 
-.section-title {
-  padding: 3px 14px;
-  font-size: 7pt;
+.info-section {
+  padding: 4px 14px 6px;
+}
+
+.info-section + .info-section {
+  border-top: 1px solid var(--b-border-light);
+}
+
+.info-section__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 6.5pt;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--b-text);
-  background: var(--b-bg-section);
-  border-top: 1px solid var(--b-border-light);
-  border-bottom: 1px solid var(--b-border-light);
 }
 
-.field-grid {
-  width: 100%;
-  padding: 0;
+.info-section__line {
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--b-border);
 }
 
-.field-grid tr td {
-  padding: 2.5px 14px;
-  vertical-align: top;
-  font-size: 7pt;
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px 16px;
 }
 
-.field-grid tr td:first-child {
-  padding-left: 14px;
+.info-item {
+  min-width: 0;
 }
 
-.field-grid tr td:last-child {
-  padding-right: 14px;
+.info-item--wide {
+  grid-column: 1 / -1;
 }
 
-.field-label {
-  color: var(--b-text-muted);
-  white-space: nowrap;
-  width: 1%;
-  padding-right: 8px !important;
-}
-
-.field-value {
+.info-item__label {
+  display: block;
+  font-size: 6pt;
+  font-weight: bold !important;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--b-text);
-  font-weight: 600;
+  margin-bottom: 1px;
 }
 
-.field-grid tr:nth-child(even) td {
-  background: var(--b-bg-row-alt);
-}
-
-.field-grid tr:nth-child(even) td:first-child {
-  padding-left: 14px;
-}
-
-.field-grid tr:nth-child(even) td:last-child {
-  padding-right: 14px;
-}
-
-.field-grid tr:last-child td {
-  padding-bottom: 5px;
-}
-
-.plan-grid .field-label {
-  width: 22%;
+.info-item__value {
+  display: block;
+  font-size: 7.5pt;
+  font-weight: 400;
+  color: var(--b-text);
+  overflow-wrap: break-word;
 }
 
 .boleto-divider {
@@ -181,6 +176,7 @@ table {
 .boleto-ficha {
   width: 100% !important;
   max-width: 100% !important;
+  min-height: 92mm;
 }
 
 .boleto-ficha__bank-header td {

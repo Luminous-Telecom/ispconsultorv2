@@ -1,29 +1,27 @@
 import type { BoletoRenderData } from './types';
 import { escapeHtml } from './escapeHtml';
 
-function fieldRow(
-  label: string,
-  value: string,
-  label2?: string,
-  value2?: string,
-): string {
-  if (label2 !== undefined && value2 !== undefined) {
-    return `<tr>
-      <td class="field-label">${escapeHtml(label)}</td>
-      <td class="field-value">${escapeHtml(value)}</td>
-      <td class="field-label">${escapeHtml(label2)}</td>
-      <td class="field-value">${escapeHtml(value2)}</td>
-    </tr>`;
-  }
+function infoItem(label: string, value: string, wide = false): string {
+  return `<div class="info-item${wide ? ' info-item--wide' : ''}">
+      <strong class="info-item__label">${escapeHtml(label)}</strong>
+      <span class="info-item__value">${escapeHtml(value)}</span>
+    </div>`;
+}
 
-  return `<tr>
-    <td class="field-label">${escapeHtml(label)}</td>
-    <td class="field-value" colspan="3">${escapeHtml(value)}</td>
-  </tr>`;
+function sectionTitle(texto: string): string {
+  return `<div class="info-section__title">
+    <span class="info-section__line"></span>
+    <span>${escapeHtml(texto)}</span>
+    <span class="info-section__line"></span>
+  </div>`;
 }
 
 export function buildBoletoFaturaHtml(data: BoletoRenderData): string {
   const { empresa, sacado, plano } = data;
+
+  const enderecoContratante = sacado.complemento
+    ? `${sacado.endereco} — ${sacado.complemento}`
+    : sacado.endereco;
 
   return `<div class="custom">
 <div class="boleto-fatura">
@@ -43,22 +41,31 @@ export function buildBoletoFaturaHtml(data: BoletoRenderData): string {
     </tr>
   </table>
 
-  <div class="section-title">Dados do contratante</div>
-  <table class="field-grid" border="0" cellspacing="0" cellpadding="0">
-    ${fieldRow('Nome', sacado.nome)}
-    ${fieldRow('Endereço', sacado.endereco, 'Compl.', sacado.complemento)}
-    ${fieldRow('Bairro', sacado.bairro, 'CEP', sacado.cep)}
-    ${fieldRow('Município', sacado.cidade, 'Estado', sacado.estado)}
-    ${fieldRow('CPF/CNPJ', sacado.documento, 'Processamento', data.ficha.dataProcessamento)}
-  </table>
+  <div class="info-section">
+    ${sectionTitle('Dados do contratante')}
+    <div class="info-grid">
+      ${infoItem('Nome', sacado.nome, true)}
+      ${infoItem('Endereço', enderecoContratante, true)}
+      ${infoItem('Bairro', sacado.bairro)}
+      ${infoItem('CEP', sacado.cep)}
+      ${infoItem('Município', sacado.cidade)}
+      ${infoItem('Estado', sacado.estado)}
+      ${infoItem('CPF/CNPJ', sacado.documento)}
+      ${infoItem('Processamento', data.ficha.dataProcessamento)}
+    </div>
+  </div>
 
-  <div class="section-title">Dados do plano contratado</div>
-  <table class="field-grid plan-grid" border="0" cellspacing="0" cellpadding="0">
-    ${fieldRow('Nome do plano', plano.nome)}
-    ${fieldRow('Descrição', plano.descricao)}
-    ${fieldRow('Tipo de serviço', plano.tipoServico, 'Usuários', plano.quantidadeUsuarios)}
-    ${fieldRow('Valor do plano', `R$ ${plano.valor}`, 'Periodicidade', plano.periodicidade)}
-  </table>
+  <div class="info-section">
+    ${sectionTitle('Dados do plano contratado')}
+    <div class="info-grid">
+      ${infoItem('Nome do plano', plano.nome, true)}
+      ${infoItem('Descrição', plano.descricao, true)}
+      ${infoItem('Tipo de serviço', plano.tipoServico)}
+      ${infoItem('Usuários', plano.quantidadeUsuarios)}
+      ${infoItem('Valor do plano', `R$ ${plano.valor}`)}
+      ${infoItem('Periodicidade', plano.periodicidade)}
+    </div>
+  </div>
 </div>
 
 <hr class="boleto-divider" />
