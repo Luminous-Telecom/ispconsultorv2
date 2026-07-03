@@ -143,7 +143,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
   const createMutation = useMutation({
     mutationFn: (data: CreateRotinaData) => SaasSchedulerService.createRotina(data),
     onSuccess: () => {
-      success('Rotina criada com sucesso!');
+      success('Rotina salva com sucesso!');
       queryClient.invalidateQueries({ queryKey: [invalidateKey] });
       resetForm();
       onSuccess?.();

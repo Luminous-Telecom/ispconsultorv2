@@ -52,7 +52,7 @@ export const useCreateBanco = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bancos'] });
       queryClient.invalidateQueries({ queryKey: ['bancos-ativos'] });
-      success('Banco criado com sucesso!');
+      success('Banco salvo com sucesso!');
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.BANCO_CREATE_ERROR),
   });

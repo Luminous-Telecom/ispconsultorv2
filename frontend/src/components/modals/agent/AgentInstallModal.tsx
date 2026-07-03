@@ -2,12 +2,10 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { Agent } from 'types';
 import DraggableModal from 'components/common/DraggableModal';
 import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
-import { CancelarButton, CopiarButton, FecharButton, GerarButton, InstalarAgenteButton, Loading } from 'components/ui';
-import { useI18n } from 'contexts/I18nContext';
+import { CancelarButton, CopyableFormField, FecharButton, GerarButton, InstalarAgenteButton, Loading } from 'components/ui';
 import FormField from 'components/ui/FormField';
 import { defaultApiClient } from 'services/core';
 import { AgentService } from 'services/agentService';
-import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
 import { getTerminalLogLineClass } from 'constants/designTokens';
 
 
@@ -29,16 +27,22 @@ const REQUIREMENTS = [
   'Mínimo: 256 MB RAM, 500 MB disco',
 ];
 
+const DEFAULT_INSTALL_FORM = {
+  name: '',
+  host: '',
+  port: '22',
+  username: 'root',
+  password: '',
+  private_key: '',
+};
+
 const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
   show, onClose, agent, onSuccess,
 }) => {
-  const { t } = useI18n();
   const [mode, setMode] = useState<InstallMode>('auto');
 
   // ── modo auto ──────────────────────────────────────────────────────────────
-  const [form, setForm] = useState({
-    host: '', port: '22', username: 'root', password: '', private_key: '',
-  });
+  const [form, setForm] = useState(DEFAULT_INSTALL_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<InstallStatus>('idle');
   const [logs, setLogs] = useState<string[]>([]);
@@ -50,19 +54,20 @@ const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
   const [agentNameError, setAgentNameError] = useState('');
   const [generatedCmd, setGeneratedCmd]   = useState('');
   const [generating, setGenerating]       = useState(false);
-  const { copy: copyToClipboard, isCopied: isCmdCopied, clearCopied } = useCopyToClipboard({ resetAfterMs: 2500 });
 
   useEffect(() => {
     if (show) {
       setStatus('idle');
       setLogs([]);
       setErrors({});
+      setForm(DEFAULT_INSTALL_FORM);
       setGeneratedCmd('');
-      clearCopied();
+      setAgentName('');
+      setAgentNameError('');
       setMode('auto');
     }
     return () => { abortRef.current?.abort(); };
-  }, [show, clearCopied]);
+  }, [show]);
 
   useEffect(() => {
     logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -75,6 +80,7 @@ const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
 
   const validate = () => {
     const e: Record<string, string> = {};
+    if (!agent && !form.name.trim()) e.name = 'Nome do agente é obrigatório';
     if (!form.host.trim()) e.host = 'IP / Host é obrigatório';
     if (!form.username.trim()) e.username = 'Usuário é obrigatório';
     if (!form.password.trim() && !form.private_key.trim()) e.password = 'Informe a senha ou a chave privada';
@@ -99,9 +105,9 @@ const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
       let targetAgent = agent;
       if (!targetAgent) {
         addLog('⚙️  Criando agente...');
-        const created = await AgentService.create({ name: form.host.trim() });
+        const created = await AgentService.create({ name: form.name.trim() });
         targetAgent = created;
-        addLog(`✅ Agente criado: ${created.name}`);
+        addLog(`✅ Agente salvo: ${created.name}`);
       }
 
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -195,11 +201,6 @@ const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
     }
   }, [agent, agentName]);
 
-  const handleCopy = useCallback(() => {
-    if (!generatedCmd) return;
-    void copyToClipboard(generatedCmd, 'cmd');
-  }, [copyToClipboard, generatedCmd]);
-
   const handleClose = () => {
     abortRef.current?.abort();
     onClose();
@@ -286,6 +287,21 @@ const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
         {/* ── Modo AUTO: formulário SSH ── */}
         {mode === 'auto' && status === 'idle' && (
           <div className="row g-3">
+            {!agent && (
+              <div className="col-12">
+                <FormField
+                  name="name"
+                  type="text"
+                  label="Nome do agente"
+                  value={form.name}
+                  onChange={set('name')}
+                  error={errors.name}
+                  required
+                  size="sm"
+                  placeholder="ex.: servidor-sp1"
+                />
+              </div>
+            )}
             <div className="col-8">
               <FormField name="host" type="text" label="IP / Host do servidor" value={form.host}
                 onChange={set('host')} error={errors.host} required size="sm"
@@ -335,36 +351,43 @@ const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
 
         {/* ── Modo MANUAL: nome do agente ── */}
         {mode === 'manual' && !generatedCmd && !agent && (
-          <div className="mb-3">
-            <FormField
-              name="agentName" type="text" label="Nome do agente" value={agentName}
-              onChange={(v) => setAgentName(v as string)}
-              error={agentNameError} required size="sm"
-              placeholder="ex.: servidor-sp1"
-            />
+          <div className="row g-2">
+            <div className="col-12">
+              <FormField
+                name="agentName"
+                type="text"
+                label="Nome do agente"
+                value={agentName}
+                onChange={(v) => setAgentName(v as string)}
+                error={agentNameError}
+                required
+                size="sm"
+                placeholder="ex.: servidor-sp1"
+              />
+            </div>
           </div>
         )}
 
         {/* ── Modo MANUAL: comando gerado ── */}
         {mode === 'manual' && generatedCmd && (
-          <div>
-            <p className="small text-muted mb-2">
-              Execute o seguinte comando <strong>como root</strong> no servidor:
-            </p>
-            <div className="mono-code-block">
-              <span className="mono-code-prompt">$</span>
-              <span className="mono-code-text">
-                {generatedCmd}
-              </span>
-              <CopiarButton
-                iconOnly
-                isCopied={isCmdCopied('cmd')}
-                onClick={handleCopy}
-                label={isCmdCopied('cmd') ? t('blockdomi.copiedToClipboard') : undefined}
+          <div className="row g-2">
+            <div className="col-12">
+              <CopyableFormField
+                name="install_command"
+                type="text"
+                label="Comando de instalação"
+                value={generatedCmd}
+                readOnly
+                size="sm"
+                className="agent-install-command-field"
+                helpText="Execute como root no servidor."
+                copyKey="agent-install-command"
               />
             </div>
-            <div className="alert alert-warning small mt-3 py-2 mb-0 alert-compact">
-              <strong>Atenção:</strong> este comando inclui o token do agente. Não compartilhe em locais públicos.
+            <div className="col-12">
+              <div className="alert alert-warning small py-2 mb-0 alert-compact">
+                <strong>Atenção:</strong> este comando inclui o token do agente. Não compartilhe em locais públicos.
+              </div>
             </div>
           </div>
         )}

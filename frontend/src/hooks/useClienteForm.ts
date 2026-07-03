@@ -219,7 +219,7 @@ export const useClienteForm = ({
   const createClienteMutation = useMutation({
     mutationFn: (data: Partial<Cliente>) => ClienteService.create(data as CreateCliente),
     onSuccess: (createdCliente: Cliente) => {
-      success('Cliente criado com sucesso!');
+      success('Cliente salvo com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
       setCreatedClienteId(createdCliente.id);
       onSuccess?.();

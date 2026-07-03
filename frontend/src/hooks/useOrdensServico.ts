@@ -64,9 +64,9 @@ export const useCreateOrdemServico = () => {
     mutationFn: OrdemServicoService.create,
     onSuccess: async () => {
       await refreshOrdensServicoCache(queryClient);
-      success('Ordem de serviço criada com sucesso!');
+      success('Ordem de serviço salva com sucesso!');
     },
-    onError: (err) => showApiError(err, 'Erro ao criar ordem de serviço'),
+    onError: (err) => showApiError(err, 'Erro ao salvar ordem de serviço'),
   });
 };
 

@@ -58,7 +58,6 @@ export interface MensagensTabProps {
     titulo: string;
     variaveis: Array<{ variavel: string; descricao: string }>;
   }>;
-  onCopyVariable?: (variable: string) => void;
   onInsertVariable?: (variable: string) => void;
   onShowTemplates?: () => void;
 }

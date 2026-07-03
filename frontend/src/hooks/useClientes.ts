@@ -54,7 +54,7 @@ export const useCreateCliente = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
       queryClient.invalidateQueries({ queryKey: ['clientes-ativos'] });
-      success('Cliente criado com sucesso!');
+      success('Cliente salvo com sucesso!');
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CLIENT_CREATE_ERROR),
   });

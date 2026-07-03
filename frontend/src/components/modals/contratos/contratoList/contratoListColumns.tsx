@@ -149,7 +149,7 @@ export function useContratoListColumns(): ListModalConfig<ContratoRow>['columns'
       },
       {
         key: 'created_at',
-        label: 'Criado em',
+        label: 'Data cadastro',
         sortable: true,
         width: '140px',
         render: (item) => {

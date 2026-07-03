@@ -6,7 +6,6 @@ import { defaultApiClient } from 'services/core';
 import { AgentService } from 'services/agentService';
 import { authService } from 'services/authService';
 import { DadosEmpresaService } from 'services/dadosEmpresaService';
-import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
 import { buildInstallScriptCommand } from './agentModalUtils';
 import { DEFAULT_SSH_FORM, EMPTY_FORM } from './constants';
 import { ActiveTab, AgentModalProps, InstallStatus } from './types';
@@ -57,9 +56,6 @@ export function useAgentModal({
 
   const [generatedCmd, setGeneratedCmd] = useState('');
   const [generating, setGenerating] = useState(false);
-  const { copy: copyToClipboard, isCopied: isCmdCopied, clearCopied } = useCopyToClipboard({
-    resetAfterMs: 2500,
-  });
 
   const [installAgent, setInstallAgent] = useState<Agent | null>(agentData ?? null);
 
@@ -67,7 +63,6 @@ export function useAgentModal({
     if (!show) {
       setActiveTab('config');
       setGeneratedCmd('');
-      clearCopied();
       setGenerating(false);
       setInstallAgent(null);
       setInstallStatus('idle');
@@ -93,12 +88,11 @@ export function useAgentModal({
     setInstallStatus('idle');
     setLogs([]);
     setGeneratedCmd('');
-    clearCopied();
     setInstallAgent(agentData ?? null);
 
     return () => { abortRef.current?.abort(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- deps intencionais: show + agentData?.id
-  }, [show, agentData?.id, clearCopied]);
+  }, [show, agentData?.id]);
 
   useEffect(() => {
     logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -236,7 +230,7 @@ export function useAgentModal({
             : {}),
         });
         setInstallAgent(target);
-        addLog(`✅ Agente criado: ${target.name}`);
+        addLog(`✅ Agente salvo: ${target.name}`);
       }
 
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -280,11 +274,6 @@ export function useAgentModal({
     }
   };
 
-  const handleCopy = useCallback(() => {
-    if (!generatedCmd) return;
-    void copyToClipboard(generatedCmd, 'cmd');
-  }, [copyToClipboard, generatedCmd]);
-
   const handleClose = () => {
     abortRef.current?.abort();
     if (!isEditing && installAgent) onSuccess?.();
@@ -327,7 +316,6 @@ export function useAgentModal({
     logs,
     logEndRef,
     generatedCmd,
-    cmdCopied: isCmdCopied('cmd'),
     generating,
     clienteEdicaoLabel,
     isSubmitting,
@@ -341,7 +329,6 @@ export function useAgentModal({
     handleRegenerate,
     handleInstall,
     handleGenerateCmd,
-    handleCopy,
     handleClose,
     handleSelectCliente,
   };

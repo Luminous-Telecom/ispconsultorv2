@@ -50,7 +50,7 @@ export const useCreateIntegracaoIxcProvedor = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['integracao-ixc-provedor'] });
       queryClient.invalidateQueries({ queryKey: ['integracao-ixc-provedor-ativos'] });
-      success('Integração IXC Provedor criada com sucesso');
+      success('Integração IXC Provedor salva com sucesso');
     },
     onError: (error) => showApiError(error),
   });

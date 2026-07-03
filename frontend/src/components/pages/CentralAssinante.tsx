@@ -71,8 +71,6 @@ const CentralAssinante: React.FC = () => {
     handleImprimirFatura,
     handleImprimirRecibo,
     handleVisualizarFatura,
-    copiarCodigo,
-    isCopyFieldCopied,
     handleCardClick,
   } = useCentralAssinanteActions({
     slug,
@@ -218,8 +216,6 @@ const CentralAssinante: React.FC = () => {
           faturaVisualizar={faturaVisualizar}
           baixandoBoletoId={baixandoBoletoId}
           onClose={() => setFaturaVisualizar(null)}
-          copiarCodigo={copiarCodigo}
-          isCopyFieldCopied={isCopyFieldCopied}
           handleImprimirFatura={handleImprimirFatura}
         />
       ) : null}

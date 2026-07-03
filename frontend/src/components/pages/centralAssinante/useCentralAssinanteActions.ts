@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
 import { CentralAssinanteService } from 'services/centralAssinanteService';
-import { CONTEXT_ERROR_MESSAGES, ERROR_MESSAGES } from 'constants/ErrorMessages';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import {
   CentralAssinanteCardTipo,
   CentralAssinanteTab,
@@ -22,12 +21,6 @@ export const useCentralAssinanteActions = ({
   showApiError,
   setActiveTab,
 }: UseCentralAssinanteActionsParams) => {
-  const { copy: copyToClipboard, isCopied } = useCopyToClipboard({
-    resetAfterMs: 2000,
-    useFallback: true,
-    successMessage: 'Código copiado!',
-    errorMessage: ERROR_MESSAGES.COPY_ERROR,
-  });
   const [faturaVisualizar, setFaturaVisualizar] = useState<FaturaVisualizar | null>(null);
   const [baixandoBoletoId, setBaixandoBoletoId] = useState<number | null>(null);
   const [baixandoContratoId, setBaixandoContratoId] = useState<number | null>(null);
@@ -86,10 +79,6 @@ export const useCentralAssinanteActions = ({
     setFaturaVisualizar(titulo);
   };
 
-  const copiarCodigo = async (text: string, fieldName: string) => {
-    await copyToClipboard(text, fieldName);
-  };
-
   const handleCardClick = (tipo: CentralAssinanteCardTipo) => {
     setActiveTab(getTabFromCardClick(tipo));
   };
@@ -106,8 +95,6 @@ export const useCentralAssinanteActions = ({
     handleImprimirFatura,
     handleImprimirRecibo,
     handleVisualizarFatura,
-    copiarCodigo,
-    isCopyFieldCopied: isCopied,
     handleCardClick,
   };
 };

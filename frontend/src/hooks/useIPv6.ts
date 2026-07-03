@@ -48,10 +48,10 @@ export const useCreateIPv6 = () => {
     mutationFn: IPv6Service.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ipv6'] });
-      success('IPv6 criado com sucesso!');
+      success('IPv6 salvo com sucesso!');
     },
     onError: (err) => {
-      error(getErrorMessage(err, 'Erro ao criar IPv6'));
+      error(getErrorMessage(err, 'Erro ao salvar IPv6'));
     },
   });
 };

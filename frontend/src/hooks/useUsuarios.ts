@@ -40,7 +40,7 @@ export const useCreateUsuario = () => {
     mutationFn: UsuarioService.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['usuarios'] });
-      success('Usuário criado com sucesso!');
+      success('Usuário salvo com sucesso!');
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.USER_CREATE_ERROR),
   });

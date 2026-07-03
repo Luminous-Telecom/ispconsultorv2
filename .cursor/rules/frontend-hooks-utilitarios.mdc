@@ -9,11 +9,29 @@ alwaysApply: false
 ## Clipboard
 
 ```tsx
-import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
-import { CopiarButton } from 'components/ui';
+import { CopyableFormField, CopiarIconButton } from 'components/ui';
 ```
 
-**Proibido** `navigator.clipboard` / `document.execCommand` espalhado — use o hook.
+Padrão obrigatório:
+
+- Campo de formulário com valor copiável (URL, token, comando, código): `CopyableFormField`
+- Ação isolada para copiar texto em card/lista/preview: `CopiarIconButton`
+- Botão visual de copiar só via componentes centralizados; não montar `CopiarButton + useCopyToClipboard` por tela
+- `useCopyToClipboard` fica restrito aos componentes centrais de copiar ou hooks sem UI reutilizável
+
+```tsx
+<CopyableFormField
+  name="webhook_url"
+  label={t('form.webhookUrl')}
+  value={url}
+  readOnly
+  copyKey="webhook-url"
+/>
+
+<CopiarIconButton text={codigo} copyKey="codigo-pix" />
+```
+
+**Proibido** `navigator.clipboard` / `document.execCommand` espalhado — use os componentes acima.
 
 ## Responsivo
 

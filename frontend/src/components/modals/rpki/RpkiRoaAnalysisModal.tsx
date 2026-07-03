@@ -102,7 +102,7 @@ const RpkiRoaAnalysisModal: React.FC<RpkiRoaAnalysisModalProps> = ({
         >
           <i className="bi bi-info-circle flex-shrink-0" aria-hidden />
           <span>
-            Selecione as linhas das alterações que deseja aplicar (criar ROA nova ou revogar conforme a análise) e
+            Selecione as linhas das alterações que deseja aplicar (salvar ROA nova ou revogar conforme a análise) e
             confirme.
           </span>
         </div>

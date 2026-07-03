@@ -128,7 +128,7 @@ const RecibosTab: React.FC<RecibosTabProps> = ({ contratoId: _contratoId }) => {
     },
     {
       key: 'created_at',
-      label: 'Criado em',
+      label: 'Data cadastro',
       sortable: true,
       render: (item: ModeloRecibo) => {
         if (!item.created_at) return '-';

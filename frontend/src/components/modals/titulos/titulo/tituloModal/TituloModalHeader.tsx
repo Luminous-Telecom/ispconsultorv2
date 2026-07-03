@@ -3,7 +3,7 @@ import { TituloService } from 'services/tituloService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
-import { CancelarButton, CriarTituloButton, SalvarButton, AppButton, DropdownItemButton } from 'components/ui';
+import { CancelarButton, SalvarButton, AppButton, DropdownItemButton } from 'components/ui';
 
 interface TituloModalHeaderProps {
   isEditMode: boolean;
@@ -87,7 +87,7 @@ const TituloModalHeader: React.FC<TituloModalHeaderProps> = ({
       {isEditMode ? (
         <SalvarButton type="submit" form="titulo-form" isPending={isPending} />
       ) : (
-        <CriarTituloButton type="submit" form="titulo-form" isPending={isPending} />
+        <SalvarButton type="submit" form="titulo-form" isPending={isPending} />
       )}
     </div>
   );

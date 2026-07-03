@@ -376,11 +376,7 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
 
             <div className="d-flex gap-2 justify-content-end mt-3 form-modal-input-col">
               <CancelarButton type="button" onClick={handleCloseForm} isPending={isPending} />
-              {editingId ? (
-                <SalvarButton type="button" onClick={handleSubmit} isPending={isPending} />
-              ) : (
-                <NovoButton entity="Empresa" type="button" onClick={handleSubmit} isPending={isPending} />
-              )}
+              <SalvarButton type="button" onClick={handleSubmit} isPending={isPending} />
             </div>
           </form>
         </DraggableModal>

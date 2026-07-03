@@ -173,7 +173,7 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
     },
     {
       key: 'created_at',
-      label: 'Criado em',
+      label: 'Data cadastro',
       sortable: true,
       render: (item: DocumentoUnion) => {
         if (!('created_at' in item) || !item.created_at) return '-';

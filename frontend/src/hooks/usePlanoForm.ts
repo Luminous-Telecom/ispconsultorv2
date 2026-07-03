@@ -177,7 +177,7 @@ export const usePlanoForm = ({
   const createPlanoMutation = useMutation({
     mutationFn: (data: PlanoForm) => PlanoService.create(data),
     onSuccess: () => {
-      success('Plano criado com sucesso!');
+      success('Plano salvo com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['planos'] });
       onSuccess?.();
     },

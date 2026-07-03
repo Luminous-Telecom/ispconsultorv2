@@ -1,21 +1,15 @@
 import React from 'react';
-import { CopiarButton, Loading } from 'components/ui';
+import { CopyableFormField, Loading } from 'components/ui';
 import { REQUIREMENTS } from './constants';
 
 interface AgentModalInstallManualTabProps {
   generating: boolean;
   generatedCmd: string;
-  cmdCopied: boolean;
-  copiedLabel?: string;
-  onCopy: () => void;
 }
 
 const AgentModalInstallManualTab: React.FC<AgentModalInstallManualTabProps> = ({
   generating,
   generatedCmd,
-  cmdCopied,
-  copiedLabel,
-  onCopy,
 }) => (
   <div>
     {generating && (
@@ -32,27 +26,31 @@ const AgentModalInstallManualTab: React.FC<AgentModalInstallManualTabProps> = ({
     )}
 
     {generatedCmd && (
-      <>
-        <p className="small text-muted mb-2">
-          Execute o seguinte comando <strong>como root</strong> no servidor:
-        </p>
-        <div className="mono-code-block">
-          <span className="mono-code-prompt">$</span>
-          <span className="mono-code-text">
-            {generatedCmd}
-          </span>
-          <CopiarButton
-            iconOnly
-            isCopied={cmdCopied}
-            onClick={onCopy}
-            label={cmdCopied ? copiedLabel : undefined}
+      <div className="row g-2">
+        <div className="col-12">
+          <CopyableFormField
+            name="install_command"
+            type="text"
+            label="Comando de instalação"
+            value={generatedCmd}
+            readOnly
+            size="sm"
+            className="agent-install-command-field"
+            helpText="Execute como root no servidor."
+            copyKey="agent-install-command"
           />
         </div>
-        <p className="small text-muted mt-2 mb-1">Prefere instalar via SSH a partir do painel? Use a aba <strong>Instalar Automático</strong>.</p>
-        <div className="alert alert-warning small py-2 mb-0 alert-compact">
-          <strong>Atenção:</strong> este comando inclui o token do agente. Não compartilhe em locais públicos.
+        <div className="col-12">
+          <p className="text-muted fs-xs mb-0 form-modal-input-col">
+            Prefere instalar via SSH a partir do painel? Use a aba Instalar Automático.
+          </p>
         </div>
-      </>
+        <div className="col-12">
+          <div className="alert alert-warning small py-2 mb-0 alert-compact">
+            <strong>Atenção:</strong> este comando inclui o token do agente. Não compartilhe em locais públicos.
+          </div>
+        </div>
+      </div>
     )}
   </div>
 );

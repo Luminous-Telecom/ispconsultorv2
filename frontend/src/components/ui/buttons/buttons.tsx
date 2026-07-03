@@ -59,7 +59,6 @@ export const PagarButton = createButton('pagar');
 export const DuplicarButton = createButton('duplicar');
 export const InserirButton = createButton('inserir');
 export const NfseButton = createButton('nfse');
-export const CriarTituloButton = createButton('criarTitulo');
 export const AtualizarSistemaButton = createButton('atualizarSistema');
 export const ValidarButton = createButton('validar');
 export const InstalarAgenteButton = createButton('instalarAgente');

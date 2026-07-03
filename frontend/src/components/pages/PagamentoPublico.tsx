@@ -3,9 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { defaultApiClient } from 'services/core';
 import { formatDate } from 'utils/formatters';
-import { ERROR_MESSAGES } from 'constants/ErrorMessages';
-import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
-import { Loading, CopiarButton, NavLinkButton } from 'components/ui';
+import { Loading, CopiarIconButton, NavLinkButton } from 'components/ui';
 import './PagamentoPublico.css';
 
 interface TituloPublico {
@@ -33,11 +31,6 @@ const PagamentoPublico: React.FC = () => {
   const navigate = useNavigate();
   const [sessionReady, setSessionReady] = useState<boolean>(!token);
   const sessionInitRef = useRef(false);
-  const { copy: copyToClipboard, isCopied } = useCopyToClipboard({
-    resetAfterMs: 2000,
-    useFallback: true,
-    errorMessage: ERROR_MESSAGES.COPY_ERROR,
-  });
 
   // Quando tem token na URL: trocar por cookie e remover token da URL (evita token em logs/histórico)
   useEffect(() => {
@@ -68,10 +61,6 @@ const PagamentoPublico: React.FC = () => {
     enabled: !!id && (sessionReady || !token),
     retry: false,
   });
-
-  const copiarCodigo = async (text: string, fieldName: string) => {
-    await copyToClipboard(text, fieldName);
-  };
 
   const formatarValor = (valor: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
@@ -201,13 +190,12 @@ const PagamentoPublico: React.FC = () => {
                 {titulo.qrcode}
               </div>
               <div className="d-flex justify-content-center mt-2">
-                <CopiarButton
+                <CopiarIconButton
                   type="button"
-                  iconOnly
                   variant="secondary"
                   label="Copiar Código PIX"
-                  isCopied={isCopied('pix')}
-                  onClick={() => copiarCodigo(titulo.qrcode!, 'pix')}
+                  text={titulo.qrcode!}
+                  copyKey="pagamento-pix"
                 />
               </div>
             </div>
@@ -225,13 +213,12 @@ const PagamentoPublico: React.FC = () => {
                 {titulo.linha_digitavel}
               </div>
               <div className="d-flex justify-content-center mt-2">
-                <CopiarButton
+                <CopiarIconButton
                   type="button"
-                  iconOnly
                   variant="secondary"
                   label="Copiar Linha Digitável"
-                  isCopied={isCopied('linha')}
-                  onClick={() => copiarCodigo(titulo.linha_digitavel!, 'linha')}
+                  text={titulo.linha_digitavel!}
+                  copyKey="pagamento-linha"
                 />
               </div>
             </div>

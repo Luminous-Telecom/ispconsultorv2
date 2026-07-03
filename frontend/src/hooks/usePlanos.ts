@@ -52,7 +52,7 @@ export const useCreatePlano = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['planos'] });
       queryClient.invalidateQueries({ queryKey: ['planos-ativos'] });
-      success('Plano criado com sucesso!');
+      success('Plano salvo com sucesso!');
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.PLANO_CREATE_ERROR),
   });

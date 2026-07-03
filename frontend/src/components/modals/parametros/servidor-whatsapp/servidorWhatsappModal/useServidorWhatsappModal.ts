@@ -6,7 +6,6 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { ServidorWhatsAppService, MensagemWhatsApp } from 'services/servidorWhatsAppService';
 import { defaultApiClient } from 'services/core';
 import { useI18n } from 'contexts/I18nContext';
-import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
 import { ServidorWhatsAppForm, ServidorWhatsappModalProps } from '../types';
 import { GrupoVariaveis, INITIAL_FORM_DATA, WhatsappActiveTab } from './constants';
 
@@ -19,9 +18,6 @@ export function useServidorWhatsappModal({ show, onClose }: UseServidorWhatsappM
   const { t } = useI18n();
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
-  const { copy: copyToClipboard } = useCopyToClipboard({
-    successMessage: t('whatsappServer.variableCopied'),
-  });
   const queryClient = useQueryClient();
 
   const initialFormData = useMemo(() => ({ ...INITIAL_FORM_DATA }), []);
@@ -276,10 +272,6 @@ export function useServidorWhatsappModal({ show, onClose }: UseServidorWhatsappM
     });
   };
 
-  const handleCopyVariable = (variable: string) => {
-    void copyToClipboard(variable);
-  };
-
   const handleInsertVariable = (variable: string) => {
     if (mensagemType === 'envio_manual') {
       setMensagemManual((prev) => prev + variable);
@@ -337,7 +329,6 @@ export function useServidorWhatsappModal({ show, onClose }: UseServidorWhatsappM
     handleReset,
     handleClose,
     handleSendTestMessage,
-    handleCopyVariable,
     handleInsertVariable,
     handleFormFieldChange,
     handleTemplateSelect,

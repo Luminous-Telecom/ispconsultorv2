@@ -40,9 +40,9 @@ export const useCreateAgent = () => {
     mutationFn: AgentService.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['agents'] });
-      success('Agente criado!');
+      success('Agente salvo!');
     },
-    onError: (err) => error(getErrorMessage(err, 'Erro ao criar agente')),
+    onError: (err) => error(getErrorMessage(err, 'Erro ao salvar agente')),
   });
 };
 

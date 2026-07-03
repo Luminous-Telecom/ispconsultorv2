@@ -47,7 +47,7 @@ export const useCreateTipoCobrancaContrato = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tipos-cobranca-contrato'] });
       queryClient.invalidateQueries({ queryKey: ['tipos-cobranca-contrato-ativos'] });
-      success('Tipo de cobrança criado com sucesso!');
+      success('Tipo de cobrança salvo com sucesso!');
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TIPO_COBRANCA_CREATE_ERROR),
   });

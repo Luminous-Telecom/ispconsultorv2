@@ -2,7 +2,7 @@ import React from 'react';
 import {
   VoltarButton,
   BaixarButton,
-  CopiarButton,
+  CopiarIconButton,
 } from 'components/ui';
 import { formatCurrency, formatDate } from 'utils/formatters';
 import { FaturaVisualizar } from './centralAssinanteUtils';
@@ -11,8 +11,6 @@ interface CentralAssinanteFaturaModalProps {
   faturaVisualizar: FaturaVisualizar;
   baixandoBoletoId: number | null;
   onClose: () => void;
-  copiarCodigo: (text: string, fieldName: string) => void;
-  isCopyFieldCopied: (fieldName: string) => boolean;
   handleImprimirFatura: (tituloId: number) => void;
 }
 
@@ -20,8 +18,6 @@ const CentralAssinanteFaturaModal: React.FC<CentralAssinanteFaturaModalProps> = 
   faturaVisualizar,
   baixandoBoletoId,
   onClose,
-  copiarCodigo,
-  isCopyFieldCopied,
   handleImprimirFatura,
 }) => (
   <div className="modal fade show d-block central-assinante-modal-backdrop" onClick={onClose}>
@@ -68,13 +64,12 @@ const CentralAssinanteFaturaModal: React.FC<CentralAssinanteFaturaModalProps> = 
                 </div>
               </div>
               <div className="d-flex justify-content-center mt-1">
-                <CopiarButton
+                <CopiarIconButton
                   type="button"
-                  iconOnly
                   variant="secondary"
                   size="sm"
-                  isCopied={isCopyFieldCopied('linha')}
-                  onClick={() => copiarCodigo(faturaVisualizar.linha_digitavel!, 'linha')}
+                  text={faturaVisualizar.linha_digitavel!}
+                  copyKey="central-fatura-linha"
                 />
               </div>
             </div>
@@ -90,13 +85,12 @@ const CentralAssinanteFaturaModal: React.FC<CentralAssinanteFaturaModalProps> = 
                 />
               </div>
               <div className="d-flex justify-content-center mt-1">
-                <CopiarButton
+                <CopiarIconButton
                   type="button"
-                  iconOnly
                   variant="secondary"
                   size="sm"
-                  isCopied={isCopyFieldCopied('pix')}
-                  onClick={() => copiarCodigo(faturaVisualizar.qrcode!, 'pix')}
+                  text={faturaVisualizar.qrcode!}
+                  copyKey="central-fatura-pix"
                 />
               </div>
             </div>

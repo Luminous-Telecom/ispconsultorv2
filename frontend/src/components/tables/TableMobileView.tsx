@@ -369,8 +369,7 @@ function TableMobileView<T extends { id: number | string }>({
       const isCreateLike =
         l.includes('nova') ||
         l.includes('novo') ||
-        l.includes('create') ||
-        l.includes('criar');
+        l.includes('create');
       const isTunnelOrBackup =
         l.includes('backup') ||
         l.includes('terminal') ||

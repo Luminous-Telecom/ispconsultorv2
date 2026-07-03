@@ -71,7 +71,7 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
     },
     {
       key: 'created_at',
-      label: 'Criado em',
+      label: 'Data cadastro',
       sortable: true,
       width: '150px',
       render: (item: DocumentoSistema) => (

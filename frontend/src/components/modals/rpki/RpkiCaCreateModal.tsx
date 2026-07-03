@@ -46,7 +46,7 @@ const RpkiCaCreateModal: React.FC<RpkiCaCreateModalProps> = ({ show, onClose, de
     mutationFn: (payload: { nome: string; clienteId?: number | null }) => RpkiCaService.create(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['rpki-cas'] });
-      success('CA criada com sucesso');
+      success('CA salva com sucesso');
       onClose();
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_CA_CREATE_ERROR),

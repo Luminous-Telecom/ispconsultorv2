@@ -91,7 +91,7 @@ const SaasPlanos: React.FC = () => {
         success('Plano atualizado com sucesso');
       } else {
         await saasPlanoService.create(form);
-        success('Plano criado com sucesso');
+        success('Plano salvo com sucesso');
       }
       queryClient.invalidateQueries({ queryKey: ['saas-planos'] });
     } catch (err) {

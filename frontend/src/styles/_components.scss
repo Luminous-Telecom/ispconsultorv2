@@ -3032,6 +3032,13 @@ textarea:focus {
   min-height: 0;
 }
 
+.agent-install-command-field.form-control,
+.agent-install-command-field .form-control {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-xs);
+  line-height: 1.4;
+}
+
 .banco-tab-disabled {
   cursor: not-allowed !important;
   opacity: 0.6 !important;

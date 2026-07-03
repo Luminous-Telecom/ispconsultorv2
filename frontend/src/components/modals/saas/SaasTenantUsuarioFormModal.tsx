@@ -84,7 +84,7 @@ const SaasTenantUsuarioFormModal: React.FC<Props> = ({
     mutationFn: (d: SaasTenantUsuarioFormData) =>
       saasTenantUsuariosService.create({ empresa_id: empresaId, ...d }),
     onSuccess: () => {
-      success('Usuário criado com sucesso');
+      success('Usuário salvo com sucesso');
       onSuccess?.();
       onClose();
     },

@@ -48,7 +48,7 @@ export const useCreateModeloTermo = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['modelos-termo'] });
-      success('Modelo de termo criado com sucesso!');
+      success('Modelo de termo salvo com sucesso!');
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.DOCUMENT_CREATE_ERROR),
   });

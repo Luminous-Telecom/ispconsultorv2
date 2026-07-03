@@ -134,7 +134,7 @@ export const useSaasBancoForm = ({ bancoId, show, onSuccess }: UseSaasBancoFormP
         lastCreatedBancoIdRef.current = created.id;
         setLastCreatedBancoId(created.id);
       }
-      success('Banco criado com sucesso!');
+      success('Banco salvo com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['saas-bancos'] });
       onSuccess?.();
     },

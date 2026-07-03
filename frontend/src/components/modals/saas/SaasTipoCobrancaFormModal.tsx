@@ -62,7 +62,7 @@ const SaasTipoCobrancaFormModal: React.FC<SaasTipoCobrancaFormModalProps> = ({
     update: (id, payload) => saasTipoCobrancaService.update(id, payload),
     invalidateQueryKeys: ['saas-tipos-cobranca'],
     messages: {
-      createSuccess: 'Tipo de cobrança criado',
+      createSuccess: 'Tipo de cobrança salvo',
       updateSuccess: 'Tipo de cobrança atualizado',
       createError: CONTEXT_ERROR_MESSAGES.TIPO_COBRANCA_CREATE_ERROR,
       updateError: CONTEXT_ERROR_MESSAGES.TIPO_COBRANCA_UPDATE_ERROR,

@@ -31,7 +31,6 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
   onSaveMensagem: _onSaveMensagem,
   isPending: _isPending,
   variaveisData,
-  onCopyVariable,
   onInsertVariable,
   onShowTemplates
 }) => {
@@ -234,12 +233,10 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                                       {variavel.variavel}
                                     </span>
                                     <small className="text-muted">{variavel.descricao}</small>
-                                    {onCopyVariable && (
-                                      <MensagemVariavelCopyButton
-                                        variable={variavel.variavel}
-                                        title={t('settings.messages.copyVariable')}
-                                      />
-                                    )}
+                                    <MensagemVariavelCopyButton
+                                      variable={variavel.variavel}
+                                      title={t('settings.messages.copyVariable')}
+                                    />
                                     </div>
                                   </div>
                                 ))}

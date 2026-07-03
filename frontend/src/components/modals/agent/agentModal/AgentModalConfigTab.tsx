@@ -53,107 +53,107 @@ function AgentModalConfigTab({
   onRegenerate,
 }: AgentModalConfigTabProps) {
   return (
-    <form onSubmit={onFormSubmit} className="form-modal-simple row g-2">
-      <>
-      {isEditing && (
-        <div className="col-12">
-          <FormField
-            name="cliente_display"
-            type="text"
-            label={t('table.client')}
-            size="sm"
-            readOnly
-            disabled
-            value={clienteEdicaoLabel}
-            onChange={() => {}}
-          />
-        </div>
-      )}
-      {!isEditing && isAdmin && clienteId == null && (
-        <div className="col-12">
-          <EntitySelectField
-            value={adminClienteId || 0}
-            onChange={(id) => {
-              setAdminClienteId(id || null);
-              if (!id) setAdminClienteNome('');
-              if (errors.cliente_id) setErrors((prev) => ({ ...prev, cliente_id: '' }));
-            }}
-            onShowModal={onShowClientePicker}
-            entities={
-              adminClienteId && adminClienteNome
-                ? [{ id: adminClienteId, nome: adminClienteNome }]
-                : []
-            }
-            label={t('table.client')}
-            required
-            error={errors.cliente_id}
-            idFieldTitle="ID do cliente"
-            searchButtonTitle={t('ui.selectClient')}
-          />
-        </div>
-      )}
-      {!isEditing && !isAdmin && me && (
-        <div className="col-12">
-          <FormField
-            name="empresa_display"
-            type="text"
-            label="Empresa"
-            size="sm"
-            readOnly
-            disabled
-            value={
-              dadosEmpresaTenant
-                ? (dadosEmpresaTenant.nome_fantasia?.trim() || dadosEmpresaTenant.razao_social)
-                : 'Carregando…'
-            }
-            onChange={() => {}}
-          />
-        </div>
-      )}
-      <div className="col-12">
-        <FormField
-          name="name"
-          type="text"
-          label="Nome do agente"
-          value={agentFormData.name}
-          onChange={setField('name')}
-          error={errors.name}
-          required
-          size="sm"
-          placeholder="Ex: Servidor Produção"
-        />
-      </div>
-      <div className="col-12">
-        <FormField
-          name="description"
-          type="textarea"
-          label="Descrição"
-          value={agentFormData.description}
-          onChange={setField('description')}
-          size="sm"
-          rows={2}
-          placeholder="Localização, função, notas..."
-        />
-      </div>
-      {isEditing && (
-        <div className="col-12">
-          <hr className="my-1" />
-          <div className="d-flex align-items-center justify-content-between">
-            <div>
-              <div className="small fw-semibold">Token atual</div>
-              <div className="text-muted form-hint small">{agentData?.token_hint ?? '(gerado na criação)'}</div>
-            </div>
-            <GerarTokenButton
-              type="button"
-              variant="outline-danger"
-              onClick={onRegenerate}
-              disabled={regeneratePending}
-              isPending={regeneratePending}
+    <form onSubmit={onFormSubmit} className="form-modal-simple">
+      <div className="row g-2">
+        {isEditing && (
+          <div className="col-12">
+            <FormField
+              name="cliente_display"
+              type="text"
+              label={t('table.client')}
+              size="sm"
+              readOnly
+              disabled
+              value={clienteEdicaoLabel}
+              onChange={() => {}}
             />
           </div>
+        )}
+        {!isEditing && isAdmin && clienteId == null && (
+          <div className="col-12">
+            <EntitySelectField
+              value={adminClienteId || 0}
+              onChange={(id) => {
+                setAdminClienteId(id || null);
+                if (!id) setAdminClienteNome('');
+                if (errors.cliente_id) setErrors((prev) => ({ ...prev, cliente_id: '' }));
+              }}
+              onShowModal={onShowClientePicker}
+              entities={
+                adminClienteId && adminClienteNome
+                  ? [{ id: adminClienteId, nome: adminClienteNome }]
+                  : []
+              }
+              label={t('table.client')}
+              required
+              error={errors.cliente_id}
+              idFieldTitle="ID do cliente"
+              searchButtonTitle={t('ui.selectClient')}
+            />
+          </div>
+        )}
+        {!isEditing && !isAdmin && me && (
+          <div className="col-12">
+            <FormField
+              name="empresa_display"
+              type="text"
+              label="Empresa"
+              size="sm"
+              readOnly
+              disabled
+              value={
+                dadosEmpresaTenant
+                  ? (dadosEmpresaTenant.nome_fantasia?.trim() || dadosEmpresaTenant.razao_social)
+                  : 'Carregando…'
+              }
+              onChange={() => {}}
+            />
+          </div>
+        )}
+        <div className="col-12">
+          <FormField
+            name="name"
+            type="text"
+            label="Nome do agente"
+            value={agentFormData.name}
+            onChange={setField('name')}
+            error={errors.name}
+            required
+            size="sm"
+            placeholder="Ex: Servidor Produção"
+          />
         </div>
-      )}
-      </>
+        <div className="col-12">
+          <FormField
+            name="description"
+            type="textarea"
+            label="Descrição"
+            value={agentFormData.description}
+            onChange={setField('description')}
+            size="sm"
+            rows={2}
+            placeholder="Localização, função, notas..."
+          />
+        </div>
+        {isEditing && (
+          <div className="col-12">
+            <hr className="my-1" />
+            <div className="d-flex align-items-center justify-content-between">
+              <div>
+                <div className="small fw-semibold">Token atual</div>
+                <div className="text-muted form-hint small">{agentData?.token_hint ?? '(gerado na criação)'}</div>
+              </div>
+              <GerarTokenButton
+                type="button"
+                variant="outline-danger"
+                onClick={onRegenerate}
+                disabled={regeneratePending}
+                isPending={regeneratePending}
+              />
+            </div>
+          </div>
+        )}
+      </div>
     </form>
   );
 }

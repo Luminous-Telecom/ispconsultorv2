@@ -24,7 +24,7 @@ export const useCreateEmpresa = () => {
     mutationFn: (data: CreateEmpresa) => EmpresaService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['empresas'] });
-      success('Empresa criada com sucesso!');
+      success('Empresa salva com sucesso!');
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.EMPRESA_CREATE_ERROR),
   });

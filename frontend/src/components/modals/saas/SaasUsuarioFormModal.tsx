@@ -78,7 +78,7 @@ const SaasUsuarioFormModal: React.FC<SaasUsuarioFormModalProps> = ({
   const createMutation = useMutation({
     mutationFn: (data: SaasUsuarioFormData) => saasUsuariosService.create(data),
     onSuccess: () => {
-      success('Usuário criado com sucesso');
+      success('Usuário salvo com sucesso');
       queryClient.invalidateQueries({ queryKey: ['saas-usuarios'] });
       onSuccess?.();
     },

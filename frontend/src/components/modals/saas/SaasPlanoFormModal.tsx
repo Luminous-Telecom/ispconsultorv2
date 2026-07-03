@@ -96,7 +96,7 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
   const createMutation = useMutation({
     mutationFn: (data: Partial<SaasPlano>) => saasPlanoService.create(data),
     onSuccess: () => {
-      success('Plano criado com sucesso');
+      success('Plano salvo com sucesso');
       queryClient.invalidateQueries({ queryKey: ['saas-planos'] });
       onSuccess?.();
     },

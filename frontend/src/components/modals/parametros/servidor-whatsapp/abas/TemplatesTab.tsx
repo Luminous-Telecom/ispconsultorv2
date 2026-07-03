@@ -147,7 +147,7 @@ const TemplatesTab: React.FC<TemplatesTabProps> = () => {
             selectable: true,
             multiSelect: false,
             bulkActions,
-            emptyMessage: 'Nenhum template criado. Crie os templates na aba Templates Meta.',
+            emptyMessage: 'Nenhum template salvo. Salve os templates na aba Templates Meta.',
             pagination: undefined,
             className: 'no-padding'
           }}

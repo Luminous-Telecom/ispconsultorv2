@@ -41,7 +41,7 @@ export const useCreateFornecedor = () => {
     mutationFn: FornecedorService.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['fornecedores'] });
-      success('Fornecedor criado com sucesso!');
+      success('Fornecedor salvo com sucesso!');
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.FORNECEDOR_CREATE_ERROR),
   });

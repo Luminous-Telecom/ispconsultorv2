@@ -85,9 +85,6 @@ const AgentModal: React.FC<AgentModalProps> = (props) => {
               <AgentModalInstallManualTab
                 generating={modal.generating}
                 generatedCmd={modal.generatedCmd}
-                cmdCopied={modal.cmdCopied}
-                copiedLabel={t('blockdomi.copiedToClipboard')}
-                onCopy={modal.handleCopy}
               />
             )}
           </div>

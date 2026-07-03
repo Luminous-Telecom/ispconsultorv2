@@ -34,7 +34,7 @@ const KEY_LABELS: Record<string, string> = {
   'mnt-by': 'Mantido por',
   source: 'Fonte',
   'last-modified': 'Alterado',
-  created: 'Criado',
+  created: 'Data cadastro',
   person: 'Contato',
   role: 'Contato',
   'nic-hdl': 'ID',

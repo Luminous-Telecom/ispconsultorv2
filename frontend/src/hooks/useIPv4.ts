@@ -48,10 +48,10 @@ export const useCreateIPv4 = () => {
     mutationFn: IPv4Service.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ipv4'] });
-      success('IPv4 criado com sucesso!');
+      success('IPv4 salvo com sucesso!');
     },
     onError: (err) => {
-      error(getErrorMessage(err, 'Erro ao criar IPv4'));
+      error(getErrorMessage(err, 'Erro ao salvar IPv4'));
     },
   });
 };

@@ -244,7 +244,7 @@ export const useBancoForm = ({
         lastCreatedBancoIdRef.current = createdBanco.id;
         setLastCreatedBancoId(createdBanco.id);
       }
-      success('Banco criado com sucesso!');
+      success('Banco salvo com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['bancos'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       onSuccess?.(createdBanco);

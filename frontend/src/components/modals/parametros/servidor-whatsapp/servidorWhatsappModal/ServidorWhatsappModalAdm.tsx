@@ -109,7 +109,6 @@ const ServidorWhatsappModalAdm: React.FC<ServidorWhatsappModalAdmProps> = ({
       onSaveMensagem={modal.handleSaveMensagem}
       isSaveMensagemPending={modal.saveMensagemMutation.isPending}
       variaveisData={modal.variaveisData}
-      onCopyVariable={modal.handleCopyVariable}
       onInsertVariable={modal.handleInsertVariable}
       onShowTemplates={() => modal.setShowTemplateSelectModal(true)}
       showTemplateSelectModal={modal.showTemplateSelectModal}

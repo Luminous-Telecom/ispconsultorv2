@@ -125,7 +125,7 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
     },
     onSuccess: (res) => {
       if (res.success) {
-        success('Template criado com sucesso');
+        success('Template salvo com sucesso');
         queryClient.invalidateQueries({ queryKey: ['templates-whatsapp'] });
       } else {
         showApiError(res.message || CONTEXT_ERROR_MESSAGES.TEMPLATE_CREATE_ERROR);
@@ -134,7 +134,7 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TEMPLATE_CREATE_ERROR),
   });
 
-  const handleCriarTemplate = async (template: Template, key: string) => {
+  const handleSalvarTemplate = async (template: Template, key: string) => {
     const nome = template.name;
     const idioma = template.language || 'pt_BR';
     const lista: TemplateWhatsApp[] = templatesConfigurados?.data ?? [];
@@ -343,10 +343,10 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
                           />
                         ) : (
                           <SystemButton
-                            action="novo"
+                            action="salvar"
                             type="button"
-                            label="Criar template"
-                            onClick={() => handleCriarTemplate(template, expandedKey)}
+                            label="Salvar template"
+                            onClick={() => handleSalvarTemplate(template, expandedKey)}
                             disabled={createTemplateMutation.isPending}
                             isPending={createTemplateMutation.isPending}
                           />

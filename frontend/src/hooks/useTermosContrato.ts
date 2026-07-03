@@ -23,7 +23,7 @@ export const useCreateTermoContrato = () => {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['termos-contrato', variables.contratoId] });
       queryClient.invalidateQueries({ queryKey: ['termos-contrato'] });
-      success( 'Termo criado com sucesso');
+      success( 'Termo salvo com sucesso');
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TERM_CREATE_ERROR),
   });

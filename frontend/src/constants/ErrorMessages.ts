@@ -35,7 +35,7 @@ export const ERROR_MESSAGES = {
   SAVE_ERROR: 'Erro ao salvar dados',
   DELETE_ERROR: 'Erro ao deletar',
   UPDATE_ERROR: 'Erro ao atualizar',
-  CREATE_ERROR: 'Erro ao criar',
+  CREATE_ERROR: 'Erro ao salvar',
   FETCH_ERROR: 'Erro ao buscar dados',
   SUBMIT_ERROR: 'Erro ao enviar dados',
   OPERATION_FAILED: 'Operação falhou. Tente novamente.',
@@ -47,7 +47,7 @@ export const CONTEXT_ERROR_MESSAGES = {
   // Clientes
   CLIENT_NOT_FOUND: 'Cliente não encontrado',
   CLIENT_LOAD_ERROR: 'Erro ao carregar cliente',
-  CLIENT_CREATE_ERROR: 'Erro ao criar cliente',
+  CLIENT_CREATE_ERROR: 'Erro ao salvar cliente',
   CLIENT_UPDATE_ERROR: 'Erro ao atualizar cliente',
   CLIENT_DELETE_ERROR: 'Erro ao excluir cliente',
   CLIENT_SAVE_ERROR: 'Erro ao salvar cliente',
@@ -57,7 +57,7 @@ export const CONTEXT_ERROR_MESSAGES = {
   CONTRACT_MODEL_NOT_FOUND: 'Erro ao gerar contrato: modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.',
   CONTRACT_GENERATE_ERROR: 'Erro interno do servidor ao gerar contrato. Tente novamente.',
   CONTRACT_LOAD_ERROR: 'Erro ao carregar contrato',
-  CONTRACT_CREATE_ERROR: 'Erro ao criar contrato',
+  CONTRACT_CREATE_ERROR: 'Erro ao salvar contrato',
   CONTRACT_UPDATE_ERROR: 'Erro ao atualizar contrato',
   CONTRACT_DELETE_ERROR: 'Erro ao deletar contrato',
   CONTRACT_SAVE_ERROR: 'Erro ao salvar contrato',
@@ -70,13 +70,13 @@ export const CONTEXT_ERROR_MESSAGES = {
   CONTRACT_DOWNLOAD_ERROR: 'Erro ao baixar contrato',
 
   // Termos de contrato
-  TERM_CREATE_ERROR: 'Erro ao criar termo',
+  TERM_CREATE_ERROR: 'Erro ao salvar termo',
   TERM_UPDATE_ERROR: 'Erro ao atualizar termo',
   TERM_ACCEPT_ERROR: 'Erro ao marcar termo como aceito',
   TERM_DEACTIVATE_ERROR: 'Erro ao desativar termo',
   TERM_DELETE_ERROR: 'Erro ao deletar termo',
   TERM_DELETE_PLURAL_ERROR: 'Erro ao deletar termo(s)',
-  TERM_CREATE_SERVICE_ERROR: 'Não foi possível criar o termo de contrato',
+  TERM_CREATE_SERVICE_ERROR: 'Não foi possível salvar o termo de contrato',
   TERM_UPDATE_SERVICE_ERROR: 'Não foi possível atualizar o termo de contrato',
   TERM_ACCEPT_SERVICE_ERROR: 'Não foi possível marcar o termo como aceito',
   TERM_DOWNLOAD_ERROR: 'Erro ao baixar termo',
@@ -84,7 +84,7 @@ export const CONTEXT_ERROR_MESSAGES = {
   // Títulos
   TITULO_NOT_FOUND: 'Título não encontrado',
   TITULO_LOAD_ERROR: 'Erro ao carregar título',
-  TITULO_CREATE_ERROR: 'Erro ao criar título',
+  TITULO_CREATE_ERROR: 'Erro ao salvar título',
   TITULO_UPDATE_ERROR: 'Erro ao atualizar título',
   TITULO_DELETE_ERROR: 'Erro ao deletar título',
   TITULO_SAVE_ERROR: 'Erro ao salvar título',
@@ -110,7 +110,7 @@ export const CONTEXT_ERROR_MESSAGES = {
   PDF_TEST_CONTENT_ERROR: 'Erro ao gerar PDF de teste com conteúdo',
   PDF_SERVER_ERROR: 'Erro interno do servidor ao gerar PDF. Tente novamente.',
   DOCUMENT_LOAD_ERROR: 'Erro ao carregar documento',
-  DOCUMENT_CREATE_ERROR: 'Erro ao criar documento',
+  DOCUMENT_CREATE_ERROR: 'Erro ao salvar documento',
   DOCUMENT_UPDATE_ERROR: 'Erro ao salvar documento',
   DOCUMENT_DELETE_ERROR: 'Erro ao deletar documento',
   DOCUMENT_SEND_SIGNATURE_ERROR: 'Erro ao enviar documento para assinatura',
@@ -121,7 +121,7 @@ export const CONTEXT_ERROR_MESSAGES = {
   // Bancos
   BANCO_NOT_FOUND: 'Banco não encontrado',
   BANCO_LOAD_ERROR: 'Erro ao carregar banco',
-  BANCO_CREATE_ERROR: 'Erro ao criar banco',
+  BANCO_CREATE_ERROR: 'Erro ao salvar banco',
   BANCO_UPDATE_ERROR: 'Erro ao atualizar banco',
   BANCO_DELETE_ERROR: 'Erro ao deletar banco',
   BANCO_SAVE_ERROR: 'Erro ao salvar banco',
@@ -129,26 +129,26 @@ export const CONTEXT_ERROR_MESSAGES = {
   // Planos
   PLANO_NOT_FOUND: 'Plano não encontrado',
   PLANO_LOAD_ERROR: 'Erro ao carregar plano',
-  PLANO_CREATE_ERROR: 'Erro ao criar plano',
+  PLANO_CREATE_ERROR: 'Erro ao salvar plano',
   PLANO_UPDATE_ERROR: 'Erro ao atualizar plano',
   PLANO_DELETE_ERROR: 'Erro ao excluir plano',
   PLANO_SAVE_ERROR: 'Erro ao salvar plano',
   PLANO_STATUS_ERROR: 'Erro ao alterar status do plano',
 
   // Serviços Adicionais
-  SERVICO_ADICIONAL_CREATE_ERROR: 'Erro ao criar serviço adicional',
+  SERVICO_ADICIONAL_CREATE_ERROR: 'Erro ao salvar serviço adicional',
   SERVICO_ADICIONAL_UPDATE_ERROR: 'Erro ao atualizar serviço adicional',
   SERVICO_ADICIONAL_SAVE_ERROR: 'Erro ao salvar serviço adicional',
   SERVICO_ADICIONAL_DELETE_ERROR: 'Erro ao deletar serviço adicional',
   SERVICOS_ADICIONAIS_DELETE_ERROR: 'Erro ao deletar serviço(s) adicional(is)',
 
   // Fornecedores
-  FORNECEDOR_CREATE_ERROR: 'Erro ao criar fornecedor',
+  FORNECEDOR_CREATE_ERROR: 'Erro ao salvar fornecedor',
   FORNECEDOR_UPDATE_ERROR: 'Erro ao atualizar fornecedor',
   FORNECEDOR_DELETE_ERROR: 'Erro ao deletar fornecedor',
 
   // Usuários
-  USER_CREATE_ERROR: 'Erro ao criar usuário',
+  USER_CREATE_ERROR: 'Erro ao salvar usuário',
   USER_UPDATE_ERROR: 'Erro ao atualizar usuário',
   USER_DELETE_ERROR: 'Erro ao deletar usuário',
 
@@ -162,25 +162,25 @@ export const CONTEXT_ERROR_MESSAGES = {
   EMPRESA_SIGNATURE_ERROR: 'Erro ao enviar a assinatura',
 
   // Contas a pagar
-  CONTA_PAGAR_CREATE_ERROR: 'Erro ao criar conta a pagar',
+  CONTA_PAGAR_CREATE_ERROR: 'Erro ao salvar conta a pagar',
   CONTA_PAGAR_UPDATE_ERROR: 'Erro ao atualizar conta a pagar',
   CONTA_PAGAR_DELETE_ERROR: 'Erro ao excluir conta a pagar.',
 
   // Tipo de cobrança
-  TIPO_COBRANCA_CREATE_ERROR: 'Erro ao criar tipo de cobrança',
+  TIPO_COBRANCA_CREATE_ERROR: 'Erro ao salvar tipo de cobrança',
   TIPO_COBRANCA_UPDATE_ERROR: 'Erro ao atualizar tipo de cobrança',
   TIPO_COBRANCA_DELETE_ERROR: 'Erro ao deletar tipo de cobrança',
 
   // Parâmetros e sistema
   PARAMS_UPDATE_ERROR: 'Erro ao atualizar parâmetros',
   ASSINATURA_DIGITAL_UPDATE_ERROR: 'Erro ao atualizar assinatura digital',
-  ROTINA_CREATE_ERROR: 'Erro ao criar rotina',
+  ROTINA_CREATE_ERROR: 'Erro ao salvar rotina',
   ROTINA_UPDATE_ERROR: 'Erro ao atualizar rotina',
   ROTINA_DELETE_ERROR: 'Erro ao deletar rotina',
   ROTINA_EXECUTE_ERROR: 'Erro ao executar rotina',
 
   // Backups
-  BACKUP_CREATE_ERROR: 'Erro ao criar backup',
+  BACKUP_CREATE_ERROR: 'Erro ao salvar backup',
   BACKUP_DELETE_ERROR: 'Erro ao excluir backup',
   BACKUP_IMPORT_ERROR: 'Erro ao importar backup',
   BACKUP_RESTORE_ERROR: 'Erro ao restaurar backup',
@@ -201,7 +201,7 @@ export const CONTEXT_ERROR_MESSAGES = {
 
   // Templates WhatsApp
   TEMPLATE_LOAD_ERROR: 'Erro ao buscar templates',
-  TEMPLATE_CREATE_ERROR: 'Erro ao criar template',
+  TEMPLATE_CREATE_ERROR: 'Erro ao salvar template',
   TEMPLATE_DELETE_ERROR: 'Erro ao remover template',
 
   // Notas fiscais
@@ -254,7 +254,7 @@ export const CONTEXT_ERROR_MESSAGES = {
   BLOCKDOMI_PDF_EXTRACT_ERROR: 'Erro ao extrair PDF da URL',
 
   // RPKI
-  RPKI_CA_CREATE_ERROR: 'Erro ao criar CA',
+  RPKI_CA_CREATE_ERROR: 'Erro ao salvar CA',
   RPKI_CA_DELETE_ERROR: 'Falha ao remover CA',
   RPKI_CA_RESOURCES_DELETE_ERROR: 'Falha ao remover recursos da CA',
   RPKI_CA_PARENT_DELETE_ERROR: 'Falha ao remover CA-pai',
@@ -268,14 +268,14 @@ export const CONTEXT_ERROR_MESSAGES = {
   RPKI_REPOSITORY_UPDATE_ERROR: 'Falha ao atualizar repositório',
   RPKI_REPOSITORY_PUBLISHER_ERROR: 'Erro ao gerar publisher_request',
   RPKI_REPOSITORY_IMPORT_ERROR: 'Erro ao importar repository_response',
-  RPKI_ROA_CREATE_ERROR: 'Falha ao criar ROA',
+  RPKI_ROA_CREATE_ERROR: 'Falha ao salvar ROA',
   RPKI_ROA_LOAD_ERROR: 'Erro ao carregar ROAs',
   RPKI_ROA_UPDATE_ERROR: 'Falha ao atualizar ROA',
   RPKI_ROA_REVOKE_ERROR: 'Falha ao revogar ROA',
   RPKI_ROA_DELETE_ERROR: 'Falha ao remover ROA',
   RPKI_ROA_ANALYZE_ERROR: 'Falha ao analisar ROAs',
   RPKI_ROA_SUGGEST_ERROR: 'Falha ao aplicar sugestões de ROA',
-  RPKI_ASPA_CREATE_ERROR: 'Falha ao criar ASPA',
+  RPKI_ASPA_CREATE_ERROR: 'Falha ao salvar ASPA',
   RPKI_ASPA_REVOKE_ERROR: 'Falha ao revogar ASPA',
   RPKI_ASPA_DELETE_ERROR: 'Falha ao excluir ASPA',
   RPKI_ROUTE_VALIDATE_ERROR: 'Falha ao validar rota',

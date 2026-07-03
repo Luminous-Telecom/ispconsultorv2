@@ -76,7 +76,7 @@ export function useRpkiKrillConfig() {
     mutationFn: RpkiCaService.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['rpki-cas'] });
-      success('CA criada com sucesso');
+      success('CA salva com sucesso');
       setCaNome('');
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_CA_CREATE_ERROR),

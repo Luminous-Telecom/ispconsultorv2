@@ -48,10 +48,10 @@ export const useCreateDominio = () => {
     mutationFn: DominioService.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dominios'] });
-      success('Domínio criado com sucesso!');
+      success('Domínio salvo com sucesso!');
     },
     onError: (err) => {
-      error(getErrorMessage(err, 'Erro ao criar domínio'));
+      error(getErrorMessage(err, 'Erro ao salvar domínio'));
     },
   });
 };

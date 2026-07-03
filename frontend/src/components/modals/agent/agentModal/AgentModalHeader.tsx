@@ -4,7 +4,6 @@ import {
   FecharButton,
   GerarButton,
   InstalarAgenteButton,
-  NovoButton,
   SalvarButton,
 } from 'components/ui';
 import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
@@ -74,7 +73,7 @@ const AgentModalHeader: React.FC<AgentModalHeaderProps> = ({
             {isEditing ? (
               <SalvarButton type="button" onClick={onSubmit} isPending={isSubmitting} />
             ) : (
-              <NovoButton entity="Agente" type="button" onClick={onSubmit} isPending={isSubmitting} />
+              <SalvarButton type="button" onClick={onSubmit} isPending={isSubmitting} />
             )}
           </>
         )}

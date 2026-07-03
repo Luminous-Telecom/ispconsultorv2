@@ -4,7 +4,6 @@ import axios from 'axios';
 import { Loading, LabelWithHelp, CopiarIconButton, NavLinkButton } from 'components/ui';
 import SearchBar from 'components/ui/SearchBar';
 import { useI18n } from 'contexts/I18nContext';
-import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
 
 interface Variavel {
   variavel: string;
@@ -18,7 +17,6 @@ interface VariaveisDocumentoProps {
 
 const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariavel }) => {
   const { t } = useI18n();
-  const { copy: copyToClipboard } = useCopyToClipboard();
   const [grupoExpandido, setGrupoExpandido] = useState<string | null>('cliente');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -39,8 +37,6 @@ const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariav
   const handleInserirVariavel = (variavel: string) => {
     if (onInserirVariavel) {
       onInserirVariavel(variavel);
-    } else {
-      void copyToClipboard(variavel);
     }
   };
 
@@ -63,7 +59,7 @@ const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariav
       <div className="mb-3">
         <LabelWithHelp
           className="form-label small fw-bold"
-          helpText={`${t('variables.tip')} ${onInserirVariavel ? t('variables.clickToInsert') : t('variables.clickToCopy')}`}
+          helpText={`${t('variables.tip')} ${onInserirVariavel ? t('variables.clickToInsert') : t('buttons.copy')}.`}
         >
           {t('variables.title')}
         </LabelWithHelp>
@@ -109,6 +105,7 @@ const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariav
                           className="flex-grow-1 border-0 bg-transparent text-start p-0"
                           onClick={() => handleInserirVariavel(variavel.variavel)}
                           ariaLabel={variavel.variavel}
+                          disabled={!onInserirVariavel}
                         >
                           <code className="small">{variavel.variavel}</code>
                           <div className="text-muted small">{variavel.descricao}</div>

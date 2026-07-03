@@ -162,7 +162,7 @@ const TemplateSelectModal: React.FC<TemplateSelectModalProps> = ({
                 multiSelect: false,
                 bulkActions,
                 emptyMessage: templates.length === 0
-                  ? 'Nenhum template criado. Crie os templates na aba Templates.'
+                  ? 'Nenhum template salvo. Salve os templates na aba Templates.'
                   : 'Nenhum resultado',
                 pagination: undefined
               }}

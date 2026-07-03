@@ -42,7 +42,7 @@ export const useCreateContaPagar = () => {
     mutationFn: ContaPagarService.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contas-pagar'] });
-      success('Conta a pagar criada com sucesso!');
+      success('Conta a pagar salva com sucesso!');
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CONTA_PAGAR_CREATE_ERROR),
   });

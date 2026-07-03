@@ -155,9 +155,9 @@ export function useImportarListaBlockdomiCadastrar({
       const { versao_lista: versaoLista, dominios: domRes, ipv4: ipv4Res, ipv6: ipv6Res } = result;
       const errs = [...domRes.errors, ...ipv4Res.errors, ...ipv6Res.errors];
       const parts: string[] = [`Lista versão ${versaoLista}`];
-      if (domRes.created + domRes.updated > 0) parts.push(`Domínios: ${domRes.created} criado(s), ${domRes.updated} atualizado(s)`);
-      if (ipv4Res.created + ipv4Res.updated > 0) parts.push(`IPv4: ${ipv4Res.created} criado(s), ${ipv4Res.updated} atualizado(s)`);
-      if (ipv6Res.created + ipv6Res.updated > 0) parts.push(`IPv6: ${ipv6Res.created} criado(s), ${ipv6Res.updated} atualizado(s)`);
+      if (domRes.created + domRes.updated > 0) parts.push(`Domínios: ${domRes.created} salvo(s), ${domRes.updated} atualizado(s)`);
+      if (ipv4Res.created + ipv4Res.updated > 0) parts.push(`IPv4: ${ipv4Res.created} salvo(s), ${ipv4Res.updated} atualizado(s)`);
+      if (ipv6Res.created + ipv6Res.updated > 0) parts.push(`IPv6: ${ipv6Res.created} salvo(s), ${ipv6Res.updated} atualizado(s)`);
       const skipTotal = domRes.skipped + ipv4Res.skipped + ipv6Res.skipped;
       if (skipTotal > 0) parts.push(`${t('blockdomi.alreadyRegisteredIgnored')}: ${skipTotal}`);
       if (classified.invalidos.length > 0) parts.push(`Inválidos: ${classified.invalidos.length}`);

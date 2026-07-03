@@ -207,7 +207,7 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = ({
             .then((created) => {
               setAspas((prev) => [created, ...prev]);
               setShowCreateModal(false);
-              success('ASPA criado com sucesso');
+              success('ASPA salvo com sucesso');
             })
             .catch((err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_ASPA_CREATE_ERROR));
         }}

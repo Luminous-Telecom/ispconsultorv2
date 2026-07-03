@@ -87,7 +87,7 @@ export function useRpkiRoaListAnalysisConfirm({
             revoked += 1;
           }
 
-          success(`${created} ROA(s) criada(s) e ${revoked} ROA(s) revogada(s) automaticamente.`);
+          success(`${created} ROA(s) salva(s) e ${revoked} ROA(s) revogada(s) automaticamente.`);
         })
         .then(() => reloadRoas())
         .then(() => {

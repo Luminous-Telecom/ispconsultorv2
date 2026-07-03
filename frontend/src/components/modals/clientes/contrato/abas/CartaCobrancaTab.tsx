@@ -128,7 +128,7 @@ const CartaCobrancaTab: React.FC<CartaCobrancaTabProps> = ({ contratoId: _contra
     },
     {
       key: 'created_at',
-      label: 'Criado em',
+      label: 'Data cadastro',
       sortable: true,
       render: (item: ModeloCarta) => {
         if (!item.created_at) return '-';

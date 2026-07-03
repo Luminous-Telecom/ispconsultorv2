@@ -216,7 +216,7 @@ export const useContratoForm = ({
       // Popular o cache evita isLoadingContrato ficar true de novo e o modal inteiro voltar ao spinner após criar.
       queryClient.setQueryData(['contrato', novoContrato.id], novoContrato);
       setCreatedContratoId(novoContrato.id);
-      success('Contrato criado com sucesso!');
+      success('Contrato salvo com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['contratos'] });
       queryClient.invalidateQueries({ queryKey: ['cliente', clienteId] });
       queryClient.invalidateQueries({ queryKey: ['contrato', novoContrato.id] });

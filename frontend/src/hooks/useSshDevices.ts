@@ -44,9 +44,9 @@ export const useCreateSshDevice = () => {
     mutationFn: SshDeviceService.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ssh-devices'] });
-      success('Device SSH criado com sucesso!');
+      success('Device SSH salvo com sucesso!');
     },
-    onError: (err) => error(getErrorMessage(err, 'Erro ao criar device SSH')),
+    onError: (err) => error(getErrorMessage(err, 'Erro ao salvar device SSH')),
   });
 };
 

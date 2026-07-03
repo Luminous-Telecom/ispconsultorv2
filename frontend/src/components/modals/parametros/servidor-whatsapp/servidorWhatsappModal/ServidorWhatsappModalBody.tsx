@@ -43,7 +43,6 @@ interface ServidorWhatsappModalBodyProps {
   onSaveMensagem: () => void;
   isSaveMensagemPending: boolean;
   variaveisData?: Record<string, GrupoVariaveis>;
-  onCopyVariable: (variable: string) => void;
   onInsertVariable: (variable: string) => void;
   onShowTemplates: () => void;
   showTemplateSelectModal: boolean;
@@ -86,7 +85,6 @@ const ServidorWhatsappModalBody: React.FC<ServidorWhatsappModalBodyProps> = ({
   onSaveMensagem,
   isSaveMensagemPending,
   variaveisData,
-  onCopyVariable,
   onInsertVariable,
   onShowTemplates,
   showTemplateSelectModal,
@@ -144,7 +142,6 @@ const ServidorWhatsappModalBody: React.FC<ServidorWhatsappModalBodyProps> = ({
               onSaveMensagem={onSaveMensagem}
               isPending={isSaveMensagemPending}
               variaveisData={variaveisData}
-              onCopyVariable={onCopyVariable}
               onInsertVariable={onInsertVariable}
               onShowTemplates={onShowTemplates}
             />
