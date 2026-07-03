@@ -7,7 +7,7 @@ import { AgentService } from 'services/agentService';
 import { authService } from 'services/authService';
 import { DadosEmpresaService } from 'services/dadosEmpresaService';
 import { useCopyToClipboard } from 'hooks/useCopyToClipboard';
-import { buildDockerRunCommand } from './agentModalUtils';
+import { buildInstallScriptCommand } from './agentModalUtils';
 import { DEFAULT_SSH_FORM, EMPTY_FORM } from './constants';
 import { ActiveTab, AgentModalProps, InstallStatus } from './types';
 
@@ -112,7 +112,7 @@ export function useAgentModal({
     try {
       const refreshed = await AgentService.regenerateToken(target.id);
       if (!refreshed.token) throw new Error('Token não retornado pelo servidor');
-      setGeneratedCmd(buildDockerRunCommand(refreshed.token));
+      setGeneratedCmd(buildInstallScriptCommand(refreshed.id, refreshed.token));
     } catch { /* silencioso */ } finally {
       setGenerating(false);
     }
@@ -174,7 +174,7 @@ export function useAgentModal({
         const result = await createMutation.mutateAsync(payload);
         setInstallAgent(result);
         if (result.token) {
-          setGeneratedCmd(buildDockerRunCommand(result.token));
+          setGeneratedCmd(buildInstallScriptCommand(result.id, result.token));
         }
         setActiveTab('install-manual');
       }

@@ -1,6 +1,8 @@
 # ISP Consultor Agent
 
-Agente que conecta ao servidor ISP Consultor via WebSocket. Permite acesso terminal e proxy SSH aos equipamentos sem expor portas.
+Agente remoto que conecta ao servidor ISP Consultor via WebSocket. Código em `backend/agent/` (fora do `src`).
+
+Permite acesso terminal e proxy SSH aos equipamentos sem expor portas.
 
 ## Variáveis de ambiente
 
@@ -18,13 +20,26 @@ Agente que conecta ao servidor ISP Consultor via WebSocket. Permite acesso termi
 2. Execute:
 
    ```bash
+   cd backend/agent
    ISPCONSULTOR_SERVER=http://localhost:3001 ISPCONSULTOR_TOKEN=<seu-token> node index.js
    ```
 
-## Produção (PM2)
+## Produção (systemd)
+
+Instale via script gerado no painel (aba Manual) ou serviço automático via SSH.
+
+O script baixa `index.js` e `package.json` do próprio ISP Consultor e configura o serviço `ispconsultor-agent`.
 
 ```bash
-ISPCONSULTOR_AGENT_CHANNEL=prod ISPCONSULTOR_TOKEN='<token-do-painel>' pm2 start index.js --name ispconsultor-agent
+# Verificar status
+sudo systemctl status ispconsultor-agent
+
+# Logs
+sudo journalctl -u ispconsultor-agent -f
 ```
 
-Ou variáveis `ISPCONSULTOR_SERVER` + `ISPCONSULTOR_TOKEN` se não usar canal fixo.
+Instalação manual (sem script):
+
+```bash
+ISPCONSULTOR_SERVER=https://seu-dominio ISPCONSULTOR_TOKEN='<token-do-painel>' node index.js
+```

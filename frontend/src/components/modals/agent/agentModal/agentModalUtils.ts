@@ -1,12 +1,4 @@
-import { DOCKER_IMAGE, DEV_URL } from './constants';
-
-export function getAgentImageTag(): 'dev' | 'prod' {
-  const host = window.location.hostname;
-  return host === 'localhost' || host === '127.0.0.1' || host.includes(DEV_URL) ? 'dev' : 'prod';
-}
-
-export function buildDockerRunCommand(token: string): string {
-  const tag = getAgentImageTag();
-  const name = tag === 'dev' ? 'ispconsultor-agent-dev' : 'ispconsultor-agent';
-  return `docker rm -f ${name} 2>/dev/null; docker run -d --name ${name} --restart unless-stopped ${DOCKER_IMAGE}:${tag} --token ${token}`;
+export function buildInstallScriptCommand(agentId: number, token: string, serverUrl?: string): string {
+  const base = (serverUrl ?? window.location.origin).replace(/\/$/, '');
+  return `sudo bash <(curl -fsSL "${base}/api/agents/${agentId}/install-script?token=${encodeURIComponent(token)}")`;
 }

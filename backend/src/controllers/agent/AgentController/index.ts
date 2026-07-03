@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import { SYSTEM_NAME } from '../../../constants/systemBrand';
 import { createHash, randomBytes } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -16,9 +15,9 @@ import {
 
 import {
   formatAgentInstallSshError,
-  getAgentContainerName,
   installAgent,
 } from '../../../services/agent/AgentInstallService';
+import { generateInstallScript } from '../../../services/agent/AgentInstallScript';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
@@ -31,7 +30,7 @@ import {
 } from '../../../utils/tenantUtils';
 import { queryString } from '../../../utils/listQuery';
 
-const AGENT_DIR = path.resolve(__dirname, '../../../../..', 'agent');
+const AGENT_DIR = path.resolve(__dirname, '../../../../agent');
 const ALLOWED_FILES = new Set(['index.js', 'package.json']);
 
 const installSchema = Joi.object({
@@ -396,82 +395,8 @@ export class AgentController {
       }
 
       const serverUrl = (process.env.BASE_URL || process.env.APP_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
-      const containerName = getAgentContainerName(serverUrl);
-      const imageTag = containerName === 'ispconsultor-agent-dev' ? 'dev' : 'prod';
-      const imageName =
-        process.env.ISPCONSULTOR_AGENT_IMAGE ||
-        `midia181/ispconsultor-tunnel:${imageTag}`;
 
-      const script = `#!/bin/bash
-set -e
-
-TOKEN="${token}"
-IMAGE_NAME="${imageName}"
-CONTAINER_NAME="${containerName}"
-
-RED='\\033[0;31m'; GREEN='\\033[0;32m'; YELLOW='\\033[1;33m'; NC='\\033[0m'
-log()   { echo -e "\${GREEN}[${SYSTEM_NAME}]\${NC} \$1"; }
-warn()  { echo -e "\${YELLOW}[${SYSTEM_NAME}]\${NC} \$1"; }
-error() { echo -e "\${RED}[${SYSTEM_NAME}]\${NC} \$1"; exit 1; }
-
-log "Iniciando instalação do agente ${SYSTEM_NAME}..."
-echo ""
-
-# ── Docker ────────────────────────────────────────────────────────────────────
-if command -v docker &> /dev/null; then
-  log "Docker já instalado: \$(docker --version)"
-else
-  warn "Docker não encontrado. Instalando..."
-  if grep -qiE 'debian|ubuntu' /etc/os-release 2>/dev/null; then
-    apt-get update -qq
-    apt-get install -y -qq ca-certificates curl gnupg
-    install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL "https://download.docker.com/linux/\$(. /etc/os-release && echo "\$ID")/gpg" | gpg --dearmor -o /etc/apt/keyrings/docker.gpg 2>/dev/null
-    chmod a+r /etc/apt/keyrings/docker.gpg
-    echo "deb [arch=\$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/\$(. /etc/os-release && echo "\$ID") \$(. /etc/os-release && echo "\$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list
-    apt-get update -qq
-    apt-get install -y -qq docker-ce docker-ce-cli containerd.io
-    systemctl enable docker && systemctl start docker
-  elif grep -qiE 'centos|rhel|almalinux|rocky|fedora' /etc/os-release 2>/dev/null || [ -f /etc/redhat-release ]; then
-    yum install -y -q yum-utils
-    yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-    yum install -y -q docker-ce docker-ce-cli containerd.io
-    systemctl enable docker && systemctl start docker
-  else
-    error "Sistema operacional não suportado. Instale o Docker manualmente e execute o script novamente."
-  fi
-  log "Docker instalado com sucesso!"
-fi
-
-# ── Baixar imagem do Docker Hub ────────────────────────────────────────────────
-log "Baixando imagem do agente (\$IMAGE_NAME)..."
-docker pull "\$IMAGE_NAME"
-log "Imagem baixada com sucesso!"
-
-# ── Substituir instalação anterior (igual Cloudflare) ─────────────────────────
-log "Substituindo instalação anterior (se existir)..."
-docker rm -f "\$CONTAINER_NAME" 2>/dev/null || true
-
-# ── Iniciar container ─────────────────────────────────────────────────────────
-log "Iniciando container \$CONTAINER_NAME..."
-docker run -d \\
-  --name "\$CONTAINER_NAME" \\
-  --restart unless-stopped \\
-  "\$IMAGE_NAME" \\
-  --token "\$TOKEN"
-
-log "Aguardando inicialização do agente (5s)..."
-sleep 5
-
-STATUS=\$(docker inspect --format='{{.State.Status}}' "\$CONTAINER_NAME" 2>/dev/null || echo "not_found")
-if [ "\$STATUS" = "running" ]; then
-  echo ""
-  log "✅ Instalação concluída! O agente deve aparecer online em instantes."
-else
-  LOGS=\$(docker logs --tail 20 "\$CONTAINER_NAME" 2>&1 || echo "")
-  error "Container não está rodando (status: \$STATUS).\\nLogs:\\n\$LOGS"
-fi
-`;
+      const script = generateInstallScript({ token, serverUrl });
 
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
       res.send(script);

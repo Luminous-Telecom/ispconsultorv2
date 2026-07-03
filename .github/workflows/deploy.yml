@@ -298,6 +298,14 @@ jobs:
           rsync -a --delete ../backend/migrations/ backend/migrations/
           rsync -a --delete ../backend/config/     backend/config/
 
+          if [ -d "../backend/agent" ]; then
+            rsync -a --delete \
+              --exclude node_modules \
+              --exclude package-lock.json \
+              ../backend/agent/ backend/agent/
+            echo "✓ backend/agent sincronizado"
+          fi
+
           for f in .sequelizerc .gitignore tsconfig.json; do
             [ -f "../backend/${f}" ] && cp "../backend/${f}" "backend/${f}"
           done
@@ -341,7 +349,7 @@ jobs:
             docker-compose.yaml nginx.docker.conf \
             frontend/Dockerfile frontend/.dockerignore \
             backend/Dockerfile backend/.dockerignore \
-            agent/Dockerfile agent/.dockerignore ; do
+            backend/agent/Dockerfile backend/agent/.dockerignore ; do
             [ ! -e "../${f}" ] && [ -e "${f}" ] || continue
             git rm -f "${f}" 2>/dev/null || rm -f "${f}"
             echo "::notice::Removido ${f} (ausente no fonte)."
@@ -349,6 +357,10 @@ jobs:
           if [ ! -d "../docker" ] && [ -d "docker" ]; then
             git rm -rf docker 2>/dev/null || rm -rf docker
             echo "::notice::Removida docker/ (ausente no fonte)."
+          fi
+          if [ ! -d "../agent" ] && [ -d "agent" ]; then
+            git rm -rf agent 2>/dev/null || rm -rf agent
+            echo "::notice::Removida agent/ da raiz (movida para backend/agent)."
           fi
 
           echo "=== Diff frontend/build vs HEAD prod (vazio = bundle igual ao commit anterior — normal se só mudou backend/infra) ==="
