@@ -1,6 +1,7 @@
-import React, { RefObject } from 'react';
+import React, { RefObject, useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useElementProperties } from 'hooks/useElementProperties';
-import { ColWithWidth, DynamicStyledElement, IconOnlyButton, NavLinkButton } from '../ui';
+import { ColWithWidth, DynamicStyledElement, IconOnlyButton, NavLinkButton, PositionedFixed } from '../ui';
 import Loading from '../ui/Loading';
 import TableColumn from './TableColumn';
 import {
@@ -13,6 +14,10 @@ import {
 } from './columnWidthUtils';
 import { drainPossiblePromise } from './tableUtils';
 import { SortDirection, TableAction, TableColumn as TableColumnType } from './types';
+
+const ACTION_DROPDOWN_GAP_PX = 4;
+const ACTION_DROPDOWN_VIEWPORT_MARGIN_PX = 8;
+const ACTION_DROPDOWN_FALLBACK_WIDTH_PX = 160;
 
 const TableCellWithWidth: React.FC<{
   className: string;
@@ -97,6 +102,50 @@ function TableDesktopView<T extends { id: number | string }>({
   const colSpan = visibleColumns.length + (selectable ? 1 : 0) + (actions.length > 0 ? 1 : 0);
 
   const columnsLocked = hasCustomWidths || isResizing;
+  const actionTriggerRefs = useRef<Map<number | string, HTMLDivElement>>(new Map());
+  const actionDropdownRef = useRef<HTMLDivElement | null>(null);
+  const [actionDropdownPosition, setActionDropdownPosition] = useState({ left: 0, top: 0 });
+
+  const updateActionDropdownPosition = useCallback(() => {
+    if (openActionDropdown === null || typeof window === 'undefined') return;
+
+    const trigger = actionTriggerRefs.current.get(openActionDropdown);
+    if (!trigger) return;
+
+    const triggerRect = trigger.getBoundingClientRect();
+    const menuRect = actionDropdownRef.current?.getBoundingClientRect();
+    const menuWidth = menuRect?.width || ACTION_DROPDOWN_FALLBACK_WIDTH_PX;
+    const menuHeight = menuRect?.height || 0;
+    const maxLeft = window.innerWidth - menuWidth - ACTION_DROPDOWN_VIEWPORT_MARGIN_PX;
+    const left = Math.max(
+      ACTION_DROPDOWN_VIEWPORT_MARGIN_PX,
+      Math.min(triggerRect.right - menuWidth, maxLeft)
+    );
+    const topBelow = triggerRect.bottom + ACTION_DROPDOWN_GAP_PX;
+    const topAbove = triggerRect.top - menuHeight - ACTION_DROPDOWN_GAP_PX;
+    const shouldOpenAbove =
+      menuHeight > 0 && topBelow + menuHeight > window.innerHeight - ACTION_DROPDOWN_VIEWPORT_MARGIN_PX;
+    const top = shouldOpenAbove
+      ? Math.max(ACTION_DROPDOWN_VIEWPORT_MARGIN_PX, topAbove)
+      : topBelow;
+
+    setActionDropdownPosition((current) =>
+      current.left === left && current.top === top ? current : { left, top }
+    );
+  }, [openActionDropdown]);
+
+  useLayoutEffect(() => {
+    if (openActionDropdown === null) return;
+
+    updateActionDropdownPosition();
+    window.addEventListener('resize', updateActionDropdownPosition);
+    window.addEventListener('scroll', updateActionDropdownPosition, true);
+
+    return () => {
+      window.removeEventListener('resize', updateActionDropdownPosition);
+      window.removeEventListener('scroll', updateActionDropdownPosition, true);
+    };
+  }, [openActionDropdown, updateActionDropdownPosition]);
 
   useElementProperties(tableRef, { '--table-min-width': `${tableMinWidth}px` }, [tableMinWidth]);
 
@@ -270,7 +319,16 @@ function TableDesktopView<T extends { id: number | string }>({
                   })}
                   {actions.length > 0 && (
                     <td className="text-center col-actions" onClick={(e) => e.stopPropagation()}>
-                      <div className="table-actions-desktop">
+                      <div
+                        ref={(element) => {
+                          if (element) {
+                            actionTriggerRefs.current.set(item.id, element);
+                          } else {
+                            actionTriggerRefs.current.delete(item.id);
+                          }
+                        }}
+                        className="table-actions-desktop"
+                      >
                         <IconOnlyButton
                           className="table-action-menu-btn"
                           onClick={(e) => {
@@ -294,51 +352,60 @@ function TableDesktopView<T extends { id: number | string }>({
                             <circle cx="12" cy="19" r="1" />
                           </svg>
                         </IconOnlyButton>
-                        {openActionDropdown === item.id && (
-                          <>
-                            <div
-                              className="table-dropdown-overlay"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onOpenActionDropdown(null);
-                              }}
-                            />
-                            <div className="table-dropdown">
-                              {actions
-                                .filter((action) =>
-                                  typeof action.hidden === 'function'
-                                    ? !action.hidden(item)
-                                    : !action.hidden
-                                )
-                                .map((action) => {
-                                  const isDisabled =
-                                    typeof action.disabled === 'function'
-                                      ? action.disabled(item)
-                                      : action.disabled;
-                                  return (
-                                    <NavLinkButton
-                                      key={action.key}
-                                      className={`table-dropdown-item ${action.variant === 'danger' ? 'danger' : ''}`}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        onOpenActionDropdown(null);
-                                        if (!isDisabled && onActionClick) {
-                                          drainPossiblePromise(onActionClick(action, item, index));
-                                        } else if (!isDisabled && action.onClick) {
-                                          drainPossiblePromise(action.onClick(item, index));
-                                        }
-                                      }}
-                                      disabled={isDisabled}
-                                      ariaLabel={action.label}
-                                    >
-                                      {action.icon && <i className={action.icon} />}
-                                      <span>{action.label}</span>
-                                    </NavLinkButton>
-                                  );
-                                })}
-                            </div>
-                          </>
-                        )}
+                        {openActionDropdown === item.id &&
+                          typeof document !== 'undefined' &&
+                          createPortal(
+                            <>
+                              <div
+                                className="table-dropdown-overlay"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onOpenActionDropdown(null);
+                                }}
+                              />
+                              <PositionedFixed
+                                left={actionDropdownPosition.left}
+                                top={actionDropdownPosition.top}
+                                className="table-action-dropdown-fixed-host"
+                              >
+                                <div ref={actionDropdownRef} className="table-dropdown">
+                                  {actions
+                                    .filter((action) =>
+                                      typeof action.hidden === 'function'
+                                        ? !action.hidden(item)
+                                        : !action.hidden
+                                    )
+                                    .map((action) => {
+                                      const isDisabled =
+                                        typeof action.disabled === 'function'
+                                          ? action.disabled(item)
+                                          : action.disabled;
+                                      return (
+                                        <NavLinkButton
+                                          key={action.key}
+                                          className={`table-dropdown-item ${action.variant === 'danger' ? 'danger' : ''}`}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            onOpenActionDropdown(null);
+                                            if (!isDisabled && onActionClick) {
+                                              drainPossiblePromise(onActionClick(action, item, index));
+                                            } else if (!isDisabled && action.onClick) {
+                                              drainPossiblePromise(action.onClick(item, index));
+                                            }
+                                          }}
+                                          disabled={isDisabled}
+                                          ariaLabel={action.label}
+                                        >
+                                          {action.icon && <i className={action.icon} />}
+                                          <span>{action.label}</span>
+                                        </NavLinkButton>
+                                      );
+                                    })}
+                                </div>
+                              </PositionedFixed>
+                            </>,
+                            document.body
+                          )}
                       </div>
                     </td>
                   )}
