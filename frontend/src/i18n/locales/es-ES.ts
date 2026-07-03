@@ -1299,7 +1299,7 @@ const esES: TranslationKeys = {
     'user.profile': 'Perfil',
     'user.admin': 'Administrador',
     'user.user': 'Usuario',
-    'user.newPassword': 'Nueva Contraseña (dejar en blanco para mantener)',
+    'user.newPassword': 'Nueva Contraseña',
     'user.passwordPlaceholder': 'Mínimo 6 caracteres',
     'user.newPasswordPlaceholder': 'Dejar en blanco para mantener la contraseña actual',
     'user.generateWebhookHelp': 'Haga clic en "Generar token" para obtener el token de API.',

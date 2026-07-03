@@ -1297,7 +1297,7 @@ const enUS: TranslationKeys = {
     'user.profile': 'Profile',
     'user.admin': 'Administrator',
     'user.user': 'User',
-    'user.newPassword': 'New Password (leave blank to keep)',
+    'user.newPassword': 'New Password',
     'user.passwordPlaceholder': 'Minimum 6 characters',
     'user.newPasswordPlaceholder': 'Leave blank to keep current password',
     'user.generateWebhookHelp': 'Click "Generate token" to get the API token.',

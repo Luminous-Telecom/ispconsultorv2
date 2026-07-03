@@ -1297,7 +1297,7 @@ const ptBR: TranslationKeys = {
     'user.profile': 'Perfil',
     'user.admin': 'Administrador',
     'user.user': 'Usuário',
-    'user.newPassword': 'Nova Senha (deixe em branco para manter)',
+    'user.newPassword': 'Nova Senha',
     'user.passwordPlaceholder': 'Mínimo 6 caracteres',
     'user.newPasswordPlaceholder': 'Deixe em branco para manter a senha atual',
     'user.generateWebhookHelp': 'Clique em "Gerar token" para obter o token de API.',
