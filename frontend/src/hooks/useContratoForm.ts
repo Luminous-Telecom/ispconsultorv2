@@ -19,6 +19,10 @@ import { contratoSchema } from '../schemas/contrato.schema';
 import type { ContratoFormData as ZodContratoFormData } from '../schemas/contrato.schema';
 import { CreateContratoData, UpdateContratoData } from '../hooks/useContratos';
 import { ensureString } from '../utils/stringUtils';
+import {
+  getRequiredValidationMessage,
+  shouldShowInlineValidationMessage,
+} from '../utils/requiredValidationToast';
 
 interface UseContratoFormParams {
   contratoId: number | null;
@@ -96,7 +100,7 @@ export const useContratoForm = ({
   onSuccess
 }: UseContratoFormParams): UseContratoFormReturn => {
   const isEditing = !!contratoId;
-  const { success } = useNotificationContext();
+  const { success, error: notifyError } = useNotificationContext();
   const { showApiError } = useApiError();
   const queryClient = useQueryClient();
   const [createdContratoId, setCreatedContratoId] = useState<number | null>(null);
@@ -133,7 +137,7 @@ export const useContratoForm = ({
     Object.keys(rhfErrors).forEach((key) => {
       const field = key as keyof ContratoForm;
       const error = rhfErrors[field as keyof typeof rhfErrors];
-      if (error?.message) {
+      if (shouldShowInlineValidationMessage(error?.message)) {
         convertedErrors[field] = String(error.message) as never;
       }
     });
@@ -311,11 +315,18 @@ export const useContratoForm = ({
     }
   };
 
+  const onError = (submitErrors: Record<string, { message?: unknown }>) => {
+    const requiredMessage = getRequiredValidationMessage(submitErrors);
+    if (requiredMessage) {
+      notifyError(requiredMessage);
+    }
+  };
+
   // Handler de submit mantido para compatibilidade
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    rhfHandleSubmit(onSubmit as any)(e);
+    rhfHandleSubmit(onSubmit as any, onError)(e);
   };
 
   return {

@@ -1,13 +1,19 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { BaseComponentProps, ValidationProps, TooltipProps } from './types';
 import { FormValue, ChangeHandler } from 'types/common';
 import { useI18n } from 'contexts/I18nContext';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import Input from './Input';
 import Select from './Select';
 import Checkbox from './Checkbox';
 import { FileInput } from './FileInput';
 import { LabelWithHelp } from './LabelWithHelp';
 import { getBootstrapTooltipProps } from './tooltipProps';
+import {
+  isRequiredValidationMessage,
+  shouldNotifyRequiredValidationToast,
+  shouldShowInlineValidationMessage,
+} from 'utils/requiredValidationToast';
 
 type FieldType = 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'datetime-local' | 'time' | 'month' | 'week' | 'select' | 'checkbox' | 'textarea' | 'file';
 
@@ -108,9 +114,34 @@ const FormField: React.FC<FormFieldProps> = ({
   formPrefix,
 }) => {
   const { t } = useI18n();
+  const { error: notifyError } = useNotificationContext();
+  const lastRequiredToastRef = useRef<string | null>(null);
   
   const defaultLoadingText = loadingText || t('messages.loading');
   const defaultEmptyText = emptyText || t('ui.noOptionsAvailable');
+  const requiredToastMessage = isRequiredValidationMessage(error)
+    ? error
+    : isRequiredValidationMessage(validationMessage)
+      ? validationMessage
+      : null;
+  const inlineError = shouldShowInlineValidationMessage(error) ? error : undefined;
+  const inlineValidationMessage = shouldShowInlineValidationMessage(validationMessage)
+    ? validationMessage
+    : undefined;
+  
+  useEffect(() => {
+    if (!requiredToastMessage) {
+      lastRequiredToastRef.current = null;
+      return;
+    }
+
+    if (lastRequiredToastRef.current === requiredToastMessage) return;
+
+    lastRequiredToastRef.current = requiredToastMessage;
+    if (!shouldNotifyRequiredValidationToast()) return;
+
+    notifyError(requiredToastMessage);
+  }, [notifyError, requiredToastMessage]);
   
   // Gerar ID único usando prefixo do formulário
   const fieldId = id || `${formPrefix ? `${formPrefix}-` : ''}field-${name}`;
@@ -207,7 +238,7 @@ const FormField: React.FC<FormFieldProps> = ({
       className,
       isValid: isValid !== undefined ? isValid : (validationStatus === 'valid' ? true : undefined),
       isInvalid: isInvalid || !!error,
-      validationMessage: validationMessage || error,
+      validationMessage: inlineValidationMessage || inlineError,
       validationStatus,
       tooltip,
       tooltipPosition,

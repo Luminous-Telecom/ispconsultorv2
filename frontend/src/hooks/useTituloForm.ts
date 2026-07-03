@@ -18,6 +18,10 @@ import { CarneParcela, CreateCarneParcela } from '../types';
 import { TituloForm, TituloFormErrors } from '../components/modals/titulos/titulo/types';
 import { tituloSchema } from '../schemas/titulo.schema';
 import type { TituloFormData as ZodTituloFormData } from '../schemas/titulo.schema';
+import {
+  getRequiredValidationMessage,
+  shouldShowInlineValidationMessage,
+} from '../utils/requiredValidationToast';
 
 interface UseTituloFormParams {
   tituloId: number | null;
@@ -75,7 +79,7 @@ export const useTituloForm = ({
   isAvulso = false
 }: UseTituloFormParams): UseTituloFormReturn => {
   const isEditing = !!tituloId;
-  const { success } = useNotificationContext();
+  const { success, error: notifyError } = useNotificationContext();
   const { showApiError } = useApiError();
   const queryClient = useQueryClient();
 
@@ -120,7 +124,7 @@ export const useTituloForm = ({
     Object.keys(rhfErrors).forEach((key) => {
       const field = key as keyof TituloFormErrors;
       const error = rhfErrors[field as keyof typeof rhfErrors];
-      if (error?.message) {
+      if (shouldShowInlineValidationMessage(error?.message)) {
         convertedErrors[field] = String(error.message);
       }
     });
@@ -314,8 +318,11 @@ export const useTituloForm = ({
   };
   
   // Handler para quando há erros de validação
-  const onError = (_errors: Record<string, { message?: string }>) => {
-    // Erros são tratados pelo React Hook Form e exibidos no formulário
+  const onError = (submitErrors: Record<string, { message?: unknown }>) => {
+    const requiredMessage = getRequiredValidationMessage(submitErrors);
+    if (requiredMessage) {
+      notifyError(requiredMessage);
+    }
   };
 
   // Handler de submit mantido para compatibilidade

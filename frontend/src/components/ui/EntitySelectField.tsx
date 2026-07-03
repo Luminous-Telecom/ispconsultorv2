@@ -1,7 +1,13 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useI18n } from 'contexts/I18nContext';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { LabelWithHelp } from './LabelWithHelp';
 import { IconOnlyButton } from './buttons';
+import {
+  isRequiredValidationMessage,
+  shouldNotifyRequiredValidationToast,
+  shouldShowInlineValidationMessage,
+} from 'utils/requiredValidationToast';
 
 export interface EntityItem {
   id: number;
@@ -47,6 +53,8 @@ const SEARCH_ICON = (
 
 const EntitySelectField: React.FC<EntitySelectFieldProps> = (props) => {
   const { t } = useI18n();
+  const { error: notifyError } = useNotificationContext();
+  const lastRequiredToastRef = useRef<string | null>(null);
   const {
     onShowModal,
     label,
@@ -65,6 +73,23 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = (props) => {
   const fieldId = `${fieldKey}_id_field`;
   const idPlaceholder = props.idPlaceholder ?? (stringIdMode ? 'UUID' : t('table.id'));
   const idTitle = idFieldTitle ?? (stringIdMode ? 'UUID' : 'Digite o ID');
+  const errorMessage = error != null ? String(error) : undefined;
+  const inlineError = shouldShowInlineValidationMessage(errorMessage) ? errorMessage : undefined;
+  const requiredToastMessage = isRequiredValidationMessage(errorMessage) ? errorMessage : null;
+
+  useEffect(() => {
+    if (!requiredToastMessage) {
+      lastRequiredToastRef.current = null;
+      return;
+    }
+
+    if (lastRequiredToastRef.current === requiredToastMessage) return;
+
+    lastRequiredToastRef.current = requiredToastMessage;
+    if (!shouldNotifyRequiredValidationToast()) return;
+
+    notifyError(requiredToastMessage);
+  }, [notifyError, requiredToastMessage]);
 
   const selectedNome = stringIdMode
     ? (entities as StringEntityItem[]).find((e) => String(e.id) === String(props.value))?.nome
@@ -115,7 +140,7 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = (props) => {
             {SEARCH_ICON}
           </IconOnlyButton>
         </div>
-        {error && <div className="invalid-feedback entity-select-error">{error}</div>}
+        {inlineError && <div className="invalid-feedback entity-select-error">{inlineError}</div>}
       </div>
     </div>
   );

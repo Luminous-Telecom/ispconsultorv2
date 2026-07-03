@@ -1,7 +1,13 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import Input from './Input';
 import CopiarIconButton from './buttons/CopiarIconButton';
 import type { InputType, InputSize } from './types';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import {
+  isRequiredValidationMessage,
+  shouldNotifyRequiredValidationToast,
+  shouldShowInlineValidationMessage,
+} from 'utils/requiredValidationToast';
 
 export interface CopyableInputProps {
   id?: string;
@@ -45,7 +51,11 @@ const CopyableInput: React.FC<CopyableInputProps> = ({
   onCopyFailed,
   onCopied,
 }) => {
+  const { error: notifyError } = useNotificationContext();
+  const lastRequiredToastRef = useRef<string | null>(null);
   const textToCopy = copyText ?? value;
+  const inlineError = shouldShowInlineValidationMessage(error) ? error : undefined;
+  const requiredToastMessage = isRequiredValidationMessage(error) ? error : null;
   const wrapperClass = [
     'copyable-input',
     size === 'sm' ? 'copyable-input-sm' : '',
@@ -54,6 +64,20 @@ const CopyableInput: React.FC<CopyableInputProps> = ({
   ]
     .filter(Boolean)
     .join(' ');
+
+  useEffect(() => {
+    if (!requiredToastMessage) {
+      lastRequiredToastRef.current = null;
+      return;
+    }
+
+    if (lastRequiredToastRef.current === requiredToastMessage) return;
+
+    lastRequiredToastRef.current = requiredToastMessage;
+    if (!shouldNotifyRequiredValidationToast()) return;
+
+    notifyError(requiredToastMessage);
+  }, [notifyError, requiredToastMessage]);
 
   return (
     <>
@@ -81,7 +105,7 @@ const CopyableInput: React.FC<CopyableInputProps> = ({
           onCopyFailed={onCopyFailed}
         />
       </div>
-      {error && <div className="invalid-feedback d-block">{error}</div>}
+      {inlineError && <div className="invalid-feedback d-block">{inlineError}</div>}
     </>
   );
 };
