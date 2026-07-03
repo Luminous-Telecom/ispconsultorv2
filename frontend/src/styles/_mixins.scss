@@ -315,6 +315,17 @@
 
   .form-field {
     @include form-modal-field;
+    margin-bottom: 0;
+  }
+
+  .row {
+    --bs-gutter-y: 0;
+    row-gap: var(--form-field-row-gap);
+    margin-top: 0;
+  }
+
+  .row > * {
+    margin-top: 0;
   }
 
   h6.text-primary,

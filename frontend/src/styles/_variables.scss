@@ -38,6 +38,7 @@
   --form-label-width: 200px;
   --form-input-max-width: 420px;
   --form-field-gap: 0.75rem;
+  --form-field-row-gap: 0.5rem;
   --form-block-max-width: calc(var(--form-label-width) + var(--form-field-gap) + var(--form-input-max-width));
   --form-block-padding-left: clamp(16px, 3vw, 48px);
   --form-input-col-offset: calc(var(--form-label-width) + var(--form-field-gap));

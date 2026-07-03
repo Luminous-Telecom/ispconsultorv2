@@ -321,10 +321,6 @@ body .draggable-modal-container-custom .modal-body.draggable-modal-body-custom:h
   overflow-x: hidden !important;
   overflow-y: auto !important;
   @include form-modal-tab-padding;
-
-  .row > * {
-    margin-top: 0;
-  }
 }
 
 /* ============================================
