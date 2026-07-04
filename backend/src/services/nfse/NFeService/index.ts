@@ -236,16 +236,7 @@ export class NFeService {
 
     // Se Asaas está configurado, usar ele
     if (provider === 'ASAAS') {
-      if (config.asaas_api_key) {
-        return await AsaasNFSeService.gerarNFSe(notaFiscal, cliente, dadosEmpresa);
-      } else {
-        logger.error('Asaas configurado mas API Key não encontrada');
-        return {
-          success: false,
-          erro: 'Configuração do Asaas incompleta. Configure a API Key nos parâmetros do sistema.',
-          codigo_erro: 'CONFIG_ASAAS_INCOMPLETA'
-        };
-      }
+      return await AsaasNFSeService.gerarNFSe(notaFiscal, cliente, dadosEmpresa, empId);
     }
 
     // Se Portal Nacional está configurado, usar ele

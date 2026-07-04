@@ -32,6 +32,7 @@ export interface BancoForm {
   exibir_mes_referente: boolean;
   taxa_cobranca: number;
   incluir_taxa: boolean;
+  usar_integracao_banco_nfse: boolean;
   observacao_linha_1: string;
   observacao_linha_2: string;
   observacao_linha_3: string;

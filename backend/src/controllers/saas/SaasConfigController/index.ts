@@ -163,6 +163,7 @@ const bancoSchema = Joi.object({
   exibir_mes_referente: Joi.boolean().optional(),
   taxa_cobranca: Joi.number().min(0).optional().allow(null),
   incluir_taxa: Joi.boolean().optional(),
+  usar_integracao_banco_nfse: Joi.boolean().optional(),
   observacao_linha_1: Joi.string().max(255).optional().allow('', null),
   observacao_linha_2: Joi.string().max(255).optional().allow('', null),
   observacao_linha_3: Joi.string().max(255).optional().allow('', null),
@@ -197,7 +198,13 @@ export class SaasBancoController {
       const item = await SaasBancoService.create(value);
       await registrarCriacao(req as any, 'SaasBanco', item.id, item.toJSON() as Record<string, unknown>);
       res.status(201).json({ success: true, message: 'Banco criado com sucesso', data: item });
-    } catch (err) { sendError(res, err, 'Erro ao criar banco', 500, true); }
+    } catch (err) {
+      if (err instanceof Error && err.message.includes('API Key do Asaas é obrigatória')) {
+        sendValidationError(res, err.message);
+        return;
+      }
+      sendError(res, err, 'Erro ao criar banco', 500, true);
+    }
   }
   static async update(req: SaasAuthenticatedRequest, res: Response) {
     try {
@@ -211,7 +218,13 @@ export class SaasBancoController {
           { ...antigo.toJSON(), ...value } as Record<string, unknown>);
       }
       sendSuccess(res, null, 'Banco atualizado com sucesso');
-    } catch (err) { sendError(res, err, 'Erro ao atualizar banco', 500, true); }
+    } catch (err) {
+      if (err instanceof Error && err.message.includes('API Key do Asaas é obrigatória')) {
+        sendValidationError(res, err.message);
+        return;
+      }
+      sendError(res, err, 'Erro ao atualizar banco', 500, true);
+    }
   }
   static async delete(req: SaasAuthenticatedRequest, res: Response) {
     try {

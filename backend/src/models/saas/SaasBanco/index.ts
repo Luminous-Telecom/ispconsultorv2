@@ -42,6 +42,7 @@ export class SaasBanco extends Model<
   declare exibir_mes_referente: CreationOptional<boolean>;
   declare taxa_cobranca: CreationOptional<number | null>;
   declare incluir_taxa: CreationOptional<boolean>;
+  declare usar_integracao_banco_nfse: CreationOptional<boolean>;
   declare observacao_linha_1: CreationOptional<string | null>;
   declare observacao_linha_2: CreationOptional<string | null>;
   declare observacao_linha_3: CreationOptional<string | null>;
@@ -129,6 +130,7 @@ SaasBanco.init(
     exibir_mes_referente: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
     taxa_cobranca: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
     incluir_taxa: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+    usar_integracao_banco_nfse: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
     observacao_linha_1: { type: DataTypes.STRING(255), allowNull: true },
     observacao_linha_2: { type: DataTypes.STRING(255), allowNull: true },
     observacao_linha_3: { type: DataTypes.STRING(255), allowNull: true },

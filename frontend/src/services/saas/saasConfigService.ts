@@ -65,6 +65,7 @@ export interface SaasBanco {
   exibir_mes_referente?: boolean;
   taxa_cobranca?: number | null;
   incluir_taxa?: boolean;
+  usar_integracao_banco_nfse?: boolean;
   observacao_linha_1?: string | null;
   observacao_linha_2?: string | null;
   observacao_linha_3?: string | null;

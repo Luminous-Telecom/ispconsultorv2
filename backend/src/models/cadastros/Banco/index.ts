@@ -65,6 +65,7 @@ export class Banco extends Model<
   declare exibir_mes_referente: boolean;
   declare taxa_cobranca: number | null;
   declare incluir_taxa: boolean;
+  declare usar_integracao_banco_nfse: boolean;
   declare observacao_linha_1: string | null;
   declare observacao_linha_2: string | null;
   declare observacao_linha_3: string | null;
@@ -407,6 +408,11 @@ Banco.init(
       allowNull: true
     },
     incluir_taxa: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    },
+    usar_integracao_banco_nfse: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false

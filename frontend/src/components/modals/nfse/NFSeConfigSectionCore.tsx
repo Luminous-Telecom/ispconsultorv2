@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { NFSeConfigUpdate, NFSeConfigTestAuth } from 'services/nfseConfigService';
+import type { NFSeConfigUpdate } from 'services/nfseConfigService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useI18n } from 'contexts/I18nContext';
-import { FormField, AtivoInativoField, Loading } from 'components/ui';
+import { FormField, Loading } from 'components/ui';
 import { NFSE_CONFIG_BY_VARIANT, type NFSeConfigVariant } from './nfseConfigVariants';
 
 export interface NFSeConfigSectionCoreProps {
@@ -37,10 +37,9 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
     portal_nacional_password: '',
     portal_nacional_base_url: 'https://sefin.producaorestrita.nfse.gov.br/API/SefinNacional',
     portal_nacional_ambiente: 'HOMOLOGACAO' as 'HOMOLOGACAO' | 'PRODUCAO',
-    asaas_api_key: '',
     asaas_sandbox: false,
-    provider: 'ASAAS' as 'PORTAL_NACIONAL' | 'ASAAS',
-    has_asaas_api_key: false,
+    provider: 'PORTAL_NACIONAL' as 'PORTAL_NACIONAL' | 'ASAAS',
+    asaas_banco_habilitado: false,
     has_portal_nacional_password: false,
   });
 
@@ -60,6 +59,7 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
 
   useEffect(() => {
     if (configData) {
+      const isAsaasHabilitado = configData.asaas_banco_habilitado ?? false;
       setFormData({
         codigo_servico_municipal: configData.codigo_servico_municipal || '',
         aliquota_iss: String(configData.aliquota_iss || 0),
@@ -72,10 +72,9 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
           configData.portal_nacional_base_url ||
           'https://sefin.producaorestrita.nfse.gov.br/API/SefinNacional',
         portal_nacional_ambiente: configData.portal_nacional_ambiente || 'HOMOLOGACAO',
-        asaas_api_key: '',
         asaas_sandbox: configData.asaas_sandbox || false,
-        provider: configData.provider === 'PORTAL_NACIONAL' ? 'ASAAS' : (configData.provider || 'ASAAS'),
-        has_asaas_api_key: configData.has_asaas_api_key ?? false,
+        provider: configData.provider === 'ASAAS' && isAsaasHabilitado ? 'ASAAS' : 'PORTAL_NACIONAL',
+        asaas_banco_habilitado: isAsaasHabilitado,
         has_portal_nacional_password: configData.has_portal_nacional_password ?? false,
       });
     }
@@ -84,17 +83,11 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
   const testAuthMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
       if (data.provider === 'ASAAS') {
-        if (!data.asaas_api_key && !data.has_asaas_api_key) {
-          throw new Error(t('nfse.messages.apiKeyRequired'));
+        if (!data.asaas_banco_habilitado) {
+          throw new Error(t('nfse.messages.providerRequired'));
         }
 
-        const testPayload: NFSeConfigTestAuth = {
-          provider: 'ASAAS',
-          asaas_sandbox: data.asaas_sandbox,
-        };
-        if (data.asaas_api_key) testPayload.asaas_api_key = data.asaas_api_key;
-
-        const response = await api.testAuth(testPayload);
+        const response = await api.testAuth({ provider: 'ASAAS' });
         if (!response.success) {
           throw new Error(response.message || t('nfse.messages.testError'));
         }
@@ -145,7 +138,6 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
         provider: data.provider,
       };
       if (data.portal_nacional_password) updateData.portal_nacional_password = data.portal_nacional_password;
-      if (data.asaas_api_key) updateData.asaas_api_key = data.asaas_api_key;
 
       const response = await api.update(updateData);
       if (!response.success) {
@@ -185,7 +177,7 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
           (formData.portal_nacional_password || formData.has_portal_nacional_password)
         )
       : formData.provider === 'ASAAS'
-        ? !!(formData.asaas_api_key || formData.has_asaas_api_key)
+        ? formData.asaas_banco_habilitado
         : false;
 
   useEffect(() => {
@@ -197,6 +189,10 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
   }, [onTestReady, testAuthMutation.isPending, canTest, handleTest]);
 
   const isFieldDisabled = disabled || saveMutation.isPending;
+  const providerOptions = [
+    ...(formData.asaas_banco_habilitado ? [{ value: 'ASAAS', label: 'Asaas' }] : []),
+    { value: 'PORTAL_NACIONAL', label: 'Portal Nacional (em breve)', disabled: true },
+  ];
 
   if (isLoading) {
     return (
@@ -303,54 +299,11 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
                 value={formData.provider}
                 onChange={(v) => handleInputChange('provider', String(v ?? '') as 'PORTAL_NACIONAL' | 'ASAAS')}
                 disabled={isFieldDisabled}
-                options={[
-                  { value: 'ASAAS', label: 'Asaas' },
-                  { value: 'PORTAL_NACIONAL', label: 'Portal Nacional (em breve)', disabled: true },
-                ]}
+                options={providerOptions}
                 helpText={t('nfse.providerHelp')}
                 size="sm"
               />
             </div>
-
-            {formData.provider === 'ASAAS' && (
-              <>
-                <div className="col-12">
-                  <FormField
-                    name="nfse_asaas_api_key"
-                    type="password"
-                    label={t('nfse.asaasApiKey')}
-                    value={formData.asaas_api_key}
-                    onChange={(v) => handleInputChange('asaas_api_key', String(v ?? ''))}
-                    disabled={isFieldDisabled}
-                    placeholder={
-                      formData.has_asaas_api_key
-                        ? 'Chave configurada — deixe em branco para manter'
-                        : t('placeholder.apiToken')
-                    }
-                    autoComplete="off"
-                    helpText={
-                      formData.has_asaas_api_key && !formData.asaas_api_key
-                        ? 'Chave de API salva. Preencha apenas para alterar.'
-                        : t('nfse.asaasApiKeyHelp')
-                    }
-                    size="sm"
-                  />
-                </div>
-
-                <div className="col-12">
-                  <AtivoInativoField
-                    name="nfse_asaas_sandbox"
-                    label={t('nfse.useSandbox')}
-                    value={formData.asaas_sandbox}
-                    onChange={(v) => handleInputChange('asaas_sandbox', v)}
-                    disabled={isFieldDisabled}
-                  />
-                  <small className="form-helper-message form-modal-input-col">
-                    {t('nfse.useSandboxHelp')}
-                  </small>
-                </div>
-              </>
-            )}
 
             {formData.provider === 'PORTAL_NACIONAL' && (
               <>

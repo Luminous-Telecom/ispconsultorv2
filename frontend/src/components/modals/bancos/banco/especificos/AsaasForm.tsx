@@ -88,6 +88,19 @@ const AsaasForm: React.FC<AsaasFormProps> = ({
           disabled={isPending}
         />
       </div>
+
+      <div className="col-12">
+        <AtivoInativoField
+          value={!!formData.usar_integracao_banco_nfse}
+          onChange={(v) => handleInputChange('usar_integracao_banco_nfse', v)}
+          label={t('form.useBankIntegrationForNFSe')}
+          name="banco-asaas-usar-integracao-nfse"
+          disabled={isPending}
+        />
+        <small className="form-helper-message form-modal-input-col">
+          {t('form.useBankIntegrationForNFSeHelp')}
+        </small>
+      </div>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { Op } from 'sequelize';
-import type { ModelStatic, Model } from 'sequelize';
+import type { ModelStatic, Model, Transaction } from 'sequelize';
 
 const DEFAULT_NFSE = {
   codigo_servico_municipal: null,
@@ -16,15 +16,20 @@ const DEFAULT_NFSE = {
   provider: 'PORTAL_NACIONAL'
 };
 
+interface NFSeConfigServiceOptions {
+  transaction?: Transaction;
+}
+
 export function createNFSeConfigService<T extends Model>(Model: ModelStatic<T>) {
-  const findConfig = async (empresaId?: number | null): Promise<T | null> => {
+  const findConfig = async (empresaId?: number | null, options?: NFSeConfigServiceOptions): Promise<T | null> => {
     const where = empresaId != null
       ? { [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
       : {};
 
     return (await (Model as ModelStatic<Model>).findOne({
       where,
-      order: [['id', 'ASC']]
+      order: [['id', 'ASC']],
+      transaction: options?.transaction
     })) as T | null;
   };
 
@@ -41,15 +46,15 @@ export function createNFSeConfigService<T extends Model>(Model: ModelStatic<T>) 
       return this.get(empresaId);
     },
 
-    async update(dados: Partial<T>, empresaId?: number | null): Promise<T> {
-      let config = await findConfig(empresaId);
+    async update(dados: Partial<T>, empresaId?: number | null, options?: NFSeConfigServiceOptions): Promise<T> {
+      let config = await findConfig(empresaId, options);
 
       if (!config) {
         const merged = { ...DEFAULT_NFSE, ...dados, empresa_id: (dados as { empresa_id?: number | null })?.empresa_id ?? empresaId ?? null } as never;
-        config = (await Model.create(merged)) as T;
+        config = (await Model.create(merged, { transaction: options?.transaction })) as T;
       } else {
-        await (config as unknown as { update: (d: object) => Promise<void> }).update(dados as object);
-        await (config as unknown as { reload: () => Promise<void> }).reload();
+        await (config as unknown as { update: (d: object, o?: NFSeConfigServiceOptions) => Promise<void> }).update(dados as object, options);
+        await (config as unknown as { reload: (o?: NFSeConfigServiceOptions) => Promise<void> }).reload(options);
       }
 
       return config;

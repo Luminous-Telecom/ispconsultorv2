@@ -839,6 +839,8 @@ export interface TranslationKeys {
   'form.finePercent': string;
   'form.interestPercent': string;
   'form.includeFee': string;
+  'form.useBankIntegrationForNFSe': string;
+  'form.useBankIntegrationForNFSeHelp': string;
   'form.accountIdentifier': string;
   'form.accountIdentifierEfiHelp': string;
   'form.paymentLocation': string;

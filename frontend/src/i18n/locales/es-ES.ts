@@ -856,6 +856,8 @@ const esES: TranslationKeys = {
     'form.finePercent': 'Porcentaje de Multa (%)',
     'form.interestPercent': 'Porcentaje de Interés (% por día)',
     'form.includeFee': 'Incluir Tasa en el Boleto',
+    'form.useBankIntegrationForNFSe': 'Usar integración del banco para NFS-e',
+    'form.useBankIntegrationForNFSeHelp': 'Al guardar, define el proveedor NFS-e como Asaas usando la API Key y el ambiente de este banco.',
     'form.accountIdentifier': 'Identificador de la Cuenta',
     'form.accountIdentifierEfiHelp': 'Disponible en la configuración de la API de Efi',
     'form.paymentLocation': 'Lugar de Pago',

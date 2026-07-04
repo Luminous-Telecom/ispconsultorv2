@@ -1,11 +1,14 @@
 import { Banco } from '../../../models/cadastros/Banco';
+import { NFSeConfig } from '../../../models/nfse/NFSeConfig';
 import { Op, WhereOptions } from 'sequelize';
+import type { Order, Transaction } from 'sequelize';
 import { sequelize } from '../../../config/database';
 import { cache } from '../../../utils/cache';
 import { logger } from '../../../utils/logger';
 import { SortHelper } from '../../../utils/sortHelper';
 import { BANCO_SORT_CONFIG } from '../../../config/sortConfigs';
 import { buildPagination } from '../../../utils/pagination';
+import { NFSeConfigService } from '../../nfse/NFSeConfigService';
 
 export interface ListBancosFilters {
   search?: string;
@@ -35,6 +38,52 @@ export interface ListBancosResponse {
 export class BancoService {
   private static getDefaultIncludes() {
     return [{ association: 'titulos' as const }];
+  }
+
+  static async findAsaasNFSeIntegracao(empresaId?: number | null, transaction?: Transaction): Promise<Banco | null> {
+    const where: WhereOptions = {
+      ativo: true,
+      tipo_banco: 'asaas',
+      usar_integracao_banco_nfse: true,
+      api_key: { [Op.ne]: null }
+    };
+
+    if (empresaId != null) {
+      (where as Record<symbol, unknown>)[Op.or] = [
+        { empresa_id: empresaId },
+        { empresa_id: null }
+      ];
+    }
+
+    return Banco.findOne({
+      where,
+      order: [['id', 'ASC']],
+      transaction
+    });
+  }
+
+  private static prepararDadosBanco(dadosBanco: Partial<Banco>): Partial<Banco> {
+    if (dadosBanco.tipo_banco && dadosBanco.tipo_banco !== 'asaas') {
+      return { ...dadosBanco, usar_integracao_banco_nfse: false };
+    }
+
+    return dadosBanco;
+  }
+
+  private static async sincronizarNFSeAsaas(banco: Banco, transaction?: Transaction): Promise<void> {
+    if (banco.tipo_banco !== 'asaas' || !banco.usar_integracao_banco_nfse) {
+      return;
+    }
+
+    if (!banco.getDataValue('api_key')) {
+      throw new Error('API Key do Asaas é obrigatória para usar a integração do banco na NFS-e.');
+    }
+
+    await NFSeConfigService.update({
+      provider: 'ASAAS',
+      asaas_api_key: null,
+      asaas_sandbox: banco.sandbox
+    } as Partial<NFSeConfig>, banco.empresa_id, { transaction });
   }
 
   /**
@@ -80,7 +129,7 @@ export class BancoService {
     if (search) {
       const searchPattern = `%${search}%`;
       const numExact = /^\d+$/.test(search) ? parseInt(search, 10) : null;
-      let orConditions: any[] = [];
+      let orConditions: WhereOptions[] = [];
       if (searchField === 'id') {
         orConditions = numExact !== null ? [{ id: numExact }] : [{ id: { [Op.lt]: 0 } }];
       } else if (searchField === 'nome' || searchField === 'descricao' || searchField === 'tipo_banco' || searchField === 'sandbox' || searchField === 'ativo') {
@@ -110,7 +159,7 @@ export class BancoService {
     }
 
     // Construir ordenação - ordena TODOS os dados antes da paginação
-    let order: any[] = [['id', 'DESC']]; // Padrão
+    let order: Order = [['id', 'DESC']]; // Padrão
     if (sortColumn && sortDirection) {
       const sortResult = SortHelper.buildOrder(
         BANCO_SORT_CONFIG,
@@ -144,10 +193,13 @@ export class BancoService {
           { association: 'titulos' }
         ]
       });
-    } catch (queryError: any) {
+    } catch (queryError: unknown) {
+      const errorInfo = queryError instanceof Error
+        ? { message: queryError.message, stack: queryError.stack }
+        : { message: 'Erro desconhecido', stack: undefined };
       logger.error('BancoService.list - Erro na query', {
-        error: queryError.message,
-        stack: queryError.stack,
+        error: errorInfo.message,
+        stack: errorInfo.stack,
         where: JSON.stringify(where).substring(0, 200),
         order: JSON.stringify(order).substring(0, 200)
       });
@@ -199,28 +251,43 @@ export class BancoService {
    * Criar banco
    */
   static async create(dadosBanco: Partial<Banco>): Promise<Banco> {
-    return await Banco.create(dadosBanco as any);
+    return await sequelize.transaction(async (transaction) => {
+      const banco = await Banco.create(
+        BancoService.prepararDadosBanco(dadosBanco) as Banco['_creationAttributes'],
+        { transaction }
+      );
+
+      await BancoService.sincronizarNFSeAsaas(banco, transaction);
+      await banco.reload({ include: BancoService.getDefaultIncludes(), transaction });
+
+      return banco;
+    });
   }
 
   /**
    * Atualizar banco
    */
   static async update(id: string | number, dadosBanco: Partial<Banco>): Promise<Banco> {
-    const banco = await Banco.findByPk(id);
+    const bancoAtualizado = await sequelize.transaction(async (transaction) => {
+      const banco = await Banco.findByPk(id, { transaction });
     
-    if (!banco) {
-      throw new Error('Banco não encontrado');
-    }
-    
-    await banco.update(dadosBanco);
-    await banco.reload({ include: BancoService.getDefaultIncludes() });
+      if (!banco) {
+        throw new Error('Banco não encontrado');
+      }
+      
+      await banco.update(BancoService.prepararDadosBanco(dadosBanco), { transaction });
+      await BancoService.sincronizarNFSeAsaas(banco, transaction);
+      await banco.reload({ include: BancoService.getDefaultIncludes(), transaction });
+
+      return banco;
+    });
 
     // Invalidar cache se status mudou
     if (dadosBanco.ativo !== undefined) {
       cache.delete('bancos:ativos');
     }
     
-    return banco;
+    return bancoAtualizado;
   }
 
   /**

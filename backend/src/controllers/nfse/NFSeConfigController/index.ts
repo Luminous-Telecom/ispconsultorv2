@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { NFSeConfigService } from '../../../services/nfse/NFSeConfigService';
+import { BancoService } from '../../../services/cadastros/BancoService';
 import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
@@ -13,7 +14,6 @@ export class NFSeConfigController {
   /** Remove campos sensíveis antes de enviar ao frontend */
   private static maskSensitiveFields(config: Record<string, unknown>): Record<string, unknown> {
     const masked = { ...config };
-    masked.has_asaas_api_key = !!masked.asaas_api_key;
     delete masked.asaas_api_key;
     masked.has_portal_nacional_password = !!masked.portal_nacional_password;
     delete masked.portal_nacional_password;
@@ -31,10 +31,24 @@ export class NFSeConfigController {
     portal_nacional_password: Joi.string().max(255).allow(null, ''),
     portal_nacional_base_url: Joi.string().max(500).allow(null, ''),
     portal_nacional_ambiente: Joi.string().valid('HOMOLOGACAO', 'PRODUCAO').required(),
-    asaas_api_key: Joi.string().max(255).allow(null, ''),
-    asaas_sandbox: Joi.boolean().required(),
+    asaas_sandbox: Joi.boolean().optional(),
     provider: Joi.string().valid('PORTAL_NACIONAL', 'ASAAS').required()
   }).min(1);
+
+  private static async buildResponseData(config: Record<string, unknown> | null, empresaId?: number | null): Promise<Record<string, unknown>> {
+    const bancoAsaas = await BancoService.findAsaasNFSeIntegracao(empresaId);
+    const masked = NFSeConfigController.maskSensitiveFields(config ?? {});
+    const isAsaasHabilitado = !!bancoAsaas;
+
+    return {
+      ...masked,
+      asaas_banco_habilitado: isAsaasHabilitado,
+      asaas_sandbox: bancoAsaas?.sandbox ?? masked.asaas_sandbox ?? false,
+      provider: masked.provider === 'ASAAS' && !isAsaasHabilitado
+        ? 'PORTAL_NACIONAL'
+        : masked.provider ?? (isAsaasHabilitado ? 'ASAAS' : 'PORTAL_NACIONAL')
+    };
+  }
 
   // Obter configuração (filtra por empresa_id quando autenticado)
   static async get(req: Request, res: Response): Promise<Response> {
@@ -43,11 +57,11 @@ export class NFSeConfigController {
       const config = await NFSeConfigService.get(empresaId);
 
       if (!config) {
-        sendSuccess(res, null);
+        sendSuccess(res, await NFSeConfigController.buildResponseData(null, empresaId));
         return res;
       }
 
-      sendSuccess(res, NFSeConfigController.maskSensitiveFields(config.toJSON() as Record<string, unknown>));
+      sendSuccess(res, await NFSeConfigController.buildResponseData(config.toJSON() as Record<string, unknown>, empresaId));
       return res;
     } catch (error: unknown) {
       sendError(res, error, 'Erro ao obter configuração NFS-e', 500, true, {
@@ -93,7 +107,19 @@ export class NFSeConfigController {
 
       // Campos sensíveis: preservar valor existente se não enviado ou enviado vazio/null
       const dadosParaSalvar = { ...value };
-      const camposSensiveis = ['asaas_api_key', 'portal_nacional_password'] as const;
+      const bancoAsaas = await BancoService.findAsaasNFSeIntegracao(empresaId);
+
+      if (dadosParaSalvar.provider === 'ASAAS') {
+        if (!bancoAsaas) {
+          sendValidationError(res, 'Habilite a integração NFS-e em um banco Asaas antes de selecionar este provedor.');
+          return res;
+        }
+
+        dadosParaSalvar.asaas_api_key = null;
+        dadosParaSalvar.asaas_sandbox = bancoAsaas.sandbox;
+      }
+
+      const camposSensiveis = ['portal_nacional_password'] as const;
       for (const campo of camposSensiveis) {
         if (dadosParaSalvar[campo] === null || dadosParaSalvar[campo] === '' || dadosParaSalvar[campo] === undefined) {
           delete dadosParaSalvar[campo];
@@ -135,7 +161,7 @@ export class NFSeConfigController {
         }
       }
 
-      sendSuccess(res, NFSeConfigController.maskSensitiveFields(configAtualizado.toJSON() as Record<string, unknown>), 'Configuração NFS-e atualizada com sucesso');
+      sendSuccess(res, await NFSeConfigController.buildResponseData(configAtualizado.toJSON() as Record<string, unknown>, empresaId), 'Configuração NFS-e atualizada com sucesso');
       return res;
     } catch (error: unknown) {
       sendError(res, error, 'Erro ao atualizar configuração NFS-e', 500, true, {
@@ -150,32 +176,35 @@ export class NFSeConfigController {
   // Testar autenticação (Portal Nacional ou Asaas)
   static async testAuth(req: Request, res: Response): Promise<Response> {
     try {
-      const { provider, portal_nacional_username, portal_nacional_password, portal_nacional_ambiente, asaas_api_key, asaas_sandbox } = req.body;
+      const { provider, portal_nacional_username, portal_nacional_password, portal_nacional_ambiente } = req.body;
 
       logger.info('Iniciando teste de autenticação NFS-e', {
         provider,
         hasCredentials: {
           portal_nacional: !!(portal_nacional_username && portal_nacional_password),
-          asaas: !!asaas_api_key
+          asaas: provider === 'ASAAS'
         }
       });
 
       // Testar conexão do Asaas
       if (provider === 'ASAAS') {
-        if (!asaas_api_key) {
-          sendValidationError(res, 'API Key do Asaas é obrigatória para testar conexão');
+        const empresaId = getEmpresaIdOrNull(req);
+        const bancoAsaas = await BancoService.findAsaasNFSeIntegracao(empresaId);
+
+        if (!bancoAsaas) {
+          sendValidationError(res, 'Habilite a integração NFS-e em um banco Asaas antes de testar este provedor.');
           return res;
         }
 
         try {
-          const baseUrl = asaas_sandbox
+          const baseUrl = bancoAsaas.sandbox
             ? 'https://sandbox.asaas.com/api/v3'
             : 'https://www.asaas.com/api/v3';
 
           // Fazer uma requisição simples para validar a API Key (endpoint de minha conta)
           const response = await axios.get(`${baseUrl}/myAccount`, {
             headers: {
-              'access_token': asaas_api_key,
+              'access_token': bancoAsaas.getDataValue('api_key'),
               'Accept': 'application/json',
               'Content-Type': 'application/json'
             },

@@ -40,6 +40,12 @@ const NFSeModalCore: React.FC<NFSeModalCoreProps> = ({ variant, show, onClose })
       modalId={modalId}
       headerActions={
         <div className="d-flex gap-2 modal-header-actions">
+          <SalvarButton
+            type="submit"
+            form={formId}
+            isPending={isSaving}
+          />
+          <FecharButton type="button" onClick={onClose} />
           {hasTestButton && (
             <TestarConexaoButton
               type="button"
@@ -48,13 +54,6 @@ const NFSeModalCore: React.FC<NFSeModalCoreProps> = ({ variant, show, onClose })
               isPending={isTesting}
             />
           )}
-          <SalvarButton
-            type="submit"
-            form={formId}
-            onClick={() => handleSaveRef.current?.()}
-            isPending={isSaving}
-          />
-          <FecharButton type="button" onClick={onClose} />
         </div>
       }
     >

@@ -14,9 +14,7 @@ export interface NFSeConfig {
   has_portal_nacional_password: boolean;
   portal_nacional_base_url: string | null;
   portal_nacional_ambiente: 'HOMOLOGACAO' | 'PRODUCAO';
-  /** API key mascarada no backend — usar has_asaas_api_key para verificar se existe */
-  asaas_api_key?: never;
-  has_asaas_api_key: boolean;
+  asaas_banco_habilitado: boolean;
   asaas_sandbox: boolean;
   provider: 'PORTAL_NACIONAL' | 'ASAAS';
   created_at: string;
@@ -33,7 +31,6 @@ export interface NFSeConfigUpdate {
   portal_nacional_password?: string | null;
   portal_nacional_base_url?: string | null;
   portal_nacional_ambiente?: 'HOMOLOGACAO' | 'PRODUCAO';
-  asaas_api_key?: string | null;
   asaas_sandbox?: boolean;
   provider?: 'PORTAL_NACIONAL' | 'ASAAS';
 }
@@ -43,7 +40,6 @@ export interface NFSeConfigTestAuth {
   portal_nacional_username?: string;
   portal_nacional_password?: string;
   portal_nacional_ambiente?: 'HOMOLOGACAO' | 'PRODUCAO';
-  asaas_api_key?: string;
   asaas_sandbox?: boolean;
 }
 

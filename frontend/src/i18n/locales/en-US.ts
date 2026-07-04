@@ -854,6 +854,8 @@ const enUS: TranslationKeys = {
     'form.finePercent': 'Fine Percentage (%)',
     'form.interestPercent': 'Interest Percentage (% per day)',
     'form.includeFee': 'Include Fee in Boleto',
+    'form.useBankIntegrationForNFSe': 'Use bank integration for NFS-e',
+    'form.useBankIntegrationForNFSeHelp': 'When saving, sets the NFS-e provider to Asaas using this bank API Key and environment.',
     'form.accountIdentifier': 'Account Identifier',
     'form.accountIdentifierEfiHelp': 'Available in Efi API settings',
     'form.paymentLocation': 'Payment Location',

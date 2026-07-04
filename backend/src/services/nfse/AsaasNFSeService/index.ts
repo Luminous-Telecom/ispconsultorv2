@@ -4,6 +4,7 @@ import { Cliente } from '../../../models/clientes/Cliente';
 import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { logger } from '../../../utils/logger';
 import { NFSeConfigService } from '../NFSeConfigService';
+import { BancoService } from '../../cadastros/BancoService';
 import { formatDateOnly } from '../../../utils/timezoneUtils';
 import asaasConfig from '../../../config/bancos/asaas';
 
@@ -32,20 +33,20 @@ interface GerarNFSeResponse {
 export class AsaasNFSeService {
   private static async getConfig(empresaId?: number | null): Promise<AsaasConfig | null> {
     try {
-      const config = await NFSeConfigService.getConfig(empresaId);
+      const bancoAsaas = await BancoService.findAsaasNFSeIntegracao(empresaId);
 
-      if (!config || !config.asaas_api_key) {
-        logger.warn('API Key do Asaas não configurada para NFS-e');
+      if (!bancoAsaas) {
+        logger.warn('Banco Asaas não habilitado para emissão de NFS-e');
         return null;
       }
 
-      const baseUrl = config.asaas_sandbox
+      const baseUrl = bancoAsaas.sandbox
         ? (asaasConfig.sandbox_url || asaasConfig.api_base_url)
         : (asaasConfig.api_base_url || asaasConfig.api_url);
 
       return {
-        apiKey: config.asaas_api_key,
-        sandbox: config.asaas_sandbox,
+        apiKey: bancoAsaas.getDataValue('api_key') || '',
+        sandbox: bancoAsaas.sandbox,
         baseUrl: baseUrl
       };
     } catch (error) {
@@ -120,15 +121,16 @@ export class AsaasNFSeService {
   static async gerarNFSe(
     notaFiscal: NotaFiscal,
     cliente: Cliente,
-    dadosEmpresa: DadosEmpresa
+    dadosEmpresa: DadosEmpresa,
+    empresaId?: number | null
   ): Promise<GerarNFSeResponse> {
     try {
-      const config = await this.getConfig(dadosEmpresa?.id);
+      const config = await this.getConfig(empresaId ?? notaFiscal.empresa_id ?? (cliente as { empresa_id?: number | null }).empresa_id);
       if (!config) {
         return {
           success: false,
           codigo_erro: 'CONFIG_001',
-          erro: 'Configuração do Asaas não encontrada. Configure API Key nos parâmetros do sistema.'
+          erro: 'Banco Asaas não habilitado para emissão de NFS-e. Habilite a integração no cadastro do banco.'
         };
       }
 
@@ -143,7 +145,7 @@ export class AsaasNFSeService {
         };
       }
 
-      const dadosNFSe = await this.prepararDadosNFSe(notaFiscal, cliente, dadosEmpresa, customerId);
+      const dadosNFSe = await this.prepararDadosNFSe(notaFiscal, cliente, dadosEmpresa, customerId, empresaId);
       const endpoint = '/invoices';
       
       const response = await apiClient.post(endpoint, dadosNFSe);
@@ -205,7 +207,7 @@ export class AsaasNFSeService {
           const errorDescription = errorData?.errors?.[0]?.description || axiosError.message;
           
           // Verificar se está em sandbox
-          const config = await this.getConfig(dadosEmpresa?.id);
+          const config = await this.getConfig(empresaId ?? notaFiscal.empresa_id ?? (cliente as { empresa_id?: number | null }).empresa_id);
           const isSandbox = config?.sandbox || false;
           
           // Se o erro for por falta de saldo, deixar agendada e o webhook atualizará quando autorizar
@@ -307,38 +309,40 @@ export class AsaasNFSeService {
       return null;
     }
 
+    const payload: Record<string, any> = {
+      name: cliente.razao_social || cliente.nome_fantasia || `Cliente ${cliente.id}`,
+      email: cliente.email,
+      cpfCnpj: cpfCnpj,
+      postalCode: cliente.cep?.replace(/\D/g, '') || '',
+      address: cliente.endereco || '',
+      addressNumber: cliente.numero || '',
+      city: cliente.cidade || '',
+      state: cliente.estado || '',
+      notify: false,
+      externalReference: `cliente_${cliente.id}`,
+      notificationDisabled: true,
+      companyName: cliente.nome_fantasia || cliente.razao_social,
+      phone: cliente.telefone?.replace(/\D/g, ''),
+      mobilePhone: (cliente.whatsapp || cliente.telefone)?.replace(/\D/g, ''),
+      complement: cliente.complemento,
+      province: cliente.bairro
+    };
+
     try {
       const searchResponse = await apiClient.get(`/customers?cpfCnpj=${cpfCnpj}&limit=1`);
       const customers = searchResponse.data?.data || [];
 
       if (customers.length > 0) {
         const id = customers[0]?.id;
-        return typeof id === 'string' ? id : typeof id === 'number' ? String(id) : null;
+        const customerId = typeof id === 'string' ? id : typeof id === 'number' ? String(id) : null;
+
+        return customerId;
       }
     } catch (error) {
       // Ignorar erro e tentar criar
     }
 
     try {
-      const payload: Record<string, any> = {
-        name: cliente.razao_social || cliente.nome_fantasia || `Cliente ${cliente.id}`,
-        email: cliente.email,
-        cpfCnpj: cpfCnpj,
-        postalCode: cliente.cep?.replace(/\D/g, '') || '',
-        address: cliente.endereco || '',
-        addressNumber: cliente.numero || '',
-        city: cliente.cidade || '',
-        state: cliente.estado || '',
-        notify: false,
-        externalReference: `cliente_${cliente.id}`,
-        notificationDisabled: true,
-        companyName: cliente.nome_fantasia || cliente.razao_social,
-        phone: cliente.telefone?.replace(/\D/g, ''),
-        mobilePhone: (cliente.whatsapp || cliente.telefone)?.replace(/\D/g, ''),
-        complement: cliente.complemento,
-        province: cliente.bairro
-      };
-
       const response = await apiClient.post('/customers', payload);
       const id = response.data?.id;
       return typeof id === 'string' ? id : typeof id === 'number' ? String(id) : null;
@@ -415,9 +419,10 @@ export class AsaasNFSeService {
     notaFiscal: NotaFiscal,
     cliente: Cliente,
     dadosEmpresa: DadosEmpresa,
-    customerId: string
+    customerId: string,
+    empresaId?: number | null
   ): Promise<Record<string, any>> {
-    const config = await NFSeConfigService.getConfig(dadosEmpresa?.id);
+    const config = await NFSeConfigService.getConfig(empresaId ?? notaFiscal.empresa_id ?? (cliente as { empresa_id?: number | null }).empresa_id);
     if (!config) {
       throw new Error('Configuração de NFS-e não encontrada');
     }

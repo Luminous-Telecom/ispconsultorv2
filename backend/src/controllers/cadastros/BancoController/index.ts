@@ -140,6 +140,11 @@ export class BancoController {
         sendValidationError(res, errorMessages.join(', '));
         return;
       }
+
+      if (error instanceof Error && error.message.includes('API Key do Asaas é obrigatória')) {
+        sendValidationError(res, error.message);
+        return;
+      }
       
       sendError(res, error, 'Erro ao criar banco', 500, true, {
         body: req.body
@@ -255,6 +260,11 @@ export class BancoController {
       if (error instanceof ValidationError) {
         const errorMessages = error.errors.map(err => err.message);
         sendValidationError(res, errorMessages.join(', '));
+        return;
+      }
+
+      if (error instanceof Error && error.message.includes('API Key do Asaas é obrigatória')) {
+        sendValidationError(res, error.message);
         return;
       }
       

@@ -185,6 +185,7 @@ export const bancoSchema = z.object({
     .optional(),
   
   incluir_taxa: z.boolean().default(false),
+  usar_integracao_banco_nfse: z.boolean().default(false),
   
   // Observações e instruções
   observacao_linha_1: z
