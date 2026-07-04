@@ -1,11 +1,12 @@
 import { Request, Response } from 'express';
 import { SaasNFSeConfigService } from '../../../services/saas/SaasNFSeConfigService';
-import { registrarAtualizacao } from '../../../services/sistema/AuditoriaService';
+import { registrarAtualizacao, registrarCriacao } from '../../../services/sistema/AuditoriaService';
 import { logger } from '../../../utils/logger';
 import Joi from 'joi';
 import axios from 'axios';
 import { URLSearchParams } from 'url';
 import { sendSuccess, sendError, sendValidationError, sendUnauthorized } from '../../../utils/responseUtils';
+import type { AuthenticatedRequest } from '../../../types/auth';
 
 export class SaasNFSeConfigController {
   private static maskSensitiveFields(config: Record<string, unknown>): Record<string, unknown> {
@@ -35,6 +36,11 @@ export class SaasNFSeConfigController {
   static async get(req: Request, res: Response): Promise<Response> {
     try {
       const config = await SaasNFSeConfigService.get();
+      if (!config) {
+        sendSuccess(res, null);
+        return res;
+      }
+
       sendSuccess(res, SaasNFSeConfigController.maskSensitiveFields(config.toJSON() as Record<string, unknown>));
       return res;
     } catch (error: unknown) {
@@ -78,8 +84,15 @@ export class SaasNFSeConfigController {
 
       const configAnterior = await SaasNFSeConfigService.get();
       const configAtualizado = await SaasNFSeConfigService.update(dadosParaSalvar);
-      if (configAnterior) {
-        await registrarAtualizacao(req as any, 'SaasNFSeConfig', configAtualizado.id,
+      if (!configAnterior) {
+        await registrarCriacao(
+          req as AuthenticatedRequest,
+          'SaasNFSeConfig',
+          configAtualizado.id,
+          configAtualizado.toJSON() as Record<string, unknown>
+        );
+      } else {
+        await registrarAtualizacao(req as AuthenticatedRequest, 'SaasNFSeConfig', configAtualizado.id,
           configAnterior.toJSON() as Record<string, unknown>,
           configAtualizado.toJSON() as Record<string, unknown>);
       }

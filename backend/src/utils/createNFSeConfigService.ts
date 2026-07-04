@@ -17,36 +17,32 @@ const DEFAULT_NFSE = {
 };
 
 export function createNFSeConfigService<T extends Model>(Model: ModelStatic<T>) {
+  const findConfig = async (empresaId?: number | null): Promise<T | null> => {
+    const where = empresaId != null
+      ? { [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
+      : {};
+
+    return (await (Model as ModelStatic<Model>).findOne({
+      where,
+      order: [['id', 'ASC']]
+    })) as T | null;
+  };
+
   return {
-    async get(empresaId?: number | null): Promise<T> {
-      const where = empresaId != null
-        ? { [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
-        : {};
-      let config = (await (Model as ModelStatic<Model>).findOne({
-        where,
-        order: [['id', 'ASC']]
-      })) as T | null;
-
-      if (!config) {
-        const createData = { ...DEFAULT_NFSE, empresa_id: empresaId ?? null } as never;
-        config = (await Model.create(createData)) as T;
-      }
-
-      return config;
+    async find(empresaId?: number | null): Promise<T | null> {
+      return findConfig(empresaId);
     },
 
-    async getConfig(empresaId?: number | null): Promise<T> {
+    async get(empresaId?: number | null): Promise<T | null> {
+      return findConfig(empresaId);
+    },
+
+    async getConfig(empresaId?: number | null): Promise<T | null> {
       return this.get(empresaId);
     },
 
     async update(dados: Partial<T>, empresaId?: number | null): Promise<T> {
-      const where = empresaId != null
-        ? { [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
-        : {};
-      let config = (await (Model as ModelStatic<Model>).findOne({
-        where,
-        order: [['id', 'ASC']]
-      })) as T | null;
+      let config = await findConfig(empresaId);
 
       if (!config) {
         const merged = { ...DEFAULT_NFSE, ...dados, empresa_id: (dados as { empresa_id?: number | null })?.empresa_id ?? empresaId ?? null } as never;

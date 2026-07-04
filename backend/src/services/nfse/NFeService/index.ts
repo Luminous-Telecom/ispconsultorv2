@@ -224,6 +224,14 @@ export class NFeService {
     // Verificar qual provedor está configurado
     const empId = empresaId ?? dadosEmpresa?.id ?? (cliente as { empresa_id?: number | null }).empresa_id ?? undefined;
     const config = await NFSeConfigService.getConfig(empId);
+    if (!config) {
+      return {
+        success: false,
+        erro: 'Configuração de NFS-e não encontrada. Configure a NFS-e nos parâmetros do sistema.',
+        codigo_erro: 'CONFIG_NFSE_NAO_ENCONTRADA'
+      };
+    }
+
     const provider = config.provider;
 
     // Se Asaas está configurado, usar ele
@@ -295,6 +303,13 @@ export class NFeService {
       if (notaFiscal.chave_acesso) {
         const config = await NFSeConfigService.getConfig(empresaIdNota);
         let resultado: { success: boolean; status?: string; erro?: string } | null = null;
+
+        if (!config) {
+          return {
+            success: false,
+            erro: 'Configuração de NFS-e não encontrada'
+          };
+        }
 
         if (config.provider === 'ASAAS') {
           resultado = await AsaasNFSeService.consultarStatus(notaFiscal.chave_acesso, empresaIdNota);

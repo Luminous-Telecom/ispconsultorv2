@@ -52,7 +52,7 @@ export class PortalNacionalNFSeService {
     try {
       const config = await NFSeConfigService.getConfig(empresaId);
 
-      if (!config.portal_nacional_username || !config.portal_nacional_password) {
+      if (!config || !config.portal_nacional_username || !config.portal_nacional_password) {
         logger.warn('Configuração do Portal Nacional NFS-e não encontrada ou incompleta');
         return null;
       }
@@ -248,6 +248,9 @@ export class PortalNacionalNFSeService {
   ): Promise<Record<string, any>> {
     // Buscar configurações de NFS-e
     const config = await NFSeConfigService.getConfig(dadosEmpresa?.id);
+    if (!config) {
+      throw new Error('Configuração de NFS-e não encontrada');
+    }
     
     // Calcular valor total e deduções
     const valorTotal = Number(notaFiscal.valor_total) || 0;

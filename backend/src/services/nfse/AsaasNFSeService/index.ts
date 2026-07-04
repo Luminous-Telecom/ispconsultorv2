@@ -34,7 +34,7 @@ export class AsaasNFSeService {
     try {
       const config = await NFSeConfigService.getConfig(empresaId);
 
-      if (!config.asaas_api_key) {
+      if (!config || !config.asaas_api_key) {
         logger.warn('API Key do Asaas não configurada para NFS-e');
         return null;
       }
@@ -418,6 +418,10 @@ export class AsaasNFSeService {
     customerId: string
   ): Promise<Record<string, any>> {
     const config = await NFSeConfigService.getConfig(dadosEmpresa?.id);
+    if (!config) {
+      throw new Error('Configuração de NFS-e não encontrada');
+    }
+
     const serviceDescription = notaFiscal.descricao || config.descricao_servico || '';
     const aliquotaIss = Number(notaFiscal.aliquota_iss) || Number(config.aliquota_iss) || 0;
 

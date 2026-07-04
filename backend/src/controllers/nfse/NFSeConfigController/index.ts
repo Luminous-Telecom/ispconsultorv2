@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import { NFSeConfig } from '../../../models/nfse/NFSeConfig';
 import { NFSeConfigService } from '../../../services/nfse/NFSeConfigService';
 import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
@@ -43,21 +42,9 @@ export class NFSeConfigController {
       const empresaId = getEmpresaIdOrNull(req);
       const config = await NFSeConfigService.get(empresaId);
 
-      // Registrar criação se for novo
-      if (config.created_at.getTime() === config.updated_at.getTime()) {
-        try {
-          const empresaIdAudit = getEmpresaIdOrNull(req) ?? config.empresa_id ?? null;
-          await registrarCriacao(
-            req as AuthenticatedRequest,
-            'NFSeConfig',
-            config.id,
-            config.toJSON() as unknown as Record<string, unknown>,
-            undefined,
-            empresaIdAudit
-          );
-        } catch (auditError) {
-          // Não interromper o fluxo
-        }
+      if (!config) {
+        sendSuccess(res, null);
+        return res;
       }
 
       sendSuccess(res, NFSeConfigController.maskSensitiveFields(config.toJSON() as Record<string, unknown>));
@@ -101,9 +88,8 @@ export class NFSeConfigController {
       }
 
       const empresaId = getEmpresaIdOrNull(req);
-      const config = await NFSeConfigService.get(empresaId);
-      const dadosAnteriores = config.toJSON();
-      const foiCriadoAgora = config.created_at.getTime() === config.updated_at.getTime();
+      const configAnterior = await NFSeConfigService.get(empresaId);
+      const dadosAnteriores = configAnterior?.toJSON();
 
       // Campos sensíveis: preservar valor existente se não enviado ou enviado vazio/null
       const dadosParaSalvar = { ...value };
@@ -116,8 +102,8 @@ export class NFSeConfigController {
 
       const configAtualizado = await NFSeConfigService.update(dadosParaSalvar, empresaId);
       
-      // Se foi criado agora, registrar criação
-      if (foiCriadoAgora) {
+      // Se não existia antes do salvamento manual, registrar criação
+      if (!configAnterior) {
         try {
           const empresaIdAudit = getEmpresaIdOrNull(req) ?? configAtualizado.empresa_id ?? null;
           await registrarCriacao(
@@ -139,7 +125,7 @@ export class NFSeConfigController {
             req as AuthenticatedRequest,
             'NFSeConfig',
             configAtualizado.id,
-            dadosAnteriores as unknown as Record<string, unknown>,
+            dadosAnteriores as Record<string, unknown>,
             configAtualizado.toJSON() as unknown as Record<string, unknown>,
             undefined,
             empresaIdAudit
