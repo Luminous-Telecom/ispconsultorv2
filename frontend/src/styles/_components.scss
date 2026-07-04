@@ -1635,6 +1635,8 @@ button {
 }
 
 .modal-tabs-overflow-dropdown {
+  position: fixed !important;
+  z-index: 100010 !important;
   min-width: 180px !important;
   max-width: 280px !important;
   max-height: 280px !important;
