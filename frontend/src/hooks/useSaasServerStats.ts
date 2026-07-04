@@ -1,7 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { SaasServerStatsService } from '../services/saas/saasServerStatsService';
 
-const REFETCH_INTERVAL_MS = 30_000;
+/** Intervalo de polling dos cards de monitoramento (RAM, CPU, disco, I/O, fila). */
+const REFETCH_INTERVAL_MS = 3_000;
 
 export const useSaasServerStats = () => {
   return useQuery({
@@ -9,6 +10,8 @@ export const useSaasServerStats = () => {
     queryFn: () => SaasServerStatsService.getServerStats(),
     staleTime: 0,
     refetchInterval: REFETCH_INTERVAL_MS,
+    refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
+    placeholderData: keepPreviousData,
   });
 };

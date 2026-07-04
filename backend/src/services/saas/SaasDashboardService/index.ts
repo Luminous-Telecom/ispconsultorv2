@@ -1,4 +1,5 @@
 import { Op, QueryTypes } from 'sequelize';
+import { readFileSync } from 'fs';
 import { sequelize } from '../../../config/database';
 import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { SaasPlano } from '../../../models/saas/SaasPlano';
@@ -126,6 +127,13 @@ export class SaasDashboardService {
   static async getServerStats(): Promise<{
     ram: { total: number; free: number; used: number; usedPercent: number };
     disk: { total: number; free: number; used: number; usedPercent: number };
+    diskIo: {
+      readBytesPerSec: number;
+      writeBytesPerSec: number;
+      readOpsPerSec: number;
+      writeOpsPerSec: number;
+    };
+    queueStats: { queueSize: number; queueRunning: number; queueConcurrency: number };
     uptime: number;
     cpuLoad: number[];
     cpu: { usedPercent: number; cores: number };
@@ -134,7 +142,10 @@ export class SaasDashboardService {
     const { execSync } = await import('child_process');
 
     const cores = os.cpus().length;
-    const cpuUsedPercent = await SaasDashboardService.getCpuUsagePercent(os);
+    const [{ cpuUsedPercent, diskIo }, queueStats] = await Promise.all([
+      SaasDashboardService.getSampledMetrics(os),
+      SaasDashboardService.getQueueStats(),
+    ]);
 
     const totalRam = os.totalmem();
     const freeRam = os.freemem();
@@ -167,14 +178,26 @@ export class SaasDashboardService {
         used: diskUsed,
         usedPercent: diskTotal > 0 ? Math.round((diskUsed / diskTotal) * 100) : 0,
       },
+      diskIo,
+      queueStats,
       uptime: os.uptime(),
       cpuLoad: os.loadavg(),
       cpu: { usedPercent: cpuUsedPercent, cores },
     };
   }
 
-  private static async getCpuUsagePercent(os: typeof import('os')): Promise<number> {
-    const snapshot = () => {
+  private static readonly SAMPLE_MS = 250;
+
+  private static async getSampledMetrics(os: typeof import('os')): Promise<{
+    cpuUsedPercent: number;
+    diskIo: {
+      readBytesPerSec: number;
+      writeBytesPerSec: number;
+      readOpsPerSec: number;
+      writeOpsPerSec: number;
+    };
+  }> {
+    const cpuSnapshot = () => {
       let idle = 0;
       let total = 0;
       for (const cpu of os.cpus()) {
@@ -185,16 +208,75 @@ export class SaasDashboardService {
       return { idle, total };
     };
 
-    const start = snapshot();
-    await new Promise((resolve) => setTimeout(resolve, 150));
-    const end = snapshot();
+    const startCpu = cpuSnapshot();
+    const startDisk = SaasDashboardService.readDiskIoCounters();
+    await new Promise((resolve) => setTimeout(resolve, SaasDashboardService.SAMPLE_MS));
+    const endCpu = cpuSnapshot();
+    const endDisk = SaasDashboardService.readDiskIoCounters();
 
-    const idleDiff = end.idle - start.idle;
-    const totalDiff = end.total - start.total;
-    if (totalDiff <= 0) return 0;
+    const elapsedSec = SaasDashboardService.SAMPLE_MS / 1000;
+    const idleDiff = endCpu.idle - startCpu.idle;
+    const totalDiff = endCpu.total - startCpu.total;
+    const cpuUsedPercent =
+      totalDiff <= 0
+        ? 0
+        : Math.max(0, Math.min(100, Math.round((1 - idleDiff / totalDiff) * 100)));
 
-    const usage = (1 - idleDiff / totalDiff) * 100;
-    return Math.max(0, Math.min(100, Math.round(usage)));
+    const sectorSize = 512;
+    const readBytesPerSec = Math.max(0, ((endDisk.readSectors - startDisk.readSectors) * sectorSize) / elapsedSec);
+    const writeBytesPerSec = Math.max(0, ((endDisk.writeSectors - startDisk.writeSectors) * sectorSize) / elapsedSec);
+    const readOpsPerSec = Math.max(0, (endDisk.readOps - startDisk.readOps) / elapsedSec);
+    const writeOpsPerSec = Math.max(0, (endDisk.writeOps - startDisk.writeOps) / elapsedSec);
+
+    return {
+      cpuUsedPercent,
+      diskIo: {
+        readBytesPerSec: Math.round(readBytesPerSec),
+        writeBytesPerSec: Math.round(writeBytesPerSec),
+        readOpsPerSec: Math.round(readOpsPerSec * 10) / 10,
+        writeOpsPerSec: Math.round(writeOpsPerSec * 10) / 10,
+      },
+    };
+  }
+
+  private static isBlockDeviceName(name: string): boolean {
+    if (name.startsWith('loop') || name.startsWith('ram') || name.startsWith('sr') || name.startsWith('zram')) {
+      return false;
+    }
+    if (/^(sd[a-z]|hd[a-z]|vd[a-z]|xvd[a-z])\d+$/.test(name)) return false;
+    if (/^nvme\d+n\d+p\d+$/.test(name)) return false;
+    if (/^mmcblk\d+p\d+$/.test(name)) return false;
+    return true;
+  }
+
+  private static readDiskIoCounters(): {
+    readSectors: number;
+    writeSectors: number;
+    readOps: number;
+    writeOps: number;
+  } {
+    try {
+      const content = readFileSync('/proc/diskstats', 'utf8');
+      let readSectors = 0;
+      let writeSectors = 0;
+      let readOps = 0;
+      let writeOps = 0;
+
+      for (const line of content.trim().split('\n')) {
+        const parts = line.trim().split(/\s+/);
+        if (parts.length < 10) continue;
+        const name = parts[2];
+        if (!SaasDashboardService.isBlockDeviceName(name)) continue;
+        readOps += parseInt(parts[3], 10) || 0;
+        readSectors += parseInt(parts[5], 10) || 0;
+        writeOps += parseInt(parts[7], 10) || 0;
+        writeSectors += parseInt(parts[9], 10) || 0;
+      }
+
+      return { readSectors, writeSectors, readOps, writeOps };
+    } catch {
+      return { readSectors: 0, writeSectors: 0, readOps: 0, writeOps: 0 };
+    }
   }
 
   private static async getQueueStats(): Promise<{ queueSize: number; queueRunning: number; queueConcurrency: number }> {

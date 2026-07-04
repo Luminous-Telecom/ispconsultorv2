@@ -31,6 +31,12 @@ function formatBytes(bytes: number): string {
   return `${(bytes / 1024).toFixed(1)} KB`;
 }
 
+function formatBytesPerSecond(bytesPerSec: number): string {
+  if (bytesPerSec >= 1_048_576) return `${(bytesPerSec / 1_048_576).toFixed(1)} MB/s`;
+  if (bytesPerSec >= 1024) return `${(bytesPerSec / 1024).toFixed(1)} KB/s`;
+  return `${bytesPerSec.toFixed(0)} B/s`;
+}
+
 function formatUptime(seconds: number): string {
   const d = Math.floor(seconds / 86400);
   const h = Math.floor((seconds % 86400) / 3600);
@@ -188,35 +194,60 @@ const SaasDashboard: React.FC = () => {
                   ]}
                 />
               </div>
+
+              <div className="col-12 col-sm-6 col-md-4">
+                <StatTilesCard
+                  title="I/O de Disco"
+                  columns={2}
+                  tiles={[
+                    {
+                      label: 'Leitura',
+                      value: formatBytesPerSecond(serverStats.diskIo.readBytesPerSec),
+                      accent: '#0ea5e9',
+                    },
+                    {
+                      label: 'Escrita',
+                      value: formatBytesPerSecond(serverStats.diskIo.writeBytesPerSec),
+                      accent: '#f59e0b',
+                    },
+                    {
+                      label: 'IOPS Leitura',
+                      value: serverStats.diskIo.readOpsPerSec.toFixed(1),
+                      accent: '#10b981',
+                    },
+                    {
+                      label: 'IOPS Escrita',
+                      value: serverStats.diskIo.writeOpsPerSec.toFixed(1),
+                      accent: '#a855f7',
+                    },
+                  ]}
+                />
+              </div>
+
+              <div className="col-12 col-sm-6 col-md-4">
+                <StatTilesCard
+                  title={t('scheduler.title')}
+                  tiles={[
+                    { label: t('scheduler.queueWaiting'), value: serverStats.queueStats.queueSize, accent: '#f59e0b' },
+                    { label: t('scheduler.queueRunning'), value: serverStats.queueStats.queueRunning, accent: '#10b981' },
+                    { label: t('scheduler.queueConcurrency'), value: serverStats.queueStats.queueConcurrency, accent: '#6366f1' },
+                  ]}
+                />
+              </div>
+
+              <div className="col-12 col-sm-6 col-md-4">
+                <StatTilesCard
+                  title="Servidor"
+                  columns={2}
+                  tiles={[
+                    { label: 'Uptime', value: formatUptime(serverStats.uptime), accent: '#0ea5e9' },
+                    { label: 'CPU (1 min)', value: serverStats.cpuLoad[0].toFixed(2), accent: '#10b981' },
+                    { label: 'CPU (5 min)', value: serverStats.cpuLoad[1].toFixed(2), accent: '#f59e0b' },
+                    { label: 'CPU (15 min)', value: serverStats.cpuLoad[2].toFixed(2), accent: '#a855f7' },
+                  ]}
+                />
+              </div>
             </>
-          )}
-
-          {dashboardData?.queueStats != null && (
-            <div className="col-12 col-sm-6 col-md-4">
-              <StatTilesCard
-                title={t('scheduler.title')}
-                tiles={[
-                  { label: t('scheduler.queueWaiting'), value: dashboardData.queueStats.queueSize, accent: '#f59e0b' },
-                  { label: t('scheduler.queueRunning'), value: dashboardData.queueStats.queueRunning, accent: '#10b981' },
-                  { label: t('scheduler.queueConcurrency'), value: dashboardData.queueStats.queueConcurrency, accent: '#6366f1' },
-                ]}
-              />
-            </div>
-          )}
-
-          {serverStats && (
-            <div className="col-12 col-sm-6 col-md-4">
-              <StatTilesCard
-                title="Servidor"
-                columns={2}
-                tiles={[
-                  { label: 'Uptime', value: formatUptime(serverStats.uptime), accent: '#0ea5e9' },
-                  { label: 'CPU (1 min)', value: serverStats.cpuLoad[0].toFixed(2), accent: '#10b981' },
-                  { label: 'CPU (5 min)', value: serverStats.cpuLoad[1].toFixed(2), accent: '#f59e0b' },
-                  { label: 'CPU (15 min)', value: serverStats.cpuLoad[2].toFixed(2), accent: '#a855f7' },
-                ]}
-              />
-            </div>
           )}
         </div>
 

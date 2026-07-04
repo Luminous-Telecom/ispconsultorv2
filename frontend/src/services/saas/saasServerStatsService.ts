@@ -20,9 +20,24 @@ export interface ServerCpuStats {
   cores: number;
 }
 
+export interface ServerDiskIoStats {
+  readBytesPerSec: number;
+  writeBytesPerSec: number;
+  readOpsPerSec: number;
+  writeOpsPerSec: number;
+}
+
+export interface ServerQueueStats {
+  queueSize: number;
+  queueRunning: number;
+  queueConcurrency: number;
+}
+
 export interface ServerStats {
   ram: ServerRamStats;
   disk: ServerDiskStats;
+  diskIo: ServerDiskIoStats;
+  queueStats: ServerQueueStats;
   uptime: number;
   cpuLoad: number[];
   cpu: ServerCpuStats;
