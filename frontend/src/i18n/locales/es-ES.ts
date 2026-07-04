@@ -1057,7 +1057,7 @@ const esES: TranslationKeys = {
     'modal.createTitle': 'Título',
     'modal.editTitle': 'Título',
     'modal.generateNFe': 'NFS-e',
-    'modal.cancelInvoice': 'Factura',
+    'modal.cancelInvoice': 'Cancelar Nota',
     'modal.deleteClient': 'Eliminar cliente',
     'modal.deletePlan': 'Eliminar plan',
     'modal.deleteBank': 'Eliminar banco',

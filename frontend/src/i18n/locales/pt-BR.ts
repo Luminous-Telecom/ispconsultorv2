@@ -1055,7 +1055,7 @@ const ptBR: TranslationKeys = {
     'modal.createTitle': 'Título',
     'modal.editTitle': 'Título',
     'modal.generateNFe': 'NFS-e',
-    'modal.cancelInvoice': 'Nota Fiscal',
+    'modal.cancelInvoice': 'Cancelar Nota',
     'modal.deleteClient': 'Deletar cliente',
     'modal.deletePlan': 'Deletar plano',
     'modal.deleteBank': 'Deletar banco',

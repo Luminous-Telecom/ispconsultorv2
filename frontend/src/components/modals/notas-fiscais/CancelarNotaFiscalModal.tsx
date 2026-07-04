@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
-import { CancelarButton, ConfirmarCancelamentoButton, FormField } from 'components/ui';
+import DetailFieldGrid, { DetailFieldItem } from 'components/common/DetailFieldGrid';
+import { CancelarButton, ConfirmarCancelamentoButton, FormField, StatusBadge } from 'components/ui';
 import { NotaFiscal } from 'types';
 import { NotaFiscalService } from 'services/notaFiscalService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
+import { formatCurrency } from 'utils/formatters';
 
 interface CancelarNotaFiscalModalProps {
   show: boolean;
@@ -100,6 +102,41 @@ const CancelarNotaFiscalModal: React.FC<CancelarNotaFiscalModalProps> = ({
     </div>
   ), [isFormValid, isSubmitting, handleClose]);
 
+  const detailFields = useMemo((): DetailFieldItem[] => {
+    if (!notaFiscal) return [];
+
+    const statusLabel =
+      notaFiscal.status === 'AUTORIZADA' ? t('status.authorized') : notaFiscal.status;
+
+    return [
+      {
+        label: t('table.number'),
+        value: notaFiscal.numero || t('messages.notInformed'),
+      },
+      {
+        label: t('table.client'),
+        value:
+          notaFiscal.cliente?.razao_social ||
+          notaFiscal.cliente?.nome_fantasia ||
+          t('messages.notInformed'),
+      },
+      {
+        label: t('table.totalValue'),
+        value: formatCurrency(notaFiscal.valor_total || 0),
+        inputClassName: 'text-success',
+      },
+      {
+        label: t('table.status'),
+        value: (
+          <StatusBadge
+            variant={notaFiscal.status === 'AUTORIZADA' ? 'success' : 'secondary'}
+            label={statusLabel}
+          />
+        ),
+      },
+    ];
+  }, [notaFiscal, t]);
+
   if (!notaFiscal) return null;
 
   return (
@@ -111,68 +148,35 @@ const CancelarNotaFiscalModal: React.FC<CancelarNotaFiscalModalProps> = ({
       modalId="cancelar-nf-modal"
       headerActions={headerActionsContent}
     >
-      <div className="modal-inner-padding">
-        <div className="alert alert-warning mb-3">
-          <i className="fas fa-exclamation-triangle me-2"></i>
-          <strong>{t('messages.warning')}!</strong> {t('messages.actionCannotBeUndone')}
-        </div>
+      <form id="cancelar-nf-form" onSubmit={handleSubmit} className="form-modal-simple">
+        <p className="form-helper-message form-modal-input-col mb-3">
+          {t('messages.warning')}! {t('messages.actionCannotBeUndone')}
+        </p>
 
-        <div className="mb-3">
-          <h6>{t('other.invoiceDetails')}</h6>
-          <div className="row g-2">
-            <div className="col-12">
-              <small className="text-muted">{t('table.number')}:</small>
-              <div className="fw-bold">{notaFiscal.numero || t('messages.notInformed')}</div>
-            </div>
-            <div className="col-12">
-              <small className="text-muted">{t('table.client')}:</small>
-              <div className="fw-bold">
-                {notaFiscal.cliente?.razao_social || notaFiscal.cliente?.nome_fantasia || t('messages.notInformed')}
-              </div>
-            </div>
-            <div className="col-12">
-              <small className="text-muted">{t('table.totalValue')}:</small>
-              <div className="fw-bold text-success">
-                R$ {notaFiscal.valor_total?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}
-              </div>
-            </div>
-            <div className="col-12">
-              <small className="text-muted">{t('table.status')}:</small>
-              <div className="fw-bold">
-                <span className={`badge ${
-                  notaFiscal.status === 'AUTORIZADA' ? 'bg-success' : 'bg-secondary'
-                }`}>
-                  {notaFiscal.status === 'AUTORIZADA' ? t('status.authorized') : notaFiscal.status}
-                </span>
-              </div>
-            </div>
+        <DetailFieldGrid fields={detailFields} className="mb-3" />
+
+        <div className="row g-2">
+          <div className="col-12">
+            <FormField
+              name="justificativa"
+              type="textarea"
+              label={t('form.justificationCancel')}
+              rows={4}
+              placeholder={t('placeholder.enterJustification')}
+              value={justificativa}
+              onChange={(v) => {
+                setJustificativa(String(v ?? ''));
+                if (justificativaError) setJustificativaError('');
+              }}
+              error={justificativaError}
+              required
+              disabled={isSubmitting}
+              helpText={`${justificativa.length}/500 ${t('other.characters')}`}
+              size="sm"
+            />
           </div>
         </div>
-
-        <form id="cancelar-nf-form" onSubmit={handleSubmit} className="form-modal-simple">
-          <div className="row g-2">
-            <div className="col-12">
-              <FormField
-                name="justificativa"
-                type="textarea"
-                label={t('form.justificationCancel')}
-                rows={4}
-                placeholder={t('placeholder.enterJustification')}
-                value={justificativa}
-                onChange={(v) => {
-                  setJustificativa(String(v ?? ''));
-                  if (justificativaError) setJustificativaError('');
-                }}
-                error={justificativaError}
-                required
-                disabled={isSubmitting}
-                helpText={`${justificativa.length}/500 ${t('other.characters')}`}
-                size="sm"
-              />
-            </div>
-          </div>
-        </form>
-      </div>
+      </form>
     </DraggableModal>
   );
 };
