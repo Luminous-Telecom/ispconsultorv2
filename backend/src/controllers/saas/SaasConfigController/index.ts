@@ -1,6 +1,5 @@
 import { Response } from 'express';
 import Joi from 'joi';
-import { randomBytes } from 'crypto';
 import { SaasServidorEmailService, SaasServidorWhatsappService, SaasBancoService } from '../../../services/saas/SaasConfigService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { BancoApiService } from '../../../services/bancos/BancoApiService';
@@ -245,11 +244,7 @@ export class SaasBancoController {
         sendValidationError(res, 'Webhook secret disponível apenas para bancos do tipo Asaas');
         return;
       }
-      const dadosAnteriores = item.toJSON() as Record<string, unknown>;
-      const novoSecret = randomBytes(32).toString('hex');
-      await SaasBancoService.update(id, { webhook_secret: novoSecret });
-      await registrarAtualizacao(req as any, 'SaasBanco', id, dadosAnteriores, { ...dadosAnteriores, webhook_secret: '[GERADO]' }, 'Webhook secret regenerado', null);
-      sendSuccess(res, { webhook_secret: novoSecret }, 'Webhook secret gerado com sucesso');
+      sendValidationError(res, 'O Webhook Secret do Asaas deve ser gerado no painel da Asaas e informado no cadastro do banco.');
     } catch (err) { sendError(res, err, 'Erro ao gerar webhook secret', 500, true); }
   }
 }

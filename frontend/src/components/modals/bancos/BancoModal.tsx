@@ -57,13 +57,11 @@ const BancoModal: React.FC<BancoModalProps> = ({
     ],
     [t]
   );
-  const [isGeneratingSecret, setIsGeneratingSecret] = useState(false);
-  const { success, warning } = useNotificationContext();
+  const { success } = useNotificationContext();
   const { showApiError } = useApiError();
   const queryClient = useQueryClient();
 
   const handleCancel = () => {
-    setIsGeneratingSecret(false);
     onClose();
   };
 
@@ -96,6 +94,9 @@ const BancoModal: React.FC<BancoModalProps> = ({
       if (!dataToSave.api_secret || dataToSave.api_secret.trim() === '') {
         delete (dataToSave as Partial<BancoForm>).api_secret;
       }
+      if (!dataToSave.webhook_secret || dataToSave.webhook_secret.trim() === '') {
+        delete (dataToSave as Partial<BancoForm>).webhook_secret;
+      }
       delete (dataToSave as Partial<BancoForm>).has_api_key;
       
       // Salvar dados primeiro (sem fechar o modal)
@@ -125,31 +126,6 @@ const BancoModal: React.FC<BancoModalProps> = ({
     }
   };
 
-  const handleGenerateWebhookSecret = async () => {
-    if (!bancoId) {
-      showApiError(t('messages.saveBankBeforeWebhook'));
-      return;
-    }
-
-    try {
-      setIsGeneratingSecret(true);
-      const novoSecret = await BancoService.gerarWebhookSecret(bancoId);
-
-      if (novoSecret) {
-        formHook.handleInputChange('webhook_secret', novoSecret);
-        queryClient.invalidateQueries({ queryKey: ['banco', bancoId] });
-        queryClient.invalidateQueries({ queryKey: ['bancos'] });
-        success(t('messages.webhookTokenGenerated'));
-      } else {
-        warning(t('messages.webhookTokenNotReturned'));
-      }
-    } catch (err) {
-      showApiError(err, CONTEXT_ERROR_MESSAGES.BANCO_WEBHOOK_ERROR);
-    } finally {
-      setIsGeneratingSecret(false);
-    }
-  };
-
   const renderBancoEspecificoCampos = () => {
     switch (formData.tipo_banco) {
       case 'efi':
@@ -165,11 +141,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
           <AsaasForm
             formData={formData}
             isPending={formHook.isSubmitting}
-            formPrefix={formPrefix}
             handleInputChange={formHook.handleInputChange}
-            onGenerateWebhookSecret={handleGenerateWebhookSecret}
-            isGeneratingSecret={isGeneratingSecret}
-            isBancoPersisted={!!bancoId}
           />
         );
       default:

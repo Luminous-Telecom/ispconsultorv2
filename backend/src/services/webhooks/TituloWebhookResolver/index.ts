@@ -10,14 +10,14 @@ export type ResolvedTitulo = {
 };
 
 export type WebhookEmpresaScope = {
-  /** 'saas' = só saas_titulos; ID do banco (ex: 42) = só titulos admin; undefined = ambos */
+  /** 'saas' = só saas_titulos; ID do banco (ex: 42) = só títulos admin daquele banco */
   empresaIdentifier?: string;
 };
 
 /**
  * Centraliza a resolução de títulos para webhooks.
  * Busca em titulos (admin) e saas_titulos (SaaS).
- * @param scope.empresaIdentifier - 'saas' para só SaaS; ID do banco para só ERP; undefined para buscar em ambos
+ * @param scope.empresaIdentifier - 'saas' para só SaaS; ID do banco para só ERP daquele banco
  */
 export class TituloWebhookResolver {
   /**
@@ -28,9 +28,14 @@ export class TituloWebhookResolver {
 
     // Só admin/ERP: buscar em titulos
     if (identifier && identifier !== 'saas') {
+      const bancoId = parseInt(identifier, 10);
+      if (!Number.isInteger(bancoId)) return null;
       const TituloModel = await import('../../../models/financeiro/Titulo').then(m => m.Titulo);
       const tituloAdmin = await TituloModel.findOne({
-        where: { charge_id: chargeId },
+        where: {
+          charge_id: chargeId,
+          banco_id: bancoId
+        },
         include: [{ model: Banco, as: 'banco' }]
       }) as (Titulo & { banco?: Banco | null }) | null;
 
@@ -63,36 +68,6 @@ export class TituloWebhookResolver {
       return null;
     }
 
-    // Sem identificador: buscar em ambos (retrocompatível)
-    const TituloModel = await import('../../../models/financeiro/Titulo').then(m => m.Titulo);
-    const tituloAdmin = await TituloModel.findOne({
-      where: { charge_id: chargeId },
-      include: [{ model: Banco, as: 'banco' }]
-    }) as (Titulo & { banco?: Banco | null }) | null;
-
-    if (tituloAdmin) {
-      return {
-        titulo: tituloAdmin,
-        saas: false,
-        banco: tituloAdmin.banco ?? null
-      };
-    }
-
-    const { default: SaasTituloModel } = await import('../../../models/saas/SaasTitulo');
-    const { default: SaasBancoModel } = await import('../../../models/saas/SaasBanco');
-    const tituloSaas = await SaasTituloModel.findOne({
-      where: { charge_id: chargeId },
-      include: [{ model: SaasBancoModel, as: 'banco' }]
-    }) as (InstanceType<typeof SaasTituloModel> & { banco?: InstanceType<typeof SaasBancoModel> | null }) | null;
-
-    if (tituloSaas) {
-      return {
-        titulo: tituloSaas,
-        saas: true,
-        banco: tituloSaas.banco ?? null
-      };
-    }
-
     return null;
   }
 
@@ -106,8 +81,14 @@ export class TituloWebhookResolver {
     const identifier = scope?.empresaIdentifier?.toLowerCase();
 
     if (identifier && identifier !== 'saas') {
+      const bancoId = parseInt(identifier, 10);
+      if (!Number.isInteger(bancoId)) return null;
       const TituloModel = await import('../../../models/financeiro/Titulo').then(m => m.Titulo);
-      const tituloAdmin = await TituloModel.findByPk(id, {
+      const tituloAdmin = await TituloModel.findOne({
+        where: {
+          id,
+          banco_id: bancoId
+        },
         include: [{ model: Banco, as: 'banco' }]
       }) as (Titulo & { banco?: Banco | null }) | null;
 
@@ -136,33 +117,6 @@ export class TituloWebhookResolver {
         };
       }
       return null;
-    }
-
-    const TituloModel = await import('../../../models/financeiro/Titulo').then(m => m.Titulo);
-    const tituloAdmin = await TituloModel.findByPk(id, {
-      include: [{ model: Banco, as: 'banco' }]
-    }) as (Titulo & { banco?: Banco | null }) | null;
-
-    if (tituloAdmin) {
-      return {
-        titulo: tituloAdmin,
-        saas: false,
-        banco: tituloAdmin.banco ?? null
-      };
-    }
-
-    const { default: SaasTituloModel } = await import('../../../models/saas/SaasTitulo');
-    const { default: SaasBancoModel } = await import('../../../models/saas/SaasBanco');
-    const tituloSaas = await SaasTituloModel.findByPk(id, {
-      include: [{ model: SaasBancoModel, as: 'banco' }]
-    }) as (InstanceType<typeof SaasTituloModel> & { banco?: InstanceType<typeof SaasBancoModel> | null }) | null;
-
-    if (tituloSaas) {
-      return {
-        titulo: tituloSaas,
-        saas: true,
-        banco: tituloSaas.banco ?? null
-      };
     }
 
     return null;

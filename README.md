@@ -35,7 +35,7 @@ Sistema ERP completo para gestão de clientes, contratos e cobrança com integra
 - **Geração, cancelamento e liquidação** de boletos nos gateways Asaas e Efí.
 - Impressão de segunda via com **linha digitável**, **código de barras** e **PIX QR Code**.
 - Armazenamento do `nosso_numero`, `charge_id`, `url_boleto` e metadados FEBRABAN.
-- **Webhooks automáticos** (Asaas/Efí) com token gerado e salvo no banco.
+- **Webhooks** (Asaas/Efí) validados pelo token salvo no banco.
 - Scheduler para geração automática de títulos.
 - Logs estruturados e ofuscação dos builds de produção.
 
@@ -1275,7 +1275,7 @@ pm2 startup
 ### Asaas
 
 - Geração, cancelamento e liquidação de boletos.
-- Registro automático de webhooks (com token armazenado em `bancos.webhook_secret`).
+- Webhooks validados com o token gerado no painel da Asaas e armazenado em `bancos.webhook_secret`.
 - `notificationDisabled` configurado para evitar envios automáticos de e-mail/SMS.
 - Fallback local para linha digitável FEBRABAN em ambiente sandbox.
 
@@ -1296,8 +1296,9 @@ pm2 startup
 
 ### URLs de Webhook
 
-- **Asaas**: `https://seu-dominio.com.br/webhook/asaas`
-- **Efí**: `https://seu-dominio.com.br/webhook/efi`
+- **Asaas ERP**: `https://seu-dominio.com.br/webhook/asaas/:bancoId`
+- **Efí ERP**: `https://seu-dominio.com.br/webhook/efi/:bancoId`
+- **Asaas/Efí SaaS**: `https://seu-dominio.com.br/webhook/{asaas|efi}/saas`
 
 ---
 
@@ -1380,7 +1381,7 @@ Em produção, as configurações vêm do backend via `window.__APP_CONFIG__`.
 
 - **Código**: TypeScript em todo backend/frontend, evitar `any`, interfaces e tipos fortes.
 - **Frontend**: Sempre usar Bootstrap, modais com DraggableModal, tabelas com ordenação local.
-- **Banco e Webhooks**: `banco.webhook_secret` gerado on-demand e exibido no modal.
+- **Banco e Webhooks**: `banco.webhook_secret` informado no cadastro do banco e usado para validar webhooks.
 - **Logs**: Usar `logger` estruturado, sem `console.log` em produção.
 - **Segurança**: Validação de entrada, rate limiting, headers de segurança no Nginx.
 

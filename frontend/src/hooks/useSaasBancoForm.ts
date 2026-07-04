@@ -159,7 +159,7 @@ export const useSaasBancoForm = ({ bancoId, show, onSuccess }: UseSaasBancoFormP
       normalizedValue = String(value);
     }
     setValue(field as keyof ZodBancoFormData, normalizedValue as never, { shouldValidate: true });
-    if (field === 'api_key') setValue('has_api_key', !!normalizedValue, { shouldValidate: false });
+    if (field === 'api_key') setValue('has_api_key', Boolean(normalizedValue) || isEditing, { shouldValidate: false });
     if (field === 'tipo_banco' && !isEditing) {
       const codigos: Record<string, string> = { efi: '364', asaas: '461', bancario: '', outros: '' };
       setValue('codigo', codigos[String(normalizedValue)] || '', { shouldValidate: false });

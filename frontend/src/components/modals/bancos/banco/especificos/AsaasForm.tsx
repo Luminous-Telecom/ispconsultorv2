@@ -1,28 +1,20 @@
 import React from 'react';
 import { FormValue } from 'types/common';
 import FormField from 'components/ui/FormField';
-import { AtivoInativoField, CopyableFormField, GerarTokenButton } from 'components/ui';
+import { AtivoInativoField } from 'components/ui';
 import { BancoForm } from '../types';
 import { useI18n } from 'contexts/I18nContext';
 
 interface AsaasFormProps {
   formData: BancoForm;
   isPending: boolean;
-  formPrefix: string;
-  isGeneratingSecret: boolean;
-  isBancoPersisted: boolean;
   handleInputChange: (field: keyof BancoForm, value: FormValue) => void;
-  onGenerateWebhookSecret: () => void;
 }
 
 const AsaasForm: React.FC<AsaasFormProps> = ({
   formData,
   isPending,
-  formPrefix,
-  isGeneratingSecret,
-  isBancoPersisted,
-  handleInputChange,
-  onGenerateWebhookSecret
+  handleInputChange
 }) => {
   const { t } = useI18n();
 
@@ -35,7 +27,7 @@ const AsaasForm: React.FC<AsaasFormProps> = ({
           label={t('form.apiKey')}
           description={t('form.apiKeyAsaasHelp')}
           placeholder={t('placeholder.apiKeyAsaas')}
-          required={true}
+          required={!formData.has_api_key}
           size="sm"
           value={formData.api_key}
           onChange={(value) => handleInputChange('api_key', value)}
@@ -45,25 +37,17 @@ const AsaasForm: React.FC<AsaasFormProps> = ({
       </div>
 
       <div className="col-12">
-        <CopyableFormField
+        <FormField
           name="webhook_secret"
-          type="text"
+          type="password"
           label={t('form.webhookSecret')}
-          helpText={formData.webhook_secret ? t('form.webhookSecretAsaasHelp') : t('form.generateWebhookSecretHelp')}
+          description={t('form.webhookSecretAsaasHelp')}
           placeholder={t('placeholder.webhookSecretHelp')}
           size="sm"
           value={formData.webhook_secret || ''}
-          readOnly
+          disabled={isPending}
           autoComplete="off"
-          copyKey="webhook-secret"
-          footerActions={
-            <GerarTokenButton
-              type="button"
-              onClick={onGenerateWebhookSecret}
-              isPending={isGeneratingSecret}
-              disabled={isPending || isGeneratingSecret || !isBancoPersisted}
-            />
-          }
+          onChange={(value) => handleInputChange('webhook_secret', value)}
         />
       </div>
 
@@ -100,7 +84,7 @@ const AsaasForm: React.FC<AsaasFormProps> = ({
           value={!!formData.incluir_taxa}
           onChange={(v) => handleInputChange('incluir_taxa', v)}
           label={t('form.includeFee')}
-          name={formPrefix ? `${formPrefix}-incluir-taxa` : 'banco-incluir-taxa'}
+          name="banco-asaas-incluir-taxa"
           disabled={isPending}
         />
       </div>

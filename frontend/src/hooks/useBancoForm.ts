@@ -297,7 +297,7 @@ export const useBancoForm = ({
 
     // Lógica especial para api_key
     if (field === 'api_key') {
-      setValue('has_api_key', !!normalizedValue, { shouldValidate: false });
+      setValue('has_api_key', Boolean(normalizedValue) || isEditing, { shouldValidate: false });
     }
     
     // Atualizar código e url_retorno quando tipo_banco mudar (fluxo de criação)

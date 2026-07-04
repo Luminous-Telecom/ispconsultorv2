@@ -17,9 +17,7 @@ export class AsaasWebhookController {
    */
   static async handle(req: Request, res: Response): Promise<void> {
     (req as import('../../../types/webhooks').WebhookRequest).webhookEmpresaIdentifier = req.params?.empresaIdentifier;
-    const startTime = Date.now();
     const clientIp = assignWebhookClientIp(req);
-    const userAgent = req.get('user-agent') || 'unknown';
     
     try {
       const payload = req.body as AsaasPaymentPayload | Record<string, JsonValue> | undefined;
@@ -37,9 +35,7 @@ export class AsaasWebhookController {
         req.get('access_token') ||
         (typeof payload?.token === 'string' ? payload.token : undefined);
 
-      // Log de informações do payload (sem dados sensíveis)
       const eventType = (payload as Record<string, JsonValue>).event as string | undefined;
-      const payloadId = (payload as Record<string, JsonValue>).id as string | undefined;
 
       // Extrair objeto payment ou invoice
       const payment = (payload.payment && typeof payload.payment === 'object' && !Array.isArray(payload.payment))
@@ -56,21 +52,20 @@ export class AsaasWebhookController {
         return;
       }
 
-      // Buscar token esperado (de qualquer banco Asaas)
-      const expectedSecret = await AsaasWebhookService.findExpectedToken(null);
+      const expectedSecret = await AsaasWebhookService.findExpectedToken(req.params?.empresaIdentifier);
+      const normalizedReceivedSecret = receivedSecret?.trim();
+      const normalizedExpectedSecret = expectedSecret?.trim();
 
       // Validar token (obrigatório para Asaas)
-      if (!expectedSecret) {
+      if (!normalizedExpectedSecret) {
         sendUnauthorized(res, 'Token do webhook não configurado');
         return;
       }
 
-      if (!receivedSecret || receivedSecret !== expectedSecret) {
+      if (!normalizedReceivedSecret || normalizedReceivedSecret !== normalizedExpectedSecret) {
         sendUnauthorized(res, 'Token do webhook inválido');
         return;
       }
-
-      // Log do evento recebido e validado
 
       // Retornar 200 OK imediatamente (webhook recebido e validado com sucesso)
       sendSuccess(res, undefined, 'Webhook recebido');
@@ -99,18 +94,11 @@ export class AsaasWebhookController {
         });
       }
 
-      // Log de conclusão
-      const processingTime = Date.now() - startTime;
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      const processingTime = Date.now() - startTime;
       sendError(res, error, 'Erro interno do servidor', 500, true, {
         context: 'AsaasWebhookController',
         action: 'handle',
-        ip: clientIp,
-        processing_time_ms: processingTime
+        ip: clientIp
       });
     }
   }

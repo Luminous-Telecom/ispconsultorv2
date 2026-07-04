@@ -66,8 +66,8 @@
 ### Webhooks (públicos)
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| POST | `/webhook/efi` | Webhook Efí Bank |
-| POST | `/webhook/asaas` | Webhook Asaas |
+| POST | `/webhook/efi/:empresaIdentifier` | Webhook Efí Bank (`:empresaIdentifier` = ID do banco ou `saas`) |
+| POST | `/webhook/asaas/:empresaIdentifier` | Webhook Asaas (`:empresaIdentifier` = ID do banco ou `saas`) |
 | POST | `/api/assinatura-digital/webhook/assinafy` | Webhook Assinafy |
 | POST | `/api/assinatura-digital/webhook/zapsign` | Webhook ZapSign |
 

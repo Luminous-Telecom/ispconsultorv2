@@ -3,7 +3,6 @@ import { BancoApiService } from '../../../services/bancos/BancoApiService';
 import { BancoService } from '../../../services/cadastros/BancoService';
 import { logger } from '../../../utils/logger';
 import { ValidationError } from 'sequelize';
-import { randomBytes } from 'crypto';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
@@ -399,32 +398,7 @@ export class BancoController {
         return;
       }
 
-      const dadosAnteriores = banco.toJSON() as Record<string, unknown>;
-      const novoSecret = randomBytes(32).toString('hex');
-      const bancoAtualizado = await BancoService.update(id, { webhook_secret: novoSecret });
-
-      try {
-        const empresaIdAudit = getEmpresaIdOrNull(req) ?? bancoAtualizado.empresa_id ?? null;
-        await registrarAtualizacao(
-          req,
-          'Banco',
-          banco.id,
-          { ...dadosAnteriores, webhook_secret: '[REDACTED]' },
-          { ...bancoAtualizado.toJSON(), webhook_secret: '[REDACTED]' } as Record<string, unknown>,
-          'Webhook secret regenerado',
-          empresaIdAudit
-        );
-      } catch (auditError) {
-        // Não interromper o fluxo
-      }
-
-      logger.info('Webhook secret Asaas gerado manualmente', {
-        banco_id: banco.id
-      });
-
-      sendSuccess(res, {
-        webhook_secret: novoSecret
-      }, 'Webhook secret gerado com sucesso');
+      sendValidationError(res, 'O Webhook Secret do Asaas deve ser gerado no painel da Asaas e informado no cadastro do banco.');
     } catch (error: unknown) {
       sendError(res, error, 'Erro ao gerar webhook secret', 500, true, {
         banco_id: req.params.id

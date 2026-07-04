@@ -30,13 +30,11 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
   const isLoading = formHook.isLoadingBanco;
 
   const [activeTab, setActiveTab] = useState('informacoes-basicas');
-  const [isGeneratingSecret, setIsGeneratingSecret] = useState(false);
-  const { success, warning } = useNotificationContext();
+  const { success } = useNotificationContext();
   const { showApiError } = useApiError();
   const queryClient = useQueryClient();
 
   const handleCancel = () => {
-    setIsGeneratingSecret(false);
     onClose();
   };
 
@@ -52,6 +50,7 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
       if (!dataToSave.client_id_producao?.trim()) delete (dataToSave as Partial<BancoForm>).client_id_producao;
       if (!dataToSave.client_secret_producao?.trim()) delete (dataToSave as Partial<BancoForm>).client_secret_producao;
       if (!dataToSave.api_secret?.trim()) delete (dataToSave as Partial<BancoForm>).api_secret;
+      if (!dataToSave.webhook_secret?.trim()) delete (dataToSave as Partial<BancoForm>).webhook_secret;
       delete (dataToSave as Partial<BancoForm>).has_api_key;
       await saasBancoService.update(idToUse, dataToSave);
       queryClient.invalidateQueries({ queryKey: ['saas-bancos'] });
@@ -69,31 +68,6 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
     }
   };
 
-  const handleGenerateWebhookSecret = async () => {
-    const idToUse = formHook.effectiveBancoId ?? itemId ?? null;
-    if (!idToUse) {
-      showApiError(t('messages.saveBankBeforeWebhook'));
-      return;
-    }
-    try {
-      setIsGeneratingSecret(true);
-      const res = await saasBancoService.gerarWebhookSecret(idToUse);
-      const data = (res?.data || res) as { webhook_secret?: string };
-      if (data?.webhook_secret) {
-        formHook.handleInputChange('webhook_secret', data.webhook_secret);
-        queryClient.invalidateQueries({ queryKey: ['saas-banco', idToUse] });
-        queryClient.invalidateQueries({ queryKey: ['saas-bancos'] });
-        success(t('messages.webhookTokenGenerated'));
-      } else {
-        warning(t('messages.webhookTokenNotReturned'));
-      }
-    } catch (err) {
-      showApiError(err, CONTEXT_ERROR_MESSAGES.BANCO_WEBHOOK_ERROR);
-    } finally {
-      setIsGeneratingSecret(false);
-    }
-  };
-
   const renderBancoEspecificoCampos = () => {
     switch (formData.tipo_banco) {
       case 'efi':
@@ -103,11 +77,7 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
           <AsaasForm
             formData={formData}
             isPending={formHook.isSubmitting}
-            formPrefix={formPrefix}
             handleInputChange={formHook.handleInputChange}
-            onGenerateWebhookSecret={handleGenerateWebhookSecret}
-            isGeneratingSecret={isGeneratingSecret}
-            isBancoPersisted={formHook.effectiveBancoId != null}
           />
         );
       default:

@@ -128,24 +128,24 @@ export class AsaasWebhookService {
   /**
    * Busca token do webhook do Asaas (admin e SaaS)
    */
-  static async findExpectedToken(
-    _titulo?: (Titulo & { banco?: Banco | null }) | null
-  ): Promise<string | undefined> {
-    const bancosAsaas = await Banco.findAll({
-      where: { tipo_banco: 'asaas', ativo: true }
-    });
-    for (const banco of bancosAsaas) {
-      const token = PaymentCommonService.getWebhookToken(banco);
-      if (token) return token;
+  static async findExpectedToken(empresaIdentifier?: string): Promise<string | undefined> {
+    const identifier = empresaIdentifier?.trim().toLowerCase();
+    const bancoId = identifier && /^\d+$/.test(identifier) ? Number(identifier) : null;
+
+    if (bancoId != null) {
+      const banco = await Banco.findOne({
+        where: { id: bancoId, tipo_banco: 'asaas', ativo: true }
+      });
+      return banco ? PaymentCommonService.getWebhookToken(banco) : undefined;
     }
 
-    const { default: SaasBanco } = await import('../../../models/saas/SaasBanco');
-    const bancosSaasAsaas = await SaasBanco.findAll({
-      where: { tipo_banco: 'asaas', ativo: true }
-    });
-    for (const banco of bancosSaasAsaas) {
-      const token = PaymentCommonService.getWebhookToken(banco);
-      if (token) return token;
+    if (identifier === 'saas') {
+      const { default: SaasBanco } = await import('../../../models/saas/SaasBanco');
+      const banco = await SaasBanco.findOne({
+        where: { tipo_banco: 'asaas', ativo: true },
+        order: [['id', 'ASC']]
+      });
+      return banco ? PaymentCommonService.getWebhookToken(banco) : undefined;
     }
 
     return undefined;
