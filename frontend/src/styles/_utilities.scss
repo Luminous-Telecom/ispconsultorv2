@@ -371,8 +371,80 @@ $truncate-widths: (
 }
 
 /* --- Rich text / editor --- */
-.tinymce-wrapper-full { height: 100%; }
-.rich-text-editor-fallback { min-height: 120px; }
+.tinymce-wrapper,
+.tinymce-wrapper-full {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.tinymce-wrapper-full,
+.tinymce-wrapper.h-100 {
+  height: 100%;
+}
+
+.tinymce-wrapper > .tox-tinymce {
+  width: 100% !important;
+  max-width: none !important;
+  min-height: 0;
+}
+
+.tinymce-wrapper.h-100 > .tox-tinymce,
+.tinymce-wrapper-full > .tox-tinymce {
+  flex: 1 1 0;
+  height: 100% !important;
+}
+
+.tinymce-wrapper .tox-editor-container,
+.tinymce-wrapper .tox-edit-area,
+.tinymce-wrapper .tox-edit-area__iframe {
+  min-height: 0;
+}
+
+.rich-text-editor-fallback {
+  width: 100%;
+  min-height: 120px;
+}
+
+.modal-rich-text-editor {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-rich-text-editor-host {
+  flex: 1 1 0;
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-rich-text-editor__header {
+  margin-bottom: 0.25rem;
+}
+
+.modal-rich-text-editor__body {
+  flex: 0 0 auto;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-rich-text-editor__body > .tinymce-wrapper,
+.modal-rich-text-editor__body > .rich-text-editor-fallback {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+}
 
 /* TinyMCE usa skin claro (oxide); menus auxiliares ficam no body fora do modal */
 body[data-app="system"] .tox-tinymce-aux,
@@ -467,13 +539,6 @@ body[data-app="system"] .tox-tinymce-aux .tox {
 
 .image-viewer-img--loading {
   display: none;
-}
-
-.mensagem-editor-layout {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 300px);
-  min-height: 400px;
 }
 
 .variavel-col-border {

@@ -30,6 +30,7 @@ interface RichTextEditorProps {
   onChange: (value: string) => void;
   placeholder?: string;
   height?: string;
+  resize?: boolean | 'both';
   id?: string;
   name?: string;
   ariaLabelledBy?: string;
@@ -44,6 +45,7 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
   onChange,
   placeholder = 'Digite aqui...',
   height = '250px',
+  resize = true,
   id,
   name: _name,
   ariaLabelledBy
@@ -76,8 +78,10 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
     insertVariable
   }));
 
+  const wrapperClassName = height === '100%' ? 'tinymce-wrapper h-100' : 'tinymce-wrapper';
+
   return (
-    <div className="tinymce-wrapper h-100" >
+    <div className={wrapperClassName} >
       <Editor
         licenseKey="gpl"
         onInit={(evt, editor) => {
@@ -97,7 +101,10 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
         }}
         init={{
           language: 'pt_BR',
+          width: '100%',
           height: height || 500,
+          min_height: 240,
+          resize,
           menubar: false,
           // Usa skins via CDN para evitar 404 e não poluir o CSS global do app
           skin_url: 'https://cdn.jsdelivr.net/npm/tinymce@7.9.1/skins/ui/oxide',
