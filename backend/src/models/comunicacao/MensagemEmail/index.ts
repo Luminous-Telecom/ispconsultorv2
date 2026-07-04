@@ -40,7 +40,6 @@ MensagemEmail.init({
   tipo: {
     type: DataTypes.STRING(100),
     allowNull: false,
-    unique: true
   },
   tipo_envio: {
     type: DataTypes.ENUM('desativado', 'pdf'),
@@ -73,7 +72,17 @@ MensagemEmail.init({
   tableName: 'comunicacao_mensagens_email',
   timestamps: true,
   createdAt: 'created_at',
-  updatedAt: 'updated_at'
+  updatedAt: 'updated_at',
+  indexes: [
+    {
+      unique: true,
+      fields: ['empresa_id', 'tipo'],
+      name: 'comunicacao_mensagens_email_empresa_tipo_unique',
+    },
+    {
+      fields: ['empresa_id'],
+    },
+  ],
 });
 
 export default MensagemEmail;

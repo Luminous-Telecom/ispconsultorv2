@@ -1,5 +1,6 @@
 import { TemplateWhatsApp } from '../../../models/comunicacao/TemplateWhatsApp';
-import { Op, WhereOptions } from 'sequelize';
+import { WhereOptions } from 'sequelize';
+import { whereComunicacaoEmpresaEstrito } from '../../../utils/comunicacaoEmpresaWhere';
 
 export interface TemplateWhatsAppData {
   nome: string;
@@ -12,9 +13,8 @@ export interface TemplateWhatsAppData {
 
 export class TemplateWhatsAppService {
   static async list(empresaId?: number | null): Promise<TemplateWhatsApp[]> {
-    const where: WhereOptions<TemplateWhatsApp> = empresaId != null
-      ? { ativo: true, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
-      : { ativo: true };
+    const whereEstrito = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
+    const where: WhereOptions<TemplateWhatsApp> = whereEstrito ?? { ativo: true };
     return await TemplateWhatsApp.findAll({
       where,
       order: [['nome', 'ASC']],
@@ -26,9 +26,8 @@ export class TemplateWhatsAppService {
   }
 
   static async findByNomeIdioma(nome: string, idioma: string, empresaId?: number | null): Promise<TemplateWhatsApp | null> {
-    const where: WhereOptions<TemplateWhatsApp> = empresaId != null
-      ? { nome, idioma, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
-      : { nome, idioma };
+    const whereEstrito = whereComunicacaoEmpresaEstrito(empresaId, { nome, idioma });
+    const where: WhereOptions<TemplateWhatsApp> = whereEstrito ?? { nome, idioma };
     return await TemplateWhatsApp.findOne({ where });
   }
 

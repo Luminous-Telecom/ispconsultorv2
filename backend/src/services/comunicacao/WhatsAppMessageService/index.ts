@@ -12,6 +12,7 @@ import { WhatsAppCloudService } from '../WhatsAppCloudService';
 import { TemplateWhatsAppService } from '../TemplateWhatsAppService';
 import { TemplateWhatsApp } from '../../../models/comunicacao/TemplateWhatsApp';
 import type { ContextoHistorico } from '../RegistroMensagemHistoricoService';
+import { whereComunicacaoEmpresaEstrito } from '../../../utils/comunicacaoEmpresaWhere';
 
 export class WhatsAppMessageService {
   /**
@@ -45,15 +46,23 @@ export class WhatsAppMessageService {
         return { sucesso: false, mensagem: 'Ative a comunicação "Recebe WhatsApp" na aba Contato do cadastro do cliente para enviar mensagens' };
       }
 
-      const servidor = await ServidorWhatsApp.findOne({ where: { ativo: true } });
+      const empresaId = (titulo as { empresa_id?: number }).empresa_id ?? (cliente as { empresa_id?: number }).empresa_id ?? undefined;
+      const whereSrv = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
+      if (!whereSrv) {
+        return { sucesso: false, mensagem: 'Empresa do título não identificada para envio de WhatsApp' };
+      }
+      const servidor = await ServidorWhatsApp.findOne({ where: whereSrv });
       if (!servidor) {
-        return { sucesso: false, mensagem: 'Nenhum servidor WhatsApp ativo encontrado' };
+        return { sucesso: false, mensagem: 'Nenhum servidor WhatsApp ativo encontrado para esta empresa' };
       }
 
-      const mensagem = await MensagemWhatsApp.findOne({
-        where: { tipo: 'envio_manual', ativo: true },
-        include: [{ model: TemplateWhatsApp, as: 'template', required: false }],
-      });
+      const whereMsg = whereComunicacaoEmpresaEstrito(empresaId, { tipo: 'envio_manual', ativo: true });
+      const mensagem = whereMsg
+        ? await MensagemWhatsApp.findOne({
+            where: whereMsg,
+            include: [{ model: TemplateWhatsApp, as: 'template', required: false }],
+          })
+        : null;
 
       if (!mensagem) {
         return { sucesso: false, mensagem: 'Mensagem de envio manual não configurada' };
@@ -62,7 +71,6 @@ export class WhatsAppMessageService {
       const contrato = (titulo as Titulo & { contrato?: Contrato | null }).contrato;
       const telefone = this.formatarTelefone(cliente.telefone);
       const baseUrl = undefined;
-      const empresaId = (titulo as { empresa_id?: number }).empresa_id ?? (cliente as { empresa_id?: number }).empresa_id ?? undefined;
       const contextoHistorico: ContextoHistorico | undefined = empresaId != null ? { empresa_id: empresaId } : undefined;
 
       const mensagemTexto = mensagem.mensagem_manual || mensagem.mensagem_padrao || '';

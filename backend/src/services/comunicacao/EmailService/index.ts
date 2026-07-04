@@ -13,6 +13,7 @@ import nodemailer, { SendMailOptions } from 'nodemailer';
 import { TituloPDFController } from '../../../controllers/titulos/TituloPDFController';
 import type { TituloComRelacoes } from '../../../controllers/titulos/TituloHelpers/types';
 import { parseDateFromDb, formatDate } from '../../../utils/dateUtils';
+import { whereComunicacaoEmpresaEstrito } from '../../../utils/comunicacaoEmpresaWhere';
 
 interface ConfiguracoesEnvios {
   antesVencimento?: number[];
@@ -89,9 +90,11 @@ export class EmailService {
           intervalo_tentativas: 0,
         } as unknown as ServidorEmail;
       } else {
-        const whereSrv = empresaId != null
-          ? { ativo: true, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
-          : { ativo: true };
+        const whereSrv = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
+        if (!whereSrv) {
+          logger.info('[Email Boleto] empresa_id ausente — envio abortado (isolamento multi-tenant)');
+          return { sucesso: false, emailsEnviados: 0, erros: 0 };
+        }
         const srv = await ServidorEmail.findOne({ where: whereSrv });
         if (!srv) {
           return { sucesso: false, emailsEnviados: 0, erros: 0 };
@@ -99,9 +102,12 @@ export class EmailService {
         servidor = srv;
       }
 
-      const whereMsg = empresaId != null
-        ? { ativo: true, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
-        : { ativo: true };
+      const whereMsg = saas
+        ? { ativo: true }
+        : whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
+      if (!whereMsg) {
+        return { sucesso: false, emailsEnviados: 0, erros: 0 };
+      }
       const mensagens = await MensagemEmail.findAll({ where: whereMsg });
       if (mensagens.length === 0) {
         return { sucesso: false, emailsEnviados: 0, erros: 0 };
@@ -418,20 +424,34 @@ export class EmailService {
     try {
       logger.info('[Recibo Email] Iniciando envio', { titulo_id: titulo.id });
 
-      const servidor = await ServidorEmail.findOne({ where: { ativo: true } });
-      if (!servidor) {
-        logger.info('[Recibo Email] Servidor de email inativo ou não configurado', { titulo_id: titulo.id });
+      const tituloComCliente = titulo as TituloComRelacoes & { cliente?: Cliente };
+      const cliente = tituloComCliente.cliente;
+      if (!cliente) {
+        logger.info('[Recibo Email] Cliente não encontrado', { titulo_id: titulo.id });
         return false;
       }
 
-      const mensagem = await MensagemEmail.findOne({ where: { tipo: 'recibo_pagamento', ativo: true } });
+      const empresaId = (titulo as { empresa_id?: number }).empresa_id ?? (cliente as { empresa_id?: number }).empresa_id ?? undefined;
+      const whereSrv = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
+      if (!whereSrv) {
+        logger.info('[Recibo Email] empresa_id ausente — envio abortado', { titulo_id: titulo.id });
+        return false;
+      }
+      const servidor = await ServidorEmail.findOne({ where: whereSrv });
+      if (!servidor) {
+        logger.info('[Recibo Email] Servidor de email inativo ou não configurado', { titulo_id: titulo.id, empresa_id: empresaId });
+        return false;
+      }
+
+      const whereMsg = whereComunicacaoEmpresaEstrito(empresaId, { tipo: 'recibo_pagamento', ativo: true });
+      const mensagem = whereMsg
+        ? await MensagemEmail.findOne({ where: whereMsg })
+        : null;
       if (!mensagem || mensagem.tipo_envio === 'desativado') {
         logger.info('[Recibo Email] Mensagem recibo_pagamento não encontrada ou desativada', { titulo_id: titulo.id });
         return false;
       }
 
-      const tituloComCliente = titulo as TituloComRelacoes & { cliente?: Cliente };
-      const cliente = tituloComCliente.cliente;
       if (!cliente?.email || !cliente.recebe_email) {
         logger.info('[Recibo Email] Cliente sem email ou recebe_email desativado', {
           titulo_id: titulo.id,
@@ -458,7 +478,6 @@ export class EmailService {
         base64Pdf = await ReciboPDFService.gerarReciboBase64({ titulo, cliente, baseUrl: undefined }) ?? undefined;
       }
 
-      const empresaId = (titulo as { empresa_id?: number }).empresa_id ?? (cliente as { empresa_id?: number }).empresa_id ?? undefined;
       const contextoSaas = empresaId != null ? { empresa_id: empresaId } : undefined;
 
       const enviou = await this.enviarEmail(
@@ -517,14 +536,20 @@ export class EmailService {
         return { sucesso: false, mensagem: 'Ative a comunicação "Recebe Email" na aba Contato do cadastro do cliente para enviar mensagens' };
       }
 
-      const servidor = await ServidorEmail.findOne({ where: { ativo: true } });
+      const empresaId = (titulo as { empresa_id?: number }).empresa_id ?? (cliente as { empresa_id?: number }).empresa_id ?? undefined;
+      const whereSrv = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
+      if (!whereSrv) {
+        return { sucesso: false, mensagem: 'Empresa do título não identificada para envio de email' };
+      }
+      const servidor = await ServidorEmail.findOne({ where: whereSrv });
       if (!servidor) {
-        return { sucesso: false, mensagem: 'Nenhum servidor de email ativo encontrado' };
+        return { sucesso: false, mensagem: 'Nenhum servidor de email ativo encontrado para esta empresa' };
       }
 
-      const mensagem = await MensagemEmail.findOne({ 
-        where: { tipo: 'envio_manual', ativo: true } 
-      });
+      const whereMsg = whereComunicacaoEmpresaEstrito(empresaId, { tipo: 'envio_manual', ativo: true });
+      const mensagem = whereMsg
+        ? await MensagemEmail.findOne({ where: whereMsg })
+        : null;
 
       if (!mensagem) {
         return { sucesso: false, mensagem: 'Mensagem de envio manual não configurada' };
@@ -607,7 +632,6 @@ export class EmailService {
         tipoEnvio: mensagem.tipo_envio
       });
 
-      const empresaId = (titulo as { empresa_id?: number }).empresa_id ?? (cliente as { empresa_id?: number }).empresa_id ?? undefined;
       const contextoSaas = empresaId != null ? { empresa_id: empresaId } : undefined;
 
       const enviou = await this.enviarEmail(

@@ -3,6 +3,7 @@ import { TemplateWhatsAppService } from '../../../services/comunicacao/TemplateW
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { sendSuccess, sendError, sendNotFound } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { pertenceComunicacaoEmpresa } from '../../../utils/comunicacaoEmpresaWhere';
 import type { AuthenticatedRequest } from '../../../types/auth';
 
 export class TemplateWhatsAppController {
@@ -19,8 +20,9 @@ export class TemplateWhatsAppController {
   static async show(req: Request, res: ExpressResponse): Promise<void> {
     try {
       const id = Number(req.params.id);
+      const empresaId = getEmpresaIdOrNull(req);
       const template = await TemplateWhatsAppService.getById(id);
-      if (!template) {
+      if (!template || !pertenceComunicacaoEmpresa(template.empresa_id, empresaId)) {
         sendNotFound(res, 'Template não encontrado');
         return;
       }
@@ -37,6 +39,10 @@ export class TemplateWhatsAppController {
 
       if (!nome || typeof nome !== 'string' || !nome.trim()) {
         sendError(res, null, 'Nome do template é obrigatório', 400);
+        return;
+      }
+      if (empresaId == null || empresaId <= 0) {
+        sendError(res, null, 'Empresa não identificada para criar template', 400);
         return;
       }
 
@@ -69,9 +75,10 @@ export class TemplateWhatsAppController {
     try {
       const id = Number(req.params.id);
       const { nome, idioma, variables, header_document, ativo } = req.body;
+      const empresaId = getEmpresaIdOrNull(req);
 
       const template = await TemplateWhatsAppService.getById(id);
-      if (!template) {
+      if (!template || !pertenceComunicacaoEmpresa(template.empresa_id, empresaId)) {
         sendNotFound(res, 'Template não encontrado');
         return;
       }
@@ -106,8 +113,9 @@ export class TemplateWhatsAppController {
   static async delete(req: Request, res: ExpressResponse): Promise<void> {
     try {
       const id = Number(req.params.id);
+      const empresaId = getEmpresaIdOrNull(req);
       const template = await TemplateWhatsAppService.getById(id);
-      if (!template) {
+      if (!template || !pertenceComunicacaoEmpresa(template.empresa_id, empresaId)) {
         sendNotFound(res, 'Template não encontrado');
         return;
       }

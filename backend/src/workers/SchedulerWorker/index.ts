@@ -331,7 +331,10 @@ if (!isMainThread && workerData) {
         data: { message: `Executando rotina: ${routine.nome}` }
       } as WorkerMessage);
 
-      const result = await routineInstance.execute(routine.configuracao);
+      const result = await routineInstance.execute(routine.configuracao, {
+        saas: false,
+        empresa_id: routine.empresa_id ?? undefined,
+      });
 
       await routine.update({
         total_execucoes: routine.total_execucoes + 1,

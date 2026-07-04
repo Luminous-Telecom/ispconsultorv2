@@ -1,5 +1,6 @@
 import { MensagemWhatsApp } from '../../../models/comunicacao/MensagemWhatsApp';
 import { TemplateWhatsApp } from '../../../models/comunicacao/TemplateWhatsApp';
+import { whereComunicacaoEmpresaEstrito } from '../../../utils/comunicacaoEmpresaWhere';
 
 export interface MensagemWhatsAppData {
   tipo: string;
@@ -20,11 +21,13 @@ export class MensagemWhatsAppService {
   }
 
   /**
-   * Buscar mensagem por tipo (com template incluído)
+   * Buscar mensagem por tipo (filtra estritamente por empresa_id quando informado)
    */
-  static async findByTipo(tipo: string): Promise<MensagemWhatsApp | null> {
+  static async findByTipo(tipo: string, empresaId?: number | null): Promise<MensagemWhatsApp | null> {
+    const whereEstrito = whereComunicacaoEmpresaEstrito(empresaId, { tipo });
+    const where = whereEstrito ?? { tipo };
     return await MensagemWhatsApp.findOne({
-      where: { tipo },
+      where,
       include: MensagemWhatsAppService.getDefaultIncludes(),
     });
   }

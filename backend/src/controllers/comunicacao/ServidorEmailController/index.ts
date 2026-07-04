@@ -13,6 +13,7 @@ import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { SYSTEM_NAME } from '../../../constants/systemBrand';
+import { whereComunicacaoEmpresaEstrito, pertenceComunicacaoEmpresa } from '../../../utils/comunicacaoEmpresaWhere';
 
 export class ServidorEmailController {
   /**
@@ -30,15 +31,16 @@ export class ServidorEmailController {
   }
 
   /**
-   * Verifica se o servidor pertence à empresa do usuário (ou é global)
+   * Verifica se o servidor pertence à empresa do usuário
    */
   private static pertenceEmpresa(
     servidor: ServidorEmail | { empresa_id?: number | null },
     empresaId: number | null
   ): boolean {
-    const sid = (servidor as { empresa_id?: number | null }).empresa_id;
-    if (empresaId == null) return false;
-    return sid === empresaId || sid === null; // próprio ou global
+    return pertenceComunicacaoEmpresa(
+      (servidor as { empresa_id?: number | null }).empresa_id,
+      empresaId
+    );
   }
 
   /**
@@ -81,11 +83,15 @@ export class ServidorEmailController {
       }
 
       const empresaIdServidor = servidorData.empresa_id ?? getEmpresaIdOrNull(req) ?? null;
+      if (empresaIdServidor == null || empresaIdServidor <= 0) {
+        sendValidationError(res, 'Empresa não identificada para configurar servidor de email');
+        return;
+      }
       if (servidorData.ativo !== false) {
-        const whereAtivo = empresaIdServidor != null
-          ? { ativo: true, [Op.or]: [{ empresa_id: empresaIdServidor }, { empresa_id: null }] }
-          : { ativo: true };
-        await ServidorEmailService.updateBulk(whereAtivo, { ativo: false });
+        const whereAtivo = whereComunicacaoEmpresaEstrito(empresaIdServidor, { ativo: true });
+        if (whereAtivo) {
+          await ServidorEmailService.updateBulk(whereAtivo, { ativo: false });
+        }
         servidorData.ativo = true;
       }
 
@@ -143,10 +149,10 @@ export class ServidorEmailController {
 
       const empresaIdServidor = (servidor as { empresa_id?: number | null }).empresa_id ?? empresaId ?? null;
       if (servidorData.ativo === true) {
-        const whereAtivo = empresaIdServidor != null
-          ? { ativo: true, id: { [Op.ne]: id }, [Op.or]: [{ empresa_id: empresaIdServidor }, { empresa_id: null }] }
-          : { ativo: true, id: { [Op.ne]: id } };
-        await ServidorEmailService.updateBulk(whereAtivo, { ativo: false });
+        const whereAtivo = whereComunicacaoEmpresaEstrito(empresaIdServidor, { ativo: true, id: { [Op.ne]: id } });
+        if (whereAtivo) {
+          await ServidorEmailService.updateBulk(whereAtivo, { ativo: false });
+        }
       }
 
       const dadosAnteriores = servidor.toJSON();
@@ -340,15 +346,15 @@ export class ServidorEmailController {
   static async getActive(req: Request, res: Response): Promise<void> {
     try {
       const empresaId = getEmpresaIdOrNull(req);
-      const where = empresaId != null
-        ? { ativo: true, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
-        : { ativo: true };
-      const servidor = await ServidorEmailService.findOne({
-        where,
-        attributes: {
-          exclude: ['senha'], // Não retornar a senha
-        },
-      });
+      const where = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
+      const servidor = where
+        ? await ServidorEmailService.findOne({
+            where,
+            attributes: {
+              exclude: ['senha'],
+            },
+          })
+        : null;
 
       if (!servidor) {
         sendSuccess(res, null, 'Nenhum servidor de email ativo configurado');
@@ -368,13 +374,15 @@ export class ServidorEmailController {
     try {
       const servidorData = req.body;
       const empresaId = getEmpresaIdOrNull(req);
+      if (empresaId == null || empresaId <= 0) {
+        sendValidationError(res, 'Empresa não identificada para configurar servidor de email');
+        return;
+      }
 
-      const whereAtivo = empresaId != null
-        ? { ativo: true, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
-        : { ativo: true };
-      const servidor = await ServidorEmailService.findOne({
-        where: whereAtivo
-      });
+      const whereAtivo = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
+      const servidor = whereAtivo
+        ? await ServidorEmailService.findOne({ where: whereAtivo })
+        : null;
 
       if (servidor) {
         // Atualizar servidor existente
@@ -419,7 +427,7 @@ export class ServidorEmailController {
         servidorData.ativo = true;
         const novoServidor = await ServidorEmailService.create({
           ...servidorData,
-          empresa_id: servidorData.empresa_id ?? getEmpresaIdOrNull(req) ?? null
+          empresa_id: empresaId,
         });
         
         // Recarregar sem a senha
@@ -514,11 +522,21 @@ export class ServidorEmailController {
         mensagem_padrao: mensagemPadraoFinal,
         mensagem_manual: mensagem_manual || null,
         ativo,
-        empresa_id: getEmpresaIdOrNull(req) ?? null
+        empresa_id: getEmpresaIdOrNull(req),
       };
 
-      const empresaIdMsg = getEmpresaIdOrNull(req) ?? null;
+      const empresaIdMsg = getEmpresaIdOrNull(req);
+      if (empresaIdMsg == null || empresaIdMsg <= 0) {
+        sendValidationError(res, 'Empresa não identificada para salvar mensagem');
+        return;
+      }
       let mensagem = await MensagemEmailService.findByTipo(tipo, empresaIdMsg);
+
+      if (mensagem) {
+        if (!pertenceComunicacaoEmpresa(mensagem.empresa_id, empresaIdMsg)) {
+          mensagem = null;
+        }
+      }
 
       try {
         if (mensagem) {

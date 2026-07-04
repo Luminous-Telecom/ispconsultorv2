@@ -5,6 +5,7 @@ import { logger } from '../../../utils/logger';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { registrarCriacao, registrarAtualizacao } from '../../sistema/AuditoriaService';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { whereComunicacaoEmpresaEstrito, pertenceComunicacaoEmpresa } from '../../../utils/comunicacaoEmpresaWhere';
 
 export interface ServidorWhatsAppData {
   tipo_api?: 'evolution' | 'whatsapp_cloud';
@@ -26,10 +27,18 @@ export class ServidorWhatsAppProcessorService {
     servidorData: ServidorWhatsAppData,
     req: AuthenticatedRequest
   ): Promise<{ servidor: ServidorWhatsApp; isNew: boolean }> {
-    // Buscar servidor existente
-    const servidor = await ServidorWhatsAppService.findOne({ ativo: true });
+    const empresaId = getEmpresaIdOrNull(req);
+    const whereAtivo = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
+    if (!whereAtivo) {
+      throw new Error('Empresa não identificada para configurar servidor de WhatsApp');
+    }
+
+    const servidor = await ServidorWhatsAppService.findOne(whereAtivo);
 
     if (servidor) {
+      if (!pertenceComunicacaoEmpresa(servidor.empresa_id, empresaId)) {
+        return await this.processCreate(servidorData, req);
+      }
       return await this.processUpdate(servidor, servidorData, req);
     }
 
@@ -85,6 +94,12 @@ export class ServidorWhatsAppProcessorService {
     servidorData: ServidorWhatsAppData,
     req: AuthenticatedRequest
   ): Promise<{ servidor: ServidorWhatsApp; isNew: boolean }> {
+    const empresaId = getEmpresaIdOrNull(req);
+    const whereAtivo = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
+    if (!whereAtivo) {
+      throw new Error('Empresa não identificada para configurar servidor de WhatsApp');
+    }
+
     const tipoApi = servidorData.tipo_api || 'evolution';
     
     // Validar dados
@@ -93,28 +108,17 @@ export class ServidorWhatsAppProcessorService {
       throw new Error(validation.error || 'Dados inválidos');
     }
 
-    // Garantir que nenhum outro servidor esteja ativo
-    const servidorAtivoExistente = await ServidorWhatsAppService.findOne({ ativo: true });
+    const servidorAtivoExistente = await ServidorWhatsAppService.findOne(whereAtivo);
     
     if (servidorAtivoExistente) {
-      // Se encontrou um servidor ativo, atualizar ao invés de criar
       return await this.processUpdate(servidorAtivoExistente, servidorData, req);
     }
 
-    // Desativar todos os outros servidores antes de criar um novo com ativo=true
-    await ServidorWhatsAppService.updateBulk(
-      { ativo: true },
-      { ativo: false }
-    );
-    
-    // Verificar novamente se ainda há algum servidor ativo (race condition)
-    const servidorAindaAtivo = await ServidorWhatsAppService.findOne({ ativo: true });
-    if (servidorAindaAtivo) {
-      await servidorAindaAtivo.update({ ativo: false });
-    }
+    await ServidorWhatsAppService.updateBulk(whereAtivo, { ativo: false });
     
     servidorData.ativo = true;
     servidorData.status_conexao = 'disconnected';
+    servidorData.empresa_id = empresaId;
     
     // Tratar webhook_url vazio como null
     if (servidorData.webhook_url && servidorData.webhook_url.trim() === '') {

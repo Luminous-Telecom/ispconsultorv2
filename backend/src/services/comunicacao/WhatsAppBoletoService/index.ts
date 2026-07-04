@@ -13,6 +13,7 @@ import { WhatsAppTemplateService } from '../WhatsAppTemplateService';
 import { WhatsAppCloudService } from '../WhatsAppCloudService';
 import { TemplateWhatsAppService } from '../TemplateWhatsAppService';
 import type { ContextoHistorico } from '../RegistroMensagemHistoricoService';
+import { whereComunicacaoEmpresaEstrito } from '../../../utils/comunicacaoEmpresaWhere';
 
 interface ConfiguracoesEnvios {
   antesVencimento?: number[];
@@ -53,9 +54,11 @@ export class WhatsAppBoletoService {
           intervalo_tentativas: 0,
         } as unknown as ServidorWhatsApp;
       } else {
-        const whereSrv = empresaId != null
-          ? { ativo: true, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
-          : { ativo: true };
+        const whereSrv = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
+        if (!whereSrv) {
+          logger.info('[WhatsApp Boleto] empresa_id ausente — envio abortado (isolamento multi-tenant)');
+          return { sucesso: false, mensagensEnviadas: 0, erros: 0 };
+        }
         const srv = await ServidorWhatsApp.findOne({ where: whereSrv });
         if (!srv) {
           return { sucesso: false, mensagensEnviadas: 0, erros: 0 };
@@ -63,9 +66,12 @@ export class WhatsAppBoletoService {
         servidor = srv;
       }
 
-      const whereMsg = empresaId != null
-        ? { ativo: true, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
-        : { ativo: true };
+      const whereMsg = saas
+        ? { ativo: true }
+        : whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
+      if (!whereMsg) {
+        return { sucesso: false, mensagensEnviadas: 0, erros: 0 };
+      }
       const mensagens = await MensagemWhatsApp.findAll({
         where: whereMsg,
         include: [{ model: TemplateWhatsApp, as: 'template', required: false }],
@@ -495,22 +501,24 @@ export class WhatsAppBoletoService {
       }
 
       const empresaId = (titulo as { empresa_id?: number | null }).empresa_id ?? (cliente as { empresa_id?: number | null }).empresa_id ?? undefined;
-      const whereSrv = empresaId != null
-        ? { ativo: true, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
-        : { ativo: true };
+      const whereSrv = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
+      if (!whereSrv) {
+        logger.info('[Recibo WhatsApp] empresa_id ausente — envio abortado', { titulo_id: titulo.id });
+        return false;
+      }
       const servidor = await ServidorWhatsApp.findOne({ where: whereSrv });
       if (!servidor) {
-        logger.info('[Recibo WhatsApp] Servidor WhatsApp inativo ou não configurado', { titulo_id: titulo.id });
+        logger.info('[Recibo WhatsApp] Servidor WhatsApp inativo ou não configurado', { titulo_id: titulo.id, empresa_id: empresaId });
         return false;
       }
 
-      const whereMsg = empresaId != null
-        ? { tipo: 'recibo_pagamento', ativo: true, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
-        : { tipo: 'recibo_pagamento', ativo: true };
-      const mensagem = await MensagemWhatsApp.findOne({
-        where: whereMsg,
-        include: [{ model: TemplateWhatsApp, as: 'template', required: false }],
-      });
+      const whereMsg = whereComunicacaoEmpresaEstrito(empresaId, { tipo: 'recibo_pagamento', ativo: true });
+      const mensagem = whereMsg
+        ? await MensagemWhatsApp.findOne({
+            where: whereMsg,
+            include: [{ model: TemplateWhatsApp, as: 'template', required: false }],
+          })
+        : null;
       if (!mensagem || mensagem.tipo_envio === 'desativado') {
         logger.info('[Recibo WhatsApp] Mensagem recibo_pagamento não encontrada ou desativada', { titulo_id: titulo.id });
         return false;

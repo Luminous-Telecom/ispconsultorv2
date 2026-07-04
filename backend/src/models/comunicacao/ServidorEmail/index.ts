@@ -149,9 +149,7 @@ ServidorEmail.init(
     updatedAt: 'updated_at',
     indexes: [
       {
-        unique: true,
-        fields: ['ativo'],
-        where: { ativo: true }
+        fields: ['empresa_id'],
       },
     ],
   }

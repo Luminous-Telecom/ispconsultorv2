@@ -1,14 +1,14 @@
 import { ServidorEmail } from '../../../models/comunicacao/ServidorEmail/index';
-import { WhereOptions, FindOptions, Op } from 'sequelize';
+import { WhereOptions, FindOptions } from 'sequelize';
+import { whereComunicacaoEmpresaEstrito } from '../../../utils/comunicacaoEmpresaWhere';
 
 export class ServidorEmailService {
   /**
-   * Listar todos os servidores de email (filtra por empresa_id quando informado)
+   * Listar servidores de email do tenant (sem incluir registros legacy com empresa_id NULL)
    */
   static async list(empresaId?: number | null): Promise<{ success: boolean; data: ServidorEmail[] }> {
-    const where = empresaId != null
-      ? { [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
-      : {};
+    const whereEstrito = whereComunicacaoEmpresaEstrito(empresaId);
+    const where: WhereOptions = whereEstrito ?? {};
     const servidores = await ServidorEmail.findAll({
       where,
       order: [['created_at', 'DESC']],

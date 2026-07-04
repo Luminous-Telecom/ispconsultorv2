@@ -1,6 +1,6 @@
-import { Op } from 'sequelize';
 import { MensagemEmail } from '../../../models/comunicacao/MensagemEmail';
 import { logger } from '../../../utils/logger';
+import { whereComunicacaoEmpresaEstrito } from '../../../utils/comunicacaoEmpresaWhere';
 
 export interface MensagemEmailData {
   tipo: string;
@@ -13,12 +13,11 @@ export interface MensagemEmailData {
 
 export class MensagemEmailService {
   /**
-   * Buscar mensagem por tipo (filtra por empresa_id quando informado - inclui globais com empresa_id null)
+   * Buscar mensagem por tipo (filtra estritamente por empresa_id quando informado)
    */
   static async findByTipo(tipo: string, empresaId?: number | null): Promise<MensagemEmail | null> {
-    const where = empresaId != null
-      ? { tipo, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
-      : { tipo };
+    const whereEstrito = whereComunicacaoEmpresaEstrito(empresaId, { tipo });
+    const where = whereEstrito ?? { tipo };
     return await MensagemEmail.findOne({
       where
     });

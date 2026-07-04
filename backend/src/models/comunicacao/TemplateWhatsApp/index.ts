@@ -74,6 +74,16 @@ TemplateWhatsApp.init({
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at',
+  indexes: [
+    {
+      unique: true,
+      fields: ['empresa_id', 'nome', 'idioma'],
+      name: 'comunicacao_templates_whatsapp_empresa_nome_idioma_unique',
+    },
+    {
+      fields: ['empresa_id'],
+    },
+  ],
 });
 
 export default TemplateWhatsApp;
