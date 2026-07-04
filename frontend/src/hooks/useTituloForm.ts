@@ -124,8 +124,9 @@ export const useTituloForm = ({
     Object.keys(rhfErrors).forEach((key) => {
       const field = key as keyof TituloFormErrors;
       const error = rhfErrors[field as keyof typeof rhfErrors];
-      if (shouldShowInlineValidationMessage(error?.message)) {
-        convertedErrors[field] = String(error.message);
+      const message = error?.message;
+      if (shouldShowInlineValidationMessage(message)) {
+        convertedErrors[field] = String(message);
       }
     });
     return convertedErrors;

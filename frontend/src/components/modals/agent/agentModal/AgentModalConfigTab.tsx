@@ -52,6 +52,11 @@ function AgentModalConfigTab({
   onFormSubmit,
   onRegenerate,
 }: AgentModalConfigTabProps) {
+  const shouldShowEmpresaTenant = !isEditing && !isAdmin && Boolean(me);
+  const empresaTenantLabel = dadosEmpresaTenant
+    ? (dadosEmpresaTenant.nome_fantasia?.trim() || dadosEmpresaTenant.razao_social)
+    : 'Carregando…';
+
   return (
     <form onSubmit={onFormSubmit} className="form-modal-simple">
       <div className="row g-2">
@@ -92,7 +97,7 @@ function AgentModalConfigTab({
             />
           </div>
         )}
-        {!isEditing && !isAdmin && me && (
+        {shouldShowEmpresaTenant && (
           <div className="col-12">
             <FormField
               name="empresa_display"
@@ -101,11 +106,7 @@ function AgentModalConfigTab({
               size="sm"
               readOnly
               disabled
-              value={
-                dadosEmpresaTenant
-                  ? (dadosEmpresaTenant.nome_fantasia?.trim() || dadosEmpresaTenant.razao_social)
-                  : 'Carregando…'
-              }
+              value={empresaTenantLabel}
               onChange={() => {}}
             />
           </div>

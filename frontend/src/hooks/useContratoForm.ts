@@ -137,8 +137,9 @@ export const useContratoForm = ({
     Object.keys(rhfErrors).forEach((key) => {
       const field = key as keyof ContratoForm;
       const error = rhfErrors[field as keyof typeof rhfErrors];
-      if (shouldShowInlineValidationMessage(error?.message)) {
-        convertedErrors[field] = String(error.message) as never;
+      const message = error?.message;
+      if (shouldShowInlineValidationMessage(message)) {
+        convertedErrors[field] = String(message) as never;
       }
     });
     return convertedErrors;
