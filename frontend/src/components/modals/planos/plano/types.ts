@@ -5,7 +5,6 @@ export interface PlanoForm {
   valor_mensal: number;
   quantidade_usuarios: number;
   servicos_inclusos: string[];
-  renovacao_automatica: boolean;
   status: 'ativo' | 'inativo';
   data_inicio: string;
   data_fim: string;

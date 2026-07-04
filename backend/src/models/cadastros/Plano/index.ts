@@ -34,7 +34,6 @@ export class Plano extends Model<
   declare quantidade_usuarios: number | null;
   declare valor_mensal: number;
   declare periodicidade: 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal' | null;
-  declare renovacao_automatica: boolean;
   declare data_inicio: Date | null;
   declare data_fim: Date | null;
   declare status: 'ativo' | 'inativo';
@@ -200,11 +199,6 @@ Plano.init(
       type: DataTypes.ENUM('mensal', 'trimestral', 'semestral', 'anual', 'bimestral', 'quinzenal', 'semanal'),
       allowNull: true,
       defaultValue: 'mensal'
-    },
-    renovacao_automatica: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: true
     },
     data_inicio: {
       type: DataTypes.DATE,

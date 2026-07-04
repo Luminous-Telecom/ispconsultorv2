@@ -83,7 +83,6 @@ export interface Plano {
   quantidade_usuarios?: number;
   valor_mensal: number;
   periodicidade?: 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal';
-  renovacao_automatica: boolean;
   status: 'ativo' | 'inativo';
   data_inicio?: string;
   data_fim?: string;

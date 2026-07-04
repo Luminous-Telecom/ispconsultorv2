@@ -46,8 +46,6 @@ export const planoSchema = z.object({
     .array(z.string())
     .default([]),
   
-  renovacao_automatica: z.boolean().default(true),
-  
   status: z.string().refine(
     (val) => ['ativo', 'inativo'].includes(val),
     { message: 'Status inválido' }

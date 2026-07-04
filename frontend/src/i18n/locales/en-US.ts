@@ -929,7 +929,6 @@ const enUS: TranslationKeys = {
     'form.planDescriptionPlaceholder': 'Plan description',
     'form.monthlyValuePlaceholder': 'Monthly value',
     'form.usersQuantity': 'Users Quantity',
-    'form.autoRenewal': 'Auto Renewal',
     'form.planObservationsPlaceholder': 'Plan observations',
     'form.serviceTypeInfrastructure': 'Infrastructure',
     'form.serviceTypeConsulting': 'Consulting',

@@ -58,7 +58,6 @@ export interface Plano extends BaseEntity {
   desconto_valor?: number;
   desconto_ativo: boolean;
   periodicidade?: string;
-  renovacao_automatica: boolean;
   data_inicio?: Date;
   data_fim?: Date;
   status: 'ativo' | 'inativo';

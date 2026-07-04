@@ -929,7 +929,6 @@ const ptBR: TranslationKeys = {
     'form.planDescriptionPlaceholder': 'Descrição do plano',
     'form.monthlyValuePlaceholder': 'Valor mensal',
     'form.usersQuantity': 'Quantidade de Usuários',
-    'form.autoRenewal': 'Renovação Automática',
     'form.planObservationsPlaceholder': 'Observações do plano',
     'form.serviceTypeInfrastructure': 'Infraestrutura',
     'form.serviceTypeConsulting': 'Consultoria',

@@ -887,7 +887,6 @@ export interface TranslationKeys {
   'form.planDescriptionPlaceholder': string;
   'form.monthlyValuePlaceholder': string;
   'form.usersQuantity': string;
-  'form.autoRenewal': string;
   'form.planObservationsPlaceholder': string;
   'form.serviceTypeInfrastructure': string;
   'form.serviceTypeConsulting': string;

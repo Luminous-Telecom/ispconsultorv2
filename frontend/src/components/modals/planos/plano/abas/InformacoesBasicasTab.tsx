@@ -158,15 +158,6 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
           disabled={isSubmitting}
         />
       </div>
-
-      <div className="col-12">
-        <AtivoInativoField
-          value={formData.renovacao_automatica}
-          onChange={(v) => handleInputChange('renovacao_automatica', v)}
-          label={t('form.autoRenewal')}
-          disabled={isSubmitting}
-        />
-      </div>
     </div>
   );
 };

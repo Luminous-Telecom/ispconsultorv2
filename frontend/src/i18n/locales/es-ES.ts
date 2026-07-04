@@ -931,7 +931,6 @@ const esES: TranslationKeys = {
     'form.planDescriptionPlaceholder': 'Descripción del plan',
     'form.monthlyValuePlaceholder': 'Valor mensual',
     'form.usersQuantity': 'Cantidad de Usuarios',
-    'form.autoRenewal': 'Renovación Automática',
     'form.planObservationsPlaceholder': 'Observaciones del plan',
     'form.serviceTypeInfrastructure': 'Infraestructura',
     'form.serviceTypeConsulting': 'Consultoría',

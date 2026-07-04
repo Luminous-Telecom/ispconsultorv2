@@ -148,7 +148,7 @@ export class PlanoService {
       where,
       attributes: [
         'id', 'nome_plano', 'descricao', 'tipo_servico', 'servicos_inclusos',
-        'quantidade_usuarios', 'valor_mensal', 'periodicidade', 'renovacao_automatica', 'data_inicio',
+        'quantidade_usuarios', 'valor_mensal', 'periodicidade', 'data_inicio',
         'data_fim', 'status', 'observacoes', 'created_at', 'updated_at'
       ],
       include: [
@@ -307,12 +307,12 @@ export class PlanoService {
     }
 
     type AllowedField = 'nome_plano' | 'descricao' | 'tipo_servico' | 'servicos_inclusos' |
-      'quantidade_usuarios' | 'valor_mensal' | 'periodicidade' | 'renovacao_automatica' | 'data_inicio' |
+      'quantidade_usuarios' | 'valor_mensal' | 'periodicidade' | 'data_inicio' |
       'data_fim' | 'status' | 'observacoes';
     
     const allowedFields: AllowedField[] = [
       'nome_plano', 'descricao', 'tipo_servico', 'servicos_inclusos',
-      'quantidade_usuarios', 'valor_mensal', 'periodicidade', 'renovacao_automatica', 'data_inicio',
+      'quantidade_usuarios', 'valor_mensal', 'periodicidade', 'data_inicio',
       'data_fim', 'status', 'observacoes'
     ];
     
@@ -324,7 +324,6 @@ export class PlanoService {
       quantidade_usuarios?: number | null;
       valor_mensal?: number;
       periodicidade?: 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal' | null;
-      renovacao_automatica?: boolean;
       data_inicio?: Date | null;
       data_fim?: Date | null;
       status?: 'ativo' | 'inativo';
