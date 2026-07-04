@@ -1350,6 +1350,7 @@ const ptBR: TranslationKeys = {
     'whatsappServer.errorSendTest': 'Não foi possível enviar a mensagem de teste. Verifique as configurações do servidor e tente novamente.',
     'whatsappServer.selectMessageType': 'Selecione um tipo de mensagem',
     'whatsappServer.messageRequired': 'Mensagem padrão é obrigatória',
+    'whatsappServer.manualMessageRequired': 'Mensagem para envio manual é obrigatória',
     'whatsappServer.removeServer': 'Deletar Servidor',
     'whatsappServer.variableCopied': 'Variável copiada!',
     'whatsappServer.server': 'Servidor',

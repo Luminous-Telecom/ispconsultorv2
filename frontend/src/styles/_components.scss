@@ -1190,6 +1190,7 @@ button {
 }
 
 .required-mark {
+  color: var(--danger-color, #dc3545) !important;
   font-weight: 600;
   line-height: 1;
 }

@@ -210,10 +210,13 @@ export function useServidorWhatsappModal({ show, onClose }: UseServidorWhatsappM
     const isWhatsAppCloud = servidorAtivo?.data?.tipo_api === 'whatsapp_cloud';
     const temTemplate = !!currentTemplateId;
 
-    let mensagemPadraoFinal = currentMensagemPadrao;
-    if (currentMensagemType === 'envio_manual' && !temTemplate && currentMensagemManual) {
-      mensagemPadraoFinal = currentMensagemManual;
-    } else if (currentMensagemType !== 'envio_manual' && !mensagemPadraoFinal && !temTemplate && !isWhatsAppCloud) {
+    if (currentMensagemType === 'envio_manual' && !temTemplate && !currentMensagemManual.trim()) {
+      showApiError(t('whatsappServer.manualMessageRequired'));
+      return;
+    }
+
+    const mensagemPadraoFinal = currentMensagemType === 'envio_manual' ? '' : currentMensagemPadrao;
+    if (currentMensagemType !== 'envio_manual' && !mensagemPadraoFinal && !temTemplate && !isWhatsAppCloud) {
       showApiError(t('whatsappServer.messageRequired'));
       return;
     }

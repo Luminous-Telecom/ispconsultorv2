@@ -1352,6 +1352,7 @@ const esES: TranslationKeys = {
     'whatsappServer.errorSendTest': 'No se pudo enviar el mensaje de prueba. Verifique la configuración del servidor e intente nuevamente.',
     'whatsappServer.selectMessageType': 'Seleccione un tipo de mensaje',
     'whatsappServer.messageRequired': 'El mensaje predeterminado es obligatorio',
+    'whatsappServer.manualMessageRequired': 'El mensaje para envío manual es obligatorio',
     'whatsappServer.removeServer': 'Eliminar Servidor',
     'whatsappServer.variableCopied': '¡Variable copiada!',
     'whatsappServer.server': 'Servidor',

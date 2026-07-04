@@ -1337,6 +1337,7 @@ export interface TranslationKeys {
   'whatsappServer.errorSendTest': string;
   'whatsappServer.selectMessageType': string;
   'whatsappServer.messageRequired': string;
+  'whatsappServer.manualMessageRequired': string;
   'whatsappServer.removeServer': string;
   'whatsappServer.variableCopied': string;
   'whatsappServer.server': string;

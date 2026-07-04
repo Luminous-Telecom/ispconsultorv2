@@ -117,21 +117,23 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                     </div>
                   </div>
 
-                  <div className="row g-2 mt-2">
-                    <div className="col-12">
-                      <FormField
-                        name="mensagemPadrao"
-                        type="textarea"
-                        label={t('settings.messages.defaultMessage')}
-                        placeholder={t('placeholder.defaultMessage')}
-                        rows={10}
-                        size="sm"
-                        required={mensagemType !== 'envio_manual'}
-                        value={mensagemPadrao}
-                        onChange={(value) => onMensagemPadraoChange(String(value ?? ''))}
-                      />
+                  {mensagemType !== 'envio_manual' && (
+                    <div className="row g-2 mt-2">
+                      <div className="col-12">
+                        <FormField
+                          name="mensagemPadrao"
+                          type="textarea"
+                          label={t('settings.messages.defaultMessage')}
+                          placeholder={t('placeholder.defaultMessage')}
+                          rows={10}
+                          size="sm"
+                          required
+                          value={mensagemPadrao}
+                          onChange={(value) => onMensagemPadraoChange(String(value ?? ''))}
+                        />
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {mensagemType === 'envio_manual' && (
                     <div className="row g-2 mt-2">
