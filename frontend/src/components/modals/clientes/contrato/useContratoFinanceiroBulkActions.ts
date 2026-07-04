@@ -145,7 +145,7 @@ export function useContratoFinanceiroBulkActions({
 
     return [
       {
-        label: t('other.newMiscTitle'),
+        label: t('buttons.new'),
         action: () => setShowTituloCreateModal(true),
       },
       createTituloEditAction(ctx, setSelectedTituloId, setShowTituloEditModal),
