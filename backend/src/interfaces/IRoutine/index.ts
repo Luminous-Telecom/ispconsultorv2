@@ -10,7 +10,12 @@ export interface RoutineResult {
   empresasDesbloqueadas?: number;
 }
 
+export interface RoutineExecuteOptions {
+  saas?: boolean;
+  empresa_id?: number;
+}
+
 export interface IRoutine {
-  execute(config: Record<string, JsonValue>): Promise<RoutineResult>;
+  execute(config: Record<string, JsonValue>, options?: RoutineExecuteOptions): Promise<RoutineResult>;
 }
 

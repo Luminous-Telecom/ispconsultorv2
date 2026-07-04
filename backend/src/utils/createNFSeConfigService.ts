@@ -16,7 +16,7 @@ const DEFAULT_NFSE = {
   provider: 'PORTAL_NACIONAL'
 };
 
-interface NFSeConfigServiceOptions {
+export interface NFSeConfigServiceOptions {
   transaction?: Transaction;
 }
 
