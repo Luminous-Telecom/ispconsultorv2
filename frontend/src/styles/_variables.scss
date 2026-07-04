@@ -42,6 +42,8 @@
   --form-block-max-width: calc(var(--form-label-width) + var(--form-field-gap) + var(--form-input-max-width));
   --form-block-padding-left: clamp(16px, 3vw, 48px);
   --form-input-col-offset: calc(var(--form-label-width) + var(--form-field-gap));
+  --modal-rich-text-editor-height: 320px;
+  --modal-rich-text-editor-bottom-spacing: 1rem;
 }
 
 /* Tema claro (default) — Paleta original Azul Ardósia Profundo (commit anterior a 9ebd0f5d) */

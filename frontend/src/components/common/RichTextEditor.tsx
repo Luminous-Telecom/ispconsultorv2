@@ -84,7 +84,7 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
     <div className={wrapperClassName} >
       <Editor
         licenseKey="gpl"
-        onInit={(evt, editor) => {
+        onInit={(_evt, editor) => {
           editorRef.current = editor;
           if (id) {
             editor.getBody().id = id;

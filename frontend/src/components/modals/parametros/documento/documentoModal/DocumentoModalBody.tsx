@@ -96,58 +96,59 @@ function DocumentoModalBody({
         </div>
 
         <div className="documento-editor-layout">
-          <div className="d-flex justify-content-between align-items-center mb-1">
+          <div className="form-field form-field--rich-text">
             <LabelWithHelp id="conteudo-label" as="span" className="form-label small mb-0" required>
               {tipo === 'contrato' ? t('document.contractContent') : t('document.content')}
             </LabelWithHelp>
+            <div className="form-field-control">
+              {tipo === 'contrato' ? (
+                <>
+                  {activeTab === 'contrato' && (
+                    <ContratoTab
+                      value={formData.conteudo_contrato}
+                      onChange={(value) => setFormData((prev) => ({ ...prev, conteudo_contrato: value }))}
+                      editorKey={`${editorKeyPrefix}-contrato`}
+                    />
+                  )}
+                  {activeTab === 'adesao' && (
+                    <AdesaoTab
+                      value={formData.conteudo_adesao}
+                      onChange={(value) => setFormData((prev) => ({ ...prev, conteudo_adesao: value }))}
+                      editorKey={`${editorKeyPrefix}-adesao`}
+                    />
+                  )}
+                  {activeTab === 'permanencia' && (
+                    <PermanenciaTab
+                      value={formData.conteudo_permanencia}
+                      onChange={(value) => setFormData((prev) => ({ ...prev, conteudo_permanencia: value }))}
+                      editorKey={`${editorKeyPrefix}-permanencia`}
+                    />
+                  )}
+                  {activeTab === 'recibo' && (
+                    <ReciboTab
+                      value={formData.conteudo_recibo}
+                      onChange={(value) => setFormData((prev) => ({ ...prev, conteudo_recibo: value }))}
+                      editorKey={`${editorKeyPrefix}-recibo`}
+                    />
+                  )}
+                  {activeTab === 'carta' && (
+                    <CartaTab
+                      value={formData.conteudo_carta}
+                      onChange={(value) => setFormData((prev) => ({ ...prev, conteudo_carta: value }))}
+                      editorKey={`${editorKeyPrefix}-carta`}
+                    />
+                  )}
+                </>
+              ) : (
+                <ConteudoTab
+                  value={formData.conteudo}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, conteudo: value }))}
+                  editorKey={`${editorKeyPrefix}-conteudo`}
+                  placeholder={contentPlaceholder}
+                />
+              )}
+            </div>
           </div>
-
-          {tipo === 'contrato' ? (
-            <>
-              {activeTab === 'contrato' && (
-                <ContratoTab
-                  value={formData.conteudo_contrato}
-                  onChange={(value) => setFormData((prev) => ({ ...prev, conteudo_contrato: value }))}
-                  editorKey={`${editorKeyPrefix}-contrato`}
-                />
-              )}
-              {activeTab === 'adesao' && (
-                <AdesaoTab
-                  value={formData.conteudo_adesao}
-                  onChange={(value) => setFormData((prev) => ({ ...prev, conteudo_adesao: value }))}
-                  editorKey={`${editorKeyPrefix}-adesao`}
-                />
-              )}
-              {activeTab === 'permanencia' && (
-                <PermanenciaTab
-                  value={formData.conteudo_permanencia}
-                  onChange={(value) => setFormData((prev) => ({ ...prev, conteudo_permanencia: value }))}
-                  editorKey={`${editorKeyPrefix}-permanencia`}
-                />
-              )}
-              {activeTab === 'recibo' && (
-                <ReciboTab
-                  value={formData.conteudo_recibo}
-                  onChange={(value) => setFormData((prev) => ({ ...prev, conteudo_recibo: value }))}
-                  editorKey={`${editorKeyPrefix}-recibo`}
-                />
-              )}
-              {activeTab === 'carta' && (
-                <CartaTab
-                  value={formData.conteudo_carta}
-                  onChange={(value) => setFormData((prev) => ({ ...prev, conteudo_carta: value }))}
-                  editorKey={`${editorKeyPrefix}-carta`}
-                />
-              )}
-            </>
-          ) : (
-            <ConteudoTab
-              value={formData.conteudo}
-              onChange={(value) => setFormData((prev) => ({ ...prev, conteudo: value }))}
-              editorKey={`${editorKeyPrefix}-conteudo`}
-              placeholder={contentPlaceholder}
-            />
-          )}
         </div>
         </div>
       </form>

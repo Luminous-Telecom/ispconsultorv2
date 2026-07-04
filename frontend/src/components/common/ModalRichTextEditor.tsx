@@ -24,7 +24,7 @@ const ModalRichTextEditor = forwardRef<RichTextEditorRef, ModalRichTextEditorPro
   required = false,
   className = '',
   ariaLabelledBy,
-  height = '420px',
+  height = '320px',
   resize = true,
   ...editorProps
 }, ref) => {
@@ -32,28 +32,48 @@ const ModalRichTextEditor = forwardRef<RichTextEditorRef, ModalRichTextEditorPro
 
   return (
     <div className={`modal-rich-text-editor ${className}`.trim()}>
-      {label && (
-        <div className="modal-rich-text-editor__header">
+      {label ? (
+        <div className="form-field form-field--rich-text">
           <LabelWithHelp id={labelId} as="span" className="form-label small mb-0" required={required}>
             {label}
           </LabelWithHelp>
+          <div className="form-field-control">
+            {helperText && (
+              <small className="form-helper-message mb-1">{helperText}</small>
+            )}
+            <div className="modal-rich-text-editor__body">
+              <Suspense fallback={<RichTextEditorFallback />}>
+                <RichTextEditor
+                  ref={ref}
+                  key={editorKey}
+                  ariaLabelledBy={resolvedAriaLabelledBy}
+                  height={height}
+                  resize={resize}
+                  {...editorProps}
+                />
+              </Suspense>
+            </div>
+          </div>
         </div>
+      ) : (
+        <>
+          {helperText && (
+            <small className="form-helper-message mb-1">{helperText}</small>
+          )}
+          <div className="modal-rich-text-editor__body">
+            <Suspense fallback={<RichTextEditorFallback />}>
+              <RichTextEditor
+                ref={ref}
+                key={editorKey}
+                ariaLabelledBy={resolvedAriaLabelledBy}
+                height={height}
+                resize={resize}
+                {...editorProps}
+              />
+            </Suspense>
+          </div>
+        </>
       )}
-      {helperText && (
-        <small className="form-helper-message mb-1">{helperText}</small>
-      )}
-      <div className="modal-rich-text-editor__body">
-        <Suspense fallback={<RichTextEditorFallback />}>
-          <RichTextEditor
-            ref={ref}
-            key={editorKey}
-            ariaLabelledBy={resolvedAriaLabelledBy}
-            height={height}
-            resize={resize}
-            {...editorProps}
-          />
-        </Suspense>
-      </div>
     </div>
   );
 });
