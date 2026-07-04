@@ -1,7 +1,6 @@
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const ForkTsCheckerWebpackPlugin = require('react-dev-utils/ForkTsCheckerWebpackPlugin');
 const ForkTsCheckerWarningWebpackPlugin = require('react-dev-utils/ForkTsCheckerWarningWebpackPlugin');
-const ESLintWebpackPlugin = require('eslint-webpack-plugin');
 
 function stripResolveUrlLoader(rules) {
   if (!rules) return;
@@ -58,6 +57,7 @@ module.exports = {
       stripResolveUrlLoader(webpackConfig.module.rules);
 
       if (env === 'development') {
+        const ESLintWebpackPlugin = require('eslint-webpack-plugin');
         // Typecheck fica no IDE; ForkTsChecker recompila ~850 arquivos .ts/.tsx em paralelo
         webpackConfig.plugins = webpackConfig.plugins.filter(
           (plugin) =>

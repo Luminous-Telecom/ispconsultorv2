@@ -89,6 +89,9 @@
     "sass": "^1.97.2"
   },
   "overrides": {
+    "ajv-keywords@^5.0.0": {
+      "ajv": "^8.17.1"
+    },
     "@tootallnate/once": "^2.0.1",
     "js-yaml": "^4.1.1",
     "nth-check": "^2.1.1",
