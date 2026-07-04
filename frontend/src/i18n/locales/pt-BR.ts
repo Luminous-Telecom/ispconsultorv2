@@ -803,6 +803,7 @@ const ptBR: TranslationKeys = {
     'form.tradeName': 'Nome Fantasia',
     'form.active': 'Cliente Ativo',
     'form.status': 'Status',
+    'form.lastUpdated': 'Última atualização',
     'form.plan': 'Plano',
     'form.startDate': 'Data de Início',
     'form.endDate': 'Data de Fim',

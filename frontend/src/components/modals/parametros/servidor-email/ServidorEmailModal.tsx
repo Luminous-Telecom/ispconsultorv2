@@ -9,6 +9,7 @@ import { ServidorEmailService, MensagemEmail } from 'services/servidorEmailServi
 import DraggableModal from 'components/common/DraggableModal';
 import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
 import { FecharButton, LimparButton, Loading, RemoverButton, SalvarButton } from 'components/ui';
+import { formatDateTime } from 'utils/formatters';
 import { ServidorEmailForm, ServidorEmailModalProps } from './types';
 import ServidorTab from './abas/ServidorTab';
 import MensagensTab from './abas/MensagensTab';
@@ -87,6 +88,11 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
     },
     enabled: !!mensagemType
   });
+
+  const ultimaAtualizacaoMensagem = useMemo(
+    () => (mensagemData?.updated_at ? formatDateTime(mensagemData.updated_at) : '-'),
+    [mensagemData?.updated_at],
+  );
 
   // Buscar servidor ativo
   const { data: servidorAtivo, isLoading } = useQuery({
@@ -362,6 +368,7 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
                 mensagemTexto={mensagemTexto}
                 mensagemManual={mensagemManual}
                 editorKey={editorKey}
+                lastUpdated={ultimaAtualizacaoMensagem}
                 onMensagemTypeChange={setMensagemType}
                 onTipoEnvioChange={setTipoEnvio}
                 onMensagemTextoChange={setMensagemTexto}

@@ -7,7 +7,7 @@ import { useI18n } from 'contexts/I18nContext';
 const ReciboTab: React.FC<DocumentoTabProps> = ({
   value,
   onChange,
-  editorKey
+  editorKey,
 }) => {
   const { t } = useI18n();
   const editorRef = useRef<RichTextEditorRef | null>(null);

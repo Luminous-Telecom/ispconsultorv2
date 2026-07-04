@@ -40,6 +40,7 @@ export interface MensagensTabProps {
   mensagemTexto: string;
   mensagemManual?: string;
   editorKey?: number;
+  lastUpdated?: string;
   onMensagemTypeChange: (value: string) => void;
   onTipoEnvioChange: (value: MensagemTipoEnvio) => void;
   onMensagemTextoChange: (value: string) => void;

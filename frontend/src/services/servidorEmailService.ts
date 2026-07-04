@@ -44,6 +44,7 @@ export interface MensagemEmail {
   mensagem_padrao: string;
   mensagem_manual?: string;
   ativo: boolean;
+  updated_at?: string;
 }
 
 const normalizeResponse = <T>(response: ApiResponse<T>, fallback: T): ApiResponse<T> => ({

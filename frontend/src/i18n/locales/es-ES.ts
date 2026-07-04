@@ -805,6 +805,7 @@ const esES: TranslationKeys = {
     'form.tradeName': 'Nombre Comercial',
     'form.active': 'Cliente Activo',
     'form.status': 'Estado',
+    'form.lastUpdated': 'Última actualización',
     'form.plan': 'Plan',
     'form.startDate': 'Fecha de Inicio',
     'form.endDate': 'Fecha de Fin',

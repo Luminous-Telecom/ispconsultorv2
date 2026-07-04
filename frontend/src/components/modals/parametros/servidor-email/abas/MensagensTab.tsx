@@ -1,5 +1,6 @@
 import React from 'react';
 import ModalRichTextEditor from 'components/common/ModalRichTextEditor';
+import FormField from 'components/ui/FormField';
 import { MensagemTypeSelect, MensagemTipoEnvioRadio } from 'components/modals/parametros/servidor-shared';
 import { MensagensTabProps } from '../types';
 import { useI18n } from 'contexts/I18nContext';
@@ -10,6 +11,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
   mensagemTexto,
   mensagemManual = '<p></p>',
   editorKey = 0,
+  lastUpdated,
   onMensagemTypeChange,
   onTipoEnvioChange,
   onMensagemTextoChange,
@@ -67,6 +69,19 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
               placeholder={t('placeholder.defaultEmail')}
             />
           )}
+          <div className="row g-2 mb-0">
+            <div className="col-12">
+              <FormField
+                name="ultima_atualizacao"
+                type="text"
+                label={t('form.lastUpdated')}
+                value={lastUpdated ?? '-'}
+                readOnly
+                disabled
+                size="sm"
+              />
+            </div>
+          </div>
         </>
       )}
     </div>

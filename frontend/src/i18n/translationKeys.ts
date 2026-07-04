@@ -788,6 +788,7 @@ export interface TranslationKeys {
   'form.tradeName': string;
   'form.active': string;
   'form.status': string;
+  'form.lastUpdated': string;
   'form.plan': string;
   'form.startDate': string;
   'form.endDate': string;

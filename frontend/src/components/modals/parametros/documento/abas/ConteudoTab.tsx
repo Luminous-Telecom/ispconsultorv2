@@ -7,7 +7,7 @@ const ConteudoTab: React.FC<DocumentoTabProps> = ({
   value,
   onChange,
   editorKey,
-  placeholder = "Digite o conteúdo do documento..."
+  placeholder = "Digite o conteúdo do documento...",
 }) => {
   const editorRef = useRef<RichTextEditorRef | null>(null);
 

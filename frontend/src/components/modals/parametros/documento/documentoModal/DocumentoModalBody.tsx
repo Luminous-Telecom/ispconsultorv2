@@ -143,6 +143,20 @@ function DocumentoModalBody({
 
         <div className="row g-2 mb-0">
           <div className="col-12">
+            <FormField
+              name="ultima_atualizacao"
+              type="text"
+              label={t('form.lastUpdated')}
+              value={ultimaAtualizacao}
+              readOnly
+              disabled
+              size="sm"
+            />
+          </div>
+        </div>
+
+        <div className="row g-2 mb-0">
+          <div className="col-12">
             <EntitySelectField
               value={clienteTesteId || 0}
               onChange={(value) => setClienteTesteId(value)}
@@ -154,17 +168,6 @@ function DocumentoModalBody({
               label={t('document.testClient')}
               idFieldTitle={t('document.idPlaceholder')}
               helpText={t('document.testClientHelp')}
-            />
-          </div>
-          <div className="col-12">
-            <FormField
-              name="ultima_atualizacao"
-              type="text"
-              label={t('document.lastUpdated')}
-              value={ultimaAtualizacao}
-              readOnly
-              disabled
-              size="sm"
             />
           </div>
         </div>

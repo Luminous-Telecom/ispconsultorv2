@@ -7,7 +7,7 @@ const AdesaoTab: React.FC<DocumentoTabProps> = ({
   value,
   onChange,
   editorKey,
-  placeholder = "Digite o conteúdo do termo de adesão..."
+  placeholder = "Digite o conteúdo do termo de adesão...",
 }) => {
   const editorRef = useRef<RichTextEditorRef | null>(null);
 

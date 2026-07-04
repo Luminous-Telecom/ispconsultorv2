@@ -803,6 +803,7 @@ const enUS: TranslationKeys = {
     'form.tradeName': 'Trade Name',
     'form.active': 'Active Client',
     'form.status': 'Status',
+    'form.lastUpdated': 'Last updated',
     'form.plan': 'Plan',
     'form.startDate': 'Start Date',
     'form.endDate': 'End Date',
