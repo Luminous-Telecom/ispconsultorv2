@@ -191,11 +191,11 @@ const SshDeviceModalDadosTab: React.FC<SshDeviceModalDadosTabProps> = ({
           type="password"
           label={
             isEditing
-              ? (formData.device_type === 'swos'
-                ? 'Nova Senha HTTP (deixe em branco para manter)'
-                : 'Nova Senha (deixe em branco para manter)')
+              ? t('user.newPassword')
               : (formData.device_type === 'swos' ? 'Senha HTTP' : 'Senha SSH')
           }
+          helpText={isEditing ? t('emailServer.passwordHelp') : undefined}
+          placeholder={isEditing ? t('user.newPasswordPlaceholder') : undefined}
           value={formData.password}
           onChange={onFieldChange('password')}
           error={errors.password}
