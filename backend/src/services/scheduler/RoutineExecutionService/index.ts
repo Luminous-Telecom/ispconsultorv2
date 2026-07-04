@@ -1,4 +1,3 @@
-import { Op, type WhereOptions } from 'sequelize';
 import { ScheduledRoutine } from '../../../models/sistema/ScheduledRoutine';
 import SaasScheduledRoutine from '../../../models/saas/SaasScheduledRoutine';
 import { SshDevice } from '../../../models/ssh-manager/SshDevice';
@@ -31,6 +30,7 @@ interface ContratoWithPlano {
   valor_final: number | null;
   desconto_valor: number | null;
   desconto_percentual: number | null;
+  data_validade_desconto?: Date | string | null;
   data_inicio: Date | null;
   tipo_cobranca_contrato_id?: number | null;
   plano?: {
@@ -296,7 +296,6 @@ export class RoutineExecutionService {
    */
   public async executeGeracaoTitulos(routine: ScheduledRoutine): Promise<GeracaoTitulosResult> {
     const { Contrato: ContratoModel } = await import('../../../models/contratos/Contrato');
-    const { Titulo } = await import('../../../models/financeiro/Titulo');
     const { Plano } = await import('../../../models/cadastros/Plano');
     const { default: Parametros } = await import('../../../models/sistema/Parametros');
     
@@ -364,7 +363,6 @@ export class RoutineExecutionService {
       for (const contrato of contratos) {
         try {
           const contratoWithCliente = contrato as unknown as ContratoWithCliente;
-          const contratoAny = contrato as unknown as { id: number; cliente_id: number; isento_mensalidade?: boolean; conta_boleto?: number | null; dia_vencimento_id?: number | null };
 
           if (!TituloGenerationHelper.validateContrato(contratoWithCliente)) continue;
 
@@ -385,7 +383,7 @@ export class RoutineExecutionService {
           const tipoCobranca = contratoWithPlano.tipoCobrancaContrato;
           const qtdTitulos = tipoCobranca ? tipoCobranca.quantidade_titulos : quantidadeMinimaTitulos;
           const resultado = await ContratoTituloProcessor.processContrato(
-            contratoWithPlano as any,
+            contratoWithPlano,
             titulosEmAberto,
             todosTitulos,
             diaVencimento,

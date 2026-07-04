@@ -1,8 +1,6 @@
-import { Op } from 'sequelize';
 import type { Transaction } from 'sequelize';
 import { logger } from '../../../../utils/logger';
 import { normalizeDateForDb, formatDate, ajustarDataVencimento } from '../../../../utils/dateUtils';
-import { withTransaction } from '../../../../utils/transaction';
 import { metrics, isMetricsEnabled } from '../../../../utils/metrics';
 import { registrarCriacao } from '../../../sistema/AuditoriaService';
 import type { Request } from 'express';
@@ -19,6 +17,7 @@ interface ContratoWithPlano {
   valor_final: number | null;
   desconto_valor: number | null;
   desconto_percentual: number | null;
+  data_validade_desconto?: Date | string | null;
   data_inicio: Date | null;
   plano?: {
     valor_mensal: number;
@@ -211,25 +210,58 @@ export class TituloGenerationHelper {
   }
 
   /**
+   * Desconto vence no início da data configurada; a partir desse dia já não aplica.
+   */
+  static isDescontoVigente(
+    dataValidadeDesconto: Date | string | null | undefined,
+    dataReferencia: Date
+  ): boolean {
+    const dataValidade = normalizeDateForDb(dataValidadeDesconto);
+    if (!dataValidade) {
+      return true;
+    }
+
+    const validade = new Date(
+      dataValidade.getFullYear(),
+      dataValidade.getMonth(),
+      dataValidade.getDate()
+    );
+    const referencia = new Date(
+      dataReferencia.getFullYear(),
+      dataReferencia.getMonth(),
+      dataReferencia.getDate()
+    );
+
+    return referencia < validade;
+  }
+
+  /**
    * Calcula o valor do título incluindo serviços adicionais
    */
   static async calculateValorTitulo(
     contrato: ContratoWithPlano,
-    servicosAdicionais: Array<ContratoPlanoAdicionalWithPlano>
+    servicosAdicionais: Array<ContratoPlanoAdicionalWithPlano>,
+    dataVencimento: Date
   ): Promise<number> {
     const plano = contrato.plano;
-    
-    let valorTitulo: number = Number(contrato.valor_final) || 0;
-    
+
+    const { FinancialCalculationsService } = await import('../../../FinancialCalculationsService');
+    const isDescontoVigente = this.isDescontoVigente(
+      contrato.data_validade_desconto,
+      dataVencimento
+    );
+
+    let valorTitulo: number = isDescontoVigente ? Number(contrato.valor_final) || 0 : 0;
+
     if (valorTitulo <= 0 && plano?.valor_mensal) {
-      const { FinancialCalculationsService } = await import('../../../FinancialCalculationsService');
-      
       valorTitulo = FinancialCalculationsService.calcularValorFinal(
         Number(plano.valor_mensal),
-        {
-          desconto_valor: contrato.desconto_valor,
-          desconto_percentual: contrato.desconto_percentual
-        }
+        isDescontoVigente
+          ? {
+              desconto_valor: contrato.desconto_valor,
+              desconto_percentual: contrato.desconto_percentual
+            }
+          : undefined
       );
     }
 
@@ -240,8 +272,6 @@ export class TituloGenerationHelper {
       const planoAdicional = servico.plano;
       
       if (valorServico <= 0 && planoAdicional?.valor_mensal) {
-        const { FinancialCalculationsService } = await import('../../../FinancialCalculationsService');
-        
         valorServico = FinancialCalculationsService.calcularValorFinal(
           Number(planoAdicional.valor_mensal),
           {
@@ -256,7 +286,6 @@ export class TituloGenerationHelper {
 
     valorTitulo = valorTitulo + valorServicosAdicionais;
 
-    const { FinancialCalculationsService } = await import('../../../FinancialCalculationsService');
     return Math.max(0.01, FinancialCalculationsService.round(valorTitulo));
   }
 

@@ -14,12 +14,13 @@ interface ContratoWithPlano {
   valor_final: number | null;
   desconto_valor: number | null;
   desconto_percentual: number | null;
+  data_validade_desconto?: Date | string | null;
   data_inicio: Date | null;
   isento_mensalidade?: boolean;
   plano?: {
     valor_mensal: number;
     nome_plano?: string;
-    periodicidade?: Periodicidade;
+    periodicidade?: Periodicidade | string | null;
   };
   tipoCobrancaContrato?: {
     quantidade_titulos: number;
@@ -44,6 +45,8 @@ interface ContratoPlanoAdicionalWithPlano {
   contrato_id: number;
 }
 
+type TituloInstance = InstanceType<typeof import('../../../../models/financeiro/Titulo').Titulo>;
+
 export class ContratoTituloProcessor {
   /**
    * Processa um contrato e gera os títulos necessários
@@ -56,7 +59,7 @@ export class ContratoTituloProcessor {
     quantidadeMinimaTitulos: number,
     parametros: Parametros | null,
     servicosAdicionais: Array<ContratoPlanoAdicionalWithPlano>
-  ): Promise<{ titulosGerados: number; titulosCriados: Array<any> }> {
+  ): Promise<{ titulosGerados: number; titulosCriados: Array<TituloInstance> }> {
     if (contrato.isento_mensalidade === true) {
       return { titulosGerados: 0, titulosCriados: [] };
     }
@@ -93,7 +96,7 @@ export class ContratoTituloProcessor {
       anoAtual = hoje.getFullYear();
     }
 
-    const titulosCriadosNaTransacao: Array<any> = [];
+    const titulosCriadosNaTransacao: Array<TituloInstance> = [];
     let titulosGerados = 0;
 
     const avancarPeriodo = (): void => {
@@ -152,7 +155,8 @@ export class ContratoTituloProcessor {
         if (podeGerar) {
           const valorTitulo = await TituloGenerationHelper.calculateValorTitulo(
             contrato,
-            servicosAdicionais
+            servicosAdicionais,
+            dataVencimento
           );
 
           const timestamp = Date.now();

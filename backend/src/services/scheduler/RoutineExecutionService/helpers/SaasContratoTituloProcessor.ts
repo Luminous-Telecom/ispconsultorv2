@@ -13,6 +13,9 @@ export interface SaasContratoWithPlano {
   conta_boleto: number;
   dia_vencimento_id: number;
   valor: number;
+  desconto_percentual?: number | null;
+  desconto_valor?: number | null;
+  data_validade_desconto?: string | Date | null;
   data_inicio: string | Date;
   tipo: string;
   plano?: {
@@ -130,7 +133,29 @@ export class SaasContratoTituloProcessor {
           continue;
         }
 
-        const valorTitulo = Number(contrato.valor) || Number(contrato.plano?.valor_mensal) || 0;
+        const isDescontoVigente = TituloGenerationHelper.isDescontoVigente(
+          contrato.data_validade_desconto,
+          dataVencimento
+        );
+        let valorTitulo = isDescontoVigente ? Number(contrato.valor) || 0 : 0;
+
+        if (valorTitulo <= 0 && contrato.plano?.valor_mensal) {
+          const { FinancialCalculationsService } = await import('../../../FinancialCalculationsService');
+          valorTitulo = FinancialCalculationsService.calcularValorFinal(
+            Number(contrato.plano.valor_mensal),
+            isDescontoVigente
+              ? {
+                  desconto_valor: contrato.desconto_valor,
+                  desconto_percentual: contrato.desconto_percentual,
+                }
+              : undefined
+          );
+        }
+
+        if (valorTitulo <= 0) {
+          valorTitulo = Number(contrato.valor) || Number(contrato.plano?.valor_mensal) || 0;
+        }
+
         if (valorTitulo <= 0) {
           avancarPeriodo();
           continue;
