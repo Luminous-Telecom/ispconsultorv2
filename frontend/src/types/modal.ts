@@ -85,6 +85,7 @@ export interface ListModalProps<T> {
   skipWrapper?: boolean;
   /** Exibe título abaixo das abas (EmbeddedTablePanel) quando embutido em modal com abas */
   showEmbeddedTableTitle?: boolean;
+  customControls?: React.ReactNode;
   customControlsAfterActions?: React.ReactNode;
   /** ID estável da tabela para persistir larguras de colunas no localStorage (redimensionamento) */
   tableId?: string;

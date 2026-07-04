@@ -38,6 +38,7 @@ function ListModal<T extends { id: number | string }>({
   onFilterChange: _onFilterChange,
   onFiltersChange,
   onClearFilters: _onClearFilters,
+  customControls,
   customControlsAfterActions,
   tableId,
   modalId,
@@ -152,6 +153,7 @@ function ListModal<T extends { id: number | string }>({
       className: 'no-padding',
       filters: filters || [],
       bulkActions: mappedBulkActions,
+      customControls,
       customControlsAfterActions,
     }),
     [
@@ -174,6 +176,7 @@ function ListModal<T extends { id: number | string }>({
       emptyMessage,
       filters,
       mappedBulkActions,
+      customControls,
       customControlsAfterActions,
     ]
   );

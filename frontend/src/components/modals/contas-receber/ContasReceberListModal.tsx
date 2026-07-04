@@ -4,6 +4,7 @@ import { useEntityListModal } from 'hooks/useEntityListModal';
 import { useI18n } from 'contexts/I18nContext';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import ListModal from 'components/common/ListModal';
+import { TableFilterCheckbox } from 'components/ui';
 import { ContasReceberListModalProps, SelectedParcela, TituloItemUnion } from './contasReceberListTypes';
 import { createGetStatusBadge } from './contasReceberListUtils';
 import { useContasReceberListColumns } from './contasReceberListColumns';
@@ -146,26 +147,35 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
     [onSelectTitulo, onClose]
   );
 
+  const customControls = useMemo(
+    () => (
+      <TableFilterCheckbox
+        id="contas-receber-show-canceled"
+        name="contas-receber-show-canceled"
+        label={t('filter.showCanceled')}
+        checked={showCancelados}
+        onChange={(checked) =>
+          handleShowCanceladosChange({ target: { checked } } as React.ChangeEvent<HTMLInputElement>)
+        }
+      />
+    ),
+    [showCancelados, handleShowCanceladosChange, t]
+  );
+
   const customControlsAfterActions = useMemo(
     () => (
       <ContasReceberListFilters
-        showCancelados={showCancelados}
         dataVencimentoInicio={dataVencimentoInicio}
         dataVencimentoFim={dataVencimentoFim}
-        onShowCanceladosChange={handleShowCanceladosChange}
         onDataVencimentoInicioChange={handleDataVencimentoInicioChange}
         onDataVencimentoFimChange={handleDataVencimentoFimChange}
-        t={t}
       />
     ),
     [
-      showCancelados,
-      handleShowCanceladosChange,
       dataVencimentoInicio,
       dataVencimentoFim,
       handleDataVencimentoInicioChange,
       handleDataVencimentoFimChange,
-      t,
     ]
   );
 
@@ -221,6 +231,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
         onRowDoubleClick={onSelectTitulo ? handleRowSelect : undefined}
         onAudit={handleAudit}
         auditEntity={isSaas ? 'SaasTitulo' : 'Titulo'}
+        customControls={customControls}
         customControlsAfterActions={customControlsAfterActions}
         tableId="financeiro-modal"
         modalId="financeiro-modal"
