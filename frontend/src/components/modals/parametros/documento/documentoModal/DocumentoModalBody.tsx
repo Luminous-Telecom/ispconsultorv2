@@ -3,6 +3,7 @@ import FormField from 'components/ui/FormField';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import { LabelWithHelp } from 'components/ui/LabelWithHelp';
 import { useI18n } from 'contexts/I18nContext';
+import { formatDateTime } from 'utils/formatters';
 import ContratoTab from '../abas/ContratoTab';
 import AdesaoTab from '../abas/AdesaoTab';
 import PermanenciaTab from '../abas/PermanenciaTab';
@@ -50,6 +51,9 @@ function DocumentoModalBody({
 }: DocumentoModalBodyProps) {
   const { t } = useI18n();
   const editorKeyPrefix = `${isEditing ? currentDocumento?.id : 'create'}`;
+  const ultimaAtualizacao = isEditing && currentDocumento?.updated_at
+    ? formatDateTime(currentDocumento.updated_at)
+    : '-';
 
   return (
     <div className="documento-modal-content">
@@ -77,20 +81,6 @@ function DocumentoModalBody({
               onChange={(value) => setFormData((prev) => ({ ...prev, descricao: String(value ?? '') }))}
               placeholder={t('placeholder.description')}
               size="sm"
-            />
-          </div>
-          <div className="col-12">
-            <EntitySelectField
-              value={clienteTesteId || 0}
-              onChange={(value) => setClienteTesteId(value)}
-              onShowModal={onShowClienteModal}
-              entities={clientesDisponiveis.map((c) => ({
-                id: c.id,
-                nome: c.razao_social,
-              }))}
-              label={t('document.testClient')}
-              idFieldTitle={t('document.idPlaceholder')}
-              helpText={t('document.testClientHelp')}
             />
           </div>
         </div>
@@ -148,6 +138,34 @@ function DocumentoModalBody({
                 />
               )}
             </div>
+          </div>
+        </div>
+
+        <div className="row g-2 mb-0">
+          <div className="col-12">
+            <EntitySelectField
+              value={clienteTesteId || 0}
+              onChange={(value) => setClienteTesteId(value)}
+              onShowModal={onShowClienteModal}
+              entities={clientesDisponiveis.map((c) => ({
+                id: c.id,
+                nome: c.razao_social,
+              }))}
+              label={t('document.testClient')}
+              idFieldTitle={t('document.idPlaceholder')}
+              helpText={t('document.testClientHelp')}
+            />
+          </div>
+          <div className="col-12">
+            <FormField
+              name="ultima_atualizacao"
+              type="text"
+              label={t('document.lastUpdated')}
+              value={ultimaAtualizacao}
+              readOnly
+              disabled
+              size="sm"
+            />
           </div>
         </div>
         </div>

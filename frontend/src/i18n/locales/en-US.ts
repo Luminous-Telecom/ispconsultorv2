@@ -1206,6 +1206,7 @@ const enUS: TranslationKeys = {
     'document.cartaCobranca': 'Collection Letter',
     'document.name': 'Name',
     'document.description': 'Description',
+    'document.lastUpdated': 'Last updated',
     'document.testClient': 'Test Client',
     'document.testClientHelp': 'Select a client to view the document with real data',
     'document.idPlaceholder': 'Enter Client ID',

@@ -257,6 +257,26 @@ body .draggable-modal-container-custom .modal-body.draggable-modal-body-custom:h
 }
 
 [class*="-modal-content"] > form.form-modal-simple:has(.modal-rich-text-editor) {
+  flex: 0 0 auto !important;
+  min-height: auto !important;
+  overflow: visible !important;
+}
+
+[class*="-modal-content"]:has(.modal-rich-text-editor) {
+  justify-content: flex-start !important;
+}
+
+/* Rich text redimensionável: aba rola quando o TinyMCE cresce */
+[class$='-tab-content-padded']:has(.modal-rich-text-editor),
+form.form-modal-simple:has(.modal-rich-text-editor) > [class$='-tab-content-padded'] {
+  flex: 0 0 auto !important;
+  min-height: auto !important;
+  overflow-y: auto !important;
+}
+
+[class*='-modal-content'] > .tab-content > form.form-modal-simple:has(.modal-rich-text-editor) {
+  flex: 0 0 auto !important;
+  min-height: auto !important;
   overflow: visible !important;
 }
 
@@ -325,18 +345,6 @@ body .draggable-modal-container-custom .modal-body.draggable-modal-body-custom:h
   overflow-x: hidden !important;
   overflow-y: auto !important;
   @include form-modal-tab-padding;
-}
-
-/* Rich text redimensionável: aba rola quando o TinyMCE cresce */
-[class$='-tab-content-padded']:has(.modal-rich-text-editor),
-form.form-modal-simple:has(.modal-rich-text-editor) > [class$='-tab-content-padded'] {
-  overflow-y: auto !important;
-}
-
-[class*='-modal-content'] > .tab-content > form.form-modal-simple:has(.modal-rich-text-editor) {
-  flex: 0 0 auto !important;
-  min-height: auto !important;
-  overflow: visible !important;
 }
 
 .documento-editor-layout:has(.modal-rich-text-editor),
@@ -3150,48 +3158,47 @@ textarea:focus {
 }
 
 .draggable-modal-container-custom.documento-modal {
-  > .draggable-modal-header-custom {
-    padding: 10px 14px 12px 14px !important;
-    gap: 10px;
-
-    > .d-flex {
-      padding-inline: 1.5rem;
-      margin-bottom: 4px;
-    }
-
-    .draggable-modal-title-custom.with-actions {
-      margin-bottom: 0 !important;
-    }
-  }
-
   > .draggable-modal-body-custom {
     padding: 0 !important;
     overflow: hidden !important;
     flex: 1 1 0 !important;
     min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
   }
 
   .documento-modal-content {
     flex: 1 1 0;
     min-height: 0;
     width: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-self: stretch;
   }
 
-  .documento-modal-content > form.form-modal-simple {
-    flex: 1 1 0;
-    min-height: 0;
+  .documento-modal-content > form.form-modal-simple,
+  .documento-modal-content > form.form-modal-simple:has(.modal-rich-text-editor) {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
     width: 100%;
     display: flex;
     flex-direction: column;
-    overflow: visible;
+    overflow: hidden !important;
+    justify-content: flex-start;
   }
 
-  .documento-tab-content-padded {
-    flex: 1 1 0;
-    min-height: 0;
+  .documento-tab-content-padded,
+  .documento-tab-content-padded:has(.modal-rich-text-editor) {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
     width: 100%;
     overflow-y: auto !important;
     overflow-x: hidden !important;
+    justify-content: flex-start;
+    gap: var(--form-field-row-gap);
   }
 
   .documento-editor-layout:has(.modal-rich-text-editor) {
@@ -3199,11 +3206,6 @@ textarea:focus {
     min-height: auto !important;
     height: auto !important;
   }
-
-  .documento-tab-content-padded:has(.modal-rich-text-editor) {
-    justify-content: flex-start;
-  }
-
 }
 
 .draggable-modal-container-custom.imprimir-modal {

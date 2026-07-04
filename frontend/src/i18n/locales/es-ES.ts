@@ -1208,6 +1208,7 @@ const esES: TranslationKeys = {
     'document.cartaCobranca': 'Carta de Cobro',
     'document.name': 'Nombre',
     'document.description': 'Descripción',
+    'document.lastUpdated': 'Última actualización',
     'document.testClient': 'Cliente para Prueba',
     'document.testClientHelp': 'Seleccione un cliente para ver el documento con datos reales',
     'document.idPlaceholder': 'Ingrese el ID del cliente',

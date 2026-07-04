@@ -456,19 +456,6 @@ $truncate-widths: (
   min-width: 0;
 }
 
-/* Alinha o início do editor com a coluna dos inputs, sem limitar a 420px */
-.form-field.form-field--rich-text {
-  max-width: none;
-  width: 100%;
-
-  > .form-field-control {
-    max-width: none;
-    flex: 1 1 auto;
-    width: auto;
-    min-width: 0;
-  }
-}
-
 /* TinyMCE usa skin claro (oxide); menus auxiliares ficam no body fora do modal */
 body[data-app="system"] .tox-tinymce-aux,
 body[data-app="system"] .tox-tinymce-aux .tox {
@@ -764,6 +751,7 @@ body[data-app="system"] .tox-tinymce-aux .tox {
     flex: 0 0 auto;
     min-height: auto;
     height: auto;
+    width: 100%;
   }
 
   &:has(.modal-rich-text-editor) > .modal-rich-text-editor {

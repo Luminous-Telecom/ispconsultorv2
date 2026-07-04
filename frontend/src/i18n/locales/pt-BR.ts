@@ -1206,6 +1206,7 @@ const ptBR: TranslationKeys = {
     'document.cartaCobranca': 'Carta de Cobrança',
     'document.name': 'Nome',
     'document.description': 'Descrição',
+    'document.lastUpdated': 'Última atualização',
     'document.testClient': 'Cliente para Teste',
     'document.testClientHelp': 'Selecione um cliente para visualizar o documento com dados reais',
     'document.idPlaceholder': 'Digite o ID do cliente',

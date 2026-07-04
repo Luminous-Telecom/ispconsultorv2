@@ -1037,6 +1037,7 @@ export interface TranslationKeys {
   'document.cartaCobranca': string;
   'document.name': string;
   'document.description': string;
+  'document.lastUpdated': string;
   'document.testClient': string;
   'document.testClientHelp': string;
   'document.idPlaceholder': string;
