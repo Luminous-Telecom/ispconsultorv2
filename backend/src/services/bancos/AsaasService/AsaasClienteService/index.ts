@@ -2,7 +2,23 @@ import axios from 'axios';
 import { Cliente } from '../../../../models/clientes/Cliente';
 import { Banco } from '../../../../models/cadastros/Banco';
 import { logger } from '../../../../utils/logger';
-import asaasConfig from '../../../../config/bancos/asaas';
+
+interface AsaasClientePayload {
+  name: string;
+  email?: string;
+  phone?: string;
+  mobilePhone?: string;
+  cpfCnpj?: string;
+  postalCode?: string;
+  address?: string;
+  addressNumber?: string;
+  complement?: string;
+  province?: string;
+  city?: string;
+  state?: string;
+  externalReference: string;
+  notificationDisabled: boolean;
+}
 
 export class AsaasClienteService {
   /**
@@ -32,7 +48,7 @@ export class AsaasClienteService {
               return customerId;
             }
           }
-        } catch (searchError: any) {
+        } catch (searchError: unknown) {
           // Se falhar na busca, continuar para criar novo
           logger.warn('Erro ao buscar cliente no Asaas, criando novo', {
             cliente_id: cliente.id,
@@ -73,7 +89,7 @@ export class AsaasClienteService {
   /**
    * Monta payload para criação/atualização de cliente no Asaas
    */
-  private static montarPayloadCliente(cliente: Cliente): Record<string, any> {
+  private static montarPayloadCliente(cliente: Cliente): AsaasClientePayload {
     const telefone = this.normalizePhone(cliente.telefone);
     const cpfCnpj = this.sanitizeDigits(cliente.cnpj || '');
 
@@ -90,7 +106,8 @@ export class AsaasClienteService {
       province: cliente.bairro || undefined,
       city: cliente.cidade || undefined,
       state: cliente.estado || undefined,
-      externalReference: `cliente_${cliente.id}`
+      externalReference: `cliente_${cliente.id}`,
+      notificationDisabled: true
     };
   }
 
