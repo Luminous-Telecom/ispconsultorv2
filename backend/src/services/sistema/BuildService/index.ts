@@ -98,6 +98,10 @@ export class BuildService {
           const msg = 'doc/.vitepress/dist/index.html não foi gerado';
           return { success: false, stdout: '', stderr: msg, error: msg };
         }
+        await execAsync('bash scripts/verify-dist.sh', {
+          cwd: path.join(this.projectRoot, 'doc'),
+          maxBuffer: MAX_BUFFER,
+        });
         parts.push('wiki (doc) compilada');
       }
 

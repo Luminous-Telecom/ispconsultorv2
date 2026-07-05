@@ -4,8 +4,10 @@
   "description": "Central de ajuda do Backnet (VitePress)",
   "main": "index.js",
   "scripts": {
+    "prebuild": "rm -rf .vitepress/dist .vitepress/cache",
     "dev": "vitepress dev",
     "build": "vitepress build",
+    "postbuild": "bash scripts/verify-dist.sh",
     "start": "vitepress preview --port 4000 --host 0.0.0.0",
     "update": "bash scripts/update.sh",
     "docs:dev": "vitepress dev",

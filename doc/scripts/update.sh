@@ -41,8 +41,8 @@ fi
 log "Instalando dependências da documentação..."
 npm install --prefix doc
 
-log "Gerando build de produção..."
-npm run doc:build
+log "Gerando build de produção (dist limpo + verificação de assets)..."
+npm run build --prefix doc
 
 log "Reiniciando PM2..."
 if pm2 describe doc >/dev/null 2>&1; then
