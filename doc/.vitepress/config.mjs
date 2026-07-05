@@ -11,7 +11,11 @@ export default defineConfig({
   lang: 'pt-BR',
   title: "Central de Ajuda",
   description: "Wiki ISP Consultor — central de ajuda para consultores que atendem clientes",
-  appearance: 'dark',
+  appearance: {
+    initialValue: 'dark',
+    valueLight: 'light',
+    valueDark: 'dark',
+  },
   head: [
     ['link', { rel: 'icon', href: '/favicon.ico', sizes: 'any' }],
     ['link', { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' }],
@@ -19,7 +23,9 @@ export default defineConfig({
     ['link', { rel: 'apple-touch-icon', href: '/favicon-32x32.png' }],
     ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
     ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
-    ['link', { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap' }]
+    ['link', { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap' }],
+    // VueUse useDark grava "" no modo claro; o script check-dark-mode do VitePress trata "" como falsy e volta ao dark
+    ['script', {}, `(function(){try{var k='vitepress-theme-appearance',v=localStorage.getItem(k);if(v==='')localStorage.setItem(k,'light')}catch(e){}})()`],
   ],
   themeConfig: {
     logo: {
