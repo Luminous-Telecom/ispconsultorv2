@@ -25,7 +25,7 @@ export interface UpdateResult {
 }
 
 /**
- * Self-update no servidor: git pull → npm install (backend) → build (backend + frontend) → migrations → PM2.
+ * Self-update no servidor: git pull → npm install (backend) → build (backend + frontend + doc) → migrations → PM2.
  */
 export class SelfUpdateService {
   private readonly projectRoot: string;
@@ -224,8 +224,8 @@ export class SelfUpdateService {
     onProgress?.({
       step: 'build',
       progress: 60,
-      message: 'Compilando código...',
-      logs: ['→ Executando build...']
+      message: 'Compilando código e wiki...',
+      logs: ['→ Executando build (backend, frontend e doc)...']
     });
     steps.build = await this.buildService.build();
     if (!steps.build.success) {

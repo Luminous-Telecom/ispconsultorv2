@@ -50,6 +50,10 @@ Ex.: `errors.central_assinante_senha` exige `central_assinante_senha` em `Client
 - Novo componente em `components/ui/` → exportar em `components/ui/index.ts`
 - Verificar imports faltando (`useI18n`, hooks, tipos)
 
+### Wiki doc
+
+Alterou menu, modal, campo, fluxo ou integração visível ao usuário → atualizar `doc/erp/` e sidebar em `doc/.vitepress/config.mjs`. Ver `doc-wiki.mdc`.
+
 ## Build — somente quando o usuário pedir push/PR
 
 Rode o build **apenas** se **todas** forem verdadeiras:

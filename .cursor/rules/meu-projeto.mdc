@@ -34,6 +34,10 @@ alwaysApply: true
 - Nunca force push para main/master
 - Nunca use commits genéricos
 
+## Wiki doc (obrigatório)
+
+Qualquer alteração visível no ERP (menu, modal, campo, fluxo, integração, parâmetro) **deve** ser refletida na wiki em `doc/`. Detalhes: `.cursor/rules/doc-wiki.mdc`
+
 ## Botões (regra crítica)
 
 Detalhes completos: `.cursor/rules/frontend-botoes.mdc`
@@ -102,5 +106,6 @@ Use sempre os primitivos do projeto. **Índice completo:** `frontend-ui-centrali
 | `frontend-terminal-logs.mdc` | Terminal e logs |
 | `frontend-react.mdc` | React Query, padrões gerais |
 | `frontend-verificacao-pos-alteracao.mdc` | Build, i18n pós-edit |
+| `doc-wiki.mdc` | Wiki VitePress — sincronizar com alterações do ERP |
 | `backend-api.mdc` | Controllers, services, API |
 | `database-migrations.mdc` | Migrações DB |

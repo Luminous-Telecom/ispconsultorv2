@@ -1,0 +1,73 @@
+---
+description: Wiki doc (VitePress) — manter sincronizada com alterações do ERP
+alwaysApply: true
+---
+
+# Wiki doc — ISP Consultor
+
+A wiki em `doc/` faz parte do sistema. **Toda alteração visível ao usuário no ERP deve ser refletida na documentação** no mesmo PR/tarefa.
+
+## Estrutura de pastas
+
+```
+doc/
+  index.md              → landing (/)
+  erp/                  → páginas da wiki (URLs /doc/*)
+    clientes/
+    cadastros/
+    ...
+  public/               → ícones e imagens estáticas
+  .vitepress/config.mjs → sidebar e nav
+```
+
+**Não** use `doc/docs/doc/` — conteúdo ERP fica só em `doc/erp/`.
+
+## Quando atualizar a wiki
+
+Atualize `doc/erp/` sempre que houver:
+
+- Nova opção de menu, modal, aba, botão ou ação em massa
+- Novo campo, filtro, validação ou fluxo em formulário
+- Mudança de comportamento, nomenclatura ou ordem de passos
+- Nova integração, parâmetro ou recurso do sistema
+- Remoção ou renomeação de funcionalidade (ajustar ou remover a página correspondente)
+
+**Não** deixe só o código — a wiki é a referência dos consultores.
+
+## Onde editar
+
+| O quê | Onde |
+|-------|------|
+| Conteúdo das páginas | `doc/erp/**/*.md` |
+| Menu lateral da wiki | `doc/.vitepress/config.mjs` → `themeConfig.sidebar['/doc/']` |
+| Página inicial da doc | `doc/erp/index.md` (DocHub) |
+| Landing | `doc/index.md` |
+
+Links internos e sidebar continuam com prefixo **`/doc/`** (rewrite automático de `erp/` → `/doc/`).
+
+## Padrão das páginas
+
+- Espelhar os **menus do ERP** (Cadastros, Financeiro, Parâmetros, etc.)
+- Descrever **caminho no menu** (ex.: **Cadastros → Clientes → aba Contratos**)
+- Listagens: referenciar [Listagens do ERP](/doc/geral/listagens) e documentar só o específico da tela
+- Passo a passo numerado para fluxos (criar, editar, sincronizar, imprimir)
+- Links internos entre páginas relacionadas (ex.: contrato → planos, bancos, documentos)
+- Encerrar com link para [Suporte e Chamados](/doc/configuracoes/suporte) quando fizer sentido
+
+## Nova funcionalidade
+
+1. Criar ou estender `.md` em `doc/erp/` no módulo correto
+2. Adicionar entrada no **sidebar** em `doc/.vitepress/config.mjs`
+3. Linkar páginas relacionadas (global ↔ aba do cliente, parâmetros ↔ uso no contrato)
+
+## Deploy
+
+O self-update via SaaS já compila e reinicia a wiki (`BuildService` + PM2 `doc`). Garantir que os `.md` commitados estejam corretos — o build roda no servidor após `git pull`.
+
+## Checklist (agente)
+
+Ao concluir tarefa que altera UI, API exposta ao usuário ou fluxo de negócio:
+
+- [ ] Página wiki existente atualizada **ou** nova página + sidebar
+- [ ] Nomes de menu/campos/botões iguais aos do ERP (via i18n pt-BR quando aplicável)
+- [ ] Links cruzados para telas dependentes (pré-requisitos, telas globais vs aba do cliente)

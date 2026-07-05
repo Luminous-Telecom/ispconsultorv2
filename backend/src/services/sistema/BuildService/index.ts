@@ -14,6 +14,9 @@ const backendBuildScriptPath = (root: string) =>
 
 const frontendSourcePath = (root: string) => path.join(root, 'frontend', 'src');
 
+const docDistIndexPath = (root: string) =>
+  path.join(root, 'doc', '.vitepress', 'dist', 'index.html');
+
 /**
  * Self-update no servidor após `git pull`.
  *
@@ -21,6 +24,7 @@ const frontendSourcePath = (root: string) => path.join(root, 'frontend', 'src');
  * commitados pelo CI. Aí não roda `tsc`/CRA no servidor: o pull já trouxe os artefatos.
  *
  * Em clone **completo** (fonte), recompila backend e/ou frontend quando as pastas existem.
+ * A wiki (`doc/`) é sempre recompilada quando `doc/package.json` existe — o output fica em `.vitepress/dist/`.
  */
 export class BuildService {
   private readonly projectRoot: string;
@@ -83,6 +87,18 @@ export class BuildService {
         } else if (fs.existsSync(frontendPkg)) {
           logger.warn('Self-update: frontend/package.json existe mas sem src e sem build/index.html');
         }
+      }
+
+      const docPkg = path.join(this.projectRoot, 'doc', 'package.json');
+      if (fs.existsSync(docPkg)) {
+        logger.info('Self-update: instalando dependências e compilando wiki (doc)');
+        await execAsync('npm install --prefix doc', { cwd: this.projectRoot, maxBuffer: MAX_BUFFER, env });
+        await execAsync('npm run build --prefix doc', { cwd: this.projectRoot, maxBuffer: MAX_BUFFER, env });
+        if (!fs.existsSync(docDistIndexPath(this.projectRoot))) {
+          const msg = 'doc/.vitepress/dist/index.html não foi gerado';
+          return { success: false, stdout: '', stderr: msg, error: msg };
+        }
+        parts.push('wiki (doc) compilada');
       }
 
       return {

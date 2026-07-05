@@ -20,3 +20,8 @@ testesuploads/
 
 # Referência local Oxidized (modelos de device), não versionar
 model
+
+# VitePress (doc/)
+doc/node_modules/
+doc/.vitepress/cache/
+doc/.vitepress/dist/

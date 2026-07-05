@@ -1,0 +1,125 @@
+# Ordens de Serviço
+
+Gestão de **ordens de serviço (OS)** dos clientes — abertura manual, acompanhamento de status e histórico. OS também podem ser **sincronizadas** do IXC quando há integração configurada.
+
+## Como acessar
+
+1. Faça login no painel administrativo.
+2. No menu lateral, abra **Suporte**.
+3. Clique em **Ordens de Serviço**.
+
+::: tip Sincronização IXC
+1. Configure [IXC Provedor](/doc/integracoes/ixc-provedor) e vincule ao contrato.
+2. Use **Verificar permissões** e confira se a quantidade em **Dados** está de acordo com o que deseja importar (ajuste o usuário da API no IXC Provedor do cliente, se necessário).
+3. Só então execute **Sincronizar dados OS** — em **Integrações → IXC Provedor** ou na [aba IXC do contrato](/doc/clientes/aba-contratos#ixc-provedor).
+
+Detalhes em [Verificar permissões antes de sincronizar OS](/doc/integracoes/ixc-provedor#verificar-permissoes-antes-de-sincronizar-os).
+:::
+
+---
+
+## Listagem
+
+A tela segue o padrão de [listagens do ERP](/doc/geral/listagens). Abaixo, apenas o que é **específico** desta tela.
+
+### Barra de ações
+
+| Botão | Função |
+|-------|--------|
+| **Novo** | Abre uma nova ordem de serviço |
+| **Editar** | Altera a OS selecionada |
+| **Deletar** | Remove a OS selecionada |
+| **Ações** | Menu com operações adicionais sobre a OS selecionada |
+
+::: tip Seleção de registro
+Editar, Deletar e Ações ficam desabilitados até que uma OS seja selecionada na tabela.
+:::
+
+### Busca — campos disponíveis
+
+- ID
+- Cliente
+- Operador
+- Estrutura
+- Descrição
+- Protocolo
+- Status
+
+---
+
+## Abrir uma ordem de serviço
+
+1. Clique em **Novo**.
+2. Selecione o **Cliente** (busca ao lado do campo ID).
+3. Na aba **Principal**, preencha conforme o cenário:
+
+### Cliente com integração IXC
+
+| Campo | Obrigatório | Descrição |
+|-------|:-----------:|-----------|
+| **Filial** | Sim | Busca no IXC do cliente |
+| **Estrutura** | Sim | Local ou ponto da OS |
+| **Assunto** | Sim | Tipo de solicitação |
+| **Setor** | Sim | Setor responsável |
+| **Técnico** | Não | Colaborador designado |
+| **Prioridade** | Não | Baixa, Normal, Alta ou Crítica |
+| **Melhor horário** | Não | Qualquer, Manhã, Tarde ou Noite |
+| **Data agenda** | Não | Data/hora agendada |
+| **Mensagem / Descrição** | Não | Detalhes da solicitação |
+
+### Cliente sem integração IXC
+
+Somente **Cliente** e **Mensagem / Descrição** (obrigatória) são exibidos — a OS fica registrada localmente no ERP.
+
+4. Clique em **Salvar**.
+
+Após salvar, ficam disponíveis:
+
+| Aba | Conteúdo |
+|-----|----------|
+| **Principal** | Dados principais da OS |
+| **Histórico** | Registro de alterações e interações |
+| **Arquivos** | Anexos vinculados à OS |
+
+---
+
+## Editar uma ordem de serviço
+
+1. Selecione a OS na listagem.
+2. Clique em **Editar**.
+3. Altere os campos na aba **Principal** e **Salvar**.
+
+Em OS sincronizadas do IXC, campos como **Protocolo** e **ID IXC** aparecem somente leitura. OS locais (sem IXC) podem ser excluídas enquanto não estiverem **Finalizadas**.
+
+---
+
+## Ações sobre a OS
+
+Com uma OS selecionada, use o menu **Ações**:
+
+| Ação | Uso |
+|------|-----|
+| **Agendar** | Define ou altera agendamento |
+| **Encaminhar** | Encaminha para outro setor/técnico |
+| **Executar** | Marca início da execução |
+| **Finalizar** | Encerra a OS |
+| **Reabrir** | Reabre OS finalizada |
+| **Registrar mensagem** | Adiciona interação ao histórico |
+
+::: tip OS local vs. IXC
+OS criadas **apenas no ERP** (cliente sem IXC) permitem **Registrar mensagem** e **Finalizar**. OS vinculadas ao IXC disponibilizam o fluxo completo acima.
+:::
+
+---
+
+## Boas práticas
+
+- Vincule sempre a OS ao **Cliente** correto para facilitar busca e relatórios.
+- Use a sincronização IXC para manter OS alinhadas ao IXC do cliente, evitando duplicidade manual.
+- Consulte o **Histórico** antes de alterar status — preserva rastreabilidade do atendimento.
+
+---
+
+::: info Precisa de ajuda?
+Consulte [Suporte e Chamados](/doc/configuracoes/suporte) para abrir um chamado com a equipe ISP Consultor.
+:::

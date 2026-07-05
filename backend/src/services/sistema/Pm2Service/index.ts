@@ -81,6 +81,24 @@ export class Pm2Service {
   }
 
   /**
+   * Apps PM2 a reiniciar após self-update.
+   * Por padrão: backend + doc (quando a wiki existe no projeto).
+   * Override: PM2_RESTART_APPS=backend,doc,frontend
+   */
+  private getRestartApps(): string[] {
+    const fromEnv = process.env.PM2_RESTART_APPS?.split(',').map((s) => s.trim()).filter(Boolean);
+    if (fromEnv?.length) {
+      return [...new Set(fromEnv)];
+    }
+
+    const apps = [this.pm2ProcessName];
+    if (fs.existsSync(path.join(this.projectRoot, 'doc', 'package.json'))) {
+      apps.push('doc');
+    }
+    return [...new Set(apps)];
+  }
+
+  /**
    * Reinicia o processo no PM2
    */
   async reload(): Promise<CommandResult> {
@@ -132,16 +150,9 @@ export class Pm2Service {
       return { success: false, stdout: '', stderr: errorMsg, error: errorMsg };
     }
 
-    // Por padrão só o backend (PM2); o front costuma ser Nginx (ou estático) servindo frontend/build em disco.
-    // Quem usa PM2 também no front: exporte PM2_RESTART_APPS=backend,frontend
-    const apps = [
-      ...new Set(
-        (process.env.PM2_RESTART_APPS || this.pm2ProcessName)
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean)
-      ),
-    ];
+    // Por padrão backend + doc (wiki). Front costuma ser Nginx servindo frontend/build em disco.
+    // Override: PM2_RESTART_APPS=backend,doc,frontend
+    const apps = this.getRestartApps();
     const appsJson = JSON.stringify(apps);
 
     const script = `
@@ -157,6 +168,19 @@ setTimeout(() => {
       ok = true;
     } catch (e) {
       console.error('pm2 restart', app, e && e.message);
+      try {
+        execFileSync('pm2', ['start', 'ecosystem.config.js', '--only', app, '--update-env'], { cwd, stdio: 'inherit', maxBuffer: 10 * 1024 * 1024 });
+        ok = true;
+      } catch (e2) {
+        console.error('pm2 start', app, e2 && e2.message);
+      }
+    }
+  }
+  if (ok) {
+    try {
+      execFileSync('pm2', ['save'], { cwd, stdio: 'inherit', maxBuffer: 10 * 1024 * 1024 });
+    } catch (e) {
+      console.error('pm2 save', e && e.message);
     }
   }
   if (!ok) process.exit(1);
