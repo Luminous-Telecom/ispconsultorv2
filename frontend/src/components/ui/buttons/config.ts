@@ -48,7 +48,6 @@ export type SystemButtonAction =
   | 'inserir'
   | 'nfse'
   | 'atualizarSistema'
-  | 'atualizarDocumentacao'
   | 'validar'
   | 'instalarAgente'
   | 'tentarNovamente'
@@ -130,7 +129,6 @@ export const SYSTEM_BUTTON_CONFIG: Record<SystemButtonAction, SystemButtonStyleC
   inserir: { variant: 'primary', defaultSize: 'sm', i18nKey: 'actions.insert' },
   nfse: { variant: 'primary', defaultSize: 'sm', i18nKey: 'actions.nfse' },
   atualizarSistema: { variant: 'primary', defaultSize: 'sm', i18nKey: 'updates.updateSystem' },
-  atualizarDocumentacao: { variant: 'primary', defaultSize: 'sm', i18nKey: 'updates.updateDoc' },
   validar: { variant: 'primary', defaultSize: 'sm', i18nKey: 'buttons.validate' },
   instalarAgente: { variant: 'primary', defaultSize: 'sm', i18nKey: 'agent.install' },
   tentarNovamente: { variant: 'outline-primary', defaultSize: 'sm', i18nKey: 'messages.tryAgain' },
@@ -244,7 +242,6 @@ export const SYSTEM_BUTTON_EXPORT_NAMES: Record<SystemButtonAction, string> = {
   inserir: 'InserirButton',
   nfse: 'NfseButton',
   atualizarSistema: 'AtualizarSistemaButton',
-  atualizarDocumentacao: 'AtualizarDocumentacaoButton',
   validar: 'ValidarButton',
   instalarAgente: 'InstalarAgenteButton',
   tentarNovamente: 'TentarNovamenteButton',

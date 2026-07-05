@@ -188,7 +188,6 @@ jobs:
               npm ci --prefix doc --no-audit --no-fund --prefer-offline
               npm run build --prefix doc
               [ -f "doc/.vitepress/dist/index.html" ] || { echo "ERRO: doc build falhou!"; exit 1; }
-              bash doc/scripts/verify-dist.sh
               echo "✓ Wiki (doc) buildada"
             else
               echo "AVISO: doc/package.json ausente — wiki não buildada"
@@ -346,35 +345,28 @@ jobs:
             echo "AVISO: frontend/build não existe (mantendo existente)"
           fi
 
-          # ── doc (wiki VitePress) ─────────────────────────────────
-          if [ -f "../doc/package.json" ]; then
-            mkdir -p doc/.vitepress/dist doc/erp doc/public doc/scripts doc/.vitepress/theme/components
-
-            rsync -a ../doc/package.json ../doc/package-lock.json doc/
-            rsync -a ../doc/index.md doc/
-            rsync -a --delete ../doc/erp/ doc/erp/
-            rsync -a --delete ../doc/public/ doc/public/
-            rsync -a ../doc/.vitepress/config.mjs doc/.vitepress/
-            rsync -a --delete ../doc/.vitepress/theme/ doc/.vitepress/theme/
-            if [ -d "../doc/scripts" ]; then
-              rsync -a --delete ../doc/scripts/ doc/scripts/
-              chmod +x doc/scripts/*.sh 2>/dev/null || true
+          # ── doc/.vitepress/dist (wiki estática) ───────────────────
+          if [ -d "../doc/.vitepress/dist" ]; then
+            mkdir -p doc/.vitepress/dist
+            rsync -a --delete ../doc/.vitepress/dist/ doc/.vitepress/dist/
+            [ -f "doc/.vitepress/dist/index.html" ] || { echo "ERRO: doc/.vitepress/dist/index.html ausente!"; exit 1; }
+            mapfile -d '' -t _doc_rm < <(find doc -mindepth 1 -maxdepth 1 ! -name '.vitepress' -print0) || true
+            for p in "${_doc_rm[@]}"; do
+              [ -n "${p}" ] || continue
+              git rm -rf "${p}" 2>/dev/null || rm -rf "${p}"
+              echo "::notice::Removido do prod (só .vitepress/dist): ${p}"
+            done
+            if [ -d doc/.vitepress ]; then
+              mapfile -d '' -t _vp_rm < <(find doc/.vitepress -mindepth 1 -maxdepth 1 ! -name 'dist' -print0) || true
+              for p in "${_vp_rm[@]}"; do
+                [ -n "${p}" ] || continue
+                git rm -rf "${p}" 2>/dev/null || rm -rf "${p}"
+                echo "::notice::Removido do prod (só .vitepress/dist): ${p}"
+              done
             fi
-            [ -f "../doc/ecosystem.config.js" ] && cp ../doc/ecosystem.config.js doc/ecosystem.config.js
-            [ -f "../doc/.gitignore" ] && cp ../doc/.gitignore doc/.gitignore
-
-            if [ -d "../doc/.vitepress/dist" ]; then
-              rsync -a --delete ../doc/.vitepress/dist/ doc/.vitepress/dist/
-              [ -f "doc/.vitepress/dist/index.html" ] || { echo "ERRO: doc/.vitepress/dist/index.html ausente!"; exit 1; }
-              bash doc/scripts/verify-dist.sh
-            else
-              echo "AVISO: doc/.vitepress/dist não existe (wiki será buildada no self-update do servidor)"
-            fi
-
-            rm -rf doc/node_modules doc/.vitepress/cache
-            echo "✓ doc/ sincronizado"
+            echo "✓ doc/.vitepress/dist sincronizado"
           else
-            echo "AVISO: doc/ ausente no fonte — wiki não sincronizada"
+            echo "AVISO: doc/.vitepress/dist não existe (wiki não incluída neste deploy)"
           fi
 
           # ── scripts de setup da raiz ─────────────────────────────

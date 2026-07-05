@@ -1411,11 +1411,6 @@ export interface TranslationKeys {
   'updates.error': string;
   'updates.confirmUpdate': string;
   'updates.updateSystem': string;
-  'updates.updateDoc': string;
-  'updates.confirmUpdateDoc': string;
-  'updates.successDoc': string;
-  'updates.updatingDoc': string;
-  'updates.errorDoc': string;
   'updates.badges.new': string;
   'updates.badges.bugfix': string;
   'updates.badges.security': string;

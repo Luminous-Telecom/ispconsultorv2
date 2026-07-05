@@ -3,7 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { formatDate } from 'utils/formatters';
 import { apiService } from 'services/api';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
-import { AtualizarDocumentacaoButton, AtualizarSistemaButton, FecharButton, Loading } from 'components/ui';
+import { AtualizarSistemaButton, FecharButton, Loading } from 'components/ui';
 import { ApiResponse } from 'types/api';
 import { API_CONFIG } from 'config/api';
 import { useI18n } from 'contexts/I18nContext';
@@ -31,13 +31,10 @@ interface AtualizacoesModalProps {
 
 const listarAtualizacoesTimeoutMs = 130_000;
 
-type UpdateKind = 'system' | 'doc';
-
 const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, onHeaderActionsReady }) => {
   const { t } = useI18n();
   const { success, error: showError } = useNotificationContext();
   const [isUpdating, setIsUpdating] = useState(false);
-  const [updateKind, setUpdateKind] = useState<UpdateKind>('system');
   const [updateProgress, setUpdateProgress] = useState<string>('');
   const [updateProgressPercent, setUpdateProgressPercent] = useState<number>(0);
   const [versaoAtual, setVersaoAtual] = useState<string>('N/A');
@@ -54,7 +51,6 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
 
 
         if (response.success && response.data) {
-          // A resposta tem estrutura { data: { data: [...], versao_atual: "..." } }
           const responseData = response.data as { data?: Atualizacao[]; versao_atual?: string };
           const atualizacoesArray = Array.isArray(responseData.data) ? responseData.data : [];
           const versao = responseData.versao_atual || 'N/A';
@@ -72,21 +68,15 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
     retry: false,
   });
 
-  const executeUpdateWithSSE = async (streamPath: string): Promise<void> => {
+  const executeUpdateWithSSE = async (): Promise<void> => {
     return new Promise((resolve, reject) => {
 
       setIsUpdating(true);
-      setUpdateProgress(
-        streamPath.includes('doc-update') ? t('updates.updatingDoc') : 'Iniciando atualização...'
-      );
+      setUpdateProgress('Iniciando atualização...');
       setUpdateProgressPercent(0);
-      setUpdateLogs([
-        streamPath.includes('doc-update')
-          ? 'Iniciando atualização da documentação...'
-          : 'Iniciando processo de atualização...',
-      ]);
+      setUpdateLogs(['Iniciando processo de atualização...']);
 
-      const url = `${API_CONFIG.BASE_URL}${streamPath}?branch=${encodeURIComponent('main')}`;
+      const url = `${API_CONFIG.BASE_URL}/saas/atualizacoes/update-stream?branch=${encodeURIComponent('main')}`;
 
       fetch(url, {
         method: 'GET',
@@ -142,7 +132,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
                       resolve();
                       return;
                     }
-                  } catch (parseError) {
+                  } catch {
                     // Ignorar erros de parsing
                   }
                 }
@@ -167,7 +157,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
   const RESTART_GRACE_SECONDS = 6;
 
   const updateMutation = useMutation({
-    mutationFn: () => executeUpdateWithSSE('/saas/atualizacoes/update-stream'),
+    mutationFn: () => executeUpdateWithSSE(),
     onSuccess: async () => {
       success(t('updates.success'), {
         id: `update-success-${Date.now()}`,
@@ -206,25 +196,6 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
     },
   });
 
-  const docUpdateMutation = useMutation({
-    mutationFn: () => executeUpdateWithSSE('/saas/atualizacoes/doc-update-stream'),
-    onSuccess: () => {
-      success(t('updates.successDoc'), {
-        id: `doc-update-success-${Date.now()}`,
-        duration: 5000,
-      });
-      setUpdateProgressPercent(100);
-      setUpdateProgress(t('updates.concluded'));
-      setIsUpdating(false);
-    },
-    onError: (err: unknown) => {
-      setIsUpdating(false);
-      setUpdateProgress('');
-      const error = err instanceof Error ? err.message : t('updates.errorDoc');
-      showError(error);
-    },
-  });
-
   const handleUpdate = async () => {
 
     const confirmed = window.confirm(t('updates.confirmUpdate'));
@@ -232,33 +203,14 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
       return;
     }
 
-    // Limpar logs anteriores
     setUpdateLogs([]);
-    setUpdateKind('system');
     updateMutation.mutate();
   };
 
-  const handleDocUpdate = async () => {
-    const confirmed = window.confirm(t('updates.confirmUpdateDoc'));
-    if (!confirmed) {
-      return;
-    }
-
-    setUpdateLogs([]);
-    setUpdateKind('doc');
-    docUpdateMutation.mutate();
-  };
-
-  const isBusy = isUpdating || updateMutation.isPending || docUpdateMutation.isPending;
-  const updatingLabel = updateKind === 'doc' ? t('updates.updatingDoc') : t('updates.updating');
+  const isBusy = isUpdating || updateMutation.isPending;
 
   const headerActions = (
     <div className="d-flex gap-2 modal-header-actions">
-      <AtualizarDocumentacaoButton
-        type="button"
-        onClick={handleDocUpdate}
-        disabled={isBusy}
-      />
       {!isLoading && !error && atualizacoes && atualizacoes.length > 0 && (
         <AtualizarSistemaButton
           type="button"
@@ -289,7 +241,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
       onHeaderActionsReady(headerActions);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, error, atualizacoes, isBusy, docUpdateMutation.isPending, updateMutation.isPending]);
+  }, [isLoading, error, atualizacoes, isBusy, updateMutation.isPending]);
 
   const modalContent = (
     <>
@@ -330,7 +282,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
           <div className="mb-2 updates-progress-alert" role="alert">
             <div className="d-flex align-items-center mb-2">
               <div className="flex-grow-1">
-                <strong className="small text-info-color">{updatingLabel}</strong>
+                <strong className="small text-info-color">{t('updates.updating')}</strong>
                 <p className="mb-0 small mt-1 text-secondary-color">{updateProgress}</p>
               </div>
             </div>
@@ -414,4 +366,3 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
 };
 
 export default AtualizacoesModal;
-
