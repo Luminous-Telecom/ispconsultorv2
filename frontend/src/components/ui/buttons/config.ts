@@ -48,6 +48,7 @@ export type SystemButtonAction =
   | 'inserir'
   | 'nfse'
   | 'atualizarSistema'
+  | 'atualizarDocumentacao'
   | 'validar'
   | 'instalarAgente'
   | 'tentarNovamente'
