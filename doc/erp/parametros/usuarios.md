@@ -60,7 +60,7 @@ A tela segue o padrão de [listagens do ERP](/doc/geral/listagens). Abaixo, apen
 4. Para trocar a senha, preencha o campo **Senha** (mínimo 6 caracteres). Deixe em branco para manter a senha atual.
 5. Clique em **Salvar**.
 
-Na edição também é possível **Gerar** um **Webhook secret** — token usado em integrações que autenticam via webhook desse usuário.
+Na edição também é possível **Gerar token** (Webhook secret) — credencial usada em integrações externas, como [Typebot](/doc/integracoes/typebot) e webhooks que autenticam com `Authorization: Bearer`.
 
 ---
 

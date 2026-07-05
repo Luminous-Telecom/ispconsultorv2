@@ -53,7 +53,8 @@ const sections = [
     icon: '/icons/plug.svg',
     description: 'Conexão com sistemas externos.',
     links: [
-      { text: 'IXC Provedor', to: '/doc/integracoes/ixc-provedor' }
+      { text: 'IXC Provedor', to: '/doc/integracoes/ixc-provedor' },
+      { text: 'Typebot', to: '/doc/integracoes/typebot' }
     ]
   },
   {

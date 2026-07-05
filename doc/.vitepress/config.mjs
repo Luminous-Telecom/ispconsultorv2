@@ -155,7 +155,8 @@ export default defineConfig({
         text: 'Integrações',
         collapsed: true,
         items: [
-          { text: 'IXC Provedor', link: '/doc/integracoes/ixc-provedor' }
+          { text: 'IXC Provedor', link: '/doc/integracoes/ixc-provedor' },
+          { text: 'Typebot', link: '/doc/integracoes/typebot' }
         ]
       },
       {
