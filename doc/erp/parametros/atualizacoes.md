@@ -26,11 +26,11 @@ Use **Atualizar documentação** quando quiser publicar apenas alterações da w
 
 O processo executa, nesta ordem:
 
-1. `git pull` (branch `main`) — somente conteúdo do repositório, incluindo a pasta `doc/`
-2. Instalação de dependências e build VitePress em `doc/`
-3. Reinício do processo PM2 **`doc`** (wiki)
+1. `git pull` (branch `main`) — traz o `doc/.vitepress/dist/` já buildado pelo GitHub Actions
+2. Validação dos assets do dist no servidor
+3. Reinício do processo PM2 **`doc`** (wiki) e purga opcional do cache Cloudflare
 
-**Não** são alterados: backend, frontend do ERP, migrations, banco de dados nem demais serviços PM2. A página do ERP **não** é recarregada ao concluir.
+**Não** recompila VitePress no servidor. **Não** são alterados: backend, frontend do ERP, migrations, banco de dados nem demais serviços PM2. A página do ERP **não** é recarregada ao concluir.
 
 Confirme a ação no aviso exibido antes de iniciar. O progresso e os logs aparecem no corpo do modal.
 

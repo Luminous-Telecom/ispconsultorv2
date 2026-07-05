@@ -1425,7 +1425,7 @@ const ptBR: TranslationKeys = {
     'updates.confirmUpdate': 'Tem certeza que deseja atualizar o sistema? Esta ação irá:\n\n1. Baixar as últimas alterações do repositório\n2. Atualizar dependências\n3. Compilar o código\n4. Executar migrations do banco de dados\n5. Reiniciar a aplicação\n\nO processo pode levar alguns minutos.',
     'updates.updateSystem': 'Atualizar Sistema',
     'updates.updateDoc': 'Atualizar documentação',
-    'updates.confirmUpdateDoc': 'Atualizar somente a wiki (documentação)?\n\n1. Baixa alterações do repositório (pasta doc/)\n2. Compila a documentação VitePress\n3. Reinicia o serviço PM2 da wiki\n\nO ERP, banco de dados e demais serviços não serão alterados.',
+    'updates.confirmUpdateDoc': 'Atualizar somente a wiki (documentação)?\n\n1. Baixa alterações do repositório (pasta doc/)\n2. Aplica o dist buildado pelo GitHub Actions\n3. Reinicia o serviço PM2 da wiki\n\nO ERP, banco de dados e demais serviços não serão alterados.',
     'updates.successDoc': 'Documentação atualizada com sucesso.',
     'updates.updatingDoc': 'Atualizando documentação...',
     'updates.errorDoc': 'Erro ao atualizar documentação',

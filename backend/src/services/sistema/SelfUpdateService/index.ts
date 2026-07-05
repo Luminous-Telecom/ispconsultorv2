@@ -121,6 +121,26 @@ export class SelfUpdateService {
     return { success: missing.length === 0, missing };
   }
 
+  /** Comandos para atualização só da wiki (dist do CI — sem npm/build no servidor). */
+  private async verifyDocCommands(): Promise<{ success: boolean; missing: string[] }> {
+    const commands = ['git', 'pm2'];
+    const missing: string[] = [];
+
+    for (const cmd of commands) {
+      try {
+        await execAsync(`which ${cmd}`, { timeout: 5000 });
+      } catch {
+        missing.push(cmd);
+      }
+    }
+
+    if (missing.length > 0) {
+      logger.error('Comandos necessários para atualização da wiki não encontrados', { missing });
+    }
+
+    return { success: missing.length === 0, missing };
+  }
+
   /**
    * Executa o processo completo de atualização
    */
@@ -301,8 +321,8 @@ export class SelfUpdateService {
   }
 
   /**
-   * Atualiza somente a wiki (`doc/`): git pull → build VitePress → restart PM2 `doc`.
-   * Não altera backend, frontend, dependências do ERP nem migrations.
+   * Atualiza somente a wiki (`doc/`): git pull → valida dist do GitHub Actions → restart PM2 `doc`.
+   * Não altera backend, frontend, dependências do ERP nem migrations. Não recompila VitePress no servidor.
    */
   async executeDocUpdate(
     branch = 'main',
@@ -327,7 +347,7 @@ export class SelfUpdateService {
       };
     }
 
-    const commandCheck = await this.verifyCommands();
+    const commandCheck = await this.verifyDocCommands();
     if (!commandCheck.success) {
       onProgress?.({
         step: 'verificacao',
@@ -387,28 +407,28 @@ export class SelfUpdateService {
     onProgress?.({
       step: 'buildDoc',
       progress: 45,
-      message: 'Compilando documentação (VitePress)...',
-      logs: ['→ Executando build da wiki...'],
+      message: 'Validando documentação buildada pelo GitHub...',
+      logs: ['→ Validando doc/.vitepress/dist do repositório...'],
     });
     steps.buildDoc = await this.buildService.buildDoc();
     if (!steps.buildDoc.success) {
       onProgress?.({
         step: 'buildDoc',
         progress: 45,
-        message: `Falha ao compilar documentação: ${steps.buildDoc.error || steps.buildDoc.stderr}`,
-        logs: [`✗ Build da wiki falhou: ${steps.buildDoc.error || steps.buildDoc.stderr}`],
+        message: `Falha ao aplicar documentação: ${steps.buildDoc.error || steps.buildDoc.stderr}`,
+        logs: [`✗ Dist da wiki inválido: ${steps.buildDoc.error || steps.buildDoc.stderr}`],
       });
       return {
         success: false,
-        message: `Falha ao compilar documentação: ${steps.buildDoc.error || steps.buildDoc.stderr}`,
+        message: `Falha ao aplicar documentação: ${steps.buildDoc.error || steps.buildDoc.stderr}`,
         steps,
       };
     }
     onProgress?.({
       step: 'buildDoc',
       progress: 85,
-      message: 'Documentação compilada com sucesso',
-      logs: ['✓ Build da wiki concluído'],
+      message: 'Documentação atualizada (dist do GitHub)',
+      logs: ['✓ Wiki: dist do repositório (CI)'],
     });
 
     onProgress?.({

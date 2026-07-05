@@ -23,8 +23,8 @@ const docDistIndexPath = (root: string) =>
  * Em **ispconsultor** (repo de produção) não há `backend/src` nem `frontend/src` — só `dist` e `build/`
  * commitados pelo CI. Aí não roda `tsc`/CRA no servidor: o pull já trouxe os artefatos.
  *
- * Em clone **completo** (fonte), recompila backend e/ou frontend quando as pastas existem.
- * A wiki (`doc/`) é sempre recompilada quando `doc/package.json` existe — o output fica em `.vitepress/dist/`.
+ * A wiki segue o mesmo padrão: `doc/.vitepress/dist/` vem buildado pelo GitHub Actions;
+ * no servidor só valida o dist e reinicia o PM2 (botão Atualizar documentação no ERP).
  */
 export class BuildService {
   private readonly projectRoot: string;
@@ -42,7 +42,7 @@ export class BuildService {
     };
   }
 
-  /** Compila apenas a wiki VitePress (`doc/`). */
+  /** Valida `doc/.vitepress/dist` já buildado pelo GitHub Actions (não recompila no servidor). */
   async buildDoc(): Promise<CommandResult> {
     const docPkg = path.join(this.projectRoot, 'doc', 'package.json');
     if (!fs.existsSync(docPkg)) {
@@ -51,38 +51,40 @@ export class BuildService {
       return { success: false, stdout: '', stderr: msg, error: msg };
     }
 
-    const env = this.buildEnv();
+    const distIndex = docDistIndexPath(this.projectRoot);
+    const docDir = path.join(this.projectRoot, 'doc');
+
+    if (!fs.existsSync(distIndex)) {
+      const msg =
+        'doc/.vitepress/dist/index.html não encontrado após git pull. O deploy do GitHub Actions deve incluir a wiki buildada.';
+      logger.error(msg, { projectRoot: this.projectRoot });
+      return { success: false, stdout: '', stderr: msg, error: msg };
+    }
 
     try {
-      logger.info('Self-update: instalando dependências e compilando wiki (doc)');
-      try {
-        await execAsync('pm2 stop doc', { cwd: this.projectRoot, maxBuffer: 1024 * 1024 });
-        logger.info('Self-update: PM2 doc parado antes do build da wiki');
-      } catch {
-        /* wiki não roda via PM2 neste ambiente */
-      }
-      await execAsync('npm install --prefix doc', { cwd: this.projectRoot, maxBuffer: MAX_BUFFER, env });
-      await execAsync('npm run build --prefix doc', { cwd: this.projectRoot, maxBuffer: MAX_BUFFER, env });
-      if (!fs.existsSync(docDistIndexPath(this.projectRoot))) {
-        const msg = 'doc/.vitepress/dist/index.html não foi gerado';
-        return { success: false, stdout: '', stderr: msg, error: msg };
-      }
       await execAsync('bash scripts/verify-dist.sh', {
-        cwd: path.join(this.projectRoot, 'doc'),
+        cwd: docDir,
         maxBuffer: MAX_BUFFER,
       });
-      return { success: true, stdout: 'wiki (doc) compilada', stderr: '' };
+      logger.info('Self-update: doc/.vitepress/dist do repositório (CI) validado');
+      return {
+        success: true,
+        stdout: 'wiki (doc) dist do repositório (CI)',
+        stderr: '',
+      };
     } catch (error) {
       const err = error as { stdout?: string; stderr?: string; message?: string };
-      logger.error('Self-update: build da wiki falhou', {
+      const msg =
+        'doc/.vitepress/dist inválido ou incompleto. Aguarde novo deploy do GitHub Actions com a wiki buildada.';
+      logger.error('Self-update: dist da wiki inválido', {
         message: err.message,
         stderrPreview: err.stderr?.slice(0, 2000),
       });
       return {
         success: false,
         stdout: (err.stdout || '').trim(),
-        stderr: (err.stderr || err.message || '').trim(),
-        error: err.message || 'Build da wiki falhou',
+        stderr: (err.stderr || msg).trim(),
+        error: msg,
       };
     }
   }
@@ -143,7 +145,7 @@ export class BuildService {
         if (!docBuild.success) {
           return docBuild;
         }
-        parts.push(docBuild.stdout || 'wiki (doc) compilada');
+        parts.push(docBuild.stdout || 'wiki (doc) dist do repositório (CI)');
       }
 
       return {

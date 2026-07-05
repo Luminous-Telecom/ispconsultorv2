@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build da wiki com dist limpo. O PM2 `doc` deve estar parado antes (update.sh / BuildService).
+# Build da wiki (GitHub Actions / dev local). O PM2 `doc` deve estar parado em produção.
 set -euo pipefail
 
 DOC_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

@@ -16,7 +16,6 @@
     "doc": "cd doc && npm run dev",
     "doc:build": "cd doc && npm run build",
     "doc:start": "cd doc && npm run start",
-    "doc:update": "bash doc/scripts/update.sh",
     "server": "cd backend && npm run dev",
     "client": "cd frontend && npm run dev",
     "build": "cd frontend && npm run build",
