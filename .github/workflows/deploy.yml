@@ -188,6 +188,7 @@ jobs:
               npm ci --prefix doc --no-audit --no-fund --prefer-offline
               npm run build --prefix doc
               [ -f "doc/.vitepress/dist/index.html" ] || { echo "ERRO: doc build falhou!"; exit 1; }
+              [ -f "doc/.vitepress/dist/ispconsultor-icone.png" ] || { echo "ERRO: doc/.vitepress/dist/ispconsultor-icone.png ausente (verifique doc/public/)!"; exit 1; }
               echo "✓ Wiki (doc) buildada"
             else
               echo "AVISO: doc/package.json ausente — wiki não buildada"
@@ -365,6 +366,7 @@ jobs:
             if [ -d "../doc/.vitepress/dist" ]; then
               rsync -a --delete ../doc/.vitepress/dist/ doc/.vitepress/dist/
               [ -f "doc/.vitepress/dist/index.html" ] || { echo "ERRO: doc/.vitepress/dist/index.html ausente!"; exit 1; }
+              [ -f "doc/.vitepress/dist/ispconsultor-icone.png" ] || { echo "ERRO: doc/.vitepress/dist/ispconsultor-icone.png ausente!"; exit 1; }
             else
               echo "AVISO: doc/.vitepress/dist não existe (wiki será buildada no self-update do servidor)"
             fi

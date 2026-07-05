@@ -53,40 +53,6 @@ router.get('/health', async (_req: Request, res: Response): Promise<void> => {
 });
 
 /**
- * Health check detalhado
- */
-router.get('/health/detailed', async (_req: Request, res: Response): Promise<void> => {
-  try {
-    await sequelize.authenticate();
-
-    const scheduler = SchedulerService.getInstance();
-    const stats = await scheduler.getDetailedStats();
-
-    res.json({
-      status: 'ok',
-      timestamp: getCurrentTimestamp(),
-      uptime: process.uptime(),
-      database: 'connected',
-      scheduler: stats.scheduler,
-      system: stats.system,
-      memory: process.memoryUsage(),
-      cpu: process.cpuUsage()
-    });
-  } catch (error) {
-    logger.error('Health check detalhado falhou', {
-      context: 'HealthRoutes',
-      error: error instanceof Error ? error.message : 'Erro desconhecido'
-    });
-
-    res.status(503).json({
-      status: 'error',
-      timestamp: getCurrentTimestamp(),
-      error: 'Service unavailable'
-    });
-  }
-});
-
-/**
  * Endpoint de métricas Prometheus
  * Disponível apenas se ENABLE_METRICS=true
  * Se não estiver habilitado, a rota nem é registrada (retorna 404 naturalmente)

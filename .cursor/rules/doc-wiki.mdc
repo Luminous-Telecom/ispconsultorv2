@@ -16,7 +16,7 @@ doc/
     clientes/
     cadastros/
     ...
-  public/               → ícones e imagens estáticas
+  public/               → ícones, favicons e imagens estáticas (única pasta public; não duplicar em .vitepress/public)
   .vitepress/config.mjs → sidebar e nav
 ```
 
