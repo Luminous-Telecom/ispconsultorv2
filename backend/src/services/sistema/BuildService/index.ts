@@ -33,13 +33,56 @@ export class BuildService {
     this.projectRoot = projectRoot;
   }
 
-  async build(): Promise<CommandResult> {
-    const env = {
+  private buildEnv(): NodeJS.ProcessEnv {
+    return {
       ...process.env,
       NPM_CONFIG_PRODUCTION: 'false',
       GENERATE_SOURCEMAP: 'false',
       NODE_OPTIONS: process.env.NODE_OPTIONS || '--max-old-space-size=4096',
     };
+  }
+
+  /** Compila apenas a wiki VitePress (`doc/`). */
+  async buildDoc(): Promise<CommandResult> {
+    const docPkg = path.join(this.projectRoot, 'doc', 'package.json');
+    if (!fs.existsSync(docPkg)) {
+      const msg = 'doc/package.json não encontrado';
+      logger.error(msg, { projectRoot: this.projectRoot });
+      return { success: false, stdout: '', stderr: msg, error: msg };
+    }
+
+    const env = this.buildEnv();
+
+    try {
+      logger.info('Self-update: instalando dependências e compilando wiki (doc)');
+      await execAsync('npm install --prefix doc', { cwd: this.projectRoot, maxBuffer: MAX_BUFFER, env });
+      await execAsync('npm run build --prefix doc', { cwd: this.projectRoot, maxBuffer: MAX_BUFFER, env });
+      if (!fs.existsSync(docDistIndexPath(this.projectRoot))) {
+        const msg = 'doc/.vitepress/dist/index.html não foi gerado';
+        return { success: false, stdout: '', stderr: msg, error: msg };
+      }
+      await execAsync('bash scripts/verify-dist.sh', {
+        cwd: path.join(this.projectRoot, 'doc'),
+        maxBuffer: MAX_BUFFER,
+      });
+      return { success: true, stdout: 'wiki (doc) compilada', stderr: '' };
+    } catch (error) {
+      const err = error as { stdout?: string; stderr?: string; message?: string };
+      logger.error('Self-update: build da wiki falhou', {
+        message: err.message,
+        stderrPreview: err.stderr?.slice(0, 2000),
+      });
+      return {
+        success: false,
+        stdout: (err.stdout || '').trim(),
+        stderr: (err.stderr || err.message || '').trim(),
+        error: err.message || 'Build da wiki falhou',
+      };
+    }
+  }
+
+  async build(): Promise<CommandResult> {
+    const env = this.buildEnv();
 
     const backendPkg = path.join(this.projectRoot, 'backend', 'package.json');
     if (!fs.existsSync(backendPkg)) {
@@ -89,20 +132,12 @@ export class BuildService {
         }
       }
 
-      const docPkg = path.join(this.projectRoot, 'doc', 'package.json');
-      if (fs.existsSync(docPkg)) {
-        logger.info('Self-update: instalando dependências e compilando wiki (doc)');
-        await execAsync('npm install --prefix doc', { cwd: this.projectRoot, maxBuffer: MAX_BUFFER, env });
-        await execAsync('npm run build --prefix doc', { cwd: this.projectRoot, maxBuffer: MAX_BUFFER, env });
-        if (!fs.existsSync(docDistIndexPath(this.projectRoot))) {
-          const msg = 'doc/.vitepress/dist/index.html não foi gerado';
-          return { success: false, stdout: '', stderr: msg, error: msg };
+      const docBuild = await this.buildDoc();
+      if (fs.existsSync(path.join(this.projectRoot, 'doc', 'package.json'))) {
+        if (!docBuild.success) {
+          return docBuild;
         }
-        await execAsync('bash scripts/verify-dist.sh', {
-          cwd: path.join(this.projectRoot, 'doc'),
-          maxBuffer: MAX_BUFFER,
-        });
-        parts.push('wiki (doc) compilada');
+        parts.push(docBuild.stdout || 'wiki (doc) compilada');
       }
 
       return {

@@ -113,6 +113,23 @@ Paginação (`page-link`):
 </PaginationNavButton>
 ```
 
+## Variantes (`primary` vs `outline-primary`)
+
+Padrão do ERP: **botões de ação com texto usam `variant: 'primary'`** (azul sólido `btn-primary`).
+
+| Variante | Uso |
+|----------|-----|
+| **`primary`** | Ação principal ou secundária com peso igual: Salvar, Fechar, Atualizar sistema, Atualizar documentação, Novo, Buscar, etc. |
+| **`outline-primary`** | Apenas ações **auxiliares/diagnóstico** sem peso de commit: Testar conexão, Tentar novamente, Validar CNPJ/CEP, Mostrar/Ocultar filtros |
+| **`danger`** | Exclusão / ações destrutivas (`ExcluirButton`) |
+| **`ghost`** | Toolbar compacta quando aplicável |
+
+Regras:
+
+1. **Não** usar `outline-primary` para ações de atualização, salvar, criar ou confirmar — manter `primary` como os demais botões do modal/tela.
+2. Novos `*Button` em `config.ts`: default **`primary`** + `defaultSize: 'sm'`, salvo exceção documentada na tabela acima.
+3. Header de modal (`modal-header-actions`): todos os botões de ação seguem **`primary`** (ex.: Atualizar documentação + Atualizar sistema + Fechar).
+
 ## Variante `unstyled`
 
 - Não adiciona classes `btn` / `btn-*`

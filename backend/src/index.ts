@@ -215,7 +215,9 @@ app.use(ddosProtectionMiddleware({
       maxProcessingTime: Number.isFinite(ddosRpkiRoaAnalyzeMaxMs) ? ddosRpkiRoaAnalyzeMaxMs : 600_000,
     },
     {
-      test: (pathname) => /^\/api\/saas\/atualizacoes\/?$/.test(pathname),
+      test: (pathname) =>
+        /^\/api\/saas\/atualizacoes\/?$/.test(pathname) ||
+        /^\/api\/saas\/atualizacoes\/doc-update-stream\/?$/.test(pathname),
       maxProcessingTime: Number.isFinite(ddosSaasAtualizacoesMaxMs) ? ddosSaasAtualizacoesMaxMs : 120_000,
     },
     {
@@ -236,6 +238,7 @@ app.use(ddosProtectionMiddleware({
     '/api/auditoria/pdf', // Geração de PDF de auditoria pode demorar mais que 15s
     '/api/atualizacoes/update', // Atualização pode levar vários minutos (git pull, npm install, build, migrations, pm2 reload)
     '/api/saas/atualizacoes/update-stream', // SSE: git pull, build, pm2 — ultrapassa qualquer limite curto
+    '/api/saas/atualizacoes/doc-update-stream', // SSE: git pull, build doc, pm2 restart doc
     '/api/pdf-extract', // Upload de PDF pode demorar (arquivo grande); processamento é assíncrono
     '/api/saas/backups' // Importação/upload e backup manual podem ultrapassar 15s (arquivos grandes)
   ]

@@ -3,7 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { formatDate } from 'utils/formatters';
 import { apiService } from 'services/api';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
-import { AtualizarSistemaButton, FecharButton, Loading } from 'components/ui';
+import { AtualizarDocumentacaoButton, AtualizarSistemaButton, FecharButton, Loading } from 'components/ui';
 import { ApiResponse } from 'types/api';
 import { API_CONFIG } from 'config/api';
 import { useI18n } from 'contexts/I18nContext';
@@ -31,10 +31,13 @@ interface AtualizacoesModalProps {
 
 const listarAtualizacoesTimeoutMs = 130_000;
 
+type UpdateKind = 'system' | 'doc';
+
 const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, onHeaderActionsReady }) => {
   const { t } = useI18n();
   const { success, error: showError } = useNotificationContext();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [updateKind, setUpdateKind] = useState<UpdateKind>('system');
   const [updateProgress, setUpdateProgress] = useState<string>('');
   const [updateProgressPercent, setUpdateProgressPercent] = useState<number>(0);
   const [versaoAtual, setVersaoAtual] = useState<string>('N/A');
@@ -69,15 +72,21 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
     retry: false,
   });
 
-  const executeUpdateWithSSE = async (branch: string = 'main'): Promise<void> => {
+  const executeUpdateWithSSE = async (streamPath: string): Promise<void> => {
     return new Promise((resolve, reject) => {
 
       setIsUpdating(true);
-      setUpdateProgress('Iniciando atualização...');
+      setUpdateProgress(
+        streamPath.includes('doc-update') ? t('updates.updatingDoc') : 'Iniciando atualização...'
+      );
       setUpdateProgressPercent(0);
-      setUpdateLogs(['Iniciando processo de atualização...']);
+      setUpdateLogs([
+        streamPath.includes('doc-update')
+          ? 'Iniciando atualização da documentação...'
+          : 'Iniciando processo de atualização...',
+      ]);
 
-      const url = `${API_CONFIG.BASE_URL}/saas/atualizacoes/update-stream?branch=${encodeURIComponent(branch)}`;
+      const url = `${API_CONFIG.BASE_URL}${streamPath}?branch=${encodeURIComponent('main')}`;
 
       fetch(url, {
         method: 'GET',
@@ -158,7 +167,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
   const RESTART_GRACE_SECONDS = 6;
 
   const updateMutation = useMutation({
-    mutationFn: (branch: string = 'main') => executeUpdateWithSSE(branch),
+    mutationFn: () => executeUpdateWithSSE('/saas/atualizacoes/update-stream'),
     onSuccess: async () => {
       success(t('updates.success'), {
         id: `update-success-${Date.now()}`,
@@ -197,6 +206,25 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
     },
   });
 
+  const docUpdateMutation = useMutation({
+    mutationFn: () => executeUpdateWithSSE('/saas/atualizacoes/doc-update-stream'),
+    onSuccess: () => {
+      success(t('updates.successDoc'), {
+        id: `doc-update-success-${Date.now()}`,
+        duration: 5000,
+      });
+      setUpdateProgressPercent(100);
+      setUpdateProgress(t('updates.concluded'));
+      setIsUpdating(false);
+    },
+    onError: (err: unknown) => {
+      setIsUpdating(false);
+      setUpdateProgress('');
+      const error = err instanceof Error ? err.message : t('updates.errorDoc');
+      showError(error);
+    },
+  });
+
   const handleUpdate = async () => {
 
     const confirmed = window.confirm(t('updates.confirmUpdate'));
@@ -206,8 +234,45 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
 
     // Limpar logs anteriores
     setUpdateLogs([]);
-    updateMutation.mutate('main');
+    setUpdateKind('system');
+    updateMutation.mutate();
   };
+
+  const handleDocUpdate = async () => {
+    const confirmed = window.confirm(t('updates.confirmUpdateDoc'));
+    if (!confirmed) {
+      return;
+    }
+
+    setUpdateLogs([]);
+    setUpdateKind('doc');
+    docUpdateMutation.mutate();
+  };
+
+  const isBusy = isUpdating || updateMutation.isPending || docUpdateMutation.isPending;
+  const updatingLabel = updateKind === 'doc' ? t('updates.updatingDoc') : t('updates.updating');
+
+  const headerActions = (
+    <div className="d-flex gap-2 modal-header-actions">
+      <AtualizarDocumentacaoButton
+        type="button"
+        onClick={handleDocUpdate}
+        disabled={isBusy}
+      />
+      {!isLoading && !error && atualizacoes && atualizacoes.length > 0 && (
+        <AtualizarSistemaButton
+          type="button"
+          onClick={handleUpdate}
+          disabled={isBusy}
+        />
+      )}
+      <FecharButton
+        type="button"
+        onClick={onClose}
+        disabled={isBusy}
+      />
+    </div>
+  );
 
   const getTipoBadge = (tipo: string) => {
     const badges = {
@@ -219,29 +284,12 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
     return badges[tipo as keyof typeof badges] || { class: 'text-secondary', bgClass: 'bg-secondary bg-opacity-10', label: t('updates.badges.other'), icon: 'bi-circle-fill' };
   };
 
-  const headerActions = (
-    <div className="d-flex gap-2 modal-header-actions">
-      {!isLoading && !error && atualizacoes && atualizacoes.length > 0 && (
-        <AtualizarSistemaButton
-          type="button"
-          onClick={handleUpdate}
-          disabled={isUpdating || updateMutation.isPending}
-        />
-      )}
-      <FecharButton
-        type="button"
-        onClick={onClose}
-        disabled={isUpdating || updateMutation.isPending}
-      />
-    </div>
-  );
-
   React.useEffect(() => {
     if (onHeaderActionsReady) {
       onHeaderActionsReady(headerActions);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, error, atualizacoes, isUpdating, updateMutation.isPending]);
+  }, [isLoading, error, atualizacoes, isBusy, docUpdateMutation.isPending, updateMutation.isPending]);
 
   const modalContent = (
     <>
@@ -266,7 +314,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
           </div>
         )}
 
-        {!isLoading && !error && atualizacoes && atualizacoes.length === 0 && (
+        {!isLoading && !error && atualizacoes && atualizacoes.length === 0 && !isUpdating && (
           <div className="alert alert-info py-2 px-3 mb-0" role="alert">
             <div className="d-flex align-items-center">
               <i className="bi bi-info-circle-fill me-2"></i>
@@ -275,6 +323,35 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
                 <p className="mb-0 small mt-1">{t('updates.systemUpdated')}</p>
               </div>
             </div>
+          </div>
+        )}
+
+        {isUpdating && updateProgress && (
+          <div className="mb-2 updates-progress-alert" role="alert">
+            <div className="d-flex align-items-center mb-2">
+              <div className="flex-grow-1">
+                <strong className="small text-info-color">{updatingLabel}</strong>
+                <p className="mb-0 small mt-1 text-secondary-color">{updateProgress}</p>
+              </div>
+            </div>
+
+            <div className="mb-2">
+              <div className="progress updates-progress-bar">
+                <DynamicProgressBar percent={updateProgressPercent}>
+                  <span className="small fw-semibold text-primary-color fs-md">{updateProgressPercent}%</span>
+                </DynamicProgressBar>
+              </div>
+            </div>
+
+            {updateLogs.length > 0 && (
+              <div className="logs-update-panel">
+                {updateLogs.map((log, index) => (
+                  <div key={index} className={log.startsWith('✗') ? 'text-danger' : log.startsWith('✓') ? 'text-success' : log.startsWith('⚠') ? 'text-warning' : 'text-muted'}>
+                    {log}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -289,35 +366,6 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
                 </div>
               </div>
             </div>
-
-            {isUpdating && updateProgress && (
-              <div className="mb-2 updates-progress-alert" role="alert">
-                <div className="d-flex align-items-center mb-2">
-                  <div className="flex-grow-1">
-                    <strong className="small text-info-color">{t('updates.updating')}</strong>
-                    <p className="mb-0 small mt-1 text-secondary-color">{updateProgress}</p>
-                  </div>
-                </div>
-
-                <div className="mb-2">
-                  <div className="progress updates-progress-bar">
-                    <DynamicProgressBar percent={updateProgressPercent}>
-                      <span className="small fw-semibold text-primary-color fs-md">{updateProgressPercent}%</span>
-                    </DynamicProgressBar>
-                  </div>
-                </div>
-
-                {updateLogs.length > 0 && (
-                  <div className="logs-update-panel">
-                    {updateLogs.map((log, index) => (
-                      <div key={index} className={log.startsWith('✗') ? 'text-danger' : log.startsWith('✓') ? 'text-success' : log.startsWith('⚠') ? 'text-warning' : 'text-muted'}>
-                        {log}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
 
             <div className="flex-col-gap-sm">
               {atualizacoes.map((atualizacao: Atualizacao) => {

@@ -99,6 +99,31 @@ export class Pm2Service {
   }
 
   /**
+   * Reinicia um app PM2 específico (ex.: só a wiki `doc`).
+   */
+  async restartApp(appName: string): Promise<CommandResult> {
+    const restartResult = await this.executeCommand(
+      `pm2 restart ${appName} --update-env`,
+      this.projectRoot,
+      `PM2 Restart ${appName}`
+    );
+    if (restartResult.success) {
+      await this.executeCommand('pm2 save', this.projectRoot, 'PM2 Save');
+      return restartResult;
+    }
+
+    const startResult = await this.executeCommand(
+      `pm2 start ecosystem.config.js --only ${appName} --update-env`,
+      this.projectRoot,
+      `PM2 Start ${appName}`
+    );
+    if (startResult.success) {
+      await this.executeCommand('pm2 save', this.projectRoot, 'PM2 Save');
+    }
+    return startResult;
+  }
+
+  /**
    * Reinicia o processo no PM2
    */
   async reload(): Promise<CommandResult> {

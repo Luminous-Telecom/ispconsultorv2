@@ -7,5 +7,6 @@ router.use(saasAuthMiddleware);
 
 router.get('/', AtualizacoesController.get);
 router.get('/update-stream', AtualizacoesController.updateStream);
+router.get('/doc-update-stream', AtualizacoesController.docUpdateStream);
 
 export default router;

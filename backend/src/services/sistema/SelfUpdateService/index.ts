@@ -24,6 +24,16 @@ export interface UpdateResult {
   };
 }
 
+export interface DocUpdateResult {
+  success: boolean;
+  message: string;
+  steps: {
+    gitPull: CommandResult;
+    buildDoc: CommandResult;
+    pm2Restart?: CommandResult;
+  };
+}
+
 /**
  * Self-update no servidor: git pull → npm install (backend) → build (backend + frontend + doc) → migrations → PM2.
  */
@@ -288,6 +298,161 @@ export class SelfUpdateService {
       message: 'Atualização concluída com sucesso. A aplicação será reiniciada em breve.',
       steps,
     };
+  }
+
+  /**
+   * Atualiza somente a wiki (`doc/`): git pull → build VitePress → restart PM2 `doc`.
+   * Não altera backend, frontend, dependências do ERP nem migrations.
+   */
+  async executeDocUpdate(
+    branch = 'main',
+    onProgress?: (progress: { step: string; progress: number; message: string; logs?: string[] }) => void
+  ): Promise<DocUpdateResult> {
+    const docPkg = path.join(this.projectRoot, 'doc', 'package.json');
+    if (!fs.existsSync(docPkg)) {
+      const msg = 'Pasta doc/ não encontrada neste servidor';
+      onProgress?.({
+        step: 'verificacao',
+        progress: 0,
+        message: msg,
+        logs: [`✗ ${msg}`],
+      });
+      return {
+        success: false,
+        message: msg,
+        steps: {
+          gitPull: { success: false, stdout: '', stderr: msg, error: msg },
+          buildDoc: { success: false, stdout: '', stderr: '', error: msg },
+        },
+      };
+    }
+
+    const commandCheck = await this.verifyCommands();
+    if (!commandCheck.success) {
+      onProgress?.({
+        step: 'verificacao',
+        progress: 0,
+        message: `Comandos necessários não encontrados: ${commandCheck.missing.join(', ')}`,
+        logs: [`✗ Comandos faltando: ${commandCheck.missing.join(', ')}`],
+      });
+      return {
+        success: false,
+        message: `Comandos necessários não encontrados: ${commandCheck.missing.join(', ')}`,
+        steps: {
+          gitPull: { success: false, stdout: '', stderr: `Comandos faltando: ${commandCheck.missing.join(', ')}` },
+          buildDoc: { success: false, stdout: '', stderr: '' },
+        },
+      };
+    }
+
+    onProgress?.({
+      step: 'iniciando',
+      progress: 0,
+      message: 'Iniciando atualização da documentação...',
+      logs: ['Iniciando atualização da wiki (doc)...'],
+    });
+
+    const steps = {
+      gitPull: { success: false, stdout: '', stderr: '' } as CommandResult,
+      buildDoc: { success: false, stdout: '', stderr: '' } as CommandResult,
+    };
+
+    onProgress?.({
+      step: 'gitPull',
+      progress: 15,
+      message: 'Baixando alterações da documentação...',
+      logs: ['→ Executando git pull...'],
+    });
+    steps.gitPull = await this.gitUpdateService.pull(branch);
+    if (!steps.gitPull.success) {
+      onProgress?.({
+        step: 'gitPull',
+        progress: 15,
+        message: `Falha ao executar git pull: ${steps.gitPull.error || steps.gitPull.stderr}`,
+        logs: [`✗ Git Pull falhou: ${steps.gitPull.error || steps.gitPull.stderr}`],
+      });
+      return {
+        success: false,
+        message: `Falha ao executar git pull: ${steps.gitPull.error || steps.gitPull.stderr}`,
+        steps,
+      };
+    }
+    onProgress?.({
+      step: 'gitPull',
+      progress: 35,
+      message: 'Repositório atualizado',
+      logs: ['✓ Git Pull concluído'],
+    });
+
+    onProgress?.({
+      step: 'buildDoc',
+      progress: 45,
+      message: 'Compilando documentação (VitePress)...',
+      logs: ['→ Executando build da wiki...'],
+    });
+    steps.buildDoc = await this.buildService.buildDoc();
+    if (!steps.buildDoc.success) {
+      onProgress?.({
+        step: 'buildDoc',
+        progress: 45,
+        message: `Falha ao compilar documentação: ${steps.buildDoc.error || steps.buildDoc.stderr}`,
+        logs: [`✗ Build da wiki falhou: ${steps.buildDoc.error || steps.buildDoc.stderr}`],
+      });
+      return {
+        success: false,
+        message: `Falha ao compilar documentação: ${steps.buildDoc.error || steps.buildDoc.stderr}`,
+        steps,
+      };
+    }
+    onProgress?.({
+      step: 'buildDoc',
+      progress: 85,
+      message: 'Documentação compilada com sucesso',
+      logs: ['✓ Build da wiki concluído'],
+    });
+
+    onProgress?.({
+      step: 'concluido',
+      progress: 90,
+      message: 'Documentação pronta. Reiniciando serviço da wiki...',
+      logs: ['✓ Conteúdo da wiki atualizado', '→ Reiniciando PM2 doc...'],
+    });
+
+    return {
+      success: true,
+      message: 'Documentação atualizada com sucesso.',
+      steps,
+    };
+  }
+
+  /** Reinicia apenas o processo PM2 da wiki (`doc`). */
+  async reloadDocPM2(
+    onProgress?: (progress: { step: string; progress: number; message: string; logs?: string[] }) => void
+  ): Promise<CommandResult> {
+    onProgress?.({
+      step: 'pm2RestartDoc',
+      progress: 92,
+      message: 'Reiniciando serviço da wiki (PM2 doc)...',
+      logs: ['→ pm2 restart doc...'],
+    });
+
+    const restartResult = await this.pm2Service.restartApp('doc');
+    if (restartResult.success) {
+      onProgress?.({
+        step: 'pm2RestartDoc',
+        progress: 100,
+        message: 'Documentação atualizada com sucesso!',
+        logs: ['✓ PM2 doc reiniciado'],
+      });
+    } else {
+      onProgress?.({
+        step: 'pm2RestartDoc',
+        progress: 92,
+        message: `Erro ao reiniciar PM2 doc: ${restartResult.error || restartResult.stderr}`,
+        logs: [`✗ ${restartResult.error || restartResult.stderr}`],
+      });
+    }
+    return restartResult;
   }
 
   /**

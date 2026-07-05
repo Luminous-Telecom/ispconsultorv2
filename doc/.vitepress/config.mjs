@@ -231,7 +231,8 @@ export default defineConfig({
           { text: 'NFS-e', link: '/doc/parametros/nfse' },
           { text: 'Documentos do Sistema', link: '/doc/parametros/documentos-do-sistema' },
           { text: 'Assinatura Digital', link: '/doc/parametros/assinatura-digital' },
-          { text: 'Dias de Vencimento', link: '/doc/parametros/dias-vencimento' }
+          { text: 'Dias de Vencimento', link: '/doc/parametros/dias-vencimento' },
+          { text: 'Atualizações do Sistema', link: '/doc/parametros/atualizacoes' }
         ]
       }
     ]
@@ -242,7 +243,8 @@ export default defineConfig({
   vite: {
     server: {
       host: '0.0.0.0',
-      port: 4000,
+      /** 4001 em dev — a 4000 fica reservada ao `vitepress preview` (PM2 `doc`) */
+      port: 4001,
       allowedHosts: ['wiki-erp.ispconsultor.com.br']
     },
     preview: {
