@@ -74,7 +74,7 @@ Os campos desta aba **dependem do Tipo de Banco** selecionado em Informações B
 
 | Campo | Obrigatório | Descrição |
 |-------|:-----------:|-----------|
-| **URL de Retorno (Webhook)** | Não | URL de callback para confirmação de pagamentos — muda conforme o tipo (`/webhook/efi` ou `/webhook/asaas`). Use **Copiar** para obter a URL padrão |
+| **URL de Retorno (Webhook)** | Não | URL de callback para confirmação de pagamentos. Use **Copiar** para obter a URL padrão |
 | **Sandbox** | Sim | **Sim** = ambiente de homologação (testes) · **Não** = produção |
 | **Percentual de Multa (%)** | Não | Multa por atraso (padrão: 2,00) |
 | **Percentual de Juros (% ao dia)** | Não | Juros diários (padrão: 0,03) |
@@ -103,6 +103,10 @@ Em ambiente de homologação, marque **Sandbox = Sim** e use as credenciais de s
 
 ::: info Credenciais
 Obtenha as credenciais no painel do provedor de pagamento (EFI ou Asaas), sempre no ambiente correspondente ao valor de **Sandbox**.
+
+Para **Asaas**, siga o passo a passo completo (API Key, webhook e validação) em [Asaas — API e Webhook](/doc/integracoes/asaas).
+
+Para **Efí (EFI)**, siga [Efí — API e Webhook](/doc/integracoes/efi).
 :::
 
 ---

@@ -53,6 +53,8 @@ const sections = [
     icon: '/icons/plug.svg',
     description: 'Conexão com sistemas externos.',
     links: [
+      { text: 'Asaas', to: '/doc/integracoes/asaas' },
+      { text: 'Efí (EFI)', to: '/doc/integracoes/efi' },
       { text: 'IXC Provedor', to: '/doc/integracoes/ixc-provedor' },
       { text: 'Typebot', to: '/doc/integracoes/typebot' },
       { text: 'API REST', to: '/doc/integracoes/api' }

@@ -186,17 +186,38 @@ body {
 
 /* ── Sidebar ── */
 
+@media (min-width: 960px) {
+  .VPSidebar {
+    top: var(--vp-nav-height) !important;
+    padding-top: 0 !important;
+    height: calc(100vh - var(--vp-nav-height)) !important;
+    bottom: auto !important;
+  }
+}
+
 .VPSidebar {
   border-right: 1px solid var(--vp-c-divider);
   background: var(--vp-c-bg-alt);
 }
 
-.VPSidebarItem.level-0 > .item > .text {
+.VPSidebar .items {
+  padding-top: 12px;
+}
+
+.VPSidebarItem.level-0:not(.is-link) > .item > .text {
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--vp-c-text-3);
+}
+
+.VPSidebarItem.level-0.is-link > .item > .link {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--vp-c-text-1);
 }
 
 .VPSidebarItem .text {
@@ -237,6 +258,87 @@ body {
 .VPDocAsideOutline .outline-link {
   font-size: 0.75rem;
   line-height: 1.45;
+}
+
+/* ── Listagem meta: busca e colunas ── */
+
+.vp-doc h3[id*='campos-disponiveis'],
+.vp-doc h3[id*='colunas-da-tabela'] {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--isp-brand);
+  margin: 1.5rem 0 0.625rem;
+  padding: 0;
+  border: none;
+}
+
+.vp-doc h3[id*='campos-disponiveis']::before,
+.vp-doc h3[id*='colunas-da-tabela']::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--isp-brand);
+  box-shadow: 0 0 0 3px var(--isp-brand-soft);
+  flex-shrink: 0;
+}
+
+.vp-doc h3[id*='campos-disponiveis'] + p {
+  margin: 0 0 0.625rem;
+  font-size: 0.8125rem;
+  color: var(--vp-c-text-2);
+  line-height: 1.55;
+}
+
+.vp-doc h3[id*='campos-disponiveis'] + ul,
+.vp-doc h3[id*='campos-disponiveis'] + p + ul,
+.vp-doc h3[id*='colunas-da-tabela'] + ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0.875rem;
+  margin: 0 0 1.5rem;
+  background: linear-gradient(160deg, var(--vp-c-bg-soft) 0%, var(--vp-c-bg-alt) 100%);
+  border: 1px solid var(--vp-c-border);
+  border-radius: 12px;
+}
+
+.vp-doc h3[id*='campos-disponiveis'] + ul > li,
+.vp-doc h3[id*='campos-disponiveis'] + p + ul > li,
+.vp-doc h3[id*='colunas-da-tabela'] + ul > li {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--vp-c-text-1);
+  background: var(--vp-c-bg);
+  border: 1px solid var(--vp-c-border);
+  border-radius: 999px;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.vp-doc h3[id*='campos-disponiveis'] + ul > li:hover,
+.vp-doc h3[id*='campos-disponiveis'] + p + ul > li:hover,
+.vp-doc h3[id*='colunas-da-tabela'] + ul > li:hover {
+  border-color: rgba(107, 155, 209, 0.45);
+  background: var(--isp-brand-soft);
+}
+
+.vp-doc h3[id*='colunas-da-tabela'] + ul > li {
+  border-radius: 10px;
+}
+
+.vp-doc h3[id*='colunas-da-tabela'] + ul > li strong {
+  font-weight: 600;
+  color: var(--isp-brand);
 }
 
 /* ── Home page ── */

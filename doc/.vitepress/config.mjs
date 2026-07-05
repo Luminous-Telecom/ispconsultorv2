@@ -9,7 +9,12 @@ export default defineConfig({
     if (id.startsWith('erp/')) return id.replace(/^erp\//, 'doc/')
   },
   lang: 'pt-BR',
-  title: "Central de Ajuda",
+  title: 'wiki ispconsultor',
+  titleTemplate: false,
+  transformPageData(pageData) {
+    pageData.title = 'wiki ispconsultor'
+    return pageData
+  },
   description: "Wiki ISP Consultor — central de ajuda para consultores que atendem clientes",
   appearance: {
     initialValue: 'dark',
@@ -28,6 +33,7 @@ export default defineConfig({
     ['script', {}, `(function(){try{var k='vitepress-theme-appearance',v=localStorage.getItem(k);if(v==='')localStorage.setItem(k,'light')}catch(e){}})()`],
   ],
   themeConfig: {
+    siteTitle: 'Central de Ajuda',
     logo: {
       src: '/favicon-32x32.png',
       alt: 'ISP Consultor'
@@ -103,13 +109,7 @@ export default defineConfig({
     // Menu lateral — somente nas páginas de documentação (/doc/)
     sidebar: {
       '/doc/': [
-      {
-        text: 'Central de Ajuda',
-        collapsed: false,
-        items: [
-          { text: 'Visão geral', link: '/doc/' }
-        ]
-      },
+      { text: 'Visão geral', link: '/doc/' },
       {
         text: 'Referência',
         collapsed: true,
@@ -170,6 +170,8 @@ export default defineConfig({
         text: 'Integrações',
         collapsed: true,
         items: [
+          { text: 'Asaas', link: '/doc/integracoes/asaas' },
+          { text: 'Efí (EFI)', link: '/doc/integracoes/efi' },
           { text: 'IXC Provedor', link: '/doc/integracoes/ixc-provedor' },
           { text: 'Typebot', link: '/doc/integracoes/typebot' },
           { text: 'API REST', link: '/doc/integracoes/api' }
