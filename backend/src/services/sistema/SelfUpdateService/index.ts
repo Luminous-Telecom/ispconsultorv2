@@ -438,12 +438,25 @@ export class SelfUpdateService {
 
     const restartResult = await this.pm2Service.restartApp('doc');
     if (restartResult.success) {
-      onProgress?.({
-        step: 'pm2RestartDoc',
-        progress: 100,
-        message: 'Documentação atualizada com sucesso!',
-        logs: ['✓ PM2 doc reiniciado'],
-      });
+      try {
+        await execAsync('bash doc/scripts/purge-cloudflare-cache.sh', {
+          cwd: this.projectRoot,
+          maxBuffer: 1024 * 1024,
+        });
+        onProgress?.({
+          step: 'pm2RestartDoc',
+          progress: 100,
+          message: 'Documentação atualizada com sucesso!',
+          logs: ['✓ PM2 doc reiniciado', '✓ Purga Cloudflare (se configurada)'],
+        });
+      } catch {
+        onProgress?.({
+          step: 'pm2RestartDoc',
+          progress: 100,
+          message: 'Documentação atualizada com sucesso!',
+          logs: ['✓ PM2 doc reiniciado', '⚠ Purga Cloudflare não executada'],
+        });
+      }
     } else {
       onProgress?.({
         step: 'pm2RestartDoc',

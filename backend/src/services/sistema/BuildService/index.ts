@@ -55,6 +55,12 @@ export class BuildService {
 
     try {
       logger.info('Self-update: instalando dependências e compilando wiki (doc)');
+      try {
+        await execAsync('pm2 stop doc', { cwd: this.projectRoot, maxBuffer: 1024 * 1024 });
+        logger.info('Self-update: PM2 doc parado antes do build da wiki');
+      } catch {
+        /* wiki não roda via PM2 neste ambiente */
+      }
       await execAsync('npm install --prefix doc', { cwd: this.projectRoot, maxBuffer: MAX_BUFFER, env });
       await execAsync('npm run build --prefix doc', { cwd: this.projectRoot, maxBuffer: MAX_BUFFER, env });
       if (!fs.existsSync(docDistIndexPath(this.projectRoot))) {

@@ -99,6 +99,30 @@ export class Pm2Service {
   }
 
   /**
+   * Para um app PM2 específico (ex.: wiki `doc` antes do build).
+   */
+  async stopApp(appName: string): Promise<CommandResult> {
+    const describeResult = await this.executeCommand(
+      `pm2 describe ${appName}`,
+      this.projectRoot,
+      `PM2 Describe ${appName}`
+    );
+    if (!describeResult.success) {
+      return { success: true, stdout: `${appName} não está no PM2`, stderr: '' };
+    }
+
+    const stopResult = await this.executeCommand(
+      `pm2 stop ${appName}`,
+      this.projectRoot,
+      `PM2 Stop ${appName}`
+    );
+    if (stopResult.success) {
+      await this.executeCommand('pm2 save', this.projectRoot, 'PM2 Save');
+    }
+    return stopResult;
+  }
+
+  /**
    * Reinicia um app PM2 específico (ex.: só a wiki `doc`).
    */
   async restartApp(appName: string): Promise<CommandResult> {

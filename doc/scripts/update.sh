@@ -41,17 +41,21 @@ fi
 log "Instalando dependências da documentação..."
 npm install --prefix doc
 
+log "Parando wiki (PM2 doc) durante o build..."
+if pm2 describe doc >/dev/null 2>&1; then
+  pm2 stop doc
+fi
+
 log "Gerando build de produção (dist limpo + verificação de assets)..."
 npm run build --prefix doc
 
-log "Reiniciando PM2..."
-if pm2 describe doc >/dev/null 2>&1; then
-  pm2 restart doc
-else
-  pm2 start ecosystem.config.js --only doc
-fi
+log "Reiniciando PM2 doc..."
+pm2 restart doc 2>/dev/null || pm2 start ecosystem.config.js --only doc
 
 pm2 save
+
+log "Purga opcional do cache Cloudflare..."
+bash doc/scripts/purge-cloudflare-cache.sh || true
 
 log "Atualização concluída com sucesso."
 pm2 list
