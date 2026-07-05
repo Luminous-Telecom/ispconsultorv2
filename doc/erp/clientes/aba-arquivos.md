@@ -49,9 +49,10 @@ A tela segue o padrão de [listagens do ERP](/doc/geral/listagens). Abaixo, apen
 - Use nomes de arquivo descritivos antes do upload — facilita a busca posterior.
 - Prefira formatos comuns (PDF, PNG, JPG) para garantir visualização no navegador.
 - Evite excluir documentos com valor legal ou histórico de atendimento; consulte a equipe quando houver dúvida.
-
 ---
 
 ::: info Precisa de ajuda?
-Consulte [Suporte e Chamados](/doc/configuracoes/suporte) para abrir um chamado com a equipe ISP Consultor.
+**Suporte ISP Consultor:** [WhatsApp (84) 99866-7245](https://wa.me/5584998667245) · [Telegram @LucasMidia](https://t.me/LucasMidia)
+
+Ao abrir um chamado, informe empresa, usuário, tela ou módulo, passos para reproduzir e capturas ou mensagem de erro.
 :::

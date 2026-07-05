@@ -51,9 +51,10 @@ No topo da tela há um campo de busca de **clientes** com seletor de campo (ID, 
 - Consulte o dashboard diariamente para identificar contratos em atraso ou backups ausentes.
 - Clique nos cards para ir direto à listagem filtrada — evita navegação manual pelo menu.
 - Valores financeiros refletem os títulos registrados em [Contas A Receber](/doc/financeiro/contas-a-receber) e [Contas a Pagar](/doc/financeiro/contas-a-pagar).
-
 ---
 
 ::: info Precisa de ajuda?
-Consulte [Suporte e Chamados](/doc/configuracoes/suporte) para abrir um chamado com a equipe ISP Consultor.
+**Suporte ISP Consultor:** [WhatsApp (84) 99866-7245](https://wa.me/5584998667245) · [Telegram @LucasMidia](https://t.me/LucasMidia)
+
+Ao abrir um chamado, informe empresa, usuário, tela ou módulo, passos para reproduzir e capturas ou mensagem de erro.
 :::

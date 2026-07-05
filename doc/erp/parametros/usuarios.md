@@ -69,9 +69,10 @@ Na edição também é possível **Gerar token** (Webhook secret) — credencial
 - Desative usuários (**Ativo = Não**) em vez de excluir — preserva histórico em [Logs de Usuários](/doc/logs/logs#logs-de-usuarios).
 - Use e-mails corporativos reais — facilita recuperação de acesso e auditoria.
 - Revise periodicamente usuários inativos ou sem uso.
-
 ---
 
 ::: info Precisa de ajuda?
-Consulte [Suporte e Chamados](/doc/configuracoes/suporte) para abrir um chamado com a equipe ISP Consultor.
+**Suporte ISP Consultor:** [WhatsApp (84) 99866-7245](https://wa.me/5584998667245) · [Telegram @LucasMidia](https://t.me/LucasMidia)
+
+Ao abrir um chamado, informe empresa, usuário, tela ou módulo, passos para reproduzir e capturas ou mensagem de erro.
 :::

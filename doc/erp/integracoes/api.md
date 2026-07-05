@@ -32,7 +32,6 @@ Prefixos permitidos pelo backend:
 - `/api/contratos`
 - `/api/titulos`
 - `/api/dados-empresa`
-- `/api/blockdomi-publico`
 
 ### Clientes
 
@@ -92,13 +91,6 @@ Prefixos permitidos pelo backend:
 | POST | `/api/dados-empresa/logo` | Upload logo |
 | POST | `/api/dados-empresa/assinatura` | Upload assinatura |
 
-### Blockdomi público (JSON)
-
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| GET | `/api/blockdomi-publico` | Ofícios, SEI, datas e versões (sem listas completas) |
-| GET | `/api/blockdomi-publico/versao` | Número da versão atual |
-
 ---
 
 ## Exemplo
@@ -115,9 +107,10 @@ curl -H "Authorization: Bearer SEU_TOKEN" \
 ```
 
 Respostas seguem o padrão `{ success, message, data }`.
-
 ---
 
 ::: info Precisa de ajuda?
-Consulte [Suporte e Chamados](/doc/configuracoes/suporte) para abrir um chamado com a equipe ISP Consultor.
+**Suporte ISP Consultor:** [WhatsApp (84) 99866-7245](https://wa.me/5584998667245) · [Telegram @LucasMidia](https://t.me/LucasMidia)
+
+Ao abrir um chamado, informe empresa, usuário, tela ou módulo, passos para reproduzir e capturas ou mensagem de erro.
 :::

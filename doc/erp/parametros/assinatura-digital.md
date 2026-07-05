@@ -31,9 +31,10 @@ Clique em **Salvar** após configurar.
 ## Monitoramento
 
 Eventos de assinatura ficam registrados em [Logs de Assinatura Digital](/doc/logs/logs#logs-de-assinatura-digital).
-
 ---
 
 ::: info Precisa de ajuda?
-Consulte [Suporte e Chamados](/doc/configuracoes/suporte) para abrir um chamado com a equipe ISP Consultor.
+**Suporte ISP Consultor:** [WhatsApp (84) 99866-7245](https://wa.me/5584998667245) · [Telegram @LucasMidia](https://t.me/LucasMidia)
+
+Ao abrir um chamado, informe empresa, usuário, tela ou módulo, passos para reproduzir e capturas ou mensagem de erro.
 :::

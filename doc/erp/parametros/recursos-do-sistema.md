@@ -33,9 +33,10 @@ Após ajustar, clique em **Salvar**.
 - **Validar CNPJ/CEP** — afeta cadastros de [Clientes](/doc/clientes/cadastro-cliente) e [Fornecedores](/doc/cadastros/fornecedores).
 - **Vencimento sábado/domingo** — afeta geração de títulos em [Contratos](/doc/clientes/aba-contratos) combinado com [Dias de Vencimento](/doc/parametros/dias-vencimento).
 - **Método de Login** — afeta apenas o portal **Central do Assinante** (login do cliente final), não o acesso dos usuários do ERP em [Usuários](/doc/parametros/usuarios).
-
 ---
 
 ::: info Precisa de ajuda?
-Consulte [Suporte e Chamados](/doc/configuracoes/suporte) para abrir um chamado com a equipe ISP Consultor.
+**Suporte ISP Consultor:** [WhatsApp (84) 99866-7245](https://wa.me/5584998667245) · [Telegram @LucasMidia](https://t.me/LucasMidia)
+
+Ao abrir um chamado, informe empresa, usuário, tela ou módulo, passos para reproduzir e capturas ou mensagem de erro.
 :::

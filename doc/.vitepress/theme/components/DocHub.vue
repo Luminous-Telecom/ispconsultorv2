@@ -61,10 +61,9 @@ const sections = [
   {
     title: 'Suporte',
     icon: '/icons/life-buoy.svg',
-    description: 'Ordens de serviço e atendimento.',
+    description: 'Ordens de serviço dos clientes.',
     links: [
-      { text: 'Ordens de serviço', to: '/doc/suporte/ordens-de-servico' },
-      { text: 'Suporte e chamados', to: '/doc/configuracoes/suporte' }
+      { text: 'Ordens de serviço', to: '/doc/suporte/ordens-de-servico' }
     ]
   },
   {
@@ -130,8 +129,6 @@ const sections = [
         <a href="https://wa.me/5584998667245" target="_blank" rel="noopener noreferrer">WhatsApp (84) 99866-7245</a>
         ·
         <a href="https://t.me/LucasMidia" target="_blank" rel="noopener noreferrer">Telegram</a>
-        ·
-        <a href="/doc/configuracoes/suporte">Suporte e chamados</a>
       </p>
     </footer>
   </div>

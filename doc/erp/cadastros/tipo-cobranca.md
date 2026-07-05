@@ -61,9 +61,10 @@ Um tipo chamado **3x** com **3 títulos** e periodicidade **Mensal** gera três 
 ::: warning
 Tipos em uso por contratos ativos não devem ser excluídos — prefira inativar.
 :::
-
 ---
 
 ::: info Precisa de ajuda?
-Consulte [Suporte e Chamados](/doc/configuracoes/suporte) para abrir um chamado com a equipe ISP Consultor.
+**Suporte ISP Consultor:** [WhatsApp (84) 99866-7245](https://wa.me/5584998667245) · [Telegram @LucasMidia](https://t.me/LucasMidia)
+
+Ao abrir um chamado, informe empresa, usuário, tela ou módulo, passos para reproduzir e capturas ou mensagem de erro.
 :::

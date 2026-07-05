@@ -58,3 +58,10 @@ Use **Recarregar** após alterações feitas por outro usuário ou em outra aba,
 ## Fechar a tela
 
 Listagens abertas a partir do menu lateral aparecem em uma janela sobre o painel. Use o **X** no canto superior direito para fechar e voltar ao dashboard.
+---
+
+::: info Precisa de ajuda?
+**Suporte ISP Consultor:** [WhatsApp (84) 99866-7245](https://wa.me/5584998667245) · [Telegram @LucasMidia](https://t.me/LucasMidia)
+
+Ao abrir um chamado, informe empresa, usuário, tela ou módulo, passos para reproduzir e capturas ou mensagem de erro.
+:::

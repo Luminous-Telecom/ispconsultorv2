@@ -113,9 +113,10 @@ Se as permissões ou a quantidade de registros não estiver correta, a sincroniz
 Com integração ativa, permissões conferidas e vínculo ao contrato, use **Sincronizar dados OS** para importar ou atualizar ordens de serviço do IXC no ERP. As OS sincronizadas aparecem em [Ordens de Serviço](/doc/suporte/ordens-de-servico).
 
 Falhas na sincronização costumam aparecer em [Logs IXC — Ordens de Serviço](/doc/logs/logs#logs-ixc-ordens-de-servico).
-
 ---
 
 ::: info Precisa de ajuda?
-Consulte [Suporte e Chamados](/doc/configuracoes/suporte) para abrir um chamado com a equipe ISP Consultor.
+**Suporte ISP Consultor:** [WhatsApp (84) 99866-7245](https://wa.me/5584998667245) · [Telegram @LucasMidia](https://t.me/LucasMidia)
+
+Ao abrir um chamado, informe empresa, usuário, tela ou módulo, passos para reproduzir e capturas ou mensagem de erro.
 :::

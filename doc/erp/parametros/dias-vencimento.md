@@ -32,9 +32,10 @@ Somente os dias marcados como **Sim** aparecem no campo **Dia de Vencimento** ao
 - Habilite apenas os dias acordados com a operação financeira da consultoria.
 - Evite dias 29, 30 e 31 se a cobrança for mensal recorrente — meses curtos podem gerar inconsistências.
 - Revise esta configuração antes de abrir novos contratos em lote.
-
 ---
 
 ::: info Precisa de ajuda?
-Consulte [Suporte e Chamados](/doc/configuracoes/suporte) para abrir um chamado com a equipe ISP Consultor.
+**Suporte ISP Consultor:** [WhatsApp (84) 99866-7245](https://wa.me/5584998667245) · [Telegram @LucasMidia](https://t.me/LucasMidia)
+
+Ao abrir um chamado, informe empresa, usuário, tela ou módulo, passos para reproduzir e capturas ou mensagem de erro.
 :::

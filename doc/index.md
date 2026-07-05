@@ -12,9 +12,6 @@ hero:
     - theme: brand
       text: Acessar documentação
       link: /doc/
-    - theme: alt
-      text: Suporte
-      link: /doc/configuracoes/suporte
 
 features:
   - icon:

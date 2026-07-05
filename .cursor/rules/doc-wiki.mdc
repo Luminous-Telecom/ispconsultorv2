@@ -52,7 +52,7 @@ Links internos e sidebar continuam com prefixo **`/doc/`** (rewrite automático 
 - Listagens: referenciar [Listagens do ERP](/doc/geral/listagens) e documentar só o específico da tela
 - Passo a passo numerado para fluxos (criar, editar, sincronizar, imprimir)
 - Links internos entre páginas relacionadas (ex.: contrato → planos, bancos, documentos)
-- Encerrar com link para [Suporte e Chamados](/doc/configuracoes/suporte) quando fizer sentido
+- Encerrar artigos com bloco **Precisa de ajuda?** (WhatsApp + Telegram ISP Consultor) — ver qualquer página em `doc/erp/`
 
 ## Nova funcionalidade
 

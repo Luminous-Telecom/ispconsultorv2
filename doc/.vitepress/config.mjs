@@ -91,8 +91,7 @@ export default defineConfig({
     nav: [
       { text: 'Início', link: '/' },
       { text: 'Documentação', link: '/doc/' },
-      { text: 'API', link: '/doc/integracoes/api' },
-      { text: 'Suporte', link: '/doc/configuracoes/suporte' }
+      { text: 'API', link: '/doc/integracoes/api' }
     ],
     
     // Menu lateral — somente nas páginas de documentação (/doc/)
@@ -233,13 +232,6 @@ export default defineConfig({
           { text: 'Documentos do Sistema', link: '/doc/parametros/documentos-do-sistema' },
           { text: 'Assinatura Digital', link: '/doc/parametros/assinatura-digital' },
           { text: 'Dias de Vencimento', link: '/doc/parametros/dias-vencimento' }
-        ]
-      },
-      {
-        text: 'Configurações Globais',
-        collapsed: true,
-        items: [
-          { text: 'Suporte e Chamados', link: '/doc/configuracoes/suporte' }
         ]
       }
     ]

@@ -140,9 +140,10 @@ Notas emitidas também podem ser consultadas em **Financeiro → [Notas Fiscais]
 ::: warning Alterações sensíveis
 Cancelar ou estornar títulos com cobrança já enviada ao banco pode exigir ajuste manual na integração. Em caso de dúvida, alinhe com a equipe antes de prosseguir.
 :::
-
 ---
 
 ::: info Precisa de ajuda?
-Consulte [Suporte e Chamados](/doc/configuracoes/suporte) para abrir um chamado com a equipe ISP Consultor.
+**Suporte ISP Consultor:** [WhatsApp (84) 99866-7245](https://wa.me/5584998667245) · [Telegram @LucasMidia](https://t.me/LucasMidia)
+
+Ao abrir um chamado, informe empresa, usuário, tela ou módulo, passos para reproduzir e capturas ou mensagem de erro.
 :::

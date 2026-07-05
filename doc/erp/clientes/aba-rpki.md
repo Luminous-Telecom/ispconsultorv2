@@ -225,9 +225,10 @@ Use **Revogar** para invalidar uma ASPA publicada ou **Excluir** para remover o 
 - Mantenha as datas de validade das ROAs monitoradas; renove antes do vencimento.
 - Use **Sincronizar** e **Atualizar** após alterações externas na CA-pai ou no repositório para refletir o status real no ERP.
 - Documente handles e respostas XML trocadas com CA-pai e repositório na aba [Arquivos](/doc/clientes/aba-arquivos) do cliente.
-
 ---
 
 ::: info Precisa de ajuda?
-Consulte [Suporte e Chamados](/doc/configuracoes/suporte) para abrir um chamado com a equipe ISP Consultor.
+**Suporte ISP Consultor:** [WhatsApp (84) 99866-7245](https://wa.me/5584998667245) · [Telegram @LucasMidia](https://t.me/LucasMidia)
+
+Ao abrir um chamado, informe empresa, usuário, tela ou módulo, passos para reproduzir e capturas ou mensagem de erro.
 :::

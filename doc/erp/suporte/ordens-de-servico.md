@@ -117,9 +117,10 @@ OS criadas **apenas no ERP** (cliente sem IXC) permitem **Registrar mensagem** e
 - Vincule sempre a OS ao **Cliente** correto para facilitar busca e relatórios.
 - Use a sincronização IXC para manter OS alinhadas ao IXC do cliente, evitando duplicidade manual.
 - Consulte o **Histórico** antes de alterar status — preserva rastreabilidade do atendimento.
-
 ---
 
 ::: info Precisa de ajuda?
-Consulte [Suporte e Chamados](/doc/configuracoes/suporte) para abrir um chamado com a equipe ISP Consultor.
+**Suporte ISP Consultor:** [WhatsApp (84) 99866-7245](https://wa.me/5584998667245) · [Telegram @LucasMidia](https://t.me/LucasMidia)
+
+Ao abrir um chamado, informe empresa, usuário, tela ou módulo, passos para reproduzir e capturas ou mensagem de erro.
 :::
