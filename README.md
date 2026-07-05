@@ -1292,7 +1292,7 @@ pm2 startup
 ### Typebot
 
 - Integração via API existente: consulta cliente por CNPJ, contratos, títulos e criação de cliente.
-- Documentação em `docs/TYPEBOT_INTEGRACAO.md`.
+- Documentação em `doc/erp/integracoes/typebot.md` (wiki) e `doc/erp/integracoes/api.md` para a API REST.
 
 ### URLs de Webhook
 

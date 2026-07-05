@@ -16,7 +16,18 @@ Ordens também podem ser sincronizadas do IXC quando há [integração configura
 
 ## Suporte ISP Consultor
 
-Para problemas com o **próprio ERP** (acesso, configuração, bugs, parâmetros globais), entre em contato com a equipe ISP Consultor pelos canais habituais de atendimento ou fale com o responsável da sua equipe.
+Para problemas com o **próprio ERP** (acesso, configuração, bugs, parâmetros globais), entre em contato com a equipe ISP Consultor:
+
+### Canais de contato
+
+| Canal | Contato |
+|-------|---------|
+| **WhatsApp** | [(84) 99866-7245](https://wa.me/5584998667245) |
+| **Telegram** | [@LucasMidia](https://t.me/LucasMidia) (Luminous Telecom) |
+
+::: tip WhatsApp
+O link abre a conversa direto no WhatsApp Web ou no app, com o número **+55 84 99866-7245**.
+:::
 
 ### O que informar ao abrir um chamado
 

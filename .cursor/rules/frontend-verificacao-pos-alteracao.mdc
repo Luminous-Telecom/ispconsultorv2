@@ -56,17 +56,33 @@ Alterou menu, modal, campo, fluxo ou integração visível ao usuário → atual
 
 ## Build — somente quando o usuário pedir push/PR
 
-Rode o build **apenas** se **todas** forem verdadeiras:
+Rode o build **apenas** se o usuário pediu **push**, **PR** ou equivalente (“subir pro remoto”, “abrir pull request”).
 
-1. O usuário pediu **push**, **PR** ou equivalente (“subir pro remoto”, “abrir pull request”)
-2. Houve alteração em `frontend/`
+### Frontend (`frontend/`)
+
+Se houve alteração em `frontend/`:
 
 ```bash
 cd frontend && npm run build
 ```
 
 - Corrija **todos** os erros de compilação antes do push
-- Não faça push com build falhando
+
+### Wiki doc (`doc/`)
+
+Se houve alteração em `doc/` (`.md`, `config.mjs`, `public/`, etc.):
+
+```bash
+cd doc && npm run build
+```
+
+- O VitePress valida **dead links** — build falha se sidebar ou links internos apontam para páginas inexistentes
+- Corrija criando o `.md` faltante ou ajustando links/sidebar antes do push
+- Detalhes: `doc-wiki.mdc`
+
+### Regra geral
+
+- Não faça push com build falhando (frontend **ou** doc)
 - Se o usuário não pediu push/PR, **pare sem rodar build** — avise que ele pode pedir push quando quiser validar
 
 ## Checklist rápido
@@ -77,4 +93,5 @@ cd frontend && npm run build
 - [ ] Linter ok nos arquivos alterados
 
 **Quando usuário pedir push/PR:**
-- [ ] `npm run build` passou sem erro (se alterou frontend)
+- [ ] `cd frontend && npm run build` passou (se alterou frontend)
+- [ ] `cd doc && npm run build` passou (se alterou doc)

@@ -7,9 +7,10 @@ package-lock.json
 .env
 .env.local
 
-# Logs (não ignora frontend modals/logs)
+# Logs (não ignora frontend modals/logs nem wiki doc/erp/logs)
 logs/
 !frontend/src/components/modals/logs/
+!doc/erp/logs/
 *.log
 
 # Build artifacts

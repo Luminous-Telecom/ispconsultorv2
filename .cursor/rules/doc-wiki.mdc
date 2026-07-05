@@ -64,6 +64,25 @@ Links internos e sidebar continuam com prefixo **`/doc/`** (rewrite automático 
 
 O self-update via SaaS já compila e reinicia a wiki (`BuildService` + PM2 `doc`). Garantir que os `.md` commitados estejam corretos — o build roda no servidor após `git pull`.
 
+## Build — somente quando o usuário pedir push/PR
+
+**Nunca** rode `npm run build` em `doc/` por iniciativa própria ao concluir uma tarefa — o build demora e o hot reload (`npm run dev` em `doc/`) basta em dev.
+
+Rode o build **apenas** se **todas** forem verdadeiras:
+
+1. O usuário pediu **push**, **PR** ou equivalente (“subir pro remoto”, “abrir pull request”)
+2. Houve alteração em `doc/` (`.md`, `config.mjs`, `public/`, etc.)
+
+```bash
+cd doc && npm run build
+```
+
+O VitePress **falha o build** se houver links mortos (`ignoreDeadLinks` não está habilitado). Corrija **todos** os dead links antes do push.
+
+- Sidebar em `config.mjs` aponta para página que não existe → criar o `.md` em `doc/erp/` **ou** remover o link
+- Link interno `/doc/...` → a página correspondente deve existir em `doc/erp/`
+- Não faça push com build da wiki falhando
+
 ## Checklist (agente)
 
 Ao concluir tarefa que altera UI, API exposta ao usuário ou fluxo de negócio:
@@ -71,3 +90,7 @@ Ao concluir tarefa que altera UI, API exposta ao usuário ou fluxo de negócio:
 - [ ] Página wiki existente atualizada **ou** nova página + sidebar
 - [ ] Nomes de menu/campos/botões iguais aos do ERP (via i18n pt-BR quando aplicável)
 - [ ] Links cruzados para telas dependentes (pré-requisitos, telas globais vs aba do cliente)
+
+**Quando o usuário pedir push/PR e houve alteração em `doc/`:**
+
+- [ ] `cd doc && npm run build` passou sem dead links

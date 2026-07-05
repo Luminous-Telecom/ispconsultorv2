@@ -347,39 +347,16 @@ body {
 /* ── Doc hub (/doc/) ── */
 
 .doc-hub {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 0.5rem 0 3rem;
-}
-
-.doc-hub-hero {
-  margin-bottom: 1.75rem;
-}
-
-.doc-hub-eyebrow {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--isp-brand);
-  margin: 0 0 0.5rem;
-}
-
-.doc-hub-hero h1 {
-  font-size: 1.625rem;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.25;
-  margin: 0 0 0.75rem;
-  border: none;
-  padding: 0;
+  max-width: none;
+  margin: 0;
+  padding: 0 0 2rem;
 }
 
 .doc-hub-lead {
   font-size: 0.875rem;
   line-height: 1.7;
   color: var(--vp-c-text-2);
-  margin: 0;
+  margin: 0 0 1.25rem;
   max-width: 42rem;
 }
 
@@ -493,9 +470,9 @@ body {
 }
 
 .doc-hub-footer {
-  margin-top: 2.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--vp-c-divider);
+  margin-top: 1rem;
+  padding-top: 0;
+  border-top: none;
 }
 
 .doc-hub-footer p {
@@ -507,11 +484,6 @@ body {
 .doc-hub-footer a {
   color: var(--isp-brand);
   font-weight: 500;
-}
-
-/* Página /doc/ sem sidebar — conteúdo centralizado */
-.VPDoc.has-aside .content-container {
-  max-width: 960px;
 }
 
 /* ── Navbar & busca ── */

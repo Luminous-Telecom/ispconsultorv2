@@ -1,7 +1,5 @@
 ---
-title: Documentação
-sidebar: false
-outline: false
+title: Seja bem-vindo à Central de Ajuda!
 ---
 
 <DocHub />

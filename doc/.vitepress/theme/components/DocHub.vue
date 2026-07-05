@@ -54,7 +54,8 @@ const sections = [
     description: 'Conexão com sistemas externos.',
     links: [
       { text: 'IXC Provedor', to: '/doc/integracoes/ixc-provedor' },
-      { text: 'Typebot', to: '/doc/integracoes/typebot' }
+      { text: 'Typebot', to: '/doc/integracoes/typebot' },
+      { text: 'API REST', to: '/doc/integracoes/api' }
     ]
   },
   {
@@ -89,14 +90,10 @@ const sections = [
 
 <template>
   <div class="doc-hub">
-    <header class="doc-hub-hero">
-      <p class="doc-hub-eyebrow">Documentação</p>
-      <h1>Seja bem-vindo à Central de Ajuda</h1>
-      <p class="doc-hub-lead">
-        Guias operacionais do ERP ISP Consultor para consultores. A estrutura do menu
-        lateral segue a mesma lógica dos menus do sistema.
-      </p>
-    </header>
+    <p class="doc-hub-lead">
+      Guias operacionais do ERP ISP Consultor para consultores. A estrutura do menu
+      lateral segue a mesma lógica dos menus do sistema.
+    </p>
 
     <div class="doc-hub-tip">
       <span class="doc-hub-tip-label">Dica</span>
@@ -105,6 +102,8 @@ const sections = [
         descrevem regras de negócio, passo a passo e boas práticas do dia a dia.
       </p>
     </div>
+
+    <h2 id="modulos-do-erp">Módulos do ERP</h2>
 
     <div class="doc-hub-grid">
       <article v-for="section in sections" :key="section.title" class="doc-hub-card">
@@ -123,12 +122,16 @@ const sections = [
       </article>
     </div>
 
+    <h2 id="precisa-de-ajuda">Precisa de ajuda?</h2>
+
     <footer class="doc-hub-footer">
       <p>
-        Precisa de ajuda? Consulte
+        Suporte ISP Consultor:
+        <a href="https://wa.me/5584998667245" target="_blank" rel="noopener noreferrer">WhatsApp (84) 99866-7245</a>
+        ·
+        <a href="https://t.me/LucasMidia" target="_blank" rel="noopener noreferrer">Telegram</a>
+        ·
         <a href="/doc/configuracoes/suporte">Suporte e chamados</a>
-        ou comece pelo
-        <a href="/doc/geral/dashboard">Dashboard</a>.
       </p>
     </footer>
   </div>

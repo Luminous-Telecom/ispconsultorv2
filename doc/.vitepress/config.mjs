@@ -13,15 +13,17 @@ export default defineConfig({
   description: "Wiki ISP Consultor — central de ajuda para consultores que atendem clientes",
   appearance: 'dark',
   head: [
-    ['link', { rel: 'icon', href: '/ispconsultor-icone.png', type: 'image/png' }],
-    ['link', { rel: 'apple-touch-icon', href: '/ispconsultor-icone.png' }],
+    ['link', { rel: 'icon', href: '/favicon.ico', sizes: 'any' }],
+    ['link', { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' }],
+    ['link', { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png' }],
+    ['link', { rel: 'apple-touch-icon', href: '/favicon-32x32.png' }],
     ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
     ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
     ['link', { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap' }]
   ],
   themeConfig: {
     logo: {
-      src: '/ispconsultor-icone.png',
+      src: '/favicon-32x32.png',
       alt: 'ISP Consultor'
     },
 
@@ -89,12 +91,20 @@ export default defineConfig({
     nav: [
       { text: 'Início', link: '/' },
       { text: 'Documentação', link: '/doc/' },
+      { text: 'API', link: '/doc/integracoes/api' },
       { text: 'Suporte', link: '/doc/configuracoes/suporte' }
     ],
     
     // Menu lateral — somente nas páginas de documentação (/doc/)
     sidebar: {
       '/doc/': [
+      {
+        text: 'Central de Ajuda',
+        collapsed: false,
+        items: [
+          { text: 'Visão geral', link: '/doc/' }
+        ]
+      },
       {
         text: 'Referência',
         collapsed: true,
@@ -156,7 +166,8 @@ export default defineConfig({
         collapsed: true,
         items: [
           { text: 'IXC Provedor', link: '/doc/integracoes/ixc-provedor' },
-          { text: 'Typebot', link: '/doc/integracoes/typebot' }
+          { text: 'Typebot', link: '/doc/integracoes/typebot' },
+          { text: 'API REST', link: '/doc/integracoes/api' }
         ]
       },
       {

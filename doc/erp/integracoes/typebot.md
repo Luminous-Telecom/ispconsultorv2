@@ -23,13 +23,11 @@ Trate o token como senha. Não publique em fluxos públicos, repositórios ou pr
 
 ## URL base da API
 
-Substitua `{SEU_DOMINIO}` pela URL pública do seu ERP (sem barra no final):
-
 ```
-https://{SEU_DOMINIO}/api/...
+https://ispconsultor.com.br/api/...
 ```
 
-Exemplo: `https://erp.suaempresa.com.br/api/clientes/cnpj/37143069000184`
+Exemplo: `https://ispconsultor.com.br/api/clientes/cnpj/37143069000184`
 
 ---
 
@@ -42,15 +40,15 @@ Exemplo: `https://erp.suaempresa.com.br/api/clientes/cnpj/37143069000184`
 | Item | Valor |
 |------|--------|
 | **Método** | `GET` |
-| **URL** | `https://{SEU_DOMINIO}/api/clientes/cnpj/{cnpj}` |
+| **URL** | `https://ispconsultor.com.br/api/clientes/cnpj/{cnpj}` |
 | **Headers** | `Authorization: Bearer SEU_TOKEN` |
 
-Exemplo de URL: `/api/clientes/cnpj/37143069000184`
+Exemplo: `https://ispconsultor.com.br/api/clientes/cnpj/37143069000184`
 
 ### Configuração no Typebot
 
 1. Adicione um bloco **HTTP Request**.
-2. **URL:** `https://{SEU_DOMINIO}/api/clientes/cnpj/{{Cnpj}}`
+2. **URL:** `https://ispconsultor.com.br/api/clientes/cnpj/{{Cnpj}}`
 3. **Método:** `GET`
 4. **Headers:** `Authorization: Bearer SEU_TOKEN`
 
@@ -60,14 +58,16 @@ Use apenas os **14 dígitos** (sem pontuação). Se o visitante digitar `37.143.
 
 ### Resposta (200)
 
-| Campo | Conteúdo |
-|-------|----------|
-| `cliente` | Dados cadastrais (nome, e-mail, endereço etc.) |
+O corpo segue `{ success, message, data }`. Em `data` vêm os campos do cliente **e** os relacionamentos aninhados:
+
+| Campo em `data` | Conteúdo |
+|-----------------|----------|
+| Campos do cliente | `id`, `cnpj`, `razao_social`, `email`, endereço, etc. |
 | `contratos` | Contratos vinculados |
 | `titulos` | Títulos/faturas |
 | `planos` | Planos relacionados |
 
-Tudo em **uma única chamada** — não é necessário chamar outras URLs para montar a ficha do cliente.
+Para consultas parciais, use também [Contratos do cliente](#2-consultar-contratos-do-cliente) e [Títulos do cliente](#3-consultar-títulos-do-cliente).
 
 ### Erros comuns
 
@@ -85,7 +85,7 @@ Use quando já tiver o `id` do cliente (por exemplo, retornado na etapa anterior
 | Item | Valor |
 |------|--------|
 | **Método** | `GET` |
-| **URL** | `https://{SEU_DOMINIO}/api/contratos/cliente/{clienteId}` |
+| **URL** | `https://ispconsultor.com.br/api/contratos/cliente/{clienteId}` |
 | **Headers** | `Authorization: Bearer SEU_TOKEN` |
 
 ---
@@ -97,10 +97,10 @@ Lista títulos/faturas de um cliente específico.
 | Item | Valor |
 |------|--------|
 | **Método** | `GET` |
-| **URL** | `https://{SEU_DOMINIO}/api/titulos?cliente_id={clienteId}` |
+| **URL** | `https://ispconsultor.com.br/api/titulos?cliente_id={clienteId}` |
 | **Headers** | `Authorization: Bearer SEU_TOKEN` |
 
-Exemplo: `/api/titulos?cliente_id=123`
+Exemplo: `https://ispconsultor.com.br/api/titulos?cliente_id=123`
 
 ---
 
@@ -113,14 +113,14 @@ Quando o bot coleta dados do visitante e deve registrar o cliente no ERP.
 | Item | Valor |
 |------|--------|
 | **Método** | `POST` |
-| **URL** | `https://{SEU_DOMINIO}/api/clientes` |
+| **URL** | `https://ispconsultor.com.br/api/clientes` |
 | **Headers** | `Authorization: Bearer SEU_TOKEN` |
 | **Body** | JSON com os campos abaixo |
 
 ### Configuração no Typebot
 
 1. Bloco **HTTP Request**.
-2. **URL:** `https://{SEU_DOMINIO}/api/clientes`
+2. **URL:** `https://ispconsultor.com.br/api/clientes`
 3. **Método:** `POST`
 4. **Headers:** `Authorization: Bearer SEU_TOKEN`
 5. **Body (JSON):** mapeie as variáveis do fluxo para os campos do ERP.
@@ -152,10 +152,10 @@ Após criar o cliente, use [Cadastro de clientes](/doc/clientes/cadastro-cliente
 
 | Uso | Método | Rota | Auth |
 |-----|--------|------|------|
-| Cliente por CNPJ | `GET` | `/api/clientes/cnpj/{cnpj}` | `Authorization: Bearer <token>` |
-| Contratos do cliente | `GET` | `/api/contratos/cliente/{clienteId}` | `Authorization: Bearer <token>` |
-| Títulos do cliente | `GET` | `/api/titulos?cliente_id={clienteId}` | `Authorization: Bearer <token>` |
-| Criar cliente | `POST` | `/api/clientes` | `Authorization: Bearer <token>` |
+| Cliente por CNPJ | `GET` | `https://ispconsultor.com.br/api/clientes/cnpj/{cnpj}` | `Authorization: Bearer <token>` |
+| Contratos do cliente | `GET` | `https://ispconsultor.com.br/api/contratos/cliente/{clienteId}` | `Authorization: Bearer <token>` |
+| Títulos do cliente | `GET` | `https://ispconsultor.com.br/api/titulos?cliente_id={clienteId}` | `Authorization: Bearer <token>` |
+| Criar cliente | `POST` | `https://ispconsultor.com.br/api/clientes` | `Authorization: Bearer <token>` |
 
 ---
 
