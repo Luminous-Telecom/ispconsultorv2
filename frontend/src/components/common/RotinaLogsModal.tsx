@@ -1,284 +1,373 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import DraggableModal from './DraggableModal';
-import Table from '../tables/Table';
+import EmbeddedTablePanel from './EmbeddedTablePanel';
+import DetailFieldGrid, { type DetailFieldItem } from './DetailFieldGrid';
+import { Badge, FormField, Loading, TableFilterCheckbox } from 'components/ui';
+import { useI18n } from 'contexts/I18nContext';
+import { useTableFilters } from 'hooks/useTableFilters';
+import { useModalSelect } from 'hooks/useModalSelect';
+import { createSchedulerService } from 'services/createSchedulerService';
+import type { RoutineExecutionLog } from 'types/entities';
+import type { BadgeVariant } from 'components/ui/Badge';
+import { TableConfig } from 'components/tables/types';
 import { formatDateTime } from 'utils/formatters';
-import { Loading, TableFilterCheckbox } from 'components/ui';
 
 interface RotinaLogsModalProps {
   show: boolean;
   onClose: () => void;
   routineId: number | null;
   routineName?: string;
+  /** API do agendador ERP (`/scheduler`) ou SaaS (`/saas/scheduler`). */
+  variant?: 'erp' | 'saas';
 }
 
-interface LogEntry {
-  id: number;
-  routine_id: number;
-  status: 'sucesso' | 'erro' | 'executando';
-  data_inicio: string;
-  data_fim?: string;
-  duracao_ms?: number;
-  resultado?: string;
-  erro?: string;
-  stack_trace?: string;
-  created_at: string;
-  updated_at?: string;
-  routine?: {
-    nome: string;
-    tipo: string;
-  };
+const STATUS_VARIANT: Record<RoutineExecutionLog['status'], BadgeVariant> = {
+  sucesso: 'success',
+  erro: 'danger',
+  executando: 'warning',
+};
+
+function formatResultado(value: RoutineExecutionLog['resultado']): string {
+  if (value == null) return '—';
+  if (typeof value === 'string') return value;
+  return JSON.stringify(value);
 }
 
 const RotinaLogsModal: React.FC<RotinaLogsModalProps> = ({
   show,
   onClose,
   routineId,
-  routineName = 'Rotina'
+  routineName = 'Rotina',
+  variant = 'saas',
 }) => {
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { t } = useI18n();
   const [showOnlyErrors, setShowOnlyErrors] = useState(false);
-  const [sortColumn, setSortColumn] = useState<string>('data_inicio');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedLog, setSelectedLog] = useState<RoutineExecutionLog | null>(null);
+  const { selectedItem, handleSelectionChange } = useModalSelect<RoutineExecutionLog>();
 
-  // Função para ordenar logs
-  const getSortedLogs = (logsData: LogEntry[]) => {
-    if (!sortColumn) return logsData;
-    
-    return [...logsData].sort((a, b) => {
-      let aValue: string | number | undefined = a[sortColumn as keyof LogEntry] as string | number | undefined;
-      let bValue: string | number | undefined = b[sortColumn as keyof LogEntry] as string | number | undefined;
-      
-      // Tratamento especial para data_inicio
-      if (sortColumn === 'data_inicio') {
-        aValue = aValue ? new Date(aValue as string).getTime() : 0;
-        bValue = bValue ? new Date(bValue as string).getTime() : 0;
-      }
-      
-      // Tratamento especial para duracao_ms
-      else if (sortColumn === 'duracao_ms') {
-        aValue = (aValue as number) || 0;
-        bValue = (bValue as number) || 0;
-      }
-      
-      // Tratamento especial para status
-      else if (sortColumn === 'status') {
-        const statusOrder = { 'erro': 0, 'executando': 1, 'sucesso': 2 };
-        aValue = statusOrder[aValue as keyof typeof statusOrder] ?? 3;
-        bValue = statusOrder[bValue as keyof typeof statusOrder] ?? 3;
-      }
-      
-      // Tratamento geral para valores undefined/null
-      if (aValue == null) aValue = '';
-      if (bValue == null) bValue = '';
-      
-      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-  };
+  const schedulerService = useMemo(
+    () => createSchedulerService(variant === 'saas' ? '/saas/scheduler' : '/scheduler', { hasLogs: true }),
+    [variant]
+  );
 
-  // Função para lidar com ordenação dos logs
-  const handleSort = (column: string, direction: 'asc' | 'desc') => {
-    setSortColumn(column);
-    setSortDirection(direction);
-  };
+  const tableFilters = useTableFilters({
+    initialSearch: '',
+    initialPage: 1,
+    initialLimit: 10,
+    initialSortColumn: 'data_inicio',
+    initialSortDirection: 'desc',
+    searchDebounceMs: 0,
+    resetPageOnFilterChange: true,
+  });
 
-  // Buscar logs
-  const fetchLogs = useCallback(async () => {
-    if (!routineId) return;
-    
-    setLoading(true);
-    try {
-      const response = await fetch(`/api/scheduler/logs/${routineId}`);
-      const data = await response.json();
-      
-      if (data.success) {
-        setLogs(data.data);
-      }
-    } catch (error) {
-      // Erro silenciosamente tratado - componente já mostra estado de loading
-    } finally {
-      setLoading(false);
-    }
-  }, [routineId]);
+  const { data: logsResponse, isLoading, refetch } = useQuery({
+    queryKey: ['scheduler-routine-logs', variant, routineId],
+    queryFn: async () => {
+      if (!routineId || !schedulerService.getLogs) return [];
+      const response = await schedulerService.getLogs(routineId);
+      return response.data ?? [];
+    },
+    enabled: show && !!routineId,
+    staleTime: 0,
+  });
 
-  // Buscar logs quando o modal abrir
+  const logs = logsResponse ?? [];
+
   useEffect(() => {
-    if (show && routineId) {
-      fetchLogs();
-      // Reset paginação e busca quando abrir o modal
-      setCurrentPage(1);
-      setPageSize(10);
-      setSearchTerm('');
+    if (!show) {
+      setShowOnlyErrors(false);
+      setSelectedLog(null);
     }
-  }, [show, routineId, fetchLogs]);
+  }, [show]);
 
-  // Função para filtrar logs por busca
-  const filterLogsBySearch = (logsData: LogEntry[], search: string) => {
-    if (!search.trim()) return logsData;
-    
-    const searchLower = search.toLowerCase();
-    return logsData.filter((log: LogEntry) => {
-      // Buscar em diferentes campos
-      const statusMatch = log.status.toLowerCase().includes(searchLower);
-      const errorMatch = log.erro?.toLowerCase().includes(searchLower) || false;
-      const resultMatch = log.resultado?.toLowerCase().includes(searchLower) || false;
-      const dateMatch = log.data_inicio ? formatDateTime(log.data_inicio).includes(search) : false;
-      
-      return statusMatch || errorMatch || resultMatch || dateMatch;
-    });
-  };
+  const statusLabel = useCallback(
+    (status: RoutineExecutionLog['status']) => {
+      const map: Record<RoutineExecutionLog['status'], string> = {
+        sucesso: t('logs.status.success'),
+        erro: t('logs.status.error'),
+        executando: t('logs.status.executing'),
+      };
+      return map[status] ?? status;
+    },
+    [t]
+  );
 
-  // Filtrar logs por busca e erros
-  const searchedLogs = filterLogsBySearch(logs, searchTerm);
-  const filteredLogs = searchedLogs.filter((log: LogEntry) => !showOnlyErrors || log.status === 'erro');
-  const sortedLogs = getSortedLogs(filteredLogs);
-  
-  // Calcular paginação
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedLogs = sortedLogs.slice(startIndex, endIndex);
+  const filterLogsBySearch = useCallback(
+    (items: RoutineExecutionLog[], search: string) => {
+      if (!search.trim()) return items;
+      const searchLower = search.toLowerCase();
+      return items.filter((log) => {
+        const statusMatch = log.status.toLowerCase().includes(searchLower);
+        const errorMatch = log.erro?.toLowerCase().includes(searchLower) ?? false;
+        const resultMatch = formatResultado(log.resultado).toLowerCase().includes(searchLower);
+        const dateMatch = log.data_inicio ? formatDateTime(log.data_inicio).includes(search) : false;
+        return statusMatch || errorMatch || resultMatch || dateMatch;
+      });
+    },
+    []
+  );
 
-  const handleSearchChange = (search: string) => {
-    setSearchTerm(search);
-    setCurrentPage(1); // Reset para primeira página quando buscar
-  };
+  const getSortedLogs = useCallback(
+    (items: RoutineExecutionLog[]) => {
+      const column = tableFilters.sortColumn;
+      if (!column) return items;
+
+      return [...items].sort((a, b) => {
+        let aValue: string | number = a[column as keyof RoutineExecutionLog] as string | number;
+        let bValue: string | number = b[column as keyof RoutineExecutionLog] as string | number;
+
+        if (column === 'data_inicio') {
+          aValue = aValue ? new Date(aValue as string).getTime() : 0;
+          bValue = bValue ? new Date(bValue as string).getTime() : 0;
+        } else if (column === 'duracao_ms') {
+          aValue = (aValue as number) || 0;
+          bValue = (bValue as number) || 0;
+        } else if (column === 'status') {
+          const statusOrder = { erro: 0, executando: 1, sucesso: 2 };
+          aValue = statusOrder[aValue as keyof typeof statusOrder] ?? 3;
+          bValue = statusOrder[bValue as keyof typeof statusOrder] ?? 3;
+        }
+
+        if (aValue == null) aValue = '';
+        if (bValue == null) bValue = '';
+
+        if (aValue < bValue) return tableFilters.sortDirection === 'asc' ? -1 : 1;
+        if (aValue > bValue) return tableFilters.sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    },
+    [tableFilters.sortColumn, tableFilters.sortDirection]
+  );
+
+  const filteredLogs = useMemo(() => {
+    const searched = filterLogsBySearch(logs, tableFilters.search);
+    const errorFiltered = searched.filter((log) => !showOnlyErrors || log.status === 'erro');
+    return getSortedLogs(errorFiltered);
+  }, [logs, tableFilters.search, showOnlyErrors, filterLogsBySearch, getSortedLogs]);
+
+  const pagination = useMemo(() => {
+    const total = filteredLogs.length;
+    const perPage = tableFilters.limit;
+    const lastPage = Math.max(1, Math.ceil(total / perPage) || 1);
+    const currentPage = Math.min(tableFilters.page, lastPage);
+    const from = total === 0 ? 0 : (currentPage - 1) * perPage + 1;
+    const to = Math.min(currentPage * perPage, total);
+    return {
+      current_page: currentPage,
+      last_page: lastPage,
+      per_page: perPage,
+      total,
+      from,
+      to,
+    };
+  }, [filteredLogs.length, tableFilters.limit, tableFilters.page]);
+
+  const paginatedLogs = useMemo(() => {
+    const start = (pagination.current_page - 1) * pagination.per_page;
+    return filteredLogs.slice(start, start + pagination.per_page);
+  }, [filteredLogs, pagination.current_page, pagination.per_page]);
+
+  const handleViewDetails = useCallback(
+    (items: unknown[]) => {
+      const item = items.length > 0 ? items[0] : selectedItem;
+      if (item) setSelectedLog(item as RoutineExecutionLog);
+    },
+    [selectedItem]
+  );
+
+  const columns = useMemo(
+    (): TableConfig<RoutineExecutionLog>['columns'] => [
+      {
+        key: 'status',
+        label: t('table.status'),
+        sortable: true,
+        width: '100px',
+        render: (log) => (
+          <Badge variant={STATUS_VARIANT[log.status]} pill>
+            {statusLabel(log.status)}
+          </Badge>
+        ),
+      },
+      {
+        key: 'data_inicio',
+        label: t('audit.timestamp'),
+        sortable: true,
+        width: '150px',
+        render: (log) => (
+          <span className="small">{log.data_inicio ? formatDateTime(log.data_inicio) : '—'}</span>
+        ),
+      },
+      {
+        key: 'duracao_ms',
+        label: t('logs.duration'),
+        sortable: true,
+        width: '90px',
+        render: (log) => (
+          <span className="small">{log.duracao_ms != null ? `${log.duracao_ms}ms` : '—'}</span>
+        ),
+      },
+      {
+        key: 'resultado',
+        label: t('logs.result'),
+        sortable: false,
+        render: (log) => {
+          if (log.resultado) {
+            return <span className="small text-muted">{formatResultado(log.resultado)}</span>;
+          }
+          if (log.erro) {
+            return <span className="small text-danger">{log.erro}</span>;
+          }
+          return '—';
+        },
+      },
+    ],
+    [t, statusLabel]
+  );
+
+  const detailFields = useMemo((): DetailFieldItem[] => {
+    if (!selectedLog) return [];
+    const fields: DetailFieldItem[] = [
+      {
+        label: t('table.status'),
+        value: statusLabel(selectedLog.status),
+        inputClassName: selectedLog.status === 'erro' ? 'text-danger' : 'text-success',
+      },
+      {
+        label: t('audit.timestamp'),
+        value: selectedLog.data_inicio ? formatDateTime(selectedLog.data_inicio) : '—',
+      },
+      {
+        label: t('logs.duration'),
+        value: selectedLog.duracao_ms != null ? `${selectedLog.duracao_ms}ms` : '—',
+      },
+    ];
+    if (selectedLog.resultado) {
+      fields.push({ label: t('logs.result'), value: formatResultado(selectedLog.resultado) });
+    }
+    if (selectedLog.erro) {
+      fields.push({
+        label: t('history.error'),
+        value: selectedLog.erro,
+        inputClassName: 'text-danger',
+      });
+    }
+    return fields;
+  }, [selectedLog, statusLabel, t]);
+
+  const errorFilterControl =
+    logs.some((log) => log.status === 'erro') ? (
+      <TableFilterCheckbox
+        id="rotina-logs-show-only-errors"
+        name="showOnlyErrors"
+        label={t('logs.showOnlyErrors')}
+        checked={showOnlyErrors}
+        onChange={(checked) => {
+          setShowOnlyErrors(checked);
+          tableFilters.setPage(1);
+        }}
+      />
+    ) : undefined;
+
+  const tableContent = (
+    <EmbeddedTablePanel<RoutineExecutionLog>
+      config={{
+        columns,
+        data: paginatedLogs,
+        loading: isLoading,
+        searchable: true,
+        searchPlaceholder: t('logs.executionSearch'),
+        searchFields: [
+          { key: 'status', label: t('table.status') },
+          { key: 'erro', label: t('history.error') },
+          { key: 'resultado', label: t('logs.result') },
+        ],
+        sortable: true,
+        sortColumn: tableFilters.sortColumn,
+        sortDirection: tableFilters.sortDirection,
+        striped: true,
+        hover: true,
+        responsive: true,
+        selectable: true,
+        multiSelect: false,
+        customControls: errorFilterControl,
+        bulkActions: [
+          {
+            key: 'ver-detalhes',
+            label: t('audit.viewDetails'),
+            variant: 'primary',
+            requiresSelection: true,
+            onClick: handleViewDetails,
+          },
+        ],
+        emptyMessage: t('logs.executionEmpty'),
+        pagination,
+      }}
+      tableId={`rotina-logs-${variant}`}
+      onSelectionChange={(items) => handleSelectionChange(items as RoutineExecutionLog[])}
+      onRefresh={() => refetch()}
+      onPageChange={tableFilters.setPage}
+      onPageSizeChange={tableFilters.setLimit}
+      onSort={tableFilters.setSort}
+      onSearch={(search) => {
+        tableFilters.setSearch(search);
+        tableFilters.setPage(1);
+      }}
+      search={tableFilters.search}
+    />
+  );
 
   return (
-    <DraggableModal
-      show={show}
-      onClose={onClose}
-      title={`Logs de Execução - ${routineName}`}
-      size="xl"
-    >
-      {loading ? (
-        <Loading variant="centered" message="Carregando logs de execução..." />
-      ) : logs.length === 0 ? (
-        <div className="text-center text-muted">
-          <i className="bi bi-info-circle fs-1"></i>
-          <p className="mt-2">Nenhum log encontrado</p>
-          <small>Esta rotina ainda não foi executada ou os logs não estão disponíveis.</small>
-        </div>
-      ) : (
-        <div>
-          {/* Filtro para mostrar apenas erros */}
-          {logs.some((log: LogEntry) => log.status === 'erro') && (
-            <div className="mb-3">
-              <TableFilterCheckbox
-                id="showOnlyErrors"
-                name="showOnlyErrors"
-                label="Mostrar apenas logs com erro"
-                checked={showOnlyErrors}
-                onChange={setShowOnlyErrors}
-              />
-            </div>
-          )}
-          
-          <Table
-            syncWithHeader={false}
-            title={`Logs de Execução - ${routineName}`}
-            config={{
-              columns: [
-                {
-                  key: 'status',
-                  label: 'Status',
-                  sortable: true,
-                  width: '90px',
-                  badgeLabels: ['Sucesso', 'Erro', 'Executando'],
-                  render: (log: LogEntry) => (
-                    <span className={`badge ${
-                      log.status === 'sucesso' ? 'bg-success' :
-                      log.status === 'erro' ? 'bg-danger' :
-                      'bg-warning'
-                    }`}>
-                      {log.status === 'sucesso' ? 'Sucesso' :
-                       log.status === 'erro' ? 'Erro' :
-                       'Executando'}
-                    </span>
-                  )
-                },
-                {
-                  key: 'data_inicio',
-                  label: 'Data/Hora',
-                  sortable: true,
-                  width: '130px',
-                  render: (log: LogEntry) => log.data_inicio ? formatDateTime(log.data_inicio) : '-'
-                },
-                {
-                  key: 'duracao_ms',
-                  label: 'Duração',
-                  sortable: true,
-                  width: '90px',
-                  render: (log: LogEntry) => log.duracao_ms ? `${log.duracao_ms}ms` : '-'
-                },
-                {
-                  key: 'resultado',
-                  label: 'Resultado',
-                  sortable: false,
-                  width: '200px',
-                  render: (log: LogEntry) => {
-                    if (log.resultado) {
-                      return (
-                        <small className="text-muted">
-                          {typeof log.resultado === 'string' 
-                            ? log.resultado 
-                            : JSON.stringify(log.resultado)}
-                        </small>
-                      );
-                    } else if (log.erro) {
-                      return (
-                        <div>
-                          <small className="text-danger">
-                            {log.erro}
-                          </small>
-                          {log.stack_trace && (
-                            <details className="mt-1">
-                              <summary className="text-warning summary-log-md" >
-                                Ver detalhes técnicos
-                              </summary>
-                              <pre className="text-danger mt-1 fs-2xs pre-wrap" >
-                                {log.stack_trace}
-                              </pre>
-                            </details>
-                          )}
-                        </div>
-                      );
-                    }
-                    return '-';
-                  }
-                }
-              ],
-              data: paginatedLogs,
-              loading,
-              searchable: true,
-              searchPlaceholder: 'Buscar logs...',
-              searchFields: [
-                { key: 'id', label: 'ID' },
-                { key: 'acao', label: 'Ação' },
-                { key: 'usuario', label: 'Usuário' },
-                { key: 'entidade', label: 'Entidade' },
-                { key: 'entidade_id', label: 'ID Entidade' }
-              ],
-              sortable: true,
-              striped: true,
-              hover: true,
-              responsive: true,
-              bulkActions: [],
-              emptyMessage: 'Nenhum log encontrado'
-            }}
-            tableId="logs-modal"
-            onSearch={handleSearchChange}
-            onSort={handleSort}
-            onRefresh={() => window.location.reload()}
-            onSelectionChange={() => {}}
-          />
-        </div>
+    <>
+      <DraggableModal
+        show={show}
+        onClose={onClose}
+        title={t('logs.executionTitle', { name: routineName })}
+        size="xl"
+        className="no-padding"
+        modalId="rotina-logs-modal"
+      >
+        {isLoading && logs.length === 0 ? (
+          <Loading variant="modal" />
+        ) : !isLoading && logs.length === 0 ? (
+          <div className="form-modal-simple">
+            <p className="text-muted mb-1">{t('logs.executionEmpty')}</p>
+            <p className="form-helper-message">{t('logs.executionEmptyHint')}</p>
+          </div>
+        ) : (
+          tableContent
+        )}
+      </DraggableModal>
+
+      {selectedLog && (
+        <DraggableModal
+          show={!!selectedLog}
+          onClose={() => setSelectedLog(null)}
+          title={t('logs.detailsTitle')}
+          size="lg"
+          modalId="rotina-log-details-modal"
+        >
+          <div className="form-modal-simple logs-auditoria-details">
+            <DetailFieldGrid fields={detailFields} />
+            {selectedLog.stack_trace ? (
+              <div className="mt-3">
+                <FormField
+                  name="stack_trace"
+                  type="textarea"
+                  label={t('logs.stackTrace')}
+                  value={selectedLog.stack_trace}
+                  onChange={() => undefined}
+                  rows={Math.min(12, Math.max(4, selectedLog.stack_trace.split('\n').length + 1))}
+                  size="sm"
+                  readOnly
+                  className="text-danger font-monospace"
+                />
+              </div>
+            ) : null}
+          </div>
+        </DraggableModal>
       )}
-    </DraggableModal>
+    </>
   );
 };
 

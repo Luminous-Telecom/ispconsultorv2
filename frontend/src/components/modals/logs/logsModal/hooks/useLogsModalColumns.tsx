@@ -3,6 +3,7 @@ import { useI18n } from 'contexts/I18nContext';
 import { formatAuditoriaListId, formatDateTime } from 'utils/formatters';
 import { AuditoriaLog } from 'services/auditoriaService';
 import { Badge } from 'components/ui';
+import type { BadgeVariant } from 'components/ui/Badge';
 import { TableConfig } from 'components/tables/types';
 import type { BlockdomiLogAcessoItem } from 'services/blockdomiLogAcessoService';
 import { formatMensagemEmpresaNome, formatOperacionalPayloadPreview } from '../formatters';
@@ -14,7 +15,7 @@ interface UseLogsModalColumnsParams {
   isEmail: boolean;
   formatTimestamp: (ts: string) => string;
   formatAcao: (acao: string) => string;
-  getAcaoBadgeClass: (acao: string) => string;
+  getAcaoBadgeVariant: (acao: string) => BadgeVariant;
 }
 
 export function useLogsModalColumns({
@@ -23,7 +24,7 @@ export function useLogsModalColumns({
   isEmail,
   formatTimestamp,
   formatAcao,
-  getAcaoBadgeClass,
+  getAcaoBadgeVariant,
 }: UseLogsModalColumnsParams) {
   const { t } = useI18n();
 
@@ -115,7 +116,7 @@ export function useLogsModalColumns({
         label: t('table.action'),
         sortable: true,
         render: (log: AuditoriaLog) => (
-          <span className={`badge bg-${getAcaoBadgeClass(log.acao)}`}>{formatAcao(log.acao)}</span>
+          <Badge variant={getAcaoBadgeVariant(log.acao)}>{formatAcao(log.acao)}</Badge>
         ),
       },
       {
@@ -148,7 +149,7 @@ export function useLogsModalColumns({
           ]
         : []),
     ],
-    [t, formatTimestamp, formatAcao, getAcaoBadgeClass, showEmpresaColumn, logType]
+    [t, formatTimestamp, formatAcao, getAcaoBadgeVariant, showEmpresaColumn, logType]
   );
 
   const blockdomiColumns: TableConfig<BlockdomiLogAcessoItem>['columns'] = useMemo(
@@ -216,9 +217,9 @@ export function useLogsModalColumns({
         sortable: true,
         width: '90px',
         render: (i) => (
-          <span className={`badge bg-${i.sucesso ? 'success' : 'danger'}`}>
+          <Badge variant={i.sucesso ? 'success' : 'danger'}>
             {i.sucesso ? t('blockdomi.logsSucessoOk') : t('blockdomi.logsSucessoErro')}
-          </span>
+          </Badge>
         ),
       },
       {

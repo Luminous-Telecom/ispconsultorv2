@@ -4,6 +4,7 @@ import { useBlockdomiLogs } from 'hooks/useBlockdomiLogs';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
 import SearchBar from 'components/ui/SearchBar';
+import { Loading } from 'components/ui';
 import { getSocketToken } from 'services/core';
 import type { BlockdomiLogAcessoItem } from 'services/blockdomiLogAcessoService';
 
@@ -30,6 +31,10 @@ function formatLogLine(item: BlockdomiLogAcessoItem): string {
   const ok = item.sucesso ? 'OK' : 'ERRO';
   const msg = item.mensagem_erro ? ` | ${item.mensagem_erro}` : '';
   return `[${time}] ${ip} | ${item.metodo} ${item.rota} | ${status} ${ok}${msg}`;
+}
+
+function getBlockdomiLogLineClass(item: BlockdomiLogAcessoItem): string {
+  return item.sucesso ? 'terminal-log-line--success' : 'terminal-log-line--danger';
 }
 
 function matchesSearch(item: BlockdomiLogAcessoItem, q: string, field?: string): boolean {
@@ -87,7 +92,7 @@ const BlockdomiLogsRealModal: React.FC<BlockdomiLogsRealModalProps> = ({ show, o
       socket = io(getSocketUrl(), {
         path: '/socket.io',
         auth: { token },
-        transports: ['polling', 'websocket']
+        transports: ['polling', 'websocket'],
       });
       socket.on('connect', () => socket?.emit('subscribe-blockdomi-logs'));
       socket.on('blockdomi:log', (log: BlockdomiLogAcessoItem) => {
@@ -108,17 +113,15 @@ const BlockdomiLogsRealModal: React.FC<BlockdomiLogsRealModalProps> = ({ show, o
     containerRef.current.scrollTop = containerRef.current.scrollHeight;
   }, [filteredLines.length, show]);
 
-  const title = t('blockdomi.logsReal');
-
   return (
     <DraggableModal
       show={show}
       onClose={onClose}
-      title={title}
+      title={t('blockdomi.logsReal')}
       size="xl"
       modalId="blockdomi-logs-real-modal"
     >
-      <div className="form-modal-simple p-3 flex-fill-min-h-0">
+      <div className="form-modal-simple d-flex flex-column flex-fill-min-h-0">
         <div className="row g-2 mb-2">
           <div className="col-12">
             <SearchBar
@@ -140,21 +143,21 @@ const BlockdomiLogsRealModal: React.FC<BlockdomiLogsRealModalProps> = ({ show, o
             />
           </div>
         </div>
-        <div ref={containerRef} className="p-3 rounded bg-dark text-light blockdomi-logs-panel">
-        {isLoading && lines.length === 0 && (
-          <span className="text-info">{t('ui.loading')}...</span>
-        )}
-        {lines.length === 0 && !isLoading && (
-          <span className="text-muted">{t('blockdomi.logsEmpty')}</span>
-        )}
-        {filteredLines.map((item) => (
-          <div
-            key={item.id}
-            className={`${item.sucesso ? 'text-success' : 'text-danger'} lh-15`}
-          >
-            {formatLogLine(item)}
-          </div>
-        ))}
+        <div
+          ref={containerRef}
+          className="terminal-log-panel terminal-log-panel--300 flex-fill-min-h-0"
+        >
+          {isLoading && lines.length === 0 ? (
+            <Loading variant="inline" size="sm" />
+          ) : null}
+          {lines.length === 0 && !isLoading ? (
+            <span className="terminal-log-line--muted">{t('blockdomi.logsEmpty')}</span>
+          ) : null}
+          {filteredLines.map((item) => (
+            <div key={item.id} className={`lh-15 ${getBlockdomiLogLineClass(item)}`}>
+              {formatLogLine(item)}
+            </div>
+          ))}
         </div>
       </div>
     </DraggableModal>

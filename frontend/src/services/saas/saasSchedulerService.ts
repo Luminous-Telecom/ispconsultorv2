@@ -12,4 +12,5 @@ export type SaasSchedulerResponse = SchedulerResponse;
 
 export const SaasSchedulerService = createSchedulerService('/saas/scheduler', {
   hasExecute: true,
+  hasLogs: true,
 });

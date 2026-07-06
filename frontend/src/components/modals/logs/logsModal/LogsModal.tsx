@@ -49,7 +49,7 @@ const LogsModal: React.FC<LogsModalProps> = ({
     setSelectedMensagem,
   } = ctx;
 
-  const { formatTimestamp, formatAcao, getAcaoBadgeClass } = useLogsAuditoriaFormatters();
+  const { formatTimestamp, formatAcao, getAcaoBadgeVariant } = useLogsAuditoriaFormatters();
 
   const auditoriaExibirDetalhe = useMemo(
     () => getAuditoriaDetalheExibir(isAuditoria ? selectedAuditoria : null, showDetailsModal && isAuditoria),
@@ -64,7 +64,7 @@ const LogsModal: React.FC<LogsModalProps> = ({
     isEmail,
     formatTimestamp,
     formatAcao,
-    getAcaoBadgeClass,
+    getAcaoBadgeVariant,
   });
 
   const handleViewDetails = useCallback(

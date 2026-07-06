@@ -210,7 +210,7 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
         width: '110px',
         render: (item) => (
           <Badge variant={item.status === 'success' ? 'success' : 'danger'} pill>
-            {item.status === 'success' ? 'Sucesso' : 'Falha'}
+            {item.status === 'success' ? t('logs.status.success') : t('logs.status.error')}
           </Badge>
         ),
       },
@@ -274,8 +274,8 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
     }
 
     fields.push({
-      label: 'Status',
-      value: selectedLog.status === 'success' ? 'Sucesso' : 'Falha',
+      label: t('table.status'),
+      value: selectedLog.status === 'success' ? t('logs.status.success') : t('logs.status.error'),
       inputClassName: selectedLog.status === 'failed' ? 'text-danger' : 'text-success',
       colClassName: 'col-12',
     });
@@ -324,7 +324,7 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
           bulkActions: [
             {
               key: 'ver-detalhes',
-              label: 'Ver detalhes',
+              label: t('audit.viewDetails'),
               variant: 'primary',
               requiresSelection: true,
               onClick: handleViewDetails,
@@ -360,7 +360,7 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
               <FormField
                 name="rpki_log_message"
                 type="textarea"
-                label="Mensagem"
+                label={t('history.message')}
                 value={selectedLog.message ?? '—'}
                 onChange={() => undefined}
                 size="sm"

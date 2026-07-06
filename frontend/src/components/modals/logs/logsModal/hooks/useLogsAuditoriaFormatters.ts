@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useI18n } from 'contexts/I18nContext';
+import type { BadgeVariant } from 'components/ui/Badge';
 import { formatDateTime } from 'utils/formatters';
 
 export function useLogsAuditoriaFormatters() {
@@ -30,8 +31,8 @@ export function useLogsAuditoriaFormatters() {
     [t]
   );
 
-  const getAcaoBadgeClass = useCallback((acao: string) => {
-    const map: Record<string, string> = {
+  const getAcaoBadgeVariant = useCallback((acao: string): BadgeVariant => {
+    const map: Record<string, BadgeVariant> = {
       create: 'success',
       update: 'primary',
       delete: 'danger',
@@ -44,5 +45,5 @@ export function useLogsAuditoriaFormatters() {
     return map[acao] || 'secondary';
   }, []);
 
-  return { formatTimestamp, formatAcao, getAcaoBadgeClass };
+  return { formatTimestamp, formatAcao, getAcaoBadgeVariant };
 }

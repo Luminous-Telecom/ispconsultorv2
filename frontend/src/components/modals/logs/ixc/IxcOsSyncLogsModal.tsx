@@ -1,12 +1,13 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
+import DetailFieldGrid, { type DetailFieldItem } from 'components/common/DetailFieldGrid';
+import DraggableModal from 'components/common/DraggableModal';
 import { TableConfig } from 'components/tables/types';
-import { Badge } from 'components/ui';
+import { Badge, FormField } from 'components/ui';
+import { useI18n } from 'contexts/I18nContext';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { useModalSelect } from 'hooks/useModalSelect';
-import DraggableModal from 'components/common/DraggableModal';
-import { FormField } from 'components/ui';
 import { defaultApiClient } from 'services/core';
 import { getOrdemServicoStatusBadgeConfig } from 'components/modals/ordens-servico/ordemServicoStatusBadges';
 import { formatDateTime } from 'utils/formatters';
@@ -30,33 +31,31 @@ export interface IxcOsSyncLogRow {
   created_at: string;
 }
 
-const EVENT_LABELS: Record<string, string> = {
-  sync_batch: 'Sincronização agendada',
-  os_abertura: 'Abertura de OS',
-  os_fechamento: 'Fechamento de OS',
-  os_mensagem: 'Nova mensagem',
-  os_status: 'Alteração de status',
-  os_sync: 'Atualização de OS',
+const EVENT_I18N_KEYS: Record<string, 'logs.ixc.event.syncBatch' | 'logs.ixc.event.osOpen' | 'logs.ixc.event.osClose' | 'logs.ixc.event.osMessage' | 'logs.ixc.event.osStatus' | 'logs.ixc.event.osSync'> = {
+  sync_batch: 'logs.ixc.event.syncBatch',
+  os_abertura: 'logs.ixc.event.osOpen',
+  os_fechamento: 'logs.ixc.event.osClose',
+  os_mensagem: 'logs.ixc.event.osMessage',
+  os_status: 'logs.ixc.event.osStatus',
+  os_sync: 'logs.ixc.event.osSync',
 };
 
-const ORIGEM_LABELS: Record<string, string> = {
-  ispconsultor: 'ISP Consultor',
-  ixc: 'IXC Provedor',
+const ORIGEM_I18N_KEYS: Record<string, 'logs.ixc.origin.ispconsultor' | 'logs.ixc.origin.ixc'> = {
+  ispconsultor: 'logs.ixc.origin.ispconsultor',
+  ixc: 'logs.ixc.origin.ixc',
 };
 
-const TRIGGER_LABELS: Record<string, string> = {
-  scheduled: 'Agendada',
-  manual: 'Manual',
-  create: 'Criação',
+const TRIGGER_I18N_KEYS: Record<string, 'logs.ixc.trigger.scheduled' | 'logs.ixc.trigger.manual' | 'logs.ixc.trigger.create'> = {
+  scheduled: 'logs.ixc.trigger.scheduled',
+  manual: 'logs.ixc.trigger.manual',
+  create: 'logs.ixc.trigger.create',
 };
 
-const STATUS_LOG_LABELS: Record<string, string> = {
-  success: 'Sucesso',
-  failed: 'Falha',
-  info: 'Informação',
+const STATUS_I18N_KEYS: Record<string, 'logs.ixc.status.success' | 'logs.ixc.status.failed' | 'logs.ixc.status.info'> = {
+  success: 'logs.ixc.status.success',
+  failed: 'logs.ixc.status.failed',
+  info: 'logs.ixc.status.info',
 };
-
-const noopChange = () => undefined;
 
 const displayText = (value?: string | null): string => {
   const trimmed = value?.trim();
@@ -72,6 +71,7 @@ interface IxcOsSyncLogsModalProps {
 type LogColumns = TableConfig<IxcOsSyncLogRow>['columns'];
 
 const IxcOsSyncLogsModal: React.FC<IxcOsSyncLogsModalProps> = ({ show }) => {
+  const { t } = useI18n();
   const tableFilters = useTableFilters({
     initialSearch: '',
     initialPage: 1,
@@ -133,6 +133,42 @@ const IxcOsSyncLogsModal: React.FC<IxcOsSyncLogsModalProps> = ({ show }) => {
     };
   }, [data, tableFilters.limit]);
 
+  const resolveEventLabel = useCallback(
+    (eventType?: string | null) => {
+      if (!eventType) return '—';
+      const key = EVENT_I18N_KEYS[eventType];
+      return key ? t(key) : eventType;
+    },
+    [t]
+  );
+
+  const resolveOriginLabel = useCallback(
+    (origin?: string | null) => {
+      if (!origin) return '—';
+      const key = ORIGEM_I18N_KEYS[origin];
+      return key ? t(key) : origin;
+    },
+    [t]
+  );
+
+  const resolveTriggerLabel = useCallback(
+    (trigger?: string | null) => {
+      if (!trigger) return '—';
+      const key = TRIGGER_I18N_KEYS[trigger];
+      return key ? t(key) : trigger;
+    },
+    [t]
+  );
+
+  const resolveStatusLabel = useCallback(
+    (status?: string | null) => {
+      if (!status) return '—';
+      const key = STATUS_I18N_KEYS[status];
+      return key ? t(key) : status;
+    },
+    [t]
+  );
+
   const handleViewDetails = useCallback(
     (items: unknown[]) => {
       const item = items.length > 0 ? items[0] : selectedItem;
@@ -144,99 +180,134 @@ const IxcOsSyncLogsModal: React.FC<IxcOsSyncLogsModalProps> = ({ show }) => {
   const columns = useMemo((): LogColumns => [
     {
       key: 'created_at',
-      label: 'Data',
+      label: t('audit.timestamp'),
       sortable: true,
       width: '150px',
       render: (item) => <span className="small">{formatDateTime(item.created_at)}</span>,
     },
     {
       key: 'event_type',
-      label: 'Evento',
+      label: t('logs.ixc.event'),
       sortable: false,
       width: '150px',
-      render: (item) => (
-        <span className="small">{EVENT_LABELS[item.event_type ?? ''] ?? item.event_type ?? '—'}</span>
-      ),
+      render: (item) => <span className="small">{resolveEventLabel(item.event_type)}</span>,
     },
     {
       key: 'protocolo',
-      label: 'OS',
+      label: t('logs.ixc.protocol'),
       sortable: false,
       width: '110px',
       render: (item) => <span className="small">{item.protocolo ?? item.ixc_os_id ?? '—'}</span>,
     },
     {
       key: 'cliente_nome',
-      label: 'Cliente',
+      label: t('table.client'),
       sortable: false,
       width: '160px',
       render: (item) => (
-        <span className="small text-truncate d-inline-block truncate-max-150"  title={item.cliente_nome ?? ''}>
+        <span className="small text-truncate d-inline-block truncate-max-150" title={item.cliente_nome ?? ''}>
           {item.cliente_nome ?? '—'}
         </span>
       ),
     },
     {
       key: 'origem_abertura',
-      label: 'Origem',
+      label: t('logs.ixc.origin'),
       sortable: false,
       width: '110px',
-      render: (item) => (
-        <span className="small">
-          {item.origem_abertura ? ORIGEM_LABELS[item.origem_abertura] ?? item.origem_abertura : '—'}
-        </span>
-      ),
+      render: (item) => <span className="small">{resolveOriginLabel(item.origem_abertura)}</span>,
     },
     {
       key: 'operador_nome',
-      label: 'Operador',
+      label: t('logs.ixc.operator'),
       sortable: false,
       width: '140px',
       render: (item) => <span className="small">{item.operador_nome ?? '—'}</span>,
     },
     {
       key: 'integracao_nome',
-      label: 'Integração',
+      label: t('logs.ixc.integration'),
       sortable: false,
       width: '140px',
       render: (item) => (
-        <span className="small text-truncate d-inline-block truncate-max-130"  title={item.integracao_nome ?? ''}>
+        <span className="small text-truncate d-inline-block truncate-max-130" title={item.integracao_nome ?? ''}>
           {item.integracao_nome ?? '—'}
         </span>
       ),
     },
     {
       key: 'status',
-      label: 'Status',
+      label: t('table.status'),
       sortable: false,
       width: '90px',
       render: (item) => {
         const status = item.status ?? '';
         const variant = status === 'success' ? 'success' : status === 'failed' ? 'danger' : 'secondary';
-        return <Badge variant={variant}>{status || 'info'}</Badge>;
+        return <Badge variant={variant}>{resolveStatusLabel(status) || 'info'}</Badge>;
       },
     },
     {
       key: 'message',
-      label: 'Mensagem',
+      label: t('history.message'),
       sortable: false,
       render: (item) => (
-        <span className="small text-truncate d-inline-block truncate-max-280"  title={item.message ?? ''}>
+        <span className="small text-truncate d-inline-block truncate-max-280" title={item.message ?? ''}>
           {item.message ?? '—'}
         </span>
       ),
     },
-  ], []);
+  ], [resolveEventLabel, resolveOriginLabel, resolveStatusLabel, t]);
 
   const searchFields = useMemo(
     () => [
-      { key: 'protocolo', label: 'Protocolo' },
-      { key: 'cliente_nome', label: 'Cliente' },
-      { key: 'operador_nome', label: 'Operador' },
-      { key: 'message', label: 'Mensagem' },
+      { key: 'protocolo', label: t('logs.ixc.protocol') },
+      { key: 'cliente_nome', label: t('table.client') },
+      { key: 'operador_nome', label: t('logs.ixc.operator') },
+      { key: 'message', label: t('history.message') },
     ],
-    []
+    [t]
   );
+
+  const detailFields = useMemo((): DetailFieldItem[] => {
+    if (!selectedLog) return [];
+
+    const fields: DetailFieldItem[] = [
+      { label: t('audit.timestamp'), value: formatDateTime(selectedLog.created_at) },
+      { label: t('logs.ixc.event'), value: resolveEventLabel(selectedLog.event_type) },
+      {
+        label: t('table.status'),
+        value: resolveStatusLabel(selectedLog.status),
+        inputClassName:
+          selectedLog.status === 'failed'
+            ? 'text-danger'
+            : selectedLog.status === 'success'
+              ? 'text-success'
+              : undefined,
+      },
+      { label: t('logs.ixc.trigger'), value: resolveTriggerLabel(selectedLog.trigger_type) },
+      { label: t('logs.ixc.protocol'), value: displayText(selectedLog.protocolo) },
+      { label: t('logs.ixc.ixcId'), value: displayText(selectedLog.ixc_os_id) },
+      { label: t('table.client'), value: displayText(selectedLog.cliente_nome) },
+      { label: t('logs.ixc.origin'), value: resolveOriginLabel(selectedLog.origem_abertura) },
+      { label: t('logs.ixc.operator'), value: displayText(selectedLog.operador_nome) },
+      { label: t('logs.ixc.integration'), value: displayText(selectedLog.integracao_nome) },
+    ];
+
+    if (selectedLog.status_anterior) {
+      fields.push({
+        label: t('logs.ixc.previousStatus'),
+        value: getOrdemServicoStatusBadgeConfig(selectedLog.status_anterior).label,
+      });
+    }
+    if (selectedLog.status_novo) {
+      fields.push({
+        label: t('logs.ixc.newStatus'),
+        value: getOrdemServicoStatusBadgeConfig(selectedLog.status_novo).label,
+      });
+    }
+
+    return fields;
+  }, [resolveEventLabel, resolveOriginLabel, resolveStatusLabel, resolveTriggerLabel, selectedLog, t]);
 
   return (
     <>
@@ -246,7 +317,7 @@ const IxcOsSyncLogsModal: React.FC<IxcOsSyncLogsModalProps> = ({ show }) => {
           data: rows,
           loading: isLoading,
           searchable: true,
-          searchPlaceholder: 'Buscar por protocolo, cliente, operador...',
+          searchPlaceholder: t('logs.ixc.searchPlaceholder'),
           searchFields,
           sortable: true,
           sortColumn: tableFilters.sortColumn,
@@ -259,13 +330,13 @@ const IxcOsSyncLogsModal: React.FC<IxcOsSyncLogsModalProps> = ({ show }) => {
           bulkActions: [
             {
               key: 'ver-detalhes',
-              label: 'Ver detalhes',
+              label: t('audit.viewDetails'),
               variant: 'primary',
               requiresSelection: true,
               onClick: handleViewDetails,
             },
           ],
-          emptyMessage: 'Nenhum log de sincronização IXC registrado',
+          emptyMessage: t('logs.ixc.empty'),
           pagination,
         }}
         tableId="ixc-os-sync-logs"
@@ -285,185 +356,27 @@ const IxcOsSyncLogsModal: React.FC<IxcOsSyncLogsModalProps> = ({ show }) => {
         <DraggableModal
           show={!!selectedLog}
           onClose={() => setSelectedLog(null)}
-          title="Detalhes do log IXC"
+          title={t('logs.ixc.detailsTitle')}
           size="lg"
           modalId="ixc-os-sync-log-details"
         >
           <div className="form-modal-simple logs-auditoria-details">
-            <div className="row g-2">
-              <div className="col-12">
-                <FormField
-                  name="created_at"
-                  type="text"
-                  label="Data"
-                  value={formatDateTime(selectedLog.created_at)}
-                  onChange={noopChange}
-                  size="sm"
-                  readOnly
-                />
-              </div>
-              <div className="col-12">
-                <FormField
-                  name="event_type"
-                  type="text"
-                  label="Evento"
-                  value={
-                    EVENT_LABELS[selectedLog.event_type ?? ''] ??
-                    displayText(selectedLog.event_type)
-                  }
-                  onChange={noopChange}
-                  size="sm"
-                  readOnly
-                />
-              </div>
-              <div className="col-12">
-                <FormField
-                  name="status"
-                  type="text"
-                  label="Status"
-                  value={
-                    STATUS_LOG_LABELS[selectedLog.status ?? ''] ??
-                    displayText(selectedLog.status)
-                  }
-                  onChange={noopChange}
-                  size="sm"
-                  readOnly
-                  className={
-                    selectedLog.status === 'failed'
-                      ? 'text-danger'
-                      : selectedLog.status === 'success'
-                        ? 'text-success'
-                        : ''
-                  }
-                />
-              </div>
-              <div className="col-12">
-                <FormField
-                  name="trigger_type"
-                  type="text"
-                  label="Disparo"
-                  value={
-                    selectedLog.trigger_type
-                      ? TRIGGER_LABELS[selectedLog.trigger_type] ?? selectedLog.trigger_type
-                      : '—'
-                  }
-                  onChange={noopChange}
-                  size="sm"
-                  readOnly
-                />
-              </div>
-              <div className="col-12">
-                <FormField
-                  name="protocolo"
-                  type="text"
-                  label="Protocolo"
-                  value={displayText(selectedLog.protocolo)}
-                  onChange={noopChange}
-                  size="sm"
-                  readOnly
-                />
-              </div>
-              <div className="col-12">
-                <FormField
-                  name="ixc_os_id"
-                  type="text"
-                  label="ID IXC"
-                  value={displayText(selectedLog.ixc_os_id)}
-                  onChange={noopChange}
-                  size="sm"
-                  readOnly
-                />
-              </div>
-              <div className="col-12">
-                <FormField
-                  name="cliente_nome"
-                  type="text"
-                  label="Cliente"
-                  value={displayText(selectedLog.cliente_nome)}
-                  onChange={noopChange}
-                  size="sm"
-                  readOnly
-                />
-              </div>
-              <div className="col-12">
-                <FormField
-                  name="origem_abertura"
-                  type="text"
-                  label="Origem"
-                  value={
-                    selectedLog.origem_abertura
-                      ? ORIGEM_LABELS[selectedLog.origem_abertura] ?? selectedLog.origem_abertura
-                      : '—'
-                  }
-                  onChange={noopChange}
-                  size="sm"
-                  readOnly
-                />
-              </div>
-              <div className="col-12">
-                <FormField
-                  name="operador_nome"
-                  type="text"
-                  label="Operador"
-                  value={displayText(selectedLog.operador_nome)}
-                  onChange={noopChange}
-                  size="sm"
-                  readOnly
-                />
-              </div>
-              <div className="col-12">
-                <FormField
-                  name="integracao_nome"
-                  type="text"
-                  label="Integração"
-                  value={displayText(selectedLog.integracao_nome)}
-                  onChange={noopChange}
-                  size="sm"
-                  readOnly
-                />
-              </div>
-              {selectedLog.status_anterior && (
-                <div className="col-12">
-                  <FormField
-                    name="status_anterior"
-                    type="text"
-                    label="Status anterior"
-                    value={getOrdemServicoStatusBadgeConfig(selectedLog.status_anterior).label}
-                    onChange={noopChange}
-                    size="sm"
-                    readOnly
-                  />
-                </div>
-              )}
-              {selectedLog.status_novo && (
-                <div className="col-12">
-                  <FormField
-                    name="status_novo"
-                    type="text"
-                    label="Status novo"
-                    value={getOrdemServicoStatusBadgeConfig(selectedLog.status_novo).label}
-                    onChange={noopChange}
-                    size="sm"
-                    readOnly
-                  />
-                </div>
-              )}
-              <div className="col-12">
-                <FormField
-                  name="message"
-                  type="textarea"
-                  label="Mensagem"
-                  value={displayText(selectedLog.message)}
-                  onChange={noopChange}
-                  rows={Math.min(
-                    12,
-                    Math.max(4, (selectedLog.message ?? '').split('\n').length + 1)
-                  )}
-                  size="sm"
-                  readOnly
-                  className={selectedLog.status === 'failed' ? 'text-danger' : ''}
-                />
-              </div>
+            <DetailFieldGrid fields={detailFields} />
+            <div className="mt-3">
+              <FormField
+                name="message"
+                type="textarea"
+                label={t('history.message')}
+                value={displayText(selectedLog.message)}
+                onChange={() => undefined}
+                rows={Math.min(
+                  12,
+                  Math.max(4, (selectedLog.message ?? '').split('\n').length + 1)
+                )}
+                size="sm"
+                readOnly
+                className={selectedLog.status === 'failed' ? 'text-danger' : undefined}
+              />
             </div>
           </div>
         </DraggableModal>
