@@ -51,13 +51,8 @@ export const useMenuItems = ({ t, openModal, hasModulo }: UseMenuItemsParams) =>
       [
         { id: 'dados-empresa', modalId: 'dados-empresa', label: t('menu.companyData'), icon: 'bi-building', onClick: () => handleOpenModal('dados-empresa') },
         { id: 'usuarios', modalId: 'usuarios', label: t('params.users'), icon: 'bi-people-fill', onClick: () => handleOpenModal('usuarios') },
-        { id: 'auditoria', modalId: 'auditoria', label: t('params.auditLogs'), icon: 'bi-journal-text', onClick: () => handleOpenModal('auditoria') },
         { id: 'recursos-sistema', modalId: 'recursos-sistema', label: t('params.systemResources'), icon: 'bi-gear', onClick: () => handleOpenModal('recursos-sistema') },
-        { id: 'servidor-email', modalId: 'servidor-email', label: t('params.emailServer'), icon: 'bi-envelope', onClick: () => handleOpenModal('servidor-email') },
-        { id: 'servidor-whatsapp', modalId: 'servidor-whatsapp', label: t('params.whatsappServer'), icon: 'bi-whatsapp', onClick: () => handleOpenModal('servidor-whatsapp') },
-        { id: 'nfse', modalId: 'nfse', label: t('params.nfse'), icon: 'bi-file-earmark-text', onClick: () => handleOpenModal('nfse') },
         { id: 'documentos-sistema', modalId: 'documentos-sistema', label: t('params.systemDocuments'), icon: 'bi-folder', onClick: () => handleOpenModal('documentos-sistema') },
-        { id: 'assinatura-digital', modalId: 'assinatura-digital', label: t('params.digitalSignature'), icon: 'bi-pen', onClick: () => handleOpenModal('assinatura-digital') },
         { id: 'dias-vencimento', modalId: 'dias-vencimento', label: t('params.dueDays'), icon: 'bi-calendar-event', onClick: () => handleOpenModal('dias-vencimento') },
       ].filter(filterItem),
     [t, handleOpenModal, filterItem]
@@ -106,21 +101,27 @@ export const useMenuItems = ({ t, openModal, hasModulo }: UseMenuItemsParams) =>
   );
 
   const integracoesFolderItems = useMemo(
-    () => [
-      {
-        id: 'integracao-ixc-provedor',
-        modalId: 'integracao-ixc-provedor',
-        label: t('tabs.ixcProvedor'),
-        icon: 'bi-plug',
-        onClick: () => handleOpenModal('integracao-ixc-provedor'),
-      },
-    ],
-    [t, handleOpenModal]
+    () =>
+      [
+        { id: 'servidor-email', modalId: 'servidor-email', label: t('params.emailServer'), icon: 'bi-envelope', onClick: () => handleOpenModal('servidor-email') },
+        { id: 'servidor-whatsapp', modalId: 'servidor-whatsapp', label: t('params.whatsappServer'), icon: 'bi-whatsapp', onClick: () => handleOpenModal('servidor-whatsapp') },
+        { id: 'nfse', modalId: 'nfse', label: t('params.nfse'), icon: 'bi-file-earmark-text', onClick: () => handleOpenModal('nfse') },
+        { id: 'assinatura-digital', modalId: 'assinatura-digital', label: t('params.digitalSignature'), icon: 'bi-pen', onClick: () => handleOpenModal('assinatura-digital') },
+        {
+          id: 'integracao-ixc-provedor',
+          modalId: 'integracao-ixc-provedor',
+          label: t('tabs.ixcProvedor'),
+          icon: 'bi-plug',
+          onClick: () => handleOpenModal('integracao-ixc-provedor'),
+        },
+      ].filter(filterItem),
+    [t, handleOpenModal, filterItem]
   );
 
   const logsFolderItems = useMemo(
     () =>
       [
+        { id: 'auditoria', modalId: 'auditoria', label: t('params.auditLogs'), icon: 'bi-journal-text', onClick: () => handleOpenModal('auditoria') },
         { id: 'logs-usuarios', modalId: 'logs-usuarios', label: t('logs.usuarios'), icon: 'bi-people-fill', onClick: () => handleOpenModal('logs-usuarios') },
         { id: 'logs-assinatura-digital', modalId: 'logs-assinatura-digital', label: t('logs.assinaturaDigital'), icon: 'bi-pen', onClick: () => handleOpenModal('logs-assinatura-digital') },
         { id: 'logs-acesso-sistema', modalId: 'logs-acesso-sistema', label: t('logs.acessoSistema'), icon: 'bi-door-open', onClick: () => handleOpenModal('logs-acesso-sistema') },

@@ -150,7 +150,7 @@ Vincula **termos adicionais** ao contrato (adesão, permanência etc.), cadastra
 3. Defina **Ativo** (**Sim** ou **Não**).
 4. Clique em **Salvar**.
 
-O campo **Assinado** indica se o termo já foi aceito pelo cliente. Use **Assinatura** para iniciar o fluxo de assinatura digital quando configurado em **Parâmetros → Assinatura Digital**.
+O campo **Assinado** indica se o termo já foi aceito pelo cliente. Use **Assinatura** para iniciar o fluxo de assinatura digital quando configurado em **Integrações → Assinatura Digital**.
 
 ---
 

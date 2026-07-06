@@ -9,7 +9,7 @@ Normalmente configurado uma única vez pela equipe administrativa ou ISP Consult
 ## Como acessar
 
 1. Faça login no painel administrativo.
-2. No menu lateral, abra **Parâmetros**.
+2. No menu lateral, abra **Integrações**.
 3. Clique em **Servidor de WhatsApp**.
 
 ---

@@ -9,7 +9,7 @@ Modelos de documento devem estar cadastrados em [Documentos do Sistema](/doc/par
 ## Como acessar
 
 1. Faça login no painel administrativo.
-2. No menu lateral, abra **Parâmetros**.
+2. No menu lateral, abra **Integrações**.
 3. Clique em **Assinatura Digital**.
 
 ---

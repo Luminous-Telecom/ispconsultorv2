@@ -9,11 +9,11 @@ Normalmente consultado por administradores para investigação de alterações o
 ## Como acessar
 
 1. Faça login no painel administrativo.
-2. No menu lateral, abra **Parâmetros**.
+2. No menu lateral, abra **Logs**.
 3. Clique em **Logs de Auditoria**.
 
 ::: tip Outros logs
-Logs específicos por área (equipamentos, comunicação, IXC, RPKI etc.) estão no menu **Logs** — veja [Logs do ERP](/doc/logs/logs).
+Logs específicos por área (equipamentos, comunicação, IXC, RPKI etc.) também estão no menu **Logs** — veja [Logs do ERP](/doc/logs/logs).
 :::
 
 ---

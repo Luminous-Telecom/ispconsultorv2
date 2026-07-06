@@ -215,6 +215,28 @@ export default defineConfig({
         collapsed: true,
         items: [
           { text: 'Asaas', link: '/doc/integracoes/asaas' },
+          {
+            text: 'Servidor de E-Mail',
+            collapsed: true,
+            items: [
+              { text: 'Visão geral', link: '/doc/integracoes/servidor-email' },
+              { text: 'Aba Servidor', link: '/doc/integracoes/servidor-email#aba-servidor' },
+              { text: 'Aba Mensagens', link: '/doc/integracoes/servidor-email#aba-mensagens' }
+            ]
+          },
+          {
+            text: 'Servidor de WhatsApp',
+            collapsed: true,
+            items: [
+              { text: 'Visão geral', link: '/doc/integracoes/servidor-whatsapp' },
+              { text: 'Aba Servidor', link: '/doc/integracoes/servidor-whatsapp#aba-servidor' },
+              { text: 'Aba Mensagens', link: '/doc/integracoes/servidor-whatsapp#aba-mensagens' },
+              { text: 'Aba Templates Meta', link: '/doc/integracoes/servidor-whatsapp#aba-templates-meta' },
+              { text: 'Aba Templates', link: '/doc/integracoes/servidor-whatsapp#aba-templates' }
+            ]
+          },
+          { text: 'NFS-e', link: '/doc/integracoes/nfse' },
+          { text: 'Assinatura Digital', link: '/doc/integracoes/assinatura-digital' },
           { text: 'Efí (EFI)', link: '/doc/integracoes/efi' },
           { text: 'IXC Provedor', link: '/doc/integracoes/ixc-provedor' },
           { text: 'Typebot', link: '/doc/integracoes/typebot' },
@@ -242,6 +264,7 @@ export default defineConfig({
         collapsed: true,
         items: [
           { text: 'Visão geral', link: '/doc/logs/logs' },
+          { text: 'Logs de Auditoria', link: '/doc/logs/logs-auditoria' },
           { text: 'Logs de Usuários', link: '/doc/logs/logs#logs-de-usuarios' },
           { text: 'Logs de Assinatura Digital', link: '/doc/logs/logs#logs-de-assinatura-digital' },
           { text: 'Logs de Acesso ao Sistema', link: '/doc/logs/logs#logs-de-acesso-ao-sistema' },
@@ -296,29 +319,7 @@ export default defineConfig({
             ]
           },
           { text: 'Usuários', link: '/doc/parametros/usuarios' },
-          { text: 'Logs de Auditoria', link: '/doc/parametros/logs-auditoria' },
           { text: 'Recursos do Sistema', link: '/doc/parametros/recursos-do-sistema' },
-          {
-            text: 'Servidor de E-Mail',
-            collapsed: true,
-            items: [
-              { text: 'Visão geral', link: '/doc/parametros/servidor-email' },
-              { text: 'Aba Servidor', link: '/doc/parametros/servidor-email#aba-servidor' },
-              { text: 'Aba Mensagens', link: '/doc/parametros/servidor-email#aba-mensagens' }
-            ]
-          },
-          {
-            text: 'Servidor de WhatsApp',
-            collapsed: true,
-            items: [
-              { text: 'Visão geral', link: '/doc/parametros/servidor-whatsapp' },
-              { text: 'Aba Servidor', link: '/doc/parametros/servidor-whatsapp#aba-servidor' },
-              { text: 'Aba Mensagens', link: '/doc/parametros/servidor-whatsapp#aba-mensagens' },
-              { text: 'Aba Templates Meta', link: '/doc/parametros/servidor-whatsapp#aba-templates-meta' },
-              { text: 'Aba Templates', link: '/doc/parametros/servidor-whatsapp#aba-templates' }
-            ]
-          },
-          { text: 'NFS-e', link: '/doc/parametros/nfse' },
           {
             text: 'Documentos do Sistema',
             collapsed: true,
@@ -328,7 +329,6 @@ export default defineConfig({
               { text: 'Aba Termos', link: '/doc/parametros/documentos-do-sistema#aba-termos' }
             ]
           },
-          { text: 'Assinatura Digital', link: '/doc/parametros/assinatura-digital' },
           { text: 'Dias de Vencimento', link: '/doc/parametros/dias-vencimento' }
         ]
       }

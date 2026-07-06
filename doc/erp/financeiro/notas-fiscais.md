@@ -9,7 +9,7 @@ Consulta e gestão das **NFS-e emitidas** pela consultoria, vinculadas aos títu
 3. Clique em **Notas Fiscais**.
 
 ::: tip Configuração
-A emissão de NFS-e depende da integração configurada em **Parâmetros → NFS-e**. A emissão por título também está disponível em **Contas A Receber** e na [Aba Financeiro](/doc/clientes/aba-financeiro) do cliente.
+A emissão de NFS-e depende da integração configurada em **Integrações → NFS-e**. A emissão por título também está disponível em **Contas A Receber** e na [Aba Financeiro](/doc/clientes/aba-financeiro) do cliente.
 :::
 
 ---
@@ -47,7 +47,7 @@ As ações ficam desabilitadas até que uma nota seja selecionada na tabela.
 
 1. Em **Contas A Receber** ou na [Aba Financeiro](/doc/clientes/aba-financeiro) do cliente, selecione o título.
 2. Abra **NFS-e → Gerar NFS-e Avulsa**.
-3. Revise cliente, valores, descrição do serviço e alíquota ISS (pré-preenchidos conforme [Parâmetros → NFS-e](/doc/parametros/nfse)).
+3. Revise cliente, valores, descrição do serviço e alíquota ISS (pré-preenchidos conforme [Integrações → NFS-e](/doc/integracoes/nfse)).
 4. Confirme a emissão.
 
 A nota emitida aparece nesta listagem e no campo **NF** do título de origem.

@@ -1,6 +1,6 @@
 # Logs do ERP
 
-Consulta de **registros operacionais** por módulo — envios de mensagem, sincronizações, acessos, equipamentos e integrações. Diferente de [Logs de Auditoria](/doc/parametros/logs-auditoria), que registra alterações genéricas no sistema, cada log aqui cobre um **contexto específico**.
+Consulta de **registros operacionais** por módulo — envios de mensagem, sincronizações, acessos, equipamentos e integrações. Diferente de [Logs de Auditoria](/doc/logs/logs-auditoria), que registra alterações genéricas no sistema, cada log aqui cobre um **contexto específico**.
 
 ::: info Somente leitura
 Todas as telas de logs são listagens de consulta — não cadastram registros manualmente.
@@ -42,7 +42,7 @@ Eventos do fluxo de assinatura digital de contratos e documentos — envio, acei
 
 **Menu:** **Logs → Logs ERP → Logs de Assinatura Digital**
 
-Relacionado a [Assinatura Digital](/doc/parametros/assinatura-digital).
+Relacionado a [Assinatura Digital](/doc/integracoes/assinatura-digital).
 
 ---
 
@@ -62,7 +62,7 @@ Histórico de envios e falhas de mensagens via servidor WhatsApp configurado.
 
 **Menu:** **Logs → Comunicação → Logs de WhatsApp**
 
-Relacionado a [Servidor WhatsApp](/doc/parametros/servidor-whatsapp).
+Relacionado a [Servidor WhatsApp](/doc/integracoes/servidor-whatsapp).
 
 ---
 
@@ -72,7 +72,7 @@ Histórico de envios e falhas de e-mails disparados pelo ERP.
 
 **Menu:** **Logs → Comunicação → Logs de Email**
 
-Relacionado a [Servidor Email](/doc/parametros/servidor-email).
+Relacionado a [Servidor Email](/doc/integracoes/servidor-email).
 
 ---
 

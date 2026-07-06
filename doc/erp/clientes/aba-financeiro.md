@@ -130,7 +130,7 @@ Títulos cancelados ficam ocultos por padrão. Marque **Mostrar cancelados** par
 Com um título selecionado:
 
 - **Enviar** — dispara a cobrança ao cliente pelos canais configurados (servidor de e-mail ou WhatsApp em **Parâmetros**).
-- **NFS-e → Gerar NFS-e Avulsa** — abre o formulário de emissão vinculado ao título (cliente e valor pré-preenchidos). Requer [NFS-e](/doc/parametros/nfse) configurada.
+- **NFS-e → Gerar NFS-e Avulsa** — abre o formulário de emissão vinculado ao título (cliente e valor pré-preenchidos). Requer [NFS-e](/doc/integracoes/nfse) configurada.
 - **Imprimir → Imprimir NF** — disponível quando o título já possui NFS-e emitida.
 
 Notas emitidas também podem ser consultadas em **Financeiro → [Notas Fiscais](/doc/financeiro/notas-fiscais)**.
