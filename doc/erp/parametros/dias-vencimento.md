@@ -1,6 +1,6 @@
 # Dias de Vencimento
 
-Define quais **dias do mês** podem ser escolhidos como vencimento dos boletos ao criar um contrato.
+Define quais **dias do mês, de 1 a 30**, podem ser escolhidos como vencimento dos boletos ao criar um contrato.
 
 ::: tip Pré-requisito de contrato
 Configure os dias de vencimento **antes** de criar contratos. Veja a [ordem sugerida](/doc/clientes/aba-contratos#ordem-sugerida).
@@ -14,12 +14,12 @@ Configure os dias de vencimento **antes** de criar contratos. Veja a [ordem suge
 
 ## Tela de configuração
 
-Diferente das listagens comuns, esta tela exibe uma **grade com os dias de 1 a 31**. Para cada dia, marque:
+Diferente das listagens comuns, esta tela exibe os **dias de 1 a 30** como opções Sim/Não. Para cada dia, marque:
 
 - **Sim** — dia disponível para vencimento em novos contratos
 - **Não** — dia indisponível
 
-Após ajustar, clique em **Salvar**.
+Após ajustar, clique em **Salvar** no cabeçalho do modal.
 
 ::: info
 Somente os dias marcados como **Sim** aparecem no campo **Dia de Vencimento** ao cadastrar um contrato (ex.: Dia 01, Dia 05, Dia 10).
@@ -30,7 +30,7 @@ Somente os dias marcados como **Sim** aparecem no campo **Dia de Vencimento** ao
 ## Boas práticas
 
 - Habilite apenas os dias acordados com a operação financeira da consultoria.
-- Evite dias 29, 30 e 31 se a cobrança for mensal recorrente — meses curtos podem gerar inconsistências.
+- Evite dias 29 e 30 se a cobrança for mensal recorrente — meses curtos podem gerar inconsistências.
 - Revise esta configuração antes de abrir novos contratos em lote.
 ---
 

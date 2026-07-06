@@ -560,6 +560,7 @@ export interface TranslationKeys {
   'params.titlesDueSundayHelp': string;
   'params.keepTitleNumbers': string;
   'params.keepTitleNumbersHelp': string;
+  'params.keepTitleQuantity': string;
   'params.subscriberCenter': string;
   'params.loginMethod': string;
   'params.loginMethodHelp': string;
@@ -569,6 +570,11 @@ export interface TranslationKeys {
   'params.overdueDaysBlockDisabledHint': string;
   'params.manualUnlockDays': string;
   'params.manualUnlockDaysHelp': string;
+  'params.exampleDays15': string;
+  'params.exampleDays7': string;
+  'params.dueDaysAvailable': string;
+  'params.activateDueDay': string;
+  'params.dueDaysSaveSuccess': string;
   'params.successUpdate': string;
   'params.errorUpdate': string;
 

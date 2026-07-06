@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useLayoutEffect } from 'react';
 import { DiasVencimentoService, type DiasVencimento } from 'services/diasVencimentoService';
 import { saasDiasVencimentoService } from 'services/saas/saasCrudService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import DraggableModal from 'components/common/DraggableModal';
-import AtivoInativoField from 'components/ui/AtivoInativoField';
-import { SalvarButton } from 'components/ui';
+import { AtivoInativoField, Loading, ModalFormActions } from 'components/ui';
+import { useI18n } from 'contexts/I18nContext';
 
 interface DiasVencimentoModalProps {
   show: boolean;
@@ -19,9 +21,15 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({
   onClose,
   variant = 'erp',
   skipWrapper = false,
+  onHeaderActionsReady,
 }) => {
   const [diasAtivos, setDiasAtivos] = useState<number[]>([]);
-  const { success, error } = useNotificationContext();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
+  const { t } = useI18n();
+  const formId = variant === 'saas' ? 'saas-dias-vencimento-form' : 'dias-vencimento-form';
 
   const loadDiasAtivosErp = useCallback(async () => {
     const response = await DiasVencimentoService.get();
@@ -47,12 +55,32 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({
   }, []);
 
   useEffect(() => {
-    if (show && variant === 'erp') {
-      loadDiasAtivosErp();
-    } else if (show && variant === 'saas') {
-      loadDiasAtivosSaas();
+    if (!show) return;
+
+    const loadDiasAtivos = async () => {
+      setIsLoading(true);
+      try {
+        if (variant === 'erp') {
+          await loadDiasAtivosErp();
+        } else {
+          await loadDiasAtivosSaas();
+        }
+      } catch (err) {
+        showApiError(err, CONTEXT_ERROR_MESSAGES.PARAMS_UPDATE_ERROR);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadDiasAtivos();
+  }, [show, variant, loadDiasAtivosErp, loadDiasAtivosSaas, showApiError]);
+
+  useEffect(() => {
+    if (!show) {
+      setIsLoading(false);
+      setIsSaving(false);
     }
-  }, [show, variant, loadDiasAtivosErp, loadDiasAtivosSaas]);
+  }, [show]);
 
   const setDiaAtivo = (dia: number, ativo: boolean) => {
     setDiasAtivos((prev) => {
@@ -63,38 +91,64 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({
     });
   };
 
-  const handleSave = useCallback(async () => {
+  const handleSubmit = useCallback(async (event: React.FormEvent) => {
+    event.preventDefault();
     try {
+      setIsSaving(true);
       if (variant === 'erp') {
         await DiasVencimentoService.update({ dias: diasAtivos });
       } else {
         await saasDiasVencimentoService.updateConfig(diasAtivos);
         await loadDiasAtivosSaas();
       }
-      success('Dias de vencimento salvos com sucesso!');
+      success(t('params.dueDaysSaveSuccess'));
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erro ao salvar dias de vencimento';
-      error(msg);
+      showApiError(err, CONTEXT_ERROR_MESSAGES.PARAMS_UPDATE_ERROR);
+    } finally {
+      setIsSaving(false);
     }
-  }, [variant, diasAtivos, success, error, loadDiasAtivosSaas]);
+  }, [variant, diasAtivos, success, showApiError, loadDiasAtivosSaas, t]);
+
+  const headerActionsContent = useMemo(
+    () => (
+      <ModalFormActions
+        onCancel={onClose}
+        formId={formId}
+        isPending={isSaving || isLoading}
+      />
+    ),
+    [onClose, formId, isSaving, isLoading]
+  );
+
+  useLayoutEffect(() => {
+    if (skipWrapper && onHeaderActionsReady) {
+      onHeaderActionsReady(headerActionsContent);
+    }
+  }, [skipWrapper, onHeaderActionsReady, headerActionsContent]);
 
   const content = (
-    <form className="form-modal-simple" onSubmit={(event) => event.preventDefault()}>
-      <div className="d-flex justify-content-start align-items-center mb-3">
-        <SalvarButton type="button" onClick={handleSave} />
+    <form id={formId} className="form-modal-simple modal-inner-padding" onSubmit={handleSubmit}>
+      <div className="form-section-heading-row">
+        <span className="form-section-heading-pill">{t('params.dueDaysAvailable')}</span>
+        <div className="form-section-heading-line" aria-hidden />
       </div>
-      <div className="row g-2">
-        {Array.from({ length: 30 }, (_, i) => i + 1).map((dia) => (
-          <div key={dia} className="col-12">
-            <AtivoInativoField
-              value={diasAtivos.includes(dia)}
-              onChange={(ativo) => setDiaAtivo(dia, ativo)}
-              label={`Ativar dia ${String(dia).padStart(2, '0')}`}
-              name={`dia-${variant}-${dia}`}
-            />
-          </div>
-        ))}
-      </div>
+      {isLoading ? (
+        <Loading variant="modal" />
+      ) : (
+        <div className="row g-2">
+          {Array.from({ length: 30 }, (_, i) => i + 1).map((dia) => (
+            <div key={dia} className="col-12">
+              <AtivoInativoField
+                value={diasAtivos.includes(dia)}
+                onChange={(ativo) => setDiaAtivo(dia, ativo)}
+                label={t('params.activateDueDay', { day: String(dia).padStart(2, '0') })}
+                name={`dia-${variant}-${dia}`}
+                disabled={isSaving}
+              />
+            </div>
+          ))}
+        </div>
+      )}
     </form>
   );
 
@@ -104,9 +158,10 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({
     <DraggableModal
       show={show}
       onClose={onClose}
-      title="Dias de Vencimento"
+      title={t('params.dueDays')}
       size="xl"
       modalId={variant === 'saas' ? 'saas-dias-vencimento-modal' : 'dias-vencimento-modal'}
+      headerActions={headerActionsContent}
     >
       {content}
     </DraggableModal>

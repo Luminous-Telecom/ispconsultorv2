@@ -14,17 +14,25 @@ Alterações nesta tela impactam todo o sistema. Normalmente restrita a administ
 
 ---
 
+## Organização da tela
+
+A tela é organizada por seções no modal:
+
+- **Validações** — regras automáticas para documentos e CEP.
+- **Geração de Títulos** — comportamento de vencimentos em finais de semana.
+- **Central do Assinante** — método usado pelo cliente final para acessar o portal.
+
+Após ajustar, clique em **Salvar** no cabeçalho do modal.
+
 ## Opções disponíveis
 
 | Parâmetro | Descrição |
 |-----------|-----------|
-| **Validar CNPJ** | Quando ativo, valida o dígito verificador ao cadastrar CNPJs |
+| **Validar CNPJ** | Quando ativo, valida o dígito verificador ao cadastrar ou editar clientes |
 | **Validar CEP** | Quando ativo, consulta e preenche endereço a partir do CEP informado |
 | **Títulos que Vencem aos Sábados** | Permite ou impede vencimento de boletos em sábados |
 | **Títulos que Vencem aos Domingos** | Permite ou impede vencimento de boletos em domingos |
 | **Método de Login** | Define se o login na [Central do Assinante](/doc/clientes/cadastro-cliente#central-do-assinante) usa **CNPJ** ou **E-mail** como identificador |
-
-Após ajustar, clique em **Salvar**.
 
 ---
 

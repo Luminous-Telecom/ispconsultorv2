@@ -76,7 +76,7 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
   const updateMutation = useMutation({
     mutationFn: (data: Partial<RecursosSistemaFormSaas>) => config.api.update(data),
     onSuccess: () => {
-      success('Parâmetros atualizados com sucesso!');
+      success(t('params.successUpdate'));
       queryClient.invalidateQueries({ queryKey: [...config.queryKey] });
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.PARAMS_UPDATE_ERROR),
@@ -134,175 +134,170 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
           className={`form-modal-simple modal-inner-padding-recursos${isSaas ? ' is-saas' : ''}`}
           onSubmit={handleSubmit}
         >
-          <div className="card mb-3">
-            <div className="card-header py-1 px-2">
-              <small className="fw-bold mb-0">{t('params.validations')}</small>
+          <div className="form-section-heading-row">
+            <span className="form-section-heading-pill">{t('params.validations')}</span>
+            <div className="form-section-heading-line" aria-hidden />
+          </div>
+          <div className="row g-2 mb-3">
+            <div className="col-12">
+              <AtivoInativoField
+                value={formData.validar_cpf_cnpj}
+                onChange={(v) => setFormData((prev) => ({ ...prev, validar_cpf_cnpj: v }))}
+                label={t('params.validateCpfCnpj')}
+                helpText={t(isSaas ? 'params.validateCpfCnpjHelpSaas' : 'params.validateCpfCnpjHelp')}
+                name={`${idPrefix}validar_cpf_cnpj`}
+                disabled={updateMutation.isPending}
+              />
             </div>
-            <div className={`card-body p-2${isSaas ? ' overflow-visible' : ''}`}>
-              <div className="row g-2">
-                <div className="col-12">
-                  <AtivoInativoField
-                    value={formData.validar_cpf_cnpj}
-                    onChange={(v) => setFormData((prev) => ({ ...prev, validar_cpf_cnpj: v }))}
-                    label={t('params.validateCpfCnpj')}
-                    name={`${idPrefix}validar_cpf_cnpj`}
-                    disabled={updateMutation.isPending}
-                  />
-                </div>
-                <div className="col-12">
-                  <AtivoInativoField
-                    value={formData.validar_cep}
-                    onChange={(v) => setFormData((prev) => ({ ...prev, validar_cep: v }))}
-                    label={t('params.validateCep')}
-                    name={`${idPrefix}validar_cep`}
-                    disabled={updateMutation.isPending}
-                  />
-                </div>
-              </div>
+            <div className="col-12">
+              <AtivoInativoField
+                value={formData.validar_cep}
+                onChange={(v) => setFormData((prev) => ({ ...prev, validar_cep: v }))}
+                label={t('params.validateCep')}
+                helpText={t(isSaas ? 'params.validateCepHelpSaas' : 'params.validateCepHelp')}
+                name={`${idPrefix}validar_cep`}
+                disabled={updateMutation.isPending}
+              />
             </div>
           </div>
 
-          <div className="card mb-3">
-            <div className="card-header py-1 px-2">
-              <small className="fw-bold mb-0">{t('params.titleGeneration')}</small>
+          <div className="form-section-heading-row">
+            <span className="form-section-heading-pill">{t('params.titleGeneration')}</span>
+            <div className="form-section-heading-line" aria-hidden />
+          </div>
+          <div className="row g-2 mb-3">
+            <div className="col-12">
+              <AtivoInativoField
+                value={formData.titulos_vence_sabado}
+                onChange={(v) => setFormData((prev) => ({ ...prev, titulos_vence_sabado: v }))}
+                label={t('params.titlesDueSaturday')}
+                helpText={t('params.titlesDueSaturdayHelp')}
+                name={`${idPrefix}titulos_vence_sabado`}
+                disabled={updateMutation.isPending}
+              />
             </div>
-            <div className={`card-body p-2${isSaas ? ' overflow-visible' : ''}`}>
-              <div className="row g-2">
+            <div className="col-12">
+              <AtivoInativoField
+                value={formData.titulos_vence_domingo}
+                onChange={(v) => setFormData((prev) => ({ ...prev, titulos_vence_domingo: v }))}
+                label={t('params.titlesDueSunday')}
+                helpText={t('params.titlesDueSundayHelp')}
+                name={`${idPrefix}titulos_vence_domingo`}
+                disabled={updateMutation.isPending}
+              />
+            </div>
+            {isSaas && (
+              <>
                 <div className="col-12">
                   <AtivoInativoField
-                    value={formData.titulos_vence_sabado}
-                    onChange={(v) => setFormData((prev) => ({ ...prev, titulos_vence_sabado: v }))}
-                    label={t('params.titlesDueSaturday')}
-                    name={`${idPrefix}titulos_vence_sabado`}
+                    value={formData.manter_numeros_titulos}
+                    onChange={(v) => setFormData((prev) => ({ ...prev, manter_numeros_titulos: v }))}
+                    label={t('params.keepTitleNumbers')}
+                    helpText={t('params.keepTitleNumbersHelp')}
+                    name="saas_manter_numeros_titulos"
                     disabled={updateMutation.isPending}
                   />
                 </div>
-                <div className="col-12">
-                  <AtivoInativoField
-                    value={formData.titulos_vence_domingo}
-                    onChange={(v) => setFormData((prev) => ({ ...prev, titulos_vence_domingo: v }))}
-                    label={t('params.titlesDueSunday')}
-                    name={`${idPrefix}titulos_vence_domingo`}
-                    disabled={updateMutation.isPending}
-                  />
-                </div>
-                {isSaas && (
-                  <>
-                    <div className="col-12">
-                      <AtivoInativoField
-                        value={formData.manter_numeros_titulos}
-                        onChange={(v) => setFormData((prev) => ({ ...prev, manter_numeros_titulos: v }))}
-                        label={t('params.keepTitleNumbers')}
-                        name="saas_manter_numeros_titulos"
-                        disabled={updateMutation.isPending}
-                      />
-                    </div>
-                    {formData.manter_numeros_titulos && (
-                      <div className="col-12">
-                        <FormField
-                          name="saas_quantidade_titulos_manter"
-                          type="number"
-                          label="Quantidade de Títulos a Manter (1 a 24)"
-                          value={formData.quantidade_titulos_manter}
-                          onChange={(v) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              quantidade_titulos_manter: Math.min(24, Math.max(1, Number(v) || 1)),
-                            }))
-                          }
-                          min={1}
-                          max={24}
-                          size="sm"
-                          disabled={updateMutation.isPending}
-                        />
-                      </div>
-                    )}
-                  </>
+                {formData.manter_numeros_titulos && (
+                  <div className="col-12">
+                    <FormField
+                      name="saas_quantidade_titulos_manter"
+                      type="number"
+                      label={t('params.keepTitleQuantity')}
+                      value={formData.quantidade_titulos_manter}
+                      onChange={(v) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          quantidade_titulos_manter: Math.min(24, Math.max(1, Number(v) || 1)),
+                        }))
+                      }
+                      min={1}
+                      max={24}
+                      size="sm"
+                      disabled={updateMutation.isPending}
+                    />
+                  </div>
                 )}
-              </div>
+              </>
+            )}
+          </div>
+
+          <div className="form-section-heading-row">
+            <span className="form-section-heading-pill">{t('params.subscriberCenter')}</span>
+            <div className="form-section-heading-line" aria-hidden />
+          </div>
+          <div className="row g-2 mb-3">
+            <div className="col-12">
+              <FormField
+                name={`${idPrefix}central_metodo`}
+                type="select"
+                label={t('params.loginMethod')}
+                helpText={t('params.loginMethodHelp')}
+                value={formData.central_assinante_metodo_login}
+                onChange={(v) => handleSelectChange('central_assinante_metodo_login', String(v ?? 'cnpj'))}
+                options={[
+                  { value: 'cnpj', label: 'CNPJ' },
+                  { value: 'email', label: 'Email' },
+                ]}
+                size="sm"
+                disabled={updateMutation.isPending}
+              />
             </div>
           </div>
 
-          <div className="card mb-3">
-            <div className="card-header py-1 px-2">
-              <small className="fw-bold mb-0">{t('params.subscriberCenter')}</small>
-            </div>
-            <div className={`card-body p-2${isSaas ? ' overflow-visible' : ''}`}>
+          {isSaas && (
+            <>
+              <div className="form-section-heading-row">
+                <span className="form-section-heading-pill">{t('params.overdueBlockSection')}</span>
+                <div className="form-section-heading-line" aria-hidden />
+              </div>
               <div className="row g-2">
                 <div className="col-12">
                   <FormField
-                    name={`${idPrefix}central_metodo`}
-                    type="select"
-                    label={t('params.loginMethod')}
-                    helpText={t('params.loginMethodHelp')}
-                    value={formData.central_assinante_metodo_login}
-                    onChange={(v) => handleSelectChange('central_assinante_metodo_login', String(v ?? 'cnpj'))}
-                    options={[
-                      { value: 'cnpj', label: 'CNPJ' },
-                      { value: 'email', label: 'Email' },
-                    ]}
+                    name="saas_dias_atraso_bloqueio"
+                    type="number"
+                    label={t('params.overdueDaysBlock')}
+                    helpText={t('params.overdueDaysBlockHelp')}
+                    placeholder={t('params.exampleDays15')}
+                    value={formData.dias_atraso_bloqueio ?? ''}
+                    onChange={(v) => {
+                      const raw = String(v ?? '');
+                      setFormData((prev) => ({
+                        ...prev,
+                        dias_atraso_bloqueio:
+                          raw === '' ? null : Math.min(365, Math.max(0, parseInt(raw, 10) || 0)),
+                      }));
+                    }}
+                    min={0}
+                    max={365}
+                    size="sm"
+                    disabled={updateMutation.isPending}
+                  />
+                </div>
+                <div className="col-12">
+                  <FormField
+                    name="saas_dias_desbloqueio_manual"
+                    type="number"
+                    label={t('params.manualUnlockDays')}
+                    helpText={t('params.manualUnlockDaysHelp')}
+                    placeholder={t('params.exampleDays7')}
+                    value={formData.dias_desbloqueio_manual ?? ''}
+                    onChange={(v) => {
+                      const raw = String(v ?? '');
+                      setFormData((prev) => ({
+                        ...prev,
+                        dias_desbloqueio_manual:
+                          raw === '' ? null : Math.min(365, Math.max(0, parseInt(raw, 10) || 0)),
+                      }));
+                    }}
+                    min={0}
+                    max={365}
                     size="sm"
                     disabled={updateMutation.isPending}
                   />
                 </div>
               </div>
-            </div>
-          </div>
-
-          {isSaas && (
-            <div className="card mb-3">
-              <div className="card-header py-1 px-2">
-                <small className="fw-bold mb-0">{t('params.overdueBlockSection')}</small>
-              </div>
-              <div className="card-body p-2 overflow-visible">
-                <div className="row g-2">
-                  <div className="col-12">
-                    <FormField
-                      name="saas_dias_atraso_bloqueio"
-                      type="number"
-                      label={t('params.overdueDaysBlock')}
-                      helpText={t('params.overdueDaysBlockHelp')}
-                      placeholder="Ex: 15"
-                      value={formData.dias_atraso_bloqueio ?? ''}
-                      onChange={(v) => {
-                        const raw = String(v ?? '');
-                        setFormData((prev) => ({
-                          ...prev,
-                          dias_atraso_bloqueio:
-                            raw === '' ? null : Math.min(365, Math.max(0, parseInt(raw, 10) || 0)),
-                        }));
-                      }}
-                      min={0}
-                      max={365}
-                      size="sm"
-                      disabled={updateMutation.isPending}
-                    />
-                  </div>
-                  <div className="col-12">
-                    <FormField
-                      name="saas_dias_desbloqueio_manual"
-                      type="number"
-                      label={t('params.manualUnlockDays')}
-                      helpText={t('params.manualUnlockDaysHelp')}
-                      placeholder="Ex: 7"
-                      value={formData.dias_desbloqueio_manual ?? ''}
-                      onChange={(v) => {
-                        const raw = String(v ?? '');
-                        setFormData((prev) => ({
-                          ...prev,
-                          dias_desbloqueio_manual:
-                            raw === '' ? null : Math.min(365, Math.max(0, parseInt(raw, 10) || 0)),
-                        }));
-                      }}
-                      min={0}
-                      max={365}
-                      size="sm"
-                      disabled={updateMutation.isPending}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
+            </>
           )}
         </form>
       )}
@@ -315,7 +310,7 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
     <DraggableModal
       show={show}
       onClose={onClose}
-      title={config.title}
+      title={t('params.systemResources')}
       size="md"
       modalId={config.modalId}
       headerActions={headerActionsContent}

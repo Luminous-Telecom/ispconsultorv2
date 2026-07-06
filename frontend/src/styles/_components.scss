@@ -320,6 +320,13 @@ form.form-modal-simple:has(.modal-rich-text-editor) > [class$='-tab-content-padd
   }
 }
 
+/* Dias de Vencimento: lista longa preenche o corpo (fundo único ao rolar) */
+#dias-vencimento-form,
+#saas-dias-vencimento-form {
+  flex: 0 0 auto !important;
+  min-height: 100% !important;
+}
+
 /* TextPreviewModal: preencher todo o espaço do modal */
 .draggable-modal-container-custom.text-preview-modal .draggable-modal-body-custom > .text-preview-content {
   flex: 1 1 0 !important;
