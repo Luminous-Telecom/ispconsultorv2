@@ -58,7 +58,7 @@ const AppUserMenu: React.FC<AppUserMenuProps> = ({
   userTitleFallback,
   showLanguage = false,
   showLanguageDropdown = false,
-  isMobile = false,
+  isMobile: _isMobile = false,
   language,
   availableLanguages = [],
   languageTriggerRef,

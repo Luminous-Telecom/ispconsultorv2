@@ -2,7 +2,7 @@ import React from 'react';
 import IspConsultorLogo from 'components/common/IspConsultorLogo';
 import { AppButton, IconOnlyButton, NavLinkButton } from 'components/ui';
 import { Theme } from 'contexts/ThemeContext';
-import { NAV_ITEMS, SHOW_WIKI } from './homeConstants';
+import { NAV_ITEMS, WIKI_HOME_URL } from './homeConstants';
 
 interface HomeHeaderProps {
   theme: Theme;
@@ -14,31 +14,33 @@ interface HomeHeaderProps {
 
 const HomeNavLinks: React.FC<{
   scrollTo: (id: string) => void;
-  onWikiClick?: () => void;
-}> = ({ scrollTo, onWikiClick }) => (
+  onNavigate?: () => void;
+}> = ({ scrollTo, onNavigate }) => (
   <>
     {NAV_ITEMS.map((item) => (
       <NavLinkButton
         key={item.id}
         type="button"
         className="home-nav-link"
-        onClick={() => scrollTo(item.id)}
+        onClick={() => {
+          scrollTo(item.id);
+          onNavigate?.();
+        }}
         ariaLabel={item.label}
       >
         {item.label}
       </NavLinkButton>
     ))}
-    {SHOW_WIKI && (
-      <a
-        href="https://wiki.ispconsultor.com.br/"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="home-nav-link home-nav-link-external"
-        onClick={onWikiClick}
-      >
-        Wiki
-      </a>
-    )}
+    <a
+      href={WIKI_HOME_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="home-nav-link home-nav-link-external"
+      onClick={onNavigate}
+    >
+      Abrir wiki
+      <span className="bi bi-box-arrow-up-right" aria-hidden />
+    </a>
   </>
 );
 
@@ -52,7 +54,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
   <header className="home-header">
     <div className="home-header-inner">
       <IspConsultorLogo width={120} className="home-logo" />
-      <nav className="home-nav home-nav-desktop">
+      <nav className="home-nav-desktop" aria-label="Navegação principal">
         <HomeNavLinks scrollTo={scrollTo} />
       </nav>
       <div className="home-header-actions">
@@ -84,16 +86,29 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
       </IconOnlyButton>
     </div>
     {isMenuOpen && (
-      <div className="home-nav-mobile">
-        <HomeNavLinks scrollTo={scrollTo} onWikiClick={() => setIsMenuOpen(false)} />
-        <AppButton
-          type="button"
-          label="Acessar Sistema"
-          variant="unstyled"
-          className="home-btn home-btn-accent home-btn-full"
-          onClick={() => window.open('/login', '_blank', 'noopener,noreferrer')}
-        />
-      </div>
+      <nav className="home-nav-mobile" aria-label="Navegação mobile">
+        <HomeNavLinks scrollTo={scrollTo} onNavigate={() => setIsMenuOpen(false)} />
+        <div className="home-mobile-actions">
+          <div className="home-mobile-theme-row">
+            <span>Tema</span>
+            <IconOnlyButton
+              type="button"
+              className="home-theme-toggle"
+              onClick={toggleTheme}
+              label={theme === 'light' ? 'Modo escuro' : 'Modo claro'}
+            >
+              <span className={`bi ${theme === 'light' ? 'bi-moon' : 'bi-sun'}`} />
+            </IconOnlyButton>
+          </div>
+          <AppButton
+            type="button"
+            label="Acessar Sistema"
+            variant="unstyled"
+            className="home-btn home-btn-accent home-btn-full"
+            onClick={() => window.open('/login', '_blank', 'noopener,noreferrer')}
+          />
+        </div>
+      </nav>
     )}
   </header>
 );

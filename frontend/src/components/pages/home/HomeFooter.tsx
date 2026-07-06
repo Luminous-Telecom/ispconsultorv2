@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import IspConsultorIcon from 'components/common/IspConsultorIcon';
-import { FOOTER_LINKS } from './homeConstants';
+import { FOOTER_LINKS, FOOTER_WIKI_LINKS } from './homeConstants';
 
 interface HomeFooterProps {
   scrollTo: (id: string) => void;
@@ -15,7 +15,9 @@ const HomeFooter: React.FC<HomeFooterProps> = ({ scrollTo }) => (
           <IspConsultorIcon size={32} className="home-footer-logo" />
           <span className="home-footer-brand-name">ISP Consultor</span>
         </div>
-        <p className="home-footer-tagline">Gestão completa para consultores de telecomunicações</p>
+        <p className="home-footer-tagline">
+          Gestão completa para consultores de telecomunicações — ERP, financeiro, equipamentos e wiki.
+        </p>
       </div>
       <div className="home-footer-links">
         <h3>Produto</h3>
@@ -28,6 +30,14 @@ const HomeFooter: React.FC<HomeFooterProps> = ({ scrollTo }) => (
               scrollTo(item.id);
             }}
           >
+            {item.label}
+          </a>
+        ))}
+      </div>
+      <div className="home-footer-links">
+        <h3>Wiki</h3>
+        {FOOTER_WIKI_LINKS.map((item) => (
+          <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer">
             {item.label}
           </a>
         ))}

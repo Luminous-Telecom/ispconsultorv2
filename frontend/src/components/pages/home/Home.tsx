@@ -1,14 +1,17 @@
 import React from 'react';
 import HomeHeader from './HomeHeader';
 import HomeHero from './HomeHero';
+import HomeStatsStrip from './HomeStatsStrip';
 import HomeCompareSection from './HomeCompareSection';
+import HomeModulesSection from './HomeModulesSection';
 import HomeFeaturesSection from './HomeFeaturesSection';
 import HomeIntegrationsSection from './HomeIntegrationsSection';
+import HomeWikiSection from './HomeWikiSection';
 import HomeAutoatendimentoSection from './HomeAutoatendimentoSection';
 import HomeBenefitsSection from './HomeBenefitsSection';
+import HomeFutureFeaturesSection from './HomeFutureFeaturesSection';
 import HomePlanosSection from './HomePlanosSection';
 import HomeFaqSection from './HomeFaqSection';
-import HomeFutureFeaturesSection from './HomeFutureFeaturesSection';
 import HomeCtaSection from './HomeCtaSection';
 import HomeFooter from './HomeFooter';
 import HomeLightbox from './HomeLightbox';
@@ -43,17 +46,20 @@ const Home: React.FC = () => {
 
       <main className="home-main">
         <HomeHero scrollTo={scrollTo} onOpenLightbox={setLightboxSrc} />
+        <HomeStatsStrip />
         <HomeCompareSection />
+        <HomeModulesSection />
         <HomeFeaturesSection />
         <HomeIntegrationsSection />
+        <HomeWikiSection />
         <HomeAutoatendimentoSection
           scrollTo={scrollTo}
           onShowContato={() => setShowContato(true)}
         />
         <HomeBenefitsSection onOpenLightbox={setLightboxSrc} />
+        <HomeFutureFeaturesSection />
         <HomePlanosSection />
         <HomeFaqSection faqOpen={faqOpen} setFaqOpen={setFaqOpen} />
-        <HomeFutureFeaturesSection />
         <HomeCtaSection
           showContato={showContato}
           setShowContato={setShowContato}
@@ -62,9 +68,9 @@ const Home: React.FC = () => {
         <HomeFooter scrollTo={scrollTo} />
       </main>
 
-      {lightboxSrc && (
+      {lightboxSrc ? (
         <HomeLightbox lightboxSrc={lightboxSrc} onClose={() => setLightboxSrc(null)} />
-      )}
+      ) : null}
     </div>
   );
 };
