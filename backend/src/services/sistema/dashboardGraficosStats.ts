@@ -27,7 +27,7 @@ export interface DashboardStatsGraficos {
     totalTitulosTodos: number;
     taxaPagamento: number;
   };
-  statusPagamentoMes: {
+  statusPagamento: {
     pagos: number;
     pendentes: number;
     vencidos: number;
@@ -97,21 +97,13 @@ function isTituloEmAbertoAtrasado(
   return tituloVencimentoDayStart(titulo) < hojeSemHora;
 }
 
-function computeStatusPagamentoMes(
+function computeStatusPagamento(
   titulos: Array<{ status: string; data_vencimento: string | Date }>
 ): { pagos: number; pendentes: number; vencidos: number; cancelados: number } {
   const hoje = new Date();
   const hojeSemHora = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
-  const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-  const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59, 999);
 
-  const titulosMes = titulos.filter((titulo) => {
-    if (!titulo.data_vencimento) return false;
-    const venc = tituloVencimentoDate(titulo);
-    return venc >= inicioMes && venc <= fimMes;
-  });
-
-  const counts = titulosMes.reduce(
+  return titulos.reduce(
     (acc, titulo) => {
       if (titulo.status === 'pago' || titulo.status === 'pago_atraso' || titulo.status === 'parcial') {
         acc.pagos++;
@@ -126,7 +118,6 @@ function computeStatusPagamentoMes(
     },
     { pagos: 0, pendentes: 0, vencidos: 0, cancelados: 0 }
   );
-  return counts;
 }
 
 function computeCrescimentoClientes(
@@ -229,7 +220,7 @@ export function buildErpDashboardStatsGraficos(input: BuildErpDashboardGraficosI
   ).length;
   const taxaPagamento = totalTitulosTodos > 0 ? (titulosPagos / totalTitulosTodos) * 100 : 0;
 
-  const statusPagamentoMes = computeStatusPagamentoMes(titulosTodos);
+  const statusPagamento = computeStatusPagamento(titulosTodos);
   const crescimentoClientes = computeCrescimentoClientes(clientesTodos);
   const clientesPorPlano = computeClientesPorPlano(planos, contratosParaPlano).sort((a, b) => b.value - a.value);
 
@@ -307,7 +298,7 @@ export function buildErpDashboardStatsGraficos(input: BuildErpDashboardGraficosI
       totalTitulosTodos,
       taxaPagamento,
     },
-    statusPagamentoMes,
+    statusPagamento,
     crescimentoClientes,
     clientesPorPlano,
     totais: {

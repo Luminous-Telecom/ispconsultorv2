@@ -16,22 +16,19 @@ export function isTituloEmAbertoAtrasado(
   return tituloVencimentoDayStart(titulo.data_vencimento) < hojeSemHora;
 }
 
+/** Filtros ao clicar numa fatia do gráfico Status dos Pagamentos (todos os títulos, como contratos). */
 export function buildDashboardPaymentStatusSliceFilters(
   filterValue: string
 ): Partial<TituloFilters> {
   const hoje = new Date();
-  const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-  const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
   const toISO = (d: Date) => d.toISOString().split('T')[0];
 
   if (filterValue === 'atraso') {
-    const ontem = new Date(hojeSemHora(hoje));
+    const ontem = hojeSemHora(hoje);
     ontem.setDate(ontem.getDate() - 1);
-    const fimAtraso = ontem < inicioMes ? inicioMes : ontem;
     return {
       status: 'pendente,vencido',
-      data_vencimento_inicio: toISO(inicioMes),
-      data_vencimento_fim: toISO(fimAtraso),
+      data_vencimento_fim: toISO(ontem),
     };
   }
 
@@ -39,14 +36,11 @@ export function buildDashboardPaymentStatusSliceFilters(
     return {
       status: 'pendente',
       data_vencimento_inicio: toISO(hojeSemHora(hoje)),
-      data_vencimento_fim: toISO(fimMes),
     };
   }
 
   return {
     status: filterValue,
-    data_vencimento_inicio: toISO(inicioMes),
-    data_vencimento_fim: toISO(fimMes),
   };
 }
 

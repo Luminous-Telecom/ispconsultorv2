@@ -81,21 +81,13 @@ export const useDashboardCharts = (
         { label: t('status.cancelled'), value: counts.cancelados, color: '#94a3b8', filterValue: 'cancelado' },
       ].filter((item) => item.value > 0);
 
-    if (sg?.statusPagamentoMes) {
-      return buildItems(sg.statusPagamentoMes);
+    if (sg?.statusPagamento) {
+      return buildItems(sg.statusPagamento);
     }
     if (!titulosTodos.length) return [];
     const hoje = new Date();
     const hojeSemHora = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
-    const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-    const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59, 999);
-    const titulosMesAtual = titulosTodos.filter((titulo) => {
-      if (!titulo.data_vencimento) return false;
-      const venc = new Date(titulo.data_vencimento);
-      return venc >= inicioMes && venc <= fimMes;
-    });
-    if (titulosMesAtual.length === 0) return [];
-    const counts = titulosMesAtual.reduce(
+    const counts = titulosTodos.reduce(
       (acc, titulo) => {
         if (titulo.status === 'pago' || titulo.status === 'pago_atraso' || titulo.status === 'parcial') {
           acc.pagos++;

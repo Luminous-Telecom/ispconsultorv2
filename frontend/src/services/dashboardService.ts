@@ -47,7 +47,7 @@ export interface DashboardStatsGraficos {
     totalTitulosTodos: number;
     taxaPagamento: number;
   };
-  statusPagamentoMes: {
+  statusPagamento: {
     pagos: number;
     pendentes: number;
     vencidos: number;
