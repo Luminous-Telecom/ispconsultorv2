@@ -86,8 +86,8 @@ export interface DashboardData {
     ticket_medio: number;
   }>;
   contratosBloqueados?: number; // SaaS: empresas bloqueadas por atraso
-  contratosEmAtraso?: number; // SaaS: em atraso | ERP: calculado no backend (período do filtro)
-  /** ERP: ativos para o gráfico, já descontando “em atraso” no período */
+  contratosEmAtraso?: number; // SaaS: em atraso | ERP: contratos ativos com título vencido não pago
+  /** ERP: ativos para o gráfico, já descontando “em atraso” */
   contratosAtivosDashboard?: number;
   contratosAtivosSaaS?: number; // SaaS: ativos excluindo bloqueados/em atraso (evita duplicar)
   titulos: Titulo[]; // Títulos do período

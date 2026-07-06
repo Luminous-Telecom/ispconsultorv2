@@ -15,7 +15,7 @@ O dashboard é a **tela inicial** do painel administrativo (`/adm`). Para voltar
 | Widget | Descrição |
 |--------|-----------|
 | **Base de clientes** | Total de clientes cadastrados, com contagem por status (Ativo / Inativo) |
-| **Status dos Contratos** | Contratos ativos, inativos, suspensos e isentos |
+| **Status dos Contratos** | Contratos ativos, inativos, suspensos, isentos e **em atraso** (ativos com título vencido não pago, de qualquer mês) |
 | **Distribuição por Tipo de Plano** | Quantidade de contratos por categoria de plano |
 | **Novos Clientes (12 meses)** | Evolução de novos clientes no período |
 | **Clientes por Plano** | Detalhamento gráfico por plano comercial |

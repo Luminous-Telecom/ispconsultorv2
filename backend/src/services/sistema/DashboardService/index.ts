@@ -32,7 +32,7 @@ export type BackupStatusDetalheItem = {
   detail: string | null;
 };
 
-/** Resultado do gráfico de contratos (ERP): em atraso no período e ativos sem duplicar fatia “em atraso”. */
+/** Resultado do gráfico de contratos (ERP): em atraso (título vencido não pago) e ativos sem duplicar fatia “em atraso”. */
 export interface ContratosAtrasoPeriodoResult {
   contratosEmAtraso: number;
   contratosAtivosDashboard: number;
@@ -335,17 +335,13 @@ export class DashboardService {
   }
 
   /**
-   * Contratos em atraso no período do dashboard e total de ativos para o gráfico (sem duplicar “em atraso”).
-   * Período = vencimento do título entre início e fim; atraso = não pago, pendente/vencido, vencimento antes de hoje.
+   * Contratos em atraso para o gráfico e total de ativos (sem duplicar fatia “em atraso”).
+   * Atraso = contrato ativo com título não pago (pendente/vencido) e vencimento antes de hoje — independente do período do dashboard.
    */
   static computeContratosAtrasoPeriodo(
     contratosTodos: ContratoDashJson[],
-    titulosTodos: TituloDashJson[],
-    parsedStart: Date,
-    parsedEnd: Date
+    titulosTodos: TituloDashJson[]
   ): ContratosAtrasoPeriodoResult {
-    const periodoInicio = formatDateISOForAPI(parsedStart)?.slice(0, 10) ?? '';
-    const periodoFim = formatDateISOForAPI(parsedEnd)?.slice(0, 10) ?? '';
     const hojeStr = formatDateISOForAPI(new Date())?.slice(0, 10) ?? '';
 
     const ativoIds = new Set(contratosTodos.filter((c) => c.status === 'ativo').map((c) => c.id));
@@ -363,8 +359,7 @@ export class DashboardService {
         typeof t.data_vencimento === 'string'
           ? t.data_vencimento.slice(0, 10)
           : (formatDateISOForAPI(t.data_vencimento as Date) ?? '').slice(0, 10);
-      if (!venc || venc < periodoInicio || venc > periodoFim) continue;
-      if (venc >= hojeStr) continue;
+      if (!venc || venc >= hojeStr) continue;
       let cid = t.contrato_id;
       if (cid == null && t.cliente_id != null) {
         cid = ativoPorCliente.get(t.cliente_id);

@@ -97,9 +97,7 @@ export class DashboardController {
             status: string;
             data_vencimento: string | Date;
           }
-        ),
-        parsedStart,
-        parsedEnd
+        )
       );
 
       const contratosParaPlano =
