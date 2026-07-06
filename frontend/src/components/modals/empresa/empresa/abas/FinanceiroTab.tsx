@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { DadosEmpresaService } from 'services/dadosEmpresaService';
 import type { SaasTitulo } from 'services/saas/saasCrudService';
 import { formatDate, formatCurrency } from 'utils/formatters';
+import { getTituloStatusEfetivo } from 'utils/tituloStatus';
 import { useI18n } from 'contexts/I18nContext';
 import { Loading, useBulkBtn } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
@@ -132,7 +133,8 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({ empresaId, tipo }) => {
     }
   }, [titulosFiltrados, empresaId, tipo, statusAbertos, statusPagas, error, success, openPrintModal, t]);
 
-  const getStatusBadge = useCallback((status?: string) => {
+  const getStatusBadge = useCallback((item: SaasTitulo) => {
+    const status = getTituloStatusEfetivo(item);
     if (!status) return '-';
     const map: Record<string, { label: string; cls: string }> = {
       pendente: { label: t('status.pending'), cls: 'bg-info' },
@@ -180,7 +182,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({ empresaId, tipo }) => {
         sortable: true,
         searchable: true,
         badgeLabels: [t('status.pending'), t('status.overdue'), t('status.paid'), t('status.paidLate'), t('status.partial')],
-        render: (item: SaasTitulo) => getStatusBadge(item.status),
+        render: (item: SaasTitulo) => getStatusBadge(item),
       },
     ];
     if (tipo === 'pagas') {

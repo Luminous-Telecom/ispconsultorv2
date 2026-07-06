@@ -3,6 +3,7 @@ import type { TranslationKeys } from 'contexts/I18nContext';
 import type { ContaPagar } from 'types';
 import type { ContasPagarTranslateFn } from 'components/modals/contas-pagar/contasPagarList/contasPagarListTypes';
 import type { ContasReceberTranslateFn } from 'components/modals/contas-receber/contasReceberListTypes';
+import { getTituloStatusEfetivo, type TituloComVencimento } from 'utils/tituloStatus';
 
 export function getContaPagarStatusBadgeConfig(
   status: ContaPagar['status'],
@@ -46,6 +47,13 @@ export function getContasReceberStatusBadgeConfig(
     pago_atraso: { label: t('status.paidLate'), className: 'bg-primary' },
   };
   return map[status] ?? { label: status, variant: 'secondary' };
+}
+
+export function getContasReceberStatusBadgeConfigForTitulo(
+  titulo: TituloComVencimento,
+  t: ContasReceberTranslateFn
+): StatusBadgeConfig {
+  return getContasReceberStatusBadgeConfig(getTituloStatusEfetivo(titulo), t);
 }
 
 export function getPlanoStatusBadgeClass(status: string): string {

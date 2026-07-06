@@ -13,6 +13,7 @@ import { PDFGenerationService } from '../../../services/pdf-generation/PDFGenera
 import { TituloPDFService, BOLETO_PDF_OPTIONS } from '../../../services/titulos/TituloPDFService';
 import { ReciboPDFService } from '../../../services/titulos/ReciboPDFService';
 import { BancoApiService } from '../../../services/bancos/BancoApiService';
+import { isTituloEmAbertoAtrasado } from '../../../utils/tituloVencimentoUtils';
 import { logger } from '../../../utils/logger';
 import crypto from 'crypto';
 import { sendSuccess, sendError, sendValidationError, sendForbidden, sendNotFound } from '../../../utils/responseUtils';
@@ -221,16 +222,13 @@ export class CentralAssinanteController {
       hoje.setHours(0, 0, 0, 0);
 
       const titulosPagos = titulosJson.filter((t: any) => t.status === 'pago' || t.status === 'pago_atraso');
-      const titulosAtrasados = titulosJson.filter((t: any) => {
-        const vencimento = new Date(t.data_vencimento);
-        vencimento.setHours(0, 0, 0, 0);
-        return (t.status === 'pendente' || t.status === 'vencido') && vencimento < hoje;
-      });
-      const titulosAPagar = titulosJson.filter((t: any) => {
-        const vencimento = new Date(t.data_vencimento);
-        vencimento.setHours(0, 0, 0, 0);
-        return (t.status === 'pendente' || t.status === 'parcial') && vencimento >= hoje;
-      });
+      const titulosAtrasados = titulosJson.filter(
+        (t: any) => isTituloEmAbertoAtrasado(t, hoje)
+      );
+      const titulosAPagar = titulosJson.filter(
+        (t: any) =>
+          (t.status === 'pendente' || t.status === 'parcial') && !isTituloEmAbertoAtrasado(t, hoje)
+      );
 
       // Preparar resposta
       const dadosCliente = {
@@ -289,11 +287,7 @@ export class CentralAssinanteController {
             linha_digitavel: t.linha_digitavel || null,
             descricao: t.descricao || null
           })),
-          atrasados: titulosJson.filter((t: any) => {
-            const vencimento = new Date(t.data_vencimento);
-            vencimento.setHours(0, 0, 0, 0);
-            return (t.status === 'pendente' || t.status === 'vencido') && vencimento < hoje;
-          }).map((t: any) => ({
+          atrasados: titulosJson.filter((t: any) => isTituloEmAbertoAtrasado(t, hoje)).map((t: any) => ({
             id: t.id,
             numero_titulo: t.numero_titulo,
             valor: t.valor,
@@ -307,11 +301,10 @@ export class CentralAssinanteController {
             linha_digitavel: t.linha_digitavel || null,
             descricao: t.descricao || null
           })),
-          a_pagar: titulosJson.filter((t: any) => {
-            const vencimento = new Date(t.data_vencimento);
-            vencimento.setHours(0, 0, 0, 0);
-            return (t.status === 'pendente' || t.status === 'parcial') && vencimento >= hoje;
-          }).map((t: any) => ({
+          a_pagar: titulosJson.filter(
+            (t: any) =>
+              (t.status === 'pendente' || t.status === 'parcial') && !isTituloEmAbertoAtrasado(t, hoje)
+          ).map((t: any) => ({
             id: t.id,
             numero_titulo: t.numero_titulo,
             valor: t.valor,

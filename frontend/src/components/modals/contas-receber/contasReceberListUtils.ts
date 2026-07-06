@@ -1,6 +1,6 @@
 import { renderStatusBadge } from 'components/ui/StatusBadge';
 import { SaasTitulo } from 'services/saas/saasCrudService';
-import { getContasReceberStatusBadgeConfig } from 'utils/tableStatusBadges';
+import { getContasReceberStatusBadgeConfigForTitulo } from 'utils/tableStatusBadges';
 import { ContasReceberTranslateFn } from './contasReceberListTypes';
 
 export const canGerarBoletoSaas = (t: SaasTitulo) =>
@@ -13,5 +13,6 @@ export const formatContasReceberCurrency = (value: number | string | null | unde
 };
 
 export const createGetStatusBadge = (t: ContasReceberTranslateFn) => {
-  return (status: string) => renderStatusBadge(getContasReceberStatusBadgeConfig(status, t));
+  return (item: { status: string; data_vencimento?: string | null; vencida?: boolean }) =>
+    renderStatusBadge(getContasReceberStatusBadgeConfigForTitulo(item, t));
 };

@@ -114,6 +114,7 @@ export interface Titulo {
   created_at_formatada?: string | null;
   status: 'pendente' | 'pago' | 'vencido' | 'cancelado' | 'parcial' | 'pago_atraso';
   pago: boolean;
+  vencida?: boolean;
   desconto_percentual?: number;
   desconto_valor?: number;
   acrescimo_percentual?: number;
@@ -299,6 +300,7 @@ export interface CarneParcela {
   data_pagamento_formatada?: string | null;
   valor_pago?: number;
   status: 'pendente' | 'pago' | 'vencido' | 'cancelado' | 'pago_atraso' | 'parcial';
+  vencida?: boolean;
   codigo_barras?: string;
   linha_digitavel?: string;
   qrcode?: string;

@@ -6,26 +6,28 @@ import { TermoContrato } from 'services/termoContratoService';
 import { ContratoPlanoAdicional } from 'services/contratoPlanoAdicionalService';
 import { IntegracaoIxcProvedor } from 'services/integracaoIxcProvedorService';
 import { formatDate, formatDateTime } from 'utils/formatters';
+import { getTituloStatusEfetivo } from 'utils/tituloStatus';
 import { getTituloStatusColor } from './contratoStatusUtils';
 
 type TranslateFn = (key: keyof TranslationKeys, params?: Record<string, string | number>) => string;
 
 function renderTituloStatusBadge(item: Titulo, t: TranslateFn) {
+  const status = getTituloStatusEfetivo(item);
   return (
-    <span className={`badge bg-${getTituloStatusColor(item.status)}`}>
-      {item.status === 'pago'
+    <span className={`badge bg-${getTituloStatusColor(status)}`}>
+      {status === 'pago'
         ? t('status.paid')
-        : item.status === 'pago_atraso'
+        : status === 'pago_atraso'
           ? t('status.paidLate')
-          : item.status === 'pendente'
+          : status === 'pendente'
             ? t('status.pending')
-            : item.status === 'vencido'
+            : status === 'vencido'
               ? t('status.overdue')
-              : item.status === 'parcial'
+              : status === 'parcial'
                 ? t('status.partial')
-                : item.status === 'cancelado'
+                : status === 'cancelado'
                   ? t('status.cancelled')
-                  : item.status}
+                  : status}
     </span>
   );
 }

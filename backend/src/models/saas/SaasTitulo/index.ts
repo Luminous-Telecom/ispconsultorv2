@@ -7,6 +7,7 @@ import {
   BelongsToGetAssociationMixin,
 } from 'sequelize';
 import { sequelize } from '../../../config/database';
+import { isTituloVencida } from '../../../utils/tituloVencimentoUtils';
 import { SaasPlano } from '../SaasPlano';
 import { SaasBanco } from '../SaasBanco';
 import { SaasContrato } from '../SaasContrato';
@@ -57,6 +58,12 @@ export class SaasTitulo extends Model<
   declare getPlano: BelongsToGetAssociationMixin<SaasPlano>;
   declare getBanco: BelongsToGetAssociationMixin<SaasBanco>;
   declare getContrato: BelongsToGetAssociationMixin<SaasContrato>;
+
+  toJSON(): Record<string, unknown> {
+    const json = this.get({ plain: true }) as Record<string, unknown>;
+    json.vencida = isTituloVencida({ status: this.status, data_vencimento: this.data_vencimento });
+    return json;
+  }
 }
 
 SaasTitulo.init(

@@ -1,20 +1,6 @@
 import type { TituloFilters } from 'types/entities';
 
-function tituloVencimentoDayStart(dataVencimento: string): Date {
-  const venc = new Date(dataVencimento);
-  venc.setHours(0, 0, 0, 0);
-  return venc;
-}
-
-export function isTituloEmAbertoAtrasado(
-  titulo: { status: string; data_vencimento?: string | null },
-  hojeSemHora: Date
-): boolean {
-  if (!titulo.data_vencimento) return false;
-  if (titulo.status === 'vencido') return true;
-  if (titulo.status !== 'pendente') return false;
-  return tituloVencimentoDayStart(titulo.data_vencimento) < hojeSemHora;
-}
+export { isTituloEmAbertoAtrasado } from './tituloStatus';
 
 /** Filtros ao clicar numa fatia do gráfico Status dos Pagamentos (todos os títulos, como contratos). */
 export function buildDashboardPaymentStatusSliceFilters(

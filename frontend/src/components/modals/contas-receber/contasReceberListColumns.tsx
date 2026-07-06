@@ -8,7 +8,7 @@ import { formatContasReceberCurrency } from './contasReceberListUtils';
 
 export function useContasReceberListColumns(
   t: ContasReceberTranslateFn,
-  getStatusBadge: (status: string) => React.ReactNode
+  getStatusBadge: (item: TituloItemUnion) => React.ReactNode
 ): ListModalConfig<TituloItemUnion>['columns'] {
   return useMemo(
     (): ListModalConfig<TituloItemUnion>['columns'] => [
@@ -60,7 +60,7 @@ export function useContasReceberListColumns(
           t('status.paidLate'),
         ],
         resizable: true,
-        render: (item: TituloItemUnion) => getStatusBadge(item.status),
+        render: (item: TituloItemUnion) => getStatusBadge(item),
       },
       {
         key: 'plano_nome',

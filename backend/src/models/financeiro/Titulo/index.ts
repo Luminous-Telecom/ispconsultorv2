@@ -12,6 +12,7 @@ import {
 } from 'sequelize';
 import { sequelize } from '../../../config/database';
 import { logger } from '../../../utils/logger';
+import { isTituloVencida } from '../../../utils/tituloVencimentoUtils';
 import { Cliente } from '../../clientes/Cliente';
 import { Plano } from '../../cadastros/Plano';
 import { Banco } from '../../cadastros/Banco';
@@ -268,14 +269,12 @@ export class Titulo extends Model<
   }
 
 
+  isVencidaSync(): boolean {
+    return isTituloVencida({ status: this.status, data_vencimento: this.data_vencimento });
+  }
+
   async isVencida(): Promise<boolean> {
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-    
-    const dataVencimento = new Date(this.data_vencimento);
-    dataVencimento.setHours(0, 0, 0, 0);
-    
-    return dataVencimento < hoje && this.status === 'pendente';
+    return this.isVencidaSync();
   }
 
   async getDiasAteVencimento(): Promise<number> {
@@ -500,6 +499,7 @@ export class Titulo extends Model<
     const json = this.get({ plain: true }) as Record<string, unknown>;
     json.data_pagamento_formatada = this.getDataPagamentoFormatada();
     json.created_at_formatada = this.getCreatedAtFormatada();
+    json.vencida = this.isVencidaSync();
     
     // Incluir número e status da NFS-e se a nota fiscal estiver carregada
     if (this.nota_fiscal_id && (this as any).nota_fiscal) {

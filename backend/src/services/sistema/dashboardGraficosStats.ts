@@ -1,4 +1,5 @@
 import { formatDateISOForAPI } from '../../utils/timezoneUtils';
+import { isTituloEmAbertoAtrasado } from '../../utils/tituloVencimentoUtils';
 
 /**
  * Estatísticas e séries pré-calculadas do dashboard (ERP/SaaS) para evitar lógica no frontend.
@@ -74,27 +75,6 @@ function parseDataLabelToRange(label: string): { data_inicio: string; data_fim: 
   if (isNaN(d.getTime())) return null;
   const iso = formatDateISOForAPI(d) || '';
   return { data_inicio: iso, data_fim: iso };
-}
-
-function tituloVencimentoDate(t: { data_vencimento: string | Date }): Date {
-  const v = t.data_vencimento;
-  return typeof v === 'string' ? new Date(v) : v;
-}
-
-function tituloVencimentoDayStart(t: { data_vencimento: string | Date }): Date {
-  const venc = tituloVencimentoDate(t);
-  venc.setHours(0, 0, 0, 0);
-  return venc;
-}
-
-/** Em aberto com vencimento antes de hoje (status vencido ou pendente ainda não sincronizado pela rotina). */
-function isTituloEmAbertoAtrasado(
-  titulo: { status: string; data_vencimento: string | Date },
-  hojeSemHora: Date
-): boolean {
-  if (titulo.status === 'vencido') return true;
-  if (titulo.status !== 'pendente') return false;
-  return tituloVencimentoDayStart(titulo) < hojeSemHora;
 }
 
 function computeStatusPagamento(

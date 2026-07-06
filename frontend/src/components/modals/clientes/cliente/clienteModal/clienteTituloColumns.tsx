@@ -3,6 +3,7 @@ import { TranslationKeys } from 'contexts/I18nContext';
 import { TableColumn as TableColumnType } from 'components/tables/types';
 import { CarneParcela } from 'types';
 import { formatCurrency, formatDate, formatDateTime } from 'utils/formatters';
+import { getTituloStatusEfetivo } from 'utils/tituloStatus';
 import { getTituloStatusColor } from './clienteStatusUtils';
 
 type TranslateFn = (key: keyof TranslationKeys, params?: Record<string, string | number>) => string;
@@ -42,23 +43,26 @@ export function buildClienteTituloColumns(t: TranslateFn): TableColumnType<Carne
         t('status.partial'),
         t('status.cancelled'),
       ],
-      render: (item) => (
-        <span className={`badge bg-${getTituloStatusColor(item.status)}`}>
-          {item.status === 'pago'
+      render: (item) => {
+        const status = getTituloStatusEfetivo(item);
+        return (
+        <span className={`badge bg-${getTituloStatusColor(status)}`}>
+          {status === 'pago'
             ? t('status.paid')
-            : item.status === 'pago_atraso'
+            : status === 'pago_atraso'
               ? t('status.paidLate')
-              : item.status === 'pendente'
+              : status === 'pendente'
                 ? t('status.pending')
-                : item.status === 'vencido'
+                : status === 'vencido'
                   ? t('status.overdue')
-                  : item.status === 'parcial'
+                  : status === 'parcial'
                     ? t('status.partial')
-                    : item.status === 'cancelado'
+                    : status === 'cancelado'
                       ? t('status.cancelled')
-                      : item.status}
+                      : status}
         </span>
-      ),
+        );
+      },
     },
     {
       key: 'plano_nome',

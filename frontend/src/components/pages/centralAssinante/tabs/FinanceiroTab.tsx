@@ -7,6 +7,7 @@ import {
 } from 'components/ui';
 import { DadosCentralAssinante } from 'services/centralAssinanteService';
 import { formatCurrency, formatDate } from 'utils/formatters';
+import { getTituloStatusEfetivo } from 'utils/tituloStatus';
 import { FaturaVisualizar } from '../centralAssinanteUtils';
 
 interface FinanceiroTabProps {
@@ -96,7 +97,9 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
 
       {dados.titulos.a_pagar.length > 0 && (
         <div className="central-assinante-stack">
-          {dados.titulos.a_pagar.map((titulo) => (
+          {dados.titulos.a_pagar.map((titulo) => {
+            const status = getTituloStatusEfetivo(titulo);
+            return (
             <div key={titulo.id} className="central-assinante-item">
               <Card className="border-0" padding="none">
                 <div className="central-assinante-item-body">
@@ -110,8 +113,8 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
                         <p className="mb-0 text-white-50 central-assinante-item-subtitle">{titulo.plano}</p>
                       )}
                     </div>
-                    <Badge variant={getStatusVariant(titulo.status)} pill className="ms-2">
-                      {getStatusLabel(titulo.status)}
+                    <Badge variant={getStatusVariant(status)} pill className="ms-2">
+                      {getStatusLabel(status)}
                     </Badge>
                   </div>
                   <div className="d-flex gap-3">
@@ -143,7 +146,8 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
                 </div>
               </Card>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </>
