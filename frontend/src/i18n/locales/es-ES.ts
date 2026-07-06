@@ -637,6 +637,7 @@ const esES: TranslationKeys = {
 
     // Company Labels
     'company.title': 'Empresa',
+    'company.id': 'ID de la Empresa',
     'company.razaoSocial': 'Razón Social',
     'company.nomeFantasia': 'Nombre Fantasía',
     'company.cnpj': 'ID Fiscal (CNPJ)',

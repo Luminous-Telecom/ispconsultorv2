@@ -34,7 +34,10 @@ export class DadosEmpresaService {
    * Criar dados da empresa
    */
   static async create(dados: Partial<DadosEmpresa>): Promise<DadosEmpresa> {
-    return await DadosEmpresa.create(dados as any);
+    const created = await DadosEmpresa.create(dados as any);
+    cache.delete('dados_empresa:config');
+    cache.delete(`dados_empresa:config:${created.id}`);
+    return created;
   }
 
   /**
@@ -51,8 +54,11 @@ export class DadosEmpresaService {
     await dadosEmpresa.update(dados);
     await dadosEmpresa.reload();
 
-    const cacheKey = empresaId != null ? `dados_empresa:config:${empresaId}` : 'dados_empresa:config';
-    cache.delete(cacheKey);
+    cache.delete('dados_empresa:config');
+    cache.delete(`dados_empresa:config:${dadosEmpresa.id}`);
+    if (empresaId != null) {
+      cache.delete(`dados_empresa:config:${empresaId}`);
+    }
     return dadosEmpresa;
   }
 }

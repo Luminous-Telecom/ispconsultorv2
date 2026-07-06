@@ -4,7 +4,8 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { resolveArquivosPath } from '../../utils/pathUtils';
-import { getEmpresaIdOrNull } from '../../utils/tenantUtils';
+import { getEmpresaIdOrNull, isAdminRequest } from '../../utils/tenantUtils';
+import type { Request, RequestHandler } from 'express';
 
 const router = Router();
 
@@ -13,10 +14,39 @@ if (!fs.existsSync(baseUploadDir)) {
   fs.mkdirSync(baseUploadDir, { recursive: true });
 }
 
+const parseEmpresaIdParam = (raw: unknown): number | null => {
+  if (raw === undefined || raw === null || raw === '') return null;
+  const empresaId = parseInt(String(raw), 10);
+  return Number.isFinite(empresaId) && empresaId > 0 ? empresaId : null;
+};
+
+const getUploadEmpresaId = (req: Request): number | null => {
+  return parseEmpresaIdParam(req.params.id) ?? getEmpresaIdOrNull(req);
+};
+
+const validateEmpresaIdParamAccess: RequestHandler = (req, res, next) => {
+  const empresaId = parseEmpresaIdParam(req.params.id);
+  if (empresaId == null) {
+    res.status(400).json({ success: false, message: 'ID da empresa inválido' });
+    return;
+  }
+
+  const tokenEmpresaId = getEmpresaIdOrNull(req);
+  if (!isAdminRequest(req) && tokenEmpresaId !== empresaId) {
+    res.status(403).json({
+      success: false,
+      message: 'Você não tem permissão para acessar os dados desta empresa',
+    });
+    return;
+  }
+
+  next();
+};
+
 // Storage para logo - pasta por empresa_id para multi-tenant
 const logoStorage = multer.diskStorage({
   destination: (req, _file, cb) => {
-    const empresaId = getEmpresaIdOrNull(req);
+    const empresaId = getUploadEmpresaId(req);
     const dir = path.join(baseUploadDir, String(empresaId ?? 'default'));
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
@@ -30,7 +60,7 @@ const logoStorage = multer.diskStorage({
 // Storage para assinatura - pasta por empresa_id para multi-tenant
 const assinaturaStorage = multer.diskStorage({
   destination: (req, _file, cb) => {
-    const empresaId = getEmpresaIdOrNull(req);
+    const empresaId = getUploadEmpresaId(req);
     const dir = path.join(baseUploadDir, String(empresaId ?? 'default'));
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
@@ -103,6 +133,9 @@ router.get('/', DadosEmpresaController.get);
 // PUT /api/dados-empresa - Atualizar dados da empresa
 router.put('/', DadosEmpresaController.update);
 
+// PUT /api/dados-empresa/:id - Atualizar dados pelo ID da empresa
+router.put('/:id', DadosEmpresaController.update);
+
 // GET /api/dados-empresa/logo - Buscar logo da empresa (redireciona para arquivo)
 router.get('/logo', DadosEmpresaController.getLogo);
 
@@ -129,6 +162,36 @@ router.post('/logo', (req, res, next) => {
       res.status(400).json({ 
         success: false,
         message: err.message || 'Erro ao processar arquivo' 
+      });
+      return;
+    }
+    next();
+  });
+}, DadosEmpresaController.uploadLogo);
+
+// POST /api/dados-empresa/:id/logo - Upload da logo pelo ID da empresa
+router.post('/:id/logo', validateEmpresaIdParamAccess, (req, res, next) => {
+  upload.single('logo')(req, res, (err) => {
+    if (err) {
+      // Tratar erros do multer
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          res.status(400).json({
+            success: false,
+            message: 'Arquivo muito grande. Tamanho máximo: 2MB'
+          });
+          return;
+        }
+        res.status(400).json({
+          success: false,
+          message: `Erro no upload: ${err.message}`
+        });
+        return;
+      }
+      // Erro de validação de tipo de arquivo
+      res.status(400).json({
+        success: false,
+        message: err.message || 'Erro ao processar arquivo'
       });
       return;
     }
@@ -190,10 +253,58 @@ router.post('/assinatura', (req, res, next) => {
   });
 }, DadosEmpresaController.uploadAssinatura);
 
+// POST /api/dados-empresa/:id/assinatura - Upload da assinatura pelo ID da empresa
+router.post('/:id/assinatura', validateEmpresaIdParamAccess, (req, res, next) => {
+  uploadAssinatura.single('assinatura')(req, res, (err) => {
+    if (err) {
+      // Tratar erros do multer
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          res.status(400).json({
+            success: false,
+            message: 'Arquivo muito grande. Tamanho máximo: 10MB'
+          });
+          return;
+        }
+        if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+          res.status(400).json({
+            success: false,
+            message: 'Campo de arquivo inválido. Use o campo "assinatura"'
+          });
+          return;
+        }
+        res.status(400).json({
+          success: false,
+          message: `Erro no upload: ${err.message}`
+        });
+        return;
+      }
+      // Erro de validação de tipo de arquivo
+      res.status(400).json({
+        success: false,
+        message: err.message || 'Erro ao processar arquivo'
+      });
+      return;
+    }
+    // Verificar se o arquivo foi recebido
+    if (!req.file) {
+      res.status(400).json({
+        success: false,
+        message: 'Nenhum arquivo foi enviado'
+      });
+      return;
+    }
+    next();
+  });
+}, DadosEmpresaController.uploadAssinatura);
+
 // GET /api/dados-empresa/public - Logo e nome (público — para login e central do assinante)
 router.get('/public', DadosEmpresaController.getPublic);
 
 // GET /api/dados-empresa/public/:slug - Logo e nome da empresa identificada pelo slug (multiloja)
 router.get('/public/:slug', DadosEmpresaController.getPublicBySlug);
+
+// GET /api/dados-empresa/:id - Buscar dados completos pelo ID da empresa
+router.get('/:id', DadosEmpresaController.get);
 
 export default router;

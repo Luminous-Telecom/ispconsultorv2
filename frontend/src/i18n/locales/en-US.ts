@@ -635,6 +635,7 @@ const enUS: TranslationKeys = {
 
     // Company Labels
     'company.title': 'Company',
+    'company.id': 'Company ID',
     'company.razaoSocial': 'Business Name',
     'company.nomeFantasia': 'Trade Name',
     'company.cnpj': 'Tax ID (CNPJ)',

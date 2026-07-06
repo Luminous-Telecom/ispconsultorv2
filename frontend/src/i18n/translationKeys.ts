@@ -618,6 +618,7 @@ export interface TranslationKeys {
 
   // Company Labels
   'company.title': string;
+  'company.id': string;
   'company.razaoSocial': string;
   'company.nomeFantasia': string;
   'company.cnpj': string;

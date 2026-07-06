@@ -635,6 +635,7 @@ const ptBR: TranslationKeys = {
 
     // Company Labels
     'company.title': 'Empresa',
+    'company.id': 'ID da Empresa',
     'company.razaoSocial': 'Razão Social',
     'company.nomeFantasia': 'Nome Fantasia',
     'company.cnpj': 'CNPJ',

@@ -11,11 +11,11 @@ import { TituloPDFService } from '../../../services/titulos/TituloPDFService';
 import { SaasTituloBoletoService } from '../../../services/saas/SaasTituloBoletoService';
 import { logger } from '../../../utils/logger';
 import type { AuthenticatedRequest } from '../../../types/auth';
-import { getEmpresaIdOrNull, parseEmpresaIdQuery } from '../../../utils/tenantUtils';
+import { getEmpresaIdOrNull, isAdminRequest, parseEmpresaIdQuery } from '../../../utils/tenantUtils';
 import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import path from 'path';
 import { resolveArquivosPath } from '../../../utils/pathUtils';
-import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
+import { sendSuccess, sendError, sendForbidden, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { parseIdsFromQueryParam, queryString } from '../../../utils/listQuery';
 
 export class DadosEmpresaController {
@@ -51,6 +51,27 @@ export class DadosEmpresaController {
     if (!path || typeof path !== 'string') return null;
     // Garantir que o path comece com /
     return path.startsWith('/') ? path : `/${path}`;
+  }
+
+  private static resolveRequestedEmpresaId(req: Request, res: Response): number | null | false {
+    const rawId = req.params.id;
+    if (rawId == null || rawId === '') {
+      return getEmpresaIdOrNull(req);
+    }
+
+    const empresaId = parseInt(String(rawId), 10);
+    if (!Number.isFinite(empresaId) || empresaId <= 0) {
+      sendValidationError(res, 'ID da empresa inválido');
+      return false;
+    }
+
+    const tokenEmpresaId = getEmpresaIdOrNull(req);
+    if (!isAdminRequest(req) && tokenEmpresaId !== empresaId) {
+      sendForbidden(res, 'Você não tem permissão para acessar os dados desta empresa');
+      return false;
+    }
+
+    return empresaId;
   }
 
   // Rota pública — retorna apenas logo, nome_fantasia e razao_social (para login e central do assinante)
@@ -202,10 +223,16 @@ export class DadosEmpresaController {
   // Rota exclusiva do sistema administrativo - requer autenticação (validada pelo authMiddleware via cookie)
   static async get(req: Request, res: Response): Promise<void> {
     try {
-      const empresaId = getEmpresaIdOrNull(req);
+      const empresaId = DadosEmpresaController.resolveRequestedEmpresaId(req, res);
+      if (empresaId === false) return;
+
       let dadosEmpresa = await DadosEmpresaService.findOne(empresaId ?? undefined);
 
       if (!dadosEmpresa) {
+        if (empresaId != null) {
+          sendNotFound(res, 'Dados da empresa não encontrados');
+          return;
+        }
         dadosEmpresa = await DadosEmpresaService.create(DadosEmpresaController.getDefaultData());
       }
 
@@ -225,7 +252,9 @@ export class DadosEmpresaController {
 
   static async update(req: Request, res: Response): Promise<void> {
     try {
-      const empresaId = getEmpresaIdOrNull(req);
+      const empresaId = DadosEmpresaController.resolveRequestedEmpresaId(req, res);
+      if (empresaId === false) return;
+
       const dadosAtualizados = { ...req.body };
 
       dadosAtualizados.logo = DadosEmpresaController.normalizePath(dadosAtualizados.logo);
@@ -235,6 +264,10 @@ export class DadosEmpresaController {
       const dadosAnteriores = dadosEmpresa ? dadosEmpresa.toJSON() : null;
 
       if (!dadosEmpresa) {
+        if (empresaId != null) {
+          sendNotFound(res, 'Dados da empresa não encontrados');
+          return;
+        }
         dadosEmpresa = await DadosEmpresaService.create(dadosAtualizados);
         try {
           const empresaIdAudit = empresaId ?? dadosEmpresa.id ?? null;
@@ -313,13 +346,19 @@ export class DadosEmpresaController {
         return;
       }
 
-      const empresaId = getEmpresaIdOrNull(req);
+      const empresaId = DadosEmpresaController.resolveRequestedEmpresaId(req, res);
+      if (empresaId === false) return;
+
       const subdir = String(empresaId ?? 'default');
       const ext = path.extname(req.file.originalname || '') || '.png';
       const filePath = `/arquivos/empresa/${subdir}/logo${ext}`;
       let dadosEmpresa = await DadosEmpresaService.findOne(empresaId ?? undefined);
 
       if (!dadosEmpresa) {
+        if (empresaId != null) {
+          sendNotFound(res, 'Dados da empresa não encontrados');
+          return;
+        }
         dadosEmpresa = await DadosEmpresaService.create({ ...DadosEmpresaController.getDefaultData(), logo: filePath });
         try {
           const empresaIdAudit = empresaId ?? dadosEmpresa.id ?? null;
@@ -434,13 +473,19 @@ export class DadosEmpresaController {
         return;
       }
 
-      const empresaId = getEmpresaIdOrNull(req);
+      const empresaId = DadosEmpresaController.resolveRequestedEmpresaId(req, res);
+      if (empresaId === false) return;
+
       const subdir = String(empresaId ?? 'default');
       const ext = path.extname(req.file.originalname || '') || '.png';
       const filePath = `/arquivos/empresa/${subdir}/assinatura${ext}`;
       let dadosEmpresa = await DadosEmpresaService.findOne(empresaId ?? undefined);
 
       if (!dadosEmpresa) {
+        if (empresaId != null) {
+          sendNotFound(res, 'Dados da empresa não encontrados');
+          return;
+        }
         dadosEmpresa = await DadosEmpresaService.create({ ...DadosEmpresaController.getDefaultData(), responsavel_assinatura: filePath });
         try {
           const empresaIdAudit = empresaId ?? dadosEmpresa.id ?? null;

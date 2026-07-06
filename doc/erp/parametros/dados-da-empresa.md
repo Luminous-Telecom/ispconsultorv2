@@ -20,6 +20,7 @@ Normalmente apenas administradores alteram esta tela. Consultores consultam os d
 
 | Campo | Obrigatório | Descrição |
 |-------|:-----------:|-----------|
+| **ID da Empresa** | Não editável | Identificador do tenant usado nas URLs da API. Use este número para confirmar que integrações e requisições estão apontando para a empresa correta |
 | **Razão Social** | Sim | Nome jurídico da consultoria |
 | **Nome Fantasia** | Não | Nome comercial |
 | **CNPJ** | Sim | CNPJ da empresa |
@@ -70,6 +71,22 @@ Abas das **faturas do plano SaaS** da consultoria junto à ISP Consultor (assina
 ## Salvar alterações
 
 Após editar qualquer aba, clique em **Salvar**. Use **Cancelar** para descartar mudanças não salvas.
+
+## ID da empresa e URLs da API
+
+O **ID da Empresa** aparece no primeiro campo da aba **Empresa** em **Parâmetros → Dados da Empresa**. O campo é somente leitura e corresponde ao cadastro do provedor/tenant atual.
+
+Use esse ID ao conferir integrações ou chamadas diretas para a API de Dados da Empresa:
+
+```text
+GET /api/dados-empresa/{id}
+PUT /api/dados-empresa/{id}
+POST /api/dados-empresa/{id}/logo
+POST /api/dados-empresa/{id}/assinatura
+```
+
+Exemplo: se o campo mostrar `42`, a URL para consultar os dados completos é `/api/dados-empresa/42`. Usuários comuns só conseguem acessar o ID da própria empresa; tentativas com outro ID são bloqueadas para evitar consultar ou alterar dados de outro provedor.
+
 ---
 
 ::: info Precisa de ajuda?

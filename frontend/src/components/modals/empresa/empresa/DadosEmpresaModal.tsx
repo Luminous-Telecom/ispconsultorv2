@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useLayoutEffect, useCallback, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DadosEmpresaService, DadosEmpresa as DadosEmpresaType } from 'services/dadosEmpresaService';
+import { authService } from 'services/authService';
 import { saasDadosEmpresaService, type SaasDadosEmpresaItem } from 'services/saas/saasDadosEmpresaService';
 import { ParametrosService } from 'services/parametrosService';
 import { SaasParametrosService } from 'services/saas/saasParametrosService';
@@ -100,7 +101,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   const queryClient = useQueryClient();
 
   const initialFormData: DadosEmpresaForm = {
-    id: 1,
+    id: 0,
     razao_social: '',
     nome_fantasia: '',
     cnpj: '',
@@ -128,7 +129,15 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
 
   const { data: dadosEmpresa } = useQuery({
     queryKey: ['dados-empresa'],
-    queryFn: () => DadosEmpresaService.get(),
+    queryFn: async () => {
+      try {
+        const currentUser = await authService.getCurrentUser();
+        const empresaId = currentUser.data?.empresa_id ?? undefined;
+        return DadosEmpresaService.get(empresaId);
+      } catch {
+        return DadosEmpresaService.get();
+      }
+    },
     enabled: show && !isSaas,
     staleTime: 0,
     refetchOnMount: true,
@@ -283,7 +292,8 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
             queryClient.invalidateQueries({ queryKey: ['saas-dados-empresa', itemId] });
           }
         } else if (!isSaas) {
-          const resp = await DadosEmpresaService.uploadLogo(file);
+          const empresaId = dados.id > 0 ? dados.id : undefined;
+          const resp = await DadosEmpresaService.uploadLogo(file, empresaId);
           setDados((prev) => ({ ...prev, logo: resp.logo }));
           success('Logo atualizada com sucesso!');
           queryClient.invalidateQueries({ queryKey: ['dados-empresa'] });
@@ -294,7 +304,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
         showApiError(err, CONTEXT_ERROR_MESSAGES.EMPRESA_LOGO_ERROR);
       }
     },
-    [isSaas, isSaasEdit, itemId, success, showApiError, queryClient]
+    [dados.id, isSaas, isSaasEdit, itemId, success, showApiError, queryClient]
   );
 
   const onAssinaturaChange = useCallback(
@@ -311,7 +321,8 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
             queryClient.invalidateQueries({ queryKey: ['saas-dados-empresa', itemId] });
           }
         } else if (!isSaas) {
-          const resp = await DadosEmpresaService.uploadAssinatura(file);
+          const empresaId = dados.id > 0 ? dados.id : undefined;
+          const resp = await DadosEmpresaService.uploadAssinatura(file, empresaId);
           setDados((prev) => ({ ...prev, responsavel_assinatura: resp.responsavel_assinatura }));
           success('Assinatura atualizada com sucesso!');
           queryClient.invalidateQueries({ queryKey: ['dados-empresa'] });
@@ -322,7 +333,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
         showApiError(err, CONTEXT_ERROR_MESSAGES.EMPRESA_SIGNATURE_ERROR);
       }
     },
-    [isSaas, isSaasEdit, itemId, success, showApiError, queryClient]
+    [dados.id, isSaas, isSaasEdit, itemId, success, showApiError, queryClient]
   );
 
   type EmpresaTabId = 'basico' | 'endereco' | 'contato' | 'responsavel' | 'faturas-abertas' | 'faturas-pagas';

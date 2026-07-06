@@ -62,6 +62,39 @@ export interface UpdateDadosEmpresa {
 }
 
 export class DadosEmpresaService {
+  private static buildEmpresaPath(empresaId?: number | null, suffix = ''): string {
+    const id = Number(empresaId);
+    const basePath = Number.isFinite(id) && id > 0 ? `/dados-empresa/${id}` : '/dados-empresa';
+    return `${basePath}${suffix}`;
+  }
+
+  private static getDefaultData(): DadosEmpresa {
+    return {
+      id: 0,
+      razao_social: '',
+      nome_fantasia: '',
+      cnpj: '',
+      inscricao_estadual: '',
+      inscricao_municipal: '',
+      cep: '',
+      endereco: '',
+      numero: '',
+      complemento: '',
+      bairro: '',
+      cidade: '',
+      estado: '',
+      telefone: '',
+      celular: '',
+      email: '',
+      site: '',
+      responsavel_nome: '',
+      responsavel_cpf: '',
+      responsavel_cargo: '',
+      responsavel_assinatura: undefined,
+      logo: undefined,
+    };
+  }
+
   // Buscar dados públicos da empresa (logo e nome — para login e central do assinante)
   static async getPublic(): Promise<Partial<DadosEmpresa>> {
     const response = await publicApiClient.get<{ success: boolean; data: Partial<DadosEmpresa> }>('/dados-empresa/public');
@@ -75,9 +108,9 @@ export class DadosEmpresaService {
   }
 
   // Buscar dados completos da empresa (exclusivo do sistema - requer autenticação)
-  static async get(): Promise<DadosEmpresa> {
+  static async get(empresaId?: number | null): Promise<DadosEmpresa> {
     try {
-      const response = await apiService.get<DadosEmpresa>('/dados-empresa');
+      const response = await apiService.get<DadosEmpresa>(DadosEmpresaService.buildEmpresaPath(empresaId));
       
       if (!response.success || !response.data) {
         throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.EMPRESA_LOAD_ERROR));
@@ -87,59 +120,13 @@ export class DadosEmpresaService {
 
       // Garantir que sempre retornamos um objeto válido
       if (!data || typeof data !== 'object' || Array.isArray(data)) {
-        return {
-          id: 1,
-          razao_social: '',
-          nome_fantasia: '',
-          cnpj: '',
-          inscricao_estadual: '',
-          inscricao_municipal: '',
-          cep: '',
-          endereco: '',
-          numero: '',
-          complemento: '',
-          bairro: '',
-          cidade: '',
-          estado: '',
-          telefone: '',
-          celular: '',
-          email: '',
-          site: '',
-          responsavel_nome: '',
-          responsavel_cpf: '',
-          responsavel_cargo: '',
-          responsavel_assinatura: undefined,
-          logo: undefined,
-        };
+        return DadosEmpresaService.getDefaultData();
       }
       
       return data;
     } catch (error) {
       // Retornar dados padrão em caso de erro
-      return {
-        id: 1,
-        razao_social: '',
-        nome_fantasia: '',
-        cnpj: '',
-        inscricao_estadual: '',
-        inscricao_municipal: '',
-        cep: '',
-        endereco: '',
-        numero: '',
-        complemento: '',
-        bairro: '',
-        cidade: '',
-        estado: '',
-        telefone: '',
-        celular: '',
-        email: '',
-        site: '',
-          responsavel_nome: '',
-          responsavel_cpf: '',
-          responsavel_cargo: '',
-          responsavel_assinatura: undefined,
-          logo: undefined,
-        };
+      return DadosEmpresaService.getDefaultData();
       }
     }
 
@@ -178,8 +165,9 @@ export class DadosEmpresaService {
     return { data: [], pagination: undefined };
   }
 
-  static async update(data: UpdateDadosEmpresa): Promise<DadosEmpresa> {
-    const response = await apiService.put<DadosEmpresa>('/dados-empresa', data);
+  static async update(data: UpdateDadosEmpresa & { id?: number }): Promise<DadosEmpresa> {
+    const { id, ...payload } = data;
+    const response = await apiService.put<DadosEmpresa>(DadosEmpresaService.buildEmpresaPath(id), payload);
     if (response.success && response.data) {
       return response.data;
     }
@@ -187,12 +175,12 @@ export class DadosEmpresaService {
     throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.EMPRESA_DATA_UPDATE_ERROR));
   }
 
-  static async uploadLogo(file: File): Promise<{ success: boolean; logo: string }> {
+  static async uploadLogo(file: File, empresaId?: number | null): Promise<{ success: boolean; logo: string }> {
     const formData = new FormData();
     formData.append('logo', file);
     
     const response = await apiService.post<{ success: boolean; logo: string }>(
-      '/dados-empresa/logo',
+      DadosEmpresaService.buildEmpresaPath(empresaId, '/logo'),
       formData
     );
     
@@ -227,12 +215,12 @@ export class DadosEmpresaService {
     throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.EMPRESA_LOGO_ERROR));
   }
 
-  static async uploadAssinatura(file: File): Promise<{ success: boolean; responsavel_assinatura: string }> {
+  static async uploadAssinatura(file: File, empresaId?: number | null): Promise<{ success: boolean; responsavel_assinatura: string }> {
     const formData = new FormData();
     formData.append('assinatura', file);
     
     const response = await apiService.post<{ success: boolean; responsavel_assinatura: string }>(
-      '/dados-empresa/assinatura',
+      DadosEmpresaService.buildEmpresaPath(empresaId, '/assinatura'),
       formData
     );
     
