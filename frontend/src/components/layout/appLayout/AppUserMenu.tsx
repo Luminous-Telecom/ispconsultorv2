@@ -33,7 +33,6 @@ export interface AppUserMenuProps {
   availableLanguages?: LanguageOption[];
   languageTriggerRef?: React.RefObject<HTMLButtonElement | null>;
   languageDropdownRef?: React.RefObject<HTMLDivElement | null>;
-  languageDropdownPosition?: { top: number; left: number };
   onToggleLanguageDropdown?: () => void;
   onSelectLanguage?: (code: Language) => void;
 }
@@ -64,7 +63,6 @@ const AppUserMenu: React.FC<AppUserMenuProps> = ({
   availableLanguages = [],
   languageTriggerRef,
   languageDropdownRef,
-  languageDropdownPosition = { top: 0, left: 0 },
   onToggleLanguageDropdown,
   onSelectLanguage,
 }) => {
@@ -126,14 +124,12 @@ const AppUserMenu: React.FC<AppUserMenuProps> = ({
                   aria-hidden
                 />
               </NavLinkButton>
-              {isMobile && languageDropdownRef && language && (
+              {languageDropdownRef && language && (
                 <LanguageDropdown
-                  isMobile={isMobile}
                   showLanguageDropdown={showLanguageDropdown}
                   language={language}
                   availableLanguages={availableLanguages}
                   languageDropdownRef={languageDropdownRef}
-                  languageDropdownPosition={languageDropdownPosition}
                   onSelectLanguage={onSelectLanguage}
                 />
               )}
@@ -150,17 +146,6 @@ const AppUserMenu: React.FC<AppUserMenuProps> = ({
             </NavLinkButton>
           </li>
         </ul>
-      )}
-      {showLanguage && !isMobile && languageDropdownRef && language && onSelectLanguage && (
-        <LanguageDropdown
-          isMobile={false}
-          showLanguageDropdown={showLanguageDropdown}
-          language={language}
-          availableLanguages={availableLanguages}
-          languageDropdownRef={languageDropdownRef}
-          languageDropdownPosition={languageDropdownPosition}
-          onSelectLanguage={onSelectLanguage}
-        />
       )}
     </div>
   </div>

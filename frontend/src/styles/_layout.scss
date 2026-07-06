@@ -593,6 +593,15 @@ button.layout-user-dropdown__row:hover,
   background: rgba(99, 102, 241, 0.12);
 }
 
+.layout-user-dropdown__languages .layout-user-dropdown__subrow:last-child {
+  border-bottom: none;
+}
+
+.layout-user-dropdown__languages .layout-user-dropdown__subrow span.text-truncate {
+  min-width: 0;
+  flex: 1;
+}
+
 /* Ícones - tamanhos reduzidos */
 .bi-search,
 .bi-person,

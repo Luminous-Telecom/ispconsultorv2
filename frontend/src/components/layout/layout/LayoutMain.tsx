@@ -36,7 +36,6 @@ const LayoutMain: React.FC = () => {
     setShowUserMenu,
     showLanguageDropdown,
     setShowLanguageDropdown,
-    languageDropdownPosition,
     userMenuRef,
     languageTriggerRef,
     languageDropdownRef,
@@ -110,7 +109,6 @@ const LayoutMain: React.FC = () => {
           userMenuRef={userMenuRef}
           languageTriggerRef={languageTriggerRef}
           languageDropdownRef={languageDropdownRef}
-          languageDropdownPosition={languageDropdownPosition}
           t={t}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           onToggleUserMenu={() => setShowUserMenu(!showUserMenu)}

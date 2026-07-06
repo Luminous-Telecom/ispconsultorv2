@@ -4,7 +4,6 @@ export const useLayoutMenus = () => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showTableMenu, setShowTableMenu] = useState(false);
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
-  const [languageDropdownPosition, setLanguageDropdownPosition] = useState({ top: 0, left: 0 });
 
   const userMenuRef = useRef<HTMLDivElement>(null);
   const tableMenuRef = useRef<HTMLDivElement>(null);
@@ -56,16 +55,6 @@ export const useLayoutMenus = () => {
   }, [showTableMenu]);
 
   useEffect(() => {
-    if (showLanguageDropdown && languageTriggerRef.current) {
-      const triggerRect = languageTriggerRef.current.getBoundingClientRect();
-      setLanguageDropdownPosition({
-        top: triggerRect.bottom + 2,
-        left: triggerRect.left,
-      });
-    }
-  }, [showLanguageDropdown]);
-
-  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
       if (languageTriggerRef.current?.contains(target)) {
@@ -92,7 +81,6 @@ export const useLayoutMenus = () => {
     setShowTableMenu,
     showLanguageDropdown,
     setShowLanguageDropdown,
-    languageDropdownPosition,
     userMenuRef,
     tableMenuRef,
     languageTriggerRef,

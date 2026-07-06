@@ -28,7 +28,6 @@ interface LayoutHeaderProps {
   userMenuRef: React.RefObject<HTMLDivElement | null>;
   languageTriggerRef: React.RefObject<HTMLButtonElement | null>;
   languageDropdownRef: React.RefObject<HTMLDivElement | null>;
-  languageDropdownPosition: { top: number; left: number };
   t: TranslateFn;
   onToggleSidebar: () => void;
   onToggleUserMenu: () => void;
@@ -69,7 +68,6 @@ const LayoutHeader: React.FC<LayoutHeaderProps> = (props) => (
       availableLanguages: props.availableLanguages,
       languageTriggerRef: props.languageTriggerRef,
       languageDropdownRef: props.languageDropdownRef,
-      languageDropdownPosition: props.languageDropdownPosition,
       onToggleLanguageDropdown: props.onToggleLanguageDropdown,
       onSelectLanguage: props.onSelectLanguage,
     }}
