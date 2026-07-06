@@ -28,6 +28,8 @@ function setLink(rel: string, href: string, sizes?: string): void {
 /** Favicon, apple-touch-icon e manifest PWA a partir dos assets (webpack). */
 export function applySystemBrandHead(): void {
   const iconUrl = toAbsoluteUrl(ispConsultorIcon);
+  const appUrl = toAbsoluteUrl('/adm');
+  const scopeUrl = toAbsoluteUrl('/');
 
   setLink('icon', iconUrl);
   setLink('icon', iconUrl, '512x512');
@@ -47,7 +49,8 @@ export function applySystemBrandHead(): void {
     background_color: '#ffffff',
     theme_color: '#6366f1',
     orientation: 'portrait-primary',
-    scope: '/',
+    start_url: appUrl,
+    scope: scopeUrl,
     lang: 'pt-BR',
     categories: ['business', 'productivity'],
     icons: [
@@ -59,7 +62,7 @@ export function applySystemBrandHead(): void {
         name: 'Dashboard',
         short_name: 'Dashboard',
         description: 'Acesse o painel principal',
-        url: '/adm',
+        url: appUrl,
         icons: [{ src: iconUrl, sizes: '192x192' }],
       },
     ],
