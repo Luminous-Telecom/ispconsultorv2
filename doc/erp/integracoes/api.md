@@ -93,20 +93,695 @@ Prefixos permitidos pelo backend:
 
 ---
 
-## Exemplo
+## Exemplos de retorno
 
-```bash
+Respostas seguem sempre o padrão `{ success, message, data }`. Cada bloco abaixo mostra a **requisição** e a **resposta** real da rota — use como referência para montar sua integração (PHP, Node, Python, etc.).
+
+::: warning Listagens retornam `data` aninhado
+Rotas de **listar** (`GET /api/clientes`, `GET /api/contratos`, `GET /api/titulos`) devolvem a paginação dentro de `data.data` e `data.pagination` (o `data` de fora é o envelope padrão, o `data` de dentro é a lista). Rotas de **buscar por ID**, **criar** e **atualizar** devolvem o registro direto em `data`.
+:::
+
+### Clientes
+
+::::: details Listar — `GET /api/clientes`
+
+::: code-group
+
+```bash [Requisição]
 curl -H "Authorization: Bearer SEU_TOKEN" \
   "https://ispconsultor.com.br/api/clientes?page=1&limit=20"
-
-curl -H "Authorization: Bearer SEU_TOKEN" \
-  "https://ispconsultor.com.br/api/clientes/cnpj/37143069000184"
-
-curl -H "Authorization: Bearer SEU_TOKEN" \
-  "https://ispconsultor.com.br/api/titulos?cliente_id=123&page=1&limit=50"
 ```
 
-Respostas seguem o padrão `{ success, message, data }`.
+```json [Resposta]
+{
+  "success": true,
+  "data": {
+    "success": true,
+    "data": [
+      {
+        "id": "",
+        "empresa_id": "",
+        "cnpj": "",
+        "razao_social": "",
+        "nome_fantasia": "",
+        "email": "",
+        "telefone": "",
+        "whatsapp": "",
+        "cep": "",
+        "endereco": "",
+        "numero": "",
+        "complemento": "",
+        "bairro": "",
+        "cidade": "",
+        "estado": "",
+        "observacoes": "",
+        "ativo": true,
+        "tipo_cobranca": "titulo",
+        "valor_primeiro_titulo": "total",
+        "recebe_email": true,
+        "recebe_sms": false,
+        "recebe_whatsapp": false,
+        "created_at": "",
+        "updated_at": "",
+        "created_at_formatada": ""
+      }
+    ],
+    "pagination": {
+      "current_page": "",
+      "per_page": "",
+      "total": "",
+      "last_page": "",
+      "from": "",
+      "to": ""
+    }
+  }
+}
+```
+
+:::
+
+:::::
+
+::::: details Buscar por CNPJ — `GET /api/clientes/cnpj/:cnpj`
+
+::: code-group
+
+```bash [Requisição]
+curl -H "Authorization: Bearer SEU_TOKEN" \
+  "https://ispconsultor.com.br/api/clientes/cnpj/SEU_CNPJ"
+```
+
+```json [Resposta]
+{
+  "success": true,
+  "data": {
+    "id": "",
+    "empresa_id": "",
+    "cnpj": "",
+    "razao_social": "",
+    "nome_fantasia": "",
+    "email": "",
+    "telefone": "",
+    "whatsapp": "",
+    "cidade": "",
+    "estado": "",
+    "ativo": true,
+    "tipo_cobranca": "titulo",
+    "contratos": [
+      { "id": "", "plano_id": "", "status": "ativo", "valor_final": "", "data_inicio": "" }
+    ],
+    "titulos": [
+      { "id": "", "numero_titulo": "", "valor": "", "status": "pendente", "data_vencimento": "" }
+    ],
+    "planos": [
+      { "id": "", "nome": "", "valor_mensal": "" }
+    ]
+  }
+}
+```
+
+:::
+
+:::::
+
+::::: details Criar — `POST /api/clientes`
+
+::: code-group
+
+```bash [Requisição]
+curl -X POST "https://ispconsultor.com.br/api/clientes" \
+  -H "Authorization: Bearer SEU_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "cnpj": "",
+    "razao_social": "",
+    "nome_fantasia": "",
+    "email": "",
+    "telefone": "",
+    "whatsapp": "",
+    "cep": "",
+    "endereco": "",
+    "numero": "",
+    "complemento": "",
+    "bairro": "",
+    "cidade": "",
+    "estado": "",
+    "observacoes": "",
+    "ativo": true,
+    "tipo_cobranca": "titulo",
+    "valor_primeiro_titulo": "total",
+    "recebe_email": true,
+    "recebe_sms": false,
+    "recebe_whatsapp": false
+  }'
+```
+
+```json [Resposta]
+{
+  "success": true,
+  "message": "Cliente criado com sucesso",
+  "data": {
+    "id": "",
+    "empresa_id": "",
+    "cnpj": "",
+    "razao_social": "",
+    "nome_fantasia": "",
+    "email": "",
+    "ativo": true,
+    "tipo_cobranca": "titulo",
+    "valor_primeiro_titulo": "total",
+    "titulos": [],
+    "created_at": "",
+    "updated_at": "",
+    "created_at_formatada": ""
+  }
+}
+```
+
+:::
+
+:::::
+
+::::: details Atualizar — `PUT /api/clientes/:id`
+
+::: code-group
+
+```bash [Requisição]
+curl -X PUT "https://ispconsultor.com.br/api/clientes/1" \
+  -H "Authorization: Bearer SEU_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "telefone": "", "ativo": true }'
+```
+
+```json [Resposta]
+{
+  "success": true,
+  "message": "Cliente atualizado com sucesso",
+  "data": {
+    "id": "",
+    "razao_social": "",
+    "telefone": "",
+    "ativo": true,
+    "titulos": [],
+    "updated_at": ""
+  }
+}
+```
+
+:::
+
+:::::
+
+::::: details Excluir — `DELETE /api/clientes/:id`
+
+::: code-group
+
+```bash [Requisição]
+curl -X DELETE "https://ispconsultor.com.br/api/clientes/1" \
+  -H "Authorization: Bearer SEU_TOKEN"
+```
+
+```json [Resposta]
+{
+  "success": true,
+  "message": "Cliente excluído com sucesso"
+}
+```
+
+```json [Resposta — 403 com vínculos]
+{
+  "success": false,
+  "message": "Não é possível excluir o cliente pois existem título(s) associado(s)"
+}
+```
+
+:::
+
+:::::
+
+### Contratos
+
+::::: details Listar — `GET /api/contratos`
+
+::: code-group
+
+```bash [Requisição]
+curl -H "Authorization: Bearer SEU_TOKEN" \
+  "https://ispconsultor.com.br/api/contratos?page=1&limit=20"
+```
+
+```json [Resposta]
+{
+  "success": true,
+  "data": {
+    "success": true,
+    "data": [
+      {
+        "id": "",
+        "empresa_id": "",
+        "cliente_id": "",
+        "plano_id": "",
+        "desconto_percentual": "",
+        "desconto_valor": "",
+        "valor_final": "",
+        "data_inicio": "",
+        "data_fim": "",
+        "status": "ativo",
+        "isento_mensalidade": false,
+        "dia_vencimento_id": "",
+        "conta_boleto": "",
+        "tipo_cobranca_contrato_id": "",
+        "usar_endereco_cliente": false,
+        "created_at": "",
+        "updated_at": "",
+        "created_at_formatada": ""
+      }
+    ],
+    "pagination": {
+      "current_page": "",
+      "per_page": "",
+      "total": "",
+      "last_page": "",
+      "from": "",
+      "to": ""
+    }
+  }
+}
+```
+
+:::
+
+:::::
+
+::::: details Buscar por ID — `GET /api/contratos/:id`
+
+::: code-group
+
+```bash [Requisição]
+curl -H "Authorization: Bearer SEU_TOKEN" \
+  "https://ispconsultor.com.br/api/contratos/1"
+```
+
+```json [Resposta]
+{
+  "success": true,
+  "data": {
+    "id": "",
+    "cliente_id": "",
+    "plano_id": "",
+    "valor_final": "",
+    "status": "ativo",
+    "data_inicio": "",
+    "data_fim": "",
+    "dia_vencimento_id": "",
+    "conta_boleto": "",
+    "tipo_cobranca_contrato_id": "",
+    "created_at_formatada": ""
+  }
+}
+```
+
+:::
+
+:::::
+
+::::: details Criar — `POST /api/contratos`
+
+::: code-group
+
+```bash [Requisição]
+curl -X POST "https://ispconsultor.com.br/api/contratos" \
+  -H "Authorization: Bearer SEU_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "cliente_id": "",
+    "plano_id": "",
+    "dia_vencimento_id": "",
+    "conta_boleto": "",
+    "tipo_cobranca_contrato_id": "",
+    "modelo_documento_id": "",
+    "status": "ativo"
+  }'
+```
+
+```json [Resposta]
+{
+  "success": true,
+  "message": "Contrato criado com sucesso",
+  "data": {
+    "id": "",
+    "cliente_id": "",
+    "plano_id": "",
+    "valor_final": "",
+    "status": "ativo",
+    "dia_vencimento_id": "",
+    "conta_boleto": "",
+    "tipo_cobranca_contrato_id": "",
+    "servicos_adicionais": []
+  }
+}
+```
+
+:::
+
+:::::
+
+::::: details Atualizar — `PUT /api/contratos/:id`
+
+::: code-group
+
+```bash [Requisição]
+curl -X PUT "https://ispconsultor.com.br/api/contratos/1" \
+  -H "Authorization: Bearer SEU_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "status": "" }'
+```
+
+```json [Resposta]
+{
+  "success": true,
+  "message": "Contrato atualizado com sucesso",
+  "data": {
+    "id": "",
+    "cliente_id": "",
+    "status": "",
+    "updated_at": ""
+  }
+}
+```
+
+:::
+
+:::::
+
+::::: details Excluir — `DELETE /api/contratos/:id`
+
+::: code-group
+
+```bash [Requisição]
+curl -X DELETE "https://ispconsultor.com.br/api/contratos/1" \
+  -H "Authorization: Bearer SEU_TOKEN"
+```
+
+```json [Resposta]
+{
+  "success": true,
+  "message": "Contrato excluído com sucesso"
+}
+```
+
+:::
+
+:::::
+
+### Títulos
+
+::::: details Listar — `GET /api/titulos`
+
+::: code-group
+
+```bash [Requisição]
+curl -H "Authorization: Bearer SEU_TOKEN" \
+  "https://ispconsultor.com.br/api/titulos?cliente_id=1&page=1&limit=20"
+```
+
+```json [Resposta]
+{
+  "success": true,
+  "data": {
+    "success": true,
+    "data": [
+      {
+        "id": "",
+        "empresa_id": "",
+        "cliente_id": "",
+        "plano_id": "",
+        "banco_id": "",
+        "contrato_id": "",
+        "numero_titulo": "",
+        "valor": "",
+        "data_vencimento": "",
+        "status": "pendente",
+        "pago": false,
+        "data_pagamento": "",
+        "valor_pago": "",
+        "codigo_barras": "",
+        "linha_digitavel": "",
+        "observacoes": "",
+        "valor_final": "",
+        "is_avulso": false,
+        "created_at": "",
+        "updated_at": ""
+      }
+    ],
+    "pagination": {
+      "current_page": "",
+      "per_page": "",
+      "total": "",
+      "last_page": "",
+      "from": "",
+      "to": ""
+    }
+  }
+}
+```
+
+:::
+
+:::::
+
+::::: details Buscar por ID — `GET /api/titulos/:id`
+
+::: code-group
+
+```bash [Requisição]
+curl -H "Authorization: Bearer SEU_TOKEN" \
+  "https://ispconsultor.com.br/api/titulos/1"
+```
+
+```json [Resposta]
+{
+  "success": true,
+  "data": {
+    "id": "",
+    "cliente_id": "",
+    "contrato_id": "",
+    "numero_titulo": "",
+    "valor": "",
+    "status": "pendente",
+    "data_vencimento": "",
+    "link_pagamento_publico": ""
+  }
+}
+```
+
+:::
+
+:::::
+
+::::: details Criar — `POST /api/titulos`
+
+::: code-group
+
+```bash [Requisição]
+curl -X POST "https://ispconsultor.com.br/api/titulos" \
+  -H "Authorization: Bearer SEU_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "cliente_id": "",
+    "contrato_id": "",
+    "plano_id": "",
+    "banco_id": "",
+    "data_vencimento": "",
+    "is_avulso": false,
+    "valor": "",
+    "descricao": "",
+    "observacoes": "",
+    "desconto_percentual": "",
+    "desconto_valor": "",
+    "acrescimo_percentual": "",
+    "acrescimo_valor": ""
+  }'
+```
+
+```json [Resposta]
+{
+  "success": true,
+  "message": "Título criado com sucesso",
+  "data": {
+    "id": "",
+    "cliente_id": "",
+    "contrato_id": "",
+    "banco_id": "",
+    "numero_titulo": "",
+    "valor": "",
+    "valor_final": "",
+    "descricao": "",
+    "data_vencimento": "",
+    "status": "pendente",
+    "pago": false,
+    "is_avulso": false
+  }
+}
+```
+
+:::
+
+:::::
+
+::::: details Atualizar — `PUT /api/titulos/:id`
+
+::: code-group
+
+```bash [Requisição]
+curl -X PUT "https://ispconsultor.com.br/api/titulos/1" \
+  -H "Authorization: Bearer SEU_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "status": "", "observacoes": "", "data_vencimento": "", "valor": "" }'
+```
+
+```json [Resposta]
+{
+  "success": true,
+  "message": "Título atualizado com sucesso",
+  "data": {
+    "id": "",
+    "status": "",
+    "observacoes": "",
+    "updated_at": ""
+  }
+}
+```
+
+:::
+
+:::::
+
+::::: details Excluir — `DELETE /api/titulos/:id`
+
+::: code-group
+
+```bash [Requisição]
+curl -X DELETE "https://ispconsultor.com.br/api/titulos/1" \
+  -H "Authorization: Bearer SEU_TOKEN"
+```
+
+```json [Resposta]
+{
+  "success": true,
+  "message": "Título deletado com sucesso"
+}
+```
+
+:::
+
+:::::
+
+### Dados da empresa
+
+::::: details Buscar — `GET /api/dados-empresa`
+
+::: code-group
+
+```bash [Requisição]
+curl -H "Authorization: Bearer SEU_TOKEN" \
+  "https://ispconsultor.com.br/api/dados-empresa"
+```
+
+```json [Resposta]
+{
+  "success": true,
+  "data": {
+    "id": "",
+    "razao_social": "",
+    "nome_fantasia": "",
+    "cnpj": "",
+    "inscricao_estadual": "",
+    "cep": "",
+    "endereco": "",
+    "numero": "",
+    "bairro": "",
+    "cidade": "",
+    "estado": "",
+    "telefone": "",
+    "email": "",
+    "responsavel_nome": "",
+    "responsavel_cpf": "",
+    "responsavel_cargo": "",
+    "logo": "",
+    "bloqueado_por_atraso": false
+  }
+}
+```
+
+:::
+
+:::::
+
+::::: details Atualizar — `PUT /api/dados-empresa`
+
+::: code-group
+
+```bash [Requisição]
+curl -X PUT "https://ispconsultor.com.br/api/dados-empresa" \
+  -H "Authorization: Bearer SEU_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "telefone": "" }'
+```
+
+```json [Resposta]
+{
+  "success": true,
+  "data": {
+    "id": "",
+    "razao_social": "",
+    "telefone": ""
+  }
+}
+```
+
+:::
+
+:::::
+
+## Erros comuns
+
+::: code-group
+
+```json [400 — validação]
+{
+  "success": false,
+  "message": "Dados inválidos",
+  "errors": {
+    "email": ["Email deve ser válido"],
+    "cep": ["CEP inválido"]
+  }
+}
+```
+
+```json [401 — token inválido]
+{
+  "success": false,
+  "message": "Token de API inválido. Gere um novo em Parâmetros → Usuários → Gerar token."
+}
+```
+
+```json [403 — rota fora do escopo do token]
+{
+  "success": false,
+  "message": "Rota não disponível via token de API"
+}
+```
+
+```json [404 — não encontrado]
+{
+  "success": false,
+  "message": "Cliente não encontrado"
+}
+```
+
+:::
+
 ---
 
 ::: info Precisa de ajuda?
