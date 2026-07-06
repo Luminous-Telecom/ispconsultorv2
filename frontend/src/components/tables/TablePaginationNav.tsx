@@ -17,7 +17,7 @@ const TablePaginationNav: React.FC<TablePaginationNavProps> = ({
   className = '',
 }) => {
   const { t } = useI18n();
-  const { currentPage, lastPage, from, to, total, visiblePages } = values;
+  const { currentPage, lastPage, from, to, total } = values;
 
   if (variant === 'mobile-compact') {
     return (
@@ -103,28 +103,11 @@ const TablePaginationNav: React.FC<TablePaginationNavProps> = ({
               <i className="bi bi-chevron-left" />
             </PaginationNavButton>
           </li>
-          {visiblePages.map((page, index) => {
-            if (page === '...') {
-              return (
-                <li key={`dots-${index}`} className="page-item disabled table-pagination-nav__slot">
-                  <span className="page-link">...</span>
-                </li>
-              );
-            }
-            const pageNumber = page as number;
-            const isActive = pageNumber === currentPage;
-            return (
-              <li key={pageNumber} className={`page-item table-pagination-nav__slot ${isActive ? 'active' : ''}`}>
-                <PaginationNavButton
-                  label={`${t('ui.page')} ${pageNumber}`}
-                  onClick={() => onGoToPage(pageNumber)}
-                  aria-current={isActive ? 'page' : undefined}
-                >
-                  {pageNumber}
-                </PaginationNavButton>
-              </li>
-            );
-          })}
+          <li className="page-item active">
+            <span className="page-link table-pagination-nav__current" aria-current="page">
+              {currentPage} / {lastPage}
+            </span>
+          </li>
           <li className={`page-item ${currentPage >= lastPage ? 'disabled' : ''}`}>
             <PaginationNavButton
               label={t('ui.nextPage')}

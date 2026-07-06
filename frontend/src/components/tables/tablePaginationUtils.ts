@@ -7,35 +7,6 @@ export interface TablePaginationValues {
   total: number;
   from: number;
   to: number;
-  visiblePages: (number | string)[];
-}
-
-function getVisiblePages(currentPage: number, lastPage: number): (number | string)[] {
-  if (lastPage <= 1) return [1];
-
-  const delta = 2;
-  const range: number[] = [];
-  const rangeWithDots: (number | string)[] = [];
-
-  for (let i = Math.max(2, currentPage - delta); i <= Math.min(lastPage - 1, currentPage + delta); i++) {
-    range.push(i);
-  }
-
-  if (currentPage - delta > 2) {
-    rangeWithDots.push(1, '...');
-  } else {
-    rangeWithDots.push(1);
-  }
-
-  rangeWithDots.push(...range);
-
-  if (currentPage + delta < lastPage - 1) {
-    rangeWithDots.push('...', lastPage);
-  } else if (lastPage > 1) {
-    rangeWithDots.push(lastPage);
-  }
-
-  return rangeWithDots;
 }
 
 export function computeTablePaginationValues(params: {
@@ -71,6 +42,5 @@ export function computeTablePaginationValues(params: {
     total,
     from,
     to,
-    visiblePages: getVisiblePages(currentPage, lastPage),
   };
 }
