@@ -6,7 +6,8 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { defaultApiClient } from 'services/core';
 import { TemplateWhatsAppService, type TemplateWhatsApp } from 'services/templateWhatsAppService';
 import type { ApiResponse } from 'types';
-import { FormField, Loading, RecarregarButton, SystemButton } from 'components/ui';
+import { Badge, FormField, Loading, RecarregarButton, SystemButton } from 'components/ui';
+import type { BadgeVariant } from 'components/ui';
 
 interface Template {
   name: string;
@@ -71,6 +72,24 @@ function previewComVariaveis(textoMeta: string, variaveis: string[]): string {
     result = result.split(placeholder).join(`{{${variaveis[i]}}}`);
   }
   return result;
+}
+
+function getTemplateBodyText(template: Template): string {
+  const bodyComp = template.components?.find((c) => c.type === 'BODY');
+  return (bodyComp as { text?: string } | undefined)?.text || '';
+}
+
+function getTemplateStatusVariant(status: string): BadgeVariant {
+  const normalized = status.toLowerCase();
+  if (normalized.includes('approved') || normalized.includes('aprovado')) return 'success';
+  if (normalized.includes('rejected') || normalized.includes('rejeitado')) return 'danger';
+  if (normalized.includes('pending') || normalized.includes('pendente')) return 'warning';
+  return 'secondary';
+}
+
+function formatTemplateStatus(status: string): string {
+  if (!status) return 'Sem status';
+  return status.replace(/_/g, ' ').toLowerCase();
 }
 
 const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
@@ -219,10 +238,14 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
 
       {data && (
         <>
-          <div className="mb-3">
-            <div className="d-flex gap-3">
-              <div><strong>Total:</strong> {data.total || 0}</div>
-              <div><strong>Aprovados:</strong> {data.aprovados || 0}</div>
+          <div className="template-meta-summary mb-3">
+            <div>
+              <div className="template-meta-summary__label">Templates Meta</div>
+              <div className="template-meta-summary__title">Modelos aprovados para WhatsApp Cloud</div>
+            </div>
+            <div className="template-meta-summary__stats">
+              <Badge variant="primary" pill>Total: {data.total || 0}</Badge>
+              <Badge variant="success" pill>Aprovados: {data.aprovados || 0}</Badge>
             </div>
           </div>
 
@@ -232,27 +255,51 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
             </div>
           ) : (
             <>
-              <div className="row g-2 mb-3 scroll-max-380">
+              <div className="template-meta-grid mb-3 scroll-max-380">
                 {data.templates.map((template: Template, index: number) => {
                   const key = `${template.name}-${template.language}-${index}`;
                   const isExpanded = expandedKey === key;
+                  const textoMeta = getTemplateBodyText(template);
+                  const placeholders = textoMeta.match(/\{\{\d+\}\}/g)?.length ?? 0;
                   return (
-                    <div key={key} className="col-12">
+                    <div key={key}>
                       <div
-                        className={`card h-100 template-meta-card ${isExpanded ? 'border-primary' : ''}`}
+                        className={`template-meta-card ${isExpanded ? 'template-meta-card--active' : ''}`}
+                        role="button"
+                        tabIndex={0}
                         onClick={() => setExpandedKey(isExpanded ? null : key)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            setExpandedKey(isExpanded ? null : key);
+                          }
+                        }}
                       >
-                        <div className="card-body d-flex flex-column align-items-center position-relative p-2">
-                          <div className="mb-1 mt-1">
-                            <i className="bi bi-chat-dots text-secondary fs-icon-sm" ></i>
+                        <div className="template-meta-card__header">
+                          <div className="template-meta-card__icon" aria-hidden>
+                            <i className="bi bi-whatsapp" />
                           </div>
-                          <div className="text-center flex-grow-1 small">
-                            <div className="fw-bold text-break fs-sm" >{template.name}</div>
-                            <div className="text-muted fs-compact" >{template.language}</div>
+                          <div className="template-meta-card__identity">
+                            <div className="template-meta-card__name">{template.name}</div>
+                            <div className="template-meta-card__meta">{template.language || 'pt_BR'}</div>
                           </div>
-                          <div className="mt-1">
-                            <i className="bi bi-database text-success fs-lg" ></i>
-                          </div>
+                          <i className={`bi ${isExpanded ? 'bi-chevron-up' : 'bi-chevron-down'} template-meta-card__chevron`} aria-hidden />
+                        </div>
+                        <div className="template-meta-card__badges">
+                          <Badge variant={getTemplateStatusVariant(template.status)} pill>
+                            {formatTemplateStatus(template.status)}
+                          </Badge>
+                          {template.category && (
+                            <Badge variant="secondary" pill>{template.category.toLowerCase()}</Badge>
+                          )}
+                          <Badge variant="info" pill>{placeholders} variáveis</Badge>
+                        </div>
+                        <p className="template-meta-card__preview">
+                          {textoMeta || 'Template sem corpo de mensagem retornado pela Meta.'}
+                        </p>
+                        <div className="template-meta-card__footer">
+                          <span>Editar mapeamento</span>
+                          <span>{template.suggested_template_mapping?.header_document ? 'PDF no cabeçalho' : 'Mensagem de texto'}</span>
                         </div>
                       </div>
                     </div>
@@ -262,8 +309,7 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
               {expandedKey && (() => {
                 const template = data.templates.find((t: Template, i: number) => `${t.name}-${t.language}-${i}` === expandedKey);
                 if (!template) return null;
-                const bodyComp = template.components?.find((c: NonNullable<Template['components']>[number]) => c.type === 'BODY');
-                const textoMeta = (bodyComp as { text?: string })?.text || '';
+                const textoMeta = getTemplateBodyText(template);
                 const numVars = (textoMeta.match(/\{\{\d+\}\}/g) || [])
                   .map((m) => parseInt(m.replace(/\{\{|\}\}/g, ''), 10))
                   .reduce((max, n) => Math.max(max, n), 0) || 1;
@@ -271,87 +317,94 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
                 const varsCompletas = Array.from({ length: numVars }, (_, i) => vars[i] ?? '');
                 const preview = previewComVariaveis(textoMeta, varsCompletas);
                 return (
-                  <div ref={expandedCardRef} className="card bg-light mb-0 form-modal-simple">
-                    <div className="card-body small">
-                      <div className="row g-2">
-                        <div className="col-12">
-                          <FormField
-                            name="template_meta_mensagem"
-                            type="textarea"
-                            size="sm"
-                            label="Mensagem"
-                            rows={1}
-                            readOnly
-                            disabled
-                            value={textoMeta}
-                            helpText="Template da Meta (variáveis numeradas)"
-                            className="font-monospace textarea-no-resize-sm"
-                          />
-                        </div>
-                        <div className="col-12">
-                          <FormField
-                            name="template_meta_preview"
-                            type="textarea"
-                            size="sm"
-                            label="Pré-visualização"
-                            rows={1}
-                            readOnly
-                            disabled
-                            value={preview}
-                            helpText="Mensagem com as variáveis selecionadas"
-                            className="font-monospace textarea-no-resize-sm"
-                          />
-                        </div>
-                        <div className="col-12">
-                          <div className="form-field">
-                            <label className="form-label fw-bold">Variáveis (mesmas para todos os templates)</label>
-                            <div className="form-field-control">
-                              <div className="row g-2">
-                                {Array.from({ length: numVars }, (_, i) => (
-                                  <div key={i} className="col-12">
-                                    <FormField
-                                      name={`template_var_${i + 1}`}
-                                      type="select"
-                                      size="sm"
-                                      label={`{{${i + 1}}}`}
-                                      value={varsCompletas[i] ?? ''}
-                                      options={[
-                                        { value: '', label: 'Selecione...' },
-                                        ...VARIAVEIS_DISPONIVEIS.map((v) => ({
-                                          value: v.value,
-                                          label: `${v.label} (${v.value})`,
-                                        })),
-                                      ]}
-                                      onChange={(value) =>
-                                        setVarParaPlaceholder(expandedKey, i, String(value ?? ''), varsCompletas)
-                                      }
-                                    />
-                                  </div>
-                                ))}
-                              </div>
+                  <div ref={expandedCardRef} className="template-meta-detail form-modal-simple">
+                    <div className="template-meta-detail__header">
+                      <div>
+                        <div className="template-meta-detail__eyebrow">Mapeamento selecionado</div>
+                        <div className="template-meta-detail__title">{template.name}</div>
+                      </div>
+                      <Badge variant={getTemplateStatusVariant(template.status)} pill>
+                        {formatTemplateStatus(template.status)}
+                      </Badge>
+                    </div>
+                    <div className="row g-2">
+                      <div className="col-12">
+                        <FormField
+                          name="template_meta_mensagem"
+                          type="textarea"
+                          size="sm"
+                          label="Mensagem"
+                          rows={1}
+                          readOnly
+                          disabled
+                          value={textoMeta}
+                          helpText="Template da Meta (variáveis numeradas)"
+                          className="font-monospace textarea-no-resize-sm"
+                        />
+                      </div>
+                      <div className="col-12">
+                        <FormField
+                          name="template_meta_preview"
+                          type="textarea"
+                          size="sm"
+                          label="Pré-visualização"
+                          rows={1}
+                          readOnly
+                          disabled
+                          value={preview}
+                          helpText="Mensagem com as variáveis selecionadas"
+                          className="font-monospace textarea-no-resize-sm"
+                        />
+                      </div>
+                      <div className="col-12">
+                        <div className="form-field">
+                          <label className="form-label fw-bold">Variáveis (mesmas para todos os templates)</label>
+                          <div className="form-field-control">
+                            <div className="row g-2">
+                              {Array.from({ length: numVars }, (_, i) => (
+                                <div key={i} className="col-12">
+                                  <FormField
+                                    name={`template_var_${i + 1}`}
+                                    type="select"
+                                    size="sm"
+                                    label={`{{${i + 1}}}`}
+                                    value={varsCompletas[i] ?? ''}
+                                    options={[
+                                      { value: '', label: 'Selecione...' },
+                                      ...VARIAVEIS_DISPONIVEIS.map((v) => ({
+                                        value: v.value,
+                                        label: `${v.label} (${v.value})`,
+                                      })),
+                                    ]}
+                                    onChange={(value) =>
+                                      setVarParaPlaceholder(expandedKey, i, String(value ?? ''), varsCompletas)
+                                    }
+                                  />
+                                </div>
+                              ))}
                             </div>
                           </div>
                         </div>
                       </div>
-                      <div className="mt-3 pt-3 border-top form-modal-input-col">
-                        {mensagemType && onSalvarVincular ? (
-                          <SystemButton
-                            action="salvar"
-                            type="button"
-                            label={`Salvar e vincular ao tipo "${mensagemType.replace(/_/g, ' ')}"`}
-                            onClick={() => handleSalvarVincular(template, expandedKey)}
-                          />
-                        ) : (
-                          <SystemButton
-                            action="salvar"
-                            type="button"
-                            label="Salvar template"
-                            onClick={() => handleSalvarTemplate(template, expandedKey)}
-                            disabled={createTemplateMutation.isPending}
-                            isPending={createTemplateMutation.isPending}
-                          />
-                        )}
-                      </div>
+                    </div>
+                    <div className="template-meta-detail__actions form-modal-input-col">
+                      {mensagemType && onSalvarVincular ? (
+                        <SystemButton
+                          action="salvar"
+                          type="button"
+                          label={`Salvar e vincular ao tipo "${mensagemType.replace(/_/g, ' ')}"`}
+                          onClick={() => handleSalvarVincular(template, expandedKey)}
+                        />
+                      ) : (
+                        <SystemButton
+                          action="salvar"
+                          type="button"
+                          label="Salvar template"
+                          onClick={() => handleSalvarTemplate(template, expandedKey)}
+                          disabled={createTemplateMutation.isPending}
+                          isPending={createTemplateMutation.isPending}
+                        />
+                      )}
                     </div>
                   </div>
                 );

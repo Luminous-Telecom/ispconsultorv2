@@ -97,7 +97,7 @@ Clique em **Salvar** na barra superior.
 
 Disponível apenas com **WhatsApp Cloud API (Oficial)**.
 
-Lista os templates **aprovados na Meta** (total e aprovados). Para cada template:
+Lista os templates **aprovados na Meta** (total e aprovados). Os cards exibem nome, idioma, status, categoria, quantidade de variáveis e uma prévia do corpo da mensagem. Para cada template:
 
 1. Clique no card para expandir.
 2. Revise a **Mensagem** e a **Pré-visualização**.
