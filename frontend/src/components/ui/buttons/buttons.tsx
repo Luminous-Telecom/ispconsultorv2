@@ -60,6 +60,7 @@ export const DuplicarButton = createButton('duplicar');
 export const InserirButton = createButton('inserir');
 export const NfseButton = createButton('nfse');
 export const AtualizarSistemaButton = createButton('atualizarSistema');
+export const AtualizarDocumentacaoButton = createButton('atualizarDocumentacao');
 export const ValidarButton = createButton('validar');
 export const InstalarAgenteButton = createButton('instalarAgente');
 export const TentarNovamenteButton = createButton('tentarNovamente');

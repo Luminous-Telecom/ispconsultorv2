@@ -18,14 +18,25 @@ export class Pm2Service {
    * Agenda reinício do PM2 em processo filho (o backend atual seria morto por restart direto).
    */
   scheduleRestart(delayMs: number = SCHEDULED_RESTART_DELAY_MS): CommandResult {
+    const fromEnv = process.env.PM2_RESTART_APPS?.split(',').map((s) => s.trim()).filter(Boolean);
+    const apps = fromEnv?.length ? [...new Set(fromEnv)] : [this.pm2ProcessName];
+    return this.scheduleRestartApps(apps, delayMs);
+  }
+
+  scheduleRestartApps(appNames: string[], delayMs: number = SCHEDULED_RESTART_DELAY_MS): CommandResult {
     if (!fs.existsSync(this.projectRoot)) {
       const errorMsg = `Diretório não existe: ${this.projectRoot}`;
       logger.error('Erro ao agendar PM2 restart', { error: errorMsg });
       return { success: false, stdout: '', stderr: errorMsg, error: errorMsg };
     }
 
-    const fromEnv = process.env.PM2_RESTART_APPS?.split(',').map((s) => s.trim()).filter(Boolean);
-    const apps = (fromEnv?.length ? [...new Set(fromEnv)] : [this.pm2ProcessName]).join(' ');
+    const uniqueApps = [...new Set(appNames.map((s) => s.trim()).filter(Boolean))];
+    if (uniqueApps.length === 0) {
+      const errorMsg = 'Nenhum processo PM2 informado para reinício';
+      return { success: false, stdout: '', stderr: errorMsg, error: errorMsg };
+    }
+
+    const apps = uniqueApps.join(' ');
     const delaySec = Math.max(1, Math.round(delayMs / 1000));
     const script = `sleep ${delaySec} && pm2 restart ${apps} --update-env && pm2 save`;
 

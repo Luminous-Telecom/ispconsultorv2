@@ -104,4 +104,58 @@ export class BuildService {
       };
     }
   }
+
+  private docDistIndexPath(): string {
+    return path.join(this.projectRoot, 'doc', '.vitepress', 'dist', 'index.html');
+  }
+
+  private hasDocSource(): boolean {
+    return fs.existsSync(path.join(this.projectRoot, 'doc', '.vitepress', 'config.mjs'));
+  }
+
+  /** Compila a wiki quando há fonte local; em produção usa dist já versionada após git pull. */
+  async buildDoc(): Promise<CommandResult> {
+    const docPkg = path.join(this.projectRoot, 'doc', 'package.json');
+    if (!fs.existsSync(docPkg)) {
+      const msg = 'doc/package.json não encontrado';
+      return { success: false, stdout: '', stderr: msg, error: msg };
+    }
+
+    const distIndex = this.docDistIndexPath();
+    if (!this.hasDocSource()) {
+      if (fs.existsSync(distIndex)) {
+        return {
+          success: true,
+          stdout: 'Wiki: usando doc/.vitepress/dist do repositório (sem recompilar)',
+          stderr: '',
+        };
+      }
+      const msg = 'doc/.vitepress/dist/index.html não encontrado após pull';
+      return { success: false, stdout: '', stderr: msg, error: msg };
+    }
+
+    const env = this.buildEnv();
+    try {
+      logger.info('Doc update: compilando wiki (VitePress)');
+      await execAsync('npm ci --prefix doc', { cwd: this.projectRoot, maxBuffer: MAX_BUFFER, env });
+      await execAsync('npm run build --prefix doc', { cwd: this.projectRoot, maxBuffer: MAX_BUFFER, env });
+      if (!fs.existsSync(distIndex)) {
+        const msg = 'doc/.vitepress/dist/index.html não foi gerado';
+        return { success: false, stdout: '', stderr: msg, error: msg };
+      }
+      return { success: true, stdout: 'Wiki compilada', stderr: '' };
+    } catch (error) {
+      const err = error as { stdout?: string; stderr?: string; message?: string };
+      logger.error('Doc update: build da wiki falhou', {
+        message: err.message,
+        stderrPreview: err.stderr?.slice(0, 2000),
+      });
+      return {
+        success: false,
+        stdout: (err.stdout || '').trim(),
+        stderr: (err.stderr || err.message || '').trim(),
+        error: err.message || 'Build da wiki falhou',
+      };
+    }
+  }
 }

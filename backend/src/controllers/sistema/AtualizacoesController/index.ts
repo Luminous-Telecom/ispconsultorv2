@@ -5,6 +5,7 @@ import axios from 'axios';
 import path from 'path';
 import fs from 'fs';
 import { SelfUpdateService } from '../../../services/sistema/SelfUpdateService';
+import { DocUpdateService } from '../../../services/sistema/DocUpdateService';
 import { AuthenticatedRequest } from '../../../types/auth';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
 import { registrarCriacao } from '../../../services/sistema/AuditoriaService/index';
@@ -357,6 +358,109 @@ export class AtualizacoesController {
         res.end();
       } catch (writeError) {
         logger.error('Erro ao escrever resposta SSE');
+      }
+    }
+  }
+
+  /**
+   * Atualiza somente a wiki (git pull + build doc se necessário + PM2 doc).
+   */
+  static async updateDocStream(req: Request, res: Response): Promise<void> {
+    let branch = 'main';
+
+    logger.info('Atualização da wiki iniciada');
+
+    try {
+      if (!AtualizacoesController.canAccess(req)) {
+        res.writeHead(403, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' });
+        res.write(`data: ${JSON.stringify({ error: 'Acesso negado. Apenas administradores podem executar atualizações.' })}\n\n`);
+        res.end();
+        return;
+      }
+
+      branch = (req.query?.branch as string) || req.body?.branch || 'main';
+
+      if (typeof branch !== 'string' || !branch.trim()) {
+        res.writeHead(400, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' });
+        res.write(`data: ${JSON.stringify({ error: 'Branch inválida' })}\n\n`);
+        res.end();
+        return;
+      }
+
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no',
+      });
+
+      let docUpdateService: DocUpdateService;
+      try {
+        docUpdateService = new DocUpdateService();
+      } catch (error) {
+        res.write(`data: ${JSON.stringify({ error: `Erro ao inicializar serviço da wiki: ${error instanceof Error ? error.message : 'Erro desconhecido'}` })}\n\n`);
+        res.end();
+        return;
+      }
+
+      const sendProgress = (progress: { step: string; progress: number; message: string; logs?: string[] }) => {
+        try { res.write(`data: ${JSON.stringify(progress)}\n\n`); } catch { /* SSE já fechado */ }
+      };
+
+      let result;
+      try {
+        result = await docUpdateService.executeDocUpdate(branch, sendProgress);
+        logger.info('Atualização da wiki concluída');
+      } catch (error) {
+        logger.error('Erro inesperado ao atualizar wiki', { error: error instanceof Error ? error.message : 'Erro desconhecido' });
+        sendProgress({
+          step: 'erro',
+          progress: 0,
+          message: `Erro inesperado: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+          logs: [`✗ Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`],
+        });
+        res.end();
+        return;
+      }
+
+      if (!result.success) {
+        logger.error('Falha na atualização da wiki', { message: result.message });
+        sendProgress({ step: 'erro', progress: 0, message: result.message, logs: [`✗ ${result.message}`] });
+        res.end();
+        return;
+      }
+
+      const pm2ReloadResult = docUpdateService.reloadDocPm2(sendProgress);
+
+      sendProgress({
+        step: 'finalizado',
+        progress: 100,
+        message: 'Documentação atualizada com sucesso!',
+        logs: ['✓ Wiki atualizada'],
+      });
+
+      res.write(`data: ${JSON.stringify({
+        success: true,
+        message: result.message,
+        steps: {
+          gitPull: { success: result.steps.gitPull.success },
+          buildDoc: { success: result.steps.buildDoc.success },
+          pm2Reload: { success: pm2ReloadResult.success },
+        },
+      })}\n\n`);
+      res.end();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro inesperado durante atualização da wiki', { error: errorMessage });
+
+      try {
+        res.write(`data: ${JSON.stringify({
+          error: 'Erro interno do servidor durante a atualização da wiki',
+          details: !__dirname.includes('dist') ? errorMessage : undefined,
+        })}\n\n`);
+        res.end();
+      } catch {
+        logger.error('Erro ao escrever resposta SSE da wiki');
       }
     }
   }
