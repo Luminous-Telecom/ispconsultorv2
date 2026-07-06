@@ -223,7 +223,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
                 }
                 footerHint={
                   !webhookSecret ? (
-                    <small className="text-secondary d-block mt-1">
+                    <small className="form-helper-message mt-1">
                       {t('user.generateWebhookHelp')}
                     </small>
                   ) : undefined
