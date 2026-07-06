@@ -21,6 +21,36 @@ export default defineConfig({
     valueLight: 'light',
     valueDark: 'dark',
   },
+  markdown: {
+    linkify: true,
+    config(md) {
+      const defaultLinkOpen = md.renderer.rules.link_open || ((tokens, idx, options, env, self) => self.renderToken(tokens, idx, options))
+      const defaultCodeInline = md.renderer.rules.code_inline || ((tokens, idx, options, env, self) => self.renderToken(tokens, idx, options))
+
+      md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
+        const token = tokens[idx]
+        const href = token.attrGet('href') || ''
+
+        if (/^https?:\/\//i.test(href)) {
+          token.attrSet('target', '_blank')
+          token.attrSet('rel', 'noopener noreferrer')
+        }
+
+        return defaultLinkOpen(tokens, idx, options, env, self)
+      }
+
+      md.renderer.rules.code_inline = (tokens, idx, options, env, self) => {
+        const content = tokens[idx].content
+
+        if (/^https?:\/\/\S+$/i.test(content)) {
+          const escapedContent = md.utils.escapeHtml(content)
+          return `<a href="${escapedContent}" target="_blank" rel="noopener noreferrer"><code>${escapedContent}</code></a>`
+        }
+
+        return defaultCodeInline(tokens, idx, options, env, self)
+      }
+    }
+  },
   head: [
     ['link', { rel: 'icon', href: '/favicon.ico', sizes: 'any' }],
     ['link', { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' }],
