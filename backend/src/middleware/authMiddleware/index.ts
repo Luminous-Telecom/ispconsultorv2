@@ -81,6 +81,23 @@ const isPublicRoute = (req: Request): boolean => {
   });
 };
 
+const isBrowserDocumentNavigation = (req: Request): boolean => {
+  const fetchMode = req.get('Sec-Fetch-Mode')?.toLowerCase();
+  const fetchDest = req.get('Sec-Fetch-Dest')?.toLowerCase();
+  const accept = req.get('Accept')?.toLowerCase() ?? '';
+
+  if (fetchMode === 'navigate' || fetchDest === 'document') {
+    return true;
+  }
+
+  const preferredResponse = accept
+    .split(',')
+    .map(type => type.split(';')[0].trim())
+    .find(Boolean);
+
+  return preferredResponse === 'text/html' || preferredResponse === 'application/xhtml+xml';
+};
+
 export const authMiddleware = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   const cleanedPath = req.originalUrl.split('?')[0];
   
@@ -91,10 +108,10 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
   const isApiRequest = /^\/api\//i.test(req.originalUrl);
   const isPublic = isPublicRoute(req);
 
-  // Bloqueia navegação direta do browser para rotas da API
-  // Sec-Fetch-Mode: navigate → usuário digitou a URL na barra de endereço
-  if (isApiRequest && !isPublic && req.headers['sec-fetch-mode'] === 'navigate') {
-    res.status(401).json({ error: 'Unauthorized: Invalid access token' });
+  // Bloqueia navegação direta do browser para rotas protegidas da API.
+  // Mantém AJAX, mobile e integrações via Authorization funcionando normalmente.
+  if (isApiRequest && !isPublic && isBrowserDocumentNavigation(req)) {
+    res.status(404).end();
     return;
   }
 
