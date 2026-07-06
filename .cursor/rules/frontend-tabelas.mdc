@@ -29,6 +29,13 @@ import { normalizeListPagination } from 'utils/pagination';
 | Ações em massa | `bulkActions` + `BulkActionButton` / `useBulkBtn` |
 | Paginação backend | `normalizeListPagination` + props `pagination` |
 
+## Tabela em Aba de Modal
+
+- Use `EmbeddedTablePanel` dentro de um container flex (`d-flex flex-column flex-grow-1 min-h-0` ou classe equivalente)
+- A aba que contém tabela deve usar `*-tab-content-scrollable` ou modal `no-padding`, para ocupar a largura total do modal
+- Não renderize tabela dentro de `form-modal-simple`/`*-tab-content-padded` quando a aba não tiver campos de formulário
+- Não use `margin-left` negativo ou `width: calc(100% + ...)` para "corrigir" padding; corrija a classe do container da aba
+
 ## ListModal + useEntityListModal
 
 ```tsx

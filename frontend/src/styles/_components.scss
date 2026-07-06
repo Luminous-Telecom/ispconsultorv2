@@ -3499,11 +3499,11 @@ textarea:focus {
   min-height: 0;
 }
 
-/* Tabela de faturas em largura total (compensa o padding do tab-content) */
+/* Tabela de faturas segue a largura útil da aba, sem compensar o padding do modal. */
 .empresa-financeiro-tab-full {
-  margin-left: -16px;
-  margin-right: -16px;
-  width: calc(100% + 32px);
+  flex: 1 1 0;
+  min-width: 0;
+  width: 100%;
   box-sizing: border-box;
 }
 

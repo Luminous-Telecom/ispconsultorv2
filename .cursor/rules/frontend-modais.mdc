@@ -71,7 +71,8 @@ if (!window.confirm(t('messages.confirmDelete'))) return;
 
 - Várias abas + overflow mobile → `ModalTabsOverflow`
 - Conteúdo de aba com tabela → `EmbeddedTablePanel`
-- Padding de aba: classes `*-tab-content-padded` + `form-modal-simple`
+- Aba de formulário → `*-tab-content-padded` + `form-modal-simple`
+- Aba de tabela/listagem → `*-tab-content-scrollable` ou corpo `no-padding`; não usar `*-tab-content-padded`, `form-modal-simple` nem margens negativas para compensar padding
 - Layout de campos: ver `frontend-form-modal-layout.mdc` — label à esquerda, input à direita, `col-12` por campo (cadastro, edição e visualização)
 
 ## Checklist

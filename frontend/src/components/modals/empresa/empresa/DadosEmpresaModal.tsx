@@ -404,9 +404,14 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
     }
   }, [skipWrapper, onHeaderActionsReady, headerActionsContent]);
 
+  const isFinanceTab = activeTab === 'faturas-abertas' || activeTab === 'faturas-pagas';
+
   const modalContent = (
     <div className="empresa-modal-content">
-      <div className={`tab-content empresa-tab-content empresa-tab-content-padded`} id="empresaTabContent">
+      <div
+        className={`tab-content empresa-tab-content ${isFinanceTab ? 'empresa-tab-content-scrollable' : 'empresa-tab-content-padded'}`}
+        id="empresaTabContent"
+      >
         <form id="empresa-form" onSubmit={handleSubmit} className="form-modal-simple">
           {activeTab === 'basico' && <DadosBasicosTab dados={dados} onChange={handleInputChange} isPending={isPending} onLogoChange={onLogoChange} />}
           {activeTab === 'endereco' && <EnderecoTab dados={dados} onChange={handleInputChange} isPending={isPending} parametrosOverride={isSaas && parametros?.data ? { validar_cep: parametros.data.validar_cep } : undefined} />}

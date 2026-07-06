@@ -244,7 +244,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({ empresaId, tipo }) => {
   );
 
   return (
-    <div className="empresa-financeiro-tab-full chart-flex-col-full" >
+    <div className="empresa-financeiro-tab-full d-flex flex-column flex-grow-1 min-h-0">
       <EmbeddedTablePanel
           key={`dados-empresa-faturas-tab-${tipo}`}
           title={tipo === 'abertas' ? t('tabs.faturasAbertas') : t('tabs.faturasPagas')}
