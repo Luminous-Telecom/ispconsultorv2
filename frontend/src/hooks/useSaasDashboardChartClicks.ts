@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useModal } from 'contexts/ModalContext';
 import { ChartDataItem } from 'components/charts/types';
 import { ModalType } from 'contexts/ModalContext';
+import { buildDashboardPaymentStatusSliceFilters } from 'utils/dashboardPaymentStatus';
 
 export const useSaasDashboardChartClicks = () => {
   const { openModal } = useModal();
@@ -17,16 +18,8 @@ export const useSaasDashboardChartClicks = () => {
   const handleStatusPagamentoSliceClick = useCallback((item: ChartDataItem) => {
     const fv = item.filterValue as string | undefined;
     if (!fv) return;
-    const hoje = new Date();
-    const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-    const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
-    const toISO = (d: Date) => d.toISOString().split('T')[0];
     openModal('saas-titulos' as ModalType, {
-      initialFilters: {
-        status: fv,
-        data_vencimento_inicio: toISO(inicioMes),
-        data_vencimento_fim: toISO(fimMes),
-      }
+      initialFilters: buildDashboardPaymentStatusSliceFilters(fv),
     });
   }, [openModal]);
 

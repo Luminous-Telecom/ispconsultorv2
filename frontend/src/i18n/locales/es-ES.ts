@@ -220,7 +220,7 @@ const esES: TranslationKeys = {
     'dashboard.contractStatusInfo':
       'Contratos por estado. Parte inferior: suma mostrada y porcentaje de activos sobre esa suma. Pulse la porción para filtrar.',
     'dashboard.paymentStatusInfo':
-      'Cobros por estado. Puede usar el mes en curso por vencimiento o totales del servidor. Parte inferior: total de cobros y porcentaje cancelados.',
+      'Cobros con vencimiento en el mes actual por estado: pagados, pendientes (en plazo), atrasadas (vencimiento pasado y no pagadas) y canceladas. Pulse la porción para abrir Cuentas por Cobrar con el filtro correspondiente.',
     'dashboard.backupStatusInfo':
       'Ventana reciente: por día, barras apilan éxito y fallo. Use la leyenda. Pulse un segmento para listar equipos.',
     'dashboard.chartReceivedInfo':
@@ -1184,6 +1184,7 @@ const esES: TranslationKeys = {
     'status.suspended': 'Suspendido',
     'status.exempt': 'Exentos',
     'status.overdue': 'Vencido',
+    'status.overdueUnpaid': 'Atrasadas',
     'status.paidLate': 'Pagado con Retraso',
 
     'saas.manualUnblock': 'Desbloquear manualmente',

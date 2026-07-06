@@ -220,7 +220,7 @@ const ptBR: TranslationKeys = {
     'dashboard.contractStatusInfo':
       'Contratos por status (ativo, inativo, suspenso, isento, bloqueado, em atraso). Rodapé: soma das quantidades exibidas e percentual de ativos sobre essa soma. Clique na fatia para filtrar.',
     'dashboard.paymentStatusInfo':
-      'Cobranças por status. Com dados locais, considera títulos com vencimento no mês corrente; com totais do servidor, usa o agregado enviado. Rodapé: total de cobranças e percentual de canceladas.',
+      'Cobranças com vencimento no mês corrente, por status: pagas, pendentes (ainda no prazo), atrasadas (vencimento já passou e não pagas) e canceladas. Clique na fatia para abrir Contas A Receber com o filtro correspondente.',
     'dashboard.backupStatusInfo':
       'Janela recente: por dia, barras empilham sucesso e falha nos eventos de backup. Use a legenda para ocultar fatias. Clique em um segmento para listar equipamentos.',
     'dashboard.chartReceivedInfo':
@@ -1182,6 +1182,7 @@ const ptBR: TranslationKeys = {
     'status.suspended': 'Suspenso',
     'status.exempt': 'Isentos',
     'status.overdue': 'Vencido',
+    'status.overdueUnpaid': 'Atrasadas',
     'status.paidLate': 'Pago em Atraso',
 
     'saas.manualUnblock': 'Desbloquear manualmente',

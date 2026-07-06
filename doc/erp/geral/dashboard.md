@@ -26,7 +26,7 @@ Os cards são **clicáveis** — abrem a listagem filtrada correspondente (ex.: 
 
 | Widget | Descrição |
 |--------|-----------|
-| **Status dos Pagamentos** | Títulos pagos, em atraso etc. |
+| **Status dos Pagamentos** | Títulos com vencimento no mês corrente: pagos, pendentes (no prazo), **atrasadas** (vencimento passou e não pagos) e cancelados |
 | **Recebidos (mês atual)** | Valor já recebido no mês corrente |
 | **A Receber (mês atual)** | Valor pendente de recebimento no mês |
 | **Faturamento Mensal (12 meses)** | Gráfico de faturamento ao longo do ano |

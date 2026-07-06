@@ -220,7 +220,7 @@ const enUS: TranslationKeys = {
     'dashboard.contractStatusInfo':
       'Contracts by status (active, inactive, suspended, exempt, blocked, in arrears). Footer: sum shown and active percent of that sum. Click a slice to filter.',
     'dashboard.paymentStatusInfo':
-      'Charges by status. Uses title due dates in the current month when server totals are unavailable. Footer: total charges and cancelled share.',
+      'Charges due in the current month by status: paid, pending (still on time), overdue (past due and unpaid), and cancelled. Click a slice to open Accounts Receivable with the matching filter.',
     'dashboard.backupStatusInfo':
       'Recent window: stacked success vs failure per day. Toggle segments in the legend. Click a segment to list devices.',
     'dashboard.chartReceivedInfo':
@@ -1182,6 +1182,7 @@ const enUS: TranslationKeys = {
     'status.suspended': 'Suspended',
     'status.exempt': 'Exempt',
     'status.overdue': 'Overdue',
+    'status.overdueUnpaid': 'Overdue',
     'status.paidLate': 'Paid Late',
 
     'saas.manualUnblock': 'Manual unblock',

@@ -81,10 +81,27 @@ function tituloVencimentoDate(t: { data_vencimento: string | Date }): Date {
   return typeof v === 'string' ? new Date(v) : v;
 }
 
+function tituloVencimentoDayStart(t: { data_vencimento: string | Date }): Date {
+  const venc = tituloVencimentoDate(t);
+  venc.setHours(0, 0, 0, 0);
+  return venc;
+}
+
+/** Em aberto com vencimento antes de hoje (status vencido ou pendente ainda não sincronizado pela rotina). */
+function isTituloEmAbertoAtrasado(
+  titulo: { status: string; data_vencimento: string | Date },
+  hojeSemHora: Date
+): boolean {
+  if (titulo.status === 'vencido') return true;
+  if (titulo.status !== 'pendente') return false;
+  return tituloVencimentoDayStart(titulo) < hojeSemHora;
+}
+
 function computeStatusPagamentoMes(
   titulos: Array<{ status: string; data_vencimento: string | Date }>
 ): { pagos: number; pendentes: number; vencidos: number; cancelados: number } {
   const hoje = new Date();
+  const hojeSemHora = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
   const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
   const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59, 999);
 
@@ -98,12 +115,12 @@ function computeStatusPagamentoMes(
     (acc, titulo) => {
       if (titulo.status === 'pago' || titulo.status === 'pago_atraso' || titulo.status === 'parcial') {
         acc.pagos++;
-      } else if (titulo.status === 'pendente') {
-        acc.pendentes++;
-      } else if (titulo.status === 'vencido') {
-        acc.vencidos++;
       } else if (titulo.status === 'cancelado') {
         acc.cancelados++;
+      } else if (isTituloEmAbertoAtrasado(titulo, hojeSemHora)) {
+        acc.vencidos++;
+      } else if (titulo.status === 'pendente') {
+        acc.pendentes++;
       }
       return acc;
     },

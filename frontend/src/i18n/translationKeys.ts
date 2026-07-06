@@ -1200,6 +1200,7 @@ export interface TranslationKeys {
   'status.suspended': string;
   'status.exempt': string;
   'status.overdue': string;
+  'status.overdueUnpaid': string;
   'status.paidLate': string;
 
   'saas.manualUnblock': string;

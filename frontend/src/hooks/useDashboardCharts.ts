@@ -3,6 +3,7 @@ import { DashboardData } from '../services/dashboardService';
 import { ChartDataItem } from '../components/charts/types';
 import type { useDashboardStats } from './useDashboardStats';
 import type { TranslationKeys } from '../contexts/I18nContext';
+import { isTituloEmAbertoAtrasado } from '../utils/dashboardPaymentStatus';
 
 interface DashboardCharts {
   clientesChartData: ChartDataItem[];
@@ -62,17 +63,30 @@ export const useDashboardCharts = (
   );
 
   const statusPagamentoData = useMemo(() => {
-    if (sg?.statusPagamentoMes) {
-      const m = sg.statusPagamentoMes;
-      return [
-        { label: t('status.paid'), value: m.pagos, color: '#10b981', filterValue: 'pago,pago_atraso,parcial' },
-        { label: t('status.pending'), value: m.pendentes, color: '#0ea5e9', filterValue: 'pendente' },
-        { label: t('status.overdue'), value: m.vencidos, color: '#f59e0b', filterValue: 'vencido' },
-        { label: t('status.cancelled'), value: m.cancelados, color: '#94a3b8', filterValue: 'cancelado' },
+    const buildItems = (counts: {
+      pagos: number;
+      pendentes: number;
+      vencidos: number;
+      cancelados: number;
+    }) =>
+      [
+        { label: t('status.paid'), value: counts.pagos, color: '#10b981', filterValue: 'pago,pago_atraso,parcial' },
+        { label: t('status.pending'), value: counts.pendentes, color: '#0ea5e9', filterValue: 'pendente' },
+        {
+          label: t('status.overdueUnpaid'),
+          value: counts.vencidos,
+          color: '#f59e0b',
+          filterValue: 'atraso',
+        },
+        { label: t('status.cancelled'), value: counts.cancelados, color: '#94a3b8', filterValue: 'cancelado' },
       ].filter((item) => item.value > 0);
+
+    if (sg?.statusPagamentoMes) {
+      return buildItems(sg.statusPagamentoMes);
     }
     if (!titulosTodos.length) return [];
     const hoje = new Date();
+    const hojeSemHora = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59, 999);
     const titulosMesAtual = titulosTodos.filter((titulo) => {
@@ -85,23 +99,18 @@ export const useDashboardCharts = (
       (acc, titulo) => {
         if (titulo.status === 'pago' || titulo.status === 'pago_atraso' || titulo.status === 'parcial') {
           acc.pagos++;
-        } else if (titulo.status === 'pendente') {
-          acc.pendentes++;
-        } else if (titulo.status === 'vencido') {
-          acc.vencidos++;
         } else if (titulo.status === 'cancelado') {
           acc.cancelados++;
+        } else if (isTituloEmAbertoAtrasado(titulo, hojeSemHora)) {
+          acc.vencidos++;
+        } else if (titulo.status === 'pendente') {
+          acc.pendentes++;
         }
         return acc;
       },
       { pagos: 0, pendentes: 0, vencidos: 0, cancelados: 0 }
     );
-    return [
-      { label: t('status.paid'), value: counts.pagos, color: '#10b981', filterValue: 'pago,pago_atraso,parcial' },
-      { label: t('status.pending'), value: counts.pendentes, color: '#0ea5e9', filterValue: 'pendente' },
-      { label: t('status.overdue'), value: counts.vencidos, color: '#f59e0b', filterValue: 'vencido' },
-      { label: t('status.cancelled'), value: counts.cancelados, color: '#94a3b8', filterValue: 'cancelado' },
-    ].filter((item) => item.value > 0);
+    return buildItems(counts);
   }, [sg, titulosTodos, t]);
 
   const clientesPorTipoPlano = useMemo(
