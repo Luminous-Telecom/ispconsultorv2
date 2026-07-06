@@ -12,12 +12,13 @@ const sections = [
   {
     title: 'Cadastros',
     icon: '/icons/folder.svg',
-    description: 'Clientes, planos, contratos, bancos e fornecedores.',
+    description: 'Clientes, planos, contratos, bancos, fornecedores e modelos de documentos.',
     links: [
       { text: 'Cadastro de clientes', to: '/doc/clientes/cadastro-cliente' },
       { text: 'Planos', to: '/doc/cadastros/planos' },
       { text: 'Contratos', to: '/doc/cadastros/contratos' },
-      { text: 'Bancos', to: '/doc/cadastros/bancos' }
+      { text: 'Bancos', to: '/doc/cadastros/bancos' },
+      { text: 'Modelos de documentos', to: '/doc/cadastros/modelos-de-documentos' }
     ]
   },
   {
@@ -79,7 +80,7 @@ const sections = [
   {
     title: 'Parâmetros',
     icon: '/icons/settings.svg',
-    description: 'Empresa, usuários, e-mail, WhatsApp, NFS-e e documentos.',
+    description: 'Empresa, usuários e recursos do sistema.',
     links: [
       { text: 'Dados da empresa', to: '/doc/parametros/dados-da-empresa' },
       { text: 'Usuários', to: '/doc/parametros/usuarios' },

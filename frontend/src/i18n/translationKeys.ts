@@ -322,6 +322,7 @@ export interface TranslationKeys {
   'menu.financial': string;
   'menu.accountsReceivable': string;
   'menu.suppliers': string;
+  'menu.documentModels': string;
   'menu.accountsPayable': string;
   'menu.invoices': string;
   'menu.companyData': string;

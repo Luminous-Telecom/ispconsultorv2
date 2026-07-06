@@ -32,6 +32,7 @@ export const useMenuItems = ({ t, openModal, hasModulo }: UseMenuItemsParams) =>
         { id: 'bancos', modalId: 'bancos', label: t('menu.banks'), icon: 'bi-bank', onClick: () => handleOpenModal('bancos') },
         { id: 'tipos-cobranca-contrato', modalId: 'tipos-cobranca-contrato', label: t('menu.billingType'), icon: 'bi-credit-card', onClick: () => handleOpenModal('tipos-cobranca-contrato') },
         { id: 'fornecedores', modalId: 'fornecedores', label: t('menu.suppliers'), icon: 'bi-truck', onClick: () => handleOpenModal('fornecedores') },
+        { id: 'documentos-sistema', modalId: 'documentos-sistema', label: t('menu.documentModels'), icon: 'bi-folder', onClick: () => handleOpenModal('documentos-sistema') },
       ].filter(filterItem),
     [t, handleOpenModal, filterItem]
   );
@@ -52,7 +53,6 @@ export const useMenuItems = ({ t, openModal, hasModulo }: UseMenuItemsParams) =>
         { id: 'dados-empresa', modalId: 'dados-empresa', label: t('menu.companyData'), icon: 'bi-building', onClick: () => handleOpenModal('dados-empresa') },
         { id: 'usuarios', modalId: 'usuarios', label: t('params.users'), icon: 'bi-people-fill', onClick: () => handleOpenModal('usuarios') },
         { id: 'recursos-sistema', modalId: 'recursos-sistema', label: t('params.systemResources'), icon: 'bi-gear', onClick: () => handleOpenModal('recursos-sistema') },
-        { id: 'documentos-sistema', modalId: 'documentos-sistema', label: t('params.systemDocuments'), icon: 'bi-folder', onClick: () => handleOpenModal('documentos-sistema') },
         { id: 'dias-vencimento', modalId: 'dias-vencimento', label: t('params.dueDays'), icon: 'bi-calendar-event', onClick: () => handleOpenModal('dias-vencimento') },
       ].filter(filterItem),
     [t, handleOpenModal, filterItem]

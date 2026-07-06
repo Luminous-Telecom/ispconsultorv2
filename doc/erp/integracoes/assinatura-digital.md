@@ -3,7 +3,7 @@
 Configuração da **assinatura digital** de contratos e termos — integração com provedores externos (Assinafy ou ZapSign).
 
 ::: info Pré-requisitos
-Modelos de documento devem estar cadastrados em [Documentos do Sistema](/doc/parametros/documentos-do-sistema). O fluxo de assinatura é acionado na [aba Termos](/doc/clientes/aba-contratos#termos) do contrato.
+Modelos de documento devem estar cadastrados em [Modelos de Documentos](/doc/cadastros/modelos-de-documentos). O fluxo de assinatura é acionado na [aba Termos](/doc/clientes/aba-contratos#termos) do contrato.
 :::
 
 ## Como acessar

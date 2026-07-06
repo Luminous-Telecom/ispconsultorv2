@@ -128,7 +128,7 @@ Use observações para registrar contexto que ajude outros consultores no atendi
 
 Após salvar, as abas **Contratos**, **Financeiro** e demais ficam acessíveis ao editar o cliente em **Cadastros → Clientes**.
 
-Antes de criar um contrato, configure [Planos](/doc/cadastros/planos), [Dias de Vencimento](/doc/parametros/dias-vencimento), [Bancos](/doc/cadastros/bancos), [Tipo de Cobrança](/doc/cadastros/tipo-cobranca) e [Documentos do Sistema](/doc/parametros/documentos-do-sistema) — veja a [ordem sugerida](/doc/clientes/aba-contratos#ordem-sugerida).
+Antes de criar um contrato, configure [Planos](/doc/cadastros/planos), [Dias de Vencimento](/doc/parametros/dias-vencimento), [Bancos](/doc/cadastros/bancos), [Tipo de Cobrança](/doc/cadastros/tipo-cobranca) e [Modelos de Documentos](/doc/cadastros/modelos-de-documentos) — veja a [ordem sugerida](/doc/clientes/aba-contratos#ordem-sugerida).
 
 Consulte também:
 

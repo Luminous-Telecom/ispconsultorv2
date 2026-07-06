@@ -799,7 +799,7 @@ export class CentralAssinanteController {
       if (!pdfBuffer) {
         sendValidationError(
           res,
-          'Modelo de recibo não configurado. Cadastre a aba Recibos em Documentos do Sistema → Contratos.'
+          'Modelo de recibo não configurado. Cadastre a aba Recibos em Cadastros → Modelos de Documentos → Contratos.',
         );
         return;
       }

@@ -15,7 +15,7 @@ Antes de vincular um contrato a um cliente, configure os cadastros abaixo. Sem e
 | **Dias de vencimento** | [Dias de Vencimento](/doc/parametros/dias-vencimento) | **Parâmetros → Dias de Vencimento** |
 | **Banco** | [Bancos](/doc/cadastros/bancos) | **Cadastros → Bancos** |
 | **Tipo de cobrança** | [Tipo de Cobrança](/doc/cadastros/tipo-cobranca) | **Cadastros → Tipo de Cobrança** |
-| **Modelo de contrato** | [Documentos do Sistema](/doc/parametros/documentos-do-sistema) | **Parâmetros → Documentos do Sistema → Contratos** |
+| **Modelo de contrato** | [Modelos de Documentos](/doc/cadastros/modelos-de-documentos) | **Cadastros → Modelos de Documentos → Contratos** |
 
 ### Ordem sugerida
 
@@ -24,7 +24,7 @@ Antes de vincular um contrato a um cliente, configure os cadastros abaixo. Sem e
 3. Configure os **dias de vencimento** disponíveis.
 4. Cadastre o **banco** que emitirá os boletos.
 5. Defina o **tipo de cobrança** (quantidade de títulos e periodicidade).
-6. Cadastre o **modelo de contrato** na aba Contratos de Documentos do Sistema.
+6. Cadastre o **modelo de contrato** na aba Contratos de Modelos de Documentos.
 7. Só então crie o contrato (veja abaixo).
 
 ---
@@ -129,7 +129,7 @@ Após salvar o contrato, abra-o com **Editar** para acessar as abas abaixo.
 
 ### Termos
 
-Vincula **termos adicionais** ao contrato (adesão, permanência etc.), cadastrados previamente em **Parâmetros → Documentos do Sistema → aba Termos**. Veja [Documentos do Sistema](/doc/parametros/documentos-do-sistema).
+Vincula **termos adicionais** ao contrato (adesão, permanência etc.), cadastrados previamente em **Cadastros → Modelos de Documentos → aba Termos**. Veja [Modelos de Documentos](/doc/cadastros/modelos-de-documentos).
 
 #### Listagem
 
@@ -146,7 +146,7 @@ Vincula **termos adicionais** ao contrato (adesão, permanência etc.), cadastra
 #### Vincular um termo
 
 1. Clique em **Novo**.
-2. Selecione o **Termo Cadastrado** na listagem (modelos de **Documentos do Sistema → Termos**).
+2. Selecione o **Termo Cadastrado** na listagem (modelos de **Modelos de Documentos → Termos**).
 3. Defina **Ativo** (**Sim** ou **Não**).
 4. Clique em **Salvar**.
 

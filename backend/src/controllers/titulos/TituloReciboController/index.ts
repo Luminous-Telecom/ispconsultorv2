@@ -78,7 +78,7 @@ export class TituloReciboController {
       if (recibosHtml.length === 0) {
         sendValidationError(
           res,
-          'Não foi possível gerar nenhum recibo. Configure a aba Recibos em Documentos do Sistema → Contratos.',
+          'Não foi possível gerar nenhum recibo. Configure a aba Recibos em Cadastros → Modelos de Documentos → Contratos.',
           {
             erros: [JSON.stringify(errosDetalhados)],
           }

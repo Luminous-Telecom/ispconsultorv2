@@ -187,6 +187,15 @@ export default defineConfig({
           },
           { text: 'Tipo de Cobrança', link: '/doc/cadastros/tipo-cobranca' },
           {
+            text: 'Modelos de Documentos',
+            collapsed: true,
+            items: [
+              { text: 'Visão geral', link: '/doc/cadastros/modelos-de-documentos' },
+              { text: 'Aba Contratos', link: '/doc/cadastros/modelos-de-documentos#aba-contratos' },
+              { text: 'Aba Termos', link: '/doc/cadastros/modelos-de-documentos#aba-termos' }
+            ]
+          },
+          {
             text: 'Fornecedores',
             collapsed: true,
             items: [
@@ -350,15 +359,6 @@ export default defineConfig({
           },
           { text: 'Usuários', link: '/doc/parametros/usuarios' },
           { text: 'Recursos do Sistema', link: '/doc/parametros/recursos-do-sistema' },
-          {
-            text: 'Documentos do Sistema',
-            collapsed: true,
-            items: [
-              { text: 'Visão geral', link: '/doc/parametros/documentos-do-sistema' },
-              { text: 'Aba Contratos', link: '/doc/parametros/documentos-do-sistema#aba-contratos' },
-              { text: 'Aba Termos', link: '/doc/parametros/documentos-do-sistema#aba-termos' }
-            ]
-          },
           { text: 'Dias de Vencimento', link: '/doc/parametros/dias-vencimento' }
         ]
       }
