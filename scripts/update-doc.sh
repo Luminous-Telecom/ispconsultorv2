@@ -5,6 +5,6 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 git pull
 test -f doc/.vitepress/dist/index.html
-pm2 restart doc 2>/dev/null || pm2 start ecosystem.config.js --only doc
+pm2 reload ecosystem.config.js --only doc 2>/dev/null || pm2 start ecosystem.config.js --only doc
 pm2 save
 echo "Wiki atualizada."

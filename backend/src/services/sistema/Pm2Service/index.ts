@@ -23,6 +23,41 @@ export class Pm2Service {
     return this.scheduleRestartApps(apps, delayMs);
   }
 
+  /**
+   * Recarrega apps a partir do ecosystem.config.js (necessário quando args/script mudam, ex.: PM2 doc).
+   */
+  scheduleReloadFromEcosystem(appNames: string[], delayMs: number = SCHEDULED_RESTART_DELAY_MS): CommandResult {
+    if (!fs.existsSync(this.projectRoot)) {
+      const errorMsg = `Diretório não existe: ${this.projectRoot}`;
+      logger.error('Erro ao agendar PM2 reload', { error: errorMsg });
+      return { success: false, stdout: '', stderr: errorMsg, error: errorMsg };
+    }
+
+    const uniqueApps = [...new Set(appNames.map((s) => s.trim()).filter(Boolean))];
+    if (uniqueApps.length === 0) {
+      const errorMsg = 'Nenhum processo PM2 informado para reload';
+      return { success: false, stdout: '', stderr: errorMsg, error: errorMsg };
+    }
+
+    const onlyFlag = uniqueApps.join(',');
+    const delaySec = Math.max(1, Math.round(delayMs / 1000));
+    const script = `sleep ${delaySec} && pm2 reload ecosystem.config.js --only ${onlyFlag} && pm2 save`;
+
+    spawn('bash', ['-c', script], {
+      detached: true,
+      stdio: 'ignore',
+      cwd: this.projectRoot,
+      env: process.env,
+    }).unref();
+
+    logger.info('PM2 reload (ecosystem) agendado', { delayMs, apps: uniqueApps, cwd: this.projectRoot });
+    return {
+      success: true,
+      stdout: `Reload agendado em ${delayMs}ms`,
+      stderr: '',
+    };
+  }
+
   scheduleRestartApps(appNames: string[], delayMs: number = SCHEDULED_RESTART_DELAY_MS): CommandResult {
     if (!fs.existsSync(this.projectRoot)) {
       const errorMsg = `Diretório não existe: ${this.projectRoot}`;

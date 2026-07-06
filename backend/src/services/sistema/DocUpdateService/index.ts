@@ -200,7 +200,7 @@ export class DocUpdateService {
       message: 'Agendando reinício da wiki (PM2)...',
       logs: [`→ Reinício do processo ${docApp} em 3 segundos...`],
     });
-    const reloadResult = this.pm2Service.scheduleRestartApps([docApp], 3000);
+    const reloadResult = this.pm2Service.scheduleReloadFromEcosystem([docApp], 3000);
 
     if (reloadResult.success) {
       onProgress?.({
