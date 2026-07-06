@@ -1,5 +1,11 @@
 import { defineConfig } from 'vitepress'
 
+/** URL pública da wiki — og:image exige URL absoluta para WhatsApp/redes sociais */
+const WIKI_SITE_URL = 'https://wiki-erp.ispconsultor.com.br'
+const WIKI_OG_IMAGE = `${WIKI_SITE_URL}/ispconsultor-icone.png`
+const WIKI_DESCRIPTION =
+  'Wiki ISP Consultor — Central de ajuda para consultores que atendem provedores de internet'
+
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   srcDir: '.',
@@ -15,7 +21,7 @@ export default defineConfig({
     pageData.title = 'wiki ispconsultor'
     return pageData
   },
-  description: "Wiki ISP Consultor — central de ajuda para consultores que atendem clientes",
+  description: WIKI_DESCRIPTION,
   appearance: {
     initialValue: 'dark',
     valueLight: 'light',
@@ -55,7 +61,21 @@ export default defineConfig({
     ['link', { rel: 'icon', href: '/favicon.ico', sizes: 'any' }],
     ['link', { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' }],
     ['link', { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png' }],
-    ['link', { rel: 'apple-touch-icon', href: '/favicon-32x32.png' }],
+    ['link', { rel: 'apple-touch-icon', href: '/ispconsultor-icone.png' }],
+    ['meta', { property: 'og:type', content: 'website' }],
+    ['meta', { property: 'og:site_name', content: 'wiki ispconsultor' }],
+    ['meta', { property: 'og:title', content: 'wiki ispconsultor' }],
+    ['meta', { property: 'og:description', content: WIKI_DESCRIPTION }],
+    ['meta', { property: 'og:url', content: WIKI_SITE_URL }],
+    ['meta', { property: 'og:image', content: WIKI_OG_IMAGE }],
+    ['meta', { property: 'og:image:width', content: '2000' }],
+    ['meta', { property: 'og:image:height', content: '2000' }],
+    ['meta', { property: 'og:image:alt', content: 'ISP Consultor' }],
+    ['meta', { property: 'og:locale', content: 'pt_BR' }],
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    ['meta', { name: 'twitter:title', content: 'wiki ispconsultor' }],
+    ['meta', { name: 'twitter:description', content: WIKI_DESCRIPTION }],
+    ['meta', { name: 'twitter:image', content: WIKI_OG_IMAGE }],
     ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
     ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
     ['link', { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap' }],
