@@ -1305,8 +1305,6 @@ export interface TranslationKeys {
 
   // Email Server
   'emailServer.title': string;
-  'emailServer.serverSettings': string;
-  'emailServer.configureServer': string;
   'emailServer.smtpHost': string;
   'emailServer.port': string;
   'emailServer.userEmail': string;
@@ -1533,9 +1531,6 @@ export interface TranslationKeys {
   'messages.sendTypes.pdf': string;
 
   // Settings Server
-  'settings.server.config': string;
-  'settings.server.configure': string;
-  'settings.test.title': string;
   'settings.test.phone': string;
   'settings.test.message': string;
   'settings.test.send': string;

@@ -183,117 +183,111 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
         <Loading variant="centered" message={t('ui.loading')} />
       ) : (
       <form id="assinatura-digital-form" onSubmit={handleSubmit} className="form-modal-simple modal-inner-padding" autoComplete="off" data-form-type="other">
-        <div className="card mb-3">
-          <div className="card-header">
-            <h6 className="mb-0">{t('digitalSignature.generalSettings')}</h6>
+        <div className="form-section-heading-row">
+          <span className="form-section-heading-pill">{t('digitalSignature.generalSettings')}</span>
+          <div className="form-section-heading-line" aria-hidden />
+        </div>
+        <div className="row g-2">
+          <div className="col-12">
+            <AtivoInativoField
+              name="habilitado"
+              label={t('digitalSignature.enable')}
+              value={formData.habilitado}
+              onChange={(v) => setFormData(prev => ({ ...prev, habilitado: v }))}
+              disabled={updateMutation.isPending}
+            />
           </div>
-          <div className="card-body">
-            <div className="row g-2">
-              <div className="col-12">
-                <AtivoInativoField
-                  name="habilitado"
-                  label={t('digitalSignature.enable')}
-                  value={formData.habilitado}
-                  onChange={(v) => setFormData(prev => ({ ...prev, habilitado: v }))}
-                  disabled={updateMutation.isPending}
-                />
-              </div>
-              <div className="col-12">
-                <FormField
-                  name="apiProvider"
-                  type="select"
-                  label={t('digitalSignature.provider')}
-                  helpText={t('digitalSignature.providerHelp')}
-                  value={formData.apiProvider}
-                  onChange={(v) => {
-                    const newProvider = String(v ?? '') as AssinaturaDigitalProviderType;
-                    setSelectedProvider(newProvider);
-                    setFormData(prev => ({ ...prev, apiProvider: newProvider }));
-                  }}
-                  disabled={updateMutation.isPending}
-                  options={[
-                    { value: 'assinafy', label: 'Assinafy (100 assinaturas/mês grátis)' },
-                    { value: 'zapsign', label: 'ZapSign (5 assinaturas/mês grátis)' },
-                  ]}
-                  size="sm"
-                />
-              </div>
-              <div className="col-12">
-                <FormField
-                  name="diasExpiracaoPadrao"
-                  type="number"
-                  label={t('digitalSignature.expirationDays')}
-                  helpText={t('digitalSignature.expirationDaysHelp')}
-                  min={1}
-                  max={365}
-                  value={formData.diasExpiracaoPadrao}
-                  onChange={(v) => setFormData(prev => ({ ...prev, diasExpiracaoPadrao: parseInt(String(v), 10) || 30 }))}
-                  disabled={updateMutation.isPending}
-                  size="sm"
-                />
-              </div>
-            </div>
+          <div className="col-12">
+            <FormField
+              name="apiProvider"
+              type="select"
+              label={t('digitalSignature.provider')}
+              helpText={t('digitalSignature.providerHelp')}
+              value={formData.apiProvider}
+              onChange={(v) => {
+                const newProvider = String(v ?? '') as AssinaturaDigitalProviderType;
+                setSelectedProvider(newProvider);
+                setFormData(prev => ({ ...prev, apiProvider: newProvider }));
+              }}
+              disabled={updateMutation.isPending}
+              options={[
+                { value: 'assinafy', label: 'Assinafy (100 assinaturas/mês grátis)' },
+                { value: 'zapsign', label: 'ZapSign (5 assinaturas/mês grátis)' },
+              ]}
+              size="sm"
+            />
+          </div>
+          <div className="col-12">
+            <FormField
+              name="diasExpiracaoPadrao"
+              type="number"
+              label={t('digitalSignature.expirationDays')}
+              helpText={t('digitalSignature.expirationDaysHelp')}
+              min={1}
+              max={365}
+              value={formData.diasExpiracaoPadrao}
+              onChange={(v) => setFormData(prev => ({ ...prev, diasExpiracaoPadrao: parseInt(String(v), 10) || 30 }))}
+              disabled={updateMutation.isPending}
+              size="sm"
+            />
           </div>
         </div>
 
-        <div className="card mb-3">
-          <div className="card-header">
-            <h6 className="mb-0">{t('digitalSignature.apiSettings')}</h6>
-          </div>
-          <div className="card-body">
-            <div className="row g-2">
-              <div className="col-12">
-                <FormField
-                  name="apiKey"
-                  type={showApiKey ? 'text' : 'password'}
-                  label={t('digitalSignature.apiKey')}
-                  helpText={formData.apiProvider === 'assinafy' ? t('digitalSignature.assinafyHelp') : t('digitalSignature.zapsignHelp')}
-                  value={formData.apiKey}
-                  autoComplete="new-password"
-                  onChange={(v) => setFormData(prev => ({ ...prev, apiKey: String(v ?? '') }))}
-                  disabled={updateMutation.isPending}
-                  placeholder={t('placeholder.apiKey')}
-                  size="sm"
-                />
-                <div className="form-modal-input-col mt-2">
-                  <IconOnlyButton
-                    type="button"
-                    variant="outline-primary"
-                    onClick={() => setShowApiKey(!showApiKey)}
-                    disabled={updateMutation.isPending}
-                    label={showApiKey ? 'Ocultar chave' : 'Mostrar chave'}
-                  >
-                    <i className={`bi ${showApiKey ? 'bi-eye-slash' : 'bi-eye'}`} aria-hidden />
-                  </IconOnlyButton>
-                </div>
-                {formData.apiProvider === 'assinafy' && (
-                  <small className="form-helper-message form-modal-input-col">
-                    <a href="https://assinafy.com.br" target="_blank" rel="noopener noreferrer">
-                      assinafy.com.br
-                    </a>
-                  </small>
-                )}
-              </div>
-
-              {formData.apiProvider === 'assinafy' && (
-                <div className="col-12">
-                  <FormField
-                    name="accountId"
-                    type="text"
-                    label={t('digitalSignature.workspaceId')}
-                    helpText={t('digitalSignature.workspaceIdHelp')}
-                    value={formData.accountId}
-                    autoComplete="off"
-                    onChange={(v) => setFormData(prev => ({ ...prev, accountId: String(v ?? '') }))}
-                    disabled={updateMutation.isPending}
-                    placeholder={t('placeholder.workspaceId')}
-                    required
-                    size="sm"
-                  />
-                </div>
-              )}
+        <div className="form-section-heading-row mt-2">
+          <span className="form-section-heading-pill">{t('digitalSignature.apiSettings')}</span>
+          <div className="form-section-heading-line" aria-hidden />
+        </div>
+        <div className="row g-2">
+          <div className="col-12">
+            <FormField
+              name="apiKey"
+              type={showApiKey ? 'text' : 'password'}
+              label={t('digitalSignature.apiKey')}
+              helpText={formData.apiProvider === 'assinafy' ? t('digitalSignature.assinafyHelp') : t('digitalSignature.zapsignHelp')}
+              value={formData.apiKey}
+              autoComplete="new-password"
+              onChange={(v) => setFormData(prev => ({ ...prev, apiKey: String(v ?? '') }))}
+              disabled={updateMutation.isPending}
+              placeholder={t('placeholder.apiKey')}
+              size="sm"
+            />
+            <div className="form-modal-input-col mt-2">
+              <IconOnlyButton
+                type="button"
+                variant="outline-primary"
+                onClick={() => setShowApiKey(!showApiKey)}
+                disabled={updateMutation.isPending}
+                label={showApiKey ? 'Ocultar chave' : 'Mostrar chave'}
+              >
+                <i className={`bi ${showApiKey ? 'bi-eye-slash' : 'bi-eye'}`} aria-hidden />
+              </IconOnlyButton>
             </div>
+            {formData.apiProvider === 'assinafy' && (
+              <small className="form-helper-message form-modal-input-col">
+                <a href="https://assinafy.com.br" target="_blank" rel="noopener noreferrer">
+                  assinafy.com.br
+                </a>
+              </small>
+            )}
           </div>
+
+          {formData.apiProvider === 'assinafy' && (
+            <div className="col-12">
+              <FormField
+                name="accountId"
+                type="text"
+                label={t('digitalSignature.workspaceId')}
+                helpText={t('digitalSignature.workspaceIdHelp')}
+                value={formData.accountId}
+                autoComplete="off"
+                onChange={(v) => setFormData(prev => ({ ...prev, accountId: String(v ?? '') }))}
+                disabled={updateMutation.isPending}
+                placeholder={t('placeholder.workspaceId')}
+                required
+                size="sm"
+              />
+            </div>
+          )}
         </div>
       </form>
       )}

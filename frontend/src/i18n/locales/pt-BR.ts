@@ -1318,8 +1318,6 @@ const ptBR: TranslationKeys = {
 
     // Email Server
     'emailServer.title': 'Servidor de E-Mail',
-    'emailServer.serverSettings': 'Configurações do Servidor',
-    'emailServer.configureServer': 'Configurar Servidor de E-Mail',
     'emailServer.smtpHost': 'Host SMTP',
     'emailServer.port': 'Porta',
     'emailServer.userEmail': 'Usuário/E-mail',
@@ -1545,9 +1543,6 @@ const ptBR: TranslationKeys = {
     'messages.sendTypes.pdf': 'Anexa PDF',
 
     // Settings Server
-    'settings.server.config': 'Configurações do Servidor',
-    'settings.server.configure': 'Configurar Servidor',
-    'settings.test.title': 'Enviar Mensagem de Teste',
     'settings.test.phone': 'Número do Telefone',
     'settings.test.message': 'Mensagem',
     'settings.test.send': 'Enviar Teste',

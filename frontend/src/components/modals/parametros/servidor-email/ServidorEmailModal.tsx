@@ -342,7 +342,7 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
       <div className="email-modal-content">
         {/* Conteúdo das Abas */}
         <div
-          className={`tab-content email-tab-content email-tab-content-padded`}
+          className={`tab-content email-tab-content email-tab-content-padded ${activeTab === 'mensagens' ? 'email-tab-content-scrollable' : ''}`}
           id="emailTabContent"
         >
           <form id="servidor-email-form" onSubmit={handleSubmit} className="form-modal-simple">

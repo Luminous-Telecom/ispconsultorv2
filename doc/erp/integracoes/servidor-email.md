@@ -26,8 +26,9 @@ Normalmente configurado uma única vez pela equipe administrativa ou ISP Consult
 | **E-mail do Remetente** | Sim | Endereço remetente visível |
 | **Segurança** | — | **Usar SSL** e/ou **Usar TLS** conforme o cliente |
 | **Timeout (ms)** | Não | Tempo limite de conexão |
+| **Enviar E-mail de Teste** | Não | Endereço usado para validar o envio pelo servidor salvo |
 
-Clique em **Salvar** após configurar. Use **Remover** para limpar a configuração existente.
+Clique em **Salvar** após configurar. Com o servidor salvo, informe um endereço em **Enviar E-mail de Teste** e clique em **Enviar Teste** para validar o envio. Use **Remover** para limpar a configuração existente.
 
 ---
 

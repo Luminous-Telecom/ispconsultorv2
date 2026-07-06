@@ -1320,8 +1320,6 @@ const esES: TranslationKeys = {
 
     // Email Server
     'emailServer.title': 'Servidor de Correo Electrónico',
-    'emailServer.serverSettings': 'Configuración del Servidor',
-    'emailServer.configureServer': 'Configurar Servidor de Correo Electrónico',
     'emailServer.smtpHost': 'Host SMTP',
     'emailServer.port': 'Puerto',
     'emailServer.userEmail': 'Usuario/Correo Electrónico',
@@ -1543,9 +1541,6 @@ const esES: TranslationKeys = {
     'messages.sendTypes.pdf': 'Adjuntar PDF',
 
     // Settings Server
-    'settings.server.config': 'Configuraciones del Servidor',
-    'settings.server.configure': 'Configurar Servidor',
-    'settings.test.title': 'Enviar Mensaje de Prueba',
     'settings.test.phone': 'Número de Teléfono',
     'settings.test.message': 'Mensaje',
     'settings.test.send': 'Enviar Prueba',

@@ -1318,8 +1318,6 @@ const enUS: TranslationKeys = {
 
     // Email Server
     'emailServer.title': 'Email Server',
-    'emailServer.serverSettings': 'Server Settings',
-    'emailServer.configureServer': 'Configure Email Server',
     'emailServer.smtpHost': 'SMTP Host',
     'emailServer.port': 'Port',
     'emailServer.userEmail': 'User/Email',
@@ -1545,9 +1543,6 @@ const enUS: TranslationKeys = {
     'messages.sendTypes.pdf': 'Attach PDF',
 
     // Settings Server
-    'settings.server.config': 'Server Settings',
-    'settings.server.configure': 'Configure Server',
-    'settings.test.title': 'Send Test Message',
     'settings.test.phone': 'Phone Number',
     'settings.test.message': 'Message',
     'settings.test.send': 'Send Test',

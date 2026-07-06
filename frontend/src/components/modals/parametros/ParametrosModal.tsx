@@ -106,85 +106,76 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
         <Loading variant="centered" message={t('ui.loading')} />
       ) : (
       <form id="parametros-form" onSubmit={handleSubmit} className="form-modal-simple modal-inner-padding">
-        <div className="card mb-3">
-          <div className="card-header">
-            <h6 className="mb-0">{t('params.validations')}</h6>
+        <div className="form-section-heading-row">
+          <span className="form-section-heading-pill">{t('params.validations')}</span>
+          <div className="form-section-heading-line" aria-hidden />
+        </div>
+        <div className="row g-2">
+          <div className="col-12">
+            <AtivoInativoField
+              name="validar_cpf_cnpj"
+              label={t('params.validateCpfCnpj')}
+              value={formData.validar_cpf_cnpj}
+              onChange={(v) => setFormData(prev => ({ ...prev, validar_cpf_cnpj: v }))}
+              disabled={isPending}
+            />
           </div>
-          <div className="card-body">
-            <div className="row g-2">
-              <div className="col-12">
-                <AtivoInativoField
-                  name="validar_cpf_cnpj"
-                  label={t('params.validateCpfCnpj')}
-                  value={formData.validar_cpf_cnpj}
-                  onChange={(v) => setFormData(prev => ({ ...prev, validar_cpf_cnpj: v }))}
-                  disabled={isPending}
-                />
-              </div>
-              <div className="col-12">
-                <AtivoInativoField
-                  name="validar_cep"
-                  label={t('params.validateCep')}
-                  value={formData.validar_cep}
-                  onChange={(v) => setFormData(prev => ({ ...prev, validar_cep: v }))}
-                  disabled={isPending}
-                />
-              </div>
-            </div>
+          <div className="col-12">
+            <AtivoInativoField
+              name="validar_cep"
+              label={t('params.validateCep')}
+              value={formData.validar_cep}
+              onChange={(v) => setFormData(prev => ({ ...prev, validar_cep: v }))}
+              disabled={isPending}
+            />
           </div>
         </div>
 
-        <div className="card mb-3">
-          <div className="card-header">
-            <h6 className="mb-0">{t('params.titleGeneration')}</h6>
+        <div className="form-section-heading-row mt-2">
+          <span className="form-section-heading-pill">{t('params.titleGeneration')}</span>
+          <div className="form-section-heading-line" aria-hidden />
+        </div>
+        <div className="row g-2">
+          <div className="col-12">
+            <AtivoInativoField
+              name="titulos_vence_sabado"
+              label={t('params.titlesDueSaturday')}
+              value={formData.titulos_vence_sabado}
+              onChange={(v) => setFormData(prev => ({ ...prev, titulos_vence_sabado: v }))}
+              disabled={isPending}
+            />
           </div>
-          <div className="card-body">
-            <div className="row g-2">
-              <div className="col-12">
-                <AtivoInativoField
-                  name="titulos_vence_sabado"
-                  label={t('params.titlesDueSaturday')}
-                  value={formData.titulos_vence_sabado}
-                  onChange={(v) => setFormData(prev => ({ ...prev, titulos_vence_sabado: v }))}
-                  disabled={isPending}
-                />
-              </div>
-              <div className="col-12">
-                <AtivoInativoField
-                  name="titulos_vence_domingo"
-                  label={t('params.titlesDueSunday')}
-                  value={formData.titulos_vence_domingo}
-                  onChange={(v) => setFormData(prev => ({ ...prev, titulos_vence_domingo: v }))}
-                  disabled={isPending}
-                />
-              </div>
-            </div>
+          <div className="col-12">
+            <AtivoInativoField
+              name="titulos_vence_domingo"
+              label={t('params.titlesDueSunday')}
+              value={formData.titulos_vence_domingo}
+              onChange={(v) => setFormData(prev => ({ ...prev, titulos_vence_domingo: v }))}
+              disabled={isPending}
+            />
           </div>
         </div>
 
-        <div className="card mb-3">
-          <div className="card-header">
-            <h6 className="mb-0">{t('params.subscriberCenter')}</h6>
-          </div>
-          <div className="card-body">
-            <div className="row g-2">
-              <div className="col-12">
-                <FormField
-                  name="central_assinante_metodo_login"
-                  type="select"
-                  label={t('params.loginMethod')}
-                  helpText={t('params.loginMethodHelp')}
-                  value={formData.central_assinante_metodo_login}
-                  onChange={(v) => setFormData(prev => ({ ...prev, central_assinante_metodo_login: String(v ?? 'cnpj') }))}
-                  disabled={isPending}
-                  options={[
-                    { value: 'cnpj', label: 'CNPJ' },
-                    { value: 'email', label: 'Email' },
-                  ]}
-                  size="sm"
-                />
-              </div>
-            </div>
+        <div className="form-section-heading-row mt-2">
+          <span className="form-section-heading-pill">{t('params.subscriberCenter')}</span>
+          <div className="form-section-heading-line" aria-hidden />
+        </div>
+        <div className="row g-2">
+          <div className="col-12">
+            <FormField
+              name="central_assinante_metodo_login"
+              type="select"
+              label={t('params.loginMethod')}
+              helpText={t('params.loginMethodHelp')}
+              value={formData.central_assinante_metodo_login}
+              onChange={(v) => setFormData(prev => ({ ...prev, central_assinante_metodo_login: String(v ?? 'cnpj') }))}
+              disabled={isPending}
+              options={[
+                { value: 'cnpj', label: 'CNPJ' },
+                { value: 'email', label: 'Email' },
+              ]}
+              size="sm"
+            />
           </div>
         </div>
       </form>

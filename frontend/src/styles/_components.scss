@@ -3844,9 +3844,17 @@ textarea:focus {
 }
 
 .email-tab-content-scrollable {
-  flex: 1;
-  overflow: auto;
-  min-height: 0;
+  flex: 1 1 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  min-height: 0 !important;
+}
+
+.email-tab-content-scrollable > form.form-modal-simple:has(.modal-rich-text-editor) {
+  flex: 0 0 auto !important;
+  min-height: auto !important;
+  overflow: visible !important;
+  display: block !important;
 }
 
 .email-tab-disabled {

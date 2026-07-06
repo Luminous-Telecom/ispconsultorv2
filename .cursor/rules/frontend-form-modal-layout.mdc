@@ -65,7 +65,9 @@ Estilo IXC: **label à esquerda (coluna fixa)**, **input/control à direita**, *
 
 - **`col-12`** em todos os campos de modal (inclui `AddressFields`, `ContactFields`, `EntitySelectField`, `DetailFieldGrid`)
 - Formulário no modal: **`className="form-modal-simple"`** no `<form>` (substituir `modal-inner-padding`, `p-3` isolado)
+- Abas de formulário não devem envolver campos em `card`, painel ou contêiner visual com título (ex.: "Configurações do Servidor"). Os campos ficam direto em `<div className="row g-2">`.
 - Seções (h6, botões auxiliares): `form-modal-input-col` para alinhar à coluna dos inputs
+- Labels laterais devem quebrar linha dentro da largura fixa; **não** usar `white-space: nowrap`, `text-nowrap` ou truncate em `.form-label` de formulário modal.
 - **`FormField`** para todo input/select/textarea — **proibido** `<input>`, `<select>`, `<textarea>` cru
 - Campos read-only: `FormField` com `readOnly` (e `disabled` se não editável)
 
@@ -134,5 +136,7 @@ TinyMCE e editores grandes: wrapper `.form-field` com label à esquerda e editor
 - `col-md-*`, `col-lg-*` em campos de formulário
 - `form-modal-multi-col`
 - `form-switch`
+- `card`/painel/contêiner visual envolvendo campos de formulário em abas de modal
+- `white-space: nowrap`, `text-nowrap` ou truncate em labels laterais de formulário modal
 - Layout vertical label-acima-input
 - Campos side-by-side (`flex-fill`, dois `FormField` na mesma linha)
