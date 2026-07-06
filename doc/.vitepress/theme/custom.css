@@ -187,17 +187,30 @@ body {
 /* ── Sidebar ── */
 
 @media (min-width: 960px) {
+  /* Offset imediato em rotas /doc/ (antes do JS do tema aplicar has-sidebar) */
+  html.isp-doc-route .VPContent {
+    padding-left: var(--vp-sidebar-width);
+  }
+
   .VPSidebar {
-    top: var(--vp-nav-height) !important;
-    padding-top: 0 !important;
-    height: calc(100vh - var(--vp-nav-height)) !important;
-    bottom: auto !important;
+    padding-top: 0;
   }
 }
 
 .VPSidebar {
   border-right: 1px solid var(--vp-c-divider);
   background: var(--vp-c-bg-alt);
+  scrollbar-color: var(--vp-c-bg-mute) transparent;
+  scrollbar-width: thin;
+}
+
+.VPSidebar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.VPSidebar::-webkit-scrollbar-thumb {
+  background: var(--vp-c-bg-mute);
+  border-radius: 999px;
 }
 
 .VPSidebar .items {

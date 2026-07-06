@@ -31,6 +31,7 @@ export default defineConfig({
     ['link', { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap' }],
     // VueUse useDark grava "" no modo claro; o script check-dark-mode do VitePress trata "" como falsy e volta ao dark
     ['script', {}, `(function(){try{var k='vitepress-theme-appearance',v=localStorage.getItem(k);if(v==='')localStorage.setItem(k,'light')}catch(e){}})()`],
+    ['script', {}, `(function(){try{var p=location.pathname;if(p==='/doc'||p.indexOf('/doc/')===0){document.documentElement.classList.add('isp-doc-route')}}catch(e){}})()`],
   ],
   themeConfig: {
     siteTitle: 'Central de Ajuda',
