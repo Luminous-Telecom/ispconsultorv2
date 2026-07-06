@@ -37,7 +37,21 @@ A tela segue o padrão de [listagens do ERP](/doc/geral/listagens). Abaixo, apen
 ## Cadastrar um equipamento
 
 1. Clique em **Novo**.
-2. Na sub-aba **Dados Básicos**, preencha:
+2. Preencha a aba **Dados Básicos** (detalhes abaixo).
+3. Clique em **Salvar**.
+
+Após salvar, a aba **Backups SSH** passa a exibir o histórico de backups desse equipamento.
+
+### Abas do formulário
+
+| Aba | Conteúdo |
+|-----|----------|
+| Dados Básicos | Cadastro e credenciais de acesso do equipamento |
+| Backups SSH | Histórico de arquivos de backup (disponível após salvar) |
+
+---
+
+## Aba Dados Básicos {#aba-dados-basicos}
 
 | Campo | Obrigatório | Descrição |
 |-------|:-----------:|-----------|
@@ -49,17 +63,29 @@ A tela segue o padrão de [listagens do ERP](/doc/geral/listagens). Abaixo, apen
 | **IP / Host** | Sim | Endereço de acesso SSH |
 | **Porta SSH** | Sim | Padrão: 22 |
 | **Usuário SSH** | Sim | Credencial de acesso |
-| **Senha SSH** | Sim | Senha de acesso |
+| **Senha SSH** | Sim | Senha de acesso (na edição, em branco = manter a senha atual) |
 | **Chave Privada (PEM)** | Não | Chave OpenSSH (não disponível para SwOS) |
 | **Descrição** | Não | Notas adicionais |
 | **Ativar backup do equipamento** | Não | Habilita backup automático da configuração |
 
-3. Clique em **Salvar**.
-
-Após salvar, a sub-aba **Backups SSH** no modal exibe o histórico de backups desse equipamento.
-
 ::: tip SwOS
 Para **MikroTik (SwOS)**, os campos usam porta e credenciais **HTTP** em vez de SSH, e a chave privada não se aplica.
+:::
+
+---
+
+## Aba Backups SSH {#aba-backups-ssh}
+
+Disponível somente com o equipamento já salvo. Lista os arquivos de backup gerados no servidor, com busca por **Arquivo**, **Tamanho** ou **Data**.
+
+| Ação | Função |
+|------|--------|
+| **Visualizar** | Abre o conteúdo do backup (somente arquivos de texto: `.rsc`, `.txt`, `.cfg`, `.conf`, `.log`) |
+| **Baixar** | Baixa o(s) arquivo(s) selecionado(s) |
+| **Deletar** | Remove o(s) backup(s) selecionado(s) do servidor (com confirmação) |
+
+::: tip Sem backups?
+Se a lista estiver vazia, confirme que **Ativar backup do equipamento** está marcado na aba **Dados Básicos** e aguarde a próxima execução da rotina agendada — ou dispare um agora com **Backup manual** na listagem.
 :::
 
 ---
@@ -68,10 +94,10 @@ Para **MikroTik (SwOS)**, os campos usam porta e credenciais **HTTP** em vez de 
 
 1. Selecione o equipamento na listagem.
 2. Clique em **Editar**.
-3. Altere os campos necessários na sub-aba **Dados Básicos**.
+3. Altere os campos necessários na aba **Dados Básicos**.
 4. Clique em **Salvar**.
 
-Na edição, deixe a **Senha SSH** em branco para manter a senha atual. Backups ficam na sub-aba **Backups SSH** do mesmo modal.
+Backups ficam na aba **Backups SSH** do mesmo modal.
 
 ---
 

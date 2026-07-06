@@ -135,11 +135,37 @@ export default defineConfig({
               { text: 'Abas Equipamentos', link: '/doc/clientes/aba-equipamentos-provedor' }
             ]
           },
-          { text: 'Planos', link: '/doc/cadastros/planos' },
           { text: 'Contratos', link: '/doc/cadastros/contratos' },
-          { text: 'Bancos', link: '/doc/cadastros/bancos' },
+          {
+            text: 'Planos',
+            collapsed: true,
+            items: [
+              { text: 'Cadastro e listagem', link: '/doc/cadastros/planos' },
+              { text: 'Aba principal', link: '/doc/cadastros/planos#aba-principal' },
+              { text: 'Aba Plano de Venda', link: '/doc/cadastros/planos#aba-plano-de-venda' },
+              { text: 'Aba Observações', link: '/doc/cadastros/planos#aba-observacoes' }
+            ]
+          },
+          {
+            text: 'Bancos',
+            collapsed: true,
+            items: [
+              { text: 'Cadastro e listagem', link: '/doc/cadastros/bancos' },
+              { text: 'Aba Informações Básicas', link: '/doc/cadastros/bancos#aba-informacoes-basicas' },
+              { text: 'Aba Configurações da API', link: '/doc/cadastros/bancos#aba-configuracoes-api' }
+            ]
+          },
           { text: 'Tipo de Cobrança', link: '/doc/cadastros/tipo-cobranca' },
-          { text: 'Fornecedores', link: '/doc/cadastros/fornecedores' }
+          {
+            text: 'Fornecedores',
+            collapsed: true,
+            items: [
+              { text: 'Cadastro e listagem', link: '/doc/cadastros/fornecedores' },
+              { text: 'Aba Dados Básicos', link: '/doc/cadastros/fornecedores#aba-dados-basicos' },
+              { text: 'Aba Endereço', link: '/doc/cadastros/fornecedores#aba-endereco' },
+              { text: 'Aba Observações', link: '/doc/cadastros/fornecedores#aba-observacoes' }
+            ]
+          }
         ]
       },
       {
@@ -155,8 +181,25 @@ export default defineConfig({
         text: 'Equipamentos',
         collapsed: true,
         items: [
-          { text: 'Túneis (Agentes)', link: '/doc/equipamentos/tuneis-agentes' },
-          { text: 'Equipamentos', link: '/doc/equipamentos/equipamentos' }
+          {
+            text: 'Túneis (Agentes)',
+            collapsed: true,
+            items: [
+              { text: 'Cadastro e listagem', link: '/doc/equipamentos/tuneis-agentes' },
+              { text: 'Aba Configurações', link: '/doc/equipamentos/tuneis-agentes#aba-configuracoes' },
+              { text: 'Aba Instalar Automático', link: '/doc/equipamentos/tuneis-agentes#aba-instalar-automatico' },
+              { text: 'Aba Instalar Manual', link: '/doc/equipamentos/tuneis-agentes#aba-instalar-manual' }
+            ]
+          },
+          {
+            text: 'Equipamentos',
+            collapsed: true,
+            items: [
+              { text: 'Cadastro e listagem', link: '/doc/equipamentos/equipamentos' },
+              { text: 'Aba Dados Básicos', link: '/doc/equipamentos/equipamentos#aba-dados-basicos' },
+              { text: 'Aba Backups SSH', link: '/doc/equipamentos/equipamentos#aba-backups-ssh' }
+            ]
+          }
         ]
       },
       {
@@ -182,7 +225,16 @@ export default defineConfig({
         text: 'Suporte',
         collapsed: true,
         items: [
-          { text: 'Ordens de Serviço', link: '/doc/suporte/ordens-de-servico' }
+          {
+            text: 'Ordens de Serviço',
+            collapsed: true,
+            items: [
+              { text: 'Cadastro e listagem', link: '/doc/suporte/ordens-de-servico' },
+              { text: 'Aba Principal', link: '/doc/suporte/ordens-de-servico#aba-principal' },
+              { text: 'Aba Histórico', link: '/doc/suporte/ordens-de-servico#aba-historico' },
+              { text: 'Aba Arquivos', link: '/doc/suporte/ordens-de-servico#aba-arquivos' }
+            ]
+          }
         ]
       },
       {
@@ -231,17 +283,53 @@ export default defineConfig({
         text: 'Parâmetros',
         collapsed: true,
         items: [
-          { text: 'Dados da Empresa', link: '/doc/parametros/dados-da-empresa' },
+          {
+            text: 'Dados da Empresa',
+            collapsed: true,
+            items: [
+              { text: 'Cadastro', link: '/doc/parametros/dados-da-empresa' },
+              { text: 'Aba Empresa', link: '/doc/parametros/dados-da-empresa#empresa' },
+              { text: 'Aba Endereço', link: '/doc/parametros/dados-da-empresa#endereco' },
+              { text: 'Aba Contato', link: '/doc/parametros/dados-da-empresa#contato' },
+              { text: 'Aba Responsável', link: '/doc/parametros/dados-da-empresa#responsavel' },
+              { text: 'Abas Faturas abertas/pagas', link: '/doc/parametros/dados-da-empresa#faturas' }
+            ]
+          },
           { text: 'Usuários', link: '/doc/parametros/usuarios' },
           { text: 'Logs de Auditoria', link: '/doc/parametros/logs-auditoria' },
           { text: 'Recursos do Sistema', link: '/doc/parametros/recursos-do-sistema' },
-          { text: 'Servidor de E-Mail', link: '/doc/parametros/servidor-email' },
-          { text: 'Servidor de WhatsApp', link: '/doc/parametros/servidor-whatsapp' },
+          {
+            text: 'Servidor de E-Mail',
+            collapsed: true,
+            items: [
+              { text: 'Visão geral', link: '/doc/parametros/servidor-email' },
+              { text: 'Aba Servidor', link: '/doc/parametros/servidor-email#aba-servidor' },
+              { text: 'Aba Mensagens', link: '/doc/parametros/servidor-email#aba-mensagens' }
+            ]
+          },
+          {
+            text: 'Servidor de WhatsApp',
+            collapsed: true,
+            items: [
+              { text: 'Visão geral', link: '/doc/parametros/servidor-whatsapp' },
+              { text: 'Aba Servidor', link: '/doc/parametros/servidor-whatsapp#aba-servidor' },
+              { text: 'Aba Mensagens', link: '/doc/parametros/servidor-whatsapp#aba-mensagens' },
+              { text: 'Aba Templates Meta', link: '/doc/parametros/servidor-whatsapp#aba-templates-meta' },
+              { text: 'Aba Templates', link: '/doc/parametros/servidor-whatsapp#aba-templates' }
+            ]
+          },
           { text: 'NFS-e', link: '/doc/parametros/nfse' },
-          { text: 'Documentos do Sistema', link: '/doc/parametros/documentos-do-sistema' },
+          {
+            text: 'Documentos do Sistema',
+            collapsed: true,
+            items: [
+              { text: 'Visão geral', link: '/doc/parametros/documentos-do-sistema' },
+              { text: 'Aba Contratos', link: '/doc/parametros/documentos-do-sistema#aba-contratos' },
+              { text: 'Aba Termos', link: '/doc/parametros/documentos-do-sistema#aba-termos' }
+            ]
+          },
           { text: 'Assinatura Digital', link: '/doc/parametros/assinatura-digital' },
-          { text: 'Dias de Vencimento', link: '/doc/parametros/dias-vencimento' },
-          { text: 'Atualizações do Sistema', link: '/doc/parametros/atualizacoes' }
+          { text: 'Dias de Vencimento', link: '/doc/parametros/dias-vencimento' }
         ]
       }
     ]

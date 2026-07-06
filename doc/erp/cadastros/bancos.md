@@ -51,7 +51,7 @@ A tela segue o padrão de [listagens do ERP](/doc/geral/listagens). Abaixo, apen
 
 ---
 
-## Aba Informações Básicas
+## Aba Informações Básicas {#aba-informacoes-basicas}
 
 | Campo | Obrigatório | Descrição |
 |-------|:-----------:|-----------|
@@ -66,7 +66,7 @@ Selecione o **Tipo de Banco** antes de preencher a aba **Configurações da API*
 
 ---
 
-## Aba Configurações da API
+## Aba Configurações da API {#aba-configuracoes-api}
 
 Os campos desta aba **dependem do Tipo de Banco** selecionado em Informações Básicas. Ao trocar entre EFI e Asaas, o formulário é recarregado com os campos correspondentes à integração escolhida.
 

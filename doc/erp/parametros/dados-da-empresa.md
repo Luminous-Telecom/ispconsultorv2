@@ -16,7 +16,7 @@ Normalmente apenas administradores alteram esta tela. Consultores consultam os d
 
 ## Abas
 
-### Empresa
+### Empresa {#empresa}
 
 | Campo | Obrigatório | Descrição |
 |-------|:-----------:|-----------|
@@ -27,7 +27,7 @@ Normalmente apenas administradores alteram esta tela. Consultores consultam os d
 | **Inscrição Municipal** | Não | IM, quando aplicável |
 | **Logo da Empresa** | Não | Imagem usada em documentos e relatórios |
 
-### Endereço
+### Endereço {#endereco}
 
 | Campo | Obrigatório | Descrição |
 |-------|:-----------:|-----------|
@@ -39,7 +39,7 @@ Normalmente apenas administradores alteram esta tela. Consultores consultam os d
 | **Cidade** | Sim | Cidade |
 | **UF** | Sim | Sigla do estado |
 
-### Contato
+### Contato {#contato}
 
 | Campo | Obrigatório | Descrição |
 |-------|:-----------:|-----------|
@@ -48,7 +48,7 @@ Normalmente apenas administradores alteram esta tela. Consultores consultam os d
 | **E-mail** | Sim | E-mail principal da empresa |
 | **Site** | Não | Site institucional |
 
-### Responsável
+### Responsável {#responsavel}
 
 | Campo | Descrição |
 |-------|-----------|
@@ -56,7 +56,7 @@ Normalmente apenas administradores alteram esta tela. Consultores consultam os d
 | **CPF** | CPF do responsável |
 | **Cargo** | Cargo ou função |
 
-### Faturas abertas / Faturas pagas
+### Faturas abertas / Faturas pagas {#faturas}
 
 Abas das **faturas do plano SaaS** da consultoria junto à ISP Consultor (assinatura do próprio ERP).
 

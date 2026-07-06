@@ -16,7 +16,7 @@ A tela possui duas abas principais: **Contratos** e **Termos**.
 
 ---
 
-## Aba Contratos
+## Aba Contratos {#aba-contratos}
 
 Modelos do **contrato comercial** e sub-documentos (adesão, permanência, recibos, cobrança).
 
@@ -66,7 +66,7 @@ Modelos referenciados por contratos ativos não devem ser excluídos — crie um
 
 ---
 
-## Aba Termos
+## Aba Termos {#aba-termos}
 
 Modelos de **termos adicionais** vinculados aos contratos — adesão, permanência, políticas etc. Usados na [aba Termos](/doc/clientes/aba-contratos#termos) do modal de contrato.
 

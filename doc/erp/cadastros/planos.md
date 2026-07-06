@@ -56,7 +56,7 @@ Para descartar, use **Cancelar** ou o **X** no canto superior.
 
 ---
 
-## Campos — aba principal
+## Campos — aba principal {#aba-principal}
 
 | Campo | Obrigatório | Descrição |
 |-------|:-----------:|-----------|
@@ -71,13 +71,13 @@ Para descartar, use **Cancelar** ou o **X** no canto superior.
 
 ---
 
-## Aba Plano de Venda
+## Aba Plano de Venda {#aba-plano-de-venda}
 
 Use esta aba para montar a descrição comercial que será apresentada ao cliente na proposta ou venda do serviço.
 
 ---
 
-## Aba Observações
+## Aba Observações {#aba-observacoes}
 
 Campo de texto livre para registrar acordos, restrições ou contexto interno sobre o plano.
 

@@ -43,7 +43,7 @@ A tela segue o padrão de [listagens do ERP](/doc/geral/listagens). Abaixo, apen
 
 ---
 
-## Aba Dados Básicos
+## Aba Dados Básicos {#aba-dados-basicos}
 
 | Campo | Obrigatório | Descrição |
 |-------|:-----------:|-----------|
@@ -55,7 +55,7 @@ A tela segue o padrão de [listagens do ERP](/doc/geral/listagens). Abaixo, apen
 
 ---
 
-## Aba Endereço
+## Aba Endereço {#aba-endereco}
 
 | Campo | Descrição |
 |-------|-----------|
@@ -64,7 +64,7 @@ A tela segue o padrão de [listagens do ERP](/doc/geral/listagens). Abaixo, apen
 
 ---
 
-## Aba Observações
+## Aba Observações {#aba-observacoes}
 
 Campo de texto livre para anotações internas — condições de pagamento, contatos, particularidades de negociação, etc.
 

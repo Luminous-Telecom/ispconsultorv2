@@ -51,7 +51,22 @@ Editar, Deletar e Ações ficam desabilitados até que uma OS seja selecionada n
 
 1. Clique em **Novo**.
 2. Selecione o **Cliente** (busca ao lado do campo ID).
-3. Na aba **Principal**, preencha conforme o cenário:
+3. Preencha a aba **Principal** (detalhes abaixo).
+4. Clique em **Salvar**.
+
+Após salvar, as abas **Histórico** e **Arquivos** ficam disponíveis.
+
+### Abas do formulário
+
+| Aba | Conteúdo |
+|-----|----------|
+| Principal | Dados principais da OS |
+| Histórico | Mensagens e interações registradas (disponível após salvar) |
+| Arquivos | Anexos vinculados à OS (disponível após salvar) |
+
+---
+
+## Aba Principal {#aba-principal}
 
 ### Cliente com integração IXC
 
@@ -71,15 +86,32 @@ Editar, Deletar e Ações ficam desabilitados até que uma OS seja selecionada n
 
 Somente **Cliente** e **Mensagem / Descrição** (obrigatória) são exibidos — a OS fica registrada localmente no ERP.
 
-4. Clique em **Salvar**.
+Em OS sincronizadas do IXC, campos como **Protocolo** e **ID IXC** aparecem somente leitura na edição.
 
-Após salvar, ficam disponíveis:
+---
 
-| Aba | Conteúdo |
-|-----|----------|
-| **Principal** | Dados principais da OS |
-| **Histórico** | Registro de alterações e interações |
-| **Arquivos** | Anexos vinculados à OS |
+## Aba Histórico {#aba-historico}
+
+Disponível somente com a OS já salva. Lista as mensagens e eventos registrados, com busca por **Evento**, **Operador** ou **Mensagem**.
+
+| Ação | Função |
+|------|--------|
+| **Novo** | Registra uma nova mensagem manual (campo **Mensagem**, até 10.000 caracteres) |
+| **Visualizar** | Exibe os detalhes da mensagem selecionada (somente leitura) |
+| **Deletar** | Remove a(s) mensagem(ns) selecionada(s) (com confirmação) |
+
+---
+
+## Aba Arquivos {#aba-arquivos}
+
+Disponível somente com a OS já salva. Lista os arquivos anexados, com busca por **ID**, **Descrição** ou **Arquivo**.
+
+| Ação | Função |
+|------|--------|
+| **Novo** | Anexa um arquivo (campos **Arquivo** e **Descrição** — obrigatórios) |
+| **Visualizar** | Pré-visualiza o arquivo (imagens e PDF); indisponível para tipos não suportados |
+| **Baixar** | Baixa o(s) arquivo(s) selecionado(s) |
+| **Deletar** | Remove o(s) arquivo(s) selecionado(s) (com confirmação) |
 
 ---
 

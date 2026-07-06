@@ -14,7 +14,7 @@ Normalmente configurado uma única vez pela equipe administrativa ou ISP Consult
 
 ---
 
-## Aba Servidor
+## Aba Servidor {#aba-servidor}
 
 | Campo | Obrigatório | Descrição |
 |-------|:-----------:|-----------|
@@ -31,7 +31,7 @@ Clique em **Salvar** após configurar. Use **Remover** para limpar a configuraç
 
 ---
 
-## Aba Mensagens
+## Aba Mensagens {#aba-mensagens}
 
 Personalização dos **textos padrão** dos e-mails enviados pelo sistema (assunto e corpo das mensagens automáticas). Edite conforme orientação da equipe ISP Consultor.
 

@@ -29,7 +29,7 @@ Ao trocar o **Tipo de API**, salve na aba **Servidor** antes de configurar mensa
 
 ---
 
-## Aba Servidor
+## Aba Servidor {#aba-servidor}
 
 ### Evolution API
 
@@ -57,7 +57,7 @@ Clique em **Salvar** para gravar. Use **Remover** ou **Limpar** conforme o estad
 
 ---
 
-## Aba Mensagens
+## Aba Mensagens {#aba-mensagens}
 
 Configure os textos ou templates por **tipo de mensagem**. Selecione o tipo no campo **Tipo de mensagem**:
 
@@ -93,7 +93,7 @@ Clique em **Salvar** na barra superior.
 
 ---
 
-## Aba Templates Meta
+## Aba Templates Meta {#aba-templates-meta}
 
 Disponível apenas com **WhatsApp Cloud API (Oficial)**.
 
@@ -108,7 +108,7 @@ Use **Recarregar** para atualizar a lista da Meta.
 
 ---
 
-## Aba Templates
+## Aba Templates {#aba-templates}
 
 Disponível apenas com **WhatsApp Cloud API (Oficial)**.
 
