@@ -90,7 +90,7 @@ module.exports = {
       name: 'doc',
       cwd: '.',
       script: 'npx',
-      args: '--yes serve doc/.vitepress/dist -l 4000 -s --no-request-logging',
+      args: '--yes serve doc/.vitepress/dist -l 4000 --no-request-logging',
       interpreter: 'none',
       exec_mode: 'fork',
       instances: 1,
