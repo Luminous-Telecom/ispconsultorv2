@@ -1,0 +1,75 @@
+---
+description: Cadeia de middlewares, logger Winston, upload (multer) e cache
+globs: backend/src/**/*.ts
+alwaysApply: false
+---
+
+# Middlewares e infraestrutura — ISP Consultor
+
+## Ordem da cadeia (`src/index.ts`)
+
+```
+helmet → cors → cookieParser → X-Request-ID → json/urlencoded → sanitize
+  → (csrf opcional, ENABLE_CSRF) → (metrics opcional, ENABLE_METRICS)
+  → ddosProtectionMiddleware → rateLimitMiddleware('/api')
+  → copyProtection/devTools/file/api/image/configProtection
+  → blockdomiIpsPermitidosMiddleware → authMiddleware
+  → auditCaptureMiddleware → auditLogMiddleware
+  → planoModuloMiddleware → static (/arquivos, /images) → routes
+  → errorHandlerMiddleware → 404 handler (/api/*)
+```
+
+Novo middleware global → inserir na posição correta desta cadeia (ex.: algo que depende de `req.user` vai **depois** do `authMiddleware`); documentar aqui se mudar a ordem.
+
+## Rate limit e DDoS
+
+- `rateLimitMiddleware()` aplicado só em `/api` — limites especializados: `authRateLimitMiddleware` (login), `publicEndpointRateLimitMiddleware` (rotas públicas tipo consulta CEP/CNPJ)
+- `ddosProtectionMiddleware`: `maxProcessingTime` padrão 15s: rota que pode legitimamente demorar mais (PDF em lote, sync IXC, análise RPKI) entra em `extendedTimeouts` (por regex de path) ou `skipRoutes` — nunca aumentar o timeout global por causa de uma rota específica
+
+## Logger (Winston)
+
+```typescript
+import { logger } from '../../utils/logger';
+
+logger.info('Sincronização concluída', { context: 'IxcSync', empresa_id });
+logger.warn('Falha ao enviar email', { error: err.message });
+logger.error('Erro ao processar cliente', { error: getErrorMessage(err), stack: getErrorStack(err) });
+```
+
+- Saída: console + `logs/error.log` + `logs/combined.log`; nível via `LOG_LEVEL`
+- **Proibido** `console.log`/`console.error` em `src/` fora de scripts standalone (`src/scripts/`, `backend/scripts/`) — sempre `logger`
+- `sendError` (ver `backend-respostas-http.mdc`) já loga automaticamente — não duplicar log antes de chamá-lo
+- Nunca logar senha, token JWT completo ou `webhook_secret` em texto plano
+
+## Upload de arquivos (Multer)
+
+```typescript
+// configurado na própria rota, não como middleware global
+const storage = multer.diskStorage({
+  destination: resolveArquivosPath('clientes'),
+  filename: (req, file, cb) => cb(null, `${Date.now()}_${sanitize(file.originalname)}`),
+});
+const upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 } });
+router.post('/clientes/:id/arquivos', upload.single('arquivo'), ClienteArquivoController.upload);
+```
+
+- Multer é configurado **na rota**, não global — cada domínio de upload define seu próprio `storage`/limite
+- Destino sempre via `resolveArquivosPath(subpasta)` (`utils/pathUtils`) — nunca path absoluto hardcoded
+- Erros `MulterError` tratados no handler da rota com `sendValidationError`, não deixados estourar pro `errorHandlerMiddleware` genérico
+
+## Cache
+
+Dois níveis, para propósitos diferentes — não confundir:
+
+| Nível | Onde | Uso |
+|---|---|---|
+| Memória (singleton com TTL) | `utils/cache/index.ts` | Cache de config/planos (`createSingletonConfigService`) — processo único |
+| Redis (ioredis, opcional via `REDIS_URL`) | `config/redis.ts` | Jobs assíncronos de extração de PDF, cache RPKI (WHOIS/RIS) — **não** é cache geral de API |
+
+Nova necessidade de cache simples em memória → reutilizar `utils/cache`; não instalar nova lib de cache sem necessidade real de compartilhamento entre processos (Redis).
+
+## Proibido
+
+- `console.log` para debug esquecido em código de produção
+- Middleware de auth/validação custom reimplementado dentro de uma rota específica — estender o middleware global existente
+- Multer com `storage` em memória para arquivos grandes (usar `diskStorage` + `resolveArquivosPath`)

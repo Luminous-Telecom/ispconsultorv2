@@ -1,0 +1,60 @@
+---
+description: Rotinas agendadas (IRoutine) e workers em background
+globs: backend/src/services/scheduler/**/*.ts,backend/src/workers/**/*.ts,backend/src/interfaces/IRoutine/**/*.ts
+alwaysApply: false
+---
+
+# Scheduler e Workers — ISP Consultor
+
+## Rotinas (`IRoutine`)
+
+```typescript
+import { IRoutine, RoutineResult, RoutineExecuteOptions } from '../../../interfaces/IRoutine';
+
+export class VerificarVencimentosRoutine implements IRoutine {
+  async execute(config: Record<string, JsonValue>, options?: RoutineExecuteOptions): Promise<RoutineResult> {
+    // ... lógica da rotina
+    return { success: true, message: 'Vencimentos verificados.', data: { total: 10 } };
+  }
+}
+```
+
+- Toda rotina agendada implementa `IRoutine.execute()` e vive em `services/scheduler/routines/`
+- `RoutineResult.message` é o texto curto exibido nos logs — detalhes (contagens, IDs) em `data`
+- `RoutineExecuteOptions.saas`/`empresa_id`: rotina pode rodar por tenant (ERP) ou global (SaaS)
+
+## Modelos de agendamento
+
+- ERP: `ScheduledRoutine`
+- SaaS: `SaasScheduledRoutine`
+
+Nova rotina → cadastrar em ambos os pontos se for necessária nos dois painéis; não duplicar lógica entre uma rotina ERP e uma SaaS equivalente (extrair função compartilhada).
+
+## `SchedulerService` (singleton)
+
+```typescript
+const { SchedulerService } = await import('../../services/scheduler/SchedulerService');
+await SchedulerService.getInstance().start(); // no boot (src/index.ts)
+await SchedulerService.getInstance().stop();  // no graceful shutdown
+```
+
+- Sempre `getInstance()` — nunca `new SchedulerService()`
+- Import dinâmico no boot/shutdown (evita custo de carregar rotinas se o processo cair antes)
+
+## `WorkerManager`
+
+- Polling periódico com limite de concorrência (`maxWorkers`) — não é fila tipo Bull/BullMQ
+- Usar para processamento assíncrono que não precisa de fila externa (Redis é usado só pontualmente, ex.: jobs de extração de PDF)
+
+## Testar rotina isoladamente
+
+```bash
+npx ts-node backend/scripts/test-scheduler-queue.ts
+```
+
+Scripts de teste manual de rotina/fila ficam em `backend/scripts/` (fora de `src/`), com `dotenv` e conexão direta ao banco.
+
+## Proibido
+
+- Lógica de negócio pesada direto no `WorkerManager` — extrair para uma classe/service e chamar a partir do worker
+- Nova dependência de fila (Bull/BullMQ/RabbitMQ) sem alinhar antes — o padrão atual é polling + Redis pontual

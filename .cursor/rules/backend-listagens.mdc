@@ -1,0 +1,54 @@
+---
+description: Pipeline de listagens — parseListQuery, sortConfigs e paginação
+globs: backend/src/**/*.ts
+alwaysApply: false
+---
+
+# Listagens — ISP Consultor
+
+Complementa `backend-api.mdc` (ordenação sempre no backend). Toda listagem paginada segue o mesmo pipeline de 3 peças.
+
+## 1. Parse da query (`utils/listQuery.ts`)
+
+```typescript
+import { parseListQuery } from '../../utils/listQuery';
+
+const filters = parseListQuery(req.query, { defaultLimit: 15, maxLimit: 100 });
+// { page, limit, search, searchField, sortColumn, sortDirection, ativo, empresa_id, status, data_*_inicio/fim }
+```
+
+- `defaultPage: 1`, `defaultLimit: 15` — só sobrescrever com `options` quando a tela exigir (ex.: auditoria SSH com `maxLimit: 100`)
+- Agendador usa variante `parseSchedulerListQuery` (aceita `sort`/`direction` além de `sortColumn`/`sortDirection`)
+- Helpers auxiliares: `parseIdsFromQueryParam` (bulk actions), `isQueryFlagTrue`, `parseTriStateBoolean`, `parseBoundedPositiveInt`
+
+## 2. Ordenação (`config/sortConfigs.ts` + `utils/sortHelper.ts`)
+
+```typescript
+import { TITULO_SORT_CONFIG } from '../../config/sortConfigs';
+import { SortHelper } from '../../utils/sortHelper';
+
+const order = SortHelper.buildOrder(filters.sortColumn, filters.sortDirection, TITULO_SORT_CONFIG);
+```
+
+- Cada entidade listável com ordenação por coluna calculada ou de relacionamento tem um `*_SORT_CONFIG` em `config/sortConfigs.ts`
+- `virtualColumns`: coluna calculada via SQL (ex.: `valor_aberto` de título) com `sql` + `description`
+- `relationshipColumns`: ordenar por campo de association (ex.: `cliente` → `razao_social` do cliente vinculado)
+- Nova coluna ordenável que não é coluna direta da tabela → adicionar ao `SortConfig` da entidade, nunca montar `ORDER BY` string manual no service
+
+## 3. Paginação da resposta
+
+```typescript
+return {
+  success: true,
+  data: rows,
+  pagination: buildPagination(filters.page, filters.limit, count),
+};
+```
+
+- Resposta sempre `{ success, data, pagination }` — `pagination` com `current_page`, `per_page`, `total`, `last_page`
+- RPKI é exceção documentada (paginação client-side) — não replicar para novas entidades sem necessidade
+
+## Proibido
+
+- Montar filtros de `page`/`limit`/`sortColumn` direto de `req.query` sem passar por `parseListQuery`
+- `ORDER BY` com string interpolada a partir de input do usuário — sempre via `SortHelper` + `SortConfig` com colunas permitidas

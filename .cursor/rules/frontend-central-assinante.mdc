@@ -1,0 +1,42 @@
+---
+description: Central do Assinante — mini-app isolada do ERP (rota, auth e estilos próprios)
+globs: frontend/src/components/pages/centralAssinante/**/*.tsx,frontend/src/components/pages/CentralAssinante.tsx,frontend/src/services/centralAssinanteService.ts,frontend/src/styles/CentralAssinante.scss
+alwaysApply: false
+---
+
+# Central do Assinante — ISP Consultor
+
+Área semi-pública para o cliente final do provedor, em rota própria `/central-assinante/:slug` — **não** é um modal do ERP e não usa o `Layout` do ERP.
+
+## Estrutura
+
+```tsx
+// components/pages/CentralAssinante.tsx — entrypoint da rota
+// components/pages/centralAssinante/ — views e tabs (resumo, financeiro, contratos, termos)
+// services/centralAssinanteService.ts — API + token da central
+// styles/CentralAssinante.scss — tokens --ca-*
+```
+
+- `slug` na URL identifica o tenant (multiloja) — toda chamada de API passa o slug (`CentralAssinanteService.login(slug, data)`, etc.)
+- Login, recuperar senha e trocar senha são **views locais** da própria página (`useCentralAssinanteAuth`), não modais do `ModalContext` do ERP
+- Tabs próprias (`resumo`, `financeiro`, `contratos`, `termos`) — navegação interna do componente, não `react-router`
+
+## Reuso vs. isolamento
+
+- **Reutiliza**: componentes UI centrais (`Loading`, botões de `components/ui/buttons`, `FormField`)
+- **Não reutiliza**: `DraggableModal`/`ListModal`/`ModalContext` do ERP — a Central tem shell próprio
+- **Estilos**: sempre prefixo `--ca-*` em `CentralAssinante.scss` — não misturar com `--bg-primary`/tokens do tema ERP (ver `frontend-design-tokens.mdc`)
+
+## Auth
+
+Ver `frontend-autenticacao.mdc` — token próprio via `useCentralAssinanteAuth(slug)`, escopado por tenant, não é JWT do ERP nem sessão SaaS.
+
+## Mobile
+
+Mesmo build Capacitor do ERP (`npm run build:ios`/`build:android`) — não há build separado para a Central (ver `frontend-config-capacitor.mdc`, `docs/BUILD-MOBILE.md`).
+
+## Proibido
+
+- Abrir uma tela da Central do Assinante como modal do `ModalContext` do ERP
+- Usar tokens `--bg-primary`/cores do ERP em `CentralAssinante.scss` — sempre `--ca-*`
+- Chamar services do ERP (que dependem de `auth_token`) dentro da Central

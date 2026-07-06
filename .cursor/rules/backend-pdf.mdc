@@ -1,0 +1,35 @@
+---
+description: Geração de PDF centralizada via PDFGenerationService (Puppeteer)
+globs: backend/src/services/**/*.ts
+alwaysApply: false
+---
+
+# Geração de PDF — ISP Consultor
+
+Toda geração de PDF (boletos, NFS-e, contratos, relatórios de auditoria) passa por um único ponto de entrada — não instanciar Puppeteer manualmente em outro service.
+
+```typescript
+import { PDFGenerationService } from '../pdf-generation/PDFGenerationService';
+
+const pdfBuffer = await PDFGenerationService.generateFromHtml(html, options);
+// ou, quando o conteúdo ainda não é HTML final:
+const pdfBuffer = await PDFGenerationService.generateFromContent(content, options, styleName);
+```
+
+## Regras
+
+- HTML é montado no service/template da entidade (ex.: `services/titulos/boletoTemplate/buildBoletoHtml.ts`, `services/nfse/NotaFiscalPdfService`) — `PDFGenerationService` só recebe HTML pronto e converte para PDF
+- Tipografia do HTML gerado: `FONT_FAMILY_BASE`/`FONT_FAMILY_MONO` de `constants/typography.ts` — nunca `Arial, sans-serif` hardcoded (ver `frontend-tipografia.mdc`, seção Backend)
+- Puppeteer roda headless com `--no-sandbox` — não alterar flags sem necessidade (ambiente de produção containerizado)
+- Rotas de geração de PDF que podem demorar (boletos múltiplos, auditoria) entram em `skipRoutes` do `ddosProtectionMiddleware` em `src/index.ts` — nova rota de PDF em lote deve ser adicionada lá também
+
+## Novo tipo de PDF
+
+1. Criar template/builder de HTML no service da entidade (não em `PDFGenerationService`)
+2. Chamar `PDFGenerationService.generateFromHtml`/`generateFromContent`
+3. Se a geração pode ultrapassar 15s (lote grande), adicionar a rota em `skipRoutes` do DDoS middleware
+
+## Proibido
+
+- `puppeteer.launch()` direto fora de `PDFGenerationService`
+- Fonte hardcoded diferente de `FONT_FAMILY_BASE`/`FONT_FAMILY_MONO` em novo template de PDF

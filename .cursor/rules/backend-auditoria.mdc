@@ -1,0 +1,42 @@
+---
+description: Auditoria manual nos controllers — registrarCriacao/Atualizacao/Exclusao
+globs: backend/src/controllers/**/*.ts,backend/src/middleware/auditMiddleware/**/*.ts
+alwaysApply: false
+---
+
+# Auditoria — ISP Consultor
+
+O `auditMiddleware` (`auditCaptureMiddleware` + `auditLogMiddleware`) só prepara contexto — **não registra automaticamente**. O registro real é manual, dentro do controller, após o sucesso da operação.
+
+```typescript
+import { setAuditData } from '../../../middleware/auditMiddleware';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
+
+// Create
+const cliente = await ClienteService.create(data);
+await registrarCriacao(req, { entidade: 'Cliente', entidade_id: cliente.id, dadosNovos: cliente });
+
+// Update — capturar estado anterior ANTES de alterar
+const dadosAnteriores = await ClienteService.getById(id);
+setAuditData(req, dadosAnteriores, dadosNovos);
+await ClienteService.update(id, data);
+await registrarAtualizacao(req, { entidade: 'Cliente', entidade_id: id });
+
+// Delete — capturar estado anterior ANTES de excluir
+setAuditData(req, dadosAnteriores);
+await ClienteService.delete(id);
+await registrarExclusao(req, { entidade: 'Cliente', entidade_id: id });
+```
+
+## Regras
+
+- `setAuditData(req, dadosAnteriores, dadosNovos?)` **antes** de `update`/`delete` — captura o estado que vai virar diff no log
+- Mapa `ROUTE_ENTITY_MAP` em `middleware/auditMiddleware/index.ts` associa prefixo de rota → nome de entidade (usado pelo `auditLogMiddleware` para contexto); ao criar CRUD novo, adicionar entrada aqui
+- CRUD novo (controller com create/update/delete) → sempre chamar os 3 registradores; não deixar "auditoria implícita"
+- Rotas públicas e webhooks ficam de fora — não chamar `registrar*` nelas
+- Erros ao registrar auditoria não devem quebrar a operação principal — envolver em `.catch()` quando o registro for best-effort (ex.: acesso via token de API)
+
+## Proibido
+
+- Assumir que o middleware registra sozinho — sem a chamada explícita, a ação **não aparece** na auditoria
+- Chamar `registrarAtualizacao`/`registrarExclusao` sem antes `setAuditData` (perde o diff "antes/depois")

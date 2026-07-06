@@ -1,0 +1,40 @@
+---
+description: ERP navega por modais globais, não por rotas internas — ModalContext + SingleModalWrapper
+globs: frontend/src/**/*.tsx,frontend/src/**/*.ts
+alwaysApply: false
+---
+
+# Navegação do ERP por modais — ISP Consultor
+
+O ERP (`/adm`) **não** usa `react-router` para abrir cadastros, financeiro ou parâmetros — só o Dashboard é rota real (`/adm`, `/adm/dashboard`). Todo o restante abre como modal global via `ModalContext`.
+
+```tsx
+import { useModal } from 'contexts/ModalContext';
+
+const { openModal, closeModal } = useModal();
+openModal('clientes'); // não navigate('/adm/clientes')
+```
+
+## Como funciona
+
+1. **`ModalType`** (`contexts/ModalContext.tsx`) — união de todos os IDs de modal do sistema (ERP, SaaS, SSH Manager, RPKI, logs, agentes)
+2. **`SingleModalWrapper`** (`components/common/SingleModalWrapper.tsx`) — registry único: `lazy(() => import(...))` para cada modal + `switch`/mapa de `ModalType` → componente
+3. **Menu** (`components/layout/layout/hooks/useMenuItems.ts`) — itens chamam `openModal('id')`, nunca `navigate(...)`
+
+## Novo módulo ERP
+
+1. Adicionar o novo tipo em `ModalType` (`contexts/ModalContext.tsx`)
+2. Criar o modal em `components/modals/<dominio>/` com barrel `index.ts`
+3. Registrar `lazy(() => import(...))` em `SingleModalWrapper.tsx`
+4. Adicionar item no menu (`useMenuItems.ts`) chamando `openModal('novo-id')`
+5. **Não** criar rota `/adm/novo-modulo` — o padrão do projeto é 100% modal
+
+## Quando usar rota de verdade
+
+- Login, Dashboard, páginas públicas (site, `/login`), Central do Assinante (`/central-assinante/:slug`) e área SaaS (`/saas/*`, que espelha o mesmo padrão de modais do ERP)
+- Qualquer tela que precise de URL compartilhável/deep-link direto (raro no ERP)
+
+## Proibido
+
+- Criar rota `/adm/<entidade>` para uma listagem/cadastro que deveria ser modal
+- Abrir modal de cadastro com `useState` local quando ele já existe em `ModalType` (evita modal duplicado com registro paralelo)

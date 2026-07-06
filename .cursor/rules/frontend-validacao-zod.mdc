@@ -1,0 +1,50 @@
+---
+description: Validação com Zod e hooks use*Form (react-hook-form) para entidades principais
+globs: frontend/src/schemas/**/*.ts,frontend/src/hooks/**/*.ts
+alwaysApply: false
+---
+
+# Validação Zod + `use*Form` — ISP Consultor
+
+Entidades principais (cliente, plano, banco, contrato, título, contas a receber) centralizam validação em `schemas/<entidade>.schema.ts` com Zod, consumido por um hook `use<Entidade>Form` com `react-hook-form`.
+
+```typescript
+// schemas/cliente.schema.ts
+import { z } from 'zod';
+import { cnpjSchema, cepSchema, emailSchema } from './brazilian-documents.schema';
+
+export const clienteSchema = z.object({
+  cnpj: cnpjSchema,
+  razao_social: z.string().min(1, 'Razão social é obrigatória').max(255).trim(),
+  email: emailSchema,
+});
+
+export type ClienteFormData = z.infer<typeof clienteSchema>;
+```
+
+```typescript
+// hooks/useClienteForm.ts
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { clienteSchema, type ClienteFormData as ZodClienteFormData } from '../schemas/cliente.schema';
+
+const form = useForm<ZodClienteFormData>({ resolver: zodResolver(clienteSchema) });
+```
+
+## Convenções
+
+- Schemas compartilhados de documentos brasileiros (CNPJ, CEP, email, telefone) ficam em `schemas/brazilian-documents.schema.ts` — reutilizar, não recriar regex de validação por entidade
+- Nomenclatura: `entidadeSchema` (criação), `updateEntidadeSchema` = `entidadeSchema.partial()` quando a entidade tem update parcial
+- Exportar sempre `type EntidadeFormData = z.infer<typeof entidadeSchema>`
+- Hook `use<Entidade>Form` encapsula: RHF (`useForm` + `zodResolver`) + mutations (`useCreateX`/`useUpdateX` do hook de dados) + formatters (`formatCNPJ`, `formatPhone`, `formatCEP`) + camada de compatibilidade (`formData`/`errors`) para modais legados que ainda esperam essa API
+
+## Quando usar
+
+- Entidade principal nova (cadastro complexo com várias regras de negócio) → criar schema Zod + `use<Entidade>Form`
+- Formulário simples (filtro, campo único, modal pequeno) → seguir o padrão de `errors: Record<string, string>` manual descrito em `frontend-formularios-crud.mdc`; não é obrigatório introduzir Zod para tudo
+
+## Proibido
+
+- Duplicar regex de CNPJ/CEP/email fora de `brazilian-documents.schema.ts`
+- Schema Zod que não é consumido por `zodResolver` (validação duplicada manual + Zod ao mesmo tempo)
+- Misturar validação Zod com o padrão antigo de `errors` manual na mesma entidade sem a camada de compatibilidade do hook

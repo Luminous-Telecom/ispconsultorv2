@@ -1,0 +1,59 @@
+---
+description: Camada de services — BaseService, ApiClient e facade estática
+globs: frontend/src/services/**/*.ts
+alwaysApply: false
+---
+
+# Services — ISP Consultor
+
+Toda entidade tem um service seguindo o mesmo formato: classe interna `extends BaseService`, instância singleton e uma facade pública com métodos `static`.
+
+```typescript
+import { BaseService, BaseFilters } from './core/BaseService';
+import { defaultApiClient } from './core/ApiClient';
+
+interface PlanoFilters extends BaseFilters { ativo?: boolean }
+
+class PlanoServiceClass extends BaseService<Plano, CreatePlano, UpdatePlano, PlanoFilters> {
+  constructor() {
+    super(defaultApiClient, '/planos');
+  }
+  async findAtivos() {
+    return this.customGet<Plano[]>('/ativos');
+  }
+}
+
+const planoServiceInstance = new PlanoServiceClass();
+
+export class PlanoService {
+  static list = (filters?: PlanoFilters) => planoServiceInstance.list(filters);
+  static getById = (id: number) => planoServiceInstance.getById(id);
+  static create = (data: CreatePlano) => planoServiceInstance.create(data);
+  static update = (id: number, data: UpdatePlano) => planoServiceInstance.update(id, data);
+  static delete = (id: number) => planoServiceInstance.delete(id);
+  static findAtivos = () => planoServiceInstance.findAtivos();
+}
+```
+
+## Regras
+
+- **Nunca** `new BaseService(...)` diretamente — é abstrata; sempre criar uma classe concreta (`class XServiceClass extends BaseService<...>`)
+- Import sempre de `services/core` (`defaultApiClient`, `ApiClient`, `BaseService`, `ResponseTransformer`, `ErrorHandler`, `unwrapResponse`) — não instanciar `ApiClient` avulso por service
+- Endpoint custom fora do CRUD padrão → método próprio na classe usando `this.customGet`/`this.customPost` (não `this.apiClient` direto, para manter `ResponseTransformer`/`ErrorHandler` consistentes)
+- `list()` já normaliza formatos variados de paginação vindos do backend (`PaginatedResponse` completo, array puro, `ApiResponse<PaginatedResponse>`) — não duplicar essa normalização no hook consumidor
+
+## SaaS
+
+```typescript
+import { createSaasCrudService } from 'services/saas/createSaasCrudService';
+
+export const SaasPlanoService = createSaasCrudService<SaasPlano, CreateSaasPlano, UpdateSaasPlano>('/saas/planos');
+```
+
+CRUD simples em `/saas/*` → usar a factory `createSaasCrudService`, não replicar o boilerplate de `BaseService` manualmente.
+
+## Proibido
+
+- Chamar `axios`/`fetch` direto num componente ou hook — sempre via um `XService`
+- Duplicar lógica de parse de resposta paginada fora de `BaseService.list()`
+- Service novo sem export da facade estática (`export class XService { static ... }`) — não exportar a instância singleton diretamente

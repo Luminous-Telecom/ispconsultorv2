@@ -1,0 +1,66 @@
+---
+description: Hooks React Query por entidade — query keys e convenção de mutations
+globs: frontend/src/hooks/**/*.ts
+alwaysApply: false
+---
+
+# Hooks de dados (React Query) — ISP Consultor
+
+Cada entidade tem um arquivo `hooks/use<Entidade>.ts` com todas as queries e mutations daquele domínio — não espalhar `useQuery`/`useMutation` da mesma entidade em componentes diferentes.
+
+```typescript
+export const usePlanos = (filters: PlanoFilters = {}) => useQuery<PaginatedResponse<Plano>>({
+  queryKey: ['planos', filters],
+  queryFn: () => PlanoService.list(filters),
+  staleTime: 30 * 1000,
+  gcTime: DEFAULT_CACHE_TIME,
+});
+
+export const usePlano = (id: number) => useQuery({
+  queryKey: ['plano', id],
+  queryFn: () => PlanoService.getById(id),
+  enabled: !!id,
+});
+
+export const usePlanosAtivos = () => useQuery({ queryKey: ['planos-ativos'], queryFn: () => PlanoService.findAtivos() });
+
+export const useCreatePlano = () => {
+  const queryClient = useQueryClient();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
+  return useMutation({
+    mutationFn: PlanoService.create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['planos'] });
+      queryClient.invalidateQueries({ queryKey: ['planos-ativos'] });
+      success('Plano salvo com sucesso!');
+    },
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.PLANO_CREATE_ERROR),
+  });
+};
+```
+
+## Query keys
+
+| Padrão | Exemplo | Uso |
+|---|---|---|
+| Plural + filtros | `['planos', filters]` | Listagem paginada |
+| Singular + id | `['plano', id]` | Item único (`enabled: !!id`) |
+| Plural + sufixo | `['planos-ativos']` | Variante/subconjunto nomeado |
+
+## `staleTime`
+
+- **Não é sempre `0`** apesar do que diz `frontend-react.mdc` de forma genérica — cada hook define o `staleTime` adequado à volatilidade do dado: `0` para dados que mudam com frequência/exigem always-fresh, `30s`/`CACHE_CONFIG.DEFAULT_STALE_TIME` para listas mais estáveis (planos, bancos)
+- Constantes centrais em `config/api.ts` → `CACHE_CONFIG.DEFAULT_STALE_TIME` / `DEFAULT_CACHE_TIME` — usar essas ao invés de números mágicos quando o valor for o "padrão"
+
+## Mutations
+
+- `onSuccess`: invalidar **todas** as `queryKey` relacionadas (lista, lista filtrada por sufixo, item por id) + toast `success` com mensagem curta
+- `onError`: sempre `showApiError(err, CONTEXT_ERROR_MESSAGES.*)` — nunca mensagem hardcoded (ver `frontend-erros-api.mdc`)
+- Mutation que depende de `id` (update/toggle) → `mutationFn: ({ id, data }) => XService.update(id, data)`, invalidar `['entidade', id]` também
+
+## Proibido
+
+- `useQuery`/`useMutation` inline dentro de componente de tela para uma entidade que já tem hook dedicado
+- Invalidar só a query key genérica esquecendo variantes (`-ativos`, item por id) após create/update/delete
+- Toast de sucesso com string diferente do padrão da entidade (mensagens devem seguir o texto do backend quando disponível — `response.message`)

@@ -1,0 +1,46 @@
+---
+description: Respostas HTTP padronizadas via responseUtils — nunca res.json cru
+globs: backend/src/controllers/**/*.ts,backend/src/middleware/**/*.ts,backend/src/routes/**/*.ts
+alwaysApply: false
+---
+
+# Respostas HTTP (`responseUtils`) — ISP Consultor
+
+Complementa `backend-api.mdc` (`{ success, message, data }`): **use sempre** os helpers de `utils/responseUtils`, nunca `res.json`/`res.status().json()` manual em controller novo.
+
+```typescript
+import { sendSuccess, sendError, sendValidationError, sendNotFound, sendForbidden, sendUnauthorized } from '../../utils/responseUtils';
+
+sendSuccess(res, cliente, 'Cliente criado com sucesso.', 201);
+sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error));
+sendNotFound(res, 'Cliente não encontrado');
+sendForbidden(res, 'Empresa sem acesso a este módulo');
+sendError(res, err, 'Erro ao processar cliente'); // 500 — loga automaticamente
+```
+
+| Helper | Status | Quando usar |
+|---|---|---|
+| `sendSuccess(res, data?, message?, status=200)` | 200/201 | Sucesso — `data` e `message` opcionais |
+| `sendError(res, error, defaultMessage?, status=500, logError=true, context?)` | 500 (ou custom) | Erro inesperado — já loga via `logger.error` com rota, stack e `cause` |
+| `sendValidationError(res, message, errors?)` | 400 | Validação Joi/manual — `errors` é `Record<string, string[]>` |
+| `sendNotFound(res, message?)` | 404 | Recurso não encontrado |
+| `sendForbidden(res, message?)` | 403 | Sem permissão/módulo do plano |
+| `sendUnauthorized(res, message?)` | 401 | Não autenticado |
+
+## Regras
+
+- `sendError` mascara mensagem interna em produção (`NODE_ENV=production`) quando `statusCode >= 500` — cliente recebe `defaultMessage`, detalhe completo vai só para o `logger`
+- Nunca chamar `logger.error` manualmente antes de `sendError` — o helper já loga (evita log duplicado)
+- `res.headersSent` já é checado internamente — não precisa validar antes de chamar
+- Erros globais não tratados no controller caem no `errorHandlerMiddleware` (`middleware/errorHandlerMiddleware`), que trata `Joi.ValidationError`, `Sequelize.UniqueConstraintError` (409) e demais erros do Sequelize
+
+## Proibido
+
+```typescript
+// ❌ Resposta manual
+res.status(500).json({ success: false, message: err.message });
+
+// ❌ Logar antes de sendError (duplica log)
+logger.error('Erro ao criar cliente', err);
+sendError(res, err);
+```

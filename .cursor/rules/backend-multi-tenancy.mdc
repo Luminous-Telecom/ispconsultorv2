@@ -1,0 +1,55 @@
+---
+description: Isolamento de dados por tenant (empresa_id) — multi-tenancy do ERP
+globs: backend/src/**/*.ts
+alwaysApply: false
+---
+
+# Multi-tenancy (`empresa_id`) — ISP Consultor
+
+Cada provedor (tenant) é uma linha em `DadosEmpresa`. O isolamento de dados nas tabelas do ERP é feito por `empresa_id`, extraído do JWT — **nunca** aceite `empresa_id` de request de usuário não-admin sem validar.
+
+## Helpers (`utils/tenantUtils.ts`)
+
+```typescript
+import { getEmpresaId, getEmpresaIdOrNull, isAdminRequest, resolveListEmpresaId, resolveEmpresaIdOnCreate, resolveEmpresaIdForScopedCreate } from '../../utils/tenantUtils';
+```
+
+| Helper | Uso |
+|---|---|
+| `getEmpresaId(req)` | Lança erro se não houver `empresa_id` no token — usar quando é obrigatório |
+| `getEmpresaIdOrNull(req)` | Retorna `null` se ausente — usar em fluxos opcionais |
+| `isAdminRequest(req)` | `true` se `role === 'admin'` (cross-tenant) |
+| `resolveListEmpresaId(req)` | Listagens: `number` = filtra por empresa, `null` = admin sem filtro (vê tudo), `false` = sem acesso |
+| `resolveEmpresaIdOnCreate(req, bodyEmpresaId)` | Criação simples: admin pode informar `empresa_id` no body; demais usam o do JWT |
+| `resolveEmpresaIdForScopedCreate(req, { cliente_id, empresa_id })` | Criação vinculada a um cliente: admin informa `cliente_id` e a empresa vem do cadastro do cliente |
+
+## Padrão em controllers/services
+
+```typescript
+// Listagem
+const empresaId = resolveListEmpresaId(req);
+if (empresaId === false) return sendForbidden(res);
+const result = await ClienteService.list({ ...filters, empresa_id: empresaId ?? undefined });
+
+// Criação
+const scope = await resolveEmpresaIdOnCreate(req, req.body.empresa_id);
+if (!scope.ok) return sendValidationError(res, scope.message);
+const cliente = await ClienteService.create({ ...req.body, empresa_id: scope.empresa_id });
+```
+
+- Services recebem `empresa_id` no filtro/dados e aplicam `where.empresa_id` na query — nunca confiam em `req.body.empresa_id` direto para não-admin
+- Admin (`role: 'admin'`) pode cruzar tenants via `?empresa_id=` (listagens) ou `empresa_id` no body (criação)
+- Demais perfis (usuário do provedor) ficam sempre presos ao `empresa_id` do próprio token
+
+## Migrations
+
+Tabela nova com dado por provedor → sempre adicionar coluna `empresa_id` (nullable ou com FK para `dados_empresas`) — ver migrations `add-empresa-id-*`.
+
+## SaaS (fora deste isolamento)
+
+Models e rotas em `models/saas/`, `routes/saas/` **não** usam `empresa_id` do ERP — são dados do painel SuperAdmin (gestão de tenants). Ver `backend-autenticacao.mdc`.
+
+## Proibido
+
+- Aceitar `empresa_id` do body/query sem passar por `resolveEmpresaIdOnCreate`/`resolveListEmpresaId` quando o usuário não é admin
+- Query em tabela com `empresa_id` sem filtrar pelo tenant (vaza dados entre provedores)

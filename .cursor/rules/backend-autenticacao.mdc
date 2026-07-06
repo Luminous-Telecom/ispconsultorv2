@@ -1,0 +1,57 @@
+---
+description: Autenticação em camadas — ERP, SaaS Super Admin e token de API
+globs: backend/src/**/*.ts
+alwaysApply: false
+---
+
+# Autenticação — ISP Consultor
+
+Três stacks de autenticação independentes. Não misturar middlewares/tokens entre elas.
+
+## 1. ERP (`authMiddleware`)
+
+- JWT em cookie HttpOnly `auth_token` (prioridade) ou header `Authorization: Bearer` (retrocompatibilidade)
+- Rotas públicas: array `PUBLIC_ROUTES` (regex por path + método opcional) em `middleware/authMiddleware/index.ts` — adicionar aqui ao criar rota pública nova, nunca pular o middleware inline
+- **Sem token em rota protegida → `404` vazio** (não `401`) — evita expor existência de rotas para scanners
+- `Sec-Fetch-Mode: navigate` em rota de API não pública → `401` direto (bloqueia acesso via barra de endereço)
+- Após validar o JWT, verifica bloqueio por atraso SaaS (`getBloqueioAtrasoInfo`) — tenant bloqueado recebe `403` com `code: 'EMPRESA_BLOQUEADA_ATRASO'`
+
+```typescript
+// Nova rota pública — adicionar em PUBLIC_ROUTES, não usar `if (isPublic)` espalhado
+{ method: 'GET', path: /^\/api\/minha-rota\/publica$/i },
+```
+
+## 2. SaaS Super Admin (`saasAuthMiddleware`)
+
+- Prefixo `/api/saas/*` — ignorado pelo `authMiddleware` do ERP (está em `PUBLIC_ROUTES`) e protegido pelo próprio `saasAuthMiddleware` dentro de `routes/saas/`
+- Cookie `saas_auth_token`; payload exige `payload.saas === true` e `payload.tipo === 'super_admin'`
+- Nunca reutilizar `authMiddleware` do ERP em rota `/api/saas/*`
+
+```typescript
+// routes/saas/xRoutes.ts
+router.use(saasAuthMiddleware);
+```
+
+## 3. Token de API (integrações)
+
+- Header `Authorization: Bearer <token>` **sem ponto** (`.`) = `webhook_secret` do usuário (gerado em Parâmetros → Usuários → Gerar token), não JWT
+- Validado via `UsuarioService.findByWebhookSecret`; usuário precisa estar `ativo` e ter `empresa_id`
+- Restrito a whitelist `API_TOKEN_ALLOWED_ROUTES` dentro do `authMiddleware` — ao liberar endpoint novo para integração, adicionar regex nessa lista
+- Requisição autenticada por token de API registra auditoria de `login` automaticamente
+
+## Central do Assinante
+
+Login/token próprios por slug (`/api/central-assinante/:slug/...`), listados em `PUBLIC_ROUTES` com regex por slug — não é JWT do ERP nem SaaS.
+
+## Ao criar rota nova
+
+1. Rota do ERP autenticada normalmente → nada a fazer, `authMiddleware` já cobre
+2. Rota pública do ERP → adicionar em `PUBLIC_ROUTES`
+3. Rota SaaS → criar sob `routes/saas/`, garantir `saasAuthMiddleware`
+4. Rota deve aceitar token de API → adicionar em `API_TOKEN_ALLOWED_ROUTES`
+
+## Proibido
+
+- Validar JWT manualmente fora do `authMiddleware`/`saasAuthMiddleware`
+- Misturar cookie `auth_token` (ERP) com `saas_auth_token` (SaaS) na mesma rota
+- Retornar `401` com corpo detalhado para requisição sem token em rota do ERP (usar `404` vazio, padrão já estabelecido)

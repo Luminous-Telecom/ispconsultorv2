@@ -1,0 +1,48 @@
+---
+description: Socket.IO — autenticação JWT no handshake e namespaces por domínio
+globs: backend/src/socket/**/*.ts
+alwaysApply: false
+---
+
+# Socket.IO — ISP Consultor
+
+Servidor HTTP compartilhado entre Express e Socket.IO (`path: '/socket.io'`), configurado em `src/index.ts` + `src/socket/socketServer.ts`.
+
+## Autenticação
+
+```typescript
+io.use((socket, next) => {
+  const token = socket.handshake.auth?.token;
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) return next(new Error('unauthorized'));
+    socket.data.user = decoded;
+    next();
+  });
+});
+```
+
+- Todo namespace herda essa validação global de JWT no handshake — não reimplementar `jwt.verify` por namespace
+- Frontend obtém o token via `GET /api/auth/socket-token` (não reutiliza o cookie `auth_token`) — ver `frontend-autenticacao.mdc`
+
+## Namespaces por domínio
+
+- `registerSshNamespaces(io)` → `/ssh-logs`, `/ssh-terminal` (SSH Manager)
+- `registerAgentNamespace(io)` / `registerAgentTerminalNamespace(io)` → agente remoto
+- Socket "raiz" (sem namespace): eventos genéricos como `blockdomi-logs`
+
+Novo domínio com eventos em tempo real → criar `src/socket/xSocket.ts` com `registerXNamespace(io)` e chamar em `setIO()`, não adicionar handlers soltos no socket raiz.
+
+## Rooms
+
+```typescript
+socket.on('subscribe-blockdomi-logs', () => socket.join('blockdomi-logs'));
+io.to('blockdomi-logs').emit('blockdomi:log', log);
+```
+
+- Rooms por recurso (`{targetType}:{targetId}`) para escopar eventos a um item específico (ex.: terminal de um dispositivo SSH)
+- Emitir sempre via helper exportado (`emitBlockdomiLog`, etc.) — não chamar `getIO().emit()` direto espalhado pelo código
+
+## Proibido
+
+- Emitir dado sensível de outro tenant numa room compartilhada sem checar `empresa_id` do socket autenticado
+- Criar novo servidor Socket.IO paralelo — sempre usar a instância única via `getIO()`

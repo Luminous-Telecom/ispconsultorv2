@@ -1,0 +1,47 @@
+---
+description: Estrutura de types/ — barrel central e convenção Create/Update
+globs: frontend/src/types/**/*.ts
+alwaysApply: false
+---
+
+# Estrutura de `types/` — ISP Consultor
+
+Tipos organizados por categoria em arquivos separados, sempre importados via o barrel `types/index.ts` — não importar direto de `types/entities.ts` etc.
+
+```typescript
+// ✅
+import { Cliente, ApiResponse, ClienteFormData, PaginatedResponse } from 'types';
+
+// ❌
+import { Cliente } from 'types/entities';
+```
+
+## Onde cada tipo vive
+
+| Arquivo | Conteúdo |
+|---|---|
+| `entities.ts` | Entidades de domínio (`Cliente`, `Plano`, `Contrato`...), DTOs (`CreateXData`/`UpdateXData`), enums de status, `Column`/`BulkAction` |
+| `common.ts` | Tipos utilitários genéricos (`FormValue`, `FilterValue`, `TableValue`) |
+| `api.ts` | `ApiResponse<T>`, `PaginatedResponse<T>`, `ApiError`, `Pagination`, filtros base (`BaseFilters`, `ClienteFilters`, ...) |
+| `forms.ts` | `FormData<T>`/`FormErrors<T>` genéricos + específicos por entidade (`ClienteFormData`, `ClienteFormErrors`) |
+| `modal.ts` | `ListModalProps`, `ListModalConfig`, `ListModalColumn` |
+
+## Convenção de nomes
+
+- `CreateX = Omit<X, 'id' | ...>` — dados para criação
+- `UpdateX = Partial<CreateX>` — dados para atualização (parcial)
+- `XFormData` / `XFormErrors` — estado de formulário (pode divergir levemente do DTO de API, ex.: campos de confirmação)
+- Entidade nova → adicionar em `entities.ts` + DTOs correspondentes + reexportar em `index.ts`
+
+## Ao adicionar campo em formulário existente
+
+Atualizar em conjunto (ver `frontend-verificacao-pos-alteracao.mdc`):
+
+1. `types/forms.ts` (`XFormData`, `XFormErrors`)
+2. `schemas/x.schema.ts` se a entidade usa Zod (ver `frontend-validacao-zod.mdc`)
+3. Props do componente que consome o campo
+
+## Proibido
+
+- Tipo de entidade/DTO definido solto num componente ou hook em vez de `types/entities.ts`
+- Import direto de arquivo interno de `types/` (`types/api.ts`, etc.) em vez do barrel `types`

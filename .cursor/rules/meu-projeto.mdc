@@ -106,6 +106,26 @@ Use sempre os primitivos do projeto. **Índice completo:** `frontend-ui-centrali
 | `frontend-terminal-logs.mdc` | Terminal e logs |
 | `frontend-react.mdc` | React Query, padrões gerais |
 | `frontend-verificacao-pos-alteracao.mdc` | Build, i18n pós-edit |
+| `frontend-navegacao-modais.mdc` | ERP navega por modais, não rotas |
+| `frontend-autenticacao.mdc` | 3 auths (ERP/SaaS/Central) |
+| `frontend-services.mdc` | BaseService, facade estática |
+| `frontend-react-query.mdc` | Query keys, mutations por entidade |
+| `frontend-validacao-zod.mdc` | Zod + use*Form |
+| `frontend-feature-gating.mdc` | usePlanoModulos |
+| `frontend-central-assinante.mdc` | Mini-app isolada do ERP |
+| `frontend-config-capacitor.mdc` | config/api.ts + build mobile |
+| `frontend-tipos.mdc` | Barrel types/, Create/Update |
+| `frontend-saas.mdc` | Painel SaaS Super Admin |
 | `doc-wiki.mdc` | Wiki VitePress — sincronizar com alterações do ERP |
 | `backend-api.mdc` | Controllers, services, API |
 | `database-migrations.mdc` | Migrações DB |
+| `backend-multi-tenancy.mdc` | Isolamento por empresa_id |
+| `backend-autenticacao.mdc` | Auth ERP/SaaS/token de API |
+| `backend-respostas-http.mdc` | responseUtils (sendSuccess/sendError) |
+| `backend-listagens.mdc` | parseListQuery, sortConfigs |
+| `backend-auditoria.mdc` | registrarCriacao/Atualizacao/Exclusao |
+| `backend-socketio.mdc` | Socket.IO, JWT, namespaces |
+| `backend-scheduler-workers.mdc` | IRoutine, WorkerManager |
+| `backend-pdf.mdc` | PDFGenerationService (Puppeteer) |
+| `backend-middlewares-infra.mdc` | Cadeia de middlewares, logger, upload, cache |
+| `backend-integracoes-externas.mdc` | Agente, SSH Manager, RPKI, Python |

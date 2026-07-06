@@ -1,0 +1,59 @@
+---
+description: Integrações externas — agente remoto, SSH Manager, RPKI/Krill e scripts Python
+globs: backend/src/services/**/*.ts,backend/agent/**/*.js,backend/python/**/*.py
+alwaysApply: false
+---
+
+# Integrações externas — ISP Consultor
+
+## Agente remoto (`backend/agent/`)
+
+- Pacote Node separado de `src/` — instalado no servidor do cliente, conecta de volta via Socket.IO (`registerAgentNamespace`/`registerAgentTerminalNamespace`)
+- Script de instalação servido dinamicamente: `GET /api/agents/:id/install-script` (rota pública, IP não previsível)
+- Nova função do agente → adicionar handler no namespace correspondente em `src/socket/agentSocket.ts`, não criar conexão HTTP separada
+
+## SSH Manager (automação de equipamentos)
+
+```typescript
+import { SshPoolService } from '../ssh-manager/SshPoolService';
+```
+
+- `SshPoolService`/`SshConnectionService`: pool de conexões SSH reutilizáveis — não abrir conexão SSH ad hoc fora do pool
+- Terminal interativo via namespace Socket.IO `/ssh-terminal` (`TerminalService`)
+- Backup de configuração por fabricante: `SshDeviceBackupRunner/models/*.ts` (ex.: `routeros.ts`, `vrp.ts`) — um arquivo por "dialeto" de equipamento, `SshDeviceBackupQueue` enfileira as execuções
+- Logs de auditoria de comandos: `SshAuditService`
+
+Novo fabricante/dialeto de equipamento → criar `SshDeviceBackupRunner/models/{fabricante}.ts` seguindo o padrão dos existentes, não embutir lógica de parsing no runner genérico.
+
+## RPKI (Krill)
+
+```typescript
+import { KrillApiService } from '../rpki/KrillApiService';
+```
+
+- `KrillApiService`: cliente HTTP para a API do Krill (RPKI CA)
+- `RpkiBgpRisWhoisRedisCache`/`RpkiBgpRisWhoisService`: consulta RIS Whois com cache Redis — não repetir chamada externa sem checar o cache
+- `RpkiRouteValidationCore`/`RpkiRouteValidationService`: validação de rota BGP contra ROAs
+- `RpkiSchedulerRoutineService`: sincronização periódica via `IRoutine` — ver `backend-scheduler-workers.mdc`
+
+## Scripts Python (`backend/python/`)
+
+```typescript
+import { spawn } from 'child_process';
+const python = process.env.PDF_EXTRACT_PYTHON || 'python3';
+const proc = spawn(python, [scriptPath, arquivo]);
+```
+
+- Scripts standalone (`extrair-dominios.py`, `extrair-sei-anatel.py`) chamados via `spawn`, stdout parseado pelo service TS (ex.: `SeiAnatelExtractService`)
+- Dependências em `backend/python/requirements.txt`, instaladas via `install-python-deps.sh` — não instalar pacote Python fora desse arquivo
+- Binário Python configurável via env (`PDF_EXTRACT_PYTHON`) — nunca hardcode `python`/`python3` sem fallback de env
+
+## IXC (OSS externo)
+
+- `services/externos/IxcOssChamadoService` — timeouts estendidos no `ddosProtectionMiddleware` (sync pode ultrapassar 15s)
+
+## Proibido
+
+- Nova automação de rede sem passar pelo `SshPoolService` (evita esgotar conexões)
+- Chamar Krill/RIS Whois direto sem usar os services/cache existentes
+- Script Python novo fora de `backend/python/` ou sem entrada em `requirements.txt`

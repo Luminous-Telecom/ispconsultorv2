@@ -1,0 +1,45 @@
+---
+description: Três domínios de autenticação independentes — ERP, SaaS e Central do Assinante
+globs: frontend/src/**/*.tsx,frontend/src/**/*.ts
+alwaysApply: false
+---
+
+# Autenticação — ISP Consultor (frontend)
+
+Não existe um `AuthContext` global único. São **três fluxos separados**, cada um com guard, storage e serviço próprios — não misturar.
+
+| Domínio | Guard | Sessão | Serviço |
+|---|---|---|---|
+| **ERP** (`/adm`) | `useLayoutAuth` | Cookie HttpOnly `auth_token` (servidor) + flag `sessionStorage` (cliente) | `services/authService` (`services/core/auth.ts`) |
+| **SaaS** (`/saas`) | `useSaasLayoutAuth` + `SaasAuthContext`/`SaasAuthProvider` | `sessionStorage.saas_session` | `services/saas/saasAuthService` |
+| **Central do Assinante** | `useCentralAssinanteAuth(slug)` | Token em `sessionStorage`/memória, escopado por `slug` | `services/centralAssinanteService` |
+
+```tsx
+// ERP
+import { authService } from 'services/authService';
+import { getAuthToken } from 'services/core';
+
+// SaaS
+import { useSaasAuth } from 'contexts/SaasAuthContext'; // via SaasAuthProvider no App.tsx
+
+// Central do Assinante
+import { useCentralAssinanteAuth } from 'hooks/useCentralAssinanteAuth';
+const auth = useCentralAssinanteAuth(slug);
+```
+
+## Regras por domínio
+
+- **ERP**: `getAuthToken()` só verifica uma *flag* de sessão (o JWT real fica no cookie HttpOnly, inacessível ao JS) — o mesmo token só é exposto em memória para autenticar o Socket.IO (`GET /api/auth/socket-token`). Login bem-sucedido faz `window.location.href = '/adm'` (hard navigation), não `navigate()` — garante que o cookie recém-setado seja aplicado
+- **SaaS**: `SaasAuthProvider` envolve **todo** o app em `App.tsx` (não só `/saas/*`), mas só é consumido dentro do painel SaaS. Rotas `/api/plano-modulos` do ERP não devem ser chamadas em páginas `/saas/*` (usam sessão diferente) — ver `usePlanoModulos` em `frontend-feature-gating.mdc`
+- **Central do Assinante**: token por `slug` (multiloja); login/recuperar senha/trocar senha são **views locais** da própria página, não modais do `ModalContext` do ERP
+
+## `ApiClient`
+
+- `AUTH_HEADER_SKIP_ROUTES` evita que o header de auth de um domínio vaze para requisições de outro (ex.: chamada à Central do Assinante não deve levar o cookie/token do ERP)
+- Novo endpoint que pertence a um domínio específico → verificar se precisa entrar nessa lista de skip
+
+## Proibido
+
+- Criar um `AuthContext` genérico compartilhado entre ERP/SaaS/Central — os três têm regras de expiração, bloqueio e escopo diferentes
+- Usar `navigate()` para o pós-login do ERP — usar hard navigation (`window.location.href`) como já é feito
+- Chamar `usePlanoModulos`/rotas do ERP a partir de páginas `/saas/*` (gera 404 no backend)

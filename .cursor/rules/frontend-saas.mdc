@@ -1,0 +1,34 @@
+---
+description: Painel SaaS Super Admin — espelha o padrão do ERP com prefixo próprio
+globs: frontend/src/components/**/saas/**/*.tsx,frontend/src/services/saas/**/*.ts,frontend/src/hooks/**/*.ts
+alwaysApply: false
+---
+
+# Painel SaaS — ISP Consultor
+
+`/saas/*` é o painel do Super Admin (gestão de tenants) — reutiliza os mesmos padrões de UI do ERP (modais, tabelas, botões), mas com auth, layout e services próprios.
+
+## O que é compartilhado com o ERP
+
+- `ModalContext` / `SingleModalWrapper` — modais SaaS têm seus próprios `ModalType` prefixados `saas-*` (ex.: `saas-planos`, `saas-usuarios`), registrados no mesmo wrapper (ver `frontend-navegacao-modais.mdc`)
+- Componentes de UI: `DraggableModal`, `ListModal`, `Table`, botões (`components/ui/buttons`) — mesmas regras de `frontend-botoes.mdc`, `frontend-form-modal-layout.mdc`, etc.
+- `createSaasCrudService` para CRUDs simples (ver `frontend-services.mdc`)
+
+## O que é isolado do ERP
+
+- **Auth**: `SaasAuthContext`/`useSaasLayoutAuth`, sessão própria (`saas_session`) — ver `frontend-autenticacao.mdc`
+- **Layout**: `SaasLayoutMain` com sidebar própria, não reutiliza o `Layout` do ERP
+- **Rotas de API**: sempre `/api/saas/*`, nunca chamam endpoints do ERP (`/api/clientes`, etc. sem o prefixo `saas`)
+- `usePlanoModulos` (feature gating por plano) é **desabilitado** em `/saas/*` — o SaaS não tem "plano" sobre si mesmo (ver `frontend-feature-gating.mdc`)
+
+## Novo cadastro SaaS
+
+1. Backend: rota em `routes/saas/`, controller `Saas*Controller`, model em `models/saas/` (ver regras de backend)
+2. Frontend: service via `createSaasCrudService('/saas/...')` ou classe própria `extends BaseService`
+3. Modal: `ModalType` com prefixo `saas-`, registrado em `SingleModalWrapper`
+4. Menu do painel SaaS (não o menu do ERP)
+
+## Proibido
+
+- Reaproveitar hook/service do ERP que assume `auth_token` dentro de tela `/saas/*`
+- `ModalType` de entidade SaaS sem prefixo `saas-` (colisão de nome com o mesmo cadastro no ERP, ex.: `planos` vs `saas-planos`)

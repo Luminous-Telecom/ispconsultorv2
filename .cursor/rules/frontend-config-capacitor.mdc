@@ -1,0 +1,42 @@
+---
+description: Configuração de API (config/api.ts) e build mobile via Capacitor
+globs: frontend/src/config/**/*.ts,frontend/capacitor.config.ts
+alwaysApply: false
+---
+
+# Config de API e Capacitor — ISP Consultor
+
+## `config/api.ts`
+
+```typescript
+import { API_CONFIG, CACHE_CONFIG, PAGINATION_CONFIG } from 'config/api';
+```
+
+- Prioridade de resolução da URL base: `window.__APP_CONFIG__` (injetado dinamicamente pelo backend em `GET /config.js`) → `process.env.REACT_APP_API_URL` → fallback `/api`
+- **Web**: URL sempre relativa (`/api`) — mesma origem, evita CORS
+- **Nativo** (`Capacitor.isNativePlatform()`): exige URL absoluta (`REACT_APP_API_URL` completa, `http(s)://...`) — o app mobile não tem "mesma origem" do backend
+- Constantes centrais no mesmo arquivo: `API_CONFIG` (timeout, retries), `CACHE_CONFIG` (staleTime/gcTime padrão para React Query — ver `frontend-react-query.mdc`), `PAGINATION_CONFIG`
+
+```typescript
+// ✅ Usar constantes centrais em vez de números mágicos
+staleTime: CACHE_CONFIG.DEFAULT_STALE_TIME,
+
+// ❌ Novo valor de timeout hardcoded fora de config/api.ts
+```
+
+## Capacitor (mobile)
+
+```bash
+npm run build:ios      # cd frontend && build + cap sync ios
+npm run build:android  # cd frontend && build + cap sync android
+```
+
+- `capacitor.config.ts` define scheme HTTPS e configs nativas — não há plugins Capacitor custom em código TS, só configuração
+- Build mobile só quando o usuário pedir explicitamente (mesma regra de `npm run build` do frontend — ver `frontend-verificacao-pos-alteracao.mdc`); não rodar `build:ios`/`build:android` por iniciativa própria
+- Detalhes de setup: `docs/BUILD-MOBILE.md`
+
+## Proibido
+
+- URL de API hardcoded em service/hook — sempre via `API_CONFIG.BASE_URL`
+- Assumir URL relativa funciona em build nativo — checar `Capacitor.isNativePlatform()` antes de qualquer lógica que dependa de mesma-origem (cookies, WebSocket, etc.)
+- Novo valor de cache/timeout duplicado fora de `CACHE_CONFIG`/`API_CONFIG`
