@@ -5,9 +5,9 @@ const HomeFutureFeaturesSection: React.FC = () => (
   <section id="recursos-futuros" className="home-section home-future-features">
     <div className="home-section-inner">
       <div className="home-section-header">
-        <h2 className="home-section-title">Recursos em breve</h2>
+        <h2 className="home-section-title">Módulos em desenvolvimento</h2>
         <p className="home-section-desc">
-          Novas funcionalidades em desenvolvimento para otimizar ainda mais sua operação
+          Novos módulos em desenvolvimento para otimizar ainda mais sua operação
         </p>
       </div>
       <div className="home-features-grid">

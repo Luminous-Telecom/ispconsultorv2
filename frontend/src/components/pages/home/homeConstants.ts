@@ -252,6 +252,21 @@ export const FUTURE_FEATURES = [
     title: 'Teste de Portas',
     description: 'Verificação de portas em equipamentos e serviços.',
   },
+  {
+    icon: 'bi-diagram-3',
+    title: 'Relatórios de CGNAT',
+    description: 'Consultas e relatórios de sessões e mapeamentos CGNAT.',
+  },
+  {
+    icon: 'bi-broadcast',
+    title: 'RADIUS Emerencial',
+    description: 'Acesso temporário e contingência via RADIUS para clientes e equipamentos.',
+  },
+  {
+    icon: 'bi-shield-lock',
+    title: 'Gerenciador de Senhas',
+    description: 'Armazenamento seguro e organizado de credenciais de rede e equipamentos.',
+  },
 ];
 
 export const BENEFITS = [
@@ -300,7 +315,7 @@ export const FAQ_ITEMS = [
   },
   {
     question: 'Quando saem novos recursos?',
-    answer: 'Atualizações frequentes. Acompanhe a seção "Em breve" e a wiki para novidades.',
+    answer: 'Atualizações frequentes. Acompanhe a seção "Módulos em desenvolvimento" e a wiki para novidades.',
   },
 ];
 
@@ -319,7 +334,7 @@ export const NAV_ITEMS = [
   { id: 'wiki', label: 'Wiki' },
   { id: 'autoatendimento', label: 'Autoatendimento' },
   { id: 'beneficios', label: 'Benefícios' },
-  { id: 'recursos-futuros', label: 'Em breve' },
+  { id: 'recursos-futuros', label: 'Em desenvolvimento' },
   { id: 'faq', label: 'FAQ' },
 ] as const;
 
