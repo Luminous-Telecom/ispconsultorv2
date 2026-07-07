@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import type { HotsitePlanoPublico } from 'services/publicHotsitePlanosService';
 import {
   buildHotsitePlanosCompareLimites,
+  buildHotsitePlanosCompareModulos,
   getBestLimiteColumnIndexes,
   getHotsitePlanoDisplayPrice,
   type HotsiteBillingPeriod,
@@ -20,6 +21,7 @@ const HomePlanosCompareTable: React.FC<Props> = ({
   featuredIndex = -1,
   buildWhatsappUrl,
 }) => {
+  const modulos = useMemo(() => buildHotsitePlanosCompareModulos(planos), [planos]);
   const limites = useMemo(() => buildHotsitePlanosCompareLimites(planos), [planos]);
 
   if (planos.length === 0) return null;
@@ -31,7 +33,7 @@ const HomePlanosCompareTable: React.FC<Props> = ({
           <thead>
             <tr>
               <th scope="col" className="home-planos-compare-feature-col">
-                Limite
+                Recurso
               </th>
               {planos.map((plano, index) => {
                 const price = getHotsitePlanoDisplayPrice(plano, billingPeriod);
@@ -54,6 +56,41 @@ const HomePlanosCompareTable: React.FC<Props> = ({
             </tr>
           </thead>
           <tbody>
+            {modulos.length > 0 && (
+              <tr className="home-planos-compare-section-row">
+                <th scope="row" colSpan={planos.length + 1}>
+                  Módulos
+                </th>
+              </tr>
+            )}
+            {modulos.map((row) => (
+              <tr key={`mod-${row.id}`}>
+                <th scope="row" className="home-planos-compare-feature-col">
+                  {row.label}
+                </th>
+                {row.included.map((included, colIndex) => (
+                  <td
+                    key={`${row.id}-${colIndex}`}
+                    className={`home-planos-compare-cell home-planos-compare-modulo${
+                      included ? ' is-yes' : ' is-no'
+                    }`}
+                  >
+                    <span
+                      className={`bi ${included ? 'bi-check-lg' : 'bi-x-lg'} home-planos-compare-icon`}
+                      aria-hidden
+                    />
+                    <span className="visually-hidden">{included ? 'Incluído' : 'Não incluído'}</span>
+                  </td>
+                ))}
+              </tr>
+            ))}
+            {limites.length > 0 && (
+              <tr className="home-planos-compare-section-row">
+                <th scope="row" colSpan={planos.length + 1}>
+                  Limites
+                </th>
+              </tr>
+            )}
             {limites.map((row) => {
               const bestCols = getBestLimiteColumnIndexes(row);
 

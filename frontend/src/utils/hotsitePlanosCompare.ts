@@ -1,3 +1,4 @@
+import { PLANO_MODULOS, type PlanoModuloId } from 'constants/planoModulos';
 import { SAAS_PLANO_LIMITE_DEFS } from 'constants/saasPlanoLimites';
 import type { HotsitePlanoPublico } from 'services/publicHotsitePlanosService';
 
@@ -8,6 +9,12 @@ export interface HotsitePlanoCompareLimiteRow {
   label: string;
   values: (string | null)[];
   numericValues: (number | null)[];
+}
+
+export interface HotsitePlanoCompareModuloRow {
+  id: PlanoModuloId;
+  label: string;
+  included: boolean[];
 }
 
 const LIMITE_ORDER = ['usuarios', ...SAAS_PLANO_LIMITE_DEFS.map((def) => def.formKey)];
@@ -68,6 +75,36 @@ function collectLimiteChaves(planos: HotsitePlanoPublico[]): string[] {
 
 function getPlanoLimiteValue(plano: HotsitePlanoPublico, chave: string): string | null {
   return plano.limites.find((l) => l.chave === chave)?.valor ?? null;
+}
+
+function collectModuloIds(planos: HotsitePlanoPublico[]): PlanoModuloId[] {
+  const present = new Set<PlanoModuloId>();
+  for (const plano of planos) {
+    for (const modulo of plano.modulos) {
+      present.add(modulo.id);
+    }
+  }
+  return PLANO_MODULOS.map((mod) => mod.id).filter((id) => present.has(id));
+}
+
+function getModuloLabel(id: PlanoModuloId, planos: HotsitePlanoPublico[]): string {
+  const fromPlano = planos.flatMap((p) => p.modulos).find((m) => m.id === id);
+  if (fromPlano?.label) return fromPlano.label;
+  return PLANO_MODULOS.find((m) => m.id === id)?.label ?? id;
+}
+
+function planoHasModulo(plano: HotsitePlanoPublico, id: PlanoModuloId): boolean {
+  return plano.modulos.some((m) => m.id === id);
+}
+
+export function buildHotsitePlanosCompareModulos(planos: HotsitePlanoPublico[]): HotsitePlanoCompareModuloRow[] {
+  if (planos.length === 0) return [];
+
+  return collectModuloIds(planos).map((id) => ({
+    id,
+    label: getModuloLabel(id, planos),
+    included: planos.map((plano) => planoHasModulo(plano, id)),
+  }));
 }
 
 export function buildHotsitePlanosCompareLimites(planos: HotsitePlanoPublico[]): HotsitePlanoCompareLimiteRow[] {
