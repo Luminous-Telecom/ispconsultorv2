@@ -32,7 +32,7 @@ import {
 import { queryString } from '../../../utils/listQuery';
 
 const AGENT_DIR = path.resolve(__dirname, '../../../../agent');
-const ALLOWED_FILES = new Set(['index.js', 'package.json']);
+const ALLOWED_FILES = new Set(['index.js', 'package.json', 'Dockerfile']);
 
 const installSchema = Joi.object({
   host: Joi.string().min(1).required(),

@@ -93,8 +93,9 @@ O ERP se conecta ao servidor via SSH e instala o agente automaticamente.
 
 - Linux (Debian, Ubuntu, CentOS, AlmaLinux, Rocky)
 - Acesso root ou sudo
-- Conexão com a internet (para baixar Docker e a imagem do agente)
+- Conexão com a internet (para baixar Docker e os arquivos do agente)
 - Docker e Docker Compose (instalados automaticamente se ausentes)
+- Imagem montada localmente a partir do ISP Consultor (sem Docker Hub)
 - Mínimo: 256 MB RAM, 500 MB disco
 
 | Campo | Obrigatório | Descrição |
@@ -115,7 +116,7 @@ Gera um comando de instalação para executar manualmente no servidor **Linux**.
 
 1. O comando é gerado automaticamente ao abrir a aba (ou clique em **Gerar**).
 2. Copie o campo **Comando de instalação**.
-3. Execute o comando como **root** no servidor — o script instala Docker (se necessário), grava `docker-compose.yml` em `/opt/ispconsultor-agent` e sobe o container.
+3. Execute o comando como **root** no servidor — o script instala Docker (se necessário), baixa os arquivos do agente do ISP Consultor, monta a imagem localmente e sobe o container em `/opt/ispconsultor-agent`.
 
 ::: warning Token no comando
 O comando gerado inclui o **token do agente** — não compartilhe em locais públicos.
@@ -144,7 +145,7 @@ As abas **Instalar Automático** e **Instalar Manual** do painel são voltadas a
 
 - Windows 10, Windows 11 ou Windows Server com suporte a containers
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado e em execução
-- Conexão com a internet (para baixar a imagem do agente)
+- Conexão com a internet (para baixar Docker e os arquivos do agente no ISP Consultor)
 - Mínimo: 256 MB RAM, 500 MB disco
 
 ### 1. Obter o token
@@ -154,45 +155,57 @@ As abas **Instalar Automático** e **Instalar Manual** do painel são voltadas a
 3. Use **Gerar token** (se necessário) e copie o token exibido.
 
 ::: warning Token sensível
-Não compartilhe o token em canais públicos. Se regenerar o token no painel, será necessário recriar o container no Windows com o valor novo.
+Não compartilhe o token em canais públicos. Se regenerar o token no painel, será necessário reconstruir o container no Windows com o valor novo.
 :::
 
-### 2. Escolher a imagem (prod ou dev)
+### 2. Canal (prod ou dev)
 
-| Ambiente do ISP Consultor | Imagem Docker | Nome do container |
-|---------------------------|---------------|-------------------|
-| Produção (`ispconsultor.com.br`) | `midia181/ispconsultor-tunnel:prod` | `ispconsultor-agent` |
-| Desenvolvimento (`dev.luminoustelecom.com.br`) | `midia181/ispconsultor-tunnel:dev` | `ispconsultor-agent-dev` |
+| Ambiente do ISP Consultor | Canal (`ISPCONSULTOR_AGENT_CHANNEL`) | Nome do container |
+|---------------------------|--------------------------------------|-------------------|
+| Produção (`ispconsultor.com.br`) | `prod` | `ispconsultor-agent` |
+| Desenvolvimento (`dev.luminoustelecom.com.br`) | `dev` | `ispconsultor-agent-dev` |
 
-A imagem já inclui a URL do servidor (`dev` ou `prod`); basta informar o `--token`.
+O `Dockerfile` define a URL do servidor conforme o canal no build.
 
-### 3. Instalar com Docker (recomendado)
+### 3. Baixar arquivos e subir com Docker Compose
 
-Abra **PowerShell** ou **Terminal** **como Administrador** e execute (substitua `<token-do-painel>`):
+1. Crie a pasta `C:\ispconsultor-agent`.
+2. Baixe os arquivos públicos do ISP Consultor (ajuste o domínio se for dev):
 
-**Produção:**
+```powershell
+cd C:\ispconsultor-agent
+curl.exe -fsSL "https://ispconsultor.com.br/api/agents/files/index.js" -o index.js
+curl.exe -fsSL "https://ispconsultor.com.br/api/agents/files/package.json" -o package.json
+curl.exe -fsSL "https://ispconsultor.com.br/api/agents/files/Dockerfile" -o Dockerfile
+```
+
+3. Crie `docker-compose.yml` (substitua `<token-do-painel>` e o canal se for dev):
+
+```yaml
+services:
+  agent:
+    image: ispconsultor-agent:prod
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        ISPCONSULTOR_AGENT_CHANNEL: prod
+    container_name: ispconsultor-agent
+    restart: unless-stopped
+    command:
+      - --token
+      - <token-do-painel>
+```
+
+4. Monte e suba (PowerShell como Administrador):
 
 ```powershell
 docker rm -f ispconsultor-agent 2>$null
-docker run -d `
-  --name ispconsultor-agent `
-  --restart unless-stopped `
-  midia181/ispconsultor-tunnel:prod `
-  --token "<token-do-painel>"
+docker compose build --pull
+docker compose up -d --force-recreate
 ```
 
-**Desenvolvimento:**
-
-```powershell
-docker rm -f ispconsultor-agent-dev 2>$null
-docker run -d `
-  --name ispconsultor-agent-dev `
-  --restart unless-stopped `
-  midia181/ispconsultor-tunnel:dev `
-  --token "<token-do-painel>"
-```
-
-O primeiro comando remove uma instalação anterior com o mesmo nome (se existir). O container sobe com reinício automático (`unless-stopped`).
+O `docker rm` remove uma instalação anterior com o mesmo nome. A imagem é montada **localmente** — não usa Docker Hub.
 
 ### 4. Verificar
 
@@ -203,37 +216,14 @@ docker logs -f ispconsultor-agent
 
 No painel, o agente deve aparecer como **Online** em alguns segundos.
 
-### Alternativa: Docker Compose no Windows
-
-1. Crie a pasta `C:\ispconsultor-agent`.
-2. Crie o arquivo `docker-compose.yml` (ajuste o token):
-
-```yaml
-services:
-  agent:
-    image: midia181/ispconsultor-tunnel:prod
-    container_name: ispconsultor-agent
-    restart: unless-stopped
-    command:
-      - --token
-      - <token-do-painel>
-```
-
-3. Na pasta, execute:
-
-```powershell
-docker compose pull
-docker compose up -d
-```
-
 ### Atualizar ou reinstalar
 
-1. **Novo token** no painel → pare e remova o container antigo (`docker rm -f ispconsultor-agent`) e rode o `docker run` ou `docker compose up -d` novamente com o token atualizado.
-2. **Nova versão da imagem** → `docker pull midia181/ispconsultor-tunnel:prod` e recrie o container (mesmos passos do `docker run` acima).
+1. **Novo token** no painel → baixe os arquivos de novo (se o código mudou), ajuste o token no `docker-compose.yml` e rode `docker compose up -d --build --force-recreate`.
+2. **Nova versão do agente** → repita o download dos arquivos em `C:\ispconsultor-agent` e `docker compose build` + `up -d --force-recreate`.
 
 ### Instalação nativa (Node.js) — não recomendada
 
-É possível executar o agente com Node.js 18+ sem Docker, mas no Windows a compilação do `node-pty` costuma exigir ferramentas extras e o terminal remoto fica limitado. Prefira sempre **Docker Desktop**.
+É possível executar o agente com Node.js 18+ sem Docker, mas no Windows a compilação do `node-pty` costuma exigir ferramentas extras e o terminal remoto fica limitado. Prefira sempre **Docker Desktop** com build local.
 
 ---
 

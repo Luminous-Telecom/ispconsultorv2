@@ -2,9 +2,15 @@ import { SYSTEM_NAME } from '../../constants/systemBrand';
 
 export const AGENT_COMPOSE_DIR = '/opt/ispconsultor-agent';
 export const AGENT_SERVICE_NAME = 'ispconsultor-agent';
+export const AGENT_LOCAL_IMAGE_PREFIX = 'ispconsultor-agent';
 
-/** Nomes de containers Docker legados (instalações anteriores). */
-export const LEGACY_DOCKER_CONTAINERS = ['ispconsultor-agent', 'ispconsultor-agent-dev'];
+/** Containers Docker legados (instalações anteriores). */
+export const LEGACY_DOCKER_CONTAINERS = [
+  'ispconsultor-agent',
+  'ispconsultor-agent-dev',
+  'backnet-agent',
+  'backnet-agent-dev',
+];
 
 export interface GenerateInstallScriptOptions {
   token: string;
@@ -19,11 +25,12 @@ export function isAgentDevServerUrl(serverUrl: string): boolean {
   );
 }
 
-export function getDockerImage(serverUrl: string): string {
-  const customImage = process.env.ISPCONSULTOR_AGENT_IMAGE;
-  if (customImage) return customImage;
-  const tag = isAgentDevServerUrl(serverUrl) ? 'dev' : 'prod';
-  return `midia181/ispconsultor-tunnel:${tag}`;
+export function getAgentChannel(serverUrl: string): 'dev' | 'prod' {
+  return isAgentDevServerUrl(serverUrl) ? 'dev' : 'prod';
+}
+
+export function getLocalAgentImage(serverUrl: string): string {
+  return `${AGENT_LOCAL_IMAGE_PREFIX}:${getAgentChannel(serverUrl)}`;
 }
 
 export function getAgentContainerName(serverUrl: string): string {
@@ -32,19 +39,25 @@ export function getAgentContainerName(serverUrl: string): string {
 
 /**
  * Script bash executado no servidor remoto (manual ou via SSH automático).
- * Instala Docker (se necessário), grava docker-compose.yml e sobe o agente.
+ * Baixa arquivos do ISP Consultor, monta imagem Docker localmente e sobe via Compose.
  */
 export function generateInstallScript(opts: GenerateInstallScriptOptions): string {
   const { token, serverUrl } = opts;
-  const imageName = getDockerImage(serverUrl);
+  const base = serverUrl.replace(/\/$/, '');
+  const filesBase = `${base}/api/agents/files`;
+  const channel = getAgentChannel(serverUrl);
+  const imageName = getLocalAgentImage(serverUrl);
   const containerName = getAgentContainerName(serverUrl);
 
   return `#!/bin/bash
 set -e
 
 TOKEN="${token}"
+SERVER_URL="${base}"
+FILES_BASE="${filesBase}"
 IMAGE_NAME="${imageName}"
 CONTAINER_NAME="${containerName}"
+AGENT_CHANNEL="${channel}"
 COMPOSE_DIR="${AGENT_COMPOSE_DIR}"
 SERVICE_NAME="${AGENT_SERVICE_NAME}"
 
@@ -111,7 +124,6 @@ if command -v systemctl &>/dev/null && systemctl list-unit-files "\$SERVICE_NAME
   rm -f "/etc/systemd/system/\$SERVICE_NAME.service"
   systemctl daemon-reload 2>/dev/null || true
 fi
-rm -rf /opt/ispconsultor-agent/index.js /opt/ispconsultor-agent/package.json /opt/ispconsultor-agent/node_modules 2>/dev/null || true
 rm -f /etc/ispconsultor-agent.env 2>/dev/null || true
 
 # ── Remover containers Docker legados ─────────────────────────────────────────
@@ -122,13 +134,25 @@ for legacy in ${LEGACY_DOCKER_CONTAINERS.join(' ')}; do
   fi
 done
 
-# ── Docker Compose ────────────────────────────────────────────────────────────
-log "Configurando Docker Compose em \$COMPOSE_DIR..."
+# ── Baixar arquivos do ISP Consultor ──────────────────────────────────────────
+log "Baixando arquivos do agente de \$SERVER_URL..."
 mkdir -p "\$COMPOSE_DIR"
+curl -fsSL "\$FILES_BASE/index.js" -o "\$COMPOSE_DIR/index.js"
+curl -fsSL "\$FILES_BASE/package.json" -o "\$COMPOSE_DIR/package.json"
+curl -fsSL "\$FILES_BASE/Dockerfile" -o "\$COMPOSE_DIR/Dockerfile"
+log "Arquivos baixados com sucesso."
+
+# ── Docker Compose (build local — sem Docker Hub) ─────────────────────────────
+log "Configurando Docker Compose em \$COMPOSE_DIR..."
 cat > "\$COMPOSE_DIR/docker-compose.yml" << EOF
 services:
   agent:
     image: \$IMAGE_NAME
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        ISPCONSULTOR_AGENT_CHANNEL: \$AGENT_CHANNEL
     container_name: \$CONTAINER_NAME
     restart: unless-stopped
     command:
@@ -136,12 +160,12 @@ services:
       - \$TOKEN
 EOF
 
-log "Baixando imagem do agente (\$IMAGE_NAME)..."
+log "Montando imagem local do agente (\$IMAGE_NAME)..."
 cd "\$COMPOSE_DIR"
-\$COMPOSE pull
+\$COMPOSE build --pull
 
 log "Subindo agente com Docker Compose..."
-\$COMPOSE up -d
+\$COMPOSE up -d --force-recreate
 
 log "Aguardando inicialização do agente (5s)..."
 sleep 5

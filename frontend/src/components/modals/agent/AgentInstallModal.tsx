@@ -23,8 +23,9 @@ type InstallMode  = 'auto' | 'manual';
 const REQUIREMENTS = [
   'Linux (Debian, Ubuntu, CentOS, AlmaLinux, Rocky)',
   'Acesso root ou sudo',
-  'Conexão com a internet (para baixar Docker)',
+  'Conexão com a internet (para baixar Docker e os arquivos do agente)',
   'Docker e Docker Compose (instalados automaticamente se ausentes)',
+  'Imagem montada localmente a partir do ISP Consultor (sem Docker Hub)',
   'Mínimo: 256 MB RAM, 500 MB disco',
 ];
 

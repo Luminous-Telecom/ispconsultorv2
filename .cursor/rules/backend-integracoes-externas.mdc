@@ -9,7 +9,7 @@ alwaysApply: false
 ## Agente remoto (`backend/agent/`)
 
 - Pacote Node separado de `src/` — instalado no servidor do cliente, conecta de volta via Socket.IO (`registerAgentNamespace`/`registerAgentTerminalNamespace`)
-- Script de instalação servido dinamicamente: `GET /api/agents/:id/install-script` (rota pública, IP não previsível) — instala Docker Compose em `/opt/ispconsultor-agent` com imagem `midia181/ispconsultor-tunnel`
+- Script de instalação servido dinamicamente: `GET /api/agents/:id/install-script` (rota pública, IP não previsível) — baixa arquivos de `GET /api/agents/files/*`, monta imagem Docker **localmente** e sobe Compose em `/opt/ispconsultor-agent` (sem Docker Hub)
 - Nova função do agente → adicionar handler no namespace correspondente em `src/socket/agentSocket.ts`, não criar conexão HTTP separada
 
 ## SSH Manager (automação de equipamentos)
