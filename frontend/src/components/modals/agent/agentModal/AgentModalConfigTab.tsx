@@ -3,7 +3,7 @@ import type { TranslationKeys } from 'contexts/I18nContext';
 import { Agent } from 'types';
 import { getClienteRazaoSocialLabel } from 'utils/clienteDisplay';
 import EntitySelectField from 'components/ui/EntitySelectField';
-import { GerarTokenButton } from 'components/ui';
+import { FormField, GerarTokenButton } from 'components/ui';
 import { DadosEmpresa } from 'services/dadosEmpresaService';
 import { AgentFormData } from './types';
 
