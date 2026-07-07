@@ -598,14 +598,23 @@ O script pede interativamente:
 - Senha do **Redis**
 - **Token** do Krill (RPKI)
 - **URL pública** (ex.: `https://erp.suaempresa.com.br`)
+- **E-mail e senha** do SuperAdmin SaaS
 - Se instala **Nginx**
 
-Também gera `backend/.env`, executa migrations, publica o front em `/var/www/ispconsultor` e sobe **PM2** (`backend` + wiki).
+Também gera `backend/.env`, executa migrations, configura o SuperAdmin SaaS, publica o front em `/var/www/ispconsultor` e sobe **PM2** (`backend` + wiki).
 
 ### 6. Primeiro acesso
 
+**ERP** (painel principal):
+
+- **URL:** `https://erp.suaempresa.com.br`
 - **E-mail:** `admin@ispconsultor.com.br`
 - **Senha:** `admin123` (troque no primeiro login)
+
+**SaaS SuperAdmin** (`/saas/login`):
+
+- **E-mail e senha:** os definidos durante o `install.sh` (padrão do e-mail: `superadmin@sistema.com` se você só pressionar Enter)
+- A migration cria um usuário temporário; o instalador substitui pelo e-mail e senha informados
 
 ### 7. Comandos úteis
 

@@ -92,6 +92,25 @@ prompt_base_url() {
   done
 }
 
+prompt_email() {
+  local label="$1" var_name="$2" default="${3:-}"
+  local input
+  while true; do
+    if [ -n "$default" ]; then
+      read -rp "$label [$default]: " input
+      input="${input:-$default}"
+    else
+      read -rp "$label: " input
+    fi
+    if [[ ! "$input" =~ ^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$ ]]; then
+      echo "  E-mail inválido."
+      continue
+    fi
+    printf -v "$var_name" '%s' "$input"
+    break
+  done
+}
+
 generate_secret() {
   openssl rand -base64 48 | tr -d '=/+' | head -c "$1"
 }
@@ -157,6 +176,8 @@ prompt_password "Senha do banco de dados (MariaDB, usuário $DB_USER)" DB_PASSWO
 prompt_password "Senha do Redis" REDIS_PASSWORD 8
 prompt_password "Token de administração do Krill (RPKI)" KRILL_API_TOKEN 16
 prompt_base_url
+prompt_email "E-mail do SuperAdmin SaaS" SAAS_SUPER_EMAIL "superadmin@sistema.com"
+prompt_password "Senha do SuperAdmin SaaS" SAAS_SUPER_PASSWORD 8
 
 DOMAIN="${BASE_URL#https://}"
 DOMAIN="${DOMAIN#http://}"
@@ -419,6 +440,10 @@ fi
 log "Executando migrations..."
 run_as_app_user "npm run migrate --prefix backend"
 
+log "Configurando SuperAdmin SaaS..."
+SAAS_SUPER_EMAIL="$SAAS_SUPER_EMAIL" SAAS_SUPER_PASSWORD="$SAAS_SUPER_PASSWORD" \
+  run_as_app_user "cd backend && node '$SCRIPT_DIR/configure-install-users.js'"
+
 log "Configurando PM2..."
 run_as_app_user "npm run pm2:delete 2>/dev/null || true"
 run_as_app_user "npm run prod:pm2"
@@ -444,9 +469,15 @@ echo ""
 echo "PM2:"
 run_as_app_user "npx pm2 list" || true
 echo ""
-echo "Acesso inicial:"
+echo "Acesso inicial — ERP (painel principal):"
+echo "  URL:    ${BASE_URL}"
 echo "  E-mail: admin@ispconsultor.com.br"
 echo "  Senha:  admin123  (troque no primeiro login)"
+echo ""
+echo "Acesso inicial — SaaS SuperAdmin:"
+echo "  URL:    ${BASE_URL}/saas/login"
+echo "  E-mail: ${SAAS_SUPER_EMAIL}"
+echo "  Senha:  (a definida durante a instalação)"
 echo ""
 if [[ "$INSTALL_NGINX" != "n" && "$INSTALL_NGINX" != "nao" && "$INSTALL_NGINX" != "não" ]]; then
   echo "Nginx: ${BASE_URL} → ${NGINX_WEB_ROOT} (estático), API → backend :3001, wiki → :4000"
