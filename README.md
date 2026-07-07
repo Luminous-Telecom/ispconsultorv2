@@ -9,14 +9,15 @@ Sistema ERP completo para gestão de clientes, contratos e cobrança com integra
 1. [Arquitetura Geral](#arquitetura-geral)
 2. [Principais Funcionalidades](#principais-funcionalidades)
 3. [Requisitos](#requisitos)
-4. [Instalação](#instalação)
-5. [Configuração do Backend](#configuração-do-backend)
-6. [Configuração do Frontend](#configuração-do-frontend)
-7. [Configuração do Nginx](#configuração-do-nginx)
-8. [Build e Deploy](#build-e-deploy)
-9. [Automação com PM2](#automação-com-pm2)
-10. [Integrações e Webhooks](#integrações-e-webhooks)
-11. [Variáveis de Ambiente](#variáveis-de-ambiente)
+4. [Instalação em produção (Linux)](#instalação-em-produção-linux)
+5. [Instalação manual / desenvolvimento](#instalação-manual--desenvolvimento)
+6. [Configuração do Backend](#configuração-do-backend)
+7. [Configuração do Frontend](#configuração-do-frontend)
+8. [Configuração do Nginx](#configuração-do-nginx)
+9. [Build e Deploy](#build-e-deploy)
+10. [Automação com PM2](#automação-com-pm2)
+11. [Integrações e Webhooks](#integrações-e-webhooks)
+12. [Variáveis de Ambiente](#variáveis-de-ambiente)
 
 ---
 
@@ -509,14 +510,162 @@ PING
 
 ---
 
-## Instalação do Projeto
+## Instalação em produção (Linux)
 
-### 1. Clonar o Repositório
+Guia para subir o ERP em um servidor **Debian/Ubuntu** do zero, usando o repositório de deploy **`ispconsultor`**.
+
+| Repositório | Uso |
+|---|---|
+| [`Luminous-Telecom/ispconsultor`](https://github.com/Luminous-Telecom/ispconsultor) | **Produção** — builds prontos (`backend/dist`, `frontend/build`) |
+| [`Luminous-Telecom/backnet`](https://github.com/Luminous-Telecom/backnet) | **Desenvolvimento** — código-fonte completo |
+
+### Estrutura no servidor
+
+| Caminho | Conteúdo |
+|---|---|
+| `/opt/ispconsultor` | Repositório Git, backend (PM2), `.env`, migrations |
+| `/var/www/ispconsultor` | Frontend estático servido pelo Nginx |
+
+O script `scripts/install.sh` instala MariaDB, Redis, Krill, Node.js, Nginx e PM2; publica o front em `/var/www/ispconsultor`.
+
+### 1. Criar usuário da aplicação
+
+**Não** rode a instalação logado como `root`. Crie um usuário dedicado:
 
 ```bash
-git clone https://github.com/Luminous-Telecom/ISP Consultor.git
-cd ISP Consultor
+sudo adduser ispconsultor
+sudo usermod -aG sudo ispconsultor
 ```
+
+### 2. (Opcional) Corrigir aviso de hostname no sudo
+
+Se aparecer `não foi possível resolver máquina HOSTNAME`:
+
+```bash
+echo "127.0.1.1 $(hostname)" | sudo tee -a /etc/hosts
+```
+
+### 3. Chave SSH para o GitHub
+
+Como usuário `ispconsultor`:
+
+```bash
+su - ispconsultor
+ssh-keygen -t ed25519 -C "ispconsultor@$(hostname)" -f ~/.ssh/id_ed25519 -N ""
+cat ~/.ssh/id_ed25519.pub
+```
+
+Copie a linha inteira e cadastre em **GitHub → Settings → SSH and GPG keys → New SSH key**.  
+O usuário/chave precisa ter acesso ao repositório `Luminous-Telecom/ispconsultor`.
+
+Teste:
+
+```bash
+ssh -T git@github.com
+```
+
+### 4. Criar pasta e clonar direto nela
+
+A pasta deve estar **vazia** antes do clone (o `.` no final evita subpasta extra):
+
+```bash
+sudo mkdir -p /opt/ispconsultor
+sudo chown ispconsultor:ispconsultor /opt/ispconsultor
+cd /opt/ispconsultor
+git clone git@github.com:Luminous-Telecom/ispconsultor.git .
+```
+
+Alternativa na home do usuário:
+
+```bash
+mkdir -p ~/ispconsultor
+cd ~/ispconsultor
+git clone git@github.com:Luminous-Telecom/ispconsultor.git .
+```
+
+### 5. Rodar o instalador
+
+Ainda como `ispconsultor`, **com sudo** (não como login root):
+
+```bash
+cd /opt/ispconsultor   # ou ~/ispconsultor
+sudo bash scripts/install.sh
+```
+
+O script pede interativamente:
+
+- Senha do **MariaDB** (usuário `ispconsultor`)
+- Senha do **Redis**
+- **Token** do Krill (RPKI)
+- **URL pública** (ex.: `https://erp.suaempresa.com.br`)
+- Se instala **Nginx**
+
+Também gera `backend/.env`, executa migrations, publica o front em `/var/www/ispconsultor` e sobe **PM2** (`backend` + wiki).
+
+### 6. Primeiro acesso
+
+- **E-mail:** `admin@ispconsultor.com.br`
+- **Senha:** `admin123` (troque no primeiro login)
+
+### 7. Comandos úteis
+
+```bash
+cd /opt/ispconsultor
+npx pm2 list
+npx pm2 logs
+npm run prod:pm2:stop
+npm run prod:pm2
+
+# Logs do Nginx
+sudo tail -f /var/log/nginx/ispconsultor-error.log
+
+# Republicar frontend manualmente (após git pull)
+sudo RUN_USER=ispconsultor bash scripts/publish-frontend-www.sh
+sudo nginx -t && sudo systemctl reload nginx
+
+# Migrations
+cd backend && npm run migrate
+```
+
+### 8. Atualizar o sistema
+
+Pelo ERP: **Parâmetros → Atualizações do sistema** (git pull, build, publish em `/var/www`, PM2).
+
+Ou manualmente:
+
+```bash
+cd /opt/ispconsultor
+git pull
+npm install --prefix backend
+npm run migrate --prefix backend
+sudo RUN_USER=ispconsultor bash scripts/publish-frontend-www.sh
+npm run prod:pm2
+```
+
+### Problemas comuns
+
+| Sintoma | Solução |
+|---|---|
+| `Execute como usuário normal com sudo` | Saia do `root` e use `su - ispconsultor` + `sudo bash scripts/install.sh` |
+| `Permission denied (publickey)` no `git pull` | Cadastre `~/.ssh/id_ed25519.pub` no GitHub |
+| Nginx `Permission denied` no front | Confirme que o `root` do site é `/var/www/ispconsultor` (não a home). Rode `scripts/publish-frontend-www.sh` |
+| `frontend/package.json` não encontrado | Normal no repo de produção — o instalador usa `frontend/build` versionado |
+
+Setup local só da infra (MariaDB, Redis, Krill), sem ERP completo: veja [`docs/SETUP-LOCAL.md`](docs/SETUP-LOCAL.md).
+
+---
+
+## Instalação manual / desenvolvimento
+
+### 1. Clonar o repositório (desenvolvimento)
+
+```bash
+git clone git@github.com:Luminous-Telecom/backnet.git
+cd backnet
+npm run install-all
+```
+
+Para produção, use o repositório [`ispconsultor`](#instalação-em-produção-linux) e o script `scripts/install.sh`.
 
 ### 2. Instalar Dependências
 
@@ -851,11 +1000,10 @@ server {
     }
 
     # Arquivos estáticos do frontend
-    # ⚠️ IMPORTANTE: Ajuste o caminho abaixo conforme seu ambiente!
-    # Desenvolvimento: /home/projetos/ISP Consultor/frontend/build
-    # Produção: /opt/ispconsultor/frontend/build (ou o caminho onde está seu frontend)
+    # Produção (install.sh): /var/www/ispconsultor
+    # Desenvolvimento: caminho do frontend/build no servidor
     location / {
-        root /opt/ispconsultor/frontend/build;  # ⚠️ AJUSTE ESTE CAMINHO!
+        root /var/www/ispconsultor;
         try_files $uri $uri/ /index.html;
         
         # Cache para arquivos estáticos
@@ -875,9 +1023,9 @@ server {
 ```
 
 **⚠️ Nota Importante sobre o caminho:**
-- O caminho `root` deve apontar para onde o frontend foi buildado em produção
-- Se você fez o build localmente e copiou, ajuste para o caminho correto
-- Se o frontend está integrado no backend (`backend/dist/frontend`), use: `root /opt/ispconsultor/backend/dist/frontend;`
+- Em **produção**, o `scripts/install.sh` publica o front em `/var/www/ispconsultor` e configura o Nginx automaticamente
+- Em **desenvolvimento** ou instalação manual, aponte `root` para `frontend/build` após o build
+- Se o frontend está integrado no backend (`backend/dist/frontend`), use: `root /caminho/do/projeto/backend/dist/frontend;`
 
 #### Opção B: HTTPS com SSL (Recomendado para Produção)
 
@@ -1004,11 +1152,10 @@ server {
     }
 
     # Arquivos estáticos do frontend
-    # ⚠️ IMPORTANTE: Ajuste o caminho abaixo conforme seu ambiente!
-    # Desenvolvimento: /home/projetos/ISP Consultor/frontend/build
-    # Produção: /opt/ispconsultor/frontend/build (ou o caminho onde está seu frontend)
+    # Produção (install.sh): /var/www/ispconsultor
+    # Desenvolvimento: caminho do frontend/build no servidor
     location / {
-        root /opt/ispconsultor/frontend/build;  # ⚠️ AJUSTE ESTE CAMINHO!
+        root /var/www/ispconsultor;
         try_files $uri $uri/ /index.html;
         
         # Cache para arquivos estáticos
@@ -1028,9 +1175,9 @@ server {
 ```
 
 **⚠️ Nota Importante sobre o caminho:**
-- O caminho `root` deve apontar para onde o frontend foi buildado em produção
-- Se você fez o build localmente e copiou, ajuste para o caminho correto
-- Se o frontend está integrado no backend (`backend/dist/frontend`), use: `root /opt/ispconsultor/backend/dist/frontend;`
+- Em **produção**, o `scripts/install.sh` publica o front em `/var/www/ispconsultor` e configura o Nginx automaticamente
+- Em **desenvolvimento** ou instalação manual, aponte `root` para `frontend/build` após o build
+- Se o frontend está integrado no backend (`backend/dist/frontend`), use: `root /caminho/do/projeto/backend/dist/frontend;`
 
 ### 4. Habilitar Site
 
