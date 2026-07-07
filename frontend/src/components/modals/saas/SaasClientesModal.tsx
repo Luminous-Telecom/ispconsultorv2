@@ -134,8 +134,8 @@ const SaasClientesModal: React.FC<Props> = ({ show, onClose, skipWrapper = false
         setSelectedId(item.id);
         setShowEdit(true);
       }}
-      onAudit={(i) => list.auditoria.handleAudit('DadosEmpresa', i.id)}
-      auditEntity="DadosEmpresa"
+      onAudit={(i) => list.auditoria.handleAudit('SaasDadosEmpresa', i.id)}
+      auditEntity="SaasDadosEmpresa"
       tableId="saas-empresas-list"
       modalId="saas-clientes-modal"
     />

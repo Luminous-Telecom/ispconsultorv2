@@ -239,6 +239,7 @@ app.use(ddosProtectionMiddleware({
     '/api/titulos/boletos-multiplos-pdf', // Geração de PDF pode demorar mais que 15s
     '/api/saas/titulos/boletos-multiplos-pdf', // Idem para SaaS
     '/api/auditoria/pdf', // Geração de PDF de auditoria pode demorar mais que 15s
+    '/api/saas/auditoria/pdf', // Idem para auditoria no painel SaaS
     '/api/atualizacoes/update', // Atualização pode levar vários minutos (git pull, npm install, build, migrations, pm2 reload)
     '/api/saas/atualizacoes/update-stream', // SSE: git pull, build, pm2 — ultrapassa qualquer limite curto
     '/api/saas/atualizacoes/update-doc-stream', // SSE: git pull + build wiki + pm2 doc

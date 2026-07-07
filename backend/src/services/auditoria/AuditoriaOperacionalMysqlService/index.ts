@@ -392,25 +392,11 @@ export class AuditoriaOperacionalMysqlService {
 
     const { rows } = await SistemaLogOperacional.findAndCountAll({
       where: { [Op.and]: and },
-      include: [
-        {
-          model: Usuario,
-          as: 'usuario',
-          attributes: ['nome', 'email'],
-          required: false,
-        },
-      ],
       order: [['created_at', sortDir]],
       limit,
     });
 
-    let logs = rows.map((r) =>
-      rowToListItem(
-        r,
-        (r as unknown as { usuario?: { nome?: string | null; email?: string | null } }).usuario,
-        true
-      )
-    );
+    let logs = rows.map((r) => rowToListItem(r, null, true));
 
     if (isUuid) {
       const matchEntityId = (d: unknown) =>

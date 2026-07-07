@@ -160,7 +160,7 @@ export async function registrarCriacao(
   empresa_id?: number | null,
   origem_auditoria?: OrigemAuditoria
 ): Promise<void> {
-  await registrarAuditoria(req, {
+  await persistSnapshot(req, {
     acao: 'create',
     entidade,
     entidade_id: entidadeId,
@@ -168,7 +168,7 @@ export async function registrarCriacao(
     observacoes,
     empresa_id,
     origem_auditoria,
-  });
+  }).catch(() => undefined);
 }
 
 export async function registrarAtualizacao(
@@ -181,7 +181,7 @@ export async function registrarAtualizacao(
   empresa_id?: number | null,
   origem_auditoria?: OrigemAuditoria
 ): Promise<void> {
-  await registrarAuditoria(req, {
+  await persistSnapshot(req, {
     acao: 'update',
     entidade,
     entidade_id: entidadeId,
@@ -190,7 +190,7 @@ export async function registrarAtualizacao(
     observacoes,
     empresa_id,
     origem_auditoria,
-  });
+  }).catch(() => undefined);
 }
 
 export async function registrarAtualizacaoSistema(
@@ -233,14 +233,14 @@ export async function registrarExclusao(
   observacoes?: string,
   empresa_id?: number | null
 ): Promise<void> {
-  await registrarAuditoria(req, {
+  await persistSnapshot(req, {
     acao: 'delete',
     entidade,
     entidade_id: entidadeId,
     dados_anteriores: dadosAnteriores,
     observacoes,
     empresa_id,
-  });
+  }).catch(() => undefined);
 }
 
 export async function registrarLogin(

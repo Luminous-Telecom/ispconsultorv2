@@ -3,7 +3,7 @@ import { getEmpresaIdOrNull, parseEmpresaIdQuery } from '../../../utils/tenantUt
 import {
   AuditoriaOperacionalMysqlService,
 } from '../../../services/auditoria/AuditoriaOperacionalMysqlService';
-import { enrichLogsWithClienteNome, enrichLogsWithEmpresaNome } from '../../../services/auditoria/auditoriaEnrichService';
+import { enrichLogsWithClienteNome, enrichLogsWithEmpresaNome, enrichLogsWithUsuarioErp } from '../../../services/auditoria/auditoriaEnrichService';
 import { ENTIDADES_SAAS } from '../../../services/auditoria/auditoriaConstants';
 import { AuditoriaPDFService } from '../../../services/auditoria/AuditoriaPDFService';
 import { logger } from '../../../utils/logger';
@@ -108,6 +108,7 @@ export class AuditoriaController {
       }
 
       await enrichLogsWithEmpresaNome(logs, false);
+      await enrichLogsWithUsuarioErp(logs);
 
       const html = await AuditoriaPDFService.generateAuditPdfHtml(logs, entidade, undefined, empresaId);
       const { PDFGenerationService } = await import('../../../services/pdf-generation/PDFGenerationService');

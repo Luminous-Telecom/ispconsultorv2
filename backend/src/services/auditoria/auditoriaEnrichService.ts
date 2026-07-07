@@ -1,5 +1,6 @@
 import { Op } from 'sequelize';
 import { DadosEmpresa } from '../../models/sistema/DadosEmpresa';
+import { Usuario } from '../../models/cadastros/Usuario';
 import { Cliente } from '../../models/clientes/Cliente';
 import { SaasUsuarioSuper } from '../../models/saas/SaasUsuarioSuper';
 import { SaasDadosEmpresa } from '../../models/saas/SaasDadosEmpresa';
@@ -49,6 +50,37 @@ function parseSaasActorId(value: unknown): number | null {
   if (typeof value === 'number' && value > 0) return value;
   if (typeof value === 'string' && /^\d+$/.test(value.trim())) return parseInt(value.trim(), 10);
   return null;
+}
+
+/** Preenche usuario_nome/email a partir de cadastros_usuarios (logs ERP). */
+export async function enrichLogsWithUsuarioErp(logs: Record<string, unknown>[]): Promise<void> {
+  if (logs.length === 0) return;
+
+  const ids = new Set<number>();
+  for (const log of logs) {
+    const uid = log.usuario_id;
+    if (typeof uid === 'number' && uid > 0) ids.add(uid);
+  }
+
+  const map = new Map<number, { nome: string | null; email: string | null }>();
+  if (ids.size > 0) {
+    const rows = await Usuario.findAll({
+      where: { id: { [Op.in]: [...ids] } },
+      attributes: ['id', 'nome', 'email'],
+    });
+    for (const row of rows) {
+      map.set(row.id, { nome: row.nome, email: row.email });
+    }
+  }
+
+  for (const log of logs) {
+    const uid = log.usuario_id;
+    if (typeof uid !== 'number' || uid <= 0) continue;
+    const user = map.get(uid);
+    if (!user) continue;
+    log.usuario_nome = (log.usuario_nome as string | null | undefined) ?? user.nome;
+    log.usuario_email = (log.usuario_email as string | null | undefined) ?? user.email;
+  }
 }
 
 /** Preenche usuario_nome/email a partir do SuperAdmin SaaS (payload ou tabela saas_usuarios_super). */
