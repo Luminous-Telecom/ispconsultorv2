@@ -13,6 +13,8 @@ import { SshDevice } from 'types';
 import ListModal from 'components/common/ListModal';
 import { ListModalConfig } from 'types/modal';
 import SshDeviceModal from './sshDeviceModal';
+import { canQueueManualSshDeviceBackup } from './sshDeviceModal/sshDeviceModalUtils';
+import { getClienteRazaoSocialLabel } from 'utils/clienteDisplay';
 import SshTerminalModal from './SshTerminalModal';
 import ImprimirModal from 'components/common/ImprimirModal';
 
@@ -115,14 +117,10 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
     [deleteMutation, list, refetch]
   );
 
-  const canQueueManualBackup = useCallback((d: SshDevice | undefined) => {
-    if (!d) return false;
-    const activeFlag = d.is_active as boolean | number;
-    const inactive = activeFlag === false || activeFlag === 0;
-    if (inactive) return false;
-    const deviceType = String(d.device_type ?? '').toLowerCase();
-    return deviceType === 'mikrotik' || deviceType === 'huawei' || deviceType === 'swos';
-  }, []);
+  const canQueueManualBackup = useCallback(
+    (d: SshDevice | undefined) => canQueueManualSshDeviceBackup(d),
+    []
+  );
 
   const isSwos = useCallback(
     (d: SshDevice) => String(d.device_type ?? '').toLowerCase() === 'swos',
@@ -167,13 +165,11 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
         sortable: true,
         width: '160px',
         sortValue: (item) => {
-          const c = item.cliente;
-          return c?.nome_fantasia?.trim() || c?.razao_social?.trim() || '';
+          return getClienteRazaoSocialLabel(item.cliente, '');
         },
         render: (item) => {
-          const c = item.cliente;
-          const label = c?.nome_fantasia?.trim() || c?.razao_social?.trim();
-          return <span className="small">{label || '—'}</span>;
+          const label = getClienteRazaoSocialLabel(item.cliente);
+          return <span className="small">{label}</span>;
         },
       },
       {

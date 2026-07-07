@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useAgents, useDeleteAgent, useTestAgent, useUpdateAgent } from 'hooks/useAgents';
 import { useEntityListModal } from 'hooks/useEntityListModal';
+import { getClienteRazaoSocialLabel } from 'utils/clienteDisplay';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useI18n } from 'contexts/I18nContext';
 import { useBulkBtn } from 'components/ui';
@@ -59,8 +60,7 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
   const testMutation = useTestAgent();
 
   const getClienteLabel = useCallback((agent: Agent) => {
-    const c = agent.cliente;
-    return c?.nome_fantasia?.trim() || c?.razao_social?.trim() || '';
+    return getClienteRazaoSocialLabel(agent.cliente, '');
   }, []);
 
   const matchAgentSearch = useCallback(
@@ -259,9 +259,8 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
         sortable: true,
         width: '160px',
         render: (item) => {
-          const c = item.cliente;
-          const label = c?.nome_fantasia?.trim() || c?.razao_social?.trim();
-          return <span className="small">{label || '—'}</span>;
+          const label = getClienteRazaoSocialLabel(item.cliente);
+          return <span className="small">{label}</span>;
         },
       },
       {

@@ -80,6 +80,8 @@ Se o equipamento só é acessível via túnel, cadastre primeiro um **agente** n
 3. Altere os campos na sub-aba **Dados Básicos**.
 4. Clique em **Salvar**.
 
+No cabeçalho do modal de edição, use **Terminal**, **Testar** ou **Backup manual** (ao lado de **Salvar**). **Terminal** e **Testar** não estão disponíveis para MikroTik (SwOS). O **Backup manual** está disponível para MikroTik, Huawei e SwOS ativos; após o backup, a sub-aba **Backups SSH** abre automaticamente.
+
 Na edição, a **Senha SSH** pode ficar em branco para **não alterar** a senha atual. Consulte backups na sub-aba **Backups SSH** do mesmo modal.
 
 ### Excluir, testar e operar

@@ -56,7 +56,7 @@ const SSH_ALGORITHMS_BASE: ConnectConfig['algorithms'] = {
 };
 
 /** IOS / IOS-XE / IOS-XR: KEX adicionais e host key DSS em hardware muito antigo. */
-const SSH_ALGORITHMS_CISCO = {
+const SSH_ALGORITHMS_LEGACY = {
   kex: [
     ...(SSH_ALGORITHMS_BASE.kex as string[]),
     'diffie-hellman-group18-sha512',
@@ -71,7 +71,7 @@ const SSH_ALGORITHMS_CISCO = {
 /** Alinha com o agente (`sshAlgorithmsForDeviceType`). */
 export function sshAlgorithmsForDeviceType(deviceType?: string | null): ConnectConfig['algorithms'] {
   const t = (deviceType ?? '').toLowerCase().trim();
-  if (t === 'cisco') return SSH_ALGORITHMS_CISCO;
+  if (t === 'cisco') return SSH_ALGORITHMS_LEGACY;
   return SSH_ALGORITHMS_BASE;
 }
 

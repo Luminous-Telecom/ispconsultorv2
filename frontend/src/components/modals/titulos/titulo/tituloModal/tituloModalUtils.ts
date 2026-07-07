@@ -1,4 +1,5 @@
 import { CarneParcela, Contrato, Plano, Titulo } from 'types';
+import { getClienteRazaoSocialLabel } from 'utils/clienteDisplay';
 
 export const calcularProximaDataVencimento = (diaVencimento: number): string => {
   const hoje = new Date();
@@ -127,7 +128,7 @@ export const getClienteDisplayLabel = (
 ): string => {
   if (titulo?.cliente) {
     const doc = titulo.cliente.cnpj ? ` - ${titulo.cliente.cnpj}` : '';
-    return `${titulo.cliente.nome_fantasia || titulo.cliente.razao_social}${doc}`;
+    return `${getClienteRazaoSocialLabel(titulo.cliente, labels.clientNotFound)}${doc}`;
   }
 
   const resolvedClienteId = clienteId ?? titulo?.cliente_id;
@@ -144,7 +145,7 @@ export const getClienteDisplayLabel = (
   }
 
   const doc = cliente.cnpj ? ` - ${cliente.cnpj}` : '';
-  return `${cliente.nome_fantasia || cliente.razao_social}${doc}`;
+  return `${getClienteRazaoSocialLabel(cliente, labels.clientNotFound)}${doc}`;
 };
 
 export const findPlanoValorMensal = (planos: Plano[] | undefined, planoId: number): number | null => {

@@ -225,6 +225,10 @@ app.use(ddosProtectionMiddleware({
         /\/api\/integracao-ixc-provedor\/.*sync/.test(pathname),
       maxProcessingTime: Number.isFinite(ddosIxcOsMaxMs) ? ddosIxcOsMaxMs : 120_000,
     },
+    {
+      test: (pathname) => /\/api\/ssh-manager\/devices\/[^/]+\/backup\/?$/.test(pathname),
+      maxProcessingTime: 360_000,
+    },
   ],
   skipRoutes: [
     '/health',

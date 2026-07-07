@@ -5,6 +5,7 @@ import SshDeviceModalDadosTab from './SshDeviceModalDadosTab';
 import SshDeviceModalHeader from './SshDeviceModalHeader';
 import SshDeviceModalLoadingState from './SshDeviceModalLoadingState';
 import SshDeviceModalSubModals from './SshDeviceModalSubModals';
+import SshTerminalModal from '../SshTerminalModal';
 import { useSshDeviceModal } from './useSshDeviceModal';
 import { SshDeviceModalProps } from './types';
 
@@ -19,10 +20,21 @@ const SshDeviceModal: React.FC<SshDeviceModalProps> = (props) => {
       isSubmitting={modal.isSubmitting}
       formId={modal.formId}
       canOpenBackupsTab={modal.canOpenBackupsTab}
+      canOpenTerminal={modal.canOpenTerminal}
+      canTestConnection={modal.canTestConnection}
+      canManualBackup={modal.canManualBackup}
+      isTestPending={modal.isTestPending}
+      isManualBackupPending={modal.isManualBackupPending}
+      terminalLabel={modal.t('sshDevice.terminal')}
+      testLabel={modal.t('sshDevice.testConnection')}
+      manualBackupLabel={modal.t('sshDevice.manualBackup')}
       basicDataLabel={modal.t('tabs.basicData')}
       backupsLabel={modal.t('tabs.sshDeviceBackups')}
       onClose={onClose}
       onTabChange={modal.setActiveTab}
+      onOpenTerminal={modal.handleOpenTerminal}
+      onTestConnection={modal.handleTestConnection}
+      onManualBackup={modal.handleManualBackup}
     />
   ) : undefined;
 
@@ -96,6 +108,14 @@ const SshDeviceModal: React.FC<SshDeviceModalProps> = (props) => {
         onSelectCliente={modal.handleSelectCliente}
         onSelectAgent={modal.handleSelectAgent}
       />
+
+      {modal.deviceData && (
+        <SshTerminalModal
+          show={modal.showTerminalModal}
+          onClose={() => modal.setShowTerminalModal(false)}
+          device={modal.deviceData}
+        />
+      )}
     </>
   );
 };

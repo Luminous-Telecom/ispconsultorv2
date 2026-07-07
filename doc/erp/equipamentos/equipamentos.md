@@ -85,7 +85,7 @@ Disponível somente com o equipamento já salvo. Lista os arquivos de backup ger
 | **Deletar** | Remove o(s) backup(s) selecionado(s) do servidor (com confirmação) |
 
 ::: tip Sem backups?
-Se a lista estiver vazia, confirme que **Ativar backup do equipamento** está marcado na aba **Dados Básicos** e aguarde a próxima execução da rotina agendada — ou dispare um agora com **Backup manual** na listagem.
+Se a lista estiver vazia, confirme que **Ativar backup do equipamento** está marcado na aba **Dados Básicos** e aguarde a próxima execução da rotina agendada — ou dispare um agora com **Backup manual** na listagem ou no cabeçalho do modal **Editar equipamento** (ao lado de **Salvar**).
 :::
 
 ---
@@ -96,6 +96,8 @@ Se a lista estiver vazia, confirme que **Ativar backup do equipamento** está ma
 2. Clique em **Editar**.
 3. Altere os campos necessários na aba **Dados Básicos**.
 4. Clique em **Salvar**.
+
+No cabeçalho do modal de edição também há **Terminal**, **Testar** e **Backup manual** (ao lado de **Salvar**). **Terminal** e **Testar** não estão disponíveis para MikroTik (SwOS). Ao concluir o backup manual, o sistema abre a aba **Backups SSH** para conferir o arquivo gerado.
 
 Backups ficam na aba **Backups SSH** do mesmo modal.
 

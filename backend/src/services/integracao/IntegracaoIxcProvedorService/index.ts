@@ -20,10 +20,10 @@ import {
   type IxcPermissionSampleResult,
 } from '../IxcApiPermissionsService';
 import { OrdemServicoCadastroService } from '../../ordens/OrdemServicoCadastroService';
+import { clienteDisplayName } from '../../../utils/clienteDisplayName';
 
-function clienteDisplayName(cliente: Pick<Cliente, 'id' | 'nome_fantasia' | 'razao_social'>): string {
-  const nome = (cliente.nome_fantasia || cliente.razao_social || '').trim();
-  return nome || `#${cliente.id}`;
+function clienteDisplayNameFromCliente(cliente: Pick<Cliente, 'id' | 'nome_fantasia' | 'razao_social'>): string {
+  return clienteDisplayName(cliente, cliente.id);
 }
 
 export interface IxcApiCredentials {
@@ -163,7 +163,7 @@ export class IntegracaoIxcProvedorService {
         const cliente = vinculo.contrato?.cliente;
         if (!integracaoId || !cliente) continue;
 
-        const nome = clienteDisplayName(cliente);
+        const nome = clienteDisplayNameFromCliente(cliente);
         const nomes = clientesPorIntegracao.get(integracaoId) ?? [];
         if (!nomes.includes(nome)) {
           nomes.push(nome);

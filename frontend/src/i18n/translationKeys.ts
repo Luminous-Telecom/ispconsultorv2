@@ -386,6 +386,9 @@ export interface TranslationKeys {
   'sshDevice.backupsLoadError': string;
   'sshDevice.manualBackup': string;
   'sshDevice.manualBackupQueued': string;
+  'sshDevice.terminal': string;
+  'sshDevice.testConnection': string;
+  'sshDevice.testSuccess': string;
   'sshDevice.backupScheduleAt': string;
   'sshDevice.freqDiaria': string;
   'sshDevice.freqSemanal': string;

@@ -1,12 +1,11 @@
 import { Op } from 'sequelize';
 import { DadosEmpresa } from '../../models/sistema/DadosEmpresa';
 import { Cliente } from '../../models/clientes/Cliente';
+import { clienteDisplayName } from '../../utils/clienteDisplayName';
 
 function clienteNomeDisplay(c: { razao_social?: string | null; nome_fantasia?: string | null }): string | null {
-  const nf = c.nome_fantasia?.trim();
-  if (nf) return nf;
-  const rs = c.razao_social?.trim();
-  return rs || null;
+  const nome = clienteDisplayName(c);
+  return nome || null;
 }
 
 export async function enrichLogsWithEmpresaNome(

@@ -2,6 +2,7 @@ import { ServidorWhatsApp } from '../../../models/comunicacao/ServidorWhatsApp';
 import { registrarMensagemHistorico, type ContextoHistorico } from '../RegistroMensagemHistoricoService';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { logger } from '../../../utils/logger';
+import { clienteDisplayName } from '../../../utils/clienteDisplayName';
 
 interface WhatsAppCloudTemplateComponent {
   type: 'body' | 'header' | 'button';
@@ -370,9 +371,11 @@ export class WhatsAppCloudService {
             });
           }
 
-          const clienteNome = cliente ? (cliente.nome_fantasia || cliente.razao_social || 'Cliente não identificado') :
-                                clienteData ? (clienteData.razao_social || clienteData.nome_fantasia || 'Cliente não identificado') :
-                                'Cliente não identificado';
+          const clienteNome = cliente
+            ? clienteDisplayName(cliente) || 'Cliente não identificado'
+            : clienteData
+              ? clienteDisplayName(clienteData) || 'Cliente não identificado'
+              : 'Cliente não identificado';
           const clienteEmail = clienteData?.email || undefined;
           const clienteTelefone = clienteData?.telefone || undefined;
 
@@ -452,7 +455,9 @@ export class WhatsAppCloudService {
         }
 
         // Preparar informações detalhadas da mensagem para log
-        const clienteNome = cliente ? (cliente.nome_fantasia || cliente.razao_social || 'Cliente não identificado') : 'Cliente não identificado';
+        const clienteNome = cliente
+          ? clienteDisplayName(cliente) || 'Cliente não identificado'
+          : 'Cliente não identificado';
 
         let logDetails = `Template ${templateName} enviado via WhatsApp Cloud API`;
         logDetails += ` | Cliente: ${clienteNome}`;

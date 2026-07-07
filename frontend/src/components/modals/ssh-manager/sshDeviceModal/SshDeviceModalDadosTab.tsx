@@ -3,6 +3,7 @@ import { FormField, AtivoInativoField } from 'components/ui';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import { useI18n } from 'contexts/I18nContext';
 import { DEVICE_TYPE_OPTIONS } from './constants';
+import { getClienteRazaoSocialLabel } from 'utils/clienteDisplay';
 import { renderBackupAgendamentoHint, BackupAgendamentoInfo } from './sshDeviceModalUtils';
 import { SshDeviceFormData, SshDeviceFormErrors } from './types';
 
@@ -88,11 +89,7 @@ const SshDeviceModalDadosTab: React.FC<SshDeviceModalDadosTabProps> = ({
             name="empresa_readonly"
             type="text"
             label="Empresa"
-            value={
-              dadosEmpresaTenant
-                ? (dadosEmpresaTenant.nome_fantasia?.trim() || dadosEmpresaTenant.razao_social)
-                : 'Carregando…'
-            }
+            value={dadosEmpresaTenant ? getClienteRazaoSocialLabel(dadosEmpresaTenant, 'Carregando…') : 'Carregando…'}
             onChange={() => {}}
             readOnly
             size="sm"

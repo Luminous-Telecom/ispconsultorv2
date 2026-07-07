@@ -1,14 +1,21 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useSshDevice, useCreateSshDevice, useUpdateSshDevice } from 'hooks/useSshDevices';
+import { useSshDevice, useCreateSshDevice, useUpdateSshDevice, useQueueManualSshDeviceBackup, useTestSshDevice } from 'hooks/useSshDevices';
 import { useAgents } from 'hooks/useAgents';
 import { SshDeviceType } from 'types';
 import { authService } from 'services/authService';
 import { DadosEmpresaService } from 'services/dadosEmpresaService';
 import { SshDeviceService } from 'services/sshDeviceService';
 import { useI18n } from 'contexts/I18nContext';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useIsMobile } from 'hooks/useMediaQuery';
+import { getClienteRazaoSocialLabel } from 'utils/clienteDisplay';
 import { EMPTY_FORM } from './constants';
+import {
+  canOpenSshDeviceTerminal,
+  canQueueManualSshDeviceBackup,
+  canTestSshDeviceConnection,
+} from './sshDeviceModalUtils';
 import {
   SshDeviceFormData,
   SshDeviceFormErrors,
@@ -24,6 +31,7 @@ export function useSshDeviceModal({
   defaultClienteId,
 }: SshDeviceModalProps) {
   const { t } = useI18n();
+  const { success } = useNotificationContext();
   const isMobile = useIsMobile();
   const isEditing = !!deviceId;
   const [activeTab, setActiveTab] = useState<SshDeviceTab>('dados');
@@ -32,6 +40,7 @@ export function useSshDeviceModal({
   const [showAgentPicker, setShowAgentPicker] = useState(false);
   const [adminClienteId, setAdminClienteId] = useState<number | null>(null);
   const [adminClienteNome, setAdminClienteNome] = useState('');
+  const [showTerminalModal, setShowTerminalModal] = useState(false);
   const [formData, setFormData] = useState<SshDeviceFormData>({ ...EMPTY_FORM });
   const [errors, setErrors] = useState<SshDeviceFormErrors>({});
 
@@ -63,7 +72,7 @@ export function useSshDeviceModal({
     if (!isEditing || !deviceData) return '';
     const c = deviceData.cliente;
     if (c) {
-      return (c.nome_fantasia?.trim() || c.razao_social || `ID ${c.id}`).trim();
+      return getClienteRazaoSocialLabel(c, `ID ${c.id}`);
     }
     if (deviceData.cliente_id != null) {
       return `Cliente #${deviceData.cliente_id}`;
@@ -89,6 +98,55 @@ export function useSshDeviceModal({
 
   const createMutation = useCreateSshDevice();
   const updateMutation = useUpdateSshDevice();
+  const queueManualBackupMutation = useQueueManualSshDeviceBackup();
+  const testMutation = useTestSshDevice();
+
+  const canManualBackup = useMemo(
+    () => isEditing && !!deviceId && canQueueManualSshDeviceBackup(deviceData),
+    [isEditing, deviceId, deviceData]
+  );
+
+  const canTestConnection = useMemo(
+    () => isEditing && !!deviceData && canTestSshDeviceConnection(deviceData),
+    [isEditing, deviceData]
+  );
+
+  const canOpenTerminal = useMemo(
+    () => isEditing && !!deviceData && canOpenSshDeviceTerminal(deviceData),
+    [isEditing, deviceData]
+  );
+
+  const handleManualBackup = useCallback(async () => {
+    if (!deviceId || !canManualBackup) return;
+    try {
+      await queueManualBackupMutation.mutateAsync(deviceId);
+      setActiveTab('backups');
+    } catch {
+      // erro tratado pelo hook
+    }
+  }, [deviceId, canManualBackup, queueManualBackupMutation]);
+
+  const handleTestConnection = useCallback(async () => {
+    if (!deviceId || !deviceData || !canTestConnection) return;
+    try {
+      const result = await testMutation.mutateAsync(deviceId);
+      if (result.success) {
+        success(
+          t('sshDevice.testSuccess', {
+            name: deviceData.name,
+            latency: String(result.latency ?? '—'),
+          })
+        );
+      }
+    } catch {
+      // erro tratado pelo hook
+    }
+  }, [deviceId, deviceData, canTestConnection, testMutation, success, t]);
+
+  const handleOpenTerminal = useCallback(() => {
+    if (!canOpenTerminal || !deviceData) return;
+    setShowTerminalModal(true);
+  }, [canOpenTerminal, deviceData]);
 
   const { data: agendamentoBackup } = useQuery({
     queryKey: ['ssh-manager', 'backup-agendamento'],
@@ -105,6 +163,7 @@ export function useSshDeviceModal({
   useEffect(() => {
     if (show) {
       setActiveTab('dados');
+      setShowTerminalModal(false);
     }
   }, [show]);
 
@@ -284,6 +343,17 @@ export function useSshDeviceModal({
     handleSelectAgent,
     handleSubmit,
     isSubmitting,
+    canManualBackup,
+    handleManualBackup,
+    isManualBackupPending: queueManualBackupMutation.isPending,
+    canTestConnection,
+    handleTestConnection,
+    isTestPending: testMutation.isPending,
+    canOpenTerminal,
+    handleOpenTerminal,
+    showTerminalModal,
+    setShowTerminalModal,
+    deviceData,
     modalTitle: 'Device SSH',
   };
 }

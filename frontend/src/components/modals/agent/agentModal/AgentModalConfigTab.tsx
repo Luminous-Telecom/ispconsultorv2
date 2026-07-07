@@ -1,7 +1,7 @@
 import React from 'react';
 import type { TranslationKeys } from 'contexts/I18nContext';
 import { Agent } from 'types';
-import FormField from 'components/ui/FormField';
+import { getClienteRazaoSocialLabel } from 'utils/clienteDisplay';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import { GerarTokenButton } from 'components/ui';
 import { DadosEmpresa } from 'services/dadosEmpresaService';
@@ -54,7 +54,7 @@ function AgentModalConfigTab({
 }: AgentModalConfigTabProps) {
   const shouldShowEmpresaTenant = !isEditing && !isAdmin && Boolean(me);
   const empresaTenantLabel = dadosEmpresaTenant
-    ? (dadosEmpresaTenant.nome_fantasia?.trim() || dadosEmpresaTenant.razao_social)
+    ? getClienteRazaoSocialLabel(dadosEmpresaTenant, 'Carregando…')
     : 'Carregando…';
 
   return (

@@ -8,6 +8,7 @@ import { authService } from 'services/authService';
 import { DadosEmpresaService } from 'services/dadosEmpresaService';
 import { buildInstallScriptCommand } from './agentModalUtils';
 import { DEFAULT_SSH_FORM, EMPTY_FORM } from './constants';
+import { getClienteRazaoSocialLabel } from 'utils/clienteDisplay';
 import { ActiveTab, AgentModalProps, InstallStatus } from './types';
 
 export function useAgentModal({
@@ -133,7 +134,7 @@ export function useAgentModal({
     if (!isEditing || !agentData) return '';
     const c = agentData.cliente;
     if (c) {
-      return (c.nome_fantasia?.trim() || c.razao_social || `ID ${c.id}`).trim();
+      return getClienteRazaoSocialLabel(c, `ID ${c.id}`);
     }
     if (agentData.cliente_id != null) {
       return `Cliente #${agentData.cliente_id}`;
