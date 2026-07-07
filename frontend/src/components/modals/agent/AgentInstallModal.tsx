@@ -7,6 +7,7 @@ import FormField from 'components/ui/FormField';
 import { defaultApiClient } from 'services/core';
 import { AgentService } from 'services/agentService';
 import { getTerminalLogLineClass } from 'constants/designTokens';
+import { buildInstallScriptCommand } from './agentModal/agentModalUtils';
 
 
 interface AgentInstallModalProps {
@@ -191,9 +192,7 @@ const AgentInstallModal: React.FC<AgentInstallModalProps> = ({
 
       if (!rawToken) throw new Error('Token não retornado pelo servidor');
 
-      const serverUrl = window.location.origin;
-      const cmd = `sudo bash <(curl -fsSL "${serverUrl}/api/agents/${refreshed.id}/install-script?token=${rawToken}")`;
-      setGeneratedCmd(cmd);
+      setGeneratedCmd(buildInstallScriptCommand(refreshed.id, rawToken));
     } catch (err: unknown) {
       setAgentNameError((err as Error).message ?? 'Erro ao gerar comando');
     } finally {
