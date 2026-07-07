@@ -1,6 +1,10 @@
 import type { PlanoModuloId } from '../constants/planoModulos';
 import { SAAS_PLANO_LIMITE_DEFS } from '../constants/saasPlanoLimites';
 import type { SaasPlano } from '../models/saas/SaasPlano';
+import {
+  appendLegacyIxcProvedorModulo,
+  readLimiteFromRecursos,
+} from './saasPlanoLimiteRecursosUtils';
 
 export const PLANO_MODULO_LABELS: Record<PlanoModuloId, string> = {
   cadastros: 'Cadastros',
@@ -8,6 +12,7 @@ export const PLANO_MODULO_LABELS: Record<PlanoModuloId, string> = {
   blockdomi: 'Blockdomi',
   equipamentos: 'Equipamentos',
   rpki: 'RPKI',
+  ixc_provedor: 'IXC Provedor',
   envio_notificacoes: 'Envio de notificações',
   assinatura_digital: 'Assinatura digital',
   nfse: 'NFS-e',
@@ -58,7 +63,8 @@ function parseRecursos(recursos: unknown): Record<string, unknown> {
 function extrairModulos(recursos: Record<string, unknown>): PlanoModuloId[] {
   const raw = recursos.modulos;
   if (!Array.isArray(raw)) return [];
-  return raw.filter((m): m is PlanoModuloId => typeof m === 'string' && m in PLANO_MODULO_LABELS);
+  const modulos = raw.filter((m): m is PlanoModuloId => typeof m === 'string' && m in PLANO_MODULO_LABELS);
+  return appendLegacyIxcProvedorModulo(modulos, recursos);
 }
 
 function extrairNumero(obj: Record<string, unknown>, key: string, fallback: number): number {
@@ -102,7 +108,7 @@ export function serializeSaasPlanoForHotsite(plano: SaasPlano): HotsitePlanoPubl
     limites.push({
       chave: def.formKey,
       label: def.listLabelShort,
-      valor: formatLimite(extrairNumero(recursos, def.recursosKey, 0)),
+      valor: formatLimite(readLimiteFromRecursos(recursos, def.recursosKey, 0)),
     });
   }
 

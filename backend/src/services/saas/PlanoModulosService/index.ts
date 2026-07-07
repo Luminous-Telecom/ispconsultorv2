@@ -1,6 +1,7 @@
 import { SaasContrato } from '../../../models/saas/SaasContrato';
 import { SaasPlano } from '../../../models/saas/SaasPlano';
 import type { PlanoModuloId } from '../../../constants/planoModulos';
+import { appendLegacyIxcProvedorModulo } from '../../../utils/saasPlanoLimiteRecursosUtils';
 
 /**
  * Retorna os IDs dos módulos habilitados no plano do tenant.
@@ -43,7 +44,10 @@ function extrairModulosDoPlano(plano: SaasPlano): PlanoModuloId[] {
 
   const modulos = recursos.modulos;
   if (Array.isArray(modulos)) {
-    return modulos.filter((m): m is PlanoModuloId => typeof m === 'string');
+    return appendLegacyIxcProvedorModulo(
+      modulos.filter((m): m is PlanoModuloId => typeof m === 'string'),
+      recursos
+    );
   }
 
   const validos: PlanoModuloId[] = ['cadastros'];
@@ -54,7 +58,7 @@ function extrairModulosDoPlano(plano: SaasPlano): PlanoModuloId[] {
   if (recursos.whatsapp === true) validos.push('envio_notificacoes');
   if (recursos.nfse === true) validos.push('nfse');
   validos.push('assinatura_digital');
-  return [...new Set(validos)];
+  return appendLegacyIxcProvedorModulo([...new Set(validos)], recursos);
 }
 
 export interface EquipamentosLimites {

@@ -98,7 +98,7 @@ export class IntegracaoIxcProvedorController {
       const empresaId = getEmpresaIdOrNull(req);
       const limitError = await SaasPlanoLimitesService.validateLimiteCreate(
         empresaId,
-        'cadastros_limite_ixc_provedor'
+        'ixc_provedor_limite_integracoes'
       );
       if (limitError) {
         sendForbidden(res, limitError);

@@ -1,5 +1,11 @@
 import { SAAS_PLANO_LIMITE_DEFS, type SaasPlanoLimiteGrupo } from 'constants/saasPlanoLimites';
 import type { PlanoModuloId } from 'services/planoModulosService';
+import {
+  appendLegacyIxcProvedorModulo,
+  readLimiteFromRecursosObj,
+  stripLegacyIxcLimiteKeys,
+  IXC_PROVEDOR_LIMITE_LEGACY_FORM_KEYS,
+} from './saasPlanoLimiteRecursosUtils';
 
 export type SaasPlanoLimitesConfig = Record<string, number>;
 
@@ -48,7 +54,8 @@ export function getSaasPlanoRecursosObj(recursos: unknown): Record<string, unkno
 export function extractModulosFromSaasPlanoRecursos(recursos: unknown): PlanoModuloId[] {
   const obj = getSaasPlanoRecursosObj(recursos);
   const modulos = obj?.modulos;
-  return Array.isArray(modulos) ? modulos.filter((m): m is PlanoModuloId => typeof m === 'string') : [];
+  const base = Array.isArray(modulos) ? modulos.filter((m): m is PlanoModuloId => typeof m === 'string') : [];
+  return appendLegacyIxcProvedorModulo(base, obj);
 }
 
 export function extractLimitesFromSaasPlanoRecursos(recursos: unknown): SaasPlanoLimitesConfig {
@@ -57,7 +64,11 @@ export function extractLimitesFromSaasPlanoRecursos(recursos: unknown): SaasPlan
   if (!obj) return limites;
 
   for (const def of SAAS_PLANO_LIMITE_DEFS) {
-    limites[def.formKey] = parseNumero(obj[def.recursosKey], 0);
+    limites[def.formKey] = readLimiteFromRecursosObj(obj, def.recursosKey, 0);
+    const legacyFormKey = IXC_PROVEDOR_LIMITE_LEGACY_FORM_KEYS[def.formKey];
+    if (legacyFormKey && limites[def.formKey] === 0) {
+      limites[def.formKey] = parseNumero(obj[legacyFormKey], 0);
+    }
   }
   return limites;
 }
@@ -84,7 +95,7 @@ export function getLimiteValorFromRecursos(recursos: unknown, recursosKey: strin
   if (!def || !modulos.includes(def.modulo)) return null;
   const obj = getSaasPlanoRecursosObj(recursos);
   if (!obj) return null;
-  return parseNumero(obj[recursosKey], 0);
+  return readLimiteFromRecursosObj(obj, recursosKey, 0);
 }
 
 export function buildSaasPlanoRecursosPayload(
@@ -101,6 +112,8 @@ export function buildSaasPlanoRecursosPayload(
       delete recursos[def.recursosKey];
     }
   }
+
+  stripLegacyIxcLimiteKeys(recursos);
 
   return recursos;
 }

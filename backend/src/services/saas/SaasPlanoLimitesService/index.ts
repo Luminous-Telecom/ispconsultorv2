@@ -1,5 +1,9 @@
 import { Op } from 'sequelize';
 import { SAAS_PLANO_LIMITE_DEFS, type SaasPlanoLimiteRecursoId } from '../../../constants/saasPlanoLimites';
+import {
+  appendLegacyIxcProvedorModulo,
+  readLimiteFromRecursos,
+} from '../../../utils/saasPlanoLimiteRecursosUtils';
 import { Usuario } from '../../../models/cadastros/Usuario';
 import { Banco } from '../../../models/cadastros/Banco';
 import { Plano } from '../../../models/cadastros/Plano';
@@ -63,19 +67,21 @@ function extractNumber(recursos: Record<string, unknown> | null, key: string, fa
 
 function extractModulos(recursos: Record<string, unknown> | null): PlanoModuloId[] {
   const modulos = recursos?.modulos;
+  let result: PlanoModuloId[];
   if (Array.isArray(modulos)) {
-    return modulos.filter((modulo): modulo is PlanoModuloId => typeof modulo === 'string');
+    result = modulos.filter((modulo): modulo is PlanoModuloId => typeof modulo === 'string');
+  } else {
+    const legacy: PlanoModuloId[] = ['cadastros'];
+    if (recursos?.financeiro === true) legacy.push('financeiro');
+    if (recursos?.blockdomi === true) legacy.push('blockdomi');
+    if (recursos?.equipamentos === true) legacy.push('equipamentos');
+    if (recursos?.rpki === true) legacy.push('rpki');
+    if (recursos?.whatsapp === true) legacy.push('envio_notificacoes');
+    if (recursos?.nfse === true) legacy.push('nfse');
+    legacy.push('assinatura_digital');
+    result = [...new Set(legacy)];
   }
-
-  const legacy: PlanoModuloId[] = ['cadastros'];
-  if (recursos?.financeiro === true) legacy.push('financeiro');
-  if (recursos?.blockdomi === true) legacy.push('blockdomi');
-  if (recursos?.equipamentos === true) legacy.push('equipamentos');
-  if (recursos?.rpki === true) legacy.push('rpki');
-  if (recursos?.whatsapp === true) legacy.push('envio_notificacoes');
-  if (recursos?.nfse === true) legacy.push('nfse');
-  legacy.push('assinatura_digital');
-  return [...new Set(legacy)];
+  return appendLegacyIxcProvedorModulo(result, recursos);
 }
 
 const LIMIT_COUNTERS: Record<SaasPlanoLimiteRecursoId, (empresaId: number) => Promise<number>> = {
@@ -84,8 +90,8 @@ const LIMIT_COUNTERS: Record<SaasPlanoLimiteRecursoId, (empresaId: number) => Pr
   cadastros_limite_contratos: (empresaId) => Contrato.count({ where: { empresa_id: empresaId } }),
   cadastros_limite_planos: (empresaId) => Plano.count({ where: { empresa_id: empresaId } }),
   cadastros_limite_modelos_documento: (empresaId) => ModeloDocumento.count({ where: { empresa_id: empresaId } }),
-  cadastros_limite_ixc_provedor: (empresaId) => IntegracaoIxcProvedor.count({ where: { empresa_id: empresaId } }),
-  cadastros_limite_ordens_servico: (empresaId) => OrdemServicoLocal.count({ where: { empresa_id: empresaId } }),
+  ixc_provedor_limite_integracoes: (empresaId) => IntegracaoIxcProvedor.count({ where: { empresa_id: empresaId } }),
+  ixc_provedor_limite_ordens_servico: (empresaId) => OrdemServicoLocal.count({ where: { empresa_id: empresaId } }),
   equipamentos_limite_equipamentos: (empresaId) => SshDevice.count({ where: { empresa_id: empresaId } }),
   equipamentos_limite_tuneis: (empresaId) => Agent.count({ where: { empresa_id: empresaId } }),
   equipamentos_limite_backups: (empresaId) =>
@@ -112,7 +118,7 @@ export class SaasPlanoLimitesService {
     const recursos = parseRecursos(contrato.plano.recursos);
     const limites: Record<string, number> = {};
     for (const def of SAAS_PLANO_LIMITE_DEFS) {
-      limites[def.recursosKey] = extractNumber(recursos, def.recursosKey, 0);
+      limites[def.recursosKey] = readLimiteFromRecursos(recursos, def.recursosKey, 0);
     }
     return {
       plano: contrato.plano,
