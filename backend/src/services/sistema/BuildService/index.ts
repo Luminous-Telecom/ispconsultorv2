@@ -115,13 +115,8 @@ export class BuildService {
 
   /** Compila a wiki quando há fonte local; em produção usa dist já versionada após git pull. */
   async buildDoc(): Promise<CommandResult> {
-    const docPkg = path.join(this.projectRoot, 'doc', 'package.json');
-    if (!fs.existsSync(docPkg)) {
-      const msg = 'doc/package.json não encontrado';
-      return { success: false, stdout: '', stderr: msg, error: msg };
-    }
-
     const distIndex = this.docDistIndexPath();
+
     if (!this.hasDocSource()) {
       if (fs.existsSync(distIndex)) {
         return {
@@ -131,6 +126,12 @@ export class BuildService {
         };
       }
       const msg = 'doc/.vitepress/dist/index.html não encontrado após pull';
+      return { success: false, stdout: '', stderr: msg, error: msg };
+    }
+
+    const docPkg = path.join(this.projectRoot, 'doc', 'package.json');
+    if (!fs.existsSync(docPkg)) {
+      const msg = 'doc/package.json não encontrado (fonte da wiki incompleta)';
       return { success: false, stdout: '', stderr: msg, error: msg };
     }
 

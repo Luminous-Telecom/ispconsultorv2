@@ -41,7 +41,7 @@ export class Pm2Service {
 
     const onlyFlag = uniqueApps.join(',');
     const delaySec = Math.max(1, Math.round(delayMs / 1000));
-    const script = `sleep ${delaySec} && pm2 reload ecosystem.config.js --only ${onlyFlag} && pm2 save`;
+    const script = `sleep ${delaySec} && pm2 startOrReload ecosystem.config.js --only ${onlyFlag} && pm2 save`;
 
     spawn('bash', ['-c', script], {
       detached: true,
