@@ -184,7 +184,9 @@ const HomePlanosSection: React.FC = () => {
         )}
 
         {!isLoading && planos.length > 0 && (
-          <div className="home-planos-grid">
+          <div
+            className={`home-planos-grid${planos.length === 1 ? ' home-planos-grid--count-1' : ''}`}
+          >
             {planos.map((plano, index) => (
               <PlanoCard
                 key={plano.id}

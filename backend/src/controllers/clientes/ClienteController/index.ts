@@ -10,6 +10,7 @@ import { setAuditData } from '../../../middleware/auditMiddleware';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { SaasPlanoLimitesService } from '../../../services/saas/SaasPlanoLimitesService';
 import { parseListQuery, queryString } from '../../../utils/listQuery';
 import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
 
@@ -212,6 +213,15 @@ export class ClienteController {
       }
 
       const empresaId = getEmpresaIdOrNull(req);
+
+      const limitError = await SaasPlanoLimitesService.validateLimiteCreate(
+        empresaId,
+        'cadastros_limite_clientes'
+      );
+      if (limitError) {
+        sendForbidden(res, limitError);
+        return;
+      }
 
       // Verificar se CNPJ já existe (dentro da empresa)
       const clienteExistente = await ClienteService.existsByCnpj(value.cnpj, undefined, empresaId ?? undefined);

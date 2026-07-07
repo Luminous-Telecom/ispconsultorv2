@@ -4,9 +4,10 @@ import {
   OSS_CHAMADO_ACOES,
   type OssChamadoAcao,
 } from '../../../services/externos/IxcOssChamadoService';
-import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
+import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 import { parseListQuery } from '../../../utils/listQuery';
 import { getEmpresaIdOrNull, getUsuarioIdOrNull } from '../../../utils/tenantUtils';
+import { SaasPlanoLimitesService } from '../../../services/saas/SaasPlanoLimitesService';
 
 export class IxcOssChamadoController {
   static async list(req: Request, res: Response): Promise<void> {
@@ -182,6 +183,15 @@ export class IxcOssChamadoController {
   static async create(req: Request, res: Response): Promise<void> {
     try {
       const empresaId = getEmpresaIdOrNull(req);
+      const limitError = await SaasPlanoLimitesService.validateLimiteCreate(
+        empresaId,
+        'cadastros_limite_ordens_servico'
+      );
+      if (limitError) {
+        sendForbidden(res, limitError);
+        return;
+      }
+
       const usuarioId = getUsuarioIdOrNull(req);
       const resultado = await IxcOssChamadoService.create(req.body, empresaId, usuarioId);
       sendSuccess(res, resultado, 'Ordem de serviço criada com sucesso', 201);

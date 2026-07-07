@@ -5,6 +5,7 @@ import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { parseListQuery, queryString } from '../../../utils/listQuery';
+import { SaasPlanoLimitesService } from '../../../services/saas/SaasPlanoLimitesService';
 
 export class PlanoController {
   static async list(req: Request, res: Response): Promise<void> {
@@ -69,6 +70,15 @@ export class PlanoController {
   static async create(req: Request, res: Response): Promise<void> {
     try {
       const empresaId = getEmpresaIdOrNull(req);
+      const limitError = await SaasPlanoLimitesService.validateLimiteCreate(
+        empresaId,
+        'cadastros_limite_planos'
+      );
+      if (limitError) {
+        sendForbidden(res, limitError);
+        return;
+      }
+
       const body = { ...req.body, empresa_id: empresaId };
       
       const plano = await PlanoService.create(body);

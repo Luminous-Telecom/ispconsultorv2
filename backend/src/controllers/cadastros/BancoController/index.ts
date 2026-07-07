@@ -8,6 +8,7 @@ import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { parseListQuery, queryString } from '../../../utils/listQuery';
+import { SaasPlanoLimitesService } from '../../../services/saas/SaasPlanoLimitesService';
 
 export class BancoController {
   /**
@@ -109,6 +110,15 @@ export class BancoController {
       }
       
       const empresaId = getEmpresaIdOrNull(req);
+      const limitError = await SaasPlanoLimitesService.validateLimiteCreate(
+        empresaId,
+        'cadastros_limite_bancos'
+      );
+      if (limitError) {
+        sendForbidden(res, limitError);
+        return;
+      }
+
       const banco = await BancoService.create({ ...dadosBanco, empresa_id: empresaId ?? null });
       
       // Registrar auditoria

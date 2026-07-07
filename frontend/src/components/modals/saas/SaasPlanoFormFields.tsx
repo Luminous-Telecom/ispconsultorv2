@@ -3,7 +3,13 @@ import { AtivoInativoField, Checkbox, FormField, LabelWithHelp } from 'component
 import { useI18n } from 'contexts/I18nContext';
 import { PLANO_MODULOS } from 'constants/planoModulos';
 import type { PlanoModuloId } from 'services/planoModulosService';
-import type { SaasPlanoEquipamentosConfig } from 'utils/saasPlanoRecursos';
+import type { SaasPlanoLimitesConfig } from 'utils/saasPlanoRecursos';
+import {
+  SAAS_PLANO_LIMITE_DEFS,
+  SAAS_PLANO_LIMITE_GRUPO_LABEL,
+  type SaasPlanoLimiteGrupo,
+} from 'constants/saasPlanoLimites';
+import { getSaasPlanoLimiteGruposAtivos } from 'utils/saasPlanoModuloLimites';
 
 export interface SaasPlanoFormData {
   nome: string;
@@ -15,7 +21,7 @@ export interface SaasPlanoFormData {
   mostrar_hotsite: boolean;
   desconto_percentual: number;
   modulos: PlanoModuloId[];
-  equipamentos: SaasPlanoEquipamentosConfig;
+  limites: SaasPlanoLimitesConfig;
 }
 
 export interface SaasPlanoGeralFormFieldsProps {
@@ -137,19 +143,6 @@ export const SaasPlanoGeralFormFields: React.FC<SaasPlanoGeralFormFieldsProps> =
         <div className="col-12">
           <div className="mb-0">
             <FormField
-              name="limite_usuarios"
-              type="number"
-              label="Limite de Usuários"
-              value={form.limite_usuarios}
-              onChange={(v) => onFieldChange('limite_usuarios', Number(v ?? 5))}
-              min={1}
-              size="sm"
-            />
-          </div>
-        </div>
-        <div className="col-12">
-          <div className="mb-0">
-            <FormField
               name="descricao"
               type="textarea"
               label={t('form.description')}
@@ -192,78 +185,79 @@ export const SaasPlanoGeralFormFields: React.FC<SaasPlanoGeralFormFieldsProps> =
   );
 };
 
-export interface SaasPlanoEquipamentosFormFieldsProps {
-  equipamentos: SaasPlanoEquipamentosConfig;
-  onEquipamentosChange: (equipamentos: SaasPlanoEquipamentosConfig) => void;
+export interface SaasPlanoLimitesFormFieldsProps {
+  form: SaasPlanoFormData;
+  onFieldChange: <K extends keyof SaasPlanoFormData>(field: K, value: SaasPlanoFormData[K]) => void;
 }
 
-export const SaasPlanoEquipamentosFormFields: React.FC<SaasPlanoEquipamentosFormFieldsProps> = ({
-  equipamentos,
-  onEquipamentosChange,
+export const SaasPlanoLimitesFormFields: React.FC<SaasPlanoLimitesFormFieldsProps> = ({
+  form,
+  onFieldChange,
 }) => {
   const { t } = useI18n();
+  const gruposAtivos = getSaasPlanoLimiteGruposAtivos(form.modulos);
+
+  if (gruposAtivos.length === 0) {
+    return (
+      <p className="text-muted small mb-0">{t('saas.planModuleLimitsEmpty')}</p>
+    );
+  }
+
+  const handleLimiteChange = (formKey: string, value: number) => {
+    onFieldChange('limites', { ...form.limites, [formKey]: value });
+  };
 
   return (
     <>
       <div className="form-modal-input-col mb-2">
         <small className="form-helper-message">{t('saas.planLimitZeroHelp')}</small>
       </div>
-      <div className="row g-2">
-        <div className="col-12">
-          <div className="mb-0">
-            <FormField
-              name="equipamentos_limite_equipamentos"
-              type="number"
-              label="Limite de equipamentos"
-              value={equipamentos.limite_equipamentos}
-              onChange={(v) =>
-                onEquipamentosChange({
-                  ...equipamentos,
-                  limite_equipamentos: Number(v ?? 0),
-                })
-              }
-              min={0}
-              size="sm"
-            />
+      {gruposAtivos.map((grupo) => {
+        const defs = SAAS_PLANO_LIMITE_DEFS.filter(
+          (def) => def.grupo === grupo && form.modulos.includes(def.modulo)
+        );
+        if (defs.length === 0) return null;
+
+        return (
+          <div key={grupo} className="mb-3">
+            <h6 className="small fw-semibold text-muted mb-2">
+              {SAAS_PLANO_LIMITE_GRUPO_LABEL[grupo as SaasPlanoLimiteGrupo]}
+            </h6>
+            <div className="row g-2">
+              {grupo === 'cadastros' && form.modulos.includes('cadastros') && (
+                <div className="col-12">
+                  <div className="mb-0">
+                    <FormField
+                      name="limite_usuarios"
+                      type="number"
+                      label={t('form.usersQuantity')}
+                      value={form.limite_usuarios}
+                      onChange={(v) => onFieldChange('limite_usuarios', Number(v ?? 5))}
+                      min={1}
+                      size="sm"
+                    />
+                  </div>
+                </div>
+              )}
+              {defs.map((def) => (
+                <div key={def.recursosKey} className="col-12">
+                  <div className="mb-0">
+                    <FormField
+                      name={def.recursosKey}
+                      type="number"
+                      label={def.label}
+                      value={form.limites[def.formKey] ?? 0}
+                      onChange={(v) => handleLimiteChange(def.formKey, Number(v ?? 0))}
+                      min={0}
+                      size="sm"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-        <div className="col-12">
-          <div className="mb-0">
-            <FormField
-              name="equipamentos_limite_tuneis"
-              type="number"
-              label="Limite de túneis"
-              value={equipamentos.limite_tuneis}
-              onChange={(v) =>
-                onEquipamentosChange({
-                  ...equipamentos,
-                  limite_tuneis: Number(v ?? 0),
-                })
-              }
-              min={0}
-              size="sm"
-            />
-          </div>
-        </div>
-        <div className="col-12">
-          <div className="mb-0">
-            <FormField
-              name="equipamentos_limite_backups"
-              type="number"
-              label="Limite de backups"
-              value={equipamentos.limite_backups}
-              onChange={(v) =>
-                onEquipamentosChange({
-                  ...equipamentos,
-                  limite_backups: Number(v ?? 0),
-                })
-              }
-              min={0}
-              size="sm"
-            />
-          </div>
-        </div>
-      </div>
+        );
+      })}
     </>
   );
 };

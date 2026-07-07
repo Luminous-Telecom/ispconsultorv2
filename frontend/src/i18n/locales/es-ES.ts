@@ -1209,6 +1209,9 @@ const esES: TranslationKeys = {
     'saas.planShowOnHotsiteLabel': 'Mostrar en el hotsite',
     'saas.planShowOnHotsiteHelp': 'Los planes marcados aparecen en la sección Planes del sitio. Solo se muestran planes activos.',
     'saas.planShowOnHotsiteShort': 'Hotsite',
+    'saas.planModuleLimitsTab': 'Límites por módulo',
+    'saas.planModuleLimitsEmpty': 'Seleccione Cadastros, Equipamentos o RPKI para configurar límites numéricos.',
+    'saas.planLimitUsersShort': 'Usuarios',
 
     // Placeholders
     'placeholder.cnpj': '00.000.000/0000-00',

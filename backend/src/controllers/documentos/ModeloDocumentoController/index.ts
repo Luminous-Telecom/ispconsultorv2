@@ -10,9 +10,10 @@ import { ValidationError } from 'sequelize';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../../../types/auth';
-import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
+import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 import { logger } from '../../../utils/logger';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { SaasPlanoLimitesService } from '../../../services/saas/SaasPlanoLimitesService';
 import { parseOptionalQueryInt, queryString } from '../../../utils/listQuery';
 
 function pertenceEmpresa(doc: { empresa_id?: number | null }, empresaId: number | null): boolean {
@@ -75,9 +76,19 @@ export class ModeloDocumentoController {
         return;
       }
 
+      const empresaId = documentoData.empresa_id ?? getEmpresaIdOrNull(req) ?? null;
+      const limitError = await SaasPlanoLimitesService.validateLimiteCreate(
+        empresaId,
+        'cadastros_limite_modelos_documento'
+      );
+      if (limitError) {
+        sendForbidden(res, limitError);
+        return;
+      }
+
       const documento = await ModeloDocumentoService.create({
         ...documentoData,
-        empresa_id: documentoData.empresa_id ?? getEmpresaIdOrNull(req) ?? null
+        empresa_id: empresaId
       });
 
       try {

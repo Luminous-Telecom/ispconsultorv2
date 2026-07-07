@@ -11,9 +11,9 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useFormReset } from 'hooks/useFormReset';
 import { saasPlanoService, type SaasPlano } from 'services/saas/saasPlanoService';
 import {
-  SAAS_PLANO_EQUIPAMENTOS_INITIAL,
+  SAAS_PLANO_LIMITES_INITIAL,
   buildSaasPlanoRecursosPayload,
-  extractEquipamentosFromSaasPlanoRecursos,
+  extractLimitesFromSaasPlanoRecursos,
   extractModulosFromSaasPlanoRecursos,
   getSaasPlanoRecursosObj,
 } from 'utils/saasPlanoRecursos';
@@ -23,10 +23,11 @@ import {
   syncSaasPlanoOnValorMensalChange,
 } from 'utils/saasPlanoAnualDesconto';
 import {
-  SaasPlanoEquipamentosFormFields,
   SaasPlanoGeralFormFields,
+  SaasPlanoLimitesFormFields,
   type SaasPlanoFormData,
 } from './SaasPlanoFormFields';
+import { saasPlanoModulosTemLimites } from 'utils/saasPlanoModuloLimites';
 
 interface Props {
   show: boolean;
@@ -45,7 +46,7 @@ const INITIAL: SaasPlanoFormData = {
   mostrar_hotsite: false,
   desconto_percentual: 0,
   modulos: [],
-  equipamentos: SAAS_PLANO_EQUIPAMENTOS_INITIAL,
+  limites: SAAS_PLANO_LIMITES_INITIAL,
 };
 
 const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId }) => {
@@ -57,12 +58,12 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
   const isEditing = !!planoId;
   const [form, setForm] = useState<SaasPlanoFormData>(INITIAL);
   const [errors, setErrors] = useState<Partial<Record<keyof SaasPlanoFormData, string>>>({});
-  const [activeTab, setActiveTab] = useState<'geral' | 'equipamentos'>('geral');
-  const hasEquipamentos = form.modulos.includes('equipamentos');
+  const [activeTab, setActiveTab] = useState<'geral' | 'limites'>('geral');
+  const hasLimitesTab = saasPlanoModulosTemLimites(form.modulos);
 
   useEffect(() => {
-    if (!hasEquipamentos && activeTab === 'equipamentos') setActiveTab('geral');
-  }, [hasEquipamentos, activeTab]);
+    if (!hasLimitesTab && activeTab === 'limites') setActiveTab('geral');
+  }, [hasLimitesTab, activeTab]);
 
   const { data: planoData } = useQuery({
     queryKey: ['saas-plano', planoId],
@@ -96,7 +97,7 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
             mostrar_hotsite: Boolean(p.mostrar_hotsite),
             desconto_percentual: Number(p.desconto_percentual) || 0,
             modulos: extractModulosFromSaasPlanoRecursos(p.recursos),
-            equipamentos: extractEquipamentosFromSaasPlanoRecursos(p.recursos),
+            limites: extractLimitesFromSaasPlanoRecursos(p.recursos),
           };
         })()
       : undefined,
@@ -170,7 +171,7 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
       isEditing && planoData?.data?.recursos
         ? getSaasPlanoRecursosObj(planoData.data.recursos) ?? {}
         : {};
-    const recursos = buildSaasPlanoRecursosPayload(form.modulos, form.equipamentos, baseRecursos);
+    const recursos = buildSaasPlanoRecursosPayload(form.modulos, form.limites, baseRecursos);
 
     const payload: Partial<SaasPlano> = {
       nome: form.nome,
@@ -195,13 +196,13 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
     }
   };
 
-  const planoTabs = useMemo((): ModalTabItem<'geral' | 'equipamentos'>[] => {
-    const tabs: ModalTabItem<'geral' | 'equipamentos'>[] = [{ id: 'geral', label: 'Geral' }];
-    if (hasEquipamentos) {
-      tabs.push({ id: 'equipamentos', label: 'Equipamentos' });
+  const planoTabs = useMemo((): ModalTabItem<'geral' | 'limites'>[] => {
+    const tabs: ModalTabItem<'geral' | 'limites'>[] = [{ id: 'geral', label: 'Geral' }];
+    if (hasLimitesTab) {
+      tabs.push({ id: 'limites', label: t('saas.planModuleLimitsTab') });
     }
     return tabs;
-  }, [hasEquipamentos]);
+  }, [hasLimitesTab, t]);
 
   return (
     <DraggableModal
@@ -242,11 +243,8 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
                 onClearError={handleClearError}
               />
             )}
-            {activeTab === 'equipamentos' && hasEquipamentos && (
-              <SaasPlanoEquipamentosFormFields
-                equipamentos={form.equipamentos}
-                onEquipamentosChange={(equipamentos) => handleFieldChange('equipamentos', equipamentos)}
-              />
+            {activeTab === 'limites' && hasLimitesTab && (
+              <SaasPlanoLimitesFormFields form={form} onFieldChange={handleFieldChange} />
             )}
           </div>
         </form>

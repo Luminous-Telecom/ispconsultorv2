@@ -14,6 +14,7 @@ import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../..
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { SaasPlanoLimitesService } from '../../../services/saas/SaasPlanoLimitesService';
 import {
   isQueryFlagTrue,
   parseListQuery,
@@ -234,6 +235,15 @@ export class ContratoController {
       const empresaId = getEmpresaIdOrNull(req);
       if (empresaId !== null) {
         value.empresa_id = empresaId;
+      }
+
+      const limitError = await SaasPlanoLimitesService.validateLimiteCreate(
+        empresaId,
+        'cadastros_limite_contratos'
+      );
+      if (limitError) {
+        sendForbidden(res, limitError);
+        return;
       }
 
       // Verificar se o cliente existe

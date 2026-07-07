@@ -1,4 +1,5 @@
 import type { PlanoModuloId } from '../constants/planoModulos';
+import { SAAS_PLANO_LIMITE_DEFS } from '../constants/saasPlanoLimites';
 import type { SaasPlano } from '../models/saas/SaasPlano';
 
 export const PLANO_MODULO_LABELS: Record<PlanoModuloId, string> = {
@@ -86,32 +87,23 @@ export function serializeSaasPlanoForHotsite(plano: SaasPlano): HotsitePlanoPubl
   const valorAnualRaw = plano.valor_anual != null ? Number(plano.valor_anual) : null;
   const valorAnual = valorAnualRaw != null && Number.isFinite(valorAnualRaw) ? arredondarMoeda(valorAnualRaw) : null;
 
-  const limites: HotsitePlanoLimite[] = [
-    {
+  const limites: HotsitePlanoLimite[] = [];
+
+  if (modulos.includes('cadastros')) {
+    limites.push({
       chave: 'usuarios',
       label: 'Usuários',
       valor: formatLimite(Number(plano.limite_usuarios) || 0),
-    },
-  ];
+    });
+  }
 
-  if (modulos.includes('equipamentos')) {
-    limites.push(
-      {
-        chave: 'equipamentos',
-        label: 'Equipamentos',
-        valor: formatLimite(extrairNumero(recursos, 'equipamentos_limite_equipamentos', 0)),
-      },
-      {
-        chave: 'tuneis',
-        label: 'Túneis',
-        valor: formatLimite(extrairNumero(recursos, 'equipamentos_limite_tuneis', 0)),
-      },
-      {
-        chave: 'backups',
-        label: 'Backups por equipamento',
-        valor: formatLimite(extrairNumero(recursos, 'equipamentos_limite_backups', 0)),
-      },
-    );
+  for (const def of SAAS_PLANO_LIMITE_DEFS) {
+    if (!modulos.includes(def.modulo)) continue;
+    limites.push({
+      chave: def.formKey,
+      label: def.listLabelShort,
+      valor: formatLimite(extrairNumero(recursos, def.recursosKey, 0)),
+    });
   }
 
   return {

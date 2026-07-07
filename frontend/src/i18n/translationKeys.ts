@@ -1225,6 +1225,9 @@ export interface TranslationKeys {
   'saas.planShowOnHotsiteLabel': string;
   'saas.planShowOnHotsiteHelp': string;
   'saas.planShowOnHotsiteShort': string;
+  'saas.planModuleLimitsTab': string;
+  'saas.planModuleLimitsEmpty': string;
+  'saas.planLimitUsersShort': string;
 
   // Placeholders
   'placeholder.cnpj': string;

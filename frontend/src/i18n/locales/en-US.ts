@@ -1207,6 +1207,9 @@ const enUS: TranslationKeys = {
     'saas.planShowOnHotsiteLabel': 'Show on hotsite',
     'saas.planShowOnHotsiteHelp': 'Checked plans appear in the Plans section of the site. Only active plans are displayed.',
     'saas.planShowOnHotsiteShort': 'Hotsite',
+    'saas.planModuleLimitsTab': 'Limits by module',
+    'saas.planModuleLimitsEmpty': 'Select Cadastros, Equipamentos or RPKI to configure numeric limits.',
+    'saas.planLimitUsersShort': 'Users',
 
     // Placeholders
     'placeholder.cnpj': '00.000.000/0000-00',

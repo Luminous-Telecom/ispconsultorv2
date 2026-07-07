@@ -8,9 +8,13 @@ import { ListModalConfig } from 'types/modal';
 import ImprimirModal from 'components/common/ImprimirModal';
 import { saasPlanoService, type SaasPlano } from 'services/saas/saasPlanoService';
 import {
-  extractEquipamentosFromSaasPlanoRecursos,
   extractModulosFromSaasPlanoRecursos,
+  getLimiteValorFromRecursos,
 } from 'utils/saasPlanoRecursos';
+import { formatSaasPlanoModulosList, SAAS_PLANO_MODULO_COL_LABEL } from 'utils/saasPlanoModuloLimites';
+import { SAAS_PLANO_LIMITE_DEFS } from 'constants/saasPlanoLimites';
+import { PLANO_MODULOS } from 'constants/planoModulos';
+import type { PlanoModuloId } from 'services/planoModulosService';
 import SaasPlanoFormModal from './SaasPlanoFormModal';
 
 interface Props {
@@ -119,54 +123,64 @@ const SaasPlanoListModal: React.FC<Props> = ({ show, onClose, skipWrapper = fals
         ),
       },
       {
+        key: 'modulos',
+        label: t('saas.planModules'),
+        sortable: false,
+        width: '180px',
+        render: (item) => {
+          const modulos = extractModulosFromSaasPlanoRecursos(item.recursos);
+          const texto = formatSaasPlanoModulosList(modulos);
+          if (!texto) return <span className="text-muted">—</span>;
+          return (
+            <span className="small" title={texto}>
+              {texto}
+            </span>
+          );
+        },
+      },
+      ...PLANO_MODULOS.map(
+        (modulo): ListModalConfig<SaasPlano>['columns'][number] => ({
+          key: `modulo_${modulo.id}`,
+          label: SAAS_PLANO_MODULO_COL_LABEL[modulo.id],
+          sortable: false,
+          width: '88px',
+          render: (item) => {
+            const modulos = extractModulosFromSaasPlanoRecursos(item.recursos);
+            const incluido = modulos.includes(modulo.id as PlanoModuloId);
+            return incluido ? (
+              <span className="badge bg-primary">{t('ui.yes')}</span>
+            ) : (
+              <span className="text-muted">—</span>
+            );
+          },
+        })
+      ),
+      {
         key: 'limite_usuarios',
-        label: t('form.usersQuantity'),
+        label: t('saas.planLimitUsersShort'),
         sortable: true,
         width: '80px',
-        render: (item) => item.limite_usuarios,
-      },
-      {
-        key: 'equipamentos_limite_equipamentos',
-        label: t('saas.planLimitEquipamentosShort'),
-        sortable: false,
-        width: '72px',
         render: (item) => {
           const modulos = extractModulosFromSaasPlanoRecursos(item.recursos);
-          if (!modulos.includes('equipamentos')) {
+          if (!modulos.includes('cadastros')) {
             return <span className="text-muted">—</span>;
           }
-          const limites = extractEquipamentosFromSaasPlanoRecursos(item.recursos);
-          return <span>{limites.limite_equipamentos}</span>;
+          return <span>{item.limite_usuarios}</span>;
         },
       },
-      {
-        key: 'equipamentos_limite_tuneis',
-        label: t('saas.planLimitTuneisShort'),
-        sortable: false,
-        width: '72px',
-        render: (item) => {
-          const modulos = extractModulosFromSaasPlanoRecursos(item.recursos);
-          if (!modulos.includes('equipamentos')) {
-            return <span className="text-muted">—</span>;
-          }
-          const limites = extractEquipamentosFromSaasPlanoRecursos(item.recursos);
-          return <span>{limites.limite_tuneis}</span>;
-        },
-      },
-      {
-        key: 'equipamentos_limite_backups',
-        label: t('saas.planLimitBackupsPerDeviceShort'),
-        sortable: false,
-        width: '96px',
-        render: (item) => {
-          const modulos = extractModulosFromSaasPlanoRecursos(item.recursos);
-          if (!modulos.includes('equipamentos')) {
-            return <span className="text-muted">—</span>;
-          }
-          const limites = extractEquipamentosFromSaasPlanoRecursos(item.recursos);
-          return <span>{limites.limite_backups}</span>;
-        },
-      },
+      ...SAAS_PLANO_LIMITE_DEFS.map(
+        (def): ListModalConfig<SaasPlano>['columns'][number] => ({
+          key: def.recursosKey,
+          label: def.listLabelShort,
+          sortable: false,
+          width: '80px',
+          render: (item) => {
+            const valor = getLimiteValorFromRecursos(item.recursos, def.recursosKey);
+            if (valor == null) return <span className="text-muted">—</span>;
+            return <span>{valor}</span>;
+          },
+        })
+      ),
       {
         key: 'ativo',
         label: t('table.status'),

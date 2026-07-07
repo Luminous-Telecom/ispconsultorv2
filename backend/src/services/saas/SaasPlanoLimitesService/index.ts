@@ -1,7 +1,20 @@
 import { Op } from 'sequelize';
+import { SAAS_PLANO_LIMITE_DEFS, type SaasPlanoLimiteRecursoId } from '../../../constants/saasPlanoLimites';
 import { Usuario } from '../../../models/cadastros/Usuario';
+import { Banco } from '../../../models/cadastros/Banco';
+import { Plano } from '../../../models/cadastros/Plano';
+import { Cliente } from '../../../models/clientes/Cliente';
+import { Contrato } from '../../../models/contratos/Contrato';
+import { ModeloDocumento } from '../../../models/documentos/ModeloDocumento';
+import { IntegracaoIxcProvedor } from '../../../models/integracao/IntegracaoIxcProvedor';
+import { OrdemServicoLocal } from '../../../models/ordens/OrdemServicoLocal';
 import { Agent } from '../../../models/agent/Agent';
 import { SshDevice } from '../../../models/ssh-manager/SshDevice';
+import { RpkiCa } from '../../../models/rpki/RpkiCa';
+import { RpkiCaParent } from '../../../models/rpki/RpkiCaParent';
+import { RpkiRepository } from '../../../models/rpki/RpkiRepository';
+import { RpkiRoa } from '../../../models/rpki/RpkiRoa';
+import { RpkiAspa } from '../../../models/rpki/RpkiAspa';
 import { SaasContrato } from '../../../models/saas/SaasContrato';
 import { SaasPlano } from '../../../models/saas/SaasPlano';
 import type { PlanoModuloId } from '../../../constants/planoModulos';
@@ -10,6 +23,7 @@ export interface SaasPlanoLimitesContext {
   plano: SaasPlano;
   modulos: PlanoModuloId[];
   limiteUsuarios: number;
+  limites: Record<string, number>;
   limiteEquipamentos: number;
   limiteTuneis: number;
   limiteBackups: number;
@@ -24,11 +38,6 @@ export interface EquipamentoUpdateLimitCheck extends EquipamentoLimitCheck {
   currentHasBackup?: boolean;
 }
 
-const DEFAULT_EQUIPAMENTOS_LIMITS = {
-  limiteEquipamentos: 0,
-  limiteTuneis: 0,
-  limiteBackups: 0,
-};
 
 function parseRecursos(recursos: SaasPlano['recursos'] | string | null | undefined): Record<string, unknown> | null {
   if (typeof recursos === 'string') {
@@ -69,6 +78,25 @@ function extractModulos(recursos: Record<string, unknown> | null): PlanoModuloId
   return [...new Set(legacy)];
 }
 
+const LIMIT_COUNTERS: Record<SaasPlanoLimiteRecursoId, (empresaId: number) => Promise<number>> = {
+  cadastros_limite_clientes: (empresaId) => Cliente.count({ where: { empresa_id: empresaId } }),
+  cadastros_limite_bancos: (empresaId) => Banco.count({ where: { empresa_id: empresaId } }),
+  cadastros_limite_contratos: (empresaId) => Contrato.count({ where: { empresa_id: empresaId } }),
+  cadastros_limite_planos: (empresaId) => Plano.count({ where: { empresa_id: empresaId } }),
+  cadastros_limite_modelos_documento: (empresaId) => ModeloDocumento.count({ where: { empresa_id: empresaId } }),
+  cadastros_limite_ixc_provedor: (empresaId) => IntegracaoIxcProvedor.count({ where: { empresa_id: empresaId } }),
+  cadastros_limite_ordens_servico: (empresaId) => OrdemServicoLocal.count({ where: { empresa_id: empresaId } }),
+  equipamentos_limite_equipamentos: (empresaId) => SshDevice.count({ where: { empresa_id: empresaId } }),
+  equipamentos_limite_tuneis: (empresaId) => Agent.count({ where: { empresa_id: empresaId } }),
+  equipamentos_limite_backups: (empresaId) =>
+    SshDevice.count({ where: { empresa_id: empresaId, backup_enabled: true } }),
+  rpki_limite_cas: (empresaId) => RpkiCa.count({ where: { empresa_id: empresaId } }),
+  rpki_limite_cas_pai: (empresaId) => RpkiCaParent.count({ where: { empresa_id: empresaId } }),
+  rpki_limite_repositorios: (empresaId) => RpkiRepository.count({ where: { empresa_id: empresaId } }),
+  rpki_limite_roas: (empresaId) => RpkiRoa.count({ where: { empresa_id: empresaId } }),
+  rpki_limite_aspas: (empresaId) => RpkiAspa.count({ where: { empresa_id: empresaId } }),
+};
+
 export class SaasPlanoLimitesService {
   static async getContext(empresaId: number): Promise<SaasPlanoLimitesContext | null> {
     const contrato = await SaasContrato.findOne({
@@ -82,26 +110,53 @@ export class SaasPlanoLimitesService {
     }
 
     const recursos = parseRecursos(contrato.plano.recursos);
+    const limites: Record<string, number> = {};
+    for (const def of SAAS_PLANO_LIMITE_DEFS) {
+      limites[def.recursosKey] = extractNumber(recursos, def.recursosKey, 0);
+    }
     return {
       plano: contrato.plano,
       modulos: extractModulos(recursos),
       limiteUsuarios: Math.max(1, Number(contrato.plano.limite_usuarios) || 1),
-      limiteEquipamentos: extractNumber(
-        recursos,
-        'equipamentos_limite_equipamentos',
-        DEFAULT_EQUIPAMENTOS_LIMITS.limiteEquipamentos
-      ),
-      limiteTuneis: extractNumber(
-        recursos,
-        'equipamentos_limite_tuneis',
-        DEFAULT_EQUIPAMENTOS_LIMITS.limiteTuneis
-      ),
-      limiteBackups: extractNumber(
-        recursos,
-        'equipamentos_limite_backups',
-        DEFAULT_EQUIPAMENTOS_LIMITS.limiteBackups
-      ),
+      limites,
+      limiteEquipamentos: limites.equipamentos_limite_equipamentos ?? 0,
+      limiteTuneis: limites.equipamentos_limite_tuneis ?? 0,
+      limiteBackups: limites.equipamentos_limite_backups ?? 0,
     };
+  }
+
+  static async validateModulo(empresaId: number, modulo: PlanoModuloId, label: string): Promise<string | null> {
+    const context = await this.getContext(empresaId);
+    if (!context) return null;
+    return context.modulos.includes(modulo) ? null : `O plano não inclui o módulo ${label}.`;
+  }
+
+  static async validateLimiteCreate(
+    empresaId: number | null | undefined,
+    recursosKey: SaasPlanoLimiteRecursoId
+  ): Promise<string | null> {
+    if (empresaId == null) return null;
+
+    const def = SAAS_PLANO_LIMITE_DEFS.find((item) => item.recursosKey === recursosKey);
+    if (!def) return null;
+
+    const context = await this.getContext(empresaId);
+    if (!context) return null;
+
+    if (!context.modulos.includes(def.modulo)) {
+      return `O plano não inclui o módulo ${def.label}.`;
+    }
+
+    const limite = context.limites[recursosKey] ?? 0;
+    if (limite <= 0) return null;
+
+    const counter = LIMIT_COUNTERS[recursosKey];
+    const count = await counter(empresaId);
+    if (count >= limite) {
+      return `Limite de ${def.label.toLowerCase()} do plano atingido (${limite}).`;
+    }
+
+    return null;
   }
 
   static async validateUsuarioAtivoLimit(
