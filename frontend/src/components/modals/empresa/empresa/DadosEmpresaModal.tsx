@@ -14,7 +14,7 @@ import { useFormReset } from 'hooks/useFormReset';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
 import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
-import { CancelarButton, Loading, NovoButton, SalvarButton } from 'components/ui';
+import { CancelarButton, Loading, SalvarButton } from 'components/ui';
 import { DadosEmpresaForm, DadosEmpresaModalProps } from './types';
 import DadosBasicosTab from './abas/DadosBasicosTab';
 import EnderecoTab from './abas/EnderecoTab';
@@ -377,11 +377,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
         )}
         <div className="empresa-header-buttons modal-header-actions">
           <CancelarButton type="button" onClick={handleCancel} isPending={isPending} />
-          {isSaasCreate ? (
-            <NovoButton type="submit" form="empresa-form" entity="Empresa" isPending={isPending} />
-          ) : (
-            <SalvarButton type="submit" form="empresa-form" isPending={isPending} />
-          )}
+          <SalvarButton type="submit" form="empresa-form" isPending={isPending} />
         </div>
         <div className="empresa-header-tabs">
           <ModalTabsOverflow
@@ -395,7 +391,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
         </div>
       </div>
     ),
-    [activeTab, empresaTabs, isMobile, isPending, handleCancel, companyOptions, selectedCompanyId, onCompanyChange, isSaasCreate]
+    [activeTab, empresaTabs, isMobile, isPending, handleCancel, companyOptions, selectedCompanyId, onCompanyChange]
   );
 
   useLayoutEffect(() => {

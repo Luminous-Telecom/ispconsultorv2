@@ -1196,6 +1196,10 @@ const esES: TranslationKeys = {
     'saas.planModules': 'Módulos del plan',
     'saas.planModulesHelp': 'Seleccione los módulos que incluye este plan. Los clientes con este plan solo tendrán acceso a los módulos marcados.',
     'saas.planLimitZeroHelp': '0 = sin límite',
+    'saas.planTableEquipmentLimits': 'Límites (equip.)',
+    'saas.planLimitEquipamentosShort': 'Equip.',
+    'saas.planLimitTuneisShort': 'Túneles',
+    'saas.planLimitBackupsPerDeviceShort': 'Backups/equip.',
 
     // Placeholders
     'placeholder.cnpj': '00.000.000/0000-00',

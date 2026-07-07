@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
 import { AuditoriaOperacionalMysqlService } from '../../../services/auditoria/AuditoriaOperacionalMysqlService';
-import { enrichLogsWithClienteNome, enrichLogsWithEmpresaNome } from '../../../services/auditoria/auditoriaEnrichService';
+import { enrichLogsWithClienteNome, enrichLogsWithEmpresaNome, enrichLogsWithSaasSuperUsuario, resolveSaasEmpresaRelatorioPdf } from '../../../services/auditoria/auditoriaEnrichService';
 import { AuditoriaPDFService } from '../../../services/auditoria/AuditoriaPDFService';
 import { logger } from '../../../utils/logger';
 import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../../../utils/responseUtils';
@@ -86,6 +86,7 @@ export class SaasAuditoriaController {
         }
       }
       await enrichLogsWithEmpresaNome(rawLogs, true, true);
+      await enrichLogsWithSaasSuperUsuario(rawLogs);
       await enrichLogsWithClienteNome(rawLogs);
 
       sendSuccess(res, {
@@ -129,8 +130,16 @@ export class SaasAuditoriaController {
       }
 
       await enrichLogsWithEmpresaNome(logs, true);
+      await enrichLogsWithSaasSuperUsuario(logs);
 
-      const html = await AuditoriaPDFService.generateAuditPdfHtml(logs, entidade, undefined, undefined, true);
+      const dadosEmpresaPdf = await resolveSaasEmpresaRelatorioPdf();
+      const html = await AuditoriaPDFService.generateAuditPdfHtml(
+        logs,
+        entidade,
+        dadosEmpresaPdf ?? undefined,
+        undefined,
+        true
+      );
       const { PDFGenerationService } = await import('../../../services/pdf-generation/PDFGenerationService');
       const pdfBuffer = await PDFGenerationService.generateFromHtml(html, {
         format: 'A4',

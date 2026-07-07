@@ -623,6 +623,8 @@ export class SistemaLogOperacionalService {
     origemAuditoria?: OrigemAuditoriaOperacional;
     dadosNovos?: Record<string, unknown> | null;
     dadosAnteriores?: Record<string, unknown> | null;
+    /** Metadados extras (ex.: ator SuperAdmin SaaS quando usuario_id ERP é null) */
+    payloadMeta?: Record<string, unknown> | null;
   }): void {
     if (p.acao === 'update') {
       const houve = houveAlteracaoEfetivaEmUpdate(p.dadosAnteriores, p.dadosNovos);
@@ -673,7 +675,7 @@ export class SistemaLogOperacionalService {
       dadosAnteriores: p.dadosAnteriores,
       rota: p.rota ?? null,
     });
-    const payloadMerged: Record<string, unknown> = { ...(payloadCorpo ?? {}) };
+    const payloadMerged: Record<string, unknown> = { ...(payloadCorpo ?? {}), ...(p.payloadMeta ?? {}) };
     if (p.origemAuditoria) payloadMerged.origem_auditoria = p.origemAuditoria;
     payloadMerged.acao_auditoria = p.acao;
 

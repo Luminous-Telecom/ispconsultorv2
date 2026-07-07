@@ -1212,6 +1212,10 @@ export interface TranslationKeys {
   'saas.planModules': string;
   'saas.planModulesHelp': string;
   'saas.planLimitZeroHelp': string;
+  'saas.planTableEquipmentLimits': string;
+  'saas.planLimitEquipamentosShort': string;
+  'saas.planLimitTuneisShort': string;
+  'saas.planLimitBackupsPerDeviceShort': string;
 
   // Placeholders
   'placeholder.cnpj': string;

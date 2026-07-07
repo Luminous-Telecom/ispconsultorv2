@@ -73,6 +73,7 @@ export class SaasAuthController {
       const token = buildSaasToken({
         sub: String(usuario.id),
         email: usuario.email,
+        nome: usuario.nome,
         tipo: 'super_admin',
         saas: true,
         nivel_acesso: usuario.nivel_acesso,

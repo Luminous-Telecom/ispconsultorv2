@@ -63,15 +63,37 @@ export const useAuditoria = (): UseAuditoriaReturn => {
       setIsGeneratingPdf(false);
       success('PDF de auditoria gerado com sucesso!');
     } catch (err) {
-      const status = (err as { response?: { status?: number } })?.response?.status;
+      const axiosErr = err as {
+        response?: { status?: number; data?: Blob | { message?: string } };
+        message?: string;
+      };
+      let status = axiosErr.response?.status;
+      let serverMessage: string | undefined;
+
+      const responseData = axiosErr.response?.data;
+      if (responseData instanceof Blob) {
+        try {
+          const text = await responseData.text();
+          const parsed = JSON.parse(text) as { message?: string; success?: boolean };
+          serverMessage = parsed.message;
+        } catch {
+          /* ignore parse errors */
+        }
+      } else if (responseData && typeof responseData === 'object' && 'message' in responseData) {
+        serverMessage = String((responseData as { message?: string }).message ?? '');
+      }
+
       if (status === 404) {
-        info('Nenhum log de auditoria encontrado para este registro.');
+        info(serverMessage || 'Nenhum log de auditoria encontrado para este registro.');
         setShowPreview(false);
         setIsGeneratingPdf(false);
         return;
       }
 
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao gerar PDF de auditoria';
+      const errorMessage =
+        serverMessage ||
+        axiosErr.message ||
+        'Erro ao gerar PDF de auditoria';
       error(errorMessage);
       setShowPreview(false);
       setIsGeneratingPdf(false);

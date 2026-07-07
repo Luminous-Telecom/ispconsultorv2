@@ -7,6 +7,10 @@ import ListModal from 'components/common/ListModal';
 import { ListModalConfig } from 'types/modal';
 import ImprimirModal from 'components/common/ImprimirModal';
 import { saasPlanoService, type SaasPlano } from 'services/saas/saasPlanoService';
+import {
+  extractEquipamentosFromSaasPlanoRecursos,
+  extractModulosFromSaasPlanoRecursos,
+} from 'utils/saasPlanoRecursos';
 import SaasPlanoFormModal from './SaasPlanoFormModal';
 
 interface Props {
@@ -59,19 +63,25 @@ const SaasPlanoListModal: React.FC<Props> = ({ show, onClose, skipWrapper = fals
         key: 'nome',
         label: t('table.planName'),
         sortable: true,
-        render: (item) => (
-          <div>
-            <div className="fw-semibold">{item.nome}</div>
-            {item.descricao && <small className="text-muted">{item.descricao}</small>}
-          </div>
-        ),
+        render: (item) => <span className="fw-semibold">{item.nome}</span>,
+      },
+      {
+        key: 'descricao',
+        label: t('table.description'),
+        sortable: true,
+        render: (item) =>
+          item.descricao?.trim() ? (
+            <span className="text-muted small">{item.descricao}</span>
+          ) : (
+            <span className="text-muted">—</span>
+          ),
       },
       {
         key: 'valor_mensal',
         label: t('table.monthlyValue'),
         sortable: true,
         width: '120px',
-        render: (item) => <span className="text-success fw-semibold">{formatCurrency(item.valor_mensal)}</span>,
+        render: (item) => <span>{formatCurrency(item.valor_mensal)}</span>,
       },
       {
         key: 'valor_anual',
@@ -80,7 +90,7 @@ const SaasPlanoListModal: React.FC<Props> = ({ show, onClose, skipWrapper = fals
         width: '120px',
         render: (item) =>
           item.valor_anual ? (
-            <span className="text-success">{formatCurrency(item.valor_anual)}</span>
+            <span>{formatCurrency(item.valor_anual)}</span>
           ) : (
             <span className="text-muted">—</span>
           ),
@@ -91,6 +101,26 @@ const SaasPlanoListModal: React.FC<Props> = ({ show, onClose, skipWrapper = fals
         sortable: true,
         width: '80px',
         render: (item) => item.limite_usuarios,
+      },
+      {
+        key: 'limites_equipamentos',
+        label: t('saas.planTableEquipmentLimits'),
+        sortable: false,
+        width: '140px',
+        render: (item) => {
+          const modulos = extractModulosFromSaasPlanoRecursos(item.recursos);
+          if (!modulos.includes('equipamentos')) {
+            return <span className="text-muted">—</span>;
+          }
+          const limites = extractEquipamentosFromSaasPlanoRecursos(item.recursos);
+          return (
+            <div className="small lh-sm">
+              <div>{t('saas.planLimitEquipamentosShort')}: {limites.limite_equipamentos}</div>
+              <div>{t('saas.planLimitTuneisShort')}: {limites.limite_tuneis}</div>
+              <div>{t('saas.planLimitBackupsPerDeviceShort')}: {limites.limite_backups}</div>
+            </div>
+          );
+        },
       },
       {
         key: 'ativo',

@@ -7,6 +7,7 @@ import { AuthenticatedRequest } from '../../../types/auth';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { getClientIp } from '../../../utils/requestUtils';
 import { normalizarSnapshotAuditoria } from '../../auditoria/normalizarSnapshotAuditoria';
+import { SaasUsuarioSuper } from '../../../models/saas/SaasUsuarioSuper';
 import { SistemaLogOperacionalService, houveAlteracaoEfetivaEmUpdate } from '../SistemaLogOperacionalService';
 
 export type AcaoAuditoria = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'export' | 'import' | 'executar';
@@ -55,7 +56,40 @@ function getUserData(req: Request | AuthenticatedRequest): {
   return { id: userId, nome: nome ?? null, email };
 }
 
-function persistSnapshot(
+function isSaasAuditRequest(req: Request | AuthenticatedRequest): boolean {
+  return Boolean((req as AuthenticatedRequest & { saasUser?: unknown }).saasUser);
+}
+
+async function buildSaasActorPayload(req: Request | AuthenticatedRequest): Promise<Record<string, unknown>> {
+  const saasUser = (req as AuthenticatedRequest & { saasUser?: JwtPayload }).saasUser;
+  if (!saasUser?.sub) return {};
+
+  const saasId = parseInt(String(saasUser.sub), 10);
+  if (!Number.isFinite(saasId) || saasId <= 0) return {};
+
+  let nome = typeof saasUser.nome === 'string' ? saasUser.nome : null;
+  let email = typeof saasUser.email === 'string' ? saasUser.email : null;
+
+  if (!nome || !email) {
+    try {
+      const row = await SaasUsuarioSuper.findByPk(saasId, { attributes: ['nome', 'email'] });
+      if (row) {
+        nome = nome ?? row.nome;
+        email = email ?? row.email;
+      }
+    } catch {
+      /* best-effort */
+    }
+  }
+
+  return {
+    saas_usuario_id: saasId,
+    saas_usuario_nome: nome,
+    saas_usuario_email: email,
+  };
+}
+
+async function persistSnapshot(
   req: Request | AuthenticatedRequest,
   dados: DadosAuditoria,
   overrides?: {
@@ -66,8 +100,9 @@ function persistSnapshot(
     metodoHttp?: string | null;
     origemAuditoria?: OrigemAuditoria;
   }
-): void {
+): Promise<void> {
   const userData = getUserData(req);
+  const saasRequest = isSaasAuditRequest(req);
   const dadosAnterioresNorm = normalizarSnapshotAuditoria(dados.dados_anteriores ?? null);
   const dadosNovosNorm = normalizarSnapshotAuditoria(dados.dados_novos ?? null);
 
@@ -75,13 +110,20 @@ function persistSnapshot(
     return;
   }
 
+  const payloadMeta = saasRequest ? await buildSaasActorPayload(req) : null;
+  const usuarioId = overrides?.usuarioId !== undefined
+    ? overrides.usuarioId
+    : saasRequest
+      ? null
+      : userData.id;
+
   SistemaLogOperacionalService.registrarFromAuditoriaSnapshot({
     acao: dados.acao,
     entidade: dados.entidade,
     entidadeId: dados.entidade_id ?? null,
     observacoes: dados.observacoes ?? null,
     empresaId: dados.empresa_id ?? getEmpresaIdForAudit(req),
-    usuarioId: overrides?.usuarioId !== undefined ? overrides.usuarioId : userData.id,
+    usuarioId,
     ipAddress: overrides?.ipAddress !== undefined ? overrides.ipAddress : dados.ip_address ?? getClientIp(req),
     userAgent: overrides?.userAgent !== undefined ? overrides.userAgent : getUserAgent(req),
     rota: overrides?.rota !== undefined ? overrides.rota : dados.rota ?? req.originalUrl ?? null,
@@ -89,6 +131,7 @@ function persistSnapshot(
     origemAuditoria: overrides?.origemAuditoria ?? dados.origem_auditoria ?? 'usuario',
     dadosNovos: dadosNovosNorm,
     dadosAnteriores: dadosAnterioresNorm,
+    payloadMeta,
   });
 }
 
@@ -97,7 +140,7 @@ export async function registrarAuditoria(
   dados: DadosAuditoria
 ): Promise<void> {
   setImmediate(() => {
-    persistSnapshot(req, dados);
+    void persistSnapshot(req, dados).catch(() => undefined);
   });
 }
 

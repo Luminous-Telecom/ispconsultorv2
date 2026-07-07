@@ -69,11 +69,17 @@ export class SaasUsuarioSuperController {
       const { error, value } = updateSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) { sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details)); return; }
       const usuarioAntigo = await SaasUsuarioSuperService.getById(Number(req.params.id));
+      if (!usuarioAntigo) { sendNotFound(res, 'Usuário não encontrado'); return; }
       await SaasUsuarioSuperService.update(Number(req.params.id), value);
-      if (usuarioAntigo) {
-        await registrarAtualizacao(req as any, 'SaasUsuarioSuper', Number(req.params.id),
+      const usuarioNovo = await SaasUsuarioSuperService.getById(Number(req.params.id));
+      if (usuarioNovo) {
+        await registrarAtualizacao(
+          req as any,
+          'SaasUsuarioSuper',
+          Number(req.params.id),
           usuarioAntigo.toJSON() as Record<string, unknown>,
-          { ...usuarioAntigo.toJSON(), ...value } as Record<string, unknown>);
+          usuarioNovo.toJSON() as Record<string, unknown>
+        );
       }
       sendSuccess(res, null, 'Usuário atualizado com sucesso');
     } catch (err) {
