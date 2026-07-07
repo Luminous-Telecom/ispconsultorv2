@@ -98,6 +98,7 @@ export class AsaasWebhookService {
         const valorPago = typeof payment.value === 'number' ? Number(payment.value) :
           typeof payment.netValue === 'number' ? Number(payment.netValue) : Number(titulo.valor);
         await applyPagoWebhook(resolved, valorPago, dataPagamentoNormalizada || new Date());
+        delete updates.status;
       }
 
       if (titulo.status === 'cancelado' && updates.status) delete updates.status;

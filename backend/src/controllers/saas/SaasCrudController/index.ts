@@ -16,6 +16,7 @@ import { SaasBanco } from '../../../models/saas/SaasBanco';
 import { TituloPDFService } from '../../../services/titulos/TituloPDFService';
 import { saasTituloToTituloComRelacoes } from '../../titulos/TituloHelpers/saasTituloToTituloComRelacoes';
 import { PaymentCommonService } from '../../../services/webhooks/PaymentCommonService';
+import { buildTituloPagamentoUpdate } from '../../../utils/tituloVencimentoUtils';
 import { desbloquearSeSemAtraso } from '../../../services/saas/BloqueioAtrasoService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
@@ -344,12 +345,12 @@ export class SaasTituloController {
         : new Date();
       const dataPagamento = dataPagamentoNorm ?? new Date();
       const dadosAnteriores = titulo.toJSON() as Record<string, unknown>;
-      const updateData: Record<string, unknown> = {
-        pago: true,
-        data_pagamento: dataPagamento,
-        valor_pago: valorPago,
-        status: 'pago'
-      };
+      const updateData: Record<string, unknown> = buildTituloPagamentoUpdate({
+        dataVencimento: titulo.data_vencimento,
+        dataPagamento,
+        valorPago,
+        valorTotal: Number(titulo.valor),
+      });
       if (observacoes !== undefined) updateData.observacoes = observacoes;
       await titulo.update(updateData);
       const tituloAtualizado = (await SaasTituloService.getById(titulo.id)) ?? titulo;

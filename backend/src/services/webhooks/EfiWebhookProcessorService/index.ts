@@ -204,6 +204,8 @@ export class EfiWebhookProcessorService {
         const dataPagamentoWebhook = PaymentCommonService.pickEfiWebhookPaymentDateRaw(dadosCompletos ?? {});
         const dataPagamentoNormalizada = dataPagamentoWebhook ? PaymentCommonService.normalizePaymentDate(dataPagamentoWebhook) : new Date();
         await applyPagoWebhook(resolved, Number(titulo.valor), dataPagamentoNormalizada || new Date());
+        delete updateData.status;
+        delete updateData.pago;
       }
 
       await (titulo as { update: (d: Record<string, unknown>) => Promise<unknown> }).update(updateData);
@@ -259,12 +261,12 @@ export class EfiWebhookProcessorService {
         const dataPagamentoWebhook = PaymentCommonService.pickEfiWebhookPaymentDateRaw(notif);
         const dataPagamentoNormalizada = dataPagamentoWebhook ? PaymentCommonService.normalizePaymentDate(dataPagamentoWebhook) : new Date();
         await applyPagoWebhook(resolved, Number(titulo.valor), dataPagamentoNormalizada || new Date());
+      } else {
+        await (titulo as { update: (d: Record<string, unknown>) => Promise<unknown> }).update({
+          status: statusLocal,
+          pago: isPago
+        });
       }
-
-      await (titulo as { update: (d: Record<string, unknown>) => Promise<unknown> }).update({
-        status: statusLocal,
-        pago: isPago
-      });
       await refetchResolvedTitulo(resolved);
       const dadosNovos = (resolved.titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
 

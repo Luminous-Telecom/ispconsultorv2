@@ -12,7 +12,7 @@ import {
 } from 'sequelize';
 import { sequelize } from '../../../config/database';
 import { logger } from '../../../utils/logger';
-import { isTituloVencida } from '../../../utils/tituloVencimentoUtils';
+import { isTituloVencida, resolveStatusPagamentoTitulo } from '../../../utils/tituloVencimentoUtils';
 import { Cliente } from '../../clientes/Cliente';
 import { Plano } from '../../cadastros/Plano';
 import { Banco } from '../../cadastros/Banco';
@@ -146,21 +146,19 @@ export class Titulo extends Model<
     const valorPagoNum = Number(valor);
 
     // Determinar status
-    let novoStatus: 'pago' | 'parcial' | 'pago_atraso';
+    const novoStatus = resolveStatusPagamentoTitulo(
+      this.data_vencimento,
+      data,
+      valorPagoNum,
+      valorTotal
+    );
     let valorAberto: number | null = null;
     let estaPago = false;
 
-    if (valorPagoNum < valorTotal) {
-      novoStatus = 'parcial';
+    if (novoStatus === 'parcial') {
       valorAberto = valorTotal - valorPagoNum;
       estaPago = false;
     } else {
-      const vencDia = new Date(this.data_vencimento);
-      vencDia.setHours(0, 0, 0, 0);
-      const pagDia = new Date(data);
-      pagDia.setHours(0, 0, 0, 0);
-
-      novoStatus = pagDia > vencDia ? 'pago_atraso' : 'pago';
       estaPago = true;
       valorAberto = null;
     }
@@ -180,7 +178,7 @@ export class Titulo extends Model<
 
     // Incrementar métrica de boletos pagos se métricas estiverem habilitadas
     // Apenas quando o título é totalmente pago (não parcial)
-    if (estaPago && novoStatus === 'pago') {
+    if (estaPago && (novoStatus === 'pago' || novoStatus === 'pago_atraso')) {
       const { metrics, isMetricsEnabled } = await import('../../../utils/metrics');
       if (isMetricsEnabled() && metrics) {
         metrics.businessBoletosPagos.inc();

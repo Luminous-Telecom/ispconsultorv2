@@ -282,7 +282,7 @@ export class EfiTituloService {
       headers['Content-Type'] = 'application/json';
 
       await axios.put(endpoint, {}, { headers, timeout: 30000 });
-      await titulo.update({ status: 'pago' });
+      await titulo.marcarComoPago(undefined, new Date(), true);
 
       return {
         success: true,

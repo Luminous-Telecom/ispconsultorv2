@@ -11,6 +11,7 @@ export type TituloStatusValue =
 export interface TituloComVencimento {
   status: string;
   data_vencimento?: string | Date | null;
+  data_pagamento?: string | Date | null;
   /** Calculado no backend quando disponível */
   vencida?: boolean;
 }
@@ -50,8 +51,21 @@ export function isTituloEmAbertoAtrasado(
   return compareAsc(vencimento, startOfDay(refDate)) < 0;
 }
 
+/** Título pago com data de pagamento posterior ao vencimento (status persistido ainda como "pago"). */
+export function isTituloPagoEmAtraso(titulo: TituloComVencimento): boolean {
+  if (titulo.status === 'pago_atraso') return true;
+  if (titulo.status !== 'pago' || !titulo.data_pagamento) return false;
+
+  const vencimento = parseTituloVencimentoLocal(titulo.data_vencimento);
+  const pagamento = parseTituloVencimentoLocal(titulo.data_pagamento);
+  if (!vencimento || !pagamento) return false;
+
+  return compareAsc(pagamento, vencimento) > 0;
+}
+
 /** Status para exibição na UI — reflete vencimento real, não só o valor persistido no banco. */
 export function getTituloStatusEfetivo(titulo: TituloComVencimento): string {
   if (isTituloEmAbertoAtrasado(titulo)) return 'vencido';
+  if (isTituloPagoEmAtraso(titulo)) return 'pago_atraso';
   return titulo.status;
 }

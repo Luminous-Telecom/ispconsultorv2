@@ -205,7 +205,7 @@ export class EfiWebhookService {
         return await EfiWebhookProcessorService.processChargeNotification(notification, receivedSecret, undefined, req);
       } else if (customId) {
         const { TituloWebhookResolver } = await import('../TituloWebhookResolver');
-        const { enviarReciboSeAdmin, registrarAuditoriaWebhook, refetchResolvedTitulo } = await import('../WebhookTituloUpdater');
+        const { applyPagoWebhook, enviarReciboSeAdmin, registrarAuditoriaWebhook, refetchResolvedTitulo } = await import('../WebhookTituloUpdater');
         const scope = PaymentCommonService.getWebhookScope(req);
         const resolved = await TituloWebhookResolver.findByCustomId(String(customId), scope);
         if (resolved) {
@@ -218,8 +218,13 @@ export class EfiWebhookService {
           const { titulo } = resolved;
           const statusString = typeof notification.status === 'string' ? notification.status : (notification.status as { current?: string })?.current || 'pendente';
           const novoStatus = EfiWebhookProcessorService.mapEfiStatus(statusString) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
+          const isPago = ['pago', 'liquidado'].includes(novoStatus);
           const dadosAnteriores = (titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
-          await (titulo as { update: (d: Record<string, unknown>) => Promise<unknown> }).update({ status: novoStatus, pago: ['pago', 'liquidado'].includes(novoStatus) });
+          if (isPago && !titulo.pago) {
+            await applyPagoWebhook(resolved, Number(titulo.valor), new Date());
+          } else {
+            await (titulo as { update: (d: Record<string, unknown>) => Promise<unknown> }).update({ status: novoStatus, pago: isPago });
+          }
           await refetchResolvedTitulo(resolved);
           const dadosNovos = (resolved.titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
           enviarReciboSeAdmin(resolved);

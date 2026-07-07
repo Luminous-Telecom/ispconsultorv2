@@ -3,11 +3,12 @@ import { logger } from '../../../utils/logger';
 import { registrarAtualizacao } from '../../sistema/AuditoriaRegistroService';
 import { desbloquearSeSemAtraso } from '../../saas/BloqueioAtrasoService';
 import type { Request } from 'express';
+import { buildTituloPagamentoUpdate } from '../../../utils/tituloVencimentoUtils';
 import type { ResolvedTitulo } from '../TituloWebhookResolver';
 import { TituloService } from '../../financeiro/TituloService';
 import { SaasTituloService } from '../../saas/SaasCrudService';
 
-type TituloLike = { id: number; empresa_id?: number; valor: number; pago: boolean; status: string; update: (data: Record<string, unknown>) => Promise<unknown>; reload: () => Promise<unknown>; toJSON: () => Record<string, unknown>; marcarComoPago?: (valor: number, data?: Date, skipLiquidacao?: boolean) => Promise<void> };
+type TituloLike = { id: number; empresa_id?: number; valor: number; data_vencimento: string | Date; pago: boolean; status: string; update: (data: Record<string, unknown>) => Promise<unknown>; reload: () => Promise<unknown>; toJSON: () => Record<string, unknown>; marcarComoPago?: (valor: number, data?: Date, skipLiquidacao?: boolean) => Promise<void> };
 
 /** Recarrega `resolved.titulo` com o mesmo shape de `getById` (antes ou depois das alterações). */
 export async function refetchResolvedTitulo(resolved: ResolvedTitulo): Promise<void> {
@@ -28,12 +29,13 @@ export async function applyPagoWebhook(
   const t = titulo as TituloLike;
 
   if (saas) {
-    await t.update({
-      pago: true,
-      data_pagamento: dataPagamento,
-      valor_pago: valorPago,
-      status: 'pago'
+    const pagamentoUpdate = buildTituloPagamentoUpdate({
+      dataVencimento: t.data_vencimento,
+      dataPagamento,
+      valorPago,
+      valorTotal: Number(t.valor),
     });
+    await t.update(pagamentoUpdate);
     const empresaId = (t as TituloLike & { empresa_id: number }).empresa_id;
     if (empresaId) {
       await desbloquearSeSemAtraso(empresaId);
