@@ -17,6 +17,7 @@ ENV_EXAMPLE="$PROJECT_ROOT/backend/.env.example"
 NODE_MAJOR="${NODE_MAJOR:-24}"
 DB_NAME="${DB_NAME:-ispconsultor}"
 DB_USER="${DB_USER:-ispconsultor}"
+NGINX_WEB_ROOT="${NGINX_WEB_ROOT:-/var/www/ispconsultor}"
 
 # ---------------------------------------------------------------------------
 # Utilitários
@@ -203,7 +204,7 @@ apt_install update -y
 
 log "Instalando ferramentas de build e dependências nativas..."
 apt_install install -y \
-  curl ca-certificates gnupg lsb-release git \
+  curl ca-certificates gnupg lsb-release git rsync \
   build-essential python3 \
   libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev \
   pkg-config
@@ -332,7 +333,7 @@ server {
     }
 
     location / {
-        root ${PROJECT_ROOT}/frontend/build;
+        root ${NGINX_WEB_ROOT};
         try_files \$uri \$uri/ /index.html;
 
         location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
@@ -408,6 +409,13 @@ if [ ! -f "$PROJECT_ROOT/frontend/build/index.html" ]; then
   die "Build do frontend indisponível — frontend/build/index.html não encontrado."
 fi
 
+if [[ "$INSTALL_NGINX" != "n" && "$INSTALL_NGINX" != "nao" && "$INSTALL_NGINX" != "não" ]]; then
+  log "Publicando frontend em ${NGINX_WEB_ROOT}..."
+  RUN_USER="$RUN_USER" NGINX_WEB_ROOT="$NGINX_WEB_ROOT" bash "$SCRIPT_DIR/publish-frontend-www.sh"
+  nginx -t
+  systemctl reload nginx
+fi
+
 log "Executando migrations..."
 run_as_app_user "npm run migrate --prefix backend"
 
@@ -441,9 +449,9 @@ echo "  E-mail: admin@ispconsultor.com.br"
 echo "  Senha:  admin123  (troque no primeiro login)"
 echo ""
 if [[ "$INSTALL_NGINX" != "n" && "$INSTALL_NGINX" != "nao" && "$INSTALL_NGINX" != "não" ]]; then
-  echo "Nginx: ${BASE_URL} → frontend/build (estático), API → backend :3001, wiki → :4000"
+  echo "Nginx: ${BASE_URL} → ${NGINX_WEB_ROOT} (estático), API → backend :3001, wiki → :4000"
 else
-  echo "Sem Nginx: frontend em frontend/build | backend em http://localhost:3001 | wiki em :4000"
+  echo "Sem Nginx: frontend publicado em ${NGINX_WEB_ROOT} | backend em http://localhost:3001 | wiki em :4000"
 fi
 echo ""
 echo "Comandos úteis (como $RUN_USER):"

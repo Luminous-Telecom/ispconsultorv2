@@ -251,6 +251,41 @@ export class SelfUpdateService {
       logs: ['✓ Build concluído']
     });
 
+    const frontendIndex = path.join(this.projectRoot, 'frontend', 'build', 'index.html');
+    const publishScript = path.join(this.projectRoot, 'scripts', 'publish-frontend-www.sh');
+    if (fs.existsSync(frontendIndex) && fs.existsSync(publishScript)) {
+      onProgress?.({
+        step: 'build',
+        progress: 72,
+        message: 'Publicando frontend em /var/www...',
+        logs: ['→ Copiando frontend/build para /var/www/ispconsultor...'],
+      });
+      try {
+        const { stdout, stderr } = await execAsync(`bash "${publishScript}"`, {
+          cwd: this.projectRoot,
+          maxBuffer: 10 * 1024 * 1024,
+        });
+        onProgress?.({
+          step: 'build',
+          progress: 74,
+          message: 'Frontend publicado',
+          logs: [`✓ ${(stdout || stderr || 'Frontend publicado em /var/www/ispconsultor').trim()}`],
+        });
+      } catch (error) {
+        const err = error as { message?: string; stderr?: string };
+        logger.warn('Self-update: falha ao publicar frontend em /var/www', {
+          message: err.message,
+          stderr: err.stderr?.slice(0, 500),
+        });
+        onProgress?.({
+          step: 'build',
+          progress: 74,
+          message: 'Frontend compilado, mas não publicado em /var/www',
+          logs: [`⚠ Publicação em /var/www falhou: ${err.stderr || err.message || 'erro desconhecido'}`],
+        });
+      }
+    }
+
     // Passo 4: Migrations
     onProgress?.({
       step: 'migrate',
