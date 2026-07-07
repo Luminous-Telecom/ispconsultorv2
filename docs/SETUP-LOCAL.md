@@ -4,7 +4,7 @@ Instalação direta no sistema para Debian/Ubuntu.
 
 ## Script automático
 
-O script lê `backend/.env` (ou `.env.example` se `.env` não existir) e cria as configurações correspondentes: usuário MySQL, Redis com ou sem senha, Krill (RPKI), etc.
+O script lê `backend/.env` (ou `.env.example` se `.env` não existir). Em terminal interativo, pede senha do MariaDB, Redis e token do Krill quando ainda não estiverem definidos.
 
 ```bash
 # 1. Configure backend/.env com DB_PASSWORD (e opcionalmente REDIS_PASSWORD)

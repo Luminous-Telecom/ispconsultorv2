@@ -39,7 +39,47 @@ fi
 
 export DB_NAME DB_USER DB_PASSWORD REDIS_PASSWORD
 
+prompt_password() {
+  local label="$1" var_name="$2" min_len="${3:-8}"
+  local pass pass2
+  while true; do
+    read -rsp "$label: " pass
+    echo ""
+    if [ "${#pass}" -lt "$min_len" ]; then
+      echo "  Senha deve ter pelo menos ${min_len} caracteres."
+      continue
+    fi
+    read -rsp "  Confirme a senha: " pass2
+    echo ""
+    if [ "$pass" != "$pass2" ]; then
+      echo "  Senhas não conferem. Tente novamente."
+      continue
+    fi
+    printf -v "$var_name" '%s' "$pass"
+    break
+  done
+}
+
+prompt_if_empty() {
+  local var_name="$1" label="$2" min_len="${3:-8}"
+  local current_val="${!var_name}"
+  if [ -n "$current_val" ] || [ ! -t 0 ]; then
+    return
+  fi
+  prompt_password "$label" "$var_name" "$min_len"
+}
+
 echo "=== ISP Consultor: instalação local (MariaDB, Redis, Krill) ==="
+
+if [ -t 0 ]; then
+  echo ""
+  echo ">>> Credenciais de infraestrutura (preenchidas automaticamente se já existirem no .env)"
+  prompt_if_empty DB_PASSWORD "Senha do banco de dados (MariaDB, usuário $DB_USER)" 8
+  prompt_if_empty REDIS_PASSWORD "Senha do Redis" 8
+  prompt_if_empty KRILL_API_TOKEN "Token de administração do Krill (RPKI)" 16
+fi
+
+export DB_NAME DB_USER DB_PASSWORD REDIS_PASSWORD KRILL_API_TOKEN
 
 # Detecta gerenciador de pacotes
 if command -v apt-get &>/dev/null; then
@@ -219,12 +259,17 @@ else
 fi
 
 if command -v krill &>/dev/null; then
-  if [ -f "$KRILL_CONF" ]; then
+  if [ -f "$KRILL_CONF" ] && [ -z "$KRILL_API_TOKEN" ]; then
     EXISTING_TOKEN="$(grep -E '^admin_token' "$KRILL_CONF" | head -1 | sed -E 's/^admin_token *= *"?([^"]+)"?.*/\1/')"
     [ -n "$EXISTING_TOKEN" ] && KRILL_API_TOKEN="$EXISTING_TOKEN"
   fi
   if [ -z "$KRILL_API_TOKEN" ]; then
-    KRILL_API_TOKEN="$(openssl rand -hex 32)"
+    if [ -t 0 ]; then
+      prompt_password "Token de administração do Krill (RPKI)" KRILL_API_TOKEN 16
+    else
+      KRILL_API_TOKEN="$(openssl rand -hex 32)"
+      echo "Token Krill gerado automaticamente (sem terminal interativo)."
+    fi
   fi
 
   cat > "$KRILL_CONF" <<EOF
@@ -245,6 +290,18 @@ else
   echo "Aviso: Krill não instalado. RPKI não funcionará até instalar o serviço."
 fi
 
+update_db_env() {
+  local env_path="$1"
+  [ -f "$env_path" ] || return 0
+  [ -z "$DB_PASSWORD" ] && return 0
+
+  if grep -q "^DB_PASSWORD=" "$env_path"; then
+    sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=${DB_PASSWORD}|" "$env_path"
+  else
+    echo "DB_PASSWORD=${DB_PASSWORD}" >> "$env_path"
+  fi
+}
+
 update_krill_env() {
   local env_path="$1"
   [ -f "$env_path" ] || return 0
@@ -259,6 +316,23 @@ update_krill_env() {
     sed -i "s|^KRILL_API_TOKEN=.*|KRILL_API_TOKEN=${KRILL_API_TOKEN}|" "$env_path"
   else
     echo "KRILL_API_TOKEN=${KRILL_API_TOKEN}" >> "$env_path"
+  fi
+}
+
+update_redis_env() {
+  local env_path="$1"
+  [ -f "$env_path" ] || return 0
+  [ -z "$REDIS_PASSWORD" ] && return 0
+
+  if grep -q "^REDIS_URL=" "$env_path"; then
+    sed -i "s|^REDIS_URL=.*|REDIS_URL=redis://:${REDIS_PASSWORD}@localhost:6379|" "$env_path"
+  else
+    echo "REDIS_URL=redis://:${REDIS_PASSWORD}@localhost:6379" >> "$env_path"
+  fi
+  if grep -q "^REDIS_PASSWORD=" "$env_path"; then
+    sed -i "s|^REDIS_PASSWORD=.*|REDIS_PASSWORD=${REDIS_PASSWORD}|" "$env_path"
+  else
+    echo "REDIS_PASSWORD=${REDIS_PASSWORD}" >> "$env_path"
   fi
 }
 
@@ -278,7 +352,9 @@ if [ ! -f "$PROJECT_ROOT/backend/.env" ]; then
   echo "backend/.env criado. Ajuste JWT_SECRET e outras variáveis conforme necessário."
 fi
 
+update_db_env "$PROJECT_ROOT/backend/.env"
 update_krill_env "$PROJECT_ROOT/backend/.env"
+update_redis_env "$PROJECT_ROOT/backend/.env"
 
 echo ""
 echo "=== Concluído ==="

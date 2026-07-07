@@ -99,6 +99,18 @@ generate_ssh_key() {
   openssl rand -base64 32 | head -c 32
 }
 
+has_backend_source() {
+  [ -f "$PROJECT_ROOT/backend/src/scripts/build.ts" ]
+}
+
+has_frontend_source() {
+  [ -f "$PROJECT_ROOT/frontend/package.json" ] && [ -d "$PROJECT_ROOT/frontend/src" ]
+}
+
+has_doc_source() {
+  [ -f "$PROJECT_ROOT/doc/.vitepress/config.mjs" ]
+}
+
 wait_for_apt() {
   local waited=0 max="${APT_LOCK_WAIT_SECONDS:-300}"
   while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 \
@@ -141,6 +153,8 @@ fi
 # ---------------------------------------------------------------------------
 
 prompt_password "Senha do banco de dados (MariaDB, usuário $DB_USER)" DB_PASSWORD 8
+prompt_password "Senha do Redis" REDIS_PASSWORD 8
+prompt_password "Token de administração do Krill (RPKI)" KRILL_API_TOKEN 16
 prompt_base_url
 
 DOMAIN="${BASE_URL#https://}"
@@ -166,7 +180,10 @@ set_env_var "$ENV_FILE" "DB_PASSWORD" "$DB_PASSWORD"
 set_env_var "$ENV_FILE" "JWT_SECRET" "$JWT_SECRET"
 set_env_var "$ENV_FILE" "JWT_EXPIRES_IN" "24h"
 set_env_var "$ENV_FILE" "ALLOWED_ORIGINS" "${BASE_URL},https://localhost"
-set_env_var "$ENV_FILE" "REDIS_URL" "redis://localhost:6379"
+set_env_var "$ENV_FILE" "REDIS_URL" "redis://:${REDIS_PASSWORD}@localhost:6379"
+set_env_var "$ENV_FILE" "REDIS_PASSWORD" "$REDIS_PASSWORD"
+set_env_var "$ENV_FILE" "KRILL_API_URL" "https://127.0.0.1:3100"
+set_env_var "$ENV_FILE" "KRILL_API_TOKEN" "$KRILL_API_TOKEN"
 set_env_var "$ENV_FILE" "SSH_ENCRYPTION_KEY" "$SSH_ENCRYPTION_KEY"
 set_env_var "$ENV_FILE" "NODE_ENV" "production"
 
@@ -315,12 +332,19 @@ server {
     }
 
     location / {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
+        root ${PROJECT_ROOT}/frontend/build;
+        try_files \$uri \$uri/ /index.html;
+
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+
+        location = /index.html {
+            add_header Cache-Control "no-cache, no-store, must-revalidate";
+            add_header Pragma "no-cache";
+            add_header Expires "0";
+        }
     }
 }
 EOF
@@ -337,21 +361,51 @@ fi
 # ---------------------------------------------------------------------------
 
 log "Instalando dependências npm..."
-run_as_app_user "npm install --no-audit --no-fund"
-run_as_app_user "npm install --prefix backend --no-audit --no-fund"
-run_as_app_user "npm install --prefix frontend --no-audit --no-fund"
+if [ -f "$PROJECT_ROOT/package.json" ]; then
+  run_as_app_user "npm install --no-audit --no-fund"
+fi
+if [ -f "$PROJECT_ROOT/backend/package.json" ]; then
+  run_as_app_user "npm install --prefix backend --no-audit --no-fund"
+fi
+if has_frontend_source; then
+  run_as_app_user "npm install --prefix frontend --no-audit --no-fund"
+else
+  log "Frontend: sem código-fonte (repo de produção) — pulando npm install do frontend."
+fi
 
 mkdir -p "$PROJECT_ROOT/logs"
 chown -R "$RUN_USER:$RUN_USER" "$PROJECT_ROOT/logs"
 
-log "Build do backend..."
-run_as_app_user "npm run build --prefix backend"
+if has_backend_source; then
+  log "Build do backend..."
+  run_as_app_user "npm run build --prefix backend"
+elif [ -f "$PROJECT_ROOT/backend/dist/index.js" ]; then
+  log "Backend: usando backend/dist do repositório (sem recompilar)."
+else
+  die "backend/dist/index.js não encontrado e não há código-fonte para compilar."
+fi
 
-log "Build do frontend (pode levar alguns minutos)..."
-run_as_app_user "npm run build --prefix frontend"
+if has_frontend_source; then
+  log "Build do frontend (pode levar alguns minutos)..."
+  run_as_app_user "npm run build --prefix frontend"
+elif [ -f "$PROJECT_ROOT/frontend/build/index.html" ]; then
+  log "Frontend: usando frontend/build do repositório (sem recompilar)."
+else
+  die "frontend/build/index.html não encontrado e não há código-fonte para compilar."
+fi
+
+if has_doc_source; then
+  log "Build da wiki..."
+  run_as_app_user "npm install --prefix doc --no-audit --no-fund"
+  run_as_app_user "npm run build --prefix doc"
+elif [ -f "$PROJECT_ROOT/doc/.vitepress/dist/index.html" ]; then
+  log "Wiki: usando doc/.vitepress/dist do repositório (sem recompilar)."
+else
+  log "Aviso: wiki não encontrada — PM2 doc pode falhar até publicar doc/.vitepress/dist."
+fi
 
 if [ ! -f "$PROJECT_ROOT/frontend/build/index.html" ]; then
-  die "Build do frontend falhou — frontend/build/index.html não encontrado."
+  die "Build do frontend indisponível — frontend/build/index.html não encontrado."
 fi
 
 log "Executando migrations..."
@@ -387,9 +441,9 @@ echo "  E-mail: admin@ispconsultor.com.br"
 echo "  Senha:  admin123  (troque no primeiro login)"
 echo ""
 if [[ "$INSTALL_NGINX" != "n" && "$INSTALL_NGINX" != "nao" && "$INSTALL_NGINX" != "não" ]]; then
-  echo "Nginx: proxy em ${BASE_URL} → frontend :3000, API → backend :3001"
+  echo "Nginx: ${BASE_URL} → frontend/build (estático), API → backend :3001, wiki → :4000"
 else
-  echo "Sem Nginx: frontend em http://localhost:3000 | backend em http://localhost:3001"
+  echo "Sem Nginx: frontend em frontend/build | backend em http://localhost:3001 | wiki em :4000"
 fi
 echo ""
 echo "Comandos úteis (como $RUN_USER):"
