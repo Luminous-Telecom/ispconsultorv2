@@ -119,7 +119,7 @@ Gera um comando de instalação para executar manualmente no servidor **Linux**.
 3. Execute o comando como **root** no servidor — o script instala Docker (se necessário), baixa os arquivos do agente do ISP Consultor, monta a imagem localmente e sobe o container em `/opt/ispconsultor-agent`.
 
 ::: warning Token no comando
-O comando gerado inclui o **token do agente** — não compartilhe em locais públicos.
+O comando gerado inclui o **token do agente** no header `X-Agent-Token` — não compartilhe em locais públicos. Abrir a URL no navegador **não** funciona (acesso bloqueado).
 :::
 
 ::: tip Windows
@@ -170,13 +170,13 @@ O `Dockerfile` define a URL do servidor conforme o canal no build.
 ### 3. Baixar arquivos e subir com Docker Compose
 
 1. Crie a pasta `C:\ispconsultor-agent`.
-2. Baixe os arquivos públicos do ISP Consultor (ajuste o domínio se for dev):
+2. Baixe os arquivos do ISP Consultor com o token no header (substitua `ID`, `TOKEN` e o domínio se for dev):
 
 ```powershell
 cd C:\ispconsultor-agent
-curl.exe -fsSL "https://ispconsultor.com.br/api/agents/files/index.js" -o index.js
-curl.exe -fsSL "https://ispconsultor.com.br/api/agents/files/package.json" -o package.json
-curl.exe -fsSL "https://ispconsultor.com.br/api/agents/files/Dockerfile" -o Dockerfile
+curl.exe -fsSL -H "X-Agent-Token: TOKEN" "https://ispconsultor.com.br/api/agents/ID/files/index.js" -o index.js
+curl.exe -fsSL -H "X-Agent-Token: TOKEN" "https://ispconsultor.com.br/api/agents/ID/files/package.json" -o package.json
+curl.exe -fsSL -H "X-Agent-Token: TOKEN" "https://ispconsultor.com.br/api/agents/ID/files/Dockerfile" -o Dockerfile
 ```
 
 3. Crie `docker-compose.yml` (substitua `<token-do-painel>` e o canal se for dev):

@@ -97,7 +97,7 @@ export async function installAgent(opts: InstallAgentOptions): Promise<void> {
   const conn = await connect(sshConfig);
   log('✅ SSH conectado.');
 
-  const script = generateInstallScript({ token, serverUrl });
+  const script = generateInstallScript({ agentId: opts.agentId, token, serverUrl });
 
   try {
     log('📥 Baixando e instalando agente a partir do servidor ISP Consultor...');

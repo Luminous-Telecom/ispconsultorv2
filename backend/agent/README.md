@@ -28,7 +28,7 @@ Permite acesso terminal e proxy SSH aos equipamentos sem expor portas.
 
 Instale via script gerado no painel (aba **Instalar Manual**) ou instalação automática via SSH.
 
-O script baixa `index.js`, `package.json` e `Dockerfile` do próprio ISP Consultor (`GET /api/agents/files/*`), monta a imagem **localmente** (sem Docker Hub) e sobe o container em `/opt/ispconsultor-agent`.
+O script baixa `index.js`, `package.json` e `Dockerfile` do ISP Consultor (`GET /api/agents/:id/files/*` com header `X-Agent-Token`), monta a imagem **localmente** e sobe o container em `/opt/ispconsultor-agent`.
 
 ```bash
 # Verificar status
@@ -38,7 +38,7 @@ cd /opt/ispconsultor-agent && docker compose ps
 docker logs -f ispconsultor-agent
 
 # Reinstalar / atualizar (baixa arquivos novos e reconstrói)
-curl -fsSL "https://seu-dominio/api/agents/ID/install-script?token=TOKEN" | sudo bash
+curl -fsSL -H "X-Agent-Token: TOKEN" "https://seu-dominio/api/agents/ID/install-script" | sudo bash
 ```
 
 Após regenerar o token no painel, execute o comando de instalação novamente no servidor.

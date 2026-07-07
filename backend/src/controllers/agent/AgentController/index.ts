@@ -29,7 +29,12 @@ import {
   resolveEmpresaScopeForList,
   resolveEmpresaIdForScopedCreate,
 } from '../../../utils/tenantUtils';
-import { queryString } from '../../../utils/listQuery';
+import {
+  AGENT_INSTALL_TOKEN_HEADER,
+  extractAgentInstallToken,
+  rejectAgentInstallBrowserAccess,
+  resolveAgentByInstallToken,
+} from '../../../utils/agentInstallAuth';
 
 const AGENT_DIR = path.resolve(__dirname, '../../../../agent');
 const ALLOWED_FILES = new Set(['index.js', 'package.json', 'Dockerfile']);
@@ -359,10 +364,24 @@ export class AgentController {
   }
 
   /**
-   * Serve os arquivos estáticos do agente (index.js, package.json).
-   * Rota pública — usada pelo install-script no servidor remoto.
+   * Serve arquivos do agente para instalação remota.
+   * Autenticação: header X-Agent-Token (ou Bearer). Bloqueia navegação direta no browser.
    */
   static async serveFile(req: Request, res: Response): Promise<void> {
+    if (rejectAgentInstallBrowserAccess(req, res)) return;
+
+    const token = extractAgentInstallToken(req);
+    if (!token) {
+      res.status(401).send(`Token obrigatório no header ${AGENT_INSTALL_TOKEN_HEADER}`);
+      return;
+    }
+
+    const agent = await resolveAgentByInstallToken(req.params.id, token);
+    if (!agent) {
+      res.status(401).send('Token inválido');
+      return;
+    }
+
     const { filename } = req.params;
     if (!ALLOWED_FILES.has(filename)) {
       res.status(404).send('Arquivo não encontrado');
@@ -375,38 +394,38 @@ export class AgentController {
       return;
     }
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
     res.sendFile(filePath);
   }
 
   /**
-   * Retorna um script bash de instalação para o servidor remoto.
-   * Rota pública — autenticada pelo token do agente na query string (?token=...).
+   * Retorna script bash de instalação para o servidor remoto.
+   * Autenticação: header X-Agent-Token (ou Bearer). Bloqueia navegação direta no browser.
    */
   static async installScript(req: Request, res: Response): Promise<void> {
-    const token = queryString(req.query.token);
+    if (rejectAgentInstallBrowserAccess(req, res)) return;
+
+    const token = extractAgentInstallToken(req);
     if (!token) {
-      res.status(401).send('Token obrigatório');
+      res.status(401).send(`Token obrigatório no header ${AGENT_INSTALL_TOKEN_HEADER}`);
       return;
     }
 
     try {
-      const agent = await Agent.findByPk(req.params.id);
+      const agent = await resolveAgentByInstallToken(req.params.id, token);
       if (!agent) {
-        res.status(404).send('Agente não encontrado');
-        return;
-      }
-
-      const tokenHash = createHash('sha256').update(token).digest('hex');
-      if (tokenHash !== agent.token_hash) {
         res.status(401).send('Token inválido');
         return;
       }
 
       const serverUrl = (process.env.BASE_URL || process.env.APP_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
 
-      const script = generateInstallScript({ token, serverUrl });
+      const script = generateInstallScript({ agentId: agent.id, token, serverUrl });
 
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.setHeader('Content-Disposition', 'attachment; filename="install-agent.sh"');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
       res.send(script);
     } catch (err) {
       logger.warn('AgentController.installScript: erro', { error: err });

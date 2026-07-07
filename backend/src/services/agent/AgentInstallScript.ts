@@ -13,6 +13,7 @@ export const LEGACY_DOCKER_CONTAINERS = [
 ];
 
 export interface GenerateInstallScriptOptions {
+  agentId: number;
   token: string;
   serverUrl: string;
 }
@@ -42,9 +43,9 @@ export function getAgentContainerName(serverUrl: string): string {
  * Baixa arquivos do ISP Consultor, monta imagem Docker localmente e sobe via Compose.
  */
 export function generateInstallScript(opts: GenerateInstallScriptOptions): string {
-  const { token, serverUrl } = opts;
+  const { agentId, token, serverUrl } = opts;
   const base = serverUrl.replace(/\/$/, '');
-  const filesBase = `${base}/api/agents/files`;
+  const filesBase = `${base}/api/agents/${agentId}/files`;
   const channel = getAgentChannel(serverUrl);
   const imageName = getLocalAgentImage(serverUrl);
   const containerName = getAgentContainerName(serverUrl);
@@ -53,6 +54,7 @@ export function generateInstallScript(opts: GenerateInstallScriptOptions): strin
 set -e
 
 TOKEN="${token}"
+AGENT_ID="${agentId}"
 SERVER_URL="${base}"
 FILES_BASE="${filesBase}"
 IMAGE_NAME="${imageName}"
@@ -60,6 +62,11 @@ CONTAINER_NAME="${containerName}"
 AGENT_CHANNEL="${channel}"
 COMPOSE_DIR="${AGENT_COMPOSE_DIR}"
 SERVICE_NAME="${AGENT_SERVICE_NAME}"
+AGENT_AUTH_HEADER="X-Agent-Token: \${TOKEN}"
+
+agent_curl() {
+  curl -fsSL -H "\$AGENT_AUTH_HEADER" "\$@"
+}
 
 RED='\\033[0;31m'; GREEN='\\033[0;32m'; YELLOW='\\033[1;33m'; NC='\\033[0m'
 log()   { echo -e "\${GREEN}[${SYSTEM_NAME}]\${NC} \$1"; }
@@ -137,9 +144,9 @@ done
 # ── Baixar arquivos do ISP Consultor ──────────────────────────────────────────
 log "Baixando arquivos do agente de \$SERVER_URL..."
 mkdir -p "\$COMPOSE_DIR"
-curl -fsSL "\$FILES_BASE/index.js" -o "\$COMPOSE_DIR/index.js"
-curl -fsSL "\$FILES_BASE/package.json" -o "\$COMPOSE_DIR/package.json"
-curl -fsSL "\$FILES_BASE/Dockerfile" -o "\$COMPOSE_DIR/Dockerfile"
+agent_curl "\$FILES_BASE/index.js" -o "\$COMPOSE_DIR/index.js"
+agent_curl "\$FILES_BASE/package.json" -o "\$COMPOSE_DIR/package.json"
+agent_curl "\$FILES_BASE/Dockerfile" -o "\$COMPOSE_DIR/Dockerfile"
 log "Arquivos baixados com sucesso."
 
 # ── Docker Compose (build local — sem Docker Hub) ─────────────────────────────
