@@ -1,15 +1,15 @@
-# Setup local (sem Docker): MariaDB, Redis, Elasticsearch
+# Setup local (sem Docker): MariaDB, Redis, Krill
 
 Instalação direta no sistema para Debian/Ubuntu.
 
 ## Script automático
 
-O script lê `backend/.env` (ou `.env.example` se `.env` não existir) e cria as configurações correspondentes: usuário MySQL, Redis com ou sem senha, etc.
+O script lê `backend/.env` (ou `.env.example` se `.env` não existir) e cria as configurações correspondentes: usuário MySQL, Redis com ou sem senha, Krill (RPKI), etc.
 
 ```bash
 # 1. Configure backend/.env com DB_PASSWORD (e opcionalmente REDIS_PASSWORD)
 # 2. Execute o script
-cd /home/lucas/projetos/ispconsultor
+cd /caminho/do/ispconsultor
 sudo bash scripts/setup-local.sh
 ```
 
@@ -43,26 +43,6 @@ sudo systemctl enable redis-server && sudo systemctl start redis-server
 Redis sem senha: `REDIS_URL=redis://localhost:6379` no `.env`  
 Com senha: `REDIS_URL=redis://:senha@localhost:6379` e configure em `/etc/redis/redis.conf`.
 
-### Elasticsearch
-
-```bash
-sudo apt install -y apt-transport-https wget
-wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg
-echo "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-8.x.list
-sudo apt update
-sudo apt install -y elasticsearch
-```
-
-Dev local: desabilitar segurança (opcional):
-
-```bash
-echo "xpack.security.enabled: false" | sudo tee -a /etc/elasticsearch/elasticsearch.yml
-```
-
-```bash
-sudo systemctl enable elasticsearch && sudo systemctl start elasticsearch
-```
-
 ### Configurar backend/.env
 
 Exemplo para uso local:
@@ -76,11 +56,6 @@ DB_PASSWORD=sua_senha
 
 REDIS_URL=redis://localhost:6379
 # ou com senha: REDIS_URL=redis://:senha@localhost:6379
-
-ELASTICSEARCH_NODE=http://localhost:9200
-ELASTICSEARCH_INDEX_NAME=ispconsultor-auditoria
-ELASTICSEARCH_USERNAME=
-ELASTICSEARCH_PASSWORD=
 ```
 
 ### Migrations

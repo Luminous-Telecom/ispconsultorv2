@@ -1,5 +1,5 @@
 #!/bin/bash
-# Instala MariaDB, Redis e Elasticsearch no sistema (Debian/Ubuntu).
+# Instala MariaDB, Redis e Krill no sistema (Debian/Ubuntu).
 # Lê backend/.env (ou .env.example) para criar as configurações correspondentes.
 # Execute com: sudo ./scripts/setup-local.sh
 
@@ -39,7 +39,7 @@ fi
 
 export DB_NAME DB_USER DB_PASSWORD REDIS_PASSWORD
 
-echo "=== ISP Consultor: instalação local (MariaDB, Redis, Elasticsearch, Krill) ==="
+echo "=== ISP Consultor: instalação local (MariaDB, Redis, Krill) ==="
 
 # Detecta gerenciador de pacotes
 if command -v apt-get &>/dev/null; then
@@ -178,37 +178,6 @@ elif [ -z "$REDIS_PASSWORD" ]; then
   fi
 fi
 
-# --- Elasticsearch ---
-echo ""
-echo ">>> Elasticsearch..."
-if pkg_installed elasticsearch || command -v elasticsearch &>/dev/null; then
-  echo "Elasticsearch já instalado, pulando..."
-else
-  if command -v apt-get &>/dev/null; then
-    apt_install_if_missing apt-transport-https wget
-    if [ ! -f /usr/share/keyrings/elasticsearch-keyring.gpg ]; then
-      wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg
-    fi
-    if [ ! -f /etc/apt/sources.list.d/elastic-8.x.list ]; then
-      echo "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main" \
-        | tee /etc/apt/sources.list.d/elastic-8.x.list
-    fi
-    apt_install_if_missing elasticsearch
-  else
-    echo "Instale Elasticsearch manualmente: https://www.elastic.co/guide/en/elasticsearch/reference/current/install-elasticsearch.html"
-  fi
-fi
-
-# Elasticsearch 8.x: desabilitar segurança para dev local
-if [ -f /etc/elasticsearch/elasticsearch.yml ]; then
-  if ! grep -q "xpack.security.enabled" /etc/elasticsearch/elasticsearch.yml; then
-    echo "xpack.security.enabled: false" >> /etc/elasticsearch/elasticsearch.yml
-  fi
-fi
-
-systemctl start elasticsearch 2>/dev/null || true
-systemctl enable elasticsearch 2>/dev/null || true
-
 # --- Krill (motor RPKI) ---
 echo ""
 echo ">>> Krill (motor RPKI)..."
@@ -315,7 +284,6 @@ echo ""
 echo "=== Concluído ==="
 echo "MariaDB: localhost:3306 ($DB_USER / $DB_NAME)"
 echo "Redis:   localhost:6379 $([ -n "$REDIS_PASSWORD" ] && echo "(com senha)" || echo "(sem senha)")"
-echo "Elastic: localhost:9200 (segurança desabilitada para dev)"
 if command -v krill &>/dev/null; then
   echo "Krill:   ${KRILL_URL} (token em backend/.env → KRILL_API_TOKEN)"
 else

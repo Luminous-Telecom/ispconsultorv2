@@ -1,6 +1,6 @@
 #!/bin/bash
 # ISP Consultor — instalação completa em Linux (Debian/Ubuntu) a partir do zero.
-# Instala dependências de sistema, MariaDB, Redis, Elasticsearch, Krill, Node.js,
+# Instala dependências de sistema, MariaDB, Redis, Krill, Node.js,
 # PM2, Nginx; configura backend/.env; builda e sobe a aplicação em produção.
 #
 # Uso (a partir da raiz do repositório clonado):
@@ -200,8 +200,8 @@ else
   log "Node.js $(node -v) já instalado."
 fi
 
-# Infraestrutura (MariaDB, Redis, Elasticsearch, Krill) — reutiliza setup-local.sh
-log "Instalando MariaDB, Redis, Elasticsearch e Krill..."
+# Infraestrutura (MariaDB, Redis, Krill) — reutiliza setup-local.sh
+log "Instalando MariaDB, Redis e Krill..."
 bash "$SCRIPT_DIR/setup-local.sh"
 
 # Nginx
