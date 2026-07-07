@@ -12,6 +12,8 @@ export interface SaasPlanoFormData {
   valor_anual: number | '';
   limite_usuarios: number;
   ativo: boolean;
+  mostrar_hotsite: boolean;
+  desconto_percentual: number;
   modulos: PlanoModuloId[];
   equipamentos: SaasPlanoEquipamentosConfig;
 }
@@ -67,6 +69,7 @@ export const SaasPlanoGeralFormFields: React.FC<SaasPlanoGeralFormFieldsProps> =
               name="valor_mensal"
               type="number"
               label="Valor Mensal (R$)"
+              helpText={t('saas.planMonthlyPriceHelp')}
               value={form.valor_mensal}
               onChange={(v) => {
                 onFieldChange('valor_mensal', Number(v ?? 0));
@@ -83,9 +86,26 @@ export const SaasPlanoGeralFormFields: React.FC<SaasPlanoGeralFormFieldsProps> =
         <div className="col-12">
           <div className="mb-0">
             <FormField
+              name="desconto_percentual"
+              type="number"
+              label={t('saas.planHotsiteDiscount')}
+              helpText={t('saas.planHotsiteDiscountHelp')}
+              value={form.desconto_percentual}
+              onChange={(v) => onFieldChange('desconto_percentual', Number(v ?? 0))}
+              min={0}
+              max={100}
+              step={0.01}
+              size="sm"
+            />
+          </div>
+        </div>
+        <div className="col-12">
+          <div className="mb-0">
+            <FormField
               name="valor_anual"
               type="number"
               label="Valor Anual (R$)"
+              helpText={t('saas.planAnnualPriceHelp')}
               value={form.valor_anual === '' ? '' : form.valor_anual}
               onChange={(v) =>
                 onFieldChange(
@@ -97,6 +117,21 @@ export const SaasPlanoGeralFormFields: React.FC<SaasPlanoGeralFormFieldsProps> =
               step={0.01}
               size="sm"
             />
+          </div>
+        </div>
+        <div className="col-12">
+          <div className="form-field mb-0">
+            <LabelWithHelp className="form-label small" helpText={t('saas.planShowOnHotsiteHelp')}>
+              {t('saas.planShowOnHotsite')}
+            </LabelWithHelp>
+            <div className="form-field-control">
+              <Checkbox
+                checked={form.mostrar_hotsite}
+                onChange={({ value }) => onFieldChange('mostrar_hotsite', value)}
+                label={t('saas.planShowOnHotsiteLabel')}
+                inline
+              />
+            </div>
           </div>
         </div>
         <div className="col-12">

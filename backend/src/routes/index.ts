@@ -42,6 +42,7 @@ import ipv6Routes from './ipv6Routes';
 import blockdomiRoutes from './blockdomiRoutes';
 import blockdomiListasRoutes from './blockdomiListasRoutes';
 import blockdomiPublicoRoutes from './blockdomiPublicoRoutes';
+import publicSaasPlanosRoutes from './publicSaasPlanosRoutes';
 import ipsPermitidosRoutes from './ipsPermitidosRoutes';
 import pdfExtractRoutes from './pdfExtractRoutes';
 import tipoCobrancaContratoRoutes from './tipoCobrancaContratoRoutes';
@@ -149,6 +150,7 @@ const routes = [
 
     // API pública Blockdomi (site público) - sem auth, sem IP
     { path: '/api/blockdomi-publico', route: blockdomiPublicoRoutes },
+    { path: '/api/public', route: publicSaasPlanosRoutes },
 
     // Rotas TXT do Blockdomi (raiz, sem /api): /domain/version, /domain/all, /v4/all, /v6/all
     { path: '', route: blockdomiListasRoutes },

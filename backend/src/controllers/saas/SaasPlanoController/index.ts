@@ -14,6 +14,8 @@ const schema = Joi.object({
   limite_usuarios: Joi.number().integer().min(1).required(),
   recursos: Joi.object().optional().allow(null),
   ativo: Joi.boolean().optional(),
+  mostrar_hotsite: Joi.boolean().optional(),
+  desconto_percentual: Joi.number().min(0).max(100).optional(),
 });
 
 export class SaasPlanoController {

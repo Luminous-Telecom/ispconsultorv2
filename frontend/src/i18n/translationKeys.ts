@@ -1216,6 +1216,15 @@ export interface TranslationKeys {
   'saas.planLimitEquipamentosShort': string;
   'saas.planLimitTuneisShort': string;
   'saas.planLimitBackupsPerDeviceShort': string;
+  'saas.planFinalPriceHelp': string;
+  'saas.planMonthlyPriceHelp': string;
+  'saas.planAnnualPriceHelp': string;
+  'saas.planHotsiteDiscount': string;
+  'saas.planHotsiteDiscountHelp': string;
+  'saas.planShowOnHotsite': string;
+  'saas.planShowOnHotsiteLabel': string;
+  'saas.planShowOnHotsiteHelp': string;
+  'saas.planShowOnHotsiteShort': string;
 
   // Placeholders
   'placeholder.cnpj': string;

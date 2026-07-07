@@ -96,6 +96,29 @@ const SaasPlanoListModal: React.FC<Props> = ({ show, onClose, skipWrapper = fals
           ),
       },
       {
+        key: 'desconto_percentual',
+        label: t('saas.planHotsiteDiscount'),
+        sortable: true,
+        width: '90px',
+        render: (item) =>
+          item.desconto_percentual && Number(item.desconto_percentual) > 0 ? (
+            <span>{Number(item.desconto_percentual)}%</span>
+          ) : (
+            <span className="text-muted">—</span>
+          ),
+      },
+      {
+        key: 'mostrar_hotsite',
+        label: t('saas.planShowOnHotsiteShort'),
+        sortable: true,
+        width: '100px',
+        render: (item) => (
+          <span className={`badge ${item.mostrar_hotsite ? 'bg-primary' : 'bg-secondary'}`}>
+            {item.mostrar_hotsite ? t('ui.yes') : t('ui.no')}
+          </span>
+        ),
+      },
+      {
         key: 'limite_usuarios',
         label: t('form.usersQuantity'),
         sortable: true,
@@ -103,23 +126,45 @@ const SaasPlanoListModal: React.FC<Props> = ({ show, onClose, skipWrapper = fals
         render: (item) => item.limite_usuarios,
       },
       {
-        key: 'limites_equipamentos',
-        label: t('saas.planTableEquipmentLimits'),
+        key: 'equipamentos_limite_equipamentos',
+        label: t('saas.planLimitEquipamentosShort'),
         sortable: false,
-        width: '140px',
+        width: '72px',
         render: (item) => {
           const modulos = extractModulosFromSaasPlanoRecursos(item.recursos);
           if (!modulos.includes('equipamentos')) {
             return <span className="text-muted">—</span>;
           }
           const limites = extractEquipamentosFromSaasPlanoRecursos(item.recursos);
-          return (
-            <div className="small lh-sm">
-              <div>{t('saas.planLimitEquipamentosShort')}: {limites.limite_equipamentos}</div>
-              <div>{t('saas.planLimitTuneisShort')}: {limites.limite_tuneis}</div>
-              <div>{t('saas.planLimitBackupsPerDeviceShort')}: {limites.limite_backups}</div>
-            </div>
-          );
+          return <span>{limites.limite_equipamentos}</span>;
+        },
+      },
+      {
+        key: 'equipamentos_limite_tuneis',
+        label: t('saas.planLimitTuneisShort'),
+        sortable: false,
+        width: '72px',
+        render: (item) => {
+          const modulos = extractModulosFromSaasPlanoRecursos(item.recursos);
+          if (!modulos.includes('equipamentos')) {
+            return <span className="text-muted">—</span>;
+          }
+          const limites = extractEquipamentosFromSaasPlanoRecursos(item.recursos);
+          return <span>{limites.limite_tuneis}</span>;
+        },
+      },
+      {
+        key: 'equipamentos_limite_backups',
+        label: t('saas.planLimitBackupsPerDeviceShort'),
+        sortable: false,
+        width: '96px',
+        render: (item) => {
+          const modulos = extractModulosFromSaasPlanoRecursos(item.recursos);
+          if (!modulos.includes('equipamentos')) {
+            return <span className="text-muted">—</span>;
+          }
+          const limites = extractEquipamentosFromSaasPlanoRecursos(item.recursos);
+          return <span>{limites.limite_backups}</span>;
         },
       },
       {

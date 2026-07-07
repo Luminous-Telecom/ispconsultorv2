@@ -1198,6 +1198,15 @@ const enUS: TranslationKeys = {
     'saas.planLimitEquipamentosShort': 'Devices',
     'saas.planLimitTuneisShort': 'Tunnels',
     'saas.planLimitBackupsPerDeviceShort': 'Backups/device',
+    'saas.planFinalPriceHelp': 'Final price charged to the client. On the site, if there is a discount, the original price is calculated for display.',
+    'saas.planMonthlyPriceHelp': 'Monthly billing amount. Base for calculating the annual plan (12× monthly).',
+    'saas.planAnnualPriceHelp': 'Final annual amount. Change here to recalculate the discount, or enter the discount to calculate automatically.',
+    'saas.planHotsiteDiscount': 'Annual discount (%)',
+    'saas.planHotsiteDiscountHelp': 'Discount on 12× the monthly price. Enter the percentage to calculate the annual amount, or enter the annual amount to calculate the discount.',
+    'saas.planShowOnHotsite': 'Public site',
+    'saas.planShowOnHotsiteLabel': 'Show on hotsite',
+    'saas.planShowOnHotsiteHelp': 'Checked plans appear in the Plans section of the site. Only active plans are displayed.',
+    'saas.planShowOnHotsiteShort': 'Hotsite',
 
     // Placeholders
     'placeholder.cnpj': '00.000.000/0000-00',

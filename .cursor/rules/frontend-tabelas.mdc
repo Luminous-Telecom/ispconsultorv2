@@ -98,10 +98,39 @@ render: createStatusBadgeRenderer(STATUS_MAP)
 
 Ver badges em `frontend-ui-centralizado.mdc`.
 
+## Uma coluna = um dado
+
+Cada coluna da tabela (`Table`, `ListModal`, `EmbeddedTablePanel`) deve exibir **apenas um valor** — o dado correspondente ao `key`/`label` da coluna.
+
+| ✅ Permitido | ❌ Proibido |
+|--------------|-------------|
+| Coluna **Equip.** com `5` | Coluna **Limites** com três linhas: Equip., Túneis, Backups |
+| Coluna **Status** com um badge | Coluna **Contato** com e-mail + telefone empilhados |
+| Coluna **Valor** com moeda formatada | Coluna **Endereço** com rua, cidade e CEP no mesmo `<div>` |
+
+- Campos relacionados (ex.: limites de equipamentos) → **uma coluna por campo**, com label próprio no cabeçalho
+- Quando o dado não se aplica à linha, use `—` (`text-muted`), não omitir a coluna
+- Agrupamento visual de colunas adjacentes é ok; **não** agrupar múltiplos valores distintos na mesma célula
+
+```tsx
+// ❌ Vários dados na mesma coluna
+render: (item) => (
+  <div>
+    <div>Equip.: {item.limite_equipamentos}</div>
+    <div>Túneis: {item.limite_tuneis}</div>
+  </div>
+)
+
+// ✅ Uma coluna por limite
+{ key: 'equipamentos_limite_equipamentos', label: t('saas.planLimitEquipamentosShort'), render: ... }
+{ key: 'equipamentos_limite_tuneis', label: t('saas.planLimitTuneisShort'), render: ... }
+```
+
 ## Proibido
 
 - `<table>` HTML custom para CRUD
 - Paginação/busca/ordenação só no frontend (exceto RPKI client-side documentado)
+- **Múltiplos dados distintos na mesma coluna/célula** (ver seção *Uma coluna = um dado*)
 - `form-switch` ou select sim/não para filtros booleanos
 - Toolbar duplicada fora de `Table` / `TableToolbar`
 - `LoadingDots` em células — usar `Loading variant="inline"`

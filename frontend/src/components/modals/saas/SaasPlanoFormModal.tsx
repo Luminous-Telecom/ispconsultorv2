@@ -18,6 +18,11 @@ import {
   getSaasPlanoRecursosObj,
 } from 'utils/saasPlanoRecursos';
 import {
+  syncSaasPlanoOnDescontoChange,
+  syncSaasPlanoOnValorAnualChange,
+  syncSaasPlanoOnValorMensalChange,
+} from 'utils/saasPlanoAnualDesconto';
+import {
   SaasPlanoEquipamentosFormFields,
   SaasPlanoGeralFormFields,
   type SaasPlanoFormData,
@@ -37,6 +42,8 @@ const INITIAL: SaasPlanoFormData = {
   valor_anual: '',
   limite_usuarios: 5,
   ativo: true,
+  mostrar_hotsite: false,
+  desconto_percentual: 0,
   modulos: [],
   equipamentos: SAAS_PLANO_EQUIPAMENTOS_INITIAL,
 };
@@ -86,6 +93,8 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
             valor_anual: valorAnual,
             limite_usuarios: p.limite_usuarios,
             ativo: p.ativo,
+            mostrar_hotsite: Boolean(p.mostrar_hotsite),
+            desconto_percentual: Number(p.desconto_percentual) || 0,
             modulos: extractModulosFromSaasPlanoRecursos(p.recursos),
             equipamentos: extractEquipamentosFromSaasPlanoRecursos(p.recursos),
           };
@@ -118,7 +127,18 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
 
   const handleFieldChange = useCallback(
     <K extends keyof SaasPlanoFormData>(field: K, value: SaasPlanoFormData[K]) => {
-      setForm((prev) => ({ ...prev, [field]: value }));
+      setForm((prev) => {
+        if (field === 'valor_mensal') {
+          return { ...prev, ...syncSaasPlanoOnValorMensalChange(prev, Number(value)) };
+        }
+        if (field === 'valor_anual') {
+          return { ...prev, ...syncSaasPlanoOnValorAnualChange(prev, value as number | '') };
+        }
+        if (field === 'desconto_percentual') {
+          return { ...prev, ...syncSaasPlanoOnDescontoChange(prev, Number(value)) };
+        }
+        return { ...prev, [field]: value };
+      });
     },
     []
   );
@@ -137,6 +157,9 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
     const newErrors: Partial<Record<keyof SaasPlanoFormData, string>> = {};
     if (!form.nome.trim()) newErrors.nome = 'Nome é obrigatório';
     if (form.valor_mensal < 0) newErrors.valor_mensal = 'Valor mensal inválido';
+    if (form.desconto_percentual < 0 || form.desconto_percentual > 100) {
+      newErrors.desconto_percentual = 'Desconto inválido';
+    }
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -156,6 +179,8 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
       valor_anual: form.valor_anual !== '' ? Number(form.valor_anual) : undefined,
       limite_usuarios: form.limite_usuarios,
       ativo: form.ativo,
+      mostrar_hotsite: form.mostrar_hotsite,
+      desconto_percentual: form.desconto_percentual,
       recursos,
     };
 

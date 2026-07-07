@@ -10,6 +10,8 @@ export interface SaasPlano {
   limite_usuarios: number;
   recursos?: Record<string, unknown>;
   ativo: boolean;
+  mostrar_hotsite?: boolean;
+  desconto_percentual?: number;
   created_at: string;
 }
 

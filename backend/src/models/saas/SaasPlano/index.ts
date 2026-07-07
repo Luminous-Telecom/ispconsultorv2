@@ -19,6 +19,8 @@ export class SaasPlano extends Model<
   declare limite_usuarios: CreationOptional<number>;
   declare recursos: CreationOptional<Record<string, unknown> | null>;
   declare ativo: CreationOptional<boolean>;
+  declare mostrar_hotsite: CreationOptional<boolean>;
+  declare desconto_percentual: CreationOptional<number>;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 }
@@ -33,6 +35,8 @@ SaasPlano.init(
     limite_usuarios: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 5 },
     recursos: { type: DataTypes.JSON, allowNull: true },
     ativo: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
+    mostrar_hotsite: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+    desconto_percentual: { type: DataTypes.DECIMAL(5, 2), allowNull: false, defaultValue: 0 },
     created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
     updated_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
   },

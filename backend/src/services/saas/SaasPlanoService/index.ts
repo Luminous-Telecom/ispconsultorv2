@@ -1,8 +1,20 @@
 import { SaasPlano } from '../../../models/saas/SaasPlano';
+import {
+  HotsitePlanoPublico,
+  serializeSaasPlanoForHotsite,
+} from '../../../utils/saasPlanoHotsiteUtils';
 
 export class SaasPlanoService {
   static async list(): Promise<SaasPlano[]> {
     return SaasPlano.findAll({ order: [['valor_mensal', 'ASC']] });
+  }
+
+  static async listForHotsite(): Promise<HotsitePlanoPublico[]> {
+    const planos = await SaasPlano.findAll({
+      where: { ativo: true, mostrar_hotsite: true },
+      order: [['valor_mensal', 'ASC'], ['nome', 'ASC']],
+    });
+    return planos.map(serializeSaasPlanoForHotsite);
   }
 
   static async getById(id: number): Promise<SaasPlano | null> {
