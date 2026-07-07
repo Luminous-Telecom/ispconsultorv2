@@ -129,3 +129,4 @@ Use sempre os primitivos do projeto. **Índice completo:** `frontend-ui-centrali
 | `backend-pdf.mdc` | PDFGenerationService (Puppeteer) |
 | `backend-middlewares-infra.mdc` | Cadeia de middlewares, logger, upload, cache |
 | `backend-integracoes-externas.mdc` | Agente, SSH Manager, RPKI, Python |
+| `backend-saas-plano-limites.mdc` | Limites numéricos do plano — validação obrigatória na criação |

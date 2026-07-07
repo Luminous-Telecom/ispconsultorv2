@@ -28,7 +28,12 @@ alwaysApply: false
 3. Modal: `ModalType` com prefixo `saas-`, registrado em `SingleModalWrapper`
 4. Menu do painel SaaS (não o menu do ERP)
 
+## Limites numéricos no plano
+
+Campos de limite no formulário de plano (`SaasPlanoLimitesFormFields`) vêm de `SAAS_PLANO_LIMITE_DEFS`. Ao adicionar limite novo, espelhar backend + frontend e validar criação no ERP — ver **`backend-saas-plano-limites.mdc`**.
+
 ## Proibido
 
 - Reaproveitar hook/service do ERP que assume `auth_token` dentro de tela `/saas/*`
 - `ModalType` de entidade SaaS sem prefixo `saas-` (colisão de nome com o mesmo cadastro no ERP, ex.: `planos` vs `saas-planos`)
+- Limite configurável no plano sem validação em todo fluxo de criação da entidade (controller, sync, worker)

@@ -29,6 +29,7 @@ const { hasModulo, isLoading } = usePlanoModulos();
 2. Mapear o(s) `modalId`/aba correspondente em `MODAL_MODULO_MAP`
 3. Envolver a aba/menu/ação com `hasModulo('novo-modulo')`
 4. Espelhar a mesma constante no backend (`backend/src/constants/planoModulos.ts` + `MODULO_ROTAS`) — ver `backend-multi-tenancy.mdc`/`backend-api.mdc`
+5. Se o módulo tiver **limite numérico** no plano → seguir `backend-saas-plano-limites.mdc` (definição, contador, `validateLimiteCreate` em **todos** os fluxos de criação)
 
 ## RBAC por perfil (nota)
 

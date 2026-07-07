@@ -35,6 +35,7 @@ Antes de criar spinner, toast, modal ou botão custom, use o que já existe em `
 | React Query (query keys) | `frontend-react-query.mdc` |
 | Validação Zod / use*Form | `frontend-validacao-zod.mdc` |
 | Feature gating por plano | `frontend-feature-gating.mdc` |
+| Limites numéricos do plano SaaS | `backend-saas-plano-limites.mdc` |
 | Central do Assinante | `frontend-central-assinante.mdc` |
 | Config API / Capacitor | `frontend-config-capacitor.mdc` |
 | Estrutura de types/ | `frontend-tipos.mdc` |

@@ -54,7 +54,12 @@ npx ts-node backend/scripts/test-scheduler-queue.ts
 
 Scripts de teste manual de rotina/fila ficam em `backend/scripts/` (fora de `src/`), com `dotenv` e conexão direta ao banco.
 
+## Criação de registros em rotina/worker
+
+Se a rotina **cria** entidades com limite numérico no plano SaaS (ex.: espelho de ordem de serviço, import sync), chamar `SaasPlanoLimitesService.validateLimiteCreate` (ou método especializado) **antes** de persistir — ver `backend-saas-plano-limites.mdc`. Não contar só com validação no controller HTTP.
+
 ## Proibido
 
 - Lógica de negócio pesada direto no `WorkerManager` — extrair para uma classe/service e chamar a partir do worker
 - Nova dependência de fila (Bull/BullMQ/RabbitMQ) sem alinhar antes — o padrão atual é polling + Redis pontual
+- Inserir registros contáveis do tenant em rotina/worker sem validar limite do plano quando existir limite configurável
