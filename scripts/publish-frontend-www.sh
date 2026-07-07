@@ -33,10 +33,11 @@ if [ "$(id -u)" -eq 0 ]; then
   usermod -aG www-data "$APP_USER" 2>/dev/null || true
 else
   if [ ! -w "$WEB_ROOT" ]; then
-    echo "Erro: sem permissão de escrita em $WEB_ROOT" >&2
+    echo "Erro: sem permissão de escrita em $WEB_ROOT (use: sudo RUN_USER=ispconsultor bash $0)" >&2
     exit 1
   fi
 fi
 
-chmod -R u=rwX,g=rX,o= "$WEB_ROOT"
+# Nginx (www-data) lê via grupo ou others — o= bloqueia e gera 403 em /saas após self-update sem sudo
+chmod -R u=rwX,go=rX "$WEB_ROOT"
 echo "Frontend publicado em $WEB_ROOT"
