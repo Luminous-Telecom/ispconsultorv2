@@ -313,6 +313,7 @@ export class AtualizacoesController {
               npmInstall: { success: result.steps.npmInstall.success },
               build: { success: result.steps.build.success },
               migrate: { success: result.steps.migrate.success },
+              buildDoc: { success: result.steps.buildDoc.success },
               pm2Reload: { success: pm2ReloadResult.success }
             },
             message: result.message
@@ -340,6 +341,7 @@ export class AtualizacoesController {
           npmInstall: { success: result.steps.npmInstall.success },
           build: { success: result.steps.build.success },
           migrate: { success: result.steps.migrate.success },
+          buildDoc: { success: result.steps.buildDoc.success },
           pm2Reload: { success: pm2ReloadResult.success }
         }
       })}\n\n`);

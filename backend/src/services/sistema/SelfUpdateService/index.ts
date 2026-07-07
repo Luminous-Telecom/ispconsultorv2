@@ -20,12 +20,13 @@ export interface UpdateResult {
     npmInstall: CommandResult;
     build: CommandResult;
     migrate: CommandResult;
+    buildDoc: CommandResult;
     pm2Reload?: CommandResult;
   };
 }
 
 /**
- * Self-update no servidor: git pull → npm install (backend) → build (backend + frontend) → migrations → PM2.
+ * Self-update no servidor: git pull → npm install (backend) → build (backend + frontend) → migrations → wiki (dist) → PM2.
  */
 export class SelfUpdateService {
   private readonly projectRoot: string;
@@ -134,6 +135,7 @@ export class SelfUpdateService {
           npmInstall: { success: false, stdout: '', stderr: '' },
           build: { success: false, stdout: '', stderr: '' },
           migrate: { success: false, stdout: '', stderr: '' },
+          buildDoc: { success: false, stdout: '', stderr: '' },
         },
       };
     }
@@ -150,6 +152,7 @@ export class SelfUpdateService {
       npmInstall: { success: false, stdout: '', stderr: '' } as CommandResult,
       build: { success: false, stdout: '', stderr: '' } as CommandResult,
       migrate: { success: false, stdout: '', stderr: '' } as CommandResult,
+      buildDoc: { success: false, stdout: '', stderr: '' } as CommandResult,
     };
 
     // Passo 1: Git Pull
@@ -277,9 +280,40 @@ export class SelfUpdateService {
     });
 
     onProgress?.({
+      step: 'buildDoc',
+      progress: 87,
+      message: 'Preparando wiki (doc)...',
+      logs: ['→ Verificando doc/.vitepress/dist...'],
+    });
+    steps.buildDoc = await this.buildService.buildDoc();
+    if (!steps.buildDoc.success) {
+      logger.warn('Self-update: wiki não preparada, continuando atualização do ERP', {
+        error: steps.buildDoc.error || steps.buildDoc.stderr,
+      });
+      onProgress?.({
+        step: 'buildDoc',
+        progress: 87,
+        message: 'Wiki não atualizada (dist ausente ou inválida)',
+        logs: [`⚠ Wiki: ${steps.buildDoc.error || steps.buildDoc.stderr}`],
+      });
+      steps.buildDoc = {
+        success: true,
+        stdout: steps.buildDoc.stderr || steps.buildDoc.error || 'Wiki ignorada neste deploy',
+        stderr: '',
+      };
+    } else {
+      onProgress?.({
+        step: 'buildDoc',
+        progress: 88,
+        message: 'Wiki pronta',
+        logs: [`✓ ${steps.buildDoc.stdout || 'Wiki preparada'}`],
+      });
+    }
+
+    onProgress?.({
       step: 'concluido',
       progress: 90,
-      message: 'Atualização concluída. Reiniciando aplicação...',
+      message: 'Atualização concluída. Reiniciando aplicação e wiki...',
       logs: ['✓ Todos os passos concluídos com sucesso', '→ Aguardando reinicialização do PM2...']
     });
     
@@ -300,8 +334,8 @@ export class SelfUpdateService {
     onProgress?.({
       step: 'pm2Reload',
       progress: 92,
-      message: 'Agendando reinício da aplicação (PM2)...',
-      logs: ['→ Reinício será executado em 5 segundos (processo filho)...']
+      message: 'Agendando reinício da aplicação e da wiki (PM2)...',
+      logs: ['→ Reinício backend + doc em 5 segundos (processo filho)...']
     });
     const reloadResult = this.pm2Service.scheduleRestart();
 
@@ -310,7 +344,10 @@ export class SelfUpdateService {
         step: 'pm2Reload',
         progress: 100,
         message: 'Atualização concluída com sucesso!',
-        logs: ['✓ Reinício agendado', '✓ O frontend aguardará o servidor ficar pronto antes de recarregar']
+        logs: [
+          '✓ Reinício agendado (backend e wiki)',
+          '✓ O frontend aguardará o servidor ficar pronto antes de recarregar',
+        ]
       });
     } else {
       onProgress?.({
