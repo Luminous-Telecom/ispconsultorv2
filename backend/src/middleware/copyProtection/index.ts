@@ -60,7 +60,7 @@ export const fileProtectionMiddleware = (req: Request, res: Response, next: Next
 };
 
 export const apiProtectionMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  const publicRoutes = ['/api/health', '/api/buscar-cep', '/api/dados-empresa', '/api/auth/login', '/login', '/health'];
+  const publicRoutes = ['/api/health', '/api/buscar-cep', '/api/dados-empresa', '/api/public', '/api/auth/login', '/login', '/health'];
   
   if (!publicRoutes.some(route => req.path.startsWith(route)) && req.path.startsWith('/api/')) {
     res.setHeader('X-API-Protected', 'true');

@@ -123,6 +123,7 @@ const routes = [
     { path: '/api/ixc/ordens-servico', route: ixcOssChamadoRoutes },
     { path: '/api/ixc', route: ixcLookupRoutes },
     { path: '/api', route: centralAssinanteRoutes },
+    { path: '/api/public', route: publicSaasPlanosRoutes },
 
     // Rotas de webhook
     { path: '/webhook', route: webhookRoutes },
@@ -150,7 +151,6 @@ const routes = [
 
     // API pública Blockdomi (site público) - sem auth, sem IP
     { path: '/api/blockdomi-publico', route: blockdomiPublicoRoutes },
-    { path: '/api/public', route: publicSaasPlanosRoutes },
 
     // Rotas TXT do Blockdomi (raiz, sem /api): /domain/version, /domain/all, /v4/all, /v6/all
     { path: '', route: blockdomiListasRoutes },

@@ -35,6 +35,7 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { method: 'GET', path: /^\/api\/dados-empresa\/logo\/?$/i }, // GET logo da empresa (público)
   { method: 'GET', path: /^\/api\/dados-empresa\/public\/?$/i }, // GET logo e nome da empresa (para login e central do assinante)
   { method: 'GET', path: /^\/api\/dados-empresa\/public\/[a-z0-9-]+$/i }, // GET logo e nome da empresa por slug (multiloja)
+  { method: 'GET', path: /^\/api\/public\/saas-planos\/?$/i }, // Planos do hotsite (site público)
   { method: 'POST', path: /^\/api\/pagamento\/session$/i }, // POST troca token por cookie (token no body)
   { method: 'GET', path: /^\/api\/pagamento\/\d+$/i }, // GET título por sessão (cookie)
   { method: 'GET', path: /^\/api\/pagamento\/\d+\/pdf$/i }, // GET PDF por sessão (cookie)
