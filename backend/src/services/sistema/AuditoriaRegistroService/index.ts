@@ -49,11 +49,18 @@ function getUserData(req: Request | AuthenticatedRequest): {
     return { id: null, nome: null, email: null };
   }
 
-  const userId = userPayload.sub ? parseInt(String(userPayload.sub), 10) : null;
-  const email = typeof userPayload.email === 'string' ? userPayload.email : null;
-  const nome = typeof userPayload.nome === 'string' ? userPayload.nome : null;
+  const payload = userPayload as JwtPayload & { id?: number | string };
+  const rawId = payload.sub ?? payload.id;
+  const userId =
+    rawId != null && String(rawId).trim() !== '' ? parseInt(String(rawId), 10) : null;
+  const email = typeof payload.email === 'string' ? payload.email : null;
+  const nome = typeof payload.nome === 'string' ? payload.nome : null;
 
-  return { id: userId, nome: nome ?? null, email };
+  return {
+    id: userId != null && Number.isFinite(userId) && userId > 0 ? userId : null,
+    nome: nome ?? null,
+    email,
+  };
 }
 
 function isSaasAuditRequest(req: Request | AuthenticatedRequest): boolean {
@@ -239,26 +246,42 @@ export async function registrarExclusao(
 export async function registrarLogin(
   req: Request | AuthenticatedRequest,
   usuarioId: number,
-  observacoes?: string
+  observacoes?: string,
+  empresa_id?: number | null
 ): Promise<void> {
-  await registrarAuditoria(req, {
-    acao: 'login',
-    entidade: 'Usuario',
-    entidade_id: usuarioId,
-    observacoes,
+  setImmediate(() => {
+    void persistSnapshot(
+      req,
+      {
+        acao: 'login',
+        entidade: 'Usuario',
+        entidade_id: usuarioId,
+        observacoes,
+        empresa_id: empresa_id ?? getEmpresaIdForAudit(req),
+      },
+      { usuarioId }
+    ).catch(() => undefined);
   });
 }
 
 export async function registrarLogout(
   req: Request | AuthenticatedRequest,
   usuarioId: number,
-  observacoes?: string
+  observacoes?: string,
+  empresa_id?: number | null
 ): Promise<void> {
-  await registrarAuditoria(req, {
-    acao: 'logout',
-    entidade: 'Usuario',
-    entidade_id: usuarioId,
-    observacoes,
+  setImmediate(() => {
+    void persistSnapshot(
+      req,
+      {
+        acao: 'logout',
+        entidade: 'Usuario',
+        entidade_id: usuarioId,
+        observacoes,
+        empresa_id: empresa_id ?? getEmpresaIdForAudit(req),
+      },
+      { usuarioId }
+    ).catch(() => undefined);
   });
 }
 

@@ -106,8 +106,13 @@ export class AuthController {
 
       // Registrar login na auditoria (empresa_id para exibir tenant nos logs)
       const authReq = req as unknown as AuthRequest;
-      authReq.user = { id: usuario.id, nome: usuario.nome, email: usuario.email, empresa_id: usuario.empresa_id ?? null };
-      await registrarLogin(authReq, usuario.id, 'Login realizado com sucesso');
+      authReq.user = {
+        sub: String(usuario.id),
+        email: usuario.email,
+        nome: usuario.nome ?? null,
+        empresa_id: usuario.empresa_id ?? null,
+      };
+      await registrarLogin(authReq, usuario.id, 'Login realizado com sucesso', usuario.empresa_id ?? null);
 
       const jwtExpiresIn = process.env.JWT_EXPIRES_IN || '24h';
 
@@ -145,12 +150,27 @@ export class AuthController {
     const cookieToken = (req as Request & { cookies?: Record<string, string> }).cookies?.auth_token;
     if (cookieToken) {
       try {
-        const payload = jwt.decode(cookieToken) as { sub?: string; email?: string; empresa_id?: number | null } | null;
+        const payload = jwt.decode(cookieToken) as {
+          sub?: string;
+          email?: string;
+          nome?: string | null;
+          empresa_id?: number | null;
+        } | null;
         if (payload?.sub) {
           const usuarioId = parseInt(payload.sub, 10);
           const authReq = req as unknown as AuthRequest;
-          authReq.user = { sub: payload.sub, email: payload.email, empresa_id: payload.empresa_id ?? null };
-          registrarLogout(authReq, usuarioId, 'Logout realizado com sucesso').catch(() => { /* não crítico */ });
+          authReq.user = {
+            sub: payload.sub,
+            email: payload.email,
+            nome: typeof payload.nome === 'string' ? payload.nome : null,
+            empresa_id: payload.empresa_id ?? null,
+          };
+          registrarLogout(
+            authReq,
+            usuarioId,
+            'Logout realizado com sucesso',
+            payload.empresa_id ?? null
+          ).catch(() => { /* não crítico */ });
         }
       } catch {
         /* ignora falha ao decodificar — logout continua */
