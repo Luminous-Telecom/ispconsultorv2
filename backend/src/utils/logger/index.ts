@@ -9,7 +9,8 @@ function buildLogLine(info: Record<string, unknown>): string {
   const message = info.message ?? '';
   const ctx = info.context ? ` [${info.context}]` : '';
   const err = info.error ? ` — ${info.error}` : '';
-  return `${ts} ${level}${ctx}: ${message}${err}`;
+  const origin = info.origin ? ` (origin: ${info.origin})` : '';
+  return `${ts} ${level}${ctx}: ${message}${err}${origin}`;
 }
 
 const consoleFormat = isProduction()

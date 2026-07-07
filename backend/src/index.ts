@@ -118,16 +118,16 @@ app.use(cors({
         } catch {
           /* invalid URL */
         }
-        logger.warn('CORS bloqueado: ALLOWED_ORIGINS não configurada em produção', { origin });
-        return callback(new Error('Origem não permitida: configure ALLOWED_ORIGINS'));
+        logger.warn(`CORS bloqueado: ALLOWED_ORIGINS não configurada em produção — origem ${origin}`, { origin });
+        return callback(new Error(`Origem não permitida: configure ALLOWED_ORIGINS (${origin})`));
       }
       return callback(null, true);
     }
     if (ALLOWED_ORIGINS.includes(origin)) {
       return callback(null, true);
     }
-    logger.warn('CORS bloqueado: origem não permitida', { origin, allowedOrigins: ALLOWED_ORIGINS });
-    return callback(new Error('Origem não permitida pelo CORS'));
+    logger.warn(`CORS bloqueado: origem não permitida — ${origin}`, { origin, allowedOrigins: ALLOWED_ORIGINS });
+    return callback(new Error(`Origem não permitida pelo CORS: ${origin}`));
   },
   credentials: true,
   exposedHeaders: ['Content-Disposition'],

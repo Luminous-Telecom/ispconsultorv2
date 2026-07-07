@@ -38,6 +38,7 @@ export const errorHandlerMiddleware = (
     path: req.path,
     method: req.method,
     ip: req.ip,
+    origin: req.headers.origin,
     statusCode: err.statusCode
   });
   
