@@ -9,6 +9,7 @@ export interface HotsitePlanoCompareLimiteRow {
   label: string;
   values: (string | null)[];
   numericValues: (number | null)[];
+  moduleAvailable: boolean[];
 }
 
 export interface HotsitePlanoCompareModuloRow {
@@ -17,7 +18,9 @@ export interface HotsitePlanoCompareModuloRow {
   included: boolean[];
 }
 
-const LIMITE_ORDER = ['usuarios', ...SAAS_PLANO_LIMITE_DEFS.map((def) => def.formKey)];
+function planoHasModulo(plano: HotsitePlanoPublico, id: PlanoModuloId): boolean {
+  return plano.modulos.some((m) => m.id === id);
+}
 
 export function formatHotsitePlanoCurrency(value: number): string {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
@@ -55,22 +58,28 @@ function parseLimiteNumeric(valor: string | null): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-function getLimiteLabel(chave: string, planos: HotsitePlanoPublico[]): string {
+function getLimiteLabel(chave: string): string {
   if (chave === 'usuarios') return 'Usuários';
-  const fromPlano = planos.flatMap((p) => p.limites).find((l) => l.chave === chave);
-  if (fromPlano?.label) return fromPlano.label;
   const fromDef = SAAS_PLANO_LIMITE_DEFS.find((d) => d.formKey === chave);
-  return fromDef?.label ?? chave;
+  return fromDef?.hotsiteLabel ?? fromDef?.label ?? chave;
+}
+
+function getLimiteModulo(chave: string): PlanoModuloId | null {
+  if (chave === 'usuarios') return 'cadastros';
+  return SAAS_PLANO_LIMITE_DEFS.find((d) => d.formKey === chave)?.modulo ?? null;
 }
 
 function collectLimiteChaves(planos: HotsitePlanoPublico[]): string[] {
-  const present = new Set<string>();
-  for (const plano of planos) {
-    for (const limite of plano.limites) {
-      present.add(limite.chave);
+  const chaves: string[] = [];
+  if (planos.some((plano) => planoHasModulo(plano, 'cadastros'))) {
+    chaves.push('usuarios');
+  }
+  for (const def of SAAS_PLANO_LIMITE_DEFS) {
+    if (planos.some((plano) => planoHasModulo(plano, def.modulo))) {
+      chaves.push(def.formKey);
     }
   }
-  return LIMITE_ORDER.filter((chave) => present.has(chave));
+  return chaves;
 }
 
 function getPlanoLimiteValue(plano: HotsitePlanoPublico, chave: string): string | null {
@@ -93,8 +102,9 @@ function getModuloLabel(id: PlanoModuloId, planos: HotsitePlanoPublico[]): strin
   return PLANO_MODULOS.find((m) => m.id === id)?.label ?? id;
 }
 
-function planoHasModulo(plano: HotsitePlanoPublico, id: PlanoModuloId): boolean {
-  return plano.modulos.some((m) => m.id === id);
+function planoHasLimiteModulo(plano: HotsitePlanoPublico, chave: string): boolean {
+  const modulo = getLimiteModulo(chave);
+  return modulo != null && planoHasModulo(plano, modulo);
 }
 
 export function buildHotsitePlanosCompareModulos(planos: HotsitePlanoPublico[]): HotsitePlanoCompareModuloRow[] {
@@ -112,11 +122,15 @@ export function buildHotsitePlanosCompareLimites(planos: HotsitePlanoPublico[]):
 
   return collectLimiteChaves(planos).map((chave) => {
     const values = planos.map((plano) => getPlanoLimiteValue(plano, chave));
+    const moduleAvailable = planos.map((plano) => planoHasLimiteModulo(plano, chave));
     return {
       chave,
-      label: getLimiteLabel(chave, planos),
+      label: getLimiteLabel(chave),
       values,
-      numericValues: values.map(parseLimiteNumeric),
+      numericValues: moduleAvailable.map((available, index) =>
+        available ? parseLimiteNumeric(values[index]) : null
+      ),
+      moduleAvailable,
     };
   });
 }

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import type { PlanoModuloId } from 'constants/planoModulos';
 import { API_CONFIG } from '../config/api';
 
 const publicApiClient = axios.create({
@@ -16,7 +17,7 @@ export interface HotsitePlanoLimite {
 }
 
 export interface HotsitePlanoModulo {
-  id: string;
+  id: PlanoModuloId;
   label: string;
 }
 

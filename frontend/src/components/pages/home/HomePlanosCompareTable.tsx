@@ -99,16 +99,28 @@ const HomePlanosCompareTable: React.FC<Props> = ({
                   <th scope="row" className="home-planos-compare-feature-col">
                     {row.label}
                   </th>
-                  {row.values.map((value, colIndex) => (
-                    <td
-                      key={`${row.chave}-${colIndex}`}
-                      className={`home-planos-compare-cell home-planos-compare-limit${
-                        bestCols.has(colIndex) ? ' is-best' : ''
-                      }`}
-                    >
-                      {value ?? '—'}
-                    </td>
-                  ))}
+                  {row.values.map((value, colIndex) => {
+                    const available = row.moduleAvailable[colIndex];
+                    const isBest = available && bestCols.has(colIndex);
+
+                    return (
+                      <td
+                        key={`${row.chave}-${colIndex}`}
+                        className={`home-planos-compare-cell home-planos-compare-limit${
+                          isBest ? ' is-best' : ''
+                        }${!available ? ' is-no' : ''}`}
+                      >
+                        {!available ? (
+                          <>
+                            <span className="bi bi-x-lg home-planos-compare-icon" aria-hidden />
+                            <span className="visually-hidden">Não incluído</span>
+                          </>
+                        ) : (
+                          value ?? '—'
+                        )}
+                      </td>
+                    );
+                  })}
                 </tr>
               );
             })}

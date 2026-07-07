@@ -10,7 +10,7 @@ export const PLANO_MODULO_LABELS: Record<PlanoModuloId, string> = {
   cadastros: 'Cadastros',
   financeiro: 'Financeiro',
   blockdomi: 'Blockdomi',
-  equipamentos: 'Equipamentos',
+  equipamentos: 'Equipamentos e Túneis SSH',
   rpki: 'RPKI',
   ixc_provedor: 'IXC Provedor',
   ordens_servico: 'Ordens de serviço',
@@ -108,7 +108,7 @@ export function serializeSaasPlanoForHotsite(plano: SaasPlano): HotsitePlanoPubl
     if (!modulos.includes(def.modulo)) continue;
     limites.push({
       chave: def.formKey,
-      label: def.listLabelShort,
+      label: def.hotsiteLabel,
       valor: formatLimite(readLimiteFromRecursos(recursos, def.recursosKey, 0)),
     });
   }
