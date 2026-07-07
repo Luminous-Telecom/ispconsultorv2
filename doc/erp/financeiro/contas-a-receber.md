@@ -28,6 +28,7 @@ A tela segue o padrão de [listagens do ERP](/doc/geral/listagens). Abaixo, apen
 | **Cancelar** | Cancela o título selecionado |
 | **Estornar** | Estorna um pagamento já registrado |
 | **Imprimir** | Menu de impressão de boletos/recibos |
+| **Enviar** | Envia a cobrança ao cliente via WhatsApp ou e-mail |
 | **NFS-e** | Ações de nota fiscal de serviço eletrônica |
 
 ::: tip Seleção de registro

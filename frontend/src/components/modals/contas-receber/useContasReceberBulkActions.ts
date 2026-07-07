@@ -8,6 +8,7 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useBulkBtn } from 'components/ui';
 import { useI18n } from 'contexts/I18nContext';
 import { BulkAction } from 'components/tables/types';
+import { createTituloEnviarAction } from 'components/modals/clientes/contrato/contratoTituloBulkActionHelpers';
 import { canGerarBoletoSaas, formatContasReceberCurrency } from './contasReceberListUtils';
 import { SelectedParcela, TituloItemUnion } from './contasReceberListTypes';
 
@@ -409,6 +410,23 @@ export function useContasReceberBulkActions({
               : []),
           ],
     });
+
+    if (!isSaas) {
+      const enviarAction = createTituloEnviarAction({ t, success, showApiError, bulkBtn });
+      actions.push({
+        key: 'enviar',
+        label: enviarAction.label,
+        variant: enviarAction.variant,
+        disabled: enviarAction.disabled as (s: TituloItemUnion[]) => boolean,
+        dropdown: enviarAction.dropdown?.map((item) => ({
+          label: item.label,
+          action: (items?: TituloItemUnion[]) => {
+            const sendAction = item.action as (selectedItems?: Titulo[]) => void | Promise<void>;
+            void sendAction(items as Titulo[] | undefined);
+          },
+        })),
+      });
+    }
 
     if (!isSaas) {
       actions.push({
