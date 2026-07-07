@@ -156,18 +156,22 @@ O ERP conecta via SSH no servidor do cliente e executa a instalação.
 4. Clique em **Instalar agente**.
 5. Acompanhe o log na tela. Ao concluir, o status muda para **Instalação concluída** e o agente aparece como **Online** na listagem.
 
-**Requisitos do servidor:** Linux (Debian, Ubuntu, CentOS, AlmaLinux, Rocky), acesso root ou sudo, internet para baixar dependências, Node.js 18+ (instalado automaticamente se ausente), mínimo 256 MB RAM e 500 MB disco.
+**Requisitos do servidor:** Linux (Debian, Ubuntu, CentOS, AlmaLinux, Rocky), acesso root ou sudo, internet para baixar Docker, Docker e Docker Compose (instalados automaticamente se ausentes), mínimo 256 MB RAM e 500 MB disco.
 
 #### Instalar Manual
 
 1. Na sub-aba **Instalar Manual**, clique em **Gerar**.
 2. Copie o **Comando de instalação** exibido.
-3. Execute o comando como **root** no servidor do cliente.
+3. Execute o comando como **root** no servidor do cliente — o script configura Docker Compose em `/opt/ispconsultor-agent`.
 4. Feche o modal e verifique na listagem se o agente ficou **Online**.
 
 ::: warning Token sensível
 O comando manual contém o token do agente. Não compartilhe em canais públicos.
 :::
+
+#### Instalar no Windows
+
+O comando da aba **Instalar Manual** é para **Linux**. Em máquinas **Windows**, use Docker Desktop — passo a passo completo em [Túneis (Agentes) — Instalar no Windows](/doc/equipamentos/tuneis-agentes#instalar-no-windows).
 
 ### Editar um agente
 

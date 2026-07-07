@@ -24,22 +24,25 @@ Permite acesso terminal e proxy SSH aos equipamentos sem expor portas.
    ISPCONSULTOR_SERVER=http://localhost:3001 ISPCONSULTOR_TOKEN=<seu-token> node index.js
    ```
 
-## Produção (systemd)
+## Produção (Docker Compose)
 
-Instale via script gerado no painel (aba Manual) ou serviço automático via SSH.
+Instale via script gerado no painel (aba **Instalar Manual**) ou instalação automática via SSH.
 
-O script baixa `index.js` e `package.json` do próprio ISP Consultor e configura o serviço `ispconsultor-agent`.
+O script instala Docker (se necessário), grava `docker-compose.yml` em `/opt/ispconsultor-agent` e sobe o container com a imagem pública `midia181/ispconsultor-tunnel` (`:dev` ou `:prod`).
 
 ```bash
 # Verificar status
-sudo systemctl status ispconsultor-agent
+cd /opt/ispconsultor-agent && docker compose ps
 
 # Logs
-sudo journalctl -u ispconsultor-agent -f
+docker logs -f ispconsultor-agent
 ```
+
+Após regenerar o token no painel, execute o comando de instalação novamente no servidor.
 
 Instalação manual (sem script):
 
 ```bash
-ISPCONSULTOR_SERVER=https://seu-dominio ISPCONSULTOR_TOKEN='<token-do-painel>' node index.js
+docker run -d --name ispconsultor-agent --restart unless-stopped \
+  midia181/ispconsultor-tunnel:prod --token '<token-do-painel>'
 ```

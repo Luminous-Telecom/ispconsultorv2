@@ -247,7 +247,8 @@ export default defineConfig({
               { text: 'Cadastro e listagem', link: '/doc/equipamentos/tuneis-agentes' },
               { text: 'Aba Configurações', link: '/doc/equipamentos/tuneis-agentes#aba-configuracoes' },
               { text: 'Aba Instalar Automático', link: '/doc/equipamentos/tuneis-agentes#aba-instalar-automatico' },
-              { text: 'Aba Instalar Manual', link: '/doc/equipamentos/tuneis-agentes#aba-instalar-manual' }
+              { text: 'Aba Instalar Manual', link: '/doc/equipamentos/tuneis-agentes#aba-instalar-manual' },
+              { text: 'Instalar no Windows', link: '/doc/equipamentos/tuneis-agentes#instalar-no-windows' }
             ]
           },
           {

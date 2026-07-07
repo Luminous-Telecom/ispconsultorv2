@@ -23,8 +23,8 @@ type InstallMode  = 'auto' | 'manual';
 const REQUIREMENTS = [
   'Linux (Debian, Ubuntu, CentOS, AlmaLinux, Rocky)',
   'Acesso root ou sudo',
-  'Conexão com a internet (para baixar Node.js e dependências)',
-  'Node.js 18+ (instalado automaticamente se ausente)',
+  'Conexão com a internet (para baixar Docker)',
+  'Docker e Docker Compose (instalados automaticamente se ausentes)',
   'Mínimo: 256 MB RAM, 500 MB disco',
 ];
 
