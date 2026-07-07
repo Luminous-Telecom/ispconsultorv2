@@ -185,7 +185,7 @@ export class IxcOssChamadoController {
       const empresaId = getEmpresaIdOrNull(req);
       const limitError = await SaasPlanoLimitesService.validateLimiteCreate(
         empresaId,
-        'ixc_provedor_limite_ordens_servico'
+        'ordens_servico_limite_ordens_servico'
       );
       if (limitError) {
         sendForbidden(res, limitError);

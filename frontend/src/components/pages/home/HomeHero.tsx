@@ -1,7 +1,7 @@
 import React from 'react';
 import { AppButton } from 'components/ui';
 import { useTheme } from 'contexts/ThemeContext';
-import { HERO_CHECKS, WIKI_HOME_URL } from './homeConstants';
+import { HERO_CHECKS } from './homeConstants';
 import HomeDashboardPreview from './HomeDashboardPreview';
 
 interface HomeHeroProps {
@@ -21,7 +21,7 @@ const HomeHero: React.FC<HomeHeroProps> = ({ scrollTo, onOpenLightbox }) => {
             <span className="home-hero-accent">telecomunicações</span>
           </h1>
           <p className="home-hero-desc">
-            ERP completo para consultores: clientes, contratos, financeiro, equipamentos, RPKI e wiki integrada.
+            ERP completo: clientes, contratos, financeiro, equipamentos, RPKI e wiki integrada.
           </p>
           <div className="home-hero-checks">
             {HERO_CHECKS.map((text) => (
@@ -34,24 +34,17 @@ const HomeHero: React.FC<HomeHeroProps> = ({ scrollTo, onOpenLightbox }) => {
           <div className="home-hero-buttons">
             <AppButton
               type="button"
-              label="Agendar Demonstração"
+              label="Ver planos"
               variant="unstyled"
               className="home-btn home-btn-accent"
+              onClick={() => scrollTo('planos')}
+            />
+            <AppButton
+              type="button"
+              label="Agendar demonstração"
+              variant="unstyled"
+              className="home-btn home-btn-outline"
               onClick={() => scrollTo('cta')}
-            />
-            <AppButton
-              type="button"
-              label="Central de Ajuda"
-              variant="unstyled"
-              className="home-btn home-btn-outline"
-              onClick={() => window.open(WIKI_HOME_URL, '_blank', 'noopener,noreferrer')}
-            />
-            <AppButton
-              type="button"
-              label="Ver recursos"
-              variant="unstyled"
-              className="home-btn home-btn-outline"
-              onClick={() => scrollTo('recursos')}
             />
           </div>
         </div>

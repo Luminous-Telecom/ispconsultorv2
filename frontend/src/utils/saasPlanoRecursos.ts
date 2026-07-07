@@ -1,10 +1,10 @@
 import { SAAS_PLANO_LIMITE_DEFS, type SaasPlanoLimiteGrupo } from 'constants/saasPlanoLimites';
 import type { PlanoModuloId } from 'services/planoModulosService';
 import {
-  appendLegacyIxcProvedorModulo,
+  appendLegacyModulosFromRecursos,
   readLimiteFromRecursosObj,
-  stripLegacyIxcLimiteKeys,
-  IXC_PROVEDOR_LIMITE_LEGACY_FORM_KEYS,
+  stripLegacyLimiteKeys,
+  SAAS_PLANO_LIMITE_LEGACY_FORM_KEYS,
 } from './saasPlanoLimiteRecursosUtils';
 
 export type SaasPlanoLimitesConfig = Record<string, number>;
@@ -55,7 +55,7 @@ export function extractModulosFromSaasPlanoRecursos(recursos: unknown): PlanoMod
   const obj = getSaasPlanoRecursosObj(recursos);
   const modulos = obj?.modulos;
   const base = Array.isArray(modulos) ? modulos.filter((m): m is PlanoModuloId => typeof m === 'string') : [];
-  return appendLegacyIxcProvedorModulo(base, obj);
+  return appendLegacyModulosFromRecursos(base, obj);
 }
 
 export function extractLimitesFromSaasPlanoRecursos(recursos: unknown): SaasPlanoLimitesConfig {
@@ -65,7 +65,7 @@ export function extractLimitesFromSaasPlanoRecursos(recursos: unknown): SaasPlan
 
   for (const def of SAAS_PLANO_LIMITE_DEFS) {
     limites[def.formKey] = readLimiteFromRecursosObj(obj, def.recursosKey, 0);
-    const legacyFormKey = IXC_PROVEDOR_LIMITE_LEGACY_FORM_KEYS[def.formKey];
+    const legacyFormKey = SAAS_PLANO_LIMITE_LEGACY_FORM_KEYS[def.formKey];
     if (legacyFormKey && limites[def.formKey] === 0) {
       limites[def.formKey] = parseNumero(obj[legacyFormKey], 0);
     }
@@ -113,7 +113,7 @@ export function buildSaasPlanoRecursosPayload(
     }
   }
 
-  stripLegacyIxcLimiteKeys(recursos);
+  stripLegacyLimiteKeys(recursos);
 
   return recursos;
 }

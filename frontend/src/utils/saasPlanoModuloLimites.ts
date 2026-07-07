@@ -17,6 +17,7 @@ export function formatSaasPlanoModulosList(modulos: PlanoModuloId[]): string {
       if (moduloId === 'equipamentos') return 'Equipamentos';
       if (moduloId === 'rpki') return 'RPKI';
       if (moduloId === 'ixc_provedor') return 'IXC Provedor';
+      if (moduloId === 'ordens_servico') return 'Ordens de serviço';
       if (moduloId === 'envio_notificacoes') return 'Notificações';
       if (moduloId === 'assinatura_digital') return 'Assinatura digital';
       if (moduloId === 'nfse') return 'NFS-e';
@@ -36,6 +37,7 @@ export const SAAS_PLANO_MODULO_COL_LABEL: Record<PlanoModuloId, string> = {
   equipamentos: 'Equip.',
   rpki: 'RPKI',
   ixc_provedor: 'IXC',
+  ordens_servico: 'O.S.',
   envio_notificacoes: 'Notif.',
   assinatura_digital: 'Assin.',
   nfse: 'NFS-e',

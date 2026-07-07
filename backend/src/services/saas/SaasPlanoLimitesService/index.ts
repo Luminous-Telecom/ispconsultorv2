@@ -1,7 +1,7 @@
 import { Op } from 'sequelize';
 import { SAAS_PLANO_LIMITE_DEFS, type SaasPlanoLimiteRecursoId } from '../../../constants/saasPlanoLimites';
 import {
-  appendLegacyIxcProvedorModulo,
+  appendLegacyModulosFromRecursos,
   readLimiteFromRecursos,
 } from '../../../utils/saasPlanoLimiteRecursosUtils';
 import { Usuario } from '../../../models/cadastros/Usuario';
@@ -81,7 +81,7 @@ function extractModulos(recursos: Record<string, unknown> | null): PlanoModuloId
     legacy.push('assinatura_digital');
     result = [...new Set(legacy)];
   }
-  return appendLegacyIxcProvedorModulo(result, recursos);
+  return appendLegacyModulosFromRecursos(result, recursos);
 }
 
 const LIMIT_COUNTERS: Record<SaasPlanoLimiteRecursoId, (empresaId: number) => Promise<number>> = {
@@ -91,7 +91,7 @@ const LIMIT_COUNTERS: Record<SaasPlanoLimiteRecursoId, (empresaId: number) => Pr
   cadastros_limite_planos: (empresaId) => Plano.count({ where: { empresa_id: empresaId } }),
   cadastros_limite_modelos_documento: (empresaId) => ModeloDocumento.count({ where: { empresa_id: empresaId } }),
   ixc_provedor_limite_integracoes: (empresaId) => IntegracaoIxcProvedor.count({ where: { empresa_id: empresaId } }),
-  ixc_provedor_limite_ordens_servico: (empresaId) => OrdemServicoLocal.count({ where: { empresa_id: empresaId } }),
+  ordens_servico_limite_ordens_servico: (empresaId) => OrdemServicoLocal.count({ where: { empresa_id: empresaId } }),
   equipamentos_limite_equipamentos: (empresaId) => SshDevice.count({ where: { empresa_id: empresaId } }),
   equipamentos_limite_tuneis: (empresaId) => Agent.count({ where: { empresa_id: empresaId } }),
   equipamentos_limite_backups: (empresaId) =>

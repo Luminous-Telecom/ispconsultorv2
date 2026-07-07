@@ -1,6 +1,6 @@
 import type { PlanoModuloId } from 'services/planoModulosService';
 
-export type SaasPlanoLimiteGrupo = 'cadastros' | 'equipamentos' | 'rpki' | 'ixc_provedor';
+export type SaasPlanoLimiteGrupo = 'cadastros' | 'equipamentos' | 'rpki' | 'ixc_provedor' | 'ordens_servico';
 
 export interface SaasPlanoLimiteDef {
   formKey: string;
@@ -18,7 +18,7 @@ export const SAAS_PLANO_LIMITE_DEFS: SaasPlanoLimiteDef[] = [
   { formKey: 'limite_planos', recursosKey: 'cadastros_limite_planos', modulo: 'cadastros', grupo: 'cadastros', label: 'Planos', listLabelShort: 'Planos' },
   { formKey: 'limite_modelos_documento', recursosKey: 'cadastros_limite_modelos_documento', modulo: 'cadastros', grupo: 'cadastros', label: 'Modelos de documentos', listLabelShort: 'Mod. doc.' },
   { formKey: 'limite_integracoes', recursosKey: 'ixc_provedor_limite_integracoes', modulo: 'ixc_provedor', grupo: 'ixc_provedor', label: 'Integrações IXC', listLabelShort: 'IXC' },
-  { formKey: 'limite_ordens_servico', recursosKey: 'ixc_provedor_limite_ordens_servico', modulo: 'ixc_provedor', grupo: 'ixc_provedor', label: 'Ordens de serviço', listLabelShort: 'O.S.' },
+  { formKey: 'limite_ordens_servico', recursosKey: 'ordens_servico_limite_ordens_servico', modulo: 'ordens_servico', grupo: 'ordens_servico', label: 'Ordens de serviço', listLabelShort: 'O.S.' },
   { formKey: 'limite_equipamentos', recursosKey: 'equipamentos_limite_equipamentos', modulo: 'equipamentos', grupo: 'equipamentos', label: 'Equipamentos', listLabelShort: 'Equip.' },
   { formKey: 'limite_tuneis', recursosKey: 'equipamentos_limite_tuneis', modulo: 'equipamentos', grupo: 'equipamentos', label: 'Túneis', listLabelShort: 'Túneis' },
   { formKey: 'limite_backups', recursosKey: 'equipamentos_limite_backups', modulo: 'equipamentos', grupo: 'equipamentos', label: 'Backups por equipamento', listLabelShort: 'Backups' },
@@ -34,4 +34,5 @@ export const SAAS_PLANO_LIMITE_GRUPO_LABEL: Record<SaasPlanoLimiteGrupo, string>
   equipamentos: 'Equipamentos e Túneis',
   rpki: 'RPKI',
   ixc_provedor: 'IXC Provedor',
+  ordens_servico: 'Ordens de serviço',
 };

@@ -1208,7 +1208,7 @@ const ptBR: TranslationKeys = {
     'saas.planShowOnHotsiteHelp': 'Planos marcados aparecem na seção Planos do site. Apenas planos ativos são exibidos.',
     'saas.planShowOnHotsiteShort': 'Hotsite',
     'saas.planModuleLimitsTab': 'Limites por módulo',
-    'saas.planModuleLimitsEmpty': 'Selecione Cadastros, Equipamentos, RPKI ou IXC Provedor para configurar limites numéricos.',
+    'saas.planModuleLimitsEmpty': 'Selecione Cadastros, Equipamentos, RPKI, IXC Provedor ou Ordens de serviço para configurar limites numéricos.',
     'saas.planLimitUsersShort': 'Usuários',
 
     // Placeholders

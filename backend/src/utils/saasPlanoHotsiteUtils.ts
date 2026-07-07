@@ -2,7 +2,7 @@ import type { PlanoModuloId } from '../constants/planoModulos';
 import { SAAS_PLANO_LIMITE_DEFS } from '../constants/saasPlanoLimites';
 import type { SaasPlano } from '../models/saas/SaasPlano';
 import {
-  appendLegacyIxcProvedorModulo,
+  appendLegacyModulosFromRecursos,
   readLimiteFromRecursos,
 } from './saasPlanoLimiteRecursosUtils';
 
@@ -13,6 +13,7 @@ export const PLANO_MODULO_LABELS: Record<PlanoModuloId, string> = {
   equipamentos: 'Equipamentos',
   rpki: 'RPKI',
   ixc_provedor: 'IXC Provedor',
+  ordens_servico: 'Ordens de serviço',
   envio_notificacoes: 'Envio de notificações',
   assinatura_digital: 'Assinatura digital',
   nfse: 'NFS-e',
@@ -64,7 +65,7 @@ function extrairModulos(recursos: Record<string, unknown>): PlanoModuloId[] {
   const raw = recursos.modulos;
   if (!Array.isArray(raw)) return [];
   const modulos = raw.filter((m): m is PlanoModuloId => typeof m === 'string' && m in PLANO_MODULO_LABELS);
-  return appendLegacyIxcProvedorModulo(modulos, recursos);
+  return appendLegacyModulosFromRecursos(modulos, recursos);
 }
 
 function extrairNumero(obj: Record<string, unknown>, key: string, fallback: number): number {
