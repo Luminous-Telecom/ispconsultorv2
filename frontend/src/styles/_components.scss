@@ -4818,6 +4818,7 @@ form p.text-muted.small {
       > .form-label,
       > label.form-label:not(.form-check-label),
       > span.form-label {
+        flex: none;
         width: 100%;
         text-align: left;
         white-space: normal;
@@ -4825,6 +4826,7 @@ form p.text-muted.small {
       }
 
       > .form-field-control {
+        flex: none;
         max-width: 100%;
       }
     }
@@ -4849,6 +4851,7 @@ form p.text-muted.small {
       > .form-label,
       > label.form-label:not(.form-check-label),
       > span.form-label {
+        flex: none;
         width: 100%;
         text-align: left;
         white-space: normal;
@@ -4856,6 +4859,7 @@ form p.text-muted.small {
       }
 
       > .form-field-control {
+        flex: none;
         max-width: 100%;
       }
     }
