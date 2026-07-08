@@ -307,11 +307,19 @@ export class SaasContratoService {
   }
 
   static async create(data: Partial<SaasContrato>) {
-    return SaasContrato.create(data as SaasContrato['_creationAttributes']);
+    const payload = { ...data };
+    if (payload.isento_mensalidade) {
+      payload.valor = 0;
+    }
+    return SaasContrato.create(payload as SaasContrato['_creationAttributes']);
   }
 
   static async update(id: number, data: Partial<SaasContrato>) {
-    await SaasContrato.update(data, { where: { id } });
+    const payload = { ...data };
+    if (payload.isento_mensalidade) {
+      payload.valor = 0;
+    }
+    await SaasContrato.update(payload, { where: { id } });
   }
 
   static async delete(id: number) {

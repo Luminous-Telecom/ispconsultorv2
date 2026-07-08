@@ -13,6 +13,7 @@ export interface SaasContratoWithPlano {
   conta_boleto: number;
   dia_vencimento_id: number;
   valor: number;
+  isento_mensalidade?: boolean;
   desconto_percentual?: number | null;
   desconto_valor?: number | null;
   data_validade_desconto?: string | Date | null;
@@ -37,6 +38,10 @@ export class SaasContratoTituloProcessor {
     diaVencimento: number,
     quantidadeMinimaTitulos: number
   ): Promise<{ titulosGerados: number; titulosCriados: Array<unknown> }> {
+    if (contrato.isento_mensalidade === true) {
+      return { titulosGerados: 0, titulosCriados: [] };
+    }
+
     const titulosGerar = quantidadeMinimaTitulos - titulosEmAberto.length;
 
     if (titulosGerar <= 0) {

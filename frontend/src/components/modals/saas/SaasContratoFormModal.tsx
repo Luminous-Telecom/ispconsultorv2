@@ -143,11 +143,12 @@ const SaasContratoFormModal: React.FC<Props> = ({
   );
 
   useEffect(() => {
-    if (!show || isEditing || !form.plano_id) return;
+    if (!show || !form.plano_id) return;
     if (form.isento_mensalidade) {
-      setForm((p) => ({ ...p, valor: 0 }));
+      setForm((p) => (p.valor === 0 ? p : { ...p, valor: 0 }));
       return;
     }
+    if (isEditing) return;
     const base = valorPlanoBase;
     const descVal = form.desconto_valor || 0;
     const descPct = form.desconto_percentual || 0;

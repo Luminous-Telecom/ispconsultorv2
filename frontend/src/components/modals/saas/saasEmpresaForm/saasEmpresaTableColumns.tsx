@@ -32,7 +32,18 @@ export function buildContratosColumns(
     { key: 'valor_final', label: t('table.finalValue'), sortable: true, searchable: true, render: (i) => formatCurrency(i.valor ?? 0) },
     { key: 'data_inicio', label: t('table.contractStartDate'), sortable: true, searchable: false, render: (i) => formatDate(i.data_inicio) },
     { key: 'data_fim', label: t('table.contractEndDate'), sortable: true, searchable: false, render: (i) => i.data_fim ? formatDate(i.data_fim) : '—' },
-    { key: 'isento_mensalidade', label: t('table.exempt'), sortable: true, searchable: true, badgeLabels: [t('ui.yes'), t('ui.no')], render: () => <span className="badge bg-secondary">{t('ui.no')}</span> },
+    {
+      key: 'isento_mensalidade',
+      label: t('table.exempt'),
+      sortable: true,
+      searchable: true,
+      badgeLabels: [t('ui.yes'), t('ui.no')],
+      render: (i) => (
+        <span className={`badge ${i.isento_mensalidade ? 'bg-success' : 'bg-secondary'}`}>
+          {i.isento_mensalidade ? t('ui.yes') : t('ui.no')}
+        </span>
+      ),
+    },
     { key: 'dia_vencimento', label: t('table.dueDay'), sortable: true, searchable: true, render: (i) => i.dia_vencimento != null ? String(i.dia_vencimento).padStart(2, '0') : '—' },
     { key: 'banco', label: t('form.bank'), sortable: true, searchable: true, render: (i) => i.banco?.nome || i.banco?.banco || '—' },
     { key: 'created_at', label: t('table.createdAt'), sortable: true, searchable: false, render: () => '—' },

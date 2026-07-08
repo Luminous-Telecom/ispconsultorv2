@@ -348,14 +348,14 @@ export class SaasDashboardService {
 
   private static async getAllContratosCompat() {
     const rows = await SaasContrato.findAll({
-      attributes: ['id', 'status', 'plano_id', 'empresa_id'],
+      attributes: ['id', 'status', 'plano_id', 'empresa_id', 'isento_mensalidade'],
     });
     return rows.map(c => ({
       id: c.id,
       status: c.status,
       plano_id: c.plano_id,
       cliente_id: c.empresa_id,
-      isento_mensalidade: false,
+      isento_mensalidade: c.isento_mensalidade === true,
     }));
   }
 

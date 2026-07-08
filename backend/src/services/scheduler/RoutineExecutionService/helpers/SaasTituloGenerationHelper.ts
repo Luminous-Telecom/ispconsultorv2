@@ -23,8 +23,10 @@ export class SaasTituloGenerationHelper {
     contrato: {
       conta_boleto: number | null;
       dia_vencimento_id: number | null;
+      isento_mensalidade?: boolean;
     }
   ): boolean {
+    if (contrato.isento_mensalidade === true) return false;
     if (!contrato.conta_boleto) return false;
     if (!contrato.dia_vencimento_id) return false;
     return true;

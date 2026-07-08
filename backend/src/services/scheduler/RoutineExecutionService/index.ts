@@ -458,7 +458,7 @@ export class RoutineExecutionService {
 
     try {
       const contratos = await SaasContrato.findAll({
-        where: { status: 'ativo' },
+        where: { status: 'ativo', isento_mensalidade: false },
         include: [
           { model: SaasPlano, as: 'plano', attributes: ['id', 'nome', 'valor_mensal'] },
         ],
