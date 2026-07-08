@@ -12,6 +12,11 @@ $background: #ffffff;
   flex-direction: column;
   background: $background;
   color: $foreground;
+
+  /* Tokens do ERP (modo claro = texto branco) não devem vazar nas páginas legais */
+  --text-primary: #{$foreground};
+  --text-secondary: #{$muted};
+  --text-muted: #{$muted};
 }
 
 .legal-header {

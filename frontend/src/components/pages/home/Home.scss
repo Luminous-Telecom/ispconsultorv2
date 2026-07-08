@@ -20,6 +20,11 @@ $header-h: 4rem;
   --home-primary-soft: rgba(30, 58, 138, 0.06);
   --home-shadow: #{$shadow};
 
+  /* Tokens do ERP (modo claro = texto branco) não devem vazar no site público */
+  --text-primary: var(--home-text);
+  --text-secondary: var(--home-text-muted);
+  --text-muted: var(--home-text-muted);
+
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -99,6 +104,8 @@ $header-h: 4rem;
   text-decoration: none;
   opacity: 0.92;
   transition: opacity 0.15s;
+  appearance: none;
+  -webkit-appearance: none;
 
   &:hover {
     opacity: 1;
@@ -134,6 +141,8 @@ $header-h: 4rem;
   color: var(--home-header-text);
   font-size: 1rem;
   cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
 
   &:hover {
     background: rgba(255, 255, 255, 0.16);
@@ -218,6 +227,8 @@ $header-h: 4rem;
   text-decoration: none;
   transition: transform 0.12s, opacity 0.15s;
   white-space: nowrap;
+  appearance: none;
+  -webkit-appearance: none;
 
   &:hover {
     opacity: 0.92;
@@ -994,12 +1005,21 @@ $header-h: 4rem;
   border-radius: 999px;
   font-size: 0.875rem;
   font-weight: 600;
-  color: rgba(248, 250, 252, 0.72);
+  border: none;
+  background: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+  color: rgba(248, 250, 252, 0.85);
   transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 
+  &:hover:not(.is-active) {
+    color: #f8fafc;
+  }
+
   &.is-active {
-    color: #1e3a8a;
-    background: #f8fafc;
+    color: $primary !important;
+    -webkit-text-fill-color: $primary;
+    background: #f8fafc !important;
     box-shadow: 0 4px 14px rgba(15, 23, 42, 0.18);
   }
 }
@@ -1583,6 +1603,8 @@ $header-h: 4rem;
   font-weight: 600;
   color: var(--home-text);
   cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 .home-faq-answer {
