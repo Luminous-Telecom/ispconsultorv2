@@ -19,18 +19,11 @@ interface UnifiedModalHeaderParts {
   tabs: React.ReactNode;
 }
 
-/** Separa botões e abas do header unificado dos modais com tabs (Cliente, Contrato, etc.). */
-function parseUnifiedModalHeader(headerActions: React.ReactNode): UnifiedModalHeaderParts | null {
-  if (!React.isValidElement(headerActions)) return null;
-
-  const props = headerActions.props as { className?: string; children?: React.ReactNode };
-  const className = props.className ?? '';
-  if (!className.includes('-header-unified')) return null;
-
+function extractUnifiedHeaderParts(children: React.ReactNode): UnifiedModalHeaderParts | null {
   let buttons: React.ReactNode = null;
   let tabs: React.ReactNode = null;
 
-  React.Children.forEach(props.children, (child) => {
+  React.Children.forEach(children, (child) => {
     if (!React.isValidElement(child)) return;
     const childClass = (child.props as { className?: string }).className ?? '';
     if (childClass.includes('-header-buttons') || childClass.includes('modal-header-actions')) {
@@ -42,6 +35,22 @@ function parseUnifiedModalHeader(headerActions: React.ReactNode): UnifiedModalHe
 
   if (!tabs) return null;
   return { buttons, tabs };
+}
+
+/** Separa botões e abas do header unificado dos modais com tabs (Cliente, Contrato, etc.). */
+function parseUnifiedModalHeader(headerActions: React.ReactNode): UnifiedModalHeaderParts | null {
+  if (!React.isValidElement(headerActions)) return null;
+
+  const props = headerActions.props as { className?: string; children?: React.ReactNode };
+  const className = props.className ?? '';
+  if (!className.includes('-header-unified')) return null;
+
+  return extractUnifiedHeaderParts(props.children);
+}
+
+/** Header passado como componente (ex.: ContratoModalHeader) — parse no elemento React falha. */
+function isUnifiedHeaderComponent(headerActions: React.ReactNode): boolean {
+  return React.isValidElement(headerActions) && typeof headerActions.type === 'function';
 }
 
 interface ResponsiveDialogProps {
@@ -120,7 +129,8 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
   if (!isOpen) return null;
 
   const unifiedHeader = headerActions ? parseUnifiedModalHeader(headerActions) : null;
-  const menuHeaderActions = unifiedHeader?.buttons ?? headerActions;
+  const isUnifiedComponent = !unifiedHeader && Boolean(headerActions && isUnifiedHeaderComponent(headerActions));
+  const menuHeaderActions = unifiedHeader?.buttons ?? (isUnifiedComponent ? null : headerActions);
   const hasActions =
     tableHeader.showSearch || tableHeader.showReload || Boolean(menuHeaderActions);
 
@@ -345,9 +355,14 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
         )}
       </div>
 
-      {/* Abas visíveis abaixo do header (modais com header unificado) */}
+      {/* Abas visíveis abaixo do header (modais com header unificado em div) */}
       {unifiedHeader?.tabs && (
         <div className="responsive-dialog-tabs-bar">{unifiedHeader.tabs}</div>
+      )}
+
+      {/* Header unificado como componente (ContratoModalHeader, ClienteModalHeader, etc.) */}
+      {isUnifiedComponent && headerActions && (
+        <div className="responsive-dialog-unified-header">{headerActions}</div>
       )}
 
       {/* Mobile Search Field (expandable) */}

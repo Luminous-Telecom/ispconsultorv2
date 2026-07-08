@@ -564,25 +564,109 @@ form.form-modal-simple:has(.modal-rich-text-editor) > [class$='-tab-content-padd
   overflow-x: auto !important;
   overflow-y: hidden !important;
   -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
   [class*='-header-tabs'] {
     overflow: visible !important;
-    min-width: 0 !important;
+    width: max-content !important;
+    max-width: none !important;
+    flex: 0 0 auto !important;
   }
 
   .modal-tabs-overflow-container {
     overflow: visible !important;
+    width: max-content !important;
+    min-width: 100% !important;
+    max-width: none !important;
+    flex: 0 0 auto !important;
   }
 
-  .modal-tabs-overflow-container > .nav-tabs {
+  .modal-tabs-overflow-container > .nav-tabs,
+  .modal-tabs-overflow-container > [class*='-tabs-unified'] {
     overflow: visible !important;
+    flex: 0 0 auto !important;
     flex-wrap: nowrap !important;
+    width: max-content !important;
+    min-width: max-content !important;
+    max-width: none !important;
+  }
+
+  [class*='-tabs-mobile'][class*='-tabs-unified'] .nav-item,
+  [class*='-tabs-mobile'] .nav-item {
+    flex: 0 0 auto !important;
+  }
+}
+
+/* Header unificado renderizado como componente (ContratoModalHeader, ClienteModalHeader, etc.) */
+.responsive-dialog-unified-header {
+  flex-shrink: 0 !important;
+  background-color: var(--bg-secondary) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+
+  [class*='-header-unified'] {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  [class*='-header-buttons'] {
+    flex-shrink: 0 !important;
+    padding: 0.25rem 8px !important;
+  }
+
+  [class*='-header-tabs'] {
+    flex-shrink: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x;
+    scrollbar-width: none;
+    padding: 0.25rem 8px 0 !important;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .modal-tabs-overflow-container {
+    overflow: visible !important;
+    width: max-content !important;
+    min-width: 100% !important;
+    max-width: none !important;
+    flex: 0 0 auto !important;
+  }
+
+  .modal-tabs-overflow-container > .nav-tabs,
+  .modal-tabs-overflow-container > [class*='-tabs-unified'] {
+    overflow: visible !important;
+    flex: 0 0 auto !important;
+    flex-wrap: nowrap !important;
+    width: max-content !important;
+    min-width: max-content !important;
+    max-width: none !important;
+  }
+
+  [class*='-tabs-mobile'][class*='-tabs-unified'] .nav-item,
+  [class*='-tabs-mobile'] .nav-item {
+    flex: 0 0 auto !important;
   }
 }
 
 /* Modais com abas no mobile: cadeia flex para tabelas nas abas */
 @media (max-width: 767.98px) {
-  .responsive-dialog-mobile-custom:has(.responsive-dialog-tabs-bar) {
+  .responsive-dialog-mobile-custom:has(.responsive-dialog-tabs-bar),
+  .responsive-dialog-mobile-custom:has(.responsive-dialog-unified-header) {
     .responsive-dialog-content-custom {
       display: flex !important;
       flex-direction: column !important;
@@ -2352,7 +2436,7 @@ textarea:focus {
 }
 
 .contrato-tabs-mobile .nav-item {
-  flex: 1;
+  flex: 0 0 auto;
   margin-right: 0.125rem;
 }
 
@@ -2534,7 +2618,7 @@ textarea:focus {
 /* Para mobile */
 .contrato-tabs-mobile.contrato-tabs-unified {
   .nav-item {
-    flex: 1;
+    flex: 0 0 auto;
     margin-right: 0.0625rem !important;
   }
 
@@ -2582,7 +2666,7 @@ textarea:focus {
 }
 
 .plano-tabs-mobile .nav-item {
-  flex: 1;
+  flex: 0 0 auto;
   margin-right: 0.125rem;
 }
 
@@ -2743,7 +2827,7 @@ textarea:focus {
 /* Para mobile */
 .plano-tabs-mobile.plano-tabs-unified {
   .nav-item {
-    flex: 1;
+    flex: 0 0 auto;
     margin-right: 0.0625rem !important;
   }
 
@@ -2791,7 +2875,7 @@ textarea:focus {
 }
 
 .fornecedor-tabs-mobile .nav-item {
-  flex: 1;
+  flex: 0 0 auto;
   margin-right: 0.125rem;
 }
 
@@ -2994,7 +3078,7 @@ textarea:focus {
 /* Para mobile */
 .fornecedor-tabs-mobile.fornecedor-tabs-unified {
   .nav-item {
-    flex: 1;
+    flex: 0 0 auto;
     margin-right: 0.0625rem !important;
   }
 
@@ -3076,7 +3160,7 @@ textarea:focus {
 
 .ordem-servico-tabs-mobile.ordem-servico-tabs-unified {
   .nav-item {
-    flex: 1;
+    flex: 0 0 auto;
     margin-right: 0.0625rem !important;
   }
 
@@ -3124,7 +3208,7 @@ textarea:focus {
 }
 
 .banco-tabs-mobile .nav-item {
-  flex: 1;
+  flex: 0 0 auto;
   margin-right: 0.125rem;
 }
 
@@ -3254,7 +3338,7 @@ textarea:focus {
 /* Para mobile */
 .banco-tabs-mobile.banco-tabs-unified {
   .nav-item {
-    flex: 1;
+    flex: 0 0 auto;
     margin-right: 0.0625rem !important;
   }
 
@@ -3384,7 +3468,7 @@ textarea:focus {
 }
 
 .documento-tabs-mobile .nav-item {
-  flex: 1;
+  flex: 0 0 auto;
   margin-right: 0.125rem;
 }
 
@@ -3510,7 +3594,7 @@ textarea:focus {
 /* Para mobile */
 .documento-tabs-mobile.documento-tabs-unified {
   .nav-item {
-    flex: 1;
+    flex: 0 0 auto;
     margin-right: 0.0625rem !important;
   }
 
@@ -3558,7 +3642,7 @@ textarea:focus {
 }
 
 .empresa-tabs-mobile .nav-item {
-  flex: 1;
+  flex: 0 0 auto;
   margin-right: 0.125rem;
 }
 
@@ -3689,7 +3773,7 @@ textarea:focus {
 /* Para mobile */
 .empresa-tabs-mobile.empresa-tabs-unified {
   .nav-item {
-    flex: 1;
+    flex: 0 0 auto;
     margin-right: 0.0625rem !important;
   }
 
@@ -3737,7 +3821,7 @@ textarea:focus {
 }
 
 .whatsapp-tabs-mobile .nav-item {
-  flex: 1;
+  flex: 0 0 auto;
   margin-right: 0.125rem;
 }
 
@@ -3860,7 +3944,7 @@ textarea:focus {
 /* Para mobile */
 .whatsapp-tabs-mobile.whatsapp-tabs-unified {
   .nav-item {
-    flex: 1;
+    flex: 0 0 auto;
     margin-right: 0.0625rem !important;
   }
 
@@ -3908,7 +3992,7 @@ textarea:focus {
 }
 
 .email-tabs-mobile .nav-item {
-  flex: 1;
+  flex: 0 0 auto;
   margin-right: 0.125rem;
 }
 
@@ -4039,7 +4123,7 @@ textarea:focus {
 /* Para mobile */
 .email-tabs-mobile.email-tabs-unified {
   .nav-item {
-    flex: 1;
+    flex: 0 0 auto;
     margin-right: 0.0625rem !important;
   }
 
@@ -4087,7 +4171,7 @@ textarea:focus {
 }
 
 .sistema-tabs-mobile .nav-item {
-  flex: 1;
+  flex: 0 0 auto;
   margin-right: 0.125rem;
 }
 
@@ -4210,7 +4294,7 @@ textarea:focus {
 /* Para mobile */
 .sistema-tabs-mobile.sistema-tabs-unified {
   .nav-item {
-    flex: 1;
+    flex: 0 0 auto;
     margin-right: 0.0625rem !important;
   }
 
@@ -4258,7 +4342,7 @@ textarea:focus {
 }
 
 .cliente-tabs-mobile .nav-item {
-  flex: 1;
+  flex: 0 0 auto;
   margin-right: 0.125rem;
 }
 
@@ -4424,7 +4508,7 @@ textarea:focus {
 /* Para mobile */
 .cliente-tabs-mobile.cliente-tabs-unified {
   .nav-item {
-    flex: 1;
+    flex: 0 0 auto;
     margin-right: 0.0625rem !important;
   }
 
