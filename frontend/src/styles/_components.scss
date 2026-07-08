@@ -555,6 +555,100 @@ form.form-modal-simple:has(.modal-rich-text-editor) > [class$='-tab-content-padd
   padding: 0 !important;
 }
 
+/* Faixa de abas abaixo do header no mobile (modais com header unificado) */
+.responsive-dialog-tabs-bar {
+  flex-shrink: 0 !important;
+  background-color: var(--bg-secondary) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  padding: 0.25rem 8px 0 !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+
+  [class*='-header-tabs'] {
+    overflow: visible !important;
+    min-width: 0 !important;
+  }
+
+  .modal-tabs-overflow-container {
+    overflow: visible !important;
+  }
+
+  .modal-tabs-overflow-container > .nav-tabs {
+    overflow: visible !important;
+    flex-wrap: nowrap !important;
+  }
+}
+
+/* Modais com abas no mobile: cadeia flex para tabelas nas abas */
+@media (max-width: 767.98px) {
+  .responsive-dialog-mobile-custom:has(.responsive-dialog-tabs-bar) {
+    .responsive-dialog-content-custom {
+      display: flex !important;
+      flex-direction: column !important;
+      overflow: hidden !important;
+    }
+
+    .responsive-dialog-mobile-content {
+      flex: 1 1 0 !important;
+      min-height: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      overflow: hidden !important;
+      padding: 0 !important;
+    }
+
+    [class*='-modal-content'] {
+      flex: 1 1 0 !important;
+      min-height: 0 !important;
+      height: auto !important;
+    }
+
+    [class*='-tab-content-scrollable'] {
+      display: flex !important;
+      flex-direction: column !important;
+      overflow: auto !important;
+      -webkit-overflow-scrolling: touch;
+
+      .embedded-table-panel,
+      .list-modal-table-wrapper,
+      .table-container-custom {
+        flex: 1 1 0 !important;
+        min-height: 0 !important;
+      }
+
+      .table-mobile-container {
+        flex: 1 1 0 !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
+        padding-bottom: 4.5rem !important;
+      }
+    }
+  }
+
+  [class*='-header-tabs'],
+  .modal-tabs-overflow-container {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .modal-tabs-overflow-container > .nav-tabs {
+    overflow: visible !important;
+  }
+
+  [class*='-tabs-mobile'][class*='-tabs-unified'] .nav-item,
+  [class*='-tabs-mobile'] .nav-item {
+    flex: 0 0 auto !important;
+  }
+
+  [class*='-tabs-unified'] {
+    flex-wrap: nowrap !important;
+    width: auto !important;
+    min-width: max-content !important;
+  }
+}
+
 .responsive-dialog-menu-dropdown-position {
   top: calc(100% + 0.5rem);
   min-width: 200px;
@@ -947,8 +1041,20 @@ button {
 
   /* Reduzir espaçamento entre botões */
   .d-flex.gap-2 > .btn,
-  .d-flex[style*="gap"] > .btn {
-    margin-right: 0.25rem;
+  .d-flex[style*='gap'] > .btn {
+    margin-right: 0 !important;
+  }
+
+  .modal-header-actions,
+  .responsive-dialog-mobile .dropdown-menu .modal-header-actions {
+    gap: 0.5rem !important;
+  }
+
+  .responsive-dialog-mobile .dropdown-menu .dropdown-item.p-1 {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    padding: 0.5rem !important;
   }
 
   /* Garantir que botões em modais tenham tamanho igual */
@@ -1516,6 +1622,9 @@ button {
 
 /* Botões de ação no header do modal (fallback fora do DraggableModal) */
 .modal-header-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 0.5rem !important;
   padding: 10px !important;
 }
 
@@ -4687,7 +4796,7 @@ form p.text-muted.small {
 }
 
 /* Responsividade */
-@media (max-width: 576px) {
+@media (max-width: 767.98px) {
   .cliente-tab-content-padded,
   .contrato-tab-content-padded,
   .plano-tab-content-padded,
@@ -4700,6 +4809,37 @@ form p.text-muted.small {
   .ordem-servico-tab-content-padded,
   .sistema-tab-content-padded {
     padding: 16px;
+
+    .form-field {
+      flex-direction: column;
+      gap: 0.25rem;
+      max-width: 100%;
+
+      > .form-label,
+      > label.form-label:not(.form-check-label),
+      > span.form-label {
+        width: 100%;
+        text-align: left;
+        white-space: normal;
+        padding-top: 0;
+      }
+
+      > .form-field-control {
+        max-width: 100%;
+      }
+    }
+
+    h6.text-primary,
+    .form-modal-input-col {
+      margin-left: 0;
+      max-width: 100%;
+    }
+  }
+
+  /* Modais simples (sem abas) no ResponsiveDialog */
+  .responsive-dialog-mobile-content > .form-modal-simple,
+  .responsive-dialog-mobile-content > form.form-modal-simple {
+    padding: 16px !important;
 
     .form-field {
       flex-direction: column;

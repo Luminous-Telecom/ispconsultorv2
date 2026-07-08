@@ -14,6 +14,36 @@ function isActionButtonComponent(type: unknown): boolean {
   return false;
 }
 
+interface UnifiedModalHeaderParts {
+  buttons: React.ReactNode;
+  tabs: React.ReactNode;
+}
+
+/** Separa botões e abas do header unificado dos modais com tabs (Cliente, Contrato, etc.). */
+function parseUnifiedModalHeader(headerActions: React.ReactNode): UnifiedModalHeaderParts | null {
+  if (!React.isValidElement(headerActions)) return null;
+
+  const props = headerActions.props as { className?: string; children?: React.ReactNode };
+  const className = props.className ?? '';
+  if (!className.includes('-header-unified')) return null;
+
+  let buttons: React.ReactNode = null;
+  let tabs: React.ReactNode = null;
+
+  React.Children.forEach(props.children, (child) => {
+    if (!React.isValidElement(child)) return;
+    const childClass = (child.props as { className?: string }).className ?? '';
+    if (childClass.includes('-header-buttons') || childClass.includes('modal-header-actions')) {
+      buttons = child;
+    } else if (childClass.includes('-header-tabs')) {
+      tabs = child;
+    }
+  });
+
+  if (!tabs) return null;
+  return { buttons, tabs };
+}
+
 interface ResponsiveDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -89,7 +119,10 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
 
   if (!isOpen) return null;
 
-  const hasActions = tableHeader.showSearch || tableHeader.showReload || headerActions;
+  const unifiedHeader = headerActions ? parseUnifiedModalHeader(headerActions) : null;
+  const menuHeaderActions = unifiedHeader?.buttons ?? headerActions;
+  const hasActions =
+    tableHeader.showSearch || tableHeader.showReload || Boolean(menuHeaderActions);
 
   return (
     <div
@@ -167,10 +200,10 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
                 )}
 
                 {/* Header Actions Customizados - Renderizar como dropdown-items */}
-                {headerActions && (
+                {menuHeaderActions && (
                   <>
                     <div className="dropdown-divider"></div>
-                    {React.Children.map(headerActions, (child) => {
+                    {React.Children.map(menuHeaderActions, (child) => {
                       if (!React.isValidElement(child)) return child;
                       
                       // Função helper para renderizar Button como dropdown-item
@@ -311,6 +344,11 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
           </div>
         )}
       </div>
+
+      {/* Abas visíveis abaixo do header (modais com header unificado) */}
+      {unifiedHeader?.tabs && (
+        <div className="responsive-dialog-tabs-bar">{unifiedHeader.tabs}</div>
+      )}
 
       {/* Mobile Search Field (expandable) */}
       {tableHeader.showMobileSearch && tableHeader.showSearch && (
