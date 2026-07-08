@@ -1,0 +1,54 @@
+---
+description: Docs internos (docs/) vs wiki pública (doc/) — onde documentar
+alwaysApply: true
+---
+
+# Documentação — wiki pública vs docs internos
+
+O projeto tem **duas pastas de documentação** com propósitos distintos. Não misturar.
+
+## `doc/` — wiki pública (consultores)
+
+- **Público:** consultores ISP Consultor e usuários finais do ERP
+- **Deploy:** VitePress compilado e servido em produção (`wiki-erp.ispconsultor.com.br`, PM2 `doc`)
+- **Conteúdo:** `doc/erp/**/*.md` — menus, fluxos, campos e telas do ERP
+- **Sidebar:** `doc/.vitepress/config.mjs`
+- **Regra completa:** `doc-wiki.mdc`
+
+Atualize `doc/erp/` quando houver alteração **visível ao usuário** no ERP (menu, modal, campo, fluxo, integração).
+
+## `docs/` — documentação interna (desenvolvedores)
+
+- **Público:** equipe de desenvolvimento
+- **Deploy:** **não** entra na wiki; fica no repositório (Markdown simples)
+- **Conteúdo:** setup local, arquitetura, planos técnicos, relatórios de auditoria, runbooks, decisões de engenharia
+
+Exemplos existentes:
+
+| Arquivo | Assunto |
+|---------|---------|
+| `docs/SETUP-LOCAL.md` | Ambiente de dev sem Docker |
+| `docs/BUILD-MOBILE.md` | Build Capacitor |
+| `docs/CENTRAL_ASSINANTE.md` | Central do assinante |
+| `docs/PLANO-API-PUBLICAS-E-HOTSITE.md` | API pública / hotsite |
+| `docs/relatorio-problemas-codigo.md` | Auditoria estática / dívida técnica |
+
+## Onde criar documentação nova
+
+| Tipo | Pasta | Sidebar wiki? |
+|------|-------|---------------|
+| Como usar uma tela do ERP | `doc/erp/` | Sim |
+| Setup, CI, arquitetura, bugs internos, relatórios de código | `docs/` | **Não** |
+| Regras para o agente Cursor | `.cursor/rules/` | N/A |
+
+## Proibido
+
+- Colocar relatórios de código, auditorias internas ou runbooks de dev em `doc/erp/` ou no sidebar da wiki
+- Colocar passo a passo de telas do ERP só em `docs/` sem espelhar em `doc/erp/` (consultores não veriam)
+- Adicionar entrada no `config.mjs` da wiki para conteúdo exclusivo de desenvolvedores
+
+## Checklist (agente)
+
+- [ ] Conteúdo para **consultor/usuário** → `doc/erp/` + sidebar (`doc-wiki.mdc`)
+- [ ] Conteúdo **só para devs** → `docs/` (sem sidebar, sem build VitePress)
+- [ ] Em dúvida: quem lê? Se não for consultor em produção → `docs/`

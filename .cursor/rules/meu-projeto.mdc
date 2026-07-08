@@ -38,6 +38,8 @@ alwaysApply: true
 
 Qualquer alteração visível no ERP (menu, modal, campo, fluxo, integração, parâmetro) **deve** ser refletida na wiki em `doc/`. Detalhes: `.cursor/rules/doc-wiki.mdc`
 
+Documentação **interna para devs** (setup, auditorias, arquitetura) vai em `docs/`, não na wiki. Detalhes: `.cursor/rules/docs-interno.mdc`
+
 ## Botões (regra crítica)
 
 Detalhes completos: `.cursor/rules/frontend-botoes.mdc`
@@ -116,7 +118,8 @@ Use sempre os primitivos do projeto. **Índice completo:** `frontend-ui-centrali
 | `frontend-config-capacitor.mdc` | config/api.ts + build mobile |
 | `frontend-tipos.mdc` | Barrel types/, Create/Update |
 | `frontend-saas.mdc` | Painel SaaS Super Admin |
-| `doc-wiki.mdc` | Wiki VitePress — sincronizar com alterações do ERP |
+| `doc-wiki.mdc` | Wiki VitePress pública — sincronizar com alterações do ERP |
+| `docs-interno.mdc` | Docs internos (`docs/`) vs wiki pública (`doc/`) |
 | `backend-api.mdc` | Controllers, services, API |
 | `database-migrations.mdc` | Migrações DB |
 | `backend-multi-tenancy.mdc` | Isolamento por empresa_id |

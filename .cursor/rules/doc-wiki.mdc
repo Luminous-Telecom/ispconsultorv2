@@ -7,6 +7,8 @@ alwaysApply: true
 
 A wiki em `doc/` faz parte do sistema. **Toda alteração visível ao usuário no ERP deve ser refletida na documentação** no mesmo PR/tarefa.
 
+> **Wiki pública vs docs internos:** `doc/` é a wiki VitePress (consultores, deploy em produção). Documentação só para desenvolvedores (setup, auditorias, arquitetura) fica em `docs/` — ver `docs-interno.mdc`. **Não** colocar conteúdo interno de dev em `doc/erp/` nem no sidebar da wiki.
+
 ## Estrutura de pastas
 
 ```
