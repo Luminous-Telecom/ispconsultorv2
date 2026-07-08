@@ -586,6 +586,61 @@
     flex-shrink: 0;
   }
 
+  .ticket-medio-card {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .ticket-medio-card__header {
+    justify-content: center;
+    margin-bottom: 1px;
+    flex-shrink: 0;
+  }
+
+  .ticket-medio-card__title {
+    flex: 0 0 auto;
+    text-align: center;
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: none;
+    letter-spacing: normal;
+  }
+
+  .ticket-medio-card__body {
+    flex: 0 0 100px;
+    height: 100px;
+    max-height: 100px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .ticket-medio-card__value {
+    flex-shrink: 0;
+    margin-bottom: 2px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    text-align: center;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ticket-medio-card__ranking {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    overflow: hidden;
+  }
+
   @media (max-width: 767.98px) {
     .pie-chart-body,
     .pie-chart-body--chart-first {
@@ -662,87 +717,8 @@
   }
 }
 
-/* Ticket médio e Backup em versão reduzida (menor e mais estreito que os cards métricos padrão). */
-.dashboard-container .chart-card-pie--sm {
-  min-height: 0;
-  height: auto;
-  flex: 0 0 auto;
-  align-self: flex-start;
-  width: 100%;
-  max-width: none;
-  padding: 0.5rem;
-
-  @media (min-width: 768px) {
-    min-height: 0;
-    padding: 0.5rem;
-  }
-
-  .pie-metric-header {
-    margin-bottom: 2px;
-  }
-
-  /* Título com a mesma fonte dos cards de pizza (.chart-title-pie). */
-  .pie-metric-header__title {
-    font-size: 0.625rem;
-    font-weight: 700;
-    text-transform: none;
-    letter-spacing: normal;
-  }
-
-  .ticket-medio-card {
-    display: flex;
-    flex-direction: column;
-    height: auto !important;
-    min-height: 0;
-    overflow: hidden;
-  }
-
-  .ticket-medio-card__header {
-    justify-content: center;
-    margin-bottom: 0;
-    flex-shrink: 0;
-  }
-
-  .ticket-medio-card__title {
-    flex: 0 0 auto;
-    text-align: center;
-  }
-
-  .ticket-medio-card__body {
-    flex: 0 0 100px;
-    height: 100px;
-    max-height: 100px;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    overflow: hidden;
-  }
-
-  .ticket-medio-card__value {
-    flex-shrink: 0;
-    margin-bottom: 2px;
-    font-size: 0.8125rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    line-height: 1.1;
-    text-align: center;
-    color: var(--text-primary);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .ticket-medio-card__ranking {
-    flex: 1 1 auto;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 4px;
-    overflow: hidden;
-  }
-}
-
-/* Corpo do card Ticket médio — altura 100% só fora da linha compacta do dashboard */
-.chart-card-pie--metric:not(.chart-card-pie--sm) .ticket-medio-card {
+/* Corpo do card Ticket médio — altura 100% na variante métrica (ex.: SaaS) */
+.chart-card-pie--metric .ticket-medio-card {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
@@ -751,28 +727,28 @@
   height: 100%;
 }
 
-.chart-card-pie--metric:not(.chart-card-pie--sm) .ticket-medio-card__header {
+.chart-card-pie--metric .ticket-medio-card__header {
   justify-content: center;
 }
 
-.chart-card-pie--metric:not(.chart-card-pie--sm) .ticket-medio-card__title {
+.chart-card-pie--metric .ticket-medio-card__title {
   flex: 0 0 auto;
   text-align: center;
 }
 
-.chart-card-pie--metric:not(.chart-card-pie--sm) .ticket-medio-card__body {
+.chart-card-pie--metric .ticket-medio-card__body {
   flex: 1 1 auto;
   height: auto;
   max-height: none;
   min-height: 0;
 }
 
-.chart-card-pie--metric:not(.chart-card-pie--sm) .ticket-medio-card__value {
+.chart-card-pie--metric .ticket-medio-card__value {
   font-size: 1.0625rem;
   margin-bottom: 4px;
 }
 
-.chart-card-pie--metric:not(.chart-card-pie--sm) .ticket-medio-card__ranking {
+.chart-card-pie--metric .ticket-medio-card__ranking {
   gap: 5px;
 }
 

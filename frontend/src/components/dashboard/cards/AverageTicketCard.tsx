@@ -10,7 +10,11 @@ export interface AverageTicketCardProps {
 /** Card de ticket médio (ranking horizontal moderno). */
 const AverageTicketCard: React.FC<AverageTicketCardProps> = ({ data, variant = 'compact' }) => (
   <div
-    className={`chart-card chart-card-pie chart-card-pie--metric${variant === 'compact' ? ' chart-card-pie--sm' : ''}`}
+    className={
+      variant === 'compact'
+        ? 'chart-card chart-card-pie chart-card-pie--compact'
+        : 'chart-card chart-card-pie chart-card-pie--metric'
+    }
   >
     <TicketMedioCard data={data} />
   </div>
