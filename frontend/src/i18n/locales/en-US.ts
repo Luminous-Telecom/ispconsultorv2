@@ -483,6 +483,7 @@ const enUS: TranslationKeys = {
     'blockdomi.placeholderOficio': 'e.g. Warrant no. 01/2026/ORG/SECTOR/CODE',
     'blockdomi.analyze': 'Analyze',
     'blockdomi.register': 'Register',
+    'blockdomi.modoLista': 'Mode',
     'blockdomi.modoListaBloqueio': 'Block',
     'blockdomi.modoListaDesbloqueio': 'Unblock',
     'blockdomi.registerRemover': 'Remove from list',

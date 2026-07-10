@@ -483,6 +483,7 @@ const ptBR: TranslationKeys = {
     'blockdomi.placeholderOficio': 'ex: Ofício nº 01/2026/ORG/SETOR/SIGLA',
     'blockdomi.analyze': 'Analisar',
     'blockdomi.register': 'Cadastrar',
+    'blockdomi.modoLista': 'Modo',
     'blockdomi.modoListaBloqueio': 'Bloqueio',
     'blockdomi.modoListaDesbloqueio': 'Desbloqueio',
     'blockdomi.registerRemover': 'Remover da lista',

@@ -485,6 +485,7 @@ const esES: TranslationKeys = {
     'blockdomi.placeholderOficio': 'ej: Oficio nº 01/2026/ORG/SECTOR/SIGLA',
     'blockdomi.analyze': 'Analizar',
     'blockdomi.register': 'Registrar',
+    'blockdomi.modoLista': 'Modo',
     'blockdomi.modoListaBloqueio': 'Bloqueo',
     'blockdomi.modoListaDesbloqueio': 'Desbloqueo',
     'blockdomi.registerRemover': 'Quitar de la lista',

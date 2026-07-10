@@ -464,6 +464,7 @@ export interface TranslationKeys {
   'blockdomi.placeholderOficio': string;
   'blockdomi.analyze': string;
   'blockdomi.register': string;
+  'blockdomi.modoLista': string;
   'blockdomi.modoListaBloqueio': string;
   'blockdomi.modoListaDesbloqueio': string;
   'blockdomi.registerRemover': string;

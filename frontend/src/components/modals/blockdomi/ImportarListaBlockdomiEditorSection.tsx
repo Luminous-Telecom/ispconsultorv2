@@ -1,5 +1,5 @@
 import React from 'react';
-import { BulkActionButton, FormField } from 'components/ui';
+import { BulkActionButton, FormField, AtivoInativoField } from 'components/ui';
 import type { BlockdomiImportTranslateFn } from './importarListaBlockdomiTypes';
 import type { ClassifiedList } from './importarListaBlockdomiTypes';
 
@@ -81,35 +81,30 @@ const ImportarListaBlockdomiEditorSection: React.FC<ImportarListaBlockdomiEditor
         isPending={isAnalyzing}
       />
       {classified && (
-        <>
-          <div className="ilb-mode-toggle" role="group" aria-label={t('blockdomi.modoListaBloqueio')}>
-            <BulkActionButton
-              type="button"
-              label={t('blockdomi.modoListaBloqueio')}
-              variant={listaModo === 'bloqueio' ? 'primary' : 'outline-primary'}
-              size="sm"
-              onClick={() => onListaModoChange('bloqueio')}
-            />
-            <BulkActionButton
-              type="button"
-              label={t('blockdomi.modoListaDesbloqueio')}
-              variant={listaModo === 'desbloqueio' ? 'danger' : 'outline-danger'}
-              size="sm"
-              onClick={() => onListaModoChange('desbloqueio')}
-            />
-          </div>
-          <BulkActionButton
-            type="button"
-            label={listaModo === 'desbloqueio' ? t('blockdomi.registerRemover') : t('blockdomi.register')}
-            variant={listaModo === 'desbloqueio' ? 'danger' : 'primary'}
-            size="sm"
-            onClick={onCadastrar}
-            disabled={!canCadastrar || isCadastrando}
-            isPending={isCadastrando}
-          />
-        </>
+        <BulkActionButton
+          type="button"
+          label={listaModo === 'desbloqueio' ? t('blockdomi.registerRemover') : t('blockdomi.register')}
+          variant={listaModo === 'desbloqueio' ? 'danger' : 'primary'}
+          size="sm"
+          onClick={onCadastrar}
+          disabled={!canCadastrar || isCadastrando}
+          isPending={isCadastrando}
+        />
       )}
     </div>
+
+    {classified && (
+      <div className="col-12">
+        <AtivoInativoField
+          name="listaModo"
+          label={t('blockdomi.modoLista')}
+          value={listaModo === 'bloqueio'}
+          trueLabel={t('blockdomi.modoListaBloqueio')}
+          falseLabel={t('blockdomi.modoListaDesbloqueio')}
+          onChange={(isBloqueio) => onListaModoChange(isBloqueio ? 'bloqueio' : 'desbloqueio')}
+        />
+      </div>
+    )}
   </>
 );
 

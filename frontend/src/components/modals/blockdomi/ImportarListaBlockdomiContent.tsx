@@ -190,7 +190,12 @@ const ImportarListaBlockdomiContent: React.FC<ImportarListaBlockdomiContentProps
       )}
 
       {classified && !isAnalyzing && (
-        <ImportarListaBlockdomiClassificationCards t={t} classified={classified} />
+        <ImportarListaBlockdomiClassificationCards
+          t={t}
+          classified={classified}
+          onCopied={onCopied}
+          onCopyFailed={onCopyFailed}
+        />
       )}
     </form>
   );
