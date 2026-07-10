@@ -10,15 +10,16 @@ interface ImprimirModalProps {
   title?: string;
   modalId?: string;
   isGenerating?: boolean;
+  fileName?: string;
 }
 
 const ImprimirModal: React.FC<ImprimirModalProps> = ({
   show,
   onClose,
   pdfUrl,
-  title = "Documento",
-  modalId = "imprimir-modal",
-  isGenerating = false
+  title = 'Documento',
+  modalId = 'imprimir-modal',
+  isGenerating = false,
 }) => {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,16 +28,16 @@ const ImprimirModal: React.FC<ImprimirModalProps> = ({
     if (show && pdfUrl) {
       setHasError(false);
       setIsLoading(true);
-      
+
       const handleResourceError = (event: ErrorEvent) => {
         if (event.filename && event.filename.includes('blob:')) {
           setIsLoading(false);
           setHasError(true);
         }
       };
-      
+
       window.addEventListener('error', handleResourceError);
-      
+
       return () => {
         window.removeEventListener('error', handleResourceError);
       };
@@ -91,7 +92,9 @@ const ImprimirModal: React.FC<ImprimirModalProps> = ({
                       onClick={() => {
                         setHasError(false);
                         setIsLoading(true);
-                        const iframe = document.querySelector(`#pdf-iframe-${modalId}`) as HTMLIFrameElement;
+                        const iframe = document.querySelector(
+                          `#pdf-iframe-${modalId}`
+                        ) as HTMLIFrameElement;
                         if (iframe) {
                           iframe.src = pdfUrl;
                         }

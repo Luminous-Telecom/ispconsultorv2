@@ -85,13 +85,14 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({ empresaId, tipo }) => {
   const statusAbertos = useMemo(() => ['pendente', 'vencido'], []);
   const statusPagas = useMemo(() => ['pago', 'pago_atraso', 'parcial'], []);
 
-  const handleImprimirSelecionados = useCallback(async () => {
-    if (selectedItems.length === 0) {
+  const handleImprimirSelecionados = useCallback(async (sel?: SaasTitulo[]) => {
+    const items = sel?.length ? sel : selectedItems;
+    if (items.length === 0) {
       error(t('messages.noTitleSelected'));
       return;
     }
     const statusValidos = tipo === 'abertas' ? statusAbertos : statusPagas;
-    const filtrados = selectedItems.filter(t => statusValidos.includes(t.status || ''));
+    const filtrados = items.filter(t => statusValidos.includes(t.status || ''));
     if (filtrados.length === 0) {
       error(tipo === 'abertas' ? t('messages.noOpenTitlesFound') : t('messages.noPaidTitlesFound'));
       return;
@@ -205,11 +206,11 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({ empresaId, tipo }) => {
   const bulkActions: BulkAction<SaasTitulo>[] = useMemo(() => {
     const dropdown = tipo === 'pagas'
       ? [
-          { label: t('other.selected'), action: () => handleImprimirSelecionados() },
+          { label: t('other.selected'), action: (sel?: SaasTitulo[]) => handleImprimirSelecionados(sel) },
           { label: t('other.all'), action: () => handleImprimirTodosEmAberto() },
         ]
       : [
-          { label: t('other.selected'), action: () => handleImprimirSelecionados() },
+          { label: t('other.selected'), action: (sel?: SaasTitulo[]) => handleImprimirSelecionados(sel) },
           { label: t('other.open'), action: () => handleImprimirTodosEmAberto() },
         ];
     return [

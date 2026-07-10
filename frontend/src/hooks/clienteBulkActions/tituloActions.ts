@@ -313,7 +313,10 @@ export function useTituloActions({
       dropdown: [
         {
           label: bulkBtn.selecionados.label,
-          action: () => handleImprimirTitulosSelecionados(selectedItems as TituloItem[]),
+          action: (items?: CarneParcela[]) =>
+            handleImprimirTitulosSelecionados(
+              (items?.length ? items : selectedItems) as TituloItem[]
+            ),
         },
         {
           label: bulkBtn.abertos.label,
@@ -321,8 +324,9 @@ export function useTituloActions({
         },
         {
           label: bulkBtn.recibo.label,
-          action: () => {
-            handleImprimirRecibosWrapper(getItemsCompletos);
+          action: (items?: CarneParcela[]) => {
+            const source = items?.length ? items : getItemsCompletos;
+            handleImprimirRecibosWrapper(source);
           },
           disabled: (selectedItems: CarneParcela[]) => {
             if (selectedItems.length === 0) return true;
@@ -331,8 +335,9 @@ export function useTituloActions({
         },
         ...(hasNFSeEmitida ? [{
           label: bulkBtn.imprimirNF.label,
-          action: () => {
-            const itensComNFSe = getItemsCompletos.filter(item => item.nfse_status === 'emitida' && item.nfse_numero);
+          action: (items?: CarneParcela[]) => {
+            const source = items?.length ? items : getItemsCompletos;
+            const itensComNFSe = source.filter(item => item.nfse_status === 'emitida' && item.nfse_numero);
             if (itensComNFSe.length === 0) {
               error(t('messages.selectInvoiceToCancel'));
               return;

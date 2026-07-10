@@ -620,13 +620,25 @@ body[data-app="system"] .tox-tinymce-aux .tox {
 
 /* --- Imprimir modal --- */
 .imprimir-modal-frame {
-  height: 80vh;
+  position: absolute;
+  inset: 0;
   width: 100%;
-  position: relative;
+  height: 100%;
+  min-height: 0;
+}
+
+.imprimir-modal-iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
 }
 
 .imprimir-modal-loading {
   min-height: 0;
+  height: 100%;
 }
 
 /* --- Terminal socket --- */

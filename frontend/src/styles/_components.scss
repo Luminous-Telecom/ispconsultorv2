@@ -3427,19 +3427,19 @@ textarea:focus {
     min-height: 0 !important;
     display: flex !important;
     flex-direction: column !important;
+    position: relative !important;
   }
+}
 
-  .imprimir-modal-frame {
-    flex: 1 1 0;
-    min-height: 0;
-    width: 100%;
-    height: 100%;
-  }
-
-  .imprimir-modal-iframe {
-    width: 100%;
-    height: 100%;
-  }
+/* Mobile (ResponsiveDialog): className cai no content — preencher altura útil */
+.responsive-dialog-content-custom.imprimir-modal {
+  position: relative !important;
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  background-color: var(--bg-primary) !important;
 }
 
 .documento-tabs {

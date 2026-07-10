@@ -149,7 +149,7 @@ export function createTituloEstornarAction(
 
 export function createTituloImprimirAction(
   ctx: BulkActionContext,
-  handleImprimirSelecionados: () => void | Promise<void>,
+  handleImprimirSelecionados: (items?: Titulo[]) => void | Promise<void>,
   handleImprimirTodosEmAberto: () => void | Promise<void>
 ): BulkAction<Titulo> {
   return {
@@ -157,7 +157,7 @@ export function createTituloImprimirAction(
     variant: ctx.bulkBtn.imprimir.variant,
     disabled: () => false,
     dropdown: [
-      { label: ctx.t('other.selected'), action: handleImprimirSelecionados },
+      { label: ctx.t('other.selected'), action: (items?: Titulo[]) => handleImprimirSelecionados(items) },
       { label: ctx.t('other.open'), action: handleImprimirTodosEmAberto },
     ],
   };

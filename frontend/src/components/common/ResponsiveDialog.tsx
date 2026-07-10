@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useTableHeader } from 'contexts/TableHeaderContext';
 import { useIsMobile } from 'hooks/useMediaQuery';
-import { RecarregarButton, Loading, VoltarButton, IconOnlyButton, NavLinkButton } from 'components/ui';
+import { RecarregarButton, Loading, IconOnlyButton, NavLinkButton } from 'components/ui';
 import SearchBar from 'components/ui/SearchBar';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -143,11 +143,14 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
         className="d-flex align-items-center border-bottom responsive-dialog-header-custom"
       >
         {/* Botão voltar */}
-        <VoltarButton
+        <IconOnlyButton
           type="button"
           variant="ghost"
+          size="sm"
           className="p-0 me-3 responsive-dialog-back-btn responsive-dialog-btn-auto"
           onClick={onClose}
+          label={t('buttons.back')}
+          iconClassName="bi bi-arrow-left fs-4"
         />
 
         {/* Título */}

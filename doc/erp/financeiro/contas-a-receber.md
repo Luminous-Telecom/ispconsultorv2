@@ -28,6 +28,9 @@ A tela segue o padrão de [listagens do ERP](/doc/geral/listagens). Abaixo, apen
 | **Cancelar** | Cancela o título selecionado |
 | **Estornar** | Estorna um pagamento já registrado |
 | **Imprimir** | Menu de impressão de boletos/recibos |
+
+No **celular**, abra o menu **⋮** do card do título e use **Selecionados** (imprime aquele título), **Abertos**, **Recibo** etc. No preview, use as ações do visualizador do PDF (download, zoom, impressão).
+
 | **Enviar** | Envia a cobrança ao cliente via WhatsApp ou e-mail |
 | **NFS-e** | Ações de nota fiscal de serviço eletrônica |
 

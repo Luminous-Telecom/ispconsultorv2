@@ -56,13 +56,16 @@ export function useContratoTitulosPrint() {
 
   const handleImprimirSelecionados = useCallback(
     async (selectedItems: Titulo[]) => {
-      if (selectedItems.length === 0) return;
+      if (selectedItems.length === 0) {
+        showApiError(t('messages.noTitleSelected'));
+        return;
+      }
       await generatePdfForIds(
         selectedItems.map((item) => item.id),
         'messages.successPrintSelected'
       );
     },
-    [generatePdfForIds]
+    [generatePdfForIds, showApiError, t]
   );
 
   const handleImprimirTodosEmAberto = useCallback(

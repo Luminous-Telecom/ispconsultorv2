@@ -267,7 +267,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   }, [contratoData?.cliente_id, impressaoHook, internalContratoId, showApiError, t]);
 
   const handleImprimirSelecionados = useCallback(
-    () => titulosPrint.handleImprimirSelecionados(selectedItems),
+    (items?: Titulo[]) =>
+      titulosPrint.handleImprimirSelecionados(items?.length ? items : selectedItems),
     [selectedItems, titulosPrint]
   );
   const handleImprimirTodosEmAberto = useCallback(
@@ -275,7 +276,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     [tabData.titulosData?.data, titulosPrint]
   );
   const handleImprimirSelecionadosAvulsos = useCallback(
-    () => titulosPrint.handleImprimirSelecionados(selectedAvulsosItems),
+    (items?: Titulo[]) =>
+      titulosPrint.handleImprimirSelecionados(items?.length ? items : selectedAvulsosItems),
     [selectedAvulsosItems, titulosPrint]
   );
   const handleImprimirTodosEmAbertoAvulsos = useCallback(

@@ -32,9 +32,9 @@ export interface UseContratoFinanceiroBulkActionsParams {
   setSelectedParcela: (parcela: Titulo | null) => void;
   setShowReceberModal: (show: boolean) => void;
   setShowTituloCreateModal: (show: boolean) => void;
-  handleImprimirSelecionados: () => void | Promise<void>;
+  handleImprimirSelecionados: (items?: Titulo[]) => void | Promise<void>;
   handleImprimirTodosEmAberto: () => void | Promise<void>;
-  handleImprimirSelecionadosAvulsos: () => void | Promise<void>;
+  handleImprimirSelecionadosAvulsos: (items?: Titulo[]) => void | Promise<void>;
   handleImprimirTodosEmAbertoAvulsos: () => void | Promise<void>;
 }
 

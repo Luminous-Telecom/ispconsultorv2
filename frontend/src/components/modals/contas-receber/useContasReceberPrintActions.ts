@@ -42,15 +42,21 @@ export function useContasReceberPrintActions({
     return items.filter((item) => item.nfse_status === 'emitida' && item.nfse_numero);
   }, []);
 
-  const handleImprimirSelecionados = useCallback(async () => {
-    if (selectedItems.length === 0) {
+  const resolveItems = useCallback(
+    (items?: TituloItemUnion[]) => (items?.length ? items : selectedItems),
+    [selectedItems]
+  );
+
+  const handleImprimirSelecionados = useCallback(async (items?: TituloItemUnion[]) => {
+    const toPrint = resolveItems(items);
+    if (toPrint.length === 0) {
       showApiError(t('messages.noTitleSelected'));
       return;
     }
     openPrintModal();
 
     try {
-      const ids = selectedItems.map((item) => item.id);
+      const ids = toPrint.map((item) => item.id);
       const pdfBlob = await TituloService.gerarPdfBoletosMultiplos(ids);
 
       const url = window.URL.createObjectURL(pdfBlob);
@@ -63,15 +69,16 @@ export function useContasReceberPrintActions({
       setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
-  }, [selectedItems, showApiError, success, openPrintModal, t]);
+  }, [resolveItems, showApiError, success, openPrintModal, t]);
 
-  const handleImprimirRecibos = useCallback(async () => {
-    if (selectedItems.length === 0) {
+  const handleImprimirRecibos = useCallback(async (items?: TituloItemUnion[]) => {
+    const toPrint = resolveItems(items);
+    if (toPrint.length === 0) {
       showApiError(t('messages.noTitleSelected'));
       return;
     }
 
-    const itensPagos = selectedItems.filter(
+    const itensPagos = toPrint.filter(
       (item) => item.status === 'pago' || item.status === 'pago_atraso'
     );
 
@@ -101,7 +108,7 @@ export function useContasReceberPrintActions({
       setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
-  }, [selectedItems, showApiError, success, openPrintModal, t]);
+  }, [resolveItems, showApiError, success, openPrintModal, t]);
 
   const handleImprimirTodosEmAberto = useCallback(async () => {
     if (!titulos || titulos.length === 0) {
@@ -133,12 +140,13 @@ export function useContasReceberPrintActions({
     }
   }, [titulos, showApiError, success, openPrintModal, t]);
 
-  const handleImprimirSelecionadosSaas = useCallback(async () => {
-    if (selectedItems.length === 0) {
+  const handleImprimirSelecionadosSaas = useCallback(async (items?: TituloItemUnion[]) => {
+    const toPrint = resolveItems(items);
+    if (toPrint.length === 0) {
       showApiError(t('messages.noTitleSelected'));
       return;
     }
-    const emAberto = (selectedItems as SaasTitulo[]).filter(
+    const emAberto = (toPrint as SaasTitulo[]).filter(
       (item) => item.status === 'pendente' || item.status === 'vencido'
     );
     if (emAberto.length === 0) {
@@ -158,7 +166,7 @@ export function useContasReceberPrintActions({
       setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
-  }, [selectedItems, showApiError, success, openPrintModal, t]);
+  }, [resolveItems, showApiError, success, openPrintModal, t]);
 
   const handleImprimirTodosEmAbertoSaas = useCallback(async () => {
     const emAberto = (titulos as SaasTitulo[]).filter(

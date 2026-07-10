@@ -24,10 +24,10 @@ interface UseContasReceberBulkActionsParams {
   setShowReceberModal: (show: boolean) => void;
   setSelectedTituloForNFe: (titulo: Titulo | null) => void;
   setShowGerarNFeModal: (show: boolean) => void;
-  handleImprimirSelecionados: () => Promise<void>;
-  handleImprimirRecibos: () => Promise<void>;
+  handleImprimirSelecionados: (items?: TituloItemUnion[]) => Promise<void>;
+  handleImprimirRecibos: (items?: TituloItemUnion[]) => Promise<void>;
   handleImprimirTodosEmAberto: () => Promise<void>;
-  handleImprimirSelecionadosSaas: () => Promise<void>;
+  handleImprimirSelecionadosSaas: (items?: TituloItemUnion[]) => Promise<void>;
   handleImprimirTodosEmAbertoSaas: () => Promise<void>;
   handleImprimirNFSe: (items: Titulo[]) => Promise<void>;
   getItensComNFSe: (items: Titulo[]) => Titulo[];
@@ -384,15 +384,15 @@ export function useContasReceberBulkActions({
       variant: bulkBtn.imprimir.variant,
       dropdown: isSaas
         ? [
-            { label: t('other.selected'), action: () => handleImprimirSelecionadosSaas() },
+            { label: t('other.selected'), action: (items?: TituloItemUnion[]) => handleImprimirSelecionadosSaas(items) },
             { label: t('other.open'), action: () => handleImprimirTodosEmAbertoSaas() },
           ]
         : [
-            { label: t('other.selected'), action: () => handleImprimirSelecionados() },
+            { label: t('other.selected'), action: (items?: TituloItemUnion[]) => handleImprimirSelecionados(items) },
             { label: t('other.open'), action: () => handleImprimirTodosEmAberto() },
             {
               label: t('other.receipt'),
-              action: () => handleImprimirRecibos(),
+              action: (items?: TituloItemUnion[]) => handleImprimirRecibos(items),
               disabled: (sel: TituloItemUnion[]) =>
                 (sel as Titulo[]).filter((i) => i.status === 'pago' || i.status === 'pago_atraso')
                   .length === 0,
