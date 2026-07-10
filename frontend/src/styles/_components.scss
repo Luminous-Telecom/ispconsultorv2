@@ -5896,31 +5896,6 @@ input[type="week"]::-moz-calendar-picker-indicator {
   overflow-y: auto;
 }
 
-.importar-lista-blockdomi .ilb-filtro-card {
-  border: 1px solid var(--border-color);
-  box-shadow: var(--ilb-shadow);
-  transition: box-shadow var(--ilb-transition);
-}
-
-.importar-lista-blockdomi .ilb-filtro-card:hover {
-  box-shadow: var(--ilb-shadow-hover);
-}
-
-.importar-lista-blockdomi .ilb-filtro-card .card-header,
-.importar-lista-blockdomi .ilb-filtro-card .card-footer {
-  padding: 0.5rem 0.75rem;
-}
-
-.importar-lista-blockdomi .ilb-filtro-card .card-body {
-  padding: 0.5rem 0.75rem;
-}
-
-.importar-lista-blockdomi .ilb-filtro-body {
-  max-height: 180px;
-  font-size: var(--font-size-xs);
-  line-height: 1.6;
-}
-
 .importar-lista-blockdomi .ilb-class-card .list-unstyled {
   font-size: var(--font-size-xs);
   line-height: 1.6;
