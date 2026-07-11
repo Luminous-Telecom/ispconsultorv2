@@ -72,6 +72,7 @@ export const ContasReceberListSubModals: React.FC<ContasReceberListSubModalsProp
       pdfUrl={pdfUrl}
       isGenerating={isGeneratingPdf}
       title={t('financial.viewDocument')}
+      fileName="boleto.pdf"
       modalId="financeiro-imprimir-modal"
     />
 

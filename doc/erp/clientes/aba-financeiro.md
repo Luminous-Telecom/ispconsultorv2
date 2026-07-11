@@ -45,7 +45,7 @@ A maioria das ações fica desabilitada até que um título seja selecionado na 
 | **Abertos** | Imprime títulos em aberto do cliente |
 | **Recibo** | Gera recibo do título pago selecionado |
 
-No **celular**, use o menu **⋮** do card do título: **Selecionados** imprime aquele título. No preview, use as ações do visualizador do PDF (download, zoom, impressão).
+No **celular**, use o menu **⋮** do card do título: **Selecionados** imprime aquele título. No preview do PDF, use **Baixar** (o visualizador embutido no celular costuma não oferecer download).
 
 ### Busca — campos disponíveis
 

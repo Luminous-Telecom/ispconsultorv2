@@ -85,6 +85,7 @@ const ptBR: TranslationKeys = {
     'messages.errorPrintSelected': 'Erro ao gerar boletos selecionados',
     'messages.clientNotFound': 'Cliente não encontrado',
     'messages.successPrintOpen': 'Boletos em aberto gerados com sucesso!',
+    'messages.pdfDownloaded': 'Documento baixado com sucesso!',
     'messages.errorPrintOpen': 'Erro ao gerar boletos em aberto',
     'messages.confirmCancelTitle': 'Tem certeza que deseja cancelar este título?',
     'messages.confirmCancelTitles': 'Tem certeza que deseja cancelar ${count} títulos?',

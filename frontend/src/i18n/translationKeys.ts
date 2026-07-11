@@ -85,6 +85,7 @@ export interface TranslationKeys {
   'messages.errorPrintSelected': string;
   'messages.clientNotFound': string;
   'messages.successPrintOpen': string;
+  'messages.pdfDownloaded': string;
   'messages.errorPrintOpen': string;
   'messages.confirmCancelTitle': string;
   'messages.confirmCancelTitles': string;

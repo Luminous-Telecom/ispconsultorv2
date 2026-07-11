@@ -85,6 +85,7 @@ const enUS: TranslationKeys = {
     'messages.errorPrintSelected': 'Error generating selected boletos',
     'messages.clientNotFound': 'Client not found',
     'messages.successPrintOpen': 'Open boletos generated successfully!',
+    'messages.pdfDownloaded': 'Document downloaded successfully!',
     'messages.errorPrintOpen': 'Error generating open boletos',
     'messages.confirmCancelTitle': 'Are you sure you want to cancel this title?',
     'messages.confirmCancelTitles': 'Are you sure you want to cancel ${count} titles?',

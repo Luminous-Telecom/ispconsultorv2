@@ -627,6 +627,16 @@ body[data-app="system"] .tox-tinymce-aux .tox {
   min-height: 0;
 }
 
+.imprimir-modal-toolbar {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 3;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .imprimir-modal-iframe {
   position: absolute;
   inset: 0;

@@ -118,6 +118,7 @@ function ClienteModalSubModals({
         pdfUrl={pdfUrl}
         isGenerating={isGeneratingPdf}
         title={t('modal.viewDocument')}
+        fileName="boleto.pdf"
         modalId="cliente-imprimir-modal"
       />
 

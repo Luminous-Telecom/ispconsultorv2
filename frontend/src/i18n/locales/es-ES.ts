@@ -85,6 +85,7 @@ const esES: TranslationKeys = {
     'messages.errorPrintSelected': 'Error al generar boletos seleccionados',
     'messages.clientNotFound': 'Cliente no encontrado',
     'messages.successPrintOpen': '¡Boletos pendientes generados con éxito!',
+    'messages.pdfDownloaded': '¡Documento descargado con éxito!',
     'messages.errorPrintOpen': 'Error al generar boletos pendientes',
     'messages.confirmCancelTitle': '¿Estás seguro de que deseas cancelar este título?',
     'messages.confirmCancelTitles': '¿Estás seguro de que deseas cancelar ${count} títulos?',
