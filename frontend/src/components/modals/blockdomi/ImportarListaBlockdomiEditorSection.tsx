@@ -42,6 +42,7 @@ const ImportarListaBlockdomiEditorSection: React.FC<ImportarListaBlockdomiEditor
         name="rawText"
         type="textarea"
         size="sm"
+        className="ilb-lista-entrada"
         label={t('blockdomi.inputListLabel')}
         helpText={
           domainCount > 0
@@ -55,7 +56,7 @@ const ImportarListaBlockdomiEditorSection: React.FC<ImportarListaBlockdomiEditor
       />
     </div>
 
-    <div className="ilb-actions form-modal-input-col">
+    <div className="ilb-actions">
       <BulkActionButton
         type="button"
         label={t('blockdomi.paste')}

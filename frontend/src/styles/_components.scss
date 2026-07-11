@@ -5744,13 +5744,51 @@ input[type="week"]::-moz-calendar-picker-indicator {
   display: none;
 }
 
-/* Botões de ação com ícones */
+/*
+ * Lista de entrada: mesma origem à esquerda dos cards (não da coluna de inputs).
+ * Precisa bater a especificidade de form-modal-tab-padding .form-field.
+ */
+.draggable-modal-body-custom
+  :is(form, div).form-modal-simple.importar-lista-blockdomi
+  .ilb-lista-entrada.form-field,
+.importar-lista-blockdomi .ilb-lista-entrada.form-field {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  max-width: var(--form-input-max-width);
+  width: 100%;
+  gap: 0.25rem;
+  margin-left: 0;
+
+  > .form-label,
+  > label.form-label:not(.form-check-label),
+  > span.form-label {
+    flex: none;
+    width: 100%;
+    max-width: none;
+    text-align: left;
+    padding-top: 0;
+  }
+
+  > .form-field-control {
+    flex: none;
+    max-width: none;
+    width: 100%;
+  }
+}
+
+.draggable-modal-body-custom
+  :is(form, div).form-modal-simple.importar-lista-blockdomi
+  .ilb-actions,
 .importar-lista-blockdomi .ilb-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
   margin-top: 0.5rem;
+  margin-left: 0;
+  max-width: var(--form-input-max-width);
+  width: 100%;
 }
 
 .importar-lista-blockdomi .ilb-actions .btn {
@@ -5856,11 +5894,23 @@ input[type="week"]::-moz-calendar-picker-indicator {
 }
 
 /* Cards de classificação */
+.draggable-modal-body-custom
+  :is(form, div).form-modal-simple.importar-lista-blockdomi
+  .form-section-heading-row,
+.importar-lista-blockdomi .form-section-heading-row {
+  max-width: none;
+  width: 100%;
+  margin-left: 0;
+}
+
 .importar-lista-blockdomi .ilb-classification-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 0.5rem;
   margin-top: 0.5rem;
+  margin-left: 0;
+  max-width: none;
+  width: 100%;
 }
 
 .importar-lista-blockdomi .ilb-class-card {
