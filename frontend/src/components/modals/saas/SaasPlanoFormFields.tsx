@@ -220,9 +220,12 @@ export const SaasPlanoLimitesFormFields: React.FC<SaasPlanoLimitesFormFieldsProp
 
         return (
           <div key={grupo} className="mb-3">
-            <h6 className="small fw-semibold text-muted mb-2">
-              {SAAS_PLANO_LIMITE_GRUPO_LABEL[grupo as SaasPlanoLimiteGrupo]}
-            </h6>
+            <div className="form-section-heading-row">
+              <span className="form-section-heading-pill">
+                {SAAS_PLANO_LIMITE_GRUPO_LABEL[grupo as SaasPlanoLimiteGrupo]}
+              </span>
+              <div className="form-section-heading-line" aria-hidden />
+            </div>
             <div className="row g-2">
               {grupo === 'cadastros' && form.modulos.includes('cadastros') && (
                 <div className="col-12">

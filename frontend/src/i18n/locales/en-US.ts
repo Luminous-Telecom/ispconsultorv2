@@ -428,6 +428,7 @@ const enUS: TranslationKeys = {
     'blockdomi.tipoLista': 'List',
     'blockdomi.versaoGerada': 'generated successfully',
     'blockdomi.selectDomain': 'Domain',
+    'blockdomi.dadosOficio': 'Warrant details',
     'blockdomi.nomeOficio': 'Warrant name',
     'blockdomi.nomeOficioOptional': 'Warrant name (optional)',
     'blockdomi.dataInicioBloqueio': 'Block start date',

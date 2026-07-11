@@ -129,11 +129,11 @@ const ReceberModalCore: React.FC<ReceberModalCoreProps> = ({
       modalId={variant === 'saas' ? 'saas-receber-modal' : 'receber-modal'}
     >
       <form onSubmit={rhfHandleSubmit(handleSubmit)} className="form-modal-simple">
-        <div className="card mb-3">
-          <div className="card-header py-2">
-            <h6 className="mb-0">{t('financial.parcelInfo')}</h6>
+        <div className="mb-3">
+          <div className="form-section-heading-row">
+            <span className="form-section-heading-pill">{t('financial.parcelInfo')}</span>
+            <div className="form-section-heading-line" aria-hidden />
           </div>
-          <div className="card-body py-2">
             <div className="row g-2">
               <div className="col-12">
                 <FormField
@@ -169,7 +169,6 @@ const ReceberModalCore: React.FC<ReceberModalCoreProps> = ({
                 />
               </div>
             </div>
-          </div>
         </div>
 
         <div className="row g-2">

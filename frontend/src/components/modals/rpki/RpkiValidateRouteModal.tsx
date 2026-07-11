@@ -174,22 +174,23 @@ const RpkiValidateRouteModal: React.FC<RpkiValidateRouteModalProps> = ({
       )}
 
       {result && (
-        <div className="card">
-          <div className="card-header py-1 px-3 d-flex align-items-center gap-2 small fw-semibold">
-            ROAs
-            {result.validatingRoas.length > 0 && (
-              <span className="badge bg-secondary fw-normal">{result.validatingRoas.length}</span>
-            )}
+        <div>
+          <div className="form-section-heading-row">
+            <span className="form-section-heading-pill">
+              ROAs
+              {result.validatingRoas.length > 0
+                ? ` (${result.validatingRoas.length})`
+                : ''}
+            </span>
+            <div className="form-section-heading-line" aria-hidden />
           </div>
-          <div className="card-body p-0">
             {result.validatingRoas.length === 0 ? (
-              <div className="text-muted small p-3">
+              <div className="text-muted small">
                 Nenhum ROA para este prefixo. Confira o CIDR; com ASN o resultado reflete a rota anunciada.
               </div>
             ) : (
               <ValidatingRoasTable rows={result.validatingRoas} />
             )}
-          </div>
         </div>
       )}
     </form>

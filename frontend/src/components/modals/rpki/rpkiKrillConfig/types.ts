@@ -21,6 +21,6 @@ export interface AspaItem {
 }
 
 export interface CaSelectOption {
-  value: number;
+  value: string;
   label: string;
 }

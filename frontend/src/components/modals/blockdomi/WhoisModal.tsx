@@ -203,7 +203,10 @@ const WhoisModal: React.FC<WhoisModalProps> = ({ show, onClose, ip }) => {
 
         {contatoItems.length > 0 && (
           <div>
-            <h6 className="small text-muted mb-2">{t('blockdomi.whoisContato')}</h6>
+            <div className="form-section-heading-row">
+              <span className="form-section-heading-pill">{t('blockdomi.whoisContato')}</span>
+              <div className="form-section-heading-line" aria-hidden />
+            </div>
             <DetailFieldGrid
               fields={contatoItems.map(({ key, label, value }) => ({ label, value, key }))}
             />

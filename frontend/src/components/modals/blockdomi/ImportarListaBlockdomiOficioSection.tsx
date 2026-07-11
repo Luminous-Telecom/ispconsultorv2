@@ -84,6 +84,10 @@ const ImportarListaBlockdomiOficioSection: React.FC<ImportarListaBlockdomiOficio
   onPdfMainFileChange,
 }) => (
   <div className="mb-2">
+    <div className="form-section-heading-row">
+      <span className="form-section-heading-pill">{t('blockdomi.dadosOficio')}</span>
+      <div className="form-section-heading-line" aria-hidden />
+    </div>
     <div className="row g-2 mb-2">
       <div className="col-12">
         <FormField
@@ -138,7 +142,11 @@ const ImportarListaBlockdomiOficioSection: React.FC<ImportarListaBlockdomiOficio
       </div>
     </div>
 
-    <div className="pt-2 mt-2 border-top border-secondary pb-2 mb-2 border-bottom border-secondary">
+    <div className="mb-2">
+      <div className="form-section-heading-row">
+        <span className="form-section-heading-pill">{t('blockdomi.importFromPdf')}</span>
+        <div className="form-section-heading-line" aria-hidden />
+      </div>
       <div className="ilb-actions mb-2 form-modal-input-col">
         <ExtrairSeiAnatelButton
           type="button"

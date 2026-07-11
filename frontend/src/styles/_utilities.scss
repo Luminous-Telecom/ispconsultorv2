@@ -741,18 +741,34 @@ body[data-app="system"] .tox-tinymce-aux .tox {
   overflow: hidden;
 }
 
-/* --- RPKI copy button overlay --- */
+/* --- RPKI copy button overlay (sobre o textarea no layout horizontal) --- */
+.rpki-field-relative {
+  position: relative;
+  width: 100%;
+  max-width: var(--form-block-max-width);
+}
+
+.rpki-field-relative > .form-field {
+  max-width: none;
+}
+
 .rpki-field-copy-overlay {
   position: absolute;
-  top: 30px;
-  right: 18px;
+  top: 0.375rem;
+  right: 0.5rem;
   z-index: 2;
   min-width: 36px;
   padding: 4px 8px;
 }
 
-.rpki-field-relative {
-  position: relative;
+.rpki-field-relative .form-field-control textarea {
+  padding-right: 2.75rem;
+}
+
+@media (max-width: 767.98px) {
+  .rpki-field-copy-overlay {
+    top: 2rem;
+  }
 }
 
 /* --- CopyableInput — input + copiar como um único controle --- */

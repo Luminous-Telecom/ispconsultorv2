@@ -196,23 +196,22 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
 
   if (isLoading) {
     return (
-      <div className="card mb-3">
-        <div className="card-header">
-          <h6 className="mb-0">{t('nfse.title')}</h6>
+      <div className="mb-3">
+        <div className="form-section-heading-row">
+          <span className="form-section-heading-pill">{t('nfse.title')}</span>
+          <div className="form-section-heading-line" aria-hidden />
         </div>
-        <div className="card-body">
-          <Loading variant="centered" size="sm" message={t('ui.loading')} />
-        </div>
+        <Loading variant="centered" size="sm" message={t('ui.loading')} />
       </div>
     );
   }
 
   return (
-    <div className="card mb-3">
-      <div className="card-header">
-        <h6 className="mb-0">{t('nfse.title')}</h6>
+    <div className="mb-3">
+      <div className="form-section-heading-row">
+        <span className="form-section-heading-pill">{t('nfse.title')}</span>
+        <div className="form-section-heading-line" aria-hidden />
       </div>
-      <div className="card-body">
         <form id={formId} onSubmit={handleSave} className="form-modal-simple">
           <div className="row g-2">
             <div className="col-12">
@@ -372,7 +371,6 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
             )}
           </div>
         </form>
-      </div>
     </div>
   );
 };

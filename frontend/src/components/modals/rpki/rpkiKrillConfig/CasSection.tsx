@@ -16,9 +16,11 @@ const CasSection: React.FC<CasSectionProps> = ({
   createCaMutation,
   handleCreateCa,
 }) => (
-  <div ref={cardRef} className="card mb-3">
-    <div className="card-header">CAs</div>
-    <div className="card-body">
+  <div ref={cardRef} className="mb-3">
+    <div className="form-section-heading-row">
+      <span className="form-section-heading-pill">CAs</span>
+      <div className="form-section-heading-line" aria-hidden />
+    </div>
       <div className="row g-2 mb-2">
         <div className="col-12">
           <FormField
@@ -70,7 +72,6 @@ const CasSection: React.FC<CasSectionProps> = ({
           </tbody>
         </table>
       </div>
-    </div>
   </div>
 );
 

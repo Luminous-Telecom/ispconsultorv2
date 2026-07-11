@@ -205,24 +205,23 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                   {variaveisData && (
                 <div className="row g-2 mt-2">
                   <div className="col-12">
-                    <div className="card border-primary">
-                      <div className="card-header py-2 px-3 bg-primary bg-opacity-10">
-                        <h6 className="mb-0 d-flex align-items-center">
-                          <i className="bi bi-code-square me-2"></i>
-                          {t('settings.messages.variablesTitle')}
-                        </h6>
-                        <small className="form-helper-message mt-1">
-                          {t('settings.messages.variablesHelper')}
-                        </small>
-                      </div>
-                      <div className="card-body p-3 scroll-max-400">
+                    <div className="form-section-heading-row">
+                      <span className="form-section-heading-pill">
+                        {t('settings.messages.variablesTitle')}
+                      </span>
+                      <div className="form-section-heading-line" aria-hidden />
+                    </div>
+                    <small className="form-helper-message d-block mb-2 form-modal-input-col">
+                      {t('settings.messages.variablesHelper')}
+                    </small>
+                    <div className="scroll-max-400">
                         <div className="row g-2">
                           {Object.entries(variaveisData).map(([chave, grupo]) => (
                             <div key={chave} className="col-12">
-                              <h6 className="fw-bold mb-2 text-primary">
-                                <i className="bi bi-tag me-1"></i>
-                                {grupo.titulo}
-                              </h6>
+                              <div className="form-section-heading-row">
+                                <span className="form-section-heading-pill">{grupo.titulo}</span>
+                                <div className="form-section-heading-line" aria-hidden />
+                              </div>
                               <div className="row g-2">
                                 {grupo.variaveis.map((variavel) => (
                                   <div key={variavel.variavel} className="col-12">
@@ -246,7 +245,6 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                             </div>
                           ))}
                         </div>
-                      </div>
                     </div>
                   </div>
                 </div>

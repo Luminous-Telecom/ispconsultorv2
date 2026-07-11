@@ -57,13 +57,14 @@ const RpkiDashboardModal: React.FC<RpkiDashboardModalProps> = () => {
         </div>
       </div>
 
-      <div className="card mt-3">
-        <div className="card-header">Resumo</div>
-        <div className="card-body">
+      <div className="mt-3">
+        <div className="form-section-heading-row">
+          <span className="form-section-heading-pill">Resumo</span>
+          <div className="form-section-heading-line" aria-hidden />
+        </div>
           <p className="text-muted mb-0">
             Dashboard RPKI pronto para receber dados reais dos endpoints do backend.
           </p>
-        </div>
       </div>
     </form>
   );

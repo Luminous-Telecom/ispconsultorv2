@@ -178,7 +178,7 @@ export function useRpkiKrillConfig() {
   ];
 
   const caOptions: CaSelectOption[] = (cas as CaItem[]).map((ca) => ({
-    value: ca.id,
+    value: String(ca.id),
     label: ca.nome,
   }));
 

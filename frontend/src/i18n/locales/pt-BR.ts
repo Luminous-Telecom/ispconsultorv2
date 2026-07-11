@@ -428,6 +428,7 @@ const ptBR: TranslationKeys = {
     'blockdomi.tipoLista': 'Lista',
     'blockdomi.versaoGerada': 'gerada com sucesso',
     'blockdomi.selectDomain': 'Domínio',
+    'blockdomi.dadosOficio': 'Dados do ofício',
     'blockdomi.nomeOficio': 'Nome do ofício',
     'blockdomi.nomeOficioOptional': 'Nome do ofício (opcional)',
     'blockdomi.dataInicioBloqueio': 'Data início bloqueio',

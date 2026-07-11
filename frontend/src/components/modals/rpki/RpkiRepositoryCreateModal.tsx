@@ -147,7 +147,7 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
             />
           </div>
           <div className="col-12">
-            <div className="position-relative">
+            <div className="rpki-field-relative">
               <FormField
                 name="rpki_repository_publisher_request_xml"
                 type="textarea"

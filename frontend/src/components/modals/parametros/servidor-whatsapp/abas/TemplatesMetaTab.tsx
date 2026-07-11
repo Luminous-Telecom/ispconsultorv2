@@ -357,9 +357,12 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
                         />
                       </div>
                       <div className="col-12">
-                        <div className="form-field">
-                          <label className="form-label fw-bold">Variáveis (mesmas para todos os templates)</label>
-                          <div className="form-field-control">
+                        <div className="form-section-heading-row">
+                          <span className="form-section-heading-pill">
+                            Variáveis (mesmas para todos os templates)
+                          </span>
+                          <div className="form-section-heading-line" aria-hidden />
+                        </div>
                             <div className="row g-2">
                               {Array.from({ length: numVars }, (_, i) => (
                                 <div key={i} className="col-12">
@@ -383,8 +386,6 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
                                 </div>
                               ))}
                             </div>
-                          </div>
-                        </div>
                       </div>
                     </div>
                     <div className="template-meta-detail__actions form-modal-input-col">

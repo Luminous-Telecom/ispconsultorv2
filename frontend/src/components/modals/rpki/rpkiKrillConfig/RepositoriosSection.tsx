@@ -28,9 +28,11 @@ const RepositoriosSection: React.FC<RepositoriosSectionProps> = ({
   handleGeneratePublisherRequest,
   handleImportRepositoryResponse,
 }) => (
-  <div ref={cardRef} className="card mb-3">
-    <div className="card-header">Repositório (RFC 8183)</div>
-    <div className="card-body">
+  <div ref={cardRef} className="mb-3">
+    <div className="form-section-heading-row">
+      <span className="form-section-heading-pill">Repositório (RFC 8183)</span>
+      <div className="form-section-heading-line" aria-hidden />
+    </div>
       <p className="text-muted form-hint small mb-2">
         Gere o <code>publisher_request</code> (XML RFC 8183) e envie no fluxo do repositório (ex.: Registro.br). O{' '}
         <code>publisher_bpki_ta</code> deve ser o mesmo certificado BPKI da sua <strong>child_request</strong> já aceita
@@ -164,7 +166,6 @@ const RepositoriosSection: React.FC<RepositoriosSectionProps> = ({
           </tbody>
         </table>
       </div>
-    </div>
   </div>
 );
 

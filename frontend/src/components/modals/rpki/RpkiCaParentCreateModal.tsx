@@ -33,25 +33,43 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
     queryFn: () => RpkiCaService.list(),
   });
 
+  const allowedCaIdsKey = (allowedCaIds ?? []).join(',');
+
   const selectableCas = useMemo((): RpkiCa[] => {
     const caList = cas as RpkiCa[];
-    if (!allowedCaIds?.length) return caList;
-    const allowed = new Set(allowedCaIds);
+    if (!allowedCaIdsKey) return caList;
+    const allowed = new Set(
+      allowedCaIdsKey
+        .split(',')
+        .map((id) => Number(id))
+        .filter((id) => Number.isFinite(id) && id > 0)
+    );
     return caList.filter((ca) => allowed.has(ca.id));
-  }, [cas, allowedCaIds]);
+  }, [cas, allowedCaIdsKey]);
+
+  // Só reseta campos ao abrir — evita limpar/cancelar a geração da CA-filha a cada re-render do pai
+  useEffect(() => {
+    if (!show) return;
+    setParentName('');
+    setChildRequestXml('');
+    setResponseXml('');
+  }, [show]);
 
   useEffect(() => {
     if (!show) return;
     if (initialCaId && selectableCas.some((ca) => ca.id === initialCaId)) {
       setCaId(String(initialCaId));
-    } else if (selectableCas.length > 0) {
-      setCaId(String(selectableCas[0].id));
-    } else {
-      setCaId('');
+      return;
     }
-    setParentName('');
-    setChildRequestXml('');
-    setResponseXml('');
+    if (selectableCas.length > 0) {
+      setCaId((prev) =>
+        prev && selectableCas.some((ca) => String(ca.id) === prev)
+          ? prev
+          : String(selectableCas[0].id)
+      );
+      return;
+    }
+    setCaId('');
   }, [show, initialCaId, selectableCas]);
 
   useEffect(() => {
@@ -88,6 +106,7 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['rpki-cas'] }),
         queryClient.invalidateQueries({ queryKey: ['rpki-ca-parents', vars.caId] }),
+        queryClient.invalidateQueries({ queryKey: ['rpki-ca-parents-all'] }),
       ]);
       success('CA-pai vinculada com sucesso');
       onClose();
@@ -106,7 +125,7 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
               label="CA"
               size="sm"
               value={caId}
-              options={selectableCas.map((ca) => ({ value: ca.id, label: ca.nome }))}
+              options={selectableCas.map((ca) => ({ value: String(ca.id), label: ca.nome }))}
               onChange={(v) => setCaId(String(v ?? ''))}
             />
           </div>
@@ -120,7 +139,7 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
             />
           </div>
           <div className="col-12">
-            <div className="position-relative">
+            <div className="rpki-field-relative">
               <FormField
                 name="rpki_child_request_preview"
                 type="textarea"

@@ -430,6 +430,7 @@ const esES: TranslationKeys = {
     'blockdomi.tipoLista': 'Lista',
     'blockdomi.versaoGerada': 'generada con éxito',
     'blockdomi.selectDomain': 'Dominio',
+    'blockdomi.dadosOficio': 'Datos del oficio',
     'blockdomi.nomeOficio': 'Nombre del oficio',
     'blockdomi.nomeOficioOptional': 'Nombre del oficio (opcional)',
     'blockdomi.dataInicioBloqueio': 'Fecha inicio bloqueo',

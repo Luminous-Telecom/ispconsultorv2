@@ -18,9 +18,11 @@ const AspasSection: React.FC<AspasSectionProps> = ({
   aspas,
   handleSaveAspa,
 }) => (
-  <div ref={cardRef} className="card">
-    <div className="card-header">ASPAs</div>
-    <div className="card-body">
+  <div ref={cardRef} className="mb-3">
+    <div className="form-section-heading-row">
+      <span className="form-section-heading-pill">ASPAs</span>
+      <div className="form-section-heading-line" aria-hidden />
+    </div>
       <div className="row g-2 mb-2">
         <div className="col-12">
           <FormField
@@ -84,7 +86,6 @@ const AspasSection: React.FC<AspasSectionProps> = ({
           </tbody>
         </table>
       </div>
-    </div>
   </div>
 );
 

@@ -412,6 +412,7 @@ export interface TranslationKeys {
   'blockdomi.tipoLista': string;
   'blockdomi.versaoGerada': string;
   'blockdomi.selectDomain': string;
+  'blockdomi.dadosOficio': string;
   'blockdomi.nomeOficio': string;
   'blockdomi.nomeOficioOptional': string;
   'blockdomi.dataInicioBloqueio': string;

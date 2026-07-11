@@ -63,6 +63,7 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
   );
 
   const { cas, caIdsKey } = useRpkiCas(clienteIdFilter);
+  const allowedCaIds = useMemo(() => cas.map((c) => c.id), [cas]);
   const { data: clientes = [] as Cliente[] } = useQuery<Cliente[]>({
     queryKey: ['clientes-rpki'],
     queryFn: async () => {
@@ -118,9 +119,9 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_CA_PARENT_SYNC_ALT_ERROR),
   });
 
-  const caById = useMemo(() => new Map(cas.map((ca) => [ca.id, ca])), [cas]);
+  const caById = useMemo(() => new Map(cas.map((ca) => [Number(ca.id), ca])), [cas]);
   const clienteNomeById = useMemo(
-    () => new Map((clientes as Cliente[]).map((c) => [c.id, c.razao_social || c.nome_fantasia || ''])),
+    () => new Map((clientes as Cliente[]).map((c) => [Number(c.id), c.razao_social || c.nome_fantasia || ''])),
     [clientes]
   );
 
@@ -143,7 +144,7 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
         label: 'CA',
         sortable: false,
         width: '200px',
-        render: (item) => caById.get(item.ca_id)?.nome || `#${item.ca_id}`,
+        render: (item) => caById.get(Number(item.ca_id))?.nome || `#${item.ca_id}`,
       },
     ];
     if (clienteIdFilter == null) {
@@ -153,9 +154,9 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
         sortable: false,
         width: '220px',
         render: (item) => {
-          const ca = caById.get(item.ca_id);
+          const ca = caById.get(Number(item.ca_id));
           if (!ca?.cliente_id) return '—';
-          return clienteNomeById.get(ca.cliente_id) || '—';
+          return clienteNomeById.get(Number(ca.cliente_id)) || '—';
         },
       });
     }
@@ -300,7 +301,7 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
         show={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         initialCaId={cas.length === 1 ? cas[0].id : null}
-        allowedCaIds={cas.map((c) => c.id)}
+        allowedCaIds={allowedCaIds}
       />
 
       <ImprimirModal
