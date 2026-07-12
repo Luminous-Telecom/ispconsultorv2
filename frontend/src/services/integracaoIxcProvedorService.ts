@@ -4,11 +4,20 @@ import { unwrapArrayResponse } from './core';
 export interface IntegracaoIxcProvedor {
   id: number;
   nome: string;
+  cliente_id?: number | null;
+  cliente_nome?: string | null;
+  cliente?: {
+    id: number;
+    razao_social?: string | null;
+    nome_fantasia?: string | null;
+  } | null;
+  contrato_id?: number | null;
+  contrato_nome?: string | null;
   api_url?: string | null;
   ativo: boolean;
   has_api_token?: boolean;
-  clientes_vinculados?: string[];
-  clientes_label?: string | null;
+  contratos_vinculados?: string[];
+  contratos_label?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -38,6 +47,8 @@ export interface PaginatedIntegracaoIxcProvedor {
 
 export interface UpsertIntegracaoIxcProvedor {
   nome: string;
+  cliente_id: number;
+  contrato_id: number;
   api_url?: string | null;
   api_token?: string | null;
   ativo?: boolean;

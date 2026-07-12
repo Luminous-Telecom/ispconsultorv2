@@ -59,6 +59,8 @@ export const buildDisplayTitle = (
     suffix = ` - ${t('status.exempt')}`;
   } else if (initialFilters?.plano_id) {
     suffix = ` - ${t('table.plan')} #${initialFilters.plano_id}`;
+  } else if (initialFilters?.cliente_id) {
+    suffix = ` - ${t('table.client')} #${initialFilters.cliente_id}`;
   } else if (initialFilters?.tipo_servico) {
     suffix = ` - ${tipoServicoLabels[initialFilters.tipo_servico] || initialFilters.tipo_servico}`;
   }
@@ -81,6 +83,7 @@ export const buildListFilters = (
     }),
     ...(initialFilters?.plano_id && { plano_id: initialFilters.plano_id }),
     ...(initialFilters?.tipo_servico && { tipo_servico: initialFilters.tipo_servico }),
+    ...(initialFilters?.cliente_id && { cliente_id: initialFilters.cliente_id }),
   };
 };
 

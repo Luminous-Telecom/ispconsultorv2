@@ -29,6 +29,7 @@ export interface ListContratosFilters {
    */
   excluir_em_atraso?: boolean;
   empresa_id?: number;
+  cliente_id?: number;
 }
 
 export interface ListContratosResponse {
@@ -110,6 +111,7 @@ export class ContratoService {
       em_atraso,
       excluir_em_atraso,
       empresa_id,
+      cliente_id,
     } = filters;
     const pageNum = Number(page);
     const limitNum = Number(limit);
@@ -220,6 +222,10 @@ export class ContratoService {
 
     if (plano_id) {
       whereClause.plano_id = plano_id;
+    }
+
+    if (cliente_id) {
+      whereClause.cliente_id = cliente_id;
     }
 
     if (tipo_servico) {

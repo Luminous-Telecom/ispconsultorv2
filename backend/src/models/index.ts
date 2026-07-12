@@ -222,6 +222,16 @@ Plano.hasMany(ContratoPlanoAdicional, {
   as: 'contratosAdicionais'
 });
 
+IntegracaoIxcProvedor.belongsTo(Cliente, {
+  foreignKey: 'cliente_id',
+  as: 'cliente',
+});
+
+Cliente.hasMany(IntegracaoIxcProvedor, {
+  foreignKey: 'cliente_id',
+  as: 'integracoesIxcProvedor',
+});
+
 Contrato.belongsToMany(IntegracaoIxcProvedor, {
   through: ContratoIntegracaoIxcVinculo,
   foreignKey: 'contrato_id',

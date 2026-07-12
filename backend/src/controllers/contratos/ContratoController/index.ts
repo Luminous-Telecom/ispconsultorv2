@@ -141,6 +141,7 @@ export class ContratoController {
         sortDirection,
         isento_mensalidade: parseTriStateBoolean(req.query.isento_mensalidade),
         plano_id: parseOptionalQueryInt(req.query.plano_id),
+        cliente_id: parseOptionalQueryInt(req.query.cliente_id),
         tipo_servico: queryString(req.query.tipo_servico),
         em_atraso: emAtrasoFlag,
         excluir_em_atraso: isQueryFlagTrue(req.query, 'excluir_em_atraso') && !emAtrasoFlag,

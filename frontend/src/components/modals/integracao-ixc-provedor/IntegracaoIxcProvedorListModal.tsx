@@ -184,6 +184,18 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
       },
       { key: 'nome', label: t('form.name'), sortable: true, render: (item) => item.nome },
       {
+        key: 'contratos_label',
+        label: t('table.contract'),
+        sortable: false,
+        render: (item) => item.contratos_label || '—',
+      },
+      {
+        key: 'cliente_nome',
+        label: t('table.client'),
+        sortable: false,
+        render: (item) => item.cliente_nome || '—',
+      },
+      {
         key: 'api_url',
         label: 'URL da API',
         sortable: true,

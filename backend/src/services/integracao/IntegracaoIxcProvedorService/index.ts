@@ -26,6 +26,61 @@ function clienteDisplayNameFromCliente(cliente: Pick<Cliente, 'id' | 'nome_fanta
   return clienteDisplayName(cliente, cliente.id);
 }
 
+function contratoDisplayLabel(
+  contrato: Pick<Contrato, 'id'> & { plano?: { nome_plano?: string | null } | null }
+): string {
+  const planoNome = contrato.plano?.nome_plano?.trim();
+  return planoNome || `Contrato #${contrato.id}`;
+}
+
+async function resolveContratosVinculadosPorIntegracao(
+  integracaoIds: number[]
+): Promise<Map<number, Array<{ id: number; label: string }>>> {
+  const contratosPorIntegracao = new Map<number, Array<{ id: number; label: string }>>();
+  if (integracaoIds.length === 0) return contratosPorIntegracao;
+
+  const vinculos = (await ContratoIntegracaoIxcVinculo.findAll({
+    where: { integracao_ixc_provedor_id: { [Op.in]: integracaoIds } },
+    attributes: ['integracao_ixc_provedor_id', 'contrato_id'],
+    include: [
+      {
+        association: 'contrato',
+        attributes: ['id'],
+        required: true,
+        include: [
+          {
+            association: 'plano',
+            attributes: ['id', 'nome_plano'],
+            required: false,
+          },
+        ],
+      },
+    ],
+    order: [['contrato_id', 'ASC']],
+  })) as Array<
+    ContratoIntegracaoIxcVinculo & {
+      contrato?: (Pick<Contrato, 'id'> & {
+        plano?: { nome_plano?: string | null } | null;
+      }) | null;
+    }
+  >;
+
+  for (const vinculo of vinculos) {
+    const integracaoId = vinculo.integracao_ixc_provedor_id;
+    const contrato = vinculo.contrato;
+    if (!integracaoId || !contrato) continue;
+
+    const label = contratoDisplayLabel(contrato);
+    const items = contratosPorIntegracao.get(integracaoId) ?? [];
+    if (!items.some((item) => item.id === contrato.id)) {
+      items.push({ id: contrato.id, label });
+    }
+    contratosPorIntegracao.set(integracaoId, items);
+  }
+
+  return contratosPorIntegracao;
+}
+
 export interface IxcApiCredentials {
   apiUrl: string;
   apiToken: string;
@@ -63,6 +118,8 @@ export interface ListIntegracaoIxcProvedorFilters {
 
 export interface UpsertIntegracaoIxcProvedorInput {
   nome?: string;
+  cliente_id: number;
+  contrato_id: number;
   api_url?: string | null;
   api_token?: string | null;
   ativo?: boolean;
@@ -129,57 +186,34 @@ export class IntegracaoIxcProvedorService {
       order,
       limit: Number(limit),
       offset,
+      include: [
+        {
+          association: 'cliente',
+          attributes: ['id', 'razao_social', 'nome_fantasia'],
+          required: false,
+        },
+      ],
     });
 
     const integracaoIds = data.map((item) => item.id);
-    const clientesPorIntegracao = new Map<number, string[]>();
-
-    if (integracaoIds.length > 0) {
-      const vinculos = (await ContratoIntegracaoIxcVinculo.findAll({
-        where: { integracao_ixc_provedor_id: { [Op.in]: integracaoIds } },
-        attributes: ['integracao_ixc_provedor_id'],
-        include: [
-          {
-            association: 'contrato',
-            attributes: ['id'],
-            required: true,
-            include: [
-              {
-                association: 'cliente',
-                attributes: ['id', 'razao_social', 'nome_fantasia'],
-                required: true,
-              },
-            ],
-          },
-        ],
-      })) as Array<
-        ContratoIntegracaoIxcVinculo & {
-          contrato?: (Contrato & { cliente?: Cliente | null }) | null;
-        }
-      >;
-
-      for (const vinculo of vinculos) {
-        const integracaoId = vinculo.integracao_ixc_provedor_id;
-        const cliente = vinculo.contrato?.cliente;
-        if (!integracaoId || !cliente) continue;
-
-        const nome = clienteDisplayNameFromCliente(cliente);
-        const nomes = clientesPorIntegracao.get(integracaoId) ?? [];
-        if (!nomes.includes(nome)) {
-          nomes.push(nome);
-        }
-        clientesPorIntegracao.set(integracaoId, nomes);
-      }
-    }
+    const contratosPorIntegracao = await resolveContratosVinculadosPorIntegracao(integracaoIds);
 
     const enrichedData = data.map((item) => {
-      const clientes = [...(clientesPorIntegracao.get(item.id) ?? [])].sort((a, b) =>
-        a.localeCompare(b, 'pt-BR')
+      const json = item.toJSON() as Record<string, unknown>;
+      const cliente = (item as IntegracaoIxcProvedor & { cliente?: Cliente | null }).cliente;
+      const clienteDireto = cliente ? clienteDisplayNameFromCliente(cliente) : null;
+      const contratos = [...(contratosPorIntegracao.get(item.id) ?? [])].sort((a, b) =>
+        a.label.localeCompare(b.label, 'pt-BR', { numeric: true })
       );
+
       return {
-        ...item.toJSON(),
-        clientes_vinculados: clientes,
-        clientes_label: clientes.length > 0 ? clientes.join(', ') : null,
+        ...json,
+        cliente_id: item.cliente_id,
+        cliente_nome: clienteDireto,
+        contrato_id: contratos[0]?.id ?? null,
+        contrato_nome: contratos[0]?.label ?? null,
+        contratos_vinculados: contratos.map((c) => c.label),
+        contratos_label: contratos.length > 0 ? contratos.map((c) => c.label).join(', ') : null,
       };
     });
 
@@ -192,6 +226,37 @@ export class IntegracaoIxcProvedorService {
 
   static async getById(id: string | number): Promise<IntegracaoIxcProvedor | null> {
     return IntegracaoIxcProvedor.findByPk(id);
+  }
+
+  /** Detalhe enriquecido com cliente e contratos vinculados. */
+  static async getByIdEnriched(id: string | number): Promise<Record<string, unknown> | null> {
+    const item = await IntegracaoIxcProvedor.findByPk(id, {
+      include: [
+        {
+          association: 'cliente',
+          attributes: ['id', 'razao_social', 'nome_fantasia'],
+          required: false,
+        },
+      ],
+    });
+    if (!item) return null;
+
+    const cliente = (item as IntegracaoIxcProvedor & { cliente?: Cliente | null }).cliente;
+    const clienteDireto = cliente ? clienteDisplayNameFromCliente(cliente) : null;
+    const contratosPorIntegracao = await resolveContratosVinculadosPorIntegracao([item.id]);
+    const contratos = [...(contratosPorIntegracao.get(item.id) ?? [])].sort((a, b) =>
+      a.label.localeCompare(b.label, 'pt-BR', { numeric: true })
+    );
+
+    return {
+      ...item.toJSON(),
+      cliente_id: item.cliente_id,
+      cliente_nome: clienteDireto,
+      contrato_id: contratos[0]?.id ?? null,
+      contrato_nome: contratos[0]?.label ?? null,
+      contratos_vinculados: contratos.map((c) => c.label),
+      contratos_label: contratos.length > 0 ? contratos.map((c) => c.label).join(', ') : null,
+    };
   }
 
   static async findAtivos(empresaId?: number | null): Promise<IntegracaoIxcProvedor[]> {
@@ -210,13 +275,22 @@ export class IntegracaoIxcProvedorService {
     empresaId: number | null,
     dados: UpsertIntegracaoIxcProvedorInput
   ): Promise<IntegracaoIxcProvedor> {
-    return IntegracaoIxcProvedor.create({
+    const item = await IntegracaoIxcProvedor.create({
       empresa_id: empresaId,
+      cliente_id: dados.cliente_id,
       nome: dados.nome?.trim() ?? '',
       api_url: dados.api_url?.trim() || null,
       api_token: dados.api_token?.trim() || null,
       ativo: dados.ativo ?? false,
     });
+
+    await IntegracaoIxcProvedorService.ensureContratoVinculo(
+      item.id,
+      dados.contrato_id,
+      empresaId
+    );
+
+    return item;
   }
 
   static async update(
@@ -226,7 +300,9 @@ export class IntegracaoIxcProvedorService {
     const item = await IntegracaoIxcProvedor.findByPk(id);
     if (!item) throw new Error('Integração IXC Provedor não encontrada');
 
-    const payload: Partial<IntegracaoIxcProvedor> = {};
+    const payload: Partial<IntegracaoIxcProvedor> = {
+      cliente_id: dados.cliente_id,
+    };
     if (dados.nome !== undefined) payload.nome = dados.nome.trim();
     if (dados.api_url !== undefined) payload.api_url = dados.api_url?.trim() || null;
     if (dados.ativo !== undefined) payload.ativo = dados.ativo;
@@ -237,7 +313,38 @@ export class IntegracaoIxcProvedorService {
     }
 
     await item.update(payload);
+    await IntegracaoIxcProvedorService.ensureContratoVinculo(
+      item.id,
+      dados.contrato_id,
+      item.empresa_id
+    );
     return item;
+  }
+
+  /** Garante o vínculo contrato ↔ integração (sem remover outros vínculos). */
+  static async ensureContratoVinculo(
+    integracaoId: number,
+    contratoId: number,
+    empresaId: number | null
+  ): Promise<void> {
+    const contrato = await Contrato.findByPk(contratoId);
+    if (!contrato) {
+      throw new Error('Contrato não encontrado');
+    }
+
+    const existing = await ContratoIntegracaoIxcVinculo.findOne({
+      where: {
+        contrato_id: contratoId,
+        integracao_ixc_provedor_id: integracaoId,
+      },
+    });
+    if (existing) return;
+
+    await ContratoIntegracaoIxcVinculo.create({
+      empresa_id: contrato.empresa_id ?? empresaId,
+      contrato_id: contratoId,
+      integracao_ixc_provedor_id: integracaoId,
+    });
   }
 
   static async delete(id: string | number): Promise<void> {
@@ -281,9 +388,22 @@ export class IntegracaoIxcProvedorService {
     };
   }
 
+  static getEnvCredentials(): IxcApiCredentials | null {
+    const apiUrl = process.env.IXC_API_URL?.trim();
+    const apiToken = process.env.IXC_API_TOKEN?.trim();
+    if (!apiUrl || !apiToken) return null;
+    return {
+      apiUrl: apiUrl.replace(/\/+$/, ''),
+      apiToken,
+    };
+  }
+
   static async resolveCredentials(empresaId: number | null): Promise<IxcApiCredentials> {
     const fromDb = await IntegracaoIxcProvedorService.getActiveCredentials(empresaId);
     if (fromDb) return fromDb;
+
+    const fromEnv = IntegracaoIxcProvedorService.getEnvCredentials();
+    if (fromEnv) return fromEnv;
 
     throw new Error(
       'Integração IXC não configurada. Cadastre uma integração IXC Provedor ativa no contrato do cliente.'
@@ -299,28 +419,45 @@ export class IntegracaoIxcProvedorService {
       empresaId
     );
 
-    if (!integracao) {
-      throw new Error(
-        'Integração IXC não configurada. Cadastre uma integração IXC Provedor no contrato do cliente.'
-      );
+    if (integracao) {
+      const apiUrl = integracao.api_url?.trim();
+      const apiToken = integracao.api_token?.trim();
+      if (apiUrl && apiToken) {
+        return {
+          apiUrl: apiUrl.replace(/\/+$/, ''),
+          apiToken,
+        };
+      }
     }
 
-    const apiUrl = integracao.api_url?.trim();
-    const apiToken = integracao.api_token?.trim();
-    if (!apiUrl || !apiToken) {
-      throw new Error('Integração IXC Provedor vinculada ao contrato sem URL ou token configurados.');
-    }
+    const fromEnv = IntegracaoIxcProvedorService.getEnvCredentials();
+    if (fromEnv) return fromEnv;
 
-    return {
-      apiUrl: apiUrl.replace(/\/+$/, ''),
-      apiToken,
-    };
+    throw new Error(
+      'Integração IXC não configurada. Cadastre uma integração IXC Provedor no contrato do cliente.'
+    );
   }
 
   static async findIntegracaoAtivaForCliente(
     clienteId: number,
     empresaId: number | null
   ): Promise<IntegracaoIxcProvedor | null> {
+    const direta = await IntegracaoIxcProvedor.findOne({
+      where:
+        empresaId != null
+          ? {
+              [Op.and]: [
+                { cliente_id: clienteId, ativo: true },
+                { [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] },
+              ],
+            }
+          : { cliente_id: clienteId, ativo: true },
+      order: [['updated_at', 'DESC']],
+    });
+    if (direta?.api_url?.trim() && direta.api_token?.trim()) {
+      return direta;
+    }
+
     const contratoWhere: WhereOptions<Contrato> = { cliente_id: clienteId };
     if (empresaId != null) {
       contratoWhere.empresa_id = empresaId;
@@ -366,7 +503,8 @@ export class IntegracaoIxcProvedorService {
       clienteId,
       empresaId
     );
-    return integracao != null;
+    if (integracao != null) return true;
+    return IntegracaoIxcProvedorService.getEnvCredentials() != null;
   }
 
   static async assertEmpresaAccess(

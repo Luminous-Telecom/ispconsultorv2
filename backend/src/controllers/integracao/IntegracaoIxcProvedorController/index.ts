@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import * as Joi from 'joi';
 import { IntegracaoIxcProvedorService } from '../../../services/integracao/IntegracaoIxcProvedorService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
-import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { getEmpresaIdOrNull, resolveEmpresaIdForScopedCreate } from '../../../utils/tenantUtils';
 import { SaasPlanoLimitesService } from '../../../services/saas/SaasPlanoLimitesService';
 import { parseListQuery, queryString } from '../../../utils/listQuery';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
@@ -10,14 +10,34 @@ import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
 import { SistemaLogOperacionalQueryService } from '../../../services/sistema/SistemaLogOperacionalQueryService';
 import { buildPagination } from '../../../utils/pagination';
 import { resolveListEmpresaId } from '../../../utils/tenantUtils';
+import { Cliente } from '../../../models/clientes/Cliente';
+import { Contrato } from '../../../models/contratos/Contrato';
 
 export class IntegracaoIxcProvedorController {
   private static upsertSchema = Joi.object({
     nome: Joi.string().max(200).required(),
+    cliente_id: Joi.number().integer().positive().required(),
+    contrato_id: Joi.number().integer().positive().required(),
     api_url: Joi.string().max(500).allow('', null),
     api_token: Joi.string().allow('', null),
     ativo: Joi.boolean().default(false),
   });
+
+  private static async validateContratoDoCliente(
+    contratoId: number,
+    clienteId: number,
+    empresaId: number | null
+  ): Promise<string | null> {
+    const contrato = await Contrato.findByPk(contratoId);
+    if (!contrato) return 'Contrato não encontrado';
+    if (Number(contrato.cliente_id) !== Number(clienteId)) {
+      return 'Contrato não pertence ao cliente selecionado';
+    }
+    if (empresaId != null && contrato.empresa_id != null && Number(contrato.empresa_id) !== Number(empresaId)) {
+      return 'Contrato não pertence à empresa do tenant';
+    }
+    return null;
+  }
 
   static async list(req: Request, res: Response): Promise<void> {
     try {
@@ -60,16 +80,17 @@ export class IntegracaoIxcProvedorController {
     try {
       const { id } = req.params;
       const empresaId = getEmpresaIdOrNull(req);
-      const item = await IntegracaoIxcProvedorService.getById(id);
-      if (!item) {
+      const enriched = await IntegracaoIxcProvedorService.getByIdEnriched(id);
+      if (!enriched) {
         sendNotFound(res, 'Integração IXC Provedor não encontrada');
         return;
       }
-      if (empresaId !== null && item.empresa_id !== null && item.empresa_id !== empresaId) {
+      const itemEmpresaId = (enriched.empresa_id as number | null | undefined) ?? null;
+      if (empresaId !== null && itemEmpresaId !== null && itemEmpresaId !== empresaId) {
         sendNotFound(res, 'Integração IXC Provedor não encontrada');
         return;
       }
-      sendSuccess(res, item);
+      sendSuccess(res, enriched);
     } catch (error) {
       sendError(res, error, 'Erro ao buscar integração IXC Provedor', 500, true, {
         context: 'IntegracaoIxcProvedorController',
@@ -95,7 +116,43 @@ export class IntegracaoIxcProvedorController {
         return;
       }
 
-      const empresaId = getEmpresaIdOrNull(req);
+      const cliente = await Cliente.findByPk(value.cliente_id);
+      if (!cliente) {
+        sendValidationError(res, 'Dados inválidos', { cliente_id: ['Cliente não encontrado'] });
+        return;
+      }
+
+      const resolved = await resolveEmpresaIdForScopedCreate(req, {
+        cliente_id: value.cliente_id,
+        empresa_id: getEmpresaIdOrNull(req),
+      });
+      if (!resolved.ok) {
+        sendValidationError(res, resolved.message, { cliente_id: [resolved.message] });
+        return;
+      }
+
+      const empresaId = resolved.empresa_id ?? getEmpresaIdOrNull(req);
+      if (
+        empresaId != null &&
+        cliente.empresa_id != null &&
+        Number(cliente.empresa_id) !== Number(empresaId)
+      ) {
+        sendValidationError(res, 'Dados inválidos', {
+          cliente_id: ['Cliente não pertence à empresa do tenant'],
+        });
+        return;
+      }
+
+      const contratoError = await IntegracaoIxcProvedorController.validateContratoDoCliente(
+        value.contrato_id,
+        value.cliente_id,
+        empresaId
+      );
+      if (contratoError) {
+        sendValidationError(res, 'Dados inválidos', { contrato_id: [contratoError] });
+        return;
+      }
+
       const limitError = await SaasPlanoLimitesService.validateLimiteCreate(
         empresaId,
         'ixc_provedor_limite_integracoes'
@@ -151,6 +208,32 @@ export class IntegracaoIxcProvedorController {
         abortEarly: false,
         stripUnknown: true,
       });
+
+      const cliente = await Cliente.findByPk(value.cliente_id);
+      if (!cliente) {
+        sendValidationError(res, 'Dados inválidos', { cliente_id: ['Cliente não encontrado'] });
+        return;
+      }
+      if (
+        empresaId != null &&
+        cliente.empresa_id != null &&
+        Number(cliente.empresa_id) !== Number(empresaId)
+      ) {
+        sendValidationError(res, 'Dados inválidos', {
+          cliente_id: ['Cliente não pertence à empresa do tenant'],
+        });
+        return;
+      }
+
+      const contratoError = await IntegracaoIxcProvedorController.validateContratoDoCliente(
+        value.contrato_id,
+        value.cliente_id,
+        empresaId
+      );
+      if (contratoError) {
+        sendValidationError(res, 'Dados inválidos', { contrato_id: [contratoError] });
+        return;
+      }
 
       if (value.ativo) {
         const url = String(value.api_url ?? existing.api_url ?? '').trim();

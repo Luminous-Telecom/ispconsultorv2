@@ -274,6 +274,8 @@ As ações de teste, permissões e sincronização ficam desabilitadas até que 
 - Nome
 - URL da API
 
+A listagem exibe a coluna **Contrato** (nome do plano dos contratos vinculados) e a coluna **Cliente** (cliente cadastrado na integração).
+
 ---
 
 ### 3. Cadastrar uma integração
@@ -283,6 +285,8 @@ As ações de teste, permissões e sincronização ficam desabilitadas até que 
 
 | Campo | Obrigatório | Descrição |
 |-------|:-----------:|-----------|
+| **Cliente** | Sim | Cliente da integração |
+| **Contrato** | Sim | Contrato do cliente ao qual a integração será vinculada |
 | **Nome** | Sim | Identificação (ex.: *IXC Matriz*) |
 | **Ativo** | Sim | Habilita ou desabilita a integração |
 | **URL da API** | Sim | URL anotada no passo [5.4](#token-api) da Parte A |
@@ -297,10 +301,11 @@ As ações de teste, permissões e sincronização ficam desabilitadas até que 
 
 1. Selecione a integração na listagem.
 2. Clique em **Editar**.
-3. Altere **Nome**, **Ativo** ou **URL da API**.
+3. Altere **Cliente**, **Contrato**, **Nome**, **Ativo** ou **URL da API** normalmente (ambos usam o seletor de vínculo do ERP).
 4. No **Token da API**, deixe em branco para **manter o token atual** ou informe um novo no formato `id:hash`.
 5. Clique em **Salvar**.
 
+Vínculos adicionais em outros contratos do mesmo cliente continuam disponíveis na aba do contrato (**Novo** / **Deletar**).
 ---
 
 ### 5. Vincular ao contrato do cliente

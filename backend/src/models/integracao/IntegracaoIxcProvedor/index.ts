@@ -13,6 +13,7 @@ export class IntegracaoIxcProvedor extends Model<
 > {
   declare id: CreationOptional<number>;
   declare empresa_id: number | null;
+  declare cliente_id: number | null;
   declare nome: string;
   declare api_url: string | null;
   declare api_token: string | null;
@@ -36,6 +37,10 @@ IntegracaoIxcProvedor.init(
       autoIncrement: true,
     },
     empresa_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    cliente_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
     },
