@@ -214,10 +214,6 @@ export class SaasSchedulerController {
         sendNotFound(res, msg);
         return;
       }
-      if (msg === 'Rotina está inativa') {
-        sendValidationError(res, msg);
-        return;
-      }
       sendError(res, error, 'Erro ao executar rotina', 500, true, {
         context: 'SaasSchedulerController',
         action: 'execute',

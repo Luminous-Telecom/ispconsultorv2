@@ -281,10 +281,7 @@ export class WorkerManager extends EventEmitter {
       throw new Error('Rotina não encontrada');
     }
 
-    if (!routine.ativo) {
-      throw new Error('Rotina está inativa');
-    }
-
+    // ativo controla só o agendamento automático; execução manual é sempre permitida
     await this.executeRoutine(routine);
   }
 

@@ -166,6 +166,7 @@ export class RoutineScheduleService {
     this.executionQueue.enqueue({
       source: 'erp',
       routineId: routine.id,
+      manual: true,
       usuario: usuario ?? undefined,
       ipAddress: ipAddress ?? undefined
     });
@@ -180,6 +181,7 @@ export class RoutineScheduleService {
     this.executionQueue.enqueue({
       source: 'saas',
       routineId: routine.id,
+      manual: true,
       usuario: usuario ?? undefined,
       ipAddress: ipAddress ?? undefined
     });
@@ -189,7 +191,7 @@ export class RoutineScheduleService {
    * Processa um job da fila (chamado pelo worker BullMQ ou fila em memória)
    */
   public async processRoutineJob(data: RoutineJobData): Promise<void> {
-    const { source, routineId, usuario, ipAddress } = data;
+    const { source, routineId, usuario, ipAddress, manual } = data;
     const routine = source === 'erp'
       ? await ScheduledRoutine.findByPk(routineId)
       : await SaasScheduledRoutine.findByPk(routineId);
@@ -202,8 +204,9 @@ export class RoutineScheduleService {
       });
       return;
     }
-    if (!routine.ativo) {
-      logger.debug('Rotina inativa, ignorando execução', {
+    // ativo = só execução automática (CRON); manual ignora o status
+    if (!manual && !routine.ativo) {
+      logger.debug('Rotina inativa, ignorando execução automática', {
         context: 'RoutineScheduleService',
         source,
         routineId

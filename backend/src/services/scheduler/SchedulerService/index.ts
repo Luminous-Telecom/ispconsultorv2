@@ -127,9 +127,7 @@ export class SchedulerService {
     if (!routine) {
       throw new Error('Rotina não encontrada');
     }
-    if (!routine.ativo) {
-      throw new Error('Rotina está inativa');
-    }
+    // ativo controla só o agendamento automático; execução manual é sempre permitida
     this.scheduleService.executeSaasRoutineNow(routine, usuario, ipAddress);
   }
 
@@ -242,9 +240,7 @@ export class SchedulerService {
     if (!routine) {
       throw new Error('Rotina não encontrada');
     }
-    if (!routine.ativo) {
-      throw new Error('Rotina está inativa');
-    }
+    // ativo controla só o agendamento automático; execução manual é sempre permitida
     this.scheduleService.executeRoutineNow(routine, usuario, ipAddress);
     return { message: 'Rotina iniciada em background' };
   }
