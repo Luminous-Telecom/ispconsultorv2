@@ -768,17 +768,19 @@ export class IxcAtendimentoService {
     return runWithIxcCredentials(
       empresaId,
       async () => {
+        const statusAtual = String(record?.su_status ?? 'N').trim() || 'N';
+        const statusAlvo = statusInformado || statusAtual;
+        const mudouStatus = statusAlvo !== statusAtual;
+
         const operadorId = resolveOperadorId();
         const body: Record<string, string> = {
           id_ticket: ticketId,
           mensagem: texto,
           visibilidade_mensagens: 'PU',
+          su_status: statusAlvo,
         };
         if (operadorId) {
           body.operador = operadorId;
-        }
-        if (statusInformado) {
-          body.su_status = statusInformado;
         }
 
         const retryDelaysMs = [0, 500, 1000, 2000];
@@ -803,8 +805,8 @@ export class IxcAtendimentoService {
             if (record) {
               const agora = nowIxcDateTime();
               const updates: Partial<typeof record> = { ultima_atualizacao: agora };
-              if (statusInformado) {
-                updates.su_status = statusInformado;
+              if (mudouStatus) {
+                updates.su_status = statusAlvo;
               }
               await record.update(updates);
             }
@@ -812,6 +814,20 @@ export class IxcAtendimentoService {
             return { type: 'success', id: response.data?.id };
           } catch (error) {
             lastError = error;
+
+            if (mudouStatus) {
+              const ticket = await fetchTicketRegistroById(ticketId);
+              if (String(ticket?.su_status ?? '').trim() === statusAlvo) {
+                if (record) {
+                  await record.update({
+                    ultima_atualizacao: nowIxcDateTime(),
+                    su_status: statusAlvo,
+                  });
+                }
+                return { type: 'success' };
+              }
+            }
+
             const msg = error instanceof Error ? error.message : String(error);
             const isTransient =
               msg.includes('Contate o suporte IXC Soft') ||
