@@ -21,6 +21,7 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "bundler",
+    "types": ["node"],
     "paths": {
       "@/*": ["./src/*"],
       "@/models/*": ["./src/models/*"],
