@@ -296,6 +296,12 @@ export const CONTEXT_ERROR_MESSAGES = {
 
   // WhatsApp teste
   WHATSAPP_TEST_SEND_ERROR: 'Não foi possível enviar a mensagem de teste. Verifique as configurações do servidor e tente novamente.',
+
+  // Atendimentos (IXC)
+  ATENDIMENTO_CREATE_ERROR: 'Erro ao criar atendimento',
+  ATENDIMENTO_UPDATE_ERROR: 'Erro ao atualizar atendimento',
+  ATENDIMENTO_DELETE_ERROR: 'Erro ao excluir atendimento',
+  ATENDIMENTO_MENSAGEM_ERROR: 'Erro ao registrar mensagem do atendimento',
 } as const;
 
 export type ErrorMessageKey = keyof typeof ERROR_MESSAGES;

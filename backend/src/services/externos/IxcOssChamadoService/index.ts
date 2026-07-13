@@ -1,4 +1,5 @@
 import { runWithIxcCredentials } from '../ixcApiContext';
+import { logger } from '../../../utils/logger';
 import { clienteNomeParaOrdemServico } from '../../ordens/clienteNomeOrdemServico';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { IntegracaoIxcProvedorService } from '../../integracao/IntegracaoIxcProvedorService';
@@ -33,7 +34,6 @@ import {
 import { OrdemServicoMensagem } from '../../../models/ordens/OrdemServicoMensagem';
 import { OrdemServicoArquivoService, type OrdemServicoArquivoItem } from '../../ordens/OrdemServicoArquivoService';
 import {
-  countMensagensExtrasIxc,
   isOrdemServicoFinalizada,
   MSG_OS_COM_ARQUIVOS,
   MSG_OS_COM_MENSAGENS,
@@ -50,6 +50,7 @@ import {
   fetchMensagensOs,
   fetchOsRawById,
 } from './ossData';
+import { enrichOssChamadosFromIxc } from './ossEnrich';
 import {
   applyApiOperadorAbertura,
   applyIspconsultorProtocoloAbertura,
@@ -460,7 +461,18 @@ export class IxcOssChamadoService {
     id: string | number,
     empresaId: number | null = null
   ): Promise<IxcOssChamado | null> {
-    return OrdemServicoLocalService.getChamado(id, empresaId);
+    const chamado = await OrdemServicoLocalService.getChamado(id, empresaId);
+    if (chamado) return chamado;
+
+    const ixcId = String(id).trim();
+    if (!ixcId) return null;
+
+    return runWithIxcCredentials(empresaId, async () => {
+      const raw = await fetchOsRawById(ixcId);
+      if (!raw || Number(raw.id_estrutura) <= 0) return null;
+      const [enriched] = await enrichOssChamadosFromIxc([raw], empresaId);
+      return enriched ?? null;
+    });
   }
 
   static async listMensagens(
@@ -469,10 +481,22 @@ export class IxcOssChamadoService {
     usuarioId: number | null = null
   ): Promise<IxcOssMensagem[]> {
     const record = await OrdemServicoLocalService.findRecord(id, empresaId);
-    if (!record) {
+    if (record) {
+      return OrdemServicoLocalService.listMensagens(record.id, empresaId);
+    }
+
+    const ixcId = String(id).trim();
+    if (!ixcId) {
       throw new Error('Ordem de serviço não encontrada');
     }
-    return OrdemServicoLocalService.listMensagens(record.id, empresaId);
+
+    return runWithIxcCredentials(empresaId, async () => {
+      const raw = await fetchOsRawById(ixcId);
+      if (!raw || Number(raw.id_estrutura) <= 0) {
+        throw new Error('Ordem de serviço não encontrada');
+      }
+      return fetchMensagensOs(ixcId);
+    });
   }
 
   private static async resolveIxcMensagemId(
@@ -505,7 +529,19 @@ export class IxcOssChamadoService {
   ): Promise<IxcActionResponse> {
     const record = await OrdemServicoLocalService.findRecord(ordemId, empresaId);
     if (!record) {
-      throw new Error('Ordem de serviço não encontrada');
+      const ixcId = String(ordemId).trim();
+      const ixcMensagemId = String(mensagemId).trim();
+      if (!ixcId || !ixcMensagemId) {
+        throw new Error('Ordem de serviço não encontrada');
+      }
+
+      return runWithIxcCredentials(empresaId, async () => {
+        const registro = await fetchOsRawById(ixcId);
+        if (!registro || Number(registro.id_estrutura) <= 0) {
+          throw new Error('Ordem de serviço não encontrada');
+        }
+        return deleteMensagemIxcById(ixcMensagemId);
+      });
     }
 
     const mensagemLocal = await OrdemServicoMensagem.findOne({
@@ -531,14 +567,34 @@ export class IxcOssChamadoService {
         throw new Error('Ordem de serviço não encontrada');
       }
 
+      // Best-effort no IXC: se não localizarmos o registro correspondente (mensagem
+      // criada localmente antes da sincronização, texto divergente etc.) ou a exclusão
+      // lá falhar, ainda assim removemos o espelho local — é o que o histórico do ERP exibe.
       const ixcMensagemId = await IxcOssChamadoService.resolveIxcMensagemId(ixcId, mensagemLocal);
-      if (!ixcMensagemId) {
-        throw new Error('Mensagem não encontrada no IXC');
+      if (ixcMensagemId) {
+        try {
+          await deleteMensagemIxcById(ixcMensagemId);
+        } catch (error) {
+          logger.warn('Falha ao excluir mensagem no IXC; removendo apenas o espelho local', {
+            context: 'IxcOssChamadoService',
+            action: 'deleteMensagem',
+            ordemId: String(ordemId),
+            mensagemId: String(mensagemId),
+            ixcMensagemId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      } else {
+        logger.warn('Mensagem não localizada no IXC; removendo apenas o espelho local', {
+          context: 'IxcOssChamadoService',
+          action: 'deleteMensagem',
+          ordemId: String(ordemId),
+          mensagemId: String(mensagemId),
+        });
       }
 
-      const resultado = await deleteMensagemIxcById(ixcMensagemId);
       await mensagemLocal.destroy();
-      return resultado;
+      return { type: 'success' };
     });
   }
 
@@ -547,9 +603,9 @@ export class IxcOssChamadoService {
     empresaId: number | null = null,
     usuarioId: number | null = null
   ): Promise<OrdemServicoArquivoItem[]> {
-    const record = await IxcOssChamadoService.requireOrdemRecord(id, empresaId);
-    const ordemServicoId = String(record.id);
-    return OrdemServicoArquivoService.list(ordemServicoId);
+    const record = await OrdemServicoLocalService.findRecord(id, empresaId);
+    if (!record) return [];
+    return OrdemServicoArquivoService.list(String(record.id));
   }
 
   static async createArquivo(
@@ -609,12 +665,14 @@ export class IxcOssChamadoService {
     usuarioId: number | null = null
   ): Promise<IxcActionResponse> {
     const clienteId = parseClienteId(payload.cliente_id);
-    const hasIxc =
-      clienteId != null &&
-      (await IntegracaoIxcProvedorService.hasIntegracaoForCliente(clienteId, empresaId));
+    const integracao =
+      clienteId != null
+        ? await IntegracaoIxcProvedorService.findIntegracaoAtivaForCliente(clienteId, empresaId)
+        : null;
+    const hasIxc = integracao != null;
 
     const record = await OrdemServicoLocalService.createRecord(
-      payload,
+      { ...payload, integracao_ixc_provedor_id: integracao?.id ?? null },
       empresaId,
       usuarioId,
       !hasIxc
@@ -842,7 +900,7 @@ export class IxcOssChamadoService {
       }
 
       const mensagens = await fetchMensagensOs(ixcId);
-      if (countMensagensExtrasIxc(mensagens) > 0) {
+      if (mensagens.length > 0) {
         throw new Error(MSG_OS_COM_MENSAGENS);
       }
     });

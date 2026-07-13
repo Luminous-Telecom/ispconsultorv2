@@ -125,6 +125,8 @@ export class ErrorHandler {
             // 404 em detalhe de auditoria (ES) ou auth sem cookie não deve deslogar o ERP
             '/auditoria/',
             'saas/auditoria/',
+            '/ixc/atendimentos',
+            '/ixc/ordens-servico',
           ];
           
           const isOptionalRoute = optionalRoutes.some(route => 

@@ -308,6 +308,17 @@ export default defineConfig({
         collapsed: true,
         items: [
           {
+            text: 'Atendimentos',
+            collapsed: true,
+            items: [
+              { text: 'Cadastro e listagem', link: '/doc/suporte/atendimentos' },
+              { text: 'Aba Principal', link: '/doc/suporte/atendimentos#aba-principal' },
+              { text: 'Aba Histórico', link: '/doc/suporte/atendimentos#aba-historico' },
+              { text: 'Aba Arquivos', link: '/doc/suporte/atendimentos#aba-arquivos' },
+              { text: 'Aba Ordens de serviço', link: '/doc/suporte/atendimentos#aba-ordens-de-servico' }
+            ]
+          },
+          {
             text: 'Ordens de Serviço',
             collapsed: true,
             items: [

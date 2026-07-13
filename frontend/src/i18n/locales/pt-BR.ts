@@ -349,6 +349,7 @@ const ptBR: TranslationKeys = {
     'menu.repositories': 'Repositórios',
     'menu.validateRoute': 'Validar Rota',
     'menu.serviceOrders': 'Ordens de Serviço',
+    'menu.attendances': 'Atendimentos',
     'menu.usersSaas': 'Usuários SaaS',
     'menu.emailServers': 'Servidores Email',
     'menu.whatsappServers': 'Servidores WhatsApp',

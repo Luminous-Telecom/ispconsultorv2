@@ -349,6 +349,7 @@ const enUS: TranslationKeys = {
     'menu.repositories': 'Repositories',
     'menu.validateRoute': 'Validate Route',
     'menu.serviceOrders': 'Service Orders',
+    'menu.attendances': 'Attendances',
     'menu.usersSaas': 'SaaS Users',
     'menu.emailServers': 'Email Servers',
     'menu.whatsappServers': 'WhatsApp Servers',

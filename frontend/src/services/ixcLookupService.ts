@@ -12,6 +12,8 @@ export interface LookupItem {
 export type LookupFilters = BaseFilters & {
   cliente_id?: number;
   setor_id?: number | string;
+  /** Departamento do atendimento (`su_ticket.id_ticket_setor`). */
+  id_ticket_setor?: number | string;
   /** Quando false, a query não é executada (ex.: modal fechado). */
   enabled?: boolean;
 };
@@ -30,6 +32,10 @@ export const FilialLookupService = createLookupService('/ixc/filiais');
 export const TecnicoLookupService = createLookupService('/ixc/tecnicos');
 export const AssuntoLookupService = createLookupService('/ixc/assuntos');
 export const SetorLookupService = createLookupService('/ixc/setores');
+export const DepartamentoAtendimentoLookupService = createLookupService(
+  '/ixc/atendimentos/departamentos'
+);
+export const TecnicoAtendimentoLookupService = createLookupService('/ixc/atendimentos/tecnicos');
 
 export interface ClienteIntegracaoIxcStatus {
   configured: boolean;

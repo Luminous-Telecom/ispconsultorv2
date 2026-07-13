@@ -337,6 +337,22 @@ export class OrdemServicoLocalService {
     };
   }
 
+  /** OS (locais e/ou já sincronizadas com IXC) vinculadas a este atendimento local. */
+  static async listByAtendimentoId(
+    atendimentoId: number,
+    empresaId: number | null = null
+  ): Promise<IxcOssChamado[]> {
+    const registros = await OrdemServicoLocal.findAll({
+      where: {
+        atendimento_id: atendimentoId,
+        ...empresaWhere(empresaId),
+      },
+      order: [['id', 'DESC']],
+    });
+
+    return mapLocalRegistros(registros, empresaId);
+  }
+
   static async createIxcMirror(
     ixcOs: IxcOssChamado,
     payload: OssChamadoInput,
@@ -475,6 +491,11 @@ export class OrdemServicoLocalService {
 
     const dataAbertura = nowIxcDateTime();
 
+    const atendimentoId = parseNumericId(payload.atendimento_id ?? '');
+    const atendimentoIxcId =
+      String(payload.atendimento_ixc_id ?? payload.id_ticket ?? '').trim() || null;
+    const integracaoIxcProvedorId = parseNumericId(payload.integracao_ixc_provedor_id ?? '');
+
     for (let attempt = 0; attempt < PROTOCOLO_CREATE_MAX_RETRIES; attempt++) {
       const protocolo = await nextProtocolo();
 
@@ -496,6 +517,9 @@ export class OrdemServicoLocalService {
           setor: String(payload.setor ?? '').trim(),
           id_tecnico: String(payload.id_tecnico ?? '').trim(),
           tipo: String(payload.tipo ?? 'E').trim() || 'E',
+          atendimento_id: atendimentoId,
+          atendimento_ixc_id: atendimentoIxcId,
+          integracao_ixc_provedor_id: integracaoIxcProvedorId,
         });
 
         if (criarMensagemAbertura) {
@@ -626,21 +650,10 @@ export class OrdemServicoLocalService {
       throw new Error('Ordem de serviço não encontrada');
     }
 
-    let mensagens = await OrdemServicoMensagem.findAll({
+    const mensagens = await OrdemServicoMensagem.findAll({
       where: { ordem_servico_id: record.id },
       order: [['id', 'ASC']],
     });
-
-    if (mensagens.length === 0) {
-      const abertura = await OrdemServicoMensagem.create({
-        empresa_id: empresaId,
-        ordem_servico_id: record.id,
-        id_evento: IXC_EVENTO_ABERTURA,
-        mensagem: record.mensagem,
-        data: record.data_abertura,
-      });
-      mensagens = [abertura];
-    }
 
     return mapMensagensComOperador(mensagens, record.id);
   }

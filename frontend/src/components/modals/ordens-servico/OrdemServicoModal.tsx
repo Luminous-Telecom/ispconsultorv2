@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import {
@@ -24,10 +24,26 @@ import IxcLookupSelectModal from './IxcLookupSelectModal';
 import { clearDependentesAoMudarSetor, isOrdemServicoExcluivel, isOrdemServicoLocal } from './ordemServicoAcoes';
 import { ixcToDatetimeLocal, datetimeLocalToIxc } from 'utils/ixcDateTime';
 
+export interface OrdemServicoAtendimentoPrefill {
+  id_filial?: string;
+  id_estrutura?: string;
+  id_assunto?: string;
+  filial_nome?: string;
+  estrutura_nome?: string;
+  assunto_nome?: string;
+}
+
 interface OrdemServicoModalProps {
   show: boolean;
   onClose: () => void;
   ordemServicoId?: number | string | null;
+  /** Prefill ao abrir OS a partir de um atendimento IXC */
+  initialClienteId?: number;
+  initialClienteNome?: string;
+  initialIdTicket?: string;
+  /** Atendimento local (`atendimentos.id`) que originou esta OS. */
+  initialAtendimentoId?: number | string;
+  initialAtendimentoPrefill?: OrdemServicoAtendimentoPrefill;
   onSuccess?: () => void;
 }
 
@@ -37,22 +53,33 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
   show,
   onClose,
   ordemServicoId,
+  initialClienteId,
+  initialClienteNome,
+  initialIdTicket,
+  initialAtendimentoId,
+  initialAtendimentoPrefill,
   onSuccess,
 }) => {
   const isMobile = useIsMobile();
   const { t } = useI18n();
   const isEdit = !!ordemServicoId;
-  const formId = isEdit ? 'ordem-servico-edit-form' : 'ordem-servico-create-form';
-  const modalId = isEdit ? 'ordem-servico-edit-modal' : 'ordem-servico-create-modal';
 
   const ordemServicoTabs = useMemo(
     (): ModalTabItem<OrdemServicoTab>[] => [
       { id: 'principal', label: 'Principal' },
-      { id: 'mensagens', label: 'Histórico' },
-      { id: 'arquivos', label: 'Arquivos' },
+      { id: 'mensagens', label: 'Histórico', disabled: !isEdit },
+      { id: 'arquivos', label: 'Arquivos', disabled: !isEdit },
     ],
-    []
+    [isEdit]
   );
+
+  const handleTabChange = (tab: OrdemServicoTab) => {
+    if (tab !== 'principal' && !isEdit) return;
+    setActiveTab(tab);
+  };
+
+  const formId = isEdit ? 'ordem-servico-edit-form' : 'ordem-servico-create-form';
+  const modalId = isEdit ? 'ordem-servico-edit-modal' : 'ordem-servico-create-modal';
 
   const [formData, setFormData] = useState<OrdemServicoFormData>(initialOrdemServicoForm);
   const [errors, setErrors] = useState<Partial<Record<keyof OrdemServicoFormData, string>>>({});
@@ -71,6 +98,9 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
   const [showAssuntoModal, setShowAssuntoModal] = useState(false);
   const [showSetorModal, setShowSetorModal] = useState(false);
   const [activeTab, setActiveTab] = useState<OrdemServicoTab>('principal');
+  const [idTicketVinculo, setIdTicketVinculo] = useState('');
+  const [atendimentoIdVinculo, setAtendimentoIdVinculo] = useState('');
+  const formInitializedRef = useRef(false);
 
   const { data: ordemData, isLoading: isLoadingOrdem } = useQuery({
     queryKey: ['ordem-servico', ordemServicoId],
@@ -103,8 +133,14 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
   }, [show]);
 
   useEffect(() => {
-    if (!show) return;
-    if (isEdit && ordemData) {
+    if (!show) {
+      formInitializedRef.current = false;
+      return;
+    }
+    if (formInitializedRef.current) return;
+
+    if (isEdit) {
+      if (!ordemData) return;
       setFormData({
         id_filial: String(ordemData.id_filial ?? ''),
         id_estrutura: String(ordemData.id_estrutura ?? ''),
@@ -123,19 +159,41 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
       setTecnicoNome(String(ordemData.tecnico_nome ?? ''));
       setAssuntoNome(String(ordemData.assunto_nome ?? ''));
       setSetorNome(String(ordemData.setor_nome ?? ''));
-    } else if (!isEdit) {
-      setFormData(initialOrdemServicoForm);
-      setClienteId(0);
-      setClienteNome('');
-      setFilialNome('');
-      setEstruturaNome('');
-      setTecnicoNome('');
-      setAssuntoNome('');
+    } else {
+      setFormData({
+        ...initialOrdemServicoForm,
+        id_filial: initialAtendimentoPrefill?.id_filial ?? '',
+        id_estrutura: initialAtendimentoPrefill?.id_estrutura ?? '',
+        id_assunto: initialAtendimentoPrefill?.id_assunto ?? '',
+      });
+      setClienteId(initialClienteId ?? 0);
+      setClienteNome(initialClienteNome ?? '');
+      setFilialNome(initialAtendimentoPrefill?.filial_nome ?? '');
+      setEstruturaNome(initialAtendimentoPrefill?.estrutura_nome ?? '');
+      setAssuntoNome(initialAtendimentoPrefill?.assunto_nome ?? '');
       setSetorNome('');
+      setTecnicoNome('');
+      setIdTicketVinculo(String(initialIdTicket ?? '').trim());
+      setAtendimentoIdVinculo(String(initialAtendimentoId ?? '').trim());
     }
     setErrors({});
     setClienteError('');
-  }, [show, isEdit, ordemData]);
+    formInitializedRef.current = true;
+  }, [
+    show,
+    isEdit,
+    ordemData,
+    initialClienteId,
+    initialClienteNome,
+    initialIdTicket,
+    initialAtendimentoId,
+    initialAtendimentoPrefill?.id_filial,
+    initialAtendimentoPrefill?.id_estrutura,
+    initialAtendimentoPrefill?.id_assunto,
+    initialAtendimentoPrefill?.filial_nome,
+    initialAtendimentoPrefill?.estrutura_nome,
+    initialAtendimentoPrefill?.assunto_nome,
+  ]);
 
   const clearIxcSelections = () => {
     setFormData((prev) => ({
@@ -241,6 +299,8 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
         data_agenda: datetimeLocalToIxc(formData.data_agenda),
         tipo: 'E',
         origem_endereco_estrutura: 'E',
+        ...(idTicketVinculo ? { id_ticket: idTicketVinculo } : {}),
+        ...(atendimentoIdVinculo ? { atendimento_id: atendimentoIdVinculo } : {}),
       };
       if (isEdit && ordemServicoId != null) {
         await updateMutation.mutateAsync({ id: ordemServicoId, data: payload });
@@ -377,8 +437,9 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
                 <ModalTabsOverflow
                   tabs={ordemServicoTabs}
                   activeTab={activeTab}
-                  onTabChange={setActiveTab}
+                  onTabChange={handleTabChange}
                   tabsClassName={`ordem-servico-tabs-unified ${isMobile ? 'ordem-servico-tabs-mobile' : ''}`}
+                  disabledClassName="ordem-servico-tab-disabled"
                   isMobile={isMobile}
                   id="ordemServicoTab"
                 />

@@ -177,7 +177,7 @@ O sistema cria as parcelas com base no plano, descontos, dia de vencimento e tip
 | **Imprimir** | Imprime boletos ou documentos do título |
 | **Enviar** | Envia a cobrança ao cliente |
 
-No **celular**, o menu **⋮** do card permite imprimir o título (**Selecionados**). No preview, use as ações do visualizador do PDF.
+No **celular**, o menu **⋮** do card permite imprimir o título (**Selecionados**). No preview do PDF, abra o menu **⋮** do cabeçalho e use **Baixar** (o visualizador embutido costuma não oferecer download). No **computador**, o preview não exibe botão **Baixar**.
 
 **Busca:** ID, Número do Título, Status, Plano, Cliente, Valor, NF.
 

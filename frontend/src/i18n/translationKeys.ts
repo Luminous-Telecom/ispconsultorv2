@@ -334,6 +334,7 @@ export interface TranslationKeys {
   'menu.repositories': string;
   'menu.validateRoute': string;
   'menu.serviceOrders': string;
+  'menu.attendances': string;
   'menu.usersSaas': string;
   'menu.emailServers': string;
   'menu.whatsappServers': string;

@@ -47,6 +47,12 @@ export function prepareCreateBody(payload: OssChamadoInput): Record<string, stri
     delete body[campo];
   }
   applyIspconsultorCliente(payload, body);
+
+  const idTicket = String(payload.id_ticket ?? body.id_ticket ?? '').trim();
+  if (idTicket) {
+    body.id_ticket = idTicket;
+  }
+
   return body;
 }
 
@@ -98,6 +104,10 @@ export function buildActionBody(
 
   if (acao === 'finalizar' && sanitized.mensagem_resposta) {
     body.mensagem_resposta = sanitized.mensagem_resposta;
+  }
+
+  if (acao === 'reabrir') {
+    body.status = 'A';
   }
 
   if (mensagemAcao && acao !== 'registrar_mensagem') {

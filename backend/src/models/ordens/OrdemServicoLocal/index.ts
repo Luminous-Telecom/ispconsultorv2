@@ -28,6 +28,12 @@ export class OrdemServicoLocal extends Model<
   declare setor: string;
   declare id_tecnico: string;
   declare tipo: string;
+  /** Atendimento local (`atendimentos.id`) que originou esta OS. */
+  declare atendimento_id: number | null;
+  /** Ticket do atendimento no IXC (`su_ticket.id`) — usado para vincular no IXC (`su_oss_chamado.id_ticket`). */
+  declare atendimento_ixc_id: string | null;
+  /** Integração IXC usada na criação/sincronização desta OS. */
+  declare integracao_ixc_provedor_id: number | null;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 }
@@ -112,6 +118,18 @@ OrdemServicoLocal.init(
       allowNull: false,
       defaultValue: 'E',
     },
+    atendimento_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    atendimento_ixc_id: {
+      type: DataTypes.STRING(32),
+      allowNull: true,
+    },
+    integracao_ixc_provedor_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,
@@ -134,6 +152,9 @@ OrdemServicoLocal.init(
       { fields: ['cliente_id'] },
       { fields: ['protocolo'], unique: true, name: 'ordens_servico_protocolo_unique' },
       { fields: ['ixc_id'] },
+      { fields: ['atendimento_id'] },
+      { fields: ['atendimento_ixc_id'] },
+      { fields: ['integracao_ixc_provedor_id'] },
     ],
   }
 );

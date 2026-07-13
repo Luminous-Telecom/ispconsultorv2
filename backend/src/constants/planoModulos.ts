@@ -26,7 +26,7 @@ export const MODULO_ROTAS: Record<PlanoModuloId, string[]> = {
   equipamentos: ['/api/agents', '/api/ssh-manager'],
   rpki: ['/api/rpki'],
   ixc_provedor: ['/api/integracao-ixc-provedor'],
-  ordens_servico: ['/api/ixc/ordens-servico'],
+  ordens_servico: ['/api/ixc/ordens-servico', '/api/ixc/atendimentos'],
   envio_notificacoes: ['/api/servidores-whatsapp', '/api/servidores-email', '/api/mensagens-whatsapp', '/api/mensagens-email', '/api/mensagens-historico', '/api/templates-whatsapp'],
   assinatura_digital: ['/api/assinatura-digital', '/api/assinatura-digital-providers'],
   nfse: ['/api/notas-fiscais', '/api/nfse-config'],

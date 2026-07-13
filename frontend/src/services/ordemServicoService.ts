@@ -30,6 +30,9 @@ export interface OrdemServico {
   setor?: string;
   protocolo?: string;
   operador_nome?: string;
+  id_ticket?: string;
+  /** Atendimento local (`atendimentos.id`) vinculado — preenchido ao criar OS pela aba do atendimento. */
+  atendimento_id?: string | number;
   tipo?: string;
   prioridade?: string;
   status?: string;

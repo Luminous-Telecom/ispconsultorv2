@@ -351,6 +351,7 @@ const esES: TranslationKeys = {
     'menu.repositories': 'Repositorios',
     'menu.validateRoute': 'Validar Ruta',
     'menu.serviceOrders': 'Órdenes de Servicio',
+    'menu.attendances': 'Atenciones',
     'menu.usersSaas': 'Usuarios SaaS',
     'menu.emailServers': 'Servidores Email',
     'menu.whatsappServers': 'Servidores WhatsApp',

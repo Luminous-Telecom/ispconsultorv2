@@ -5,6 +5,8 @@ import {
   TecnicoLookupService,
   AssuntoLookupService,
   SetorLookupService,
+  DepartamentoAtendimentoLookupService,
+  TecnicoAtendimentoLookupService,
   IxcIntegracaoStatusService,
   type LookupFilters,
   type LookupItem,
@@ -58,6 +60,18 @@ export const useAssuntos = (filters: LookupFilters = {}) =>
     queryKey: ['ixc-assuntos', filters],
     queryFn: () => AssuntoLookupService.list(filters),
     ...lookupQueryOptions(filters, Boolean(filters.setor_id)),
+  });
+
+export const useDepartamentosAtendimento = createLookupHook(
+  'ixc-departamentos-atendimento',
+  DepartamentoAtendimentoLookupService.list
+);
+
+export const useTecnicosAtendimento = (filters: LookupFilters = {}) =>
+  useQuery({
+    queryKey: ['ixc-tecnicos-atendimento', filters],
+    queryFn: () => TecnicoAtendimentoLookupService.list(filters),
+    ...lookupQueryOptions(filters, Boolean(filters.id_ticket_setor)),
   });
 
 export const useClienteIxcIntegracao = (clienteId: number, enabled = true) => {

@@ -222,6 +222,7 @@ app.use(ddosProtectionMiddleware({
     {
       test: (pathname) =>
         /\/api\/ixc\/ordens-servico/.test(pathname) ||
+        /\/api\/ixc\/atendimentos/.test(pathname) ||
         /\/api\/integracao-ixc-provedor\/.*sync/.test(pathname),
       maxProcessingTime: Number.isFinite(ddosIxcOsMaxMs) ? ddosIxcOsMaxMs : 120_000,
     },

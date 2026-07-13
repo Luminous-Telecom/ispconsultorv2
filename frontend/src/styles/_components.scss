@@ -3171,6 +3171,11 @@ textarea:focus {
   }
 }
 
+.ordem-servico-tab-disabled {
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+}
+
 /* ============================================
    BANCO MODAL - Estilos específicos
    ============================================ */
@@ -5155,12 +5160,25 @@ input[type='file'].form-control:focus-visible {
   opacity: 0.6;
 }
 
-/* Tema escuro - ajustar cor de fundo dos inputs desabilitados */
 [data-theme="dark"] .form-control:disabled,
 [data-theme="dark"] .form-select:disabled {
   background-color: var(--bg-tertiary);
   opacity: 0.6;
   border-color: var(--border-color);
+}
+
+/* Readonly estático (não .entity-select-input — listagem/busca) */
+.form-control[readonly]:not(.entity-select-input),
+.form-control[readonly]:not(.entity-select-input):focus {
+  background-color: #2F3D48 !important;
+  opacity: 0.6;
+}
+
+[data-theme="dark"] .form-control[readonly]:not(.entity-select-input),
+[data-theme="dark"] .form-control[readonly]:not(.entity-select-input):focus {
+  background-color: var(--bg-tertiary) !important;
+  opacity: 0.6;
+  border-color: var(--border-color) !important;
 }
 
 /* Campos de data (calendários) - cursor pointer */

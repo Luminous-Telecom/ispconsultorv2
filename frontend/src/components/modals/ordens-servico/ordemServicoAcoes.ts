@@ -25,6 +25,15 @@ export const isOrdemServicoLocal = (
   ordem?: { origem?: string; ixc_id?: string } | null
 ): boolean => ordem?.origem === 'ispconsultor';
 
+export const resolveOrdemServicoId = (ordem: {
+  id: string | number;
+  id_local?: string | number;
+}): string | number => {
+  const local = ordem.id_local;
+  if (local != null && String(local).trim() !== '') return local;
+  return ordem.id;
+};
+
 export const isOrdemServicoExcluivel = (ordem?: { status?: string } | null): boolean =>
   ordem != null && ordem.status !== 'F';
 

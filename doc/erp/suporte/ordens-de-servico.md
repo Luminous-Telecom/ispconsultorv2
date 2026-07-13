@@ -54,7 +54,7 @@ Editar, Deletar e Ações ficam desabilitados até que uma OS seja selecionada n
 3. Preencha a aba **Principal** (detalhes abaixo).
 4. Clique em **Salvar**.
 
-Após salvar, as abas **Histórico** e **Arquivos** ficam disponíveis.
+Após salvar, as abas **Histórico** e **Arquivos** são habilitadas (ficam inativas enquanto a OS ainda não foi salva).
 
 ### Abas do formulário
 
@@ -137,6 +137,10 @@ Com uma OS selecionada, use o menu **Ações**:
 | **Finalizar** | Encerra a OS |
 | **Reabrir** | Reabre OS finalizada |
 | **Registrar mensagem** | Adiciona interação ao histórico |
+
+::: warning Reabrir no IXC Phoenix
+Em alguns tenants IXC (ex.: Phoenix/Fenix), o ERP exibe a ação **Reabrir** e envia a requisição corretamente, mas o IXC pode responder *"Não é possível prosseguir, esta O.S. já foi finalizada."* — limitação ou permissão do IXC do cliente, não falha de sincronização do ERP. Nesse caso a OS permanece **Finalizada** no IXC e no espelho local.
+:::
 
 ::: tip OS local vs. IXC
 OS criadas **apenas no ERP** (cliente sem IXC) permitem **Registrar mensagem** e **Finalizar**. OS vinculadas ao IXC disponibilizam o fluxo completo acima.

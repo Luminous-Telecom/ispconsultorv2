@@ -69,8 +69,11 @@ export class IxcLookupController {
       }
 
       const empresaId = getEmpresaIdOrNull(req);
-      const configured = await IntegracaoIxcProvedorService.hasIntegracaoForCliente(clienteId, empresaId);
-      sendSuccess(res, { configured });
+      const integracao = await IntegracaoIxcProvedorService.findIntegracaoAtivaForCliente(
+        clienteId,
+        empresaId
+      );
+      sendSuccess(res, { configured: integracao != null });
     } catch (error) {
       sendError(res, error, 'Erro ao verificar integração IXC do cliente', 500, true, {
         context: 'IxcLookupController',

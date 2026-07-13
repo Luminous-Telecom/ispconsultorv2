@@ -49,6 +49,7 @@ export const MODAL_MODULO_MAP: Record<string, PlanoModuloId> = {
   'rpki-logs-repositorios': 'rpki',
   'integracao-ixc-provedor': 'ixc_provedor',
   'ordens-servico': 'ordens_servico',
+  atendimentos: 'ordens_servico',
   'logs-ixc-os-sync': 'ixc_provedor',
   'servidor-whatsapp': 'envio_notificacoes',
   'servidor-email': 'envio_notificacoes',

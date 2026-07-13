@@ -66,6 +66,7 @@ import agentRoutes from './agentRoutes';
 import rpkiRoutes from './rpkiRoutes';
 import integracaoIxcProvedorRoutes from './integracaoIxcProvedorRoutes';
 import ixcOssChamadoRoutes from './ixcOssChamadoRoutes';
+import ixcAtendimentoRoutes from './ixcAtendimentoRoutes';
 import ixcLookupRoutes from './ixcLookupRoutes';
 
 const router = Router();
@@ -121,6 +122,7 @@ const routes = [
     { path: '/api/rpki', route: rpkiRoutes },
     { path: '/api/integracao-ixc-provedor', route: integracaoIxcProvedorRoutes },
     { path: '/api/ixc/ordens-servico', route: ixcOssChamadoRoutes },
+    { path: '/api/ixc/atendimentos', route: ixcAtendimentoRoutes },
     { path: '/api/ixc', route: ixcLookupRoutes },
     { path: '/api', route: centralAssinanteRoutes },
     { path: '/api/public', route: publicSaasPlanosRoutes },

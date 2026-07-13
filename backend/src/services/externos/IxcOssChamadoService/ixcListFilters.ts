@@ -1,4 +1,8 @@
-import { IXC_CIDADE_RESOURCE } from './constants';
+import { IXC_CIDADE_RESOURCE, IXC_MENSAGEM_RESOURCE, IXC_RESOURCE } from './constants';
+import {
+  IXC_ATENDIMENTO_RESOURCE,
+  IXC_MENSAGEM_RESOURCE as IXC_ATENDIMENTO_MENSAGEM_RESOURCE,
+} from '../IxcAtendimentoService/constants';
 
 export interface IxcGridParamFilter {
   TB: string;
@@ -19,7 +23,13 @@ export function filterRegistrosAtivos<T extends Record<string, string | undefine
 }
 
 /** Recursos IXC sem coluna `ativo` — filtro quebra a listagem. */
-const IXC_RESOURCES_WITHOUT_ATIVO_FILTER = new Set<string>([IXC_CIDADE_RESOURCE]);
+const IXC_RESOURCES_WITHOUT_ATIVO_FILTER = new Set<string>([
+  IXC_CIDADE_RESOURCE,
+  IXC_RESOURCE,
+  IXC_MENSAGEM_RESOURCE,
+  IXC_ATENDIMENTO_RESOURCE,
+  IXC_ATENDIMENTO_MENSAGEM_RESOURCE,
+]);
 
 export function ixcResourceSupportsAtivoFilter(resource: string): boolean {
   return !IXC_RESOURCES_WITHOUT_ATIVO_FILTER.has(resource);

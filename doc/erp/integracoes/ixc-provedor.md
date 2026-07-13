@@ -7,7 +7,7 @@ Guia completo para integrar o **IXC Provedor** com o ISP Consultor: configurar *
 | Direção | O que faz |
 |---------|-----------|
 | **ERP → IXC (API)** | Cria, edita e executa ações em ordens de serviço |
-| **IXC → ERP (sync)** | Importa/atualiza OS, filiais, setores, assuntos e mensagens |
+| **IXC → ERP (sync)** | Importa/atualiza OS, filiais, setores, departamentos de atendimento, assuntos e mensagens |
 
 ---
 
@@ -95,7 +95,7 @@ Estes recursos são conferidos em **Integrações → IXC Provedor → Verificar
 | **Assuntos** | Assuntos OS / `su_oss_assunto` | Sim | — | — | — |
 | **Estruturas** | Estruturas | Sim | — | — | — |
 | **Cidades** | Cidades | Sim | — | — | — |
-| **Chamados** | Ordens de serviço / `su_oss_chamado` | Sim | Sim | Sim | — |
+| **Ordens de serviço** | Ordens de serviço / `su_oss_chamado` | Sim | Sim | Sim | — |
 | **Mensagens** | Mensagens OS / `su_oss_chamado_mensagem` | Sim | Sim | Sim | Sim |
 
 #### Cadastros complementares (conforme uso)
@@ -332,15 +332,15 @@ Se as permissões ou a quantidade de registros não estiver correta, a sincroniz
 
 | Coluna | O que conferir |
 |--------|----------------|
-| **Cadastro** | Recurso consultado na API (Filiais, Setores, Colaboradores, Assuntos, Estruturas, Cidades, Chamados, Mensagens) |
+| **Cadastro** | Recurso consultado na API (Filiais, Setores, Colaboradores, Assuntos, Estruturas, Cidades, Ordens de serviço, Mensagens) |
 | **Dados** | Quantidade de registros que a API retorna para aquele cadastro |
 | **Menu** / **Listar** | Devem estar **Liberado** (verde). **Bloqueado** (vermelho) indica falta de permissão no IXC |
 
 4. Selecione um cadastro e clique em **Dados** para abrir o detalhe — confira o **Total na API** e a lista de **Registros retornados** (amostra do que será usado na integração).
-5. Compare se a quantidade e os registros batem com o que você espera importar (filiais, setores, assuntos, chamados/OS etc.).
+5. Compare se a quantidade e os registros batem com o que você espera importar (filiais, setores, assuntos, ordens de serviço etc.).
 6. Se algo estiver **Bloqueado**, com **Dados** zerado ou abaixo do esperado:
    - Volte ao [grupo de usuários](#grupo-usuarios) e [permissões avançadas](#permissoes-avancadas) no IXC.
-   - Libere **Listar** (e **Novo**/**Alterar** em Chamados e Mensagens) nos formulários da tabela do passo [3](#permissoes-avancadas).
+   - Libere **Listar** (e **Novo**/**Alterar** em Ordens de serviço e Mensagens) nos formulários da tabela do passo [3](#permissoes-avancadas).
    - Confira a aba **Filiais** do usuário API (acesso às filiais corretas).
    - Confira o **setor do operador** vinculado ao usuário — passo [4](#colaborador-setor) (Setores, Colaboradores e Assuntos dependem disso).
 7. Clique em **Recarregar** em **Verificar permissões** e repita a conferência até ficar adequado.

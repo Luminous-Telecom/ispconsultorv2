@@ -29,7 +29,7 @@ A tela segue o padrão de [listagens do ERP](/doc/geral/listagens). Abaixo, apen
 | **Estornar** | Estorna um pagamento já registrado |
 | **Imprimir** | Menu de impressão de boletos/recibos |
 
-No **celular**, abra o menu **⋮** do card do título e use **Selecionados** (imprime aquele título), **Abertos**, **Recibo** etc. No preview do PDF, use **Baixar** (no mobile o visualizador embutido costuma não oferecer download).
+No **celular**, abra o menu **⋮** do card do título e use **Selecionados** (imprime aquele título), **Abertos**, **Recibo** etc. No preview do PDF, abra o menu **⋮** do cabeçalho e use **Baixar** (o visualizador embutido costuma não oferecer download). No **computador**, o preview não exibe botão **Baixar**.
 
 | **Enviar** | Envia a cobrança ao cliente via WhatsApp ou e-mail |
 | **NFS-e** | Ações de nota fiscal de serviço eletrônica |

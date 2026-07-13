@@ -308,6 +308,21 @@
       margin-bottom: 0;
     }
   }
+
+  /* Readonly simples e datas: largura pelo conteúdo (ignora .input-group / EntitySelect) */
+  > .form-field-control:has(> input.form-control[readonly]),
+  > .form-field-control:has(
+      > input.form-control:is([type='date'], [type='datetime-local'], [type='time'], [type='month'], [type='week'])
+    ) {
+    flex: 0 1 auto;
+
+    > input.form-control {
+      field-sizing: content;
+      width: auto;
+      min-width: 4.5rem;
+      max-width: 100%;
+    }
+  }
 }
 
 @mixin form-modal-tab-padding {

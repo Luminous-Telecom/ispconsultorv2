@@ -5,6 +5,7 @@ import Loading from './Loading';
 import { useI18n } from 'contexts/I18nContext';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
+import { useIsMobile } from 'hooks/useMediaQuery';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 
 interface ImprimirModalProps {
@@ -77,6 +78,7 @@ const ImprimirModal: React.FC<ImprimirModalProps> = ({
   fileName = 'documento.pdf',
 }) => {
   const { t } = useI18n();
+  const isMobile = useIsMobile();
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
   const [hasError, setHasError] = useState(false);
@@ -141,6 +143,16 @@ const ImprimirModal: React.FC<ImprimirModalProps> = ({
 
   const canDownload = Boolean(pdfUrl) && !isGenerating && !hasError;
 
+  const downloadButton = canDownload ? (
+    <BaixarButton
+      type="button"
+      size="sm"
+      onClick={handleDownload}
+      disabled={isDownloading}
+      isPending={isDownloading}
+    />
+  ) : null;
+
   return (
     <DraggableModal
       show={show}
@@ -149,19 +161,13 @@ const ImprimirModal: React.FC<ImprimirModalProps> = ({
       size="xl"
       className="imprimir-modal no-padding"
       modalId={modalId}
+      headerActions={
+        isMobile && downloadButton ? (
+          <div className="modal-header-actions">{downloadButton}</div>
+        ) : undefined
+      }
     >
       <div className="imprimir-modal-frame">
-        {canDownload && (
-          <div className="imprimir-modal-toolbar">
-            <BaixarButton
-              type="button"
-              size="sm"
-              onClick={handleDownload}
-              disabled={isDownloading}
-              isPending={isDownloading}
-            />
-          </div>
-        )}
         {isGenerating || !pdfUrl ? (
           <div className="d-flex align-items-center justify-content-center h-100 imprimir-modal-loading">
             <Loading message="Carregando documento..." variant="modal" />

@@ -95,6 +95,7 @@ export const useMenuItems = ({ t, openModal, hasModulo }: UseMenuItemsParams) =>
   const suporteFolderItems = useMemo(
     () =>
       [
+        { id: 'atendimentos', modalId: 'atendimentos', label: t('menu.attendances'), icon: 'bi-chat-left-text', onClick: () => handleOpenModal('atendimentos') },
         { id: 'ordens-servico', modalId: 'ordens-servico', label: t('menu.serviceOrders'), icon: 'bi-headset', onClick: () => handleOpenModal('ordens-servico') },
       ].filter(filterItem),
     [t, handleOpenModal, filterItem]

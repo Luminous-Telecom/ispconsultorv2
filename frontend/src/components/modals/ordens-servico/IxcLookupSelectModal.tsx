@@ -14,6 +14,7 @@ interface IxcLookupSelectModalProps {
   nomeLabel: string;
   clienteId?: number;
   setorId?: number | string;
+  departamentoId?: number | string;
   useData: (filters: LookupFilters) => UseQueryResult<PaginatedResponse<LookupItem>>;
 }
 
@@ -25,6 +26,7 @@ const IxcLookupSelectModal: React.FC<IxcLookupSelectModalProps> = ({
   nomeLabel,
   clienteId,
   setorId,
+  departamentoId,
   useData,
 }) => {
   const list = useEntityListModal<LookupItem>({ onClose, onSelect });
@@ -32,6 +34,7 @@ const IxcLookupSelectModal: React.FC<IxcLookupSelectModalProps> = ({
   const { data, isLoading, refetch } = useData({
     cliente_id: clienteId || undefined,
     setor_id: setorId || undefined,
+    id_ticket_setor: departamentoId || undefined,
     enabled: show,
     search: list.tableFilters.debouncedSearch || undefined,
     page: list.tableFilters.page,

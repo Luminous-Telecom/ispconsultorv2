@@ -20,6 +20,10 @@ import {
   type IxcPermissionSampleResult,
 } from '../IxcApiPermissionsService';
 import { OrdemServicoCadastroService } from '../../ordens/OrdemServicoCadastroService';
+import { AtendimentoDepartamentoService } from '../../atendimentos/AtendimentoDepartamentoService';
+import { AtendimentoTecnicoService } from '../../atendimentos/AtendimentoTecnicoService';
+import { IXC_DEPARTAMENTO_RESOURCE } from '../../externos/IxcAtendimentoService/constants';
+import { fetchFuncionariosForAtendimentoSync } from '../../externos/IxcAtendimentoService/atendimentoTecnicoContext';
 import { clienteDisplayName } from '../../../utils/clienteDisplayName';
 
 function clienteDisplayNameFromCliente(cliente: Pick<Cliente, 'id' | 'nome_fantasia' | 'razao_social'>): string {
@@ -646,35 +650,60 @@ export class IntegracaoIxcProvedorService {
         { resource: IXC_FUNCIONARIOS_RESOURCE, nomeCampo: 'funcionario', label: 'colaboradores' },
         { resource: IXC_ASSUNTO_RESOURCE, nomeCampo: 'assunto', label: 'assuntos' },
         { resource: IXC_ESTRUTURA_RESOURCE, nomeCampo: 'descricao', label: 'estruturas' },
+        {
+          resource: IXC_DEPARTAMENTO_RESOURCE,
+          nomeCampo: 'setor',
+          label: 'departamentos_atendimento',
+        },
       ];
 
       let total = 0;
       const detalhes: Record<string, number> = {};
 
       for (const cadastro of cadastros) {
-        const tipo = OrdemServicoCadastroService.resolveTipoByIxcResource(cadastro.resource)!;
         const itens = await IxcOssChamadoService.fetchCadastrosForSync(
           cadastro.resource,
           cadastro.nomeCampo
         );
-        await OrdemServicoCadastroService.syncIxcItens(tipo, empresaId, integracaoId, itens);
 
-        if (
-          cadastro.resource === IXC_SETOR_RESOURCE ||
-          cadastro.resource === IXC_ASSUNTO_RESOURCE ||
-          cadastro.resource === IXC_FUNCIONARIOS_RESOURCE
-        ) {
-          await OrdemServicoCadastroService.pruneIxcCadastros(
-            tipo,
+        if (cadastro.resource === IXC_DEPARTAMENTO_RESOURCE) {
+          await AtendimentoDepartamentoService.syncIxcItens(empresaId, integracaoId, itens);
+          await AtendimentoDepartamentoService.pruneIxcCadastros(
             empresaId,
             integracaoId,
             new Set(itens.map((item) => String(item.id)))
           );
+        } else {
+          const tipo = OrdemServicoCadastroService.resolveTipoByIxcResource(cadastro.resource)!;
+          await OrdemServicoCadastroService.syncIxcItens(tipo, empresaId, integracaoId, itens);
+
+          if (
+            cadastro.resource === IXC_SETOR_RESOURCE ||
+            cadastro.resource === IXC_ASSUNTO_RESOURCE ||
+            cadastro.resource === IXC_FUNCIONARIOS_RESOURCE
+          ) {
+            await OrdemServicoCadastroService.pruneIxcCadastros(
+              tipo,
+              empresaId,
+              integracaoId,
+              new Set(itens.map((item) => String(item.id)))
+            );
+          }
         }
 
         detalhes[cadastro.label] = itens.length;
         total += itens.length;
       }
+
+      const tecnicosAtendimento = await fetchFuncionariosForAtendimentoSync('funcionario');
+      await AtendimentoTecnicoService.syncIxcItens(empresaId, integracaoId, tecnicosAtendimento);
+      await AtendimentoTecnicoService.pruneIxcCadastros(
+        empresaId,
+        integracaoId,
+        new Set(tecnicosAtendimento.map((item) => String(item.id)))
+      );
+      detalhes.tecnicos_atendimento = tecnicosAtendimento.length;
+      total += tecnicosAtendimento.length;
 
       return {
         total,

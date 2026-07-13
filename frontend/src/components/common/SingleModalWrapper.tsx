@@ -69,6 +69,7 @@ const IxcOsSyncLogsModal = lazy(() => import('../modals/logs/ixc/IxcOsSyncLogsMo
 
 // Suporte
 const OrdemServicoListModal = lazy(() => import('../modals/ordens-servico').then(m => ({ default: m.OrdemServicoListModal })));
+const AtendimentoListModal = lazy(() => import('../modals/atendimentos').then(m => ({ default: m.AtendimentoListModal })));
 const IntegracaoIxcProvedorListModal = lazy(() =>
   import('../modals/integracao-ixc-provedor').then((m) => ({ default: m.IntegracaoIxcProvedorListModal }))
 );
@@ -113,6 +114,13 @@ const resolveRpkiModal = (active: ModalType): ResolvedRpkiModal | null => {
 
 const resolveSuporteModal = (active: ModalType): ResolvedRpkiModal | null => {
   switch (active) {
+    case 'atendimentos':
+      return {
+        title: 'Atendimentos',
+        component: AtendimentoListModal,
+        size: 'xl',
+        className: 'no-padding list-modal-no-body-scroll',
+      };
     case 'ordens-servico':
       return {
         title: 'Ordens de Serviço',
