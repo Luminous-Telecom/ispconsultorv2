@@ -115,13 +115,13 @@ export const useCreateAtendimentoMensagem = () => {
       id,
       mensagem,
       clienteId,
-      su_status,
+      suStatus,
     }: {
       id: number | string;
       mensagem: string;
       clienteId?: number;
-      su_status?: string;
-    }) => AtendimentoService.createMensagem(id, mensagem, clienteId, su_status),
+      suStatus?: string;
+    }) => AtendimentoService.createMensagem(id, mensagem, clienteId, suStatus),
     onSuccess: async (_data, { id, clienteId }) => {
       await queryClient.invalidateQueries({ queryKey: ['atendimento-mensagens', id, clienteId] });
       await queryClient.invalidateQueries({ queryKey: ['atendimento', id] });

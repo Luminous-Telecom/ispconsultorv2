@@ -40,7 +40,7 @@ const AtendimentoInteragirModal: React.FC<AtendimentoInteragirModalProps> = ({
         id: atendimentoId,
         mensagem: mensagem.trim(),
         clienteId,
-        su_status: suStatus,
+        suStatus,
       },
       {
         onSuccess: () => {
