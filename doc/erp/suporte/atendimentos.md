@@ -74,7 +74,7 @@ Os campos exibidos seguem o mesmo critério das [Ordens de Serviço](/doc/suport
 | **Data reservada** | Não | Agenda sugerida |
 | **Melhor horário reserva** | Não | Qualquer, manhã, tarde ou noite |
 | **Descrição** | Sim | Detalhamento do chamado |
-| **Status** | — | Novo, Pendente, Em progresso, Solucionado, Cancelado (com IXC) |
+| **Status** | Não | Novo, Pendente, Em progresso, Solucionado, Cancelado — disponível em atendimentos locais (sem IXC) e sincronizados com IXC |
 
 ---
 
@@ -89,8 +89,8 @@ Os campos exibidos seguem o mesmo critério das [Ordens de Serviço](/doc/suport
 | **Visualizar** | Modal somente leitura |
 | **Deletar** | Exclui no IXC (com confirmação); local conforme origem |
 
-::: warning Atendimento solucionado ou cancelado (IXC)
-O IXC não aceita nova mensagem quando o atendimento está **Solucionado** (`S`) ou **Cancelado** (`C`).
+::: warning Atendimento solucionado ou cancelado
+Com status **Solucionado** (`S`) ou **Cancelado** (`C`), não é possível registrar nova mensagem. No IXC essa regra também é aplicada pela API.
 :::
 
 ---

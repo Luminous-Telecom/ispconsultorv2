@@ -267,6 +267,8 @@ const AtendimentoModal: React.FC<AtendimentoModalProps> = ({
   };
 
   const showIxcFields = isAtendimentoIxcRecord || clienteComIntegracaoIxc;
+  const showStatusField =
+    showIxcFields || isAtendimentoLocalRecord || clienteSemIntegracaoIxc;
   const showAgendaFields =
     isAtendimentoIxcRecord ||
     isAtendimentoLocalRecord ||
@@ -280,6 +282,7 @@ const AtendimentoModal: React.FC<AtendimentoModalProps> = ({
       melhor_horario_reserve: formData.melhor_horario_reserve,
       data_reservada: datetimeLocalToIxc(formData.data_reservada),
       menssagem: formData.menssagem,
+      ...(showStatusField ? { su_status: formData.su_status } : {}),
     };
 
     if (!showIxcFields) return base;
@@ -291,7 +294,6 @@ const AtendimentoModal: React.FC<AtendimentoModalProps> = ({
       id_ticket_setor: formData.id_ticket_setor,
       id_responsavel_technico: formData.id_responsavel_technico,
       titulo: formData.titulo,
-      su_status: formData.su_status,
     };
   };
 
@@ -363,6 +365,7 @@ const AtendimentoModal: React.FC<AtendimentoModalProps> = ({
         isPersisted ? formatIxcData(String(atendimentoData?.ultima_atualizacao ?? '')) : ''
       }
       showIxcFields={showIxcFields}
+      showStatusField={showStatusField}
       showAgendaFields={showAgendaFields}
       mensagemRequired={isAtendimentoLocalRecord || clienteSemIntegracaoIxc || showIxcFields}
       onShowClienteModal={() => setShowClienteModal(true)}

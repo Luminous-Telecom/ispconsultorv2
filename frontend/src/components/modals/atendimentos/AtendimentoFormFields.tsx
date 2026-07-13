@@ -67,6 +67,7 @@ interface AtendimentoFormFieldsProps {
   ixcId?: string;
   ultimaAtualizacao?: string;
   showIxcFields?: boolean;
+  showStatusField?: boolean;
   showAgendaFields?: boolean;
   mensagemRequired?: boolean;
   onShowClienteModal?: () => void;
@@ -94,6 +95,7 @@ const AtendimentoFormFields: React.FC<AtendimentoFormFieldsProps> = ({
   ixcId = '',
   ultimaAtualizacao = '',
   showIxcFields = true,
+  showStatusField = false,
   showAgendaFields = true,
   mensagemRequired = false,
   onShowClienteModal,
@@ -235,19 +237,21 @@ const AtendimentoFormFields: React.FC<AtendimentoFormFieldsProps> = ({
               searchButtonTitle="Buscar colaborador responsável"
             />
           </div>
-          <div className="col-12">
-            <FormField
-              name="su_status"
-              type="select"
-              label="Status"
-              value={form.su_status}
-              onChange={(v) => onChange('su_status', String(v ?? 'N'))}
-              options={STATUS_ATENDIMENTO_OPTIONS}
-              size="sm"
-              disabled={disabled}
-            />
-          </div>
         </>
+      ) : null}
+      {showStatusField ? (
+        <div className="col-12">
+          <FormField
+            name="su_status"
+            type="select"
+            label="Status"
+            value={form.su_status}
+            onChange={(v) => onChange('su_status', String(v ?? 'N'))}
+            options={STATUS_ATENDIMENTO_OPTIONS}
+            size="sm"
+            disabled={disabled}
+          />
+        </div>
       ) : null}
       {showAgendaFields ? (
         <>
