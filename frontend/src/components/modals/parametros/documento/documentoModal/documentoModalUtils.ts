@@ -14,6 +14,7 @@ export const getTipoLabel = (docTipo: string, t: TranslateFn) => {
     recibo: t('document.labels.recibo'),
     carta_cobranca: t('document.labels.carta_cobranca'),
     termo: t('document.labels.termo'),
+    ordem_servico: t('document.labels.ordem_servico'),
   };
   return labels[docTipo] || t('document.labels.documento');
 };
@@ -28,6 +29,8 @@ export const getContentPlaceholder = (docTipo: string, t: TranslateFn) => {
       return t('placeholder.letterContent');
     case 'termo':
       return t('placeholder.termContent');
+    case 'ordem_servico':
+      return t('placeholder.ordemServicoContent');
     default:
       return t('placeholder.contractContent');
   }
@@ -43,6 +46,8 @@ export const getDocumentoService = (tipo: DocumentoModalProps['tipo']) => {
       return ModeloCartaService;
     case 'termo':
       return ModeloTermoService;
+    case 'ordem_servico':
+      return DocumentoSistemaService;
     default:
       return DocumentoSistemaService;
   }

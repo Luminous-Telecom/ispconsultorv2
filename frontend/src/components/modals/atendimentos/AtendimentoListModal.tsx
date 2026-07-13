@@ -4,7 +4,11 @@ import { useEntityListModal } from 'hooks/useEntityListModal';
 import ListModal from 'components/common/ListModal';
 import { ListModalConfig } from 'types/modal';
 import type { Atendimento } from 'services/atendimentoService';
+import { AtendimentoService } from 'services/atendimentoService';
 import AtendimentoModal from './AtendimentoModal';
+import ImprimirModal from 'components/common/ImprimirModal';
+import { useImpressaoSuporteDocumento } from 'hooks/useImpressaoSuporteDocumento';
+import { useBulkBtn } from 'components/ui';
 import {
   getAtendimentoPrioridadeBadgeConfig,
   ATENDIMENTO_PRIORIDADE_BADGE_LABELS,
@@ -57,6 +61,25 @@ const AtendimentoListModal: React.FC<AtendimentoListModalProps> = ({
   );
 
   const deleteMutation = useDeleteAtendimento();
+  const bulkBtn = useBulkBtn();
+
+  const impressaoAtendimento = useImpressaoSuporteDocumento({
+    fetchPdf: AtendimentoService.imprimirPdf,
+    entityLabel: 'Atendimento',
+  });
+
+  const handleImprimir = useCallback(
+    (selectedItems: Atendimento[]) => {
+      if (selectedItems.length !== 1) return;
+      const atendimento = selectedItems[0];
+      const atendimentoId = atendimento.id_local ?? atendimento.id;
+      const clienteRef = atendimento.cliente_id;
+      void impressaoAtendimento.imprimir(atendimentoId, {
+        clienteId: clienteRef ? Number(clienteRef) : undefined,
+      });
+    },
+    [impressaoAtendimento]
+  );
 
   const handleDelete = useCallback(
     async (id: number) => {
@@ -164,7 +187,7 @@ const AtendimentoListModal: React.FC<AtendimentoListModalProps> = ({
   );
 
   const bulkActions = useMemo(() => {
-    return list.buildCrudBulkActions({
+    const crudActions = list.buildCrudBulkActions({
       onNew: () => {
         setEditingId(null);
         setEditingClienteId(undefined);
@@ -181,7 +204,17 @@ const AtendimentoListModal: React.FC<AtendimentoListModalProps> = ({
       },
       onDelete: handleDelete,
     });
-  }, [list, handleDelete]);
+
+    return [
+      ...crudActions,
+      {
+        label: bulkBtn.imprimir.label,
+        variant: bulkBtn.imprimir.variant,
+        disabled: (selectedItems: Atendimento[]) => selectedItems.length !== 1,
+        action: handleImprimir,
+      },
+    ];
+  }, [list, handleDelete, handleImprimir, bulkBtn.imprimir.label, bulkBtn.imprimir.variant]);
 
   const pagination = useMemo(
     () => list.buildPagination(atendimentosData?.pagination),
@@ -220,19 +253,30 @@ const AtendimentoListModal: React.FC<AtendimentoListModalProps> = ({
         modalId="atendimentos-list-modal"
       />
 
-      <AtendimentoModal
-        show={showFormModal}
-        onClose={() => {
-          setShowFormModal(false);
-          setIsEditMode(false);
-          setEditingId(null);
-          setEditingClienteId(undefined);
-        }}
-        atendimentoId={isEditMode ? editingId : null}
-        clienteIdInicial={editingClienteId}
-        onSuccess={() => {
-          void refetch();
-        }}
+      {showFormModal && (
+        <AtendimentoModal
+          show={showFormModal}
+          onClose={() => {
+            setShowFormModal(false);
+            setIsEditMode(false);
+            setEditingId(null);
+            setEditingClienteId(undefined);
+          }}
+          atendimentoId={isEditMode ? editingId : null}
+          clienteIdInicial={editingClienteId}
+          onSuccess={() => {
+            void refetch();
+          }}
+        />
+      )}
+
+      <ImprimirModal
+        show={impressaoAtendimento.showModal}
+        onClose={impressaoAtendimento.limparPdfUrl}
+        pdfUrl={impressaoAtendimento.pdfUrl}
+        isGenerating={impressaoAtendimento.isGeneratingPdf}
+        title="Atendimento"
+        modalId="atendimento-list-imprimir-modal"
       />
     </>
   );

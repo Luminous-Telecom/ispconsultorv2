@@ -42,6 +42,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
     (): ModalTabItem<TipoDocumento>[] => [
       { id: 'contrato', label: 'Contratos' },
       { id: 'termo', label: 'Termos' },
+      { id: 'ordem_servico', label: 'Ordens de serviço' },
     ],
     []
   );
@@ -76,6 +77,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
       recibo: 'Recibos',
       carta_cobranca: 'Cartas de Cobrança',
       termo: 'Termos',
+      ordem_servico: 'Ordens de serviço',
     };
     return labels[tipo];
   };

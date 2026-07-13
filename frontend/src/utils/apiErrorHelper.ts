@@ -60,6 +60,39 @@ function resolveAxiosError(
   return axiosError.message || defaultMessage;
 }
 
+function getAxiosErrorFromUnknown(error: unknown): AxiosError | null {
+  if (error && typeof error === 'object' && 'isAxiosError' in error) {
+    return error as AxiosError;
+  }
+  if (error instanceof ApiErrorException && error.apiError.originalError) {
+    return error.apiError.originalError;
+  }
+  return null;
+}
+
+async function tryExtractMessageFromBlobResponse(
+  axiosError: AxiosError,
+  defaultMessage: string,
+  customStatusMessages?: Record<number, string>
+): Promise<string | null> {
+  const data = axiosError.response?.data;
+  if (!(data instanceof Blob)) return null;
+
+  try {
+    const parsed = JSON.parse(await data.text()) as BackendErrorResponse;
+    if (parsed.message?.trim()) return parsed.message.trim();
+    if (parsed.error?.trim()) return parsed.error.trim();
+  } catch {
+    /* usa fallback por status abaixo */
+  }
+
+  if (axiosError.response?.status) {
+    return getMessageByStatus(axiosError.response.status, customStatusMessages);
+  }
+
+  return null;
+}
+
 function resolveApiErrorMessage(
   error: unknown,
   defaultMessage: string,
@@ -88,18 +121,14 @@ export async function extractApiErrorMessage(
   const { defaultMessage = ERROR_MESSAGES.GENERIC_ERROR, handleBlobResponse = false, customStatusMessages } = options;
 
   if (handleBlobResponse) {
-    const axiosError = error as AxiosError<BackendErrorResponse>;
-    const data = axiosError.response?.data;
-    if (data instanceof Blob) {
-      try {
-        const parsed = JSON.parse(await data.text()) as BackendErrorResponse;
-        if (parsed.message || parsed.error) return parsed.message || parsed.error || defaultMessage;
-      } catch {
-        /* usa fallback abaixo */
-      }
-      if (axiosError.response?.status) {
-        return getMessageByStatus(axiosError.response.status, customStatusMessages);
-      }
+    const axiosError = getAxiosErrorFromUnknown(error);
+    if (axiosError) {
+      const blobMessage = await tryExtractMessageFromBlobResponse(
+        axiosError,
+        defaultMessage,
+        customStatusMessages
+      );
+      if (blobMessage) return blobMessage;
     }
   }
 

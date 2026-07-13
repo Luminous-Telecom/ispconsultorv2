@@ -29,10 +29,11 @@ A tela segue o padrão de [listagens do ERP](/doc/geral/listagens). Abaixo, apen
 | **Novo** | Abre uma nova ordem de serviço |
 | **Editar** | Altera a OS selecionada |
 | **Deletar** | Remove a OS selecionada |
+| **Imprimir** | Gera PDF da OS selecionada (um registro por vez) |
 | **Ações** | Menu com operações adicionais sobre a OS selecionada |
 
 ::: tip Seleção de registro
-Editar, Deletar e Ações ficam desabilitados até que uma OS seja selecionada na tabela.
+Editar, Deletar, Imprimir e Ações ficam desabilitados até que uma OS seja selecionada na tabela. **Imprimir** exige exatamente um registro selecionado.
 :::
 
 ### Busca — campos disponíveis
@@ -55,6 +56,15 @@ Editar, Deletar e Ações ficam desabilitados até que uma OS seja selecionada n
 4. Clique em **Salvar**.
 
 Após salvar, as abas **Histórico** e **Arquivos** são habilitadas (ficam inativas enquanto a OS ainda não foi salva).
+
+### Imprimir PDF
+
+1. Selecione **uma** ordem de serviço na listagem.
+2. Clique em **Imprimir** na barra de ações e escolha o layout:
+   - **Padrão (padrão)** — modelo embutido do sistema
+   - **Modelos cadastrados** — layouts personalizados em **Cadastros → Modelos de Documentos → Ordens de serviço**
+
+O PDF substitui as variáveis pelos dados da OS, do cliente e da empresa.
 
 ### Abas do formulário
 

@@ -5,6 +5,7 @@
 import { BaseService, defaultApiClient } from './core';
 import type { BaseFilters } from './core/BaseService';
 import { PaginatedResponse } from '../types';
+import { extractApiErrorMessage, CONTEXT_ERROR_MESSAGES } from '../utils/apiErrorHelper';
 
 /** Criação/ações de OS IXC podem levar várias chamadas ao webservice */
 const IXC_OS_REQUEST_TIMEOUT_MS = 120_000;
@@ -256,5 +257,54 @@ export class OrdemServicoService {
     );
 
     return response.data?.data ?? (response.data as { type?: string; message?: string; id?: string });
+  }
+
+  static async imprimirPdf(
+    id: number | string,
+    options: { clienteId?: number; modeloId?: number; modeloPadrao?: string } = {}
+  ): Promise<Blob> {
+    const params = new URLSearchParams();
+    if (options.clienteId) params.set('cliente_id', String(options.clienteId));
+    if (options.modeloId) params.set('modelo_id', String(options.modeloId));
+    if (options.modeloPadrao) params.set('modelo_padrao', options.modeloPadrao);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+
+    try {
+      const response = await defaultApiClient.get<Blob>(`/ixc/ordens-servico/${id}/imprimir${qs}`, {
+        responseType: 'blob',
+        timeout: 60_000,
+      });
+
+      const blob = response.data ?? (response as unknown as Blob);
+      if (!(blob instanceof Blob)) {
+        throw new Error('Resposta do servidor não é um PDF válido');
+      }
+
+      if (blob.size < 1000) {
+        try {
+          const text = await blob.text();
+          const errorData = JSON.parse(text) as { message?: string };
+          if (errorData.message?.trim()) {
+            throw new Error(errorData.message.trim());
+          }
+        } catch (parseError) {
+          if (parseError instanceof Error && !('isAxiosError' in parseError)) {
+            throw parseError;
+          }
+        }
+      }
+
+      return blob;
+    } catch (error) {
+      if (error instanceof Error && !('isAxiosError' in error)) {
+        throw error;
+      }
+
+      const message = await extractApiErrorMessage(error, {
+        defaultMessage: CONTEXT_ERROR_MESSAGES.PDF_GENERATE_ERROR,
+        handleBlobResponse: true,
+      });
+      throw new Error(message);
+    }
   }
 }

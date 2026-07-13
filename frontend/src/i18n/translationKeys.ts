@@ -1106,6 +1106,8 @@ export interface TranslationKeys {
   'document.labels.recibo': string;
   'document.labels.carta_cobranca': string;
   'document.labels.termo': string;
+  'document.labels.ordem_servico': string;
+  'document.labels.atendimento': string;
   'document.labels.documento': string;
 
   // Modal Titles
@@ -1587,6 +1589,8 @@ export interface TranslationKeys {
   'placeholder.paymentObservations': string;
   'placeholder.testMessage': string;
   'placeholder.termContent': string;
+  'placeholder.ordemServicoContent': string;
+  'placeholder.atendimentoContent': string;
 
   // Message Types
   'messages.types.10daysBefore': string;

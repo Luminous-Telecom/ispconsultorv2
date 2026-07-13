@@ -3,6 +3,7 @@ import { IxcAtendimentoService } from '../../../services/externos/IxcAtendimento
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { parseListQuery } from '../../../utils/listQuery';
 import { getEmpresaIdOrNull, getUsuarioIdOrNull } from '../../../utils/tenantUtils';
+import { SuporteDocumentoPdfService } from '../../../services/documentos/SuporteDocumentoPdfService';
 
 function parseOptionalClienteId(value: unknown): number | null {
   if (value == null || value === '') return null;
@@ -301,6 +302,22 @@ export class IxcAtendimentoController {
       sendError(res, error, 'Erro ao listar departamentos de atendimento', 500, true, {
         context: 'IxcAtendimentoController',
         action: 'listDepartamentos',
+      });
+    }
+  }
+
+  static async imprimir(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
+      await SuporteDocumentoPdfService.gerarAtendimentoPdf(id, empresaId, req, res, {
+        clienteId: parseOptionalClienteId(req.query.cliente_id),
+      });
+    } catch (error) {
+      sendError(res, error, 'Erro ao imprimir atendimento', 500, true, {
+        context: 'IxcAtendimentoController',
+        action: 'imprimir',
+        id: req.params.id,
       });
     }
   }

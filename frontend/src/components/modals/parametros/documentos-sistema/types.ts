@@ -3,7 +3,12 @@ import { ModeloRecibo } from 'services/modeloReciboService';
 import { ModeloCarta } from 'services/modeloCartaService';
 import { ModeloTermo } from 'services/modeloTermoService';
 
-export type TipoDocumento = 'contrato' | 'recibo' | 'carta_cobranca' | 'termo';
+export type TipoDocumento =
+  | 'contrato'
+  | 'recibo'
+  | 'carta_cobranca'
+  | 'termo'
+  | 'ordem_servico';
 
 export type DocumentoUnion = DocumentoSistema | ModeloRecibo | ModeloCarta | ModeloTermo;
 

@@ -40,6 +40,7 @@ router.post('/:id/arquivos', (req, res, next) => {
 }, IxcAtendimentoController.createArquivo);
 router.delete('/:id/arquivos/:arquivoId', IxcAtendimentoController.deleteArquivo);
 router.get('/:id/ordens-servico', IxcAtendimentoController.listOrdensServico);
+router.get('/:id/imprimir', IxcAtendimentoController.imprimir);
 router.get('/:id', IxcAtendimentoController.getById);
 router.post('/', IxcAtendimentoController.create);
 router.put('/:id', IxcAtendimentoController.update);

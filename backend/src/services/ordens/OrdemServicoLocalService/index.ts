@@ -198,6 +198,40 @@ async function fetchOperadorAberturaPorOrdemIds(
   return mapa;
 }
 
+async function fetchMensagemRespostaPorOrdemIds(
+  ordemIds: number[]
+): Promise<Map<number, string>> {
+  if (ordemIds.length === 0) return new Map();
+
+  const finalizacoes = await OrdemServicoMensagem.findAll({
+    where: {
+      ordem_servico_id: { [Op.in]: ordemIds },
+      id_evento: IXC_EVENTO_FINALIZAR,
+    },
+    order: [['id', 'DESC']],
+  });
+
+  const mapa = new Map<number, string>();
+  for (const finalizacao of finalizacoes) {
+    if (mapa.has(finalizacao.ordem_servico_id)) continue;
+    const texto = String(finalizacao.mensagem ?? '').trim();
+    if (texto) mapa.set(finalizacao.ordem_servico_id, texto);
+  }
+  return mapa;
+}
+
+function withMensagemResposta(
+  chamado: IxcOssChamado,
+  ordemLocalId: number,
+  respostaPorOrdem: Map<number, string>
+): IxcOssChamado {
+  const existente = String(chamado.mensagem_resposta ?? '').trim();
+  if (existente) return chamado;
+
+  const resposta = respostaPorOrdem.get(ordemLocalId);
+  return resposta ? { ...chamado, mensagem_resposta: resposta } : chamado;
+}
+
 function applyListFilters(
   data: IxcOssChamado[],
   filters: ListOssChamadosFilters
@@ -288,7 +322,11 @@ async function mapLocalRegistros(
     clientes.map((c) => [c.id, clienteNomeParaOrdemServico(c, c.id)])
   );
 
-  const operadorPorOrdem = await fetchOperadorAberturaPorOrdemIds(registros.map((r) => r.id));
+  const ordemIds = registros.map((r) => r.id);
+  const [operadorPorOrdem, respostaPorOrdem] = await Promise.all([
+    fetchOperadorAberturaPorOrdemIds(ordemIds),
+    fetchMensagemRespostaPorOrdemIds(ordemIds),
+  ]);
 
   return enrichChamadosComCadastrosLocais(
     registros.map((record) => {
@@ -297,7 +335,8 @@ async function mapLocalRegistros(
         clienteNomes.get(record.cliente_id) ?? String(record.cliente_id)
       );
       const operadorNome = operadorPorOrdem.get(record.id);
-      return operadorNome ? { ...chamado, operador_nome: operadorNome } : chamado;
+      const comOperador = operadorNome ? { ...chamado, operador_nome: operadorNome } : chamado;
+      return withMensagemResposta(comOperador, record.id, respostaPorOrdem);
     }),
     registros,
     empresaId

@@ -1292,6 +1292,8 @@ const enUS: TranslationKeys = {
     'document.labels.recibo': 'Receipt',
     'document.labels.carta_cobranca': 'Collection Letter',
     'document.labels.termo': 'Term',
+    'document.labels.ordem_servico': 'Work order',
+    'document.labels.atendimento': 'Support ticket',
     'document.labels.documento': 'Document',
 
     // Other
@@ -1599,6 +1601,8 @@ const enUS: TranslationKeys = {
     'placeholder.paymentObservations': 'Payment observations (optional)',
     'placeholder.testMessage': 'ISP Consultor system test message',
     'placeholder.termContent': 'Enter term content...',
+    'placeholder.ordemServicoContent': 'Enter work order model content...',
+    'placeholder.atendimentoContent': 'Enter support ticket model content...',
 
     // Message Types
     'messages.types.10daysBefore': '10 days before due date',

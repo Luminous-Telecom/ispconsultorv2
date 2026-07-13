@@ -51,6 +51,8 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
         return 'ModeloDocumento'; // Usa /modelos-documento com tipo=carta
       case 'termo':
         return 'ModeloTermo'; // Usa /modelos-termo
+      case 'ordem_servico':
+        return 'ModeloDocumento';
       default:
         return null;
     }
@@ -80,6 +82,9 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
           break;
         case 'termo':
           response = await ModeloTermoService.list();
+          break;
+        case 'ordem_servico':
+          response = await DocumentoSistemaService.getByType('ordem_servico');
           break;
         default:
           response = await DocumentoSistemaService.getByType('contrato');
@@ -116,6 +121,8 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
           return ModeloCartaService.delete(id);
         case 'termo':
           return ModeloTermoService.delete(id);
+        case 'ordem_servico':
+          return DocumentoSistemaService.delete(id);
         default:
           return DocumentoSistemaService.delete(id);
       }

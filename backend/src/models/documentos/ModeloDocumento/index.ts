@@ -5,7 +5,7 @@ interface ModeloDocumentoAttributes {
   id: number;
   empresa_id?: number | null;
   nome: string;
-  tipo: 'contrato' | 'recibo' | 'carta' | 'boleto' | 'comprovante' | 'outro' | 'termo';
+  tipo: 'contrato' | 'recibo' | 'carta' | 'boleto' | 'comprovante' | 'outro' | 'termo' | 'ordem_servico' | 'atendimento';
   conteudo: string;
   conteudo_adesao?: string;
   conteudo_permanencia?: string;
@@ -28,7 +28,7 @@ export class ModeloDocumento extends Model<ModeloDocumentoAttributes, ModeloDocu
   public id!: number;
   public empresa_id?: number | null;
   public nome!: string;
-  public tipo!: 'contrato' | 'recibo' | 'carta' | 'boleto' | 'comprovante' | 'outro' | 'termo';
+  public tipo!: ModeloDocumentoAttributes['tipo'];
   public conteudo!: string;
   public conteudo_adesao?: string;
   public conteudo_permanencia?: string;
@@ -49,7 +49,7 @@ export class ModeloDocumento extends Model<ModeloDocumentoAttributes, ModeloDocu
   static async findByTipo(tipo: string): Promise<ModeloDocumento[]> {
     // Validar que o tipo é um dos valores permitidos
     const tiposValidos: Array<ModeloDocumentoAttributes['tipo']> = [
-      'contrato', 'recibo', 'carta', 'boleto', 'comprovante', 'outro', 'termo'
+      'contrato', 'recibo', 'carta', 'boleto', 'comprovante', 'outro', 'termo', 'ordem_servico', 'atendimento'
     ];
     
     if (!tiposValidos.includes(tipo as ModeloDocumentoAttributes['tipo'])) {
@@ -95,7 +95,7 @@ ModeloDocumento.init(
       },
     },
     tipo: {
-      type: DataTypes.ENUM('contrato', 'recibo', 'carta', 'boleto', 'comprovante', 'outro', 'termo'),
+      type: DataTypes.ENUM('contrato', 'recibo', 'carta', 'boleto', 'comprovante', 'outro', 'termo', 'ordem_servico', 'atendimento'),
       allowNull: false,
       validate: {
         notEmpty: true,

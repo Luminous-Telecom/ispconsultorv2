@@ -1,13 +1,19 @@
 import React, { useCallback, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   useOrdensServico,
   useDeleteOrdemServico,
 } from 'hooks/useOrdensServico';
 import { useEntityListModal } from 'hooks/useEntityListModal';
 import ListModal from 'components/common/ListModal';
+import DocumentoSistemaService from 'services/documentoSistemaService';
+import { OrdemServicoService } from 'services/ordemServicoService';
 import type { OrdemServico } from 'services/ordemServicoService';
+import { MODELOS_ORDEM_SERVICO_PADRAO } from 'constants/modelosOrdemServicoPadrao';
 import OrdemServicoModal from './OrdemServicoModal';
 import OrdemServicoAcaoModal from './OrdemServicoAcaoModal';
+import ImprimirModal from 'components/common/ImprimirModal';
+import { useImpressaoSuporteDocumento } from 'hooks/useImpressaoSuporteDocumento';
 import { ORDEM_SERVICO_ACOES, isOrdemServicoExcluivel, isOrdemServicoLocal, resolveOrdemServicoId, type OrdemServicoAcao } from './ordemServicoAcoes';
 import {
   getOrdemServicoListColumns,
@@ -54,6 +60,58 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
 
   const deleteMutation = useDeleteOrdemServico();
   const bulkBtn = useBulkBtn();
+
+  const impressaoOs = useImpressaoSuporteDocumento({
+    fetchPdf: OrdemServicoService.imprimirPdf,
+    entityLabel: 'Ordem de serviço',
+  });
+
+  const { data: modelosOsData } = useQuery({
+    queryKey: ['documentos-sistema', 'ordem_servico'],
+    queryFn: () => DocumentoSistemaService.getByType('ordem_servico'),
+    enabled: show,
+    staleTime: 60_000,
+  });
+
+  const modelosOsCadastrados = useMemo(
+    () => (modelosOsData?.data ?? []).filter((item) => item.ativo !== false),
+    [modelosOsData?.data]
+  );
+
+  const handleImprimirComModelo = useCallback(
+    (
+      selectedItems: OrdemServico[],
+      options: { modeloId?: number; modeloPadrao?: string } = {}
+    ) => {
+      if (selectedItems.length !== 1) return;
+      const ordem = selectedItems[0];
+      const ordemId = resolveOrdemServicoId(ordem);
+      const clienteRef = ordem.cliente_id;
+      void impressaoOs.imprimir(ordemId, {
+        clienteId: clienteRef ? Number(clienteRef) : undefined,
+        ...options,
+      });
+    },
+    [impressaoOs]
+  );
+
+  const imprimirDropdown = useMemo(() => {
+    const presetItems = MODELOS_ORDEM_SERVICO_PADRAO.map((preset) => ({
+      label: `${preset.nome} (padrão)`,
+      action: (selectedItems?: OrdemServico[]) => {
+        handleImprimirComModelo(selectedItems ?? [], { modeloPadrao: preset.id });
+      },
+    }));
+
+    const cadastradosItems = modelosOsCadastrados.map((modelo) => ({
+      label: modelo.nome,
+      action: (selectedItems?: OrdemServico[]) => {
+        handleImprimirComModelo(selectedItems ?? [], { modeloId: modelo.id });
+      },
+    }));
+
+    return [...presetItems, ...cadastradosItems];
+  }, [handleImprimirComModelo, modelosOsCadastrados]);
 
   const handleAcao = useCallback((ordem: OrdemServico, acao: OrdemServicoAcao) => {
     if (isOrdemServicoLocal(ordem) && acao !== 'registrar_mensagem' && acao !== 'finalizar') {
@@ -119,13 +177,19 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
     return [
       ...crudActions,
       {
+        label: bulkBtn.imprimir.label,
+        variant: bulkBtn.imprimir.variant,
+        disabled: (selectedItems: OrdemServico[]) => selectedItems.length !== 1,
+        dropdown: imprimirDropdown,
+      },
+      {
         label: 'Ações',
         variant: 'primary' as const,
         disabled: (selectedItems: OrdemServico[]) => selectedItems.length !== 1,
         dropdown: acoesDropdown,
       },
     ];
-  }, [list, handleDelete, acoesDropdown, bulkBtn.deletar.label]);
+  }, [list, handleDelete, imprimirDropdown, acoesDropdown, bulkBtn.imprimir.label, bulkBtn.imprimir.variant]);
 
   const pagination = useMemo(
     () => list.buildPagination(ordensData?.pagination),
@@ -166,20 +230,22 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
         modalId="ordens-servico-list-modal"
       />
 
-      <OrdemServicoModal
-        show={showFormModal}
-        onClose={() => {
-          setShowFormModal(false);
-          setIsEditMode(false);
-          list.setSelectedEntityId(null);
-        }}
-        ordemServicoId={isEditMode ? list.selectedEntityId : null}
-        onSuccess={() => {
-          setShowFormModal(false);
-          setIsEditMode(false);
-          list.setSelectedEntityId(null);
-        }}
-      />
+      {showFormModal && (
+        <OrdemServicoModal
+          show={showFormModal}
+          onClose={() => {
+            setShowFormModal(false);
+            setIsEditMode(false);
+            list.setSelectedEntityId(null);
+          }}
+          ordemServicoId={isEditMode ? list.selectedEntityId : null}
+          onSuccess={() => {
+            setShowFormModal(false);
+            setIsEditMode(false);
+            list.setSelectedEntityId(null);
+          }}
+        />
+      )}
 
       <OrdemServicoAcaoModal
         show={!!acaoModal}
@@ -189,6 +255,15 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
         onSuccess={() => {
           setAcaoModal(null);
         }}
+      />
+
+      <ImprimirModal
+        show={impressaoOs.showModal}
+        onClose={impressaoOs.limparPdfUrl}
+        pdfUrl={impressaoOs.pdfUrl}
+        isGenerating={impressaoOs.isGeneratingPdf}
+        title="Ordem de serviço"
+        modalId="ordem-servico-list-imprimir-modal"
       />
     </>
   );

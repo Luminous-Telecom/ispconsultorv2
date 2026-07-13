@@ -8,6 +8,13 @@ import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidde
 import { parseListQuery } from '../../../utils/listQuery';
 import { getEmpresaIdOrNull, getUsuarioIdOrNull } from '../../../utils/tenantUtils';
 import { SaasPlanoLimitesService } from '../../../services/saas/SaasPlanoLimitesService';
+import { SuporteDocumentoPdfService } from '../../../services/documentos/SuporteDocumentoPdfService';
+
+function parseOptionalPositiveInt(value: unknown): number | null {
+  if (value == null || value === '') return null;
+  const n = typeof value === 'number' ? value : parseInt(String(value), 10);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
 
 export class IxcOssChamadoController {
   static async list(req: Request, res: Response): Promise<void> {
@@ -242,6 +249,25 @@ export class IxcOssChamadoController {
         action: 'executeAcao',
         id: req.params.id,
         acao: req.params.acao,
+      });
+    }
+  }
+
+  static async imprimir(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
+      await SuporteDocumentoPdfService.gerarOrdemServicoPdf(id, empresaId, req, res, {
+        modeloId: parseOptionalPositiveInt(req.query.modelo_id),
+        modeloPadrao:
+          typeof req.query.modelo_padrao === 'string' ? req.query.modelo_padrao : undefined,
+        clienteId: parseOptionalPositiveInt(req.query.cliente_id),
+      });
+    } catch (error) {
+      sendError(res, error, 'Erro ao imprimir ordem de serviço', 500, true, {
+        context: 'IxcOssChamadoController',
+        action: 'imprimir',
+        id: req.params.id,
       });
     }
   }

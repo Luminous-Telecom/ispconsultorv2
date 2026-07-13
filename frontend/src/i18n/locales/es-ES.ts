@@ -1294,6 +1294,8 @@ const esES: TranslationKeys = {
     'document.labels.recibo': 'Recibo',
     'document.labels.carta_cobranca': 'Carta de Cobro',
     'document.labels.termo': 'Término',
+    'document.labels.ordem_servico': 'Orden de servicio',
+    'document.labels.atendimento': 'Atención',
     'document.labels.documento': 'Documento',
 
     // Other
@@ -1597,6 +1599,8 @@ const esES: TranslationKeys = {
     'placeholder.paymentObservations': 'Observaciones sobre el pago (opcional)',
     'placeholder.testMessage': 'Mensaje de prueba del sistema ISP Consultor',
     'placeholder.termContent': 'Ingrese el contenido del término...',
+    'placeholder.ordemServicoContent': 'Ingrese el contenido del modelo de orden de servicio...',
+    'placeholder.atendimentoContent': 'Ingrese el contenido del modelo de atención...',
 
     // Message Types
     'messages.types.10daysBefore': '10 días antes del vencimiento',

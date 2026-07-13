@@ -111,7 +111,7 @@ function DocumentoModalHeader({
 
   const actionButtons = (
     <>
-      {imprimirDropdown}
+      {isEditing && imprimirDropdown}
       <SalvarButton type="button" onClick={onSubmit} isPending={isSubmitting} />
       <CancelarButton type="button" onClick={onClose} />
     </>

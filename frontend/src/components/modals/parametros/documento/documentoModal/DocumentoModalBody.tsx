@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import FormField from 'components/ui/FormField';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import { LabelWithHelp } from 'components/ui/LabelWithHelp';
@@ -10,6 +10,7 @@ import PermanenciaTab from '../abas/PermanenciaTab';
 import ReciboTab from '../abas/ReciboTab';
 import CartaTab from '../abas/CartaTab';
 import ConteudoTab from '../abas/ConteudoTab';
+import { MODELOS_ORDEM_SERVICO_PADRAO } from 'constants/modelosOrdemServicoPadrao';
 import { DocumentoForm, DocumentoModalProps, DocumentoUnion } from '../types';
 import { DocumentoActiveTab } from './constants';
 
@@ -50,6 +51,7 @@ function DocumentoModalBody({
   onSubmit,
 }: DocumentoModalBodyProps) {
   const { t } = useI18n();
+  const [modeloPadraoPreset, setModeloPadraoPreset] = useState('');
   const editorKeyPrefix = `${isEditing ? currentDocumento?.id : 'create'}`;
   const ultimaAtualizacao = isEditing && currentDocumento?.updated_at
     ? formatDateTime(currentDocumento.updated_at)
@@ -84,6 +86,36 @@ function DocumentoModalBody({
             />
           </div>
         </div>
+
+        {tipo === 'ordem_servico' && (
+          <div className="row g-2 mb-0">
+            <div className="col-12">
+              <FormField
+                name="modelo_padrao"
+                type="select"
+                label="Modelo padrão"
+                value={modeloPadraoPreset}
+                onChange={(value) => {
+                  const presetId = String(value ?? '');
+                  setModeloPadraoPreset(presetId);
+                  const preset = MODELOS_ORDEM_SERVICO_PADRAO.find((item) => item.id === presetId);
+                  if (!preset) return;
+                  setFormData((prev) => ({
+                    ...prev,
+                    conteudo: preset.conteudo,
+                    nome: prev.nome.trim() ? prev.nome : preset.nome,
+                  }));
+                }}
+                options={MODELOS_ORDEM_SERVICO_PADRAO.map((item) => ({
+                  value: item.id,
+                  label: item.nome,
+                }))}
+                helpText="Carrega um layout pré-definido no editor. Você pode ajustar o conteúdo antes de salvar."
+                size="sm"
+              />
+            </div>
+          </div>
+        )}
 
         <div className="documento-editor-layout">
           <div className="form-field form-field--rich-text">

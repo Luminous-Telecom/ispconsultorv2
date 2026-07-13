@@ -36,6 +36,7 @@ router.post('/:id/arquivos', (req, res, next) => {
   });
 }, IxcOssChamadoController.createArquivo);
 router.delete('/:id/arquivos/:arquivoId', IxcOssChamadoController.deleteArquivo);
+router.get('/:id/imprimir', IxcOssChamadoController.imprimir);
 router.get('/:id', IxcOssChamadoController.getById);
 router.post('/', IxcOssChamadoController.create);
 router.put('/:id', IxcOssChamadoController.update);

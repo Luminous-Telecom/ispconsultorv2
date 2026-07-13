@@ -28,6 +28,7 @@ A tela segue o padrão de [listagens do ERP](/doc/geral/listagens). A listagem l
 | **Novo** | Abre um novo atendimento |
 | **Editar** | Altera o atendimento selecionado |
 | **Deletar** | Remove o atendimento (local e IXC, quando houver vínculo) |
+| **Imprimir** | Gera PDF do atendimento selecionado (um registro por vez) |
 
 ---
 
@@ -39,6 +40,13 @@ A tela segue o padrão de [listagens do ERP](/doc/geral/listagens). A listagem l
 4. Clique em **Salvar**.
 
 Após salvar, as abas **Histórico**, **Arquivos** e **Ordens de serviço** são habilitadas (ficam inativas enquanto o atendimento ainda não foi salvo).
+
+### Imprimir PDF {#imprimir-pdf}
+
+1. Selecione **um** atendimento na listagem.
+2. Clique em **Imprimir** na barra de ações.
+
+O ERP gera um PDF com **modelo fixo do sistema**: cabeçalho da empresa, dados do cliente, dados do atendimento, descrição inicial e **tabela com todas as interações** do histórico (data, operador e mensagem). Não é necessário cadastrar modelo em **Modelos de Documentos**.
 
 ### Abas do formulário
 

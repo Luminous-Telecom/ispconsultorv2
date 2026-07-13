@@ -155,6 +155,10 @@ export function useDocumentoModal({
         const response = await ModeloTermoService.create({ ...data, tipo_termo: 'adesao' });
         return response.data;
       }
+      if (tipo === 'ordem_servico') {
+        const response = await DocumentoSistemaService.create({ ...data, tipo });
+        return response.data;
+      }
       const response = await DocumentoSistemaService.create({ ...data, tipo: 'contrato' });
       return response.data;
     },

@@ -8,9 +8,13 @@ import {
   FinanceiroVariableHandler,
   SistemaVariableHandler,
   EmpresaVariableHandler,
+  OrdemServicoVariableHandler,
+  AtendimentoVariableHandler,
   VariableContext,
   GrupoVariaveis,
-  VariableHandler
+  VariableHandler,
+  SuporteOrdemServicoVars,
+  SuporteAtendimentoVars,
 } from '../../variable-handlers';
 
 /**
@@ -22,6 +26,9 @@ export interface DadosVariaveis {
   cliente?: Cliente;
   contrato?: Contrato | (Partial<Contrato> & { id: number });
   titulo?: Titulo | TituloComRelacoes;
+  ordemServico?: SuporteOrdemServicoVars;
+  atendimento?: SuporteAtendimentoVars;
+  atendimentoMensagens?: Array<{ data: string; operador?: string; mensagem: string }>;
   dataReferencia?: Date;
   /** ID da empresa para multi-tenant (contratos, recibos, etc.) */
   empresaId?: number | null;
@@ -40,11 +47,12 @@ export interface DadosVariaveis {
  * - FinanceiroVariableHandler: Variáveis financeiras calculadas
  * - SistemaVariableHandler: Variáveis do sistema (data, hora, etc.)
  * - EmpresaVariableHandler: Variáveis da empresa
+ * - OrdemServicoVariableHandler: Variáveis da ordem de serviço
+ * - AtendimentoVariableHandler: Variáveis do atendimento
  */
 export class VariaveisDocumentoService {
   /**
    * Lista de handlers registrados para processamento de variáveis.
-   * Ordem de processamento: Cliente -> Contrato -> Título -> Financeiro -> Sistema -> Empresa
    */
   private static readonly handlers: readonly VariableHandler[] = [
     new ClienteVariableHandler(),
@@ -52,7 +60,9 @@ export class VariaveisDocumentoService {
     new TituloVariableHandler(),
     new FinanceiroVariableHandler(),
     new SistemaVariableHandler(),
-    new EmpresaVariableHandler()
+    new EmpresaVariableHandler(),
+    new OrdemServicoVariableHandler(),
+    new AtendimentoVariableHandler(),
   ];
 
   /**
@@ -64,7 +74,9 @@ export class VariaveisDocumentoService {
     'Dados do Título/Parcela': 'titulo',
     'Dados Financeiros': 'financeiro',
     'Dados do Sistema': 'sistema',
-    'Dados da Empresa': 'empresa'
+    'Dados da Empresa': 'empresa',
+    'Dados da Ordem de Serviço': 'ordem_servico',
+    'Dados do Atendimento': 'atendimento',
   };
 
   /**
@@ -156,6 +168,9 @@ export class VariaveisDocumentoService {
       cliente: dados.cliente,
       contrato: dados.contrato,
       titulo: dados.titulo,
+      ordemServico: dados.ordemServico,
+      atendimento: dados.atendimento,
+      atendimentoMensagens: dados.atendimentoMensagens,
       dataReferencia: dados.dataReferencia || new Date(),
       baseUrl,
       empresaId

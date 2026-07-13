@@ -11,6 +11,7 @@ import {
   IXC_FUNCIONARIOS_RESOURCE,
   IXC_RESOURCE,
   IXC_SETOR_RESOURCE,
+  IXC_EVENTO_FINALIZAR,
   OSS_CHAMADO_ACOES,
 } from './constants';
 import {
@@ -471,7 +472,19 @@ export class IxcOssChamadoService {
       const raw = await fetchOsRawById(ixcId);
       if (!raw || Number(raw.id_estrutura) <= 0) return null;
       const [enriched] = await enrichOssChamadosFromIxc([raw], empresaId);
-      return enriched ?? null;
+      if (!enriched) return null;
+
+      if (!String(enriched.mensagem_resposta ?? '').trim()) {
+        const mensagens = await fetchMensagensOs(ixcId);
+        const finalizacao = mensagens.find(
+          (item) => String(item.id_evento) === IXC_EVENTO_FINALIZAR
+        );
+        if (finalizacao?.mensagem?.trim()) {
+          return { ...enriched, mensagem_resposta: finalizacao.mensagem.trim() };
+        }
+      }
+
+      return enriched;
     });
   }
 

@@ -7,7 +7,7 @@ import {
   fetchUsuarioNomeById,
   OrdemServicoLocalService,
 } from '../../ordens/OrdemServicoLocalService';
-import { IXC_EVENTO_ABERTURA } from './constants';
+import { IXC_EVENTO_ABERTURA, IXC_EVENTO_FINALIZAR } from './constants';
 import { parseClienteId } from './ossPayload';
 import type { IxcOssChamado } from './types';
 
@@ -46,7 +46,7 @@ export async function enrichOssChamadosFromIxc(
   );
   const localOrdemIds = [...localByIxcId.values()].map((record) => record.id);
 
-  const [assuntos, estruturas, setores, tecnicos, clientes, aberturas] = await Promise.all([
+  const [assuntos, estruturas, setores, tecnicos, clientes, aberturas, finalizacoes] = await Promise.all([
     OrdemServicoCadastroService.lookupNomesPorReferencias('assunto', assuntoRefs, empresaId),
     OrdemServicoCadastroService.lookupNomesPorReferencias('estrutura', estruturaRefs, empresaId),
     OrdemServicoCadastroService.lookupNomesPorReferencias('setor', setorRefs, empresaId),
@@ -63,6 +63,15 @@ export async function enrichOssChamadosFromIxc(
             ordem_servico_id: { [Op.in]: localOrdemIds },
             id_evento: IXC_EVENTO_ABERTURA,
           },
+        })
+      : [],
+    localOrdemIds.length
+      ? OrdemServicoMensagem.findAll({
+          where: {
+            ordem_servico_id: { [Op.in]: localOrdemIds },
+            id_evento: IXC_EVENTO_FINALIZAR,
+          },
+          order: [['id', 'DESC']],
         })
       : [],
   ]);
@@ -92,10 +101,20 @@ export async function enrichOssChamadosFromIxc(
     if (nome) operadorPorOrdemId.set(abertura.ordem_servico_id, nome);
   }
 
+  const respostaPorOrdemId = new Map<number, string>();
+  for (const finalizacao of finalizacoes) {
+    if (respostaPorOrdemId.has(finalizacao.ordem_servico_id)) continue;
+    const texto = String(finalizacao.mensagem ?? '').trim();
+    if (texto) respostaPorOrdemId.set(finalizacao.ordem_servico_id, texto);
+  }
+
   return registros.map((registro) => {
     const ixcId = String(registro.id ?? '').trim();
     const localRecord = localByIxcId.get(ixcId);
     const clienteId = parseClienteId(registro.idx);
+    const mensagemResposta =
+      String(registro.mensagem_resposta ?? '').trim() ||
+      (localRecord ? respostaPorOrdemId.get(localRecord.id) ?? '' : '');
 
     return {
       ...registro,
@@ -107,6 +126,7 @@ export async function enrichOssChamadosFromIxc(
       protocolo: String(registro.protocolo ?? ''),
       status: String(registro.status ?? ''),
       mensagem: String(registro.mensagem ?? ''),
+      mensagem_resposta: mensagemResposta,
       assunto_nome: resolveCadastroNome(assuntos, registro.id_assunto),
       estrutura_nome: resolveCadastroNome(estruturas, registro.id_estrutura),
       setor_nome: resolveCadastroNome(setores, registro.setor),
