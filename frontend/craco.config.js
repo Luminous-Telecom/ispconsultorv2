@@ -1,3 +1,4 @@
+const path = require('path');
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const ForkTsCheckerWebpackPlugin = require('react-dev-utils/ForkTsCheckerWebpackPlugin');
 const ForkTsCheckerWarningWebpackPlugin = require('react-dev-utils/ForkTsCheckerWarningWebpackPlugin');
@@ -49,6 +50,13 @@ module.exports = {
       '@xterm/addon-web-links$': require.resolve('@xterm/addon-web-links/lib/addon-web-links.js'),
     },
     configure: (webpackConfig, { env }) => {
+      // Espelha tsconfig paths: "*": ["./src/*"] — imports como "components/ui" resolvem em src/
+      const srcPath = path.resolve(__dirname, 'src');
+      webpackConfig.resolve.modules = [
+        srcPath,
+        ...(webpackConfig.resolve.modules || ['node_modules']),
+      ];
+
       webpackConfig.resolve.plugins = webpackConfig.resolve.plugins.filter(
         (plugin) => !(plugin instanceof ModuleScopePlugin)
       );

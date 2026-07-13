@@ -25,6 +25,7 @@ interface EntitySelectFieldBaseProps {
   placeholder?: string;
   error?: string | number;
   required?: boolean;
+  disabled?: boolean;
   idFieldTitle?: string;
   searchButtonTitle?: string;
   helpText?: string;
@@ -60,6 +61,7 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = (props) => {
     label,
     error,
     required = false,
+    disabled = false,
     idFieldTitle,
     searchButtonTitle = 'Abrir listagem de registros',
     helpText,
@@ -118,6 +120,7 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = (props) => {
             className="form-control text-center id-field"
             placeholder={idPlaceholder}
             name={fieldId}
+            disabled={disabled}
             onChange={(e) => handleIdChange(e.target.value)}
             value={props.value ? String(props.value) : ''}
           />
@@ -129,6 +132,7 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = (props) => {
             type="text"
             className="form-control entity-select-input"
             name={`${fieldKey}_nome_field`}
+            disabled={disabled}
             value={selectedNome || ''}
           />
           <IconOnlyButton
@@ -136,6 +140,7 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = (props) => {
             title={searchButtonTitle}
             label={searchButtonTitle}
             className="search-button"
+            disabled={disabled}
           >
             {SEARCH_ICON}
           </IconOnlyButton>

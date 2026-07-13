@@ -189,7 +189,7 @@ const OrdemServicoListModal: React.FC<OrdemServicoListModalProps> = ({
         dropdown: acoesDropdown,
       },
     ];
-  }, [list, handleDelete, imprimirDropdown, acoesDropdown, bulkBtn.imprimir.label, bulkBtn.imprimir.variant]);
+  }, [list, handleDelete, imprimirDropdown, acoesDropdown, bulkBtn.deletar.label, bulkBtn.imprimir.label, bulkBtn.imprimir.variant]);
 
   const pagination = useMemo(
     () => list.buildPagination(ordensData?.pagination),

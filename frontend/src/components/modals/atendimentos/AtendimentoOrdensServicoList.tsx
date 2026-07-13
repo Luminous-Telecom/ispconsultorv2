@@ -108,8 +108,8 @@ const AtendimentoOrdensServicoList: React.FC<AtendimentoOrdensServicoListProps> 
 
     return acoes.map((acao) => ({
       label: acao.label,
-      action: (selectedItems: OrdemServico[]) => {
-        const ordem = resolveItem(selectedItems);
+      action: (selectedItems?: OrdemServico[]) => {
+        const ordem = resolveItem(selectedItems ?? []);
         if (ordem) {
           handleAcao(ordem, acao.key);
         }
@@ -173,7 +173,6 @@ const AtendimentoOrdensServicoList: React.FC<AtendimentoOrdensServicoListProps> 
       handleDelete,
       isNothingSelected,
       resolveItem,
-      selectedItem,
       t,
     ]
   );
