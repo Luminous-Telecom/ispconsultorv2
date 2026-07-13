@@ -164,11 +164,11 @@ O ERP conecta via SSH no servidor do cliente e executa a instalação.
 
 1. Na sub-aba **Instalar Manual**, clique em **Gerar**.
 2. Copie o **Comando de instalação** exibido.
-3. Execute o comando como **root** no servidor do cliente — o script baixa os arquivos do ISP Consultor, monta a imagem localmente e configura Docker Compose em `/opt/ispconsultor-agent`.
+3. Execute o comando como **root** no servidor do cliente — conforme indicado no comando gerado pelo painel.
 4. Feche o modal e verifique na listagem se o agente ficou **Online**.
 
 ::: warning Token sensível
-O comando manual envia o token no header `X-Agent-Token`. Não compartilhe em canais públicos. URLs não abrem no navegador.
+O comando manual inclui o token do agente. Não compartilhe em canais públicos. URLs não abrem no navegador.
 :::
 
 #### Instalar no Windows

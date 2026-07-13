@@ -1,6 +1,6 @@
 # Logs de Auditoria
 
-Registro detalhado de **todas as ações** realizadas no ERP — criação, edição, exclusão e acessos a rotas do sistema. Diferente dos logs por módulo (Usuários, RPKI etc.), este log cobre **qualquer operação** auditável.
+Registro detalhado de **todas as ações** realizadas no ERP — criação, edição, exclusão e acessos ao sistema. Diferente dos logs por módulo (Usuários, RPKI etc.), este log cobre **qualquer operação** auditável.
 
 ::: info Acesso restrito
 Normalmente consultado por administradores para investigação de alterações ou conformidade.
@@ -31,7 +31,7 @@ Tela de consulta (somente leitura) — não cadastra registros manualmente.
 ### Filtros
 
 - **Ação** — tipo de operação (criar, editar, excluir, etc.)
-- **Entidade** — módulo ou tabela afetada
+- **Entidade** — módulo ou registro afetado
 
 ### Busca — campos disponíveis
 

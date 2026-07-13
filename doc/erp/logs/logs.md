@@ -78,7 +78,7 @@ Relacionado a [Servidor Email](/doc/integracoes/servidor-email).
 
 ## Logs Equipamentos {#logs-equipamentos}
 
-Operações e eventos registrados nos equipamentos gerenciados pelo módulo SSH Manager.
+Operações e eventos registrados nos equipamentos cadastrados no ERP.
 
 **Menu:** **Logs → Equipamentos → Logs Equipamentos**
 

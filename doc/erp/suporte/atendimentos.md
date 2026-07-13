@@ -1,6 +1,6 @@
 # Atendimentos
 
-Gestão de **atendimentos** dos clientes com **espelho local** no ERP (`atendimentos`). Quando o cliente tem [IXC Provedor](/doc/integracoes/ixc-provedor) vinculado ao contrato, o registro é sincronizado com o webservice IXC (`su_ticket`).
+Gestão de **atendimentos** dos clientes no ERP. Quando o cliente tem [IXC Provedor](/doc/integracoes/ixc-provedor) vinculado ao contrato, os dados são sincronizados com o IXC; sem IXC, o atendimento fica apenas no ERP.
 
 ## Como acessar
 
@@ -9,17 +9,17 @@ Gestão de **atendimentos** dos clientes com **espelho local** no ERP (`atendime
 3. Clique em **Atendimentos**.
 
 ::: tip Integração IXC (opcional por cliente)
-- **Com IXC no contrato:** o atendimento é gravado localmente e replicado no IXC.
-- **Sem IXC no contrato:** o atendimento fica **somente local** (protocolo `AT` + data + sequência).
+- **Com IXC no contrato:** o atendimento é gravado no ERP e replicado no IXC Provedor.
+- **Sem IXC no contrato:** o atendimento fica **somente no ERP** (protocolo `AT` + data + sequência).
 
-O **Cliente** selecionado no ERP é a chave da integração IXC (credenciais do contrato). O atendimento no IXC é sempre aberto por **estrutura** (`tipo E`), com `id_estrutura` informado no formulário.
+Preencha o campo **Estrutura** no formulário quando o cliente tiver IXC vinculado.
 :::
 
 ---
 
 ## Listagem
 
-A tela segue o padrão de [listagens do ERP](/doc/geral/listagens). A listagem lê os registros da tabela local `atendimentos` (todos os status — Novo, Pendente, Em progresso, Solucionado e Cancelado). Colunas principais: protocolo, assunto, departamento, responsável, status, prioridade e última atualização.
+A tela segue o padrão de [listagens do ERP](/doc/geral/listagens). A listagem exibe todos os atendimentos (Novo, Pendente, Em progresso, Solucionado e Cancelado). Colunas principais: protocolo, assunto, departamento, responsável, status, prioridade e última atualização.
 
 ### Barra de ações
 
@@ -27,8 +27,16 @@ A tela segue o padrão de [listagens do ERP](/doc/geral/listagens). A listagem l
 |-------|--------|
 | **Novo** | Abre um novo atendimento |
 | **Editar** | Altera o atendimento selecionado |
-| **Deletar** | Remove o atendimento (local e IXC, quando houver vínculo) |
+| **Deletar** | Remove o atendimento (no ERP e no IXC, quando houver vínculo) |
 | **Imprimir** | Gera PDF do atendimento selecionado (um registro por vez) |
+| **Ações** | Menu com **Interagir** (nova mensagem + alteração de status) e **Abrir OS** (cria ordem de serviço vinculada sem abrir o formulário do atendimento) |
+
+#### Ações (um atendimento selecionado)
+
+| Opção | Descrição |
+|-------|-----------|
+| **Interagir** | Abre modal para registrar mensagem e alterar o **status** do atendimento (mesmo fluxo do IXC Provedor). Indisponível quando o status é **Solucionado** ou **Cancelado**. |
+| **Abrir OS** | Abre diretamente o formulário de nova ordem de serviço já vinculada ao atendimento (cliente, filial e estrutura pré-preenchidos). Não é necessário editar o atendimento nem ir na aba Ordens de serviço. |
 
 ---
 
@@ -53,9 +61,9 @@ O ERP gera um PDF com **modelo fixo do sistema**: cabeçalho da empresa, dados d
 | Aba | Conteúdo |
 |-----|----------|
 | Principal | Dados principais do chamado |
-| Histórico | Mensagens e interações registradas (local ou IXC conforme origem) |
-| Arquivos | Anexos do atendimento (espelho local) |
-| Ordens de serviço | OS vinculadas no IXC (`id_ticket`) |
+| Histórico | Mensagens e interações registradas |
+| Arquivos | Anexos do atendimento |
+| Ordens de serviço | OS vinculadas a este atendimento |
 
 ---
 
@@ -66,39 +74,39 @@ Os campos exibidos seguem o mesmo critério das [Ordens de Serviço](/doc/suport
 | Situação | Campos visíveis |
 |----------|-----------------|
 | **Sempre** | Cliente |
-| **Cliente com IXC** (ou atendimento já vinculado ao IXC) | Estrutura, filial, descrição do assunto, departamento, técnico, status, prioridade, data reservada, melhor horário e descrição |
+| **Cliente com IXC** (ou atendimento já vinculado ao IXC) | Estrutura, filial, descrição do assunto, departamento, técnico, prioridade, data reservada, melhor horário e descrição |
 | **Cliente sem IXC** | Prioridade, data reservada, melhor horário e descrição (obrigatória) |
+| **Edição** (atendimento já salvo) | **Status** somente leitura — a alteração de status é feita ao **Interagir** (nova mensagem) |
 
 | Campo | Obrigatório | Descrição |
 |-------|:-----------:|-----------|
 | **Estrutura** | Sim | Local / estrutura (sempre visível) |
-| **Protocolo** | — | Gerado localmente (`AT` + ano + mês + sequência); replicado no IXC quando houver integração |
-| **ID** / **ID IXC** | — | ID local e ID IXC (quando sincronizado) |
+| **Protocolo** | — | Gerado automaticamente (`AT` + ano + mês + sequência); replicado no IXC quando houver integração |
+| **ID** / **ID IXC** | — | ID no ERP e ID no IXC (quando sincronizado) |
 | **Filial** | Sim (com IXC) | Filial no IXC |
 | **Descrição do assunto** | Sim (com IXC) | Título resumido |
 | **Departamento** | Sim (com IXC) | Departamento do atendimento |
-| **Colaborador responsável** | Não | Responsável do atendimento (`su_ticket.id_responsavel_tecnico` → `funcionarios.id`); lista filtrada pelo **departamento** selecionado; cache local `atendimentos_tecnicos` (separado dos técnicos de OS). Gravado no IXC via **POST/PUT** em `su_ticket` (campo `id_responsavel_tecnico`). |
+| **Colaborador responsável** | Não | Responsável do atendimento; a lista é filtrada pelo **departamento** selecionado |
 | **Prioridade** | Não | Baixa, Normal, Alta ou Crítica |
 | **Data reservada** | Não | Agenda sugerida |
 | **Melhor horário reserva** | Não | Qualquer, manhã, tarde ou noite |
 | **Descrição** | Sim | Detalhamento do chamado |
-| **Status** | Não | Novo, Pendente, Em progresso, Solucionado, Cancelado — disponível em atendimentos locais (sem IXC) e sincronizados com IXC |
+| **Status** | — | Exibido somente leitura na edição. Para alterar, use **Ações → Interagir** na listagem ou **Interagir** na aba Histórico |
 
 ---
 
 ## Aba Histórico {#aba-historico}
 
-- **Atendimento local (sem IXC):** mensagens gravadas na tabela `atendimentos_mensagens`; o **Operador** é o usuário logado no ERP.
-- **Atendimento com IXC:** mensagens no recurso `su_mensagens` (`id_ticket`).
+Mensagens registradas no ERP (operador = usuário logado) ou sincronizadas do IXC Provedor, conforme a origem do atendimento.
 
 | Ação | Descrição |
 |------|-----------|
-| **Novo** | Registrar mensagem |
+| **Interagir** | Registrar mensagem e alterar o status do atendimento (modal com campos **Status** e **Mensagem**) |
 | **Visualizar** | Modal somente leitura |
-| **Deletar** | Exclui no IXC (com confirmação); local conforme origem |
+| **Deletar** | Exclui a mensagem (com confirmação) |
 
 ::: warning Atendimento solucionado ou cancelado
-Com status **Solucionado** (`S`) ou **Cancelado** (`C`), não é possível registrar nova mensagem. No IXC essa regra também é aplicada pela API.
+Com status **Solucionado** ou **Cancelado**, não é possível registrar nova mensagem.
 :::
 
 ---
@@ -118,23 +126,9 @@ Disponível após salvar o atendimento. Lista os arquivos anexados, com busca po
 
 ## Aba Ordens de serviço {#aba-ordens-de-servico}
 
-Lista as OS vinculadas a este atendimento (local, no IXC, ou ambos), com as mesmas colunas e ações da listagem global. O botão **Novo** cria a OS já vinculada ao atendimento atual.
+Lista as OS vinculadas a este atendimento, com as mesmas colunas e ações da listagem global. O botão **Novo** cria a OS já vinculada ao atendimento atual.
 
-O vínculo é gravado no espelho local da OS (`ordens_servico.atendimento_id`) e, quando o atendimento está sincronizado com o IXC, também no ticket (`su_oss_chamado.id_ticket` = `su_ticket.id` do atendimento). Um atendimento local sem IXC também pode ter OS vinculadas — nesse caso a lista usa só o espelho local.
-
----
-
-## Relação com IXC
-
-| Recurso | Uso |
-|---------|-----|
-| Tabela `atendimentos` | Espelho local (listagem e atendimentos sem IXC) |
-| `su_ticket` | Sincronização quando o cliente tem integração |
-| `su_mensagens` | Mensagens (IXC) |
-| `su_transf_atendimento` | Fallback de assunção/transferência de colaborador ou departamento |
-| `su_ticket_setor` | Departamentos de atendimento (cache local `atendimentos_departamentos`) |
-| `funcionarios` | Responsáveis do atendimento (cache local `atendimentos_tecnicos`; filtro por departamento) |
-| `su_oss_chamado` | OS vinculadas (`id_ticket`); espelho local também guarda `atendimento_id`, `atendimento_ixc_id` e `integracao_ixc_provedor_id` |
+Atendimentos sem IXC também podem ter OS vinculadas no ERP.
 
 Consulte também [IXC Provedor](/doc/integracoes/ixc-provedor) e [Ordens de Serviço](/doc/suporte/ordens-de-servico).
 

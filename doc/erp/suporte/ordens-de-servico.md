@@ -149,7 +149,7 @@ Com uma OS selecionada, use o menu **Ações**:
 | **Registrar mensagem** | Adiciona interação ao histórico |
 
 ::: warning Reabrir no IXC Phoenix
-Em alguns tenants IXC (ex.: Phoenix/Fenix), o ERP exibe a ação **Reabrir** e envia a requisição corretamente, mas o IXC pode responder *"Não é possível prosseguir, esta O.S. já foi finalizada."* — limitação ou permissão do IXC do cliente, não falha de sincronização do ERP. Nesse caso a OS permanece **Finalizada** no IXC e no espelho local.
+Em alguns painéis IXC (ex.: Phoenix/Fenix), a ação **Reabrir** pode não ser aceita pelo IXC do cliente — a mensagem *"Não é possível prosseguir, esta O.S. já foi finalizada."* indica limitação do IXC, não falha do ERP. Nesse caso a OS permanece **Finalizada**.
 :::
 
 ::: tip OS local vs. IXC

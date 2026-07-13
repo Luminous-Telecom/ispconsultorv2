@@ -26,7 +26,7 @@ Integração Typebot: [Typebot](/doc/integracoes/typebot).
 
 Header em todas: `Authorization: Bearer SEU_TOKEN`
 
-Prefixos permitidos pelo backend:
+Rotas disponíveis com token de API:
 
 - `/api/clientes`
 - `/api/contratos`

@@ -87,22 +87,24 @@ O print acima ilustra o padrão: **Acesso** e **Menu** podem ficar **Bloqueado**
 
 Estes recursos são conferidos em **Integrações → IXC Provedor → Verificar permissões**:
 
-| Cadastro (Verificar permissões) | Formulário no IXC (busca) | Listar | Novo | Alterar | Deletar |
-|---------------------------------|---------------------------|:------:|:----:|:-------:|:-------:|
-| **Filiais** | Filiais | Sim | — | — | — |
-| **Setores** | Setores / `empresa_setor` | Sim | — | — | — |
-| **Colaboradores** | Colaboradores / `funcionarios` | Sim | — | — | — |
-| **Assuntos** | Assuntos OS / `su_oss_assunto` | Sim | — | — | — |
-| **Estruturas** | Estruturas | Sim | — | — | — |
-| **Cidades** | Cidades | Sim | — | — | — |
-| **Ordens de serviço** | Ordens de serviço / `su_oss_chamado` | Sim | Sim | Sim | — |
-| **Mensagens** | Mensagens OS / `su_oss_chamado_mensagem` | Sim | Sim | Sim | Sim |
+| Cadastro (Verificar permissões) | Listar | Novo | Alterar | Deletar |
+|---------------------------------|:------:|:----:|:-------:|:-------:|
+| **Filiais** | Sim | — | — | — |
+| **Setores** | Sim | — | — | — |
+| **Colaboradores** | Sim | — | — | — |
+| **Assuntos** | Sim | — | — | — |
+| **Estruturas** | Sim | — | — | — |
+| **Cidades** | Sim | — | — | — |
+| **Ordens de serviço** | Sim | Sim | Sim | — |
+| **Mensagens** | Sim | Sim | Sim | Sim |
+
+No IXC, busque cada cadastro pelo nome amigável indicado na coluna **Cadastro** (ex.: *Filiais*, *Setores*, *Colaboradores*).
 
 #### Cadastros complementares (conforme uso)
 
-| Formulário no IXC | Quando liberar |
-|-------------------|----------------|
-| **Alterar setor OS** (`su_oss_chamado_alterar_setor`) | Encaminhar e agendar OS pelo ERP |
+| Cadastro no IXC | Quando liberar |
+|-----------------|----------------|
+| **Alterar setor OS** | Encaminhar e agendar OS pelo ERP |
 | **Setor × Assunto**, **Funcionário × Setores** | Quando **Setores**, **Colaboradores** ou **Assuntos** retornarem **Dados** abaixo do esperado |
 
 ::: warning Ajuste conforme a operação
