@@ -9,8 +9,11 @@ import { resolveApiOperadorContext } from '../IxcOssChamadoService/ossUsuarioCon
 import {
   ATENDIMENTO_DEFAULTS,
   applyAtendimentoTipoEstrutura,
+  applyResponsavelToIxcBody,
   IXC_ATENDIMENTO_RESOURCE,
+  IXC_CAMPO_RESPONSAVEL_TECNICO,
   IXC_TRANSFERENCIA_RESOURCE,
+  readResponsavelFromIxcRegistro,
 } from './constants';
 import type { AtendimentoInput, IxcActionResponse } from './types';
 
@@ -70,6 +73,11 @@ function buildAcaoAtendimentoBody(
 
   applyAtendimentoTipoEstrutura(body);
 
+  applyResponsavelToIxcBody(
+    body,
+    body.id_responsavel_technico ?? payload.id_responsavel_technico
+  );
+
   for (const [campo, valorPadrao] of Object.entries(ATENDIMENTO_DEFAULTS)) {
     const valor = String(body[campo] ?? '').trim();
     if (!valor) {
@@ -96,8 +104,8 @@ async function postTransferenciaAtendimento(body: Record<string, string>): Promi
 }
 
 /**
- * No IXC, assumir/transferir o colaborador responsável grava em `su_transf_atendimento`
- * (campo `id_responsavel_tecnico`), não em PUT direto de `su_ticket`.
+ * Fallback: assumir/transferir colaborador ou departamento via `su_transf_atendimento`
+ * quando o PUT direto em `su_ticket` não aplicar a alteração.
  */
 async function executarAssumirAtendimento(
   ixcId: string,
@@ -208,14 +216,14 @@ export function deveSincronizarResponsavelNoIxc(
   mudouDepartamento: boolean;
 } {
   const responsavelAlvo = normalizeIxcId(
-    payload.id_responsavel_technico ?? body.id_responsavel_technico
+    payload.id_responsavel_technico ??
+      body.id_responsavel_technico ??
+      body[IXC_CAMPO_RESPONSAVEL_TECNICO]
   );
   const departamentoAlvo = normalizeIxcId(payload.id_ticket_setor ?? body.id_ticket_setor);
 
   const atualVeioDoIxc = options.atualVeioDoIxc !== false;
-  const responsavelAtual = atualVeioDoIxc
-    ? normalizeIxcId(atual.id_responsavel_technico)
-    : '';
+  const responsavelAtual = atualVeioDoIxc ? normalizeIxcId(readResponsavelFromIxcRegistro(atual)) : '';
   const departamentoAtual = atualVeioDoIxc ? normalizeIxcId(atual.id_ticket_setor) : '';
 
   const mudouResponsavel = Boolean(responsavelAlvo && responsavelAlvo !== responsavelAtual);
@@ -230,8 +238,8 @@ export function deveSincronizarResponsavelNoIxc(
 }
 
 /**
- * No IXC, colaborador responsável exige workflow Assumir + Transferir (`su_transf_atendimento`),
- * não apenas edição de `su_ticket`.
+ * Fallback de sincronização via `su_transf_atendimento` (depto/responsável).
+ * Colaborador responsável em atendimentos deve ir em POST/PUT `su_ticket.id_responsavel_tecnico`.
  */
 export async function syncResponsavelEDepartamentoNoIxc(
   ixcId: string,

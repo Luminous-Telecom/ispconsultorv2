@@ -108,7 +108,7 @@ const AtendimentoListModal: React.FC<AtendimentoListModalProps> = ({
       },
       {
         key: 'id_responsavel_technico',
-        label: 'Técnico',
+        label: 'Colaborador responsável',
         sortable: true,
         width: '140px',
         render: (item) => <span>{item.responsavel_nome || '-'}</span>,

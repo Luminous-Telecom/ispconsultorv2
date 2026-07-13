@@ -34,12 +34,16 @@ import { resolveApiOperadorContext } from '../IxcOssChamadoService/ossUsuarioCon
 import {
   ATENDIMENTO_DEFAULTS,
   applyAtendimentoTipoEstrutura,
+  applyResponsavelToIxcBody,
   CAMPOS_AUTOGERADOS,
   CAMPOS_ENRIQUECIDOS,
   IXC_ATENDIMENTO_RESOURCE,
   IXC_DEPARTAMENTO_RESOURCE,
   IXC_MENSAGEM_RESOURCE,
   IXC_OSS_RESOURCE,
+  mapErpCampoToIxcQuery,
+  normalizeIxcTicketRegistro,
+  readResponsavelFromIxcRegistro,
 } from './constants';
 import { generateAtendimentoProtocolo } from './atendimentoProtocolo';
 import { syncResponsavelEDepartamentoNoIxc } from './atendimentoAcoes';
@@ -132,7 +136,7 @@ async function enrichAtendimento(registro: Record<string, string>): Promise<IxcA
   const idEstrutura = String(registro.id_estrutura ?? '');
   const idAssunto = String(registro.id_assunto ?? '');
   const idDepartamento = String(registro.id_ticket_setor ?? '');
-  const idResponsavel = String(registro.id_responsavel_technico ?? '');
+  const idResponsavel = readResponsavelFromIxcRegistro(registro);
 
   const [filiais, estruturas, assuntos, departamentos, responsaveis] = await Promise.all([
     fetchNomeMap(IXC_FILIAL_RESOURCE, [idFilial], ['fantasia', 'razao']),
@@ -198,13 +202,16 @@ async function listRaw(
   const primaryValue = idLookup || '0';
   const primaryOper = idLookup ? '=' : '>';
 
+  const sortColumnIxc = mapErpCampoToIxcQuery(sortColumn);
+  const searchFieldIxc = mapErpCampoToIxcQuery(searchField);
+
   const body: Record<string, string> = {
     qtype: `${resource}.${primaryField}`,
     query: primaryValue,
     oper: primaryOper,
     page: String(page),
     rp: String(limit),
-    sortname: `${resource}.${sortColumn}`,
+    sortname: `${resource}.${sortColumnIxc}`,
     sortorder: sortDirection,
   };
 
@@ -230,7 +237,7 @@ async function listRaw(
   }
   if (search) {
     gridFilters.push({
-      TB: `${resource}.${searchField}`,
+      TB: `${resource}.${searchFieldIxc}`,
       OP: 'L',
       P: search,
       C: 'AND',
@@ -320,7 +327,7 @@ async function fetchTicketRegistroById(id: string | number): Promise<Record<stri
     { id: idStr }
   );
   if (direto[0] && String(direto[0].id) === idStr) {
-    return direto[0];
+    return normalizeIxcTicketRegistro(direto[0]);
   }
 
   const deptoIds = await resolveTicketDepartamentoIdsDoOperador();
@@ -334,7 +341,8 @@ async function fetchTicketRegistroById(id: string | number): Promise<Record<stri
     buildDepartamentoGridOrFilters(deptoIds)
   );
 
-  return registros.find((registro) => String(registro.id) === idStr) ?? null;
+  const found = registros.find((registro) => String(registro.id) === idStr);
+  return found ? normalizeIxcTicketRegistro(found) : null;
 }
 
 function buildTicketRegistroFromLocal(record: AtendimentoLocal): Record<string, string> {
@@ -415,13 +423,7 @@ export class IxcAtendimentoService {
 
     applyAtendimentoTipoEstrutura(body);
 
-    const responsavel = String(body.id_responsavel_technico ?? '').trim();
-    if (!responsavel || responsavel === '0') {
-      const { funcionarioId } = await resolveApiOperadorContext();
-      if (funcionarioId) {
-        body.id_responsavel_technico = funcionarioId;
-      }
-    }
+    applyResponsavelToIxcBody(body, payload.id_responsavel_technico);
 
     const operadorId = resolveOperadorId();
     if (operadorId) {
@@ -449,7 +451,7 @@ export class IxcAtendimentoService {
     const valido = itens.some((item) => String(item.id) === responsavelId);
     if (!valido) {
       throw new Error(
-        'O colaborador selecionado não está vinculado ao departamento de atendimento no IXC. Escolha um técnico da lista do departamento.'
+        'O colaborador selecionado não está vinculado ao departamento de atendimento no IXC. Escolha um colaborador da lista do departamento.'
       );
     }
   }
@@ -549,34 +551,16 @@ export class IxcAtendimentoService {
             su_status: String(body.su_status ?? 'N'),
           });
 
-          const ticket = await fetchTicketRegistroById(ixcId);
-          if (ticket) {
-            await syncResponsavelEDepartamentoNoIxc(ixcId, ticket, payload, body, {
-              atualVeioDoIxc: true,
-            });
-            const ticketAtualizado =
-              (await resolveTicketRegistroForSync(ixcId, record)) ?? ticket;
-            await AtendimentoLocalService.syncFromIxcTicket(
-              ixcId,
-              ticketAtualizado,
-              empresaId,
-              body
-            );
-          } else {
-            await syncResponsavelEDepartamentoNoIxc(
-              ixcId,
-              buildTicketRegistroFromLocal(record),
-              payload,
-              body,
-              { atualVeioDoIxc: false }
-            );
-            await AtendimentoLocalService.syncFromIxcTicket(
-              ixcId,
-              buildTicketRegistroFromLocal(record),
-              empresaId,
-              body
-            );
-          }
+          const ticketAtualizado =
+            (await resolveTicketRegistroForSync(ixcId, record)) ??
+            (await fetchTicketRegistroById(ixcId)) ??
+            buildTicketRegistroFromLocal(record);
+          await AtendimentoLocalService.syncFromIxcTicket(
+            ixcId,
+            ticketAtualizado,
+            empresaId,
+            payload
+          );
 
           return {
             type: 'success',
@@ -637,10 +621,7 @@ export class IxcAtendimentoService {
 
         applyAtendimentoTipoEstrutura(body);
 
-        const responsavelEnviado = String(payload.id_responsavel_technico ?? '').trim();
-        if (responsavelEnviado && responsavelEnviado !== '0') {
-          body.id_responsavel_technico = responsavelEnviado;
-        }
+        applyResponsavelToIxcBody(body, payload.id_responsavel_technico);
 
         try {
           const response = await createIxcClient().request<IxcActionResponse>({

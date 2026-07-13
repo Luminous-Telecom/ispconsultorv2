@@ -221,7 +221,7 @@ const AtendimentoFormFields: React.FC<AtendimentoFormFieldsProps> = ({
           <div className="col-12">
             <EntitySelectField
               stringIdMode
-              label="Técnico"
+              label="Colaborador responsável"
               value={form.id_responsavel_technico}
               onChange={(v) => onChange('id_responsavel_technico', v)}
               onShowModal={onShowResponsavelModal}
@@ -230,9 +230,9 @@ const AtendimentoFormFields: React.FC<AtendimentoFormFieldsProps> = ({
                   ? [{ id: form.id_responsavel_technico, nome: responsavelNome }]
                   : []
               }
-              idFieldTitle="ID do técnico"
+              idFieldTitle="ID do colaborador responsável"
               idPlaceholder="ID"
-              searchButtonTitle="Buscar técnico"
+              searchButtonTitle="Buscar colaborador responsável"
             />
           </div>
           <div className="col-12">

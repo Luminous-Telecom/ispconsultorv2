@@ -69,7 +69,7 @@ Os campos exibidos seguem o mesmo critério das [Ordens de Serviço](/doc/suport
 | **Filial** | Sim (com IXC) | Filial no IXC |
 | **Descrição do assunto** | Sim (com IXC) | Título resumido |
 | **Departamento** | Sim (com IXC) | Departamento do atendimento |
-| **Técnico** | Não | Responsável do atendimento (`su_ticket.id_responsavel_technico`); lista filtrada pelo **departamento** selecionado; cache local `atendimentos_tecnicos` (separado dos técnicos de OS). No IXC, a atribuição grava em **Transferência de atendimento** (`POST su_transf_atendimento`, campo `id_responsavel_tecnico`), após assumir o ticket — não por edição direta de `su_ticket`. |
+| **Colaborador responsável** | Não | Responsável do atendimento (`su_ticket.id_responsavel_tecnico` → `funcionarios.id`); lista filtrada pelo **departamento** selecionado; cache local `atendimentos_tecnicos` (separado dos técnicos de OS). Gravado no IXC via **POST/PUT** em `su_ticket` (campo `id_responsavel_tecnico`). |
 | **Prioridade** | Não | Baixa, Normal, Alta ou Crítica |
 | **Data reservada** | Não | Agenda sugerida |
 | **Melhor horário reserva** | Não | Qualquer, manhã, tarde ou noite |
@@ -123,7 +123,7 @@ O vínculo é gravado no espelho local da OS (`ordens_servico.atendimento_id`) e
 | Tabela `atendimentos` | Espelho local (listagem e atendimentos sem IXC) |
 | `su_ticket` | Sincronização quando o cliente tem integração |
 | `su_mensagens` | Mensagens (IXC) |
-| `su_transf_atendimento` | Assunção e transferência de colaborador/departamento |
+| `su_transf_atendimento` | Fallback de assunção/transferência de colaborador ou departamento |
 | `su_ticket_setor` | Departamentos de atendimento (cache local `atendimentos_departamentos`) |
 | `funcionarios` | Responsáveis do atendimento (cache local `atendimentos_tecnicos`; filtro por departamento) |
 | `su_oss_chamado` | OS vinculadas (`id_ticket`); espelho local também guarda `atendimento_id`, `atendimento_ixc_id` e `integracao_ixc_provedor_id` |

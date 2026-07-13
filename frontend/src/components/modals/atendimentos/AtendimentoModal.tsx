@@ -546,8 +546,8 @@ const AtendimentoModal: React.FC<AtendimentoModalProps> = ({
           handleChange('id_responsavel_technico', item.id);
           setResponsavelNome(item.nome);
         }}
-        title="Técnico"
-        nomeLabel="Técnico"
+        title="Colaborador responsável"
+        nomeLabel="Colaborador responsável"
         useData={useTecnicosAtendimento}
       />
     </>
