@@ -142,12 +142,15 @@ export class IxcAtendimentoController {
         sendValidationError(res, 'Informe a mensagem');
         return;
       }
+      const suStatus =
+        req.body?.su_status != null ? String(req.body.su_status).trim() || undefined : undefined;
       const resultado = await IxcAtendimentoService.createMensagem(
         id,
         mensagem,
         empresaId,
         clienteId,
-        getUsuarioIdOrNull(req)
+        getUsuarioIdOrNull(req),
+        suStatus
       );
       sendSuccess(res, resultado, 'Mensagem registrada com sucesso', 201);
     } catch (error) {

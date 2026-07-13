@@ -115,13 +115,17 @@ export const useCreateAtendimentoMensagem = () => {
       id,
       mensagem,
       clienteId,
+      su_status,
     }: {
       id: number | string;
       mensagem: string;
       clienteId?: number;
-    }) => AtendimentoService.createMensagem(id, mensagem, clienteId),
+      su_status?: string;
+    }) => AtendimentoService.createMensagem(id, mensagem, clienteId, su_status),
     onSuccess: async (_data, { id, clienteId }) => {
       await queryClient.invalidateQueries({ queryKey: ['atendimento-mensagens', id, clienteId] });
+      await queryClient.invalidateQueries({ queryKey: ['atendimento', id] });
+      await invalidateAtendimentos(queryClient);
       success('Mensagem registrada com sucesso');
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.ATENDIMENTO_MENSAGEM_ERROR),

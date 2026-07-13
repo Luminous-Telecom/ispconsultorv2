@@ -6,6 +6,8 @@ import { ListModalConfig } from 'types/modal';
 import type { Atendimento } from 'services/atendimentoService';
 import { AtendimentoService } from 'services/atendimentoService';
 import AtendimentoModal from './AtendimentoModal';
+import AtendimentoInteragirModal from './AtendimentoInteragirModal';
+import OrdemServicoModal from 'components/modals/ordens-servico/OrdemServicoModal';
 import ImprimirModal from 'components/common/ImprimirModal';
 import { useImpressaoSuporteDocumento } from 'hooks/useImpressaoSuporteDocumento';
 import { useBulkBtn } from 'components/ui';
@@ -17,6 +19,12 @@ import {
   getAtendimentoStatusBadgeConfig,
   ATENDIMENTO_STATUS_BADGE_LABELS,
 } from './atendimentoStatusBadges';
+import {
+  ATENDIMENTO_ACOES,
+  isAtendimentoInteracaoBloqueada,
+  resolveAtendimentoId,
+  type AtendimentoAcao,
+} from './atendimentoAcoes';
 import { renderStatusBadge } from 'components/ui/StatusBadge';
 import { formatIxcData } from 'utils/ixcDateTime';
 
@@ -42,6 +50,8 @@ const AtendimentoListModal: React.FC<AtendimentoListModalProps> = ({
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingId, setEditingId] = useState<number | string | null>(null);
   const [editingClienteId, setEditingClienteId] = useState<number | undefined>();
+  const [interagirAtendimento, setInteragirAtendimento] = useState<Atendimento | null>(null);
+  const [osAtendimento, setOsAtendimento] = useState<Atendimento | null>(null);
 
   const list = useEntityListModal<Atendimento>({
     onClose,
@@ -91,6 +101,17 @@ const AtendimentoListModal: React.FC<AtendimentoListModalProps> = ({
     },
     [deleteMutation]
   );
+
+  const handleAcao = useCallback((atendimento: Atendimento, acao: AtendimentoAcao) => {
+    if (acao === 'interagir') {
+      if (isAtendimentoInteracaoBloqueada(atendimento.su_status)) return;
+      setInteragirAtendimento(atendimento);
+      return;
+    }
+    if (acao === 'abrir_os') {
+      setOsAtendimento(atendimento);
+    }
+  }, []);
 
   const columns = useMemo(
     (): ListModalConfig<Atendimento>['columns'] => [
@@ -186,6 +207,25 @@ const AtendimentoListModal: React.FC<AtendimentoListModalProps> = ({
     []
   );
 
+  const acoesDropdown = useMemo(() => {
+    return ATENDIMENTO_ACOES.map((acao) => ({
+      label: acao.label,
+      action: (selectedItems?: Atendimento[]) => {
+        const atendimento = list.resolveItem(selectedItems ?? []);
+        if (atendimento) {
+          handleAcao(atendimento, acao.key);
+        }
+      },
+      disabled:
+        acao.key === 'interagir'
+          ? (selectedItems?: Atendimento[]) => {
+              const atendimento = list.resolveItem(selectedItems ?? []);
+              return !atendimento || isAtendimentoInteracaoBloqueada(atendimento.su_status);
+            }
+          : undefined,
+    }));
+  }, [handleAcao, list]);
+
   const bulkActions = useMemo(() => {
     const crudActions = list.buildCrudBulkActions({
       onNew: () => {
@@ -213,13 +253,29 @@ const AtendimentoListModal: React.FC<AtendimentoListModalProps> = ({
         disabled: (selectedItems: Atendimento[]) => selectedItems.length !== 1,
         action: handleImprimir,
       },
+      {
+        label: 'Ações',
+        variant: 'primary' as const,
+        disabled: (selectedItems: Atendimento[]) => selectedItems.length !== 1,
+        dropdown: acoesDropdown,
+      },
     ];
-  }, [list, handleDelete, handleImprimir, bulkBtn.imprimir.label, bulkBtn.imprimir.variant]);
+  }, [list, handleDelete, handleImprimir, acoesDropdown, bulkBtn.imprimir.label, bulkBtn.imprimir.variant]);
 
   const pagination = useMemo(
     () => list.buildPagination(atendimentosData?.pagination),
     [list, atendimentosData?.pagination]
   );
+
+  const osAtendimentoId = osAtendimento ? resolveAtendimentoId(osAtendimento) : null;
+  const osClienteId =
+    osAtendimento?.cliente_id != null ? Number(osAtendimento.cliente_id) : undefined;
+  const osIxcTicketId = useMemo(() => {
+    if (!osAtendimento) return '';
+    const ixcId = String(osAtendimento.ixc_id ?? '').trim();
+    if (ixcId) return ixcId;
+    return osAtendimentoId != null ? String(osAtendimentoId) : '';
+  }, [osAtendimento, osAtendimentoId]);
 
   return (
     <>
@@ -269,6 +325,45 @@ const AtendimentoListModal: React.FC<AtendimentoListModalProps> = ({
           }}
         />
       )}
+
+      {interagirAtendimento ? (
+        <AtendimentoInteragirModal
+          show={!!interagirAtendimento}
+          onClose={() => setInteragirAtendimento(null)}
+          atendimentoId={resolveAtendimentoId(interagirAtendimento)}
+          clienteId={
+            interagirAtendimento.cliente_id != null
+              ? Number(interagirAtendimento.cliente_id)
+              : undefined
+          }
+          statusAtual={String(interagirAtendimento.su_status ?? 'N')}
+          onSuccess={() => {
+            void refetch();
+          }}
+        />
+      ) : null}
+
+      {osAtendimento && osAtendimentoId != null ? (
+        <OrdemServicoModal
+          show={!!osAtendimento}
+          onClose={() => setOsAtendimento(null)}
+          ordemServicoId={null}
+          initialClienteId={osClienteId && osClienteId > 0 ? osClienteId : undefined}
+          initialClienteNome={String(osAtendimento.cliente_nome ?? '')}
+          initialAtendimentoId={osAtendimentoId}
+          initialIdTicket={osIxcTicketId || String(osAtendimentoId)}
+          initialAtendimentoPrefill={{
+            id_filial: String(osAtendimento.id_filial ?? ''),
+            id_estrutura: String(osAtendimento.id_estrutura ?? ''),
+            filial_nome: String(osAtendimento.filial_nome ?? ''),
+            estrutura_nome: String(osAtendimento.estrutura_nome ?? ''),
+          }}
+          onSuccess={() => {
+            setOsAtendimento(null);
+            void refetch();
+          }}
+        />
+      ) : null}
 
       <ImprimirModal
         show={impressaoAtendimento.showModal}

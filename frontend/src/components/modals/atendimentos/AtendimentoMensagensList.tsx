@@ -1,30 +1,32 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
-import DraggableModal from 'components/common/DraggableModal';
-import { FormField, ModalFormActions, useBulkBtn } from 'components/ui';
+import { useBulkBtn } from 'components/ui';
 import type { TableConfig } from 'components/tables/types';
 import { useTableFilters } from 'hooks/useTableFilters';
 import {
   useAtendimentoMensagens,
-  useCreateAtendimentoMensagem,
   useDeleteAtendimentoMensagem,
 } from 'hooks/useAtendimentos';
 import type { AtendimentoMensagem } from 'services/atendimentoService';
 import { formatIxcData } from 'utils/ixcDateTime';
 import AtendimentoMensagemDetalhesModal from './AtendimentoMensagemDetalhesModal';
+import AtendimentoInteragirModal from './AtendimentoInteragirModal';
+import { isAtendimentoInteracaoBloqueada } from './atendimentoAcoes';
 
 interface AtendimentoMensagensListProps {
   atendimentoId: number | string;
   clienteId?: number;
   suStatus?: string;
+  onStatusChanged?: () => void;
 }
 
 const AtendimentoMensagensList: React.FC<AtendimentoMensagensListProps> = ({
   atendimentoId,
   clienteId,
   suStatus,
+  onStatusChanged,
 }) => {
-  const mensagensBloqueadas = suStatus === 'S' || suStatus === 'C';
+  const mensagensBloqueadas = isAtendimentoInteracaoBloqueada(suStatus);
   const bulkBtn = useBulkBtn();
   const tableFilters = useTableFilters({
     initialSortColumn: 'data',
@@ -37,13 +39,11 @@ const AtendimentoMensagensList: React.FC<AtendimentoMensagensListProps> = ({
     clienteId,
     true
   );
-  const createMutation = useCreateAtendimentoMensagem();
   const deleteMutation = useDeleteAtendimentoMensagem();
 
   const [, setSelectedItems] = useState<AtendimentoMensagem[]>([]);
-  const [showNovaMensagem, setShowNovaMensagem] = useState(false);
+  const [showInteragir, setShowInteragir] = useState(false);
   const [previewMensagem, setPreviewMensagem] = useState<AtendimentoMensagem | null>(null);
-  const [mensagem, setMensagem] = useState('');
 
   const columns = useMemo(
     (): TableConfig<AtendimentoMensagem>['columns'] => [
@@ -76,25 +76,6 @@ const AtendimentoMensagensList: React.FC<AtendimentoMensagensListProps> = ({
     []
   );
 
-  const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!mensagem.trim() || mensagensBloqueadas) return;
-
-      createMutation.mutate(
-        { id: atendimentoId, mensagem: mensagem.trim(), clienteId },
-        {
-          onSuccess: () => {
-            setMensagem('');
-            setShowNovaMensagem(false);
-            void refetch();
-          },
-        }
-      );
-    },
-    [atendimentoId, clienteId, createMutation, mensagem, mensagensBloqueadas, refetch]
-  );
-
   const handleDelete = useCallback(
     async (items: AtendimentoMensagem[]) => {
       if (items.length === 0) return;
@@ -125,12 +106,12 @@ const AtendimentoMensagensList: React.FC<AtendimentoMensagensListProps> = ({
   const bulkActions = useMemo(
     () => [
       {
-        key: 'novo',
-        label: bulkBtn.novo.label,
+        key: 'interagir',
+        label: 'Interagir',
         variant: bulkBtn.novo.variant,
         requiresSelection: false,
         disabled: () => mensagensBloqueadas,
-        onClick: () => setShowNovaMensagem(true),
+        onClick: () => setShowInteragir(true),
       },
       {
         key: 'visualizar',
@@ -152,6 +133,11 @@ const AtendimentoMensagensList: React.FC<AtendimentoMensagensListProps> = ({
     ],
     [bulkBtn, deleteMutation.isPending, handleDelete, mensagensBloqueadas]
   );
+
+  const handleInteragirSuccess = useCallback(() => {
+    void refetch();
+    onStatusChanged?.();
+  }, [onStatusChanged, refetch]);
 
   return (
     <>
@@ -202,41 +188,14 @@ const AtendimentoMensagensList: React.FC<AtendimentoMensagensListProps> = ({
         onSelectionChange={setSelectedItems}
       />
 
-      <DraggableModal
-        show={showNovaMensagem}
-        onClose={() => setShowNovaMensagem(false)}
-        title="Nova mensagem"
-        size="md"
-        modalId="atendimento-nova-mensagem-modal"
-        headerActions={
-          <ModalFormActions
-            onCancel={() => setShowNovaMensagem(false)}
-            formId="atendimento-nova-mensagem-form"
-            isPending={createMutation.isPending}
-          />
-        }
-      >
-        <form
-          id="atendimento-nova-mensagem-form"
-          onSubmit={handleSubmit}
-          className="form-modal-simple"
-        >
-          <div className="row g-2">
-            <div className="col-12">
-              <FormField
-                name="mensagem"
-                type="textarea"
-                label="Mensagem"
-                required
-                value={mensagem}
-                onChange={(v) => setMensagem(String(v ?? ''))}
-                rows={5}
-                size="sm"
-              />
-            </div>
-          </div>
-        </form>
-      </DraggableModal>
+      <AtendimentoInteragirModal
+        show={showInteragir}
+        onClose={() => setShowInteragir(false)}
+        atendimentoId={atendimentoId}
+        clienteId={clienteId}
+        statusAtual={String(suStatus ?? 'N')}
+        onSuccess={handleInteragirSuccess}
+      />
 
       <AtendimentoMensagemDetalhesModal
         show={previewMensagem != null}

@@ -67,7 +67,7 @@ interface AtendimentoFormFieldsProps {
   ixcId?: string;
   ultimaAtualizacao?: string;
   showIxcFields?: boolean;
-  showStatusField?: boolean;
+  statusAtual?: string;
   showAgendaFields?: boolean;
   mensagemRequired?: boolean;
   onShowClienteModal?: () => void;
@@ -95,7 +95,7 @@ const AtendimentoFormFields: React.FC<AtendimentoFormFieldsProps> = ({
   ixcId = '',
   ultimaAtualizacao = '',
   showIxcFields = true,
-  showStatusField = false,
+  statusAtual,
   showAgendaFields = true,
   mensagemRequired = false,
   onShowClienteModal,
@@ -239,17 +239,19 @@ const AtendimentoFormFields: React.FC<AtendimentoFormFieldsProps> = ({
           </div>
         </>
       ) : null}
-      {showStatusField ? (
+      {statusAtual ? (
         <div className="col-12">
           <FormField
             name="su_status"
-            type="select"
+            type="text"
             label="Status"
-            value={form.su_status}
-            onChange={(v) => onChange('su_status', String(v ?? 'N'))}
-            options={STATUS_ATENDIMENTO_OPTIONS}
+            value={
+              STATUS_ATENDIMENTO_OPTIONS.find((o) => o.value === statusAtual)?.label || statusAtual
+            }
+            onChange={() => undefined}
             size="sm"
-            disabled={disabled}
+            readOnly
+            disabled
           />
         </div>
       ) : null}

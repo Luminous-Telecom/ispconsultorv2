@@ -99,7 +99,7 @@ const AtendimentoModal: React.FC<AtendimentoModalProps> = ({
   const [showResponsavelModal, setShowResponsavelModal] = useState(false);
   const [activeTab, setActiveTab] = useState<AtendimentoTab>('principal');
 
-  const { data: atendimentoData, isLoading: isLoadingAtendimento } = useAtendimento(
+  const { data: atendimentoData, isLoading: isLoadingAtendimento, refetch: refetchAtendimento } = useAtendimento(
     resolvedAtendimentoId,
     clienteId || clienteIdInicial || undefined,
     show && isPersisted
@@ -267,8 +267,6 @@ const AtendimentoModal: React.FC<AtendimentoModalProps> = ({
   };
 
   const showIxcFields = isAtendimentoIxcRecord || clienteComIntegracaoIxc;
-  const showStatusField =
-    showIxcFields || isAtendimentoLocalRecord || clienteSemIntegracaoIxc;
   const showAgendaFields =
     isAtendimentoIxcRecord ||
     isAtendimentoLocalRecord ||
@@ -282,7 +280,6 @@ const AtendimentoModal: React.FC<AtendimentoModalProps> = ({
       melhor_horario_reserve: formData.melhor_horario_reserve,
       data_reservada: datetimeLocalToIxc(formData.data_reservada),
       menssagem: formData.menssagem,
-      ...(showStatusField ? { su_status: formData.su_status } : {}),
     };
 
     if (!showIxcFields) return base;
@@ -365,7 +362,7 @@ const AtendimentoModal: React.FC<AtendimentoModalProps> = ({
         isPersisted ? formatIxcData(String(atendimentoData?.ultima_atualizacao ?? '')) : ''
       }
       showIxcFields={showIxcFields}
-      showStatusField={showStatusField}
+      statusAtual={isPersisted ? String(atendimentoData?.su_status ?? formData.su_status ?? '') : undefined}
       showAgendaFields={showAgendaFields}
       mensagemRequired={isAtendimentoLocalRecord || clienteSemIntegracaoIxc || showIxcFields}
       onShowClienteModal={() => setShowClienteModal(true)}
@@ -399,6 +396,9 @@ const AtendimentoModal: React.FC<AtendimentoModalProps> = ({
                   atendimentoId={resolvedAtendimentoId}
                   clienteId={clienteId || undefined}
                   suStatus={String(atendimentoData?.su_status ?? formData.su_status ?? '')}
+                  onStatusChanged={() => {
+                    void refetchAtendimento();
+                  }}
                 />
               ) : (
                 <p className="text-muted small mb-0">

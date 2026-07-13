@@ -615,6 +615,7 @@ export class IxcAtendimentoService {
         };
         delete body.id;
         delete body.cliente_id;
+        delete body.su_status;
         for (const campo of CAMPOS_ENRIQUECIDOS) {
           delete body[campo];
         }
@@ -732,13 +733,15 @@ export class IxcAtendimentoService {
     mensagem: string,
     empresaId: number | null = null,
     clienteId: number | null = null,
-    usuarioId: number | null = null
+    usuarioId: number | null = null,
+    suStatus?: string | null
   ): Promise<IxcActionResponse> {
     const texto = mensagem.trim();
     if (!texto) {
       throw new Error('Informe a mensagem');
     }
 
+    const statusInformado = String(suStatus ?? '').trim();
     const record = await AtendimentoLocalService.findRecord(atendimentoId, empresaId);
     if (record && !record.ixc_id?.trim()) {
       const agora = nowIxcDateTime();
@@ -750,6 +753,13 @@ export class IxcAtendimentoService {
         usuario_id: usuarioId,
         visibilidade_mensagens: 'E',
       });
+
+      const updates: Partial<typeof record> = { ultima_atualizacao: agora };
+      if (statusInformado) {
+        updates.su_status = statusInformado;
+      }
+      await record.update(updates);
+
       return { type: 'success', id: String(created.id) };
     }
 
@@ -766,6 +776,9 @@ export class IxcAtendimentoService {
         };
         if (operadorId) {
           body.operador = operadorId;
+        }
+        if (statusInformado) {
+          body.su_status = statusInformado;
         }
 
         const retryDelaysMs = [0, 500, 1000, 2000];
@@ -786,6 +799,16 @@ export class IxcAtendimentoService {
             if (response.data?.type === 'error') {
               throw new Error(actionErrorMessage(response.data, 'Erro ao registrar mensagem no IXC'));
             }
+
+            if (record) {
+              const agora = nowIxcDateTime();
+              const updates: Partial<typeof record> = { ultima_atualizacao: agora };
+              if (statusInformado) {
+                updates.su_status = statusInformado;
+              }
+              await record.update(updates);
+            }
+
             return { type: 'success', id: response.data?.id };
           } catch (error) {
             lastError = error;

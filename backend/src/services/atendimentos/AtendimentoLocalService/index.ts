@@ -496,9 +496,6 @@ export class AtendimentoLocalService {
     if (payload.id_responsavel_technico !== undefined) {
       updates.id_responsavel_technico = String(payload.id_responsavel_technico).trim();
     }
-    if (payload.su_status !== undefined) {
-      updates.su_status = String(payload.su_status).trim() || record.su_status;
-    }
 
     await record.update(updates);
     return { type: 'success', id: String(record.id) };

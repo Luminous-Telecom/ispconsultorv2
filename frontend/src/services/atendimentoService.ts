@@ -150,11 +150,12 @@ export class AtendimentoService {
   static async createMensagem(
     id: number | string,
     mensagem: string,
-    clienteId?: number
+    clienteId?: number,
+    suStatus?: string
   ): Promise<unknown> {
     return defaultApiClient.post(
       `/ixc/atendimentos/${id}/mensagens`,
-      { mensagem, cliente_id: clienteId },
+      { mensagem, cliente_id: clienteId, su_status: suStatus },
       { timeout: IXC_ATENDIMENTO_TIMEOUT_MS }
     );
   }
