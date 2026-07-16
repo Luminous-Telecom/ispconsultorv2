@@ -163,6 +163,8 @@ services:
     container_name: \$CONTAINER_NAME
     restart: unless-stopped
     command:
+      - --server
+      - \$SERVER_URL
       - --token
       - \$TOKEN
 EOF

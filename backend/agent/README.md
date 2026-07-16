@@ -8,9 +8,9 @@ Permite acesso terminal e proxy SSH aos equipamentos sem expor portas.
 
 | Variável | Padrão | Descrição |
 |----------|--------|-----------|
-| `ISPCONSULTOR_SERVER` | — | URL do backend (ex: `http://localhost:3001`) |
+| `ISPCONSULTOR_SERVER` / `--server` | — | URL do backend (ex: `https://beta.ispconsultor.com.br`) — **obrigatório** em staging/beta; o script de instalação do painel passa automaticamente |
 | `ISPCONSULTOR_TOKEN` | — | Token do agente (gerado no painel) |
-| `ISPCONSULTOR_AGENT_CHANNEL` | — | `dev` ou `prod` — usa URL fixa do canal |
+| `ISPCONSULTOR_AGENT_CHANNEL` | — | `dev` ou `prod` — fallback de URL só se `--server` não estiver definido |
 | `ISPCONSULTOR_MAX_SHELLS` | 10 | Máx. sessões simultâneas |
 | `ISPCONSULTOR_ALLOWED_BASE_PATH` | `/tmp` | Caminhos para file transfer (separados por vírgula) |
 

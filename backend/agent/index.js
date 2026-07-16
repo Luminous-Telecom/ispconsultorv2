@@ -145,7 +145,11 @@ async function httpGetWithDigestAuth(urlStr, username, password, timeoutMs) {
 
 // ── Configuração ───────────────────────────────────────────────────────────────
 
-/** URLs do ISP Consultor por ambiente (imagem :dev ou :prod define o canal no build). */
+/**
+ * Fallback quando não há --server / ISPCONSULTOR_SERVER / token base64 {s,t}.
+ * Instalação via painel sempre passa --server (BASE_URL do tenant).
+ * Canal dev/prod na imagem (:dev / :prod) só cobre dev local e produção principal.
+ */
 const ISPCONSULTOR_URL_BY_CHANNEL = {
   dev: 'https://dev.luminoustelecom.com.br',
   prod: 'https://ispconsultor.com.br',
@@ -492,7 +496,7 @@ socket.on('connect_error', (err) => {
       }
     } else {
       console.error(
-        '[ispconsultor-agent] O servidor recusou o token. Verifique: (1) agente "Ativo" no ISP Consultor, (2) --token igual ao token atual do agente (se regenerou, rode o container de novo com o novo token), (3) URL dev/prod correta na imagem (:dev vs :prod).'
+        '[ispconsultor-agent] O servidor recusou o token. Verifique: (1) agente "Ativo" no ISP Consultor, (2) --token igual ao token atual do agente (se regenerou, rode o container de novo com o novo token), (3) --server / ISPCONSULTOR_SERVER apontando para o mesmo domínio do painel (ex.: beta.ispconsultor.com.br), não só o fallback :prod da imagem.'
       );
     }
   }
