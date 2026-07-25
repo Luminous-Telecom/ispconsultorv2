@@ -48,17 +48,23 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(
     const formatPointLabel = useCallback(
       (value: number) =>
         format === 'currency'
-          ? value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 })
+          ? value.toLocaleString('pt-BR', {
+              style: 'currency',
+              currency: 'BRL',
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })
           : value.toLocaleString('pt-BR'),
       [format]
     );
 
-    const formatAxis = useCallback((value: number) => {
-      const abs = Math.abs(value);
-      if (abs >= 1_000_000) return `${(value / 1_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}M`;
-      if (abs >= 1_000) return `${(value / 1_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}k`;
-      return value.toLocaleString('pt-BR');
-    }, []);
+    const formatAxis = useCallback(
+      (value: number) =>
+        format === 'currency'
+          ? value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          : value.toLocaleString('pt-BR'),
+      [format]
+    );
 
     useLayoutEffect(() => {
       const update = () => {
@@ -81,7 +87,8 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(
       sel.selectAll('*').remove();
       sel.attr('width', dimensions.width).attr('height', dimensions.height);
 
-      const margin = { top: 14, right: 16, left: 44, bottom: 34 };
+      const leftMargin = format === 'currency' ? 58 : 44;
+      const margin = { top: 18, right: 16, left: leftMargin, bottom: 34 };
       const chartWidth = Math.max(1, dimensions.width - margin.left - margin.right);
       const chartHeight = Math.max(1, dimensions.height - margin.top - margin.bottom);
 
@@ -89,7 +96,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(
       const maxValue = Math.max(...values, 0);
 
       const xScale = d3.scaleLinear().domain([0, Math.max(1, chartData.length - 1)]).range([0, chartWidth]);
-      const yScale = d3.scaleLinear().domain([0, maxValue * 1.15 || 1]).nice().range([chartHeight, 0]);
+      const yScale = d3.scaleLinear().domain([0, maxValue * 1.2 || 1]).nice().range([chartHeight, 0]);
 
       const textColor = 'var(--text-muted)';
       const gridColor = 'var(--border-color)';
@@ -128,7 +135,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(
         .attr('y', (d) => yScale(d))
         .attr('text-anchor', 'end')
         .attr('dominant-baseline', 'central')
-        .attr('font-size', '10px')
+        .attr('font-size', '9px')
         .attr('font-family', FONT_FAMILY_BASE)
         .attr('fill', textColor)
         .attr('opacity', 0.75)
@@ -176,12 +183,48 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(
           .attr('stroke-dashoffset', 0);
       }
 
+      const LABEL_CHAR_W = format === 'currency' ? 5.4 : 5.8;
+      const LABEL_H = 11;
+      const LABEL_GAP = 3;
+
+      type PointLabel = { text: string; x: number; y: number; w: number; show: boolean };
+
+      const overlaps = (a: PointLabel, b: PointLabel): boolean => {
+        const a0 = a.x - a.w / 2;
+        const a1 = a.x + a.w / 2;
+        const b0 = b.x - b.w / 2;
+        const b1 = b.x + b.w / 2;
+        if (a1 + LABEL_GAP < b0 || b1 + LABEL_GAP < a0) return false;
+        return Math.abs(a.y - b.y) < LABEL_H + LABEL_GAP;
+      };
+
+      const pointLabels: PointLabel[] = [];
+      chartData.forEach((d, i) => {
+        if (d.value <= 0) return;
+        const text = formatPointLabel(d.value);
+        const x = xScale(i);
+        const baseY = yScale(d.value);
+        const w = Math.max(24, text.length * LABEL_CHAR_W);
+        const candidates = [baseY - 10, baseY + 14, baseY - 22, baseY + 26].filter(
+          (y) => y >= LABEL_H / 2 && y <= chartHeight - LABEL_H / 2
+        );
+        const label: PointLabel = { text, x, y: candidates[0] ?? baseY - 10, w, show: false };
+        for (const y of candidates) {
+          label.y = y;
+          if (!pointLabels.some((prev) => prev.show && overlaps(label, prev))) {
+            label.show = true;
+            break;
+          }
+        }
+        pointLabels.push(label);
+      });
+
       g.append('g')
         .selectAll('text')
-        .data(chartData)
+        .data(pointLabels.filter((l) => l.show))
         .join('text')
-        .attr('x', (_, i) => xScale(i))
-        .attr('y', (d) => yScale(d.value) - 8)
+        .attr('x', (d) => d.x)
+        .attr('y', (d) => d.y)
         .attr('text-anchor', 'middle')
         .attr('dominant-baseline', 'central')
         .attr('font-size', '9px')
@@ -189,7 +232,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(
         .attr('font-family', FONT_FAMILY_BASE)
         .attr('fill', lineColor)
         .attr('opacity', 0)
-        .text((d) => (d.value > 0 ? formatPointLabel(d.value) : ''))
+        .text((d) => d.text)
         .transition()
         .delay(600)
         .duration(400)
