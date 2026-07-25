@@ -61,6 +61,8 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
       titulos_vence_sabado: d.titulos_vence_sabado ?? false,
       titulos_vence_domingo: d.titulos_vence_domingo ?? false,
       central_assinante_metodo_login: d.central_assinante_metodo_login ?? 'cnpj',
+      dias_suspender_atraso:
+        'dias_suspender_atraso' in d ? ((d as RecursosSistemaFormBase).dias_suspender_atraso ?? null) : null,
     };
     if (!isSaas) return { ...RECURSOS_SAAS_INITIAL, ...base };
     return mapSaasParametrosToForm(d as SaasParametros, base);
@@ -95,11 +97,20 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
       if (payload.dias_desbloqueio_manual !== null && payload.dias_desbloqueio_manual <= 0) {
         payload.dias_desbloqueio_manual = null;
       }
-      updateMutation.mutate(payload);
+      const { dias_suspender_atraso: _s, ...saasPayload } = payload;
+      updateMutation.mutate(saasPayload);
       return;
     }
-    const { manter_numeros_titulos: _m, quantidade_titulos_manter: _q, dias_atraso_bloqueio: _a, dias_desbloqueio_manual: _d, ...erpPayload } =
-      formData;
+    const {
+      manter_numeros_titulos: _m,
+      quantidade_titulos_manter: _q,
+      dias_atraso_bloqueio: _a,
+      dias_desbloqueio_manual: _d,
+      ...erpPayload
+    } = formData;
+    if (erpPayload.dias_suspender_atraso !== null && erpPayload.dias_suspender_atraso <= 0) {
+      erpPayload.dias_suspender_atraso = null;
+    }
     updateMutation.mutate(erpPayload);
   };
 
@@ -244,6 +255,39 @@ const RecursosSistemaModalCore: React.FC<RecursosSistemaModalCoreProps> = ({
               />
             </div>
           </div>
+
+          {!isSaas && (
+            <>
+              <div className="form-section-heading-row">
+                <span className="form-section-heading-pill">{t('params.overdueSuspendSection')}</span>
+                <div className="form-section-heading-line" aria-hidden />
+              </div>
+              <div className="row g-2 mb-3">
+                <div className="col-12">
+                  <FormField
+                    name="dias_suspender_atraso"
+                    type="number"
+                    label={t('params.overdueDaysSuspend')}
+                    helpText={t('params.overdueDaysSuspendHelp')}
+                    placeholder={t('params.exampleDays15')}
+                    value={formData.dias_suspender_atraso ?? ''}
+                    onChange={(v) => {
+                      const raw = String(v ?? '');
+                      setFormData((prev) => ({
+                        ...prev,
+                        dias_suspender_atraso:
+                          raw === '' ? null : Math.min(365, Math.max(0, parseInt(raw, 10) || 0)),
+                      }));
+                    }}
+                    min={0}
+                    max={365}
+                    size="sm"
+                    disabled={updateMutation.isPending}
+                  />
+                </div>
+              </div>
+            </>
+          )}
 
           {isSaas && (
             <>

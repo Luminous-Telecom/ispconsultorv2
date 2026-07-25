@@ -1062,9 +1062,22 @@ body[data-app="system"] .tox-tinymce-aux .tox {
 }
 
 /* --- Label help icon --- */
+.label-with-help-inner {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 0.25rem;
+  max-width: 100%;
+}
+
+.label-with-help-text {
+  min-width: 0;
+}
+
 .label-help-icon {
   cursor: help;
   font-size: var(--font-size-lg);
+  vertical-align: -0.05em;
 }
 
 /* --- Central assinante --- */

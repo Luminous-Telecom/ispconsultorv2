@@ -11,6 +11,7 @@ const parametrosStore = createSingletonConfigService(Parametros, {
     'titulos_vence_sabado',
     'titulos_vence_domingo',
     'central_assinante_metodo_login',
+    'dias_suspender_atraso',
     'empresa_id',
     'created_at',
     'updated_at',
@@ -21,6 +22,7 @@ const parametrosStore = createSingletonConfigService(Parametros, {
     titulos_vence_sabado: false,
     titulos_vence_domingo: false,
     central_assinante_metodo_login: 'cnpj',
+    dias_suspender_atraso: null,
   },
 });
 

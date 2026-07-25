@@ -614,6 +614,9 @@ export interface TranslationKeys {
   'params.overdueDaysBlock': string;
   'params.overdueDaysBlockHelp': string;
   'params.overdueDaysBlockDisabledHint': string;
+  'params.overdueSuspendSection': string;
+  'params.overdueDaysSuspend': string;
+  'params.overdueDaysSuspendHelp': string;
   'params.manualUnlockDays': string;
   'params.manualUnlockDaysHelp': string;
   'params.exampleDays15': string;

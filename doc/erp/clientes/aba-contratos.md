@@ -65,7 +65,7 @@ Após salvar, as abas **Termos**, **Financeiro**, **Financeiro Avulso**, **Servi
 | Campo | Obrigatório | Descrição |
 |-------|:-----------:|-----------|
 | **Plano** | Sim | Plano comercial vinculado — selecione pela listagem (ícone de busca) |
-| **Status** | Sim | **Ativo**, **Inativo** ou **Suspenso** |
+| **Status** | Sim | **Ativo**, **Inativo** ou **Suspenso**. Contratos **ativos** com parcela em atraso podem ser suspensos automaticamente conforme [Recursos do Sistema](/doc/parametros/recursos-do-sistema). Suspensos não geram novos títulos |
 | **Data de Início** | Sim | Início da vigência do contrato |
 | **Data de Fim** | Não | Encerramento programado, se houver |
 | **Dia de Vencimento** | Sim | Dia do mês para vencimento dos boletos (somente dias habilitados em [Dias de Vencimento](/doc/parametros/dias-vencimento)) |

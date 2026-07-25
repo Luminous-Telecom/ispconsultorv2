@@ -16,7 +16,8 @@ export class ParametrosController {
     validar_cep: Joi.boolean().optional(),
     titulos_vence_sabado: Joi.boolean().optional(),
     titulos_vence_domingo: Joi.boolean().optional(),
-    central_assinante_metodo_login: Joi.string().valid('cnpj', 'email').optional()
+    central_assinante_metodo_login: Joi.string().valid('cnpj', 'email').optional(),
+    dias_suspender_atraso: Joi.number().integer().min(0).max(365).allow(null).optional(),
   }).min(1).unknown(true);
 
   // Obter parâmetros (sempre retorna o primeiro registro)
@@ -41,6 +42,7 @@ export class ParametrosController {
           titulos_vence_sabado: parametros.titulos_vence_sabado,
           titulos_vence_domingo: parametros.titulos_vence_domingo,
           central_assinante_metodo_login: parametros.central_assinante_metodo_login || 'cnpj',
+          dias_suspender_atraso: parametros.dias_suspender_atraso ?? null,
           created_at: parametros.created_at,
           updated_at: parametros.updated_at
         }

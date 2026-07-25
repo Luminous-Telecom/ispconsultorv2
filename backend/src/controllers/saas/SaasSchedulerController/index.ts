@@ -21,6 +21,7 @@ const TIPOS_ALVO_ERP_GLOBAL = [
   'consulta_titulos_asaas',
   'consulta_titulos_efi',
   'ixc_sync_ordens_servico',
+  'suspender_contratos_atraso',
   'outros'
 ] as const;
 
@@ -37,7 +38,7 @@ function mensagemValidacaoAlvoTipo(body: { tipo?: string; alvo?: string }): stri
       return 'No alvo Cobrança SaaS, use geração/envio/remessa do produto ou bloquear por atraso.';
     }
   } else if (!(TIPOS_ALVO_ERP_GLOBAL as readonly string[]).includes(tipo)) {
-    return 'No alvo ERP (todos os clientes), use faturamento ERP, verificar vencimentos, consulta de títulos, desbloquear domínios, rotinas RPKI ou sincronização IXC.';
+    return 'No alvo ERP (todos os clientes), use faturamento ERP, verificar vencimentos, suspender contratos por atraso, consulta de títulos, desbloquear domínios, rotinas RPKI ou sincronização IXC.';
   }
   return null;
 }

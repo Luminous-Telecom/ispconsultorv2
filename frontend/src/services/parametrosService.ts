@@ -7,6 +7,7 @@ export interface Parametros {
   titulos_vence_sabado: boolean;
   titulos_vence_domingo: boolean;
   central_assinante_metodo_login?: string;
+  dias_suspender_atraso?: number | null;
   assinatura_digital_habilitado?: boolean;
   assinatura_digital_api_provider?: string;
   assinatura_digital_api_key?: string;

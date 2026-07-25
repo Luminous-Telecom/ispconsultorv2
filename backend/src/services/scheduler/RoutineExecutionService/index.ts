@@ -121,6 +121,7 @@ export class RoutineExecutionService {
         'consulta_titulos_asaas',
         'consulta_titulos_efi',
         'ixc_sync_ordens_servico',
+        'suspender_contratos_atraso',
         'outros'
       ] as const;
       const ok =
@@ -233,6 +234,15 @@ export class RoutineExecutionService {
           return { success: false, message: 'Sincronização IXC de OS deve usar alvo ERP (todos os clientes).' };
         }
         return await this.executeIxcSyncOrdensServico();
+
+      case 'suspender_contratos_atraso': {
+        if (saas && saasAlvo(routine as SaasScheduledRoutine) !== 'erp_global') {
+          return { success: false, message: 'Suspender contratos por atraso deve usar alvo ERP (todos os clientes).' };
+        }
+        const { SuspenderContratosAtrasoRoutine } = await import('../routines/SuspenderContratosAtrasoRoutine');
+        const r = new SuspenderContratosAtrasoRoutine();
+        return (await r.execute({})) as RoutineExecutionResult;
+      }
 
       default:
         logger.warn('RoutineExecutionService.executeRoutine - Tipo de rotina não implementado', {

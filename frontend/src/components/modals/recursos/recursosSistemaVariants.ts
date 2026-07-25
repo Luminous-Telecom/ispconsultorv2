@@ -12,6 +12,8 @@ export interface RecursosSistemaFormBase {
   titulos_vence_sabado: boolean;
   titulos_vence_domingo: boolean;
   central_assinante_metodo_login: string;
+  /** Dias após vencimento para suspender contrato. null/0 = desabilitado. */
+  dias_suspender_atraso: number | null;
 }
 
 export interface RecursosSistemaFormSaas extends RecursosSistemaFormBase {
@@ -50,6 +52,7 @@ export const RECURSOS_ERP_INITIAL: RecursosSistemaFormBase = {
   titulos_vence_sabado: false,
   titulos_vence_domingo: false,
   central_assinante_metodo_login: 'cnpj',
+  dias_suspender_atraso: null,
 };
 
 export const RECURSOS_SAAS_INITIAL: RecursosSistemaFormSaas = {

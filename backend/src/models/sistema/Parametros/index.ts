@@ -8,6 +8,8 @@ interface ParametrosAttributes {
   titulos_vence_sabado: boolean;
   titulos_vence_domingo: boolean;
   central_assinante_metodo_login: string;
+  /** Dias após vencimento para suspender contrato ativo. null/0 = desabilitado. */
+  dias_suspender_atraso: number | null;
   empresa_id: number | null;
   created_at?: Date;
   updated_at?: Date;
@@ -22,6 +24,7 @@ class Parametros extends Model<ParametrosAttributes, ParametrosCreationAttribute
   public titulos_vence_sabado!: boolean;
   public titulos_vence_domingo!: boolean;
   public central_assinante_metodo_login!: string;
+  public dias_suspender_atraso!: number | null;
   public empresa_id!: number | null;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
@@ -58,6 +61,11 @@ Parametros.init(
       type: DataTypes.STRING(20),
       allowNull: false,
       defaultValue: 'cnpj'
+    },
+    dias_suspender_atraso: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
     },
     empresa_id: {
       type: DataTypes.INTEGER,

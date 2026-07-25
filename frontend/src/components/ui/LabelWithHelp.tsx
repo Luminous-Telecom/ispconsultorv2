@@ -17,7 +17,7 @@ export const RequiredMark: React.FC = () => (
   </span>
 );
 
-const HelpIcon: React.FC<{ text: string; className?: string }> = ({ text, className = 'ms-1' }) => (
+const HelpIcon: React.FC<{ text: string; className?: string }> = ({ text, className = '' }) => (
   <i
     className={`bi bi-info-circle text-muted flex-shrink-0 label-help-icon ${className}`.trim()}
     title={text}
@@ -38,11 +38,13 @@ export const LabelWithHelp: React.FC<LabelWithHelpProps> = ({
   as = 'label',
 }) => {
   const content = (
-    <>
-      {children}
-      {required && <RequiredMark />}
+    <span className="label-with-help-inner">
+      <span className="label-with-help-text">
+        {children}
+        {required && <RequiredMark />}
+      </span>
       {helpText && <HelpIcon text={helpText} className={helpIconClassName} />}
-    </>
+    </span>
   );
 
   if (as === 'span') {

@@ -1,6 +1,6 @@
 # Recursos do Sistema
 
-Parâmetros **globais de comportamento** do ERP — validações automáticas, regras de vencimento e configurações da Central do Assinante.
+Parâmetros **globais de comportamento** do ERP — validações automáticas, regras de vencimento, suspensão por atraso e configurações da Central do Assinante.
 
 ::: info Acesso restrito
 Alterações nesta tela impactam todo o sistema. Normalmente restrita a administradores.
@@ -21,6 +21,7 @@ A tela é organizada por seções no modal:
 - **Validações** — regras automáticas para documentos e CEP.
 - **Geração de Títulos** — comportamento de vencimentos em finais de semana.
 - **Central do Assinante** — método usado pelo cliente final para acessar o portal.
+- **Suspensão de Contratos por Atraso** — dias após o vencimento da parcela para suspender o contrato automaticamente.
 
 Após ajustar, clique em **Salvar** no cabeçalho do modal.
 
@@ -33,6 +34,20 @@ Após ajustar, clique em **Salvar** no cabeçalho do modal.
 | **Títulos que Vencem aos Sábados** | Permite ou impede vencimento de boletos em sábados |
 | **Títulos que Vencem aos Domingos** | Permite ou impede vencimento de boletos em domingos |
 | **Método de Login** | Define se o login na [Central do Assinante](/doc/clientes/cadastro-cliente#central-do-assinante) usa **CNPJ** ou **E-mail** como identificador |
+| **Dias em atraso para suspender contrato** | Quantidade de dias após o vencimento de uma parcela em aberto para alterar o [contrato](/doc/clientes/aba-contratos) de **Ativo** para **Suspenso**. Em branco ou **0** desabilita a regra |
+
+---
+
+## Suspensão automática por atraso
+
+1. Configure o número de dias em **Parâmetros → Recursos do Sistema**.
+2. A rotina **Suspender contratos por atraso** roda **uma vez ao dia** (agendador) e analisa títulos **pendentes** ou **vencidos** não pagos vinculados ao contrato.
+3. Se o atraso for maior ou igual aos dias configurados, o contrato **ativo** passa a **suspenso**.
+4. Contratos suspensos **não geram novos títulos** até voltarem ao status **ativo** (reativação manual).
+
+::: tip
+A reativação do contrato é **manual** — após a regularização das parcelas, altere o status do contrato para **Ativo** na aba [Contratos](/doc/clientes/aba-contratos).
+:::
 
 ---
 
@@ -41,6 +56,7 @@ Após ajustar, clique em **Salvar** no cabeçalho do modal.
 - **Validar CNPJ/CEP** — afeta cadastros de [Clientes](/doc/clientes/cadastro-cliente) e [Fornecedores](/doc/cadastros/fornecedores).
 - **Vencimento sábado/domingo** — afeta geração de títulos em [Contratos](/doc/clientes/aba-contratos) combinado com [Dias de Vencimento](/doc/parametros/dias-vencimento).
 - **Método de Login** — afeta apenas o portal **Central do Assinante** (login do cliente final), não o acesso dos usuários do ERP em [Usuários](/doc/parametros/usuarios).
+- **Suspensão por atraso** — altera o status do contrato e interrompe a geração automática de títulos (ver [Contas A Receber](/doc/financeiro/contas-a-receber)).
 ---
 
 ::: info Precisa de ajuda?

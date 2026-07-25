@@ -5,7 +5,7 @@ import { formatCreatedAt } from '../../../utils/dateUtils';
 export interface SaasScheduledRoutineAttributes {
   id: number;
   nome: string;
-  tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'bloquear_saas_atraso' | 'backup_equipamentos_ssh' | 'rpki_sync_parent_resources' | 'rpki_sync_repositories' | 'consulta_titulos_asaas' | 'consulta_titulos_efi' | 'ixc_sync_ordens_servico' | 'outros';
+  tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'bloquear_saas_atraso' | 'backup_equipamentos_ssh' | 'rpki_sync_parent_resources' | 'rpki_sync_repositories' | 'consulta_titulos_asaas' | 'consulta_titulos_efi' | 'ixc_sync_ordens_servico' | 'suspender_contratos_atraso' | 'outros';
   /** saas = cobrança do produto; erp_global = uma rotina para todos os clientes do ERP */
   alvo: 'saas' | 'erp_global';
   /** Token cron (dia da semana); coluna VARCHAR após migration 00000205 */
@@ -44,7 +44,7 @@ export type SaasScheduledRoutineCreationAttributes = Optional<
 export class SaasScheduledRoutine extends Model<SaasScheduledRoutineAttributes, SaasScheduledRoutineCreationAttributes> implements SaasScheduledRoutineAttributes {
   public id!: number;
   public nome!: string;
-  public tipo!: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'bloquear_saas_atraso' | 'backup_equipamentos_ssh' | 'rpki_sync_parent_resources' | 'rpki_sync_repositories' | 'consulta_titulos_asaas' | 'consulta_titulos_efi' | 'ixc_sync_ordens_servico' | 'outros';
+  public tipo!: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'bloquear_saas_atraso' | 'backup_equipamentos_ssh' | 'rpki_sync_parent_resources' | 'rpki_sync_repositories' | 'consulta_titulos_asaas' | 'consulta_titulos_efi' | 'ixc_sync_ordens_servico' | 'suspender_contratos_atraso' | 'outros';
   public alvo!: 'saas' | 'erp_global';
   public dia_semana?: string;
   public minuto!: string;
@@ -90,7 +90,7 @@ SaasScheduledRoutine.init(
       allowNull: false
     },
     tipo: {
-      type: DataTypes.ENUM('geracao_titulos', 'envio_boletos', 'remessa_bancaria', 'verificar_vencimentos', 'desbloquear_blockdomi', 'bloquear_saas_atraso', 'backup_equipamentos_ssh', 'rpki_sync_parent_resources', 'rpki_sync_repositories', 'consulta_titulos_asaas', 'consulta_titulos_efi', 'ixc_sync_ordens_servico', 'outros'),
+      type: DataTypes.ENUM('geracao_titulos', 'envio_boletos', 'remessa_bancaria', 'verificar_vencimentos', 'desbloquear_blockdomi', 'bloquear_saas_atraso', 'backup_equipamentos_ssh', 'rpki_sync_parent_resources', 'rpki_sync_repositories', 'consulta_titulos_asaas', 'consulta_titulos_efi', 'ixc_sync_ordens_servico', 'suspender_contratos_atraso', 'outros'),
       allowNull: false
     },
     alvo: {
