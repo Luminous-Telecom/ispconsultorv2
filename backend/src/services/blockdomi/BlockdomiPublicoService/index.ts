@@ -25,6 +25,8 @@ export interface OficioPublico {
   versao: string | null;
   /** Número SEI do ofício Anatel (protocolo), quando cadastrado. */
   numero_sei_anatel: string | null;
+  /** Data/hora de inserção no sistema (primeiro registro do ofício). */
+  created_at: string | null;
   detalhes?: OficioDetalhes;
 }
 
@@ -61,42 +63,58 @@ export class BlockdomiPublicoService {
     const [dominios, ipv4s, ipv6s] = await Promise.all([
       Dominio.findAll({
         where: { ativo: true },
-        attributes: ['nome_oficio', 'data_inicio_bloqueio', 'data_fim_bloqueio', 'versao_id'],
+        attributes: ['nome_oficio', 'data_inicio_bloqueio', 'data_fim_bloqueio', 'versao_id', 'created_at'],
         include: oficioIncludes,
         raw: false
       }),
       IPv4.findAll({
         where: { ativo: true },
-        attributes: ['nome_oficio', 'data_inicio_bloqueio', 'data_fim_bloqueio', 'versao_id'],
+        attributes: ['nome_oficio', 'data_inicio_bloqueio', 'data_fim_bloqueio', 'versao_id', 'created_at'],
         include: oficioIncludes,
         raw: false
       }),
       IPv6.findAll({
         where: { ativo: true },
-        attributes: ['nome_oficio', 'data_inicio_bloqueio', 'data_fim_bloqueio', 'versao_id'],
+        attributes: ['nome_oficio', 'data_inicio_bloqueio', 'data_fim_bloqueio', 'versao_id', 'created_at'],
         include: oficioIncludes,
         raw: false
       })
     ]);
 
-    const seen = new Set<string>();
+    const seen = new Map<string, OficioPublico>();
     const oficios: OficioPublico[] = [];
 
-    const adicionar = (nome: string | null, di: string, df: string, versao: string | null, numeroSei: string | null) => {
+    const adicionar = (
+      nome: string | null,
+      di: string,
+      df: string,
+      versao: string | null,
+      numeroSei: string | null,
+      createdAt: string | null
+    ) => {
       const seiKey = (numeroSei ?? '').trim();
       const key = `${nome ?? ''}|${di}|${df}|${versao ?? ''}|${seiKey}`;
-      if (seen.has(key)) return;
-      seen.add(key);
-      oficios.push({
+      const existente = seen.get(key);
+      if (existente) {
+        // Mantém a inserção mais antiga do grupo (quando o ofício entrou no sistema).
+        if (createdAt && (!existente.created_at || createdAt < existente.created_at)) {
+          existente.created_at = createdAt;
+        }
+        return;
+      }
+      const oficio: OficioPublico = {
         nome_oficio: nome,
         data_inicio_bloqueio: di || null,
         data_fim_bloqueio: df || null,
         versao,
-        numero_sei_anatel: seiKey ? seiKey : null
-      });
+        numero_sei_anatel: seiKey ? seiKey : null,
+        created_at: createdAt
+      };
+      seen.set(key, oficio);
+      oficios.push(oficio);
     };
 
-    const domPlain = dominios.map((d) => {
+    const toPlain = (d: { get: (opts: { plain: true }) => Record<string, unknown> }) => {
       const p = d.get({ plain: true }) as Record<string, unknown>;
       const seiRef = p.numeroSeiRef as { numero?: string } | null | undefined;
       return {
@@ -105,33 +123,13 @@ export class BlockdomiPublicoService {
         data_fim_bloqueio: p.data_fim_bloqueio,
         versao_id: p.versao_id as number | null,
         numero_sei_anatel: seiRef?.numero ?? null,
+        created_at: p.created_at as string | Date | null | undefined,
         versaoRef: p.versaoRef as { numero?: string } | undefined
       };
-    });
-    const ipv4Plain = ipv4s.map((d) => {
-      const p = d.get({ plain: true }) as Record<string, unknown>;
-      const seiRef = p.numeroSeiRef as { numero?: string } | null | undefined;
-      return {
-        nome_oficio: p.nome_oficio as string | null,
-        data_inicio_bloqueio: p.data_inicio_bloqueio,
-        data_fim_bloqueio: p.data_fim_bloqueio,
-        versao_id: p.versao_id as number | null,
-        numero_sei_anatel: seiRef?.numero ?? null,
-        versaoRef: p.versaoRef as { numero?: string } | undefined
-      };
-    });
-    const ipv6Plain = ipv6s.map((d) => {
-      const p = d.get({ plain: true }) as Record<string, unknown>;
-      const seiRef = p.numeroSeiRef as { numero?: string } | null | undefined;
-      return {
-        nome_oficio: p.nome_oficio as string | null,
-        data_inicio_bloqueio: p.data_inicio_bloqueio,
-        data_fim_bloqueio: p.data_fim_bloqueio,
-        versao_id: p.versao_id as number | null,
-        numero_sei_anatel: seiRef?.numero ?? null,
-        versaoRef: p.versaoRef as { numero?: string } | undefined
-      };
-    });
+    };
+    const domPlain = dominios.map(toPlain);
+    const ipv4Plain = ipv4s.map(toPlain);
+    const ipv6Plain = ipv6s.map(toPlain);
 
     for (const r of [...domPlain, ...ipv4Plain, ...ipv6Plain]) {
       const di = this.normalizarDataParaChave(r.data_inicio_bloqueio as string | Date | null | undefined);
@@ -139,13 +137,18 @@ export class BlockdomiPublicoService {
       const versao = r.versaoRef?.numero ?? versaoIdParaNumero.get(r.versao_id) ?? null;
       const seiRaw = r.numero_sei_anatel;
       const sei = seiRaw != null && String(seiRaw).trim() !== '' ? String(seiRaw).trim() : null;
-      adicionar(r.nome_oficio, di, df, versao, sei);
+      adicionar(r.nome_oficio, di, df, versao, sei, this.normalizarCreatedAt(r.created_at));
     }
 
+    // Mais novo inserido → mais antigo (por created_at, não pela data de bloqueio).
     oficios.sort((a, b) => {
-      const da = a.data_inicio_bloqueio || '';
-      const db = b.data_inicio_bloqueio || '';
-      if (da !== db) return db.localeCompare(da);
+      const da = a.created_at || '';
+      const db = b.created_at || '';
+      if (da !== db) {
+        if (!da) return 1;
+        if (!db) return -1;
+        return db.localeCompare(da);
+      }
       const nomeCmp = (a.nome_oficio || '').localeCompare(b.nome_oficio || '');
       if (nomeCmp !== 0) return nomeCmp;
       return (a.numero_sei_anatel || '').localeCompare(b.numero_sei_anatel || '');
@@ -207,6 +210,17 @@ export class BlockdomiPublicoService {
       return `${y}-${m}-${d}`;
     }
     return '';
+  }
+
+  /** Normaliza created_at para ISO string comparável (YYYY-MM-DDTHH:mm:ss.sssZ). */
+  private static normalizarCreatedAt(val: string | Date | null | undefined): string | null {
+    if (val == null) return null;
+    if (val instanceof Date && !Number.isNaN(val.getTime())) return val.toISOString();
+    if (typeof val === 'string') {
+      const d = new Date(val);
+      if (!Number.isNaN(d.getTime())) return d.toISOString();
+    }
+    return null;
   }
 
   /**
