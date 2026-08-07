@@ -1,6 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useCreateIpPermitido, useUpdateIpPermitido } from 'hooks/useIpsPermitidos';
 import { IpsPermitidosService, type IpPermitido } from 'services/ipsPermitidosService';
+import { ClienteService } from 'services/clienteService';
+import { buildNumberEntitySelectEntities } from 'utils/entitySelectUtils';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
 import { ModalFormActions } from 'components/ui';
@@ -34,6 +37,21 @@ const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
 
   const createMutation = useCreateIpPermitido();
   const updateMutation = useUpdateIpPermitido();
+
+  const { data: clientesData } = useQuery({
+    queryKey: ['clientes-ativos-entity-select'],
+    queryFn: () => ClienteService.list({ ativo: true, limit: 500 }),
+    enabled: show && !isEditing,
+    staleTime: 60 * 1000,
+  });
+
+  const clienteEntities = useMemo(() => {
+    const base = (clientesData?.data ?? []).map((cliente) => ({
+      id: cliente.id,
+      nome: cliente.razao_social?.trim() || cliente.nome_fantasia?.trim() || String(cliente.id),
+    }));
+    return buildNumberEntitySelectEntities(base, clienteId, clienteNome);
+  }, [clientesData?.data, clienteId, clienteNome]);
 
   useEffect(() => {
     if (!show) return;
@@ -133,7 +151,7 @@ const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
                     if (!id) setClienteNome('');
                   }}
                   onShowModal={() => setShowClienteSelect(true)}
-                  entities={clienteId && clienteNome ? [{ id: clienteId, nome: clienteNome }] : []}
+                  entities={clienteEntities}
                   label={t('blockdomi.cliente')}
                   placeholder={t('blockdomi.selectCliente')}
                   required

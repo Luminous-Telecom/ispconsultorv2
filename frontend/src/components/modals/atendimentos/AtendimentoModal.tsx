@@ -8,6 +8,7 @@ import {
 } from 'hooks/useAtendimentos';
 import { useI18n } from 'contexts/I18nContext';
 import type { CreateAtendimento, Atendimento } from 'services/atendimentoService';
+import { ClienteService } from 'services/clienteService';
 import {
   useFiliais,
   useEstruturas,
@@ -15,6 +16,12 @@ import {
   useDepartamentosAtendimento,
   useClienteIxcIntegracao,
 } from 'hooks/useIxcLookups';
+import {
+  buildNumberEntitySelectEntities,
+  buildStringEntitySelectEntities,
+  mapLookupItemsToStringEntities,
+} from 'utils/entitySelectUtils';
+import { useQuery } from '@tanstack/react-query';
 import ClienteListModal from 'components/modals/clientes/ClienteListModal';
 import DraggableModal from 'components/common/DraggableModal';
 import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
@@ -331,6 +338,75 @@ const AtendimentoModal: React.FC<AtendimentoModalProps> = ({
     return resolvedAtendimentoId != null ? String(resolvedAtendimentoId) : '';
   }, [atendimentoData?.ixc_id, resolvedAtendimentoId]);
 
+  const { data: clientesData } = useQuery({
+    queryKey: ['clientes-ativos-entity-select'],
+    queryFn: () => ClienteService.list({ ativo: true, limit: 500 }),
+    enabled: show,
+    staleTime: 60 * 1000,
+  });
+
+  const { data: filiaisData } = useFiliais({
+    cliente_id: clienteId,
+    enabled: show && showIxcFields && clienteId > 0,
+  });
+  const { data: estruturasData } = useEstruturas({
+    cliente_id: clienteId,
+    enabled: show && showIxcFields && clienteId > 0,
+  });
+  const { data: departamentosData } = useDepartamentosAtendimento({
+    cliente_id: clienteId,
+    enabled: show && showIxcFields && clienteId > 0,
+  });
+  const { data: responsaveisData } = useTecnicosAtendimento({
+    cliente_id: clienteId,
+    id_ticket_setor: formData.id_ticket_setor || undefined,
+    enabled: show && showIxcFields && clienteId > 0,
+  });
+
+  const clienteEntities = useMemo(() => {
+    const base = (clientesData?.data ?? []).map((cliente) => ({
+      id: cliente.id,
+      nome: cliente.razao_social?.trim() || cliente.nome_fantasia?.trim() || String(cliente.id),
+    }));
+    return buildNumberEntitySelectEntities(base, clienteId, clienteNome);
+  }, [clientesData?.data, clienteId, clienteNome]);
+
+  const filialEntities = useMemo(
+    () => buildStringEntitySelectEntities(
+      mapLookupItemsToStringEntities(filiaisData?.data),
+      formData.id_filial,
+      filialNome
+    ),
+    [filiaisData?.data, formData.id_filial, filialNome]
+  );
+
+  const estruturaEntities = useMemo(
+    () => buildStringEntitySelectEntities(
+      mapLookupItemsToStringEntities(estruturasData?.data),
+      formData.id_estrutura,
+      estruturaNome
+    ),
+    [estruturasData?.data, formData.id_estrutura, estruturaNome]
+  );
+
+  const departamentoEntities = useMemo(
+    () => buildStringEntitySelectEntities(
+      mapLookupItemsToStringEntities(departamentosData?.data),
+      formData.id_ticket_setor,
+      departamentoNome
+    ),
+    [departamentosData?.data, formData.id_ticket_setor, departamentoNome]
+  );
+
+  const responsavelEntities = useMemo(
+    () => buildStringEntitySelectEntities(
+      mapLookupItemsToStringEntities(responsaveisData?.data),
+      formData.id_responsavel_technico,
+      responsavelNome
+    ),
+    [responsaveisData?.data, formData.id_responsavel_technico, responsavelNome]
+  );
+
   const formFields = (
     <AtendimentoFormFields
       form={formData}
@@ -347,12 +423,12 @@ const AtendimentoModal: React.FC<AtendimentoModalProps> = ({
           clearAgendaFields();
         }
       }}
-      clienteNome={clienteNome}
+      clienteEntities={clienteEntities}
       clienteError={clienteError}
-      filialNome={filialNome}
-      estruturaNome={estruturaNome}
-      departamentoNome={departamentoNome}
-      responsavelNome={responsavelNome}
+      filialEntities={filialEntities}
+      estruturaEntities={estruturaEntities}
+      departamentoEntities={departamentoEntities}
+      responsavelEntities={responsavelEntities}
       protocolo={isPersisted ? String(atendimentoData?.protocolo ?? '') : ''}
       idLocal={
         isPersisted ? String(atendimentoData?.id_local ?? atendimentoData?.id ?? '') : ''

@@ -1,5 +1,7 @@
 import React from 'react';
 import { FormField, EntitySelectField } from 'components/ui';
+import type { EntityItem, StringEntityItem } from 'components/ui/EntitySelectField';
+import { useI18n } from 'contexts/I18nContext';
 
 export interface OrdemServicoFormData {
   id_filial: string;
@@ -58,13 +60,13 @@ interface OrdemServicoFormFieldsProps {
   disabled?: boolean;
   clienteId?: number;
   onClienteIdChange?: (value: number) => void;
-  clienteNome?: string;
+  clienteEntities?: EntityItem[];
   clienteError?: string;
-  filialNome?: string;
-  estruturaNome?: string;
-  tecnicoNome?: string;
-  assuntoNome?: string;
-  setorNome?: string;
+  filialEntities?: StringEntityItem[];
+  estruturaEntities?: StringEntityItem[];
+  tecnicoEntities?: StringEntityItem[];
+  assuntoEntities?: StringEntityItem[];
+  setorEntities?: StringEntityItem[];
   protocolo?: string;
   idLocal?: string;
   ixcId?: string;
@@ -86,13 +88,13 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
   disabled = false,
   clienteId = 0,
   onClienteIdChange,
-  clienteNome = '',
+  clienteEntities = [],
   clienteError,
-  filialNome = '',
-  estruturaNome = '',
-  tecnicoNome = '',
-  assuntoNome = '',
-  setorNome = '',
+  filialEntities = [],
+  estruturaEntities = [],
+  tecnicoEntities = [],
+  assuntoEntities = [],
+  setorEntities = [],
   protocolo = '',
   idLocal = '',
   ixcId = '',
@@ -106,6 +108,7 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
   showAgendaFields = true,
   mensagemRequired = false,
 }) => {
+  const { t } = useI18n();
   const metaColClass = 'col-12';
 
   return (
@@ -156,7 +159,8 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
           value={clienteId}
           onChange={(v) => onClienteIdChange?.(v)}
           onShowModal={onShowClienteModal}
-          entities={clienteId && clienteNome ? [{ id: clienteId, nome: clienteNome }] : []}
+          entities={clienteEntities}
+          placeholder={t('placeholder.selectClient')}
           error={clienteError}
           idFieldTitle="ID do cliente"
           searchButtonTitle="Buscar cliente"
@@ -172,7 +176,8 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
               value={form.id_filial}
               onChange={(v) => onChange('id_filial', v)}
               onShowModal={onShowFilialModal}
-              entities={form.id_filial ? [{ id: form.id_filial, nome: filialNome }] : []}
+              entities={filialEntities}
+              placeholder={t('ui.selectOption')}
               error={errors.id_filial}
               idFieldTitle="ID da filial"
               idPlaceholder="ID"
@@ -187,7 +192,8 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
               value={form.id_estrutura}
               onChange={(v) => onChange('id_estrutura', v)}
               onShowModal={onShowEstruturaModal}
-              entities={form.id_estrutura ? [{ id: form.id_estrutura, nome: estruturaNome }] : []}
+              entities={estruturaEntities}
+              placeholder={t('ui.selectOption')}
               error={errors.id_estrutura}
               idFieldTitle="ID da estrutura"
               idPlaceholder="ID"
@@ -202,7 +208,8 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
               value={form.id_assunto}
               onChange={(v) => onChange('id_assunto', v)}
               onShowModal={onShowAssuntoModal}
-              entities={form.id_assunto ? [{ id: form.id_assunto, nome: assuntoNome }] : []}
+              entities={assuntoEntities}
+              placeholder={t('ui.selectOption')}
               error={errors.id_assunto}
               idFieldTitle="ID do assunto"
               idPlaceholder="ID"
@@ -217,7 +224,8 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
               value={form.setor}
               onChange={(v) => onChange('setor', v)}
               onShowModal={onShowSetorModal}
-              entities={form.setor ? [{ id: form.setor, nome: setorNome }] : []}
+              entities={setorEntities}
+              placeholder={t('ui.selectOption')}
               error={errors.setor}
               idFieldTitle="ID do setor"
               idPlaceholder="ID"
@@ -231,7 +239,8 @@ const OrdemServicoFormFields: React.FC<OrdemServicoFormFieldsProps> = ({
               value={form.id_tecnico}
               onChange={(v) => onChange('id_tecnico', v)}
               onShowModal={onShowTecnicoModal}
-              entities={form.id_tecnico ? [{ id: form.id_tecnico, nome: tecnicoNome }] : []}
+              entities={tecnicoEntities}
+              placeholder={t('ui.selectOption')}
               idFieldTitle="ID do técnico"
               idPlaceholder="ID"
               searchButtonTitle="Buscar técnico"

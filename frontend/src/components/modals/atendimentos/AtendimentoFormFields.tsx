@@ -1,5 +1,7 @@
 import React from 'react';
 import { FormField, EntitySelectField } from 'components/ui';
+import type { EntityItem, StringEntityItem } from 'components/ui/EntitySelectField';
+import { useI18n } from 'contexts/I18nContext';
 
 export interface AtendimentoFormData {
   id_filial: string;
@@ -56,12 +58,12 @@ interface AtendimentoFormFieldsProps {
   disabled?: boolean;
   clienteId?: number;
   onClienteIdChange?: (value: number) => void;
-  clienteNome?: string;
+  clienteEntities?: EntityItem[];
   clienteError?: string;
-  filialNome?: string;
-  estruturaNome?: string;
-  departamentoNome?: string;
-  responsavelNome?: string;
+  filialEntities?: StringEntityItem[];
+  estruturaEntities?: StringEntityItem[];
+  departamentoEntities?: StringEntityItem[];
+  responsavelEntities?: StringEntityItem[];
   protocolo?: string;
   idLocal?: string;
   ixcId?: string;
@@ -84,12 +86,12 @@ const AtendimentoFormFields: React.FC<AtendimentoFormFieldsProps> = ({
   disabled = false,
   clienteId = 0,
   onClienteIdChange,
-  clienteNome = '',
+  clienteEntities = [],
   clienteError,
-  filialNome = '',
-  estruturaNome = '',
-  departamentoNome = '',
-  responsavelNome = '',
+  filialEntities = [],
+  estruturaEntities = [],
+  departamentoEntities = [],
+  responsavelEntities = [],
   protocolo = '',
   idLocal = '',
   ixcId = '',
@@ -104,6 +106,8 @@ const AtendimentoFormFields: React.FC<AtendimentoFormFieldsProps> = ({
   onShowDepartamentoModal,
   onShowResponsavelModal,
 }) => {
+  const { t } = useI18n();
+
   return (
     <div className="row g-2">
       {idLocal ? (
@@ -152,7 +156,8 @@ const AtendimentoFormFields: React.FC<AtendimentoFormFieldsProps> = ({
           value={clienteId}
           onChange={(v) => onClienteIdChange?.(v)}
           onShowModal={onShowClienteModal}
-          entities={clienteId && clienteNome ? [{ id: clienteId, nome: clienteNome }] : []}
+          entities={clienteEntities}
+          placeholder={t('placeholder.selectClient')}
           error={clienteError}
           idFieldTitle="ID do cliente"
           searchButtonTitle="Buscar cliente"
@@ -168,7 +173,8 @@ const AtendimentoFormFields: React.FC<AtendimentoFormFieldsProps> = ({
               value={form.id_estrutura}
               onChange={(v) => onChange('id_estrutura', v)}
               onShowModal={onShowEstruturaModal}
-              entities={form.id_estrutura ? [{ id: form.id_estrutura, nome: estruturaNome }] : []}
+              entities={estruturaEntities}
+              placeholder={t('ui.selectOption')}
               error={errors.id_estrutura}
               idFieldTitle="ID da estrutura"
               idPlaceholder="ID"
@@ -183,7 +189,8 @@ const AtendimentoFormFields: React.FC<AtendimentoFormFieldsProps> = ({
               value={form.id_filial}
               onChange={(v) => onChange('id_filial', v)}
               onShowModal={onShowFilialModal}
-              entities={form.id_filial ? [{ id: form.id_filial, nome: filialNome }] : []}
+              entities={filialEntities}
+              placeholder={t('ui.selectOption')}
               error={errors.id_filial}
               idFieldTitle="ID da filial"
               idPlaceholder="ID"
@@ -211,9 +218,8 @@ const AtendimentoFormFields: React.FC<AtendimentoFormFieldsProps> = ({
               value={form.id_ticket_setor}
               onChange={(v) => onChange('id_ticket_setor', v)}
               onShowModal={onShowDepartamentoModal}
-              entities={
-                form.id_ticket_setor ? [{ id: form.id_ticket_setor, nome: departamentoNome }] : []
-              }
+              entities={departamentoEntities}
+              placeholder={t('ui.selectOption')}
               error={errors.id_ticket_setor}
               idFieldTitle="ID do departamento"
               idPlaceholder="ID"
@@ -227,11 +233,8 @@ const AtendimentoFormFields: React.FC<AtendimentoFormFieldsProps> = ({
               value={form.id_responsavel_technico}
               onChange={(v) => onChange('id_responsavel_technico', v)}
               onShowModal={onShowResponsavelModal}
-              entities={
-                form.id_responsavel_technico
-                  ? [{ id: form.id_responsavel_technico, nome: responsavelNome }]
-                  : []
-              }
+              entities={responsavelEntities}
+              placeholder={t('ui.selectOption')}
               idFieldTitle="ID do colaborador responsável"
               idPlaceholder="ID"
               searchButtonTitle="Buscar colaborador responsável"

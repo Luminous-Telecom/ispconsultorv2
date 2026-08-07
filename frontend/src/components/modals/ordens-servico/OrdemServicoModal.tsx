@@ -9,7 +9,13 @@ import {
 import { useI18n } from 'contexts/I18nContext';
 import { OrdemServicoService } from 'services/ordemServicoService';
 import type { CreateOrdemServico } from 'services/ordemServicoService';
+import { ClienteService } from 'services/clienteService';
 import { useFiliais, useEstruturas, useTecnicos, useAssuntos, useSetores, useClienteIxcIntegracao } from 'hooks/useIxcLookups';
+import {
+  buildNumberEntitySelectEntities,
+  buildStringEntitySelectEntities,
+  mapLookupItemsToStringEntities,
+} from 'utils/entitySelectUtils';
 import ClienteListModal from 'components/modals/clientes/ClienteListModal';
 import DraggableModal from 'components/common/DraggableModal';
 import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
@@ -317,6 +323,89 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
   const showIxcFields = isOrdemIxc || clienteComIntegracaoIxc;
   const showAgendaFields = isOrdemIxc || isOrdemLocal || clienteComIntegracaoIxc || clienteSemIntegracaoIxc;
 
+  const { data: clientesData } = useQuery({
+    queryKey: ['clientes-ativos-entity-select'],
+    queryFn: () => ClienteService.list({ ativo: true, limit: 500 }),
+    enabled: show,
+    staleTime: 60 * 1000,
+  });
+
+  const { data: filiaisData } = useFiliais({
+    cliente_id: clienteId,
+    enabled: show && showIxcFields && clienteId > 0,
+  });
+  const { data: estruturasData } = useEstruturas({
+    cliente_id: clienteId,
+    enabled: show && showIxcFields && clienteId > 0,
+  });
+  const { data: setoresData } = useSetores({
+    cliente_id: clienteId,
+    enabled: show && showIxcFields && clienteId > 0,
+  });
+  const { data: tecnicosData } = useTecnicos({
+    cliente_id: clienteId,
+    setor_id: formData.setor || undefined,
+    enabled: show && showIxcFields && clienteId > 0,
+  });
+  const { data: assuntosData } = useAssuntos({
+    cliente_id: clienteId,
+    setor_id: formData.setor || undefined,
+    enabled: show && showIxcFields && clienteId > 0,
+  });
+
+  const clienteEntities = useMemo(() => {
+    const base = (clientesData?.data ?? []).map((cliente) => ({
+      id: cliente.id,
+      nome: cliente.razao_social?.trim() || cliente.nome_fantasia?.trim() || String(cliente.id),
+    }));
+    return buildNumberEntitySelectEntities(base, clienteId, clienteNome);
+  }, [clientesData?.data, clienteId, clienteNome]);
+
+  const filialEntities = useMemo(
+    () => buildStringEntitySelectEntities(
+      mapLookupItemsToStringEntities(filiaisData?.data),
+      formData.id_filial,
+      filialNome
+    ),
+    [filiaisData?.data, formData.id_filial, filialNome]
+  );
+
+  const estruturaEntities = useMemo(
+    () => buildStringEntitySelectEntities(
+      mapLookupItemsToStringEntities(estruturasData?.data),
+      formData.id_estrutura,
+      estruturaNome
+    ),
+    [estruturasData?.data, formData.id_estrutura, estruturaNome]
+  );
+
+  const setorEntities = useMemo(
+    () => buildStringEntitySelectEntities(
+      mapLookupItemsToStringEntities(setoresData?.data),
+      formData.setor,
+      setorNome
+    ),
+    [setoresData?.data, formData.setor, setorNome]
+  );
+
+  const tecnicoEntities = useMemo(
+    () => buildStringEntitySelectEntities(
+      mapLookupItemsToStringEntities(tecnicosData?.data),
+      formData.id_tecnico,
+      tecnicoNome
+    ),
+    [tecnicosData?.data, formData.id_tecnico, tecnicoNome]
+  );
+
+  const assuntoEntities = useMemo(
+    () => buildStringEntitySelectEntities(
+      mapLookupItemsToStringEntities(assuntosData?.data),
+      formData.id_assunto,
+      assuntoNome
+    ),
+    [assuntosData?.data, formData.id_assunto, assuntoNome]
+  );
+
   const formFields = (
     <OrdemServicoFormFields
       form={formData}
@@ -335,13 +424,13 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
           clearAgendaFields();
         }
       }}
-      clienteNome={clienteNome}
+      clienteEntities={clienteEntities}
       clienteError={clienteError}
-      filialNome={filialNome}
-      estruturaNome={estruturaNome}
-      tecnicoNome={tecnicoNome}
-      assuntoNome={assuntoNome}
-      setorNome={setorNome}
+      filialEntities={filialEntities}
+      estruturaEntities={estruturaEntities}
+      tecnicoEntities={tecnicoEntities}
+      assuntoEntities={assuntoEntities}
+      setorEntities={setorEntities}
       protocolo={isEdit ? String(ordemData?.protocolo ?? '') : ''}
       idLocal={isEdit ? String(ordemData?.id_local ?? ordemData?.id ?? '') : ''}
       ixcId={isEdit && isOrdemIxc ? String(ordemData?.ixc_id ?? ordemData?.id ?? '') : ''}

@@ -1,12 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useExecutarAcaoOrdemServico } from 'hooks/useOrdensServico';
 import { useTecnicos, useSetores, useAssuntos } from 'hooks/useIxcLookups';
 import type { OrdemServico } from 'services/ordemServicoService';
 import DraggableModal from 'components/common/DraggableModal';
 import { EntitySelectField, FormField, ModalFormActions, AtivoInativoField } from 'components/ui';
+import { useI18n } from 'contexts/I18nContext';
 import IxcLookupSelectModal from './IxcLookupSelectModal';
 import { clearDependentesAoMudarSetor, type OrdemServicoAcao } from './ordemServicoAcoes';
 import { ixcToDatetimeLocal, datetimeLocalToIxc } from 'utils/ixcDateTime';
+import {
+  buildStringEntitySelectEntities,
+  mapLookupItemsToStringEntities,
+} from 'utils/entitySelectUtils';
 
 interface OrdemServicoAcaoModalProps {
   show: boolean;
@@ -45,6 +50,7 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
   acao,
   onSuccess,
 }) => {
+  const { t } = useI18n();
   const executarMutation = useExecutarAcaoOrdemServico();
   const isPending = executarMutation.isPending;
 
@@ -58,6 +64,49 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
   const [showAssuntoModal, setShowAssuntoModal] = useState(false);
 
   const clienteId = Number(ordemServico?.cliente_id ?? 0) || 0;
+  const lookupEnabled = show && !!ordemServico && clienteId > 0;
+
+  const { data: setoresData } = useSetores({
+    cliente_id: clienteId,
+    enabled: lookupEnabled,
+  });
+  const { data: tecnicosData } = useTecnicos({
+    cliente_id: clienteId,
+    setor_id: form.setor || undefined,
+    enabled: lookupEnabled,
+  });
+  const { data: assuntosData } = useAssuntos({
+    cliente_id: clienteId,
+    setor_id: form.setor || undefined,
+    enabled: lookupEnabled,
+  });
+
+  const setorEntities = useMemo(
+    () => buildStringEntitySelectEntities(
+      mapLookupItemsToStringEntities(setoresData?.data),
+      form.setor,
+      setorNome
+    ),
+    [setoresData?.data, form.setor, setorNome]
+  );
+
+  const tecnicoEntities = useMemo(
+    () => buildStringEntitySelectEntities(
+      mapLookupItemsToStringEntities(tecnicosData?.data),
+      form.id_tecnico,
+      tecnicoNome
+    ),
+    [tecnicosData?.data, form.id_tecnico, tecnicoNome]
+  );
+
+  const assuntoEntities = useMemo(
+    () => buildStringEntitySelectEntities(
+      mapLookupItemsToStringEntities(assuntosData?.data),
+      form.id_assunto,
+      assuntoNome
+    ),
+    [assuntosData?.data, form.id_assunto, assuntoNome]
+  );
 
   useEffect(() => {
     if (!show || !ordemServico || !acao) return;
@@ -230,7 +279,8 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
                     value={form.id_tecnico}
                     onChange={(v) => handleChange('id_tecnico', v)}
                     onShowModal={() => setShowTecnicoModal(true)}
-                    entities={form.id_tecnico ? [{ id: form.id_tecnico, nome: tecnicoNome }] : []}
+                    entities={tecnicoEntities}
+                    placeholder={t('ui.selectOption')}
                     error={errors.id_tecnico}
                     idFieldTitle="ID do técnico"
                     idPlaceholder="ID"
@@ -272,7 +322,8 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
                       value={form.setor}
                       onChange={(v) => handleChange('setor', v)}
                       onShowModal={() => setShowSetorModal(true)}
-                      entities={form.setor ? [{ id: form.setor, nome: setorNome }] : []}
+                      entities={setorEntities}
+                      placeholder={t('ui.selectOption')}
                       error={errors.setor}
                       idFieldTitle="ID do setor"
                       idPlaceholder="ID"
@@ -287,7 +338,8 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
                     value={form.id_tecnico}
                     onChange={(v) => handleChange('id_tecnico', v)}
                     onShowModal={() => setShowTecnicoModal(true)}
-                    entities={form.id_tecnico ? [{ id: form.id_tecnico, nome: tecnicoNome }] : []}
+                    entities={tecnicoEntities}
+                    placeholder={t('ui.selectOption')}
                     error={errors.id_tecnico}
                     idFieldTitle="ID do colaborador"
                     idPlaceholder="ID"
@@ -301,7 +353,8 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
                     value={form.id_assunto}
                     onChange={(v) => handleChange('id_assunto', v)}
                     onShowModal={() => setShowAssuntoModal(true)}
-                    entities={form.id_assunto ? [{ id: form.id_assunto, nome: assuntoNome }] : []}
+                    entities={assuntoEntities}
+                    placeholder={t('ui.selectOption')}
                     idFieldTitle="ID do assunto"
                     idPlaceholder="ID"
                     searchButtonTitle="Buscar assunto"
