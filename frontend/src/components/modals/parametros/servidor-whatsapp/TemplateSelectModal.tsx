@@ -13,7 +13,7 @@ import { useBulkBtn } from 'components/ui';
 interface TemplateSelectModalProps {
   show: boolean;
   onClose: () => void;
-  onSelect: (data: { template_id: number }) => void;
+  onSelect: (data: { template_id: number; nome: string; idioma: string }) => void;
   title?: string;
 }
 
@@ -39,7 +39,7 @@ const TemplateSelectModal: React.FC<TemplateSelectModalProps> = ({
     handleSelectionChange,
     clearSelection
   } = useModalSelect<TemplateWhatsApp>((item) => {
-    onSelect({ template_id: item.id });
+    onSelect({ template_id: item.id, nome: item.nome, idioma: item.idioma });
     onClose();
   });
 
@@ -55,7 +55,7 @@ const TemplateSelectModal: React.FC<TemplateSelectModalProps> = ({
     const item = selectedItems && selectedItems.length > 0 ? selectedItems[0] : selectedItem;
     if (item) {
       clearSelection();
-      onSelect({ template_id: item.id });
+      onSelect({ template_id: item.id, nome: item.nome, idioma: item.idioma });
       onClose();
     }
   }, [selectedItem, clearSelection, onSelect, onClose]);
@@ -172,7 +172,7 @@ const TemplateSelectModal: React.FC<TemplateSelectModalProps> = ({
               tableId="template-select-table"
               onSelectionChange={handleSelectionChange}
               onRowDoubleClick={(item) => {
-                onSelect({ template_id: item.id });
+                onSelect({ template_id: item.id, nome: item.nome, idioma: item.idioma });
                 onClose();
               }}
               onRefresh={refetch}

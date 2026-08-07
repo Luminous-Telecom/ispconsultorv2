@@ -4,6 +4,7 @@ import { useNotificationContext } from 'components/notifications/NotificationPro
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { ServidorWhatsAppService, MensagemWhatsApp } from 'services/servidorWhatsAppService';
+import { TemplateWhatsAppService } from 'services/templateWhatsAppService';
 import { defaultApiClient } from 'services/core';
 import { useI18n } from 'contexts/I18nContext';
 import { ServidorWhatsAppForm, ServidorWhatsappModalProps } from '../types';
@@ -13,6 +14,10 @@ type UseServidorWhatsappModalParams = Omit<
   ServidorWhatsappModalProps,
   'variant' | 'skipWrapper' | 'onHeaderActionsReady'
 >;
+
+function formatTemplateEntityNome(nome: string, idioma: string): string {
+  return `${nome} (${idioma})`;
+}
 
 export function useServidorWhatsappModal({ show, onClose }: UseServidorWhatsappModalParams) {
   const { t } = useI18n();
@@ -126,6 +131,23 @@ export function useServidorWhatsappModal({ show, onClose }: UseServidorWhatsappM
     retry: false,
   });
 
+  const isWhatsAppCloud = servidorAtivo?.data?.tipo_api === 'whatsapp_cloud';
+
+  const { data: templatesData } = useQuery({
+    queryKey: ['templates-whatsapp'],
+    queryFn: () => TemplateWhatsAppService.list(),
+    enabled: show && isWhatsAppCloud,
+    staleTime: 60 * 1000,
+  });
+
+  const templateEntities = useMemo(
+    () => (templatesData?.data ?? []).map((template) => ({
+      id: template.id,
+      nome: formatTemplateEntityNome(template.nome, template.idioma),
+    })),
+    [templatesData?.data]
+  );
+
   const saveServidorMutation = useMutation({
     mutationFn: (data: ServidorWhatsAppForm) => {
       return ServidorWhatsAppService.createOrUpdate(data);
@@ -154,6 +176,8 @@ export function useServidorWhatsappModal({ show, onClose }: UseServidorWhatsappM
     },
     onSuccess: () => {
       success(t('whatsappServer.successMessageSave'));
+      queryClient.invalidateQueries({ queryKey: ['mensagem-whatsapp', mensagemTypeRef.current] });
+      queryClient.invalidateQueries({ queryKey: ['templates-whatsapp'] });
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.SERVER_SEND_ERROR),
   });
@@ -290,9 +314,13 @@ export function useServidorWhatsappModal({ show, onClose }: UseServidorWhatsappM
     []
   );
 
-  const handleTemplateSelect = useCallback(({ template_id: selectedTemplateId }: { template_id: number }) => {
-    setTemplateId(selectedTemplateId);
+  const handleTemplateSelect = useCallback((selection: { template_id: number }) => {
+    setTemplateId(selection.template_id);
     setShowTemplateSelectModal(false);
+  }, []);
+
+  const handleTemplateIdChange = useCallback((value: number | null) => {
+    setTemplateId(value);
   }, []);
 
   return {
@@ -315,6 +343,7 @@ export function useServidorWhatsappModal({ show, onClose }: UseServidorWhatsappM
     setMensagemManual,
     templateId,
     setTemplateId,
+    templateEntities,
     interacao1,
     setInteracao1,
     interacao2,
@@ -335,6 +364,7 @@ export function useServidorWhatsappModal({ show, onClose }: UseServidorWhatsappM
     handleInsertVariable,
     handleFormFieldChange,
     handleTemplateSelect,
+    handleTemplateIdChange,
     setTestPhone,
     setTestMessage,
   };

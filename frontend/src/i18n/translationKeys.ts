@@ -1254,6 +1254,7 @@ export interface TranslationKeys {
   'placeholder.selectBank': string;
   'placeholder.selectContractModel': string;
   'placeholder.selectClient': string;
+  'placeholder.selectTemplate': string;
   'placeholder.selectSupplier': string;
   'placeholder.enterClientId': string;
   'placeholder.bankName': string;

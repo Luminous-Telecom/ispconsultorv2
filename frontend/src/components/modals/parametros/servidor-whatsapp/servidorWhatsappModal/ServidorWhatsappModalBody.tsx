@@ -28,7 +28,7 @@ interface ServidorWhatsappModalBodyProps {
   mensagemPadrao: string;
   mensagemManual: string;
   templateId: number | null;
-  templateNome?: string;
+  templateEntities: Array<{ id: number; nome: string }>;
   interacao1: string;
   interacao2: string;
   interacao3: string;
@@ -47,7 +47,7 @@ interface ServidorWhatsappModalBodyProps {
   onShowTemplates: () => void;
   showTemplateSelectModal: boolean;
   onCloseTemplateSelectModal: () => void;
-  onTemplateSelect: (selection: { template_id: number }) => void;
+  onTemplateSelect: (selection: { template_id: number; nome?: string; idioma?: string }) => void;
 }
 
 const ServidorWhatsappModalBody: React.FC<ServidorWhatsappModalBodyProps> = ({
@@ -70,7 +70,7 @@ const ServidorWhatsappModalBody: React.FC<ServidorWhatsappModalBodyProps> = ({
   mensagemPadrao,
   mensagemManual,
   templateId,
-  templateNome,
+  templateEntities,
   interacao1,
   interacao2,
   interacao3,
@@ -126,7 +126,7 @@ const ServidorWhatsappModalBody: React.FC<ServidorWhatsappModalBodyProps> = ({
               mensagemPadrao={mensagemPadrao}
               mensagemManual={mensagemManual}
               templateId={templateId}
-              templateNome={templateNome}
+              templateEntities={templateEntities}
               interacao1={interacao1}
               interacao2={interacao2}
               interacao3={interacao3}

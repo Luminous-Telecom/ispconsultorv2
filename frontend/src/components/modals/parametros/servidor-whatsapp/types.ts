@@ -39,7 +39,7 @@ export interface MensagensTabProps {
   mensagemPadrao: string;
   mensagemManual?: string;
   templateId?: number | null;
-  templateNome?: string;
+  templateEntities?: Array<{ id: number; nome: string }>;
   interacao1: string;
   interacao2: string;
   interacao3: string;

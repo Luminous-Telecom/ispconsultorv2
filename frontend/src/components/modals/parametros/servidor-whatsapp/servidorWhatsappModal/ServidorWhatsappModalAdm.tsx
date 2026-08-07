@@ -93,16 +93,12 @@ const ServidorWhatsappModalAdm: React.FC<ServidorWhatsappModalAdmProps> = ({
       mensagemPadrao={modal.mensagemPadrao}
       mensagemManual={modal.mensagemManual}
       templateId={modal.templateId}
-      templateNome={
-        modal.mensagemData?.template
-          ? `${modal.mensagemData.template.nome} (${modal.mensagemData.template.idioma})`
-          : undefined
-      }
+      templateEntities={modal.templateEntities}
       onMensagemTypeChange={modal.setMensagemType}
       onTipoEnvioChange={modal.setTipoEnvio}
       onMensagemPadraoChange={modal.setMensagemPadrao}
       onMensagemManualChange={modal.setMensagemManual}
-      onTemplateIdChange={modal.setTemplateId}
+      onTemplateIdChange={modal.handleTemplateIdChange}
       onInteracao1Change={modal.setInteracao1}
       onInteracao2Change={modal.setInteracao2}
       onInteracao3Change={modal.setInteracao3}

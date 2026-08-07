@@ -1234,6 +1234,7 @@ const enUS: TranslationKeys = {
     'placeholder.selectBank': 'Select bank',
     'placeholder.selectContractModel': 'Select contract model',
     'placeholder.selectClient': 'Select client',
+    'placeholder.selectTemplate': 'Select template',
     'placeholder.selectSupplier': 'Select supplier',
     'placeholder.enterClientId': 'Enter client ID',
     'placeholder.bankName': 'Bank name',

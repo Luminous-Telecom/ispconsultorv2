@@ -16,7 +16,7 @@ export interface MensagemWhatsAppData {
 }
 
 export class MensagemWhatsAppService {
-  private static getDefaultIncludes() {
+  static getDefaultIncludes() {
     return [{ model: TemplateWhatsApp, as: 'template', required: false }];
   }
 
@@ -43,7 +43,10 @@ export class MensagemWhatsAppService {
       await mensagemExistente.reload({ include: MensagemWhatsAppService.getDefaultIncludes() });
       return mensagemExistente;
     } else {
-      return await MensagemWhatsApp.create(dadosMensagem as any);
+      return await MensagemWhatsApp.create(dadosMensagem as any).then(async (created) => {
+        await created.reload({ include: MensagemWhatsAppService.getDefaultIncludes() });
+        return created;
+      });
     }
   }
 

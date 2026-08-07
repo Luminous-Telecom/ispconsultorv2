@@ -15,7 +15,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
   mensagemPadrao,
   mensagemManual = '',
   templateId = null as number | null,
-  templateNome = '',
+  templateEntities = [],
   interacao1,
   interacao2,
   interacao3,
@@ -97,9 +97,9 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                       value={templateId ?? 0}
                       onChange={(value) => onTemplateIdChange?.(value === 0 ? null : value)}
                       onShowModal={onShowTemplates}
-                      entities={templateId && templateNome ? [{ id: templateId, nome: templateNome }] : []}
+                      entities={templateEntities}
                       label={t('settings.messages.templateConfig')}
-                      placeholder={t('settings.messages.viewTemplates')}
+                      placeholder={t('placeholder.selectTemplate')}
                       searchButtonTitle={t('settings.messages.viewTemplates')}
                     />
                   </div>
