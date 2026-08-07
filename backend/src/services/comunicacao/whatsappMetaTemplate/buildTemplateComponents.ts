@@ -4,6 +4,7 @@ import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { logger } from '../../../utils/logger';
 import { parseDateFromDb, formatDate } from '../../../utils/dateUtils';
 import { WhatsAppCloudService } from '../WhatsAppCloudService';
+import { resolveTituloPixParaOrderDetails } from './resolveTituloPixParaOrderDetails';
 import type {
   MetaTemplateButtonDef,
   MetaTemplateStructure,
@@ -17,45 +18,76 @@ export async function buildTemplateComponentsFromStructure(
   structure: MetaTemplateStructure,
   context: TemplateBuildContext
 ): Promise<WhatsAppCloudTemplateComponentPayload> {
+  const needsOrderDetails = structure.hasOrderDetailsButton
+    || structure.buttons.some((b) => b.type === 'ORDER_DETAILS' && b.requiresParameter);
+
+  let buildContext = context;
+  if (needsOrderDetails) {
+    const tituloComPix = await resolveTituloPixParaOrderDetails(context.titulo, context.cliente);
+    buildContext = { ...context, titulo: tituloComPix };
+  }
+
   const components: WhatsAppCloudTemplateComponentPayload = [];
 
   if (structure.header?.requiresParameter) {
-    const incluirHeader = !context.headerSomenteSeTipoPdf || context.tipoEnvio === 'pdf' || structure.header.format === 'DOCUMENT';
+    const incluirHeader = !buildContext.headerSomenteSeTipoPdf || buildContext.tipoEnvio === 'pdf' || structure.header.format === 'DOCUMENT';
     if (incluirHeader) {
-      const headerComponent = await buildHeaderComponent(structure, context);
+      const headerComponent = await buildHeaderComponent(structure, buildContext);
       if (headerComponent) {
         components.push(headerComponent);
       } else {
         logger.error('[WhatsApp Template] Header obrigatório não montado', {
           template: structure.name,
           format: structure.header.format,
-          titulo_id: context.titulo.id,
+          titulo_id: buildContext.titulo.id,
         });
       }
     }
   }
 
-  const bodyParams = buildBodyParams(context.variables, context.cliente, context.titulo);
+  const bodyParams = buildBodyParams(buildContext.variables, buildContext.cliente, buildContext.titulo);
   if (bodyParams.length > 0) {
     components.push({ type: 'body', parameters: bodyParams });
   }
 
   for (const buttonDef of structure.buttons) {
     if (!buttonDef.requiresParameter) continue;
-    const buttonComponent = await buildButtonComponent(buttonDef, context);
+    const buttonComponent = await buildButtonComponent(buttonDef, buildContext);
     if (buttonComponent) {
       components.push(buttonComponent);
     } else {
+      const failureReason = getButtonBuildFailureReason(buttonDef, buildContext);
       logger.error('[WhatsApp Template] Botão obrigatório não montado', {
         template: structure.name,
         buttonType: buttonDef.type,
         index: buttonDef.index,
-        titulo_id: context.titulo.id,
+        titulo_id: buildContext.titulo.id,
+        reason: failureReason,
       });
     }
   }
 
   return components;
+}
+
+function getButtonBuildFailureReason(
+  buttonDef: MetaTemplateButtonDef,
+  context: TemplateBuildContext
+): string {
+  const { titulo, cliente } = context;
+  switch (buttonDef.type) {
+    case 'ORDER_DETAILS':
+      if (!titulo.id) return 'titulo_sem_id';
+      if (!(titulo.qrcode || '').trim()) return 'qrcode_pix_ausente';
+      if (!(titulo.empresa_id ?? cliente?.empresa_id)) return 'empresa_id_ausente';
+      return 'cnpj_empresa_ausente';
+    case 'URL':
+      return 'link_pagamento_indisponivel';
+    case 'COPY_CODE':
+      return 'codigo_pix_ou_linha_digitavel_ausente';
+    default:
+      return 'nao_suportado';
+  }
 }
 
 async function buildHeaderComponent(
@@ -189,13 +221,24 @@ async function buildOrderDetailsButton(
   if (!titulo.id) return null;
 
   const pixCode = (titulo.qrcode || '').trim();
-  if (!pixCode) return null;
+  if (!pixCode) {
+    logger.error('[WhatsApp Template] order_details: QR Code PIX ausente no título', {
+      titulo_id: titulo.id,
+    });
+    return null;
+  }
 
   const empresaId = titulo.empresa_id ?? cliente?.empresa_id;
   const empresa = empresaId ? await DadosEmpresa.findByPk(empresaId) : null;
   const merchantName = (empresa?.nome_fantasia || empresa?.razao_social || 'Empresa').trim();
   const cnpj = (empresa?.cnpj || '').replace(/\D/g, '');
-  if (!cnpj) return null;
+  if (!cnpj) {
+    logger.error('[WhatsApp Template] order_details: CNPJ ausente em Dados da Empresa', {
+      titulo_id: titulo.id,
+      empresa_id: empresaId ?? null,
+    });
+    return null;
+  }
 
   const valorReais = titulo.valor_final != null ? Number(titulo.valor_final) : Number(titulo.valor);
   const valueCentavos = Number.isNaN(valorReais) ? 0 : Math.round(valorReais * 100);

@@ -87,12 +87,36 @@ function buttonRequiresParameter(type: MetaButtonType, url?: string): boolean {
   }
 }
 
+function normalizeButtonType(raw?: string): MetaButtonType {
+  const type = normMetaType(raw);
+  if (type === 'OTP') return 'COPY_CODE';
+  if (type === 'PAYMENT' || type === 'CHECKOUT' || type === 'ORDER_DETAIL') {
+    return 'ORDER_DETAILS';
+  }
+  return type as MetaButtonType;
+}
+
+function ensureOrderDetailsButton(
+  buttons: MetaTemplateButtonDef[],
+  hasOrderDetailsButton: boolean
+): MetaTemplateButtonDef[] {
+  if (!hasOrderDetailsButton || buttons.some((b) => b.type === 'ORDER_DETAILS')) {
+    return buttons;
+  }
+  return [{
+    index: 0,
+    type: 'ORDER_DETAILS',
+    requiresParameter: true,
+    urlDynamic: false,
+  }, ...buttons];
+}
+
 function parseButtons(comps?: MetaTemplateComponentRaw[]): MetaTemplateButtonDef[] {
   const buttonsComp = comps?.find((c) => normMetaType(c.type) === 'BUTTONS');
   if (!buttonsComp?.buttons?.length) return [];
 
   return buttonsComp.buttons.map((btn, index) => {
-    const type = normMetaType(btn.type) as MetaButtonType;
+    const type = normalizeButtonType(btn.type);
     const url = btn.url;
     return {
       index,
@@ -137,12 +161,13 @@ export function parseMetaTemplateStructure(params: {
   const bodyComp = components.find((c) => normMetaType(c.type) === 'BODY');
   const bodyParamCount = countBodyParams(bodyComp?.text);
   const header = parseHeader(components.find((c) => normMetaType(c.type) === 'HEADER'));
-  const buttons = parseButtons(components);
+  const parsedButtons = parseButtons(components);
 
   const hasHeaderDocument = header?.format === 'DOCUMENT';
-  const hasUrlButton = buttons.some((b) => b.type === 'URL');
-  const hasOrderDetailsButton = buttons.some((b) => b.type === 'ORDER_DETAILS')
+  const hasUrlButton = parsedButtons.some((b) => b.type === 'URL');
+  const hasOrderDetailsButton = parsedButtons.some((b) => b.type === 'ORDER_DETAILS')
     || (hasHeaderDocument && !hasUrlButton && /fatura/i.test(name));
+  const buttons = ensureOrderDetailsButton(parsedButtons, hasOrderDetailsButton);
   const hasCopyCodeButton = buttons.some((b) => b.type === 'COPY_CODE');
   const requiresStructuredButtons = buttons.some((b) =>
     ['ORDER_DETAILS', 'FLOW', 'CATALOG', 'MPM'].includes(b.type)

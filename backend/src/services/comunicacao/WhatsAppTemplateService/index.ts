@@ -79,14 +79,16 @@ export class WhatsAppTemplateService {
             ? { format: 'DOCUMENT', requiresParameter: true, paramType: 'document' }
             : null,
           buttons: forcarBotao === false
-            ? []
+            ? (/fatura/i.test(templateInfo.name)
+              ? [{ index: 0, type: 'ORDER_DETAILS', requiresParameter: true, urlDynamic: false }]
+              : [])
             : [{ index: 0, type: 'URL', requiresParameter: true, urlDynamic: true }],
           suggestedVariables: variables,
           hasHeaderDocument: templateInfo.header_document === true,
-          hasUrlButton: forcarBotao !== false,
-          hasOrderDetailsButton: false,
+          hasUrlButton: forcarBotao !== false && !/fatura/i.test(templateInfo.name),
+          hasOrderDetailsButton: /fatura/i.test(templateInfo.name),
           hasCopyCodeButton: false,
-          requiresStructuredButtons: false,
+          requiresStructuredButtons: /fatura/i.test(templateInfo.name),
         },
         {
           servidor,
