@@ -1234,6 +1234,7 @@ const ptBR: TranslationKeys = {
     'placeholder.selectBank': 'Selecione o banco',
     'placeholder.selectContractModel': 'Selecione o modelo de contrato',
     'placeholder.selectClient': 'Selecione o cliente',
+    'placeholder.selectContract': 'Selecione o contrato',
     'placeholder.selectTemplate': 'Selecione o template',
     'placeholder.selectSupplier': 'Selecione o fornecedor',
     'placeholder.enterClientId': 'Digite o ID do cliente',

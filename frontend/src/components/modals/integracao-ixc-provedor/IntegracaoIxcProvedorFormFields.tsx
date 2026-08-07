@@ -1,5 +1,6 @@
 import React from 'react';
 import { FormField, AtivoInativoField, EntitySelectField } from 'components/ui';
+import type { EntityItem } from 'components/ui/EntitySelectField';
 import { useI18n } from 'contexts/I18nContext';
 
 export interface IntegracaoIxcProvedorFormData {
@@ -17,8 +18,8 @@ interface IntegracaoIxcProvedorFormFieldsProps {
   onChange: (field: keyof IntegracaoIxcProvedorFormData, value: string | boolean | number) => void;
   disabled?: boolean;
   hasApiToken?: boolean;
-  clienteNome?: string;
-  contratoNome?: string;
+  clienteEntities?: EntityItem[];
+  contratoEntities?: EntityItem[];
   onShowClienteModal: () => void;
   onShowContratoModal: () => void;
 }
@@ -29,8 +30,8 @@ const IntegracaoIxcProvedorFormFields: React.FC<IntegracaoIxcProvedorFormFieldsP
   onChange,
   disabled = false,
   hasApiToken = false,
-  clienteNome = '',
-  contratoNome = '',
+  clienteEntities = [],
+  contratoEntities = [],
   onShowClienteModal,
   onShowContratoModal,
 }) => {
@@ -45,9 +46,8 @@ const IntegracaoIxcProvedorFormFields: React.FC<IntegracaoIxcProvedorFormFieldsP
           value={form.cliente_id}
           onChange={(id) => onChange('cliente_id', id || 0)}
           onShowModal={onShowClienteModal}
-          entities={
-            form.cliente_id && clienteNome ? [{ id: form.cliente_id, nome: clienteNome }] : []
-          }
+          entities={clienteEntities}
+          placeholder={t('placeholder.selectClient')}
           error={errors.cliente_id}
           disabled={disabled}
           idFieldTitle="ID do cliente"
@@ -62,11 +62,8 @@ const IntegracaoIxcProvedorFormFields: React.FC<IntegracaoIxcProvedorFormFieldsP
           value={form.contrato_id}
           onChange={(id) => onChange('contrato_id', id || 0)}
           onShowModal={onShowContratoModal}
-          entities={
-            form.contrato_id && contratoNome
-              ? [{ id: form.contrato_id, nome: contratoNome }]
-              : []
-          }
+          entities={contratoEntities}
+          placeholder={t('placeholder.selectContract')}
           error={errors.contrato_id}
           disabled={disabled}
           idFieldTitle="ID do contrato"

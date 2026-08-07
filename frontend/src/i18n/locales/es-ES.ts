@@ -1236,6 +1236,7 @@ const esES: TranslationKeys = {
     'placeholder.selectBank': 'Seleccione el banco',
     'placeholder.selectContractModel': 'Seleccione el modelo de contrato',
     'placeholder.selectClient': 'Seleccione el cliente',
+    'placeholder.selectContract': 'Seleccione el contrato',
     'placeholder.selectTemplate': 'Seleccione la plantilla',
     'placeholder.selectSupplier': 'Seleccione el proveedor',
     'placeholder.enterClientId': 'Ingrese el ID del cliente',

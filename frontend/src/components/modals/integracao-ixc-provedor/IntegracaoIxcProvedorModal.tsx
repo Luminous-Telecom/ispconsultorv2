@@ -1,4 +1,5 @@
-import React, { lazy, Suspense, useEffect, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useI18n } from 'contexts/I18nContext';
 import {
   useCreateIntegracaoIxcProvedor,
@@ -10,6 +11,8 @@ import DraggableModal from 'components/common/DraggableModal';
 import { Loading, ModalFormActions } from 'components/ui';
 import { getClienteRazaoSocialLabel } from 'utils/clienteDisplay';
 import { ClienteService } from 'services/clienteService';
+import { ContratoService } from 'services/contratoService';
+import { buildNumberEntitySelectEntities } from 'utils/entitySelectUtils';
 import IntegracaoIxcProvedorFormFields, {
   type IntegracaoIxcProvedorFormData,
 } from './IntegracaoIxcProvedorFormFields';
@@ -57,6 +60,36 @@ const IntegracaoIxcProvedorModal: React.FC<IntegracaoIxcProvedorModalProps> = ({
   const createMutation = useCreateIntegracaoIxcProvedor();
   const updateMutation = useUpdateIntegracaoIxcProvedor();
   const isPending = createMutation.isPending || updateMutation.isPending;
+
+  const { data: clientesData } = useQuery({
+    queryKey: ['clientes-ativos-entity-select'],
+    queryFn: () => ClienteService.list({ ativo: true, limit: 500 }),
+    enabled: show,
+    staleTime: 60 * 1000,
+  });
+
+  const { data: contratosData } = useQuery({
+    queryKey: ['contratos-cliente-entity-select', formData.cliente_id],
+    queryFn: () => ContratoService.getByCliente(formData.cliente_id),
+    enabled: show && formData.cliente_id > 0,
+    staleTime: 60 * 1000,
+  });
+
+  const clienteEntities = useMemo(() => {
+    const base = (clientesData?.data ?? []).map((cliente) => ({
+      id: cliente.id,
+      nome: getClienteRazaoSocialLabel(cliente),
+    }));
+    return buildNumberEntitySelectEntities(base, formData.cliente_id, clienteNome);
+  }, [clientesData?.data, formData.cliente_id, clienteNome]);
+
+  const contratoEntities = useMemo(() => {
+    const base = (contratosData ?? []).map((contrato) => ({
+      id: contrato.id,
+      nome: contrato.plano?.nome_plano?.trim() || `Contrato #${contrato.id}`,
+    }));
+    return buildNumberEntitySelectEntities(base, formData.contrato_id, contratoNome);
+  }, [contratosData, formData.contrato_id, contratoNome]);
 
   useFormReset({
     show,
@@ -231,8 +264,8 @@ const IntegracaoIxcProvedorModal: React.FC<IntegracaoIxcProvedorModalProps> = ({
               onChange={handleChange}
               disabled={isPending}
               hasApiToken={!!integracaoData?.has_api_token}
-              clienteNome={clienteNome}
-              contratoNome={contratoNome}
+              clienteEntities={clienteEntities}
+              contratoEntities={contratoEntities}
               onShowClienteModal={() => setShowClienteModal(true)}
               onShowContratoModal={() => setShowContratoModal(true)}
             />
