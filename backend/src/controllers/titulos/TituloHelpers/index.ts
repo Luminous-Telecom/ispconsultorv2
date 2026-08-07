@@ -125,12 +125,24 @@ export function processarInstrucao(instrucao: string, titulo: TituloComRelacoes)
 /**
  * Gera link público de pagamento
  */
-export function gerarLinkPagamentoPublico(tituloId: number, baseUrl?: string): string {
+export function gerarTokenPagamentoPublico(tituloId: number): string {
   const secret = process.env.JWT_SECRET || 'default-secret';
-  const token = crypto.createHmac('sha256', secret).update(String(tituloId)).digest('hex').substring(0, 16);
-  
-  // URL do frontend detectada automaticamente da requisição ou padrão relativo
-  // Em produção, será a mesma origem (Nginx serve frontend e backend)
+  return crypto.createHmac('sha256', secret).update(String(tituloId)).digest('hex').substring(0, 16);
+}
+
+export function gerarLinkPagamentoPublico(tituloId: number, _baseUrl?: string): string {
+  const token = gerarTokenPagamentoPublico(tituloId);
   return `/pagamento/${tituloId}/${token}`;
+}
+
+/**
+ * URL pública HTTPS do PDF do boleto (WhatsApp Cloud header document link).
+ * Requer BASE_URL ou APP_URL apontando para o servidor acessível pela Meta.
+ */
+export function gerarLinkPdfPublico(tituloId: number): string | null {
+  const base = (process.env.BASE_URL || process.env.APP_URL || '').replace(/\/$/, '');
+  if (!base) return null;
+  const token = gerarTokenPagamentoPublico(tituloId);
+  return `${base}/api/pagamento/${tituloId}/${token}/pdf`;
 }
 

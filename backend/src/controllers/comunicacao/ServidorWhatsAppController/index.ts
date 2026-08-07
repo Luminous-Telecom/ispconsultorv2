@@ -13,6 +13,7 @@ import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { whereComunicacaoEmpresaEstrito, pertenceComunicacaoEmpresa } from '../../../utils/comunicacaoEmpresaWhere';
+import { parseMetaTemplateStructure, toSuggestedTemplateMapping } from '../../../services/comunicacao/whatsappMetaTemplate';
 
 export class ServidorWhatsAppController {
   /**
@@ -545,29 +546,14 @@ export class ServidorWhatsAppController {
   private static gerarSuggestedTemplateMapping(template: {
     name?: string;
     language?: string;
-    components?: Array<{ type?: string; format?: string; text?: string }>;
-  }): { name: string; language: string; variables: string[]; header_document?: boolean } {
-    const name = template.name || 'template';
-    const language = template.language || 'pt_BR';
-
-    const isRecibo = /pagamento|recibo|recebido|payment|receipt/i.test(name);
-    const baseVars = isRecibo
-      ? ['titulo.valor_pago', 'titulo.pagamento']
-      : ['cliente.razao_social', 'titulo.valor_final', 'titulo.data_vencimento', 'dias_vencimento'];
-
-    let varCount = baseVars.length;
-    const bodyComp = template.components?.find((c) => c.type === 'BODY');
-    if (bodyComp?.text) {
-      const matches = bodyComp.text.match(/\{\{(\d+)\}\}/g);
-      if (matches) {
-        const nums = matches.map((m) => parseInt(m.replace(/\{\{|\}\}/g, ''), 10));
-        varCount = Math.max(...nums, 1);
-      }
-    }
-
-    const hasHeaderDoc = template.components?.some((c) => c.type === 'HEADER' && c.format === 'DOCUMENT');
-    const variables = baseVars.slice(0, varCount);
-    return { name, language, variables, header_document: hasHeaderDoc || undefined };
+    components?: Array<{ type?: string; format?: string; text?: string; buttons?: Array<{ type?: string; url?: string }> }>;
+  }) {
+    const structure = parseMetaTemplateStructure({
+      name: template.name || 'template',
+      language: template.language || 'pt_BR',
+      components: template.components,
+    });
+    return toSuggestedTemplateMapping(structure);
   }
 
   /**

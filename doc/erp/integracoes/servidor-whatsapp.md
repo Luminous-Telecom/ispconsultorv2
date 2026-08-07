@@ -97,12 +97,34 @@ Clique em **Salvar** na barra superior.
 
 Disponível apenas com **WhatsApp Cloud API (Oficial)**.
 
-Lista os templates **aprovados na Meta** (total e aprovados). Os cards exibem nome, idioma, status, categoria, quantidade de variáveis e uma prévia do corpo da mensagem. Para cada template:
+Lista os templates **aprovados na Meta** (total e aprovados). Os cards exibem nome, idioma, status, categoria, quantidade de variáveis, resumo da estrutura (header, botões) e uma prévia do corpo da mensagem. Para cada template:
 
 1. Clique no card para expandir.
 2. Revise a **Mensagem** e a **Pré-visualização**.
-3. Mapeie cada placeholder numerado da Meta (`1`, `2`, …) para variáveis do ERP (razão social, valor, vencimento etc.).
-4. Clique em **Salvar template** ou **Salvar e vincular** ao tipo de mensagem selecionado.
+3. Confira os badges de estrutura (ex.: **PDF no cabeçalho**, **PIX / Pedido** para botão `order_details`).
+4. Mapeie cada placeholder numerado da Meta (`1`, `2`, …) para variáveis do ERP (razão social, valor, vencimento etc.).
+5. Clique em **Salvar template** ou **Salvar e vincular** ao tipo de mensagem selecionado.
+
+### Estruturas de template suportadas no envio
+
+O ERP monta automaticamente os componentes exigidos pela Meta conforme o template aprovado:
+
+| Componente | Suporte |
+|------------|---------|
+| **Header DOCUMENT** | PDF da fatura/recibo (link público ou upload) |
+| **Header TEXT** | Nome do cliente |
+| **Body** | Variáveis mapeadas (texto, moeda, data) |
+| **Botão URL** | Link de pagamento público do título |
+| **Botão ORDER_DETAILS** | PIX dinâmico (EMV do título + CNPJ da empresa) |
+| **Botão COPY_CODE** | Código PIX ou linha digitável |
+
+Para templates com **ORDER_DETAILS** (ex.: `fatura_disponivel`):
+
+- O título precisa ter **QR Code PIX** (`qrcode`) preenchido.
+- **Dados da empresa** devem ter **CNPJ** cadastrado.
+- Header com PDF usa link público quando `BASE_URL`/`APP_URL` estão configurados.
+
+Header **IMAGE/VIDEO** e botões **FLOW/CATALOG** ainda não são montados automaticamente — use templates com DOCUMENT + ORDER_DETAILS ou URL.
 
 Use **Recarregar** para atualizar a lista da Meta.
 

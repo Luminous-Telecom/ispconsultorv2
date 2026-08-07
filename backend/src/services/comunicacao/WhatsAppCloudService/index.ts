@@ -3,28 +3,13 @@ import { registrarMensagemHistorico, type ContextoHistorico } from '../RegistroM
 import { Cliente } from '../../../models/clientes/Cliente';
 import { logger } from '../../../utils/logger';
 import { clienteDisplayName } from '../../../utils/clienteDisplayName';
+import {
+  fetchMetaTemplateStructure,
+  type MetaTemplateStructure,
+  type WhatsAppCloudTemplateComponentPayload,
+} from '../whatsappMetaTemplate';
 
-interface WhatsAppCloudTemplateComponent {
-  type: 'body' | 'header' | 'button';
-  parameters?: Array<{
-    type: 'text' | 'currency' | 'date_time' | 'image' | 'document' | 'video';
-    text?: string;
-    currency?: { fallback_value: string; code: string; amount_1000: number };
-    date_time?: { fallback_value: string };
-    image?: { link?: string; id?: string };
-    document?: { link?: string; id?: string; filename?: string };
-    video?: { link?: string; id?: string };
-  }>;
-  sub_type?: 'url' | 'quick_reply';
-  index?: number;
-  buttons?: Array<{
-    type: 'URL' | 'QUICK_REPLY' | 'PHONE_NUMBER';
-    text: string;
-    url?: string;
-    phone_number?: string;
-    example?: string[];
-  }>;
-}
+type WhatsAppCloudTemplateComponent = WhatsAppCloudTemplateComponentPayload[number];
 
 interface WhatsAppCloudTemplateMessage {
   messaging_product: 'whatsapp';
@@ -274,7 +259,6 @@ export class WhatsAppCloudService {
         const cloned = filtered.map((c) => ({
           ...c,
           parameters: c.parameters ? [...c.parameters] : undefined,
-          buttons: c.buttons ? [...c.buttons] : undefined,
         }));
 
         const bodyIndex = cloned.findIndex((c) => c.type === 'body');
@@ -294,10 +278,17 @@ export class WhatsAppCloudService {
       };
 
       const originalComponents = components || [];
+      const hasStructuredButtons = originalComponents.some(
+        (c) =>
+          c.sub_type === 'order_details'
+          || c.sub_type === 'copy_code'
+          || c.sub_type === 'flow'
+          || c.parameters?.some((p) => p.type === 'action')
+      );
       let { response, responseData } = await sendTemplateRequest(originalComponents);
 
-      // Retry automático para erro (#132000) quando componentes/parâmetros não batem com o template
-      if (!response.ok && isParamsMismatchError(responseData)) {
+      // Retry só para templates simples (URL/texto) — não remover botões estruturados
+      if (!response.ok && isParamsMismatchError(responseData) && !hasStructuredButtons) {
         const bodyComponent = originalComponents.find((c) => c.type === 'body');
         const originalBodyParamCount = bodyComponent?.parameters?.length || 0;
         const hasHeader = originalComponents.some((c) => c.type === 'header');
@@ -574,10 +565,11 @@ export class WhatsAppCloudService {
           paramsCount: c.parameters?.length ?? 0,
           paramTypes: c.parameters?.map((p) => p.type) ?? []
         }));
-        logger.error(`Erro #132000 template ${templateName}: components=${JSON.stringify(compsSummary)}, params_mismatch`);
+        const errorCode = errorObj?.error?.code;
+        logger.error(`Erro template ${templateName} (#${errorCode ?? 'unknown'}): components=${JSON.stringify(compsSummary)}, params_mismatch=${errorCode === 132000}`);
         logger.error(`Erro ao enviar template via WhatsApp Cloud API - Template: ${templateName}, Mensagem: ${errorMessage}`, {
           status: response.status,
-          errorCode: errorObj?.error?.code,
+          errorCode,
           components: JSON.stringify(components).substring(0, 800),
           fullResponse: JSON.stringify(responseData).substring(0, 800)
         });
@@ -846,61 +838,14 @@ export class WhatsAppCloudService {
   }
 
   /**
-   * Busca o template na Meta API e retorna a estrutura esperada (quantidade de parâmetros do body, se tem header documento).
-   * Usado para ajustar os componentes enviados conforme o template real.
+   * Busca o template na Meta API e retorna a estrutura parseada.
    */
   static async buscarEstruturaTemplateMeta(
     servidor: { whatsapp_cloud_token?: string; whatsapp_cloud_business_account_id?: string; whatsapp_cloud_phone_number_id?: string },
     templateName: string,
     language: string
-  ): Promise<{ bodyParamCount: number; hasHeaderDocument: boolean } | null> {
-    try {
-      if (!servidor.whatsapp_cloud_token) return null;
-      let wabaId = servidor.whatsapp_cloud_business_account_id;
-      if (!wabaId && servidor.whatsapp_cloud_phone_number_id) {
-        const phoneRes = await fetch(
-          `https://graph.facebook.com/v18.0/${servidor.whatsapp_cloud_phone_number_id}?fields=whatsapp_business_account`,
-          { headers: { 'Authorization': `Bearer ${servidor.whatsapp_cloud_token}` } }
-        );
-        const phoneData = await phoneRes.json().catch(() => ({}));
-        wabaId = (phoneData as { whatsapp_business_account?: { id?: string } })?.whatsapp_business_account?.id;
-      }
-      if (!wabaId) return null;
-
-      const res = await fetch(
-        `https://graph.facebook.com/v18.0/${wabaId}/message_templates`,
-        { headers: { 'Authorization': `Bearer ${servidor.whatsapp_cloud_token}` } }
-      );
-      const data = await res.json().catch(() => ({}));
-      const templates = (data as { data?: Array<{ name?: string; language?: string; components?: Array<{ type?: string; format?: string; text?: string }> }> })?.data || [];
-      const langNorm = (l: string) => (l || '').toLowerCase().replace(/-/g, '_');
-      const template = templates.find((t: { name?: string; language?: string }) =>
-        t.name === templateName && langNorm(t.language || '') === langNorm(language || 'pt_BR')
-      );
-      if (!template) {
-        const nomes = templates.slice(0, 5).map((t: { name?: string; language?: string }) => `${t.name}:${t.language}`);
-        logger.info(`[Meta Template] Template não encontrado: procurando ${templateName}:${language}, total=${templates.length}, primeiros=${JSON.stringify(nomes)}`);
-        return null;
-      }
-
-      let bodyParamCount = 0;
-      const bodyComp = template.components?.find((c: { type?: string }) => c.type === 'BODY');
-      if (bodyComp?.text) {
-        const matches = (bodyComp.text as string).match(/\{\{(\d+)\}\}/g);
-        if (matches) {
-          const nums = matches.map((m: string) => parseInt(m.replace(/\{\{|\}\}/g, ''), 10));
-          bodyParamCount = Math.max(...nums, 1);
-        }
-      }
-      const hasHeaderDocument = template.components?.some(
-        (c: { type?: string; format?: string }) => c.type === 'HEADER' && c.format === 'DOCUMENT'
-      ) ?? false;
-      logger.info(`[Meta Template] Estrutura extraída: ${templateName}:${language}, bodyParamCount=${bodyParamCount}, hasHeaderDocument=${hasHeaderDocument}`);
-      return { bodyParamCount, hasHeaderDocument };
-    } catch (error) {
-      logger.error('Erro ao buscar estrutura do template na Meta', { templateName, language, error: error instanceof Error ? error.message : String(error) });
-      return null;
-    }
+  ): Promise<MetaTemplateStructure | null> {
+    return fetchMetaTemplateStructure(servidor, templateName, language);
   }
 
   /**

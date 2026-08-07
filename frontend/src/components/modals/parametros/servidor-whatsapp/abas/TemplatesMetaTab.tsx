@@ -19,6 +19,13 @@ interface Template {
     language: string;
     variables: string[];
     header_document?: boolean;
+    header_format?: string | null;
+    button_types?: string[];
+    template_structure?: {
+      bodyParamCount: number;
+      headerFormat?: string | null;
+      buttons: Array<{ type: string; index: number; requiresParameter: boolean }>;
+    };
   };
   components?: Array<{
     type: string;
@@ -85,6 +92,35 @@ function getTemplateStatusVariant(status: string): BadgeVariant {
   if (normalized.includes('rejected') || normalized.includes('rejeitado')) return 'danger';
   if (normalized.includes('pending') || normalized.includes('pendente')) return 'warning';
   return 'secondary';
+}
+
+function formatButtonTypeLabel(type: string): string {
+  const map: Record<string, string> = {
+    URL: 'Link URL',
+    ORDER_DETAILS: 'PIX / Pedido',
+    COPY_CODE: 'Copiar código',
+    QUICK_REPLY: 'Resposta rápida',
+    PHONE_NUMBER: 'Telefone',
+    FLOW: 'Flow',
+    CATALOG: 'Catálogo',
+    MPM: 'Multi-produto',
+  };
+  return map[type] || type;
+}
+
+function getTemplateStructureSummary(template: Template): string {
+  const mapping = template.suggested_template_mapping;
+  if (!mapping) return 'Mensagem de texto';
+  const parts: string[] = [];
+  if (mapping.header_format) {
+    parts.push(`Header: ${mapping.header_format}`);
+  } else if (mapping.header_document) {
+    parts.push('PDF no cabeçalho');
+  }
+  if (mapping.button_types?.length) {
+    parts.push(`Botões: ${mapping.button_types.map(formatButtonTypeLabel).join(', ')}`);
+  }
+  return parts.length > 0 ? parts.join(' · ') : 'Mensagem de texto';
 }
 
 function formatTemplateStatus(status: string): string {
@@ -299,7 +335,7 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
                         </p>
                         <div className="template-meta-card__footer">
                           <span>Editar mapeamento</span>
-                          <span>{template.suggested_template_mapping?.header_document ? 'PDF no cabeçalho' : 'Mensagem de texto'}</span>
+                          <span>{getTemplateStructureSummary(template)}</span>
                         </div>
                       </div>
                     </div>
@@ -327,6 +363,15 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
                         {formatTemplateStatus(template.status)}
                       </Badge>
                     </div>
+                    {template.suggested_template_mapping?.button_types?.length ? (
+                      <div className="template-meta-detail__badges row g-2 mb-2 form-modal-input-col">
+                        {template.suggested_template_mapping.button_types.map((btnType) => (
+                          <div key={btnType} className="col-auto">
+                            <Badge variant="info" pill>{formatButtonTypeLabel(btnType)}</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
                     <div className="row g-2">
                       <div className="col-12">
                         <FormField

@@ -368,14 +368,14 @@ export class WhatsAppBoletoService {
       }, baseUrl);
     }
 
-    const components = await WhatsAppTemplateService.prepararComponentesTemplate({
+    const components = await WhatsAppTemplateService.prepararComponentesParaTemplateCloud({
       servidor,
       cliente,
       contrato: contrato || undefined,
       titulo,
       mensagemTexto: msg,
-      incluirPdfNoHeader: mensagem.tipo_envio === 'pdf' || templateInfo.name === 'fatura_pdf',
-      variables: templateInfo.variables
+      templateInfo,
+      tipoEnvio: mensagem.tipo_envio,
     });
 
     return await WhatsAppCloudService.enviarTemplate(
@@ -551,28 +551,17 @@ export class WhatsAppBoletoService {
               dataReferencia: new Date()
             }, baseUrl)
           : '';
-        const estrutura = await WhatsAppCloudService.buscarEstruturaTemplateMeta(
-          servidor,
-          templateInfo.name,
-          templateInfo.language
-        );
-        logger.info(`[Recibo WhatsApp] Estrutura Meta: bodyParamCount=${estrutura?.bodyParamCount ?? 'null'}, hasHeaderDocument=${estrutura?.hasHeaderDocument ?? 'null'}, template=${templateInfo.name}`);
-        const variaveis = (templateInfo.variables || []).slice(
-          0,
-          estrutura?.bodyParamCount ?? (templateInfo.variables?.length ?? 0)
-        );
-        const incluirPdfHeader = mensagem.tipo_envio === 'pdf' && (estrutura?.hasHeaderDocument ?? templateInfo.header_document === true);
-        logger.info(`[Recibo WhatsApp] Variáveis: originais=${JSON.stringify(templateInfo.variables)}, usadas=${JSON.stringify(variaveis)}, incluirPdfHeader=${incluirPdfHeader}`);
-        const components = await WhatsAppTemplateService.prepararComponentesTemplate({
+        const components = await WhatsAppTemplateService.prepararComponentesParaTemplateCloud({
           servidor,
           cliente,
           contrato: contrato || undefined,
           titulo,
           mensagemTexto: msg,
-          incluirPdfNoHeader: incluirPdfHeader,
+          templateInfo,
+          tipoEnvio: mensagem.tipo_envio,
           tipoPdfHeader: 'recibo',
-          incluirBotao: false,
-          variables: variaveis.length > 0 ? variaveis : templateInfo.variables
+          forcarBotao: false,
+          headerSomenteSeTipoPdf: true,
         });
         const bodyComp = components.find((c) => c.type === 'body');
         const bodyParamsPreview = bodyComp?.parameters?.map((p) => (p.type === 'text' ? p.text : p.type)) ?? [];

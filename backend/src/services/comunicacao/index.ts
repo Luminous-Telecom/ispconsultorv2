@@ -4,6 +4,7 @@ export { WhatsAppTemplateService } from './WhatsAppTemplateService';
 export { WhatsAppBoletoService } from './WhatsAppBoletoService';
 export { WhatsAppMessageService } from './WhatsAppMessageService';
 export { WhatsAppCloudService } from './WhatsAppCloudService';
+export * from './whatsappMetaTemplate';
 export { ServidorWhatsAppService } from './ServidorWhatsAppService';
 export { ServidorWhatsAppProcessorService } from './ServidorWhatsAppProcessorService';
 export { ServidorWhatsAppConnectionService } from './ServidorWhatsAppConnectionService';

@@ -119,14 +119,14 @@ export class WhatsAppMessageService {
       }, baseUrl);
     }
 
-    const components = await WhatsAppTemplateService.prepararComponentesTemplate({
+    const components = await WhatsAppTemplateService.prepararComponentesParaTemplateCloud({
       servidor,
       cliente,
       contrato: contrato || undefined,
       titulo,
       mensagemTexto: msg,
-      incluirPdfNoHeader: mensagem.tipo_envio === 'pdf' || templateInfo.name === 'fatura_pdf',
-      variables: templateInfo.variables
+      templateInfo,
+      tipoEnvio: mensagem.tipo_envio,
     });
 
     const enviouTemplate = await WhatsAppCloudService.enviarTemplate(
