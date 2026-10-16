@@ -59,6 +59,7 @@ import saasParametrosRoutes from './saas/saasParametrosRoutes';
 import saasNfseConfigRoutes from './saas/saasNfseConfigRoutes';
 import saasSchedulerRoutes from './saas/saasSchedulerRoutes';
 import saasAtualizacoesRoutes from './saas/saasAtualizacoesRoutes';
+import sistemaAtualizacaoRoutes from './sistemaAtualizacaoRoutes';
 import saasBackupsRoutes from './saas/saasBackupsRoutes';
 import tenantRoutes from './tenantRoutes';
 import sshManagerRoutes from './sshManagerRoutes';
@@ -146,6 +147,7 @@ const routes = [
     { path: '/api/saas/scheduler', route: saasSchedulerRoutes },
     { path: '/api/saas/saas-dados-empresa', route: saasDadosEmpresaCrudRoutes },
     { path: '/api/saas/atualizacoes', route: saasAtualizacoesRoutes },
+    { path: '/api/sistema', route: sistemaAtualizacaoRoutes },
     { path: '/api/saas/backups', route: saasBackupsRoutes },
     { path: '/api/saas', route: saasCrudRoutes },
     { path: '/api/tenant', route: tenantRoutes },

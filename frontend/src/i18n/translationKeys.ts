@@ -1505,6 +1505,7 @@ export interface TranslationKeys {
   'updates.waitingServer': string;
   'updates.restartInSeconds': string;
   'updates.reloadingPage': string;
+  'updates.inProgressWait': string;
 
   // Login
   'login.title': string;

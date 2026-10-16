@@ -10,6 +10,7 @@ import { ModalProvider } from './contexts/ModalContext';
 import { LoadingProvider } from './contexts/LoadingContext';
 import { SaasAuthProvider } from './contexts/SaasAuthContext';
 import Loading from './components/common/Loading';
+import SystemUpdateOverlay from './components/common/SystemUpdateOverlay';
 import { RecarregarButton } from './components/ui';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import ProtectionLayer from './components/common/ProtectionLayer';
@@ -195,6 +196,7 @@ function AppContent() {
 function App() {
   return (
     <I18nProvider>
+      <SystemUpdateOverlay />
       <AppContent />
     </I18nProvider>
   );

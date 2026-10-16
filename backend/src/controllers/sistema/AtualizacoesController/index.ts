@@ -12,6 +12,10 @@ import { registrarCriacao } from '../../../services/sistema/AuditoriaService/ind
 import { sendSuccess, sendError, sendValidationError, sendNotFound, sendForbidden } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { SYSTEM_NAME } from '../../../constants/systemBrand';
+import {
+  SystemUpdateProgressService,
+  type SystemUpdateKind,
+} from '../../../services/sistema/SystemUpdateProgressService';
 
 function findDirWith(startPath: string, target: string): string | null {
   let cur = startPath;
@@ -108,7 +112,30 @@ function parseReleaseItens(body: string): string[] {
   return [...new Set(itens)];
 }
 
+function trackUpdateProgress(
+  kind: SystemUpdateKind,
+  progress: { step: string; progress: number }
+): void {
+  if (progress.step === 'erro') {
+    SystemUpdateProgressService.fail();
+    return;
+  }
+  if (kind === 'doc' && progress.step === 'finalizado') {
+    SystemUpdateProgressService.end();
+    return;
+  }
+  SystemUpdateProgressService.report(progress.progress);
+}
+
 export class AtualizacoesController {
+  /**
+   * Estado da atualização em andamento para as demais telas do sistema.
+   */
+  static async getStatus(_req: Request, res: Response): Promise<void> {
+    res.set('Cache-Control', 'no-store');
+    sendSuccess(res, SystemUpdateProgressService.getSnapshot());
+  }
+
   /**
    * Verifica se o usuário pode acessar (admin ERP ou super_admin SaaS)
    */
@@ -254,16 +281,20 @@ export class AtualizacoesController {
         'X-Accel-Buffering': 'no',
       });
 
+      SystemUpdateProgressService.begin('system');
+
       let updateService: SelfUpdateService;
       try {
         updateService = new SelfUpdateService();
       } catch (error) {
+        SystemUpdateProgressService.fail();
         res.write(`data: ${JSON.stringify({ error: `Erro ao inicializar serviço de atualização: ${error instanceof Error ? error.message : 'Erro desconhecido'}` })}\n\n`);
         res.end();
         return;
       }
 
       const sendProgress = (progress: { step: string; progress: number; message: string; logs?: string[] }) => {
+        trackUpdateProgress('system', progress);
         try { res.write(`data: ${JSON.stringify(progress)}\n\n`); } catch { /* SSE já fechado */ }
       };
 
@@ -352,6 +383,8 @@ export class AtualizacoesController {
         error: errorMessage
       });
 
+      SystemUpdateProgressService.fail();
+
       try {
         res.write(`data: ${JSON.stringify({ 
           error: 'Erro interno do servidor durante a atualização',
@@ -396,16 +429,20 @@ export class AtualizacoesController {
         'X-Accel-Buffering': 'no',
       });
 
+      SystemUpdateProgressService.begin('doc');
+
       let docUpdateService: DocUpdateService;
       try {
         docUpdateService = new DocUpdateService();
       } catch (error) {
+        SystemUpdateProgressService.fail();
         res.write(`data: ${JSON.stringify({ error: `Erro ao inicializar serviço da wiki: ${error instanceof Error ? error.message : 'Erro desconhecido'}` })}\n\n`);
         res.end();
         return;
       }
 
       const sendProgress = (progress: { step: string; progress: number; message: string; logs?: string[] }) => {
+        trackUpdateProgress('doc', progress);
         try { res.write(`data: ${JSON.stringify(progress)}\n\n`); } catch { /* SSE já fechado */ }
       };
 
@@ -454,6 +491,8 @@ export class AtualizacoesController {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro inesperado durante atualização da wiki', { error: errorMessage });
+
+      SystemUpdateProgressService.fail();
 
       try {
         res.write(`data: ${JSON.stringify({

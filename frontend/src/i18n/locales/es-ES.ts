@@ -1520,6 +1520,7 @@ const esES: TranslationKeys = {
     'updates.waitingServer': 'Esperando a que el servidor esté listo...',
     'updates.restartInSeconds': 'Esperando reinicio del servidor (${n}s)...',
     'updates.reloadingPage': 'Recargando página...',
+    'updates.inProgressWait': 'Actualización en curso, espere',
 
     // Login
     'login.title': 'Acceda al panel administrativo',

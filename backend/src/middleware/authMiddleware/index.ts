@@ -13,6 +13,7 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { path: /^\/health$/i },
   { path: /^\/client-ip$/i },
   { path: /^\/api\/health/i },
+  { method: 'GET', path: /^\/api\/sistema\/atualizacao-status\/?$/i },
   { path: /^\/api\/auth\/login$/i },
   { method: 'POST', path: /^\/api\/auth\/logout$/i }, // Logout limpa cookie — não exige token válido
   // Rotas TXT Blockdomi (protegidas por IP no blockdomiIpsPermitidosMiddleware)

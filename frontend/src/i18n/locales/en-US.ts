@@ -1518,6 +1518,7 @@ const enUS: TranslationKeys = {
     'updates.waitingServer': 'Waiting for server to be ready...',
     'updates.restartInSeconds': 'Waiting for server restart (${n}s)...',
     'updates.reloadingPage': 'Reloading page...',
+    'updates.inProgressWait': 'Update in progress, please wait',
 
     // Login
     'login.title': 'Access the administrative panel',

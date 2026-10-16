@@ -29,6 +29,8 @@ export type { BadgeProps, BadgeVariant } from './Badge';
 export { default as Spinner } from './Spinner';
 export type { SpinnerProps, SpinnerSize, SpinnerVariant } from './Spinner';
 export { default as Loading } from './Loading';
+export { default as CircularProgress } from './CircularProgress';
+export type { CircularProgressProps } from './CircularProgress';
 export type { LoadingProps, LoadingVariant } from './Loading';
 export { default as LoadingBar } from './LoadingBar';
 export { LabelWithHelp, RequiredMark } from './LabelWithHelp';

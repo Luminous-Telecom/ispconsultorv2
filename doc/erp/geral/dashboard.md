@@ -46,6 +46,12 @@ No topo da tela há um campo de busca de **clientes** com seletor de campo (ID, 
 
 ---
 
+## Atualização do sistema
+
+Quando o painel SaaS inicia **Atualizar sistema** ou **Atualizar documentação**, as demais telas abertas (ERP, Central do Assinante e outros acessos) exibem um aviso em tela cheia: **Atualização em andamento, aguarde**, com a porcentagem em um progresso circular. Aguarde o término. Na atualização do sistema a página recarrega sozinha quando o servidor volta.
+
+A tela que disparou a atualização continua mostrando o progresso detalhado e o log, sem esse aviso por cima.
+
 ## Boas práticas
 
 - Consulte o dashboard diariamente para identificar contratos em atraso ou backups ausentes.

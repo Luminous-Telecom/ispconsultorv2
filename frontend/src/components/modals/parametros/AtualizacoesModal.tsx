@@ -9,6 +9,7 @@ import { API_CONFIG } from 'config/api';
 import { useI18n } from 'contexts/I18nContext';
 import { DynamicProgressBar } from 'components/ui';
 import { waitForBackendHealth } from 'utils/healthCheck';
+import { clearSystemUpdateDriver, markSystemUpdateDriver } from 'utils/systemUpdateDriver';
 
 interface Atualizacao {
   versao: string;
@@ -191,6 +192,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
       }, 800);
     },
     onError: (err: unknown) => {
+      clearSystemUpdateDriver();
       setIsUpdating(false);
       setUpdateKind(null);
       setUpdateProgress('');
@@ -209,6 +211,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
       setUpdateProgressPercent(100);
       setUpdateProgress(t('updates.concluded'));
       setTimeout(() => {
+        clearSystemUpdateDriver();
         setIsUpdating(false);
         setUpdateKind(null);
         setUpdateProgress('');
@@ -216,6 +219,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
       }, 1200);
     },
     onError: (err: unknown) => {
+      clearSystemUpdateDriver();
       setIsUpdating(false);
       setUpdateKind(null);
       setUpdateProgress('');
@@ -230,6 +234,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
       return;
     }
 
+    markSystemUpdateDriver();
     setUpdateKind('system');
     setUpdateLogs([]);
     updateMutation.mutate();
@@ -241,6 +246,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
       return;
     }
 
+    markSystemUpdateDriver();
     setUpdateKind('doc');
     setUpdateLogs([]);
     updateDocMutation.mutate();

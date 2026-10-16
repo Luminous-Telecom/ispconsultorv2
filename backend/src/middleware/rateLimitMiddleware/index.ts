@@ -48,6 +48,7 @@ const generalLimiter = rateLimit({
       '/api/assinaturas-digital/webhook', // Webhooks de assinatura digital não devem ter rate limit
       '/health',
       '/api/health',
+      '/api/sistema/atualizacao-status',
       '/webhook',
       '/arquivos'
     ];

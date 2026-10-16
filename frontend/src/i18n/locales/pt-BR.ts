@@ -1518,6 +1518,7 @@ const ptBR: TranslationKeys = {
     'updates.waitingServer': 'Aguardando servidor ficar pronto...',
     'updates.restartInSeconds': 'Aguardando reinício do servidor (${n}s)...',
     'updates.reloadingPage': 'Recarregando página...',
+    'updates.inProgressWait': 'Atualização em andamento, aguarde',
 
     // Login
     'login.title': 'Acesse o painel administrativo',

@@ -161,6 +161,76 @@
   /* width definida via ref/hook */
 }
 
+.circular-progress {
+  position: relative;
+  width: 7.5rem;
+  height: 7.5rem;
+}
+
+.circular-progress__svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.circular-progress__track,
+.circular-progress__value {
+  fill: none;
+  stroke-width: 8;
+}
+
+.circular-progress__track {
+  stroke: var(--bg-tertiary);
+}
+
+.circular-progress__value {
+  stroke: var(--primary-color);
+  stroke-linecap: round;
+  stroke-dasharray: 263.894;
+  stroke-dashoffset: calc(263.894 - (263.894 * var(--circular-progress, 0)) / 100);
+  transition: stroke-dashoffset 0.35s ease;
+}
+
+.circular-progress__percent {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: var(--font-size-lg);
+  color: var(--text-primary);
+}
+
+.system-update-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.system-update-overlay__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  max-width: 22rem;
+  margin: 1rem;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+}
+
+.system-update-overlay__title {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
 .updates-item-card {
   border-radius: var(--border-radius-md);
   border: 1px solid var(--border-color);
