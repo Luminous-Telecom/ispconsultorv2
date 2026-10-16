@@ -8,12 +8,15 @@ export interface NFSeConfig {
   descricao_servico: string | null;
   serie_nf: string | null;
   numero_dps: number | null;
-  portal_nacional_username: string | null;
-  /** Senha mascarada no backend — usar has_portal_nacional_password para verificar se existe */
-  portal_nacional_password?: never;
-  has_portal_nacional_password: boolean;
-  portal_nacional_base_url: string | null;
   portal_nacional_ambiente: 'HOMOLOGACAO' | 'PRODUCAO';
+  has_certificado?: boolean;
+  certificado_titular?: string | null;
+  certificado_cnpj?: string | null;
+  certificado_validade?: string | null;
+  op_simples_nacional?: number;
+  regime_especial_tributacao?: number;
+  regime_apuracao_sn?: number | null;
+  tp_ret_issqn?: number;
   asaas_banco_habilitado: boolean;
   asaas_sandbox: boolean;
   provider: 'PORTAL_NACIONAL' | 'ASAAS';
@@ -27,19 +30,22 @@ export interface NFSeConfigUpdate {
   descricao_servico?: string | null;
   serie_nf?: string | null;
   numero_dps?: number | null;
-  portal_nacional_username?: string | null;
-  portal_nacional_password?: string | null;
-  portal_nacional_base_url?: string | null;
   portal_nacional_ambiente?: 'HOMOLOGACAO' | 'PRODUCAO';
   asaas_sandbox?: boolean;
   provider?: 'PORTAL_NACIONAL' | 'ASAAS';
+  op_simples_nacional?: number;
+  regime_especial_tributacao?: number;
+  regime_apuracao_sn?: number | null;
+  tp_ret_issqn?: number;
+  certificado_pfx_base64?: string | null;
+  certificado_senha?: string | null;
 }
 
 export interface NFSeConfigTestAuth {
   provider?: 'PORTAL_NACIONAL' | 'ASAAS';
-  portal_nacional_username?: string;
-  portal_nacional_password?: string;
   portal_nacional_ambiente?: 'HOMOLOGACAO' | 'PRODUCAO';
+  certificado_pfx_base64?: string;
+  certificado_senha?: string;
   asaas_sandbox?: boolean;
 }
 

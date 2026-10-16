@@ -13,7 +13,11 @@ const DEFAULT_NFSE = {
   portal_nacional_ambiente: 'HOMOLOGACAO',
   asaas_api_key: null,
   asaas_sandbox: false,
-  provider: 'PORTAL_NACIONAL'
+  provider: 'PORTAL_NACIONAL',
+  op_simples_nacional: 1,
+  regime_especial_tributacao: 0,
+  regime_apuracao_sn: null,
+  tp_ret_issqn: 1
 };
 
 export interface NFSeConfigServiceOptions {

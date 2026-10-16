@@ -25,6 +25,15 @@ export class NFSeConfig extends Model<
   declare asaas_api_key: string | null;
   declare asaas_sandbox: boolean;
   declare provider: 'PORTAL_NACIONAL' | 'ASAAS';
+  declare certificado_pfx: string | null;
+  declare certificado_senha: string | null;
+  declare certificado_titular: string | null;
+  declare certificado_cnpj: string | null;
+  declare certificado_validade: Date | null;
+  declare op_simples_nacional: CreationOptional<number>;
+  declare regime_especial_tributacao: CreationOptional<number>;
+  declare regime_apuracao_sn: number | null;
+  declare tp_ret_issqn: CreationOptional<number>;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 }
@@ -106,6 +115,50 @@ NFSeConfig.init(
       allowNull: false,
       defaultValue: 'PORTAL_NACIONAL',
       comment: 'Provedor de NFS-e (PORTAL_NACIONAL, ASAAS)'
+    },
+    certificado_pfx: {
+      type: DataTypes.TEXT('medium'),
+      allowNull: true,
+      comment: 'Certificado A1 (.pfx) criptografado'
+    },
+    certificado_senha: {
+      type: DataTypes.STRING(512),
+      allowNull: true,
+      comment: 'Senha do certificado A1 criptografada'
+    },
+    certificado_titular: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    certificado_cnpj: {
+      type: DataTypes.STRING(14),
+      allowNull: true
+    },
+    certificado_validade: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
+    op_simples_nacional: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 1,
+      comment: '1 não optante, 2 MEI, 3 ME/EPP'
+    },
+    regime_especial_tributacao: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0
+    },
+    regime_apuracao_sn: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: 'Obrigatório quando op_simples_nacional = 3'
+    },
+    tp_ret_issqn: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 1,
+      comment: '1 não retido, 2 retido pelo tomador, 3 retido pelo intermediário'
     },
     created_at: {
       type: DataTypes.DATE,

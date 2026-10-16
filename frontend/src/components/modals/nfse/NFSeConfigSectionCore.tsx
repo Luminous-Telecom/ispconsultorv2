@@ -7,6 +7,7 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useI18n } from 'contexts/I18nContext';
 import { FormField, Loading } from 'components/ui';
 import { NFSE_CONFIG_BY_VARIANT, type NFSeConfigVariant } from './nfseConfigVariants';
+import PortalNacionalConfigFields from './PortalNacionalConfigFields';
 
 export interface NFSeConfigSectionCoreProps {
   variant: NFSeConfigVariant;
@@ -33,14 +34,21 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
     descricao_servico: '',
     serie_nf: '80000',
     numero_dps: '1',
-    portal_nacional_username: '',
-    portal_nacional_password: '',
-    portal_nacional_base_url: 'https://sefin.producaorestrita.nfse.gov.br/API/SefinNacional',
     portal_nacional_ambiente: 'HOMOLOGACAO' as 'HOMOLOGACAO' | 'PRODUCAO',
     asaas_sandbox: false,
     provider: 'PORTAL_NACIONAL' as 'PORTAL_NACIONAL' | 'ASAAS',
     asaas_banco_habilitado: false,
-    has_portal_nacional_password: false,
+    certificado_pfx_base64: '',
+    certificado_senha: '',
+    certificado_nome_arquivo: '',
+    has_certificado: false,
+    certificado_titular: '',
+    certificado_cnpj: '',
+    certificado_validade: '',
+    op_simples_nacional: '1',
+    regime_especial_tributacao: '0',
+    regime_apuracao_sn: '',
+    tp_ret_issqn: '1',
   });
 
   const { data: configData, isLoading, refetch } = useQuery({
@@ -66,16 +74,21 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
         descricao_servico: configData.descricao_servico || '',
         serie_nf: configData.serie_nf || '80000',
         numero_dps: String(configData.numero_dps || 1),
-        portal_nacional_username: configData.portal_nacional_username || '',
-        portal_nacional_password: '',
-        portal_nacional_base_url:
-          configData.portal_nacional_base_url ||
-          'https://sefin.producaorestrita.nfse.gov.br/API/SefinNacional',
         portal_nacional_ambiente: configData.portal_nacional_ambiente || 'HOMOLOGACAO',
         asaas_sandbox: configData.asaas_sandbox || false,
         provider: configData.provider === 'ASAAS' && isAsaasHabilitado ? 'ASAAS' : 'PORTAL_NACIONAL',
         asaas_banco_habilitado: isAsaasHabilitado,
-        has_portal_nacional_password: configData.has_portal_nacional_password ?? false,
+        certificado_pfx_base64: '',
+        certificado_senha: '',
+        certificado_nome_arquivo: '',
+        has_certificado: configData.has_certificado ?? false,
+        certificado_titular: configData.certificado_titular || '',
+        certificado_cnpj: configData.certificado_cnpj || '',
+        certificado_validade: configData.certificado_validade || '',
+        op_simples_nacional: String(configData.op_simples_nacional || 1),
+        regime_especial_tributacao: String(configData.regime_especial_tributacao ?? 0),
+        regime_apuracao_sn: configData.regime_apuracao_sn ? String(configData.regime_apuracao_sn) : '',
+        tp_ret_issqn: String(configData.tp_ret_issqn || 1),
       });
     }
   }, [configData]);
@@ -94,15 +107,15 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
         return response.data;
       }
       if (data.provider === 'PORTAL_NACIONAL') {
-        if (!data.portal_nacional_username || !data.portal_nacional_password) {
-          throw new Error(t('nfse.messages.credentialsRequired'));
+        if (!data.has_certificado && !(data.certificado_pfx_base64 && data.certificado_senha)) {
+          throw new Error(t('nfse.messages.certificateRequired'));
         }
 
         const response = await api.testAuth({
           provider: 'PORTAL_NACIONAL',
-          portal_nacional_username: data.portal_nacional_username,
-          portal_nacional_password: data.portal_nacional_password,
           portal_nacional_ambiente: data.portal_nacional_ambiente,
+          certificado_pfx_base64: data.certificado_pfx_base64 || undefined,
+          certificado_senha: data.certificado_senha || undefined,
         });
         if (!response.success) {
           throw new Error(response.message || t('nfse.messages.testError'));
@@ -129,15 +142,18 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
         descricao_servico: data.descricao_servico || null,
         serie_nf: data.serie_nf || null,
         numero_dps: data.numero_dps ? parseInt(data.numero_dps, 10) : null,
-        portal_nacional_username: data.portal_nacional_username || null,
-        portal_nacional_base_url:
-          data.portal_nacional_base_url ||
-          'https://sefin.producaorestrita.nfse.gov.br/API/SefinNacional',
         portal_nacional_ambiente: data.portal_nacional_ambiente,
         asaas_sandbox: data.asaas_sandbox,
         provider: data.provider,
+        op_simples_nacional: parseInt(data.op_simples_nacional, 10) || 1,
+        regime_especial_tributacao: parseInt(data.regime_especial_tributacao, 10) || 0,
+        regime_apuracao_sn: data.regime_apuracao_sn ? parseInt(data.regime_apuracao_sn, 10) : null,
+        tp_ret_issqn: parseInt(data.tp_ret_issqn, 10) || 1,
       };
-      if (data.portal_nacional_password) updateData.portal_nacional_password = data.portal_nacional_password;
+      if (data.certificado_pfx_base64 && data.certificado_senha) {
+        updateData.certificado_pfx_base64 = data.certificado_pfx_base64;
+        updateData.certificado_senha = data.certificado_senha;
+      }
 
       const response = await api.update(updateData);
       if (!response.success) {
@@ -172,10 +188,7 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
 
   const canTest =
     formData.provider === 'PORTAL_NACIONAL'
-      ? !!(
-          formData.portal_nacional_username &&
-          (formData.portal_nacional_password || formData.has_portal_nacional_password)
-        )
+      ? !!(formData.has_certificado || (formData.certificado_pfx_base64 && formData.certificado_senha))
       : formData.provider === 'ASAAS'
         ? formData.asaas_banco_habilitado
         : false;
@@ -191,7 +204,7 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
   const isFieldDisabled = disabled || saveMutation.isPending;
   const providerOptions = [
     ...(formData.asaas_banco_habilitado ? [{ value: 'ASAAS', label: 'Asaas' }] : []),
-    { value: 'PORTAL_NACIONAL', label: 'Portal Nacional (em breve)', disabled: true },
+    { value: 'PORTAL_NACIONAL', label: t('nfse.providerPortal') },
   ];
 
   if (isLoading) {
@@ -305,69 +318,11 @@ const NFSeConfigSectionCore: React.FC<NFSeConfigSectionCoreProps> = ({
             </div>
 
             {formData.provider === 'PORTAL_NACIONAL' && (
-              <>
-                <div className="col-12">
-                  <FormField
-                    name="nfse_portal_username"
-                    type="text"
-                    label={t('nfse.username')}
-                    value={formData.portal_nacional_username}
-                    onChange={(v) => handleInputChange('portal_nacional_username', String(v ?? ''))}
-                    disabled={isFieldDisabled}
-                    placeholder={t('nfse.username')}
-                    size="sm"
-                  />
-                </div>
-
-                <div className="col-12">
-                  <FormField
-                    name="nfse_portal_password"
-                    type="password"
-                    label={t('nfse.password')}
-                    value={formData.portal_nacional_password}
-                    onChange={(v) => handleInputChange('portal_nacional_password', String(v ?? ''))}
-                    disabled={isFieldDisabled}
-                    placeholder={
-                      formData.has_portal_nacional_password
-                        ? 'Senha configurada — deixe em branco para manter'
-                        : t('nfse.password')
-                    }
-                    autoComplete="off"
-                    size="sm"
-                  />
-                </div>
-
-                <div className="col-12">
-                  <FormField
-                    name="nfse_portal_base_url"
-                    type="url"
-                    label={t('nfse.baseUrl')}
-                    value={formData.portal_nacional_base_url}
-                    onChange={(v) => handleInputChange('portal_nacional_base_url', String(v ?? ''))}
-                    disabled={isFieldDisabled}
-                    placeholder="https://sefin.producaorestrita.nfse.gov.br/API/SefinNacional"
-                    size="sm"
-                  />
-                </div>
-
-                <div className="col-12">
-                  <FormField
-                    name="nfse_portal_ambiente"
-                    type="select"
-                    label={t('nfse.environment')}
-                    value={formData.portal_nacional_ambiente}
-                    onChange={(v) =>
-                      handleInputChange('portal_nacional_ambiente', String(v ?? '') as 'HOMOLOGACAO' | 'PRODUCAO')
-                    }
-                    disabled={isFieldDisabled}
-                    options={[
-                      { value: 'HOMOLOGACAO', label: t('nfse.homologation') },
-                      { value: 'PRODUCAO', label: t('nfse.production') },
-                    ]}
-                    size="sm"
-                  />
-                </div>
-              </>
+              <PortalNacionalConfigFields
+                formData={formData}
+                disabled={isFieldDisabled}
+                onChange={(field, value) => handleInputChange(field as keyof typeof formData, value)}
+              />
             )}
           </div>
         </form>

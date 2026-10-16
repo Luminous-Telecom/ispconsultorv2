@@ -239,18 +239,8 @@ export class NFeService {
       return await AsaasNFSeService.gerarNFSe(notaFiscal, cliente, dadosEmpresa, empId);
     }
 
-    // Se Portal Nacional está configurado, usar ele
     if (provider === 'PORTAL_NACIONAL') {
-      if (config.portal_nacional_username && config.portal_nacional_password) {
-        return await PortalNacionalNFSeService.gerarNFSe(notaFiscal, cliente, dadosEmpresa);
-      } else {
-        logger.error('Portal Nacional configurado mas credenciais não encontradas');
-        return {
-          success: false,
-          erro: 'Configuração do Portal Nacional incompleta. Configure usuário e senha nos parâmetros do sistema.',
-          codigo_erro: 'CONFIG_PORTAL_NACIONAL_INCOMPLETA'
-        };
-      }
+      return await PortalNacionalNFSeService.gerarNFSe(notaFiscal, cliente, dadosEmpresa, empId);
     }
 
     // Se provider não configurado, não permitir geração
@@ -417,14 +407,18 @@ export class NFeService {
         };
       }
 
-      // Cancelar no Asaas se tiver identificador
+      const empresaIdCancel = notaFiscal.cliente_id
+        ? ((await Cliente.findByPk(notaFiscal.cliente_id, { attributes: ['empresa_id'] })) as { empresa_id?: number | null } | null)?.empresa_id
+        : undefined;
+      const configCancel = await NFSeConfigService.getConfig(empresaIdCancel);
+      if (configCancel?.provider === 'PORTAL_NACIONAL') {
+        return PortalNacionalNFSeService.cancelarNFSe();
+      }
+
       const identificador = notaFiscal.asaas_invoice_id;
 
       if (identificador) {
 
-        const empresaIdCancel = notaFiscal.cliente_id
-          ? ((await Cliente.findByPk(notaFiscal.cliente_id, { attributes: ['empresa_id'] })) as { empresa_id?: number | null } | null)?.empresa_id
-          : undefined;
         const resultado = await AsaasNFSeService.cancelarNFSe(identificador, justificativa, empresaIdCancel);
 
         if (!resultado.success) {

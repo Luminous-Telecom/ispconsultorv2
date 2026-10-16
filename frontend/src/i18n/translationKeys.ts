@@ -721,6 +721,36 @@ export interface TranslationKeys {
   'nfse.messages.apiKeyRequired': string;
   'nfse.messages.credentialsRequired': string;
   'nfse.messages.providerRequired': string;
+  'nfse.messages.certificateRequired': string;
+  'nfse.providerPortal': string;
+  'nfse.certificate': string;
+  'nfse.certificateHelp': string;
+  'nfse.certificatePassword': string;
+  'nfse.certificatePasswordKeep': string;
+  'nfse.certificateInstalled': string;
+  'nfse.certificateHolder': string;
+  'nfse.environmentHelp': string;
+  'nfse.simplesNacional': string;
+  'nfse.simplesNacionalHelp': string;
+  'nfse.simplesNao': string;
+  'nfse.simplesMei': string;
+  'nfse.simplesMeEpp': string;
+  'nfse.regimeApuracao': string;
+  'nfse.regimeApuracao1': string;
+  'nfse.regimeApuracao2': string;
+  'nfse.regimeApuracao3': string;
+  'nfse.regimeEspecial': string;
+  'nfse.regimeEspecialNenhum': string;
+  'nfse.regimeEspecial1': string;
+  'nfse.regimeEspecial2': string;
+  'nfse.regimeEspecial3': string;
+  'nfse.regimeEspecial4': string;
+  'nfse.regimeEspecial5': string;
+  'nfse.regimeEspecial6': string;
+  'nfse.issRetention': string;
+  'nfse.issRetentionNone': string;
+  'nfse.issRetentionTomador': string;
+  'nfse.issRetentionIntermediary': string;
 
   // Title Labels
   'titulo.title': string;
@@ -824,6 +854,23 @@ export interface TranslationKeys {
   'buttons.validate': string;
   'buttons.apply': string;
   'agent.install': string;
+  'agent.configureVpn': string;
+  'agent.tabWireguard': string;
+  'agent.wgHost': string;
+  'agent.wgApiPort': string;
+  'agent.wgHttps': string;
+  'agent.wgUsername': string;
+  'agent.wgPassword': string;
+  'agent.wgPasswordHelp': string;
+  'agent.wgListenPort': string;
+  'agent.wgLanCidrs': string;
+  'agent.wgLanCidrsHelp': string;
+  'agent.wgStatus': string;
+  'agent.wgOurAddress': string;
+  'agent.wgPeerAddress': string;
+  'agent.wgOurPublicKey': string;
+  'agent.wgPeerPublicKey': string;
+  'agent.wgLastError': string;
 
   // RPKI
   'rpki.generateChildCaRequest': string;

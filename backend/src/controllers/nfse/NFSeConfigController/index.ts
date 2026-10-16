@@ -6,8 +6,9 @@ import { registrarCriacao, registrarAtualizacao } from '../../../services/sistem
 import type { AuthenticatedRequest } from '../../../types/auth';
 import Joi from 'joi';
 import axios from 'axios';
-import { URLSearchParams } from 'url';
 import { sendSuccess, sendError, sendValidationError, sendUnauthorized } from '../../../utils/responseUtils';
+import { aplicarCertificadoNoPayload, abrirCertificadoArmazenado, lerCertificadoA1, mascararCertificado, semSegredosNfse } from '../../../services/nfse/portalNacional/certificadoA1';
+import { testarConexaoSefin } from '../../../services/nfse/portalNacional/sefinClient';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class NFSeConfigController {
@@ -17,6 +18,7 @@ export class NFSeConfigController {
     delete masked.asaas_api_key;
     masked.has_portal_nacional_password = !!masked.portal_nacional_password;
     delete masked.portal_nacional_password;
+    mascararCertificado(masked);
     return masked;
   }
 
@@ -32,7 +34,13 @@ export class NFSeConfigController {
     portal_nacional_base_url: Joi.string().max(500).allow(null, ''),
     portal_nacional_ambiente: Joi.string().valid('HOMOLOGACAO', 'PRODUCAO').required(),
     asaas_sandbox: Joi.boolean().optional(),
-    provider: Joi.string().valid('PORTAL_NACIONAL', 'ASAAS').required()
+    provider: Joi.string().valid('PORTAL_NACIONAL', 'ASAAS').required(),
+    op_simples_nacional: Joi.number().integer().valid(1, 2, 3).optional(),
+    regime_especial_tributacao: Joi.number().integer().min(0).max(6).optional(),
+    regime_apuracao_sn: Joi.number().integer().valid(1, 2, 3).allow(null).optional(),
+    tp_ret_issqn: Joi.number().integer().valid(1, 2, 3).optional(),
+    certificado_pfx_base64: Joi.string().max(300000).allow(null, '').optional(),
+    certificado_senha: Joi.string().max(200).allow(null, '').optional()
   }).min(1);
 
   private static async buildResponseData(config: Record<string, unknown> | null, empresaId?: number | null): Promise<Record<string, unknown>> {
@@ -126,6 +134,12 @@ export class NFSeConfigController {
         }
       }
 
+      const erroCertificado = aplicarCertificadoNoPayload(dadosParaSalvar, configAnterior);
+      if (erroCertificado) {
+        sendValidationError(res, erroCertificado);
+        return res;
+      }
+
       const configAtualizado = await NFSeConfigService.update(dadosParaSalvar, empresaId);
       
       // Se não existia antes do salvamento manual, registrar criação
@@ -136,7 +150,7 @@ export class NFSeConfigController {
             req as AuthenticatedRequest,
             'NFSeConfig',
             configAtualizado.id,
-            configAtualizado.toJSON() as unknown as Record<string, unknown>,
+            semSegredosNfse(configAtualizado.toJSON() as unknown as Record<string, unknown>),
             undefined,
             empresaIdAudit
           );
@@ -151,8 +165,8 @@ export class NFSeConfigController {
             req as AuthenticatedRequest,
             'NFSeConfig',
             configAtualizado.id,
-            dadosAnteriores as Record<string, unknown>,
-            configAtualizado.toJSON() as unknown as Record<string, unknown>,
+            semSegredosNfse((dadosAnteriores || {}) as Record<string, unknown>),
+            semSegredosNfse(configAtualizado.toJSON() as unknown as Record<string, unknown>),
             undefined,
             empresaIdAudit
           );
@@ -167,7 +181,7 @@ export class NFSeConfigController {
       sendError(res, error, 'Erro ao atualizar configuração NFS-e', 500, true, {
         context: 'NFSeConfigController',
         action: 'update',
-        body: req.body
+        body: semSegredosNfse({ ...req.body } as Record<string, unknown>)
       });
       return res;
     }
@@ -176,12 +190,12 @@ export class NFSeConfigController {
   // Testar autenticação (Portal Nacional ou Asaas)
   static async testAuth(req: Request, res: Response): Promise<Response> {
     try {
-      const { provider, portal_nacional_username, portal_nacional_password, portal_nacional_ambiente } = req.body;
+      const { provider, portal_nacional_ambiente, certificado_pfx_base64, certificado_senha } = req.body;
 
       logger.info('Iniciando teste de autenticação NFS-e', {
         provider,
         hasCredentials: {
-          portal_nacional: !!(portal_nacional_username && portal_nacional_password),
+          portal_nacional: !!(certificado_pfx_base64 || certificado_senha),
           asaas: provider === 'ASAAS'
         }
       });
@@ -243,140 +257,37 @@ export class NFSeConfigController {
         }
       }
 
-      // Testar autenticação do Portal Nacional
-      if (!portal_nacional_username || !portal_nacional_password) {
-        logger.warn('Validação falhou: usuário ou senha não fornecidos');
-        sendValidationError(res, 'Usuário e senha são obrigatórios para testar autenticação');
+      const ambiente = portal_nacional_ambiente === 'PRODUCAO' ? 'PRODUCAO' : 'HOMOLOGACAO';
+      const empresaId = getEmpresaIdOrNull(req);
+      const config = await NFSeConfigService.get(empresaId);
+      let certificado;
+      try {
+        if (certificado_pfx_base64 && certificado_senha) {
+          const limpo = String(certificado_pfx_base64).replace(/\s/g, '').replace(/^data:.*?;base64,/, '');
+          certificado = lerCertificadoA1(Buffer.from(limpo, 'base64'), String(certificado_senha));
+        } else if (config?.certificado_pfx && config.certificado_senha) {
+          certificado = abrirCertificadoArmazenado(config.certificado_pfx, config.certificado_senha);
+        } else {
+          sendValidationError(res, 'Envie o certificado A1 e a senha para testar a conexão.');
+          return res;
+        }
+      } catch (erroCert) {
+        sendValidationError(res, erroCert instanceof Error ? erroCert.message : 'Não foi possível ler o certificado A1.');
         return res;
       }
 
-      const ambiente = portal_nacional_ambiente || 'HOMOLOGACAO';
-      
-      // URLs fixas da API Sefin Nacional (Portal Nacional)
-      // Homologação: https://sefin.producaorestrita.nfse.gov.br
-      // Produção: https://sefin.nfse.gov.br
-      // Endpoints: /sefinnacional/{endpoint}
-      const baseUrl = ambiente === 'PRODUCAO' 
-        ? 'https://sefin.nfse.gov.br'
-        : 'https://sefin.producaorestrita.nfse.gov.br';
-
-      logger.info('Configuração do teste de autenticação', {
-        ambiente,
-        baseUrl,
-        username: '***'
-      });
-
-      // Tentar autenticar usando método privado do serviço
-      // Vamos criar uma instância temporária para teste
-      try {
-        const testConfig = {
-          username: portal_nacional_username,
-          password: portal_nacional_password,
-          baseUrl: baseUrl,
-          ambiente: ambiente as 'PRODUCAO' | 'HOMOLOGACAO'
-        };
-
-        // Usar axios diretamente para teste (simulando o que o PortalNacionalNFSeService faz)
-        // Tentar endpoint OAuth padrão usando caminho sefinnacional
-        const authUrl = `${testConfig.baseUrl}/sefinnacional/oauth/token`;
-
-        logger.info('Tentando autenticar no Portal Nacional', {
-          authUrl,
-          ambiente: testConfig.ambiente
-        });
-
-        // OAuth2 normalmente usa form-urlencoded
-        const params = new URLSearchParams();
-        params.append('grant_type', 'password');
-        params.append('username', testConfig.username);
-        params.append('password', testConfig.password);
-
-        const response = await axios.post(
-          authUrl,
-          params.toString(),
-          {
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-              'Accept': 'application/json'
-            },
-            timeout: 30000
-          }
-        );
-
-        logger.info('Resposta da autenticação recebida', {
-          status: response.status,
-          hasToken: !!response.data?.access_token
-        });
-
-        if (response.data?.access_token) {
-          logger.info('Autenticação bem-sucedida');
-          sendSuccess(res, undefined, 'Autenticação realizada com sucesso!');
-          return res;
-        } else {
-          logger.warn('Autenticação falhou: token não encontrado na resposta');
-          sendUnauthorized(res, 'Autenticação falhou: credenciais inválidas');
-          return res;
-        }
-      } catch (authError: any) {
-        let errorMessage: string;
-        let statusCode = 500;
-
-        // Log detalhado do erro
-        const errorDetails = {
-          errorCode: authError?.code,
-          errorMessage: authError?.message,
-          errorName: authError?.name,
-          responseStatus: authError?.response?.status,
-          responseStatusText: authError?.response?.statusText,
-          responseData: authError?.response?.data,
-          authUrl: `${baseUrl}/oauth/token`
-        };
-        
-        logger.error(`Erro ao autenticar no Portal Nacional: ${JSON.stringify(errorDetails, null, 2)}`);
-        
-        if (authError?.stack) {
-          logger.error(`Stack trace: ${authError.stack}`);
-        }
-
-        // Tratamento específico para erros de DNS/conexão
-        if (authError?.code === 'ENOTFOUND' || authError?.code === 'ECONNREFUSED' || authError?.code === 'ETIMEDOUT') {
-          errorMessage = `Não foi possível conectar ao servidor do Portal Nacional. Verifique se a URL base está correta (${baseUrl}) e se o serviço está acessível.`;
-          statusCode = 503; // Service Unavailable
-        } else if (authError?.response?.data) {
-          // Erro retornado pela API
-          errorMessage = authError.response.data.error_description 
-            || authError.response.data.error
-            || authError.response.data.message
-            || 'Credenciais inválidas ou erro na autenticação';
-          statusCode = authError.response.status || 401;
-        } else if (authError?.response?.status) {
-          // Erro HTTP sem body
-          statusCode = authError.response.status;
-          if (statusCode === 401 || statusCode === 403) {
-            errorMessage = 'Credenciais inválidas. Verifique usuário e senha.';
-          } else if (statusCode === 404) {
-            errorMessage = `Endpoint de autenticação não encontrado. Verifique se a URL base está correta (${baseUrl}).`;
-          } else {
-            errorMessage = `Erro ao conectar com o servidor (HTTP ${statusCode}).`;
-          }
-        } else {
-          errorMessage = authError?.message || 'Erro desconhecido ao testar autenticação';
-        }
-
-        logger.error('Erro ao testar autenticação no Portal Nacional NFS-e', {
-          error: errorMessage,
-          code: authError?.code,
-          status: statusCode,
-          url: `${baseUrl}/auth/login`
-        });
-
-        sendError(res, authError, errorMessage, statusCode, true, {
+      const teste = await testarConexaoSefin(ambiente, certificado);
+      if (!teste.ok) {
+        sendError(res, new Error(teste.mensagem), teste.mensagem, 400, false, {
           context: 'NFSeConfigController',
           action: 'testAuth',
           provider: 'PORTAL_NACIONAL'
         });
         return res;
       }
+
+      sendSuccess(res, undefined, 'Conexão com o Portal Nacional testada. O certificado A1 foi aceito.');
+      return res;
     } catch (error: unknown) {
       sendError(res, error, 'Erro interno ao testar autenticação', 500, true, {
         context: 'NFSeConfigController',
