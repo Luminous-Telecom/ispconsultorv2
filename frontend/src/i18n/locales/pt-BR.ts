@@ -1666,7 +1666,9 @@ const ptBR: TranslationKeys = {
     // Message Types
     'messages.types.10daysBefore': '10 dias antes do vencimento',
     'messages.types.05daysBefore': '05 dias antes do vencimento',
+    'messages.types.02daysBefore': '02 dias antes do vencimento',
     'messages.types.sameDay': 'Mesmo dia do vencimento',
+    'messages.types.01daysAfter': '01 dia depois do vencimento',
     'messages.types.05daysAfter': '05 dias depois do vencimento',
     'messages.types.10daysAfter': '10 dias depois do vencimento',
     'messages.types.15daysAfter': '15 dias depois do vencimento',

@@ -1664,7 +1664,9 @@ const esES: TranslationKeys = {
     // Message Types
     'messages.types.10daysBefore': '10 días antes del vencimiento',
     'messages.types.05daysBefore': '05 días antes del vencimiento',
+    'messages.types.02daysBefore': '02 días antes del vencimiento',
     'messages.types.sameDay': 'Día del vencimiento',
+    'messages.types.01daysAfter': '01 día después del vencimiento',
     'messages.types.05daysAfter': '05 días después del vencimiento',
     'messages.types.10daysAfter': '10 días después del vencimiento',
     'messages.types.15daysAfter': '15 días después del vencimiento',

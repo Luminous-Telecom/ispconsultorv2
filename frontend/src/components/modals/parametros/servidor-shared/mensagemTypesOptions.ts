@@ -3,7 +3,9 @@ import type { TranslationKeys } from 'contexts/I18nContext';
 export type MensagemCobrancaType =
   | '10_dias_antes_vencimento'
   | '05_dias_antes_vencimento'
+  | '02_dias_antes_vencimento'
   | 'mesmo_dia_vencimento'
+  | '01_dias_depois_vencimento'
   | '05_dias_depois_vencimento'
   | '10_dias_depois_vencimento'
   | '15_dias_depois_vencimento'
@@ -19,7 +21,9 @@ export function getMensagemCobrancaTypeOptions(t: TranslateFn) {
   return [
     { value: '10_dias_antes_vencimento', label: t('messages.types.10daysBefore') },
     { value: '05_dias_antes_vencimento', label: t('messages.types.05daysBefore') },
+    { value: '02_dias_antes_vencimento', label: t('messages.types.02daysBefore') },
     { value: 'mesmo_dia_vencimento', label: t('messages.types.sameDay') },
+    { value: '01_dias_depois_vencimento', label: t('messages.types.01daysAfter') },
     { value: '05_dias_depois_vencimento', label: t('messages.types.05daysAfter') },
     { value: '10_dias_depois_vencimento', label: t('messages.types.10daysAfter') },
     { value: '15_dias_depois_vencimento', label: t('messages.types.15daysAfter') },

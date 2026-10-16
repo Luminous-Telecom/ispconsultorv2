@@ -65,7 +65,9 @@ Configure os textos ou templates por **tipo de mensagem**. Selecione o tipo no c
 |------|-----|
 | 10 dias antes do vencimento | Lembrete antecipado |
 | 5 dias antes do vencimento | Lembrete antecipado |
+| 2 dias antes do vencimento | Lembrete antecipado |
 | Mesmo dia do vencimento | Aviso no vencimento |
+| 1 dia depois do vencimento | Cobrança em atraso |
 | 5 / 10 / 15 dias após vencimento | Cobrança em atraso |
 | Corte de cliente | Notificação de corte |
 | Envio manual | Texto usado no envio manual pelo ERP |

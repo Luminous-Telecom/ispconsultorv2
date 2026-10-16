@@ -58,9 +58,9 @@ export class EnvioBoletosRoutine {
   }> {
     try {
       const configuracoes = {
-        antesVencimento: (config?.antesVencimento?.length ?? 0) > 0 ? config.antesVencimento : [10, 5],
+        antesVencimento: (config?.antesVencimento?.length ?? 0) > 0 ? config.antesVencimento : [10, 5, 2],
         mesmoDia: config?.mesmoDia ?? true,
-        depoisVencimento: (config?.depoisVencimento?.length ?? 0) > 0 ? config.depoisVencimento : [5, 10, 15]
+        depoisVencimento: (config?.depoisVencimento?.length ?? 0) > 0 ? config.depoisVencimento : [1, 5, 10, 15]
       };
 
       const canais = config?.canais || ['whatsapp', 'email'];

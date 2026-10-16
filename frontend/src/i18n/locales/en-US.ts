@@ -1666,7 +1666,9 @@ const enUS: TranslationKeys = {
     // Message Types
     'messages.types.10daysBefore': '10 days before due date',
     'messages.types.05daysBefore': '05 days before due date',
+    'messages.types.02daysBefore': '02 days before due date',
     'messages.types.sameDay': 'Due date',
+    'messages.types.01daysAfter': '01 day after due date',
     'messages.types.05daysAfter': '05 days after due date',
     'messages.types.10daysAfter': '10 days after due date',
     'messages.types.15daysAfter': '15 days after due date',

@@ -36,6 +36,8 @@ Clique em **Salvar** após configurar. Com o servidor salvo, informe um endereç
 
 Personalização dos **textos padrão** dos e-mails enviados pelo sistema (assunto e corpo das mensagens automáticas). Edite conforme orientação da equipe ISP Consultor.
 
+O campo **Tipo de mensagem** inclui **2 dias antes do vencimento** e **1 dia depois do vencimento**, além dos lembretes de 10 e 5 dias, do mesmo dia e das cobranças de 5, 10 e 15 dias. A rotina de envio de boletos dispara esses textos nos dias correspondentes.
+
 Em um título já pago, **Enviar → Recibo** reenvia o recibo de pagamento sob demanda.
 
 ---

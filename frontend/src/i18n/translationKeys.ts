@@ -1654,7 +1654,9 @@ export interface TranslationKeys {
   // Message Types
   'messages.types.10daysBefore': string;
   'messages.types.05daysBefore': string;
+  'messages.types.02daysBefore': string;
   'messages.types.sameDay': string;
+  'messages.types.01daysAfter': string;
   'messages.types.05daysAfter': string;
   'messages.types.10daysAfter': string;
   'messages.types.15daysAfter': string;
