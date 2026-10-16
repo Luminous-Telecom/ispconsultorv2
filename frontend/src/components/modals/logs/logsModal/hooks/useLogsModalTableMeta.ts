@@ -1,7 +1,12 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState } from 'react';
 import { useI18n } from 'contexts/I18nContext';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useApiError } from 'hooks/useApiError';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { normalizeListPagination } from 'utils/pagination';
+import { getMensagemHistoricoService } from 'services/mensagemHistoricoService';
 import type { BlockdomiLogAcessoItem } from 'services/blockdomiLogAcessoService';
+import { idsSelecionadosParaReenvio, type ReenvioSelecionavel } from '../reenviarFalhasCobranca';
 import type { useLogsContent } from './useLogsContent';
 
 type LogsContent = ReturnType<typeof useLogsContent>;
@@ -18,6 +23,9 @@ interface UseLogsModalTableMetaParams {
   setWhoisIp: (ip: string | null) => void;
   selectedItem: { id: number | string } | null;
   handleViewDetails: (item: unknown) => void;
+  canal: 'email' | 'whatsapp' | null;
+  isSaasApi: boolean;
+  incluirErp: boolean;
 }
 
 export function useLogsModalTableMeta({
@@ -31,9 +39,15 @@ export function useLogsModalTableMeta({
   setWhoisIp,
   selectedItem,
   handleViewDetails,
+  canal,
+  isSaasApi,
+  incluirErp,
 }: UseLogsModalTableMetaParams) {
   const { t } = useI18n();
-  const { tableFilters, setFilterStartDate, setFilterEndDate } = ctx;
+  const { success, info, error } = useNotificationContext();
+  const { showApiError } = useApiError();
+  const [isResending, setIsResending] = useState(false);
+  const { tableFilters, setFilterStartDate, setFilterEndDate, refetch } = ctx;
 
   const handleSearchChange = useCallback(
     (value: string, field?: string) => {
@@ -74,6 +88,45 @@ export function useLogsModalTableMeta({
     return d as { id: number | string }[];
   }, [data, isBlockdomiApi]);
 
+  const handleReenviarFalhas = useCallback(async (items: unknown[]) => {
+    if (!canal || isResending) return;
+    const ids = idsSelecionadosParaReenvio(items as ReenvioSelecionavel[]);
+    if (ids && ids.length === 0) {
+      info(t('history.resendFailuresNotError'));
+      return;
+    }
+    const confirmed = window.confirm(
+      ids
+        ? t('history.resendFailuresConfirmSelected', { count: ids.length })
+        : t('history.resendFailuresConfirm')
+    );
+    if (!confirmed) return;
+
+    setIsResending(true);
+    try {
+      const response = await getMensagemHistoricoService(isSaasApi).reenviarFalhas({
+        tipo: canal,
+        ...(ids ? { ids } : {}),
+        ...(incluirErp ? { incluir_erp: true } : {}),
+      });
+      const data = response.data;
+      if (!data || data.total === 0) {
+        info(t('history.resendFailuresEmpty'));
+      } else if (data.reenviadas === 0 && data.erros === 0) {
+        info(t('history.resendFailuresSkipped'));
+      } else if (data.reenviadas === 0) {
+        error(t('history.resendFailuresFailed', { failed: data.erros }));
+      } else {
+        success(t('history.resendFailuresDone', { sent: data.reenviadas, failed: data.erros }));
+      }
+      refetch();
+    } catch (err) {
+      showApiError(err, CONTEXT_ERROR_MESSAGES.MENSAGEM_RESEND_ERROR);
+    } finally {
+      setIsResending(false);
+    }
+  }, [canal, isResending, isSaasApi, incluirErp, info, t, error, success, refetch, showApiError]);
+
   const bulkActions = useMemo(() => {
     if (isBlockdomiApi) {
       return [
@@ -97,19 +150,30 @@ export function useLogsModalTableMeta({
         },
       ];
     }
+    const visualizar = {
+      label: isAuditoria ? t('audit.viewDetails') : t('history.view'),
+      variant: 'primary' as const,
+      disabled: (items: unknown[]) => items.length === 0 && !selectedItem,
+      requiresSelection: true,
+      action: (items: unknown[]) => {
+        const it = items.length > 0 ? items[0] : selectedItem;
+        if (it) handleViewDetails(it);
+      },
+    };
+    if (!canal) return [visualizar];
     return [
+      visualizar,
       {
-        label: isAuditoria ? t('audit.viewDetails') : t('history.view'),
+        label: t('history.resendFailures'),
         variant: 'primary' as const,
-        disabled: (items: unknown[]) => items.length === 0 && !selectedItem,
-        requiresSelection: true,
+        disabled: () => isResending,
+        requiresSelection: false,
         action: (items: unknown[]) => {
-          const it = items.length > 0 ? items[0] : selectedItem;
-          if (it) handleViewDetails(it);
+          void handleReenviarFalhas(items);
         },
       },
     ];
-  }, [t, selectedItem, handleViewDetails, isAuditoria, isBlockdomiApi, setShowBlockdomiLogsReal, setWhoisIp]);
+  }, [t, selectedItem, handleViewDetails, isAuditoria, isBlockdomiApi, setShowBlockdomiLogsReal, setWhoisIp, canal, isResending, handleReenviarFalhas]);
 
   const emptyMessage = isEquipamentosOuAgentes
     ? 'Nenhum log encontrado'

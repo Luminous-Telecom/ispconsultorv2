@@ -28,6 +28,13 @@ export interface MensagemHistorico {
   updated_at: string;
 }
 
+export interface ReenviarFalhasCobrancaResult {
+  total: number;
+  reenviadas: number;
+  erros: number;
+  ignoradas: number;
+}
+
 export interface MensagemHistoricoFilters {
   tipo?: 'email' | 'whatsapp';
   status?: 'enviada' | 'erro';
@@ -64,6 +71,10 @@ class MensagemHistoricoServiceClass extends BaseService<MensagemHistorico, Recor
   async getByEntity(entidadeTipo: string, entidadeId: number, filters?: { page?: number; limit?: number }): Promise<ApiResponse<PaginatedResponse<MensagemHistorico>>> {
     const queryString = this.apiClient.buildQueryString(filters || {});
     return this.apiClient.get<PaginatedResponse<MensagemHistorico>>(`${this.baseEndpoint}/entidade/${entidadeTipo}/${entidadeId}${queryString}`);
+  }
+
+  async reenviarFalhas(payload: { tipo: 'email' | 'whatsapp'; ids?: number[]; incluir_erp?: boolean }): Promise<ApiResponse<ReenviarFalhasCobrancaResult>> {
+    return this.customPost<ReenviarFalhasCobrancaResult>('/reenviar-falhas', payload);
   }
 }
 

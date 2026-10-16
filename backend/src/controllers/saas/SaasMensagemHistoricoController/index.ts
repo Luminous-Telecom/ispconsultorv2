@@ -5,7 +5,7 @@ import { MensagemHistorico } from '../../../models/comunicacao/MensagemHistorico
 import { Usuario } from '../../../models/cadastros/Usuario';
 import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { logger } from '../../../utils/logger';
-import { sendSuccess, sendError } from '../../../utils/responseUtils';
+import { sendSuccess, sendError, sendValidationError } from '../../../utils/responseUtils';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
 import { buildListPagination } from '../../../utils/pagination';
 import { isQueryFlagTrue, parseListQuery, parseOptionalQueryInt, queryString } from '../../../utils/listQuery';
@@ -14,6 +14,8 @@ import {
   HISTORICO_ORIGEM_SAAS,
   type HistoricoOrigem,
 } from '../../../services/comunicacao/mensagemHistoricoOrigens';
+import { parseReenviarFalhasBody } from '../../../services/comunicacao/ReenviarNotificacoesCobrancaService/selecao';
+import { ReenviarNotificacoesCobrancaService } from '../../../services/comunicacao/ReenviarNotificacoesCobrancaService';
 
 const VALID_SORT_COLUMNS = [
   'id',
@@ -279,6 +281,31 @@ export class SaasMensagemHistoricoController {
     } catch (error) {
       logger.error('Erro ao buscar mensagens da entidade SaaS:', error);
       sendError(res, error, 'Erro ao buscar mensagens da entidade', 500, true);
+    }
+  }
+
+  static async reenviarFalhas(req: SaasAuthenticatedRequest, res: ExpressResponse): Promise<void> {
+    try {
+      const parsed = parseReenviarFalhasBody(req.body);
+      if (!parsed.ok) {
+        sendValidationError(res, parsed.message);
+        return;
+      }
+
+      const origens = parsed.incluirErp
+        ? [HISTORICO_ORIGEM_SAAS, HISTORICO_ORIGEM_ERP]
+        : [HISTORICO_ORIGEM_SAAS];
+
+      const resultado = await ReenviarNotificacoesCobrancaService.reenviar({
+        tipo: parsed.tipo,
+        ids: parsed.ids,
+        empresaId: null,
+        origens,
+      });
+
+      sendSuccess(res, resultado, 'Reenvio de cobranças processado.');
+    } catch (error) {
+      sendError(res, error, 'Erro ao reenviar notificações de cobrança', 500, true);
     }
   }
 }

@@ -14,6 +14,7 @@ import { TituloPDFController } from '../../../controllers/titulos/TituloPDFContr
 import type { TituloComRelacoes } from '../../../controllers/titulos/TituloHelpers/types';
 import { parseDateFromDb, formatDate } from '../../../utils/dateUtils';
 import { whereComunicacaoEmpresaEstrito } from '../../../utils/comunicacaoEmpresaWhere';
+import { escolherMensagemCobranca, textoMensagemCobranca } from '../ReenviarNotificacoesCobrancaService/selecao';
 
 interface ConfiguracoesEnvios {
   antesVencimento?: number[];
@@ -655,6 +656,117 @@ export class EmailService {
       }
     } catch (error) {
       logger.error('Erro ao enviar título manual via Email:', error);
+      return { sucesso: false, mensagem: 'Erro interno ao enviar email' };
+    }
+  }
+
+  /**
+   * Reenvia a cobrança de um título SaaS que falhou.
+   */
+  static async reenviarCobrancaSaas(tituloId: number): Promise<{ sucesso: boolean; mensagem?: string }> {
+    try {
+      const { SaasTitulo } = await import('../../../models/saas/SaasTitulo');
+      const { DadosEmpresa } = await import('../../../models/sistema/DadosEmpresa');
+      const { SaasPlano } = await import('../../../models/saas/SaasPlano');
+      const { SaasBanco } = await import('../../../models/saas/SaasBanco');
+      const SaasServidorEmail = (await import('../../../models/saas/SaasServidorEmail')).default;
+
+      const titulo = await SaasTitulo.findByPk(tituloId, {
+        include: [
+          { model: DadosEmpresa, as: 'empresa', required: true, attributes: ['id', 'razao_social', 'nome_fantasia', 'email', 'telefone'] },
+          { model: SaasPlano, as: 'plano', required: false },
+          { model: SaasBanco, as: 'banco', required: false },
+        ],
+      });
+      if (!titulo) {
+        return { sucesso: false, mensagem: 'Título não encontrado' };
+      }
+
+      const saasSrv = await SaasServidorEmail.findOne({ where: { status: 'ativo' } });
+      if (!saasSrv) {
+        return { sucesso: false, mensagem: 'Nenhum servidor de email ativo encontrado' };
+      }
+      const srv = saasSrv.get({ plain: true }) as Record<string, unknown>;
+      const servidor = {
+        id: saasSrv.id,
+        host: (srv.host_smtp as string) || '',
+        porta: saasSrv.porta,
+        usuario: saasSrv.usuario,
+        senha: (srv.senha as string) || (srv.senha_criptografada as string) || '',
+        ssl: saasSrv.ssl,
+        tls: false,
+        nome_remetente: saasSrv.nome,
+        email_remetente: saasSrv.usuario,
+        ativo: true,
+        timeout: 30000,
+        tentativas: 1,
+        intervalo_tentativas: 0,
+      } as unknown as ServidorEmail;
+
+      const mensagens = await MensagemEmail.findAll({ where: { ativo: true, empresa_id: { [Op.is]: null } } });
+      const mensagem = escolherMensagemCobranca(mensagens.length > 0 ? mensagens : await MensagemEmail.findAll({ where: { ativo: true } }));
+      if (!mensagem) {
+        return { sucesso: false, mensagem: 'Mensagem de cobrança não configurada' };
+      }
+
+      const emp = (titulo as unknown as { empresa?: { get: (o: { plain: boolean }) => Record<string, unknown> } }).empresa;
+      const empData = (emp?.get({ plain: true }) as Record<string, unknown>) || {};
+      const email = typeof empData.email === 'string' ? empData.email : '';
+      if (!email) {
+        return { sucesso: false, mensagem: 'Empresa sem e-mail cadastrado' };
+      }
+
+      const plain = titulo.get({ plain: true }) as Record<string, unknown>;
+      const cliente = {
+        razao_social: (empData.razao_social || empData.nome_fantasia) as string,
+        nome_fantasia: empData.nome_fantasia as string,
+        email,
+        telefone: empData.telefone as string | undefined,
+      };
+      const tituloObj = {
+        ...plain,
+        cliente,
+        banco: (titulo as unknown as { banco?: unknown }).banco,
+        plano: (titulo as unknown as { plano?: unknown }).plano,
+      };
+      const mensagemTexto = textoMensagemCobranca(mensagem);
+      const contratoRef = titulo.contrato_id ? { id: titulo.contrato_id } : undefined;
+      const corpoHtml = mensagemTexto
+        ? await VariaveisDocumentoService.processarVariaveis(mensagemTexto, {
+          cliente: cliente as Cliente,
+          contrato: contratoRef,
+          titulo: tituloObj as unknown as TituloComRelacoes,
+          dataReferencia: new Date(),
+        }, undefined)
+        : '<p>Boleto em anexo.</p>';
+
+      let base64Pdf: string | undefined;
+      if (mensagem.tipo_envio === 'pdf') {
+        const pdf = await TituloPDFController.gerarPdfBase64(tituloObj as unknown as TituloComRelacoes);
+        if (pdf) base64Pdf = pdf;
+      }
+
+      const enviou = await this.enviarEmail(
+        servidor,
+        email,
+        corpoHtml,
+        base64Pdf,
+        'titulo',
+        titulo.id,
+        `${servidor.nome_remetente} - Boleto de Pagamento`,
+        cliente.razao_social || cliente.nome_fantasia,
+        email,
+        cliente.telefone,
+        { saas: true, empresa_id: titulo.empresa_id, entidade_tipo: 'titulo', entidade_id: titulo.id, titulo_historico: 'Boleto de Pagamento' }
+      );
+      return enviou
+        ? { sucesso: true, mensagem: 'Email enviado com sucesso' }
+        : { sucesso: false, mensagem: 'Erro ao enviar email' };
+    } catch (error) {
+      logger.error('Erro ao reenviar cobrança SaaS por email', {
+        tituloId,
+        error: error instanceof Error ? error.message : String(error),
+      });
       return { sucesso: false, mensagem: 'Erro interno ao enviar email' };
     }
   }

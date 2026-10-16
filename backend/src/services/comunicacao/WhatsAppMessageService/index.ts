@@ -71,7 +71,12 @@ export class WhatsAppMessageService {
       const contrato = (titulo as Titulo & { contrato?: Contrato | null }).contrato;
       const telefone = this.formatarTelefone(cliente.telefone);
       const baseUrl = undefined;
-      const contextoHistorico: ContextoHistorico | undefined = empresaId != null ? { empresa_id: empresaId } : undefined;
+      const contextoHistorico: ContextoHistorico = {
+        ...(empresaId != null ? { empresa_id: empresaId } : {}),
+        entidade_tipo: 'titulo',
+        entidade_id: titulo.id,
+        titulo_historico: 'Boleto de Pagamento',
+      };
 
       const mensagemTexto = mensagem.mensagem_manual || mensagem.mensagem_padrao || '';
       

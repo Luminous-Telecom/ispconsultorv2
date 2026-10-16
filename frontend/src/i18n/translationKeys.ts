@@ -1715,6 +1715,14 @@ export interface TranslationKeys {
   'history.searchPhone': string;
   'history.searchEmail': string;
   'history.noMessages': string;
+  'history.resendFailures': string;
+  'history.resendFailuresConfirm': string;
+  'history.resendFailuresConfirmSelected': string;
+  'history.resendFailuresEmpty': string;
+  'history.resendFailuresSkipped': string;
+  'history.resendFailuresDone': string;
+  'history.resendFailuresFailed': string;
+  'history.resendFailuresNotError': string;
 
   // File Modal
   'messages.selectFile': string;

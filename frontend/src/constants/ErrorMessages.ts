@@ -297,6 +297,7 @@ export const CONTEXT_ERROR_MESSAGES = {
 
   // WhatsApp teste
   WHATSAPP_TEST_SEND_ERROR: 'Não foi possível enviar a mensagem de teste. Verifique as configurações do servidor e tente novamente.',
+  MENSAGEM_RESEND_ERROR: 'Erro ao reenviar notificações de cobrança',
 
   // Atendimentos (IXC)
   ATENDIMENTO_CREATE_ERROR: 'Erro ao criar atendimento',

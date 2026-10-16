@@ -4,11 +4,13 @@ import { sequelize } from '../../../config/database';
 import { MensagemHistorico } from '../../../models/comunicacao/MensagemHistorico';
 import { Usuario } from '../../../models/cadastros/Usuario';
 import { logger } from '../../../utils/logger';
-import { sendSuccess, sendError } from '../../../utils/responseUtils';
+import { sendSuccess, sendError, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { getEmpresaIdOrNull, resolveListEmpresaId } from '../../../utils/tenantUtils';
 import { buildListPagination } from '../../../utils/pagination';
 import { HISTORICO_ORIGEM_ERP } from '../../../services/comunicacao/mensagemHistoricoOrigens';
+import { parseReenviarFalhasBody } from '../../../services/comunicacao/ReenviarNotificacoesCobrancaService/selecao';
+import { ReenviarNotificacoesCobrancaService } from '../../../services/comunicacao/ReenviarNotificacoesCobrancaService';
 import { parseListQuery, parseOptionalQueryInt, queryString } from '../../../utils/listQuery';
 
 interface MensagemHistoricoFilters {
@@ -242,6 +244,37 @@ export class MensagemHistoricoController {
     } catch (error) {
       logger.error('Erro ao buscar mensagens da entidade:', error);
       sendError(res, error, 'Erro ao buscar mensagens da entidade', 500, true);
+    }
+  }
+
+  /**
+   * Reenvia notificações de cobrança (título em aberto) que falharam.
+   * empresa_id vem do token — admin sem filtro vê todos os tenants.
+   */
+  static async reenviarFalhas(req: AuthenticatedRequest, res: ExpressResponse): Promise<void> {
+    try {
+      const parsed = parseReenviarFalhasBody(req.body);
+      if (!parsed.ok) {
+        sendValidationError(res, parsed.message);
+        return;
+      }
+
+      const empresaId = resolveListEmpresaId(req);
+      if (empresaId === false) {
+        sendForbidden(res, 'Sem acesso a este histórico');
+        return;
+      }
+
+      const resultado = await ReenviarNotificacoesCobrancaService.reenviar({
+        tipo: parsed.tipo,
+        ids: parsed.ids,
+        empresaId,
+        origens: [HISTORICO_ORIGEM_ERP],
+      });
+
+      sendSuccess(res, resultado, 'Reenvio de cobranças processado.');
+    } catch (error) {
+      sendError(res, error, 'Erro ao reenviar notificações de cobrança', 500, true);
     }
   }
 }

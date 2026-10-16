@@ -14,6 +14,7 @@ import { WhatsAppCloudService } from '../WhatsAppCloudService';
 import { TemplateWhatsAppService } from '../TemplateWhatsAppService';
 import type { ContextoHistorico } from '../RegistroMensagemHistoricoService';
 import { whereComunicacaoEmpresaEstrito } from '../../../utils/comunicacaoEmpresaWhere';
+import { escolherMensagemCobranca } from '../ReenviarNotificacoesCobrancaService/selecao';
 
 interface ConfiguracoesEnvios {
   antesVencimento?: number[];
@@ -267,11 +268,16 @@ export class WhatsAppBoletoService {
           ? ({ ...(typeof titulo.get === 'function' ? (titulo as { get: (o: { plain: boolean }) => Record<string, unknown> }).get({ plain: true }) : titulo), cliente, contrato, banco: (titulo as unknown as { banco?: unknown }).banco, plano: (titulo as unknown as { plano?: unknown }).plano } as unknown as Titulo)
           : titulo;
         const empresaIdHistorico = (titulo as { empresa_id?: number }).empresa_id ?? (cliente as { empresa_id?: number }).empresa_id ?? empresaId;
+        const vinculoCobranca = {
+          entidade_tipo: 'titulo' as const,
+          entidade_id: titulo.id,
+          titulo_historico: 'Boleto de Pagamento',
+        };
         const contextoSaas = saas && (titulo as { empresa_id?: number }).empresa_id
-          ? { saas: true as const, empresa_id: (titulo as { empresa_id: number }).empresa_id }
+          ? { saas: true as const, empresa_id: (titulo as { empresa_id: number }).empresa_id, ...vinculoCobranca }
           : empresaIdHistorico != null
-            ? { empresa_id: empresaIdHistorico }
-            : undefined;
+            ? { empresa_id: empresaIdHistorico, ...vinculoCobranca }
+            : vinculoCobranca;
         const resultado = await this.enviarParaTitulo(mensagem, servidor, tituloParaEnvio as Titulo, cliente, contrato, contextoSaas);
 
         logger.info('WhatsAppBoletoService.processarEnvio - Resultado do envio', {
@@ -534,7 +540,12 @@ export class WhatsAppBoletoService {
       const baseUrl = undefined;
       const contrato: Contrato | null | undefined = titulo.contrato_id ? { id: titulo.contrato_id } as Contrato : undefined;
       const telefone = this.formatarTelefone(cliente.telefone);
-      const contextoHistorico = empresaId != null ? { empresa_id: empresaId } : undefined;
+      const contextoHistorico = {
+        ...(empresaId != null ? { empresa_id: empresaId } : {}),
+        entidade_tipo: 'titulo',
+        entidade_id: titulo.id,
+        titulo_historico: 'Recibo de Pagamento',
+      };
 
       if (servidor.tipo_api === 'whatsapp_cloud' && temTemplate) {
         const templateInfo = TemplateWhatsAppService.getTemplateInfoForMensagem(mensagem);
@@ -616,6 +627,104 @@ export class WhatsAppBoletoService {
         error: error instanceof Error ? error.message : String(error)
       });
       return false;
+    }
+  }
+
+  /**
+   * Reenvia a cobrança de um título SaaS que falhou.
+   */
+  static async reenviarCobrancaSaas(tituloId: number): Promise<{ sucesso: boolean; mensagem?: string }> {
+    try {
+      const { SaasTitulo } = await import('../../../models/saas/SaasTitulo');
+      const { DadosEmpresa } = await import('../../../models/sistema/DadosEmpresa');
+      const { SaasPlano } = await import('../../../models/saas/SaasPlano');
+      const { SaasBanco } = await import('../../../models/saas/SaasBanco');
+      const SaasSrv = (await import('../../../models/saas/SaasServidorWhatsapp')).default;
+
+      const saasSrv = await SaasSrv.findOne({ where: { status: 'ativo' } });
+      if (!saasSrv) {
+        return { sucesso: false, mensagem: 'Nenhum servidor WhatsApp ativo encontrado' };
+      }
+      const servidor = {
+        id: saasSrv.id,
+        tipo_api: 'evolution' as const,
+        evolution_api_url: (saasSrv as { url_api?: string }).url_api || '',
+        evolution_api_key: (saasSrv as { token?: string }).token || '',
+        instance_name: (saasSrv as { numero?: string }).numero || saasSrv.nome,
+        ativo: true,
+        timeout: 30000,
+        notificacoes_automaticas: false,
+        tentativas: 1,
+        intervalo_tentativas: 0,
+      } as unknown as ServidorWhatsApp;
+
+      const doTenant = await MensagemWhatsApp.findAll({
+        where: { ativo: true, empresa_id: { [Op.is]: null } },
+        include: [{ model: TemplateWhatsApp, as: 'template', required: false }],
+      });
+      const mensagens = doTenant.length > 0
+        ? doTenant
+        : await MensagemWhatsApp.findAll({
+          where: { ativo: true },
+          include: [{ model: TemplateWhatsApp, as: 'template', required: false }],
+        });
+      const mensagem = escolherMensagemCobranca(mensagens);
+      if (!mensagem) {
+        return { sucesso: false, mensagem: 'Mensagem de cobrança não configurada' };
+      }
+
+      const titulo = await SaasTitulo.findByPk(tituloId, {
+        include: [
+          { model: DadosEmpresa, as: 'empresa', required: true, attributes: ['id', 'razao_social', 'nome_fantasia', 'telefone', 'celular'] },
+          { model: SaasPlano, as: 'plano', required: false },
+          { model: SaasBanco, as: 'banco', required: false },
+        ],
+      });
+      if (!titulo) {
+        return { sucesso: false, mensagem: 'Título não encontrado' };
+      }
+
+      const emp = (titulo as unknown as { empresa?: { get: (o: { plain: boolean }) => Record<string, unknown> } }).empresa;
+      const empData = emp?.get?.({ plain: true }) as Record<string, unknown> | undefined;
+      const telefone = (empData?.telefone || empData?.celular) as string | undefined;
+      if (!telefone) {
+        return { sucesso: false, mensagem: 'Empresa sem telefone cadastrado' };
+      }
+      const cliente = {
+        telefone,
+        razao_social: (empData?.razao_social || empData?.nome_fantasia) as string,
+      } as Cliente;
+      const tituloParaEnvio = {
+        ...(titulo.get({ plain: true }) as unknown as Record<string, unknown>),
+        cliente,
+        contrato: null,
+        banco: (titulo as unknown as { banco?: unknown }).banco,
+        plano: (titulo as unknown as { plano?: unknown }).plano,
+      } as unknown as Titulo;
+
+      const enviou = await this.enviarParaTitulo(
+        mensagem,
+        servidor,
+        tituloParaEnvio,
+        cliente,
+        null,
+        {
+          saas: true,
+          empresa_id: titulo.empresa_id,
+          entidade_tipo: 'titulo',
+          entidade_id: titulo.id,
+          titulo_historico: 'Boleto de Pagamento',
+        }
+      );
+      return enviou
+        ? { sucesso: true, mensagem: 'Mensagem enviada com sucesso' }
+        : { sucesso: false, mensagem: 'Erro ao enviar mensagem' };
+    } catch (error) {
+      logger.error('Erro ao reenviar cobrança SaaS por WhatsApp', {
+        tituloId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return { sucesso: false, mensagem: 'Erro interno ao enviar mensagem' };
     }
   }
 

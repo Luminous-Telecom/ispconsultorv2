@@ -1727,6 +1727,14 @@ const enUS: TranslationKeys = {
     'history.searchPhone': 'Search by phone...',
     'history.searchEmail': 'Search by email...',
     'history.noMessages': 'No messages found',
+    'history.resendFailures': 'Resend failures',
+    'history.resendFailuresConfirm': 'Resend the billing notifications that failed?',
+    'history.resendFailuresConfirmSelected': 'Resend ${count} failed billing notification(s)?',
+    'history.resendFailuresEmpty': 'There are no failed billing notifications to resend.',
+    'history.resendFailuresSkipped': 'The failed billings were already paid or cancelled.',
+    'history.resendFailuresDone': 'Resend finished: ${sent} sent, ${failed} still failed.',
+    'history.resendFailuresFailed': 'Could not resend. ${failed} notification(s) are still in error.',
+    'history.resendFailuresNotError': 'Select a failed billing notification.',
 
     // File Modal
     'messages.selectFile': 'Select a file',

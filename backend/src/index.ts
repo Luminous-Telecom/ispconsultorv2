@@ -230,6 +230,10 @@ app.use(ddosProtectionMiddleware({
       test: (pathname) => /\/api\/ssh-manager\/devices\/[^/]+\/backup\/?$/.test(pathname),
       maxProcessingTime: 360_000,
     },
+    {
+      test: (pathname) => /\/mensagens-historico\/reenviar-falhas\/?$/.test(pathname),
+      maxProcessingTime: 180_000,
+    },
   ],
   skipRoutes: [
     '/health',

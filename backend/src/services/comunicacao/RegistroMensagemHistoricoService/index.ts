@@ -26,11 +26,18 @@ export interface DadosRegistroHistorico {
 export interface ContextoSaas {
   saas: true;
   empresa_id: number;
+  entidade_tipo?: string;
+  entidade_id?: number;
+  titulo_historico?: string;
 }
 
 /** Contexto para ERP: empresa_id para isolar dados por empresa */
 export interface ContextoErp {
   empresa_id?: number;
+  /** Preenchido no recibo para o histórico impedir reenvio do mesmo pagamento */
+  entidade_tipo?: string;
+  entidade_id?: number;
+  titulo_historico?: string;
 }
 
 /** Contexto passado aos serviços de envio (SaaS ou ERP) */
@@ -46,9 +53,13 @@ export async function registrarMensagemHistorico(
   try {
     const empresaId = contexto?.empresa_id;
     const isSaas = !!(contexto && 'saas' in contexto && contexto.saas);
+    const vinculo = contexto && 'entidade_tipo' in contexto ? contexto : undefined;
 
     await MensagemHistorico.create({
       ...dados,
+      entidade_tipo: dados.entidade_tipo || vinculo?.entidade_tipo,
+      entidade_id: dados.entidade_id ?? vinculo?.entidade_id,
+      titulo: dados.titulo || vinculo?.titulo_historico,
       historico_origem: isSaas ? HISTORICO_ORIGEM_SAAS : HISTORICO_ORIGEM_ERP,
       ...(empresaId != null && { empresa_id: empresaId }),
     });

@@ -24,6 +24,7 @@ router.use(authMiddleware);
  * @query {string} sortColumn - Coluna para ordenação (padrão: created_at)
  * @query {string} sortDirection - Direção da ordenação: 'asc' ou 'desc' (padrão: desc)
  */
+router.post('/reenviar-falhas', MensagemHistoricoController.reenviarFalhas);
 router.get('/', MensagemHistoricoController.list);
 
 /**

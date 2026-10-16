@@ -92,6 +92,9 @@ const LogsModal: React.FC<LogsModalProps> = ({
     setWhoisIp,
     selectedItem,
     handleViewDetails,
+    canal: logType === 'email' ? 'email' : logType === 'whatsapp' ? 'whatsapp' : null,
+    isSaasApi: effectiveVariant === 'saas',
+    incluirErp: mesclarMensagensErp,
   });
 
   const columns = isAuditoria

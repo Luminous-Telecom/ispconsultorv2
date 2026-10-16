@@ -1725,6 +1725,14 @@ const esES: TranslationKeys = {
     'history.searchPhone': 'Buscar por teléfono...',
     'history.searchEmail': 'Buscar por email...',
     'history.noMessages': 'No se encontraron mensajes',
+    'history.resendFailures': 'Reenviar fallos',
+    'history.resendFailuresConfirm': '¿Reenviar las notificaciones de cobro que fallaron?',
+    'history.resendFailuresConfirmSelected': '¿Reenviar ${count} notificación(es) de cobro con fallo?',
+    'history.resendFailuresEmpty': 'No hay notificaciones de cobro con fallo para reenviar.',
+    'history.resendFailuresSkipped': 'Los cobros con fallo ya fueron pagados o cancelados.',
+    'history.resendFailuresDone': 'Reenvío concluido: ${sent} enviada(s), ${failed} con error.',
+    'history.resendFailuresFailed': 'No fue posible reenviar. ${failed} notificación(es) siguen con error.',
+    'history.resendFailuresNotError': 'Seleccione una notificación de cobro con fallo.',
 
     // File Modal
     'messages.selectFile': 'Seleccione un archivo',

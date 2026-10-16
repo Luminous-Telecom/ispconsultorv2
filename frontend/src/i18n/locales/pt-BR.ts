@@ -1727,6 +1727,14 @@ const ptBR: TranslationKeys = {
     'history.searchPhone': 'Buscar por telefone...',
     'history.searchEmail': 'Buscar por email...',
     'history.noMessages': 'Nenhuma mensagem encontrada',
+    'history.resendFailures': 'Reenviar falhas',
+    'history.resendFailuresConfirm': 'Reenviar as notificações de cobrança que falharam?',
+    'history.resendFailuresConfirmSelected': 'Reenviar ${count} notificação(ões) de cobrança com falha?',
+    'history.resendFailuresEmpty': 'Nenhuma notificação de cobrança com falha para reenviar.',
+    'history.resendFailuresSkipped': 'As cobranças com falha já foram pagas ou canceladas.',
+    'history.resendFailuresDone': 'Reenvio concluído: ${sent} enviada(s), ${failed} com erro.',
+    'history.resendFailuresFailed': 'Não foi possível reenviar. ${failed} notificação(ões) continuam com erro.',
+    'history.resendFailuresNotError': 'Selecione uma notificação de cobrança com falha.',
 
     // File Modal
     'messages.selectFile': 'Selecione um arquivo',
