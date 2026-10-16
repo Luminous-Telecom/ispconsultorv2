@@ -62,7 +62,7 @@ Histórico de envios e falhas de mensagens via servidor WhatsApp configurado.
 
 **Menu:** **Logs → Comunicação → Logs de WhatsApp**
 
-**Reenviar falhas** reenvia as notificações de cobrança (boleto) que ficaram com erro e cujo título ainda está em aberto. Recibos e mensagens já enviadas depois da falha não entram. Sem linha selecionada, o botão percorre as falhas do canal. Com uma linha de erro selecionada, reenvia só aquela.
+**Reenviar falhas** abre duas opções: **Selecionados** reenvia só as linhas marcadas que estão com erro; **Todos com erro** reenvia as cobranças (boleto) que falharam e cujo título ainda está em aberto. Recibos e mensagens já enviadas depois da falha não entram.
 
 Relacionado a [Servidor WhatsApp](/doc/integracoes/servidor-whatsapp).
 

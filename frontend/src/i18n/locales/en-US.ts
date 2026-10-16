@@ -1728,6 +1728,7 @@ const enUS: TranslationKeys = {
     'history.searchEmail': 'Search by email...',
     'history.noMessages': 'No messages found',
     'history.resendFailures': 'Resend failures',
+    'history.resendAllErrors': 'All with errors',
     'history.resendFailuresConfirm': 'Resend the billing notifications that failed?',
     'history.resendFailuresConfirmSelected': 'Resend ${count} failed billing notification(s)?',
     'history.resendFailuresEmpty': 'There are no failed billing notifications to resend.',

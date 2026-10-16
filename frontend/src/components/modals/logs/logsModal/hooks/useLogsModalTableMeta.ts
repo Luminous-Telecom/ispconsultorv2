@@ -88,16 +88,18 @@ export function useLogsModalTableMeta({
     return d as { id: number | string }[];
   }, [data, isBlockdomiApi]);
 
-  const handleReenviarFalhas = useCallback(async (items: unknown[]) => {
+  const handleReenviarFalhas = useCallback(async (items: unknown[], apenasSelecionados: boolean) => {
     if (!canal || isResending) return;
-    const ids = idsSelecionadosParaReenvio(items as ReenvioSelecionavel[]);
-    if (ids && ids.length === 0) {
+    const ids = apenasSelecionados
+      ? (idsSelecionadosParaReenvio(items as ReenvioSelecionavel[]) ?? [])
+      : undefined;
+    if (apenasSelecionados && (ids?.length ?? 0) === 0) {
       info(t('history.resendFailuresNotError'));
       return;
     }
     const confirmed = window.confirm(
-      ids
-        ? t('history.resendFailuresConfirmSelected', { count: ids.length })
+      apenasSelecionados
+        ? t('history.resendFailuresConfirmSelected', { count: ids?.length ?? 0 })
         : t('history.resendFailuresConfirm')
     );
     if (!confirmed) return;
@@ -168,9 +170,22 @@ export function useLogsModalTableMeta({
         variant: 'primary' as const,
         disabled: () => isResending,
         requiresSelection: false,
-        action: (items: unknown[]) => {
-          void handleReenviarFalhas(items);
-        },
+        dropdown: [
+          {
+            label: t('buttons.selected'),
+            disabled: (items: unknown[]) => (idsSelecionadosParaReenvio(items as ReenvioSelecionavel[]) ?? []).length === 0,
+            action: (items?: unknown[]) => {
+              void handleReenviarFalhas(items ?? [], true);
+            },
+          },
+          {
+            label: t('history.resendAllErrors'),
+            disabled: () => isResending,
+            action: () => {
+              void handleReenviarFalhas([], false);
+            },
+          },
+        ],
       },
     ];
   }, [t, selectedItem, handleViewDetails, isAuditoria, isBlockdomiApi, setShowBlockdomiLogsReal, setWhoisIp, canal, isResending, handleReenviarFalhas]);

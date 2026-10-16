@@ -1716,6 +1716,7 @@ export interface TranslationKeys {
   'history.searchEmail': string;
   'history.noMessages': string;
   'history.resendFailures': string;
+  'history.resendAllErrors': string;
   'history.resendFailuresConfirm': string;
   'history.resendFailuresConfirmSelected': string;
   'history.resendFailuresEmpty': string;

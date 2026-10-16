@@ -1726,6 +1726,7 @@ const esES: TranslationKeys = {
     'history.searchEmail': 'Buscar por email...',
     'history.noMessages': 'No se encontraron mensajes',
     'history.resendFailures': 'Reenviar fallos',
+    'history.resendAllErrors': 'Todos con error',
     'history.resendFailuresConfirm': '¿Reenviar las notificaciones de cobro que fallaron?',
     'history.resendFailuresConfirmSelected': '¿Reenviar ${count} notificación(es) de cobro con fallo?',
     'history.resendFailuresEmpty': 'No hay notificaciones de cobro con fallo para reenviar.',

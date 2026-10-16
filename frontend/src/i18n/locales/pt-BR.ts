@@ -1728,6 +1728,7 @@ const ptBR: TranslationKeys = {
     'history.searchEmail': 'Buscar por email...',
     'history.noMessages': 'Nenhuma mensagem encontrada',
     'history.resendFailures': 'Reenviar falhas',
+    'history.resendAllErrors': 'Todos com erro',
     'history.resendFailuresConfirm': 'Reenviar as notificações de cobrança que falharam?',
     'history.resendFailuresConfirmSelected': 'Reenviar ${count} notificação(ões) de cobrança com falha?',
     'history.resendFailuresEmpty': 'Nenhuma notificação de cobrança com falha para reenviar.',

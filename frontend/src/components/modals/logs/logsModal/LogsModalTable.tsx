@@ -12,7 +12,12 @@ interface BulkAction {
   variant: 'primary';
   disabled: (items: unknown[]) => boolean;
   requiresSelection: boolean;
-  action: (items: unknown[]) => void;
+  action?: (items: unknown[]) => void;
+  dropdown?: {
+    label: string;
+    action: (items?: unknown[]) => void;
+    disabled?: (items: unknown[]) => boolean;
+  }[];
 }
 
 interface LogsModalTableProps {
@@ -113,7 +118,7 @@ const LogsModalTable: React.FC<LogsModalTableProps> = ({
         hover: true,
         responsive: true,
         selectable: true,
-        multiSelect: false,
+        multiSelect: logType === 'email' || logType === 'whatsapp',
         customControls: equipamentosAgentesDateControls || undefined,
         bulkActions: bulkActions.map((a) => ({
           key: a.label.toLowerCase().replace(/\s+/g, '-'),
@@ -122,6 +127,7 @@ const LogsModalTable: React.FC<LogsModalTableProps> = ({
           disabled: a.disabled,
           variant: a.variant,
           requiresSelection: a.requiresSelection,
+          dropdown: a.dropdown,
         })),
         emptyMessage,
         pagination,

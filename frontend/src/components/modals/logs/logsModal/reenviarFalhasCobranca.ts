@@ -5,8 +5,9 @@ export interface ReenvioSelecionavel {
 }
 
 /**
- * Sem seleção, reenvia todas as falhas do canal (undefined).
- * Com seleção, só as linhas com status de erro.
+ * Ids das linhas selecionadas que estão com erro.
+ * Lista vazia ou só envios ok devolve lista vazia.
+ * Sem itens, devolve undefined.
  */
 export function idsSelecionadosParaReenvio(items: ReenvioSelecionavel[]): number[] | undefined {
   if (items.length === 0) return undefined;
