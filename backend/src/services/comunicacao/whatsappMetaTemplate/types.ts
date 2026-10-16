@@ -82,6 +82,9 @@ export interface WhatsAppOrderDetailsPayload {
       key: string;
       key_type: string;
     };
+    boleto?: {
+      digitable_line: string;
+    };
   }>;
   currency: string;
   total_amount: WhatsAppOrderDetailsAmount;

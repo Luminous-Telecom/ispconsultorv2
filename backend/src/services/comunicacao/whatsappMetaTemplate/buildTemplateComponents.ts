@@ -4,6 +4,8 @@ import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { logger } from '../../../utils/logger';
 import { parseDateFromDb, formatDate } from '../../../utils/dateUtils';
 import { WhatsAppCloudService } from '../WhatsAppCloudService';
+import { buildBrPaymentSettings } from './brPaymentSettings';
+import { resolvePixOrderDetailsIdentity } from './pixOrderDetails';
 import { resolveTituloPixParaOrderDetails } from './resolveTituloPixParaOrderDetails';
 import type {
   MetaTemplateButtonDef,
@@ -78,7 +80,10 @@ function getButtonBuildFailureReason(
   switch (buttonDef.type) {
     case 'ORDER_DETAILS':
       if (!titulo.id) return 'titulo_sem_id';
-      if (!(titulo.qrcode || '').trim()) return 'qrcode_pix_ausente';
+      if (!(titulo.qrcode || '').trim() && !(titulo.linha_digitavel || '').trim()) {
+        return 'pix_e_linha_digitavel_ausentes';
+      }
+      if (!(titulo.qrcode || '').trim()) return 'linha_digitavel_invalida';
       if (!(titulo.empresa_id ?? cliente?.empresa_id)) return 'empresa_id_ausente';
       return 'cnpj_empresa_ausente';
     case 'URL':
@@ -221,21 +226,40 @@ async function buildOrderDetailsButton(
   if (!titulo.id) return null;
 
   const pixCode = (titulo.qrcode || '').trim();
-  if (!pixCode) {
-    logger.error('[WhatsApp Template] order_details: QR Code PIX ausente no título', {
-      titulo_id: titulo.id,
-    });
-    return null;
+  const empresaId = titulo.empresa_id ?? cliente?.empresa_id;
+  const empresa = pixCode && empresaId ? await DadosEmpresa.findByPk(empresaId) : null;
+  let pix: { code: string; merchantName: string; key: string; keyType: string } | null = null;
+
+  if (pixCode) {
+    const identity = await resolvePixOrderDetailsIdentity(pixCode);
+    const merchantName = (identity?.merchantName || empresa?.nome_fantasia || empresa?.razao_social || 'Empresa').trim();
+    let pixKey = identity?.key;
+    let pixKeyType = identity?.keyType;
+    if (!pixKey || !pixKeyType) {
+      const cnpj = (empresa?.cnpj || '').replace(/\D/g, '');
+      if (cnpj.length === 14) {
+        pixKey = cnpj;
+        pixKeyType = 'CNPJ';
+      }
+    }
+    if (merchantName && pixKey && pixKeyType) {
+      pix = { code: pixCode, merchantName, key: pixKey, keyType: pixKeyType };
+    } else {
+      logger.warn('[WhatsApp Template] order_details: PIX ignorado — chave ou nome do recebedor ausente', {
+        titulo_id: titulo.id,
+        empresa_id: empresaId ?? null,
+        keyType: pixKeyType ?? null,
+      });
+    }
   }
 
-  const empresaId = titulo.empresa_id ?? cliente?.empresa_id;
-  const empresa = empresaId ? await DadosEmpresa.findByPk(empresaId) : null;
-  const merchantName = (empresa?.nome_fantasia || empresa?.razao_social || 'Empresa').trim();
-  const cnpj = (empresa?.cnpj || '').replace(/\D/g, '');
-  if (!cnpj) {
-    logger.error('[WhatsApp Template] order_details: CNPJ ausente em Dados da Empresa', {
+  const paymentSettings = buildBrPaymentSettings({
+    pix,
+    linhaDigitavel: titulo.linha_digitavel,
+  });
+  if (paymentSettings.length === 0) {
+    logger.error('[WhatsApp Template] order_details: PIX e linha digitável ausentes', {
       titulo_id: titulo.id,
-      empresa_id: empresaId ?? null,
     });
     return null;
   }
@@ -244,7 +268,7 @@ async function buildOrderDetailsButton(
   const valueCentavos = Number.isNaN(valorReais) ? 0 : Math.round(valorReais * 100);
   const amount = { value: valueCentavos, offset: 100 };
   const referenceId = (titulo.numero_titulo || `FAT-${titulo.id}`).slice(0, 35);
-  const itemName = (titulo.descricao || 'Fatura').slice(0, 60);
+  const itemName = (titulo.descricao || 'Fatura').replace(/\s+/g, ' ').trim().slice(0, 60);
 
   return {
     type: 'button',
@@ -257,15 +281,7 @@ async function buildOrderDetailsButton(
           reference_id: referenceId,
           type: 'digital-goods',
           payment_type: 'br',
-          payment_settings: [{
-            type: 'pix_dynamic_code',
-            pix_dynamic_code: {
-              code: pixCode,
-              merchant_name: merchantName.slice(0, 25),
-              key: cnpj,
-              key_type: 'CNPJ',
-            },
-          }],
+          payment_settings: paymentSettings,
           currency: 'BRL',
           total_amount: amount,
           order: {

@@ -115,13 +115,14 @@ O ERP monta automaticamente os componentes exigidos pela Meta conforme o templat
 | **Header TEXT** | Nome do cliente |
 | **Body** | Variáveis mapeadas (texto, moeda, data) |
 | **Botão URL** | Link de pagamento público do título |
-| **Botão ORDER_DETAILS** | PIX dinâmico (EMV do título + CNPJ da empresa) |
-| **Botão COPY_CODE** | Código PIX ou linha digitável |
+| **Botão ORDER_DETAILS** | PIX e boleto no mesmo pagamento do WhatsApp |
+| **Botão COPY_CODE** | Cupom de até 15 caracteres (não cabe a linha digitável) |
 
 Para templates com **ORDER_DETAILS** (ex.: `fatura_disponivel`):
 
-- O título precisa ter **QR Code PIX** (`qrcode`) preenchido.
-- **Dados da empresa** devem ter **CNPJ** cadastrado.
+- O cliente toca no botão do WhatsApp e vê as duas opções: **copiar código Pix** e **copiar código do boleto**.
+- O PIX usa o QR Code do título. O nome do recebedor e a chave saem desse código (CNPJ, CPF, e-mail, telefone ou chave aleatória). Se o código não trouxer a chave, o ERP usa o **CNPJ** de **Dados da empresa**.
+- O boleto usa a **linha digitável** do título. Sem ela, o cliente só vê o PIX.
 - Header com PDF usa link público quando `BASE_URL`/`APP_URL` estão configurados.
 
 Header **IMAGE/VIDEO** e botões **FLOW/CATALOG** ainda não são montados automaticamente — use templates com DOCUMENT + ORDER_DETAILS ou URL.
