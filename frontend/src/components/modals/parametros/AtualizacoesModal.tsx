@@ -47,7 +47,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
     queryFn: async (): Promise<Atualizacao[]> => {
 
       try {
-        const response = await apiService.get('/saas/atualizacoes', {
+        const response = await apiService.get('/atualizacoes', {
           timeout: listarAtualizacoesTimeoutMs,
         }) as ApiResponseWithVersao;
 
@@ -160,7 +160,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
   const RESTART_GRACE_SECONDS = 6;
 
   const updateMutation = useMutation({
-    mutationFn: () => executeUpdateWithSSE('/saas/atualizacoes/update-stream'),
+    mutationFn: () => executeUpdateWithSSE('/atualizacoes/update-stream'),
     onSuccess: async () => {
       success(t('updates.success'), {
         id: `update-success-${Date.now()}`,
@@ -202,7 +202,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
   });
 
   const updateDocMutation = useMutation({
-    mutationFn: () => executeUpdateWithSSE('/saas/atualizacoes/update-doc-stream'),
+    mutationFn: () => executeUpdateWithSSE('/atualizacoes/update-doc-stream'),
     onSuccess: () => {
       success(t('updates.successDoc'), {
         id: `update-doc-success-${Date.now()}`,

@@ -6,12 +6,15 @@ import AgentModalHeader from './AgentModalHeader';
 import AgentModalConfigTab from './AgentModalConfigTab';
 import AgentModalInstallAutoTab from './AgentModalInstallAutoTab';
 import AgentModalInstallManualTab from './AgentModalInstallManualTab';
+import AgentModalWireguardTab from './AgentModalWireguardTab';
 import { useAgentModal } from './useAgentModal';
+import { useAgentWireguard } from './useAgentWireguard';
 import { AgentModalProps } from './types';
 
 const AgentModal: React.FC<AgentModalProps> = (props) => {
   const { t } = useI18n();
   const modal = useAgentModal(props);
+  const wireguard = useAgentWireguard(modal.installAgent ?? props.agentData, props.show, props.onSuccess);
 
   const headerActions = (
     <AgentModalHeader
@@ -29,6 +32,8 @@ const AgentModal: React.FC<AgentModalProps> = (props) => {
       onSubmit={modal.handleSubmit}
       onInstall={modal.handleInstall}
       onGenerateCmd={modal.handleGenerateCmd}
+      wireguardPending={wireguard.isPending}
+      onConfigureWireguard={() => { void wireguard.handleConfigure(); }}
     />
   );
 
@@ -85,6 +90,17 @@ const AgentModal: React.FC<AgentModalProps> = (props) => {
               <AgentModalInstallManualTab
                 generating={modal.generating}
                 generatedCmd={modal.generatedCmd}
+              />
+            )}
+
+            {modal.activeTab === 'wireguard' && (
+              <AgentModalWireguardTab
+                form={wireguard.form}
+                errors={wireguard.errors}
+                agent={wireguard.liveAgent}
+                t={t}
+                setField={wireguard.setField}
+                setTls={wireguard.setTls}
               />
             )}
           </div>

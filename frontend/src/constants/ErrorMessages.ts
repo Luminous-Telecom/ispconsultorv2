@@ -238,6 +238,7 @@ export const CONTEXT_ERROR_MESSAGES = {
   SSH_BACKUP_QUEUE_ERROR: 'Erro ao enfileirar backup',
   SSH_BACKUP_CONTENT_ERROR: 'Falha ao carregar conteúdo',
   SSH_BACKUP_DOWNLOAD_ERROR: 'Falha ao baixar',
+  AGENT_WIREGUARD_ERROR: 'Erro ao configurar a VPN WireGuard',
 
   // Blockdomi
   BLOCKDOMI_IPV4_DELETE_ERROR: 'Erro ao excluir IPv4.',

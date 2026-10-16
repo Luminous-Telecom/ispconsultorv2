@@ -40,6 +40,10 @@ Qualquer alteração visível no ERP (menu, modal, campo, fluxo, integração, p
 
 Documentação **interna para devs** (setup, auditorias, arquitetura) vai em `docs/`, não na wiki. Detalhes: `.cursor/rules/docs-interno.mdc`
 
+## Testes
+
+Qualquer componente, segurança, validação, botão, cadastro, edição ou visualização criado ou alterado leva o `.test` no mesmo trabalho. Detalhes: `.cursor/rules/testes.mdc`
+
 ## Botões (regra crítica)
 
 Detalhes completos: `.cursor/rules/frontend-botoes.mdc`
@@ -133,3 +137,4 @@ Use sempre os primitivos do projeto. **Índice completo:** `frontend-ui-centrali
 | `backend-middlewares-infra.mdc` | Cadeia de middlewares, logger, upload, cache |
 | `backend-integracoes-externas.mdc` | Agente, SSH Manager, RPKI, Python |
 | `backend-saas-plano-limites.mdc` | Limites numéricos do plano — validação obrigatória na criação |
+| `testes.mdc` | Arquivo `.test` obrigatório — segurança, validação, botões, componentes, cadastro, edição, visualização |

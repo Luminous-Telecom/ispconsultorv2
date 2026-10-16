@@ -5,6 +5,7 @@ import { SshDeviceBackup } from '../../../models/ssh-manager/SshDeviceBackup';
 import { Agent } from '../../../models/agent/Agent';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { isAgentOnline, testSshThroughAgent } from '../../../services/agent/AgentService';
+import { isWireguardAgent, resolveWireguardBind } from '../../../services/agent/wireguard/AgentWireguardService';
 import { encrypt, decryptSshCredential } from '../../../utils/encryption';
 import { normalizeSshPrivateKeyPem, privateKeyPemForSsh2 } from '../../../utils/sshPrivateKey';
 import { sshPool } from '../../../services/ssh-manager/SshPoolService';
@@ -433,6 +434,34 @@ export class DeviceController {
           sendSuccess(res, { success: false, latency: null, error: msg });
           return;
         }
+        if (isWireguardAgent(agentRow)) {
+          const localAddress = await resolveWireguardBind(agentRow);
+          const start = Date.now();
+          logger.info('DeviceController.testConnection: SSH pela VPN WireGuard', {
+            deviceId,
+            deviceName,
+            agentId: device.agent_id,
+            localAddress,
+          });
+          const conn = await openDeviceConnection(device, { localAddress });
+          const latency = Date.now() - start;
+          conn.end();
+          logSshAudit({
+            action: 'CONNECT',
+            userId: getUserId(req),
+            empresaId: device.empresa_id ?? null,
+            deviceId,
+            deviceName,
+            success: true,
+            ip: getClientIpOrDefault(req, '0.0.0.0'),
+            duration: latency,
+          });
+          try {
+            await registrarAtualizacao(req as AuthenticatedRequest, 'SshDevice', 0, { entity_id_str: deviceId, name: deviceName }, { entity_id_str: deviceId, name: deviceName }, 'Teste de conexão no equipamento', getEmpresaIdOrNull(req) ?? undefined);
+          } catch { /* não crítico */ }
+          sendSuccess(res, { success: true, latency, error: null });
+          return;
+        }
         if (!isAgentOnline(device.agent_id)) {
           const msg =
             'Agente offline. O teste de conexão usa o mesmo túnel do terminal — mantenha o agente conectado.';
@@ -658,8 +687,23 @@ export class DeviceController {
       }
 
       const start = Date.now();
-      const conn = await sshPool.getDeviceConnection(device);
+      let dedicatedConn = false;
+      let conn: Awaited<ReturnType<typeof openDeviceConnection>> | undefined;
+      if (device.agent_id) {
+        const agentRow = await Agent.findByPk(device.agent_id);
+        if (agentRow && isWireguardAgent(agentRow)) {
+          const localAddress = await resolveWireguardBind(agentRow);
+          conn = await openDeviceConnection(device, { localAddress });
+          dedicatedConn = true;
+        }
+      }
+      if (!conn) {
+        conn = await sshPool.getDeviceConnection(device);
+      }
       const output = await executeCommand(conn, command.trim(), device.id);
+      if (dedicatedConn) {
+        try { conn.end(); } catch { /* ignora */ }
+      }
       const duration = Date.now() - start;
 
       logSshAudit({
@@ -728,7 +772,15 @@ export class DeviceController {
           sendValidationError(res, 'Agente não encontrado ou inativo.');
           return;
         }
-        if (!isAgentOnline(device.agent_id)) {
+        if (isWireguardAgent(agentRow)) {
+          try {
+            await resolveWireguardBind(agentRow);
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : 'VPN WireGuard indisponível';
+            sendValidationError(res, msg);
+            return;
+          }
+        } else if (!isAgentOnline(device.agent_id)) {
           sendValidationError(
             res,
             'Agente offline. Mantenha o túnel conectado para o backup via agente.'

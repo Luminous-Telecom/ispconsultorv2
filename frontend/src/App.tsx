@@ -8,7 +8,6 @@ import { DashboardFiltersProvider } from './contexts/DashboardFiltersContext';
 import { TableHeaderProvider } from './contexts/TableHeaderContext';
 import { ModalProvider } from './contexts/ModalContext';
 import { LoadingProvider } from './contexts/LoadingContext';
-import { SaasAuthProvider } from './contexts/SaasAuthContext';
 import Loading from './components/common/Loading';
 import SystemUpdateOverlay from './components/common/SystemUpdateOverlay';
 import { RecarregarButton } from './components/ui';
@@ -26,11 +25,6 @@ const CentralAssinante = lazy(() => import('./components/pages/CentralAssinante'
 const Privacidade = lazy(() => import('./components/pages/Privacidade'));
 const Termos = lazy(() => import('./components/pages/Termos'));
 const Cookies = lazy(() => import('./components/pages/Cookies'));
-
-// SaaS Admin Pages
-const SaasLogin = lazy(() => import('./components/pages/saas/SaasLogin'));
-const SaasLayout = lazy(() => import('./components/pages/saas/SaasLayout'));
-const SaasDashboard = lazy(() => import('./components/pages/saas/SaasDashboard'));
 
 // Query Client
 const queryClient = new QueryClient({
@@ -61,7 +55,7 @@ const queryClient = new QueryClient({
 function RouteAppContext() {
   const location = useLocation();
   useEffect(() => {
-    const isSystem = location.pathname.startsWith('/adm') || location.pathname.startsWith('/saas') || location.pathname === '/login';
+    const isSystem = location.pathname.startsWith('/adm') || location.pathname === '/login';
     document.body.setAttribute('data-app', isSystem ? 'system' : 'site');
   }, [location.pathname]);
   return null;
@@ -90,7 +84,6 @@ function AppContent() {
       <ProtectionLayer>
         <QueryClientProvider client={queryClient}>
             <NotificationProvider>
-              <SaasAuthProvider>
               <Router>
                 <RouteAwareThemeProvider>
                 <RouteAppContext />
@@ -153,39 +146,12 @@ function AppContent() {
                         </Suspense>
                       } />
                     </Route>
-                    {/* Rotas SaaS Super Admin */}
-                    <Route path="/saas/login" element={
-                      <Suspense fallback={<Loading message="Carregando..." />}>
-                        <SaasLogin />
-                      </Suspense>
-                    } />
-                    <Route path="/saas" element={
-                      <DashboardFiltersProvider>
-                        <TableHeaderProvider>
-                          <ModalProvider>
-                            <LoadingProvider>
-                              <Suspense fallback={<Loading message="Carregando painel SaaS..." />}>
-                                <SaasLayout />
-                              </Suspense>
-                            </LoadingProvider>
-                          </ModalProvider>
-                        </TableHeaderProvider>
-                      </DashboardFiltersProvider>
-                    }>
-                      <Route index element={
-                        <Suspense fallback={<Loading message="Carregando..." variant="page" />}>
-                          <SaasDashboard />
-                        </Suspense>
-                      } />
-                    </Route>
-
                     {/* Fallback: evitar ficar em rotas inválidas (ex: /undefined) */}
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </Suspense>
                 </RouteAwareThemeProvider>
               </Router>
-              </SaasAuthProvider>
             </NotificationProvider>
         </QueryClientProvider>
       </ProtectionLayer>

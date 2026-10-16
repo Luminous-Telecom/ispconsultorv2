@@ -51,6 +51,7 @@ const LayoutMain: React.FC = () => {
     t,
     openModal,
     hasModulo,
+    userRole: currentUser?.role,
   });
 
   const handleSearch = (value: string) => {

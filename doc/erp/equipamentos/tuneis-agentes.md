@@ -70,6 +70,7 @@ Ao salvar, as abas **Instalar Automático** e **Instalar Manual** são habilitad
 | Configurações | Dados do agente e token |
 | Instalar Automático | Instalação via SSH direto do painel (disponível após salvar) |
 | Instalar Manual | Comando para instalação manual no servidor (disponível após salvar) |
+| WireGuard | Configura a VPN no MikroTik do cliente pela API HTTP (disponível após salvar) |
 
 ---
 
@@ -127,6 +128,37 @@ O comando da aba **Instalar Manual** é para Linux. Para instalar em **Windows**
 :::
 
 Passo a passo completo, requisitos do servidor e cuidados com o token em [Abas Equipamentos — Túneis (agentes)](/doc/clientes/aba-equipamentos-provedor#instalar-o-agente-no-servidor).
+
+---
+
+## Aba WireGuard {#aba-wireguard}
+
+Use esta aba quando o cliente **não tem servidor Linux nem Windows** e o acesso à rede passa pelo **MikroTik**. O painel configura a interface WireGuard no roteador pela API HTTP. O ISP Consultor entra como cliente da VPN e, com o túnel no ar, o backup e o terminal SSH dos equipamentos usam esse caminho.
+
+O MikroTik precisa ser **RouterOS 7**, com IP público (a porta UDP do WireGuard acessível na internet) e a API web alcançável a partir do servidor do ISP Consultor.
+
+1. Cadastre o agente e clique em **Salvar**.
+2. Abra a aba **WireGuard**.
+3. Preencha:
+
+| Campo | Obrigatório | Descrição |
+|-------|:-----------:|-----------|
+| **IP / Host da API** | Sim | Endereço em que a API do MikroTik responde |
+| **Porta da API** | Sim | Padrão: 80. Use a porta do serviço `www` ou `www-ssl` |
+| **HTTPS** | Sim | **Sim** se a API for HTTPS |
+| **Usuário da API** | Sim | Usuário com permissão de escrita em interface, IP e firewall |
+| **Senha da API** | Sim | Na reedição, em branco mantém a senha já salva |
+| **Porta UDP WireGuard** | Sim | Porta em que o MikroTik escuta. Padrão: 13231 |
+| **Redes da LAN** | Sim | Redes atrás do MikroTik, separadas por vírgula. Ex.: `192.168.88.0/24` |
+
+4. Clique em **Configurar VPN**.
+5. Se o handshake concluir, o status fica **up**. O painel mostra o IP deste servidor, o IP do MikroTik na VPN e as chaves públicas.
+
+No equipamento, preencha **Agente Túnel** com este agente e use o **IP de LAN** do dispositivo (não o IP público). O backup (`/export` no RouterOS, ou o arquivo `.swb` no SwOS) e o terminal seguem pela VPN.
+
+::: warning API e porta UDP
+A API precisa estar acessível **antes** do primeiro **Configurar VPN**. A porta UDP informada precisa aceitar conexão vinda da internet. No RouterOS 6 não há REST nem WireGuard.
+:::
 
 ---
 

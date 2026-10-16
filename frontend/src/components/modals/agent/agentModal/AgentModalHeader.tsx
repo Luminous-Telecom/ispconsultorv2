@@ -1,12 +1,14 @@
 import React, { useMemo } from 'react';
 import {
   CancelarButton,
+  ConfigurarVpnButton,
   FecharButton,
   GerarButton,
   InstalarAgenteButton,
   SalvarButton,
 } from 'components/ui';
 import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
+import { useI18n } from 'contexts/I18nContext';
 import { ActiveTab } from './types';
 
 interface AgentModalHeaderProps {
@@ -24,6 +26,8 @@ interface AgentModalHeaderProps {
   onSubmit: (e: React.FormEvent) => void;
   onInstall: () => void;
   onGenerateCmd: () => void;
+  wireguardPending?: boolean;
+  onConfigureWireguard?: () => void;
 }
 
 const AgentModalHeader: React.FC<AgentModalHeaderProps> = ({
@@ -41,7 +45,10 @@ const AgentModalHeader: React.FC<AgentModalHeaderProps> = ({
   onSubmit,
   onInstall,
   onGenerateCmd,
+  wireguardPending = false,
+  onConfigureWireguard,
 }) => {
+  const { t } = useI18n();
   const tabs = useMemo(
     (): ModalTabItem<ActiveTab>[] => [
       { id: 'config', label: 'Configurações' },
@@ -55,12 +62,17 @@ const AgentModalHeader: React.FC<AgentModalHeaderProps> = ({
         label: 'Instalar Manual',
         disabled: !canUseInstallTabs,
       },
+      {
+        id: 'wireguard',
+        label: t('agent.tabWireguard'),
+        disabled: !canUseInstallTabs,
+      },
     ],
-    [canUseInstallTabs]
+    [canUseInstallTabs, t]
   );
 
   const handleTabChange = (tab: ActiveTab) => {
-    if ((tab === 'install-auto' || tab === 'install-manual') && !canUseInstallTabs) return;
+    if (tab !== 'config' && !canUseInstallTabs) return;
     setActiveTab(tab);
   };
 
@@ -97,6 +109,12 @@ const AgentModalHeader: React.FC<AgentModalHeaderProps> = ({
         )}
         {activeTab === 'install-manual' && (generatedCmd || generating) && (
           <FecharButton type="button" onClick={onClose} />
+        )}
+        {activeTab === 'wireguard' && (
+          <>
+            <CancelarButton type="button" onClick={onClose} isPending={wireguardPending} />
+            <ConfigurarVpnButton type="button" onClick={onConfigureWireguard} isPending={wireguardPending} />
+          </>
         )}
       </div>
 

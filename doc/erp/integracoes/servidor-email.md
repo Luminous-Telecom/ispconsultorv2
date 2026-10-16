@@ -38,7 +38,7 @@ Personalização dos **textos padrão** dos e-mails enviados pelo sistema (assun
 
 O campo **Tipo de mensagem** inclui **2 dias antes do vencimento** e **1 dia depois do vencimento**, além dos lembretes de 10 e 5 dias, do mesmo dia e das cobranças de 5, 10 e 15 dias. A rotina de envio de boletos dispara esses textos nos dias correspondentes.
 
-Em um título já pago, **Enviar → Recibo** reenvia o recibo de pagamento sob demanda.
+O tipo **Recibo de pagamento** sai uma vez, quando o título fica pago. Notificação repetida do banco e pagamento com mais de 7 dias encontrado na consulta automática não reenviam o recibo. Marcar como pago na tela continua enviando. Em um título já pago, **Enviar → Recibo** reenvia o recibo sob demanda.
 
 ---
 

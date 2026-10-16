@@ -58,13 +58,50 @@ export async function applyStatusWebhook(
   await t.update(updates);
 }
 
-/**
- * Envia recibo de pagamento apenas para títulos admin (não SaaS)
- */
-export function enviarReciboSeAdmin(resolved: ResolvedTitulo): void {
-  if (!resolved.saas && resolved.titulo.pago) {
-    ReciboPagamentoService.enviarRecibo((resolved.titulo as { id: number }).id);
+/** Baixa automática só dispara recibo se o pagamento caiu nesta janela (evita recibo de cobrança antiga). */
+const RECIBO_AUTOMATICO_MAX_DIAS = 7;
+
+function diaLocal(value: Date | string): Date | null {
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) return null;
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
   }
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (match) {
+    return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+}
+
+function pagamentoRecenteParaRecibo(dataPagamento: Date | string | null | undefined): boolean {
+  if (dataPagamento == null || dataPagamento === '') return true;
+  const pagamentoDia = diaLocal(dataPagamento);
+  if (!pagamentoDia) return true;
+  const limite = new Date();
+  limite.setHours(0, 0, 0, 0);
+  limite.setDate(limite.getDate() - RECIBO_AUTOMATICO_MAX_DIAS);
+  return pagamentoDia >= limite;
+}
+
+/**
+ * Envia recibo só na transição para pago (admin).
+ * Webhook repetido de título já pago, ou baixa de pagamento com mais de 7 dias, não reenvia.
+ */
+export function enviarReciboSeAdmin(resolved: ResolvedTitulo, jaEstavaPago: boolean): void {
+  if (resolved.saas || jaEstavaPago || !resolved.titulo.pago) return;
+
+  const titulo = resolved.titulo as { id: number; data_pagamento?: Date | string | null };
+  if (!pagamentoRecenteParaRecibo(titulo.data_pagamento)) {
+    logger.info('[Recibo] Pagamento antigo — recibo automático não enviado', {
+      titulo_id: titulo.id,
+      data_pagamento: titulo.data_pagamento ?? null,
+    });
+    return;
+  }
+
+  ReciboPagamentoService.enviarRecibo(titulo.id);
 }
 
 /**

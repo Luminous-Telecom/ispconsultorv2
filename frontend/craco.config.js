@@ -81,6 +81,12 @@ module.exports = {
       return webpackConfig;
     },
   },
+  jest: {
+    configure: (jestConfig) => {
+      jestConfig.modulePaths = ['<rootDir>/src'];
+      return jestConfig;
+    },
+  },
   style: {
     sass: {
       loaderOptions: {

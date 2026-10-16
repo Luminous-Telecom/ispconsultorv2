@@ -24,6 +24,23 @@ export class Agent extends Model<
   declare hostname: string | null;
   declare os_info: string | null;
   declare ip_address: string | null;
+  declare connection_mode: CreationOptional<string>;
+  declare mikrotik_host: string | null;
+  declare mikrotik_api_port: number | null;
+  declare mikrotik_api_tls: CreationOptional<boolean>;
+  declare mikrotik_username: string | null;
+  declare mikrotik_password: string | null;
+  declare wg_listen_port: number | null;
+  declare wg_lan_cidrs: string | null;
+  declare wg_interface_name: string | null;
+  declare wg_our_public_key: string | null;
+  declare wg_our_private_key: string | null;
+  declare wg_peer_public_key: string | null;
+  declare wg_address_ours: string | null;
+  declare wg_address_peer: string | null;
+  declare wg_status: CreationOptional<string>;
+  declare wg_last_handshake_at: Date | null;
+  declare wg_last_error: string | null;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 }
@@ -90,6 +107,77 @@ Agent.init(
     },
     ip_address: {
       type: DataTypes.STRING(45),
+      allowNull: true,
+    },
+    connection_mode: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      defaultValue: 'socket',
+    },
+    mikrotik_host: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    mikrotik_api_port: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    mikrotik_api_tls: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    mikrotik_username: {
+      type: DataTypes.STRING(64),
+      allowNull: true,
+    },
+    mikrotik_password: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    wg_listen_port: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    wg_lan_cidrs: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+    },
+    wg_interface_name: {
+      type: DataTypes.STRING(15),
+      allowNull: true,
+    },
+    wg_our_public_key: {
+      type: DataTypes.STRING(64),
+      allowNull: true,
+    },
+    wg_our_private_key: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    wg_peer_public_key: {
+      type: DataTypes.STRING(64),
+      allowNull: true,
+    },
+    wg_address_ours: {
+      type: DataTypes.STRING(45),
+      allowNull: true,
+    },
+    wg_address_peer: {
+      type: DataTypes.STRING(45),
+      allowNull: true,
+    },
+    wg_status: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      defaultValue: 'idle',
+    },
+    wg_last_handshake_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    wg_last_error: {
+      type: DataTypes.STRING(500),
       allowNull: true,
     },
     created_at: {

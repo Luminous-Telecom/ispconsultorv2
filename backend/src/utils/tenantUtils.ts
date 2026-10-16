@@ -1,6 +1,7 @@
 import { Request } from 'express';
 import { JwtPayload } from 'jsonwebtoken';
 import { AuthTokenPayload, AuthenticatedRequest } from '../types/auth';
+import { isErpAdminRole } from './erpAdminRole';
 import { DadosEmpresa } from '../models/sistema/DadosEmpresa';
 import { Cliente } from '../models/clientes/Cliente';
 
@@ -59,7 +60,7 @@ export function isAdminRequest(req: Request): boolean {
   const user = (req as AuthenticatedRequest).user;
   if (!user || typeof user === 'string') return false;
   const role = (user as AuthTokenPayload).role;
-  return String(role) === 'admin';
+  return isErpAdminRole(role);
 }
 
 /**

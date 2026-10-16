@@ -12,6 +12,15 @@ import {
   isAgentEffectivelyOnline,
   pingAgent,
 } from '../../../services/agent/AgentService';
+import {
+  handshakeUnixForAgent,
+  isWireguardAgent,
+  provisionAgentWireguard,
+  readWireguardHandshakes,
+  teardownAgentWireguard,
+  testAgentWireguard,
+  wireguardAgentOnline,
+} from '../../../services/agent/wireguard/AgentWireguardService';
 
 import {
   formatAgentInstallSshError,
@@ -71,6 +80,31 @@ const updateSchema = Joi.object({
   cliente_id: Joi.number().integer().positive().allow(null).optional(),
 });
 
+const wireguardSchema = Joi.object({
+  mikrotik_host: Joi.string().trim().min(1).max(255).required(),
+  mikrotik_api_port: Joi.number().integer().min(1).max(65535).default(80),
+  mikrotik_api_tls: Joi.boolean().default(false),
+  mikrotik_username: Joi.string().trim().min(1).max(64).required(),
+  mikrotik_password: Joi.string().allow('').optional(),
+  wg_listen_port: Joi.number().integer().min(1).max(65535).default(13231),
+  wg_lan_cidrs: Joi.string().trim().min(1).max(500).required(),
+});
+
+function serializeAgent(agent: Agent, handshakes: Map<string, number>) {
+  const json = agent.toJSON() as Record<string, unknown>;
+  delete json.mikrotik_password;
+  delete json.wg_our_private_key;
+  const online = isWireguardAgent(agent)
+    ? wireguardAgentOnline(agent, handshakes)
+    : isAgentEffectivelyOnline(agent.id, agent.is_active);
+  return {
+    ...json,
+    online,
+    has_mikrotik_password: Boolean(agent.mikrotik_password),
+    wg_handshake_at: handshakeUnixForAgent(agent, handshakes),
+  };
+}
+
 export class AgentController {
   static async index(req: Request, res: Response): Promise<void> {
     try {
@@ -97,10 +131,10 @@ export class AgentController {
           },
         ],
       });
-      const data = agents.map((a) => ({
-        ...a.toJSON(),
-        online: isAgentEffectivelyOnline(a.id, a.is_active),
-      }));
+      const handshakes = agents.some((agent) => isWireguardAgent(agent))
+        ? await readWireguardHandshakes()
+        : new Map<string, number>();
+      const data = agents.map((agent) => serializeAgent(agent, handshakes));
       sendSuccess(res, data);
     } catch (err) {
       logger.warn('AgentController.index: erro', { error: err });
@@ -123,10 +157,8 @@ export class AgentController {
       if (!agent) { sendNotFound(res, 'Agente não encontrado'); return; }
       const empresaId = getEmpresaIdOrNull(req);
       if (!canAccessAgent(agent, empresaId)) { sendNotFound(res, 'Agente não encontrado'); return; }
-      sendSuccess(res, {
-        ...agent.toJSON(),
-        online: isAgentEffectivelyOnline(agent.id, agent.is_active),
-      });
+      const handshakes = isWireguardAgent(agent) ? await readWireguardHandshakes() : new Map<string, number>();
+      sendSuccess(res, serializeAgent(agent, handshakes));
     } catch (err) {
       sendError(res, 'Erro ao buscar agente');
     }
@@ -204,11 +236,15 @@ export class AgentController {
       if (!canAccessAgent(agent, empresaId)) { sendNotFound(res, 'Agente não encontrado'); return; }
       const dadosAntes = agent.toJSON() as Record<string, unknown>;
       delete dadosAntes.token_hash;
+      delete dadosAntes.mikrotik_password;
+      delete dadosAntes.wg_our_private_key;
       delete dadosAntes.id;
       await agent.update(value);
       try {
         const dadosDepois = agent.toJSON() as Record<string, unknown>;
         delete dadosDepois.token_hash;
+        delete dadosDepois.mikrotik_password;
+        delete dadosDepois.wg_our_private_key;
         delete dadosDepois.id;
         await registrarAtualizacao(req as AuthenticatedRequest, 'Agent', 0, { ...dadosAntes, entity_id_str: agent.id }, { ...dadosDepois, entity_id_str: agent.id }, undefined, empresaId ?? undefined);
       } catch (auditErr) {
@@ -217,10 +253,8 @@ export class AgentController {
       if (!agent.is_active) {
         disconnectAgentById(agent.id, { sessionEnd: 'inactive' });
       }
-      sendSuccess(res, {
-        ...agent.toJSON(),
-        online: isAgentEffectivelyOnline(agent.id, agent.is_active),
-      });
+      const handshakes = isWireguardAgent(agent) ? await readWireguardHandshakes() : new Map<string, number>();
+      sendSuccess(res, serializeAgent(agent, handshakes));
     } catch (err) {
       sendError(res, 'Erro ao atualizar agente');
     }
@@ -242,7 +276,10 @@ export class AgentController {
       }
       const dadosAntes = agent.toJSON() as Record<string, unknown>;
       delete dadosAntes.token_hash;
+      delete dadosAntes.mikrotik_password;
+      delete dadosAntes.wg_our_private_key;
       delete dadosAntes.id;
+      await teardownAgentWireguard(agent);
       await agent.destroy();
       try {
         await registrarExclusao(req as AuthenticatedRequest, 'Agent', 0, { ...dadosAntes, entity_id_str: agent.id }, undefined, empresaId ?? undefined);
@@ -281,7 +318,7 @@ export class AgentController {
         });
         return;
       }
-      const result = await pingAgent(agent.id);
+      const result = isWireguardAgent(agent) ? await testAgentWireguard(agent) : await pingAgent(agent.id);
       logger.info('AgentController.testConnection: resultado', {
         agentId: agent.id,
         name: agent.name,
@@ -433,6 +470,52 @@ export class AgentController {
     }
   }
 
+  /** Configura WireGuard no MikroTik do cliente (API HTTP) e sobe o peer local. */
+  static async configureWireguard(req: Request, res: Response): Promise<void> {
+    const { error, value } = wireguardSchema.validate(req.body, { abortEarly: false });
+    if (error) { sendValidationError(res, error.details.map((d) => d.message).join('; ')); return; }
+
+    try {
+      const agent = await Agent.findByPk(req.params.id);
+      if (!agent) { sendNotFound(res, 'Agente não encontrado'); return; }
+      const empresaId = getEmpresaIdOrNull(req);
+      if (!canAccessAgent(agent, empresaId)) { sendNotFound(res, 'Agente não encontrado'); return; }
+      if (!agent.is_active) {
+        sendValidationError(res, 'Agente inativo no cadastro.');
+        return;
+      }
+
+      const provisioned = await provisionAgentWireguard(agent, {
+        mikrotikHost: value.mikrotik_host,
+        mikrotikApiPort: value.mikrotik_api_port,
+        mikrotikApiTls: value.mikrotik_api_tls,
+        mikrotikUsername: value.mikrotik_username,
+        mikrotikPassword: value.mikrotik_password,
+        listenPort: value.wg_listen_port,
+        lanCidrs: value.wg_lan_cidrs,
+      });
+
+      await agent.reload();
+      try {
+        await registrarAtualizacao(
+          req as AuthenticatedRequest,
+          'Agent',
+          0,
+          { entity_id_str: agent.id, name: agent.name },
+          { entity_id_str: agent.id, name: agent.name, connection_mode: 'wireguard' },
+          'VPN WireGuard configurada no MikroTik',
+          empresaId ?? undefined
+        );
+      } catch { /* não crítico */ }
+
+      const handshakes = await readWireguardHandshakes();
+      sendSuccess(res, serializeAgent(agent, handshakes), provisioned.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro ao configurar a VPN WireGuard';
+      sendValidationError(res, message);
+    }
+  }
+
   /** Regenera o token de um agente (invalida o anterior). */
   static async regenerateToken(req: Request, res: Response): Promise<void> {
     try {
@@ -448,10 +531,10 @@ export class AgentController {
       await agent.update({ token_hash: tokenHash, token_hint: tokenHint });
       disconnectAgentById(agent.id, { sessionEnd: 'token_regenerated' });
 
+      const handshakes = isWireguardAgent(agent) ? await readWireguardHandshakes() : new Map<string, number>();
       sendSuccess(res, {
-        ...agent.toJSON(),
+        ...serializeAgent(agent, handshakes),
         token,
-        online: isAgentEffectivelyOnline(agent.id, agent.is_active),
       }, 'Token regenerado. Guarde o novo token — ele não será exibido novamente.');
     } catch (err) {
       sendError(res, 'Erro ao regenerar token');

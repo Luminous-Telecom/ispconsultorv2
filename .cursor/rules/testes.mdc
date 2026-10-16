@@ -1,0 +1,85 @@
+---
+description: Padrão obrigatório de arquivos .test — componentes, segurança, validações, botões, cadastro, edição e visualização
+alwaysApply: true
+---
+
+# Testes `.test` — ISP Consultor
+
+Todo código novo ou alterado nas áreas abaixo sai com o `.test` no mesmo trabalho. Sem o arquivo, a tarefa não está pronta.
+
+## Arquivo
+
+| Pacote | Runner | Nome | Lugar |
+|---|---|---|---|
+| Backend | Jest (`ts-jest`), `roots: src` | `Nome.test.ts` | Ao lado do fonte em `backend/src` |
+| Frontend | `craco test` (Jest do react-scripts) | `Nome.test.ts` ou `Nome.test.tsx` | Ao lado do fonte em `frontend/src` |
+
+- Sufixo **`.test`**. Não usar `.spec`, nem pasta solta fora de `src`.
+- `backend/scripts/test-*.ts` é script manual. Não conta como teste.
+- Um arquivo de teste por módulo. Cobre cadastro, edição e visualização no mesmo arquivo quando forem o mesmo service, schema ou componente.
+
+## O que testa
+
+| Área | Onde | O teste prova |
+|---|---|---|
+| Segurança | `authMiddleware`, `saasAuthMiddleware`, token de API, `tenantUtils`, `SaasPlanoLimitesService`, CSRF | Sem sessão não entra. ERP, SaaS e Central não compartilham token. Não-admin não lê, edita nem vê outro `empresa_id`. Limite do plano bloqueia o create. Senha, JWT e `webhook_secret` não saem na resposta |
+| Validações | `backend/src/validators/**`, `validateMiddleware`, `frontend/src/schemas/**` | Válido passa. Obrigatório vazio, formato inválido e tamanho excedido falham no campo certo. Update parcial não exige o que não foi enviado |
+| Botões | `frontend/src/components/ui/buttons/**` | Texto de Salvar e Criar não muda com `isPending`. Fica `disabled` enquanto pendente. Ação vem de `components/ui/buttons` |
+| Componentes | `frontend/src/components/**` | Estado principal, vazio, erro e loading. Clique em salvar, cancelar ou selecionar dispara o callback certo |
+| Cadastro | `create` do service/controller e submit do form | Payload válido persiste. Inválido não persiste. `empresa_id` vem do token, não do body de não-admin |
+| Edição | `update` | Altera só o que foi enviado. Id de outro tenant não muda. Id inexistente não grava |
+| Visualização | `getById` / `list` e modal/lista somente leitura | Filtra `empresa_id`. Lista vazia não quebra. Campo sensível não aparece |
+
+Fora dessa lista (migration, barrel `index.ts` só de reexport, tipo, locale, SCSS) não criar teste vazio.
+
+## Forma
+
+Backend — schema e função pura, sem banco e sem `.env`:
+
+```typescript
+import { clienteCreateSchema } from './index';
+
+it('recusa cadastro sem razão social', () => {
+  const { error } = clienteCreateSchema.validate({ cnpj: '00.000.000/0001-00' }, { abortEarly: false });
+  expect(error?.details.some((item) => item.path.join('.') === 'razao_social')).toBe(true);
+});
+```
+
+Frontend — schema Zod ou componente com Testing Library:
+
+```tsx
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+
+it('mantém o texto Salvar enquanto isPending', () => {
+  render(<SalvarButton isPending onClick={jest.fn()} />);
+  expect(screen.getByRole('button', { name: 'Salvar' })).toBeDisabled();
+});
+```
+
+Cada `it` tem um `expect`. Caso que passa e caso que falha. Mock só de I/O (model, HTTP, filesystem). Não mockar a função, o schema ou a regra que o teste deveria provar.
+
+## Rodar
+
+Só o arquivo tocado. Não rodar a suíte inteira e não rodar `npm run build`.
+
+```bash
+cd backend && npx jest src/validators/cliente.validator/index.test.ts --no-coverage
+cd frontend && npm test -- --watchAll=false --watchman=false src/schemas/cliente.schema.test.ts
+```
+
+## Proibido
+
+- Teste sem `expect`, snapshot da tela inteira, ou teste que só confirma que a função foi chamada
+- Banco real, credencial, senha ou token verdadeiro no teste
+- `npm test` no frontend sem `--watchAll=false`
+- Alterar segurança, validação, botão, componente ou fluxo de cadastro, edição ou visualização sem atualizar o `.test` correspondente
+
+## Checklist
+
+- [ ] `.test.ts` / `.test.tsx` ao lado do fonte alterado
+- [ ] Segurança: sessão e `empresa_id` quando o fluxo lê ou grava dado
+- [ ] Validação: aceita o válido e recusa o inválido no campo
+- [ ] Botão: texto fixo e `disabled` em `isPending`
+- [ ] Cadastro, edição e visualização do fluxo tocado
+- [ ] Jest do arquivo passou

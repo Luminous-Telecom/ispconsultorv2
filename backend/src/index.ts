@@ -231,6 +231,10 @@ app.use(ddosProtectionMiddleware({
       maxProcessingTime: 360_000,
     },
     {
+      test: (pathname) => /\/api\/agents\/[^/]+\/wireguard\/?$/.test(pathname),
+      maxProcessingTime: 90_000,
+    },
+    {
       test: (pathname) => /\/mensagens-historico\/reenviar-falhas\/?$/.test(pathname),
       maxProcessingTime: 180_000,
     },
@@ -246,10 +250,10 @@ app.use(ddosProtectionMiddleware({
     '/api/auditoria/pdf', // Geração de PDF de auditoria pode demorar mais que 15s
     '/api/saas/auditoria/pdf', // Idem para auditoria no painel SaaS
     '/api/atualizacoes/update', // Atualização pode levar vários minutos (git pull, npm install, build, migrations, pm2 reload)
-    '/api/saas/atualizacoes/update-stream', // SSE: git pull, build, pm2 — ultrapassa qualquer limite curto
-    '/api/saas/atualizacoes/update-doc-stream', // SSE: git pull + build wiki + pm2 doc
+    '/api/atualizacoes/update-stream',
+    '/api/atualizacoes/update-doc-stream',
     '/api/pdf-extract', // Upload de PDF pode demorar (arquivo grande); processamento é assíncrono
-    '/api/saas/backups' // Importação/upload e backup manual podem ultrapassar 15s (arquivos grandes)
+    '/api/backups'
   ]
 }));
 

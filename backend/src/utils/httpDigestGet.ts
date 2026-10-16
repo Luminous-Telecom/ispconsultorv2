@@ -19,7 +19,8 @@ function digVal(wwwAuthenticate: string, field: string): string | null {
 function httpRequestBuffer(
   urlStr: string,
   requestHeaders: Record<string, string>,
-  timeoutMs: number
+  timeoutMs: number,
+  localAddress?: string
 ): Promise<{ statusCode: number; headers: http.IncomingHttpHeaders; body: Buffer }> {
   return new Promise((resolve, reject) => {
     const parsed = new URL(urlStr);
@@ -35,6 +36,7 @@ function httpRequestBuffer(
         method: 'GET',
         headers: requestHeaders,
         timeout: timeoutMs,
+        ...(localAddress ? { localAddress } : {}),
       },
       (res) => {
         res.on('data', (chunk: Buffer) => chunks.push(chunk));
@@ -66,12 +68,13 @@ export async function httpGetWithDigestAuth(
   urlStr: string,
   username: string,
   password: string,
-  timeoutMs: number
+  timeoutMs: number,
+  options?: { localAddress?: string }
 ): Promise<HttpDigestGetResult> {
   const parsed = new URL(urlStr);
   const uri = `${parsed.pathname}${parsed.search || ''}` || '/';
 
-  const first = await httpRequestBuffer(urlStr, {}, timeoutMs);
+  const first = await httpRequestBuffer(urlStr, {}, timeoutMs, options?.localAddress);
   if (first.statusCode >= 200 && first.statusCode < 300) {
     if (first.body.length > 0) return { ok: true, statusCode: first.statusCode, body: first.body };
     return { ok: false, statusCode: first.statusCode, error: 'Resposta HTTP vazia' };
@@ -118,7 +121,7 @@ export async function httpGetWithDigestAuth(
   if (opaque) authHeader += `, opaque="${esc(opaque)}"`;
   authHeader += ', algorithm=MD5';
 
-  const second = await httpRequestBuffer(urlStr, { Authorization: authHeader }, timeoutMs);
+  const second = await httpRequestBuffer(urlStr, { Authorization: authHeader }, timeoutMs, options?.localAddress);
   if (second.statusCode >= 200 && second.statusCode < 300) {
     return { ok: true, statusCode: second.statusCode, body: second.body };
   }

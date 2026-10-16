@@ -1,5 +1,5 @@
 import { defaultApiClient } from './core';
-import { Agent, AgentConnectionTestResult, CreateAgent, UpdateAgent } from '../types';
+import { Agent, AgentConnectionTestResult, ConfigureAgentWireguard, CreateAgent, UpdateAgent } from '../types';
 
 export class AgentService {
   static async list(filters?: { cliente_id?: number; empresa_id?: number }): Promise<Agent[]> {
@@ -36,6 +36,12 @@ export class AgentService {
 
   static async regenerateToken(id: string): Promise<Agent> {
     const response = await defaultApiClient.post<Agent>(`/agents/${id}/regenerate-token`, {});
+    const r = response as { data?: Agent };
+    return r.data ?? (response as unknown as Agent);
+  }
+
+  static async configureWireguard(id: string, data: ConfigureAgentWireguard): Promise<Agent> {
+    const response = await defaultApiClient.post<Agent>(`/agents/${id}/wireguard`, data, { timeout: 90_000 });
     const r = response as { data?: Agent };
     return r.data ?? (response as unknown as Agent);
   }

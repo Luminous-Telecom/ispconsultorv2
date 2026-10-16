@@ -25,13 +25,13 @@ export type BackupManualTipo = 'database' | 'arquivos' | 'logs' | 'completo';
 
 export class BackupService {
   static async list(): Promise<Backup[]> {
-    const response = await apiService.get<Backup[]>('/saas/backups');
+    const response = await apiService.get<Backup[]>('/backups');
     return unwrapResponse<Backup[]>(response, { fallback: [], throwOnFailure: false });
   }
 
   static async deleteBackup(nome: string): Promise<void> {
     const response = await apiService.delete<{ success: boolean; message: string }>(
-      `/saas/backups/${encodeURIComponent(nome)}`
+      `/backups/${encodeURIComponent(nome)}`
     );
     unwrapResponse(response, { fallback: { success: true, message: '' } });
   }
@@ -39,7 +39,7 @@ export class BackupService {
   /** URL autenticada por cookie (mesma origem com `/api` no proxy habitual). */
   static getBackupDownloadUrl(nome: string): string {
     const base = API_CONFIG.BASE_URL.replace(/\/+$/, '');
-    const path = `/saas/backups/${encodeURIComponent(nome)}/download`;
+    const path = `/backups/${encodeURIComponent(nome)}/download`;
     return `${base}${path.startsWith('/') ? path : `/${path}`}`;
   }
 
@@ -61,7 +61,7 @@ export class BackupService {
 
   static async restoreBackup(nome: string): Promise<{ success: boolean; message: string }> {
     const response = await apiService.post<{ success: boolean; message?: string }>(
-      `/saas/backups/${encodeURIComponent(nome)}/restore`,
+      `/backups/${encodeURIComponent(nome)}/restore`,
       undefined,
       { timeout: BACKUP_LONG_OPERATION_TIMEOUT_MS, forceLoading: true }
     );
@@ -75,7 +75,7 @@ export class BackupService {
 
   static async executeManual(tipo: BackupManualTipo): Promise<{ success: boolean; message: string }> {
     const response = await apiService.post<{ success: boolean; message?: string }>(
-      '/saas/backups/manual',
+      '/backups/manual',
       { tipo },
       { timeout: BACKUP_LONG_OPERATION_TIMEOUT_MS, forceLoading: true }
     );
@@ -91,7 +91,7 @@ export class BackupService {
     const formData = new FormData();
     formData.append('arquivo', file);
     const response = await apiService.post<{ success: boolean; message?: string; data?: { nome: string } }>(
-      '/saas/backups/upload',
+      '/backups/upload',
       formData,
       { timeout: BACKUP_LONG_OPERATION_TIMEOUT_MS, forceLoading: true }
     );

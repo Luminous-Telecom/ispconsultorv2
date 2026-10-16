@@ -1,9 +1,5 @@
 import { Op } from 'sequelize';
 import { SAAS_PLANO_LIMITE_DEFS, type SaasPlanoLimiteRecursoId } from '../../../constants/saasPlanoLimites';
-import {
-  appendLegacyModulosFromRecursos,
-  readLimiteFromRecursos,
-} from '../../../utils/saasPlanoLimiteRecursosUtils';
 import { Usuario } from '../../../models/cadastros/Usuario';
 import { Banco } from '../../../models/cadastros/Banco';
 import { Plano } from '../../../models/cadastros/Plano';
@@ -19,7 +15,6 @@ import { RpkiCaParent } from '../../../models/rpki/RpkiCaParent';
 import { RpkiRepository } from '../../../models/rpki/RpkiRepository';
 import { RpkiRoa } from '../../../models/rpki/RpkiRoa';
 import { RpkiAspa } from '../../../models/rpki/RpkiAspa';
-import { SaasContrato } from '../../../models/saas/SaasContrato';
 import { SaasPlano } from '../../../models/saas/SaasPlano';
 import type { PlanoModuloId } from '../../../constants/planoModulos';
 
@@ -43,47 +38,6 @@ export interface EquipamentoUpdateLimitCheck extends EquipamentoLimitCheck {
 }
 
 
-function parseRecursos(recursos: SaasPlano['recursos'] | string | null | undefined): Record<string, unknown> | null {
-  if (typeof recursos === 'string') {
-    try {
-      const parsed = JSON.parse(recursos) as unknown;
-      return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
-        ? (parsed as Record<string, unknown>)
-        : null;
-    } catch {
-      return null;
-    }
-  }
-
-  return recursos && typeof recursos === 'object' && !Array.isArray(recursos)
-    ? (recursos as Record<string, unknown>)
-    : null;
-}
-
-function extractNumber(recursos: Record<string, unknown> | null, key: string, fallback: number): number {
-  const raw = recursos?.[key];
-  return typeof raw === 'number' && Number.isFinite(raw) && raw >= 0 ? raw : fallback;
-}
-
-function extractModulos(recursos: Record<string, unknown> | null): PlanoModuloId[] {
-  const modulos = recursos?.modulos;
-  let result: PlanoModuloId[];
-  if (Array.isArray(modulos)) {
-    result = modulos.filter((modulo): modulo is PlanoModuloId => typeof modulo === 'string');
-  } else {
-    const legacy: PlanoModuloId[] = ['cadastros'];
-    if (recursos?.financeiro === true) legacy.push('financeiro');
-    if (recursos?.blockdomi === true) legacy.push('blockdomi');
-    if (recursos?.equipamentos === true) legacy.push('equipamentos');
-    if (recursos?.rpki === true) legacy.push('rpki');
-    if (recursos?.whatsapp === true) legacy.push('envio_notificacoes');
-    if (recursos?.nfse === true) legacy.push('nfse');
-    legacy.push('assinatura_digital');
-    result = [...new Set(legacy)];
-  }
-  return appendLegacyModulosFromRecursos(result, recursos);
-}
-
 const LIMIT_COUNTERS: Record<SaasPlanoLimiteRecursoId, (empresaId: number) => Promise<number>> = {
   cadastros_limite_clientes: (empresaId) => Cliente.count({ where: { empresa_id: empresaId } }),
   cadastros_limite_bancos: (empresaId) => Banco.count({ where: { empresa_id: empresaId } }),
@@ -104,31 +58,8 @@ const LIMIT_COUNTERS: Record<SaasPlanoLimiteRecursoId, (empresaId: number) => Pr
 };
 
 export class SaasPlanoLimitesService {
-  static async getContext(empresaId: number): Promise<SaasPlanoLimitesContext | null> {
-    const contrato = await SaasContrato.findOne({
-      where: { empresa_id: empresaId, status: 'ativo' },
-      include: [{ model: SaasPlano, as: 'plano', required: true }],
-      order: [['data_inicio', 'DESC']],
-    }) as (SaasContrato & { plano?: SaasPlano }) | null;
-
-    if (!contrato?.plano) {
-      return null;
-    }
-
-    const recursos = parseRecursos(contrato.plano.recursos);
-    const limites: Record<string, number> = {};
-    for (const def of SAAS_PLANO_LIMITE_DEFS) {
-      limites[def.recursosKey] = readLimiteFromRecursos(recursos, def.recursosKey, 0);
-    }
-    return {
-      plano: contrato.plano,
-      modulos: extractModulos(recursos),
-      limiteUsuarios: Math.max(1, Number(contrato.plano.limite_usuarios) || 1),
-      limites,
-      limiteEquipamentos: limites.equipamentos_limite_equipamentos ?? 0,
-      limiteTuneis: limites.equipamentos_limite_tuneis ?? 0,
-      limiteBackups: limites.equipamentos_limite_backups ?? 0,
-    };
+  static async getContext(_empresaId: number): Promise<SaasPlanoLimitesContext | null> {
+    return null;
   }
 
   static async validateModulo(empresaId: number, modulo: PlanoModuloId, label: string): Promise<string | null> {

@@ -46,6 +46,7 @@ export class AsaasWebhookService {
 
       await refetchResolvedTitulo(resolved);
       const { titulo } = resolved;
+      const jaEstavaPago = !!titulo.pago;
       const updates: Record<string, JsonValue> = {};
       const pagamentoStatusRaw = payment.status;
       const paymentStatus = typeof pagamentoStatusRaw === 'string'
@@ -87,7 +88,7 @@ export class AsaasWebhookService {
 
       const dadosAnteriores = (titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
 
-      if (novoStatus === 'pago') {
+      if (novoStatus === 'pago' && !jaEstavaPago) {
         const dataPagamentoRaw = PaymentCommonService.pickAsaasWebhookPaymentDateRaw(
           payment,
           rootPayload?.dateCreated
@@ -98,6 +99,9 @@ export class AsaasWebhookService {
         const valorPago = typeof payment.value === 'number' ? Number(payment.value) :
           typeof payment.netValue === 'number' ? Number(payment.netValue) : Number(titulo.valor);
         await applyPagoWebhook(resolved, valorPago, dataPagamentoNormalizada || new Date());
+      }
+
+      if (novoStatus === 'pago') {
         delete updates.status;
       }
 
@@ -107,7 +111,7 @@ export class AsaasWebhookService {
       }
       await refetchResolvedTitulo(resolved);
 
-      enviarReciboSeAdmin(resolved);
+      enviarReciboSeAdmin(resolved, jaEstavaPago);
 
       const dadosNovos = (resolved.titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
       await registrarAuditoriaWebhook(req, resolved, dadosAnteriores, dadosNovos, `Atualização via webhook Asaas - Status: ${paymentStatus}`);

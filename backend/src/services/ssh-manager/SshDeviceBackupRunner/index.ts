@@ -3,7 +3,8 @@ import * as path from 'path';
 import { SshDevice, SshDeviceType } from '../../../models/ssh-manager/SshDevice';
 import { Agent } from '../../../models/agent/Agent';
 import { sshPool } from '../SshPoolService';
-import { executeCommand } from '../SshConnectionService';
+import { executeCommand, openDeviceConnection } from '../SshConnectionService';
+import { isWireguardAgent, resolveWireguardBind } from '../../agent/wireguard/AgentWireguardService';
 import { logSshAudit } from '../SshAuditService';
 import { logger } from '../../../utils/logger';
 import { resolveArquivosPath } from '../../../utils/pathUtils';
@@ -51,6 +52,23 @@ async function fetchSwosBackupBuffer(
   const viaAgent = Boolean(device.agent_id);
 
   if (viaAgent) {
+    const agentRow = await Agent.findByPk(device.agent_id!);
+    if (agentRow && isWireguardAgent(agentRow)) {
+      try {
+        const localAddress = await resolveWireguardBind(agentRow);
+        const res = await httpGetWithDigestAuth(url, user, passwordPlain, timeoutMs, { localAddress });
+        if (!res.ok) {
+          return { ok: false, error: res.error ?? `HTTP ${res.statusCode} ao baixar backup SwOS` };
+        }
+        if (!res.body.length) {
+          return { ok: false, error: 'Resposta vazia do equipamento SwOS' };
+        }
+        return { ok: true, body: res.body };
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        return { ok: false, error: msg };
+      }
+    }
     if (!isAgentOnline(device.agent_id!)) {
       return { ok: false, error: 'Agente offline. O backup SwOS usa HTTP na rede do agente.' };
     }
@@ -357,6 +375,42 @@ export async function runSshDeviceBackup(
       if (!agentRow || !agentRow.is_active) {
         return auditCommandFail(auditLabel, 'Agente não encontrado ou inativo.');
       }
+      if (isWireguardAgent(agentRow)) {
+        let localAddress: string;
+        try {
+          localAddress = await resolveWireguardBind(agentRow);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          return auditCommandFail(auditLabel, msg);
+        }
+        const conn = await openDeviceConnection(device, { localAddress });
+        try {
+          const execWg: ExecFn = async (cmd) => {
+            try {
+              const out = await executeCommand(conn, cmd, device.id, { timeoutMs: BACKUP_CMD_TIMEOUT_MS });
+              return { success: true, output: out };
+            } catch (e) {
+              return { success: false, error: e instanceof Error ? e.message : String(e) };
+            }
+          };
+          if (device.device_type === 'mikrotik') {
+            const mt = await mikrotikProbeAndExport(execWg);
+            commandAuditLabel = mt.auditLabel;
+            if (!mt.ok) {
+              return auditCommandFail(commandAuditLabel, mt.error);
+            }
+            output = mt.output;
+          } else {
+            const via = await execWg(backupCommand);
+            if (!via.success) {
+              return auditCommandFail(auditLabel, via.error ?? 'Falha no comando SSH pela VPN');
+            }
+            output = via.output ?? '';
+          }
+        } finally {
+          try { conn.end(); } catch { /* ignora */ }
+        }
+      } else {
       if (!isAgentOnline(device.agent_id!)) {
         return auditCommandFail(
           auditLabel,
@@ -420,6 +474,7 @@ export async function runSshDeviceBackup(
           return auditCommandFail(auditLabel, msg);
         }
         output = via.output ?? '';
+      }
       }
     } else {
       usedPool = true;

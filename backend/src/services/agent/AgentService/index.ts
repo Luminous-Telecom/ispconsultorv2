@@ -28,6 +28,8 @@ export interface AgentShellSession {
   deviceName?: string;
   /** tenant para auditoria Elasticsearch */
   empresaId?: number | null;
+  /** SSH aberto no backend pela interface WireGuard, sem socket do agente */
+  viaWireguard?: boolean;
 }
 
 export interface AgentFileTransfer {

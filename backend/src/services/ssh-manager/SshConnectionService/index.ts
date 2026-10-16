@@ -101,7 +101,7 @@ function buildConnectConfig(
 /**
  * Abre uma conexão SSH direta com um device e retorna o Client pronto.
  */
-export function openDeviceConnection(device: SshDevice): Promise<SshClient> {
+export function openDeviceConnection(device: SshDevice, options?: { localAddress?: string }): Promise<SshClient> {
   return new Promise((resolve, reject) => {
     let settled = false;
     const conn = new SshClient();
@@ -145,6 +145,7 @@ export function openDeviceConnection(device: SshDevice): Promise<SshClient> {
           device.device_type
         ),
         readyTimeout: SSH_DEVICE_TIMEOUT_MS,
+        ...(options?.localAddress ? { localAddress: options.localAddress } : {}),
       });
     } catch (err) {
       if (!settled) {

@@ -43,24 +43,13 @@ import blockdomiRoutes from './blockdomiRoutes';
 import blockdomiListasRoutes from './blockdomiListasRoutes';
 import blockdomiPublicoRoutes from './blockdomiPublicoRoutes';
 import publicSaasPlanosRoutes from './publicSaasPlanosRoutes';
+import backupRoutes from './backupRoutes';
+import atualizacoesRoutes from './atualizacoesRoutes';
 import ipsPermitidosRoutes from './ipsPermitidosRoutes';
 import pdfExtractRoutes from './pdfExtractRoutes';
 import tipoCobrancaContratoRoutes from './tipoCobrancaContratoRoutes';
 import empresaRoutes from './empresaRoutes';
-import saasAuthRoutes from './saas/saasAuthRoutes';
-import saasEmpresasRoutes from './saas/saasEmpresasRoutes';
-import saasPlanoRoutes from './saas/saasPlanoRoutes';
-import saasUsuariosRoutes from './saas/saasUsuariosRoutes';
-import saasConfigRoutes from './saas/saasConfigRoutes';
-import saasCrudRoutes from './saas/saasCrudRoutes';
-import saasDadosEmpresaCrudRoutes from './saas/saasDadosEmpresaCrudRoutes';
-import saasMensagemHistoricoRoutes from './saas/saasMensagemHistoricoRoutes';
-import saasParametrosRoutes from './saas/saasParametrosRoutes';
-import saasNfseConfigRoutes from './saas/saasNfseConfigRoutes';
-import saasSchedulerRoutes from './saas/saasSchedulerRoutes';
-import saasAtualizacoesRoutes from './saas/saasAtualizacoesRoutes';
 import sistemaAtualizacaoRoutes from './sistemaAtualizacaoRoutes';
-import saasBackupsRoutes from './saas/saasBackupsRoutes';
 import tenantRoutes from './tenantRoutes';
 import sshManagerRoutes from './sshManagerRoutes';
 import agentRoutes from './agentRoutes';
@@ -135,21 +124,9 @@ const routes = [
     // IMPORTANTE: Esta rota genérica /api deve vir POR ÚLTIMO para não capturar rotas específicas
     { path: '/api', route: pagamentoPublicoRoutes },
     
-    // Rotas SaaS (Super Admin) — completamente separadas do ERP
-    { path: '/api/saas/auth', route: saasAuthRoutes },
-    { path: '/api/saas/empresas', route: saasEmpresasRoutes },
-    { path: '/api/saas/planos', route: saasPlanoRoutes },
-    { path: '/api/saas/usuarios', route: saasUsuariosRoutes },
-    { path: '/api/saas/config', route: saasConfigRoutes },
-    { path: '/api/saas/mensagens-historico', route: saasMensagemHistoricoRoutes },
-    { path: '/api/saas/parametros', route: saasParametrosRoutes },
-    { path: '/api/saas/nfse-config', route: saasNfseConfigRoutes },
-    { path: '/api/saas/scheduler', route: saasSchedulerRoutes },
-    { path: '/api/saas/saas-dados-empresa', route: saasDadosEmpresaCrudRoutes },
-    { path: '/api/saas/atualizacoes', route: saasAtualizacoesRoutes },
+    { path: '/api/backups', route: backupRoutes },
+    { path: '/api/atualizacoes', route: atualizacoesRoutes },
     { path: '/api/sistema', route: sistemaAtualizacaoRoutes },
-    { path: '/api/saas/backups', route: saasBackupsRoutes },
-    { path: '/api/saas', route: saasCrudRoutes },
     { path: '/api/tenant', route: tenantRoutes },
     { path: '/api/ssh-manager', route: sshManagerRoutes },
 

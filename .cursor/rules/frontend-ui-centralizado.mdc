@@ -40,6 +40,7 @@ Antes de criar spinner, toast, modal ou botão custom, use o que já existe em `
 | Config API / Capacitor | `frontend-config-capacitor.mdc` |
 | Estrutura de types/ | `frontend-tipos.mdc` |
 | Painel SaaS | `frontend-saas.mdc` |
+| Testes `.test` | `testes.mdc` |
 
 ## Loading
 

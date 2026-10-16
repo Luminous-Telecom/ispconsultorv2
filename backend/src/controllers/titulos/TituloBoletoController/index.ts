@@ -134,7 +134,7 @@ export class TituloBoletoController {
       if (resultado.success && resultado.data) {
         const statusPago = resultado.data.status === 'paid' || resultado.data.status === 'settled';
         
-        if (statusPago) {
+        if (statusPago && !titulo.pago) {
           const dadosAnteriores = titulo.toJSON();
           const valorPago = resultado.data.valor_pago || titulo.valor;
           const rawData = resultado.data.data_pagamento;
@@ -166,6 +166,8 @@ export class TituloBoletoController {
 
           ReciboPagamentoService.enviarRecibo(titulo.id);
           sendSuccess(res, { titulo_id: titulo.id, status_novo: titulo.status, valor_pago: valorPago, data_pagamento: dataPagamento }, 'Título atualizado com sucesso');
+        } else if (statusPago) {
+          sendSuccess(res, { titulo_id: titulo.id, status: titulo.status }, 'Título já estava pago');
         } else {
           sendSuccess(res, { titulo_id: titulo.id, status: titulo.status, status_banco: resultado.data.status }, 'Título consultado - sem alterações (ainda não foi pago)');
         }

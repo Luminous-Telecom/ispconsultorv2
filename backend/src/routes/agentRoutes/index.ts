@@ -15,6 +15,7 @@ router.patch('/:id', AgentController.update);
 router.delete('/:id', AgentController.destroy);
 router.post('/:id/regenerate-token', AgentController.regenerateToken);
 router.post('/:id/test', AgentController.testConnection);
+router.post('/:id/wireguard', AgentController.configureWireguard);
 router.post('/:id/install', AgentController.install);
 
 export default router;

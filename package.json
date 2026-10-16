@@ -23,6 +23,7 @@
     "build:ios": "cd frontend && npm run build:ios",
     "build:android": "cd frontend && npm run build:android",
     "start": "cd backend && npm start",
+    "test": "npm test --prefix backend && npm test --prefix frontend -- --watchAll=false --watchman=false",
     "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install && cd ../doc && npm install"
   },
   "keywords": [

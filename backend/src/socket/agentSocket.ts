@@ -17,6 +17,8 @@ import {
   resolveAgentPingResult,
 } from '../services/agent/AgentService';
 import { logSshAudit } from '../services/ssh-manager/SshAuditService';
+import { closeTerminalSession, createTerminalSession, resizeTerminal, writeToTerminal } from '../services/ssh-manager/TerminalService';
+import { isWireguardAgent, resolveWireguardBind } from '../services/agent/wireguard/AgentWireguardService';
 import { registrarExecucaoParaSocket } from '../services/sistema/AuditoriaService';
 import { logger } from '../utils/logger';
 import {
@@ -439,6 +441,49 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
         return;
       }
 
+      if (isWireguardAgent(agent)) {
+        let localAddress: string;
+        try {
+          localAddress = await resolveWireguardBind(agent);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'VPN WireGuard indisponível';
+          socket.emit('terminal:error', { message });
+          return;
+        }
+        const sessionId = randomUUID();
+        createShellSession(sessionId, device.agent_id, socket.id, true, {
+          deviceId: device.id,
+          deviceName: device.name,
+          empresaId: device.empresa_id ?? null,
+        });
+        const shell = getShellSession(sessionId);
+        if (shell) shell.viaWireguard = true;
+        try {
+          await createTerminalSession(
+            device,
+            userId,
+            ip,
+            sessionId,
+            (data) => socket.emit('terminal:output', { sessionId, data }),
+            (reason) => {
+              deleteShellSession(sessionId);
+              socket.emit('terminal:closed', { sessionId, reason });
+            },
+            { localAddress }
+          );
+        } catch (err) {
+          deleteShellSession(sessionId);
+          const message = err instanceof Error ? err.message : 'Falha ao abrir SSH pela VPN';
+          socket.emit('terminal:error', { message });
+          return;
+        }
+        socket.emit('terminal:created', { sessionId });
+        try {
+          await registrarExecucaoParaSocket(userId, ip, 'SshDevice', `Acesso ao terminal do equipamento ${device.name} (via VPN)`, { deviceId: device.id, deviceName: device.name, agentId: device.agent_id }, device.empresa_id ?? undefined);
+        } catch { /* não crítico */ }
+        return;
+      }
+
       if (!sendToAgent(device.agent_id, 'ping', {})) {
         logSshAudit({
           action: 'AUTH_FAIL',
@@ -517,6 +562,10 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
       const session = getShellSession(sessionId);
       if (!session) return;
       const str = typeof data === 'string' ? data.slice(0, 65536) : '';
+      if (session.viaWireguard) {
+        if (str) writeToTerminal(sessionId, str);
+        return;
+      }
       if (str) {
         const dbg = isSshTerminalLatencyDebugEnabled();
         const t0 = dbg ? process.hrtime.bigint() : 0n;
@@ -573,6 +622,10 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
     }) => {
       const session = getShellSession(sessionId);
       if (!session) return;
+      if (session.viaWireguard) {
+        resizeTerminal(sessionId, clampColsRows(cols, 80, false), clampColsRows(rows, 24, true));
+        return;
+      }
       const event = session.isProxy ? 'proxy:ssh:resize' : 'shell:resize';
       const c = clampColsRows(cols, 80, false);
       const r = clampColsRows(rows, 24, true);
@@ -584,6 +637,11 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
       clearAgentTerminalLatencyPending(sessionId);
       const session = getShellSession(sessionId);
       if (session) {
+        if (session.viaWireguard) {
+          closeTerminalSession(sessionId);
+          deleteShellSession(sessionId);
+          return;
+        }
         const event = session.isProxy ? 'proxy:ssh:close' : 'shell:close';
         sendToAgent(session.agentId, event, { sessionId });
         deleteShellSession(sessionId);

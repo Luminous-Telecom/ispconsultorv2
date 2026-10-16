@@ -63,6 +63,7 @@ export const AtualizarSistemaButton = createButton('atualizarSistema');
 export const AtualizarDocumentacaoButton = createButton('atualizarDocumentacao');
 export const ValidarButton = createButton('validar');
 export const InstalarAgenteButton = createButton('instalarAgente');
+export const ConfigurarVpnButton = createButton('configurarVpn');
 export const TentarNovamenteButton = createButton('tentarNovamente');
 export const AbrirCentralAssinanteButton = createButton('abrirCentralAssinante');
 export const EntrarButton = createButton('entrar');

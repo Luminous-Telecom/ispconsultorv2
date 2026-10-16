@@ -318,6 +318,7 @@ export function useAgentModal({
     logEndRef,
     generatedCmd,
     generating,
+    installAgent,
     clienteEdicaoLabel,
     isSubmitting,
     isRunning,

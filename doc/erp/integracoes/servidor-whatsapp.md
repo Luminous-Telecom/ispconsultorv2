@@ -71,7 +71,9 @@ Configure os textos ou templates por **tipo de mensagem**. Selecione o tipo no c
 | 5 / 10 / 15 dias após vencimento | Cobrança em atraso |
 | Corte de cliente | Notificação de corte |
 | Envio manual | Texto usado no envio manual pelo ERP |
-| Recibo de pagamento | Confirmação de pagamento. Em título pago, **Enviar → Recibo** reenvia sob demanda |
+| Recibo de pagamento | Confirmação de pagamento, enviada quando o título fica pago e também em **Enviar → Recibo** |
+
+O recibo (WhatsApp e e-mail) sai na baixa do título. Uma nova notificação do banco sobre o mesmo pagamento não reenvia. Se a consulta automática encontrar um pagamento com mais de 7 dias, o recibo também não sai — isso evita mandar recibo de cobrança antiga. Marcar como pago na tela continua enviando o recibo. Em um título já pago, **Enviar → Recibo** (Financeiro, Contas a receber ou aba do contrato) reenvia o recibo sob demanda.
 
 ### Evolution API
 

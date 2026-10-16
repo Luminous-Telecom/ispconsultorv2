@@ -152,7 +152,7 @@ export class AtualizacoesController {
 
   static async get(req: Request, res: Response): Promise<void> {
     if (!AtualizacoesController.canAccess(req)) {
-      sendForbidden(res, 'Acesso restrito ao painel SaaS');
+      sendForbidden(res, 'Apenas administradores podem ver as atualizações do sistema.');
       return;
     }
 

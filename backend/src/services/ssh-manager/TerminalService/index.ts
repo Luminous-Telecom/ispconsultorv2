@@ -37,9 +37,10 @@ export async function createTerminalSession(
   ip: string,
   sessionId: string,
   onOutput: (data: string) => void,
-  onClose: (reason: string) => void
+  onClose: (reason: string) => void,
+  options?: { localAddress?: string }
 ): Promise<string> {
-  const deviceConn = await openDeviceConnection(device);
+  const deviceConn = await openDeviceConnection(device, options);
 
   return new Promise((resolve, reject) => {
     deviceConn.shell({ term: 'xterm-256color', cols: 80, rows: 24 }, (err, stream) => {

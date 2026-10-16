@@ -926,10 +926,35 @@ export interface Agent {
   hostname?: string | null;
   os_info?: string | null;
   ip_address?: string | null;
+  connection_mode?: 'socket' | 'wireguard' | string | null;
+  mikrotik_host?: string | null;
+  mikrotik_api_port?: number | null;
+  mikrotik_api_tls?: boolean;
+  mikrotik_username?: string | null;
+  has_mikrotik_password?: boolean;
+  wg_listen_port?: number | null;
+  wg_lan_cidrs?: string | null;
+  wg_interface_name?: string | null;
+  wg_our_public_key?: string | null;
+  wg_peer_public_key?: string | null;
+  wg_address_ours?: string | null;
+  wg_address_peer?: string | null;
+  wg_status?: string | null;
+  wg_last_error?: string | null;
   created_at?: string;
   updated_at?: string;
   /** Retornado somente na criação/regeneração */
   token?: string;
+}
+
+export interface ConfigureAgentWireguard {
+  mikrotik_host: string;
+  mikrotik_api_port: number;
+  mikrotik_api_tls: boolean;
+  mikrotik_username: string;
+  mikrotik_password?: string;
+  wg_listen_port: number;
+  wg_lan_cidrs: string;
 }
 
 export interface CreateAgent {

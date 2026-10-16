@@ -248,7 +248,8 @@ export default defineConfig({
               { text: 'Aba Configurações', link: '/doc/equipamentos/tuneis-agentes#aba-configuracoes' },
               { text: 'Aba Instalar Automático', link: '/doc/equipamentos/tuneis-agentes#aba-instalar-automatico' },
               { text: 'Aba Instalar Manual', link: '/doc/equipamentos/tuneis-agentes#aba-instalar-manual' },
-              { text: 'Instalar no Windows', link: '/doc/equipamentos/tuneis-agentes#instalar-no-windows' }
+              { text: 'Instalar no Windows', link: '/doc/equipamentos/tuneis-agentes#instalar-no-windows' },
+              { text: 'Aba WireGuard', link: '/doc/equipamentos/tuneis-agentes#aba-wireguard' }
             ]
           },
           {
@@ -391,7 +392,9 @@ export default defineConfig({
           },
           { text: 'Usuários', link: '/doc/parametros/usuarios' },
           { text: 'Recursos do Sistema', link: '/doc/parametros/recursos-do-sistema' },
-          { text: 'Dias de Vencimento', link: '/doc/parametros/dias-vencimento' }
+          { text: 'Dias de Vencimento', link: '/doc/parametros/dias-vencimento' },
+          { text: 'Atualizações', link: '/doc/parametros/atualizacoes' },
+          { text: 'Backups', link: '/doc/parametros/backups' }
         ]
       }
     ]

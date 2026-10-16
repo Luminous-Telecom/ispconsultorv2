@@ -51,6 +51,7 @@ export type SystemButtonAction =
   | 'atualizarDocumentacao'
   | 'validar'
   | 'instalarAgente'
+  | 'configurarVpn'
   | 'tentarNovamente'
   | 'abrirCentralAssinante'
   | 'entrar'
@@ -133,6 +134,7 @@ export const SYSTEM_BUTTON_CONFIG: Record<SystemButtonAction, SystemButtonStyleC
   atualizarDocumentacao: { variant: 'primary', defaultSize: 'sm', i18nKey: 'updates.updateDoc' },
   validar: { variant: 'primary', defaultSize: 'sm', i18nKey: 'buttons.validate' },
   instalarAgente: { variant: 'primary', defaultSize: 'sm', i18nKey: 'agent.install' },
+  configurarVpn: { variant: 'primary', defaultSize: 'sm', i18nKey: 'agent.configureVpn' },
   tentarNovamente: { variant: 'outline-primary', defaultSize: 'sm', i18nKey: 'messages.tryAgain' },
   abrirCentralAssinante: { variant: 'secondary', defaultSize: 'sm', i18nKey: 'central.openPortal' },
   entrar: { variant: 'primary', defaultSize: 'md', i18nKey: 'login.enter' },
@@ -247,6 +249,7 @@ export const SYSTEM_BUTTON_EXPORT_NAMES: Record<SystemButtonAction, string> = {
   atualizarDocumentacao: 'AtualizarDocumentacaoButton',
   validar: 'ValidarButton',
   instalarAgente: 'InstalarAgenteButton',
+  configurarVpn: 'ConfigurarVpnButton',
   tentarNovamente: 'TentarNovamenteButton',
   abrirCentralAssinante: 'AbrirCentralAssinanteButton',
   entrar: 'EntrarButton',

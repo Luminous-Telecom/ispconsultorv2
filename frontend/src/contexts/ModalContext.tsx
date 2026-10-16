@@ -22,6 +22,8 @@ export type ModalType =
   | 'documentos-sistema'
   | 'dias-vencimento'
   | 'assinatura-digital'
+  | 'atualizacoes'
+  | 'backups'
   | 'blockdomi-dominios'
   | 'blockdomi-ipv4'
   | 'blockdomi-ipv6'

@@ -216,6 +216,7 @@ export class EfiWebhookService {
           }
           await refetchResolvedTitulo(resolved);
           const { titulo } = resolved;
+          const jaEstavaPago = !!titulo.pago;
           const statusString = typeof notification.status === 'string' ? notification.status : (notification.status as { current?: string })?.current || 'pendente';
           const novoStatus = EfiWebhookProcessorService.mapEfiStatus(statusString) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
           const isPago = ['pago', 'liquidado'].includes(novoStatus);
@@ -227,7 +228,7 @@ export class EfiWebhookService {
           }
           await refetchResolvedTitulo(resolved);
           const dadosNovos = (resolved.titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
-          enviarReciboSeAdmin(resolved);
+          enviarReciboSeAdmin(resolved, jaEstavaPago);
           await registrarAuditoriaWebhook(req, resolved, dadosAnteriores, dadosNovos, `Atualização via webhook EFI (generic) - Status: ${statusString}`);
           return {
             success: true,

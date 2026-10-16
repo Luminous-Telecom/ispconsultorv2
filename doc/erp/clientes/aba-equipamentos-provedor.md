@@ -171,6 +171,10 @@ O ERP conecta via SSH no servidor do cliente e executa a instalação.
 O comando manual inclui o token do agente. Não compartilhe em canais públicos. URLs não abrem no navegador.
 :::
 
+#### WireGuard no MikroTik
+
+Quando o cliente não tem servidor para o agente, use a sub-aba **WireGuard**. O painel cria a VPN no MikroTik (RouterOS 7) pela API HTTP. Depois, vincule os equipamentos a esse agente usando o IP de LAN. Passo a passo em [Túneis (Agentes) — Aba WireGuard](/doc/equipamentos/tuneis-agentes#aba-wireguard).
+
 #### Instalar no Windows
 
 O comando da aba **Instalar Manual** é para **Linux**. Em máquinas **Windows**, use Docker Desktop — passo a passo completo em [Túneis (Agentes) — Instalar no Windows](/doc/equipamentos/tuneis-agentes#instalar-no-windows).

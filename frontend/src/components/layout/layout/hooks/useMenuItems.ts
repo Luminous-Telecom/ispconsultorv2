@@ -2,15 +2,17 @@ import { useCallback, useMemo } from 'react';
 import type { ModalType } from 'contexts/ModalContext';
 import type { SidebarFolderConfig, SidebarMenuItem, TranslateFn } from '../types';
 import { filterByModulo } from '../utils';
+import { canManageSystemMaintenance } from '../systemMaintenanceAccess';
 import type { PlanoModuloId } from 'services/planoModulosService';
 
 interface UseMenuItemsParams {
   t: TranslateFn;
   openModal: (modalName: ModalType) => void;
   hasModulo: (moduloId: PlanoModuloId) => boolean;
+  userRole?: string | null;
 }
 
-export const useMenuItems = ({ t, openModal, hasModulo }: UseMenuItemsParams) => {
+export const useMenuItems = ({ t, openModal, hasModulo, userRole }: UseMenuItemsParams) => {
   const handleOpenModal = useCallback(
     (modalName: string) => {
       openModal(modalName as ModalType);
@@ -54,8 +56,14 @@ export const useMenuItems = ({ t, openModal, hasModulo }: UseMenuItemsParams) =>
         { id: 'usuarios', modalId: 'usuarios', label: t('params.users'), icon: 'bi-people-fill', onClick: () => handleOpenModal('usuarios') },
         { id: 'recursos-sistema', modalId: 'recursos-sistema', label: t('params.systemResources'), icon: 'bi-gear', onClick: () => handleOpenModal('recursos-sistema') },
         { id: 'dias-vencimento', modalId: 'dias-vencimento', label: t('params.dueDays'), icon: 'bi-calendar-event', onClick: () => handleOpenModal('dias-vencimento') },
+        ...(canManageSystemMaintenance(userRole)
+          ? [
+              { id: 'atualizacoes', modalId: 'atualizacoes', label: t('modal.updates'), icon: 'bi-arrow-clockwise', onClick: () => handleOpenModal('atualizacoes') },
+              { id: 'backups', modalId: 'backups', label: t('menu.backups'), icon: 'bi-hdd-stack', onClick: () => handleOpenModal('backups') },
+            ]
+          : []),
       ].filter(filterItem),
-    [t, handleOpenModal, filterItem]
+    [t, handleOpenModal, filterItem, userRole]
   );
 
   const sshManagerFolderItems = useMemo(
