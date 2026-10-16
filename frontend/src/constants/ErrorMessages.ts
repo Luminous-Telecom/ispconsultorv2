@@ -98,6 +98,7 @@ export const CONTEXT_ERROR_MESSAGES = {
   TITULO_SEND_MESSAGE_ERROR: 'Erro ao enviar mensagem',
   TITULO_SEND_WHATSAPP_ERROR: 'Erro ao enviar mensagem via WhatsApp',
   TITULO_SEND_EMAIL_ERROR: 'Erro ao enviar email',
+  TITULO_SEND_RECEIPT_ERROR: 'Erro ao enviar recibo',
   TITULO_BOLETO_ERROR: 'Erro ao gerar boleto',
   TITULO_BOLETO_DOWNLOAD_ERROR: 'Erro ao baixar boleto',
   TITULO_BOLETO_PRINT_SELECTED_ERROR: 'Erro ao gerar boletos selecionados',

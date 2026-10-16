@@ -30,7 +30,7 @@ A tela segue o padrão de [listagens do ERP](/doc/geral/listagens). Abaixo, apen
 | **Cancelar** | Cancela o título selecionado |
 | **Estornar** | Estorna um pagamento já registrado |
 | **Imprimir** | Menu de impressão (veja abaixo) |
-| **Enviar** | Envia a cobrança ao cliente (e-mail/WhatsApp, conforme configuração) |
+| **Enviar** | Envia a cobrança ou o recibo ao cliente (e-mail/WhatsApp, conforme configuração) |
 | **NFS-e** | Ações de nota fiscal de serviço eletrônica |
 
 ::: tip Seleção de registro
@@ -131,7 +131,8 @@ Títulos cancelados ficam ocultos por padrão. Marque **Mostrar cancelados** par
 
 Com um título selecionado:
 
-- **Enviar** — dispara a cobrança ao cliente pelos canais configurados (servidor de e-mail ou WhatsApp em **Parâmetros**).
+- **Enviar → Via WhatsApp** ou **Via Email** — dispara a cobrança ao cliente pelos canais configurados (servidor de e-mail ou WhatsApp em **Parâmetros**).
+- **Enviar → Recibo** — reenvia o recibo de pagamento (e-mail e WhatsApp) usando a mensagem **Recibo de pagamento**. A opção fica disponível somente quando o título selecionado está **pago**.
 - **NFS-e → Gerar NFS-e Avulsa** — abre o formulário de emissão vinculado ao título (cliente e valor pré-preenchidos). Requer [NFS-e](/doc/integracoes/nfse) configurada.
 - **Imprimir → Imprimir NF** — disponível quando o título já possui NFS-e emitida.
 

@@ -59,9 +59,11 @@ const TituloModal: React.FC<TituloModalProps> = (props) => {
           isEditMode={modal.isEditMode}
           internalTituloId={modal.internalTituloId}
           isPending={modal.isPending}
+          tituloStatus={modal.tituloData?.data?.status}
           sendLabel={modal.t('titulo.send')}
           sendViaWhatsAppLabel={modal.t('titulo.sendViaWhatsApp')}
           sendViaEmailLabel={modal.t('titulo.sendViaEmail')}
+          sendReceiptLabel={modal.t('titulo.sendReceipt')}
           sendSuccessMessage={modal.t('titulo.messages.sendSuccess')}
           onClose={modal.handleCancel}
         />

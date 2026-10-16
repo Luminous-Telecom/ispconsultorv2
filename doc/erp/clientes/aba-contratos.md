@@ -175,7 +175,7 @@ O sistema cria as parcelas com base no plano, descontos, dia de vencimento e tip
 | **Cancelar** | Cancela o título selecionado |
 | **Estornar** | Estorna pagamento registrado |
 | **Imprimir** | Imprime boletos ou documentos do título |
-| **Enviar** | Envia a cobrança ao cliente |
+| **Enviar** | Envia a cobrança ou, se o título estiver pago, o recibo |
 
 No **celular**, o menu **⋮** do card permite imprimir o título (**Selecionados**). No preview do PDF, abra o menu **⋮** do cabeçalho e use **Baixar** (o visualizador embutido costuma não oferecer download). No **computador**, o preview não exibe botão **Baixar**.
 
@@ -211,7 +211,7 @@ Lançamentos **pontuais** vinculados ao contrato — cobranças extras fora da g
 | **Cancelar** | Cancela o título |
 | **Estornar** | Estorna pagamento |
 | **Imprimir** | Imprime boleto ou documento |
-| **Enviar** | Envia cobrança ao cliente |
+| **Enviar** | Envia a cobrança ou, se o título estiver pago, o recibo |
 
 **Busca:** ID, Número do Título, Status, Cliente, Valor, NF.
 

@@ -52,5 +52,6 @@ router.get('/stats/geral', TituloCRUDController.getStats);
 
 router.post('/:id/enviar-whatsapp', TituloCRUDController.enviarWhatsApp);
 router.post('/:id/enviar-email', TituloCRUDController.enviarEmail);
+router.post('/:id/enviar-recibo', TituloCRUDController.enviarRecibo);
 
 export default router;

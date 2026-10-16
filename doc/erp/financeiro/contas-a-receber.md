@@ -31,7 +31,7 @@ A tela segue o padrão de [listagens do ERP](/doc/geral/listagens). Abaixo, apen
 
 No **celular**, abra o menu **⋮** do card do título e use **Selecionados** (imprime aquele título), **Abertos**, **Recibo** etc. No preview do PDF, abra o menu **⋮** do cabeçalho e use **Baixar** (o visualizador embutido costuma não oferecer download). No **computador**, o preview não exibe botão **Baixar**.
 
-| **Enviar** | Envia a cobrança ao cliente via WhatsApp ou e-mail |
+| **Enviar** | Envia a cobrança (WhatsApp ou e-mail) ou o **Recibo** de um título pago |
 | **NFS-e** | Ações de nota fiscal de serviço eletrônica |
 
 ::: tip Seleção de registro

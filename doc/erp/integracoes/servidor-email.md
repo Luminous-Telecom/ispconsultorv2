@@ -36,6 +36,8 @@ Clique em **Salvar** após configurar. Com o servidor salvo, informe um endereç
 
 Personalização dos **textos padrão** dos e-mails enviados pelo sistema (assunto e corpo das mensagens automáticas). Edite conforme orientação da equipe ISP Consultor.
 
+Em um título já pago, **Enviar → Recibo** reenvia o recibo de pagamento sob demanda.
+
 ---
 
 ## Monitoramento

@@ -728,5 +728,36 @@ export class TituloCRUDController {
       sendError(res, error, 'Erro ao enviar título via Email', 500, true);
     }
   }
+
+  /**
+   * Envia recibo de pagamento (e-mail e WhatsApp) de um título pago.
+   */
+  public static async enviarRecibo(req: Request, res: Response): Promise<void> {
+    try {
+      const tituloId = parseInt(req.params.id, 10);
+      if (isNaN(tituloId)) {
+        sendValidationError(res, 'ID do título inválido');
+        return;
+      }
+
+      const empresaId = getEmpresaIdOrNull(req);
+      const { ReciboPagamentoService } = await import('../../../services/comunicacao/ReciboPagamentoService');
+      const resultado = await ReciboPagamentoService.enviarReciboManual(tituloId, empresaId);
+
+      if (resultado.mensagem === 'Título não encontrado') {
+        sendNotFound(res, resultado.mensagem);
+        return;
+      }
+
+      if (resultado.sucesso) {
+        sendSuccess(res, undefined, resultado.mensagem);
+        return;
+      }
+
+      sendError(res, new Error(resultado.mensagem), resultado.mensagem, 400, false);
+    } catch (error: unknown) {
+      sendError(res, error, 'Erro ao enviar recibo', 500, true);
+    }
+  }
 }
 

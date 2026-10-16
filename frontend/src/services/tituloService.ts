@@ -172,6 +172,13 @@ class TituloServiceClass extends BaseService<CarneParcela, CreateCarneParcela, P
   }
 
   /**
+   * Enviar recibo de pagamento (título pago)
+   */
+  async enviarRecibo(id: number): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    return this.customPost<{ success: boolean; message: string }>(`/${id}/enviar-recibo`);
+  }
+
+  /**
    * Gerar PDF de múltiplos boletos
    */
   async gerarPdfBoletosMultiplos(ids: number[]): Promise<Blob> {
@@ -455,6 +462,25 @@ export class TituloService {
       if (error && typeof error === 'object' && 'message' in error) {
         const apiError = error as { message: string; statusCode?: number };
         throw new Error(resolveServiceErrorMessage(apiError.message, CONTEXT_ERROR_MESSAGES.TITULO_SEND_EMAIL_ERROR));
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Enviar recibo de pagamento de um título pago
+   */
+  static async enviarRecibo(id: number): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await tituloServiceInstance.enviarRecibo(id);
+      return {
+        success: response.success || true,
+        message: response.message || response.data?.message || 'Recibo enviado com sucesso'
+      };
+    } catch (error) {
+      if (error && typeof error === 'object' && 'message' in error) {
+        const apiError = error as { message: string; statusCode?: number };
+        throw new Error(resolveServiceErrorMessage(apiError.message, CONTEXT_ERROR_MESSAGES.TITULO_SEND_RECEIPT_ERROR));
       }
       throw error;
     }

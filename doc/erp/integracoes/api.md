@@ -81,6 +81,7 @@ Rotas disponíveis com token de API:
 | POST | `/api/titulos/:id/consultar-recebimento` | Consultar no banco |
 | POST | `/api/titulos/:id/enviar-whatsapp` | Enviar cobrança WhatsApp |
 | POST | `/api/titulos/:id/enviar-email` | Enviar cobrança e-mail |
+| POST | `/api/titulos/:id/enviar-recibo` | Enviar recibo de título pago |
 
 ### Dados da empresa
 

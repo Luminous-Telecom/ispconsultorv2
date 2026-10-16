@@ -104,6 +104,11 @@ export interface TranslationKeys {
   'messages.errorSendEmail': string;
   'messages.errorSendEmails': string;
   'messages.errorSendEmailsGeneral': string;
+  'messages.successSendReceipt': string;
+  'messages.successSendReceipts': string;
+  'messages.errorSendReceipt': string;
+  'messages.errorSendReceipts': string;
+  'messages.errorSendReceiptsGeneral': string;
   'messages.successReverseTitle': string;
   'messages.errorReverseTitle': string;
   'messages.successDeleteTerm': string;
@@ -722,6 +727,7 @@ export interface TranslationKeys {
   'titulo.send': string;
   'titulo.sendViaWhatsApp': string;
   'titulo.sendViaEmail': string;
+  'titulo.sendReceipt': string;
   'titulo.createTitle': string;
   'titulo.validationErrors': string;
   'titulo.clientNotFound': string;

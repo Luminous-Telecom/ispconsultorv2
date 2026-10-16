@@ -424,6 +424,7 @@ export function useContasReceberBulkActions({
             const sendAction = item.action as (selectedItems?: Titulo[]) => void | Promise<void>;
             void sendAction(items as Titulo[] | undefined);
           },
+          disabled: item.disabled as ((selectedItems: TituloItemUnion[]) => boolean) | boolean | undefined,
         })),
       });
     }

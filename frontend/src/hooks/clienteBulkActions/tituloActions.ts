@@ -11,6 +11,7 @@ import { formatCurrency } from '../../utils/formatters';
 import { BulkAction } from '../../components/modals/clientes/cliente/types';
 import { useI18n } from '../../contexts/I18nContext';
 import { useBulkBtn } from '../../components/ui';
+import { isTituloPagoParaRecibo } from '../../utils/tituloRecibo';
 import { awaitRefreshResult, isTituloDeletavel } from './utils';
 
 interface UseTituloActionsParams {
@@ -208,6 +209,54 @@ export function useTituloActions({
     }
   }, [t, success, error]);
 
+  const handleEnviarRecibo = useCallback(async (items: CarneParcela[]) => {
+    const pagos = items.filter((item) => isTituloPagoParaRecibo(item.status));
+    if (pagos.length === 0) return;
+
+    try {
+      let successCount = 0;
+      let errorCount = 0;
+      let firstErrorMessage = '';
+
+      for (const item of pagos) {
+        try {
+          const response = await TituloService.enviarRecibo(item.id);
+          if (response.success) {
+            successCount++;
+          } else {
+            errorCount++;
+            if (!firstErrorMessage && response.message) {
+              firstErrorMessage = response.message;
+            }
+          }
+        } catch (err) {
+          errorCount++;
+          if (!firstErrorMessage) {
+            firstErrorMessage = extractApiErrorMessageSync(err, {
+              defaultMessage: CONTEXT_ERROR_MESSAGES.TITULO_SEND_RECEIPT_ERROR,
+            });
+          }
+        }
+      }
+
+      if (successCount > 0) {
+        const message = successCount === 1
+          ? t('messages.successSendReceipt')
+          : t('messages.successSendReceipts', { count: successCount });
+        success(message);
+      }
+
+      if (errorCount > 0) {
+        const message = firstErrorMessage || (errorCount === 1
+          ? t('messages.errorSendReceipt')
+          : t('messages.errorSendReceipts', { count: errorCount }));
+        error(message);
+      }
+    } catch {
+      error(t('messages.errorSendReceiptsGeneral'));
+    }
+  }, [t, success, error]);
+
   const handleDeletarTitulos = useCallback(async (items: CarneParcela[]) => {
     const deletaveis = items.filter(isTituloDeletavel);
     if (deletaveis.length === 0) return;
@@ -364,6 +413,14 @@ export function useTituloActions({
           label: bulkBtn.viaEmail.label,
           action: () => handleEnviarEmail(getItemsCompletos),
         },
+        {
+          label: bulkBtn.recibo.label,
+          action: () => handleEnviarRecibo(getItemsCompletos),
+          disabled: (items: CarneParcela[]) => {
+            if (items.length === 0) return true;
+            return !items.some((item) => isTituloPagoParaRecibo(item.status));
+          },
+        },
       ],
     },
     {
@@ -391,6 +448,7 @@ export function useTituloActions({
     handleEstornarTitulo,
     handleEnviarWhatsApp,
     handleEnviarEmail,
+    handleEnviarRecibo,
     onShowTituloEditModal,
     onShowReceberModal,
     onShowGerarNFeModal,
@@ -409,5 +467,6 @@ export function useTituloActions({
     handleEstornarTitulo,
     handleEnviarWhatsApp,
     handleEnviarEmail,
+    handleEnviarRecibo,
   };
 }

@@ -69,7 +69,7 @@ Configure os textos ou templates por **tipo de mensagem**. Selecione o tipo no c
 | 5 / 10 / 15 dias após vencimento | Cobrança em atraso |
 | Corte de cliente | Notificação de corte |
 | Envio manual | Texto usado no envio manual pelo ERP |
-| Recibo de pagamento | Confirmação de pagamento |
+| Recibo de pagamento | Confirmação de pagamento. Em título pago, **Enviar → Recibo** reenvia sob demanda |
 
 ### Evolution API
 

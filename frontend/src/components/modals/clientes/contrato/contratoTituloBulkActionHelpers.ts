@@ -3,6 +3,7 @@ import { TranslationKeys } from 'contexts/I18nContext';
 import { TituloService } from 'services/tituloService';
 import { Titulo } from 'types';
 import { formatCurrency } from 'utils/formatters';
+import { isTituloPagoParaRecibo } from 'utils/tituloRecibo';
 import { BulkAction } from './types';
 
 type TranslateFn = (key: keyof TranslationKeys, params?: Record<string, string | number>) => string;
@@ -241,6 +242,23 @@ export function createTituloEnviarAction(ctx: BulkActionContext): BulkAction<Tit
             ctx,
             { one: 'messages.successSendEmail', many: 'messages.successSendEmails' },
             { one: 'messages.errorSendEmail', many: 'messages.errorSendEmails', general: 'messages.errorSendEmailsGeneral' }
+          );
+        },
+      },
+      {
+        label: ctx.t('other.receipt'),
+        disabled: (selectedItems: Titulo[]) => {
+          if (selectedItems.length === 0) return true;
+          return !selectedItems.some((item) => isTituloPagoParaRecibo(item.status));
+        },
+        action: async (selectedItems?: Titulo[]) => {
+          const pagos = (selectedItems || []).filter((item) => isTituloPagoParaRecibo(item.status));
+          await enviarTitulos(
+            pagos,
+            TituloService.enviarRecibo,
+            ctx,
+            { one: 'messages.successSendReceipt', many: 'messages.successSendReceipts' },
+            { one: 'messages.errorSendReceipt', many: 'messages.errorSendReceipts', general: 'messages.errorSendReceiptsGeneral' }
           );
         },
       },
