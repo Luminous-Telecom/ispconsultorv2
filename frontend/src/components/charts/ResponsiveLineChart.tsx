@@ -5,6 +5,7 @@ import { ChartEmptyState } from './ChartEmptyState';
 import { ChartTitleWithInfo } from './ChartTitleWithInfo';
 import { clampTooltipNearPoint, createD3ChartTooltip } from './chartTooltip';
 import { FONT_FAMILY_BASE } from 'constants/typography';
+import { lineChartHorizontalMargins } from './lineChartMargins';
 
 const DEFAULT_LINE_COLOR = 'var(--chart-color-1)';
 
@@ -87,13 +88,16 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(
       sel.selectAll('*').remove();
       sel.attr('width', dimensions.width).attr('height', dimensions.height);
 
-      const leftMargin = format === 'currency' ? 58 : 44;
-      const margin = { top: 18, right: 16, left: leftMargin, bottom: 34 };
-      const chartWidth = Math.max(1, dimensions.width - margin.left - margin.right);
-      const chartHeight = Math.max(1, dimensions.height - margin.top - margin.bottom);
-
       const values = chartData.map((d) => d.value);
       const maxValue = Math.max(...values, 0);
+      const yProbe = d3.scaleLinear().domain([0, maxValue * 1.2 || 1]).nice();
+      const { left: leftMargin, right: rightMargin } = lineChartHorizontalMargins(
+        yProbe.ticks(4).map((tick) => formatAxis(Number(tick))),
+        format
+      );
+      const margin = { top: 18, right: rightMargin, left: leftMargin, bottom: 34 };
+      const chartWidth = Math.max(1, dimensions.width - margin.left - margin.right);
+      const chartHeight = Math.max(1, dimensions.height - margin.top - margin.bottom);
 
       const xScale = d3.scaleLinear().domain([0, Math.max(1, chartData.length - 1)]).range([0, chartWidth]);
       const yScale = d3.scaleLinear().domain([0, maxValue * 1.2 || 1]).nice().range([chartHeight, 0]);
