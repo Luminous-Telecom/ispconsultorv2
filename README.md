@@ -498,12 +498,7 @@ PING
 
 ## Instalação em produção (Linux)
 
-Guia para subir o ERP em um servidor **Debian/Ubuntu** do zero, usando o repositório de deploy **`ispconsultor`**.
-
-| Repositório | Uso |
-|---|---|
-| [`Luminous-Telecom/ispconsultor`](https://github.com/Luminous-Telecom/ispconsultor) | **Produção** — builds prontos (`backend/dist`, `frontend/build`) |
-| [`Luminous-Telecom/backnet`](https://github.com/Luminous-Telecom/backnet) | **Desenvolvimento** — código-fonte completo |
+Guia para subir o ERP em um servidor **Debian/Ubuntu** do zero. O servidor clona o fonte e compila no próprio host. Não há repositório separado de build.
 
 ### Estrutura no servidor
 
@@ -542,7 +537,7 @@ cat ~/.ssh/id_ed25519.pub
 ```
 
 Copie a linha inteira e cadastre em **GitHub → Settings → SSH and GPG keys → New SSH key**.  
-O usuário/chave precisa ter acesso ao repositório `Luminous-Telecom/ispconsultor`.
+O usuário/chave precisa ter acesso ao repositório `Luminous-Telecom/ispconsultorv2`.
 
 Teste:
 
@@ -558,7 +553,7 @@ A pasta deve estar **vazia** antes do clone (o `.` no final evita subpasta extra
 sudo mkdir -p /opt/ispconsultor
 sudo chown ispconsultor:ispconsultor /opt/ispconsultor
 cd /opt/ispconsultor
-git clone git@github.com:Luminous-Telecom/ispconsultor.git .
+git clone git@github.com:Luminous-Telecom/ispconsultorv2.git .
 ```
 
 Alternativa na home do usuário:
@@ -566,7 +561,7 @@ Alternativa na home do usuário:
 ```bash
 mkdir -p ~/ispconsultor
 cd ~/ispconsultor
-git clone git@github.com:Luminous-Telecom/ispconsultor.git .
+git clone git@github.com:Luminous-Telecom/ispconsultorv2.git .
 ```
 
 ### 5. Rodar o instalador
@@ -637,7 +632,7 @@ npm run prod:pm2
 | `Execute como usuário normal com sudo` | Saia do `root` e use `su - ispconsultor` + `sudo bash scripts/install.sh` |
 | `Permission denied (publickey)` no `git pull` | Cadastre `~/.ssh/id_ed25519.pub` no GitHub |
 | Nginx `Permission denied` no front | Confirme que o `root` do site é `/var/www/ispconsultor` (não a home). Rode de novo `sudo bash scripts/install.sh` ou a atualização em Parâmetros → Atualizações |
-| `frontend/package.json` não encontrado | Normal no repo de produção — o instalador usa `frontend/build` versionado |
+| `frontend/package.json` não encontrado | O clone do fonte não está completo. O servidor compila `frontend/` no próprio host |
 
 A instalação do zero é só `sudo bash scripts/install.sh`.
 
@@ -653,7 +648,7 @@ cd backnet
 npm run install-all
 ```
 
-Para produção, use o repositório [`ispconsultor`](#instalação-em-produção-linux) e o script `scripts/install.sh`.
+Para produção, clone [`ispconsultorv2`](#instalação-em-produção-linux) no servidor e rode `scripts/install.sh`. O build acontece nessa máquina.
 
 ### 2. Instalar Dependências
 

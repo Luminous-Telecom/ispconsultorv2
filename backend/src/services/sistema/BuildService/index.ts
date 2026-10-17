@@ -16,7 +16,7 @@ const frontendSourcePath = (root: string) => path.join(root, 'frontend', 'src');
 
 /**
  * Self-update no servidor após `git pull`.
- * Em produção (ispconsultor) usa backend/dist e frontend/build do CI quando não há fonte local.
+ * Compila backend e frontend nesta máquina.
  */
 export class BuildService {
   private readonly projectRoot: string;
