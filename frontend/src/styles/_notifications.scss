@@ -524,6 +524,31 @@
   }
 }
 
+[data-theme="dark"] .notification {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .notification-info {
+  border-left-color: var(--color-accent-dark) !important;
+}
+
+[data-theme="dark"] .notification-info .notification-icon {
+  color: var(--color-accent-dark);
+}
+
+[data-theme="dark"] .notification-info .notification-progress-bar {
+  background-color: var(--color-accent-dark);
+}
+
+[data-theme="dark"] .notification-success,
+[data-theme="dark"] .notification-error,
+[data-theme="dark"] .notification-warning,
+[data-theme="dark"] .notification-info {
+  background-color: var(--bg-secondary) !important;
+}
+
 /* Dark mode - manter cores definidas */
 @media (prefers-color-scheme: dark) {
   .notification-success {

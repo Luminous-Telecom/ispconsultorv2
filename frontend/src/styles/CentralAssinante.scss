@@ -1,17 +1,17 @@
 // Central do Assinante — temas claro/escuro via CSS variables
 @mixin ca-theme-dark {
-  --ca-bg-primary: #111318;
-  --ca-bg-secondary: #181b22;
-  --ca-bg-card: #1e222a;
-  --ca-bg-hover: #262b35;
-  --ca-border: #2e3440;
-  --ca-border-focus: #3b4250;
-  --ca-border-hover: #363d4a;
-  --ca-text: var(--color-gray-100);
-  --ca-text-secondary: color-mix(in srgb, var(--color-gray-100) 65%, transparent);
-  --ca-text-muted: color-mix(in srgb, var(--color-gray-100) 45%, transparent);
-  --ca-btn-primary: var(--color-gray-700);
-  --ca-btn-primary-hover: var(--color-gray-600);
+  --ca-bg-primary: var(--color-bg-dark);
+  --ca-bg-secondary: var(--color-bg-secondary-dark);
+  --ca-bg-card: var(--color-bg-tertiary-dark);
+  --ca-bg-hover: var(--color-bg-dropdown-hover-dark);
+  --ca-border: var(--color-border-dark);
+  --ca-border-focus: var(--color-border-light-dark);
+  --ca-border-hover: var(--color-border-light-dark);
+  --ca-text: var(--color-text-dark);
+  --ca-text-secondary: var(--color-text-secondary-dark);
+  --ca-text-muted: var(--color-text-muted-dark);
+  --ca-btn-primary: var(--color-primary-fill-dark);
+  --ca-btn-primary-hover: var(--color-primary-fill-hover-dark);
   --ca-modal-backdrop: color-mix(in srgb, var(--color-black) 60%, transparent);
 }
 

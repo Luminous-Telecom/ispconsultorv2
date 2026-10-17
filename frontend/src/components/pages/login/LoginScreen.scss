@@ -71,6 +71,22 @@
   box-shadow: 0 4px 14px color-mix(in srgb, var(--color-indigo) 35%, transparent);
 }
 
+[data-theme="dark"] .login-page {
+  background:
+    radial-gradient(1100px 520px at 50% -12%, color-mix(in srgb, var(--color-accent-dark) 18%, transparent), transparent 62%),
+    radial-gradient(900px 480px at 100% 110%, color-mix(in srgb, var(--color-success-dark) 10%, transparent), transparent 60%),
+    var(--bg-primary);
+}
+
+[data-theme="dark"] .login-card__accent {
+  background: linear-gradient(90deg, var(--color-accent-dark) 0%, var(--color-warning-dark) 55%, var(--color-success-dark) 100%);
+}
+
+[data-theme="dark"] .login-badge {
+  background: var(--color-primary-fill-dark);
+  box-shadow: none;
+}
+
 .login-subtitle {
   margin: 0.85rem 0 0;
   color: var(--text-muted);

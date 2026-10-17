@@ -426,6 +426,21 @@
   --layout-user-avatar-fg: #4f46e5;
 }
 
+[data-theme="dark"] & {
+  .layout-user-trigger__avatar {
+    --layout-user-avatar-bg: color-mix(in srgb, var(--color-accent-dark) 22%, transparent);
+    --layout-user-avatar-fg: var(--color-accent-dark);
+  }
+
+  .layout-user-trigger:hover .layout-user-trigger__avatar {
+    --layout-user-avatar-bg-hover: color-mix(in srgb, var(--color-accent-dark) 34%, transparent);
+  }
+
+  .layout-user-dropdown__subrow.active {
+    background: color-mix(in srgb, var(--color-accent-dark) 18%, transparent);
+  }
+}
+
 .layout-user-trigger:hover .layout-user-trigger__avatar {
   background: var(--layout-user-avatar-bg-hover, color-mix(in srgb, var(--color-indigo) 26%, transparent));
 }

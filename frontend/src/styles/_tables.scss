@@ -501,38 +501,33 @@ colgroup col.col-checkbox {
   background-color: var(--bg-tertiary) !important;
 }
 
-/* Linhas selecionadas no tema dark - cor em tr e td */
-[data-theme="dark"] .table tbody tr.table-active,
-[data-theme="dark"] .table tbody tr.table-active:nth-child(even),
-[data-theme="dark"] .table tbody tr.table-active:nth-child(odd) {
-  background-color: color-mix(in srgb, var(--color-indigo) 80%, transparent) !important;
-}
+/* Linhas selecionadas no tema dark */
+[data-theme="dark"] & {
+  .table tbody tr.table-active,
+  .table tbody tr.table-active:nth-child(even),
+  .table tbody tr.table-active:nth-child(odd),
+  .table tbody tr.table-active td,
+  .table tbody tr.table-active th,
+  .table tbody tr.table-active:nth-child(even) td,
+  .table tbody tr.table-active:nth-child(even) th,
+  .table tbody tr.table-active:nth-child(odd) td,
+  .table tbody tr.table-active:nth-child(odd) th {
+    background-color: color-mix(in srgb, var(--color-accent-dark) 34%, var(--bg-tertiary)) !important;
+    color: var(--text-primary) !important;
+  }
 
-[data-theme="dark"] .table tbody tr.table-active td,
-[data-theme="dark"] .table tbody tr.table-active th,
-[data-theme="dark"] .table tbody tr.table-active:nth-child(even) td,
-[data-theme="dark"] .table tbody tr.table-active:nth-child(even) th,
-[data-theme="dark"] .table tbody tr.table-active:nth-child(odd) td,
-[data-theme="dark"] .table tbody tr.table-active:nth-child(odd) th {
-  background-color: color-mix(in srgb, var(--color-indigo) 80%, transparent) !important;
-  color: var(--text-primary) !important;
-}
-
-/* Hover em linha selecionada no tema dark */
-[data-theme="dark"] .table tbody tr.table-active:hover,
-[data-theme="dark"] .table tbody tr.table-active:nth-child(even):hover,
-[data-theme="dark"] .table tbody tr.table-active:nth-child(odd):hover {
-  background-color: color-mix(in srgb, var(--color-indigo) 85%, transparent) !important;
-}
-
-[data-theme="dark"] .table tbody tr.table-active:hover td,
-[data-theme="dark"] .table tbody tr.table-active:hover th,
-[data-theme="dark"] .table tbody tr.table-active:nth-child(even):hover td,
-[data-theme="dark"] .table tbody tr.table-active:nth-child(even):hover th,
-[data-theme="dark"] .table tbody tr.table-active:nth-child(odd):hover td,
-[data-theme="dark"] .table tbody tr.table-active:nth-child(odd):hover th {
-  background-color: color-mix(in srgb, var(--color-indigo) 85%, transparent) !important;
-  color: var(--text-primary) !important;
+  .table tbody tr.table-active:hover,
+  .table tbody tr.table-active:nth-child(even):hover,
+  .table tbody tr.table-active:nth-child(odd):hover,
+  .table tbody tr.table-active:hover td,
+  .table tbody tr.table-active:hover th,
+  .table tbody tr.table-active:nth-child(even):hover td,
+  .table tbody tr.table-active:nth-child(even):hover th,
+  .table tbody tr.table-active:nth-child(odd):hover td,
+  .table tbody tr.table-active:nth-child(odd):hover th {
+    background-color: color-mix(in srgb, var(--color-accent-dark) 48%, var(--bg-tertiary)) !important;
+    color: var(--text-primary) !important;
+  }
 }
 
 /* Sobrescrever bg-light para ambos os temas */
@@ -565,34 +560,37 @@ colgroup col.col-checkbox {
   color: var(--text-primary) !important;
 }
 
-/* Sobrescrever badge bg-primary para tema escuro */
-[data-theme="dark"] .badge.bg-primary {
-  background-color: var(--color-indigo) !important;
-  color: var(--color-white) !important;
-}
+/* Badges no tema escuro — fundo baixo, texto da mesma família */
+[data-theme="dark"] & {
+  .badge.bg-primary,
+  .badge-primary {
+    background-color: color-mix(in srgb, var(--color-accent-dark) 28%, var(--bg-tertiary)) !important;
+    color: var(--color-accent-dark) !important;
+  }
 
-/* Sobrescrever badge bg-warning para tema escuro */
-[data-theme="dark"] .badge.bg-warning {
-  background-color: var(--color-yellow-bootstrap) !important;
-  color: var(--color-black) !important;
-}
+  .badge.bg-warning,
+  .badge-warning {
+    background-color: color-mix(in srgb, var(--warning-color) 24%, var(--bg-tertiary)) !important;
+    color: var(--warning-color) !important;
+  }
 
-/* Sobrescrever badge bg-success para tema escuro */
-[data-theme="dark"] .badge.bg-success {
-  background-color: var(--color-green-bootstrap-bright) !important;
-  color: var(--color-white) !important;
-}
+  .badge.bg-success,
+  .badge-success {
+    background-color: color-mix(in srgb, var(--success-color) 24%, var(--bg-tertiary)) !important;
+    color: var(--success-color) !important;
+  }
 
-/* Sobrescrever badge bg-danger para tema escuro */
-[data-theme="dark"] .badge.bg-danger {
-  background-color: var(--color-red-bootstrap) !important;
-  color: var(--color-white) !important;
-}
+  .badge.bg-danger,
+  .badge-danger {
+    background-color: color-mix(in srgb, var(--danger-color) 24%, var(--bg-tertiary)) !important;
+    color: var(--danger-color) !important;
+  }
 
-/* Sobrescrever badge bg-info para tema escuro */
-[data-theme="dark"] .badge.bg-info {
-  background-color: var(--color-blue) !important;
-  color: var(--color-white) !important;
+  .badge.bg-info,
+  .badge-info {
+    background-color: color-mix(in srgb, var(--info-color) 24%, var(--bg-tertiary)) !important;
+    color: var(--info-color) !important;
+  }
 }
 
 /* Garantir que cards e table-responsive também tenham fundo correto */
@@ -753,6 +751,32 @@ colgroup col.col-checkbox {
   background: color-mix(in srgb, var(--color-blue) 10%, transparent);
   border-color: var(--color-blue);
   color: var(--color-blue);
+}
+
+[data-theme="dark"] & {
+  .alert-success {
+    background: color-mix(in srgb, var(--success-color) 14%, transparent);
+    border-color: var(--success-color);
+    color: var(--success-color);
+  }
+
+  .alert-danger {
+    background: color-mix(in srgb, var(--danger-color) 14%, transparent);
+    border-color: var(--danger-color);
+    color: var(--danger-color);
+  }
+
+  .alert-warning {
+    background: color-mix(in srgb, var(--warning-color) 14%, transparent);
+    border-color: var(--warning-color);
+    color: var(--warning-color);
+  }
+
+  .alert-info {
+    background: color-mix(in srgb, var(--info-color) 14%, transparent);
+    border-color: var(--info-color);
+    color: var(--info-color);
+  }
 }
 
 /* Scrollbar personalizada */

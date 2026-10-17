@@ -125,7 +125,7 @@
   }
 }
 
-/* Tema escuro — Azul-petróleo */
+/* Tema escuro — grafite frio */
 [data-theme="dark"] {
   --bg-primary: var(--color-bg-dark);
   --bg-secondary: var(--color-bg-secondary-dark);
@@ -141,14 +141,17 @@
   --text-muted: var(--color-text-muted-dark);
   --border-light: var(--color-border-light-dark);
 
-  --shadow-sm: 0 1px 2px 0 #{rgba(palette-color('shadow-ink'), 0.45)};
-  --shadow: 0 4px 6px -1px #{rgba(palette-color('shadow-ink'), 0.5)}, 0 2px 4px -1px #{rgba(palette-color('shadow-ink'), 0.35)};
-  --shadow-lg: 0 10px 15px -3px #{rgba(palette-color('shadow-ink'), 0.55)}, 0 4px 6px -2px #{rgba(palette-color('shadow-ink'), 0.3)};
+  --shadow-sm: 0 1px 2px 0 #{rgba(palette-color('shadow-graphite'), 0.45)};
+  --shadow: 0 4px 6px -1px #{rgba(palette-color('shadow-graphite'), 0.5)}, 0 2px 4px -1px #{rgba(palette-color('shadow-graphite'), 0.35)};
+  --shadow-lg: 0 10px 15px -3px #{rgba(palette-color('shadow-graphite'), 0.55)}, 0 4px 6px -2px #{rgba(palette-color('shadow-graphite'), 0.3)};
 
+  --primary-color: var(--color-accent-dark);
+  --primary-hover: var(--color-primary-fill-dark);
   --sidebar-bg: var(--bg-secondary);
   --sidebar-text: var(--text-primary);
-  --sidebar-hover: #{rgba(palette-color('slate-blue'), 0.14)};
-  --sidebar-active: var(--color-slate-blue);
+  --sidebar-hover: #{rgba(palette-color('accent-dark'), 0.16)};
+  --sidebar-active: var(--color-accent-dark);
+  --sidebar-section-accent: var(--color-accent-dark);
 
   --navbar-bg: var(--bg-primary);
   --navbar-text: var(--text-primary);
@@ -156,6 +159,8 @@
   --navbar-input-bg: #{rgba(palette-color('white'), 0.06)};
   --navbar-input-text: var(--color-white);
 
+  --btn-primary-color: var(--color-primary-fill-dark);
+  --btn-primary-hover: var(--color-primary-fill-hover-dark);
   --btn-primary-disabled: var(--color-btn-disabled-dark);
   --btn-disabled-color: #{rgba(palette-color('text-secondary-dark'), 0.4)};
   --btn-disabled-border: var(--color-btn-disabled-border-dark);

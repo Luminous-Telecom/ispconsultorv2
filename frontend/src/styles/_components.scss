@@ -1363,6 +1363,52 @@ button {
   box-shadow: none !important;
 }
 
+[data-theme="dark"] & {
+  .btn-success {
+    background: var(--color-success-fill-dark);
+    border-color: var(--color-success-fill-dark);
+    color: var(--color-text-dark);
+  }
+
+  .btn-success:hover:not(:disabled) {
+    background: var(--color-success-fill-hover-dark);
+    border-color: var(--color-success-fill-hover-dark);
+  }
+
+  .btn-danger {
+    background: var(--color-danger-fill-dark);
+    border-color: var(--color-danger-fill-dark);
+    color: var(--color-text-dark);
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background: var(--color-danger-fill-hover-dark);
+    border-color: var(--color-danger-fill-hover-dark);
+  }
+
+  .btn-info {
+    background: var(--color-info-fill-dark);
+    border-color: var(--color-info-fill-dark);
+    color: var(--color-text-dark);
+  }
+
+  .btn-info:hover:not(:disabled) {
+    background: var(--color-info-fill-hover-dark);
+    border-color: var(--color-info-fill-hover-dark);
+  }
+
+  .btn-warning {
+    background: var(--color-warning-fill-dark);
+    border-color: var(--color-warning-fill-dark);
+    color: var(--color-text-dark);
+  }
+
+  .btn-warning:hover:not(:disabled) {
+    background: var(--color-warning-fill-hover-dark);
+    border-color: var(--color-warning-fill-hover-dark);
+  }
+}
+
 /* Botões outline — desabilitados: tom escuro neutro, bem distinto do ativo */
 .btn-outline-primary:disabled,
 .btn-outline-success:disabled,
@@ -1564,7 +1610,7 @@ button {
 
 [data-theme="dark"] .form-check-input:hover:not(:disabled) {
   border-color: var(--btn-primary-color);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 20%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent-dark) 28%, transparent);
 }
 
 [data-theme="dark"] .form-switch .form-check-input {
