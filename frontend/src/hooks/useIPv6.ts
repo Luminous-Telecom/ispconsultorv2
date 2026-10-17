@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { IPv6Service } from '../services/ipv6Service';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { CACHE_CONFIG } from '../config/api';
-import { IPv6Filters, UpdateIPv6 } from '../types';
+import {  UpdateIPv6 } from '../types';
 import { AxiosError } from 'axios';
 
 const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;
@@ -19,24 +19,13 @@ function getErrorMessage(err: unknown, fallback: string): string {
   return fallback;
 }
 
-export const useIPv6s = (filters: IPv6Filters = {}) => {
-  return useQuery({
-    queryKey: ['ipv6', filters],
-    queryFn: () => IPv6Service.list(filters),
-    staleTime: 30 * 1000,
-    gcTime: DEFAULT_CACHE_TIME,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
-};
-
 export const useIPv6 = (id: number) => {
   return useQuery({
     queryKey: ['ipv6-item', id],
     queryFn: () => IPv6Service.getById(id),
     enabled: !!id,
     staleTime: DEFAULT_STALE_TIME,
-    gcTime: DEFAULT_CACHE_TIME,
+    gcTime: DEFAULT_CACHE_TIME
   });
 };
 
@@ -52,7 +41,7 @@ export const useCreateIPv6 = () => {
     },
     onError: (err) => {
       error(getErrorMessage(err, 'Erro ao salvar IPv6'));
-    },
+    }
   });
 };
 
@@ -70,7 +59,7 @@ export const useUpdateIPv6 = () => {
     },
     onError: (err) => {
       error(getErrorMessage(err, 'Erro ao atualizar IPv6'));
-    },
+    }
   });
 };
 
@@ -86,6 +75,6 @@ export const useDeleteIPv6 = () => {
     },
     onError: (err) => {
       error(getErrorMessage(err, 'Erro ao excluir IPv6'));
-    },
+    }
   });
 };

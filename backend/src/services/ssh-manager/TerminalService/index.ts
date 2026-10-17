@@ -210,10 +210,6 @@ export function closeTerminalSession(sessionId: string): void {
   logger.info('SSH terminal: sessão encerrada pelo cliente', { sessionId });
 }
 
-export function hasTerminalSession(sessionId: string): boolean {
-  return sessions.has(sessionId);
-}
-
 export function getSessionsByUser(userId: string): string[] {
   const result: string[] = [];
   for (const [id, session] of sessions) {

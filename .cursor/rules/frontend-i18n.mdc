@@ -44,7 +44,7 @@ t('pagination.showing', { from, to, total });
 
 ## Seletor de idioma
 
-- Layout ERP: `LanguageSelector` / `LanguageDropdown` via `AppUserMenu`
+- Layout ERP: `LanguageDropdown` via `AppUserMenu`
 - Não reinventar dropdown de idioma
 
 ## Botões do sistema

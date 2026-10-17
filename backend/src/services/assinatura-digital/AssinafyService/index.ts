@@ -49,7 +49,6 @@ interface AssinafyResponse {
  * - Staging: https://app-staging.assinafy.com.br/v1
  */
 export const ASSINAFY_API_URL_PRODUCTION = 'https://api.assinafy.com.br/v1';
-export const ASSINAFY_API_URL_STAGING = 'https://app-staging.assinafy.com.br/v1';
 export const ASSINAFY_API_URL_DEFAULT = ASSINAFY_API_URL_PRODUCTION;
 
 export class AssinafyService {
@@ -121,7 +120,6 @@ export class AssinafyService {
     return `/accounts/${this.accountId}${endpoint}`;
   }
 
-
   /**
    * Busca signer existente por email
    */
@@ -189,7 +187,6 @@ export class AssinafyService {
       if (!documentId) {
         throw new Error('Documento enviado mas ID não retornado pela API');
       }
-
 
       return {
         success: true,

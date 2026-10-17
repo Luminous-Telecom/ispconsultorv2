@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { IPv4Service } from '../services/ipv4Service';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { CACHE_CONFIG } from '../config/api';
-import { IPv4Filters, UpdateIPv4 } from '../types';
+import {  UpdateIPv4 } from '../types';
 import { AxiosError } from 'axios';
 
 const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;
@@ -19,24 +19,13 @@ function getErrorMessage(err: unknown, fallback: string): string {
   return fallback;
 }
 
-export const useIPv4s = (filters: IPv4Filters = {}) => {
-  return useQuery({
-    queryKey: ['ipv4', filters],
-    queryFn: () => IPv4Service.list(filters),
-    staleTime: 30 * 1000,
-    gcTime: DEFAULT_CACHE_TIME,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
-};
-
 export const useIPv4 = (id: number) => {
   return useQuery({
     queryKey: ['ipv4-item', id],
     queryFn: () => IPv4Service.getById(id),
     enabled: !!id,
     staleTime: DEFAULT_STALE_TIME,
-    gcTime: DEFAULT_CACHE_TIME,
+    gcTime: DEFAULT_CACHE_TIME
   });
 };
 
@@ -52,7 +41,7 @@ export const useCreateIPv4 = () => {
     },
     onError: (err) => {
       error(getErrorMessage(err, 'Erro ao salvar IPv4'));
-    },
+    }
   });
 };
 
@@ -70,7 +59,7 @@ export const useUpdateIPv4 = () => {
     },
     onError: (err) => {
       error(getErrorMessage(err, 'Erro ao atualizar IPv4'));
-    },
+    }
   });
 };
 
@@ -86,6 +75,6 @@ export const useDeleteIPv4 = () => {
     },
     onError: (err) => {
       error(getErrorMessage(err, 'Erro ao excluir IPv4'));
-    },
+    }
   });
 };

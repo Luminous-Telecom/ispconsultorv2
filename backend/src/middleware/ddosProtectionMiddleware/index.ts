@@ -148,20 +148,3 @@ export const ddosProtectionMiddleware = (config?: Partial<DDoSProtectionConfig>)
   };
 };
 
-/**
- * Função auxiliar para obter o número atual de requisições ativas
- * Útil para monitoramento e debugging
- */
-export const getActiveRequestsCount = (): number => {
-  return activeRequestsCount;
-};
-
-/**
- * Função auxiliar para resetar o contador de requisições ativas
- * Útil para testes ou em caso de necessidade de reset manual
- */
-export const resetActiveRequestsCount = (): void => {
-  activeRequestsCount = 0;
-  logger.info('Contador de requisições ativas resetado manualmente');
-};
-

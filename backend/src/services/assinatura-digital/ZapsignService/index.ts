@@ -44,7 +44,6 @@ interface ZapsignResponse {
  * Produção: https://api.zapsign.com.br/api/v1/ (possui validade jurídica)
  */
 export const ZAPSIGN_API_URL_SANDBOX = 'https://sandbox.api.zapsign.com.br/api/v1';
-export const ZAPSIGN_API_URL_PRODUCTION = 'https://api.zapsign.com.br/api/v1';
 export const ZAPSIGN_API_URL_DEFAULT = ZAPSIGN_API_URL_SANDBOX;
 
 export class ZapsignService {

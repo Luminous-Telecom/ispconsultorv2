@@ -2,10 +2,6 @@ export function arredondarMoedaSaasPlano(valor: number): number {
   return Math.round(valor * 100) / 100;
 }
 
-export function calcularValorAnualReferencia(valorMensal: number): number {
-  return arredondarMoedaSaasPlano(valorMensal * 12);
-}
-
 export function calcularValorAnualComDesconto(
   valorMensal: number,
   descontoPercentual: number

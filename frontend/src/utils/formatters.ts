@@ -148,7 +148,6 @@ export function formatRpkiValidityDisplay(value: string | Date | null | undefine
   return formatDateTime(s);
 }
 
-
 /**
  * Formata um CNPJ progressivamente durante a digitação
  * @param cnpj - CNPJ sem formatação
@@ -227,33 +226,6 @@ export const formatCEP = (cep: string): string => {
   
   if (limitedNumbers.length <= 5) return limitedNumbers;
   return `${limitedNumbers.slice(0, 5)}-${limitedNumbers.slice(5, 8)}`;
-};
-
-/**
- * Formata uma data para o formato "15 de janeiro"
- * @param date - Data como string, Date ou null/undefined
- * @returns String formatada como "DD de mês" ou '-' se nula
- */
-export const formatDateLong = (date: string | Date | null | undefined): string => {
-  if (!date) return '-';
-  
-  try {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    
-    if (isNaN(dateObj.getTime())) return '-';
-    
-    const formatted = formatDate(dateObj);
-    const meses = [
-      'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-      'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
-    ];
-    
-    return formatted.replace(/(\d{2})\/(\d{2})\/(\d{4})/, (_, dia, mes) => {
-      return `${dia} de ${meses[parseInt(mes) - 1]}`;
-    });
-  } catch {
-    return '-';
-  }
 };
 
 /**

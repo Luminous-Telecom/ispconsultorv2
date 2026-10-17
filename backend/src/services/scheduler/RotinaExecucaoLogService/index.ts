@@ -1,5 +1,4 @@
 import type { JsonValue } from '../../../types/index';
-import { logger } from '../../../utils/logger';
 import { SistemaLogOperacionalService } from '../../sistema/SistemaLogOperacionalService';
 import { SistemaLogOperacionalQueryService } from '../../sistema/SistemaLogOperacionalQueryService';
 
@@ -25,7 +24,7 @@ export async function criarLogExecucaoMysql(
     routineTipo,
     startTime,
     origem,
-    empresaId,
+    empresaId
   });
 }
 
@@ -38,7 +37,7 @@ export async function atualizarLogExecucaoMysql(
     data_fim: data.data_fim,
     duracao_ms: data.duracao_ms,
     resultado: data.resultado ?? null,
-    erro: data.erro ?? null,
+    erro: data.erro ?? null
   });
 }
 
@@ -47,20 +46,4 @@ export async function buscarLogsExecucaoMysql(
   limit = 100
 ): Promise<Array<Record<string, unknown>>> {
   return SistemaLogOperacionalQueryService.buscarLogsRotinaExecucao(routineId, limit);
-}
-
-export async function buscarLogsExecucaoRecentesMysql(limit = 10): Promise<Array<Record<string, unknown>>> {
-  return buscarLogsExecucaoMysql(undefined, limit);
-}
-
-export async function limparLogsExecucaoAntigosMysql(cutoffDate: Date): Promise<number> {
-  try {
-    return await SistemaLogOperacionalQueryService.limparLogsRotinaExecucaoAntigos(cutoffDate);
-  } catch (error) {
-    logger.warn('Falha ao limpar logs antigos de rotina', {
-      context: 'RotinaExecucaoLogService',
-      error: error instanceof Error ? error.message : 'Erro desconhecido',
-    });
-    return 0;
-  }
 }

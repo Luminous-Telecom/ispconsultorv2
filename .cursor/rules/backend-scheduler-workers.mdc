@@ -34,13 +34,8 @@ await SchedulerService.getInstance().stop();  // no graceful shutdown
 - Sempre `getInstance()` — nunca `new SchedulerService()`
 - Import dinâmico no boot/shutdown (evita custo de carregar rotinas se o processo cair antes)
 
-## `WorkerManager`
-
-- Polling periódico com limite de concorrência (`maxWorkers`) — não é fila tipo Bull/BullMQ
-- Usar para processamento assíncrono que não precisa de fila externa (Redis é usado só pontualmente, ex.: jobs de extração de PDF)
-
 ## Proibido
 
-- Lógica de negócio pesada direto no `WorkerManager` — extrair para uma classe/service e chamar a partir do worker
+- Lógica de negócio pesada direto no boot — extrair para uma classe `IRoutine` e chamar a partir do `RoutineExecutionService`
 - Nova dependência de fila sem alinhar antes
 - Reintroduzir rotina ou tabela de agendamento do painel SaaS

@@ -13,28 +13,6 @@ export interface SidebarMenuSearchResult {
   folderPath: string;
 }
 
-export function collectSidebarMenuItems(
-  folders: SidebarFolderConfig[],
-  t: TranslateFn
-): SidebarMenuSearchResult[] {
-  const results: SidebarMenuSearchResult[] = [];
-
-  for (const folder of folders) {
-    for (const item of folder.items) {
-      results.push({ item, folderPath: folder.title });
-    }
-
-    for (const nested of folder.nestedFolders ?? []) {
-      const nestedTitle = t(nested.titleKey);
-      for (const item of nested.items) {
-        results.push({ item, folderPath: `${folder.title} › ${nestedTitle}` });
-      }
-    }
-  }
-
-  return results;
-}
-
 export interface SidebarMenuSearchNestedGroup {
   folder: SidebarNestedFolderConfig;
   items: SidebarMenuItem[];

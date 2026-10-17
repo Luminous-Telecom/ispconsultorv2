@@ -23,15 +23,7 @@ import { RichTextEditor, RichTextEditorFallback } from 'components/common/RichTe
 
 ## Variáveis de documento
 
-```tsx
-import VariaveisDocumento from 'components/common/VariaveisDocumento';
-```
-
-- Painel accordion com variáveis disponíveis
-- Inserir: callback `onInserirVariavel` | copiar: `CopiarButton` + `useCopyToClipboard`
-- Busca: `SearchBar variant="table"`
-
-**Proibido** painel de variáveis custom duplicado.
+Quem precisa listar variáveis busca a query `variaveis-documento` no modal que insere o texto. Copiar com `CopiarButton`. Não criar um segundo painel de variáveis.
 
 ## Copiar variável/código
 

@@ -80,10 +80,6 @@ function createShell(svg: SVGSVGElement | null, idPrefix: string): TooltipShell 
   };
 }
 
-export function createD3ChartTooltipShell(svg: SVGSVGElement | null, idPrefix = 'tooltip-shadow'): TooltipShell | null {
-  return createShell(svg, idPrefix);
-}
-
 export function createD3ChartTooltip(svg: SVGSVGElement | null, idPrefix = 'tooltip-shadow') {
   const shell = createShell(svg, idPrefix);
   if (!shell) return null;

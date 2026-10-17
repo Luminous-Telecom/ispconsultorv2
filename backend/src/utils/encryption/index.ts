@@ -84,15 +84,3 @@ export function decryptSshCredential(encryptedText: string, field: SshCredential
     throw new Error(MSG_SSH_DECRYPT_FAIL);
   }
 }
-
-/**
- * Tenta descriptografar; retorna null em caso de erro (ex.: dado legado não criptografado).
- */
-export function tryDecrypt(encryptedText: string | null | undefined): string | null {
-  if (!encryptedText) return null;
-  try {
-    return decrypt(encryptedText);
-  } catch {
-    return null;
-  }
-}

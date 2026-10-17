@@ -70,17 +70,3 @@ export const validateBody = (schema: Joi.ObjectSchema) => {
   return validate(schema, 'body');
 };
 
-/**
- * Validação de query
- */
-export const validateQuery = (schema: Joi.ObjectSchema) => {
-  return validate(schema, 'query');
-};
-
-/**
- * Validação de params
- */
-export const validateParams = (schema: Joi.ObjectSchema) => {
-  return validate(schema, 'params');
-};
-

@@ -48,18 +48,3 @@ export async function withTransaction<T>(
     throw error;
   }
 }
-
-/**
- * Executa várias operações na mesma transação.
- */
-export async function withTransactionBatch<T>(
-  operations: Array<(transaction: TransactionClient) => Promise<T>>
-): Promise<T[]> {
-  return withTransaction(async (transaction) => {
-    const results: T[] = [];
-    for (const operation of operations) {
-      results.push(await operation(transaction));
-    }
-    return results;
-  });
-}

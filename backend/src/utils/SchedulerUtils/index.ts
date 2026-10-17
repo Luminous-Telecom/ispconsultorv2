@@ -1,6 +1,4 @@
 import * as cron from 'node-cron';
-import { ScheduledRoutine } from '../../models/sistema/ScheduledRoutine';
-import { ajustarDataVencimento } from '../dateUtils';
 import type { CreateRoutineData, UpdateRoutineData } from '../../types/scheduler';
 
 /** Interface comum para rotinas (ERP e SaaS) */
@@ -139,24 +137,6 @@ export function calculateNextExecution(
   }
 
   return nextExecution;
-}
-
-/**
- * Normaliza uma data para o início do dia e a formata como string 'YYYY-MM-DD 00:00:00'.
- * Aplica regras de ajuste de vencimento (sábado/domingo).
- * @param date - A data a ser normalizada
- * @returns A data formatada como string
- */
-export async function normalizeDateToString(date: Date): Promise<string> {
-  // 1. Aplica regra de ajuste de vencimento (sábado/domingo)
-  const dataAjustada = await ajustarDataVencimento(date);
-
-  // 2. Formata para string YYYY-MM-DD HH:mm:ss
-  const year = dataAjustada.getFullYear();
-  const month = String(dataAjustada.getMonth() + 1).padStart(2, '0');
-  const day = String(dataAjustada.getDate()).padStart(2, '0');
-
-  return `${year}-${month}-${day} 00:00:00`;
 }
 
 /**

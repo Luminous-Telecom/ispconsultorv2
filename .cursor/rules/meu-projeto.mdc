@@ -78,7 +78,7 @@ Use sempre os primitivos do projeto. **Índice completo:** `frontend-ui-centrali
 | Escolher ficheiro | `FileInput` / `FormField type="file"` | `<input type="file">` cru |
 | Status em tabela | `StatusBadge`, `renderStatusBadge` | `badge bg-*` manual |
 | Endereço / contato | `AddressFields`, `ContactFields` | campos duplicados inline |
-| Impressão PDF | `useImprimir`, `ImprimirModal` | URL hardcoded, iframe custom |
+| Impressão PDF | `ImprimirModal` | URL hardcoded, iframe custom |
 | Rich text | `RichTextEditorLazy` + `Suspense` | TinyMCE import direto |
 | Estilos dinâmicos | `DynamicStyleElements`, `useElementProperties` | `style={{}}` no JSX |
 | Foco em inputs | Borda igual + `box-shadow: none` (global) | Halo azul, `border-color` primary no `:focus` |
@@ -104,8 +104,8 @@ Use sempre os primitivos do projeto. **Índice completo:** `frontend-ui-centrali
 | `frontend-i18n.mdc` | Locales e translationKeys |
 | `frontend-erros-api.mdc` | ErrorMessages, showApiError |
 | `frontend-contextos.mdc` | Loading, Theme, Modal, TableHeader |
-| `frontend-impressao-auditoria.mdc` | useImprimir, auditoria |
-| `frontend-rich-text-documentos.mdc` | TinyMCE, VariaveisDocumento |
+| `frontend-impressao-auditoria.mdc` | ImprimirModal, auditoria |
+| `frontend-rich-text-documentos.mdc` | TinyMCE, variáveis de documento |
 | `frontend-design-tokens.mdc` | Sem inline styles |
 | `frontend-tipografia.mdc` | Fontes |
 | `frontend-hooks-utilitarios.mdc` | Clipboard, media query, debounce |
@@ -128,10 +128,10 @@ Use sempre os primitivos do projeto. **Índice completo:** `frontend-ui-centrali
 | `backend-multi-tenancy.mdc` | Empresa única — `empresa_id` do token |
 | `backend-autenticacao.mdc` | Auth do ERP e token de API |
 | `backend-respostas-http.mdc` | responseUtils (sendSuccess/sendError) |
-| `backend-listagens.mdc` | parseListQuery, sortConfigs |
+| `backend-listagens.mdc` | parseListQuery, ordenação |
 | `backend-auditoria.mdc` | registrarCriacao/Atualizacao/Exclusao |
 | `backend-socketio.mdc` | Socket.IO, JWT, namespaces |
-| `backend-scheduler-workers.mdc` | IRoutine, WorkerManager |
+| `backend-scheduler-workers.mdc` | IRoutine, SchedulerService |
 | `backend-pdf.mdc` | PDFGenerationService (Puppeteer) |
 | `backend-middlewares-infra.mdc` | Cadeia de middlewares, logger, upload, cache |
 | `backend-integracoes-externas.mdc` | Agente, SSH Manager, RPKI, Python |

@@ -30,31 +30,6 @@ export function normalizeHoraExecucaoStr(h: string | undefined): string {
   return `${hh}:${mm}`;
 }
 
-/** Deriva os dois primeiros tokens do cron a partir do horário (demais = todos). */
-export function cronPartsFromHoraExecucao(horaExecucao: string): CronPartState[] {
-  const parts = defaultCronParts();
-  const norm = normalizeHoraExecucaoStr(horaExecucao);
-  const [h = '00', m = '00'] = norm.split(':');
-  const hh = Math.min(23, Math.max(0, parseInt(h, 10) || 0));
-  const mm = Math.min(59, Math.max(0, parseInt(m, 10) || 0));
-  parts[0] = { mode: 'valor', valor: String(mm) };
-  parts[1] = { mode: 'valor', valor: String(hh) };
-  return parts;
-}
-
-/** Valor exibido no campo texto (* = qualquer). */
-export function partToCronInputDisplay(p: CronPartState | undefined): string {
-  if (!p || p.mode === 'todos') return '*';
-  return p.valor;
-}
-
-/** Interpreta o texto digitado no campo do cron. */
-export function parseCronTokenInput(raw: string): CronPartState {
-  const t = raw.trim();
-  if (t === '' || t === '*') return { mode: 'todos', valor: '' };
-  return { mode: 'valor', valor: t };
-}
-
 function padCronTokens(parts: string[]): string[] {
   const t = parts.filter((x) => x !== undefined && x !== '');
   if (t.length >= 6) {
@@ -75,34 +50,6 @@ export function cronTokensToParts(tokens: string[]): CronPartState[] {
     }
     return { mode: 'valor' as const, valor: t };
   });
-}
-
-export function buildCronExpressionFromParts(parts: CronPartState[]): string {
-  const five = parts.slice(0, 5);
-  while (five.length < 5) {
-    five.push({ mode: 'todos', valor: '' });
-  }
-  return five
-    .map((p) => {
-      if (p.mode === 'todos') return '*';
-      const v = p.valor.trim();
-      return v || '*';
-    })
-    .join(' ');
-}
-
-/** Deriva `HH:mm` para o campo TIME quando minuto e hora são valores numéricos simples. */
-export function horaExecucaoFromCronParts(parts: CronPartState[]): string {
-  const minP = parts[0];
-  const hourP = parts[1];
-  const minTok = minP?.mode === 'valor' ? minP.valor.trim() : '';
-  const hourTok = hourP?.mode === 'valor' ? hourP.valor.trim() : '';
-  if (/^\d{1,2}$/.test(minTok) && /^\d{1,2}$/.test(hourTok)) {
-    const m = Math.min(59, Math.max(0, parseInt(minTok, 10)));
-    const h = Math.min(23, Math.max(0, parseInt(hourTok, 10)));
-    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-  }
-  return '00:00';
 }
 
 export function cronPartsFromRotina(

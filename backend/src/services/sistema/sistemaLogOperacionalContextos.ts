@@ -29,22 +29,6 @@ export const LOG_CONTEXTO_ESPECIALIZADOS = [
 
 export type LogContextoEspecializado = (typeof LOG_CONTEXTO_ESPECIALIZADOS)[number];
 
-function sqlString(value: string): string {
-  return `'${value.replace(/\\/g, '\\\\').replace(/'/g, "''")}'`;
-}
-
-const ALIAS_DEFAULT = 'sistema_logs_operacionais';
-
-export function sqlFiltrarLogContexto(contexto: string, alias = ALIAS_DEFAULT): string {
-  return `JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.log_contexto')) = ${sqlString(contexto)}`;
-}
-
-/** Exclui logs de domínios especializados (auditoria CRUD / operacional geral). */
-export function sqlExcluirLogContextosEspecializados(alias = ALIAS_DEFAULT): string {
-  const list = LOG_CONTEXTO_ESPECIALIZADOS.map((c) => sqlString(c)).join(', ');
-  return `(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.log_contexto') IS NULL OR JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.log_contexto')) NOT IN (${list}))`;
-}
-
 export function normalizeOperacionalPayload(raw: unknown): Record<string, unknown> | null {
   if (raw == null) return null;
   if (Buffer.isBuffer(raw)) {

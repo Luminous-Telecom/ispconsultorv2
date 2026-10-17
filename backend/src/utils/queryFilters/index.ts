@@ -94,17 +94,6 @@ export function buildNumericSearchFilter(
 }
 
 /**
- * Interpreta o termo como data e filtra o dia inteiro.
- */
-export function buildDateSearchFilter(
-  searchTerm: string | null | undefined,
-  field = 'data_vencimento'
-): PrismaWhere | null {
-  if (!searchTerm || !searchTerm.trim()) return null;
-  return buildDateFilter(searchTerm.trim(), searchTerm.trim(), field);
-}
-
-/**
  * Junta filtros com AND. Null e undefined são ignorados.
  */
 export function combineFilters(...filters: Array<PrismaWhere | null | undefined>): PrismaWhere | null {

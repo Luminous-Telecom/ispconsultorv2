@@ -69,16 +69,4 @@ class ErrorBoundary extends Component<Props, State> {
   }
 }
 
-// Hook personalizado para usar Error Boundary de forma funcional
-export const withErrorBoundary = <P extends object>(
-  Component: React.ComponentType<P>,
-  errorBoundaryProps?: Omit<Props, 'children'>
-) => {
-  return (props: P) => (
-    <ErrorBoundary {...errorBoundaryProps}>
-      <Component {...props} />
-    </ErrorBoundary>
-  );
-};
-
 export default ErrorBoundary;

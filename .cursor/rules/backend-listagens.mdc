@@ -1,5 +1,5 @@
 ---
-description: Pipeline de listagens — parseListQuery, sortConfigs e paginação
+description: Pipeline de listagens — parseListQuery, ordenação e paginação
 globs: backend/src/**/*.ts
 alwaysApply: false
 ---
@@ -21,19 +21,18 @@ const filters = parseListQuery(req.query, { defaultLimit: 15, maxLimit: 100 });
 - Agendador usa variante `parseSchedulerListQuery` (aceita `sort`/`direction` além de `sortColumn`/`sortDirection`)
 - Helpers auxiliares: `parseIdsFromQueryParam` (bulk actions), `isQueryFlagTrue`, `parseTriStateBoolean`, `parseBoundedPositiveInt`
 
-## 2. Ordenação (`config/sortConfigs.ts` + `utils/sortHelper.ts`)
+## 2. Ordenação (allowlist no service)
 
 ```typescript
-import { TITULO_SORT_CONFIG } from '../../config/sortConfigs';
-import { SortHelper } from '../../utils/sortHelper';
-
-const order = SortHelper.buildOrder(filters.sortColumn, filters.sortDirection, TITULO_SORT_CONFIG);
+const SORT_COLUMNS = ['id', 'data_vencimento', 'valor'] as const;
+let orderBy: Prisma.financeiro_titulosOrderByWithRelationInput = { id: 'desc' };
+if (sortColumn === 'cliente') orderBy = { clientes: { razao_social: dir } };
+else if (sortColumn && (SORT_COLUMNS as readonly string[]).includes(sortColumn)) orderBy = { [sortColumn]: dir };
 ```
 
-- Cada entidade listável com ordenação por coluna calculada ou de relacionamento tem um `*_SORT_CONFIG` em `config/sortConfigs.ts`
-- `virtualColumns`: coluna calculada via SQL (ex.: `valor_aberto` de título) com `sql` + `description`
-- `relationshipColumns`: ordenar por campo de association (ex.: `cliente` → `razao_social` do cliente vinculado)
-- Nova coluna ordenável que não é coluna direta da tabela → adicionar ao `SortConfig` da entidade, nunca montar `ORDER BY` string manual no service
+- Allowlist de colunas no próprio service (referência: `TituloService.list`)
+- Coluna de relacionamento vira `orderBy` aninhado do Prisma, nunca string SQL montada com o input
+- Coluna fora da allowlist não entra no `ORDER BY` — registrar aviso e cair no padrão `id desc`
 
 ## 3. Paginação da resposta
 
@@ -51,4 +50,4 @@ return {
 ## Proibido
 
 - Montar filtros de `page`/`limit`/`sortColumn` direto de `req.query` sem passar por `parseListQuery`
-- `ORDER BY` com string interpolada a partir de input do usuário — sempre via `SortHelper` + `SortConfig` com colunas permitidas
+- `ORDER BY` com string interpolada a partir de input do usuário — só colunas da allowlist do service, via `orderBy` do Prisma

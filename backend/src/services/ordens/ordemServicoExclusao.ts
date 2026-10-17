@@ -1,14 +1,9 @@
-import { IXC_EVENTO_ABERTURA } from '../externos/IxcOssChamadoService/constants';
-import type { IxcOssMensagem } from '../externos/IxcOssChamadoService/types';
+
 
 export const ORDEM_SERVICO_STATUS_FINALIZADA = 'F';
 
 export function isOrdemServicoFinalizada(status?: string | null): boolean {
   return String(status ?? '').trim().toUpperCase() === ORDEM_SERVICO_STATUS_FINALIZADA;
-}
-
-export function countMensagensExtrasIxc(mensagens: IxcOssMensagem[]): number {
-  return mensagens.filter((mensagem) => String(mensagem.id_evento ?? '') !== IXC_EVENTO_ABERTURA).length;
 }
 
 export const MSG_OS_FINALIZADA =

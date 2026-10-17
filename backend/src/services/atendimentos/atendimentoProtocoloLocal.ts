@@ -5,8 +5,6 @@
 
 export const LOCAL_ATENDIMENTO_PROTOCOLO_PREFIX = 'AT';
 
-export const LOCAL_ATENDIMENTO_PROTOCOLO_PATTERN = /^AT\d{4}\d{2}\d{6}$/;
-
 export function formatLocalAtendimentoProtocolo(
   year: number,
   month: number,

@@ -44,12 +44,6 @@ success(response.message || t('messages.savedSuccess'));
 
 Mensagem curta no toast; detalhes (contagens, IDs) em logs/auditoria — não no toast.
 
-## useErrorHandler
-
-`hooks/useErrorHandler.ts` — log interno / localStorage para debug.
-
-**Não** usar para feedback ao usuário — use `showApiError`.
-
 ## Proibido
 
 ```tsx

@@ -46,18 +46,6 @@ export async function applyPagoWebhook(
   }
 }
 
-/**
- * Aplica atualização de status (não pago) em título
- */
-export async function applyStatusWebhook(
-  resolved: ResolvedTitulo,
-  updates: { status: string; pago: boolean; data_pagamento?: null; valor_pago?: null }
-): Promise<void> {
-  const { titulo } = resolved;
-  const t = titulo as TituloLike;
-  await t.update(updates);
-}
-
 /** Baixa automática só dispara recibo se o pagamento caiu nesta janela (evita recibo de cobrança antiga). */
 const RECIBO_AUTOMATICO_MAX_DIAS = 7;
 

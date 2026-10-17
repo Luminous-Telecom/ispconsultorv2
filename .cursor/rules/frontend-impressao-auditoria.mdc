@@ -9,20 +9,13 @@ alwaysApply: false
 ## Impressão em massa
 
 ```tsx
-import { useImprimir } from 'hooks/useImprimir';
-import { createImprimirDropdown } from 'components/common/ImprimirDropdown';
-
-const { handleImprimirSelecionados, handleImprimirTodos } = useImprimir({
-  itemType: 'contrato', // 'titulo' | 'recibo' | 'carta'
-});
+import ImprimirModal from 'components/common/ImprimirModal';
 ```
 
-- Abre PDF: `window.open(url, '_blank')` com URLs relativas `/contrato/web/multiplos`, etc.
+- A ação de imprimir da listagem abre `ImprimirModal` (preview) ou `window.open(url, '_blank')` com URL relativa (`/contrato/web/multiplos`, etc.)
 - **Proibido** URLs de impressão hardcoded com host/domínio
 
-## Dropdown imprimir
-
-`createImprimirDropdown` + `ImprimirDropdown` — menu Imprimir selecionados/todos em bulk actions.
+## Botões
 
 Botões individuais: `ImprimirButton`, `ImprimirNFButton` de `components/ui/buttons`.
 

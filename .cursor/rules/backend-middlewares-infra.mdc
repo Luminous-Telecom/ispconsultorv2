@@ -63,7 +63,7 @@ Dois níveis, para propósitos diferentes — não confundir:
 
 | Nível | Onde | Uso |
 |---|---|---|
-| Memória (singleton com TTL) | `utils/cache/index.ts` | Cache de config/planos (`createSingletonConfigService`) — processo único |
+| Memória (singleton com TTL) | `utils/cache/index.ts` | Cache de config/planos — processo único |
 | Redis (ioredis, opcional via `REDIS_URL`) | `config/redis.ts` | Jobs assíncronos de extração de PDF, cache RPKI (WHOIS/RIS) — **não** é cache geral de API |
 
 Nova necessidade de cache simples em memória → reutilizar `utils/cache`; não instalar nova lib de cache sem necessidade real de compartilhamento entre processos (Redis).

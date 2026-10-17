@@ -74,10 +74,6 @@ export function unregisterAgent(agentId: number): void {
   }
 }
 
-export function getAgent(agentId: number): ConnectedAgent | undefined {
-  return connectedAgents.get(agentId);
-}
-
 export function isAgentOnline(agentId: number): boolean {
   return connectedAgents.has(agentId);
 }
@@ -107,10 +103,6 @@ export function disconnectAgentById(
     logger.warn('Agent: falha ao desconectar socket', { agentId, error: err });
     unregisterAgent(agentId);
   }
-}
-
-export function getOnlineAgentIds(): number[] {
-  return [...connectedAgents.keys()];
 }
 
 // ── Shell sessions ────────────────────────────────────────────────────────────

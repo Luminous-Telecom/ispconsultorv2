@@ -91,28 +91,6 @@ export const useContratos = (clienteId?: number) => {
   });
 };
 
-export const useCreateContrato = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: (data: CreateContratoData) => ContratoService.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contratos'] });
-    },
-  });
-};
-
-export const useUpdateContrato = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: (data: UpdateContratoData) => ContratoService.update(data.id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contratos'] });
-    },
-  });
-};
-
 export const useDeleteContrato = () => {
   const queryClient = useQueryClient();
   

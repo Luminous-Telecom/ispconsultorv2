@@ -31,15 +31,6 @@ export const useIntegracaoIxcProvedor = (id: number | null) => {
   });
 };
 
-export const useIntegracaoIxcProvedorAtivos = () => {
-  return useQuery({
-    queryKey: ['integracao-ixc-provedor-ativos'],
-    queryFn: () => IntegracaoIxcProvedorService.findAtivos(),
-    staleTime: DEFAULT_STALE_TIME,
-    gcTime: DEFAULT_CACHE_TIME,
-  });
-};
-
 export const useCreateIntegracaoIxcProvedor = () => {
   const queryClient = useQueryClient();
   const { success } = useNotificationContext();

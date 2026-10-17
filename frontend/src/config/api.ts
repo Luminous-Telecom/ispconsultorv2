@@ -73,10 +73,6 @@ export const API_CONFIG = {
     return '';
   },
 };
-
-export const getApiUrl = (endpoint: string) => {
-  return endpoint.startsWith('/') ? endpoint : '/' + endpoint;
-};
 export const getCepUrl = (cep: string) => {
   return `/api/clientes/buscar-cep/${cep}`;
 };
@@ -98,12 +94,6 @@ export const API_ENDPOINTS = {
   DASHBOARD_STATS: '/dashboard/stats',
   BUSCAR_CEP: getCepUrl,
   HEALTH: '/health',
-};
-
-export const PAGINATION_CONFIG = {
-  DEFAULT_PAGE_SIZE: 15,
-  MAX_PAGE_SIZE: 100,
-  PAGE_SIZE_OPTIONS: [5, 10, 15, 25, 50, 100],
 };
 
 export const CACHE_CONFIG = {

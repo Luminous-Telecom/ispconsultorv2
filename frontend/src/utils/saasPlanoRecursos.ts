@@ -1,10 +1,10 @@
-import { SAAS_PLANO_LIMITE_DEFS, type SaasPlanoLimiteGrupo } from 'constants/saasPlanoLimites';
+import { SAAS_PLANO_LIMITE_DEFS  } from 'constants/saasPlanoLimites';
 import type { PlanoModuloId } from 'services/planoModulosService';
 import {
   appendLegacyModulosFromRecursos,
   readLimiteFromRecursosObj,
   stripLegacyLimiteKeys,
-  SAAS_PLANO_LIMITE_LEGACY_FORM_KEYS,
+  SAAS_PLANO_LIMITE_LEGACY_FORM_KEYS
 } from './saasPlanoLimiteRecursosUtils';
 
 export type SaasPlanoLimitesConfig = Record<string, number>;
@@ -18,12 +18,6 @@ export type SaasPlanoEquipamentosConfig = {
 export const SAAS_PLANO_LIMITES_INITIAL: SaasPlanoLimitesConfig = Object.fromEntries(
   SAAS_PLANO_LIMITE_DEFS.map((def) => [def.formKey, 0])
 );
-
-export const SAAS_PLANO_EQUIPAMENTOS_INITIAL: SaasPlanoEquipamentosConfig = {
-  limite_equipamentos: 0,
-  limite_tuneis: 0,
-  limite_backups: 0,
-};
 
 function parseNumero(val: unknown, fallback = 0): number {
   if (typeof val === 'number' && Number.isFinite(val) && val >= 0) return val;
@@ -73,22 +67,6 @@ export function extractLimitesFromSaasPlanoRecursos(recursos: unknown): SaasPlan
   return limites;
 }
 
-export function extractEquipamentosFromSaasPlanoRecursos(recursos: unknown): SaasPlanoEquipamentosConfig {
-  const limites = extractLimitesFromSaasPlanoRecursos(recursos);
-  return {
-    limite_equipamentos: limites.limite_equipamentos ?? 0,
-    limite_tuneis: limites.limite_tuneis ?? 0,
-    limite_backups: limites.limite_backups ?? 0,
-  };
-}
-
-export function getLimitesByGrupo(
-  limites: SaasPlanoLimitesConfig,
-  grupo: SaasPlanoLimiteGrupo
-) {
-  return SAAS_PLANO_LIMITE_DEFS.filter((def) => def.grupo === grupo);
-}
-
 export function getLimiteValorFromRecursos(recursos: unknown, recursosKey: string): number | null {
   const modulos = extractModulosFromSaasPlanoRecursos(recursos);
   const def = SAAS_PLANO_LIMITE_DEFS.find((item) => item.recursosKey === recursosKey);
@@ -116,17 +94,4 @@ export function buildSaasPlanoRecursosPayload(
   stripLegacyLimiteKeys(recursos);
 
   return recursos;
-}
-
-/** @deprecated use buildSaasPlanoRecursosPayload com limites unificados */
-export function buildSaasPlanoRecursosPayloadLegacy(
-  modulos: PlanoModuloId[],
-  equipamentos: SaasPlanoEquipamentosConfig,
-  baseRecursos?: Record<string, unknown>
-): Record<string, unknown> {
-  return buildSaasPlanoRecursosPayload(
-    modulos,
-    { ...SAAS_PLANO_LIMITES_INITIAL, ...equipamentos },
-    baseRecursos
-  );
 }

@@ -82,49 +82,6 @@ export function getStartOfLocalDay(dateInput: string | Date | null | undefined):
 }
 
 /**
- * Converte data do banco para Date em meia-noite local, evitando problemas de timezone.
- * Usado ao agrupar por dia (ex: recebidos por período) para que a data do título
- * seja a mesma exibida no banco, independente do fuso horário.
- * - Strings YYYY-MM-DD: interpreta como data local.
- * - Date: usa componentes UTC (já que DATE no banco costuma vir como meia-noite UTC).
- */
-export function parseDateAsLocal(dateInput: string | Date | null | undefined): Date | null {
-  if (!dateInput) return null;
-
-  try {
-    if (typeof dateInput === 'string') {
-      const m = dateInput.match(/^(\d{4})-(\d{2})-(\d{2})/);
-      if (m) {
-        const year = parseInt(m[1], 10);
-        const month = parseInt(m[2], 10) - 1;
-        const day = parseInt(m[3], 10);
-        return new Date(year, month, day, 0, 0, 0, 0);
-      }
-      const d = new Date(dateInput);
-      if (isNaN(d.getTime())) return null;
-      return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0);
-    }
-
-    if (dateInput instanceof Date) {
-      if (isNaN(dateInput.getTime())) return null;
-      return new Date(
-        dateInput.getUTCFullYear(),
-        dateInput.getUTCMonth(),
-        dateInput.getUTCDate(),
-        0,
-        0,
-        0,
-        0
-      );
-    }
-
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-/**
  * Normaliza uma data para salvar no banco de dados
  * Strings YYYY-MM-DD são interpretadas como data local (00:00), para não caírem em UTC.
  * A única regra necessária é: strings no formato YYYY-MM-DD devem ser interpretadas como
@@ -271,27 +228,6 @@ export function formatDateTime(date: string | Date | null | undefined): string |
     return null;
   }
 }
-
-/**
- * Formata uma data para formato ISO completo (YYYY-MM-DDTHH:mm:ss.sssZ)
- * Usado para APIs e integrações que requerem formato ISO
- * @param date - Data como string, Date ou null/undefined
- * @returns String no formato ISO ou null se inválida
- */
-export function formatDateISO(date: string | Date | null | undefined): string | null {
-  if (!date) return null;
-  
-  try {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    
-    if (isNaN(dateObj.getTime())) return null;
-    
-    return dateObj.toISOString();
-  } catch {
-    return null;
-  }
-}
-
 
 /**
  * Formata created_at para exibição (sem conversão de timezone)

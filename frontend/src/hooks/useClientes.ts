@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { ClienteService } from '../services/clienteService';
-import { UpdateCliente, ClienteFilters, PaginatedResponse, Cliente } from '../types';
+import {  ClienteFilters, PaginatedResponse, Cliente } from '../types';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { CACHE_CONFIG } from '../config/api';
 import { useApiError } from './useApiError';
@@ -29,53 +29,7 @@ export const useCliente = (id: number) => {
     queryFn: () => ClienteService.getById(id),
     enabled: !!id,
     staleTime: DEFAULT_STALE_TIME,
-    gcTime: DEFAULT_CACHE_TIME,
-  });
-};
-
-// Hook para buscar clientes ativos
-export const useClientesAtivos = () => {
-  return useQuery({
-    queryKey: ['clientes-ativos'],
-    queryFn: () => ClienteService.listAtivos(),
-    staleTime: DEFAULT_STALE_TIME,
-    gcTime: DEFAULT_CACHE_TIME,
-  });
-};
-
-// Hook para criar cliente
-export const useCreateCliente = () => {
-  const queryClient = useQueryClient();
-  const { success } = useNotificationContext();
-  const { showApiError } = useApiError();
-
-  return useMutation({
-    mutationFn: ClienteService.create,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clientes'] });
-      queryClient.invalidateQueries({ queryKey: ['clientes-ativos'] });
-      success('Cliente salvo com sucesso!');
-    },
-    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CLIENT_CREATE_ERROR),
-  });
-};
-
-// Hook para atualizar cliente
-export const useUpdateCliente = () => {
-  const queryClient = useQueryClient();
-  const { success } = useNotificationContext();
-  const { showApiError } = useApiError();
-
-  return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateCliente }) =>
-      ClienteService.update(id, data),
-    onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: ['clientes'] });
-      queryClient.invalidateQueries({ queryKey: ['cliente', id] });
-      queryClient.invalidateQueries({ queryKey: ['clientes-ativos'] });
-      success('Cliente atualizado com sucesso!');
-    },
-    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CLIENT_UPDATE_ERROR),
+    gcTime: DEFAULT_CACHE_TIME
   });
 };
 
@@ -92,6 +46,6 @@ export const useDeleteCliente = () => {
       queryClient.invalidateQueries({ queryKey: ['clientes-ativos'] });
       success('Cliente excluído com sucesso!');
     },
-    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CLIENT_DELETE_ERROR),
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CLIENT_DELETE_ERROR)
   });
 };

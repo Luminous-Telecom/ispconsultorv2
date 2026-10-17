@@ -30,17 +30,6 @@ export function resolveImagePath(...imagePath: string[]): string {
 }
 
 /**
- * Resolve o caminho para um arquivo relativo ao projeto
- * Usa __dirname para navegar relativamente ao arquivo atual
- */
-export function resolveProjectPath(...pathParts: string[]): string {
-  // pathUtils está em utils/pathUtils/, então:
-  // - Em dev: __dirname = .../src/utils/pathUtils -> ../../ = src/
-  // - Em prod: __dirname = .../dist/utils/pathUtils -> ../../ = dist/
-  return path.join(__dirname, '..', '..', ...pathParts);
-}
-
-/**
  * Resolve o caminho para a pasta de arquivos (uploads)
  * Em produção, arquivos devem ser salvos em dist/arquivos/
  * Em desenvolvimento, arquivos são salvos na raiz arquivos/

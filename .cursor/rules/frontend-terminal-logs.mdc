@@ -13,11 +13,7 @@ alwaysApply: false
 
 ## Logs de rotina
 
-```tsx
-import RotinaLogsModal from 'components/common/RotinaLogsModal';
-```
-
-Registro central: `logsModalRegistry` — registrar tipo de rotina uma vez.
+Registro central: `components/modals/logs/logsModalRegistry.ts` — registrar o tipo de log uma vez e abrir pelo `LogsModal` desse módulo.
 
 ## Estilo de linhas de log
 

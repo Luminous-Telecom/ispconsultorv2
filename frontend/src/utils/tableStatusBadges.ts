@@ -98,7 +98,3 @@ export function getRpkiAspaStatusBadgeConfig(status: string): StatusBadgeConfig 
     status === 'active' ? 'bg-success' : status === 'revoked' ? 'bg-warning' : 'bg-secondary';
   return { label: labels[status] ?? status, className };
 }
-
-export function getRpkiRoaStatusBadgeConfig(status: string): StatusBadgeConfig {
-  return getRpkiAspaStatusBadgeConfig(status);
-}

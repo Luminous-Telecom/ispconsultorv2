@@ -2,11 +2,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { TituloService } from '../services/tituloService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { CACHE_CONFIG } from '../config/api';
-import { CarneParcelaFilters, CarneParcela } from '../types';
+import { CarneParcelaFilters  } from '../types';
 import { useApiError } from './useApiError';
 import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 
-const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;
+const { DEFAULT_CACHE_TIME } = CACHE_CONFIG;
 
 // Hook para listar parcelas
 export const useTitulos = (filters: CarneParcelaFilters = {}) => {
@@ -18,38 +18,6 @@ export const useTitulos = (filters: CarneParcelaFilters = {}) => {
     refetchOnWindowFocus: false,
     refetchOnMount: false, // Não refetch automático ao montar
     enabled: !!filters.cliente_id, // Só executar se cliente_id estiver definido
-  });
-};
-
-// Hook para buscar parcela por ID
-export const useCarneParcela = (id: number) => {
-  return useQuery({
-    queryKey: ['carne-parcela', id],
-    queryFn: () => TituloService.getById(id),
-    enabled: !!id,
-    staleTime: DEFAULT_STALE_TIME,
-    gcTime: DEFAULT_CACHE_TIME,
-  });
-};
-
-// Hook para buscar parcelas por carnê
-export const useCarneParcelasByCarne = (carneId: number) => {
-  return useQuery({
-    queryKey: ['carne-parcelas-carne', carneId],
-    queryFn: () => TituloService.findByCarne(carneId),
-    enabled: !!carneId,
-    staleTime: DEFAULT_STALE_TIME,
-    gcTime: DEFAULT_CACHE_TIME,
-  });
-};
-
-// Hook para buscar parcelas vencidas
-export const useCarneParcelasVencidas = () => {
-  return useQuery({
-    queryKey: ['carne-parcelas-vencidas'],
-    queryFn: () => TituloService.findVencidas(),
-    staleTime: DEFAULT_STALE_TIME,
-    gcTime: DEFAULT_CACHE_TIME,
   });
 };
 
@@ -82,44 +50,6 @@ export const useMarcarTituloPago = () => {
       
       success(response.message);
     },
-    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TITULO_PAY_ERROR),
-  });
-};
-
-// Hook para desmarcar pagamento da parcela
-export const useDesmarcarParcelaPago = () => {
-  const queryClient = useQueryClient();
-  const { success } = useNotificationContext();
-  const { showApiError } = useApiError();
-
-  return useMutation({
-    mutationFn: (id: number) => TituloService.desmarcarPago(id),
-    onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: ['carne-parcelas'] });
-      queryClient.invalidateQueries({ queryKey: ['carne-parcela', id] });
-      queryClient.invalidateQueries({ queryKey: ['carne-parcelas-carne'] });
-      queryClient.invalidateQueries({ queryKey: ['carne-parcelas-vencidas'] });
-      success('Pagamento desmarcado com sucesso!');
-    },
-    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TITULO_UNPAY_ERROR),
-  });
-};
-
-// Hook para atualizar parcela
-export const useUpdateCarneParcela = () => {
-  const queryClient = useQueryClient();
-  const { success } = useNotificationContext();
-  const { showApiError } = useApiError();
-
-  return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<CarneParcela> }) =>
-      TituloService.update(id, data),
-    onSuccess: (response, { id }) => {
-      queryClient.invalidateQueries({ queryKey: ['carne-parcelas'] });
-      queryClient.invalidateQueries({ queryKey: ['carne-parcela', id] });
-      queryClient.invalidateQueries({ queryKey: ['carne-parcelas-carne'] });
-      success(response.message);
-    },
-    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TITULO_UPDATE_ERROR),
+    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TITULO_PAY_ERROR)
   });
 };

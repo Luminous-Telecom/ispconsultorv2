@@ -1,11 +1,5 @@
-import { SAAS_PLANO_LIMITE_DEFS, SAAS_PLANO_LIMITE_GRUPO_LABEL, type SaasPlanoLimiteGrupo } from 'constants/saasPlanoLimites';
+import { SAAS_PLANO_LIMITE_DEFS,  type SaasPlanoLimiteGrupo } from 'constants/saasPlanoLimites';
 import type { PlanoModuloId } from 'services/planoModulosService';
-
-export function getSaasPlanoModuloLabel(moduloId: PlanoModuloId): string {
-  const fromPlanoModulos = SAAS_PLANO_LIMITE_GRUPO_LABEL[moduloId as SaasPlanoLimiteGrupo];
-  if (fromPlanoModulos) return fromPlanoModulos;
-  return moduloId;
-}
 
 export function formatSaasPlanoModulosList(modulos: PlanoModuloId[]): string {
   if (modulos.length === 0) return '';
@@ -40,7 +34,7 @@ export const SAAS_PLANO_MODULO_COL_LABEL: Record<PlanoModuloId, string> = {
   ordens_servico: 'O.S.',
   envio_notificacoes: 'Notif.',
   assinatura_digital: 'Assin.',
-  nfse: 'NFS-e',
+  nfse: 'NFS-e'
 };
 
 export function getSaasPlanoLimiteGruposAtivos(modulos: PlanoModuloId[]): SaasPlanoLimiteGrupo[] {

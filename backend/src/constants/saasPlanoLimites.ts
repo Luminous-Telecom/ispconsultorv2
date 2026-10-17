@@ -31,8 +31,4 @@ export const SAAS_PLANO_LIMITE_DEFS: SaasPlanoLimiteDef[] = [
   { formKey: 'limite_aspas', recursosKey: 'rpki_limite_aspas', modulo: 'rpki', grupo: 'rpki', label: 'ASPAs', listLabelShort: 'ASPAs', hotsiteLabel: 'ASPAs RPKI' },
 ];
 
-export const SAAS_PLANO_LIMITE_DEFS_BY_RECURSOS_KEY = Object.fromEntries(
-  SAAS_PLANO_LIMITE_DEFS.map((def) => [def.recursosKey, def])
-) as Record<string, SaasPlanoLimiteDef>;
-
 export type SaasPlanoLimiteRecursoId = (typeof SAAS_PLANO_LIMITE_DEFS)[number]['recursosKey'];

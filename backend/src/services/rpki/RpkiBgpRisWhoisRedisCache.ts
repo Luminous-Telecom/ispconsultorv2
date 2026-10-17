@@ -37,12 +37,6 @@ async function scanDelPattern(pattern: string): Promise<void> {
   } while (cursor !== '0');
 }
 
-export async function redisDeleteFilteredEntriesForDumpUrl(url: string): Promise<void> {
-  if (!risRedisPersistEnabled()) return;
-  const digest = redisUrlDigest(url);
-  await scanDelPattern(`${PREFIX_FILT}${digest}:*`);
-}
-
 interface PersistTableV1 {
   v: 1;
   loadedAt: number;

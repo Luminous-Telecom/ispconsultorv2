@@ -58,55 +58,11 @@ export function safeFormatDateISOLocal(date: string | Date | null | undefined): 
 }
 
 /**
- * Formata uma data para string ISO no horário local (sem milissegundos)
- * Útil quando não precisa de precisão de milissegundos
- * 
- * @param date - Data como string, Date ou null/undefined
- * @returns String no formato ISO com timezone local sem milissegundos ou null se inválida
- */
-export function formatDateISOLocalSimple(date: string | Date | null | undefined): string | null {
-  if (!date) return null;
-  
-  try {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    
-    if (isNaN(dateObj.getTime())) return null;
-    
-    const year = dateObj.getFullYear();
-    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-    const day = String(dateObj.getDate()).padStart(2, '0');
-    const hours = String(dateObj.getHours()).padStart(2, '0');
-    const minutes = String(dateObj.getMinutes()).padStart(2, '0');
-    const seconds = String(dateObj.getSeconds()).padStart(2, '0');
-    
-    const timezoneOffset = -3;
-    const offsetHours = Math.abs(timezoneOffset);
-    const offsetSign = timezoneOffset < 0 ? '-' : '+';
-    const offsetString = `${offsetSign}${String(offsetHours).padStart(2, '0')}:00`;
-    
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${offsetString}`;
-  } catch {
-    return null;
-  }
-}
-
-/**
  * Obtém o offset de timezone do servidor (Brasil -03:00)
  * @returns Offset em horas (ex: -3 para UTC-3)
  */
 export function getServerTimezoneOffset(): number {
   return -3; // Brasil (UTC-3)
-}
-
-/**
- * Obtém o offset de timezone como string formatada
- * @returns String no formato "-03:00" ou "+03:00"
- */
-export function getServerTimezoneOffsetString(): string {
-  const offset = getServerTimezoneOffset();
-  const offsetHours = Math.abs(offset);
-  const offsetSign = offset < 0 ? '-' : '+';
-  return `${offsetSign}${String(offsetHours).padStart(2, '0')}:00`;
 }
 
 /**

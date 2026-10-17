@@ -208,10 +208,3 @@ export function csrfProtectionMiddleware(req: Request, res: Response, next: Next
   }
 }
 
-/**
- * Verificar se CSRF está habilitado
- */
-export function isCsrfEnabled(): boolean {
-  return ENABLE_CSRF && csrfInstance !== null;
-}
-

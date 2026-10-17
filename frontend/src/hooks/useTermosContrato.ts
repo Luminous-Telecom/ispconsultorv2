@@ -46,38 +46,6 @@ export const useUpdateTermoContrato = () => {
   });
 };
 
-export const useMarcarTermoComoAceito = () => {
-  const queryClient = useQueryClient();
-  const { success } = useNotificationContext();
-  const { showApiError } = useApiError();
-
-  return useMutation({
-    mutationFn: ({ id, aceitoPor }: { id: number; aceitoPor: string }) =>
-      TermoContratoService.marcarComoAceito(id, aceitoPor),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['termos-contrato', data.contrato_id] });
-      queryClient.invalidateQueries({ queryKey: ['termos-contrato'] });
-      success( 'Termo marcado como aceito');
-    },
-    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TERM_ACCEPT_ERROR),
-  });
-};
-
-export const useDeactivateTermoContrato = () => {
-  const queryClient = useQueryClient();
-  const { success } = useNotificationContext();
-  const { showApiError } = useApiError();
-
-  return useMutation({
-    mutationFn: (id: number) => TermoContratoService.deactivate(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['termos-contrato'] });
-      success( 'Termo desativado com sucesso');
-    },
-    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TERM_DEACTIVATE_ERROR),
-  });
-};
-
 export const useDeleteTermoContrato = () => {
   const queryClient = useQueryClient();
   const { showApiError } = useApiError();

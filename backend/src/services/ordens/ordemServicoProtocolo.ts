@@ -9,12 +9,6 @@
 
 export const LOCAL_PROTOCOLO_PREFIX = 'BN';
 
-/** Protocolo gerado automaticamente pelo IXC (somente números). Mantido para referência. */
-export const IXC_PROTOCOLO_PATTERN = /^\d+$/;
-
-/** Protocolo de OS local do ISP Consultor: BN + AAAA + MM + NNNNNN */
-export const LOCAL_PROTOCOLO_PATTERN = /^BN\d{4}\d{2}\d{6}$/;
-
 export function formatLocalProtocolo(year: number, month: number, sequence: number): string {
   const mm = String(month).padStart(2, '0');
   const seq = String(sequence).padStart(6, '0');

@@ -18,7 +18,3 @@ export interface EquipamentosLimites {
   limite_tuneis: number;
   limite_backups: number;
 }
-
-export async function getEquipamentosLimites(_empresaId: number): Promise<EquipamentosLimites | null> {
-  return null;
-}

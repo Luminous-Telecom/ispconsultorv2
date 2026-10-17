@@ -9,13 +9,13 @@ alwaysApply: false
 ## `config/api.ts`
 
 ```typescript
-import { API_CONFIG, CACHE_CONFIG, PAGINATION_CONFIG } from 'config/api';
+import { API_CONFIG, CACHE_CONFIG } from 'config/api';
 ```
 
 - Prioridade de resolução da URL base: `window.__APP_CONFIG__` (injetado dinamicamente pelo backend em `GET /config.js`) → `process.env.REACT_APP_API_URL` → fallback `/api`
 - **Web**: URL sempre relativa (`/api`) — mesma origem, evita CORS
 - **Nativo** (`Capacitor.isNativePlatform()`): exige URL absoluta (`REACT_APP_API_URL` completa, `http(s)://...`) — o app mobile não tem "mesma origem" do backend
-- Constantes centrais no mesmo arquivo: `API_CONFIG` (timeout, retries), `CACHE_CONFIG` (staleTime/gcTime padrão para React Query — ver `frontend-react-query.mdc`), `PAGINATION_CONFIG`
+- Constantes centrais no mesmo arquivo: `API_CONFIG` (timeout, retries), `CACHE_CONFIG` (staleTime/gcTime padrão para React Query — ver `frontend-react-query.mdc`)
 
 ```typescript
 // ✅ Usar constantes centrais em vez de números mágicos

@@ -73,4 +73,4 @@ Ver `frontend-design-tokens.mdc` — **proibido** `style={{}}` no JSX.
 ## Listagens especializadas
 
 - `useRpkiListModal` — listagens RPKI (paginação client-side)
-- `useSelectModal` — seleção única em ListModal
+- `useModalSelect` — seleção única em ListModal

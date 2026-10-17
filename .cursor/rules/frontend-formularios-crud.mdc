@@ -16,7 +16,7 @@ Complementa layout horizontal: `frontend-form-modal-layout.mdc` — **referênci
 | `useFormReset` | Reset ao fechar modal |
 | `useFormPrefix` | IDs únicos em forms aninhados |
 | `useEntitySelectField` | Estado do `EntitySelectField` |
-| `useSelectModal` / `useModalSelect` | Modal de seleção + item escolhido |
+| `useModalSelect` | Modal de seleção + item escolhido |
 
 ## Blocos reutilizáveis (`components/forms/`)
 
