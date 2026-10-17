@@ -70,9 +70,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     if (!opt) return;
     const computed = window.getComputedStyle(select);
     const temp = document.createElement('span');
-    temp.style.visibility = 'hidden';
-    temp.style.position = 'absolute';
-    temp.style.whiteSpace = 'nowrap';
+    temp.className = 'measure-text-offscreen';
     temp.style.fontSize = computed.fontSize;
     temp.style.fontFamily = computed.fontFamily;
     temp.style.fontWeight = computed.fontWeight;

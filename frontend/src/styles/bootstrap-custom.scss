@@ -2,6 +2,8 @@
    BOOTSTRAP CUSTOM - Customizações do Bootstrap
    ============================================ */
 
+@import 'palette';
+
 // Importar variáveis do Bootstrap para sobrescrever
 @import 'bootstrap/scss/functions';
 @import 'bootstrap/scss/variables';
@@ -9,15 +11,15 @@
 
 // ===== VARIÁVEIS PERSONALIZADAS =====
 
-// Cores principais
-$primary: #0d6efd !default;
-$secondary: #6c757d !default;
-$success: #198754 !default;
-$info: #0dcaf0 !default;
-$warning: #ffc107 !default;
-$danger: #dc3545 !default;
-$light: #f8f9fa !default;
-$dark: #212529 !default;
+// Cores principais — mesmos valores da paleta
+$primary: palette-color('blue-bootstrap') !default;
+$secondary: palette-color('gray-bootstrap') !default;
+$success: palette-color('green-bootstrap') !default;
+$info: palette-color('cyan-bootstrap') !default;
+$warning: palette-color('yellow-bootstrap') !default;
+$danger: palette-color('red-bootstrap') !default;
+$light: palette-color('gray-light') !default;
+$dark: palette-color('gray-dark') !default;
 
 // Cores do tema
 $theme-colors: (
@@ -44,7 +46,7 @@ $spacers: (
 
 // Bordas
 $border-width: 1px !default;
-$border-color: #e2e8f0 !default;
+$border-color: palette-color('slate-border') !default;
 $border-radius: var(--border-radius) !default;
 $border-radius-sm: var(--border-radius-sm) !default;
 $border-radius-lg: var(--border-radius-lg) !default;
@@ -71,7 +73,7 @@ $input-focus-box-shadow: none !default;
 
 // Form Select - usar seta nativa do Bootstrap com cor visível
 $form-select-bg-size: 16px 12px !default;
-$form-select-indicator-color: #ffffff !default; // Seta branca para contraste no fundo escuro
+$form-select-indicator-color: palette-color('white') !default; // Seta branca para contraste no fundo escuro
 $form-select-indicator: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='none' stroke='#{$form-select-indicator-color}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/></svg>") !default;
 
 // Modais

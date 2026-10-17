@@ -3,6 +3,8 @@ import { PieLegendDot } from 'components/ui';
 import * as d3 from 'd3';
 import { clampTooltipNearPoint, createD3ChartTooltip } from './chartTooltip';
 import { HIDE_ANIMATION_MS } from './responsivePieChart/utils';
+import { CHART_MUTED_COLOR } from './chartColors';
+import { COLOR } from 'constants/colors';
 
 export type BackupStatusKey = 'sucesso' | 'somente_local' | 'falha_envio' | 'verificado' | 'falha';
 
@@ -20,11 +22,11 @@ export interface BackupStatusDayDatum {
 const STACK_KEYS: BackupStatusKey[] = ['sucesso', 'falha'];
 
 const STATUS_COLORS: Record<BackupStatusKey, string> = {
-  sucesso: '#22c55e',
-  somente_local: '#eab308',
-  falha_envio: '#f97316',
-  verificado: '#3b82f6',
-  falha: '#ef4444',
+  sucesso: COLOR.green,
+  somente_local: COLOR.yellow,
+  falha_envio: COLOR.orange,
+  verificado: COLOR.blue,
+  falha: COLOR.red,
 };
 
 export interface BackupStatusStackedBarChartProps {
@@ -145,9 +147,9 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
     }, [showChartBody]);
 
     const textMuted = useCallback(() => {
-      if (typeof window === 'undefined') return '#94a3b8';
+      if (typeof window === 'undefined') return COLOR.slateLight;
       const v = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
-      return v || '#94a3b8';
+      return v || COLOR.slateLight;
     }, []);
 
     useEffect(() => {
@@ -193,7 +195,7 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
 
       const defs = svgSel.append('defs');
       (visibleKeys.length > 0 ? visibleKeys : STACK_KEYS).forEach((k) => {
-        const color = STATUS_COLORS[k] ?? '#64748b';
+        const color = STATUS_COLORS[k] ?? CHART_MUTED_COLOR;
         const grad = defs
           .append('linearGradient')
           .attr('id', `backup-grad-${k}`)

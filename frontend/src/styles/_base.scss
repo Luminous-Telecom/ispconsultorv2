@@ -39,14 +39,14 @@ body[data-app="system"],
 /* Site público: fundo neutro; cada página define o seu */
 body[data-app="site"],
 body:not([data-app]) {
-  background: #ffffff;
-  color: #1f2937;
+  background: var(--color-white);
+  color: var(--color-slate-text);
 }
 
 [data-theme="dark"] body[data-app="site"],
 [data-theme="dark"] body:not([data-app]) {
-  background: #0f172a;
-  color: #f8fafc;
+  background: var(--color-slate-dark);
+  color: var(--color-slate-bg);
 }
 
 /* Links — base global */
@@ -91,14 +91,14 @@ body[data-app="system"] {
   }
 
   a {
-    color: var(--link-color, #0d6efd);
+    color: var(--link-color, var(--color-blue-bootstrap));
 
     &:hover {
-      color: var(--link-hover-color, #0b5ed7);
+      color: var(--link-hover-color, var(--color-blue-bootstrap-hover));
     }
 
     &:focus {
-      outline: 2px solid var(--focus-color, #0d6efd);
+      outline: 2px solid var(--focus-color, var(--color-blue-bootstrap));
       outline-offset: 2px;
     }
   }
@@ -107,11 +107,27 @@ body[data-app="system"] {
 /* Site: links padrão — cor do tema do site (accent verde), não azul Bootstrap */
 body[data-app="site"] a,
 body:not([data-app]) a {
-  color: #059669;
+  color: var(--color-emerald-dark);
 
   &:hover {
-    color: #047857;
+    color: var(--color-emerald-darker);
   }
+}
+
+/* Elementos criados no JS, fora do JSX */
+.measure-text-offscreen {
+  visibility: hidden;
+  position: absolute;
+  white-space: nowrap;
+}
+
+.clipboard-fallback-input {
+  position: fixed;
+  left: -999999px;
+}
+
+body.body-scroll-lock {
+  overflow: hidden;
 }
 
 /* Botões */
@@ -168,30 +184,30 @@ body[data-app="system"] {
 
 /* Focus outlines — sistema (botões usam regra própria em _components.scss; inputs sem halo) */
 body[data-app="system"] *:focus-visible:not(.btn):not(.page-link):not(.nav-link):not(input):not(textarea):not(select):not(.form-control):not(.form-select) {
-  outline: 2px solid var(--focus-color, #0d6efd);
+  outline: 2px solid var(--focus-color, var(--color-blue-bootstrap));
   outline-offset: 2px;
 }
 
 /* Selection — sistema */
 body[data-app="system"]::selection {
-  background-color: rgba(13, 110, 253, 0.2);
+  background-color: color-mix(in srgb, var(--color-blue-bootstrap) 20%, transparent);
   color: var(--text-primary);
 }
 
 /* Terminal modais — fundo escuro e cores garantidas */
 .terminal-modal-dark {
-  background: #0d1117 !important;
+  background: var(--color-terminal-bg) !important;
 
   .xterm {
-    background: #0d1117 !important;
+    background: var(--color-terminal-bg) !important;
   }
 
   .xterm .xterm-viewport {
-    background-color: #0d1117 !important;
+    background-color: var(--color-terminal-bg) !important;
   }
 
   .xterm .xterm-screen {
-    background-color: #0d1117 !important;
+    background-color: var(--color-terminal-bg) !important;
   }
 }
 

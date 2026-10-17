@@ -4,6 +4,8 @@ import { ChartDataItem } from '../components/charts/types';
 import type { useDashboardStats } from './useDashboardStats';
 import type { TranslationKeys } from '../contexts/I18nContext';
 import { isTituloEmAbertoAtrasado } from '../utils/dashboardPaymentStatus';
+import { CHART_SERIES_COLORS, CHART_TYPE_COLORS } from '../components/charts/chartColors';
+import { COLOR } from '../constants/colors';
 
 interface DashboardCharts {
   clientesChartData: ChartDataItem[];
@@ -48,16 +50,16 @@ export const useDashboardCharts = (
 
   const clientesChartData = useMemo(
     () => [
-      { label: t('status.active'), value: stats.clientesAtivos, color: '#10b981', filterValue: true },
-      { label: t('status.inactive'), value: stats.clientesInativos, color: '#94a3b8', filterValue: false },
+      { label: t('status.active'), value: stats.clientesAtivos, color: COLOR.emerald, filterValue: true },
+      { label: t('status.inactive'), value: stats.clientesInativos, color: COLOR.slateLight, filterValue: false },
     ],
     [stats.clientesAtivos, stats.clientesInativos, t]
   );
 
   const planosChartData = useMemo(
     () => [
-      { label: t('status.active'), value: stats.planosAtivos, color: '#3b82f6', filterValue: 'ativo' },
-      { label: t('status.inactive'), value: stats.planosInativos, color: '#64748b', filterValue: 'inativo' },
+      { label: t('status.active'), value: stats.planosAtivos, color: COLOR.blue, filterValue: 'ativo' },
+      { label: t('status.inactive'), value: stats.planosInativos, color: COLOR.slate, filterValue: 'inativo' },
     ],
     [stats.planosAtivos, stats.planosInativos, t]
   );
@@ -70,15 +72,15 @@ export const useDashboardCharts = (
       cancelados: number;
     }) =>
       [
-        { label: t('status.paid'), value: counts.pagos, color: '#10b981', filterValue: 'pago,pago_atraso,parcial' },
-        { label: t('status.pending'), value: counts.pendentes, color: '#0ea5e9', filterValue: 'pendente' },
+        { label: t('status.paid'), value: counts.pagos, color: COLOR.emerald, filterValue: 'pago,pago_atraso,parcial' },
+        { label: t('status.pending'), value: counts.pendentes, color: COLOR.sky, filterValue: 'pendente' },
         {
           label: t('status.overdueUnpaid'),
           value: counts.vencidos,
-          color: '#f59e0b',
+          color: COLOR.amber,
           filterValue: 'atraso',
         },
-        { label: t('status.cancelled'), value: counts.cancelados, color: '#94a3b8', filterValue: 'cancelado' },
+        { label: t('status.cancelled'), value: counts.cancelados, color: COLOR.slateLight, filterValue: 'cancelado' },
       ].filter((item) => item.value > 0);
 
     if (sg?.statusPagamento) {
@@ -116,7 +118,7 @@ export const useDashboardCharts = (
       consultoria: t('form.serviceTypeConsulting'),
       blockdomi: t('form.serviceTypeBlockdomi'),
     };
-    const cores = ['#3b82f6', '#10b981', '#8b5cf6', '#ef4444', '#06b6d4'];
+    const cores = CHART_TYPE_COLORS;
     return clientesPorTipoPlano
       .filter((item) => item.quantidade > 0)
       .map((item, index) => ({
@@ -130,20 +132,20 @@ export const useDashboardCharts = (
   const contratosChartData = useMemo(() => {
     const isSaas = stats.contratosBloqueados !== undefined;
     const items: ChartDataItem[] = [
-      { label: t('status.active'), value: stats.contratosAtivos, color: '#10b981', filterValue: 'ativo' },
-      { label: t('status.inactive'), value: stats.contratosInativos, color: '#94a3b8', filterValue: 'inativo' },
+      { label: t('status.active'), value: stats.contratosAtivos, color: COLOR.emerald, filterValue: 'ativo' },
+      { label: t('status.inactive'), value: stats.contratosInativos, color: COLOR.slateLight, filterValue: 'inativo' },
     ];
     if (!isSaas) {
-      items.push({ label: t('status.suspended'), value: stats.contratosSuspensos, color: '#ef4444', filterValue: 'suspenso' });
+      items.push({ label: t('status.suspended'), value: stats.contratosSuspensos, color: COLOR.red, filterValue: 'suspenso' });
     }
-    items.push({ label: t('status.exempt'), value: stats.contratosIsentos, color: '#64748b', filterValue: 'isento' });
+    items.push({ label: t('status.exempt'), value: stats.contratosIsentos, color: COLOR.slate, filterValue: 'isento' });
     if ((stats.contratosBloqueados ?? 0) > 0) {
-      items.push({ label: t('status.blocked'), value: stats.contratosBloqueados!, color: '#dc2626', filterValue: 'bloqueado' });
+      items.push({ label: t('status.blocked'), value: stats.contratosBloqueados!, color: COLOR.redDark, filterValue: 'bloqueado' });
     }
     items.push({
       label: t('status.inArrears'),
       value: stats.contratosEmAtraso ?? 0,
-      color: '#f59e0b',
+      color: COLOR.amber,
       filterValue: 'em_atraso',
     });
     return items;
@@ -188,7 +190,7 @@ export const useDashboardCharts = (
       return data.map((row, index) => ({
         mes: row.mes,
         valor: row.valor,
-        color: index === data.length - 1 ? '#28a745' : '#6c757d',
+        color: index === data.length - 1 ? COLOR.greenBootstrapBright : COLOR.grayBootstrap,
         data_inicio: row.data_inicio,
         data_fim: row.data_fim,
       }));
@@ -199,7 +201,7 @@ export const useDashboardCharts = (
       return {
         mes: label,
         valor: dashboardData.receitaUltimosMeses.data[index] ?? 0,
-        color: index === dashboardData.receitaUltimosMeses.data.length - 1 ? '#28a745' : '#6c757d',
+        color: index === dashboardData.receitaUltimosMeses.data.length - 1 ? COLOR.greenBootstrapBright : COLOR.grayBootstrap,
         ...range,
       };
     });
@@ -250,7 +252,7 @@ export const useDashboardCharts = (
       return sg.crescimentoClientes.map((row, i) => ({
         mes: row.mes,
         valor: row.valor,
-        color: i === 11 ? '#007bff' : '#6c757d',
+        color: i === 11 ? COLOR.blueLegacy : COLOR.grayBootstrap,
         data_inicio: row.data_inicio,
         data_fim: row.data_fim,
       }));
@@ -271,7 +273,7 @@ export const useDashboardCharts = (
       meses.push({
         mes: mesAno,
         valor: clientesMes,
-        color: i === 11 ? '#007bff' : '#6c757d',
+        color: i === 11 ? COLOR.blueLegacy : COLOR.grayBootstrap,
         ...range,
       });
     }
@@ -280,7 +282,7 @@ export const useDashboardCharts = (
 
   const clientesPorPlano = useMemo(() => {
     if (sg?.clientesPorPlano?.length) {
-      const cores = ['#3b82f6', '#10b981', '#8b5cf6', '#ef4444', '#06b6d4', '#f97316'];
+      const cores = CHART_SERIES_COLORS;
       return sg.clientesPorPlano.map((row, index) => ({
         label: row.nome_plano,
         value: row.value,
@@ -301,7 +303,7 @@ export const useDashboardCharts = (
       },
       {} as Record<number, Set<number>>
     );
-    const cores = ['#3b82f6', '#10b981', '#8b5cf6', '#ef4444', '#06b6d4', '#f97316'];
+    const cores = CHART_SERIES_COLORS;
     return planos
       .map((plano, index) => ({
         label: plano.nome_plano,

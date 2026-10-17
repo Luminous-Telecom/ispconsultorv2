@@ -1,20 +1,23 @@
 import type { ITerminalOptions } from '@xterm/xterm';
+import { COLOR } from 'constants/colors';
 import { FONT_FAMILY_MONO } from 'constants/typography';
 
 export const TERMINAL_INIT_DELAY_MS = 200;
 
-export const TERMINAL_BACKGROUND = '#0d1117';
+export const TERMINAL_BACKGROUND = COLOR.terminalBg;
+
+const TERMINAL_BLUE = '#58a6ff';
 
 export const XTERM_THEME: NonNullable<ITerminalOptions['theme']> = {
   background: TERMINAL_BACKGROUND,
   foreground: '#e6edf3',
-  cursor: '#58a6ff',
+  cursor: TERMINAL_BLUE,
   selectionBackground: '#264f78',
   black: '#484f58',
   red: '#ff7b72',
   green: '#3fb950',
   yellow: '#d29922',
-  blue: '#58a6ff',
+  blue: TERMINAL_BLUE,
   magenta: '#bc8cff',
   cyan: '#39c5cf',
   white: '#b1bac4',

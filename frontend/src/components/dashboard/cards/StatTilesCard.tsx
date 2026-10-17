@@ -1,6 +1,7 @@
 import React from 'react';
 import { DynamicStyledElement } from 'components/ui';
 import { hexToRgba } from 'components/charts/chartColors';
+import { COLOR } from 'constants/colors';
 
 export interface StatTile {
   label: string;
@@ -16,7 +17,7 @@ export interface StatTilesCardProps {
   columns?: number;
 }
 
-const DEFAULT_ACCENT = '#6366f1';
+const DEFAULT_ACCENT = COLOR.indigo;
 
 /** Card com blocos de métricas destacadas (agendador, servidor, etc.). */
 const StatTilesCard: React.FC<StatTilesCardProps> = ({ title, tiles, columns }) => {

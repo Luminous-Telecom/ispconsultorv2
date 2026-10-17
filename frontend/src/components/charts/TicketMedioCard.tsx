@@ -3,6 +3,7 @@ import { DynamicStyledElement } from 'components/ui';
 import { formatCurrency } from 'utils/formatters';
 import { useI18n } from 'contexts/I18nContext';
 import { hexToRgba } from './chartColors';
+import { COLOR } from 'constants/colors';
 
 export interface TicketMedioMes {
   mes: string;
@@ -19,7 +20,7 @@ export interface TicketMedioCardProps {
   data: TicketMedioData;
 }
 
-const DEFAULT_BAR_COLOR = '#6366f1';
+const DEFAULT_BAR_COLOR = COLOR.indigo;
 
 const HorizontalRanking: React.FC<{ series: TicketMedioMes[]; className?: string }> = ({
   series,

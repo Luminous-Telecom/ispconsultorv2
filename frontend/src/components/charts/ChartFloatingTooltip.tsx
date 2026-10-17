@@ -39,8 +39,7 @@ export function showFloatingChartTooltip(el: HTMLDivElement, text: string, clien
   el.textContent = text;
   el.style.left = `${clientX + CURSOR_OFFSET_PX}px`;
   el.style.top = `${clientY + CURSOR_OFFSET_PX}px`;
-  el.style.opacity = '1';
-  el.style.visibility = 'visible';
+  el.classList.add('is-visible');
 }
 
 export function moveFloatingChartTooltip(el: HTMLDivElement, clientX: number, clientY: number): void {
@@ -49,6 +48,5 @@ export function moveFloatingChartTooltip(el: HTMLDivElement, clientX: number, cl
 }
 
 export function hideFloatingChartTooltip(el: HTMLDivElement): void {
-  el.style.opacity = '0';
-  el.style.visibility = 'hidden';
+  el.classList.remove('is-visible');
 }

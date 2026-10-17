@@ -78,7 +78,7 @@
   background: var(--bs-white, white);
   border: 1px solid var(--bs-border-color);
   border-radius: var(--border-radius);
-  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0.25rem 0.5rem color-mix(in srgb, var(--color-black) 10%, transparent);
   color: var(--text-primary);
   margin-bottom: 0.5rem;
   overflow: hidden;
@@ -89,7 +89,7 @@
 }
 
 .notification:hover {
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0.5rem 1rem color-mix(in srgb, var(--color-black) 15%, transparent);
 }
 
 .notification-clickable {
@@ -206,7 +206,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: color-mix(in srgb, var(--color-black) 10%, transparent);
   overflow: hidden;
 }
 
@@ -239,55 +239,55 @@
 
 /* Tipos de notificação */
 .notification-success {
-  border-left: 4px solid #8FB369 !important;
-  background-color: #2F3D48 !important;
+  border-left: 4px solid var(--color-accent-complete) !important;
+  background-color: var(--color-bg) !important;
 }
 
 .notification-success .notification-icon {
-  color: #8FB369;
+  color: var(--color-accent-complete);
 }
 
 .notification-success .notification-progress-bar {
-  background-color: #8FB369;
+  background-color: var(--color-accent-complete);
 }
 
 .notification-error {
-  border-left: 4px solid #D97373 !important;
-  background-color: #2F3D48 !important;
+  border-left: 4px solid var(--color-chart-coral) !important;
+  background-color: var(--color-bg) !important;
 }
 
 .notification-error .notification-icon {
-  color: #D97373;
+  color: var(--color-chart-coral);
 }
 
 .notification-error .notification-progress-bar {
-  background-color: #D97373;
+  background-color: var(--color-chart-coral);
 }
 
 .notification-warning {
-  border-left: 4px solid #E8B44C !important;
-  background-color: #2F3D48 !important;
+  border-left: 4px solid var(--color-accent-pending) !important;
+  background-color: var(--color-bg) !important;
 }
 
 .notification-warning .notification-icon {
-  color: #E8B44C;
+  color: var(--color-accent-pending);
 }
 
 .notification-warning .notification-progress-bar {
-  background-color: #E8B44C;
+  background-color: var(--color-accent-pending);
 }
 
 .notification-info {
-  border-left: 4px solid #6B9BD1 !important;
-  background-color: #2F3D48 !important;
+  border-left: 4px solid var(--color-slate-blue) !important;
+  background-color: var(--color-bg) !important;
 }
 
 .notification-info .notification-icon {
-  color: #6B9BD1;
+  color: var(--color-slate-blue);
 }
 
 .notification-info .notification-progress-bar {
-  background-color: #6B9BD1;
+  background-color: var(--color-slate-blue);
 }
 
 .notification-loading {
@@ -527,19 +527,19 @@
 /* Dark mode - manter cores definidas */
 @media (prefers-color-scheme: dark) {
   .notification-success {
-    background-color: #2F3D48;
+    background-color: var(--color-bg);
   }
 
   .notification-error {
-    background-color: #2F3D48;
+    background-color: var(--color-bg);
   }
 
   .notification-warning {
-    background-color: #2F3D48;
+    background-color: var(--color-bg);
   }
 
   .notification-info {
-    background-color: #2F3D48;
+    background-color: var(--color-bg);
   }
 }
 

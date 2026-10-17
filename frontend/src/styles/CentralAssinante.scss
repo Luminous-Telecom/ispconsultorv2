@@ -7,28 +7,28 @@
   --ca-border: #2e3440;
   --ca-border-focus: #3b4250;
   --ca-border-hover: #363d4a;
-  --ca-text: #f3f4f6;
-  --ca-text-secondary: rgba(243, 244, 246, 0.65);
-  --ca-text-muted: rgba(243, 244, 246, 0.45);
-  --ca-btn-primary: #374151;
-  --ca-btn-primary-hover: #4b5563;
-  --ca-modal-backdrop: rgba(0, 0, 0, 0.6);
+  --ca-text: var(--color-gray-100);
+  --ca-text-secondary: color-mix(in srgb, var(--color-gray-100) 65%, transparent);
+  --ca-text-muted: color-mix(in srgb, var(--color-gray-100) 45%, transparent);
+  --ca-btn-primary: var(--color-gray-700);
+  --ca-btn-primary-hover: var(--color-gray-600);
+  --ca-modal-backdrop: color-mix(in srgb, var(--color-black) 60%, transparent);
 }
 
 @mixin ca-theme-light {
-  --ca-bg-primary: #f3f4f6;
-  --ca-bg-secondary: #ffffff;
-  --ca-bg-card: #ffffff;
-  --ca-bg-hover: #e5e7eb;
+  --ca-bg-primary: var(--color-gray-100);
+  --ca-bg-secondary: var(--color-white);
+  --ca-bg-card: var(--color-white);
+  --ca-bg-hover: var(--color-gray-200);
   --ca-border: #d1d5db;
   --ca-border-focus: #9ca3af;
-  --ca-border-hover: #cbd5e1;
+  --ca-border-hover: var(--color-slate-300);
   --ca-text: #111827;
   --ca-text-secondary: rgba(17, 24, 39, 0.65);
   --ca-text-muted: rgba(17, 24, 39, 0.45);
-  --ca-btn-primary: #374151;
-  --ca-btn-primary-hover: #4b5563;
-  --ca-modal-backdrop: rgba(15, 23, 42, 0.45);
+  --ca-btn-primary: var(--color-gray-700);
+  --ca-btn-primary-hover: var(--color-gray-600);
+  --ca-modal-backdrop: color-mix(in srgb, var(--color-slate-dark) 45%, transparent);
 }
 
 @mixin ca-scope {
@@ -352,26 +352,26 @@
 
   &.bg-danger,
   &[class*="danger"] {
-    background-color: #b91c1c !important;
-    color: #fff !important;
+    background-color: var(--color-red-deep) !important;
+    color: var(--color-white) !important;
   }
 
   &.bg-warning,
   &[class*="warning"] {
     background-color: #ca8a04 !important;
-    color: #fff !important;
+    color: var(--color-white) !important;
   }
 
   &.bg-success,
   &[class*="success"] {
     background-color: #15803d !important;
-    color: #fff !important;
+    color: var(--color-white) !important;
   }
 
   &.bg-secondary,
   &[class*="secondary"] {
-    background-color: #4b5563 !important;
-    color: #fff !important;
+    background-color: var(--color-gray-600) !important;
+    color: var(--color-white) !important;
   }
 }
 

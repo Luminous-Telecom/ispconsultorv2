@@ -7,6 +7,7 @@ import { formatPieValue, getItemValue, resolveHighlightItem } from './utils';
 import { MetricPieHeaderIcon } from './MetricPieHeaderIcon';
 import { PieSidebarLegend } from './PieSidebarLegend';
 import { usePieChartD3Render } from './usePieChartD3Render';
+import { CHART_MUTED_COLOR } from '../chartColors';
 
 const ResponsivePieChart: React.FC<PieChartProps> = memo(
   ({
@@ -127,7 +128,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(
       const pct = Math.round((v / grandTotal) * 100);
       return {
         text: `${pct}%`,
-        color: hit.color || '#64748b',
+        color: hit.color || CHART_MUTED_COLOR,
       };
     }, [data, centerHighlightFilterValue]);
 

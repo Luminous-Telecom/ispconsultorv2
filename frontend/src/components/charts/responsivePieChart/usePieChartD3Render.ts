@@ -5,6 +5,7 @@ import * as d3Ease from 'd3-ease';
 import * as d3Interpolate from 'd3-interpolate';
 import { ChartDataItem } from '../types';
 import { FONT_FAMILY_BASE } from 'constants/typography';
+import { CHART_MUTED_COLOR } from '../chartColors';
 import {
   hideFloatingChartTooltip,
   moveFloatingChartTooltip,
@@ -87,7 +88,7 @@ export function usePieChartD3Render({
         index,
         label: item.label || '',
         value: val,
-        color: item.color || '#64748b',
+        color: item.color || CHART_MUTED_COLOR,
         percent: total > 0 ? Math.round((val / total) * 100) : 0,
         data: item,
       };

@@ -134,7 +134,7 @@ body.resizing-columns * {
   position: absolute;
   width: 2px;
   margin-left: -1px;
-  background-color: var(--btn-primary-color, #0d6efd);
+  background-color: var(--btn-primary-color, var(--color-blue-bootstrap));
   opacity: 0.85;
   pointer-events: none;
   z-index: 5;
@@ -170,7 +170,7 @@ label {
 /* Tabelas modernas e elegantes */
 .table {
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-black) 8%, transparent);
   border: none;
   background: var(--bg-primary);
   margin: 0;
@@ -305,11 +305,11 @@ label {
   background-color: var(--bg-tertiary) !important;
 }
 
-/* Linha selecionada - azul (#6B9BD1) - cor aplicada em tr e td para garantir visibilidade */
+/* Linha selecionada - azul (var(--color-slate-blue)) - cor aplicada em tr e td para garantir visibilidade */
 .table tbody tr.table-active,
 .table tbody tr.table-active:nth-child(even),
 .table tbody tr.table-active:nth-child(odd) {
-  background-color: rgba(107, 155, 209, 0.9) !important;
+  background-color: color-mix(in srgb, var(--color-slate-blue) 90%, transparent) !important;
   border-left: none !important;
 }
 
@@ -319,7 +319,7 @@ label {
 .table tbody tr.table-active:nth-child(even) th,
 .table tbody tr.table-active:nth-child(odd) td,
 .table tbody tr.table-active:nth-child(odd) th {
-  background-color: rgba(107, 155, 209, 0.9) !important;
+  background-color: color-mix(in srgb, var(--color-slate-blue) 90%, transparent) !important;
   color: var(--text-primary) !important;
 }
 
@@ -327,7 +327,7 @@ label {
 .table tbody tr.table-active:hover,
 .table tbody tr.table-active:nth-child(even):hover,
 .table tbody tr.table-active:nth-child(odd):hover {
-  background-color: rgba(107, 155, 209, 1) !important;
+  background-color: var(--color-slate-blue) !important;
 }
 
 .table tbody tr.table-active:hover td,
@@ -336,7 +336,7 @@ label {
 .table tbody tr.table-active:nth-child(even):hover th,
 .table tbody tr.table-active:nth-child(odd):hover td,
 .table tbody tr.table-active:nth-child(odd):hover th {
-  background-color: rgba(107, 155, 209, 1) !important;
+  background-color: var(--color-slate-blue) !important;
   color: var(--text-primary) !important;
 }
 
@@ -478,7 +478,7 @@ colgroup col.col-checkbox {
 
 /* Garantir que cabeçalhos de tabela tenham texto claro no tema escuro */
 [data-theme="dark"] .table th {
-  color: #ffffff !important;
+  color: var(--color-white) !important;
 }
 
 [data-theme="dark"] .table tbody tr:nth-child(even) {
@@ -505,7 +505,7 @@ colgroup col.col-checkbox {
 [data-theme="dark"] .table tbody tr.table-active,
 [data-theme="dark"] .table tbody tr.table-active:nth-child(even),
 [data-theme="dark"] .table tbody tr.table-active:nth-child(odd) {
-  background-color: rgba(99, 102, 241, 0.8) !important;
+  background-color: color-mix(in srgb, var(--color-indigo) 80%, transparent) !important;
 }
 
 [data-theme="dark"] .table tbody tr.table-active td,
@@ -514,7 +514,7 @@ colgroup col.col-checkbox {
 [data-theme="dark"] .table tbody tr.table-active:nth-child(even) th,
 [data-theme="dark"] .table tbody tr.table-active:nth-child(odd) td,
 [data-theme="dark"] .table tbody tr.table-active:nth-child(odd) th {
-  background-color: rgba(99, 102, 241, 0.8) !important;
+  background-color: color-mix(in srgb, var(--color-indigo) 80%, transparent) !important;
   color: var(--text-primary) !important;
 }
 
@@ -522,7 +522,7 @@ colgroup col.col-checkbox {
 [data-theme="dark"] .table tbody tr.table-active:hover,
 [data-theme="dark"] .table tbody tr.table-active:nth-child(even):hover,
 [data-theme="dark"] .table tbody tr.table-active:nth-child(odd):hover {
-  background-color: rgba(99, 102, 241, 0.85) !important;
+  background-color: color-mix(in srgb, var(--color-indigo) 85%, transparent) !important;
 }
 
 [data-theme="dark"] .table tbody tr.table-active:hover td,
@@ -531,7 +531,7 @@ colgroup col.col-checkbox {
 [data-theme="dark"] .table tbody tr.table-active:nth-child(even):hover th,
 [data-theme="dark"] .table tbody tr.table-active:nth-child(odd):hover td,
 [data-theme="dark"] .table tbody tr.table-active:nth-child(odd):hover th {
-  background-color: rgba(99, 102, 241, 0.85) !important;
+  background-color: color-mix(in srgb, var(--color-indigo) 85%, transparent) !important;
   color: var(--text-primary) !important;
 }
 
@@ -567,32 +567,32 @@ colgroup col.col-checkbox {
 
 /* Sobrescrever badge bg-primary para tema escuro */
 [data-theme="dark"] .badge.bg-primary {
-  background-color: #6366f1 !important;
-  color: #ffffff !important;
+  background-color: var(--color-indigo) !important;
+  color: var(--color-white) !important;
 }
 
 /* Sobrescrever badge bg-warning para tema escuro */
 [data-theme="dark"] .badge.bg-warning {
-  background-color: #ffc107 !important;
-  color: #000000 !important;
+  background-color: var(--color-yellow-bootstrap) !important;
+  color: var(--color-black) !important;
 }
 
 /* Sobrescrever badge bg-success para tema escuro */
 [data-theme="dark"] .badge.bg-success {
-  background-color: #28a745 !important;
-  color: #ffffff !important;
+  background-color: var(--color-green-bootstrap-bright) !important;
+  color: var(--color-white) !important;
 }
 
 /* Sobrescrever badge bg-danger para tema escuro */
 [data-theme="dark"] .badge.bg-danger {
-  background-color: #dc3545 !important;
-  color: #ffffff !important;
+  background-color: var(--color-red-bootstrap) !important;
+  color: var(--color-white) !important;
 }
 
 /* Sobrescrever badge bg-info para tema escuro */
 [data-theme="dark"] .badge.bg-info {
-  background-color: #3b82f6 !important;
-  color: #ffffff !important;
+  background-color: var(--color-blue) !important;
+  color: var(--color-white) !important;
 }
 
 /* Garantir que cards e table-responsive também tenham fundo correto */
@@ -677,27 +677,27 @@ colgroup col.col-checkbox {
 }
 
 .badge-primary {
-  background: #6366f1;
+  background: var(--color-indigo);
   color: white;
 }
 
 .badge-success {
-  background: #10b981;
+  background: var(--color-emerald);
   color: white;
 }
 
 .badge-danger {
-  background: #ef4444;
+  background: var(--color-red);
   color: white;
 }
 
 .badge-warning {
-  background: #f59e0b;
+  background: var(--color-amber);
   color: white;
 }
 
 .badge-info {
-  background: #3b82f6;
+  background: var(--color-blue);
   color: white;
 }
 
@@ -732,27 +732,27 @@ colgroup col.col-checkbox {
 
 /* Estilos específicos para alertas */
 .alert-success {
-  background: rgba(16, 185, 129, 0.1);
-  border-color: #10b981;
-  color: #10b981;
+  background: color-mix(in srgb, var(--color-emerald) 10%, transparent);
+  border-color: var(--color-emerald);
+  color: var(--color-emerald);
 }
 
 .alert-danger {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: #ef4444;
-  color: #ef4444;
+  background: color-mix(in srgb, var(--color-red) 10%, transparent);
+  border-color: var(--color-red);
+  color: var(--color-red);
 }
 
 .alert-warning {
-  background: rgba(245, 158, 11, 0.1);
-  border-color: #f59e0b;
-  color: #f59e0b;
+  background: color-mix(in srgb, var(--color-amber) 10%, transparent);
+  border-color: var(--color-amber);
+  color: var(--color-amber);
 }
 
 .alert-info {
-  background: rgba(59, 130, 246, 0.1);
-  border-color: #3b82f6;
-  color: #3b82f6;
+  background: color-mix(in srgb, var(--color-blue) 10%, transparent);
+  border-color: var(--color-blue);
+  color: var(--color-blue);
 }
 
 /* Scrollbar personalizada */
@@ -832,12 +832,12 @@ colgroup col.col-checkbox {
 }
 
 .table-mobile-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-black) 10%, transparent);
 }
 
 .table-mobile-card.selected {
-  border-color: var(--btn-primary-color, #0d6efd);
-  background: rgba(13, 110, 253, 0.05);
+  border-color: var(--btn-primary-color, var(--color-blue-bootstrap));
+  background: color-mix(in srgb, var(--color-blue-bootstrap) 5%, transparent);
 }
 
 .table-mobile-card-header {
@@ -974,7 +974,7 @@ colgroup col.col-checkbox {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-black) 15%, transparent);
   min-width: 140px;
   z-index: 99999 !important;
   overflow: hidden;
@@ -1022,11 +1022,11 @@ colgroup col.col-checkbox {
 }
 
 .table-mobile-dropdown-item.danger {
-  color: var(--danger-color, #dc3545);
+  color: var(--danger-color, var(--color-red-bootstrap));
 }
 
 .table-mobile-dropdown-item.danger:hover:not(:disabled) {
-  background: rgba(220, 53, 69, 0.1);
+  background: color-mix(in srgb, var(--color-red-bootstrap) 10%, transparent);
 }
 
 /* Paginação fixa na parte inferior (mobile) */
@@ -1188,7 +1188,7 @@ colgroup col.col-checkbox {
   background: var(--bg-dropdown);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--color-black) 25%, transparent);
   min-width: 140px;
   z-index: 1049;
   overflow: hidden;
@@ -1230,11 +1230,11 @@ colgroup col.col-checkbox {
 }
 
 .table-dropdown-item.danger {
-  color: var(--danger-color, #dc3545);
+  color: var(--danger-color, var(--color-red-bootstrap));
 }
 
 .table-dropdown-item.danger:hover:not(:disabled) {
-  background: rgba(220, 53, 69, 0.1);
+  background: color-mix(in srgb, var(--color-red-bootstrap) 10%, transparent);
 }
 
 @media (min-width: 768px) {
@@ -1410,7 +1410,7 @@ colgroup col.col-checkbox {
   background: var(--bg-secondary) !important;
   border: 1px solid var(--border-color) !important;
   border-radius: var(--border-radius) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-black) 10%, transparent) !important;
   font-size: 12px !important;
 }
 
@@ -1436,7 +1436,7 @@ colgroup col.col-checkbox {
 .table-header-flex .dropdown-menu .dropdown-item:hover,
 .table-header-content .dropdown-menu .dropdown-item:hover,
 .table-bulk-dropdown-menu .dropdown-item:hover {
-  background-color: #4A5D6E !important;
+  background-color: var(--color-bg-tertiary) !important;
   color: var(--text-primary) !important;
 }
 
@@ -1827,7 +1827,7 @@ colgroup col.col-checkbox {
   font-size: 0.75rem;
   padding: 0.35em 0.6em;
   border-radius: 0.25rem;
-  color: #fff !important;
+  color: var(--color-white) !important;
 }
 
 .os-status--aberta {
@@ -1835,7 +1835,7 @@ colgroup col.col-checkbox {
 }
 
 .os-status--agendada {
-  background-color: #3a7ca5 !important;
+  background-color: var(--color-os-blue) !important;
 }
 
 .os-status--encaminhada {
@@ -1859,15 +1859,15 @@ colgroup col.col-checkbox {
 }
 
 .os-status--execucao {
-  background-color: #e07b39 !important;
+  background-color: var(--color-os-orange) !important;
 }
 
 .os-status--reagendar {
-  background-color: #7d8a96 !important;
+  background-color: var(--color-os-slate) !important;
 }
 
 .os-status--default {
-  background-color: #6c757d !important;
+  background-color: var(--color-gray-bootstrap) !important;
 }
 
 /* Prioridade (IXC) */
@@ -1876,19 +1876,19 @@ colgroup col.col-checkbox {
   font-size: 0.75rem;
   padding: 0.35em 0.6em;
   border-radius: 0.25rem;
-  color: #fff !important;
+  color: var(--color-white) !important;
 }
 
 .os-prioridade--baixa {
-  background-color: #7d8a96 !important;
+  background-color: var(--color-os-slate) !important;
 }
 
 .os-prioridade--normal {
-  background-color: #3a7ca5 !important;
+  background-color: var(--color-os-blue) !important;
 }
 
 .os-prioridade--alta {
-  background-color: #e07b39 !important;
+  background-color: var(--color-os-orange) !important;
 }
 
 .os-prioridade--critica {
@@ -1896,7 +1896,7 @@ colgroup col.col-checkbox {
 }
 
 .os-prioridade--default {
-  background-color: #6c757d !important;
+  background-color: var(--color-gray-bootstrap) !important;
 }
 
 .os-mensagem-texto {
@@ -2021,7 +2021,7 @@ colgroup col.col-checkbox {
   background: var(--bg-dropdown) !important;
   border: 1px solid var(--border-color) !important;
   border-radius: var(--border-radius) !important;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25) !important;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--color-black) 25%, transparent) !important;
   min-width: 140px !important;
   overflow: hidden !important;
   list-style: none !important;
@@ -2056,7 +2056,7 @@ colgroup col.col-checkbox {
 
 /* Selected cell */
 .table-selected-cell {
-  background-color: #0d6efd !important;
+  background-color: var(--color-blue-bootstrap) !important;
   color: white !important;
 }
 

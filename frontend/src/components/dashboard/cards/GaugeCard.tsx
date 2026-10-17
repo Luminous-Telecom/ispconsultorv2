@@ -1,6 +1,7 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { useElementProperties } from 'hooks/useElementProperties';
 import { hexToRgba } from 'components/charts/chartColors';
+import { COLOR } from 'constants/colors';
 
 export interface GaugeDetailRow {
   label: string;
@@ -15,9 +16,9 @@ export interface GaugeCardProps {
 }
 
 function getUsageColor(percent: number): string {
-  if (percent >= 90) return '#ef4444';
-  if (percent >= 70) return '#f59e0b';
-  return '#10b981';
+  if (percent >= 90) return COLOR.red;
+  if (percent >= 70) return COLOR.amber;
+  return COLOR.emerald;
 }
 
 const SIZE = 108;

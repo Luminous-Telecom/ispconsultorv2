@@ -17,8 +17,7 @@ async function writeTextWithFallback(text: string, useFallback: boolean): Promis
     try {
       const textArea = document.createElement('textarea');
       textArea.value = text;
-      textArea.style.position = 'fixed';
-      textArea.style.left = '-999999px';
+      textArea.className = 'clipboard-fallback-input';
       document.body.appendChild(textArea);
       textArea.select();
       const ok = document.execCommand('copy');

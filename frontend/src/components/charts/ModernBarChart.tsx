@@ -3,7 +3,7 @@ import { DynamicStyledElement } from 'components/ui';
 import { ChartDataItem, ChartFormat } from './types';
 import { ChartEmptyState } from './ChartEmptyState';
 import { ChartTitleWithInfo } from './ChartTitleWithInfo';
-import { hexToRgba } from './chartColors';
+import { CHART_BAR_PALETTE, hexToRgba } from './chartColors';
 
 interface ModernBarChartProps {
   data: ChartDataItem[];
@@ -13,7 +13,7 @@ interface ModernBarChartProps {
   onBarClick?: (item: ChartDataItem, index: number) => void;
 }
 
-const PALETTE = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#a855f7', '#14b8a6', '#ec4899'];
+const PALETTE = CHART_BAR_PALETTE;
 
 const ModernBarLabel: React.FC<{ label: string }> = ({ label }) => {
   const ref = useRef<HTMLSpanElement>(null);

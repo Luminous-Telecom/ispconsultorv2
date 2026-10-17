@@ -2,6 +2,7 @@
    MIXINS - Funções reutilizáveis de CSS
    ============================================ */
 @use "sass:color";
+@use "palette" as palette;
 
 /* Mixin para responsividade */
 @mixin responsive($breakpoint) {
@@ -87,7 +88,7 @@
 }
 
 /* Mixin para inputs */
-@mixin input-focus($color: #0d6efd) {
+@mixin input-focus($color: palette.palette-color('blue-bootstrap')) {
   &:focus {
     box-shadow: none;
   }
@@ -140,7 +141,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(palette.palette-color('white'), 0.8);
     z-index: 10;
     @include flex-center;
   }
@@ -153,7 +154,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(palette.palette-color('black'), 0.5);
   z-index: 1040;
   display: flex;
   align-items: center;
@@ -207,7 +208,7 @@
 }
 
 /* Mixin para focus states acessíveis */
-@mixin focus-ring($color: #0d6efd, $offset: 2px) {
+@mixin focus-ring($color: palette.palette-color('blue-bootstrap'), $offset: 2px) {
   &:focus {
     outline: none;
     box-shadow: 0 0 0 $offset rgba($color, 0.5);

@@ -53,7 +53,7 @@ export class BackupService {
     a.href = href;
     a.setAttribute('download', nome);
     a.rel = 'noopener noreferrer';
-    a.style.display = 'none';
+    a.className = 'visually-hidden-input';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

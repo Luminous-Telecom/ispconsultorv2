@@ -1,3 +1,4 @@
+import { COLOR, readCssColor } from '../constants/colors';
 import { SYSTEM_NAME, SYSTEM_TAGLINE } from '../constants/systemBrand';
 import { ispConsultorIcon } from '../constants/systemBrandAssets';
 
@@ -46,8 +47,8 @@ export function applySystemBrandHead(): void {
     short_name: SYSTEM_NAME,
     description: SYSTEM_TAGLINE,
     display: 'standalone',
-    background_color: '#ffffff',
-    theme_color: '#6366f1',
+    background_color: readCssColor(COLOR.white),
+    theme_color: readCssColor(COLOR.indigo),
     orientation: 'portrait-primary',
     start_url: appUrl,
     scope: scopeUrl,

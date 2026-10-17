@@ -6,8 +6,10 @@ import { WebLinksAddon } from '@xterm/addon-web-links';
 import { getSocketToken } from 'services/core';
 import { authService } from 'services/authService';
 import { logSshTerminalLatency } from 'utils/sshTerminalLatencyDebug';
+import { readCssColor } from 'constants/colors';
 import {
   getSocketUrl,
+  TERMINAL_BACKGROUND,
   TERMINAL_INIT_DELAY_MS,
   XTERM_OPTIONS,
 } from './constants';
@@ -61,7 +63,13 @@ export function useSocketTerminalSession({
     const timer = setTimeout(async () => {
       if (!termRef.current) return;
 
-      const xterm = new Terminal(XTERM_OPTIONS);
+      const xterm = new Terminal({
+        ...XTERM_OPTIONS,
+        theme: {
+          ...XTERM_OPTIONS.theme,
+          background: readCssColor(TERMINAL_BACKGROUND),
+        },
+      });
       const fitAddon = new FitAddon();
       xterm.loadAddon(fitAddon);
       xterm.loadAddon(new WebLinksAddon());

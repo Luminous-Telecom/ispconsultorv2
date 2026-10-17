@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { PieLegendDot } from 'components/ui';
 import { ChartDataItem } from '../types';
 import { formatPieValue } from './utils';
+import { CHART_MUTED_COLOR } from '../chartColors';
 
 export interface PieLegendEntry {
   item: ChartDataItem;
@@ -41,7 +42,7 @@ export const PieSidebarLegend = memo(function PieSidebarLegend({
               }
             }}
           >
-            <PieLegendDot color={item.color || '#64748b'} />
+            <PieLegendDot color={item.color || CHART_MUTED_COLOR} />
             <span className="pie-sidebar-legend__text">
               {item.label || ''} {formatPieValue(value)}
             </span>

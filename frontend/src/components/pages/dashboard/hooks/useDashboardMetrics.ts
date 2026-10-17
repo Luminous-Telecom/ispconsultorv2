@@ -5,10 +5,12 @@ import type { useDashboardStats } from 'hooks/useDashboardStats';
 import type { useDashboardCharts } from 'hooks/useDashboardCharts';
 import type { TranslationKeys } from 'contexts/I18nContext';
 
+import { COLOR } from 'constants/colors';
+
 const TIPO_CORES_FALLBACK: Record<string, string> = {
-  infraestrutura: '#3b82f6',
-  consultoria: '#10b981',
-  blockdomi: '#8b5cf6',
+  infraestrutura: COLOR.blue,
+  consultoria: COLOR.emerald,
+  blockdomi: COLOR.violet,
 };
 
 interface UseDashboardMetricsParams {

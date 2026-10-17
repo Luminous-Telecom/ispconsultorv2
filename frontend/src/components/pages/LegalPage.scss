@@ -1,10 +1,12 @@
 /* Páginas legais: Privacidade, Termos, Cookies */
-$primary: #1e3a8a;
-$primary-foreground: #f3f4f6;
-$foreground: #1f2937;
-$muted: #6b7280;
-$border: #e5e7eb;
-$background: #ffffff;
+@import '../../styles/palette';
+
+$primary: palette-color('navy');
+$primary-foreground: palette-color('gray-100');
+$foreground: palette-color('slate-text');
+$muted: palette-color('gray');
+$border: palette-color('gray-200');
+$background: palette-color('white');
 
 .legal-page {
   min-height: 100vh;
@@ -24,8 +26,8 @@ $background: #ffffff;
   top: 0;
   z-index: 50;
   background: $primary;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-white) 8%, transparent);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--color-black) 10%, transparent);
 }
 
 .legal-header-inner {
@@ -58,8 +60,8 @@ $background: #ffffff;
   justify-content: center;
   width: 2.25rem;
   height: 2.25rem;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: color-mix(in srgb, var(--color-white) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-white) 20%, transparent);
   border-radius: 0.5rem;
   color: $primary-foreground;
   font-size: 1rem;
@@ -67,7 +69,7 @@ $background: #ffffff;
   transition: background 0.2s;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: color-mix(in srgb, var(--color-white) 15%, transparent);
   }
 }
 
@@ -86,10 +88,10 @@ $background: #ffffff;
 .legal-btn-outline {
   background: transparent;
   color: $primary-foreground;
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid color-mix(in srgb, var(--color-white) 50%, transparent);
 
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: color-mix(in srgb, var(--color-white) 10%, transparent);
     color: $primary-foreground;
   }
 }
@@ -194,23 +196,23 @@ $background: #ffffff;
 
 /* Tema escuro */
 [data-theme="dark"] .legal-page {
-  background: #0f172a;
-  color: #f8fafc;
+  background: var(--color-slate-dark);
+  color: var(--color-slate-bg);
 }
 
 [data-theme="dark"] .legal-title,
 [data-theme="dark"] .legal-body h2,
 [data-theme="dark"] .legal-body h3 {
-  color: #f8fafc;
+  color: var(--color-slate-bg);
 }
 
 [data-theme="dark"] .legal-body p,
 [data-theme="dark"] .legal-body li {
-  color: #94a3b8;
+  color: var(--color-slate-light);
 }
 
 [data-theme="dark"] .legal-body a {
-  color: #93c5fd;
+  color: var(--color-blue-soft);
 }
 
 [data-theme="dark"] .legal-footer {

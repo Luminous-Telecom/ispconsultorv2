@@ -12,7 +12,9 @@ Estilos vivem em SCSS/CSS. **Proibido** `style={{ ... }}` ou `style={variavel}` 
 
 | Tipo | Arquivo |
 |------|---------|
-| Variáveis globais (cores, fontes, raios) | `frontend/src/styles/_variables.scss` |
+| Hexadecimal das cores | `frontend/src/styles/_palette.scss` |
+| Variáveis globais (cores, fontes, raios) | `frontend/src/styles/_variables.scss` (`--color-*` e tokens de tema) |
+| Cores em TS (gráficos, D3, manifest) | `frontend/src/constants/colors.ts` → `var(--color-*)` |
 | Classes utilitárias reutilizáveis | `frontend/src/styles/_utilities.scss` |
 | Gráficos / dashboard | `frontend/src/styles/_charts.scss` |
 | Central do Assinante | `frontend/src/styles/CentralAssinante.scss` (`--ca-*`) |
@@ -71,11 +73,11 @@ Novas exceções: documentar no PR e preferir `useElementProperties`.
 1. Existe classe em `_utilities.scss` ou `_charts.scss`? **Use.**
 2. Será reutilizado? **Adicione** em `_utilities.scss` com `var(--*)`.
 3. Central Assinante? **Prefixo `--ca-*`**, não misturar com `--bg-primary` do ERP.
-4. Cor/tamanho novo global? **Token** em `_variables.scss`, depois classe ou `var()`.
+4. Cor nova? **Hex só em** `_palette.scss`. Se a cor já existe, reutilize `var(--color-*)` (CSS) ou `COLOR` / `readCssColor` (TS). Token de tema em `_variables.scss` aponta para a paleta.
 
 ## Checklist
 
 - [ ] Zero `style={` no TSX alterado
 - [ ] Cores/tamanhos via `var(--*)` ou classes utilitárias
 - [ ] Dinâmico via `DynamicStyleElements` / `useElementProperties`
-- [ ] Novo token documentado em `_variables.scss` se for global
+- [ ] Hex novo só em `_palette.scss`; mesma cor reutiliza `var(--color-*)`

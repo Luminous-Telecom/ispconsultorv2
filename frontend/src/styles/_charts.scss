@@ -151,7 +151,7 @@
 .ticket-medio-ranking-label {
   font-size: 9px;
   font-weight: 600;
-  color: var(--text-secondary, rgba(255, 255, 255, 0.65));
+  color: var(--text-secondary, color-mix(in srgb, var(--color-white) 65%, transparent));
   width: 30%;
   flex-shrink: 0;
   white-space: nowrap;
@@ -272,7 +272,7 @@
 }
 
 .backup-legend-label {
-  color: var(--text-muted, #94a3b8);
+  color: var(--text-muted, var(--color-slate-light));
 }
 
 /* --- Responsive line chart --- */
