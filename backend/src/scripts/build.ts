@@ -9,7 +9,25 @@ function log(msg: string) { console.log(msg); }
 function warn(msg: string) { console.warn(msg); }
 function fail(msg: string): never { console.error(msg); process.exit(1); }
 
-// ─── 1. Compilar TypeScript ───────────────────────────────────────────────────
+// ─── 1. Prisma Client ─────────────────────────────────────────────────────────
+// O npm do CI não roda o postinstall do @prisma/client. Sem generate, o tsc
+// vê um client vazio e acusa que os models não existem.
+log('🗄 Gerando Prisma Client...');
+try {
+  execSync('npx prisma generate', {
+    stdio: 'inherit',
+    cwd: ROOT,
+    env: {
+      ...process.env,
+      DATABASE_URL: process.env.DATABASE_URL || 'mysql://build:build@127.0.0.1:3306/build',
+    },
+  });
+  log('✓ Prisma Client gerado');
+} catch {
+  fail('✗ Erro ao gerar o Prisma Client');
+}
+
+// ─── 2. Compilar TypeScript ───────────────────────────────────────────────────
 log('📦 Compilando TypeScript...');
 try {
   execSync('tsc', { stdio: 'inherit', env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=4096' } });
@@ -18,7 +36,7 @@ try {
   fail('✗ Erro ao compilar TypeScript');
 }
 
-// ─── 2. Remover arquivos .js "planos" que conflitam com pastas de mesmo nome ──
+// ─── 3. Remover arquivos .js "planos" que conflitam com pastas de mesmo nome ──
 //
 // Ocorre quando há, p.ex., dist/services/Foo.js e dist/services/Foo/ ao mesmo
 // tempo. O TypeScript antigo gerava ambos; removemos o arquivo plano.
@@ -49,7 +67,7 @@ if (fs.existsSync(oldImages)) {
   log('✓ Pasta legada dist/images/ removida');
 }
 
-// ─── 3. Copiar templates ──────────────────────────────────────────────────────
+// ─── 4. Copiar templates ──────────────────────────────────────────────────────
 const templatesSrc  = path.join(ROOT, 'src', 'templates');
 const templatesDest = path.join(distPath, 'templates');
 
@@ -61,7 +79,7 @@ if (fs.existsSync(templatesSrc)) {
   warn('⚠ src/templates não encontrado');
 }
 
-// ─── 4. Copiar arquivos estáticos (images do sistema) ────────────────────────
+// ─── 5. Copiar arquivos estáticos (images do sistema) ────────────────────────
 //
 // Copia apenas arquivos/images (logos, bancos, etc.) — não toca em uploads de
 // clientes que vivem em arquivos/empresa, clientes, documentos, blockdomi.
@@ -89,7 +107,7 @@ if (fs.existsSync(imagesSrc)) {
   log('✓ Estrutura de pastas criada');
 }
 
-// ─── 5. Copiar scripts Python para dist/python/ ───────────────────────────────
+// ─── 6. Copiar scripts Python para dist/python/ ───────────────────────────────
 //
 // Os scripts ficam em backend/python/ (separados dos scripts TS).
 // Em produção o controller os encontra em dist/python/.
