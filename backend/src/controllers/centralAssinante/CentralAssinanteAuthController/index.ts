@@ -11,6 +11,7 @@ import { DadosEmpresaService } from '../../../services/sistema/DadosEmpresaServi
 import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
 import nodemailer from 'nodemailer';
 import { SYSTEM_NAME } from '../../../constants/systemBrand';
+import { cnpjLookupValues, stripCnpj } from '../../../utils/cnpj';
 
 function hydrateCliente(row: unknown): Cliente {
   return (Cliente as unknown as { hydrate: (value: unknown) => Cliente }).hydrate(row);
@@ -66,8 +67,7 @@ export class CentralAssinanteAuthController {
         cliente = await findCliente({ email: login, ativo: true, empresa_id: empresaId });
       } else {
         // Remover formatação do CNPJ para busca
-        const cnpjLimpo = login.replace(/\D/g, '');
-        cliente = await findCliente({ cnpj: cnpjLimpo, ativo: true, empresa_id: empresaId });
+        cliente = await findCliente({ cnpj: { in: cnpjLookupValues(login) }, ativo: true, empresa_id: empresaId });
       }
 
       if (!cliente) {
@@ -163,14 +163,14 @@ export class CentralAssinanteAuthController {
       const empresaId = empresa.id;
 
       // Remover formatação do CNPJ para busca
-      const cnpjLimpo = cnpj.replace(/\D/g, '');
+      const cnpjLimpo = stripCnpj(cnpj);
       // Normalizar email: lowercase, trim e remover espaços extras
       const emailLimpo = email.toLowerCase().trim().replace(/\s+/g, '');
 
       logger.info('Buscando cliente para recuperação de senha', { cnpjLimpo, emailLimpo, empresaId });
 
       // Buscar cliente por CNPJ e Email separadamente (filtrado pela empresa)
-      const clientePorCnpj = await findCliente({ cnpj: cnpjLimpo, ativo: true, empresa_id: empresaId });
+      const clientePorCnpj = await findCliente({ cnpj: { in: cnpjLookupValues(cnpj) }, ativo: true, empresa_id: empresaId });
       const emailRows = await prisma.$queryRawUnsafe<Array<{ id: number }>>(
         'SELECT id FROM clientes WHERE ativo = 1 AND empresa_id = ? AND LOWER(email) = ? LIMIT 1',
         empresaId,
@@ -197,7 +197,7 @@ export class CentralAssinanteAuthController {
         return;
       } else if (clientePorEmail) {
         // Só Email encontrado - verificar se o CNPJ do cliente encontrado corresponde ao recebido
-        if (clientePorEmail.cnpj?.replace(/\D/g, '') === cnpjLimpo) {
+        if (stripCnpj(clientePorEmail.cnpj || '') === cnpjLimpo) {
           cliente = clientePorEmail;
         } else {
           sendUnauthorized(res, 'CNPJ não corresponde ao Email informado');

@@ -869,6 +869,7 @@ const ptBR: TranslationKeys = {
     'buttons.sync': 'Sincronizar',
     'buttons.createEntity': 'Novo ${entity}',
     'buttons.validate': 'Validar',
+    'buttons.cartaoCnpj': 'Cartão CNPJ',
     'buttons.apply': 'Aplicar',
     'agent.install': 'Instalar Agente',
     'agent.configureVpn': 'Configurar VPN',
@@ -1248,7 +1249,7 @@ const ptBR: TranslationKeys = {
 
 
     // Placeholders
-    'placeholder.cnpj': '00.000.000/0000-00',
+    'placeholder.cnpj': 'AA.AAA.AAA/AAAA-00',
     'placeholder.companyName': 'Razão social da empresa',
     'placeholder.tradeName': 'Nome fantasia da empresa',
     'placeholder.observations': 'Observações sobre o cliente...',
@@ -1256,7 +1257,7 @@ const ptBR: TranslationKeys = {
     'placeholder.discountValue': '0.00',
     'placeholder.fileName': 'Nome do arquivo',
     'placeholder.fileDescription': 'Descrição do arquivo (opcional)',
-    'placeholder.cpfCnpj': '11 dígitos para CPF ou 14 dígitos para CNPJ',
+    'placeholder.cpfCnpj': 'CPF ou CNPJ (números e letras)',
     'placeholder.briefDescription': 'Breve descrição',
     'placeholder.selectStatus': 'Selecione o status',
     'placeholder.selectPlan': 'Selecione o plano',

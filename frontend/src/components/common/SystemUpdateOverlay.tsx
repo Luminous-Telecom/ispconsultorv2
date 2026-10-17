@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
+import type { Socket } from 'socket.io-client';
+import { io } from 'socket.io-client';
 import { useI18n } from 'contexts/I18nContext';
 import { CircularProgress } from 'components/ui';
-import { API_CONFIG } from 'config/api';
+import { getSocketUrl } from 'components/common/terminal/constants';
+import { authService } from 'services/authService';
+import { getAuthToken, getSocketToken } from 'services/core';
 import { clearSystemUpdateDriver, isSystemUpdateDriver } from 'utils/systemUpdateDriver';
-
-const POLL_MS = 2000;
 
 interface SystemUpdateStatus {
   active: boolean;
@@ -15,8 +17,7 @@ interface SystemUpdateStatus {
 
 function parseStatus(body: unknown): SystemUpdateStatus | null {
   if (!body || typeof body !== 'object') return null;
-  const record = body as { data?: unknown };
-  const data = (record.data && typeof record.data === 'object' ? record.data : body) as Partial<SystemUpdateStatus>;
+  const data = body as Partial<SystemUpdateStatus>;
   if (typeof data.active !== 'boolean') return null;
   return {
     active: data.active,
@@ -34,75 +35,62 @@ const SystemUpdateOverlay: React.FC = () => {
   const reloadingRef = useRef(false);
 
   useEffect(() => {
+    if (!getAuthToken()) return undefined;
+
     let cancelled = false;
-    let timer = 0;
+    let socket: Socket | null = null;
 
-    const schedule = () => {
-      if (cancelled || reloadingRef.current) return;
-      timer = window.setTimeout(() => {
-        void poll();
-      }, POLL_MS);
-    };
+    const applyStatus = (body: unknown) => {
+      const status = parseStatus(body);
+      if (cancelled || reloadingRef.current || !status) return;
 
-    const reloadAfterRestart = () => {
-      if (reloadingRef.current) return;
-      reloadingRef.current = true;
-      window.location.reload();
-    };
-
-    const poll = async () => {
-      try {
-        const response = await fetch(`${API_CONFIG.BASE_URL}/sistema/atualizacao-status`, {
-          credentials: 'include',
-          cache: 'no-store',
-        });
-        if (!response.ok) throw new Error('status');
-        const status = parseStatus(await response.json());
-        if (cancelled || !status) {
-          schedule();
-          return;
-        }
-
-        if (isSystemUpdateDriver()) {
-          if (!status.active) clearSystemUpdateDriver();
-          setVisible(false);
-          schedule();
-          return;
-        }
-
-        if (status.active && status.phase === 'running') {
-          if (status.kind === 'system') sawSystemRef.current = true;
-          setPercent(status.progress);
-          setVisible(true);
-          schedule();
-          return;
-        }
-
-        if (status.phase === 'failed') {
-          sawSystemRef.current = false;
-          setVisible(false);
-          schedule();
-          return;
-        }
-
-        if (sawSystemRef.current && status.phase === 'idle') {
-          reloadAfterRestart();
-          return;
-        }
-
+      if (isSystemUpdateDriver()) {
+        if (!status.active) clearSystemUpdateDriver();
         setVisible(false);
-        schedule();
-      } catch {
-        if (sawSystemRef.current) setVisible(true);
-        schedule();
+        return;
       }
+
+      if (status.active && status.phase === 'running') {
+        if (status.kind === 'system') sawSystemRef.current = true;
+        setPercent(status.progress);
+        setVisible(true);
+        return;
+      }
+
+      if (status.phase === 'failed') {
+        sawSystemRef.current = false;
+        setVisible(false);
+        return;
+      }
+
+      if (sawSystemRef.current && status.phase === 'idle') {
+        reloadingRef.current = true;
+        window.location.reload();
+        return;
+      }
+
+      setVisible(false);
     };
 
-    void poll();
+    const connect = async () => {
+      let token = getSocketToken();
+      if (!token) token = await authService.restoreSocketToken();
+      if (cancelled || !token) return;
+
+      socket = io(`${getSocketUrl()}/sistema-atualizacao`, {
+        path: '/socket.io',
+        auth: { token },
+        transports: ['websocket'],
+      });
+      socket.on('system-update:status', applyStatus);
+    };
+
+    void connect();
 
     return () => {
       cancelled = true;
-      window.clearTimeout(timer);
+      socket?.off('system-update:status', applyStatus);
+      socket?.disconnect();
     };
   }, []);
 

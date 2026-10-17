@@ -10,6 +10,7 @@ import { montarDpsXml } from '../portalNacional/dpsXml';
 import { abrirCertificadoArmazenado, certificadoVencido } from '../portalNacional/certificadoA1';
 import { assinarDpsXml } from '../portalNacional/assinarDps';
 import { consultarNfseSefin, emitirNaSefin } from '../portalNacional/sefinClient';
+import { stripCnpj } from '../../../utils/cnpj';
 
 interface ResultadoPortal {
   success: boolean;
@@ -102,7 +103,7 @@ export class PortalNacionalNFSeService {
         };
       }
 
-      const cnpjEmpresa = digitos(dadosEmpresa.cnpj);
+      const cnpjEmpresa = stripCnpj(dadosEmpresa.cnpj || '');
       if (certificado.cnpj && certificado.cnpj !== cnpjEmpresa) {
         return {
           success: false,
@@ -111,8 +112,9 @@ export class PortalNacionalNFSeService {
         };
       }
 
-      const documentoTomador = digitos(cliente.cnpj);
-      if (documentoTomador.length !== 11 && documentoTomador.length !== 14) {
+      const documentoTomador = stripCnpj(cliente.cnpj || '');
+      const documentoValido = /^\d{11}$/.test(documentoTomador) || /^[0-9A-Z]{12}\d{2}$/.test(documentoTomador);
+      if (!documentoValido) {
         return {
           success: false,
           codigo_erro: 'TOMADOR_DOC',

@@ -329,6 +329,10 @@
       padding-top: 0.25rem;
       margin-bottom: 0;
     }
+
+    &:has(> .form-field-with-leading) {
+      max-width: calc(var(--form-input-max-width) + 9rem);
+    }
   }
 
   /* Readonly simples e datas: largura pelo conteúdo (ignora .input-group / EntitySelect) */

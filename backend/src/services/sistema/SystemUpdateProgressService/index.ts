@@ -17,6 +17,28 @@ const IDLE_STATUS: SystemUpdateStatus = {
 
 let status: SystemUpdateStatus = { ...IDLE_STATUS };
 
+type SystemUpdateStatusListener = (status: SystemUpdateStatus) => void;
+
+const listeners = new Set<SystemUpdateStatusListener>();
+
+export function subscribeSystemUpdateStatus(listener: SystemUpdateStatusListener): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+function publish(): void {
+  const snapshot = { ...status };
+  for (const listener of listeners) {
+    try {
+      listener(snapshot);
+    } catch {
+      // Um assinante não pode interromper a atualização.
+    }
+  }
+}
+
 function clampProgress(progress: number): number {
   if (!Number.isFinite(progress)) return 0;
   return Math.max(0, Math.min(100, Math.round(progress)));
@@ -26,6 +48,7 @@ function clampProgress(progress: number): number {
 export class SystemUpdateProgressService {
   static begin(kind: SystemUpdateKind): void {
     status = { active: true, progress: 0, kind, phase: 'running' };
+    publish();
   }
 
   static report(progress: number): void {
@@ -35,6 +58,7 @@ export class SystemUpdateProgressService {
       progress: clampProgress(progress),
       phase: 'running',
     };
+    publish();
   }
 
   static fail(): void {
@@ -44,10 +68,12 @@ export class SystemUpdateProgressService {
       kind: status.kind,
       phase: 'failed',
     };
+    publish();
   }
 
   static end(): void {
     status = { ...IDLE_STATUS };
+    publish();
   }
 
   static getSnapshot(): SystemUpdateStatus {

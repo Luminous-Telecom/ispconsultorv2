@@ -12,6 +12,25 @@ describe('fornecedorCreateSchema', () => {
     expect(value.pais).toBe('Brasil');
   });
 
+  it('aceita CNPJ alfanumérico e formata a máscara', () => {
+    const { error, value } = fornecedorCreateSchema.validate({
+      tipo_pessoa: 'JURIDICA',
+      nome_razao_social: 'Fornecedor Alfa',
+      cpf_cnpj: '12abc34501de35',
+    });
+    expect(error).toBeUndefined();
+    expect(value.cpf_cnpj).toBe('12.ABC.345/01DE-35');
+  });
+
+  it('recusa CNPJ alfanumérico com dígito verificador errado', () => {
+    const { error } = fornecedorCreateSchema.validate({
+      tipo_pessoa: 'JURIDICA',
+      nome_razao_social: 'Fornecedor Alfa',
+      cpf_cnpj: '12ABC34501DE00',
+    });
+    expect(error?.details[0]?.path).toEqual(['cpf_cnpj']);
+  });
+
   it('recusa CPF com dígitos repetidos para pessoa física', () => {
     const { error } = fornecedorCreateSchema.validate({
       tipo_pessoa: 'FISICA',

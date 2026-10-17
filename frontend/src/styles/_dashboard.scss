@@ -705,7 +705,7 @@
       justify-content: flex-end;
     }
 
-    .backup-status-card__body {
+    .backup-status-card__body:not(.backup-status-card__body--empty) {
       flex-direction: row;
       align-items: center;
       justify-content: space-between;
@@ -713,6 +713,12 @@
       max-height: none;
       overflow: visible;
       gap: 4px;
+    }
+
+    .backup-status-card__body--empty {
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
 
     .backup-status-card__chart {

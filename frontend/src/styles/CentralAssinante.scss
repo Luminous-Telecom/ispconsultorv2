@@ -12,23 +12,25 @@
   --ca-text-muted: var(--color-text-muted-dark);
   --ca-btn-primary: var(--color-primary-fill-dark);
   --ca-btn-primary-hover: var(--color-primary-fill-hover-dark);
+  --ca-btn-text: var(--color-text-dark);
   --ca-modal-backdrop: color-mix(in srgb, var(--color-black) 60%, transparent);
 }
 
 @mixin ca-theme-light {
-  --ca-bg-primary: var(--color-gray-100);
-  --ca-bg-secondary: var(--color-white);
-  --ca-bg-card: var(--color-white);
-  --ca-bg-hover: var(--color-gray-200);
-  --ca-border: #d1d5db;
-  --ca-border-focus: #9ca3af;
-  --ca-border-hover: var(--color-slate-300);
-  --ca-text: #111827;
-  --ca-text-secondary: rgba(17, 24, 39, 0.65);
-  --ca-text-muted: rgba(17, 24, 39, 0.45);
-  --ca-btn-primary: var(--color-gray-700);
-  --ca-btn-primary-hover: var(--color-gray-600);
-  --ca-modal-backdrop: color-mix(in srgb, var(--color-slate-dark) 45%, transparent);
+  --ca-bg-primary: var(--color-bg);
+  --ca-bg-secondary: var(--color-bg-secondary);
+  --ca-bg-card: var(--color-bg-tertiary);
+  --ca-bg-hover: var(--color-bg-dropdown-hover);
+  --ca-border: var(--color-border);
+  --ca-border-focus: var(--color-sidebar-accent);
+  --ca-border-hover: var(--color-border);
+  --ca-text: var(--color-text-ink);
+  --ca-text-secondary: var(--color-text-soft);
+  --ca-text-muted: var(--color-text-muted);
+  --ca-btn-primary: var(--color-primary-fill-light);
+  --ca-btn-primary-hover: var(--color-primary-fill-hover-light);
+  --ca-btn-text: var(--color-text-on-fill);
+  --ca-modal-backdrop: color-mix(in srgb, var(--color-text-ink) 45%, transparent);
 }
 
 @mixin ca-scope {
@@ -138,7 +140,7 @@
   button.btn-primary {
     background-color: var(--ca-btn-primary) !important;
     border-color: var(--ca-btn-primary) !important;
-    color: var(--ca-text) !important;
+    color: var(--ca-btn-text, var(--ca-text)) !important;
 
     &:hover:not(:disabled) {
       background-color: var(--ca-btn-primary-hover) !important;

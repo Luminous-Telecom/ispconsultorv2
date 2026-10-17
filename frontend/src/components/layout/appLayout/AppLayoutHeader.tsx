@@ -60,9 +60,8 @@ const AppLayoutHeader: React.FC<AppLayoutHeaderProps> = ({
               className="navbar-toggler d-block border-0 p-0"
               onClick={onToggleSidebar}
               label={menuAriaLabel}
-            >
-              <span className="navbar-toggler-icon" />
-            </IconOnlyButton>
+              iconClassName="bi bi-list"
+            />
           )}
         </div>
 

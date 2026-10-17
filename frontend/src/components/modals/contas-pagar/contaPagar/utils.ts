@@ -1,5 +1,6 @@
 import { CreateContaPagar, ContaPagar } from 'types';
-import { formatCurrency, formatCPF, formatCNPJ, formatLinhaDigitavel } from 'utils/formatters';
+import { formatCurrency, formatCpfOrCnpj, formatLinhaDigitavel } from 'utils/formatters';
+import { stripCnpj } from 'utils/validators';
 import { getTodayISO } from 'utils/dateUtils';
 import type { ContaPagarFormData, ContaPagarFormErrors, PagamentoData } from './types';
 
@@ -50,8 +51,7 @@ export const mapContaPagarToFormData = (contaPagar: ContaPagar): ContaPagarFormD
 
 const formatChavePixFromContaPagar = (contaPagar: ContaPagar): string => {
   if (contaPagar.tipo_chave_pix === 'CPF_CNPJ') {
-    const cleaned = contaPagar.chave_pix!.replace(/\D/g, '');
-    return cleaned.length <= 11 ? formatCPF(cleaned) : formatCNPJ(cleaned);
+    return formatCpfOrCnpj(contaPagar.chave_pix!);
   }
   if (contaPagar.tipo_chave_pix === 'CELULAR') {
     const cleaned = contaPagar.chave_pix!.replace(/\D/g, '').slice(0, 11);
@@ -103,7 +103,10 @@ const processarChavePix = (formData: ContaPagarFormData): string | undefined => 
   if (formData.tipo_pagamento !== 'PIX') return undefined;
   const chave = formData.chave_pix.trim();
   if (!chave) return undefined;
-  if (formData.tipo_chave_pix === 'CPF_CNPJ' || formData.tipo_chave_pix === 'CELULAR') {
+  if (formData.tipo_chave_pix === 'CPF_CNPJ') {
+    return /[A-Za-z]/.test(chave) ? stripCnpj(chave) : chave.replace(/\D/g, '');
+  }
+  if (formData.tipo_chave_pix === 'CELULAR') {
     return chave.replace(/\D/g, '');
   }
   return chave;

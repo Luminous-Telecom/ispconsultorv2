@@ -48,7 +48,6 @@ import ipsPermitidosRoutes from './ipsPermitidosRoutes';
 import pdfExtractRoutes from './pdfExtractRoutes';
 import tipoCobrancaContratoRoutes from './tipoCobrancaContratoRoutes';
 import empresaRoutes from './empresaRoutes';
-import sistemaAtualizacaoRoutes from './sistemaAtualizacaoRoutes';
 import sshManagerRoutes from './sshManagerRoutes';
 import agentRoutes from './agentRoutes';
 import rpkiRoutes from './rpkiRoutes';
@@ -122,7 +121,6 @@ const routes = [
     
     { path: '/api/backups', route: backupRoutes },
     { path: '/api/atualizacoes', route: atualizacoesRoutes },
-    { path: '/api/sistema', route: sistemaAtualizacaoRoutes },
     { path: '/api/ssh-manager', route: sshManagerRoutes },
 
     // API pública Blockdomi (site público) - sem auth, sem IP

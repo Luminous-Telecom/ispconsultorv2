@@ -76,6 +76,7 @@ export const ExtrairSeiAnatelButton = createButton('extrairSeiAnatel');
 export const ExtrairDominiosPdfButton = createButton('extrairDominiosPdf');
 export const ExtrairPlanilhaUrlButton = createButton('extrairPlanilhaUrl');
 export const ValidarCnpjButton = createButton('validarCnpj');
+export const CartaoCnpjButton = createButton('cartaoCnpj');
 export const ValidarCepButton = createButton('validarCep');
 export const OcultarFiltrosButton = createButton('ocultarFiltros');
 export const MostrarFiltrosButton = createButton('mostrarFiltros');

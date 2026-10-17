@@ -186,6 +186,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
       }
       setUpdateProgress(t('updates.reloadingPage'));
       setTimeout(() => {
+        clearSystemUpdateDriver();
         window.location.reload();
       }, 800);
     },

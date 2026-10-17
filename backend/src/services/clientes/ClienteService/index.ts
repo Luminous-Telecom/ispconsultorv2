@@ -4,6 +4,7 @@ import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
 import { buildPagination } from '../../../utils/pagination';
 import { dateBounds, sortDirection, toPrismaWhere } from '../../cadastros/prismaWhere';
+import { cnpjLookupValues } from '../../../utils/cnpj';
 
 export interface ListClientesFilters {
   page?: number;
@@ -262,12 +263,7 @@ export class ClienteService {
   }
 
   static async findByCnpj(cnpj: string, empresaId?: number) {
-    const digitos = cnpj.replace(/\D/g, '');
-    const formatos: string[] = [cnpj.trim()];
-    if (digitos.length === 14) {
-      formatos.push(digitos);
-      formatos.push(`${digitos.slice(0, 2)}.${digitos.slice(2, 5)}.${digitos.slice(5, 8)}/${digitos.slice(8, 12)}-${digitos.slice(12)}`);
-    }
+    const formatos = cnpjLookupValues(cnpj);
     const cliente = await prisma.clientes.findFirst({
       where: {
         cnpj: { in: [...new Set(formatos)] },

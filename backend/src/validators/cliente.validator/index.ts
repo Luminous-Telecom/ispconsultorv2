@@ -2,12 +2,24 @@
  * Validadores centralizados para Cliente
  */
 import Joi from 'joi';
+import { formatCnpj, isValidCnpj, stripCnpj } from '../../utils/cnpj';
+
+const cnpjField = (required: boolean) => {
+  let schema = Joi.string().custom((value, helpers) => {
+    const stripped = stripCnpj(String(value ?? ''));
+    if (!isValidCnpj(stripped)) return helpers.error('string.cnpj');
+    return formatCnpj(stripped);
+  }).messages({
+    'string.cnpj': 'CNPJ inválido',
+    'string.empty': 'CNPJ é obrigatório',
+    'any.required': 'CNPJ é obrigatório',
+  });
+  if (required) schema = schema.required();
+  return schema;
+};
 
 export const clienteCreateSchema = Joi.object({
-  cnpj: Joi.string().length(18).required().messages({
-    'string.length': 'CNPJ deve ter exatamente 18 caracteres',
-    'any.required': 'CNPJ é obrigatório'
-  }),
+  cnpj: cnpjField(true),
   razao_social: Joi.string().min(2).max(255).required().messages({
     'string.min': 'Razão social deve ter pelo menos 2 caracteres',
     'string.max': 'Razão social deve ter no máximo 255 caracteres',
@@ -58,9 +70,7 @@ export const clienteCreateSchema = Joi.object({
 });
 
 export const clienteUpdateSchema = Joi.object({
-  cnpj: Joi.string().length(18).messages({
-    'string.length': 'CNPJ deve ter exatamente 18 caracteres'
-  }),
+  cnpj: cnpjField(false),
   razao_social: Joi.string().min(2).max(255).messages({
     'string.min': 'Razão social deve ter pelo menos 2 caracteres',
     'string.max': 'Razão social deve ter no máximo 255 caracteres'

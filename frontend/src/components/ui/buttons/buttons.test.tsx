@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { I18nProvider } from 'contexts/I18nContext';
 import { translations } from 'i18n/translations';
-import { NovoButton, SalvarButton, VisualizarButton } from './buttons';
+import { CartaoCnpjButton, NovoButton, SalvarButton, VisualizarButton } from './buttons';
 import { getSystemButtonBulkProps, SYSTEM_BUTTON_CONFIG, toBulkVariant } from './config';
 
 function renderButton(ui: React.ReactElement) {
@@ -36,6 +36,13 @@ describe('botões do sistema', () => {
     );
     expect((screen.getByRole('button', { name: 'Novo Cliente' }) as HTMLButtonElement).disabled).toBe(false);
     expect((screen.getByRole('button', { name: 'Visualizar' }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('Cartão CNPJ mantém o texto da ação', () => {
+    renderButton(<CartaoCnpjButton type="button" onClick={jest.fn()} />);
+    const botao = screen.getByRole('button', { name: 'Cartão CNPJ' });
+    expect((botao as HTMLButtonElement).disabled).toBe(false);
+    expect(botao.getAttribute('type')).toBe('button');
   });
 
   it('variante em massa não usa outline e o rótulo de criar inclui a entidade', () => {

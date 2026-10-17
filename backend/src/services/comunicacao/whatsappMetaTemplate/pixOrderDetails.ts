@@ -1,3 +1,5 @@
+import { stripCnpj } from '../../../utils/cnpj';
+
 export type PixKeyType = 'CPF' | 'CNPJ' | 'EMAIL' | 'PHONE' | 'EVP';
 
 export interface PixOrderDetailsIdentity {
@@ -35,9 +37,13 @@ export function detectPixKeyType(key: string): PixKeyType | null {
     return 'EVP';
   }
   if (trimmed.startsWith('+')) return 'PHONE';
+  const documento = stripCnpj(trimmed);
+  const soDocumento = trimmed.replace(/[^0-9A-Za-z]/g, '');
+  if (documento.length === 14 && documento.length === soDocumento.length && /^[0-9A-Z]{12}\d{2}$/.test(documento)) {
+    return 'CNPJ';
+  }
   const digits = trimmed.replace(/\D/g, '');
-  if (digits.length === 14 && digits === trimmed.replace(/\D/g, '')) return 'CNPJ';
-  if (digits.length === 11) return 'CPF';
+  if (digits.length === 11 && !/[A-Za-z]/.test(trimmed)) return 'CPF';
   return null;
 }
 

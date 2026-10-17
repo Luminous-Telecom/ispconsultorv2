@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { logger } from '../../../utils/logger';
 import { formatCEP } from '../../../utils/dateUtils';
+import { isNumericCnpj, stripCnpj } from '../../../utils/cnpj';
 
 export interface DadosEmpresaReceitaWS {
   razao_social: string;
@@ -26,10 +27,10 @@ export class ReceitaWsService {
    */
   static async consultarCnpj(cnpj: string): Promise<DadosEmpresaReceitaWS | null> {
     try {
-      const cnpjLimpo = cnpj.replace(/\D/g, '');
-      
-      if (cnpjLimpo.length !== 14) {
-        throw new Error('CNPJ deve ter 14 dígitos');
+      const cnpjLimpo = stripCnpj(cnpj);
+
+      if (!isNumericCnpj(cnpjLimpo)) {
+        throw new Error('Consulta automática disponível apenas para CNPJ numérico');
       }
 
       const response = await axios.get(`https://www.receitaws.com.br/v1/cnpj/${cnpjLimpo}`, {

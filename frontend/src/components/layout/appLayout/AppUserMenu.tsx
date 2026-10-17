@@ -88,7 +88,9 @@ const AppUserMenu: React.FC<AppUserMenuProps> = ({
         <ul className="layout-user-dropdown layout-table-dropdown">
           <li className="layout-user-dropdown__header">
             <div className="layout-user-dropdown__name text-truncate">{displayName}</div>
-            <small className="layout-user-dropdown__email text-truncate">{currentUser?.email}</small>
+            <small className="layout-user-dropdown__email text-truncate" title={currentUser?.email || undefined}>
+              {currentUser?.email}
+            </small>
             {currentUser?.nivel_acesso && (
               <small className="layout-user-dropdown__role">{currentUser.nivel_acesso}</small>
             )}

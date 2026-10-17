@@ -9,6 +9,7 @@ import axios from 'axios';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { parseListQuery, queryString } from '../../../utils/listQuery';
+import { isNumericCnpj, stripCnpj } from '../../../utils/cnpj';
 
 export class FornecedorController {
   // Listar todos os fornecedores
@@ -256,10 +257,10 @@ export class FornecedorController {
       const { cnpj } = req.params;
       
       // Remover formatação do CNPJ
-      const cnpjLimpo = cnpj.replace(/\D/g, '');
-      
-      if (cnpjLimpo.length !== 14) {
-        sendValidationError(res, 'CNPJ deve ter 14 dígitos');
+      const cnpjLimpo = stripCnpj(cnpj);
+
+      if (!isNumericCnpj(cnpjLimpo)) {
+        sendValidationError(res, 'Consulta automática disponível apenas para CNPJ numérico');
         return;
       }
 

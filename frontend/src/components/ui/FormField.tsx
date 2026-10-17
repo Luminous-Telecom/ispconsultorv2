@@ -60,6 +60,8 @@ interface FormFieldProps extends BaseComponentProps, ValidationProps, TooltipPro
   isInvalid?: boolean;
   // Prefixo para gerar IDs únicos
   formPrefix?: string;
+  /** Conteúdo imediatamente antes do controle, na mesma linha. */
+  leading?: React.ReactNode;
 }
 
 const FormField: React.FC<FormFieldProps> = ({
@@ -112,6 +114,7 @@ const FormField: React.FC<FormFieldProps> = ({
   iconPosition = 'left',
   iconSize = 'md',
   formPrefix,
+  leading,
 }) => {
   const { t } = useI18n();
   const { error: notifyError } = useNotificationContext();
@@ -347,7 +350,14 @@ const FormField: React.FC<FormFieldProps> = ({
     <div className={`form-field ${className}`}>
       {renderLabel()}
       <div className="form-field-control">
-        {renderField()}
+        {leading ? (
+          <div className="form-field-with-leading">
+            {leading}
+            <div className="form-field-with-leading-input">{renderField()}</div>
+          </div>
+        ) : (
+          renderField()
+        )}
       </div>
     </div>
   );

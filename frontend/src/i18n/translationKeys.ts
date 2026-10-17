@@ -852,6 +852,7 @@ export interface TranslationKeys {
   'buttons.sync': string;
   'buttons.createEntity': string;
   'buttons.validate': string;
+  'buttons.cartaoCnpj': string;
   'buttons.apply': string;
   'agent.install': string;
   'agent.configureVpn': string;

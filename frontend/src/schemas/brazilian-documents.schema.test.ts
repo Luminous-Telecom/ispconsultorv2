@@ -13,6 +13,7 @@ import {
 describe('documentos brasileiros', () => {
   it('aceita CNPJ, CPF, CEP, e-mail, telefone e UF válidos', () => {
     expect(cnpjSchema.safeParse('11.444.777/0001-61').success).toBe(true);
+    expect(cnpjSchema.safeParse('12.ABC.345/01DE-35').success).toBe(true);
     expect(cpfSchema.safeParse('529.982.247-25').success).toBe(true);
     expect(cepSchema.safeParse('01310-100').success).toBe(true);
     expect(emailSchema.safeParse('financeiro@provedor.test').success).toBe(true);
@@ -22,6 +23,7 @@ describe('documentos brasileiros', () => {
 
   it('recusa documento inválido, CEP curto e e-mail vazio', () => {
     expect(cnpjSchema.safeParse('11.111.111/1111-11').success).toBe(false);
+    expect(cnpjSchema.safeParse('12.ABC.345/01DE-00').success).toBe(false);
     expect(cpfSchema.safeParse('111.111.111-11').success).toBe(false);
     expect(cepSchema.safeParse('123').success).toBe(false);
     expect(emailSchema.safeParse('').success).toBe(false);

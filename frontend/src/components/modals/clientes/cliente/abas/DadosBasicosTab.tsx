@@ -3,6 +3,8 @@ import { FormValue } from 'types/common';
 import { useI18n } from 'contexts/I18nContext';
 import FormField from 'components/ui/FormField';
 import AtivoInativoField from 'components/ui/AtivoInativoField';
+import { CartaoCnpjButton } from 'components/ui';
+import { openCartaoCnpj } from 'utils/cartaoCnpj';
 import { ClienteTabProps } from '../types';
 
 const DadosBasicosTab: React.FC<ClienteTabProps> = ({
@@ -28,6 +30,7 @@ const DadosBasicosTab: React.FC<ClienteTabProps> = ({
         disabled={isSubmitting}
         formPrefix={formPrefix}
         error={errors.cnpj}
+        leading={<CartaoCnpjButton type="button" onClick={openCartaoCnpj} />}
         />
       </div>
       <div className="col-12">

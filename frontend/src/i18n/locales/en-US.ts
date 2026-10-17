@@ -869,6 +869,7 @@ const enUS: TranslationKeys = {
     'buttons.sync': 'Sync',
     'buttons.createEntity': 'New ${entity}',
     'buttons.validate': 'Validate',
+    'buttons.cartaoCnpj': 'CNPJ Card',
     'buttons.apply': 'Apply',
     'agent.install': 'Install Agent',
     'agent.configureVpn': 'Configure VPN',
@@ -1248,7 +1249,7 @@ const enUS: TranslationKeys = {
 
 
     // Placeholders
-    'placeholder.cnpj': '00.000.000/0000-00',
+    'placeholder.cnpj': 'AA.AAA.AAA/AAAA-00',
     'placeholder.companyName': 'Company name',
     'placeholder.tradeName': 'Trade name',
     'placeholder.observations': 'Observations about the client...',
@@ -1256,7 +1257,7 @@ const enUS: TranslationKeys = {
     'placeholder.discountValue': '0.00',
     'placeholder.fileName': 'File name',
     'placeholder.fileDescription': 'File description (optional)',
-    'placeholder.cpfCnpj': '11 digits for CPF or 14 digits for CNPJ',
+    'placeholder.cpfCnpj': 'CPF or CNPJ (numbers and letters)',
     'placeholder.briefDescription': 'Brief description',
     'placeholder.selectStatus': 'Select status',
     'placeholder.selectPlan': 'Select plan',

@@ -1,5 +1,6 @@
 import React from 'react';
-import { AtivoInativoField, FormField } from 'components/ui';
+import { AtivoInativoField, CartaoCnpjButton, FormField } from 'components/ui';
+import { openCartaoCnpj } from 'utils/cartaoCnpj';
 import { FornecedorFormData, FornecedorFormErrors } from './types';
 
 interface FornecedorModalDadosBasicosTabProps {
@@ -59,6 +60,7 @@ const FornecedorModalDadosBasicosTab: React.FC<FornecedorModalDadosBasicosTabPro
         required
         error={errors.cpf_cnpj}
         formPrefix={formPrefix}
+        leading={formData.tipo_pessoa === 'JURIDICA' ? <CartaoCnpjButton type="button" onClick={openCartaoCnpj} /> : undefined}
       />
     </div>
 

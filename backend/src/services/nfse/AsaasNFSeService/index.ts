@@ -7,6 +7,7 @@ import { NFSeConfigService } from '../NFSeConfigService';
 import { BancoService } from '../../cadastros/BancoService';
 import { formatDateOnly } from '../../../utils/timezoneUtils';
 import asaasConfig from '../../../config/bancos/asaas';
+import { stripCnpj } from '../../../utils/cnpj';
 
 interface AsaasConfig {
   apiKey: string;
@@ -303,7 +304,7 @@ export class AsaasNFSeService {
     cliente: Cliente
   ): Promise<string | null> {
     const apiClient = this.createApiClient(config);
-    const cpfCnpj = cliente.cnpj?.replace(/\D/g, '') || '';
+    const cpfCnpj = cliente.cnpj ? stripCnpj(cliente.cnpj) : '';
 
     if (!cpfCnpj) {
       return null;

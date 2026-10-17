@@ -1,3 +1,5 @@
+import { stripCnpj } from '../../../utils/cnpj';
+
 const CODIGO_6 = /^\d{6}$/;
 
 /**
@@ -31,7 +33,8 @@ export function montarIdDps(params: {
   numeroDps: number;
 }): string {
   const municipio = params.codigoMunicipio.replace(/\D/g, '');
-  const cnpj = params.cnpjPrestador.replace(/\D/g, '').padStart(14, '0');
+  const cnpjBruto = stripCnpj(params.cnpjPrestador);
+  const cnpj = /^\d+$/.test(cnpjBruto) ? cnpjBruto.padStart(14, '0') : cnpjBruto;
   const serie = params.serie.padStart(5, '0');
   const numero = String(params.numeroDps).padStart(15, '0');
   if (municipio.length !== 7 || cnpj.length !== 14 || serie.length !== 5 || numero.length !== 15) {

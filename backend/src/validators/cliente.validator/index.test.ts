@@ -27,6 +27,15 @@ describe('clienteCreateSchema', () => {
     expect(error?.details.some((item) => item.path.join('.') === 'razao_social')).toBe(true);
   });
 
+  it('aceita CNPJ alfanumérico e grava com máscara', () => {
+    const { error, value } = clienteCreateSchema.validate({
+      ...clienteValido,
+      cnpj: '12abc34501de35',
+    });
+    expect(error).toBeUndefined();
+    expect(value.cnpj).toBe('12.ABC.345/01DE-35');
+  });
+
   it('recusa e-mail inválido e CNPJ fora do tamanho', () => {
     const { error } = clienteCreateSchema.validate(
       { ...clienteValido, email: 'nao-e-email', cnpj: '123' },

@@ -149,34 +149,21 @@ export function formatRpkiValidityDisplay(value: string | Date | null | undefine
 }
 
 /**
- * Formata um CNPJ progressivamente durante a digitação
- * @param cnpj - CNPJ sem formatação
- * @returns CNPJ formatado como 00.000.000/0000-00
+ * Formata um CNPJ numérico ou alfanumérico durante a digitação.
+ * Máscara AA.AAA.AAA/AAAA-DD.
  */
 export const formatCNPJ = (cnpj: string): string => {
   if (!cnpj) return '';
-  
-  // Remove todos os caracteres não numéricos
-  const numbers = cnpj.replace(/\D/g, '');
-  
-  // Limita a 14 dígitos (tamanho máximo do CNPJ)
-  const limitedNumbers = numbers.slice(0, 14);
-  
-  // Retorna sem formatação se tiver menos de 3 dígitos
-  if (limitedNumbers.length <= 2) return limitedNumbers;
-  
-  // Formata progressivamente
-  if (limitedNumbers.length <= 5) {
-    return `${limitedNumbers.slice(0, 2)}.${limitedNumbers.slice(2)}`;
+
+  const limited = cnpj.toUpperCase().replace(/[^0-9A-Z]/g, '').slice(0, 14);
+
+  if (limited.length <= 2) return limited;
+  if (limited.length <= 5) return `${limited.slice(0, 2)}.${limited.slice(2)}`;
+  if (limited.length <= 8) return `${limited.slice(0, 2)}.${limited.slice(2, 5)}.${limited.slice(5)}`;
+  if (limited.length <= 12) {
+    return `${limited.slice(0, 2)}.${limited.slice(2, 5)}.${limited.slice(5, 8)}/${limited.slice(8)}`;
   }
-  if (limitedNumbers.length <= 8) {
-    return `${limitedNumbers.slice(0, 2)}.${limitedNumbers.slice(2, 5)}.${limitedNumbers.slice(5)}`;
-  }
-  if (limitedNumbers.length <= 12) {
-    return `${limitedNumbers.slice(0, 2)}.${limitedNumbers.slice(2, 5)}.${limitedNumbers.slice(5, 8)}/${limitedNumbers.slice(8)}`;
-  }
-  
-  return `${limitedNumbers.slice(0, 2)}.${limitedNumbers.slice(2, 5)}.${limitedNumbers.slice(5, 8)}/${limitedNumbers.slice(8, 12)}-${limitedNumbers.slice(12, 14)}`;
+  return `${limited.slice(0, 2)}.${limited.slice(2, 5)}.${limited.slice(5, 8)}/${limited.slice(8, 12)}-${limited.slice(12, 14)}`;
 };
 
 /**
@@ -194,6 +181,14 @@ export const formatCPF = (cpf: string): string => {
   if (limitedNumbers.length <= 6) return `${limitedNumbers.slice(0, 3)}.${limitedNumbers.slice(3)}`;
   if (limitedNumbers.length <= 9) return `${limitedNumbers.slice(0, 3)}.${limitedNumbers.slice(3, 6)}.${limitedNumbers.slice(6)}`;
   return `${limitedNumbers.slice(0, 3)}.${limitedNumbers.slice(3, 6)}.${limitedNumbers.slice(6, 9)}-${limitedNumbers.slice(9, 11)}`;
+};
+
+/** CPF enquanto só há dígitos e no máximo 11; a partir de letra ou do 12º caractere, CNPJ. */
+export const formatCpfOrCnpj = (value: string): string => {
+  const upper = value.toUpperCase();
+  if (/[A-Z]/.test(upper)) return formatCNPJ(upper);
+  const digits = upper.replace(/\D/g, '');
+  return digits.length <= 11 ? formatCPF(digits) : formatCNPJ(digits);
 };
 
 /**

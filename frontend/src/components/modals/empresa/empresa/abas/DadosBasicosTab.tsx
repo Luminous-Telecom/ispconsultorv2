@@ -1,6 +1,7 @@
 import React from 'react';
 import { formatCNPJ } from 'utils/formatters';
-import { FormField } from 'components/ui';
+import { CartaoCnpjButton, FormField } from 'components/ui';
+import { openCartaoCnpj } from 'utils/cartaoCnpj';
 import { DadosEmpresaTabProps } from '../types';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -65,12 +66,13 @@ const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: Fi
             name="cnpj"
             type="text"
             label={t('company.cnpj')}
-            placeholder="00.000.000/0000-00"
+            placeholder="AA.AAA.AAA/AAAA-00"
             required={true}
             size="md"
             value={dados.cnpj}
             onChange={(value) => handleInputChange('cnpj', String(value ?? ''))}
             disabled={isPending}
+            leading={<CartaoCnpjButton type="button" onClick={openCartaoCnpj} />}
           />
         </div>
         <div className="col-12">

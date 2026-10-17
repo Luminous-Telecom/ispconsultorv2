@@ -1,4 +1,5 @@
 import { montarIdDps } from './dpsId';
+import { stripCnpj } from '../../../utils/cnpj';
 
 const NS = 'http://www.sped.fazenda.gov.br/nfse';
 
@@ -93,8 +94,10 @@ export function montarDpsXml(input: DpsXmlInput): string {
     numeroDps: input.numeroDps,
   });
   const tpAmb = input.ambiente === 'PRODUCAO' ? 1 : 2;
-  const documento = input.tomador.documento.replace(/\D/g, '');
-  const tagDocumento = documento.length === 11 ? tag('CPF', documento) : tag('CNPJ', documento.padStart(14, '0'));
+  const documento = stripCnpj(input.tomador.documento);
+  const tagDocumento = documento.length === 11 && /^\d{11}$/.test(documento)
+    ? tag('CPF', documento)
+    : tag('CNPJ', /^\d+$/.test(documento) ? documento.padStart(14, '0') : documento);
   const desconto = input.valorDesconto && input.valorDesconto > 0
     ? `<vDescCondIncond>${tag('vDescIncond', dinheiro(input.valorDesconto))}</vDescCondIncond>`
     : '';
@@ -109,5 +112,5 @@ export function montarDpsXml(input: DpsXmlInput): string {
   const telefoneDigitos = input.tomador.telefone?.replace(/\D/g, '') || '';
   const telefone = telefoneDigitos.length >= 10 ? tag('fone', telefoneDigitos.slice(0, 20)) : '';
 
-  return `<?xml version="1.0" encoding="UTF-8"?><DPS xmlns="${NS}" versao="1.01"><infDPS Id="${id}">${tag('tpAmb', tpAmb)}${tag('dhEmi', dataHoraBrasilia(input.dataEmissao))}${tag('verAplic', 'ISPConsultor')}${tag('serie', input.serie)}${tag('nDPS', input.numeroDps)}${tag('dCompet', dataBrasilia(input.dataEmissao))}${tag('tpEmit', 1)}${tag('cLocEmi', input.codigoMunicipioEmissao)}<prest>${tag('CNPJ', input.cnpjPrestador.replace(/\D/g, ''))}${inscricao ? tag('IM', inscricao.slice(0, 15)) : ''}<regTrib>${tag('opSimpNac', input.opSimplesNacional)}${regimeApuracao}${tag('regEspTrib', input.regimeEspecialTributacao)}</regTrib></prest><toma>${tagDocumento}${tag('xNome', input.tomador.nome.slice(0, 150))}${enderecoXml(input.tomador.endereco)}${telefone}${email}</toma><serv><locPrest>${tag('cLocPrestacao', input.codigoMunicipioPrestacao)}</locPrest><cServ>${tag('cTribNac', input.codigoTributacaoNacional)}${tag('xDescServ', input.descricaoServico.slice(0, 2000))}</cServ></serv><valores><vServPrest>${tag('vServ', dinheiro(input.valorServico))}</vServPrest>${desconto}<trib><tribMun>${tag('tribISSQN', 1)}${tag('tpRetISSQN', input.tipoRetencaoIssqn)}${aliquota}</tribMun><totTrib>${tag('indTotTrib', 0)}</totTrib></trib></valores></infDPS></DPS>`;
+  return `<?xml version="1.0" encoding="UTF-8"?><DPS xmlns="${NS}" versao="1.01"><infDPS Id="${id}">${tag('tpAmb', tpAmb)}${tag('dhEmi', dataHoraBrasilia(input.dataEmissao))}${tag('verAplic', 'ISPConsultor')}${tag('serie', input.serie)}${tag('nDPS', input.numeroDps)}${tag('dCompet', dataBrasilia(input.dataEmissao))}${tag('tpEmit', 1)}${tag('cLocEmi', input.codigoMunicipioEmissao)}<prest>${tag('CNPJ', stripCnpj(input.cnpjPrestador))}${inscricao ? tag('IM', inscricao.slice(0, 15)) : ''}<regTrib>${tag('opSimpNac', input.opSimplesNacional)}${regimeApuracao}${tag('regEspTrib', input.regimeEspecialTributacao)}</regTrib></prest><toma>${tagDocumento}${tag('xNome', input.tomador.nome.slice(0, 150))}${enderecoXml(input.tomador.endereco)}${telefone}${email}</toma><serv><locPrest>${tag('cLocPrestacao', input.codigoMunicipioPrestacao)}</locPrest><cServ>${tag('cTribNac', input.codigoTributacaoNacional)}${tag('xDescServ', input.descricaoServico.slice(0, 2000))}</cServ></serv><valores><vServPrest>${tag('vServ', dinheiro(input.valorServico))}</vServPrest>${desconto}<trib><tribMun>${tag('tribISSQN', 1)}${tag('tpRetISSQN', input.tipoRetencaoIssqn)}${aliquota}</tribMun><totTrib>${tag('indTotTrib', 0)}</totTrib></trib></valores></infDPS></DPS>`;
 }

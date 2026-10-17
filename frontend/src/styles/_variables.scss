@@ -50,21 +50,24 @@
   --modal-rich-text-editor-bottom-spacing: 1rem;
 }
 
-/* Tema claro (default) — Paleta original Azul Ardósia Profundo (commit anterior a 9ebd0f5d) */
+/* Tema claro — grafite claro */
 [data-theme="light"],
 :root {
-  --primary-color: var(--color-slate-blue);
-  --primary-hover: var(--color-slate-blue-hover);
-  --btn-primary-color: var(--primary-color);
-  --btn-primary-hover: var(--primary-hover);
+  --primary-color: var(--color-accent-light);
+  --primary-hover: var(--color-primary-fill-hover-light);
+  --btn-primary-color: var(--color-primary-fill-light);
+  --btn-primary-hover: var(--color-primary-fill-hover-light);
   --btn-primary-disabled: var(--color-btn-disabled);
-  --btn-disabled-color: #{rgba(palette-color('white'), 0.42)};
+  --btn-disabled-color: var(--color-btn-disabled-text);
   --btn-disabled-border: var(--color-btn-disabled-border);
   --secondary-color: var(--color-gray-bootstrap);
-  --success-color: var(--color-green-bootstrap);
-  --danger-color: var(--color-red-bootstrap);
-  --warning-color: var(--color-yellow-bootstrap);
-  --info-color: var(--color-cyan-bootstrap);
+  --success-color: var(--color-success-light);
+  --danger-color: var(--color-danger-light);
+  --warning-color: var(--color-warning-light);
+  --info-color: var(--color-info-light);
+  --link-color: var(--color-accent-light);
+  --link-hover-color: var(--color-primary-fill-light);
+  --focus-color: var(--color-accent-light);
   --bg-primary: var(--color-bg);
   --bg-secondary: var(--color-bg-secondary);
   --bg-tertiary: var(--color-bg-tertiary);
@@ -74,7 +77,7 @@
   --border-color: var(--color-border);
   --border-light: var(--border-color);
   --btn-close-filter: none;
-  --text-primary: var(--color-white);
+  --text-primary: var(--color-text-ink);
   --text-secondary: var(--color-text-soft);
   --text-muted: var(--color-text-muted);
   --shadow-sm: 0 1px 2px 0 #{rgba(palette-color('black'), 0.05)};
@@ -82,16 +85,16 @@
   --shadow-lg: 0 10px 15px -3px #{rgba(palette-color('black'), 0.1)}, 0 4px 6px -2px #{rgba(palette-color('black'), 0.05)};
   --shadow-xl: 0 20px 25px -5px #{rgba(palette-color('black'), 0.1)}, 0 10px 10px -5px #{rgba(palette-color('black'), 0.04)};
   --sidebar-bg: var(--bg-primary);
-  --sidebar-text: var(--text-muted);
-  --sidebar-hover: var(--bg-secondary);
+  --sidebar-text: var(--text-primary);
+  --sidebar-hover: var(--bg-dropdown-hover);
   --sidebar-active: var(--color-sidebar-active);
   /* Barra vertical ao lado do título da pasta aberta (referência visual “pro”) */
   --sidebar-section-accent: var(--color-sidebar-accent);
   --navbar-bg: var(--color-navbar-bg);
-  --navbar-text: var(--color-white);
+  --navbar-text: var(--color-text-ink);
   --navbar-border: var(--border-color);
-  --navbar-input-bg: #{rgba(palette-color('white'), 0.1)};
-  --navbar-input-text: var(--color-white);
+  --navbar-input-bg: #{rgba(palette-color('text-ink'), 0.04)};
+  --navbar-input-text: var(--color-text-ink);
   --accent-pending: var(--color-accent-pending);
   --accent-complete: var(--color-accent-complete);
   --card-border-primary: var(--sidebar-active);
@@ -107,7 +110,7 @@
   --chart-color-6: var(--color-chart-sky);
   --chart-color-7: var(--color-chart-lime);
   --chart-color-8: var(--color-chart-gold);
-  --bs-form-select-bg-img: #{select-chevron(palette-color('white'))};
+  --bs-form-select-bg-img: #{select-chevron(palette-color('text-ink'))};
 }
 
 /* mobile fix: P9 - font sizes */
@@ -147,6 +150,9 @@
 
   --primary-color: var(--color-accent-dark);
   --primary-hover: var(--color-primary-fill-dark);
+  --link-color: var(--color-accent-dark);
+  --link-hover-color: var(--color-text-dark);
+  --focus-color: var(--color-accent-dark);
   --sidebar-bg: var(--bg-secondary);
   --sidebar-text: var(--text-primary);
   --sidebar-hover: #{rgba(palette-color('accent-dark'), 0.16)};

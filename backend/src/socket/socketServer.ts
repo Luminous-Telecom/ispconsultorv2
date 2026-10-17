@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { logger } from '../utils/logger';
 import { registerSshNamespaces } from './sshManagerSocket';
 import { registerAgentNamespace, registerAgentTerminalNamespace } from './agentSocket';
+import { registerSystemUpdateNamespace } from './systemUpdateSocket';
 
 let io: SocketIOServer | null = null;
 
@@ -34,6 +35,7 @@ export function setIO(server: SocketIOServer): void {
   registerSshNamespaces(io);
   registerAgentNamespace(io);
   registerAgentTerminalNamespace(io);
+  registerSystemUpdateNamespace(io);
 }
 
 export function getIO(): SocketIOServer | null {

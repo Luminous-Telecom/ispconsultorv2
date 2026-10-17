@@ -131,17 +131,14 @@ export function sanitizeInteger(input: string | number | null | undefined): numb
 }
 
 /**
- * Sanitiza um CNPJ/CPF removendo caracteres não numéricos
- * @param input - CNPJ/CPF a ser sanitizado
- * @returns String apenas com dígitos
+ * Sanitiza um CNPJ/CPF. CPF permanece só com dígitos. CNPJ alfanumérico conserva A-Z.
  */
 export function sanitizeCnpjCpf(input: string | null | undefined): string {
   if (!input || typeof input !== 'string') {
     return '';
   }
 
-  // Remover tudo exceto dígitos
-  return input.replace(/\D/g, '');
+  return input.toUpperCase().replace(/[^0-9A-Z]/g, '');
 }
 
 /**

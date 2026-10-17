@@ -4,49 +4,13 @@
  */
 
 import { z } from 'zod';
+import { isValidCNPJ } from '../utils/validators';
 
 /**
  * Remove caracteres não numéricos de uma string
  */
 const cleanDocument = (value: string): string => {
   return value.replace(/\D/g, '');
-};
-
-/**
- * Valida se um CNPJ é válido usando o algoritmo de validação
- */
-const isValidCNPJ = (cnpj: string): boolean => {
-  const cleaned = cleanDocument(cnpj);
-  
-  if (cleaned.length !== 14) return false;
-  
-  // Verificar se todos os dígitos são iguais
-  if (/^(\d)\1+$/.test(cleaned)) return false;
-  
-  // Algoritmo de validação do CNPJ
-  let sum = 0;
-  let weight = 2;
-  
-  for (let i = 11; i >= 0; i--) {
-    sum += parseInt(cleaned[i]) * weight;
-    weight = weight === 9 ? 2 : weight + 1;
-  }
-  
-  const firstDigit = sum % 11 < 2 ? 0 : 11 - (sum % 11);
-  
-  if (parseInt(cleaned[12]) !== firstDigit) return false;
-  
-  sum = 0;
-  weight = 2;
-  
-  for (let i = 12; i >= 0; i--) {
-    sum += parseInt(cleaned[i]) * weight;
-    weight = weight === 9 ? 2 : weight + 1;
-  }
-  
-  const secondDigit = sum % 11 < 2 ? 0 : 11 - (sum % 11);
-  
-  return parseInt(cleaned[13]) === secondDigit;
 };
 
 /**
@@ -82,19 +46,12 @@ const isValidCPF = (cpf: string): boolean => {
 };
 
 /**
- * Schema para validação de CNPJ
- * Aceita formatado (00.000.000/0000-00) ou apenas números
+ * Schema para validação de CNPJ numérico ou alfanumérico.
+ * Aceita com máscara (AA.AAA.AAA/AAAA-DD) ou as 14 posições sem máscara.
  */
 export const cnpjSchema = z
   .string()
   .min(1, 'CNPJ é obrigatório')
-  .refine(
-    (value) => {
-      const cleaned = cleanDocument(value);
-      return cleaned.length === 14 || cleaned.length === 18; // Com ou sem formatação
-    },
-    { message: 'CNPJ deve ter 14 dígitos' }
-  )
   .refine(
     (value) => isValidCNPJ(value),
     { message: 'CNPJ inválido' }

@@ -7,6 +7,7 @@ import { WhatsAppCloudService } from '../WhatsAppCloudService';
 import { buildBrPaymentSettings } from './brPaymentSettings';
 import { resolvePixOrderDetailsIdentity } from './pixOrderDetails';
 import { resolveTituloPixParaOrderDetails } from './resolveTituloPixParaOrderDetails';
+import { stripCnpj } from '../../../utils/cnpj';
 import type {
   MetaTemplateButtonDef,
   MetaTemplateStructure,
@@ -238,7 +239,7 @@ async function buildOrderDetailsButton(
     let pixKey = identity?.key;
     let pixKeyType = identity?.keyType;
     if (!pixKey || !pixKeyType) {
-      const cnpj = (empresa?.cnpj || '').replace(/\D/g, '');
+      const cnpj = stripCnpj(empresa?.cnpj || '');
       if (cnpj.length === 14) {
         pixKey = cnpj;
         pixKeyType = 'CNPJ';

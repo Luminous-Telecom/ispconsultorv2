@@ -4,6 +4,7 @@ import type { cadastros_bancos, clientes } from '@prisma/client';
 type Cliente = clientes;
 type Banco = cadastros_bancos;
 import { logger } from '../../../../utils/logger';
+import { stripCnpj } from '../../../../utils/cnpj';
 
 interface AsaasClientePayload {
   name: string;
@@ -34,7 +35,7 @@ export class AsaasClienteService {
   ): Promise<string | null> {
     try {
       // Buscar cliente existente por CPF/CNPJ
-      const cpfCnpj = this.sanitizeDigits(cliente.cnpj);
+      const cpfCnpj = stripCnpj(cliente.cnpj || '');
       if (cpfCnpj) {
         try {
           const searchUrl = `${baseUrl}/customers?cpfCnpj=${cpfCnpj}&limit=1`;
@@ -93,7 +94,7 @@ export class AsaasClienteService {
    */
   private static montarPayloadCliente(cliente: Cliente): AsaasClientePayload {
     const telefone = this.normalizePhone(cliente.telefone);
-    const cpfCnpj = this.sanitizeDigits(cliente.cnpj || '');
+    const cpfCnpj = stripCnpj(cliente.cnpj || '');
 
     return {
       name: cliente.razao_social || cliente.nome_fantasia || 'Cliente',

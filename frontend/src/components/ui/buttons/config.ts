@@ -64,6 +64,7 @@ export type SystemButtonAction =
   | 'extrairDominiosPdf'
   | 'extrairPlanilhaUrl'
   | 'validarCnpj'
+  | 'cartaoCnpj'
   | 'validarCep'
   | 'ocultarFiltros'
   | 'mostrarFiltros'
@@ -146,6 +147,7 @@ export const SYSTEM_BUTTON_CONFIG: Record<SystemButtonAction, SystemButtonStyleC
   extrairDominiosPdf: { variant: 'primary', defaultSize: 'sm', i18nKey: 'blockdomi.extractDomainsFromPdf' },
   extrairPlanilhaUrl: { variant: 'secondary', defaultSize: 'sm', i18nKey: 'blockdomi.extractFromPlanilhaUrl' },
   validarCnpj: { variant: 'outline-primary', defaultSize: 'sm', i18nKey: 'params.validateCpfCnpj' },
+  cartaoCnpj: { variant: 'primary', defaultSize: 'sm', i18nKey: 'buttons.cartaoCnpj' },
   validarCep: { variant: 'outline-primary', defaultSize: 'sm', i18nKey: 'params.validateCep' },
   ocultarFiltros: { variant: 'outline-primary', defaultSize: 'sm', i18nKey: 'ui.hideFilters' },
   mostrarFiltros: { variant: 'outline-primary', defaultSize: 'sm', i18nKey: 'ui.showFilters' },
@@ -260,6 +262,7 @@ export const SYSTEM_BUTTON_EXPORT_NAMES: Record<SystemButtonAction, string> = {
   extrairDominiosPdf: 'ExtrairDominiosPdfButton',
   extrairPlanilhaUrl: 'ExtrairPlanilhaUrlButton',
   validarCnpj: 'ValidarCnpjButton',
+  cartaoCnpj: 'CartaoCnpjButton',
   validarCep: 'ValidarCepButton',
   ocultarFiltros: 'OcultarFiltrosButton',
   mostrarFiltros: 'MostrarFiltrosButton',

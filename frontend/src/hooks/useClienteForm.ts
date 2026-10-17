@@ -18,7 +18,7 @@ import { Cliente, CreateCliente, UpdateCliente } from '../types';
 import { ClienteFormData, ClienteFormErrors } from '../types';
 import { FormValue } from '../types/common';
 import { formatCNPJ, formatPhone, formatCEP } from '../utils/formatters';
-import { isValidCNPJ } from '../utils/validators';
+import { isNumericCnpj, isValidCNPJ, stripCnpj } from '../utils/validators';
 import { clienteSchema } from '../schemas/cliente.schema';
 import type { ClienteFormData as ZodClienteFormData } from '../schemas/cliente.schema';
 
@@ -251,10 +251,9 @@ export const useClienteForm = ({
 
     // Se o campo for CNPJ e estiver completo e válido, consultar dados
     if (field === 'cnpj' && typeof formattedValue === 'string' && !isEditing) {
-      const cnpjLimpo = formattedValue.replace(/\D/g, '');
-      
-      // Verificar se CNPJ está completo (14 dígitos) e válido
-      if (cnpjLimpo.length === 14 && isValidCNPJ(formattedValue)) {
+      const cnpjLimpo = stripCnpj(formattedValue);
+
+      if (isNumericCnpj(cnpjLimpo) && isValidCNPJ(formattedValue)) {
         // Verificar se já consultou este CNPJ para evitar consultas duplicadas
         if (lastCnpjConsulted.current === cnpjLimpo) {
           return;

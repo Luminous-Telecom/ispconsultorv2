@@ -1,7 +1,7 @@
 import React from 'react';
 import { useI18n } from 'contexts/I18nContext';
 import FormField from 'components/ui/FormField';
-import { formatCPF, formatCNPJ, formatLinhaDigitavel } from 'utils/formatters';
+import { formatCpfOrCnpj, formatLinhaDigitavel } from 'utils/formatters';
 import type { ContaPagarFormData } from '../types';
 
 interface ContaPagarPixBoletoSectionProps {
@@ -64,8 +64,7 @@ const ContaPagarPixBoletoSection: React.FC<ContaPagarPixBoletoSectionProps> = ({
               let formatted = inputValue;
 
               if (formData.tipo_chave_pix === 'CPF_CNPJ') {
-                const cleaned = inputValue.replace(/\D/g, '');
-                formatted = cleaned.length <= 11 ? formatCPF(cleaned) : formatCNPJ(cleaned);
+                formatted = formatCpfOrCnpj(inputValue);
               } else if (formData.tipo_chave_pix === 'CELULAR') {
                 const cleaned = inputValue.replace(/\D/g, '').slice(0, 11);
                 formatted = cleaned && cleaned.length >= 10

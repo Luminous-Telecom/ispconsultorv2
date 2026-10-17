@@ -177,7 +177,7 @@ const EnviarAssinaturaModal: React.FC<EnviarAssinaturaModalProps> = ({
               label="CPF/CNPJ do Assinante"
               value={formData.cpf_cnpj_assinante}
               onChange={(value) => handleFieldChange('cpf_cnpj_assinante', String(value ?? ''))}
-              placeholder="11 dígitos para CPF ou 14 dígitos para CNPJ"
+              placeholder="CPF ou CNPJ (números e letras)"
               disabled={isSubmitting}
             />
           </div>

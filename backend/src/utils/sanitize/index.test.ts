@@ -24,6 +24,7 @@ describe('sanitize', () => {
     expect(sanitizeEmail('  Ana@Empresa.COM ')).toBe('ana@empresa.com');
     expect(sanitizeEmail('sem-arroba')).toBe('');
     expect(sanitizeCnpjCpf('11.444.777/0001-61')).toBe('11444777000161');
+    expect(sanitizeCnpjCpf('12.abc.345/01de-35')).toBe('12ABC34501DE35');
     expect(sanitizeCep('01310-100')).toBe('01310100');
     expect(sanitizePhone('(11) 98888-7777')).toBe('11 988887777');
     expect(sanitizeNumber('R$ 10,5')).toBe(105);

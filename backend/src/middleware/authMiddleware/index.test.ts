@@ -60,6 +60,14 @@ describe('authMiddleware', () => {
     expect(res.statusCode).toBe(404);
   });
 
+  it('não trata mais atualizacao-status como rota pública', async () => {
+    const next = jest.fn();
+    const res = resposta();
+    await authMiddleware(pedido('/api/sistema/atualizacao-status') as never, res as never, next);
+    expect(next).not.toHaveBeenCalled();
+    expect(res.statusCode).toBe(404);
+  });
+
   it('token opaco da central não abre o ERP', async () => {
     (UsuarioService.findByWebhookSecret as jest.Mock).mockResolvedValue(null);
     const next = jest.fn();

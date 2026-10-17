@@ -1085,6 +1085,11 @@ body[data-app="system"] .tox-tinymce-aux .tox {
   display: block;
 }
 
+[data-theme="light"] & .ispconsultor-logo-block {
+  filter: invert(1);
+  mix-blend-mode: multiply;
+}
+
 .ispconsultor-icon-block {
   object-fit: contain;
   display: block;

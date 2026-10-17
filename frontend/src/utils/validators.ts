@@ -58,38 +58,37 @@ export const isValidIPv6 = (ip: string | null | undefined): boolean => {
  * @param cnpj - CNPJ para validar
  * @returns true se válido, false caso contrário
  */
-export const isValidCNPJ = (cnpj: string): boolean => {
-  const cleaned = cnpj.replace(/\D/g, '');
-  
-  if (cleaned.length !== 14) return false;
-  
-  // Verificar se todos os dígitos são iguais
-  if (/^(\d)\1+$/.test(cleaned)) return false;
-  
-  // Algoritmo de validação do CNPJ
+/** Remove a máscara e limita às 14 posições. Letras permanecem (CNPJ alfanumérico). */
+export const stripCnpj = (cnpj: string): string =>
+  cnpj.toUpperCase().replace(/[^0-9A-Z]/g, '');
+
+export const isNumericCnpj = (cnpj: string): boolean => {
+  const cleaned = stripCnpj(cnpj);
+  return cleaned.length === 14 && /^\d{14}$/.test(cleaned);
+};
+
+const cnpjCharValue = (char: string): number => char.charCodeAt(0) - 48;
+
+const cnpjCheckDigit = (base: string): number => {
   let sum = 0;
   let weight = 2;
-  
-  for (let i = 11; i >= 0; i--) {
-    sum += parseInt(cleaned[i]) * weight;
+  for (let index = base.length - 1; index >= 0; index -= 1) {
+    sum += cnpjCharValue(base[index]) * weight;
     weight = weight === 9 ? 2 : weight + 1;
   }
-  
-  const firstDigit = sum % 11 < 2 ? 0 : 11 - (sum % 11);
-  
-  if (parseInt(cleaned[12]) !== firstDigit) return false;
-  
-  sum = 0;
-  weight = 2;
-  
-  for (let i = 12; i >= 0; i--) {
-    sum += parseInt(cleaned[i]) * weight;
-    weight = weight === 9 ? 2 : weight + 1;
-  }
-  
-  const secondDigit = sum % 11 < 2 ? 0 : 11 - (sum % 11);
-  
-  return parseInt(cleaned[13]) === secondDigit;
+  const mod = sum % 11;
+  return mod < 2 ? 0 : 11 - mod;
+};
+
+export const isValidCNPJ = (cnpj: string): boolean => {
+  const cleaned = stripCnpj(cnpj);
+
+  if (!/^[0-9A-Z]{12}\d{2}$/.test(cleaned)) return false;
+  if (/^(.)\1{13}$/.test(cleaned)) return false;
+
+  const first = cnpjCheckDigit(cleaned.slice(0, 12));
+  const second = cnpjCheckDigit(cleaned.slice(0, 12) + String(first));
+  return cleaned.endsWith(`${first}${second}`);
 };
 
 /**

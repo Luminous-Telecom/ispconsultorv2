@@ -1201,7 +1201,7 @@ button {
 /* Variantes de botões */
 .btn-primary {
   background-color: var(--btn-primary-color);
-  color: white;
+  color: var(--color-text-on-fill) !important;
   border: 1px solid var(--btn-primary-color);
   border-radius: var(--border-radius-sm) !important;
 }
@@ -1280,15 +1280,15 @@ button {
 }
 
 .btn-success {
-  background: var(--color-emerald);
-  color: white;
-  border: 1px solid var(--color-emerald);
+  background: var(--color-success-fill-light);
+  color: var(--color-text-on-fill) !important;
+  border: 1px solid var(--color-success-fill-light);
   border-radius: var(--border-radius-sm) !important;
 }
 
 .btn-success:hover:not(:disabled) {
-  background: var(--color-emerald-dark);
-  border-color: var(--color-emerald-dark);
+  background: var(--color-success-fill-hover-light);
+  border-color: var(--color-success-fill-hover-light);
 }
 
 .btn-success:disabled {
@@ -1301,15 +1301,15 @@ button {
 }
 
 .btn-danger {
-  background: var(--color-red);
-  color: white;
-  border: 1px solid var(--color-red);
+  background: var(--color-danger-fill-light);
+  color: var(--color-text-on-fill) !important;
+  border: 1px solid var(--color-danger-fill-light);
   border-radius: var(--border-radius-sm) !important;
 }
 
 .btn-danger:hover:not(:disabled) {
-  background: var(--color-red-dark);
-  border-color: var(--color-red-dark);
+  background: var(--color-danger-fill-hover-light);
+  border-color: var(--color-danger-fill-hover-light);
 }
 
 .btn-danger:disabled {
@@ -1322,15 +1322,15 @@ button {
 }
 
 .btn-info {
-  background: var(--color-blue);
-  color: white;
-  border: 1px solid var(--color-blue);
+  background: var(--color-info-fill-light);
+  color: var(--color-text-on-fill) !important;
+  border: 1px solid var(--color-info-fill-light);
   border-radius: var(--border-radius-sm) !important;
 }
 
 .btn-info:hover:not(:disabled) {
-  background: var(--color-blue-dark);
-  border-color: var(--color-blue-dark);
+  background: var(--color-info-fill-hover-light);
+  border-color: var(--color-info-fill-hover-light);
 }
 
 .btn-info:disabled {
@@ -1343,15 +1343,15 @@ button {
 }
 
 .btn-warning {
-  background: var(--color-amber);
-  color: white;
-  border: 1px solid var(--color-amber);
+  background: var(--color-warning-fill-light);
+  color: var(--color-text-on-fill) !important;
+  border: 1px solid var(--color-warning-fill-light);
   border-radius: var(--border-radius-sm) !important;
 }
 
 .btn-warning:hover:not(:disabled) {
-  background: var(--color-amber-dark);
-  border-color: var(--color-amber-dark);
+  background: var(--color-warning-fill-hover-light);
+  border-color: var(--color-warning-fill-hover-light);
 }
 
 .btn-warning:disabled {
@@ -4769,6 +4769,27 @@ textarea:focus {
 
 .form-field {
   margin-bottom: 0.5rem;
+}
+
+.form-field-with-leading {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.form-field-with-leading > .btn {
+  flex: 0 0 auto;
+}
+
+.form-field-with-leading-input {
+  flex: 1 1 auto;
+  min-width: 0;
+
+  > .form-control,
+  > .input-wrapper {
+    width: 100%;
+  }
 }
 
 .form-field .form-label {

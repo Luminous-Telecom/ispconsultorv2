@@ -12,8 +12,9 @@ import { useNotificationContext } from 'components/notifications/NotificationPro
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { formatCNPJ, formatCEP, formatPhone } from 'utils/formatters';
-import { isValidCNPJ } from 'utils/validators';
-import { CancelarButton, FormField, NovoButton, SalvarButton } from 'components/ui';
+import { isNumericCnpj, isValidCNPJ, stripCnpj } from 'utils/validators';
+import { CancelarButton, CartaoCnpjButton, FormField, NovoButton, SalvarButton } from 'components/ui';
+import { openCartaoCnpj } from 'utils/cartaoCnpj';
 import AddressFields from 'components/forms/AddressFields';
 import ContactFields from 'components/forms/ContactFields';
 import { FormValue } from 'types/common';
@@ -146,8 +147,8 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
   // Buscar CNPJ ao digitar 14 dígitos válidos
   useEffect(() => {
     if (!showForm || editingId || !parametros?.data?.validar_cpf_cnpj) return;
-    const cnpjLimpo = form.cnpj.replace(/\D/g, '');
-    if (cnpjLimpo.length !== 14 || !isValidCNPJ(form.cnpj) || lastCnpjConsulted.current === cnpjLimpo) return;
+    const cnpjLimpo = stripCnpj(form.cnpj);
+    if (!isNumericCnpj(cnpjLimpo) || !isValidCNPJ(form.cnpj) || lastCnpjConsulted.current === cnpjLimpo) return;
     const camposVazios = !form.razao_social && !form.nome_fantasia && !form.endereco;
     if (!camposVazios) return;
 
@@ -316,9 +317,10 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
                   value={form.cnpj}
                   onChange={(v) => handleChange('cnpj', String(v ?? ''))}
                   error={errors.cnpj}
-                  placeholder="00.000.000/0000-00"
+                  placeholder="AA.AAA.AAA/AAAA-00"
                   maxLength={18}
                   required
+                  leading={<CartaoCnpjButton type="button" onClick={openCartaoCnpj} />}
                 />
               </div>
             </div>

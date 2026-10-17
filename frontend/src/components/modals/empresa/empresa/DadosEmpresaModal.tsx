@@ -17,7 +17,7 @@ import DadosBasicosTab from './abas/DadosBasicosTab';
 import EnderecoTab from './abas/EnderecoTab';
 import ContatoTab from './abas/ContatoTab';
 import ResponsavelTab from './abas/ResponsavelTab';
-import { isValidCNPJ } from 'utils/validators';
+import { isNumericCnpj, isValidCNPJ, stripCnpj } from 'utils/validators';
 
 const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   show,
@@ -108,8 +108,8 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   // Buscar CNPJ ao digitar 14 dígitos válidos
   useEffect(() => {
     if (!show || !parametros?.data?.validar_cpf_cnpj) return;
-    const cnpjLimpo = dados.cnpj.replace(/\D/g, '');
-    if (cnpjLimpo.length !== 14 || !isValidCNPJ(dados.cnpj) || lastCnpjConsulted.current === cnpjLimpo) return;
+    const cnpjLimpo = stripCnpj(dados.cnpj);
+    if (!isNumericCnpj(cnpjLimpo) || !isValidCNPJ(dados.cnpj) || lastCnpjConsulted.current === cnpjLimpo) return;
     const camposVazios = !dados.razao_social && !dados.nome_fantasia && !dados.endereco;
     if (!camposVazios) return;
 

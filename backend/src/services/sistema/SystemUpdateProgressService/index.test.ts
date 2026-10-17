@@ -1,4 +1,4 @@
-import { SystemUpdateProgressService } from './index';
+import { subscribeSystemUpdateStatus, SystemUpdateProgressService } from './index';
 
 describe('SystemUpdateProgressService', () => {
   beforeEach(() => {
@@ -43,5 +43,22 @@ describe('SystemUpdateProgressService', () => {
       kind: null,
       phase: 'idle',
     });
+  });
+
+  it('avisa inscritos só enquanto a inscrição estiver ativa', () => {
+    const received: number[] = [];
+    const unsubscribe = subscribeSystemUpdateStatus((snapshot) => {
+      received.push(snapshot.progress);
+    });
+
+    try {
+      SystemUpdateProgressService.begin('system');
+      SystemUpdateProgressService.report(40);
+      unsubscribe();
+      SystemUpdateProgressService.fail();
+      expect(received).toEqual([0, 40]);
+    } finally {
+      unsubscribe();
+    }
   });
 });

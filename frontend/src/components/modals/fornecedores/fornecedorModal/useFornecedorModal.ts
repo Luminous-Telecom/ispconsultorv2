@@ -5,7 +5,7 @@ import { useFormPrefix } from 'hooks/useFormId';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useCep } from 'hooks/useCep';
 import { formatCPF, formatCNPJ, formatCEP } from 'utils/formatters';
-import { isValidCPF, isValidCNPJ } from 'utils/validators';
+import { isNumericCnpj, isValidCPF, isValidCNPJ, stripCnpj } from 'utils/validators';
 import { CreateFornecedor } from 'types';
 import { FornecedorService } from 'services/fornecedorService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
@@ -98,9 +98,9 @@ export function useFornecedorModal({
       setFormData((prev) => ({ ...prev, cpf_cnpj: formatted }));
 
       if (formData.tipo_pessoa === 'JURIDICA' && !isEditing) {
-        const cnpjLimpo = formatted.replace(/\D/g, '');
+        const cnpjLimpo = stripCnpj(formatted);
 
-        if (cnpjLimpo.length === 14 && isValidCNPJ(formatted)) {
+        if (isNumericCnpj(cnpjLimpo) && isValidCNPJ(formatted)) {
           if (lastCnpjConsultedRef.current === cnpjLimpo) {
             return;
           }
@@ -207,15 +207,13 @@ export function useFornecedorModal({
 
     if (!formData.cpf_cnpj.trim()) {
       newErrors.cpf_cnpj = t('messages.cpfCnpjRequired');
-    } else {
+    } else if (formData.tipo_pessoa === 'FISICA') {
       const cleaned = formData.cpf_cnpj.replace(/\D/g, '');
-      if (formData.tipo_pessoa === 'FISICA') {
-        if (cleaned.length !== 11 || !isValidCPF(formData.cpf_cnpj)) {
-          newErrors.cpf_cnpj = t('messages.invalidCpf');
-        }
-      } else if (cleaned.length !== 14 || !isValidCNPJ(formData.cpf_cnpj)) {
-        newErrors.cpf_cnpj = t('messages.invalidCnpj');
+      if (cleaned.length !== 11 || !isValidCPF(formData.cpf_cnpj)) {
+        newErrors.cpf_cnpj = t('messages.invalidCpf');
       }
+    } else if (!isValidCNPJ(formData.cpf_cnpj)) {
+      newErrors.cpf_cnpj = t('messages.invalidCnpj');
     }
 
     setErrors(newErrors);

@@ -117,14 +117,6 @@ function trackUpdateProgress(progress: { step: string; progress: number }): void
 
 export class AtualizacoesController {
   /**
-   * Estado da atualização em andamento para as demais telas do sistema.
-   */
-  static async getStatus(_req: Request, res: Response): Promise<void> {
-    res.set('Cache-Control', 'no-store');
-    sendSuccess(res, SystemUpdateProgressService.getSnapshot());
-  }
-
-  /**
    * Verifica se o usuário administrador do ERP pode acessar
    */
   private static canAccess(req: Request): boolean {

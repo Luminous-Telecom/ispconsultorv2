@@ -871,6 +871,7 @@ const esES: TranslationKeys = {
     'buttons.sync': 'Sincronizar',
     'buttons.createEntity': 'Nuevo ${entity}',
     'buttons.validate': 'Validar',
+    'buttons.cartaoCnpj': 'Tarjeta CNPJ',
     'buttons.apply': 'Aplicar',
     'agent.install': 'Instalar Agente',
     'agent.configureVpn': 'Configurar VPN',
@@ -1250,7 +1251,7 @@ const esES: TranslationKeys = {
 
 
     // Placeholders
-    'placeholder.cnpj': '00.000.000/0000-00',
+    'placeholder.cnpj': 'AA.AAA.AAA/AAAA-00',
     'placeholder.companyName': 'Razón social de la empresa',
     'placeholder.tradeName': 'Nombre comercial de la empresa',
     'placeholder.observations': 'Observaciones sobre el cliente...',
@@ -1258,7 +1259,7 @@ const esES: TranslationKeys = {
     'placeholder.discountValue': '0.00',
     'placeholder.fileName': 'Nombre del archivo',
     'placeholder.fileDescription': 'Descripción del archivo (opcional)',
-    'placeholder.cpfCnpj': '11 dígitos para CPF o 14 dígitos para CNPJ',
+    'placeholder.cpfCnpj': 'CPF o CNPJ (números y letras)',
     'placeholder.briefDescription': 'Breve descripción',
     'placeholder.selectStatus': 'Seleccione el estado',
     'placeholder.selectPlan': 'Seleccione el plan',

@@ -7,6 +7,7 @@ import { formatDateOnly } from '../../../../utils/timezoneUtils';
 import { efiConfig } from '../../../../config/bancos/efi';
 import type { JsonValue } from '../../../../types/index';
 import type { TituloWithRelations } from '../../types';
+import { stripCnpj } from '../../../../utils/cnpj';
 
 interface ClienteForBoleto {
   razao_social: string;
@@ -107,7 +108,7 @@ export class EfiHelpers {
       phone_number: this.formatarTelefoneEFI(cliente.telefone, titulo.id),
       juridical_person: {
         corporate_name: nomeFormatado,
-        cnpj: cliente.cnpj.replace(/\D/g, ''),
+        cnpj: stripCnpj(cliente.cnpj),
       },
       address: {
         street: cliente.endereco,

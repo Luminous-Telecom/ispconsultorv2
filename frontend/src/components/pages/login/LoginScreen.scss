@@ -10,8 +10,8 @@
   padding: 1.5rem;
   font-family: var(--font-family-base);
   background:
-    radial-gradient(1100px 520px at 50% -12%, color-mix(in srgb, var(--color-indigo) 22%, transparent), transparent 62%),
-    radial-gradient(900px 480px at 100% 110%, color-mix(in srgb, var(--color-sky) 16%, transparent), transparent 60%),
+    radial-gradient(1100px 520px at 50% -12%, color-mix(in srgb, var(--color-accent-light) 14%, transparent), transparent 62%),
+    radial-gradient(900px 480px at 100% 110%, color-mix(in srgb, var(--color-success-light) 10%, transparent), transparent 60%),
     var(--bg-primary);
 }
 
@@ -40,7 +40,7 @@
 
 .login-card__accent {
   height: 4px;
-  background: linear-gradient(90deg, var(--color-indigo) 0%, var(--color-sky) 50%, var(--color-emerald) 100%);
+  background: linear-gradient(90deg, var(--color-accent-light) 0%, var(--color-warning-light) 55%, var(--color-success-light) 100%);
 }
 
 .login-card__body {
@@ -66,9 +66,9 @@
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: var(--color-white);
-  background: linear-gradient(90deg, var(--color-indigo) 0%, var(--color-sky) 100%);
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--color-indigo) 35%, transparent);
+  color: var(--color-text-on-fill);
+  background: var(--color-primary-fill-light);
+  box-shadow: none;
 }
 
 [data-theme="dark"] .login-page {
