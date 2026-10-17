@@ -37,7 +37,7 @@ logger.error('Erro ao processar cliente', { error: getErrorMessage(err), stack: 
 ```
 
 - Saída: console + `logs/error.log` + `logs/combined.log`; nível via `LOG_LEVEL`
-- **Proibido** `console.log`/`console.error` em `src/` fora de scripts standalone (`src/scripts/`, `backend/scripts/`) — sempre `logger`
+- **Proibido** `console.log`/`console.error` em `src/` fora de scripts standalone (`src/scripts/`) — sempre `logger`
 - `sendError` (ver `backend-respostas-http.mdc`) já loga automaticamente — não duplicar log antes de chamá-lo
 - Nunca logar senha, token JWT completo ou `webhook_secret` em texto plano
 

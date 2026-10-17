@@ -15,7 +15,6 @@ Todo código novo ou alterado nas áreas abaixo sai com o `.test` no mesmo traba
 | Frontend | `craco test` (Jest do react-scripts) | `Nome.test.ts` ou `Nome.test.tsx` | Ao lado do fonte em `frontend/src` |
 
 - Sufixo **`.test`**. Não usar `.spec`, nem pasta solta fora de `src`.
-- `backend/scripts/test-*.ts` é script manual. Não conta como teste.
 - Um arquivo de teste por módulo. Cobre cadastro, edição e visualização no mesmo arquivo quando forem o mesmo service, schema ou componente.
 
 ## O que testa

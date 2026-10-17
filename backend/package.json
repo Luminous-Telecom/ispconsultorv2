@@ -9,8 +9,6 @@
     "start": "node dist/index.js",
     "migrate": "prisma db push",
     "db:generate": "prisma generate",
-    "seed:webhook-logs": "ts-node scripts/seed-webhook-audit-logs.ts",
-    "test:scheduler-queue": "ts-node scripts/test-scheduler-queue.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
