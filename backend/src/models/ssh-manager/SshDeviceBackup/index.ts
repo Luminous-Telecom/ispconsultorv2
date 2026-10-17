@@ -4,7 +4,7 @@ import {
   InferAttributes,
   InferCreationAttributes,
   CreationOptional,
-} from 'sequelize';
+} from '../../../db/orm';
 import { sequelize } from '../../../config/database';
 
 export class SshDeviceBackup extends Model<

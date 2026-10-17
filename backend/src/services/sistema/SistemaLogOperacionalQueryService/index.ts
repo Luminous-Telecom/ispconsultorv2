@@ -1,6 +1,5 @@
-import { Op, literal, type OrderItem, type WhereOptions } from 'sequelize';
-import { SistemaLogOperacional } from '../../../models/sistema/SistemaLogOperacional';
-import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
+import type { Prisma, sistema_logs_operacionais } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { formatCreatedAt } from '../../../utils/dateUtils';
 import { buildPagination } from '../../../utils/pagination';
 import {
@@ -11,8 +10,36 @@ import {
   LOG_CONTEXTO_ROTINA_EXECUCAO,
   LOG_CONTEXTO_SSH_AUDIT,
   normalizeOperacionalPayload,
-  sqlFiltrarLogContexto,
 } from '../sistemaLogOperacionalContextos';
+
+type LogWhere = Prisma.sistema_logs_operacionaisWhereInput;
+type LogRow = Omit<sistema_logs_operacionais, 'id'> & { id: number };
+
+function contexto(valor: string): LogWhere {
+  return { payload: { contains: `"log_contexto":"${valor}"` } };
+}
+
+function payloadContem(fragmento: string): LogWhere {
+  return { payload: { contains: fragmento } };
+}
+
+async function listarLogs(
+  where: LogWhere,
+  limit: number,
+  offset = 0,
+  direction: 'asc' | 'desc' = 'desc'
+): Promise<{ rows: LogRow[]; count: number }> {
+  const [count, rows] = await Promise.all([
+    prisma.sistema_logs_operacionais.count({ where }),
+    prisma.sistema_logs_operacionais.findMany({
+      where,
+      orderBy: { created_at: direction },
+      take: limit,
+      skip: offset,
+    }),
+  ]);
+  return { count, rows: rows.map((row) => ({ ...row, id: Number(row.id) })) };
+}
 
 /** Rotas das listas TXT públicas (mesmo critério do blockdomiIpsPermitidosMiddleware). */
 const ROTAS_API_TXT: readonly string[] = [
@@ -27,7 +54,7 @@ const ROTAS_API_TXT: readonly string[] = [
 ];
 
 export class SistemaLogOperacionalQueryService {
-  static rotinaExecucaoToListItem(row: SistemaLogOperacional): Record<string, unknown> {
+  static rotinaExecucaoToListItem(row: LogRow): Record<string, unknown> {
     const p = normalizeOperacionalPayload(row.payload) ?? {};
     const dataInicio =
       typeof p.data_inicio === 'string'
@@ -57,31 +84,26 @@ export class SistemaLogOperacionalQueryService {
     routineId?: number,
     limit = 100
   ): Promise<Array<Record<string, unknown>>> {
-    const and: WhereOptions[] = [literal(sqlFiltrarLogContexto(LOG_CONTEXTO_ROTINA_EXECUCAO))];
+    const and: LogWhere[] = [contexto(LOG_CONTEXTO_ROTINA_EXECUCAO)];
     if (routineId != null) {
-      and.push(
-        literal(
-          `CAST(JSON_UNQUOTE(JSON_EXTRACT(\`SistemaLogOperacional\`.\`payload\`, '$.routine_id')) AS UNSIGNED) = ${routineId}`
-        )
-      );
+      and.push({
+        OR: [
+          payloadContem(`"routine_id":${routineId},`),
+          payloadContem(`"routine_id":${routineId}}`),
+        ],
+      });
     }
-    const rows = await SistemaLogOperacional.findAll({
-      where: { [Op.and]: and },
-      order: [['created_at', 'DESC']],
-      limit,
-    });
+    const { rows } = await listarLogs({ AND: and }, limit);
     return rows.map((r) => SistemaLogOperacionalQueryService.rotinaExecucaoToListItem(r));
   }
 
   static async limparLogsRotinaExecucaoAntigos(cutoffDate: Date): Promise<number> {
-    return SistemaLogOperacional.destroy({
+    const removidos = await prisma.sistema_logs_operacionais.deleteMany({
       where: {
-        [Op.and]: [
-          literal(sqlFiltrarLogContexto(LOG_CONTEXTO_ROTINA_EXECUCAO)),
-          { created_at: { [Op.lt]: cutoffDate } },
-        ],
+        AND: [contexto(LOG_CONTEXTO_ROTINA_EXECUCAO), { created_at: { lt: cutoffDate } }],
       },
     });
+    return removidos.count;
   }
 
   static blockdomiAcessoToListItem(row: Record<string, unknown>): Record<string, unknown> {
@@ -117,9 +139,9 @@ export class SistemaLogOperacionalQueryService {
         empresa_nome: (r.empresa_nome as string | null | undefined) ?? null,
       }));
     }
-    const empresas = await DadosEmpresa.findAll({
-      where: { id: { [Op.in]: ids } },
-      attributes: ['id', 'razao_social', 'nome_fantasia'],
+    const empresas = await prisma.sistema_tenants.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, razao_social: true, nome_fantasia: true },
     });
     const map = new Map<number, string>();
     for (const e of empresas) {
@@ -145,69 +167,39 @@ export class SistemaLogOperacionalQueryService {
     const page = filters.page ?? 1;
     const limit = filters.limit ?? 15;
     const offset = (page - 1) * limit;
-    const sortDir = filters.sortDirection?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
-    const sortCol = 'created_at';
+    const sortDir = filters.sortDirection?.toUpperCase() === 'ASC' ? 'asc' : 'desc';
 
-    const and: WhereOptions[] = [literal(sqlFiltrarLogContexto(LOG_CONTEXTO_BLOCKDOMI_ACESSO))];
+    const and: LogWhere[] = [contexto(LOG_CONTEXTO_BLOCKDOMI_ACESSO)];
 
     if (filters.origem === 'api_txt') {
-      const rotas = ROTAS_API_TXT.map((r) => `'${r.replace(/'/g, "''")}'`).join(', ');
-      and.push(
-        literal(
-          `JSON_UNQUOTE(JSON_EXTRACT(\`SistemaLogOperacional\`.\`payload\`, '$.rota')) IN (${rotas})`
-        )
-      );
+      and.push({ OR: ROTAS_API_TXT.map((rota) => payloadContem(`"rota":"${rota}"`)) });
     } else if (filters.origem === 'sistema') {
-      const rotas = ROTAS_API_TXT.map((r) => `'${r.replace(/'/g, "''")}'`).join(', ');
-      and.push(
-        literal(
-          `JSON_UNQUOTE(JSON_EXTRACT(\`SistemaLogOperacional\`.\`payload\`, '$.rota')) NOT IN (${rotas})`
-        )
-      );
+      and.push({ NOT: { OR: ROTAS_API_TXT.map((rota) => payloadContem(`"rota":"${rota}"`)) } });
     }
 
     if (typeof filters.sucesso === 'boolean') {
-      and.push(
-        literal(
-          `JSON_EXTRACT(\`SistemaLogOperacional\`.\`payload\`, '$.sucesso') = ${filters.sucesso ? 'true' : 'false'}`
-        )
-      );
+      and.push(payloadContem(`"sucesso":${filters.sucesso ? 'true' : 'false'}`));
     }
 
     if (filters.empresa_id != null && filters.empresa_id > 0) {
-      and.push({
-        [Op.or]: [{ empresa_id: filters.empresa_id }, { empresa_id: { [Op.is]: null } }],
-      });
+      and.push({ OR: [{ empresa_id: filters.empresa_id }, { empresa_id: null }] });
     }
 
     if (filters.search?.trim()) {
-      const term = `%${filters.search.trim().replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_')}%`;
+      const term = filters.search.trim();
       and.push({
-        [Op.or]: [
-          { ip_address: { [Op.like]: term } },
-          { mensagem: { [Op.like]: term } },
-          literal(
-            `JSON_UNQUOTE(JSON_EXTRACT(\`SistemaLogOperacional\`.\`payload\`, '$.rota')) LIKE ${SistemaLogOperacional.sequelize!.escape(term)}`
-          ),
-          literal(
-            `JSON_UNQUOTE(JSON_EXTRACT(\`SistemaLogOperacional\`.\`payload\`, '$.mensagem_erro')) LIKE ${SistemaLogOperacional.sequelize!.escape(term)}`
-          ),
+        OR: [
+          { ip_address: { contains: term } },
+          { mensagem: { contains: term } },
+          payloadContem(term),
         ],
       });
     }
 
-    const order: OrderItem[] = [[sortCol, sortDir]];
+    const { count, rows } = await listarLogs({ AND: and }, limit, offset, sortDir);
 
-    const { count, rows } = await SistemaLogOperacional.findAndCountAll({
-      where: { [Op.and]: and },
-      limit,
-      offset,
-      order,
-      raw: true,
-    });
-
-    const plain = (rows as unknown as Array<Record<string, unknown>>).map((row) =>
-      SistemaLogOperacionalQueryService.blockdomiAcessoToListItem(row)
+    const plain = rows.map((row) =>
+      SistemaLogOperacionalQueryService.blockdomiAcessoToListItem(row as unknown as Record<string, unknown>)
     );
     const data = await SistemaLogOperacionalQueryService.attachEmpresaNomes(plain);
 
@@ -217,7 +209,7 @@ export class SistemaLogOperacionalQueryService {
     };
   }
 
-  static sshAuditToListItem(row: SistemaLogOperacional): Record<string, unknown> {
+  static sshAuditToListItem(row: LogRow): Record<string, unknown> {
     const p = normalizeOperacionalPayload(row.payload) ?? {};
     return {
       id: String(row.id),
@@ -253,95 +245,63 @@ export class SistemaLogOperacionalQueryService {
     empresaId?: number;
   }): Promise<{ logs: Record<string, unknown>[]; total: number }> {
     const { page = 1, limit = 20 } = params;
-    const and: WhereOptions[] = [literal(sqlFiltrarLogContexto(LOG_CONTEXTO_SSH_AUDIT))];
-    const alias = 'SistemaLogOperacional';
-    const seq = SistemaLogOperacional.sequelize!;
+    const and: LogWhere[] = [contexto(LOG_CONTEXTO_SSH_AUDIT)];
 
     if (params.logType === 'equipamentos') {
-      and.push(
-        literal(
-          `JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.action')) NOT IN ('AGENT_CONNECT', 'AGENT_DISCONNECT')`
-        )
-      );
+      and.push({
+        NOT: {
+          OR: [
+            payloadContem('"action":"AGENT_CONNECT"'),
+            payloadContem('"action":"AGENT_DISCONNECT"'),
+          ],
+        },
+      });
     } else if (params.logType === 'agentes') {
-      and.push(
-        literal(
-          `JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.action')) IN ('AGENT_CONNECT', 'AGENT_DISCONNECT')`
-        )
-      );
+      and.push({
+        OR: [
+          payloadContem('"action":"AGENT_CONNECT"'),
+          payloadContem('"action":"AGENT_DISCONNECT"'),
+        ],
+      });
     }
 
     if (params.empresaId != null && params.empresaId > 0) {
       and.push({ empresa_id: params.empresaId });
     }
-    if (params.deviceId) {
-      and.push(
-        literal(
-          `JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.device_id')) = ${seq.escape(params.deviceId)}`
-        )
-      );
-    }
-    if (params.userId) {
-      and.push(
-        literal(
-          `JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.user_id')) = ${seq.escape(params.userId)}`
-        )
-      );
-    }
-    if (params.action) {
-      and.push(
-        literal(
-          `JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.action')) = ${seq.escape(params.action)}`
-        )
-      );
-    }
+    if (params.deviceId) and.push(payloadContem(`"device_id":"${params.deviceId}"`));
+    if (params.userId) and.push(payloadContem(`"user_id":"${params.userId}"`));
+    if (params.action) and.push(payloadContem(`"action":"${params.action}"`));
 
     if (params.startDate || params.endDate) {
-      const range: { [Op.gte]?: Date; [Op.lte]?: Date } = {};
-      if (params.startDate) range[Op.gte] = new Date(params.startDate);
-      if (params.endDate) range[Op.lte] = new Date(params.endDate);
+      const range: { gte?: Date; lte?: Date } = {};
+      if (params.startDate) range.gte = new Date(params.startDate);
+      if (params.endDate) range.lte = new Date(params.endDate);
       and.push({ created_at: range });
     }
 
     const search = params.search?.trim();
     if (search) {
-      const esc = seq.escape(`%${search}%`);
       const field = params.searchField?.trim();
       if (field === 'command') {
-        and.push(literal(`JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.command')) LIKE ${esc}`));
+        and.push(payloadContem(search));
       } else if (field === 'deviceName') {
-        and.push(literal(`JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.device_name')) LIKE ${esc}`));
+        and.push(payloadContem(search));
       } else if (field === 'userId') {
         if (params.searchUserIds && params.searchUserIds.length > 0) {
-          const ids = params.searchUserIds.map((id) => seq.escape(id)).join(', ');
-          and.push(literal(`JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.user_id')) IN (${ids})`));
+          and.push({ OR: params.searchUserIds.map((id) => payloadContem(`"user_id":"${id}"`)) });
         } else {
-          and.push(literal(`JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.user_id')) LIKE ${esc}`));
+          and.push(payloadContem(search));
         }
       } else if (field === 'errorMessage') {
-        and.push(literal(`JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.error_message')) LIKE ${esc}`));
+        and.push(payloadContem(search));
       } else {
-        and.push({
-          [Op.or]: [
-            literal(`JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.command')) LIKE ${esc}`),
-            literal(`JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.error_message')) LIKE ${esc}`),
-            literal(`JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.device_name')) LIKE ${esc}`),
-            literal(`JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.user_id')) LIKE ${esc}`),
-          ],
-        });
+        and.push(payloadContem(search));
       }
     }
 
-    const sortCol = 'created_at';
-    const sortDir = params.sortDirection === 'asc' ? 'ASC' : 'DESC';
+    const sortDir = params.sortDirection === 'asc' ? 'asc' : 'desc';
     const offset = (page - 1) * limit;
-
-    const { rows, count } = await SistemaLogOperacional.findAndCountAll({
-      where: { [Op.and]: and },
-      order: [[sortCol, sortDir]],
-      limit,
-      offset,
-    });
+    const { rows, count } = await listarLogs({ AND: and }, limit, offset, sortDir);
 
     return {
       logs: rows.map((r) => SistemaLogOperacionalQueryService.sshAuditToListItem(r)),
@@ -349,7 +309,7 @@ export class SistemaLogOperacionalQueryService {
     };
   }
 
-  static rpkiSyncToListItem(row: SistemaLogOperacional): Record<string, unknown> {
+  static rpkiSyncToListItem(row: LogRow): Record<string, unknown> {
     const p = normalizeOperacionalPayload(row.payload) ?? {};
     return {
       id: row.id,
@@ -376,49 +336,24 @@ export class SistemaLogOperacionalQueryService {
       trigger_type?: 'roa' | 'aspa' | 'manual';
     };
   }): Promise<{ rows: Record<string, unknown>[]; count: number }> {
-    const and: WhereOptions[] = [literal(sqlFiltrarLogContexto(LOG_CONTEXTO_RPKI_SYNC))];
-    const alias = 'SistemaLogOperacional';
-    const seq = SistemaLogOperacional.sequelize!;
+    const and: LogWhere[] = [contexto(LOG_CONTEXTO_RPKI_SYNC)];
 
     if (params.empresaId != null) and.push({ empresa_id: params.empresaId });
-    if (params.baseWhere.type) {
-      and.push(
-        literal(
-          `JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.sync_type')) = ${seq.escape(params.baseWhere.type)}`
-        )
-      );
-    }
-    if (params.baseWhere.trigger_type) {
-      and.push(
-        literal(
-          `JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.trigger_type')) = ${seq.escape(params.baseWhere.trigger_type)}`
-        )
-      );
-    }
+    if (params.baseWhere.type) and.push(payloadContem(`"sync_type":"${params.baseWhere.type}"`));
+    if (params.baseWhere.trigger_type) and.push(payloadContem(`"trigger_type":"${params.baseWhere.trigger_type}"`));
     if (params.status && ['success', 'failed'].includes(params.status)) {
-      and.push(
-        literal(
-          `JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.status')) = ${seq.escape(params.status)}`
-        )
-      );
+      and.push(payloadContem(`"status":"${params.status}"`));
     }
     if (params.search) {
-      const esc = seq.escape(`%${params.search}%`);
       and.push({
-        [Op.or]: [
-          literal(`JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.remote_host')) LIKE ${esc}`),
-          literal(`JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.message')) LIKE ${esc}`),
-          { mensagem: { [Op.like]: `%${params.search}%` } },
+        OR: [
+          payloadContem(params.search),
+          { mensagem: { contains: params.search } },
         ],
       });
     }
 
-    const { rows, count } = await SistemaLogOperacional.findAndCountAll({
-      where: { [Op.and]: and },
-      order: [['created_at', 'DESC']],
-      limit: params.limit,
-      offset: params.offset,
-    });
+    const { rows, count } = await listarLogs({ AND: and }, params.limit, params.offset);
 
     return {
       rows: rows.map((r) => SistemaLogOperacionalQueryService.rpkiSyncToListItem(r)),
@@ -433,29 +368,17 @@ export class SistemaLogOperacionalQueryService {
     empresaId?: number | null;
     search?: string;
   }): Promise<{ rows: Record<string, unknown>[]; count: number }> {
-    const and: WhereOptions[] = [literal(sqlFiltrarLogContexto(LOG_CONTEXTO_RPKI_VALIDATION))];
-    const alias = 'SistemaLogOperacional';
-    const seq = SistemaLogOperacional.sequelize!;
+    const and: LogWhere[] = [contexto(LOG_CONTEXTO_RPKI_VALIDATION)];
 
     if (params.empresaId != null) and.push({ empresa_id: params.empresaId });
 
     if (params.search) {
-      const esc = seq.escape(`%${params.search}%`);
       and.push({
-        [Op.or]: [
-          literal(`JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.prefix')) LIKE ${esc}`),
-          literal(`JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.reason')) LIKE ${esc}`),
-          { mensagem: { [Op.like]: `%${params.search}%` } },
-        ],
+        OR: [payloadContem(params.search), { mensagem: { contains: params.search } }],
       });
     }
 
-    const { rows, count } = await SistemaLogOperacional.findAndCountAll({
-      where: { [Op.and]: and },
-      order: [['created_at', 'DESC']],
-      limit: params.limit,
-      offset: params.offset,
-    });
+    const { rows, count } = await listarLogs({ AND: and }, params.limit, params.offset);
 
     return {
       rows: rows.map((row) => {
@@ -482,15 +405,11 @@ export class SistemaLogOperacionalQueryService {
     empresaId: number | null,
     limit = 500
   ): Promise<Array<Record<string, unknown>>> {
-    const and: WhereOptions[] = [literal(sqlFiltrarLogContexto(LOG_CONTEXTO_RPKI_VALIDATION))];
-    if (empresaId == null) and.push({ empresa_id: { [Op.is]: null } });
+    const and: LogWhere[] = [contexto(LOG_CONTEXTO_RPKI_VALIDATION)];
+    if (empresaId == null) and.push({ empresa_id: null });
     else and.push({ empresa_id: empresaId });
 
-    const rows = await SistemaLogOperacional.findAll({
-      where: { [Op.and]: and },
-      order: [['created_at', 'DESC']],
-      limit,
-    });
+    const { rows } = await listarLogs({ AND: and }, limit);
 
     return rows.map((row) => {
       const p = normalizeOperacionalPayload(row.payload) ?? {};
@@ -509,7 +428,7 @@ export class SistemaLogOperacionalQueryService {
     });
   }
 
-  static ixcOsSyncToListItem(row: SistemaLogOperacional): Record<string, unknown> {
+  static ixcOsSyncToListItem(row: LogRow): Record<string, unknown> {
     const p = normalizeOperacionalPayload(row.payload) ?? {};
     return {
       id: row.id,
@@ -540,38 +459,19 @@ export class SistemaLogOperacionalQueryService {
     search?: string;
     eventType?: string;
   }): Promise<{ rows: Record<string, unknown>[]; count: number }> {
-    const and: WhereOptions[] = [literal(sqlFiltrarLogContexto(LOG_CONTEXTO_IXC_OS_SYNC))];
-    const alias = 'SistemaLogOperacional';
-    const seq = SistemaLogOperacional.sequelize!;
+    const and: LogWhere[] = [contexto(LOG_CONTEXTO_IXC_OS_SYNC)];
 
     if (params.empresaId != null) and.push({ empresa_id: params.empresaId });
     if (params.eventType?.trim()) {
-      and.push(
-        literal(
-          `JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.event_type')) = ${seq.escape(params.eventType.trim())}`
-        )
-      );
+      and.push(payloadContem(`"event_type":"${params.eventType.trim()}"`));
     }
     if (params.search) {
-      const esc = seq.escape(`%${params.search}%`);
       and.push({
-        [Op.or]: [
-          literal(`JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.protocolo')) LIKE ${esc}`),
-          literal(`JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.cliente_nome')) LIKE ${esc}`),
-          literal(`JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.operador_nome')) LIKE ${esc}`),
-          literal(`JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.integracao_nome')) LIKE ${esc}`),
-          literal(`JSON_UNQUOTE(JSON_EXTRACT(\`${alias}\`.\`payload\`, '$.message')) LIKE ${esc}`),
-          { mensagem: { [Op.like]: `%${params.search}%` } },
-        ],
+        OR: [payloadContem(params.search), { mensagem: { contains: params.search } }],
       });
     }
 
-    const { rows, count } = await SistemaLogOperacional.findAndCountAll({
-      where: { [Op.and]: and },
-      order: [['created_at', 'DESC']],
-      limit: params.limit,
-      offset: params.offset,
-    });
+    const { rows, count } = await listarLogs({ AND: and }, params.limit, params.offset);
 
     return {
       rows: rows.map((r) => SistemaLogOperacionalQueryService.ixcOsSyncToListItem(r)),

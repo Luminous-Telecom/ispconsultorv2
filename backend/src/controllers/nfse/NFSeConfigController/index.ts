@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { NFSeConfigService } from '../../../services/nfse/NFSeConfigService';
 import { BancoService } from '../../../services/cadastros/BancoService';
@@ -69,7 +70,7 @@ export class NFSeConfigController {
         return res;
       }
 
-      sendSuccess(res, await NFSeConfigController.buildResponseData(config.toJSON() as Record<string, unknown>, empresaId));
+      sendSuccess(res, await NFSeConfigController.buildResponseData(toPlain(config) as Record<string, unknown>, empresaId));
       return res;
     } catch (error: unknown) {
       sendError(res, error, 'Erro ao obter configuração NFS-e', 500, true, {
@@ -111,7 +112,7 @@ export class NFSeConfigController {
 
       const empresaId = getEmpresaIdOrNull(req);
       const configAnterior = await NFSeConfigService.get(empresaId);
-      const dadosAnteriores = configAnterior?.toJSON();
+      const dadosAnteriores = toPlain(configAnterior);
 
       // Campos sensíveis: preservar valor existente se não enviado ou enviado vazio/null
       const dadosParaSalvar = { ...value };
@@ -150,7 +151,7 @@ export class NFSeConfigController {
             req as AuthenticatedRequest,
             'NFSeConfig',
             configAtualizado.id,
-            semSegredosNfse(configAtualizado.toJSON() as unknown as Record<string, unknown>),
+            semSegredosNfse(toPlain(configAtualizado) as unknown as Record<string, unknown>),
             undefined,
             empresaIdAudit
           );
@@ -166,7 +167,7 @@ export class NFSeConfigController {
             'NFSeConfig',
             configAtualizado.id,
             semSegredosNfse((dadosAnteriores || {}) as Record<string, unknown>),
-            semSegredosNfse(configAtualizado.toJSON() as unknown as Record<string, unknown>),
+            semSegredosNfse(toPlain(configAtualizado) as unknown as Record<string, unknown>),
             undefined,
             empresaIdAudit
           );
@@ -175,7 +176,7 @@ export class NFSeConfigController {
         }
       }
 
-      sendSuccess(res, await NFSeConfigController.buildResponseData(configAtualizado.toJSON() as Record<string, unknown>, empresaId), 'Configuração NFS-e atualizada com sucesso');
+      sendSuccess(res, await NFSeConfigController.buildResponseData(toPlain(configAtualizado) as Record<string, unknown>, empresaId), 'Configuração NFS-e atualizada com sucesso');
       return res;
     } catch (error: unknown) {
       sendError(res, error, 'Erro ao atualizar configuração NFS-e', 500, true, {
@@ -218,7 +219,7 @@ export class NFSeConfigController {
           // Fazer uma requisição simples para validar a API Key (endpoint de minha conta)
           const response = await axios.get(`${baseUrl}/myAccount`, {
             headers: {
-              'access_token': bancoAsaas.getDataValue('api_key'),
+              'access_token': bancoAsaas.api_key,
               'Accept': 'application/json',
               'Content-Type': 'application/json'
             },

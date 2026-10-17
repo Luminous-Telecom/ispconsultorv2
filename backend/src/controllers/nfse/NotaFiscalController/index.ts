@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { NFeService, DadosNFe } from '../../../services/nfse/NFeService';
 import { NotaFiscalService } from '../../../services/nfse/NotaFiscalService';
@@ -126,7 +127,7 @@ export class NotaFiscalController {
 
       if (resultado.success && resultado.notaFiscal) {
         try {
-          const notaData = resultado.notaFiscal.toJSON() as Record<string, unknown>;
+          const notaData = toPlain(resultado.notaFiscal) as Record<string, unknown>;
           const empresaIdAudit = getEmpresaIdOrNull(req) ?? resultado.notaFiscal.empresa_id ?? null;
           await registrarCriacao(
             req,
@@ -216,7 +217,7 @@ export class NotaFiscalController {
         return;
       }
 
-      const dadosAnteriores = notaFiscal.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(notaFiscal) as Record<string, unknown>;
       const resultado = await NFeService.cancelarNFe(parseInt(id, 10), justificativa);
 
       if (resultado.success) {
@@ -229,7 +230,7 @@ export class NotaFiscalController {
               'NotaFiscal',
               parseInt(id, 10),
               dadosAnteriores,
-              notaAtualizada.toJSON() as Record<string, unknown>,
+              toPlain(notaAtualizada) as Record<string, unknown>,
               `NFS-e cancelada: ${justificativa}`,
               empresaIdAudit
             );
@@ -297,7 +298,9 @@ export class NotaFiscalController {
         return;
       }
 
-      const pdfBuffer = await NotaFiscalPdfService.getPdfBuffer(notaFiscal);
+      const pdfBuffer = await NotaFiscalPdfService.getPdfBuffer(
+        notaFiscal as unknown as Parameters<typeof NotaFiscalPdfService.getPdfBuffer>[0]
+      );
 
       if (!pdfBuffer) {
         sendNotFound(res, 'PDF da NFS-e não encontrado. A nota pode ainda estar sendo processada.');
@@ -333,7 +336,9 @@ export class NotaFiscalController {
 
         const notaFiscal = await NotaFiscalService.getById(titulo.nota_fiscal_id);
         if (notaFiscal?.nfse_status === 'emitida' && notaFiscal.numero) {
-          const pdfBuffer = await NotaFiscalPdfService.getPdfBuffer(notaFiscal);
+          const pdfBuffer = await NotaFiscalPdfService.getPdfBuffer(
+        notaFiscal as unknown as Parameters<typeof NotaFiscalPdfService.getPdfBuffer>[0]
+      );
           if (pdfBuffer) pdfBuffers.push(pdfBuffer);
         }
       }

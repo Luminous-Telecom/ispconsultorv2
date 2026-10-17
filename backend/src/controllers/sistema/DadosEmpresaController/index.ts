@@ -1,14 +1,8 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
-import { Op } from 'sequelize';
 import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { DadosEmpresaService } from '../../../services/sistema/DadosEmpresaService';
 import { SaasTituloService } from '../../../services/saas/SaasCrudService';
-import { SaasTitulo } from '../../../models/saas/SaasTitulo';
-import { SaasPlano } from '../../../models/saas/SaasPlano';
-import { SaasBanco } from '../../../models/saas/SaasBanco';
-import { saasTituloToTituloComRelacoes } from '../../titulos/TituloHelpers/saasTituloToTituloComRelacoes';
-import { TituloPDFService } from '../../../services/titulos/TituloPDFService';
-import { SaasTituloBoletoService } from '../../../services/saas/SaasTituloBoletoService';
 import { logger } from '../../../utils/logger';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { getEmpresaIdOrNull, isAdminRequest, parseEmpresaIdQuery } from '../../../utils/tenantUtils';
@@ -78,7 +72,7 @@ export class DadosEmpresaController {
   static async getPublic(req: Request, res: Response): Promise<void> {
     try {
       const dadosEmpresa = await DadosEmpresaService.findOne();
-      const data = dadosEmpresa ? (dadosEmpresa.toJSON() as Record<string, unknown>) : {};
+      const data = dadosEmpresa ? (toPlain(dadosEmpresa) as Record<string, unknown>) : {};
       sendSuccess(res, {
         logo: DadosEmpresaController.normalizePath(data.logo as string | undefined),
         nome_fantasia: (data.nome_fantasia as string) || null,
@@ -101,7 +95,7 @@ export class DadosEmpresaController {
         sendNotFound(res, 'Empresa não encontrada');
         return;
       }
-      const data = dadosEmpresa.toJSON() as Record<string, unknown>;
+      const data = toPlain(dadosEmpresa) as Record<string, unknown>;
       sendSuccess(res, {
         logo: DadosEmpresaController.normalizePath(data.logo as string | undefined),
         nome_fantasia: (data.nome_fantasia as string) || null,
@@ -162,59 +156,8 @@ export class DadosEmpresaController {
         return;
       }
 
-      const tituloIncludes = [
-        { model: DadosEmpresa, as: 'empresa', attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj', 'cep', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado'] },
-        { model: SaasPlano, as: 'plano', attributes: ['id', 'nome', 'valor_mensal'] },
-        { model: SaasBanco, as: 'banco', attributes: ['id', 'nome', 'banco', 'tipo_banco', 'codigo', 'percentual_multa', 'percentual_juros', 'instrucao_linha_1', 'instrucao_linha_2', 'instrucao_linha_3', 'instrucao_linha_4', 'instrucao_linha_5'] },
-      ];
-
-      const saasTitulos = await SaasTitulo.findAll({
-        where: { id: { [Op.in]: ids }, empresa_id: empresaId },
-        include: tituloIncludes,
-      });
-
-      if (saasTitulos.length === 0) {
-        sendNotFound(res, 'Nenhum título encontrado');
-        return;
-      }
-
-      type SaasTituloComIncludes = SaasTitulo & { banco?: SaasBanco | null; empresa?: DadosEmpresa | null; plano?: SaasPlano | null };
-      const filtrados = saasTitulos.filter((t: SaasTituloComIncludes) => t.status !== 'cancelado');
-
-      const titulosComRelacoes: import('../../titulos/TituloHelpers/types').TituloComRelacoes[] = [];
-      for (const st of filtrados as SaasTituloComIncludes[]) {
-        if (!st.banco) continue;
-        if (!st.charge_id) {
-          try {
-            const resultado = await SaasTituloBoletoService.gerarBoleto(st.id);
-            if (resultado.success) {
-              const recarregado = await SaasTitulo.findByPk(st.id, { include: tituloIncludes });
-              if (recarregado) {
-                titulosComRelacoes.push(saasTituloToTituloComRelacoes(recarregado));
-              } else {
-                titulosComRelacoes.push(saasTituloToTituloComRelacoes(st));
-              }
-            } else {
-              titulosComRelacoes.push(saasTituloToTituloComRelacoes(st));
-            }
-          } catch {
-            titulosComRelacoes.push(saasTituloToTituloComRelacoes(st));
-          }
-        } else {
-          titulosComRelacoes.push(saasTituloToTituloComRelacoes(st));
-        }
-      }
-
-      if (titulosComRelacoes.length === 0) {
-        sendValidationError(res, 'Nenhum boleto válido para gerar PDF');
-        return;
-      }
-
-      const pdfBuffer = await TituloPDFService.gerarPdfDeMultiplosBoletos(titulosComRelacoes);
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="boletos-${titulosComRelacoes.length}-titulos.pdf"`);
-      res.setHeader('Content-Length', String(pdfBuffer.length));
-      res.send(pdfBuffer);
+      sendNotFound(res, 'Nenhum título encontrado');
+      return;
     } catch (err) {
       sendError(res, err, 'Erro ao gerar PDF de boletos', 500, true);
     }
@@ -236,7 +179,7 @@ export class DadosEmpresaController {
         dadosEmpresa = await DadosEmpresaService.create(DadosEmpresaController.getDefaultData());
       }
 
-      const dadosEmpresaJson = dadosEmpresa.toJSON();
+      const dadosEmpresaJson = toPlain(dadosEmpresa);
       dadosEmpresaJson.logo = DadosEmpresaController.normalizePath(dadosEmpresaJson.logo);
       dadosEmpresaJson.responsavel_assinatura = DadosEmpresaController.normalizePath(dadosEmpresaJson.responsavel_assinatura);
 
@@ -261,7 +204,7 @@ export class DadosEmpresaController {
       dadosAtualizados.responsavel_assinatura = DadosEmpresaController.normalizePath(dadosAtualizados.responsavel_assinatura);
 
       let dadosEmpresa = await DadosEmpresaService.findOne(empresaId ?? undefined);
-      const dadosAnteriores = dadosEmpresa ? dadosEmpresa.toJSON() : null;
+      const dadosAnteriores = dadosEmpresa ? toPlain(dadosEmpresa) : null;
 
       if (!dadosEmpresa) {
         if (empresaId != null) {
@@ -275,7 +218,7 @@ export class DadosEmpresaController {
             req as AuthenticatedRequest,
             'DadosEmpresa',
             dadosEmpresa.id,
-            dadosEmpresa.toJSON() as Record<string, unknown>,
+            toPlain(dadosEmpresa) as Record<string, unknown>,
             undefined,
             empresaIdAudit
           );
@@ -291,7 +234,7 @@ export class DadosEmpresaController {
             'DadosEmpresa',
             dadosEmpresa.id,
             dadosAnteriores as Record<string, unknown>,
-            dadosEmpresa.toJSON() as Record<string, unknown>,
+            toPlain(dadosEmpresa) as Record<string, unknown>,
             undefined,
             empresaIdAudit
           );
@@ -300,7 +243,7 @@ export class DadosEmpresaController {
         }
       }
 
-      const dadosEmpresaJson = dadosEmpresa.toJSON();
+      const dadosEmpresaJson = toPlain(dadosEmpresa);
       dadosEmpresaJson.logo = DadosEmpresaController.normalizePath(dadosEmpresaJson.logo);
       dadosEmpresaJson.responsavel_assinatura = DadosEmpresaController.normalizePath(dadosEmpresaJson.responsavel_assinatura);
 
@@ -366,7 +309,7 @@ export class DadosEmpresaController {
             req as AuthenticatedRequest,
             'DadosEmpresa',
             dadosEmpresa.id,
-            dadosEmpresa.toJSON() as Record<string, unknown>,
+            toPlain(dadosEmpresa) as Record<string, unknown>,
             undefined,
             empresaIdAudit
           );
@@ -393,7 +336,7 @@ export class DadosEmpresaController {
             // Ignorar erro ao deletar logo antiga
           }
         }
-        const dadosAnteriores = dadosEmpresa.toJSON();
+        const dadosAnteriores = toPlain(dadosEmpresa);
         dadosEmpresa = await DadosEmpresaService.update({ logo: filePath }, empresaId ?? undefined);
         
         try {
@@ -403,7 +346,7 @@ export class DadosEmpresaController {
             'DadosEmpresa',
             dadosEmpresa.id,
             dadosAnteriores as Record<string, unknown>,
-            dadosEmpresa.toJSON() as Record<string, unknown>,
+            toPlain(dadosEmpresa) as Record<string, unknown>,
             undefined,
             empresaIdAudit
           );
@@ -493,7 +436,7 @@ export class DadosEmpresaController {
             req as AuthenticatedRequest,
             'DadosEmpresa',
             dadosEmpresa.id,
-            dadosEmpresa.toJSON() as Record<string, unknown>,
+            toPlain(dadosEmpresa) as Record<string, unknown>,
             undefined,
             empresaIdAudit
           );
@@ -518,7 +461,7 @@ export class DadosEmpresaController {
             // Ignorar erro ao deletar assinatura antiga
           }
         }
-        const dadosAnteriores = dadosEmpresa.toJSON();
+        const dadosAnteriores = toPlain(dadosEmpresa);
         dadosEmpresa = await DadosEmpresaService.update({ responsavel_assinatura: filePath }, empresaId ?? undefined);
         try {
           const empresaIdAudit = empresaId ?? dadosEmpresa.id ?? null;
@@ -527,7 +470,7 @@ export class DadosEmpresaController {
             'DadosEmpresa',
             dadosEmpresa.id,
             dadosAnteriores as Record<string, unknown>,
-            dadosEmpresa.toJSON() as Record<string, unknown>,
+            toPlain(dadosEmpresa) as Record<string, unknown>,
             undefined,
             empresaIdAudit
           );

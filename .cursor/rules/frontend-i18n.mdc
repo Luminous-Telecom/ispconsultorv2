@@ -18,7 +18,7 @@ const { t, language, setLanguage } = useI18n();
 t('messages.itemsDeleted', { count: 3 });
 ```
 
-**Proibido** strings fixas em português em labels, botões, toasts e placeholders de telas internas (ERP, SaaS, central assinante).
+**Proibido** strings fixas em português em labels, botões, toasts e placeholders de telas internas (ERP e Central do Assinante).
 
 ## Ao adicionar chave nova
 

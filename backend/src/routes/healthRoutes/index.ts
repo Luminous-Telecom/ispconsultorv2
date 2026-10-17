@@ -3,7 +3,7 @@
  */
 import { Router, Request, Response } from 'express';
 import { SchedulerService } from '../../services/scheduler/SchedulerService';
-import { sequelize } from '../../config/database';
+import { prisma } from '../../db/prisma';
 import { logger } from '../../utils/logger';
 import { getMetrics, isMetricsEnabled } from '../../utils/metrics';
 import { getCurrentTimestamp } from '../../utils/timezoneUtils';
@@ -17,7 +17,7 @@ const router = Router();
 router.get('/health', async (_req: Request, res: Response): Promise<void> => {
   try {
     // Verificar conexão com banco de dados
-    await sequelize.authenticate();
+    await prisma.$queryRawUnsafe('SELECT 1');
 
     const scheduler = SchedulerService.getInstance();
     const schedulerHealth = await scheduler.getHealthStatus();

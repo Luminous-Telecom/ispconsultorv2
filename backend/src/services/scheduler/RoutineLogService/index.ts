@@ -1,5 +1,4 @@
-import { ScheduledRoutine } from '../../../models/sistema/ScheduledRoutine';
-import SaasScheduledRoutine from '../../../models/saas/SaasScheduledRoutine';
+import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
 import type { JsonValue } from '../../../types/index';
 import {
@@ -8,7 +7,13 @@ import {
   buscarLogsExecucaoMysql,
 } from '../RotinaExecucaoLogService';
 
-type AnyRoutine = ScheduledRoutine | SaasScheduledRoutine;
+type AnyRoutine = {
+  id: number;
+  nome?: string | null;
+  tipo?: string | null;
+  empresa_id?: number | null;
+  alvo?: string | null;
+};
 
 interface UpdateLogData {
   status: 'sucesso' | 'erro';
@@ -24,9 +29,8 @@ export class RoutineLogService {
     startTime: Date
   ): Promise<{ id: string }> {
     try {
-      const origem = 'empresa_id' in routine && routine.empresa_id != null ? 'erp' : 'saas';
-      const empresaId =
-        'empresa_id' in routine ? (routine as ScheduledRoutine).empresa_id : null;
+      const origem = routine.alvo ? 'saas' : 'erp';
+      const empresaId = routine.empresa_id ?? null;
       return await criarLogExecucaoMysql(
         routine.id,
         routine.nome ?? 'Rotina',
@@ -90,17 +94,14 @@ export class RoutineLogService {
     endTime: Date
   ): Promise<void> {
     try {
-      const model = routine as unknown as {
-        increment: (f: string) => Promise<unknown>;
-        update: (a: object) => Promise<unknown>;
+      if (routine.alvo) return;
+      const data: { total_execucoes: { increment: number }; execucoes_com_sucesso?: { increment: number }; execucoes_com_erro?: { increment: number }; ultima_execucao: Date } = {
+        total_execucoes: { increment: 1 },
+        ultima_execucao: endTime,
       };
-      await model.increment('total_execucoes');
-      if (status === 'sucesso') {
-        await model.increment('execucoes_com_sucesso');
-      } else {
-        await model.increment('execucoes_com_erro');
-      }
-      await model.update({ ultima_execucao: endTime });
+      if (status === 'sucesso') data.execucoes_com_sucesso = { increment: 1 };
+      else data.execucoes_com_erro = { increment: 1 };
+      await prisma.sistema_scheduled_routines.update({ where: { id: routine.id }, data });
     } catch (error) {
       logger.error('Erro ao atualizar contadores da rotina', {
         context: 'RoutineLogService',
@@ -120,21 +121,21 @@ export class RoutineLogService {
     return buscarLogsExecucaoMysql(undefined, limit);
   }
 
-  public async getAllRoutines(): Promise<ScheduledRoutine[]> {
-    const routines = await ScheduledRoutine.findAll({ order: [['id', 'ASC']] });
+  public async getAllRoutines(): Promise<Array<Record<string, unknown>>> {
+    const routines = await prisma.sistema_scheduled_routines.findMany({ orderBy: { id: 'asc' } });
+    const result = [];
     for (const routine of routines) {
       const logs = await buscarLogsExecucaoMysql(routine.id, 5);
-      (routine as any).dataValues.executionLogs = logs;
+      result.push({ ...routine, executionLogs: logs });
     }
-    return routines;
+    return result;
   }
 
-  public async getRoutineById(id: number): Promise<ScheduledRoutine | null> {
-    const routine = await ScheduledRoutine.findByPk(id);
+  public async getRoutineById(id: number): Promise<Record<string, unknown> | null> {
+    const routine = await prisma.sistema_scheduled_routines.findUnique({ where: { id } });
     if (!routine) return null;
     const logs = await buscarLogsExecucaoMysql(id, 10);
-    (routine as any).dataValues.executionLogs = logs;
-    return routine;
+    return { ...routine, executionLogs: logs };
   }
 }
 

@@ -133,7 +133,12 @@ export class NFeService {
       await notaFiscal.reload();
       logger.info(`[NFeService] Data emissão após salvar no banco - Local: ${notaFiscal.data_emissao.getFullYear()}-${String(notaFiscal.data_emissao.getMonth() + 1).padStart(2, '0')}-${String(notaFiscal.data_emissao.getDate()).padStart(2, '0')} ${String(notaFiscal.data_emissao.getHours()).padStart(2, '0')}:${String(notaFiscal.data_emissao.getMinutes()).padStart(2, '0')}:${String(notaFiscal.data_emissao.getSeconds()).padStart(2, '0')}`);
 
-      const resultadoProvedor = await this.gerarNFeComProvedor(notaFiscal, cliente, dadosEmpresa, empresaId);
+      const resultadoProvedor = await NFeService.gerarNFeComProvedor(
+        notaFiscal,
+        cliente,
+        dadosEmpresa as unknown as DadosEmpresa,
+        empresaId
+      );
 
       if (resultadoProvedor.success) {
         // Atualizar nota fiscal com dados do provedor

@@ -1,11 +1,8 @@
-import { Fornecedor } from '../../../models/financeiro/Fornecedor';
-import { Op, WhereOptions } from 'sequelize';
-import type { Order } from 'sequelize';
-import { sequelize } from '../../../config/database';
+import type { Prisma } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
-import { SortHelper } from '../../../utils/sortHelper';
-import { FORNECEDOR_SORT_CONFIG } from '../../../config/sortConfigs';
 import { buildPagination } from '../../../utils/pagination';
+import { sortDirection } from '../../cadastros/prismaWhere';
 
 export interface ListFornecedoresFilters {
   page?: number;
@@ -19,183 +16,131 @@ export interface ListFornecedoresFilters {
   empresa_id?: number;
 }
 
-export interface ListFornecedoresResponse {
-  success: boolean;
-  data: Fornecedor[];
-  pagination: {
-    current_page: number;
-    per_page: number;
-    total: number;
-    last_page: number;
-    from: number;
-    to: number;
-  };
+const SORT_COLUMNS = [
+  'id', 'tipo_pessoa', 'nome_razao_social', 'nome_fantasia', 'cpf_cnpj', 'cep', 'logradouro',
+  'numero', 'complemento', 'bairro', 'cidade', 'estado', 'pais', 'created_at', 'updated_at', 'empresa_id',
+] as const;
+
+const TEXT_FIELDS = ['nome_razao_social', 'nome_fantasia', 'cpf_cnpj', 'cep', 'logradouro', 'bairro', 'cidade', 'estado', 'pais'] as const;
+
+function shapeFornecedor<T extends { financeiro_contas_pagar?: unknown }>(row: T) {
+  return { ...row, contasPagar: row.financeiro_contas_pagar ?? [] };
 }
 
 export class FornecedorService {
-  private static getDefaultIncludes() {
-    return [
-      {
-        association: 'contasPagar' as const,
-        required: false,
-        include: [
-          { association: 'pagamentos' as const, required: false, limit: 10, order: [['created_at', 'DESC']] as Order },
-        ],
-      },
-    ];
-  }
-
-  /**
-   * Listar fornecedores com filtros e paginação
-   */
-  static async list(filters: ListFornecedoresFilters): Promise<ListFornecedoresResponse> {
-    const { page = 1, limit = 15, search = '', searchField, tipo_pessoa, ativo, sortColumn, sortDirection, empresa_id } = filters;
+  static async list(filters: ListFornecedoresFilters) {
+    const { page = 1, limit = 15, search = '', searchField, tipo_pessoa, sortColumn, sortDirection: direction, empresa_id } = filters;
     const pageNum = Number(page);
     const limitNum = Number(limit);
     const offset = (pageNum - 1) * limitNum;
+    const where: Prisma.financeiro_fornecedoresWhereInput = {};
 
-    const where: WhereOptions = {};
+    if (empresa_id !== undefined) where.empresa_id = empresa_id;
 
-    if (empresa_id !== undefined) {
-      where.empresa_id = empresa_id;
-    }
-    
     if (search) {
-      const searchPattern = `%${search}%`;
       const numExact = /^\d+$/.test(search) ? parseInt(search, 10) : null;
       if (searchField === 'id') {
-        where.id = numExact !== null ? numExact : { [Op.lt]: 0 };
-      } else if (searchField) {
-        const allowedFields = ['nome_razao_social', 'nome_fantasia', 'cpf_cnpj', 'cep', 'logradouro', 'bairro', 'cidade', 'estado', 'pais'];
-        if (allowedFields.includes(searchField)) {
-          where[searchField as keyof typeof where] = { [Op.like]: searchPattern };
-        }
-      } else {
-        const orConditions: any[] = [
-          { nome_razao_social: { [Op.like]: searchPattern } },
-          { nome_fantasia: { [Op.like]: searchPattern } },
-          { cpf_cnpj: { [Op.like]: searchPattern } }
+        where.id = numExact !== null ? numExact : { lt: 0 };
+      } else if (searchField && (TEXT_FIELDS as readonly string[]).includes(searchField)) {
+        (where as Record<string, unknown>)[searchField] = { contains: search };
+      } else if (!searchField) {
+        const orConditions: Prisma.financeiro_fornecedoresWhereInput[] = [
+          { nome_razao_social: { contains: search } },
+          { nome_fantasia: { contains: search } },
+          { cpf_cnpj: { contains: search } },
         ];
-        if (numExact !== null) {
-          orConditions.unshift({ id: numExact });
-        }
-        (where as Record<symbol, unknown>)[Op.or] = orConditions;
+        if (numExact !== null) orConditions.unshift({ id: numExact });
+        where.OR = orConditions;
       }
     }
 
     if (tipo_pessoa) {
-      where.tipo_pessoa = tipo_pessoa;
+      where.tipo_pessoa = tipo_pessoa as Prisma.financeiro_fornecedoresWhereInput['tipo_pessoa'];
     }
 
-    if (ativo !== undefined) {
-      where.ativo = ativo === 'true';
+    const dir = sortDirection(direction);
+    const orderBy: Prisma.financeiro_fornecedoresOrderByWithRelationInput =
+      sortColumn && (SORT_COLUMNS as readonly string[]).includes(sortColumn)
+        ? { [sortColumn]: dir }
+        : { id: 'desc' };
+    if (sortColumn && !(SORT_COLUMNS as readonly string[]).includes(sortColumn)) {
+      logger.warn('FornecedorService.list - Coluna de ordenação inválida', { column: sortColumn });
     }
 
-    // Construir ordenação - ordena TODOS os dados antes da paginação
-    let order: any[] = [['id', 'DESC']]; // Padrão
-    if (sortColumn && sortDirection) {
-      const sortResult = SortHelper.buildOrder(
-        FORNECEDOR_SORT_CONFIG,
-        sortColumn,
-        sortDirection.toUpperCase() as 'ASC' | 'DESC'
-      );
-
-      if (sortResult.isValid) {
-        order = sortResult.order;
-      } else {
-        logger.warn('FornecedorService.list - Coluna de ordenação inválida', {
-          column: sortColumn,
-          error: sortResult.error
-        });
-        // Manter ordenação padrão se coluna inválida
-      }
-    }
-
-    const count = await Fornecedor.count({ where });
-    
-    const fornecedores = await Fornecedor.findAll({
-      where,
-      include: [
-        {
-          association: 'contasPagar',
-          required: false,
-          attributes: ['id', 'status', 'valor', 'valor_pago', 'data_vencimento']
-        }
-      ],
-      order,
-      limit: limitNum,
-      offset
-    });
+    const [count, fornecedores] = await Promise.all([
+      prisma.financeiro_fornecedores.count({ where }),
+      prisma.financeiro_fornecedores.findMany({
+        where,
+        include: {
+          financeiro_contas_pagar: {
+            select: { id: true, status: true, valor: true, valor_pago: true, data_vencimento: true },
+          },
+        },
+        orderBy,
+        take: limitNum,
+        skip: offset,
+      }),
+    ]);
 
     return {
       success: true,
-      data: fornecedores,
+      data: fornecedores.map(shapeFornecedor),
       pagination: buildPagination(pageNum, limitNum, count),
     };
   }
 
-  /**
-   * Buscar fornecedor por ID
-   */
-  static async getById(id: string | number, includeAssociations = true): Promise<Fornecedor | null> {
-    if (includeAssociations) {
-      return await Fornecedor.findByPk(id, {
-        include: FornecedorService.getDefaultIncludes(),
-      });
+  static async getById(id: string | number, includeAssociations = true) {
+    if (!includeAssociations) {
+      return prisma.financeiro_fornecedores.findUnique({ where: { id: Number(id) } });
     }
-    return await Fornecedor.findByPk(id);
+    const row = await prisma.financeiro_fornecedores.findUnique({
+      where: { id: Number(id) },
+      include: {
+        financeiro_contas_pagar: {
+          include: {
+            financeiro_conta_pagar_pagamentos: { orderBy: { created_at: 'desc' }, take: 10 },
+          },
+        },
+      },
+    });
+    if (!row) return null;
+    const contas = row.financeiro_contas_pagar.map((conta) => ({
+      ...conta,
+      pagamentos: conta.financeiro_conta_pagar_pagamentos,
+    }));
+    return { ...row, financeiro_contas_pagar: contas, contasPagar: contas };
   }
 
-  /**
-   * Verificar se existe fornecedor com CPF/CNPJ
-   */
   static async existsByCpfCnpj(cpfCnpj: string, excludeId?: number): Promise<boolean> {
-    const where: WhereOptions = { cpf_cnpj: cpfCnpj };
-    
-    if (excludeId) {
-      where.id = { [Op.ne]: excludeId } as unknown as number;
-    }
-    
-    const fornecedor = await Fornecedor.findOne({ where });
+    const fornecedor = await prisma.financeiro_fornecedores.findFirst({
+      where: {
+        cpf_cnpj: cpfCnpj,
+        ...(excludeId ? { id: { not: excludeId } } : {}),
+      },
+      select: { id: true },
+    });
     return !!fornecedor;
   }
 
-  /**
-   * Criar fornecedor
-   */
-  static async create(dadosFornecedor: Partial<Fornecedor>): Promise<Fornecedor> {
-    return await Fornecedor.create(dadosFornecedor as any);
+  static async create(dadosFornecedor: Prisma.financeiro_fornecedoresUncheckedCreateInput) {
+    return prisma.financeiro_fornecedores.create({ data: dadosFornecedor });
   }
 
-  /**
-   * Atualizar fornecedor
-   */
-  static async update(id: string | number, dadosFornecedor: Partial<Fornecedor>): Promise<Fornecedor> {
-    const fornecedor = await Fornecedor.findByPk(id);
-    
-    if (!fornecedor) {
-      throw new Error('Fornecedor não encontrado');
-    }
-    
-    await fornecedor.update(dadosFornecedor);
-    await fornecedor.reload({ include: FornecedorService.getDefaultIncludes() });
-
-    return fornecedor;
+  static async update(id: string | number, dadosFornecedor: Prisma.financeiro_fornecedoresUncheckedUpdateInput) {
+    const numericId = Number(id);
+    const fornecedor = await prisma.financeiro_fornecedores.findUnique({ where: { id: numericId } });
+    if (!fornecedor) throw new Error('Fornecedor não encontrado');
+    await prisma.financeiro_fornecedores.update({ where: { id: numericId }, data: dadosFornecedor });
+    const atualizado = await FornecedorService.getById(numericId);
+    if (!atualizado) throw new Error('Fornecedor não encontrado');
+    return atualizado;
   }
 
-  /**
-   * Deletar fornecedor
-   */
-  static async delete(id: string | number): Promise<Fornecedor> {
-    const fornecedor = await Fornecedor.findByPk(id);
-    
-    if (!fornecedor) {
-      throw new Error('Fornecedor não encontrado');
-    }
-    
-    await fornecedor.destroy();
-    
+  static async delete(id: string | number) {
+    const numericId = Number(id);
+    const fornecedor = await prisma.financeiro_fornecedores.findUnique({ where: { id: numericId } });
+    if (!fornecedor) throw new Error('Fornecedor não encontrado');
+    await prisma.financeiro_fornecedores.delete({ where: { id: numericId } });
     return fornecedor;
   }
 }
-

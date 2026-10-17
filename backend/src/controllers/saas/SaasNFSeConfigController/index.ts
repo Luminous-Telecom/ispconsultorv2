@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { SaasNFSeConfigService } from '../../../services/saas/SaasNFSeConfigService';
 import { SaasBancoService } from '../../../services/saas/SaasConfigService';
@@ -63,7 +64,7 @@ export class SaasNFSeConfigController {
         return res;
       }
 
-      sendSuccess(res, await SaasNFSeConfigController.buildResponseData(config.toJSON() as Record<string, unknown>));
+      sendSuccess(res, await SaasNFSeConfigController.buildResponseData(toPlain(config) as Record<string, unknown>));
       return res;
     } catch (error: unknown) {
       sendError(res, error, 'Erro ao obter configuração NFS-e SaaS', 500, true, {
@@ -128,14 +129,14 @@ export class SaasNFSeConfigController {
           req as AuthenticatedRequest,
           'SaasNFSeConfig',
           configAtualizado.id,
-          semSegredosNfse(configAtualizado.toJSON() as Record<string, unknown>)
+          semSegredosNfse(toPlain(configAtualizado) as Record<string, unknown>)
         );
       } else {
         await registrarAtualizacao(req as AuthenticatedRequest, 'SaasNFSeConfig', configAtualizado.id,
-          semSegredosNfse(configAnterior.toJSON() as Record<string, unknown>),
-          semSegredosNfse(configAtualizado.toJSON() as Record<string, unknown>));
+          semSegredosNfse(toPlain(configAnterior) as Record<string, unknown>),
+          semSegredosNfse(toPlain(configAtualizado) as Record<string, unknown>));
       }
-      sendSuccess(res, await SaasNFSeConfigController.buildResponseData(configAtualizado.toJSON() as Record<string, unknown>), 'Configuração NFS-e atualizada com sucesso');
+      sendSuccess(res, await SaasNFSeConfigController.buildResponseData(toPlain(configAtualizado) as Record<string, unknown>), 'Configuração NFS-e atualizada com sucesso');
       return res;
     } catch (error: unknown) {
       sendError(res, error, 'Erro ao atualizar configuração NFS-e SaaS', 500, true, {

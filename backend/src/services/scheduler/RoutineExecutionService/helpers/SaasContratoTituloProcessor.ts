@@ -1,5 +1,5 @@
 import { withTransaction } from '../../../../utils/transaction';
-import type { Transaction } from 'sequelize';
+import type { TransactionClient as Transaction } from '../../../../utils/transaction';
 import { logger } from '../../../../utils/logger';
 import { TituloGenerationHelper } from './TituloGenerationHelper';
 import { SaasTituloGenerationHelper } from './SaasTituloGenerationHelper';

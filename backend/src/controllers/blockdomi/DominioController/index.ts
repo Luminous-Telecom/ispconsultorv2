@@ -1,7 +1,7 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
-import { Op } from 'sequelize';
+import { prisma } from '../../../db/prisma';
 import { DominioService, type SincronizarSeiAnatelDominiosRow } from '../../../services/blockdomi/DominioService';
-import { Dominio } from '../../../models/blockdomi/Dominio';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { registrarAuditoria } from '../../../services/sistema/AuditoriaRegistroService';
 import { setAuditData } from '../../../middleware/auditMiddleware';
@@ -58,7 +58,7 @@ export class DominioController {
         return;
       }
 
-      sendSuccess(res, dominio.toJSON());
+      sendSuccess(res, toPlain(dominio));
     } catch (error) {
       sendError(res, error, 'Erro ao buscar domínio', 500, true, {
         context: 'DominioController',
@@ -103,8 +103,8 @@ export class DominioController {
       try {
         const allIds = [...result.createdIds, ...result.updatedIds];
         if (allIds.length > 0) {
-          const dominios = await Dominio.findAll({ where: { id: { [Op.in]: allIds } } });
-          const domMap = new Map(dominios.map((d) => [d.id, d.toJSON() as Record<string, unknown>]));
+          const dominios = await prisma.blockdomi_dominios.findMany({ where: { id: { in: allIds } } });
+          const domMap = new Map(dominios.map((d) => [d.id, { ...d } as Record<string, unknown>]));
           for (const id of result.createdIds) {
             const dados = domMap.get(id);
             if (dados) await registrarCriacao(req, 'Dominio', id, dados, 'Importação em lote', empresaIdAudit);
@@ -159,8 +159,8 @@ export class DominioController {
       };
 
       const dominiosAntes =
-        ids.length > 0 ? await Dominio.findAll({ where: { id: { [Op.in]: ids } } }) : [];
-      const antesMap = new Map(dominiosAntes.map((d) => [d.id, d.toJSON() as Record<string, unknown>]));
+        ids.length > 0 ? await prisma.blockdomi_dominios.findMany({ where: { id: { in: ids } } }) : [];
+      const antesMap = new Map(dominiosAntes.map((d) => [d.id, { ...d } as Record<string, unknown>]));
 
       const result = await DominioService.bulkUpdate(ids, {
         nome_oficio: trimOrNull(body.nome_oficio),
@@ -177,8 +177,8 @@ export class DominioController {
       const empresaIdAudit = getEmpresaIdOrNull(req) ?? null;
 
       try {
-        const dominiosDepois = await Dominio.findAll({ where: { id: { [Op.in]: ids } } });
-        const depoisMap = new Map(dominiosDepois.map((d) => [d.id, d.toJSON() as Record<string, unknown>]));
+        const dominiosDepois = await prisma.blockdomi_dominios.findMany({ where: { id: { in: ids } } });
+        const depoisMap = new Map(dominiosDepois.map((d) => [d.id, { ...d } as Record<string, unknown>]));
         for (const id of ids) {
           const dadosAnteriores = antesMap.get(id);
           const dadosNovos = depoisMap.get(id);
@@ -242,7 +242,7 @@ export class DominioController {
           req,
           'Dominio',
           dominioCriado.id,
-          dominioCriado.toJSON() as Record<string, unknown>,
+          toPlain(dominioCriado) as Record<string, unknown>,
           undefined,
           empresaIdAudit
         );
@@ -270,7 +270,7 @@ export class DominioController {
         return;
       }
       
-      const dadosAnteriores = existingDominio.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(existingDominio) as Record<string, unknown>;
       
       const { dominio } = req.body;
       if (!dominio) {
@@ -293,7 +293,7 @@ export class DominioController {
       const dominioAtualizado = await DominioService.update(id, { ...req.body, dominio: dominioLimpo });
       
       // Registrar auditoria
-      const dadosNovos = dominioAtualizado.toJSON() as Record<string, unknown>;
+      const dadosNovos = toPlain(dominioAtualizado) as Record<string, unknown>;
       setAuditData(req, dadosAnteriores, dadosNovos);
       
       try {
@@ -333,7 +333,7 @@ export class DominioController {
         return;
       }
       
-      const dadosAnteriores = dominio.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(dominio) as Record<string, unknown>;
       
       await DominioService.delete(id);
       
@@ -373,12 +373,12 @@ export class DominioController {
       const idsNum = ids.map((id: unknown) => Number(id)).filter((n: number) => !Number.isNaN(n));
       const empresaIdAudit = getEmpresaIdOrNull(req) ?? null;
 
-      const dominiosAntes = idsNum.length > 0 ? await Dominio.findAll({ where: { id: { [Op.in]: idsNum } } }) : [];
+      const dominiosAntes = idsNum.length > 0 ? await prisma.blockdomi_dominios.findMany({ where: { id: { in: idsNum } } }) : [];
       const { deleted, versao } = await DominioService.bulkDelete(ids);
 
       try {
         for (const d of dominiosAntes) {
-          await registrarExclusao(req, 'Dominio', d.id, d.toJSON() as Record<string, unknown>, 'Exclusão em lote', empresaIdAudit);
+          await registrarExclusao(req, 'Dominio', d.id, { ...d } as Record<string, unknown>, 'Exclusão em lote', empresaIdAudit);
         }
       } catch (auditError) {
         // Não interromper o fluxo

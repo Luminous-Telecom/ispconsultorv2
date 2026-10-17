@@ -1,17 +1,14 @@
-import { Op } from 'sequelize';
-import { MensagemHistorico } from '../../../models/comunicacao/MensagemHistorico';
-import { Titulo } from '../../../models/financeiro/Titulo';
-import { SaasTitulo } from '../../../models/saas/SaasTitulo';
+import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
 import { EmailService } from '../EmailService';
 import { WhatsAppService } from '../WhatsAppService';
 import { WhatsAppBoletoService } from '../WhatsAppBoletoService';
+import { HISTORICO_ORIGEM_ERP, HISTORICO_ORIGEM_SAAS } from '../mensagemHistoricoOrigens';
 import {
-  HISTORICO_ORIGEM_ERP,
-  HISTORICO_ORIGEM_SAAS,
-} from '../mensagemHistoricoOrigens';
+  mensagemHistoricoFromLog,
+  whereFalhasCobrancaLog,
+} from '../../sistema/mensagemHistoricoLog';
 import {
-  montarWhereFalhasCobranca,
   selecionarFalhasCobrancaPendentes,
   tituloAceitaReenvioCobranca,
   type CanalNotificacao,
@@ -36,25 +33,20 @@ export interface ReenviarFalhasResultado {
   ignoradas: number;
 }
 
-function toRow(row: MensagemHistorico): HistoricoCobrancaRow {
-  const plain = row.get({ plain: true }) as HistoricoCobrancaRow;
-  return plain;
-}
-
 export class ReenviarNotificacoesCobrancaService {
   static async reenviar(input: ReenviarFalhasInput): Promise<ReenviarFalhasResultado> {
     const origens = input.origens.length > 0 ? input.origens : [HISTORICO_ORIGEM_ERP];
-    const erros = await MensagemHistorico.findAll({
-      where: montarWhereFalhasCobranca({
+    const erros = (await prisma.sistema_logs_operacionais.findMany({
+      where: whereFalhasCobrancaLog({
         tipo: input.tipo,
         origens,
         empresaId: input.empresaId,
         ids: input.ids,
-      }) as never,
-      attributes: ['id', 'tipo', 'status', 'entidade_tipo', 'entidade_id', 'titulo', 'historico_origem', 'created_at'],
-      order: [['created_at', 'DESC']],
-      limit: 500,
-    });
+        status: 'erro',
+      }),
+      orderBy: { created_at: 'desc' },
+      take: 500,
+    })).map(mensagemHistoricoFromLog);
 
     if (erros.length === 0) {
       return { total: 0, reenviadas: 0, erros: 0, ignoradas: 0 };
@@ -66,27 +58,21 @@ export class ReenviarNotificacoesCobrancaService {
       return em < min ? em : min;
     }, new Date(erros[0].created_at).getTime());
 
-    const sucessos = await MensagemHistorico.findAll({
-      where: {
-        status: 'enviada',
+    const sucessos = (await prisma.sistema_logs_operacionais.findMany({
+      where: whereFalhasCobrancaLog({
         tipo: input.tipo,
-        entidade_tipo: 'titulo',
-        entidade_id: { [Op.in]: entidadeIds },
-        historico_origem: origens.length === 1 ? origens[0] : { [Op.in]: origens },
-        created_at: { [Op.gt]: new Date(maisAntigo) },
-        ...(input.empresaId != null ? { empresa_id: input.empresaId } : {}),
-        [Op.or]: [
-          { titulo: { [Op.is]: null } },
-          { titulo: { [Op.notLike]: '%recibo%' } },
-        ],
-      } as never,
-      attributes: ['id', 'tipo', 'status', 'entidade_tipo', 'entidade_id', 'titulo', 'historico_origem', 'created_at'],
-    });
+        origens,
+        empresaId: input.empresaId,
+        status: 'enviada',
+        createdAfter: new Date(maisAntigo),
+        entidadeIds,
+      }),
+    })).map(mensagemHistoricoFromLog);
 
     const pendentes = selecionarFalhasCobrancaPendentes([
-      ...erros.map(toRow),
-      ...sucessos.map(toRow),
-    ]).slice(0, LIMITE_REENVIO);
+      ...erros,
+      ...sucessos,
+    ] as HistoricoCobrancaRow[]).slice(0, LIMITE_REENVIO);
 
     let reenviadas = 0;
     let falhas = 0;
@@ -131,11 +117,18 @@ export class ReenviarNotificacoesCobrancaService {
 
   private static async carregarEstadoTitulo(origem: OrigemHistorico, tituloId: number) {
     if (origem === HISTORICO_ORIGEM_SAAS) {
-      const titulo = await SaasTitulo.findByPk(tituloId, { attributes: ['id', 'status', 'pago'] });
+      const rows = await prisma.$queryRawUnsafe<Array<{ status: string; pago: boolean | number }>>(
+        'SELECT id, status, pago FROM saas_titulos WHERE id = ? LIMIT 1',
+        tituloId
+      );
+      const titulo = rows[0];
       if (!titulo) return null;
-      return { status: titulo.status, pago: titulo.pago };
+      return { status: titulo.status, pago: !!titulo.pago };
     }
-    const titulo = await Titulo.findByPk(tituloId, { attributes: ['id', 'status', 'pago'] });
+    const titulo = await prisma.financeiro_titulos.findUnique({
+      where: { id: Number(tituloId) },
+      select: { id: true, status: true, pago: true },
+    });
     if (!titulo) return null;
     return { status: titulo.status, pago: !!titulo.pago };
   }

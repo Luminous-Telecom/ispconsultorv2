@@ -19,7 +19,7 @@ export interface RoutineScheduleShape {
   mes?: string | null;
 }
 
-/** Normaliza hora_execucao para HH:mm (compatível com Sequelize TIME) */
+/** Normaliza hora_execucao para HH:mm. */
 export function normalizeHoraExecucao(routine: RoutineScheduleShape): string {
   const h = routine.hora_execucao;
   if (h === undefined || h === null) {

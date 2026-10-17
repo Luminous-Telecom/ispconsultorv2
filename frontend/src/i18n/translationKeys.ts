@@ -1211,8 +1211,6 @@ export interface TranslationKeys {
   'tabs.address': string;
   'tabs.contracts': string;
   'tabs.financial': string;
-  'tabs.faturasAbertas': string;
-  'tabs.faturasPagas': string;
   'tabs.observations': string;
   'tabs.files': string;
   'tabs.tunnelAgents': string;
@@ -1539,10 +1537,6 @@ export interface TranslationKeys {
   'updates.error': string;
   'updates.confirmUpdate': string;
   'updates.updateSystem': string;
-  'updates.updateDoc': string;
-  'updates.confirmUpdateDoc': string;
-  'updates.updatingDoc': string;
-  'updates.successDoc': string;
   'updates.badges.new': string;
   'updates.badges.bugfix': string;
   'updates.badges.security': string;

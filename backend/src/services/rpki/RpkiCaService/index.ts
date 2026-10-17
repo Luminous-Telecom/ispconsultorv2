@@ -1,8 +1,4 @@
-import { Op, WhereOptions } from 'sequelize';
-import { RpkiCa } from '../../../models/rpki/RpkiCa';
-import { RpkiCaParent } from '../../../models/rpki/RpkiCaParent';
-import { RpkiCaResource } from '../../../models/rpki/RpkiCaResource';
-import { RpkiRepository } from '../../../models/rpki/RpkiRepository';
+import { prisma } from '../../../db/prisma';
 import { RpkiClientError } from '../../../utils/errorUtils';
 import { KrillApiService } from '../KrillApiService';
 import { syncKrillRepositoryForCa } from '../KrillSyncService';
@@ -31,17 +27,12 @@ function normalizeHandleBase(input: string): string {
 async function generateUniqueHandle(empresa_id: number | null, nome: string): Promise<string> {
   const base = normalizeHandleBase(nome);
   const prefix = `${base}`;
-  const whereEmpresa: WhereOptions<RpkiCa> = empresa_id == null ? { empresa_id: null } : { empresa_id };
-
-  const existing = await RpkiCa.findAll({
+  const existing = await prisma.rpki_cas.findMany({
     where: {
-      ...whereEmpresa,
-      handle: {
-        [Op.like]: `${prefix}%`,
-      },
+      empresa_id,
+      handle: { startsWith: prefix },
     },
-    attributes: ['handle'],
-    raw: true,
+    select: { handle: true },
   });
 
   if (existing.length === 0) return prefix;
@@ -53,19 +44,14 @@ async function generateUniqueHandle(empresa_id: number | null, nome: string): Pr
 }
 
 export class RpkiCaService {
-  static async list(filters: ListRpkiCaFilters): Promise<RpkiCa[]> {
-    const where: WhereOptions<RpkiCa> =
-      filters.empresa_id == null
-        ? { empresa_id: null }
-        : { empresa_id: filters.empresa_id };
-
-    return RpkiCa.findAll({
-      where,
-      order: [['id', 'DESC']],
+  static async list(filters: ListRpkiCaFilters) {
+    return prisma.rpki_cas.findMany({
+      where: { empresa_id: filters.empresa_id },
+      orderBy: { id: 'desc' },
     });
   }
 
-  static async create(input: CreateRpkiCaInput): Promise<RpkiCa> {
+  static async create(input: CreateRpkiCaInput) {
     const nome = input.nome.trim();
     const empresa_id = input.empresa_id ?? null;
     const cliente_id = input.cliente_id ?? null;
@@ -74,50 +60,49 @@ export class RpkiCaService {
 
     await KrillApiService.ensureCa(handle);
 
-    return RpkiCa.create({
-      empresa_id,
-      cliente_id,
-      nome,
-      handle,
-      status: 'pending',
-    });
-  }
-
-  static async listParents(ca_id: number): Promise<RpkiCaParent[]> {
-    return RpkiCaParent.findAll({
-      where: { ca_id },
-      order: [['id', 'DESC']],
-      attributes: {
-        exclude: ['parent_response_xml'],
+    return prisma.rpki_cas.create({
+      data: {
+        empresa_id,
+        cliente_id,
+        nome,
+        handle,
+        status: 'pending',
       },
     });
   }
 
-  static async listResources(ca_id: number): Promise<RpkiCaResource[]> {
-    return RpkiCaResource.findAll({
+  static async listParents(ca_id: number) {
+    const rows = await prisma.rpki_ca_parents.findMany({
       where: { ca_id },
-      order: [['id', 'DESC']],
+      orderBy: { id: 'desc' },
+    });
+    return rows.map(({ parent_response_xml: _xml, ...rest }) => rest);
+  }
+
+  static async listResources(ca_id: number) {
+    return prisma.rpki_ca_resources.findMany({
+      where: { ca_id },
+      orderBy: { id: 'desc' },
     });
   }
 
   static async clearResources(ca_id: number): Promise<number> {
-    return RpkiCaResource.destroy({
-      where: { ca_id },
-    });
+    const result = await prisma.rpki_ca_resources.deleteMany({ where: { ca_id } });
+    return result.count;
   }
 
-  static async listRepositories(ca_id: number): Promise<RpkiRepository[]> {
-    return RpkiRepository.findAll({
+  static async listRepositories(ca_id: number) {
+    return prisma.rpki_repositories.findMany({
       where: { ca_id },
-      order: [['id', 'DESC']],
+      orderBy: { id: 'desc' },
     });
   }
 
   static async deleteParent(ca_id: number, parent_id: number): Promise<void> {
-    const parent = await RpkiCaParent.findOne({ where: { id: parent_id, ca_id } });
+    const parent = await prisma.rpki_ca_parents.findFirst({ where: { id: parent_id, ca_id } });
     if (!parent) throw new RpkiClientError('CA-pai não encontrada para exclusão');
 
-    const ca = await RpkiCa.findByPk(ca_id);
+    const ca = await prisma.rpki_cas.findUnique({ where: { id: ca_id } });
     if (ca?.handle && parent.parent_name) {
       try {
         await KrillApiService.removeParent(ca.handle, parent.parent_name);
@@ -132,30 +117,27 @@ export class RpkiCaService {
       }
     }
 
-    await RpkiCaParent.destroy({ where: { id: parent_id, ca_id } });
+    await prisma.rpki_ca_parents.deleteMany({ where: { id: parent_id, ca_id } });
   }
 
   static async deleteRepository(ca_id: number, repository_id: number): Promise<void> {
-    const deleted = await RpkiRepository.destroy({
-      where: {
-        id: repository_id,
-        ca_id,
-      },
+    const deleted = await prisma.rpki_repositories.deleteMany({
+      where: { id: repository_id, ca_id },
     });
-    if (!deleted) {
+    if (!deleted.count) {
       throw new RpkiClientError('Repositório não encontrado para exclusão');
     }
   }
 
-  static async syncRepository(ca_id: number, repository_id: number, triggerType?: 'roa' | 'aspa' | 'manual' | null): Promise<RpkiRepository> {
-    const repository = await RpkiRepository.findOne({
+  static async syncRepository(ca_id: number, repository_id: number, triggerType?: 'roa' | 'aspa' | 'manual' | null) {
+    const repository = await prisma.rpki_repositories.findFirst({
       where: { id: repository_id, ca_id },
     });
     if (!repository) {
       throw new RpkiClientError('Repositório não encontrado para atualização');
     }
 
-    const ca = await RpkiCa.findByPk(ca_id);
+    const ca = await prisma.rpki_cas.findUnique({ where: { id: ca_id } });
     if (!ca) {
       throw new RpkiClientError('CA não encontrada');
     }
@@ -173,13 +155,13 @@ export class RpkiCaService {
   }
 
   static async delete(ca_id: number): Promise<void> {
-    const ca = await RpkiCa.findByPk(ca_id);
+    const ca = await prisma.rpki_cas.findUnique({ where: { id: ca_id } });
     if (!ca) throw new RpkiClientError('CA não encontrada');
 
     const [parentsCount, resourcesCount, repositoriesCount] = await Promise.all([
-      RpkiCaParent.count({ where: { ca_id } }),
-      RpkiCaResource.count({ where: { ca_id } }),
-      RpkiRepository.count({ where: { ca_id } }),
+      prisma.rpki_ca_parents.count({ where: { ca_id } }),
+      prisma.rpki_ca_resources.count({ where: { ca_id } }),
+      prisma.rpki_repositories.count({ where: { ca_id } }),
     ]);
 
     if (parentsCount > 0 || resourcesCount > 0 || repositoriesCount > 0) {
@@ -200,7 +182,7 @@ export class RpkiCaService {
       });
     }
 
-    await RpkiCa.destroy({ where: { id: ca_id } });
+    await prisma.rpki_cas.delete({ where: { id: ca_id } });
   }
 }
 

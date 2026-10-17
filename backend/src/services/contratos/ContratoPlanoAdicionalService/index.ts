@@ -1,85 +1,89 @@
-import { ContratoPlanoAdicional } from '../../../models/contratos/ContratoPlanoAdicional';
+import type { Prisma } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
+import { withToJson } from '../../cadastros/prismaWhere';
+
+const planoSelect = {
+  id: true,
+  nome_plano: true,
+  descricao: true,
+  tipo_servico: true,
+  valor_mensal: true,
+  status: true,
+} as const;
+
+function withPlano<T extends { cadastros_planos?: { valor_mensal?: unknown } | null; valor_final?: unknown; desconto_valor?: unknown; desconto_percentual?: unknown; plano_id?: number }>(row: T) {
+  const shaped = { ...row, plano: row.cadastros_planos ?? null };
+  return withToJson(Object.assign(shaped, {
+    async getValorFinal() {
+      if (shaped.valor_final) return parseFloat(String(shaped.valor_final));
+      const plano = shaped.cadastros_planos ?? (shaped.plano_id
+        ? await prisma.cadastros_planos.findUnique({ where: { id: shaped.plano_id } })
+        : null);
+      let valor = parseFloat(String(plano?.valor_mensal ?? 0));
+      const descontoValor = Number(shaped.desconto_valor || 0);
+      const descontoPercentual = Number(shaped.desconto_percentual || 0);
+      if (descontoValor > 0) valor = Math.max(0, valor - descontoValor);
+      else if (descontoPercentual > 0) valor = Math.max(0, valor - valor * (descontoPercentual / 100));
+      return Math.round(valor * 100) / 100;
+    },
+  }));
+}
 
 export class ContratoPlanoAdicionalService {
-  private static getPlanoInclude() {
-    return {
-      association: 'plano' as const,
-      attributes: ['id', 'nome_plano', 'descricao', 'tipo_servico', 'valor_mensal', 'status'],
-    };
-  }
-
-  /**
-   * Listar planos adicionais por contrato
-   */
-  static async getByContrato(contratoId: number): Promise<ContratoPlanoAdicional[]> {
-    return await ContratoPlanoAdicional.findAll({
+  static async getByContrato(contratoId: number) {
+    const rows = await prisma.contratos_planos_adicionais.findMany({
       where: { contrato_id: contratoId },
-      include: [
-        {
-          association: 'plano',
-          attributes: ['id', 'nome_plano', 'descricao', 'tipo_servico', 'valor_mensal', 'status']
-        }
-      ],
-      order: [['created_at', 'DESC']]
+      include: { cadastros_planos: { select: planoSelect } },
+      orderBy: { created_at: 'desc' },
     });
+    return rows.map(withPlano);
   }
 
-  /**
-   * Buscar plano adicional por ID
-   */
-  static async getById(id: string | number, includePlano = true): Promise<ContratoPlanoAdicional | null> {
-    const include = includePlano ? [ContratoPlanoAdicionalService.getPlanoInclude()] : [];
-
-    return await ContratoPlanoAdicional.findByPk(id, {
-      include
+  static async getById(id: string | number, includePlano = true) {
+    if (!includePlano) {
+      return prisma.contratos_planos_adicionais.findUnique({ where: { id: Number(id) } });
+    }
+    const row = await prisma.contratos_planos_adicionais.findUnique({
+      where: { id: Number(id) },
+      include: { cadastros_planos: { select: planoSelect } },
     });
+    return row ? withPlano(row) : null;
   }
 
-  /**
-   * Buscar plano adicional existente
-   */
-  static async findOne(where: any): Promise<ContratoPlanoAdicional | null> {
-    // Se where já contém a propriedade 'where', usar diretamente, senão criar o objeto
-    const queryOptions = where && 'where' in where ? where : { where };
-    return await ContratoPlanoAdicional.findOne(queryOptions);
+  static async findOne(where: Prisma.contratos_planos_adicionaisWhereInput | { where: Prisma.contratos_planos_adicionaisWhereInput }) {
+    const filter = where && typeof where === 'object' && 'where' in where ? where.where : where;
+    const row = await prisma.contratos_planos_adicionais.findFirst({ where: filter });
+    return row;
   }
 
-  /**
-   * Criar plano adicional
-   */
-  static async create(dados: Partial<ContratoPlanoAdicional>, transaction?: any): Promise<ContratoPlanoAdicional> {
-    return await ContratoPlanoAdicional.create(dados as any, { transaction });
+  static async create(
+    dados: Prisma.contratos_planos_adicionaisUncheckedCreateInput,
+    _transaction?: unknown,
+  ) {
+    return prisma.contratos_planos_adicionais.create({ data: dados });
   }
 
-  /**
-   * Atualizar plano adicional
-   */
-  static async update(id: string | number, dados: Partial<ContratoPlanoAdicional>): Promise<ContratoPlanoAdicional> {
-    const servico = await ContratoPlanoAdicional.findByPk(id);
-    
+  static async update(id: string | number, dados: Prisma.contratos_planos_adicionaisUncheckedUpdateInput) {
+    const numericId = Number(id);
+    const servico = await prisma.contratos_planos_adicionais.findUnique({ where: { id: numericId } });
     if (!servico) {
       throw new Error('Plano adicional não encontrado');
     }
-    
-    await servico.update(dados);
-    await servico.reload({ include: [ContratoPlanoAdicionalService.getPlanoInclude()] });
-
-    return servico;
+    const updated = await prisma.contratos_planos_adicionais.update({
+      where: { id: numericId },
+      data: dados,
+      include: { cadastros_planos: { select: planoSelect } },
+    });
+    return withPlano(updated);
   }
 
-  /**
-   * Deletar plano adicional
-   */
-  static async delete(id: string | number): Promise<ContratoPlanoAdicional> {
-    const servico = await ContratoPlanoAdicional.findByPk(id);
-    
+  static async delete(id: string | number) {
+    const numericId = Number(id);
+    const servico = await prisma.contratos_planos_adicionais.findUnique({ where: { id: numericId } });
     if (!servico) {
       throw new Error('Plano adicional não encontrado');
     }
-    
-    await servico.destroy();
-    
+    await prisma.contratos_planos_adicionais.delete({ where: { id: numericId } });
     return servico;
   }
 }
-

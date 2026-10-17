@@ -1,8 +1,4 @@
 import { Response as ExpressResponse } from 'express';
-import { Op } from 'sequelize';
-import { sequelize } from '../../../config/database';
-import { MensagemHistorico } from '../../../models/comunicacao/MensagemHistorico';
-import { Usuario } from '../../../models/cadastros/Usuario';
 import { logger } from '../../../utils/logger';
 import { sendSuccess, sendError, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 import type { AuthenticatedRequest } from '../../../types/auth';
@@ -12,17 +8,11 @@ import { HISTORICO_ORIGEM_ERP } from '../../../services/comunicacao/mensagemHist
 import { parseReenviarFalhasBody } from '../../../services/comunicacao/ReenviarNotificacoesCobrancaService/selecao';
 import { ReenviarNotificacoesCobrancaService } from '../../../services/comunicacao/ReenviarNotificacoesCobrancaService';
 import { parseListQuery, parseOptionalQueryInt, queryString } from '../../../utils/listQuery';
-
-interface MensagemHistoricoFilters {
-  tipo?: 'email' | 'whatsapp';
-  status?: 'enviada' | 'erro';
-  destinatario?: string;
-  entidade_tipo?: string;
-  entidade_id?: number;
-  usuario_id?: number;
-  data_inicio?: Date;
-  data_fim?: Date;
-}
+import {
+  buscarMensagemHistorico,
+  listarMensagensHistorico,
+  type FiltroMensagemHistorico,
+} from '../../../services/sistema/mensagemHistoricoLog';
 
 export class MensagemHistoricoController {
   /**
@@ -57,87 +47,58 @@ export class MensagemHistoricoController {
         return;
       }
 
-      const where: Record<string, unknown> = {
-        historico_origem: HISTORICO_ORIGEM_ERP,
-        ...(listEmpresaId != null ? { empresa_id: listEmpresaId } : {}),
+      const filtro: FiltroMensagemHistorico = {
+        origens: [HISTORICO_ORIGEM_ERP],
+        ...(listEmpresaId != null ? { empresaId: listEmpresaId } : {}),
+        ...(tipo === 'email' || tipo === 'whatsapp' ? { canal: tipo } : {}),
+        ...(status === 'enviada' || status === 'erro' ? { status } : {}),
+        ...(entidade_tipo ? { entidadeTipo: entidade_tipo } : {}),
+        ...(entidade_id ? { entidadeId: entidade_id } : {}),
+        ...(usuario_id ? { usuarioId: usuario_id } : {}),
+        ...(data_inicio ? { createdFrom: new Date(data_inicio as string) } : {}),
+        ...(data_fim ? { createdTo: new Date(data_fim as string) } : {}),
       };
-
-      if (tipo) {
-        where.tipo = tipo;
-      }
-
-      if (status) {
-        where.status = status;
-      }
 
       const searchTerm = (search as string)?.trim();
       const field = (searchField as string)?.trim() || 'destinatario';
       if (searchTerm) {
         if (field === 'id') {
           const num = parseInt(searchTerm, 10);
-          if (!Number.isNaN(num) && String(num) === searchTerm) {
-            where.id = num;
-          } else {
-            (where as Record<string | symbol, unknown>)[Op.and] = [
-              sequelize.where(sequelize.cast(sequelize.col('id'), 'CHAR'), { [Op.like]: `%${searchTerm}%` })
-            ];
-          }
-        } else if (field === 'tipo') {
-          where.tipo = searchTerm;
-        } else if (field === 'status') {
-          where.status = searchTerm;
-        } else if (['cliente_nome', 'titulo', 'destinatario', 'mensagem'].includes(field)) {
-          (where as Record<string, unknown>)[field] = { [Op.like]: `%${searchTerm}%` };
+          if (!Number.isNaN(num) && String(num) === searchTerm) filtro.id = num;
+          else filtro.idInexistente = true;
+        } else if (field === 'tipo' && (searchTerm === 'email' || searchTerm === 'whatsapp')) {
+          filtro.canal = searchTerm;
+        } else if (field === 'status' && (searchTerm === 'enviada' || searchTerm === 'erro')) {
+          filtro.status = searchTerm;
+        } else if (field === 'cliente_nome' || field === 'titulo' || field === 'destinatario' || field === 'mensagem') {
+          filtro.textoCampo = field;
+          filtro.texto = searchTerm;
         } else {
-          where.destinatario = { [Op.like]: `%${searchTerm}%` };
+          filtro.textoCampo = 'destinatario';
+          filtro.texto = searchTerm;
         }
       } else if (destinatario) {
-        where.destinatario = { [Op.like]: `%${destinatario}%` };
-      }
-
-      if (entidade_tipo) {
-        where.entidade_tipo = entidade_tipo;
-      }
-
-      if (entidade_id) {
-        where.entidade_id = entidade_id;
-      }
-
-      if (usuario_id) {
-        where.usuario_id = usuario_id;
-      }
-
-      if (data_inicio || data_fim) {
-        where.created_at = {
-          ...(data_inicio && { [Op.gte]: new Date(data_inicio as string) }),
-          ...(data_fim && { [Op.lte]: new Date(data_fim as string) })
-        };
+        filtro.textoCampo = 'destinatario';
+        filtro.texto = destinatario;
       }
 
       const validSortColumns = ['id', 'tipo', 'destinatario', 'titulo', 'status', 'created_at', 'updated_at', 'cliente_nome', 'mensagem'];
       const col = sortColumn && validSortColumns.includes(sortColumn) ? sortColumn : 'created_at';
-      const order: [string, string][] = [[col, (sortDirection ?? 'desc') === 'asc' ? 'ASC' : 'DESC']];
+      const direction = (sortDirection ?? 'desc') === 'asc' ? 'asc' : 'desc';
 
-      // Buscar mensagens
-      const { count, rows } = await MensagemHistorico.findAndCountAll({
-        where,
-        include: [
-          {
-            model: Usuario,
-            as: 'usuario',
-            attributes: ['id', 'nome', 'email'],
-            required: false
-          }
-        ],
-        limit,
-        offset,
-        order,
-        distinct: true
+      const { total, rows } = await listarMensagensHistorico(filtro, {
+        take: limit,
+        skip: offset,
+        sortColumn: col,
+        sortDirection: direction,
       });
 
       const result = {
-        data: rows,
-        pagination: buildListPagination(page, limit, count),
+        data: rows.map(({ cadastros_usuarios, sistema_tenants: _empresa, ...rest }) => ({
+          ...rest,
+          usuario: cadastros_usuarios,
+        })),
+        pagination: buildListPagination(page, limit, total),
         filters: {
           tipo,
           status,
@@ -169,31 +130,24 @@ export class MensagemHistoricoController {
       const { id } = req.params;
       const empresaId = getEmpresaIdOrNull(req);
 
-      const mensagem = await MensagemHistorico.findByPk(id, {
-        include: [
-          {
-            model: Usuario,
-            as: 'usuario',
-            attributes: ['id', 'nome', 'email'],
-            required: false
-          }
-        ]
-      });
+      const numericId = Number(id);
+      const mensagem = Number.isInteger(numericId) ? await buscarMensagemHistorico(numericId) : null;
 
-      if (!mensagem || mensagem.getDataValue('historico_origem') !== HISTORICO_ORIGEM_ERP) {
+      if (!mensagem || mensagem.historico_origem !== HISTORICO_ORIGEM_ERP) {
         sendError(res, null, 'Mensagem não encontrada', 404);
         return;
       }
 
       if (empresaId != null) {
-        const msgEmpresaId = (mensagem as { empresa_id?: number | null }).empresa_id;
+        const msgEmpresaId = mensagem.empresa_id;
         if (msgEmpresaId != null && msgEmpresaId !== empresaId) {
           sendError(res, null, 'Mensagem não encontrada', 404);
           return;
         }
       }
 
-      sendSuccess(res, mensagem, 'Mensagem encontrada');
+      const { cadastros_usuarios, sistema_tenants: _empresa, ...rest } = mensagem;
+      sendSuccess(res, { ...rest, usuario: cadastros_usuarios }, 'Mensagem encontrada');
     } catch (error) {
       logger.error('Erro ao buscar mensagem:', error);
       sendError(res, error, 'Erro ao buscar mensagem', 500, true);
@@ -211,33 +165,19 @@ export class MensagemHistoricoController {
 
       const offset = (page - 1) * limit;
 
-      const where: Record<string, unknown> = {
-        historico_origem: HISTORICO_ORIGEM_ERP,
-        entidade_tipo,
-        entidade_id: Number(entidade_id),
-      };
-      if (empresaId != null) {
-        (where as Record<string, unknown>)[Op.or as unknown as string] = [{ empresa_id: empresaId }, { empresa_id: null }];
-      }
-
-      const { count, rows } = await MensagemHistorico.findAndCountAll({
-        where,
-        include: [
-          {
-            model: Usuario,
-            as: 'usuario',
-            attributes: ['id', 'nome', 'email'],
-            required: false
-          }
-        ],
-        limit,
-        offset,
-        order: [['created_at', 'DESC']]
-      });
+      const { total, rows } = await listarMensagensHistorico({
+        origens: [HISTORICO_ORIGEM_ERP],
+        entidadeTipo: entidade_tipo,
+        entidadeId: Number(entidade_id),
+        ...(empresaId != null ? { empresaId, empresaOuNulo: true } : {}),
+      }, { take: limit, skip: offset, sortColumn: 'created_at', sortDirection: 'desc' });
 
       const result = {
-        data: rows,
-        pagination: buildListPagination(page, limit, count),
+        data: rows.map(({ cadastros_usuarios, sistema_tenants: _empresa, ...rest }) => ({
+          ...rest,
+          usuario: cadastros_usuarios,
+        })),
+        pagination: buildListPagination(page, limit, total),
       };
 
       sendSuccess(res, result, 'Mensagens da entidade listadas com sucesso');

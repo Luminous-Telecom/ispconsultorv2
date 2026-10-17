@@ -1,41 +1,13 @@
 ---
-description: Feature gating por módulo do plano SaaS — usePlanoModulos
+description: A instalação não tem plano nem limite de módulo
 globs: frontend/src/**/*.tsx,frontend/src/**/*.ts
 alwaysApply: false
 ---
 
-# Feature gating por plano — ISP Consultor
+# Módulos — ISP Consultor
 
-O ERP não tem RBAC granular por perfil de usuário nas telas — o controle recorrente é **módulo contratado no plano SaaS** do tenant, via `usePlanoModulos`.
+Esta instalação não vende plano e não esconde menu por módulo contratado.
 
-```tsx
-import { usePlanoModulos } from 'hooks/usePlanoModulos';
-
-const { hasModulo, isLoading } = usePlanoModulos();
-
-{hasModulo('rpki') && <Tab label="RPKI">...</Tab>}
-```
-
-## Como funciona
-
-- `usePlanoModulos()` busca `/api/plano-modulos` (React Query, `queryKey: ['plano-modulos', pathname]`) — **desabilitado automaticamente** em rotas `/saas/*` (`enabled: !pathname.startsWith('/saas')`), porque o painel SaaS usa `saas_auth_token`, não `auth_token`
-- `modulos === null` → sem restrição, `hasModulo()` sempre `true` (fallback seguro quando a API ainda não respondeu ou o tenant não tem limite de módulos)
-- IDs de módulo centralizados em `constants/planoModulos.ts` (`PlanoModuloId`)
-- Menu lateral filtra itens via `filterByModulo` (`components/layout/layout/utils.ts`) usando `MODAL_MODULO_MAP` (associação `modalId` → módulo do plano)
-
-## Novo módulo pago
-
-1. Adicionar o ID em `PlanoModuloId` / `PLANO_MODULOS` (`constants/planoModulos.ts`)
-2. Mapear o(s) `modalId`/aba correspondente em `MODAL_MODULO_MAP`
-3. Envolver a aba/menu/ação com `hasModulo('novo-modulo')`
-4. Espelhar a mesma constante no backend (`backend/src/constants/planoModulos.ts` + `MODULO_ROTAS`) — ver `backend-multi-tenancy.mdc`/`backend-api.mdc`
-5. Se o módulo tiver **limite numérico** no plano → seguir `backend-saas-plano-limites.mdc` (definição, contador, `validateLimiteCreate` em **todos** os fluxos de criação)
-
-## RBAC por perfil (nota)
-
-`role`/`nivel_acesso` existe para exibição e cadastro de usuários SaaS (`constants/saasUsuarioAccess.ts`), mas **não** há um padrão consistente de esconder ações do ERP por perfil de usuário — não inventar um sistema de permissões novo sem alinhar; o gating existente é por módulo de plano, não por papel do usuário.
-
-## Proibido
-
-- Checar `hasModulo` chamando a API do plano diretamente num componente — sempre via `usePlanoModulos()`
-- Habilitar módulo novo só no frontend sem espelhar em `MODULO_ROTAS` no backend (usuário veria a aba mas a API bloquearia com 403)
+- Não criar painel de planos, limite numérico nem checagem de módulo na tela
+- `usePlanoModulos` / `hasModulo`, se ainda existirem no código, não bloqueiam funcionalidade
+- Permissão de tela administrativa (backup, atualização) é `role === 'admin'` do ERP

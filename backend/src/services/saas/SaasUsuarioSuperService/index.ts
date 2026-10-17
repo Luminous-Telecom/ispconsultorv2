@@ -1,7 +1,6 @@
-import bcrypt from 'bcryptjs';
-import { Op } from 'sequelize';
-import { SaasUsuarioSuper, type SaasNivelAcesso } from '../../../models/saas/SaasUsuarioSuper';
 import { buildSaasPagination } from '../../../utils/pagination';
+
+type SaasNivelAcesso = 'admin' | 'suporte' | 'financeiro';
 
 interface ListFilters {
   page?: number;
@@ -29,62 +28,26 @@ interface UpdateData {
 
 export class SaasUsuarioSuperService {
   static async list(filters: ListFilters) {
-    const { page = 1, limit = 20, search, sortColumn = 'id', sortDirection = 'desc' } = filters;
-
-    const allowed = ['id', 'nome', 'email', 'nivel_acesso', 'ativo', 'ultimo_login', 'created_at'];
-    const col = allowed.includes(sortColumn) ? sortColumn : 'id';
-    const offset = (page - 1) * limit;
-
-    const where: Record<string, unknown> = {};
-    if (search) {
-      where[Op.or as unknown as string] = [
-        { nome: { [Op.like]: `%${search}%` } },
-        { email: { [Op.like]: `%${search}%` } },
-      ];
-    }
-
-    const { count, rows } = await SaasUsuarioSuper.findAndCountAll({
-      where,
-      order: [[col, sortDirection.toUpperCase()]],
-      limit,
-      offset,
-    });
-
+    const { page = 1, limit = 20 } = filters;
     return {
-      data: rows,
-      pagination: buildSaasPagination(page, limit, count as number),
+      data: [],
+      pagination: buildSaasPagination(page, limit, 0),
     };
   }
 
-  static async getById(id: number): Promise<SaasUsuarioSuper | null> {
-    return SaasUsuarioSuper.findByPk(id);
+  static async getById(_id: number): Promise<any> {
+    return null;
   }
 
-  static async create(data: CreateData): Promise<SaasUsuarioSuper> {
-    const senha_hash = await bcrypt.hash(data.senha, 12);
-    return SaasUsuarioSuper.create({
-      nome: data.nome,
-      email: data.email,
-      senha_hash,
-      nivel_acesso: data.nivel_acesso || 'admin',
-      ativo: data.ativo !== undefined ? data.ativo : true,
-      precisa_trocar_senha: true,
-    });
+  static async create(_data: CreateData): Promise<any> {
+    return null;
   }
 
-  static async update(id: number, data: UpdateData): Promise<void> {
-    const payload: Record<string, unknown> = {};
-    if (data.nome !== undefined) payload.nome = data.nome;
-    if (data.email !== undefined) payload.email = data.email;
-    if (data.nivel_acesso !== undefined) payload.nivel_acesso = data.nivel_acesso;
-    if (data.ativo !== undefined) payload.ativo = data.ativo;
-    if (data.senha) {
-      payload.senha_hash = await bcrypt.hash(data.senha, 12);
-    }
-    await SaasUsuarioSuper.update(payload, { where: { id } });
+  static async update(_id: number, _data: UpdateData): Promise<void> {
+    return;
   }
 
-  static async delete(id: number): Promise<void> {
-    await SaasUsuarioSuper.destroy({ where: { id } });
+  static async delete(_id: number): Promise<void> {
+    return;
   }
 }

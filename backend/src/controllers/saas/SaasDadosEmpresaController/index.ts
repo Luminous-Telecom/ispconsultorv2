@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Response } from 'express';
 import Joi from 'joi';
 import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
@@ -78,7 +79,7 @@ export class SaasDadosEmpresaController {
         return;
       }
       const empresa = await SaasDadosEmpresaService.create(value);
-      await registrarCriacao(req as any, 'SaasDadosEmpresa', empresa.id, empresa.toJSON() as Record<string, unknown>, undefined, null);
+      await registrarCriacao(req as any, 'SaasDadosEmpresa', empresa.id, toPlain(empresa) as Record<string, unknown>, undefined, null);
       res.status(201).json({ success: true, message: 'Empresa criada com sucesso', data: empresa });
     } catch (err) {
       sendError(res, err, 'Erro ao criar empresa', 500, true);
@@ -100,10 +101,10 @@ export class SaasDadosEmpresaController {
       }
       const empresaAtualizada = await SaasDadosEmpresaService.update(id, value);
       await registrarAtualizacao(req as any, 'SaasDadosEmpresa', id,
-        empresaAntiga.toJSON() as Record<string, unknown>,
-        empresaAtualizada.toJSON() as Record<string, unknown>,
+        toPlain(empresaAntiga) as Record<string, unknown>,
+        toPlain(empresaAtualizada) as Record<string, unknown>,
         undefined, null);
-      sendSuccess(res, empresaAtualizada.toJSON(), 'Empresa atualizada com sucesso');
+      sendSuccess(res, toPlain(empresaAtualizada), 'Empresa atualizada com sucesso');
     } catch (err) {
       sendError(res, err, 'Erro ao atualizar empresa', 500, true);
     }
@@ -114,7 +115,7 @@ export class SaasDadosEmpresaController {
       const empresaAntiga = await SaasDadosEmpresaService.getById(Number(req.params.id));
       await SaasDadosEmpresaService.delete(Number(req.params.id));
       if (empresaAntiga) {
-        await registrarExclusao(req as any, 'SaasDadosEmpresa', Number(req.params.id), empresaAntiga.toJSON() as Record<string, unknown>, undefined, null);
+        await registrarExclusao(req as any, 'SaasDadosEmpresa', Number(req.params.id), toPlain(empresaAntiga) as Record<string, unknown>, undefined, null);
       }
       sendSuccess(res, null, 'Empresa removida com sucesso');
     } catch (err) {
@@ -154,7 +155,7 @@ export class SaasDadosEmpresaController {
         return;
       }
       if (empresaAntiga) {
-        const dadosAnteriores = empresaAntiga.toJSON() as Record<string, unknown>;
+        const dadosAnteriores = toPlain(empresaAntiga) as Record<string, unknown>;
         const dadosNovos = { ...dadosAnteriores, data_fim_desbloqueio_manual: value };
         await registrarAtualizacao(req as any, 'SaasDadosEmpresa', id, dadosAnteriores, dadosNovos, 'Atualização data fim desbloqueio manual', null);
       }
@@ -178,7 +179,7 @@ export class SaasDadosEmpresaController {
         return;
       }
       if (empresaAntiga) {
-        const dadosAnteriores = empresaAntiga.toJSON() as Record<string, unknown>;
+        const dadosAnteriores = toPlain(empresaAntiga) as Record<string, unknown>;
         const dadosNovos = {
           ...dadosAnteriores,
           bloqueado_por_atraso: false,

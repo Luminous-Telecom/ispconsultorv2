@@ -1,56 +1,65 @@
-import { Transaction } from 'sequelize';
-import { sequelize } from '../../config/database';
+import type { Prisma } from '@prisma/client';
+import { prisma } from '../../db/prisma';
 import { logger } from '../logger';
 
 /**
- * Helper para executar operações dentro de uma transação Sequelize
- * Garante rollback automático em caso de erro
- * 
- * @param callback Função que recebe a transação e retorna o resultado
- * @returns Resultado da operação
+ * Cliente da transação Prisma, com os campos que o ORM ainda lê (`.tx`)
+ * enquanto os services não forem migrados.
+ */
+export type TransactionClient = Prisma.TransactionClient & {
+  tx: Prisma.TransactionClient;
+  commit: () => Promise<void>;
+  rollback: () => Promise<void>;
+};
+
+const ROLLBACK = '__rollback__';
+
+function asTransactionClient(tx: Prisma.TransactionClient): TransactionClient {
+  return new Proxy(tx, {
+    get(target, prop, receiver) {
+      if (prop === 'tx') return target;
+      if (prop === 'commit') return async () => undefined;
+      if (prop === 'rollback') return async () => {
+        throw new Error(ROLLBACK);
+      };
+      return Reflect.get(target, prop, receiver);
+    },
+  }) as TransactionClient;
+}
+
+/**
+ * Executa o callback dentro de prisma.$transaction.
+ * O callback recebe o transaction client do Prisma.
  */
 export async function withTransaction<T>(
-  callback: (transaction: Transaction) => Promise<T>
+  callback: (transaction: TransactionClient) => Promise<T>
 ): Promise<T> {
-  const transaction = await sequelize.transaction();
-  
   try {
-    const result = await callback(transaction);
-    await transaction.commit();
-    return result;
+    return await prisma.$transaction(async (tx) => callback(asTransactionClient(tx)));
   } catch (error) {
-    await transaction.rollback();
-    
+    if (error instanceof Error && error.message === ROLLBACK) {
+      throw error;
+    }
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-    
     logger.error('Erro em transação - rollback executado', {
       context: 'transaction',
-      error: errorMessage
+      error: errorMessage,
     });
-    
     throw error;
   }
 }
 
 /**
- * Helper para executar múltiplas operações em uma transação
- * Útil para operações em lote que precisam ser atômicas
- * 
- * @param operations Array de funções que recebem a transação
- * @returns Array com os resultados de cada operação
+ * Executa várias operações na mesma transação.
  */
 export async function withTransactionBatch<T>(
-  operations: Array<(transaction: Transaction) => Promise<T>>
+  operations: Array<(transaction: TransactionClient) => Promise<T>>
 ): Promise<T[]> {
   return withTransaction(async (transaction) => {
     const results: T[] = [];
-    
     for (const operation of operations) {
-      const result = await operation(transaction);
-      results.push(result);
+      results.push(await operation(transaction));
     }
-    
     return results;
   });
 }
-

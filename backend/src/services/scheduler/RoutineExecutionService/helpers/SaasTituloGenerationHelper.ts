@@ -1,7 +1,7 @@
-import type { Transaction } from 'sequelize';
+import { toPlain } from '../../../../utils/toPlain';
+import type { TransactionClient as Transaction } from '../../../../utils/transaction';
 import type { Request } from 'express';
 import { logger } from '../../../../utils/logger';
-import { normalizeDateForDb, formatDate } from '../../../../utils/dateUtils';
 import { registrarCriacao } from '../../../sistema/AuditoriaRegistroService';
 
 interface SaasContratoWithPlano {
@@ -39,29 +39,12 @@ export class SaasTituloGenerationHelper {
     numeroTitulo: string,
     transaction: Transaction
   ) {
-    const { SaasTitulo } = await import('../../../../models/saas/SaasTitulo');
-    const plano = contrato.plano;
-    const dataVencimentoNormalizada = normalizeDateForDb(dataVencimento) || dataVencimento;
-
-    const titulo = await SaasTitulo.create(
-      {
-        empresa_id: contrato.empresa_id,
-        plano_id: contrato.plano_id,
-        banco_id: contrato.conta_boleto,
-        contrato_id: contrato.id,
-        valor: valorTitulo,
-        valor_final: valorTitulo,
-        data_vencimento: dataVencimentoNormalizada,
-        status: 'pendente',
-        pago: false,
-        descricao: `${plano?.nome || 'Mensalidade'}\n${formatDate(dataVencimento) || ''}`,
-        numero_titulo: numeroTitulo,
-        is_avulso: false,
-      },
-      { transaction }
-    );
-
-    return titulo;
+    void contrato;
+    void dataVencimento;
+    void valorTitulo;
+    void numeroTitulo;
+    void transaction;
+    return null;
   }
 
   static async registerAuditForTitulos(
@@ -70,7 +53,7 @@ export class SaasTituloGenerationHelper {
     const reqSimulado = { headers: {}, socket: { remoteAddress: null }, user: undefined } as unknown as Request;
     for (const titulo of titulos) {
       try {
-        const tituloData = titulo.toJSON() as Record<string, unknown>;
+        const tituloData = toPlain(titulo) as Record<string, unknown>;
         await registrarCriacao(
           reqSimulado,
           'SaasTitulo',

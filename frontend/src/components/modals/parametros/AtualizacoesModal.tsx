@@ -3,7 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { formatDate } from 'utils/formatters';
 import { apiService } from 'services/api';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
-import { AtualizarDocumentacaoButton, AtualizarSistemaButton, FecharButton, Loading } from 'components/ui';
+import { AtualizarSistemaButton, FecharButton, Loading } from 'components/ui';
 import { ApiResponse } from 'types/api';
 import { API_CONFIG } from 'config/api';
 import { useI18n } from 'contexts/I18nContext';
@@ -36,7 +36,6 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
   const { t } = useI18n();
   const { success, error: showError } = useNotificationContext();
   const [isUpdating, setIsUpdating] = useState(false);
-  const [updateKind, setUpdateKind] = useState<'system' | 'doc' | null>(null);
   const [updateProgress, setUpdateProgress] = useState<string>('');
   const [updateProgressPercent, setUpdateProgressPercent] = useState<number>(0);
   const [versaoAtual, setVersaoAtual] = useState<string>('N/A');
@@ -148,7 +147,6 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
         })
         .catch(error => {
           setIsUpdating(false);
-          setUpdateKind(null);
           setUpdateProgress('');
           setUpdateProgressPercent(0);
           reject(error);
@@ -194,34 +192,6 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
     onError: (err: unknown) => {
       clearSystemUpdateDriver();
       setIsUpdating(false);
-      setUpdateKind(null);
-      setUpdateProgress('');
-      const error = err instanceof Error ? err.message : t('updates.error');
-      showError(error);
-    },
-  });
-
-  const updateDocMutation = useMutation({
-    mutationFn: () => executeUpdateWithSSE('/atualizacoes/update-doc-stream'),
-    onSuccess: () => {
-      success(t('updates.successDoc'), {
-        id: `update-doc-success-${Date.now()}`,
-        duration: 5000,
-      });
-      setUpdateProgressPercent(100);
-      setUpdateProgress(t('updates.concluded'));
-      setTimeout(() => {
-        clearSystemUpdateDriver();
-        setIsUpdating(false);
-        setUpdateKind(null);
-        setUpdateProgress('');
-        setUpdateProgressPercent(0);
-      }, 1200);
-    },
-    onError: (err: unknown) => {
-      clearSystemUpdateDriver();
-      setIsUpdating(false);
-      setUpdateKind(null);
       setUpdateProgress('');
       const error = err instanceof Error ? err.message : t('updates.error');
       showError(error);
@@ -235,34 +205,14 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
     }
 
     markSystemUpdateDriver();
-    setUpdateKind('system');
     setUpdateLogs([]);
     updateMutation.mutate();
   };
 
-  const handleUpdateDoc = async () => {
-    const confirmed = window.confirm(t('updates.confirmUpdateDoc'));
-    if (!confirmed) {
-      return;
-    }
-
-    markSystemUpdateDriver();
-    setUpdateKind('doc');
-    setUpdateLogs([]);
-    updateDocMutation.mutate();
-  };
-
-  const isBusy = isUpdating || updateMutation.isPending || updateDocMutation.isPending;
+  const isBusy = isUpdating || updateMutation.isPending;
 
   const headerActions = (
     <div className="d-flex gap-2 modal-header-actions">
-      {!isLoading && !error && (
-        <AtualizarDocumentacaoButton
-          type="button"
-          onClick={handleUpdateDoc}
-          disabled={isBusy}
-        />
-      )}
       {!isLoading && !error && atualizacoes && atualizacoes.length > 0 && (
         <AtualizarSistemaButton
           type="button"
@@ -293,7 +243,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
       onHeaderActionsReady(headerActions);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, error, atualizacoes, isBusy, updateMutation.isPending, updateDocMutation.isPending]);
+  }, [isLoading, error, atualizacoes, isBusy, updateMutation.isPending]);
 
   const modalContent = (
     <>
@@ -335,7 +285,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
             <div className="d-flex align-items-center mb-2">
               <div className="flex-grow-1">
                 <strong className="small text-info-color">
-                  {updateKind === 'doc' ? t('updates.updatingDoc') : t('updates.updating')}
+                  {t('updates.updating')}
                 </strong>
                 <p className="mb-0 small mt-1 text-secondary-color">{updateProgress}</p>
               </div>

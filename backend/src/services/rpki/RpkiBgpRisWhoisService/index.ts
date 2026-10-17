@@ -2,8 +2,6 @@ import axios from 'axios';
 import readline from 'readline';
 import { Readable } from 'stream';
 import { createGunzip } from 'zlib';
-import type { RpkiCaResource } from '../../../models/rpki/RpkiCaResource';
-import type { RpkiRoa } from '../../../models/rpki/RpkiRoa';
 import {
   redisGetFilteredAnnouncements,
   redisGetFullTable,
@@ -11,6 +9,19 @@ import {
   redisSetFullTable,
   risRedisPersistEnabled,
 } from '../RpkiBgpRisWhoisRedisCache';
+
+interface RpkiCaResource {
+  resource_type: string;
+  start_range: string | null;
+}
+
+interface RpkiRoa {
+  prefix: string;
+  asn: string | bigint;
+  max_length: number;
+  status: string;
+  not_after: Date;
+}
 
 /** Alinhado ao Krill: `MINIMUM_SEEN_BY` em `krill/src/server/bgp/riswhois.rs` */
 const MINIMUM_SEEN_BY = 13;
@@ -252,7 +263,10 @@ function resourceFingerprint(resources: RpkiCaResource[]): string {
     return 'empty';
   }
   return [...resources]
-    .map((r) => `${String(r.resource_type ?? '')}:${String(r.start_range ?? '').trim()}:${String(r.end_range ?? '').trim()}`)
+    .map((r) => {
+      const row = r as RpkiCaResource & { end_range?: string | null };
+      return `${String(row.resource_type ?? '')}:${String(row.start_range ?? '').trim()}:${String(row.end_range ?? '').trim()}`;
+    })
     .sort()
     .join('\n');
 }

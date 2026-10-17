@@ -1,12 +1,11 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { createHash, randomBytes } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import Joi from 'joi';
-import { Op, WhereOptions } from 'sequelize';
+import { prisma } from '../../../db/prisma';
 import { Agent } from '../../../models/agent/Agent';
-import { SshDevice } from '../../../models/ssh-manager/SshDevice';
-import { Cliente } from '../../../models/clientes/Cliente';
 import {
   disconnectAgentById,
   isAgentEffectivelyOnline,
@@ -60,6 +59,33 @@ function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
 
+type AgentFilter = Record<string, unknown>;
+
+function hydrateAgent(row: Record<string, unknown>): Agent {
+  const cliente = row.clientes;
+  const scalar: Record<string, unknown> = { ...row };
+  delete scalar.clientes;
+  delete scalar.sistema_tenants;
+  delete scalar.ssh_manager_devices;
+  const agent = (Agent as unknown as { hydrate: (value: unknown) => Agent }).hydrate(scalar);
+  if (cliente !== undefined) (agent as Agent & { cliente?: unknown }).cliente = cliente;
+  return agent;
+}
+
+const agentClienteInclude = {
+  clientes: { select: { id: true, razao_social: true, nome_fantasia: true } },
+};
+
+async function loadAgentById(id: unknown, withCliente = false): Promise<Agent | null> {
+  const numericId = Number(id);
+  if (!Number.isInteger(numericId) || numericId <= 0) return null;
+  const row = await prisma.agent_agents.findUnique({
+    where: { id: numericId },
+    ...(withCliente ? { include: agentClienteInclude } : {}),
+  });
+  return row ? hydrateAgent(row as unknown as Record<string, unknown>) : null;
+}
+
 function canAccessAgent(agent: Agent, userEmpresaId: number | null): boolean {
   if (agent.empresa_id === null) return true;
   if (userEmpresaId === null) return true;
@@ -91,7 +117,7 @@ const wireguardSchema = Joi.object({
 });
 
 function serializeAgent(agent: Agent, handshakes: Map<string, number>) {
-  const json = agent.toJSON() as Record<string, unknown>;
+  const json = toPlain(agent) as Record<string, unknown>;
   delete json.mikrotik_password;
   delete json.wg_our_private_key;
   const online = isWireguardAgent(agent)
@@ -110,27 +136,20 @@ export class AgentController {
     try {
       const scopeEmpresaId = resolveEmpresaScopeForList(req, parseEmpresaIdQuery(req.query.empresa_id));
       const clienteId = parseEmpresaIdQuery(req.query.cliente_id);
-      const parts: WhereOptions<Agent>[] = [];
+      const parts: AgentFilter[] = [];
       if (scopeEmpresaId != null) {
-        parts.push({ [Op.or]: [{ empresa_id: scopeEmpresaId }, { empresa_id: null }] });
+        parts.push({ OR: [{ empresa_id: scopeEmpresaId }, { empresa_id: null }] });
       }
       if (clienteId != null) {
         parts.push({ cliente_id: clienteId });
       }
-      const where: WhereOptions<Agent> =
-        parts.length === 0 ? {} : parts.length === 1 ? parts[0]! : { [Op.and]: parts };
-      const agents = await Agent.findAll({
-        where,
-        order: [['created_at', 'DESC']],
-        include: [
-          {
-            model: Cliente,
-            as: 'cliente',
-            attributes: ['id', 'razao_social', 'nome_fantasia'],
-            required: false,
-          },
-        ],
+      const where: AgentFilter = parts.length === 0 ? {} : parts.length === 1 ? parts[0]! : { AND: parts };
+      const rows = await prisma.agent_agents.findMany({
+        where: where as never,
+        orderBy: { created_at: 'desc' },
+        include: agentClienteInclude,
       });
+      const agents = rows.map((row) => hydrateAgent(row as unknown as Record<string, unknown>));
       const handshakes = agents.some((agent) => isWireguardAgent(agent))
         ? await readWireguardHandshakes()
         : new Map<string, number>();
@@ -144,16 +163,7 @@ export class AgentController {
 
   static async show(req: Request, res: Response): Promise<void> {
     try {
-      const agent = await Agent.findByPk(req.params.id, {
-        include: [
-          {
-            model: Cliente,
-            as: 'cliente',
-            attributes: ['id', 'razao_social', 'nome_fantasia'],
-            required: false,
-          },
-        ],
-      });
+      const agent = await loadAgentById(req.params.id, true);
       if (!agent) { sendNotFound(res, 'Agente não encontrado'); return; }
       const empresaId = getEmpresaIdOrNull(req);
       if (!canAccessAgent(agent, empresaId)) { sendNotFound(res, 'Agente não encontrado'); return; }
@@ -188,17 +198,20 @@ export class AgentController {
       const tokenHash = hashToken(token);
       const tokenHint = token.slice(0, 8) + '...';
 
-      const agent = await Agent.create({
-        name: value.name,
-        description: value.description ?? null,
-        token_hash: tokenHash,
-        token_hint: tokenHint,
-        empresa_id: resolved.empresa_id,
-        cliente_id: value.cliente_id ?? null,
+      const created = await prisma.agent_agents.create({
+        data: {
+          name: value.name,
+          description: value.description ?? null,
+          token_hash: tokenHash,
+          token_hint: tokenHint,
+          empresa_id: resolved.empresa_id,
+          cliente_id: value.cliente_id ?? null,
+        },
       });
+      const agent = hydrateAgent(created as unknown as Record<string, unknown>);
 
       try {
-        const dados = agent.toJSON() as Record<string, unknown>;
+        const dados = toPlain(agent) as Record<string, unknown>;
         const dadosAudit: Record<string, unknown> = {
           entity_id_str: agent.id,
           name: dados.name,
@@ -215,7 +228,7 @@ export class AgentController {
 
       // Retorna o token UMA VEZ — nunca mais será exibido
       sendSuccess(res, {
-        ...agent.toJSON(),
+        ...toPlain(agent),
         token, // só na criação
         online: false,
       }, 'Agente criado. Guarde o token — ele não será exibido novamente.', 201);
@@ -230,18 +243,18 @@ export class AgentController {
     if (error) { sendValidationError(res, error.details.map((d) => d.message).join('; ')); return; }
 
     try {
-      const agent = await Agent.findByPk(req.params.id);
+      const agent = await loadAgentById(req.params.id);
       if (!agent) { sendNotFound(res, 'Agente não encontrado'); return; }
       const empresaId = getEmpresaIdOrNull(req);
       if (!canAccessAgent(agent, empresaId)) { sendNotFound(res, 'Agente não encontrado'); return; }
-      const dadosAntes = agent.toJSON() as Record<string, unknown>;
+      const dadosAntes = toPlain(agent) as Record<string, unknown>;
       delete dadosAntes.token_hash;
       delete dadosAntes.mikrotik_password;
       delete dadosAntes.wg_our_private_key;
       delete dadosAntes.id;
       await agent.update(value);
       try {
-        const dadosDepois = agent.toJSON() as Record<string, unknown>;
+        const dadosDepois = toPlain(agent) as Record<string, unknown>;
         delete dadosDepois.token_hash;
         delete dadosDepois.mikrotik_password;
         delete dadosDepois.wg_our_private_key;
@@ -262,11 +275,11 @@ export class AgentController {
 
   static async destroy(req: Request, res: Response): Promise<void> {
     try {
-      const agent = await Agent.findByPk(req.params.id);
+      const agent = await loadAgentById(req.params.id);
       if (!agent) { sendNotFound(res, 'Agente não encontrado'); return; }
       const empresaId = getEmpresaIdOrNull(req);
       if (!canAccessAgent(agent, empresaId)) { sendNotFound(res, 'Agente não encontrado'); return; }
-      const deviceCount = await SshDevice.count({ where: { agent_id: agent.id } });
+      const deviceCount = await prisma.ssh_manager_devices.count({ where: { agent_id: agent.id } });
       if (deviceCount > 0) {
         sendValidationError(
           res,
@@ -274,7 +287,7 @@ export class AgentController {
         );
         return;
       }
-      const dadosAntes = agent.toJSON() as Record<string, unknown>;
+      const dadosAntes = toPlain(agent) as Record<string, unknown>;
       delete dadosAntes.token_hash;
       delete dadosAntes.mikrotik_password;
       delete dadosAntes.wg_our_private_key;
@@ -294,7 +307,7 @@ export class AgentController {
 
   static async testConnection(req: Request, res: Response): Promise<void> {
     try {
-      const agent = await Agent.findByPk(req.params.id);
+      const agent = await loadAgentById(req.params.id);
       if (!agent) {
         sendNotFound(res, 'Agente não encontrado');
         return;
@@ -345,7 +358,7 @@ export class AgentController {
     if (error) { sendValidationError(res, error.details.map((d) => d.message).join('; ')); return; }
 
     try {
-      const agent = await Agent.findByPk(req.params.id);
+      const agent = await loadAgentById(req.params.id);
       if (!agent) { sendNotFound(res, 'Agente não encontrado'); return; }
       const empresaId = getEmpresaIdOrNull(req);
       if (!canAccessAgent(agent, empresaId)) { sendNotFound(res, 'Agente não encontrado'); return; }
@@ -476,7 +489,7 @@ export class AgentController {
     if (error) { sendValidationError(res, error.details.map((d) => d.message).join('; ')); return; }
 
     try {
-      const agent = await Agent.findByPk(req.params.id);
+      const agent = await loadAgentById(req.params.id);
       if (!agent) { sendNotFound(res, 'Agente não encontrado'); return; }
       const empresaId = getEmpresaIdOrNull(req);
       if (!canAccessAgent(agent, empresaId)) { sendNotFound(res, 'Agente não encontrado'); return; }
@@ -519,7 +532,7 @@ export class AgentController {
   /** Regenera o token de um agente (invalida o anterior). */
   static async regenerateToken(req: Request, res: Response): Promise<void> {
     try {
-      const agent = await Agent.findByPk(req.params.id);
+      const agent = await loadAgentById(req.params.id);
       if (!agent) { sendNotFound(res, 'Agente não encontrado'); return; }
       const empresaId = getEmpresaIdOrNull(req);
       if (!canAccessAgent(agent, empresaId)) { sendNotFound(res, 'Agente não encontrado'); return; }

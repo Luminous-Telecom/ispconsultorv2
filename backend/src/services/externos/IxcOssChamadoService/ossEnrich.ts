@@ -1,4 +1,4 @@
-import { Op } from 'sequelize';
+import { Op } from '../../../db/orm';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { OrdemServicoMensagem } from '../../../models/ordens/OrdemServicoMensagem';
 import { clienteNomeParaOrdemServico } from '../../ordens/clienteNomeOrdemServico';

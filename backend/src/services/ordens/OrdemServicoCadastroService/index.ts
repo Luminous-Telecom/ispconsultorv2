@@ -1,4 +1,4 @@
-import { Op, WhereOptions } from 'sequelize';
+import { prisma } from '../../../db/prisma';
 import {
   IXC_ASSUNTO_RESOURCE,
   IXC_ESTRUTURA_RESOURCE,
@@ -7,14 +7,6 @@ import {
   IXC_SETOR_RESOURCE,
 } from '../../externos/IxcOssChamadoService/constants';
 import type { LookupItem } from '../../externos/IxcOssChamadoService/types';
-import {
-  OrdemServicoAssunto,
-  OrdemServicoCadastroModel,
-  OrdemServicoEstrutura,
-  OrdemServicoFilial,
-  OrdemServicoSetor,
-  OrdemServicoTecnico,
-} from '../../../models/ordens/ordemServicoCadastros';
 
 export type OrdemServicoCadastroTipo =
   | 'filial'
@@ -31,20 +23,51 @@ const CADASTRO_POR_IXC_RESOURCE: Record<string, OrdemServicoCadastroTipo> = {
   [IXC_ESTRUTURA_RESOURCE]: 'estrutura',
 };
 
-const MODEL_POR_TIPO: Record<OrdemServicoCadastroTipo, typeof OrdemServicoCadastroModel> = {
-  filial: OrdemServicoFilial,
-  setor: OrdemServicoSetor,
-  tecnico: OrdemServicoTecnico,
-  assunto: OrdemServicoAssunto,
-  estrutura: OrdemServicoEstrutura,
+type CadastroRow = {
+  id: number;
+  nome: string;
+  ixc_id: string | null;
+  ixc: boolean;
+  integracao_ixc_provedor_id: number | null;
+  empresa_id: number | null;
 };
 
-function empresaWhere(empresaId: number | null): WhereOptions<OrdemServicoCadastroModel> {
+type CadastroWhere = {
+  integracao_ixc_provedor_id?: number;
+  ixc_id?: string | { in: string[] };
+  ixc?: boolean;
+  empresa_id?: number;
+  nome?: { contains: string };
+  id?: { in: number[] };
+  OR?: CadastroWhere[];
+};
+
+type CadastroDelegate = {
+  findFirst(args: { where: CadastroWhere }): Promise<CadastroRow | null>;
+  findMany(args: {
+    where: CadastroWhere;
+    orderBy?: { nome: 'asc' | 'desc' };
+    select?: { ixc_id?: boolean; id?: boolean; nome?: boolean };
+  }): Promise<CadastroRow[]>;
+  create(args: { data: Record<string, unknown> }): Promise<CadastroRow>;
+  update(args: { where: { id: number }; data: Record<string, unknown> }): Promise<CadastroRow>;
+  delete(args: { where: { id: number } }): Promise<CadastroRow>;
+};
+
+const DELEGATE: Record<OrdemServicoCadastroTipo, CadastroDelegate> = {
+  filial: prisma.ordens_servico_filiais as unknown as CadastroDelegate,
+  setor: prisma.ordens_servico_setores as unknown as CadastroDelegate,
+  tecnico: prisma.ordens_servico_tecnicos as unknown as CadastroDelegate,
+  assunto: prisma.ordens_servico_assuntos as unknown as CadastroDelegate,
+  estrutura: prisma.ordens_servico_estruturas as unknown as CadastroDelegate,
+};
+
+function empresaWhere(empresaId: number | null): CadastroWhere {
   if (empresaId == null) return {};
   return { empresa_id: empresaId };
 }
 
-function toLookupItem(record: OrdemServicoCadastroModel): LookupItem {
+function toLookupItem(record: CadastroRow): LookupItem {
   return {
     id: record.ixc ? String(record.ixc_id ?? record.id) : String(record.id),
     nome: record.nome,
@@ -68,14 +91,14 @@ export class OrdemServicoCadastroService {
   ): Promise<void> {
     if (itens.length === 0) return;
 
-    const Model = MODEL_POR_TIPO[tipo];
+    const model = DELEGATE[tipo];
 
     for (const item of itens) {
       const ixcId = String(item.id).trim();
       const nome = String(item.nome ?? '').trim();
       if (!ixcId || !nome) continue;
 
-      const existente = await Model.findOne({
+      const existente = await model.findFirst({
         where: {
           integracao_ixc_provedor_id: integracaoIxcProvedorId,
           ixc_id: ixcId,
@@ -83,16 +106,21 @@ export class OrdemServicoCadastroService {
       });
 
       if (existente) {
-        await existente.update({ nome, ixc: true });
+        await model.update({
+          where: { id: existente.id },
+          data: { nome, ixc: true, updated_at: new Date() },
+        });
         continue;
       }
 
-      await Model.create({
-        empresa_id: empresaId,
-        integracao_ixc_provedor_id: integracaoIxcProvedorId,
-        nome,
-        ixc_id: ixcId,
-        ixc: true,
+      await model.create({
+        data: {
+          empresa_id: empresaId,
+          integracao_ixc_provedor_id: integracaoIxcProvedorId,
+          nome,
+          ixc_id: ixcId,
+          ixc: true,
+        },
       });
     }
   }
@@ -103,8 +131,8 @@ export class OrdemServicoCadastroService {
     integracaoIxcProvedorId: number,
     allowedIxcIds: Set<string>
   ): Promise<void> {
-    const Model = MODEL_POR_TIPO[tipo];
-    const registros = await Model.findAll({
+    const model = DELEGATE[tipo];
+    const registros = await model.findMany({
       where: {
         integracao_ixc_provedor_id: integracaoIxcProvedorId,
         ixc: true,
@@ -115,7 +143,7 @@ export class OrdemServicoCadastroService {
     for (const registro of registros) {
       const ixcId = String(registro.ixc_id ?? '').trim();
       if (ixcId && !allowedIxcIds.has(ixcId)) {
-        await registro.destroy();
+        await model.delete({ where: { id: registro.id } });
       }
     }
   }
@@ -125,14 +153,14 @@ export class OrdemServicoCadastroService {
     integracaoIxcProvedorId: number,
     empresaId: number | null
   ): Promise<string[]> {
-    const Model = MODEL_POR_TIPO[tipo];
-    const registros = await Model.findAll({
+    const model = DELEGATE[tipo];
+    const registros = await model.findMany({
       where: {
         integracao_ixc_provedor_id: integracaoIxcProvedorId,
         ixc: true,
         ...empresaWhere(empresaId),
       },
-      attributes: ['ixc_id'],
+      select: { ixc_id: true },
     });
 
     return registros
@@ -145,16 +173,16 @@ export class OrdemServicoCadastroService {
     empresaId: number | null,
     search?: string
   ): Promise<LookupItem[]> {
-    const Model = MODEL_POR_TIPO[tipo];
+    const model = DELEGATE[tipo];
     const termo = search?.trim();
 
-    const registros = await Model.findAll({
+    const registros = await model.findMany({
       where: {
         ixc: false,
         ...empresaWhere(empresaId),
-        ...(termo ? { nome: { [Op.like]: `%${termo}%` } } : {}),
+        ...(termo ? { nome: { contains: termo } } : {}),
       },
-      order: [['nome', 'ASC']],
+      orderBy: { nome: 'asc' },
     });
 
     return registros.map(toLookupItem);
@@ -168,20 +196,20 @@ export class OrdemServicoCadastroService {
     const refs = [...new Set(referencias.map((ref) => String(ref).trim()).filter((ref) => ref && ref !== '0'))];
     if (refs.length === 0) return new Map();
 
-    const Model = MODEL_POR_TIPO[tipo];
+    const model = DELEGATE[tipo];
     const numericIds = refs
       .map((ref) => parseInt(ref, 10))
       .filter((id) => Number.isFinite(id) && id > 0);
 
-    const registros = await Model.findAll({
+    const registros = await model.findMany({
       where: {
-        [Op.or]: [
-          { ixc_id: { [Op.in]: refs } },
-          ...(numericIds.length > 0 ? [{ id: { [Op.in]: numericIds } }] : []),
+        OR: [
+          { ixc_id: { in: refs } },
+          ...(numericIds.length > 0 ? [{ id: { in: numericIds } }] : []),
         ],
         ...empresaWhere(empresaId),
       },
-      attributes: ['id', 'ixc_id', 'nome'],
+      select: { id: true, ixc_id: true, nome: true },
     });
 
     const mapa = new Map<string, string>();

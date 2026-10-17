@@ -1,42 +1,11 @@
-import { Sequelize } from 'sequelize';
-import { EventEmitter } from 'events';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Evitar MaxListenersExceededWarning no pool MySQL (Sequelize usa mysql2; cada conexão adiciona close listeners)
-EventEmitter.defaultMaxListeners = 20;
-
-const requiredEnv = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'] as const;
-
+const requiredEnv = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD', 'DATABASE_URL'] as const;
 const missingEnv = requiredEnv.filter((key) => !process.env[key]);
 if (missingEnv.length > 0) {
   throw new Error(`Variáveis de ambiente faltando para conexão ao banco: ${missingEnv.join(', ')}`);
 }
 
-const sequelize = new Sequelize({
-  dialect: 'mysql',
-  host: process.env.DB_HOST,
-  port: parseInt(process.env.DB_PORT ?? '3306', 10),
-  database: process.env.DB_NAME,
-  username: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  logging: false,
-  timezone: '-03:00', // Horário de Brasília
-  pool: {
-    max: 10,
-    min: 0,
-    acquire: 30000,
-    idle: 10000
-  },
-  define: {
-    timestamps: true,
-    underscored: true,
-    freezeTableName: true
-  },
-  dialectOptions: {
-    connectTimeout: 10000 // 10s; evita ficar travado se MySQL não estiver acessível
-  }
-});
-
-export { sequelize };
+export { sequelize } from '../../db/orm';

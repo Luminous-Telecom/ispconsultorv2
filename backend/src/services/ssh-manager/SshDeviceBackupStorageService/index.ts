@@ -1,8 +1,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { Op } from 'sequelize';
+import { prisma } from '../../../db/prisma';
 import { resolveArquivosPath } from '../../../utils/pathUtils';
-import { SshDeviceBackup } from '../../../models/ssh-manager/SshDeviceBackup';
 import { logger } from '../../../utils/logger';
 
 export interface SshDeviceBackupFileMeta {
@@ -35,12 +34,14 @@ export async function registerSshDeviceBackupRow(
     return;
   }
   try {
-    await SshDeviceBackup.create({
-      ssh_device_id: sshDeviceId,
-      file_name: base,
-      size_bytes: sizeBytes,
-      started_at: startedAt,
-      finished_at: finishedAt,
+    await prisma.ssh_manager_device_backups.create({
+      data: {
+        ssh_device_id: sshDeviceId,
+        file_name: base,
+        size_bytes: BigInt(sizeBytes),
+        started_at: startedAt,
+        finished_at: finishedAt,
+      },
     });
   } catch (err) {
     logger.error('Falha ao registrar backup SSH no banco (arquivo já existe no disco)', {
@@ -70,11 +71,10 @@ function rowToModifiedAtIso(r: BackupRow): string {
 
 export async function listBackupsForDevice(deviceId: number): Promise<SshDeviceBackupFileMeta[]> {
   if (!Number.isInteger(deviceId) || deviceId < 1) return [];
-  const rows = (await SshDeviceBackup.findAll({
+  const rows = await prisma.ssh_manager_device_backups.findMany({
     where: { ssh_device_id: deviceId },
-    order: [['finished_at', 'DESC']],
-    raw: true,
-  })) as unknown as BackupRow[];
+    orderBy: { finished_at: 'desc' },
+  });
 
   return rows.map((r) => ({
     fileName: r.file_name,
@@ -100,11 +100,10 @@ export async function listBackupsForDeviceIds(
   const ids = deviceIds.filter((n) => Number.isInteger(n) && n > 0);
   if (ids.length === 0) return [];
 
-  const rows = (await SshDeviceBackup.findAll({
-    where: { ssh_device_id: { [Op.in]: ids } },
-    order: [['finished_at', 'DESC']],
-    raw: true,
-  })) as unknown as BackupRow[];
+  const rows = await prisma.ssh_manager_device_backups.findMany({
+    where: { ssh_device_id: { in: ids } },
+    orderBy: { finished_at: 'desc' },
+  });
 
   return rows.map((r) => {
     const did = r.ssh_device_id!;
@@ -132,7 +131,7 @@ export async function resolveBackupFileForDownload(
 
   if (!Number.isInteger(deviceId) || deviceId < 1) return null;
 
-  const row = await SshDeviceBackup.findOne({
+  const row = await prisma.ssh_manager_device_backups.findFirst({
     where: { ssh_device_id: deviceId, file_name: base },
   });
   if (!row) {
@@ -164,7 +163,7 @@ export async function deleteBackup(deviceId: number, fileName: string): Promise<
 
   if (!Number.isInteger(deviceId) || deviceId < 1) return false;
 
-  const row = await SshDeviceBackup.findOne({
+  const row = await prisma.ssh_manager_device_backups.findFirst({
     where: { ssh_device_id: deviceId, file_name: base },
   });
   if (!row) return false;
@@ -178,6 +177,6 @@ export async function deleteBackup(deviceId: number, fileName: string): Promise<
   } catch {
     // Continua para remover o registro
   }
-  await row.destroy();
+  await prisma.ssh_manager_device_backups.delete({ where: { id: row.id } });
   return true;
 }

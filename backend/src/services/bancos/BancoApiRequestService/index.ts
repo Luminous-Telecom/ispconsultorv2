@@ -1,5 +1,7 @@
 import axios, { type AxiosResponse } from 'axios';
-import { Banco } from '../../../models/cadastros/Banco';
+import type { cadastros_bancos } from '@prisma/client';
+
+type Banco = cadastros_bancos;
 import { logger } from '../../../utils/logger';
 import type { BancoConfig } from '../BancoApiService';
 import type { JsonValue } from '../../../types/index';

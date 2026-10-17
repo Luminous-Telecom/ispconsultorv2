@@ -43,7 +43,6 @@ import { SistemaLogOperacional } from './sistema/SistemaLogOperacional';
 // Comunicação
 import { ServidorEmail } from './comunicacao/ServidorEmail';
 import { ServidorWhatsApp } from './comunicacao/ServidorWhatsApp';
-import { MensagemHistorico } from './comunicacao/MensagemHistorico';
 import { MensagemWhatsApp } from './comunicacao/MensagemWhatsApp';
 import { TemplateWhatsApp } from './comunicacao/TemplateWhatsApp';
 
@@ -58,7 +57,6 @@ import { IpPermitidoBlockdomi } from './blockdomi/IpPermitidoBlockdomi';
 // SSH Manager
 import { SshDevice } from './ssh-manager/SshDevice';
 import { SshDeviceBackup } from './ssh-manager/SshDeviceBackup';
-import { SshDeviceBackupEvent } from './ssh-manager/SshDeviceBackupEvent';
 
 // Agent
 import { Agent } from './agent/Agent';
@@ -357,17 +355,6 @@ ContaPagarPagamento.belongsTo(Usuario, {
   as: 'usuario'
 });
 
-// MensagemHistorico
-MensagemHistorico.belongsTo(Usuario, {
-  foreignKey: 'usuario_id',
-  as: 'usuario'
-});
-MensagemHistorico.belongsTo(DadosEmpresa, {
-  foreignKey: 'empresa_id',
-  as: 'empresa'
-});
-DadosEmpresa.hasMany(MensagemHistorico, { foreignKey: 'empresa_id', as: 'mensagensHistorico' });
-
 SistemaLogOperacional.belongsTo(DadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
 SistemaLogOperacional.belongsTo(Usuario, { foreignKey: 'usuario_id', as: 'usuario' });
 
@@ -489,16 +476,6 @@ SshDeviceBackup.belongsTo(SshDevice, {
   as: 'ssh_device',
 });
 
-SshDevice.hasMany(SshDeviceBackupEvent, {
-  foreignKey: 'ssh_device_id',
-  as: 'ssh_device_backup_events',
-});
-
-SshDeviceBackupEvent.belongsTo(SshDevice, {
-  foreignKey: 'ssh_device_id',
-  as: 'ssh_device',
-});
-
 // Exportar todos os modelos
 export {
   Cliente,
@@ -551,7 +528,6 @@ export {
   SaasNFSeConfig,
   SshDevice,
   SshDeviceBackup,
-  SshDeviceBackupEvent,
   Agent,
   RpkiRoa,
   RpkiAlert,

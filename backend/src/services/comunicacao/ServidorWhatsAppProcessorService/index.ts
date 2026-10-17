@@ -1,4 +1,4 @@
-import { ServidorWhatsApp } from '../../../models/comunicacao/ServidorWhatsApp';
+import type { comunicacao_servidores_whatsapp } from '@prisma/client';
 import { ServidorWhatsAppService } from '../ServidorWhatsAppService';
 import { ServidorWhatsAppValidatorService } from '../ServidorWhatsAppValidatorService';
 import { logger } from '../../../utils/logger';
@@ -26,7 +26,7 @@ export class ServidorWhatsAppProcessorService {
   static async processCreateOrUpdate(
     servidorData: ServidorWhatsAppData,
     req: AuthenticatedRequest
-  ): Promise<{ servidor: ServidorWhatsApp; isNew: boolean }> {
+  ): Promise<{ servidor: comunicacao_servidores_whatsapp; isNew: boolean }> {
     const empresaId = getEmpresaIdOrNull(req);
     const whereAtivo = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
     if (!whereAtivo) {
@@ -49,10 +49,10 @@ export class ServidorWhatsAppProcessorService {
    * Processa atualização de servidor existente
    */
   private static async processUpdate(
-    servidor: ServidorWhatsApp,
+    servidor: comunicacao_servidores_whatsapp,
     servidorData: ServidorWhatsAppData,
     req: AuthenticatedRequest
-  ): Promise<{ servidor: ServidorWhatsApp; isNew: boolean }> {
+  ): Promise<{ servidor: comunicacao_servidores_whatsapp; isNew: boolean }> {
     const tipoApi = servidorData.tipo_api || servidor.tipo_api || 'evolution';
     
     // Remover campos que não devem ser atualizados
@@ -66,8 +66,11 @@ export class ServidorWhatsAppProcessorService {
       servidorData.webhook_url = null;
     }
 
-    const dadosAnteriores = servidor.toJSON();
-    await ServidorWhatsAppService.updateInstance(servidor, servidorData as Partial<ServidorWhatsApp>);
+    const dadosAnteriores = { ...servidor };
+    const servidorAtualizado = await ServidorWhatsAppService.updateInstance(
+      servidor,
+      servidorData as Partial<comunicacao_servidores_whatsapp>
+    );
     
     try {
       const empresaIdAudit = getEmpresaIdOrNull(req) ?? (servidor as { empresa_id?: number | null }).empresa_id ?? null;
@@ -76,7 +79,7 @@ export class ServidorWhatsAppProcessorService {
         'ServidorWhatsApp',
         servidor.id,
         dadosAnteriores as unknown as Record<string, unknown>,
-        servidor.toJSON() as unknown as Record<string, unknown>,
+        { ...servidorAtualizado } as unknown as Record<string, unknown>,
         undefined,
         empresaIdAudit
       );
@@ -84,7 +87,7 @@ export class ServidorWhatsAppProcessorService {
       logger.warn('Erro ao registrar auditoria', { error: auditError });
     }
     
-    return { servidor, isNew: false };
+    return { servidor: servidorAtualizado, isNew: false };
   }
 
   /**
@@ -93,7 +96,7 @@ export class ServidorWhatsAppProcessorService {
   private static async processCreate(
     servidorData: ServidorWhatsAppData,
     req: AuthenticatedRequest
-  ): Promise<{ servidor: ServidorWhatsApp; isNew: boolean }> {
+  ): Promise<{ servidor: comunicacao_servidores_whatsapp; isNew: boolean }> {
     const empresaId = getEmpresaIdOrNull(req);
     const whereAtivo = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
     if (!whereAtivo) {
@@ -125,14 +128,8 @@ export class ServidorWhatsAppProcessorService {
       servidorData.webhook_url = null;
     }
     
-    const novoServidor = await ServidorWhatsAppService.create(servidorData as Partial<ServidorWhatsApp>);
-    
-    // Recarregar sem os tokens
-    await novoServidor.reload({
-      attributes: {
-        exclude: ['evolution_api_key', 'whatsapp_cloud_token'],
-      },
-    });
+    const criado = await ServidorWhatsAppService.create(servidorData as Partial<comunicacao_servidores_whatsapp>);
+    const { evolution_api_key: _apiKey, whatsapp_cloud_token: _token, ...novoServidor } = criado;
     
     try {
       const empresaIdAudit = getEmpresaIdOrNull(req) ?? (novoServidor as { empresa_id?: number | null }).empresa_id ?? null;
@@ -140,7 +137,7 @@ export class ServidorWhatsAppProcessorService {
         req,
         'ServidorWhatsApp',
         novoServidor.id,
-        novoServidor.toJSON() as unknown as Record<string, unknown>,
+        { ...novoServidor } as unknown as Record<string, unknown>,
         undefined,
         empresaIdAudit
       );
@@ -148,7 +145,7 @@ export class ServidorWhatsAppProcessorService {
       logger.warn('Erro ao registrar auditoria', { error: auditError });
     }
     
-    return { servidor: novoServidor, isNew: true };
+    return { servidor: novoServidor as comunicacao_servidores_whatsapp, isNew: true };
   }
 
   /**

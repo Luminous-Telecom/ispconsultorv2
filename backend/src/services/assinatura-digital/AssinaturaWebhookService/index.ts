@@ -1,4 +1,5 @@
 import { Request } from 'express';
+import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
 import { AssinaturaDigitalService } from '../AssinaturaDigitalService';
 import { AssinafyService } from '../AssinafyService';
@@ -39,7 +40,10 @@ export class AssinaturaWebhookService {
     const novoStatus = (statusMap[event] || assinatura.status) as 'pendente' | 'enviado' | 'assinado' | 'cancelado' | 'expirado' | 'erro';
 
     if (novoStatus !== assinatura.status) {
-      await assinatura.update({ status: novoStatus });
+      await prisma.assinatura_digital_assinaturas.update({
+        where: { id: assinatura.id },
+        data: { status: novoStatus, updated_at: new Date() },
+      });
 
       const reqSimulado = req as unknown as Request;
       const dadosAnteriores = { status: assinatura.status };
@@ -110,7 +114,10 @@ export class AssinaturaWebhookService {
     const novoStatus = (statusMap[event] || assinatura.status) as 'pendente' | 'enviado' | 'assinado' | 'cancelado' | 'expirado' | 'erro';
 
     if (novoStatus !== assinatura.status) {
-      await assinatura.update({ status: novoStatus });
+      await prisma.assinatura_digital_assinaturas.update({
+        where: { id: assinatura.id },
+        data: { status: novoStatus, updated_at: new Date() },
+      });
 
       const reqSimulado = req as unknown as Request;
       const dadosAnteriores = { status: assinatura.status };

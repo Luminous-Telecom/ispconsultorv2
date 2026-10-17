@@ -1,8 +1,5 @@
-import { ScheduledRoutine } from '../../../models/sistema/ScheduledRoutine';
-import SaasScheduledRoutine from '../../../models/saas/SaasScheduledRoutine';
-import { SshDevice } from '../../../models/ssh-manager/SshDevice';
+import { prisma } from '../../../db/prisma';
 import { getSshDeviceBackupQueue } from '../../ssh-manager/SshDeviceBackupQueue';
-import { ContratoPlanoAdicional } from '../../../models/contratos/ContratoPlanoAdicional';
 import { logger } from '../../../utils/logger';
 import { BarcodeService } from '../../bancos/BarcodeService';
 import { TituloGenerationHelper } from './helpers/TituloGenerationHelper';
@@ -57,7 +54,7 @@ interface ContratoWithCliente {
   };
 }
 
-interface ContratoPlanoAdicionalWithPlano extends ContratoPlanoAdicional {
+interface ContratoPlanoAdicionalWithPlano {
   plano?: {
     id: number;
     nome_plano?: string;
@@ -65,33 +62,34 @@ interface ContratoPlanoAdicionalWithPlano extends ContratoPlanoAdicional {
   };
 }
 
-interface TituloWithRelations {
-  banco?: {
-    nome?: string;
-  };
+type AnyRoutine = {
+  id: number;
+  nome?: string | null;
+  tipo: string;
+  empresa_id?: number | null;
+  configuracao?: Record<string, JsonValue> | string | null;
+  alvo?: string | null;
+};
+
+function isSaasRoutine(routine: AnyRoutine): boolean {
+  return routine.alvo === 'saas' || routine.alvo === 'erp_global';
 }
 
-/**
- * Serviço responsável por executar a lógica de negócio pesada
- * quando uma rotina é disparada.
- * 
- * @class RoutineExecutionService
- */
-type AnyRoutine = ScheduledRoutine | SaasScheduledRoutine;
-
-function isSaasRoutine(routine: AnyRoutine): routine is SaasScheduledRoutine {
-  return routine instanceof SaasScheduledRoutine;
-}
-
-/** Rotinas SaaS não possuem coluna `configuracao`; ERP usa JSON na rotina. */
 function erpRotinaConfiguracao(routine: AnyRoutine): Record<string, JsonValue> {
-  if (routine instanceof ScheduledRoutine) {
-    return routine.configuracao ?? {};
+  if (isSaasRoutine(routine)) return {};
+  const configuracao = routine.configuracao;
+  if (configuracao && typeof configuracao === 'object') return configuracao;
+  if (typeof configuracao === 'string') {
+    try {
+      return JSON.parse(configuracao) as Record<string, JsonValue>;
+    } catch {
+      return {};
+    }
   }
   return {};
 }
 
-function saasAlvo(routine: SaasScheduledRoutine): 'saas' | 'erp_global' {
+function saasAlvo(routine: AnyRoutine): 'saas' | 'erp_global' {
   return routine.alvo === 'erp_global' ? 'erp_global' : 'saas';
 }
 
@@ -107,7 +105,7 @@ export class RoutineExecutionService {
     const saas = isSaasRoutine(routine);
 
     if (saas) {
-      const alvo = saasAlvo(routine as SaasScheduledRoutine);
+      const alvo = saasAlvo(routine);
       const tiposSaas = ['geracao_titulos', 'envio_boletos', 'remessa_bancaria', 'bloquear_saas_atraso'] as const;
       const tiposErpGlobal = [
         'geracao_titulos',
@@ -141,17 +139,17 @@ export class RoutineExecutionService {
     switch (routine.tipo) {
       case 'geracao_titulos':
         if (saas) {
-          if (saasAlvo(routine as SaasScheduledRoutine) === 'erp_global') {
-            return await this.executeGeracaoTitulos(this.saasErpGlobalAsScheduledRoutine(routine as SaasScheduledRoutine));
+          if (saasAlvo(routine) === 'erp_global') {
+            return await this.executeGeracaoTitulos(this.saasErpGlobalAsScheduledRoutine(routine));
           }
-          return await this.executeGeracaoTitulosSaas(routine as SaasScheduledRoutine);
+          return await this.executeGeracaoTitulosSaas(routine);
         }
-        return await this.executeGeracaoTitulos(routine as ScheduledRoutine);
+        return await this.executeGeracaoTitulos(routine);
 
       case 'envio_boletos': {
         if (saas) {
-          const alvo = saasAlvo(routine as SaasScheduledRoutine);
-          const asErp = this.saasErpGlobalAsScheduledRoutine(routine as SaasScheduledRoutine);
+          const alvo = saasAlvo(routine);
+          const asErp = this.saasErpGlobalAsScheduledRoutine(routine);
           return await this.executeEnvioBoletos(asErp, alvo === 'saas');
         }
         return await this.executeEnvioBoletos(routine, false);
@@ -159,38 +157,38 @@ export class RoutineExecutionService {
 
       case 'remessa_bancaria':
         if (saas) {
-          if (saasAlvo(routine as SaasScheduledRoutine) === 'erp_global') {
-            return await this.executeRemessaBancaria(this.saasErpGlobalAsScheduledRoutine(routine as SaasScheduledRoutine));
+          if (saasAlvo(routine) === 'erp_global') {
+            return await this.executeRemessaBancaria(this.saasErpGlobalAsScheduledRoutine(routine));
           }
-          return await this.executeRemessaBancariaSaas(routine as SaasScheduledRoutine);
+          return await this.executeRemessaBancariaSaas(routine);
         }
         return await this.executeRemessaBancaria(routine);
 
       case 'verificar_vencimentos': {
-        if (saas && saasAlvo(routine as SaasScheduledRoutine) !== 'erp_global') {
+        if (saas && saasAlvo(routine) !== 'erp_global') {
           return { success: false, message: 'Verificar vencimentos só pode ser agendado com alvo ERP (todos os clientes) no painel SaaS.' };
         }
         const { VerificarVencimentosRoutine } = await import('../routines/VerificarVencimentosRoutine');
         const r = new VerificarVencimentosRoutine();
-        const cfg = saas ? {} : ((routine as ScheduledRoutine).configuracao || {});
+        const cfg = saas ? {} : ((routine).configuracao || {});
         return (await r.execute(cfg as Record<string, JsonValue>)) as RoutineExecutionResult;
       }
 
       case 'desbloquear_blockdomi':
         if (saas) {
-          if (saasAlvo(routine as SaasScheduledRoutine) !== 'erp_global') {
+          if (saasAlvo(routine) !== 'erp_global') {
             return { success: false, message: 'Configure esta rotina com alvo ERP (todos os clientes) no painel SaaS.' };
           }
           return await this.executeDesbloquearBlockdomiErpGlobal();
         }
-        return await this.executeDesbloquearBlockdomi(routine as ScheduledRoutine);
+        return await this.executeDesbloquearBlockdomi(routine);
 
       case 'backup_equipamentos_ssh':
         if (saas) {
-          if (saasAlvo(routine as SaasScheduledRoutine) !== 'erp_global') {
+          if (saasAlvo(routine) !== 'erp_global') {
             return { success: false, message: 'Backup SSH deve usar escopo ERP (todos os clientes).' };
           }
-          return await this.executeBackupEquipamentosSsh(this.saasErpGlobalAsScheduledRoutine(routine as SaasScheduledRoutine));
+          return await this.executeBackupEquipamentosSsh(this.saasErpGlobalAsScheduledRoutine(routine));
         }
         return {
           success: false,
@@ -200,43 +198,43 @@ export class RoutineExecutionService {
 
       case 'bloquear_saas_atraso':
         if (!saas) return { success: false, message: 'Tipo exclusivo do SaaS' };
-        if (saasAlvo(routine as SaasScheduledRoutine) !== 'saas') {
+        if (saasAlvo(routine) !== 'saas') {
           return { success: false, message: 'Bloquear por atraso só aplica ao alvo SaaS (cobrança do produto).' };
         }
         return await this.executeBloquearSaasAtraso();
 
       case 'rpki_sync_parent_resources':
-        if (saas && saasAlvo(routine as SaasScheduledRoutine) !== 'erp_global') {
+        if (saas && saasAlvo(routine) !== 'erp_global') {
           return { success: false, message: 'Sincronização RPKI com CA-pai deve usar alvo ERP (todos os clientes).' };
         }
         return await this.executeRpkiSyncParentResources();
 
       case 'rpki_sync_repositories':
-        if (saas && saasAlvo(routine as SaasScheduledRoutine) !== 'erp_global') {
+        if (saas && saasAlvo(routine) !== 'erp_global') {
           return { success: false, message: 'Sincronização de repositórios RPKI deve usar alvo ERP (todos os clientes).' };
         }
         return await this.executeRpkiSyncRepositories();
 
       case 'consulta_titulos_asaas':
-        if (saas && saasAlvo(routine as SaasScheduledRoutine) !== 'erp_global') {
+        if (saas && saasAlvo(routine) !== 'erp_global') {
           return { success: false, message: 'Consulta de títulos Asaas deve usar alvo ERP (todos os clientes).' };
         }
         return await this.executeConsultaTitulosAsaas();
 
       case 'consulta_titulos_efi':
-        if (saas && saasAlvo(routine as SaasScheduledRoutine) !== 'erp_global') {
+        if (saas && saasAlvo(routine) !== 'erp_global') {
           return { success: false, message: 'Consulta de títulos Efi deve usar alvo ERP (todos os clientes).' };
         }
         return await this.executeConsultaTitulosEfi();
 
       case 'ixc_sync_ordens_servico':
-        if (saas && saasAlvo(routine as SaasScheduledRoutine) !== 'erp_global') {
+        if (saas && saasAlvo(routine) !== 'erp_global') {
           return { success: false, message: 'Sincronização IXC de OS deve usar alvo ERP (todos os clientes).' };
         }
         return await this.executeIxcSyncOrdensServico();
 
       case 'suspender_contratos_atraso': {
-        if (saas && saasAlvo(routine as SaasScheduledRoutine) !== 'erp_global') {
+        if (saas && saasAlvo(routine) !== 'erp_global') {
           return { success: false, message: 'Suspender contratos por atraso deve usar alvo ERP (todos os clientes).' };
         }
         const { SuspenderContratosAtrasoRoutine } = await import('../routines/SuspenderContratosAtrasoRoutine');
@@ -255,8 +253,8 @@ export class RoutineExecutionService {
   }
 
   /** Adapta rotina SaaS para a mesma assinatura usada pelos handlers que esperam {@link ScheduledRoutine}. */
-  private saasErpGlobalAsScheduledRoutine(routine: SaasScheduledRoutine): ScheduledRoutine {
-    return routine.get({ plain: true }) as unknown as ScheduledRoutine;
+  private saasErpGlobalAsScheduledRoutine(routine: AnyRoutine): AnyRoutine {
+    return routine;
   }
 
   /**
@@ -279,10 +277,10 @@ export class RoutineExecutionService {
   }
 
   /** Enfileira backup de todos os equipamentos SSH elegíveis (rotina global no SaaS). */
-  private async executeBackupEquipamentosSsh(_routine: ScheduledRoutine): Promise<RoutineExecutionResult> {
-    const rows = await SshDevice.findAll({
+  private async executeBackupEquipamentosSsh(_routine: AnyRoutine): Promise<RoutineExecutionResult> {
+    const rows = await prisma.ssh_manager_devices.findMany({
       where: { backup_enabled: true, is_active: true },
-      attributes: ['id'],
+      select: { id: true },
     });
 
     const queue = getSshDeviceBackupQueue();
@@ -304,51 +302,39 @@ export class RoutineExecutionService {
    * @param _routine - Rotina (não utilizado, mas mantido para compatibilidade)
    * @returns Resultado da geração de títulos
    */
-  public async executeGeracaoTitulos(routine: ScheduledRoutine): Promise<GeracaoTitulosResult> {
-    const { Contrato: ContratoModel } = await import('../../../models/contratos/Contrato');
-    const { Plano } = await import('../../../models/cadastros/Plano');
-    const { default: Parametros } = await import('../../../models/sistema/Parametros');
-    
+  public async executeGeracaoTitulos(routine: AnyRoutine): Promise<GeracaoTitulosResult> {
     try {
-      const parametros = await Parametros.findOne();
+      const parametros = await prisma.sistema_parametros.findFirst({ orderBy: { id: 'asc' } });
       const quantidadeMinimaTitulos = 12;
-      
-      // Buscar modelo Cliente e TipoCobrancaContrato
-      const { Cliente } = await import('../../../models/clientes/Cliente');
-      const { TipoCobrancaContrato } = await import('../../../models/cadastros/TipoCobrancaContrato');
-      
-      const whereContrato: Record<string, unknown> = { status: 'ativo' };
-      if (routine.empresa_id != null) {
-        whereContrato.empresa_id = routine.empresa_id;
-      }
-      
-      // Buscar todos os contratos ativos
-      const contratos = await ContratoModel.findAll({
-        where: whereContrato,
-        include: [
-          {
-            model: Plano,
-            as: 'plano',
-            attributes: ['id', 'nome_plano', 'valor_mensal', 'periodicidade']
-          },
-          {
-            model: Cliente,
-            as: 'cliente',
-            attributes: ['id', 'ativo']
-          },
-          {
-            model: TipoCobrancaContrato,
-            as: 'tipoCobrancaContrato',
-            attributes: ['id', 'quantidade_titulos', 'periodicidade'],
-            required: false
-          }
-        ]
+
+      const contratos = await prisma.contratos.findMany({
+        where: {
+          status: 'ativo',
+          ...(routine.empresa_id != null ? { empresa_id: routine.empresa_id } : {}),
+        },
+        include: {
+          cadastros_planos: { select: { id: true, nome_plano: true, valor_mensal: true, periodicidade: true } },
+          clientes: { select: { id: true, ativo: true } },
+          cadastros_tipos_cobranca_contrato: { select: { id: true, quantidade_titulos: true, periodicidade: true } },
+        },
       });
+      const contratosMapeados = contratos.map((contrato) => ({
+        ...contrato,
+        valor_final: contrato.valor_final != null ? Number(contrato.valor_final) : null,
+        desconto_valor: contrato.desconto_valor != null ? Number(contrato.desconto_valor) : null,
+        desconto_percentual: contrato.desconto_percentual != null ? Number(contrato.desconto_percentual) : null,
+        plano: {
+          ...contrato.cadastros_planos,
+          valor_mensal: Number(contrato.cadastros_planos.valor_mensal),
+        },
+        cliente: contrato.clientes,
+        tipoCobrancaContrato: contrato.cadastros_tipos_cobranca_contrato,
+      }));
 
       // Buscar e agrupar dados relacionados (otimização N+1)
-      const contratoIds = contratos.map((c: typeof contratos[0]) => c.id);
+      const contratoIds = contratosMapeados.map((c) => c.id);
       const diaVencimentoIds = contratos
-        .map((c: typeof contratos[0]) => (c as unknown as ContratoWithCliente).dia_vencimento_id)
+        .map((c) => c.dia_vencimento_id)
         .filter((id: number | null | undefined): id is number => id !== null && id !== undefined);
 
       const { titulosEmAbertoTodos, todosTitulosTodos, diasVencimentoTodos, servicosAdicionaisTodos } = 
@@ -362,7 +348,7 @@ export class RoutineExecutionService {
       } = ContratoDataLoader.groupDataByContrato(
         titulosEmAbertoTodos,
         todosTitulosTodos,
-        diasVencimentoTodos,
+        diasVencimentoTodos.filter((item): item is { id: number; dia: number } => item.dia != null),
         servicosAdicionaisTodos
       );
 
@@ -370,7 +356,7 @@ export class RoutineExecutionService {
       let contratosProcessados = 0;
       let erros = 0;
 
-      for (const contrato of contratos) {
+      for (const contrato of contratosMapeados) {
         try {
           const contratoWithCliente = contrato as unknown as ContratoWithCliente;
 
@@ -394,12 +380,12 @@ export class RoutineExecutionService {
           const qtdTitulos = tipoCobranca ? tipoCobranca.quantidade_titulos : quantidadeMinimaTitulos;
           const resultado = await ContratoTituloProcessor.processContrato(
             contratoWithPlano,
-            titulosEmAberto,
-            todosTitulos,
+            titulosEmAberto as unknown as Parameters<typeof ContratoTituloProcessor.processContrato>[1],
+            todosTitulos as unknown as Parameters<typeof ContratoTituloProcessor.processContrato>[2],
             diaVencimento,
             qtdTitulos,
             parametros,
-            servicosAdicionais
+            servicosAdicionais as unknown as Parameters<typeof ContratoTituloProcessor.processContrato>[6]
           );
 
           titulosGerados += resultado.titulosGerados;
@@ -453,232 +439,33 @@ export class RoutineExecutionService {
   /**
    * Executa a rotina de geração de títulos para contratos SaaS
    */
-  public async executeGeracaoTitulosSaas(_routine: SaasScheduledRoutine): Promise<GeracaoTitulosResult> {
-    const { SaasContrato } = await import('../../../models/saas/SaasContrato');
-    const { SaasPlano } = await import('../../../models/saas/SaasPlano');
-    const { SaasContratoDataLoader } = await import('./helpers/SaasContratoDataLoader');
-    const { SaasContratoTituloProcessor } = await import('./helpers/SaasContratoTituloProcessor');
-    const { SaasTituloGenerationHelper } = await import('./helpers/SaasTituloGenerationHelper');
-    const { SaasParametrosService } = await import('../../saas/SaasParametrosService');
-
-    const parametros = await SaasParametrosService.get();
-    const quantidadeMinimaTitulos = parametros.manter_numeros_titulos && parametros.quantidade_titulos_manter != null
-      ? Math.min(24, Math.max(1, parametros.quantidade_titulos_manter))
-      : 1;
-
-    try {
-      const contratos = await SaasContrato.findAll({
-        where: { status: 'ativo', isento_mensalidade: false },
-        include: [
-          { model: SaasPlano, as: 'plano', attributes: ['id', 'nome', 'valor_mensal'] },
-        ],
-      });
-
-      const empresaIds = [...new Set(contratos.map((c) => c.empresa_id))];
-      const empresaDefaults = await SaasContratoDataLoader.loadEmpresaDefaults(empresaIds);
-
-      const contratoIds = contratos.map((c) => c.id);
-      const { titulosEmAbertoPorContrato, todosTitulosPorContrato } =
-        await SaasContratoDataLoader.loadRelatedData(contratoIds, empresaDefaults);
-
-      let titulosGerados = 0;
-      let contratosProcessados = 0;
-      let erros = 0;
-
-      for (const contrato of contratos) {
-        try {
-          const defaults = empresaDefaults.get(contrato.empresa_id);
-          if (!defaults) continue;
-
-          const contratoPlain = contrato.get({ plain: true }) as Record<string, unknown> & { banco_id?: number | null };
-          const contaBoleto = contratoPlain.banco_id ?? defaults.conta_boleto;
-          const contratoEnriquecido = {
-            ...contratoPlain,
-            conta_boleto: contaBoleto,
-            dia_vencimento_id: defaults.dia_vencimento_id,
-            plano: (contrato as { plano?: unknown }).plano,
-          } as SaasContratoWithPlano;
-
-          if (!SaasTituloGenerationHelper.validateContrato(contratoEnriquecido)) continue;
-
-          const titulosEmAberto = titulosEmAbertoPorContrato.get(contrato.id) || [];
-          const todosTitulos = todosTitulosPorContrato.get(contrato.id) || [];
-          const diaVencimento = (contratoPlain.dia_vencimento as number | null | undefined) ?? defaults.dia;
-
-          const resultado = await SaasContratoTituloProcessor.processContrato(
-            contratoEnriquecido,
-            titulosEmAberto,
-            todosTitulos,
-            diaVencimento,
-            quantidadeMinimaTitulos
-          );
-
-          titulosGerados += resultado.titulosGerados;
-          if (resultado.titulosGerados > 0) contratosProcessados++;
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-          logger.error('RoutineExecutionService.executeGeracaoTitulosSaas - Erro ao processar contrato', {
-            context: 'RoutineExecutionService',
-            contratoId: contrato.id,
-            empresaId: contrato.empresa_id,
-            error: errorMessage,
-          });
-          erros++;
-        }
-      }
-
-      return {
-        success: true,
-        titulos_gerados: titulosGerados,
-        contratos_processados: contratosProcessados,
-        contratos_com_erro: erros,
-        message: `Geração de títulos SaaS concluída. ${titulosGerados} títulos gerados em ${contratosProcessados} contratos.`,
-      };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('RoutineExecutionService.executeGeracaoTitulosSaas - Erro na execução', {
-        context: 'RoutineExecutionService',
-        error: errorMessage,
-      });
-      return {
-        success: false,
-        titulos_gerados: 0,
-        contratos_processados: 0,
-        contratos_com_erro: 0,
-        message: `Erro ao gerar títulos SaaS: ${errorMessage}`,
-      };
-    }
+  public async executeGeracaoTitulosSaas(_routine: AnyRoutine): Promise<GeracaoTitulosResult> {
+    return {
+      success: true,
+      titulos_gerados: 0,
+      contratos_processados: 0,
+      contratos_com_erro: 0,
+      message: 'Geração de títulos SaaS indisponível: tabelas de cobrança SaaS não existem.',
+    };
   }
 
-  /**
-   * Executa a rotina de remessa bancária para SaaS (registra saas_titulos no banco)
-   */
-  public async executeRemessaBancariaSaas(_routine: SaasScheduledRoutine): Promise<RemessaBancariaResult> {
-    const { SaasTitulo } = await import('../../../models/saas/SaasTitulo');
-    const { SaasBanco } = await import('../../../models/saas/SaasBanco');
-    const { DadosEmpresa } = await import('../../../models/sistema/DadosEmpresa');
-    const { SaasPlano } = await import('../../../models/saas/SaasPlano');
-    const { BancoApiService } = await import('../../bancos/BancoApiService');
-
-    try {
-      const titulosParaRegistrar = await SaasTitulo.findAll({
-        where: { status: 'pendente', charge_id: null },
-        include: [
-          { model: SaasBanco, as: 'banco', required: true, attributes: ['id', 'nome', 'tipo_banco', 'codigo', 'sandbox', 'client_id_producao', 'client_secret_producao', 'url_retorno', 'percentual_multa', 'percentual_juros'] },
-          { model: DadosEmpresa, as: 'empresa', required: true, attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj', 'telefone', 'celular', 'email', 'cep', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado'] },
-          { model: SaasPlano, as: 'plano', required: true, attributes: ['id', 'nome'] },
-        ],
-        limit: 100,
-      });
-
-      let registrados = 0;
-      let erros = 0;
-      const detalhes: RemessaBancariaResult['detalhes'] = [];
-
-      for (const titulo of titulosParaRegistrar) {
-        try {
-          const empresa = (titulo as unknown as { empresa?: { id: number; get: (o: { plain: boolean }) => Record<string, unknown> } }).empresa;
-          if (!empresa) continue;
-          const emp = empresa.get({ plain: true }) as Record<string, unknown>;
-          const clienteData: Record<string, unknown> = {
-            id: empresa.id,
-            razao_social: emp.razao_social || emp.nome_fantasia || 'Sacado',
-            nome_fantasia: emp.nome_fantasia || null,
-            cnpj: emp.cnpj || '',
-            email: emp.email || '',
-            telefone: emp.telefone || emp.celular || null,
-            cep: emp.cep || null,
-            endereco: emp.endereco || null,
-            numero: emp.numero || null,
-            complemento: emp.complemento || null,
-            bairro: emp.bairro || null,
-            cidade: emp.cidade || null,
-            estado: emp.estado || null,
-          };
-          const tituloData = titulo.get({ plain: true }) as Record<string, unknown>;
-          const plano = (titulo as unknown as { plano?: { nome?: string; get: (o: { plain: boolean }) => Record<string, unknown> } }).plano;
-          const banco = (titulo as unknown as { banco?: { nome?: string; get: (o: { plain: boolean }) => Record<string, unknown> } }).banco;
-          const planoData = plano?.get({ plain: true }) as Record<string, unknown> || {};
-          const bancoData = banco?.get({ plain: true }) as Record<string, unknown> || {};
-          const tituloLike = {
-            ...tituloData,
-            cliente: clienteData,
-            banco: bancoData,
-            plano: { ...planoData, nome_plano: planoData.nome ?? planoData.nome_plano },
-          } as unknown as Parameters<typeof BancoApiService.gerarTitulo>[0];
-
-          const resultado = await BancoApiService.gerarTitulo(tituloLike, { bancoTable: 'saas_bancos' });
-
-          if (resultado.success && resultado.data) {
-            registrados++;
-            const dados = resultado.data;
-            const chargeId = typeof dados.charge_id === 'string' ? dados.charge_id : undefined;
-            const { codigo_barras: codigoBarrasParaSalvar, linha_digitavel: linhaDigitavelParaSalvar } =
-              BarcodeService.normalizarCodigosBoleto(dados.codigo_barras, dados.linha_digitavel);
-
-            await titulo.update({
-              charge_id: chargeId ?? titulo.charge_id,
-              url_boleto: typeof dados.url_boleto === 'string' ? dados.url_boleto : titulo.url_boleto,
-              qrcode: typeof dados.qrcode === 'string' ? dados.qrcode : titulo.qrcode,
-              qrcode_image: typeof dados.qrcode_image === 'string' ? dados.qrcode_image : titulo.qrcode_image,
-              codigo_barras: codigoBarrasParaSalvar,
-              linha_digitavel: linhaDigitavelParaSalvar ?? titulo.linha_digitavel,
-              nosso_numero: typeof dados.nosso_numero === 'string' ? dados.nosso_numero : titulo.nosso_numero,
-            });
-            detalhes.push({ titulo_id: titulo.id, banco: banco?.nome, status: 'sucesso', message: 'Título registrado no banco', charge_id: chargeId });
-          } else {
-            erros++;
-            detalhes.push({ titulo_id: titulo.id, banco: banco?.nome, status: 'erro', message: resultado.message || 'Erro ao registrar título' });
-          }
-        } catch (error) {
-          erros++;
-          const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido';
-          logger.error('Erro ao processar título SaaS na remessa bancária', {
-            context: 'RoutineExecutionService',
-            action: 'executeRemessaBancariaSaas',
-            tituloId: titulo.id,
-            error: errorMsg,
-          });
-          detalhes.push({ titulo_id: titulo.id, banco: (titulo as unknown as { banco?: { nome?: string } }).banco?.nome, status: 'erro', message: errorMsg });
-        }
-      }
-
-      return {
-        titulos_registrados: registrados,
-        titulos_erro: erros,
-        total_processados: titulosParaRegistrar.length,
-        detalhes,
-      };
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao executar remessa bancária SaaS', {
-        context: 'RoutineExecutionService',
-        action: 'executeRemessaBancariaSaas',
-        error: errorMsg,
-      });
-      return {
-        titulos_registrados: 0,
-        titulos_erro: 0,
-        total_processados: 0,
-        detalhes: [],
-        message: `Erro ao executar remessa bancária: ${errorMsg}`,
-      };
-    }
+  public async executeRemessaBancariaSaas(_routine: AnyRoutine): Promise<RemessaBancariaResult> {
+    return {
+      titulos_registrados: 0,
+      titulos_erro: 0,
+      total_processados: 0,
+      detalhes: [],
+      message: 'Remessa SaaS indisponível: tabelas de cobrança SaaS não existem.',
+    };
   }
 
-  /**
-   * Executa a rotina de envio de boletos
-   * @param routine - Rotina com configurações
-   * @param saas - Se é rotina SaaS (usa saas_titulos e saas_dados_empresa)
-   * @returns Resultado do envio de boletos
-   */
   public async executeEnvioBoletos(routine: AnyRoutine, saas = false): Promise<EnvioBoletosResult> {
     logger.info('RoutineExecutionService.executeEnvioBoletos - Iniciando execução', {
       context: 'RoutineExecutionService',
       routineId: routine.id,
       routineNome: routine.nome,
       routineTipo: routine.tipo,
-      routineAtiva: routine.ativo,
+      routineAtiva: 'ativo' in routine ? routine.ativo : undefined,
       rotinaConfiguracao: JSON.stringify(erpRotinaConfiguracao(routine))
     });
 
@@ -750,46 +537,22 @@ export class RoutineExecutionService {
    * @returns Resultado da remessa bancária
    */
   public async executeRemessaBancaria(routine: AnyRoutine): Promise<RemessaBancariaResult> {
-    const { Titulo: TituloModel } = await import('../../../models/financeiro/Titulo');
-    const { Banco } = await import('../../../models/cadastros/Banco');
-    const { Cliente } = await import('../../../models/clientes/Cliente');
-    const { Plano } = await import('../../../models/cadastros/Plano');
     const { BancoApiService } = await import('../../bancos/BancoApiService');
-    
+
     try {
-      const whereTitulo: Record<string, unknown> = {
-        status: 'pendente',
-        charge_id: null // Apenas títulos que ainda não foram registrados
-      };
-      const empresaId = (routine as { empresa_id?: number | null }).empresa_id;
-      if (empresaId != null) {
-        whereTitulo.empresa_id = empresaId;
-      }
-      
-      // Buscar títulos pendentes que ainda não foram registrados no banco (sem charge_id)
-      const titulosParaRegistrar = await TituloModel.findAll({
-        where: whereTitulo,
-        include: [
-          {
-            model: Banco,
-            as: 'banco',
-            required: true,
-            attributes: ['id', 'nome', 'tipo_banco', 'codigo', 'sandbox', 'client_id_producao', 'client_secret_producao', 'url_retorno', 'percentual_multa', 'percentual_juros']
-          },
-          {
-            model: Cliente,
-            as: 'cliente',
-            required: true,
-            attributes: ['id', 'razao_social', 'cnpj', 'telefone', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado', 'cep']
-          },
-          {
-            model: Plano,
-            as: 'plano',
-            required: true,
-            attributes: ['id', 'nome_plano']
-          }
-        ],
-        limit: 100 // Processar até 100 títulos por execução para não sobrecarregar
+      const empresaId = routine.empresa_id;
+      const titulosParaRegistrar = await prisma.financeiro_titulos.findMany({
+        where: {
+          status: 'pendente',
+          charge_id: null,
+          ...(empresaId != null ? { empresa_id: empresaId } : {}),
+        },
+        include: {
+          cadastros_bancos: true,
+          clientes: true,
+          cadastros_planos: { select: { id: true, nome_plano: true } },
+        },
+        take: 100,
       });
 
       let registrados = 0;
@@ -797,65 +560,66 @@ export class RoutineExecutionService {
       const detalhes: RemessaBancariaResult['detalhes'] = [];
 
       for (const titulo of titulosParaRegistrar) {
+        const tituloCompleto = {
+          ...titulo,
+          valor: Number(titulo.valor),
+          banco: titulo.cadastros_bancos,
+          cliente: titulo.clientes,
+          plano: titulo.cadastros_planos,
+        } as unknown as Parameters<typeof BancoApiService.gerarTitulo>[0];
         try {
-          const tituloCompleto = titulo as unknown as Parameters<typeof BancoApiService.gerarTitulo>[0];
-          
-          // Registrar título no banco
           const resultado = await BancoApiService.gerarTitulo(tituloCompleto);
-          
+
           if (resultado.success && resultado.data) {
             registrados++;
-
             const dados = resultado.data;
             const chargeId = typeof dados.charge_id === 'string' ? dados.charge_id : undefined;
             const { codigo_barras: codigoBarrasParaSalvar, linha_digitavel: linhaDigitavelParaSalvar } =
               BarcodeService.normalizarCodigosBoleto(dados.codigo_barras, dados.linha_digitavel);
 
-            await titulo.update({
-              charge_id: chargeId ?? titulo.charge_id,
-              url_boleto: typeof dados.url_boleto === 'string' ? dados.url_boleto : titulo.url_boleto,
-              qrcode: typeof dados.qrcode === 'string' ? dados.qrcode : titulo.qrcode,
-              qrcode_image: typeof dados.qrcode_image === 'string' ? dados.qrcode_image : titulo.qrcode_image,
-              codigo_barras: codigoBarrasParaSalvar,
-              linha_digitavel: linhaDigitavelParaSalvar ?? titulo.linha_digitavel,
-              nosso_numero: typeof dados.nosso_numero === 'string' ? dados.nosso_numero : titulo.nosso_numero
+            await prisma.financeiro_titulos.update({
+              where: { id: titulo.id },
+              data: {
+                charge_id: chargeId ?? titulo.charge_id,
+                url_boleto: typeof dados.url_boleto === 'string' ? dados.url_boleto : titulo.url_boleto,
+                qrcode: typeof dados.qrcode === 'string' ? dados.qrcode : titulo.qrcode,
+                qrcode_image: typeof dados.qrcode_image === 'string' ? dados.qrcode_image : titulo.qrcode_image,
+                codigo_barras: codigoBarrasParaSalvar,
+                linha_digitavel: linhaDigitavelParaSalvar ?? titulo.linha_digitavel,
+                nosso_numero: typeof dados.nosso_numero === 'string' ? dados.nosso_numero : titulo.nosso_numero,
+              },
             });
 
             detalhes.push({
               titulo_id: titulo.id,
-              banco: tituloCompleto.banco?.nome,
+              banco: titulo.cadastros_bancos?.nome,
               status: 'sucesso',
               message: 'Título registrado no banco',
-              charge_id: chargeId
+              charge_id: chargeId,
             });
           } else {
             erros++;
-            
             detalhes.push({
               titulo_id: titulo.id,
-              banco: tituloCompleto.banco?.nome,
+              banco: titulo.cadastros_bancos?.nome,
               status: 'erro',
-              message: resultado.message || 'Erro desconhecido ao registrar título'
+              message: resultado.message || 'Erro desconhecido ao registrar título',
             });
           }
         } catch (error) {
           erros++;
           const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido';
-          const errorStack = error instanceof Error ? error.stack : undefined;
           logger.error('Erro ao processar título na remessa bancária', {
             context: 'RoutineExecutionService',
             action: 'executeRemessaBancaria',
             tituloId: titulo.id,
             error: errorMsg,
-            stack: errorStack
           });
-          
-          const tituloComBanco = titulo as InstanceType<typeof TituloModel> & TituloWithRelations;
           detalhes.push({
             titulo_id: titulo.id,
-            banco: tituloComBanco.banco?.nome,
+            banco: titulo.cadastros_bancos?.nome,
             status: 'erro',
-            message: errorMsg
+            message: errorMsg,
           });
         }
       }
@@ -890,14 +654,12 @@ export class RoutineExecutionService {
    * @param routine - Rotina com configurações
    * @returns Resultado da execução
    */
-  public async executeDesbloquearBlockdomi(routine: ScheduledRoutine): Promise<RoutineExecutionResult> {
+  public async executeDesbloquearBlockdomi(routine: AnyRoutine): Promise<RoutineExecutionResult> {
     try {
       const { getModulosDoPlano, tenantTemModulo } = await import('../../saas/PlanoModulosService');
-      const { DadosEmpresa } = await import('../../../models/sistema/DadosEmpresa');
-
       let empresaId = routine.empresa_id ?? null;
       if (empresaId == null) {
-        const primeiraEmpresa = await DadosEmpresa.findOne({ attributes: ['id'], order: [['id', 'ASC']] });
+        const primeiraEmpresa = await prisma.sistema_tenants.findFirst({ select: { id: true }, orderBy: { id: 'asc' } });
         empresaId = primeiraEmpresa?.id ?? null;
       }
       if (empresaId != null) {
@@ -916,7 +678,10 @@ export class RoutineExecutionService {
 
       const { DesbloquearBlockdomiRoutine } = await import('../routines/DesbloquearBlockdomiRoutine');
       const desbloquearRoutine = new DesbloquearBlockdomiRoutine();
-      const config = { ...(routine.configuracao || {}), empresa_id: empresaId };
+      const configBase = routine.configuracao && typeof routine.configuracao === 'object'
+        ? routine.configuracao as Record<string, unknown>
+        : {};
+      const config = { ...configBase, empresa_id: empresaId };
       const resultado = await desbloquearRoutine.execute(config);
       return {
         success: resultado.success,

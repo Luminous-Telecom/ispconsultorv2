@@ -1,5 +1,7 @@
-import { Banco } from '../../../models/cadastros/Banco';
-import { Titulo } from '../../../models/financeiro/Titulo';
+import type { cadastros_bancos, financeiro_titulos } from '@prisma/client';
+
+type Banco = cadastros_bancos;
+type Titulo = financeiro_titulos;
 import { logger } from '../../../utils/logger';
 import type { ApiResponse, TituloWithRelations, IBancoService } from '../types';
 import { AsaasTituloService } from './AsaasTituloService';
@@ -10,24 +12,7 @@ export class AsaasService implements IBancoService {
    * Obter token (API Key) do Asaas
    */
   async obterToken(banco: Banco): Promise<string | null> {
-    let apiKey = banco.api_key;
-
-    // Banco pode vir como instância do Sequelize Model ou como objeto simples
-    interface BancoModelLike {
-      dataValues?: { api_key?: string | null };
-      getDataValue?: (key: string) => string | null;
-    }
-    const bancoModel = banco as BancoModelLike;
-
-    if (!apiKey && bancoModel.dataValues) {
-      apiKey = bancoModel.dataValues.api_key || null;
-    }
-
-    if (!apiKey && typeof bancoModel.getDataValue === 'function') {
-      const value = bancoModel.getDataValue('api_key');
-      apiKey = value || null;
-    }
-
+    const apiKey = banco.api_key?.trim() || null;
     if (!apiKey) {
       logger.error('API Key não configurada para Asaas', {
         banco_id: banco.id,
@@ -35,7 +20,6 @@ export class AsaasService implements IBancoService {
       });
       return null;
     }
-
     return apiKey;
   }
 

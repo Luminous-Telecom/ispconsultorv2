@@ -1,5 +1,5 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response as ExpressResponse } from 'express';
-import { ValidationError } from 'sequelize';
 import { MensagemWhatsAppService } from '../../../services/comunicacao/MensagemWhatsAppService';
 import { ServidorWhatsAppService } from '../../../services/comunicacao/ServidorWhatsAppService';
 import { ServidorWhatsAppValidatorService } from '../../../services/comunicacao/ServidorWhatsAppValidatorService';
@@ -14,6 +14,10 @@ import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../..
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { whereComunicacaoEmpresaEstrito, pertenceComunicacaoEmpresa } from '../../../utils/comunicacaoEmpresaWhere';
 import { parseMetaTemplateStructure, toSuggestedTemplateMapping } from '../../../services/comunicacao/whatsappMetaTemplate';
+
+function isModelValidationError(error: unknown): error is Error & { errors: Array<{ message?: string }> } {
+  return error instanceof Error && Array.isArray((error as { errors?: unknown }).errors);
+}
 
 export class ServidorWhatsAppController {
   /**
@@ -95,7 +99,7 @@ export class ServidorWhatsAppController {
           req as AuthenticatedRequest,
           'ServidorWhatsApp',
           servidor.id,
-          servidor.toJSON() as unknown as Record<string, unknown>,
+          toPlain(servidor) as unknown as Record<string, unknown>,
           undefined,
           empresaIdAudit
         );
@@ -105,8 +109,8 @@ export class ServidorWhatsAppController {
 
       sendSuccess(res, servidor, 'Servidor de WhatsApp criado com sucesso', 201);
     } catch (error: unknown) {
-      if (error instanceof ValidationError) {
-        const errors = error.errors.map((err) => err.message);
+      if (isModelValidationError(error)) {
+        const errors = error.errors.map((err) => err.message ?? '');
         sendValidationError(res, 'Dados inválidos', { errors });
         return;
       }
@@ -136,7 +140,7 @@ export class ServidorWhatsAppController {
         return;
       }
 
-      const dadosAnteriores = servidor.toJSON();
+      const dadosAnteriores = toPlain(servidor);
       await ServidorWhatsAppService.updateInstance(servidor, servidorData);
 
       try {
@@ -146,7 +150,7 @@ export class ServidorWhatsAppController {
           'ServidorWhatsApp',
           servidor.id,
           dadosAnteriores as unknown as Record<string, unknown>,
-          servidor.toJSON() as unknown as Record<string, unknown>,
+          toPlain(servidor) as unknown as Record<string, unknown>,
           undefined,
           empresaIdAudit
         );
@@ -156,8 +160,8 @@ export class ServidorWhatsAppController {
 
       sendSuccess(res, servidor, 'Servidor de WhatsApp atualizado com sucesso');
     } catch (error: unknown) {
-      if (error instanceof ValidationError) {
-        const errors = error.errors.map((err) => err.message);
+      if (isModelValidationError(error)) {
+        const errors = error.errors.map((err) => err.message ?? '');
         sendValidationError(res, 'Dados inválidos', { errors });
         return;
       }
@@ -186,7 +190,7 @@ export class ServidorWhatsAppController {
         return;
       }
 
-      const dadosAnteriores = servidor.toJSON();
+      const dadosAnteriores = toPlain(servidor);
       await ServidorWhatsAppService.delete(servidor.id);
 
       try {
@@ -276,8 +280,8 @@ export class ServidorWhatsAppController {
       
       sendSuccess(res, result.servidor, message, result.isNew ? 201 : 200);
     } catch (error: unknown) {
-      if (error instanceof ValidationError) {
-        const errors = error.errors.map((err) => err.message);
+      if (isModelValidationError(error)) {
+        const errors = error.errors.map((err) => err.message ?? '');
         sendValidationError(res, 'Dados inválidos', { errors });
         return;
       }
@@ -309,9 +313,11 @@ export class ServidorWhatsAppController {
         return;
       }
 
-      const dadosAnteriores = servidor.toJSON();
-      await ServidorWhatsAppConnectionService.connectInstance(servidor);
-      await servidor.reload();
+      const dadosAnteriores = toPlain(servidor);
+      await ServidorWhatsAppConnectionService.connectInstance(
+        servidor as Parameters<typeof ServidorWhatsAppConnectionService.connectInstance>[0]
+      );
+      const servidorAtualizado = await ServidorWhatsAppService.getById(id);
       try {
         const empresaIdAudit = getEmpresaIdOrNull(req) ?? servidor.empresa_id ?? null;
         await registrarAtualizacao(
@@ -319,7 +325,7 @@ export class ServidorWhatsAppController {
           'ServidorWhatsApp',
           servidor.id,
           dadosAnteriores as unknown as Record<string, unknown>,
-          servidor.toJSON() as unknown as Record<string, unknown>,
+          toPlain(servidor) as unknown as Record<string, unknown>,
           undefined,
           empresaIdAudit
         );
@@ -357,7 +363,11 @@ export class ServidorWhatsAppController {
         return;
       }
 
-      const result = await ServidorWhatsAppMessageService.sendTestMessage(servidor, phone, message);
+      const result = await ServidorWhatsAppMessageService.sendTestMessage(
+        servidor as Parameters<typeof ServidorWhatsAppMessageService.sendTestMessage>[0],
+        phone,
+        message
+      );
       sendSuccess(res, result, `Mensagem de teste enviada com sucesso para ${phone}`);
     } catch (error: unknown) {
       const { message: errorMessage, statusCode } = ServidorWhatsAppMessageService.extractErrorMessage(error);
@@ -475,7 +485,7 @@ export class ServidorWhatsAppController {
         if (mensagem) {
           // Atualizar existente
           logger.info('Atualizando mensagem existente:', { id: mensagem.id, tipo });
-          const dadosAnteriores = mensagem.toJSON();
+          const dadosAnteriores = toPlain(mensagem);
           mensagem = await MensagemWhatsAppService.update(mensagem.id, mensagemData);
           logger.info('Mensagem atualizada com sucesso:', { id: mensagem.id });
           
@@ -486,7 +496,7 @@ export class ServidorWhatsAppController {
               'MensagemWhatsApp',
               mensagem.id,
               dadosAnteriores as unknown as Record<string, unknown>,
-              mensagem.toJSON() as unknown as Record<string, unknown>,
+              toPlain(mensagem) as unknown as Record<string, unknown>,
               undefined,
               empresaIdAudit
             );
@@ -499,7 +509,7 @@ export class ServidorWhatsAppController {
           mensagem = await MensagemWhatsAppService.create({
             ...mensagemData,
             empresa_id: empresaIdMsg,
-          });
+          }) as NonNullable<Awaited<ReturnType<typeof MensagemWhatsAppService.findByTipo>>>;
           logger.info('Mensagem criada com sucesso:', { id: mensagem.id, tipo });
           
           try {
@@ -508,7 +518,7 @@ export class ServidorWhatsAppController {
               req as AuthenticatedRequest,
               'MensagemWhatsApp',
               mensagem.id,
-              mensagem.toJSON() as unknown as Record<string, unknown>,
+              toPlain(mensagem) as unknown as Record<string, unknown>,
               undefined,
               empresaIdAudit
             );

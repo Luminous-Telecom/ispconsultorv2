@@ -1,6 +1,5 @@
-import { Op } from 'sequelize';
-import { ModeloDocumento } from '../../../models/documentos/ModeloDocumento';
-import { WhereOptions } from 'sequelize';
+import type { Prisma, documentos_modelo } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 
 export interface ListModeloDocumentoFilters {
   tipo?: string;
@@ -8,60 +7,65 @@ export interface ListModeloDocumentoFilters {
   empresa_id?: number | null;
 }
 
+function whereEmpresaOuGlobal(empresaId: number): Prisma.documentos_modeloWhereInput {
+  return { OR: [{ empresa_id: empresaId }, { empresa_id: null }] };
+}
+
 export class ModeloDocumentoService {
   /**
    * Listar modelos de documento (filtra por empresa_id quando informado)
    */
-  static async list(filters: ListModeloDocumentoFilters = {}): Promise<{ success: boolean; data: ModeloDocumento[] }> {
+  static async list(filters: ListModeloDocumentoFilters = {}): Promise<{ success: boolean; data: documentos_modelo[] }> {
     const { tipo, ativo, empresa_id } = filters;
-    
-    const whereClause: WhereOptions = {};
+    const where: Prisma.documentos_modeloWhereInput = {};
     if (tipo) {
-      whereClause.tipo = tipo;
+      where.tipo = tipo as documentos_modelo['tipo'];
     }
     if (ativo !== undefined) {
-      whereClause.ativo = ativo;
+      where.ativo = ativo;
     }
     if (typeof empresa_id === 'number') {
-      (whereClause as WhereOptions & { [Op.or]?: unknown[] })[Op.or] = [{ empresa_id }, { empresa_id: null }];
+      Object.assign(where, whereEmpresaOuGlobal(empresa_id));
     }
 
-    const documentos = await ModeloDocumento.findAll({
-      where: whereClause,
-      order: [['created_at', 'DESC']]
+    const documentos = await prisma.documentos_modelo.findMany({
+      where,
+      orderBy: { created_at: 'desc' },
     });
 
     return {
       success: true,
-      data: documentos
+      data: documentos,
     };
   }
 
   /**
    * Buscar modelos por tipo (filtra por empresa_id quando informado)
    */
-  static async getByType(tipo: string, ativo = true, empresaId?: number | null): Promise<ModeloDocumento[]> {
-    const where: WhereOptions = { tipo: tipo as never, ativo };
-    if (typeof empresaId === 'number') {
-      (where as WhereOptions & { [Op.or]?: unknown[] })[Op.or] = [{ empresa_id: empresaId }, { empresa_id: null }];
-    }
-    return await ModeloDocumento.findAll({
+  static async getByType(tipo: string, ativo = true, empresaId?: number | null): Promise<documentos_modelo[]> {
+    const where: Prisma.documentos_modeloWhereInput = {
+      tipo: tipo as documentos_modelo['tipo'],
+      ativo,
+      ...(typeof empresaId === 'number' ? whereEmpresaOuGlobal(empresaId) : {}),
+    };
+    return prisma.documentos_modelo.findMany({
       where,
-      order: [['nome', 'ASC']]
+      orderBy: { nome: 'asc' },
     });
   }
 
   /**
    * Buscar modelo padrão por tipo (filtra por empresa_id quando informado)
    */
-  static async getDefaultByType(tipo: string, empresaId?: number | null): Promise<ModeloDocumento | null> {
-    const where: WhereOptions = { tipo: tipo as never, ativo: true };
-    if (typeof empresaId === 'number') {
-      (where as WhereOptions & { [Op.or]?: unknown[] })[Op.or] = [{ empresa_id: empresaId }, { empresa_id: null }];
-    }
-    return await ModeloDocumento.findOne({
+  static async getDefaultByType(tipo: string, empresaId?: number | null): Promise<documentos_modelo | null> {
+    const where: Prisma.documentos_modeloWhereInput = {
+      tipo: tipo as documentos_modelo['tipo'],
+      ativo: true,
+      ...(typeof empresaId === 'number' ? whereEmpresaOuGlobal(empresaId) : {}),
+    };
+    return prisma.documentos_modelo.findFirst({
       where,
-      order: [['created_at', 'ASC']]
+      orderBy: { created_at: 'asc' },
     });
   }
 
@@ -69,15 +73,15 @@ export class ModeloDocumentoService {
    * Listar tipos disponíveis (filtra por empresa_id quando informado)
    */
   static async getTypes(empresaId?: number | null): Promise<string[]> {
-    const where: WhereOptions = { ativo: true };
-    if (typeof empresaId === 'number') {
-      (where as WhereOptions & { [Op.or]?: unknown[] })[Op.or] = [{ empresa_id: empresaId }, { empresa_id: null }];
-    }
-    const tipos = await ModeloDocumento.findAll({
-      attributes: ['tipo'],
-      group: ['tipo'],
+    const where: Prisma.documentos_modeloWhereInput = {
+      ativo: true,
+      ...(typeof empresaId === 'number' ? whereEmpresaOuGlobal(empresaId) : {}),
+    };
+    const tipos = await prisma.documentos_modelo.findMany({
       where,
-      order: [['tipo', 'ASC']]
+      distinct: ['tipo'],
+      select: { tipo: true },
+      orderBy: { tipo: 'asc' },
     });
 
     return tipos.map((doc) => doc.tipo);
@@ -90,10 +94,10 @@ export class ModeloDocumentoService {
   static async resolveModeloReciboContrato(params: {
     empresaId?: number | null;
     modeloDocumentoId?: number | null;
-  }): Promise<ModeloDocumento | null> {
+  }): Promise<documentos_modelo | null> {
     const { empresaId, modeloDocumentoId } = params;
 
-    const temRecibo = (modelo: ModeloDocumento): boolean =>
+    const temRecibo = (modelo: documentos_modelo): boolean =>
       Boolean(modelo.conteudo_recibo?.trim());
 
     if (modeloDocumentoId) {
@@ -110,46 +114,55 @@ export class ModeloDocumentoService {
   /**
    * Buscar modelo por ID
    */
-  static async getById(id: string | number): Promise<ModeloDocumento | null> {
-    return await ModeloDocumento.findByPk(id);
+  static async getById(id: string | number): Promise<documentos_modelo | null> {
+    return prisma.documentos_modelo.findUnique({
+      where: { id: Number(id) },
+    });
   }
 
   /**
    * Criar modelo de documento
    */
-  static async create(dados: Partial<ModeloDocumento>): Promise<ModeloDocumento> {
-    return await ModeloDocumento.create(dados as any);
+  static async create(dados: Partial<documentos_modelo>): Promise<documentos_modelo> {
+    return prisma.documentos_modelo.create({
+      data: dados as Prisma.documentos_modeloCreateInput,
+    });
   }
 
   /**
    * Atualizar modelo de documento
    */
-  static async update(id: string | number, dados: Partial<ModeloDocumento>): Promise<ModeloDocumento> {
-    const documento = await ModeloDocumento.findByPk(id);
-    
+  static async update(id: string | number, dados: Partial<documentos_modelo>): Promise<documentos_modelo> {
+    const documento = await prisma.documentos_modelo.findUnique({
+      where: { id: Number(id) },
+    });
+
     if (!documento) {
       throw new Error('Modelo de documento não encontrado');
     }
-    
-    await documento.update(dados);
-    await documento.reload();
-    
-    return documento;
+
+    return prisma.documentos_modelo.update({
+      where: { id: documento.id },
+      data: {
+        ...(dados as Prisma.documentos_modeloUpdateInput),
+        updated_at: new Date(),
+      },
+    });
   }
 
   /**
    * Deletar modelo de documento
    */
-  static async delete(id: string | number): Promise<ModeloDocumento> {
-    const documento = await ModeloDocumento.findByPk(id);
-    
+  static async delete(id: string | number): Promise<documentos_modelo> {
+    const documento = await prisma.documentos_modelo.findUnique({
+      where: { id: Number(id) },
+    });
+
     if (!documento) {
       throw new Error('Modelo de documento não encontrado');
     }
-    
-    await documento.destroy();
-    
+
+    await prisma.documentos_modelo.delete({ where: { id: documento.id } });
     return documento;
   }
 }
-

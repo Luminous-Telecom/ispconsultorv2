@@ -4,7 +4,7 @@ import { ClienteService } from '../../clientes/ClienteService';
 import { ContratoService } from '../../contratos/ContratoService';
 import { VariaveisDocumentoService } from '../VariaveisDocumentoService';
 import { PDFGenerationService } from '../../pdf-generation/PDFGenerationService';
-import { Contrato } from '../../../models/contratos/Contrato';
+import type { contratos } from '@prisma/client';
 import type { Response } from 'express';
 import { sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
@@ -25,7 +25,7 @@ export class ModeloDocumentoPdfService {
     }
 
     const pdfBuffer = await PDFGenerationService.generateFromContent(
-      documento.conteudo,
+      documento.conteudo ?? '',
       {
         format: 'A4',
         margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },
@@ -65,7 +65,7 @@ export class ModeloDocumentoPdfService {
         return;
       }
 
-      let contrato: Contrato | null = null;
+      let contrato: contratos | null = null;
 
       if (contratoId) {
         contrato = await ContratoService.getById(contratoId);
@@ -86,7 +86,7 @@ export class ModeloDocumentoPdfService {
       const baseUrl = req.get('host') ? `${req.protocol}://${req.get('host')}` : undefined;
       const empresaId = getEmpresaIdOrNull(req) ?? cliente.empresa_id ?? contrato?.empresa_id;
       conteudoProcessado = await VariaveisDocumentoService.processarVariaveis(
-        documento.conteudo,
+        documento.conteudo ?? '',
         {
           cliente,
           contrato: contrato || undefined,
@@ -97,7 +97,7 @@ export class ModeloDocumentoPdfService {
     }
 
     const pdfBuffer = await PDFGenerationService.generateFromContent(
-      conteudoProcessado,
+      conteudoProcessado ?? '',
       {
         format: 'A4',
         margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },

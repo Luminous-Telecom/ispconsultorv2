@@ -1,14 +1,11 @@
 import { Request, Response } from 'express';
-import { Op } from 'sequelize';
+import { prisma } from '../../../db/prisma';
 import { ImportarListaBlockdomiService, type RemoverListaResult } from '../../../services/blockdomi/ImportarListaBlockdomiService';
 import { VersaoBlockdomiService } from '../../../services/blockdomi/VersaoBlockdomiService';
 import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import { sendSuccess, sendError, sendValidationError } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { logger } from '../../../utils/logger';
-import { Dominio } from '../../../models/blockdomi/Dominio';
-import { IPv4 } from '../../../models/blockdomi/IPv4';
-import { IPv6 } from '../../../models/blockdomi/IPv6';
 import { SeiAnatelExtractService } from '../../../services/blockdomi/SeiAnatelExtractService';
 import fs from 'fs';
 
@@ -76,8 +73,8 @@ export class ImportarListaBlockdomiController {
           const obs = `Importação lista v${result.versao_lista}`;
           const allDomIds = [...result.dominios.createdIds, ...result.dominios.updatedIds];
           if (allDomIds.length > 0) {
-            const dominios = await Dominio.findAll({ where: { id: { [Op.in]: allDomIds } } });
-            const domMap = new Map(dominios.map((d) => [d.id, d.toJSON() as Record<string, unknown>]));
+            const dominios = await prisma.blockdomi_dominios.findMany({ where: { id: { in: allDomIds } } });
+            const domMap = new Map(dominios.map((d) => [d.id, { ...d } as Record<string, unknown>]));
             for (const id of result.dominios.createdIds) {
               const dados = domMap.get(id);
               if (dados) await registrarCriacao(req, 'Dominio', id, dados, obs, empresaIdAudit);
@@ -89,8 +86,8 @@ export class ImportarListaBlockdomiController {
           }
           const allIpv4Ids = [...result.ipv4.createdIds, ...result.ipv4.updatedIds];
           if (allIpv4Ids.length > 0) {
-            const ipv4s = await IPv4.findAll({ where: { id: { [Op.in]: allIpv4Ids } } });
-            const ipv4Map = new Map(ipv4s.map((d) => [d.id, d.toJSON() as Record<string, unknown>]));
+            const ipv4s = await prisma.blockdomi_ipv4.findMany({ where: { id: { in: allIpv4Ids } } });
+            const ipv4Map = new Map(ipv4s.map((d) => [d.id, { ...d } as Record<string, unknown>]));
             for (const id of result.ipv4.createdIds) {
               const dados = ipv4Map.get(id);
               if (dados) await registrarCriacao(req, 'IPv4', id, dados, obs, empresaIdAudit);
@@ -102,8 +99,8 @@ export class ImportarListaBlockdomiController {
           }
           const allIpv6Ids = [...result.ipv6.createdIds, ...result.ipv6.updatedIds];
           if (allIpv6Ids.length > 0) {
-            const ipv6s = await IPv6.findAll({ where: { id: { [Op.in]: allIpv6Ids } } });
-            const ipv6Map = new Map(ipv6s.map((d) => [d.id, d.toJSON() as Record<string, unknown>]));
+            const ipv6s = await prisma.blockdomi_ipv6.findMany({ where: { id: { in: allIpv6Ids } } });
+            const ipv6Map = new Map(ipv6s.map((d) => [d.id, { ...d } as Record<string, unknown>]));
             for (const id of result.ipv6.createdIds) {
               const dados = ipv6Map.get(id);
               if (dados) await registrarCriacao(req, 'IPv6', id, dados, obs, empresaIdAudit);

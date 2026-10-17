@@ -9,7 +9,6 @@ import { ClienteService } from 'services/clienteService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
-import { useI18n } from 'contexts/I18nContext';
 import { useFormReset } from 'hooks/useFormReset';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
@@ -20,7 +19,6 @@ import DadosBasicosTab from './abas/DadosBasicosTab';
 import EnderecoTab from './abas/EnderecoTab';
 import ContatoTab from './abas/ContatoTab';
 import ResponsavelTab from './abas/ResponsavelTab';
-import FinanceiroTab from './abas/FinanceiroTab';
 import { isValidCNPJ } from 'utils/validators';
 
 function toFormData(item: SaasDadosEmpresaItem): DadosEmpresaForm {
@@ -89,13 +87,12 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   selectedCompanyId,
   onCompanyChange,
 }) => {
-  const { t } = useI18n();
   const isMobile = useIsMobile();
   const isSaas = variant === 'saas';
   const isSaasCreate = isSaas && itemId == null;
   const isSaasEdit = isSaas && itemId != null;
 
-  const [activeTab, setActiveTab] = useState<'basico' | 'endereco' | 'contato' | 'responsavel' | 'faturas-abertas' | 'faturas-pagas'>('basico');
+  const [activeTab, setActiveTab] = useState<'basico' | 'endereco' | 'contato' | 'responsavel'>('basico');
   const { success, info } = useNotificationContext();
   const { showApiError } = useApiError();
   const queryClient = useQueryClient();
@@ -336,25 +333,14 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
     [dados.id, isSaas, isSaasEdit, itemId, success, showApiError, queryClient]
   );
 
-  type EmpresaTabId = 'basico' | 'endereco' | 'contato' | 'responsavel' | 'faturas-abertas' | 'faturas-pagas';
+  type EmpresaTabId = 'basico' | 'endereco' | 'contato' | 'responsavel';
 
-  const empresaTabs = useMemo((): ModalTabItem<EmpresaTabId>[] => {
-    const tabs: ModalTabItem<EmpresaTabId>[] = [
-      { id: 'basico', label: 'Empresa' },
-      { id: 'endereco', label: 'Endereço' },
-      { id: 'contato', label: 'Contato' },
-      { id: 'responsavel', label: 'Responsável' },
-    ];
-
-    if (!isSaas) {
-      tabs.push(
-        { id: 'faturas-abertas', label: t('tabs.faturasAbertas') },
-        { id: 'faturas-pagas', label: t('tabs.faturasPagas') },
-      );
-    }
-
-    return tabs;
-  }, [isSaas, t]);
+  const empresaTabs = useMemo((): ModalTabItem<EmpresaTabId>[] => [
+    { id: 'basico', label: 'Empresa' },
+    { id: 'endereco', label: 'Endereço' },
+    { id: 'contato', label: 'Contato' },
+    { id: 'responsavel', label: 'Responsável' },
+  ], []);
 
   const headerActionsContent = useMemo(
     () => (
@@ -400,21 +386,14 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
     }
   }, [skipWrapper, onHeaderActionsReady, headerActionsContent]);
 
-  const isFinanceTab = activeTab === 'faturas-abertas' || activeTab === 'faturas-pagas';
-
   const modalContent = (
     <div className="empresa-modal-content">
-      <div
-        className={`tab-content empresa-tab-content ${isFinanceTab ? 'empresa-tab-content-scrollable' : 'empresa-tab-content-padded'}`}
-        id="empresaTabContent"
-      >
+      <div className="tab-content empresa-tab-content empresa-tab-content-padded" id="empresaTabContent">
         <form id="empresa-form" onSubmit={handleSubmit} className="form-modal-simple">
           {activeTab === 'basico' && <DadosBasicosTab dados={dados} onChange={handleInputChange} isPending={isPending} onLogoChange={onLogoChange} />}
           {activeTab === 'endereco' && <EnderecoTab dados={dados} onChange={handleInputChange} isPending={isPending} parametrosOverride={isSaas && parametros?.data ? { validar_cep: parametros.data.validar_cep } : undefined} />}
           {activeTab === 'contato' && <ContatoTab dados={dados} onChange={handleInputChange} isPending={isPending} />}
           {activeTab === 'responsavel' && <ResponsavelTab dados={dados} onChange={handleInputChange} isPending={isPending} onAssinaturaChange={onAssinaturaChange} />}
-          {activeTab === 'faturas-abertas' && !isSaas && <FinanceiroTab empresaId={dadosEmpresa?.id} tipo="abertas" />}
-          {activeTab === 'faturas-pagas' && !isSaas && <FinanceiroTab empresaId={dadosEmpresa?.id} tipo="pagas" />}
         </form>
       </div>
     </div>

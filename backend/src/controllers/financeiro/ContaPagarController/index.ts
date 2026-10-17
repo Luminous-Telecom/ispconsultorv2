@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { ContaPagar } from '../../../models/financeiro/ContaPagar';
 import { ContaPagarService } from '../../../services/financeiro/ContaPagarService';
@@ -8,8 +9,8 @@ import { normalizeDateForDb } from '../../../utils/dateUtils';
 import { contaPagarCreateSchema, contaPagarUpdateSchema, contaPagarPagamentoSchema } from '../../../validators/contaPagar.validator';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
-import { Transaction } from 'sequelize';
-import { sequelize } from '../../../config/database';
+import { prisma } from '../../../db/prisma';
+import { withTransaction } from '../../../utils/transaction';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
@@ -77,13 +78,10 @@ export class ContaPagarController {
   }
 
   static async store(req: Request, res: Response): Promise<void> {
-    const transaction = await sequelize.transaction();
-    
     try {
       const { error, value } = contaPagarCreateSchema.validate(req.body);
       
       if (error) {
-        await transaction.rollback();
         const errors: Record<string, string[]> = {};
         error.details.forEach(detail => {
           const path = detail.path.join('.');
@@ -99,7 +97,6 @@ export class ContaPagarController {
       // Verificar se fornecedor existe
       const fornecedor = await FornecedorService.getById(value.fornecedor_id, false);
       if (!fornecedor) {
-        await transaction.rollback();
         sendNotFound(res, 'Fornecedor não encontrado');
         return;
       }
@@ -113,13 +110,11 @@ export class ContaPagarController {
         const dataFinal = normalizeDateForDb(value.data_vencimento_final);
 
         if (!dataInicial || !dataFinal) {
-          await transaction.rollback();
           sendValidationError(res, 'As datas de vencimento fornecidas são inválidas');
           return;
         }
 
         if (dataInicial > dataFinal) {
-          await transaction.rollback();
           sendValidationError(res, 'A data inicial deve ser anterior à data final');
           return;
         }
@@ -129,12 +124,10 @@ export class ContaPagarController {
                                  (dataFinal.getMonth() - dataInicial.getMonth()) + 1;
         
         if (quantidadeMeses > 120) {
-          await transaction.rollback();
           sendValidationError(res, 'O intervalo não pode exceder 120 meses (10 anos)');
           return;
         }
 
-        const contasCriadas = [];
         const empresaId = getEmpresaIdOrNull(req);
         const dadosBase = {
           empresa_id: empresaId ?? fornecedor.empresa_id ?? null,
@@ -155,34 +148,34 @@ export class ContaPagarController {
 
         const diaVencimento = dataInicial.getDate();
 
-        for (let i = 0; i < quantidadeMeses; i++) {
-          let dataVencimento = new Date(dataInicial.getFullYear(), dataInicial.getMonth() + i, diaVencimento);
-          
-          // Ajustar se o dia não existir no mês (ex: 31 em fevereiro)
-          const ultimoDiaDoMes = new Date(dataVencimento.getFullYear(), dataVencimento.getMonth() + 1, 0).getDate();
-          if (diaVencimento > ultimoDiaDoMes) {
-            dataVencimento.setDate(ultimoDiaDoMes);
+        const contasCriadas = await withTransaction(async (transaction) => {
+          const contas = [];
+          for (let i = 0; i < quantidadeMeses; i++) {
+            let dataVencimento = new Date(dataInicial.getFullYear(), dataInicial.getMonth() + i, diaVencimento);
+
+            const ultimoDiaDoMes = new Date(dataVencimento.getFullYear(), dataVencimento.getMonth() + 1, 0).getDate();
+            if (diaVencimento > ultimoDiaDoMes) {
+              dataVencimento.setDate(ultimoDiaDoMes);
+            }
+
+            if (i === quantidadeMeses - 1) {
+              dataVencimento = new Date(dataFinal);
+            }
+
+            const conta = await ContaPagarService.create({
+              ...dadosBase,
+              data_vencimento: dataVencimento
+            }, transaction);
+
+            contas.push(conta);
           }
-          
-          // Último mês usa a data final
-          if (i === quantidadeMeses - 1) {
-            dataVencimento = new Date(dataFinal);
-          }
-
-          const conta = await ContaPagarService.create({
-            ...dadosBase,
-            data_vencimento: dataVencimento
-          }, transaction);
-
-          contasCriadas.push(conta);
-        }
-
-        await transaction.commit();
+          return contas;
+        });
 
         // Registrar auditoria para cada conta criada (após commit)
         for (const conta of contasCriadas) {
           try {
-            const contaData = conta.toJSON() as Record<string, unknown>;
+            const contaData = toPlain(conta) as Record<string, unknown>;
             const empresaIdAudit = getEmpresaIdOrNull(req) ?? conta.empresa_id ?? null;
             await registrarCriacao(
               req as AuthenticatedRequest,
@@ -212,7 +205,6 @@ export class ContaPagarController {
       } else {
         // Criar uma única conta
         if (!value.data_vencimento) {
-          await transaction.rollback();
           sendValidationError(res, 'Data de vencimento é obrigatória para criação única');
           return;
         }
@@ -223,12 +215,12 @@ export class ContaPagarController {
         }
 
         const empresaIdSingle = getEmpresaIdOrNull(req);
-        const conta = await ContaPagarService.create({
+        const conta = await withTransaction(async (transaction) => ContaPagarService.create({
           ...value,
           empresa_id: empresaIdSingle ?? fornecedor.empresa_id ?? null,
           valor_pago: 0,
           status: 'A_PAGAR'
-        }, transaction);
+        }, transaction));
 
         // Registrar auditoria
         try {
@@ -237,7 +229,7 @@ export class ContaPagarController {
             req,
             'ContaPagar',
             conta.id,
-            conta.toJSON() as Record<string, unknown>,
+            toPlain(conta) as Record<string, unknown>,
             undefined,
             empresaIdAudit
           );
@@ -256,12 +248,9 @@ export class ContaPagarController {
           });
         }
 
-        await transaction.commit();
-
         sendSuccess(res, conta, 'Conta a pagar criada com sucesso', 201);
       }
     } catch (error) {
-      await transaction.rollback();
       sendError(res, error, 'Erro ao criar conta a pagar', 500, true, {
         context: 'ContaPagarController',
         action: 'store'
@@ -337,22 +326,28 @@ export class ContaPagarController {
       }
 
       // Capturar dados anteriores para auditoria - buscar novamente do banco para garantir todos os campos
-      const contaCompleta = await ContaPagar.findByPk(id);
+      const contaRow = await prisma.financeiro_contas_pagar.findUnique({ where: { id } });
+      const contaCompleta = contaRow
+        ? (ContaPagar as unknown as { hydrate: (value: unknown) => ContaPagar }).hydrate(contaRow)
+        : null;
       if (!contaCompleta) {
         sendNotFound(res, 'Conta a pagar não encontrada');
         return;
       }
-      const dadosAnteriores = contaCompleta.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(contaCompleta) as Record<string, unknown>;
       
       const contaAtualizada = await ContaPagarService.update(id, value);
       
       // Registrar auditoria - buscar novamente do banco para garantir todos os campos
-      const contaAtualizadaCompleta = await ContaPagar.findByPk(contaAtualizada.id);
+      const contaAtualizadaRow = await prisma.financeiro_contas_pagar.findUnique({ where: { id: contaAtualizada.id } });
+      const contaAtualizadaCompleta = contaAtualizadaRow
+        ? (ContaPagar as unknown as { hydrate: (value: unknown) => ContaPagar }).hydrate(contaAtualizadaRow)
+        : null;
       if (!contaAtualizadaCompleta) {
         sendNotFound(res, 'Conta a pagar não encontrada após atualização');
         return;
       }
-      const dadosNovos = contaAtualizadaCompleta.toJSON() as Record<string, unknown>;
+      const dadosNovos = toPlain(contaAtualizadaCompleta) as Record<string, unknown>;
       
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores, dadosNovos);
@@ -398,13 +393,13 @@ export class ContaPagarController {
       }
 
       // Não permitir excluir se já tiver pagamentos
-      if (conta.valor_pago > 0) {
+      if (Number(conta.valor_pago) > 0) {
         sendForbidden(res, 'A conta possui pagamentos e não pode ser excluída. Use cancelar.');
         return;
       }
 
       // Capturar dados anteriores para auditoria
-      const dadosAnteriores = conta.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(conta) as Record<string, unknown>;
       
       await ContaPagarService.delete(id);
 
@@ -434,12 +429,9 @@ export class ContaPagarController {
   }
 
   static async pagar(req: Request, res: Response): Promise<void> {
-    const transaction: Transaction = await sequelize.transaction();
-    
     try {
       const id = parseInt(req.params.id, 10);
       if (isNaN(id)) {
-        await transaction.rollback();
         sendValidationError(res, 'ID inválido');
         return;
       }
@@ -447,7 +439,6 @@ export class ContaPagarController {
       const { error, value } = contaPagarPagamentoSchema.validate(req.body);
       
       if (error) {
-        await transaction.rollback();
         const errors: Record<string, string[]> = {};
         error.details.forEach(detail => {
           const path = detail.path.join('.');
@@ -460,8 +451,9 @@ export class ContaPagarController {
         return;
       }
 
-      const { conta, status } = await ContaPagarOperationService.registrarPagamento(id, value, req, transaction);
-      await transaction.commit();
+      const { status } = await withTransaction(async (transaction) => {
+        return ContaPagarOperationService.registrarPagamento(id, value, req, transaction);
+      });
 
       const contaAtualizada = await ContaPagarService.getById(id);
       if (!contaAtualizada) {
@@ -472,8 +464,6 @@ export class ContaPagarController {
       const message = status === 'PAGO' ? 'Conta paga com sucesso' : 'Pagamento parcial registrado com sucesso';
       sendSuccess(res, contaAtualizada, message);
     } catch (error) {
-      await transaction.rollback();
-      
       if (error instanceof Error) {
         if (error.message === 'Conta a pagar não encontrada') {
           sendNotFound(res, error.message);

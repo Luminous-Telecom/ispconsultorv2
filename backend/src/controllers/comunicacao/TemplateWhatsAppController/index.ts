@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response as ExpressResponse } from 'express';
 import { TemplateWhatsAppService } from '../../../services/comunicacao/TemplateWhatsAppService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
@@ -56,7 +57,7 @@ export class TemplateWhatsAppController {
       });
       try {
         const empresaId = getEmpresaIdOrNull(req) ?? (template as { empresa_id?: number | null }).empresa_id ?? null;
-        await registrarCriacao(req as AuthenticatedRequest, 'TemplateWhatsApp', template.id, (template.get ? template.get({ plain: true }) : template) as unknown as Record<string, unknown>, undefined, empresaId);
+        await registrarCriacao(req as AuthenticatedRequest, 'TemplateWhatsApp', template.id, toPlain(template) as Record<string, unknown>, undefined, empresaId);
       } catch (auditError) {
         // Não interromper o fluxo
       }
@@ -90,12 +91,12 @@ export class TemplateWhatsAppController {
       if (header_document != null) updates.header_document = !!header_document;
       if (ativo != null) updates.ativo = !!ativo;
 
-      const dadosAnteriores = template.get ? template.get({ plain: true }) : template;
+      const dadosAnteriores = toPlain(template);
       await TemplateWhatsAppService.update(id, updates);
       const updated = await TemplateWhatsAppService.getById(id);
       try {
         const empresaId = getEmpresaIdOrNull(req) ?? (updated as { empresa_id?: number | null })?.empresa_id ?? null;
-        await registrarAtualizacao(req as AuthenticatedRequest, 'TemplateWhatsApp', id, dadosAnteriores as unknown as Record<string, unknown>, (updated?.get ? updated.get({ plain: true }) : updated) as unknown as Record<string, unknown>, undefined, empresaId);
+        await registrarAtualizacao(req as AuthenticatedRequest, 'TemplateWhatsApp', id, dadosAnteriores as unknown as Record<string, unknown>, (updated ? toPlain(updated) : updated) as unknown as Record<string, unknown>, undefined, empresaId);
       } catch (auditError) {
         // Não interromper o fluxo
       }
@@ -119,7 +120,7 @@ export class TemplateWhatsAppController {
         sendNotFound(res, 'Template não encontrado');
         return;
       }
-      const dadosAnteriores = template.get ? template.get({ plain: true }) : template;
+      const dadosAnteriores = toPlain(template);
       await TemplateWhatsAppService.delete(id);
       try {
         const empresaId = getEmpresaIdOrNull(req) ?? (template as { empresa_id?: number | null })?.empresa_id ?? null;

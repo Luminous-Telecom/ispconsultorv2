@@ -1,11 +1,16 @@
-import { ScheduledRoutine } from '../../../models/sistema/ScheduledRoutine';
 import {
   createScheduledRoutineService,
   type ListScheduledRoutinesFilters,
   type ListScheduledRoutinesResponse
 } from '../../../utils/createScheduledRoutineService';
 
-const service = createScheduledRoutineService<ScheduledRoutine>(ScheduledRoutine, {
+class SistemaScheduledRoutineTable {
+  static tableName = 'sistema_scheduled_routines';
+}
+
+const service = createScheduledRoutineService<Record<string, unknown>>(
+  SistemaScheduledRoutineTable as unknown as Parameters<typeof createScheduledRoutineService<Record<string, unknown>>>[0],
+  {
   additionalSortColumns: ['cron_expression', 'descricao', 'frequencia', 'dia_execucao', 'empresa_id', 'hora_execucao'],
 });
 

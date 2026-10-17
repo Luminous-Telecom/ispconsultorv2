@@ -44,5 +44,5 @@ io.to('blockdomi-logs').emit('blockdomi:log', log);
 
 ## Proibido
 
-- Emitir dado sensível de outro tenant numa room compartilhada sem checar `empresa_id` do socket autenticado
+- Emitir dado sensível de outra empresa numa room compartilhada sem checar `empresa_id` do socket autenticado
 - Criar novo servidor Socket.IO paralelo — sempre usar a instância única via `getIO()`

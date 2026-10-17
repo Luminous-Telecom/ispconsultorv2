@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { TipoCobrancaContratoService } from '../../../services/cadastros/TipoCobrancaContratoService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
@@ -68,7 +69,7 @@ export class TipoCobrancaContratoController {
       });
       try {
         const empresaIdAudit = getEmpresaIdOrNull(req) ?? item.empresa_id ?? null;
-        await registrarCriacao(req, 'TipoCobrancaContrato', item.id, item.toJSON() as Record<string, unknown>, undefined, empresaIdAudit);
+        await registrarCriacao(req, 'TipoCobrancaContrato', item.id, toPlain(item) as Record<string, unknown>, undefined, empresaIdAudit);
       } catch {
         // não interromper
       }
@@ -99,8 +100,8 @@ export class TipoCobrancaContratoController {
           req,
           'TipoCobrancaContrato',
           item.id,
-          existing.toJSON() as Record<string, unknown>,
-          item.toJSON() as Record<string, unknown>,
+          toPlain(existing) as Record<string, unknown>,
+          toPlain(item) as Record<string, unknown>,
           undefined,
           empresaIdAudit
         );
@@ -121,7 +122,7 @@ export class TipoCobrancaContratoController {
         sendNotFound(res, 'Tipo de cobrança não encontrado');
         return;
       }
-      const dadosAnteriores = existing.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(existing) as Record<string, unknown>;
       await TipoCobrancaContratoService.delete(id);
       try {
         const empresaIdAudit = getEmpresaIdOrNull(req) ?? existing.empresa_id ?? null;

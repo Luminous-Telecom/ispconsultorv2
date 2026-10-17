@@ -1,7 +1,10 @@
 import axios from 'axios';
-import { Titulo } from '../../../../models/financeiro/Titulo';
-import { Banco } from '../../../../models/cadastros/Banco';
-import { Plano } from '../../../../models/cadastros/Plano';
+import type { cadastros_bancos, cadastros_planos, financeiro_titulos } from '@prisma/client';
+import { prisma } from '../../../../db/prisma';
+
+type Banco = cadastros_bancos;
+type Titulo = financeiro_titulos;
+type Plano = cadastros_planos;
 import { logger } from '../../../../utils/logger';
 import { formatDateOnly } from '../../../../utils/timezoneUtils';
 import { BarcodeService } from '../../BarcodeService';
@@ -190,11 +193,17 @@ export class AsaasTituloService {
 
         // Se não tem linha digitável, gerar localmente (para sandbox)
         if (!linhaDigitavelRaw && banco.sandbox) {
-          try {
-            const tituloModel = titulo as unknown as Titulo;
-            linhaDigitavelRaw = await tituloModel.gerarLinhaDigitavel();
-          } catch (gerarError) {
-            logger.warn('Erro ao gerar linha digitável localmente', { titulo_id: titulo.id, error: gerarError });
+          const codigo = String((titulo as { codigo_barras?: string | null }).codigo_barras || '').replace(/\D/g, '');
+          if (codigo.length >= 44) {
+            linhaDigitavelRaw =
+              codigo.substring(0, 5) + '.' +
+              codigo.substring(5, 10) + ' ' +
+              codigo.substring(10, 15) + '.' +
+              codigo.substring(15, 21) + ' ' +
+              codigo.substring(21, 26) + '.' +
+              codigo.substring(26, 32) + ' ' +
+              codigo.substring(32, 33) + ' ' +
+              codigo.substring(33);
           }
         }
 
@@ -208,17 +217,21 @@ export class AsaasTituloService {
         // Se o título foi criado (tem charge_id), retornar sucesso mesmo se PIX estiver incompleto
         // O PIX pode ser atualizado posteriormente via webhook
         if (chargeId) {
-          const tituloModel = titulo as unknown as Titulo & { __skipTituloUpdate?: boolean };
-          if (!tituloModel.__skipTituloUpdate && typeof tituloModel.update === 'function') {
-            await tituloModel.update({
-              charge_id: String(chargeId),
-              codigo_barras: codigoBarrasFinal,
-              url_boleto: urlBoleto,
-              linha_digitavel: linhaDigitavelFormatada,
-              qrcode: pixQrCodeStringValue || pixQrCode || null,
-              qrcode_image: pixQrCodeImageNormalized,
-              nosso_numero: nossoNumero || null,
-              status: 'pendente'
+          const skipUpdate = Boolean((titulo as { __skipTituloUpdate?: boolean }).__skipTituloUpdate);
+          if (!skipUpdate) {
+            await prisma.financeiro_titulos.update({
+              where: { id: titulo.id },
+              data: {
+                charge_id: String(chargeId),
+                codigo_barras: codigoBarrasFinal,
+                url_boleto: urlBoleto,
+                linha_digitavel: linhaDigitavelFormatada,
+                qrcode: pixQrCodeStringValue || pixQrCode || null,
+                qrcode_image: pixQrCodeImageNormalized,
+                nosso_numero: nossoNumero || null,
+                status: 'pendente',
+                updated_at: new Date(),
+              },
             });
           }
 

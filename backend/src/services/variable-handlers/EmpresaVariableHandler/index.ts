@@ -1,6 +1,7 @@
 import { VariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis } from '../types';
 import { DadosEmpresaService } from '../../sistema/DadosEmpresaService';
-import type { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
+
+type DadosEmpresa = NonNullable<Awaited<ReturnType<typeof DadosEmpresaService.findOne>>>;
 import { Formatter } from '../utils/Formatter';
 import { VariableReplacer } from '../utils/VariableReplacer';
 import { ImageConverter } from '../utils/ImageConverter';

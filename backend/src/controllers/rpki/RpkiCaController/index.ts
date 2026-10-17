@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { RpkiCaService } from '../../../services/rpki/RpkiCaService';
 import { RpkiProvisioningService } from '../../../services/rpki/RpkiProvisioningService';
@@ -6,14 +7,21 @@ import { RpkiAspaService } from '../../../services/rpki/RpkiAspaService';
 import { RpkiRouteValidationService } from '../../../services/rpki/RpkiRouteValidationService';
 import { RpkiCa } from '../../../models/rpki/RpkiCa';
 import { RpkiCaParent } from '../../../models/rpki/RpkiCaParent';
-import { RpkiCaResource } from '../../../models/rpki/RpkiCaResource';
 import { RpkiRepository } from '../../../models/rpki/RpkiRepository';
 import { RpkiRoa } from '../../../models/rpki/RpkiRoa';
 import { RpkiAspa } from '../../../models/rpki/RpkiAspa';
 import { SistemaLogOperacionalQueryService } from '../../../services/sistema/SistemaLogOperacionalQueryService';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
-import { Op } from 'sequelize';
+import { prisma } from '../../../db/prisma';
+
+async function findHydrated<T>(
+  findFirst: (args: { where: Record<string, unknown> }) => Promise<unknown>,
+  ModelClass: unknown,
+  where: Record<string, unknown>,
+): Promise<T | null> {
+  const row = await findFirst({ where });
+  if (!row) return null;
+  return (ModelClass as { hydrate: (value: unknown) => T }).hydrate(row);
+}
 import { sendError, sendNotFound, sendSuccess, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 import { isRpkiClientError } from '../../../utils/errorUtils';
 import { SaasPlanoLimitesService } from '../../../services/saas/SaasPlanoLimitesService';
@@ -51,9 +59,9 @@ async function enrichRpkiSyncLogsWithEmpresaSaas(rows: Record<string, unknown>[]
   ];
   const nomeById = new Map<number, string>();
   if (empresaIds.length > 0) {
-    const empresas = await DadosEmpresa.findAll({
-      where: { id: empresaIds },
-      attributes: ['id', 'razao_social', 'nome_fantasia'],
+    const empresas = await prisma.sistema_tenants.findMany({
+      where: { id: { in: empresaIds } },
+      select: { id: true, razao_social: true, nome_fantasia: true },
     });
     for (const e of empresas) {
       const rs = e.razao_social != null ? String(e.razao_social).trim() : '';
@@ -74,9 +82,9 @@ async function enrichRpkiSyncLogsWithEmpresaSaas(rows: Record<string, unknown>[]
   const clienteIdByCaId = new Map<number, number | null>();
   const clienteNomeById = new Map<number, string>();
   if (caIds.length > 0) {
-    const cas = await RpkiCa.findAll({
-      where: { id: caIds },
-      attributes: ['id', 'nome', 'cliente_id'],
+    const cas = await prisma.rpki_cas.findMany({
+      where: { id: { in: caIds } },
+      select: { id: true, nome: true, cliente_id: true },
     });
     const clienteIds = new Set<number>();
     for (const c of cas) {
@@ -87,9 +95,9 @@ async function enrichRpkiSyncLogsWithEmpresaSaas(rows: Record<string, unknown>[]
       }
     }
     if (clienteIds.size > 0) {
-      const clientes = await Cliente.findAll({
-        where: { id: [...clienteIds] },
-        attributes: ['id', 'razao_social', 'nome_fantasia'],
+      const clientes = await prisma.clientes.findMany({
+        where: { id: { in: [...clienteIds] } },
+        select: { id: true, razao_social: true, nome_fantasia: true },
       });
       for (const cl of clientes) {
         const razao = cl.razao_social != null ? String(cl.razao_social).trim() : '';
@@ -123,8 +131,8 @@ async function enrichRpkiSyncLogsWithEmpresaSaas(rows: Record<string, unknown>[]
   });
 }
 
-function rpkiJsonParaAuditoria(model: { toJSON: () => Record<string, unknown> }): Record<string, unknown> {
-  const j = { ...model.toJSON() };
+function rpkiJsonParaAuditoria(model: object): Record<string, unknown> {
+  const j = { ...toPlain(model) };
   if (typeof j.parent_response_xml === 'string' && j.parent_response_xml.length > 400) {
     j.parent_response_xml = `[omitido: ${j.parent_response_xml.length} caracteres]`;
   }
@@ -133,7 +141,8 @@ function rpkiJsonParaAuditoria(model: { toJSON: () => Record<string, unknown> })
 
 export class RpkiCaController {
   static async getByIdForTenant(req: Request, caId: number): Promise<RpkiCa | null> {
-    const ca = await RpkiCa.findByPk(caId);
+    const row = await prisma.rpki_cas.findUnique({ where: { id: caId } });
+    const ca = row ? (RpkiCa as unknown as { hydrate: (value: unknown) => RpkiCa }).hydrate(row) : null;
     if (!ca) return null;
 
     const reqEmpresaId = getEmpresaIdOrNull(req);
@@ -192,7 +201,7 @@ export class RpkiCaController {
           req,
           'RpkiCa',
           data.id,
-          data.toJSON() as Record<string, unknown>,
+          toPlain(data) as Record<string, unknown>,
           undefined,
           empresaIdAuditoria(req, data.empresa_id)
         );
@@ -220,7 +229,7 @@ export class RpkiCaController {
         return;
       }
 
-      const snapshotCa = ca.toJSON() as Record<string, unknown>;
+      const snapshotCa = toPlain(ca) as Record<string, unknown>;
       const caIdAuditoria = ca.id;
       const empresaAuditoria = empresaIdAuditoria(req, ca.empresa_id);
       await RpkiCaService.delete(caIdAuditoria);
@@ -366,9 +375,11 @@ export class RpkiCaController {
         return;
       }
 
-      const parentRow = await RpkiCaParent.findOne({
-        where: { id: parentId, ca_id: ca.id },
-      });
+      const parentRow = await findHydrated<RpkiCaParent>(
+        (args) => prisma.rpki_ca_parents.findFirst(args),
+        RpkiCaParent,
+        { id: parentId, ca_id: ca.id },
+      );
       if (!parentRow) {
         sendNotFound(res, 'CA-pai não encontrada');
         return;
@@ -436,7 +447,7 @@ export class RpkiCaController {
         return;
       }
 
-      const resourceCount = await RpkiCaResource.count({ where: { ca_id: ca.id } });
+      const resourceCount = await prisma.rpki_ca_resources.count({ where: { ca_id: ca.id } });
       const removed = await RpkiCaService.clearResources(ca.id);
       await auditarRpki(async () => {
         await registrarAtualizacao(
@@ -473,12 +484,11 @@ export class RpkiCaController {
         return;
       }
 
-      const parent = await RpkiCaParent.findOne({
-        where: {
-          id: parentId,
-          ca_id: ca.id,
-        },
-      });
+      const parent = await findHydrated<RpkiCaParent>(
+        (args) => prisma.rpki_ca_parents.findFirst(args),
+        RpkiCaParent,
+        { id: parentId, ca_id: ca.id },
+      );
       if (!parent) {
         sendNotFound(res, 'CA-pai não encontrada');
         return;
@@ -571,9 +581,11 @@ export class RpkiCaController {
         return;
       }
 
-      const repoRow = await RpkiRepository.findOne({
-        where: { id: repositoryId, ca_id: ca.id },
-      });
+      const repoRow = await findHydrated<RpkiRepository>(
+        (args) => prisma.rpki_repositories.findFirst(args),
+        RpkiRepository,
+        { id: repositoryId, ca_id: ca.id },
+      );
       if (!repoRow) {
         sendNotFound(res, 'Repositório não encontrado');
         return;
@@ -585,7 +597,7 @@ export class RpkiCaController {
           req,
           'RpkiRepository',
           repositoryId,
-          repoRow.toJSON() as Record<string, unknown>,
+          toPlain(repoRow) as Record<string, unknown>,
           undefined,
           empresaIdAuditoria(req, repoRow.empresa_id ?? ca.empresa_id)
         );
@@ -618,9 +630,11 @@ export class RpkiCaController {
         return;
       }
 
-      const repoBefore = await RpkiRepository.findOne({
-        where: { id: repositoryId, ca_id: ca.id },
-      });
+      const repoBefore = await findHydrated<RpkiRepository>(
+        (args) => prisma.rpki_repositories.findFirst(args),
+        RpkiRepository,
+        { id: repositoryId, ca_id: ca.id },
+      );
       if (!repoBefore) {
         sendNotFound(res, 'Repositório não encontrado');
         return;
@@ -632,8 +646,8 @@ export class RpkiCaController {
           req,
           'RpkiRepository',
           repository.id,
-          repoBefore.toJSON() as Record<string, unknown>,
-          repository.toJSON() as Record<string, unknown>,
+          toPlain(repoBefore) as Record<string, unknown>,
+          toPlain(repository) as Record<string, unknown>,
           'Publicação/sincronização com repositório (RFC 8181)',
           empresaIdAuditoria(req, repository.empresa_id ?? ca.empresa_id)
         );
@@ -742,7 +756,7 @@ export class RpkiCaController {
           req,
           'RpkiRepository',
           row.id,
-          row.toJSON() as Record<string, unknown>,
+          toPlain(row) as Record<string, unknown>,
           'Vínculo repositório (repository_response)',
           empresaIdAuditoria(req, row.empresa_id ?? ca.empresa_id)
         );
@@ -833,7 +847,7 @@ export class RpkiCaController {
           req,
           'RpkiRoa',
           row.id,
-          row.toJSON() as Record<string, unknown>,
+          toPlain(row) as Record<string, unknown>,
           undefined,
           empresaIdAuditoria(req, row.empresa_id ?? ca.empresa_id)
         );
@@ -888,9 +902,11 @@ export class RpkiCaController {
         return;
       }
 
-      const roaAntes = await RpkiRoa.findOne({
-        where: { id: roaId, ca_id: ca.id },
-      });
+      const roaAntes = await findHydrated<RpkiRoa>(
+        (args) => prisma.rpki_roas.findFirst(args),
+        RpkiRoa,
+        { id: roaId, ca_id: ca.id },
+      );
       if (!roaAntes) {
         sendNotFound(res, 'ROA não encontrado');
         return;
@@ -902,8 +918,8 @@ export class RpkiCaController {
           req,
           'RpkiRoa',
           roaId,
-          roaAntes.toJSON() as Record<string, unknown>,
-          row.toJSON() as Record<string, unknown>,
+          toPlain(roaAntes) as Record<string, unknown>,
+          toPlain(row) as Record<string, unknown>,
           undefined,
           empresaIdAuditoria(req, ca.empresa_id)
         );
@@ -934,9 +950,11 @@ export class RpkiCaController {
         sendNotFound(res, 'CA não encontrada');
         return;
       }
-      const roaAntes = await RpkiRoa.findOne({
-        where: { id: roaId, ca_id: ca.id },
-      });
+      const roaAntes = await findHydrated<RpkiRoa>(
+        (args) => prisma.rpki_roas.findFirst(args),
+        RpkiRoa,
+        { id: roaId, ca_id: ca.id },
+      );
       if (!roaAntes) {
         sendNotFound(res, 'ROA não encontrado');
         return;
@@ -947,8 +965,8 @@ export class RpkiCaController {
           req,
           'RpkiRoa',
           roaId,
-          roaAntes.toJSON() as Record<string, unknown>,
-          row.toJSON() as Record<string, unknown>,
+          toPlain(roaAntes) as Record<string, unknown>,
+          toPlain(row) as Record<string, unknown>,
           'Revogação de ROA',
           empresaIdAuditoria(req, ca.empresa_id)
         );
@@ -979,9 +997,11 @@ export class RpkiCaController {
         sendNotFound(res, 'CA não encontrada');
         return;
       }
-      const roaAntes = await RpkiRoa.findOne({
-        where: { id: roaId, ca_id: ca.id },
-      });
+      const roaAntes = await findHydrated<RpkiRoa>(
+        (args) => prisma.rpki_roas.findFirst(args),
+        RpkiRoa,
+        { id: roaId, ca_id: ca.id },
+      );
       if (!roaAntes) {
         sendNotFound(res, 'ROA não encontrado');
         return;
@@ -992,7 +1012,7 @@ export class RpkiCaController {
           req,
           'RpkiRoa',
           roaId,
-          roaAntes.toJSON() as Record<string, unknown>,
+          toPlain(roaAntes) as Record<string, unknown>,
           undefined,
           empresaIdAuditoria(req, ca.empresa_id)
         );
@@ -1147,7 +1167,7 @@ export class RpkiCaController {
           req,
           'RpkiAspa',
           data.id,
-          data.toJSON() as Record<string, unknown>,
+          toPlain(data) as Record<string, unknown>,
           undefined,
           empresaIdAuditoria(req, data.empresa_id ?? ca.empresa_id)
         );
@@ -1166,7 +1186,11 @@ export class RpkiCaController {
       if (!Number.isFinite(caId) || !Number.isFinite(aspaId)) { sendValidationError(res, 'IDs inválidos'); return; }
       const ca = await RpkiCaController.getByIdForTenant(req, caId);
       if (!ca) { sendNotFound(res, 'CA não encontrada'); return; }
-      const aspaAntes = await RpkiAspa.findOne({ where: { id: aspaId, ca_id: caId } });
+      const aspaAntes = await findHydrated<RpkiAspa>(
+        (args) => prisma.rpki_aspas.findFirst(args),
+        RpkiAspa,
+        { id: aspaId, ca_id: caId },
+      );
       if (!aspaAntes) { sendNotFound(res, 'ASPA não encontrado'); return; }
       const data = await RpkiAspaService.revoke(caId, aspaId);
       await auditarRpki(async () => {
@@ -1174,8 +1198,8 @@ export class RpkiCaController {
           req,
           'RpkiAspa',
           aspaId,
-          aspaAntes.toJSON() as Record<string, unknown>,
-          data.toJSON() as Record<string, unknown>,
+          toPlain(aspaAntes) as Record<string, unknown>,
+          toPlain(data) as Record<string, unknown>,
           'Revogação de ASPA',
           empresaIdAuditoria(req, ca.empresa_id)
         );
@@ -1194,7 +1218,11 @@ export class RpkiCaController {
       if (!Number.isFinite(caId) || !Number.isFinite(aspaId)) { sendValidationError(res, 'IDs inválidos'); return; }
       const ca = await RpkiCaController.getByIdForTenant(req, caId);
       if (!ca) { sendNotFound(res, 'CA não encontrada'); return; }
-      const aspaAntes = await RpkiAspa.findOne({ where: { id: aspaId, ca_id: caId } });
+      const aspaAntes = await findHydrated<RpkiAspa>(
+        (args) => prisma.rpki_aspas.findFirst(args),
+        RpkiAspa,
+        { id: aspaId, ca_id: caId },
+      );
       if (!aspaAntes) { sendNotFound(res, 'ASPA não encontrado'); return; }
       await RpkiAspaService.delete(caId, aspaId);
       await auditarRpki(async () => {
@@ -1202,7 +1230,7 @@ export class RpkiCaController {
           req,
           'RpkiAspa',
           aspaId,
-          aspaAntes.toJSON() as Record<string, unknown>,
+          toPlain(aspaAntes) as Record<string, unknown>,
           undefined,
           empresaIdAuditoria(req, ca.empresa_id)
         );

@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { ContratoPlanoAdicional } from '../../../models/contratos/ContratoPlanoAdicional';
 import { ContratoPlanoAdicionalService } from '../../../services/contratos/ContratoPlanoAdicionalService';
@@ -55,13 +56,13 @@ export class ContratoPlanoAdicionalController {
       const servicos = await ContratoPlanoAdicionalService.getByContrato(parseInt(contrato_id));
 
       // Calcular valor_final para cada serviço
-      interface ServicoJson extends ReturnType<typeof servicos[0]['toJSON']> {
+      type ServicoJson = Record<string, unknown> & {
         valor_final?: number;
-      }
+      };
       
       const servicosComValorFinal = await Promise.all(
         servicos.map(async (servico) => {
-          const servicoJson = servico.toJSON() as ServicoJson;
+          const servicoJson = toPlain(servico) as unknown as ServicoJson;
           const valorFinal = await servico.getValorFinal();
           return {
             ...servicoJson,
@@ -147,7 +148,7 @@ export class ContratoPlanoAdicionalController {
           req as AuthenticatedRequest,
           'ContratoPlanoAdicional',
           servico.id,
-          servicoComPlano?.toJSON() as Record<string, unknown>,
+          toPlain(servicoComPlano) as Record<string, unknown>,
           undefined,
           empresaIdAudit
         );
@@ -229,8 +230,8 @@ export class ContratoPlanoAdicionalController {
 
       const servicoAtualizado = await ContratoPlanoAdicionalService.getById(id, true);
 
-      const dadosAnteriores = servico.toJSON() as Record<string, unknown>;
-      const dadosNovos = servicoAtualizado?.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(servico) as Record<string, unknown>;
+      const dadosNovos = toPlain(servicoAtualizado) as Record<string, unknown>;
       
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores, dadosNovos);
@@ -290,7 +291,7 @@ export class ContratoPlanoAdicionalController {
         return;
       }
 
-      const dadosAnteriores = servico.toJSON();
+      const dadosAnteriores = toPlain(servico);
       await ContratoPlanoAdicionalService.delete(servicoId);
 
       try {

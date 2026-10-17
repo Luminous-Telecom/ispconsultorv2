@@ -26,7 +26,7 @@ import {
   BelongsToManyHasAssociationMixin,
   BelongsToManyHasAssociationsMixin,
   BelongsToManyCountAssociationsMixin,
-} from 'sequelize';
+} from '../../../db/orm';
 import { sequelize } from '../../../config/database';
 import { Cliente } from '../../clientes/Cliente';
 import { Plano } from '../../cadastros/Plano';

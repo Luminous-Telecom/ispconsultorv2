@@ -66,7 +66,7 @@ export class NotaFiscalHtmlService {
 
           if (contrato) {
             const planosAdicionais = await ContratoPlanoAdicionalService.getByContrato(contrato.id);
-            const planosAtivos = planosAdicionais.filter(p => p.status === 'ativo') as Array<ContratoPlanoAdicional & { plano?: Plano }>;
+            const planosAtivos = planosAdicionais.filter(p => p.status === 'ativo') as unknown as Array<ContratoPlanoAdicional & { plano?: Plano }>;
 
             for (const planoAdicional of planosAtivos) {
               if (planoAdicional.plano) {

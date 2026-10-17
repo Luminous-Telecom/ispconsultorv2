@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { ModeloDocumentoService } from '../../../services/documentos/ModeloDocumentoService';
 import { ModeloDocumentoPdfService } from '../../../services/documentos/ModeloDocumentoPdfService';
@@ -6,7 +7,6 @@ import { ClienteService } from '../../../services/clientes/ClienteService';
 import { ContratoService } from '../../../services/contratos/ContratoService';
 import { VariaveisDocumentoService } from '../../../services/documentos/VariaveisDocumentoService';
 import { PDFGenerationService } from '../../../services/pdf-generation/PDFGenerationService';
-import { ValidationError } from 'sequelize';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../../../types/auth';
@@ -15,6 +15,10 @@ import { logger } from '../../../utils/logger';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { SaasPlanoLimitesService } from '../../../services/saas/SaasPlanoLimitesService';
 import { parseOptionalQueryInt, queryString } from '../../../utils/listQuery';
+
+function isModelValidationError(error: unknown): error is Error & { errors: Array<{ message?: string }> } {
+  return error instanceof Error && Array.isArray((error as { errors?: unknown }).errors);
+}
 
 function pertenceEmpresa(doc: { empresa_id?: number | null }, empresaId: number | null): boolean {
   const eid = doc.empresa_id;
@@ -97,7 +101,7 @@ export class ModeloDocumentoController {
           req as AuthenticatedRequest,
           'ModeloDocumento',
           documento.id,
-          documento.toJSON() as unknown as Record<string, unknown>,
+          toPlain(documento) as unknown as Record<string, unknown>,
           undefined,
           empresaId
         );
@@ -107,8 +111,8 @@ export class ModeloDocumentoController {
 
       sendSuccess(res, documento, 'Documento criado com sucesso', 201);
     } catch (error: unknown) {
-      if (error instanceof ValidationError) {
-        const errors = error.errors ? error.errors.map((err) => err.message) : [];
+      if (isModelValidationError(error)) {
+        const errors = error.errors.map((err) => err.message ?? '');
         sendValidationError(res, 'Dados inválidos', { errors });
         return;
       }
@@ -133,12 +137,12 @@ export class ModeloDocumentoController {
         return;
       }
 
-      const dadosAnteriores = documento.toJSON();
+      const dadosAnteriores = toPlain(documento);
       const payload = { ...documentoData };
       if (empresaId != null) payload.empresa_id = documento.empresa_id;
       const documentoAtualizado = await ModeloDocumentoService.update(id, payload);
 
-      const dadosNovos = documentoAtualizado.toJSON() as unknown as Record<string, unknown>;
+      const dadosNovos = toPlain(documentoAtualizado) as unknown as Record<string, unknown>;
       
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores as unknown as Record<string, unknown>, dadosNovos);
@@ -160,8 +164,8 @@ export class ModeloDocumentoController {
 
       sendSuccess(res, documentoAtualizado, 'Documento atualizado com sucesso');
     } catch (error: unknown) {
-      if (error instanceof ValidationError) {
-        const errors = error.errors ? error.errors.map((err) => err.message) : [];
+      if (isModelValidationError(error)) {
+        const errors = error.errors.map((err) => err.message ?? '');
         sendValidationError(res, 'Dados inválidos', { errors });
         return;
       }
@@ -185,7 +189,7 @@ export class ModeloDocumentoController {
         return;
       }
 
-      const dadosAnteriores = documento.toJSON();
+      const dadosAnteriores = toPlain(documento);
       
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores as unknown as Record<string, unknown>);
@@ -336,7 +340,7 @@ export class ModeloDocumentoController {
         sendNotFound(res, 'Modelo de documento não encontrado');
         return;
       }
-      const dadosAnteriores = doc.toJSON() as unknown as Record<string, unknown>;
+      const dadosAnteriores = toPlain(doc) as unknown as Record<string, unknown>;
       const result = await ModeloDocumentoContentService.salvarConteudo(Number(modelo_documento_id), 'conteudo', modelo);
       if (result.success) {
         try {
@@ -348,7 +352,7 @@ export class ModeloDocumentoController {
               'ModeloDocumento',
               doc.id,
               dadosAnteriores,
-              (docAtualizado.toJSON?.() ?? docAtualizado) as unknown as Record<string, unknown>,
+              (toPlain(docAtualizado) ?? docAtualizado) as unknown as Record<string, unknown>,
               'Modelo contrato conteúdo atualizado',
               empresaIdAudit
             );
@@ -378,7 +382,7 @@ export class ModeloDocumentoController {
         sendNotFound(res, 'Modelo de documento não encontrado');
         return;
       }
-      const dadosAnteriores = doc.toJSON() as unknown as Record<string, unknown>;
+      const dadosAnteriores = toPlain(doc) as unknown as Record<string, unknown>;
       const result = await ModeloDocumentoContentService.salvarConteudo(Number(modelo_documento_id), 'conteudo_adesao', modelo);
       if (result.success) {
         try {
@@ -390,7 +394,7 @@ export class ModeloDocumentoController {
               'ModeloDocumento',
               doc.id,
               dadosAnteriores,
-              (docAtualizado.toJSON?.() ?? docAtualizado) as unknown as Record<string, unknown>,
+              (toPlain(docAtualizado) ?? docAtualizado) as unknown as Record<string, unknown>,
               'Modelo termo adesão atualizado',
               empresaIdAudit
             );
@@ -420,7 +424,7 @@ export class ModeloDocumentoController {
         sendNotFound(res, 'Modelo de documento não encontrado');
         return;
       }
-      const dadosAnteriores = doc.toJSON() as unknown as Record<string, unknown>;
+      const dadosAnteriores = toPlain(doc) as unknown as Record<string, unknown>;
       const result = await ModeloDocumentoContentService.salvarConteudo(Number(modelo_documento_id), 'conteudo_permanencia', modelo);
       if (result.success) {
         try {
@@ -432,7 +436,7 @@ export class ModeloDocumentoController {
               'ModeloDocumento',
               doc.id,
               dadosAnteriores,
-              (docAtualizado.toJSON?.() ?? docAtualizado) as unknown as Record<string, unknown>,
+              (toPlain(docAtualizado) ?? docAtualizado) as unknown as Record<string, unknown>,
               'Modelo contrato permanência atualizado',
               empresaIdAudit
             );
@@ -462,7 +466,7 @@ export class ModeloDocumentoController {
         sendNotFound(res, 'Modelo de documento não encontrado');
         return;
       }
-      const dadosAnteriores = doc.toJSON() as unknown as Record<string, unknown>;
+      const dadosAnteriores = toPlain(doc) as unknown as Record<string, unknown>;
       const result = await ModeloDocumentoContentService.salvarConteudo(Number(modelo_documento_id), 'conteudo_recibo', modelo);
       if (result.success) {
         try {
@@ -474,7 +478,7 @@ export class ModeloDocumentoController {
               'ModeloDocumento',
               doc.id,
               dadosAnteriores,
-              (docAtualizado.toJSON?.() ?? docAtualizado) as unknown as Record<string, unknown>,
+              (toPlain(docAtualizado) ?? docAtualizado) as unknown as Record<string, unknown>,
               'Modelo recibo atualizado',
               empresaIdAudit
             );
@@ -504,7 +508,7 @@ export class ModeloDocumentoController {
         sendNotFound(res, 'Modelo de documento não encontrado');
         return;
       }
-      const dadosAnteriores = doc.toJSON() as unknown as Record<string, unknown>;
+      const dadosAnteriores = toPlain(doc) as unknown as Record<string, unknown>;
       const result = await ModeloDocumentoContentService.salvarConteudo(Number(modelo_documento_id), 'conteudo_carta', modelo);
       if (result.success) {
         try {
@@ -516,7 +520,7 @@ export class ModeloDocumentoController {
               'ModeloDocumento',
               doc.id,
               dadosAnteriores,
-              (docAtualizado.toJSON?.() ?? docAtualizado) as unknown as Record<string, unknown>,
+              (toPlain(docAtualizado) ?? docAtualizado) as unknown as Record<string, unknown>,
               'Modelo carta atualizado',
               empresaIdAudit
             );

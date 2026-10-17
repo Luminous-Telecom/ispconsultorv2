@@ -36,7 +36,7 @@ export class SuporteDocumentoPdfService {
       const modelo = await ModeloDocumentoService.getById(modeloId);
       if (modelo?.ativo && modelo.tipo === tipo) {
         if (empresaId == null || modelo.empresa_id == null || modelo.empresa_id === empresaId) {
-          return { conteudo: modelo.conteudo, nome: modelo.nome };
+          return { conteudo: modelo.conteudo ?? '', nome: modelo.nome };
         }
       }
       return null;

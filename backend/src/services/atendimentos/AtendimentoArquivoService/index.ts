@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { AtendimentoArquivo } from '../../../models/atendimentos/AtendimentoArquivo';
+import { prisma } from '../../../db/prisma';
 import { resolveArquivosPath } from '../../../utils/pathUtils';
 import { logger } from '../../../utils/logger';
 
@@ -24,7 +24,13 @@ export interface CreateAtendimentoArquivoData {
 export class AtendimentoArquivoService {
   private static readonly UPLOAD_DIR = resolveArquivosPath('atendimentos');
 
-  private static toItem(record: AtendimentoArquivo): AtendimentoArquivoItem {
+  private static toItem(record: {
+    id: number;
+    atendimento_id: string;
+    descricao: string | null;
+    nome: string;
+    mime_type: string | null;
+  }): AtendimentoArquivoItem {
     return {
       id: String(record.id),
       atendimento_id: record.atendimento_id,
@@ -35,9 +41,9 @@ export class AtendimentoArquivoService {
   }
 
   static async list(atendimentoId: string): Promise<AtendimentoArquivoItem[]> {
-    const registros = await AtendimentoArquivo.findAll({
+    const registros = await prisma.atendimento_arquivos.findMany({
       where: { atendimento_id: String(atendimentoId) },
-      order: [['id', 'DESC']],
+      orderBy: { id: 'desc' },
     });
     return registros.map((registro) => this.toItem(registro));
   }
@@ -53,22 +59,24 @@ export class AtendimentoArquivoService {
 
     await fs.writeFile(destinoPath, data.arquivo.buffer);
 
-    const registro = await AtendimentoArquivo.create({
-      atendimento_id: String(data.atendimento_id),
-      empresa_id: data.empresa_id ?? null,
-      nome: data.nome,
-      descricao: data.descricao ?? null,
-      caminho: path.join(String(data.atendimento_id), fileName),
-      tamanho: data.arquivo.size,
-      mime_type: data.mime_type || data.arquivo.mimetype || null,
+    const registro = await prisma.atendimento_arquivos.create({
+      data: {
+        atendimento_id: String(data.atendimento_id),
+        empresa_id: data.empresa_id ?? null,
+        nome: data.nome,
+        descricao: data.descricao ?? null,
+        caminho: path.join(String(data.atendimento_id), fileName),
+        tamanho: data.arquivo.size,
+        mime_type: data.mime_type || data.arquivo.mimetype || null,
+      },
     });
 
     return this.toItem(registro);
   }
 
   static async delete(id: number, atendimentoId: string): Promise<void> {
-    const registro = await AtendimentoArquivo.findOne({
-      where: { id, atendimento_id: String(atendimentoId) },
+    const registro = await prisma.atendimento_arquivos.findFirst({
+      where: { id: Number(id), atendimento_id: String(atendimentoId) },
     });
     if (!registro) {
       throw new Error('Arquivo não encontrado');
@@ -80,15 +88,15 @@ export class AtendimentoArquivoService {
       logger.warn('Erro ao deletar arquivo físico do atendimento', { id, error });
     }
 
-    await registro.destroy();
+    await prisma.atendimento_arquivos.delete({ where: { id: registro.id } });
   }
 
   static async getFileContent(
     id: number,
     atendimentoId: string
   ): Promise<{ buffer: Buffer; nome: string; mimeType: string }> {
-    const registro = await AtendimentoArquivo.findOne({
-      where: { id, atendimento_id: String(atendimentoId) },
+    const registro = await prisma.atendimento_arquivos.findFirst({
+      where: { id: Number(id), atendimento_id: String(atendimentoId) },
     });
     if (!registro) {
       throw new Error('Arquivo não encontrado');

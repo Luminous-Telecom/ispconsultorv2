@@ -1,15 +1,10 @@
 import { Request, Response } from 'express';
-import { Op } from 'sequelize';
+import { prisma } from '../../../db/prisma';
 import { searchSshAuditLogs, SshAuditAction } from '../../../services/ssh-manager/SshAuditService';
 import { sendSuccess, sendError } from '../../../utils/responseUtils';
 import { resolveListEmpresaId } from '../../../utils/tenantUtils';
 import { parseListQuery } from '../../../utils/listQuery';
 import { buildPagination } from '../../../utils/pagination';
-import { Agent } from '../../../models/agent/Agent';
-import { SshDevice } from '../../../models/ssh-manager/SshDevice';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Usuario } from '../../../models/cadastros/Usuario';
-import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 
 function clienteDisplayName(c: {
   razao_social?: string | null;
@@ -56,24 +51,20 @@ async function enrichSshAuditLogsWithCliente(
     );
   }
 
-  const devices = await SshDevice.findAll({
-    where: { id: { [Op.in]: deviceIdNums } },
-    attributes: ['id', 'cliente_id'],
-    include: [
-      {
-        model: Cliente,
-        as: 'cliente',
-        attributes: ['id', 'razao_social', 'nome_fantasia'],
-        required: false,
-      },
-    ],
+  const devices = await prisma.ssh_manager_devices.findMany({
+    where: { id: { in: deviceIdNums } },
+    select: {
+      id: true,
+      cliente_id: true,
+      clientes: { select: { razao_social: true, nome_fantasia: true } },
+    },
   });
 
   const map = new Map<string, { clienteId: number | null; clienteName: string | null }>();
   for (const d of devices) {
     map.set(String(d.id), {
       clienteId: d.cliente_id ?? null,
-      clienteName: clienteDisplayName((d as unknown as { cliente?: { razao_social?: string; nome_fantasia?: string } | null }).cliente ?? null),
+      clienteName: clienteDisplayName(d.clientes),
     });
   }
 
@@ -108,19 +99,20 @@ async function enrichAgentLogsWithCliente(
   const agentIdNums = agentIds.map((id) => parseInt(id, 10)).filter((n) => Number.isFinite(n) && n > 0);
   if (agentIdNums.length === 0) return logs;
 
-  const agents = await Agent.findAll({
-    where: { id: { [Op.in]: agentIdNums } },
-    attributes: ['id', 'cliente_id'],
-    include: [
-      { model: Cliente, as: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia'], required: false },
-    ],
+  const agents = await prisma.agent_agents.findMany({
+    where: { id: { in: agentIdNums } },
+    select: {
+      id: true,
+      cliente_id: true,
+      clientes: { select: { razao_social: true, nome_fantasia: true } },
+    },
   });
 
   const agentClienteMap = new Map<string, { clienteId: number | null; clienteName: string | null }>();
   for (const a of agents) {
     agentClienteMap.set(String(a.id), {
       clienteId: a.cliente_id ?? null,
-      clienteName: clienteDisplayName((a as unknown as { cliente?: { razao_social?: string; nome_fantasia?: string } | null }).cliente ?? null),
+      clienteName: clienteDisplayName(a.clientes),
     });
   }
 
@@ -162,9 +154,9 @@ async function enrichSshAuditLogsWithEmpresa(
 
   const deviceIdNums = deviceIds.map((id) => parseInt(id, 10)).filter((n) => Number.isFinite(n) && n > 0);
   if (deviceIdNums.length > 0) {
-    const devices = await SshDevice.findAll({
-      where: { id: { [Op.in]: deviceIdNums } },
-      attributes: ['id', 'empresa_id'],
+    const devices = await prisma.ssh_manager_devices.findMany({
+      where: { id: { in: deviceIdNums } },
+      select: { id: true, empresa_id: true },
     });
     for (const d of devices) {
       empresaIdByDevice.set(String(d.id), d.empresa_id ?? null);
@@ -172,9 +164,9 @@ async function enrichSshAuditLogsWithEmpresa(
   }
   const agentIdNums = agentIds.map((id) => parseInt(id, 10)).filter((n) => Number.isFinite(n) && n > 0);
   if (agentIdNums.length > 0) {
-    const agents = await Agent.findAll({
-      where: { id: { [Op.in]: agentIdNums } },
-      attributes: ['id', 'empresa_id'],
+    const agents = await prisma.agent_agents.findMany({
+      where: { id: { in: agentIdNums } },
+      select: { id: true, empresa_id: true },
     });
     for (const a of agents) {
       empresaIdByAgent.set(String(a.id), a.empresa_id ?? null);
@@ -191,9 +183,9 @@ async function enrichSshAuditLogsWithEmpresa(
 
   const nameMap = new Map<number, string>();
   if (allEids.size > 0) {
-    const empresas = await DadosEmpresa.findAll({
-      where: { id: { [Op.in]: [...allEids] } },
-      attributes: ['id', 'razao_social', 'nome_fantasia'],
+    const empresas = await prisma.sistema_tenants.findMany({
+      where: { id: { in: [...allEids] } },
+      select: { id: true, razao_social: true, nome_fantasia: true },
     });
     for (const e of empresas) {
       const label = (e.razao_social?.trim() || e.nome_fantasia?.trim() || `Empresa ${e.id}`).trim();
@@ -233,9 +225,9 @@ async function enrichSshAuditLogsWithUsuario(
     return logs.map((log) => ({ ...log, userName: null }));
   }
 
-  const users = await Usuario.findAll({
-    where: { id: { [Op.in]: userIds } },
-    attributes: ['id', 'nome'],
+  const users = await prisma.cadastros_usuarios.findMany({
+    where: { id: { in: userIds } },
+    select: { id: true, nome: true },
   });
 
   const userMap = new Map<number, string>();
@@ -289,9 +281,9 @@ export class SshAuditController {
       let searchUserIds: string[] | undefined;
       if (searchField === 'userId' && search?.trim()) {
         const term = search.trim();
-        const users = await Usuario.findAll({
-          where: { nome: { [Op.like]: `%${term}%` } },
-          attributes: ['id'],
+        const users = await prisma.cadastros_usuarios.findMany({
+          where: { nome: { contains: term } },
+          select: { id: true },
         });
         const ids = users.map((u) => String(u.id));
         const idNum = parseInt(term, 10);

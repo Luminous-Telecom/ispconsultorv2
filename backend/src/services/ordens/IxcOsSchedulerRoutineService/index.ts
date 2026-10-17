@@ -1,10 +1,6 @@
-import { Op } from 'sequelize';
+import type { integracao_ixc_provedor, ordens_servico } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
-import { IntegracaoIxcProvedor } from '../../../models/integracao/IntegracaoIxcProvedor';
-import { ContratoIntegracaoIxcVinculo } from '../../../models/contratos/ContratoIntegracaoIxcVinculo';
-import { Contrato } from '../../../models/contratos/Contrato';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { OrdemServicoLocal } from '../../../models/ordens/OrdemServicoLocal';
 import { IntegracaoIxcProvedorService } from '../../integracao/IntegracaoIxcProvedorService';
 import { runWithIntegracaoCredentials } from '../../externos/ixcApiContext';
 import { clienteNomeParaOrdemServico } from '../clienteNomeOrdemServico';
@@ -47,34 +43,23 @@ interface ClienteVinculo {
 }
 
 async function listClientesPorIntegracao(integracaoId: number): Promise<ClienteVinculo[]> {
-  const vinculos = (await ContratoIntegracaoIxcVinculo.findAll({
+  const vinculos = await prisma.contratos_integracao_ixc_vinculos.findMany({
     where: { integracao_ixc_provedor_id: integracaoId },
-    include: [
-      {
-        model: Contrato,
-        as: 'contrato',
-        required: true,
-        attributes: ['cliente_id', 'empresa_id'],
-        include: [
-          {
-            model: Cliente,
-            as: 'cliente',
-            required: true,
-            attributes: ['id', 'razao_social', 'nome_fantasia'],
-          },
-        ],
+    include: {
+      contratos: {
+        select: {
+          cliente_id: true,
+          empresa_id: true,
+          clientes: { select: { id: true, razao_social: true, nome_fantasia: true } },
+        },
       },
-    ],
-  })) as Array<
-    ContratoIntegracaoIxcVinculo & {
-      contrato?: (Contrato & { cliente?: Cliente | null }) | null;
-    }
-  >;
+    },
+  });
 
   const mapa = new Map<number, ClienteVinculo>();
   for (const vinculo of vinculos) {
-    const contrato = vinculo.contrato;
-    const cliente = contrato?.cliente;
+    const contrato = vinculo.contratos;
+    const cliente = contrato?.clientes;
     if (!cliente) continue;
 
     mapa.set(cliente.id, {
@@ -141,7 +126,7 @@ export class IxcOsSchedulerRoutineService {
   }
 
   static async syncIntegracao(
-    integracao: IntegracaoIxcProvedor,
+    integracao: integracao_ixc_provedor,
     triggerType: 'scheduled' | 'manual' = 'scheduled'
   ): Promise<SchedulerResult> {
     const apiUrl = integracao.api_url?.trim().replace(/\/+$/, '');
@@ -174,9 +159,9 @@ export class IxcOsSchedulerRoutineService {
       encontradasIxc = ixcOsBulk.length;
       const bulkById = indexOsListById(ixcOsBulk);
 
-      const mirrors = await OrdemServicoLocal.findAll({
+      const mirrors = await prisma.ordens_servico.findMany({
         where: {
-          ixc_id: { [Op.ne]: null },
+          ixc_id: { not: null },
           ...(integracao.empresa_id != null ? { empresa_id: integracao.empresa_id } : {}),
         },
       });
@@ -319,8 +304,8 @@ export class IxcOsSchedulerRoutineService {
   }
 
   private static async syncMirrorRecord(
-    record: OrdemServicoLocal,
-    integracao: IntegracaoIxcProvedor,
+    record: ordens_servico,
+    integracao: integracao_ixc_provedor,
     triggerType: 'scheduled' | 'manual',
     clienteNome: string,
     bulkById: Map<string, IxcOssChamado>
@@ -330,13 +315,18 @@ export class IxcOsSchedulerRoutineService {
 
     const ixcOs = await fetchOsForSync(ixcId, bulkById);
     if (!ixcOs?.id) {
-      await record.update({ ixc_id: null });
+      await prisma.ordens_servico.update({
+        where: { id: record.id },
+        data: { ixc_id: null, updated_at: new Date() },
+      });
+      record.ixc_id = null;
       return 'desvinculada';
     }
 
     const statusAnterior = record.status;
     await OrdemServicoLocalService.syncFromIxcOs(ixcId, ixcOs, {}, record.empresa_id);
-    await record.reload();
+    const refreshed = await prisma.ordens_servico.findUnique({ where: { id: record.id } });
+    if (refreshed) Object.assign(record, refreshed);
 
     const statusNovo = record.status;
     if (statusAnterior !== statusNovo) {
@@ -408,7 +398,7 @@ export class IxcOsSchedulerRoutineService {
   }
 
   static async registrarAberturaIspconsultor(params: {
-    record: OrdemServicoLocal;
+    record: ordens_servico;
     integracaoId?: number | null;
     integracaoNome?: string | null;
     usuarioId?: number | null;

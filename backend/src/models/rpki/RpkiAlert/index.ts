@@ -4,7 +4,7 @@ import {
   CreationOptional,
   InferAttributes,
   InferCreationAttributes,
-} from 'sequelize';
+} from '../../../db/orm';
 import { sequelize } from '../../../config/database';
 
 export type RpkiAlertType = 'hijack-detected' | 'roa-expiring';

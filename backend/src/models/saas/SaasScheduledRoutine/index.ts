@@ -1,4 +1,4 @@
-import { DataTypes, Model, Optional } from 'sequelize';
+import { DataTypes, Model, Optional } from '../../../db/orm';
 import { sequelize } from '../../../config/database';
 import { formatCreatedAt } from '../../../utils/dateUtils';
 

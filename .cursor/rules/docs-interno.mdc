@@ -7,10 +7,12 @@ alwaysApply: true
 
 O projeto tem **duas pastas de documentação** com propósitos distintos. Não misturar.
 
+Elas ficam **fora** da raiz do repositório, em `../backnet-docs/` (`doc/` wiki, `docs/` interno). Não recriar `doc/` nem `docs/` na raiz.
+
 ## `doc/` — wiki pública (consultores)
 
 - **Público:** consultores ISP Consultor e usuários finais do ERP
-- **Deploy:** VitePress compilado e servido em produção (`wiki-erp.ispconsultor.com.br`, PM2 `doc`)
+- **Deploy:** VitePress em `../backnet-docs/doc`, servido em `wiki-erp.ispconsultor.com.br`. Este repositório não publica a wiki.
 - **Conteúdo:** `doc/erp/**/*.md` — menus, fluxos, campos e telas do ERP
 - **Sidebar:** `doc/.vitepress/config.mjs`
 - **Regra completa:** `doc-wiki.mdc`

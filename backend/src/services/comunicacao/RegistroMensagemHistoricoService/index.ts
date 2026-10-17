@@ -1,11 +1,11 @@
 /**
- * Serviço para registrar mensagens no histórico unificado (comunicacao_mensagens_historico)
+ * Registra e-mail e WhatsApp na tabela única sistema_logs_operacionais.
  */
-import { MensagemHistorico } from '../../../models/comunicacao/MensagemHistorico';
 import {
   HISTORICO_ORIGEM_ERP,
   HISTORICO_ORIGEM_SAAS,
 } from '../mensagemHistoricoOrigens';
+import { gravarMensagemHistoricoLog } from '../../sistema/mensagemHistoricoLog';
 import { logger } from '../../../utils/logger';
 
 export interface DadosRegistroHistorico {
@@ -54,14 +54,21 @@ export async function registrarMensagemHistorico(
     const empresaId = contexto?.empresa_id;
     const isSaas = !!(contexto && 'saas' in contexto && contexto.saas);
     const vinculo = contexto && 'entidade_tipo' in contexto ? contexto : undefined;
-
-    await MensagemHistorico.create({
-      ...dados,
+    await gravarMensagemHistoricoLog({
+      tipo: dados.tipo,
+      destinatario: dados.destinatario,
+      titulo: dados.titulo || vinculo?.titulo_historico,
+      mensagem: dados.mensagem,
+      status: dados.status,
+      erro_mensagem: dados.erro_mensagem,
       entidade_tipo: dados.entidade_tipo || vinculo?.entidade_tipo,
       entidade_id: dados.entidade_id ?? vinculo?.entidade_id,
-      titulo: dados.titulo || vinculo?.titulo_historico,
+      servidor_id: dados.servidor_id,
+      cliente_nome: dados.cliente_nome,
+      cliente_email: dados.cliente_email,
+      cliente_telefone: dados.cliente_telefone,
       historico_origem: isSaas ? HISTORICO_ORIGEM_SAAS : HISTORICO_ORIGEM_ERP,
-      ...(empresaId != null && { empresa_id: empresaId }),
+      empresa_id: empresaId ?? null,
     });
   } catch (error) {
     logger.error('Erro ao registrar mensagem no histórico:', {

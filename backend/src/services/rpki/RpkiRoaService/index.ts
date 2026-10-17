@@ -1,7 +1,5 @@
-import { Op } from 'sequelize';
-import { RpkiRoa } from '../../../models/rpki/RpkiRoa';
-import { RpkiCa } from '../../../models/rpki/RpkiCa';
-import { RpkiCaResource } from '../../../models/rpki/RpkiCaResource';
+import type { Prisma } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { SistemaLogOperacionalQueryService } from '../../sistema/SistemaLogOperacionalQueryService';
 import { SistemaLogOperacionalService } from '../../sistema/SistemaLogOperacionalService';
 import { RpkiClientError } from '../../../utils/errorUtils';
@@ -114,27 +112,34 @@ function normalizeValidationPrefix(prefix: string, prefixLength: number): string
   return `${cleanPrefix}/${prefixLength}`;
 }
 
+function plainRoa<T extends { asn: bigint }>(row: T) {
+  return { ...row, asn: row.asn.toString() };
+}
+
 export class RpkiRoaService {
-  static async listByCa(caId: number): Promise<RpkiRoa[]> {
+  static async listByCa(caId: number) {
     await syncRoasFromKrillToDb(caId);
-    return RpkiRoa.findAll({
+    const rows = await prisma.rpki_roas.findMany({
       where: { ca_id: caId, status: 'active' },
-      order: [['id', 'DESC']],
+      orderBy: { id: 'desc' },
     });
+    return rows.map(plainRoa);
   }
 
-  static async create(input: CreateRpkiRoaInput): Promise<RpkiRoa> {
-    const row = await RpkiRoa.create({
-      empresa_id: input.empresaId,
-      ca_id: input.caId,
-      prefix: input.prefix.trim(),
-      asn: parseAsn(input.asn),
-      max_length: Math.trunc(input.maxLength),
-      not_before: input.notBefore,
-      not_after: input.notAfter,
-      status: 'active',
-      revoked_at: null,
-    });
+  static async create(input: CreateRpkiRoaInput) {
+    const row = plainRoa(await prisma.rpki_roas.create({
+      data: {
+        empresa_id: input.empresaId,
+        ca_id: input.caId,
+        prefix: input.prefix.trim(),
+        asn: BigInt(parseAsn(input.asn)),
+        max_length: Math.trunc(input.maxLength),
+        not_before: input.notBefore,
+        not_after: input.notAfter,
+        status: 'active',
+        revoked_at: null,
+      },
+    }));
 
     SistemaLogOperacionalService.registrarRpkiActivity({
       empresaId: input.empresaId,
@@ -149,34 +154,34 @@ export class RpkiRoaService {
     return row;
   }
 
-  static async update(caId: number, roaId: number, input: UpdateRpkiRoaInput): Promise<RpkiRoa> {
-    const row = await RpkiRoa.findOne({ where: { id: roaId, ca_id: caId } });
-    if (!row) throw new RpkiClientError('ROA não encontrado para esta CA.');
-    if (row.status === 'revoked') {
+  static async update(caId: number, roaId: number, input: UpdateRpkiRoaInput) {
+    const found = await prisma.rpki_roas.findFirst({ where: { id: roaId, ca_id: caId } });
+    if (!found) throw new RpkiClientError('ROA não encontrado para esta CA.');
+    if (found.status === 'revoked') {
       throw new RpkiClientError('ROA revogado não pode ser alterado. Crie um novo ROA.');
     }
 
-    const payload: Record<string, unknown> = {};
+    const payload: Prisma.rpki_roasUncheckedUpdateInput = {};
     if (input.prefix != null) payload.prefix = input.prefix.trim();
-    if (input.asn != null) payload.asn = parseAsn(input.asn);
+    if (input.asn != null) payload.asn = BigInt(parseAsn(input.asn));
     if (input.maxLength != null) payload.max_length = Math.trunc(input.maxLength);
     if (input.notBefore != null) payload.not_before = input.notBefore;
     if (input.notAfter != null) payload.not_after = input.notAfter;
 
-    await row.update(payload);
+    const row = plainRoa(await prisma.rpki_roas.update({ where: { id: roaId }, data: payload }));
     await syncKrillRoutesForCa(caId, 'roa');
     return row;
   }
 
-  static async revoke(caId: number, roaId: number): Promise<RpkiRoa> {
-    const row = await RpkiRoa.findOne({ where: { id: roaId, ca_id: caId } });
-    if (!row) throw new RpkiClientError('ROA não encontrado para esta CA.');
-    if (row.status === 'revoked') return row;
+  static async revoke(caId: number, roaId: number) {
+    const found = await prisma.rpki_roas.findFirst({ where: { id: roaId, ca_id: caId } });
+    if (!found) throw new RpkiClientError('ROA não encontrado para esta CA.');
+    if (found.status === 'revoked') return plainRoa(found);
 
-    await row.update({
-      status: 'revoked',
-      revoked_at: new Date(),
-    });
+    const row = plainRoa(await prisma.rpki_roas.update({
+      where: { id: roaId },
+      data: { status: 'revoked', revoked_at: new Date() },
+    }));
 
     SistemaLogOperacionalService.registrarRpkiActivity({
       empresaId: row.empresa_id,
@@ -192,10 +197,11 @@ export class RpkiRoaService {
   }
 
   static async delete(caId: number, roaId: number): Promise<void> {
-    const row = await RpkiRoa.findOne({ where: { id: roaId, ca_id: caId } });
-    if (!row) throw new RpkiClientError('ROA não encontrado para exclusão.');
+    const found = await prisma.rpki_roas.findFirst({ where: { id: roaId, ca_id: caId } });
+    if (!found) throw new RpkiClientError('ROA não encontrado para exclusão.');
+    const row = plainRoa(found);
 
-    await RpkiRoa.destroy({ where: { id: roaId, ca_id: caId } });
+    await prisma.rpki_roas.delete({ where: { id: roaId } });
 
     SistemaLogOperacionalService.registrarRpkiActivity({
       empresaId: row.empresa_id,
@@ -228,15 +234,15 @@ export class RpkiRoaService {
     details: Array<{ roa_id: number; prefix: string; asn: string; reason: string }>;
   }> {
     await syncRoasFromKrillToDb(caId);
-    const roas = await RpkiRoa.findAll({
+    const roas = (await prisma.rpki_roas.findMany({
       where: { ca_id: caId },
-      order: [['id', 'DESC']],
-    });
-    const resources = await RpkiCaResource.findAll({
+      orderBy: { id: 'desc' },
+    })).map(plainRoa);
+    const resources = await prisma.rpki_ca_resources.findMany({
       where: { ca_id: caId },
-      order: [['id', 'ASC']],
+      orderBy: { id: 'asc' },
     });
-    const ca = await RpkiCa.findByPk(caId);
+    const ca = await prisma.rpki_cas.findUnique({ where: { id: caId } });
     const empresaId = ca?.empresa_id ?? roas[0]?.empresa_id ?? null;
     const validationLogs = await SistemaLogOperacionalQueryService.listRpkiValidationByEmpresa(empresaId, 500);
     const now = new Date();
@@ -468,13 +474,13 @@ export class RpkiRoaService {
   ): Promise<{ created: number }> {
     let created = 0;
     for (const item of suggestions) {
-      const exists = await RpkiRoa.findOne({
+      const exists = await prisma.rpki_roas.findFirst({
         where: {
           ca_id: caId,
           prefix: item.prefix,
-          asn: item.asn,
+          asn: BigInt(parseAsn(item.asn)),
           max_length: item.max_length,
-          status: { [Op.ne]: 'revoked' },
+          status: { not: 'revoked' },
         },
       });
       if (exists) continue;

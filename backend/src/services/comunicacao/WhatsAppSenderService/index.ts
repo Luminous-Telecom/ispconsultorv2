@@ -1,6 +1,6 @@
-import { ServidorWhatsApp } from '../../../models/comunicacao/ServidorWhatsApp';
+import type { comunicacao_servidores_whatsapp } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { registrarMensagemHistorico, type ContextoHistorico } from '../RegistroMensagemHistoricoService';
-import { Cliente } from '../../../models/clientes/Cliente';
 import { logger } from '../../../utils/logger';
 import { WhatsAppCloudService } from '../WhatsAppCloudService';
 
@@ -20,7 +20,7 @@ export class WhatsAppSenderService {
    * Envia mensagem de texto
    */
   static async enviarTexto(
-    servidor: ServidorWhatsApp,
+    servidor: comunicacao_servidores_whatsapp,
     telefone: string,
     mensagem: string,
     contextoSaas?: ContextoHistorico
@@ -37,7 +37,7 @@ export class WhatsAppSenderService {
    * Envia PDF em base64
    */
   static async enviarPdfBase64(
-    servidor: ServidorWhatsApp,
+    servidor: comunicacao_servidores_whatsapp,
     telefone: string,
     base64: string,
     descricao?: string,
@@ -76,7 +76,7 @@ export class WhatsAppSenderService {
    */
   private static async fazerRequisicao(
     url: string,
-    servidor: ServidorWhatsApp,
+    servidor: comunicacao_servidores_whatsapp,
     body: WhatsAppRequestBody,
     telefone?: string,
     mensagem?: string,
@@ -111,13 +111,9 @@ export class WhatsAppSenderService {
             if (telefone) {
               // Limpar telefone para busca (remover caracteres especiais)
               const telefoneLimpo = telefone.replace(/\D/g, '');
-              clienteData = await Cliente.findOne({
-                where: {
-                  telefone: {
-                    [require('sequelize').Op.like]: `%${telefoneLimpo}%`
-                  }
-                },
-                attributes: ['razao_social', 'nome_fantasia', 'email', 'telefone']
+              clienteData = await prisma.clientes.findFirst({
+                where: { telefone: { contains: telefoneLimpo } },
+                select: { razao_social: true, nome_fantasia: true, email: true, telefone: true },
               });
             }
 
@@ -155,13 +151,9 @@ export class WhatsAppSenderService {
             if (telefone) {
               // Limpar telefone para busca (remover caracteres especiais)
               const telefoneLimpo = telefone.replace(/\D/g, '');
-              clienteData = await Cliente.findOne({
-                where: {
-                  telefone: {
-                    [require('sequelize').Op.like]: `%${telefoneLimpo}%`
-                  }
-                },
-                attributes: ['razao_social', 'nome_fantasia', 'email', 'telefone']
+              clienteData = await prisma.clientes.findFirst({
+                where: { telefone: { contains: telefoneLimpo } },
+                select: { razao_social: true, nome_fantasia: true, email: true, telefone: true },
               });
             }
 
@@ -202,7 +194,7 @@ export class WhatsAppSenderService {
   /**
    * Obtém URL base do servidor Evolution API
    */
-  private static getBaseUrl(servidor: ServidorWhatsApp): string {
+  private static getBaseUrl(servidor: comunicacao_servidores_whatsapp): string {
     return servidor.evolution_api_url.replace(/\/$/, '');
   }
 

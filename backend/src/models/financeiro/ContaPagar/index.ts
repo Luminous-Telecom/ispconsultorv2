@@ -16,7 +16,7 @@ import {
   HasManyHasAssociationsMixin,
   HasManyCountAssociationsMixin,
   HasManyCreateAssociationMixin
-} from 'sequelize';
+} from '../../../db/orm';
 import { sequelize } from '../../../config/database';
 import { Fornecedor } from '../Fornecedor';
 import { ContaPagarPagamento } from '../ContaPagarPagamento';

@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Response } from 'express';
 import Joi from 'joi';
 import { SaasUsuarioSuperService } from '../../../services/saas/SaasUsuarioSuperService';
@@ -57,7 +58,7 @@ export class SaasUsuarioSuperController {
       const { error, value } = createSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) { sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details)); return; }
       const usuario = await SaasUsuarioSuperService.create(value);
-      await registrarCriacao(req as any, 'SaasUsuarioSuper', usuario.id, usuario.toJSON() as Record<string, unknown>);
+      await registrarCriacao(req as any, 'SaasUsuarioSuper', usuario.id, toPlain(usuario) as Record<string, unknown>);
       res.status(201).json({ success: true, message: 'Usuário criado com sucesso', data: usuario });
     } catch (err) {
       sendError(res, err, 'Erro ao criar usuário', 500, true);
@@ -77,8 +78,8 @@ export class SaasUsuarioSuperController {
           req as any,
           'SaasUsuarioSuper',
           Number(req.params.id),
-          usuarioAntigo.toJSON() as Record<string, unknown>,
-          usuarioNovo.toJSON() as Record<string, unknown>
+          toPlain(usuarioAntigo) as Record<string, unknown>,
+          toPlain(usuarioNovo) as Record<string, unknown>
         );
       }
       sendSuccess(res, null, 'Usuário atualizado com sucesso');
@@ -97,7 +98,7 @@ export class SaasUsuarioSuperController {
       const usuarioAntigo = await SaasUsuarioSuperService.getById(id);
       await SaasUsuarioSuperService.delete(id);
       if (usuarioAntigo) {
-        await registrarExclusao(req as any, 'SaasUsuarioSuper', id, usuarioAntigo.toJSON() as Record<string, unknown>);
+        await registrarExclusao(req as any, 'SaasUsuarioSuper', id, toPlain(usuarioAntigo) as Record<string, unknown>);
       }
       sendSuccess(res, null, 'Usuário removido com sucesso');
     } catch (err) {

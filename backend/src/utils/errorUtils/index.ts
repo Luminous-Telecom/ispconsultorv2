@@ -1,17 +1,14 @@
 import { ValidationError as JoiValidationError } from 'joi';
 
-interface SequelizeValidationErrorItem {
+interface FieldErrorItem {
   message?: string;
   path?: string;
   value?: unknown;
 }
 
-/**
- * Type guard para verificar se um erro é um erro de validação do Sequelize
- */
-export function isSequelizeValidationError(
+function hasFieldErrors(
   error: unknown
-): error is Error & { errors?: SequelizeValidationErrorItem[] } {
+): error is Error & { errors?: FieldErrorItem[] } {
   return (
     typeof error === 'object' &&
     error !== null &&
@@ -44,7 +41,7 @@ export function isError(error: unknown): error is Error {
  * Extrai mensagem de erro de forma segura
  */
 export function getErrorMessage(error: unknown): string {
-  if (isSequelizeValidationError(error) && error.errors?.length) {
+  if (hasFieldErrors(error) && error.errors?.length) {
     const parts = error.errors.map((e) => `${e.path ?? 'campo'}: ${e.message ?? 'inválido'}`);
     return parts.join('; ');
   }

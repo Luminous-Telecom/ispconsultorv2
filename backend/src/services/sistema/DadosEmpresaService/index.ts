@@ -1,65 +1,46 @@
-import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
+import type { Prisma, sistema_tenants } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { cache } from '../../../utils/cache';
 import { slugify } from '../../../utils/slugify';
 
 export class DadosEmpresaService {
-  /**
-   * Buscar dados da empresa. Se empresaId for fornecido, filtra por id (multi-tenant).
-   * Caso contrário, retorna o primeiro registro.
-   */
-  static async findOne(empresaId?: number): Promise<DadosEmpresa | null> {
+  static async findOne(empresaId?: number): Promise<sistema_tenants | null> {
     const cacheKey = empresaId != null ? `dados_empresa:config:${empresaId}` : 'dados_empresa:config';
-    const cached = cache.get<DadosEmpresa>(cacheKey);
-    if (cached) {
-      return cached;
-    }
+    const cached = cache.get<sistema_tenants>(cacheKey);
+    if (cached) return cached;
 
-    const where = empresaId != null ? { where: { id: empresaId } } : {};
-    const dados = await DadosEmpresa.findOne(where);
-    if (dados) {
-      cache.set(cacheKey, dados, 600000); // Cache por 10 minutos
-    }
+    const dados = empresaId != null
+      ? await prisma.sistema_tenants.findUnique({ where: { id: empresaId } })
+      : await prisma.sistema_tenants.findFirst({ orderBy: { id: 'asc' } });
+    if (dados) cache.set(cacheKey, dados, 600000);
     return dados;
   }
 
-  /**
-   * Buscar empresa pelo slug derivado de nome_fantasia ou razao_social
-   */
-  static async findBySlug(slug: string): Promise<DadosEmpresa | null> {
-    const all = await DadosEmpresa.findAll();
-    return all.find(e => slugify(e.nome_fantasia || e.razao_social || '') === slug) ?? null;
+  static async findBySlug(slug: string): Promise<sistema_tenants | null> {
+    const all = await prisma.sistema_tenants.findMany();
+    return all.find((empresa) => slugify(empresa.nome_fantasia || empresa.razao_social || '') === slug) ?? null;
   }
 
-  /**
-   * Criar dados da empresa
-   */
-  static async create(dados: Partial<DadosEmpresa>): Promise<DadosEmpresa> {
-    const created = await DadosEmpresa.create(dados as any);
+  static async create(dados: Prisma.sistema_tenantsUncheckedCreateInput): Promise<sistema_tenants> {
+    const created = await prisma.sistema_tenants.create({ data: dados });
     cache.delete('dados_empresa:config');
     cache.delete(`dados_empresa:config:${created.id}`);
     return created;
   }
 
-  /**
-   * Atualizar dados da empresa. Se empresaId for fornecido, filtra por id (multi-tenant).
-   */
-  static async update(dados: Partial<DadosEmpresa>, empresaId?: number): Promise<DadosEmpresa> {
-    const where = empresaId != null ? { where: { id: empresaId } } : {};
-    const dadosEmpresa = await DadosEmpresa.findOne(where);
+  static async update(dados: Prisma.sistema_tenantsUncheckedUpdateInput, empresaId?: number): Promise<sistema_tenants> {
+    const dadosEmpresa = empresaId != null
+      ? await prisma.sistema_tenants.findUnique({ where: { id: empresaId } })
+      : await prisma.sistema_tenants.findFirst({ orderBy: { id: 'asc' } });
+    if (!dadosEmpresa) throw new Error('Dados da empresa não encontrados');
 
-    if (!dadosEmpresa) {
-      throw new Error('Dados da empresa não encontrados');
-    }
-
-    await dadosEmpresa.update(dados);
-    await dadosEmpresa.reload();
-
+    const updated = await prisma.sistema_tenants.update({
+      where: { id: dadosEmpresa.id },
+      data: dados,
+    });
     cache.delete('dados_empresa:config');
-    cache.delete(`dados_empresa:config:${dadosEmpresa.id}`);
-    if (empresaId != null) {
-      cache.delete(`dados_empresa:config:${empresaId}`);
-    }
-    return dadosEmpresa;
+    cache.delete(`dados_empresa:config:${updated.id}`);
+    if (empresaId != null) cache.delete(`dados_empresa:config:${empresaId}`);
+    return updated;
   }
 }
-

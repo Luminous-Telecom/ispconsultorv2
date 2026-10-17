@@ -1,15 +1,20 @@
-import { Titulo } from '../../../models/financeiro/Titulo';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Contrato } from '../../../models/contratos/Contrato';
-import { Plano } from '../../../models/cadastros/Plano';
-import { Banco } from '../../../models/cadastros/Banco';
-import { Op, WhereOptions, Transaction } from 'sequelize';
-import { sequelize } from '../../../config/database';
+import type { Prisma } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
-import { buildDateFilter, buildNumericSearchFilter, combineFilters } from '../../../utils/queryFilters';
-import { SortHelper } from '../../../utils/sortHelper';
-import { TITULO_SORT_CONFIG } from '../../../config/sortConfigs';
 import { buildPagination } from '../../../utils/pagination';
+import { resolveStatusPagamentoTitulo } from '../../../utils/tituloVencimentoUtils';
+import { BancoApiService } from '../../bancos/BancoApiService';
+import {
+  dateBounds,
+  enumMatches,
+  numericBounds,
+  orderPageBySql,
+  reorderByIds,
+  sortDirection,
+  sqlDirection,
+  toPrismaWhere,
+  withToJson,
+} from '../../cadastros/prismaWhere';
 
 export interface ListTitulosFilters {
   page?: number;
@@ -27,159 +32,219 @@ export interface ListTitulosFilters {
   empresa_id?: number;
 }
 
-export interface ListTitulosResponse {
-  success: boolean;
-  data: Titulo[];
-  pagination: {
-    current_page: number;
-    per_page: number;
-    total: number;
-    last_page: number;
-    from: number;
-    to: number;
+const TITULO_STATUS = ['pendente', 'pago', 'vencido', 'cancelado', 'parcial', 'pago_atraso'] as const;
+const SORT_COLUMNS = [
+  'id', 'cliente_id', 'plano_id', 'banco_id', 'contrato_id', 'numero_titulo', 'valor',
+  'data_vencimento', 'status', 'pago', 'data_pagamento', 'valor_pago', 'valor_aberto',
+  'charge_id', 'nosso_numero', 'created_at', 'updated_at', 'is_avulso', 'empresa_id',
+] as const;
+
+const BANCO_SELECT = {
+  id: true, nome: true, tipo_banco: true, logo: true, codigo: true, api_key: true, sandbox: true,
+} as const;
+
+const NOTA_RELATION = 'nfse_notas_fiscais_financeiro_titulos_nota_fiscal_idTonfse_notas_fiscais' as const;
+
+const detalheInclude = {
+  clientes: true,
+  cadastros_planos: true,
+  cadastros_bancos: { select: BANCO_SELECT },
+  contratos: { include: { cadastros_bancos: { select: BANCO_SELECT } } },
+  [NOTA_RELATION]: true,
+} as const;
+
+type TituloComRelacoesRow = {
+  id: number;
+  banco_id: number;
+  valor?: unknown;
+  data_vencimento?: Date | string | null;
+  charge_id?: string | null;
+  empresa_id?: number | null;
+  status?: string;
+  pago?: boolean;
+  clientes?: unknown;
+  cadastros_planos?: unknown;
+  cadastros_bancos?: { id: number } | null;
+  contratos?: {
+    clientes?: unknown;
+    cadastros_planos?: unknown;
+    cadastros_bancos?: { id: number } | null;
+  } | null;
+  [NOTA_RELATION]?: unknown;
+};
+
+function shapeTitulo<T extends TituloComRelacoesRow>(row: T) {
+  const contrato = row.contratos ?? null;
+  let banco = row.cadastros_bancos ?? null;
+  let bancoId = row.banco_id;
+  if (!banco && contrato?.cadastros_bancos) {
+    banco = contrato.cadastros_bancos;
+    bancoId = contrato.cadastros_bancos.id;
+  }
+  const nota = row[NOTA_RELATION] ?? null;
+  const shaped = {
+    ...row,
+    banco_id: bancoId,
+    cliente: row.clientes ?? null,
+    plano: row.cadastros_planos ?? null,
+    banco,
+    contrato: contrato
+      ? {
+          ...contrato,
+          cliente: contrato.clientes ?? null,
+          plano: contrato.cadastros_planos ?? null,
+          bancoBoleto: contrato.cadastros_bancos ?? null,
+        }
+      : null,
+    nota_fiscal: nota,
   };
+
+  return withToJson(Object.assign(shaped, {
+    async marcarComoPago(valorPago?: number, dataPagamento?: Date, skipLiquidacaoBanco = false) {
+      const valor = valorPago ?? Number(shaped.valor);
+      const agora = new Date();
+      let data: Date;
+      if (dataPagamento) {
+        const dp = new Date(dataPagamento);
+        if (dp.getHours() === 0 && dp.getMinutes() === 0 && dp.getSeconds() === 0 && dp.getMilliseconds() === 0) {
+          data = new Date(dp.getFullYear(), dp.getMonth(), dp.getDate(), agora.getHours(), agora.getMinutes(), agora.getSeconds(), agora.getMilliseconds());
+        } else {
+          data = new Date(dp.getFullYear(), dp.getMonth(), dp.getDate(), dp.getHours(), dp.getMinutes(), dp.getSeconds(), dp.getMilliseconds());
+        }
+      } else {
+        data = new Date(agora);
+      }
+      const valorTotal = Number(shaped.valor);
+      const valorPagoNum = Number(valor);
+      const novoStatus = resolveStatusPagamentoTitulo(shaped.data_vencimento as Date, data, valorPagoNum, valorTotal);
+      const parcial = novoStatus === 'parcial';
+      const valorAberto = parcial ? valorTotal - valorPagoNum : null;
+      const estaPago = !parcial;
+      await prisma.financeiro_titulos.update({
+        where: { id: shaped.id },
+        data: {
+          pago: estaPago,
+          data_pagamento: data,
+          valor_pago: valor,
+          valor_aberto: valorAberto,
+          status: novoStatus,
+        },
+      });
+      Object.assign(shaped, { pago: estaPago, data_pagamento: data, valor_pago: valor, valor_aberto: valorAberto, status: novoStatus });
+      if (estaPago && (novoStatus === 'pago' || novoStatus === 'pago_atraso')) {
+        const { metrics, isMetricsEnabled } = await import('../../../utils/metrics');
+        if (isMetricsEnabled() && metrics) metrics.businessBoletosPagos.inc();
+      }
+      if (shaped.charge_id && !skipLiquidacaoBanco) {
+        try {
+          const bancoAtual = shaped.banco ?? await prisma.cadastros_bancos.findUnique({ where: { id: shaped.banco_id } });
+          if (!bancoAtual) return;
+          shaped.banco = bancoAtual;
+          const resultado = await BancoApiService.liquidarTitulo(shaped as unknown as Parameters<typeof BancoApiService.liquidarTitulo>[0]);
+          if (!resultado.success) {
+            logger.warn('Falha ao liquidar título no banco externo', { titulo_id: shaped.id, charge_id: shaped.charge_id, message: resultado.message });
+          }
+        } catch (error) {
+          logger.error('Erro ao integrar com banco externo', {
+            titulo_id: shaped.id,
+            charge_id: shaped.charge_id,
+            error: error instanceof Error ? error.message : 'Erro desconhecido',
+          });
+        }
+      }
+    },
+    async desmarcarPago() {
+      await prisma.financeiro_titulos.update({
+        where: { id: shaped.id },
+        data: { pago: false, data_pagamento: null, valor_pago: null, status: 'pendente' },
+      });
+      Object.assign(shaped, { pago: false, data_pagamento: null, valor_pago: null, status: 'pendente' });
+    },
+  }));
+}
+
+function statusFilter(term: string): Prisma.financeiro_titulosWhereInput {
+  const matches = enumMatches(TITULO_STATUS, term);
+  return matches.length > 0 ? { status: { in: matches } } : { id: { lt: 0 } };
+}
+
+function legacyOrder(order: unknown): Prisma.financeiro_titulosOrderByWithRelationInput[] | undefined {
+  if (!Array.isArray(order)) return undefined;
+  const mapped: Prisma.financeiro_titulosOrderByWithRelationInput[] = [];
+  for (const item of order) {
+    if (!Array.isArray(item) || typeof item[0] !== 'string') continue;
+    const dir = sortDirection(String(item[1] ?? 'DESC'));
+    if ((SORT_COLUMNS as readonly string[]).includes(item[0])) mapped.push({ [item[0]]: dir });
+  }
+  return mapped.length > 0 ? mapped : undefined;
 }
 
 export class TituloService {
-  /** Includes alinhados a `getById` — usar em `reload` após `update` para auditoria coerente */
-  static getDefaultIncludes() {
-    return [
-      { association: 'cliente', required: false },
-      {
-        association: 'contrato',
-        required: false,
-        include: [
-          {
-            association: 'bancoBoleto',
-            required: false,
-            attributes: ['id', 'nome', 'tipo_banco', 'logo', 'codigo', 'api_key', 'sandbox'],
-          },
-        ],
-      },
-      { association: 'plano', required: false },
-      {
-        association: 'banco',
-        required: false,
-        attributes: ['id', 'nome', 'tipo_banco', 'logo', 'codigo', 'api_key', 'sandbox'],
-      },
-      { association: 'nota_fiscal', required: false },
-    ];
-  }
-
-  /** Se o título não tem banco mas o contrato tem banco de boleto, espelhar (cancelamento etc.) */
-  private static aplicarBancoFallbackTitulo(titulo: Titulo | null): void {
-    if (!titulo) return;
-    const tituloAny = titulo as Titulo & {
-      banco?: Banco | null;
-      banco_id?: number | null;
-      contrato?: { bancoBoleto?: Banco | null } | null;
-    };
-    if (!tituloAny.banco && tituloAny.contrato?.bancoBoleto) {
-      tituloAny.banco = tituloAny.contrato.bancoBoleto;
-      tituloAny.banco_id = tituloAny.contrato.bancoBoleto.id;
-    }
-  }
-
-  /**
-   * Buscar IDs de clientes que têm títulos com status específicos
-   * Usado para filtros em webhooks
-   */
   static async getClienteIdsByStatus(statuses: string[]): Promise<number[]> {
-    const titulos = await Titulo.findAll({
-      attributes: ['cliente_id'],
-      where: {
-        status: { [Op.in]: statuses }
-      },
-      group: ['cliente_id'],
-      raw: true
+    const titulos = await prisma.financeiro_titulos.findMany({
+      where: { status: { in: statuses as typeof TITULO_STATUS[number][] } },
+      select: { cliente_id: true },
+      distinct: ['cliente_id'],
     });
-
-    return titulos.map((t: { cliente_id: number }) => t.cliente_id);
+    return titulos.map((titulo) => titulo.cliente_id);
   }
 
-  /**
-   * Listar títulos com filtros e paginação
-   */
-  static async list(filters: ListTitulosFilters): Promise<ListTitulosResponse> {
+  static async list(filters: ListTitulosFilters) {
     const {
-      page = 1,
-      limit = 10,
-      status,
-      cliente_id,
-      data_vencimento_inicio,
-      data_vencimento_fim,
-      data_pagamento_inicio,
-      data_pagamento_fim,
-      search,
-      searchField,
-      sortColumn,
-      sortDirection,
-      empresa_id
+      page = 1, limit = 10, status, cliente_id, data_vencimento_inicio, data_vencimento_fim,
+      data_pagamento_inicio, data_pagamento_fim, search, searchField, sortColumn,
+      sortDirection: direction, empresa_id,
     } = filters;
-
-
-
     const limitNum = Number(limit);
     const pageNum = Number(page);
     const offset = (pageNum - 1) * limitNum;
+    const and: Prisma.financeiro_titulosWhereInput[] = [];
 
-    // Construir filtros usando helpers
-    const whereConditions: (WhereOptions | null)[] = [];
-
-    if (empresa_id !== undefined) {
-      whereConditions.push({ empresa_id } as WhereOptions);
-    }
-
-    // Filtro de status (suporta múltiplos: "pago,pago_atraso,parcial")
+    if (empresa_id !== undefined) and.push({ empresa_id });
     if (status) {
       if (typeof status === 'string' && status.startsWith('!')) {
-        whereConditions.push({ status: { [Op.ne]: status.substring(1) } } as WhereOptions);
-      } else if (typeof status === 'string' && status.includes(',')) {
-        const statuses = status.split(',').map(s => s.trim()).filter(Boolean);
-        if (statuses.length > 0) {
-          whereConditions.push({ status: { [Op.in]: statuses } } as WhereOptions);
+        const excluded = status.substring(1);
+        if ((TITULO_STATUS as readonly string[]).includes(excluded)) {
+          and.push({ status: { not: excluded as (typeof TITULO_STATUS)[number] } });
         }
-      } else {
-        whereConditions.push({ status } as WhereOptions);
+      } else if (typeof status === 'string' && status.includes(',')) {
+        const statuses = status.split(',').map((item) => item.trim()).filter((item) => (TITULO_STATUS as readonly string[]).includes(item));
+        if (statuses.length > 0) and.push({ status: { in: statuses as typeof TITULO_STATUS[number][] } });
+      } else if ((TITULO_STATUS as readonly string[]).includes(status)) {
+        and.push({ status: status as (typeof TITULO_STATUS)[number] });
       }
     }
-
-    // Filtro de cliente
     if (cliente_id) {
-      whereConditions.push({ cliente_id } as WhereOptions);
+      const clienteIdNum = Number(cliente_id);
+      if (!Number.isNaN(clienteIdNum)) and.push({ cliente_id: clienteIdNum });
     }
-
-    // Filtro de data de vencimento
-    whereConditions.push(buildDateFilter(data_vencimento_inicio, data_vencimento_fim, 'data_vencimento'));
-    // Filtro de data de pagamento (ex.: ao abrir Contas A Receber pelo gráfico Recebidos)
-    whereConditions.push(buildDateFilter(data_pagamento_inicio, data_pagamento_fim, 'data_pagamento'));
+    const vencimento = dateBounds(data_vencimento_inicio, data_vencimento_fim);
+    if (vencimento) and.push({ data_vencimento: vencimento });
+    const pagamento = dateBounds(data_pagamento_inicio, data_pagamento_fim);
+    if (pagamento) and.push({ data_pagamento: pagamento });
 
     if (search && String(search).trim()) {
       const term = String(search).trim();
-      const likePattern = `%${term.replace(/[%_\\]/g, '\\$&')}%`;
       const termNum = Number(term);
-      const isNumericSearch = !isNaN(termNum) && term !== '';
-
+      const isNumericSearch = term !== '' && !Number.isNaN(termNum);
       const field = typeof searchField === 'string' ? searchField : undefined;
-      const orConditions: WhereOptions[] = [];
-
+      const orConditions: Prisma.financeiro_titulosWhereInput[] = [];
       const addMultiFieldSearch = () => {
         orConditions.push(
-          { numero_titulo: { [Op.like]: likePattern } } as WhereOptions,
-          { status: { [Op.like]: likePattern } } as WhereOptions,
-          { charge_id: { [Op.like]: likePattern } } as WhereOptions,
-          { nosso_numero: { [Op.like]: likePattern } } as WhereOptions,
-          { '$cliente.razao_social$': { [Op.like]: likePattern } } as WhereOptions,
-          { '$cliente.nome_fantasia$': { [Op.like]: likePattern } } as WhereOptions,
-          { '$plano.nome_plano$': { [Op.like]: likePattern } } as WhereOptions
+          { numero_titulo: { contains: term } },
+          statusFilter(term),
+          { charge_id: { contains: term } },
+          { nosso_numero: { contains: term } },
+          { clientes: { razao_social: { contains: term } } },
+          { clientes: { nome_fantasia: { contains: term } } },
+          { cadastros_planos: { nome_plano: { contains: term } } },
         );
-
         if (isNumericSearch) {
           orConditions.push(
-            { id: termNum } as WhereOptions,
-            { valor: termNum } as WhereOptions,
-            { valor_pago: termNum } as WhereOptions,
-            { contrato_id: termNum } as WhereOptions
+            { id: termNum },
+            { valor: termNum },
+            { valor_pago: termNum },
+            { contrato_id: termNum },
           );
         }
       };
@@ -187,380 +252,203 @@ export class TituloService {
       if (field) {
         switch (field) {
           case 'id':
-            if (isNumericSearch) orConditions.push({ id: termNum } as WhereOptions);
+            if (isNumericSearch) orConditions.push({ id: termNum });
             break;
           case 'numero_titulo':
-            orConditions.push({ numero_titulo: { [Op.like]: likePattern } } as WhereOptions);
+            orConditions.push({ numero_titulo: { contains: term } });
             break;
           case 'status':
-            orConditions.push({ status: { [Op.like]: likePattern } } as WhereOptions);
+            orConditions.push(statusFilter(term));
             break;
           case 'charge_id':
-            orConditions.push({ charge_id: { [Op.like]: likePattern } } as WhereOptions);
+            orConditions.push({ charge_id: { contains: term } });
             break;
           case 'nosso_numero':
-            orConditions.push({ nosso_numero: { [Op.like]: likePattern } } as WhereOptions);
+            orConditions.push({ nosso_numero: { contains: term } });
             break;
           case 'contrato_id':
-            if (isNumericSearch) orConditions.push({ contrato_id: termNum } as WhereOptions);
+            if (isNumericSearch) orConditions.push({ contrato_id: termNum });
             break;
           case 'valor':
             if (isNumericSearch) {
-              const numericFilter = buildNumericSearchFilter(term, 'valor', 0.1);
-              if (numericFilter) orConditions.push(numericFilter);
+              const range = numericBounds(term, 0.1);
+              if (range) orConditions.push({ valor: range });
             }
             break;
           case 'valor_pago':
             if (isNumericSearch) {
-              const numericFilter = buildNumericSearchFilter(term, 'valor_pago', 0.1);
-              if (numericFilter) orConditions.push(numericFilter);
+              const range = numericBounds(term, 0.1);
+              if (range) orConditions.push({ valor_pago: range });
             }
             break;
           case 'cliente':
             orConditions.push(
-              { '$cliente.razao_social$': { [Op.like]: likePattern } } as WhereOptions,
-              { '$cliente.nome_fantasia$': { [Op.like]: likePattern } } as WhereOptions
+              { clientes: { razao_social: { contains: term } } },
+              { clientes: { nome_fantasia: { contains: term } } },
             );
             break;
           case 'plano':
-            orConditions.push({ '$plano.nome_plano$': { [Op.like]: likePattern } } as WhereOptions);
+            orConditions.push({ cadastros_planos: { nome_plano: { contains: term } } });
             break;
           default:
             addMultiFieldSearch();
-            break;
         }
       } else {
         addMultiFieldSearch();
       }
 
-      if (orConditions.length === 0) {
-        whereConditions.push({ id: { [Op.eq]: -1 } } as WhereOptions);
-      } else {
-        whereConditions.push({ [Op.or]: orConditions } as WhereOptions);
-      }
+      and.push(orConditions.length > 0 ? { OR: orConditions } : { id: { lt: 0 } });
     }
 
-    // Combinar todos os filtros
-    const where = combineFilters(...whereConditions) || {};
+    const where: Prisma.financeiro_titulosWhereInput = and.length > 0 ? { AND: and } : {};
+    const dir = sortDirection(direction);
+    const listInclude = {
+      clientes: { select: { id: true, razao_social: true, nome_fantasia: true, cnpj: true, email: true } },
+      cadastros_planos: { select: { id: true, nome_plano: true, valor_mensal: true } },
+      cadastros_bancos: { select: BANCO_SELECT },
+      [NOTA_RELATION]: { select: { id: true, numero: true, nfse_status: true } },
+    };
 
-    // Construir ordenação - ordena TODOS os dados antes da paginação
-    let order: any[] = [['id', 'DESC']]; // Padrão
-    if (sortColumn && sortDirection) {
-      const sortResult = SortHelper.buildOrder(
-        TITULO_SORT_CONFIG,
-        sortColumn,
-        sortDirection.toUpperCase() as 'ASC' | 'DESC'
-      );
-
-      if (sortResult.isValid) {
-        order = sortResult.order;
-      } else {
-        logger.warn('TituloService.list - Coluna de ordenação inválida', {
-          column: sortColumn,
-          error: sortResult.error
-        });
-        // Manter ordenação padrão se coluna inválida
-      }
-    }
-
-    const { NotaFiscal } = await import('../../../models/nfse/NotaFiscal');
-    
-    const include = [
-      { model: Cliente, as: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj', 'email'], required: false },
-      { model: Plano, as: 'plano', attributes: ['id', 'nome_plano', 'valor_mensal'], required: false },
-      { model: Banco, as: 'banco', attributes: ['id', 'nome', 'tipo_banco', 'logo', 'codigo', 'api_key', 'sandbox'], required: false },
-      { model: NotaFiscal, as: 'nota_fiscal', attributes: ['id', 'numero', 'nfse_status'], required: false }
-    ];
-
-    let count: number;
-    let rows: Titulo[];
     try {
-      const result = await Titulo.findAndCountAll({
-        where,
-        include,
-        order,
-        limit: limitNum,
-        offset,
-        distinct: true,
-        subQuery: false
-      });
-      count = result.count as number;
-      rows = result.rows;
-    } catch (queryError: any) {
-      logger.error('TituloService.list - Erro na query', {
-        error: queryError.message,
-        sortColumn: filters.sortColumn,
-        sortDirection: filters.sortDirection
-      });
+      let rows;
+      let count: number;
+      if (sortColumn === 'valor_aberto') {
+        const matching = await prisma.financeiro_titulos.findMany({ where, select: { id: true } });
+        const pageIds = await orderPageBySql(
+          'financeiro_titulos',
+          'COALESCE(`valor_aberto`, `valor` - COALESCE(`valor_pago`, 0))',
+          sqlDirection(direction),
+          matching.map((item) => item.id),
+          limitNum,
+          offset,
+        );
+        count = matching.length;
+        const found = pageIds.length
+          ? await prisma.financeiro_titulos.findMany({ where: { id: { in: pageIds } }, include: listInclude })
+          : [];
+        rows = reorderByIds(found, pageIds);
+      } else {
+        let orderBy: Prisma.financeiro_titulosOrderByWithRelationInput = { id: 'desc' };
+        if (sortColumn === 'cliente') orderBy = { clientes: { razao_social: dir } };
+        else if (sortColumn === 'plano_nome') orderBy = { cadastros_planos: { nome_plano: dir } };
+        else if (sortColumn === 'nfse_numero') orderBy = { [NOTA_RELATION]: { numero: dir } };
+        else if (sortColumn === 'nfse_status') orderBy = { [NOTA_RELATION]: { nfse_status: dir } };
+        else if (sortColumn && (SORT_COLUMNS as readonly string[]).includes(sortColumn)) orderBy = { [sortColumn]: dir };
+        else if (sortColumn) logger.warn('TituloService.list - Coluna de ordenação inválida', { column: sortColumn });
+
+        [count, rows] = await Promise.all([
+          prisma.financeiro_titulos.count({ where }),
+          prisma.financeiro_titulos.findMany({
+            where,
+            include: listInclude,
+            orderBy,
+            take: limitNum,
+            skip: offset,
+          }),
+        ]);
+      }
+
+      return {
+        success: true,
+        data: rows.map((row) => shapeTitulo(row)),
+        pagination: buildPagination(pageNum, limitNum, count),
+      };
+    } catch (queryError: unknown) {
+      const error = queryError instanceof Error ? queryError : new Error('Erro desconhecido');
+      logger.error('TituloService.list - Erro na query', { error: error.message, sortColumn, sortDirection: direction });
       throw queryError;
     }
-
-
-    return {
-      success: true,
-      data: rows,
-      pagination: buildPagination(pageNum, limitNum, count),
-    };
   }
 
-  /**
-   * Buscar título por ID
-   */
-  static async getById(id: string | number, transaction?: Transaction): Promise<Titulo | null> {
-    try {
-      const titulo = await Titulo.findByPk(id, {
-        include: TituloService.getDefaultIncludes(),
-        transaction,
-      });
+  static async getById(id: string | number, _transaction?: unknown) {
+    const titulo = await prisma.financeiro_titulos.findUnique({
+      where: { id: Number(id) },
+      include: detalheInclude,
+    });
+    return titulo ? shapeTitulo(titulo) : null;
+  }
 
-      TituloService.aplicarBancoFallbackTitulo(titulo);
-
-      return titulo;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      const errorName = error instanceof Error ? error.name : 'Unknown';
-      
-      logger.error('Erro ao buscar título', {
-        id: id,
-        error: errorMessage
-      });
-      throw error;
+  static async getByIds(ids: number[], status?: string[]) {
+    const where: Prisma.financeiro_titulosWhereInput = { id: { in: ids } };
+    if (status && status.length > 0) {
+      where.status = { in: status as typeof TITULO_STATUS[number][] };
     }
-  }
+    const titulos = await prisma.financeiro_titulos.findMany({
+      where,
+      include: {
+        clientes: true,
+        cadastros_planos: true,
+        cadastros_bancos: { select: BANCO_SELECT },
+        contratos: { include: { cadastros_bancos: { select: BANCO_SELECT } } },
+      },
+    });
 
-  /**
-   * Buscar títulos por IDs com includes
-   */
-  static async getByIds(ids: number[], status?: string[]): Promise<Titulo[]> {
-    try {
-      const where: any = {
-        id: { [Op.in]: ids }
-      };
-
-      if (status) {
-        where.status = { [Op.in]: status };
-      }
-
-      let titulos: Titulo[];
-      try {
-        
-        titulos = await Titulo.findAll({
-          where,
-          include: [
-            { model: Cliente, as: 'cliente', required: false },
-            { model: Plano, as: 'plano', required: false },
-            { 
-              model: Banco,
-              as: 'banco', 
-              required: false,
-              attributes: ['id', 'nome', 'tipo_banco', 'logo', 'codigo', 'api_key', 'sandbox'] // Incluir api_key para cancelamento
-            },
-            { 
-              model: Contrato,
-              as: 'contrato', 
-              required: false,
-              include: [
-                { 
-                  association: 'bancoBoleto', 
-                  required: false,
-                  attributes: ['id', 'nome', 'tipo_banco', 'logo', 'codigo', 'api_key', 'sandbox'] // Incluir api_key para cancelamento
-                }
-              ]
-            }
-          ]
+    const completos = [];
+    for (const titulo of titulos) {
+      let row: TituloComRelacoesRow = titulo;
+      if (!row.cadastros_bancos && row.banco_id) {
+        const banco = await prisma.cadastros_bancos.findUnique({
+          where: { id: row.banco_id },
+          select: BANCO_SELECT,
         });
-        
-      } catch (findAllError: unknown) {
-        logger.error('Erro ao executar Titulo.findAll', {
-          error: findAllError instanceof Error ? findAllError.message : 'Erro desconhecido',
-          ids: ids
-        });
-        throw findAllError;
+        if (banco) row = { ...row, cadastros_bancos: banco };
       }
-
-      // Se algum título não tem banco carregado, tentar carregar do banco_id ou do contrato
-      for (const titulo of titulos) {
-        try {
-          const tituloAny = titulo as any;
-          
-          // Se não tem banco carregado mas tem banco_id, carregar o banco
-          if (!tituloAny.banco && tituloAny.banco_id) {
-            try {
-              const banco = await Banco.findByPk(tituloAny.banco_id, {
-                attributes: ['id', 'nome', 'tipo_banco', 'logo', 'codigo', 'api_key', 'sandbox']
-              });
-              if (banco) {
-                tituloAny.banco = banco;
-              }
-            } catch (err) {
-              // Ignorar erro ao carregar banco individual
-            }
-          }
-          
-          // Se ainda não tem banco mas tem contrato com banco, usar o banco do contrato
-          if (!tituloAny.banco && tituloAny.contrato && tituloAny.contrato.bancoBoleto) {
-            tituloAny.banco = tituloAny.contrato.bancoBoleto;
-            tituloAny.banco_id = tituloAny.contrato.bancoBoleto.id;
-          }
-        } catch (err) {
-          // Ignorar erro ao processar título individual, continuar com os outros
-        }
-      }
-
-      return titulos;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      const errorName = error instanceof Error ? error.name : 'Unknown';
-      const errorCause = error instanceof Error && 'cause' in error ? (error as any).cause : undefined;
-      
-      logger.error('Erro ao buscar títulos', {
-        ids: ids,
-        error: errorMessage
-      });
-      throw error;
+      completos.push(shapeTitulo(row));
     }
+    return completos;
   }
 
-  /**
-   * Recarrega instância após mutação direta no modelo (ex.: marcar como pago) com os mesmos includes de `getById`.
-   */
-  static async reloadTituloComRelacoes(titulo: Titulo, transaction?: Transaction): Promise<void> {
-    await titulo.reload({ include: TituloService.getDefaultIncludes(), transaction });
-    TituloService.aplicarBancoFallbackTitulo(titulo);
+  static async reloadTituloComRelacoes(titulo: { id: number }, _transaction?: unknown): Promise<void> {
+    const atualizado = await TituloService.getById(titulo.id);
+    if (atualizado) Object.assign(titulo, atualizado);
   }
 
-  /**
-   * Criar título
-   */
-  static async create(dadosTitulo: Partial<Titulo>, transaction?: Transaction): Promise<Titulo> {
-    return await Titulo.create(dadosTitulo as any, { transaction });
+  static async create(dadosTitulo: Prisma.financeiro_titulosUncheckedCreateInput, _transaction?: unknown) {
+    return prisma.financeiro_titulos.create({ data: dadosTitulo });
   }
 
-  /**
-   * Atualizar título
-   */
-  static async update(id: string | number, dadosTitulo: Partial<Titulo>): Promise<Titulo> {
-    const titulo = await Titulo.findByPk(id);
-    
-    if (!titulo) {
-      throw new Error('Título não encontrado');
-    }
-    
-    await titulo.update(dadosTitulo);
-    await titulo.reload({ include: TituloService.getDefaultIncludes() });
-    TituloService.aplicarBancoFallbackTitulo(titulo);
+  static async update(id: string | number, dadosTitulo: Prisma.financeiro_titulosUncheckedUpdateInput) {
+    const numericId = Number(id);
+    const titulo = await prisma.financeiro_titulos.findUnique({ where: { id: numericId } });
+    if (!titulo) throw new Error('Título não encontrado');
+    await prisma.financeiro_titulos.update({ where: { id: numericId }, data: dadosTitulo });
+    const atualizado = await TituloService.getById(numericId);
+    if (!atualizado) throw new Error('Título não encontrado');
+    return atualizado;
+  }
 
+  static async delete(id: string | number) {
+    const numericId = Number(id);
+    const titulo = await prisma.financeiro_titulos.findUnique({ where: { id: numericId } });
+    if (!titulo) throw new Error('Título não encontrado');
+    await prisma.financeiro_titulos.delete({ where: { id: numericId } });
     return titulo;
   }
 
-  /**
-   * Deletar título
-   */
-  static async delete(id: string | number): Promise<Titulo> {
-    const titulo = await Titulo.findByPk(id);
-    
-    if (!titulo) {
-      throw new Error('Título não encontrado');
-    }
-    
-    await titulo.destroy();
-    
-    return titulo;
+  static async count(where?: unknown): Promise<number> {
+    return prisma.financeiro_titulos.count({
+      where: (toPrismaWhere(where) ?? {}) as Prisma.financeiro_titulosWhereInput,
+    });
   }
 
-  /**
-   * Contar títulos com filtros (para dashboard)
-   */
-  static async count(where?: WhereOptions): Promise<number> {
-    return await Titulo.count({ where });
-  }
+  static async findAllWithFilters(
+    where?: unknown,
+    options?: { include?: unknown[]; order?: unknown; limit?: number; attributes?: string[] },
+  ) {
+    const prismaWhere = (toPrismaWhere(where) ?? {}) as Prisma.financeiro_titulosWhereInput;
+    const orderBy = legacyOrder(options?.order) ?? [{ created_at: 'desc' as const }];
+    const titulos = await prisma.financeiro_titulos.findMany({
+      where: prismaWhere,
+      include: {
+        clientes: true,
+        cadastros_planos: true,
+        cadastros_bancos: { select: BANCO_SELECT },
+        contratos: { include: { cadastros_bancos: { select: BANCO_SELECT } } },
+      },
+      orderBy,
+      take: options?.limit,
+    });
 
-  /**
-   * Buscar títulos com filtros e includes (para dashboard)
-   */
-  static async findAllWithFilters(where?: WhereOptions, options?: { include?: any[]; order?: any[]; limit?: number; attributes?: string[] }): Promise<Titulo[]> {
-    try {
-      // Garantir que o contrato com bancoBoleto seja incluído se não estiver nos includes
-      const includes = options?.include ? [...options.include] : [];
-      const hasContrato = includes.some((inc: any) => {
-        if (!inc) return false;
-        return inc.association === 'contrato' || inc.as === 'contrato' || 
-               (inc.model && (inc.model.name === 'Contrato' || (inc.model as any).tableName === 'contratos'));
-      });
-      
-      if (!hasContrato) {
-        includes.push({
-          association: 'contrato',
-          required: false,
-          include: [
-            { 
-              association: 'bancoBoleto', 
-              required: false,
-              attributes: ['id', 'nome', 'tipo_banco', 'logo', 'codigo', 'api_key', 'sandbox'] // Incluir api_key para cancelamento
-            }
-          ]
-        });
-      } else {
-        // Se já tem contrato, garantir que tem bancoBoleto
-        const contratoIndex = includes.findIndex((inc: any) => {
-          if (!inc) return false;
-          return inc.association === 'contrato' || inc.as === 'contrato' || 
-                 (inc.model && (inc.model.name === 'Contrato' || (inc.model as any).tableName === 'contratos'));
-        });
-        if (contratoIndex >= 0) {
-          const contratoInclude = includes[contratoIndex];
-          if (!contratoInclude.include) {
-            contratoInclude.include = [];
-          }
-          const hasBancoBoleto = contratoInclude.include.some((inc: any) => 
-            inc && (inc.association === 'bancoBoleto' || inc.as === 'bancoBoleto')
-          );
-          if (!hasBancoBoleto) {
-            contratoInclude.include.push({ 
-              association: 'bancoBoleto', 
-              required: false,
-              attributes: ['id', 'nome', 'tipo_banco', 'logo', 'codigo', 'api_key', 'sandbox'] // Incluir api_key para cancelamento
-            });
-          }
-        }
-      }
-      
-      const titulos = await Titulo.findAll({
-        where,
-        attributes: options?.attributes,
-        include: includes,
-        order: options?.order || [['created_at', 'DESC']],
-        limit: options?.limit
-      });
-
-      // Se algum título não tem banco_id mas tem contrato com banco, usar o banco do contrato
-      for (const titulo of titulos) {
-        try {
-          const tituloAny = titulo as any;
-          if (!tituloAny.banco && tituloAny.contrato && tituloAny.contrato.bancoBoleto) {
-            tituloAny.banco = tituloAny.contrato.bancoBoleto;
-            tituloAny.banco_id = tituloAny.contrato.bancoBoleto.id;
-          }
-        } catch (err) {
-          // Ignorar erros ao processar título individual
-          continue;
-        }
-      }
-
-      return titulos;
-    } catch (error) {
-      // Se houver erro, tentar sem a lógica de contrato/banco
-      const includes = options?.include || [];
-      return await Titulo.findAll({
-        where,
-        attributes: options?.attributes,
-        include: includes,
-        order: options?.order || [['created_at', 'DESC']],
-        limit: options?.limit
-      });
-    }
+    return titulos.map((titulo) => shapeTitulo(titulo));
   }
 }
-

@@ -1,6 +1,5 @@
-import { sequelize } from '../../../config/database';
-import { QueryTypes, Transaction } from 'sequelize';
-import { VersaoBlockdomi } from '../../../models/blockdomi/VersaoBlockdomi';
+import type { Prisma } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 
 export type TipoVersao = 'lista' | 'dominio' | 'ipv4' | 'ipv6' | 'dominio_delete' | 'ipv4_delete' | 'ipv6_delete';
 
@@ -10,32 +9,28 @@ export interface VersaoResult {
 }
 
 /**
- * Gera versões na tabela versoes_blockdomi.
+ * Gera versões na tabela blockdomi_versoes.
  * Cada versão é um registro com id e numero (YYYYMMDD + contador).
  * Domínios, listas e operações vinculam via versao_id.
  */
 export class VersaoBlockdomiService {
   /**
-   * Obtém próximos contadores baseado em versoes_blockdomi (em transação).
+   * Obtém próximos contadores baseado em blockdomi_versoes (em transação).
    * Sequência única por dia: lista, dominio, ipv4, ipv6, exclusões compartilham o mesmo contador.
    */
   private static async _obterProximosContadores(
     _tipo: TipoVersao,
     quantidade: number,
     data: Date,
-    t: Transaction
+    tx: Prisma.TransactionClient
   ): Promise<number[]> {
     const prefix = data.toISOString().slice(0, 10).replace(/-/g, '');
-    const rows = await sequelize.query<{ numero: string }>(
-      `SELECT numero FROM blockdomi_versoes 
-       WHERE numero LIKE :prefix 
-       ORDER BY CAST(SUBSTRING(numero, 9) AS UNSIGNED) DESC 
+    const rows = await tx.$queryRawUnsafe<Array<{ numero: string }>>(
+      `SELECT numero FROM blockdomi_versoes
+       WHERE numero LIKE ?
+       ORDER BY CAST(SUBSTRING(numero, 9) AS UNSIGNED) DESC
        LIMIT 1 FOR UPDATE`,
-      {
-        replacements: { prefix: `${prefix}%` },
-        type: QueryTypes.SELECT,
-        transaction: t
-      }
+      `${prefix}%`
     );
 
     const ultimoNumero = Array.isArray(rows) && rows.length > 0 ? rows[0]?.numero : null;
@@ -53,11 +48,13 @@ export class VersaoBlockdomiService {
   static async obterProximaVersao(tipo: TipoVersao, data?: Date, empresaId?: number | null): Promise<VersaoResult> {
     const d = data ?? new Date();
     const anoMesDia = d.toISOString().slice(0, 10).replace(/-/g, '');
-    return sequelize.transaction(async (t) => {
-      const contadores = await VersaoBlockdomiService._obterProximosContadores(tipo, 1, d, t);
+    return prisma.$transaction(async (tx) => {
+      const contadores = await VersaoBlockdomiService._obterProximosContadores(tipo, 1, d, tx);
       const c = contadores[0] ?? 1;
       const numero = `${anoMesDia}${String(c).padStart(2, '0')}`;
-      const versao = await VersaoBlockdomi.create({ numero, empresa_id: empresaId ?? null }, { transaction: t });
+      const versao = await tx.blockdomi_versoes.create({
+        data: { numero, empresa_id: empresaId ?? null },
+      });
       return { id: versao.id, numero: versao.numero };
     });
   }
@@ -72,13 +69,15 @@ export class VersaoBlockdomiService {
 
     const d = data ?? new Date();
     const anoMesDia = d.toISOString().slice(0, 10).replace(/-/g, '');
-    return sequelize.transaction(async (t) => {
-      const contadores = await VersaoBlockdomiService._obterProximosContadores(tipo, quantidade, d, t);
+    return prisma.$transaction(async (tx) => {
+      const contadores = await VersaoBlockdomiService._obterProximosContadores(tipo, quantidade, d, tx);
       const resultado: VersaoResult[] = [];
       for (const c of contadores) {
         const numero = `${anoMesDia}${String(c).padStart(2, '0')}`;
-        const v = await VersaoBlockdomi.create({ numero, empresa_id: empresaId ?? null }, { transaction: t });
-        resultado.push({ id: v.id, numero: v.numero });
+        const versao = await tx.blockdomi_versoes.create({
+          data: { numero, empresa_id: empresaId ?? null },
+        });
+        resultado.push({ id: versao.id, numero: versao.numero });
       }
       return resultado;
     });

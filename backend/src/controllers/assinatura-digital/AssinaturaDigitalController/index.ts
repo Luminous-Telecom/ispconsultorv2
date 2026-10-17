@@ -1,3 +1,5 @@
+import { prisma } from '../../../db/prisma';
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { logger } from '../../../utils/logger';
 import { AssinaturaDigitalService } from '../../../services/assinatura-digital/AssinaturaDigitalService';
@@ -110,7 +112,7 @@ export class AssinaturaDigitalController {
         req: req as AuthenticatedRequest
       });
 
-      sendSuccess(res, assinatura.toJSON ? assinatura.toJSON() : assinatura, 'Documento enviado para assinatura com sucesso');
+      sendSuccess(res, toPlain(assinatura), 'Documento enviado para assinatura com sucesso');
     } catch (error) {
       if (error instanceof Error) {
         if (error.message.includes('não encontrado')) {
@@ -163,24 +165,35 @@ export class AssinaturaDigitalController {
 
       if (resultado.success && resultado.data) {
         if (resultado.data.status === 'signed' || resultado.data.status === 'completed') {
-          await assinatura.marcarComoAssinado();
-          
+          const dataAssinatura = new Date();
+          await prisma.assinatura_digital_assinaturas.update({
+            where: { id: assinatura.id },
+            data: { status: 'assinado', data_assinatura: dataAssinatura },
+          });
+          assinatura.status = 'assinado';
+          assinatura.data_assinatura = dataAssinatura;
+
           if (assinatura.termo_contrato_id) {
             const termoContrato = await TermoContratoService.getById(assinatura.termo_contrato_id);
             if (termoContrato && termoContrato.assinado === 'NAO') {
-              termoContrato.assinado = 'SIM';
-              termoContrato.data_aceite = new Date();
-              termoContrato.aceito_por = assinatura.nome_assinante || 'Assinatura Digital';
-              await termoContrato.save();
+              const dataAceite = new Date();
+              const aceitoPor = assinatura.nome_assinante || 'Assinatura Digital';
+              await prisma.contratos_termos.update({
+                where: { id: termoContrato.id },
+                data: { assinado: 'SIM', data_aceite: dataAceite, aceito_por: aceitoPor },
+              });
             }
           }
         } else if (resultado.data.status === 'canceled') {
+          await prisma.assinatura_digital_assinaturas.update({
+            where: { id: assinatura.id },
+            data: { status: 'cancelado' },
+          });
           assinatura.status = 'cancelado';
-          await assinatura.save();
         }
 
         sendSuccess(res, {
-          ...assinatura.toJSON(),
+          ...toPlain(assinatura),
           status_api: resultado.data.status,
           url_assinatura: resultado.data.url
         });
@@ -247,8 +260,12 @@ export class AssinaturaDigitalController {
         return;
       }
 
-      assinatura.pdf_assinado_base64 = pdfBuffer.toString('base64');
-      await assinatura.save();
+      const pdfBase64 = pdfBuffer.toString('base64');
+      await prisma.assinatura_digital_assinaturas.update({
+        where: { id: assinatura.id },
+        data: { pdf_assinado_base64: pdfBase64 },
+      });
+      assinatura.pdf_assinado_base64 = pdfBase64;
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename="documento-assinado-${id}.pdf"`);
@@ -290,9 +307,12 @@ export class AssinaturaDigitalController {
         }
       }
 
-      const dadosAnteriores = assinatura.toJSON();
+      const dadosAnteriores = toPlain(assinatura);
+      await prisma.assinatura_digital_assinaturas.update({
+        where: { id: assinatura.id },
+        data: { status: 'cancelado' },
+      });
       assinatura.status = 'cancelado';
-      await assinatura.save();
 
       try {
         const empresaIdAudit = getEmpresaIdOrNull(req) ?? assinatura.empresa_id ?? null;

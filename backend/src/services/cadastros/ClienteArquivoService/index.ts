@@ -1,9 +1,11 @@
-import { ClienteArquivo } from '../../../models/clientes/ClienteArquivo';
-import { Cliente } from '../../../models/clientes/Cliente';
+import type { Prisma } from '@prisma/client';
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
 import { logger } from '../../../utils/logger';
+import { resolveArquivosPath } from '../../../utils/pathUtils';
+import { prisma } from '../../../db/prisma';
+import { sortDirection } from '../prismaWhere';
 
 export interface CreateClienteArquivoData {
   cliente_id: number;
@@ -23,14 +25,11 @@ export interface UpdateClienteArquivoData {
   descricao?: string;
 }
 
-import { resolveArquivosPath } from '../../../utils/pathUtils';
+const SORT_COLUMNS = ['id', 'cliente_id', 'nome', 'tipo', 'tamanho', 'mime_type', 'origem', 'created_at', 'updated_at'] as const;
 
 export class ClienteArquivoService {
   private static readonly UPLOAD_DIR = resolveArquivosPath('clientes');
 
-  /**
-   * Garante que o diretório de upload existe
-   */
   private static async ensureUploadDir(): Promise<void> {
     try {
       await fs.mkdir(this.UPLOAD_DIR, { recursive: true });
@@ -40,9 +39,6 @@ export class ClienteArquivoService {
     }
   }
 
-  /**
-   * Converte Buffer para arquivo temporário
-   */
   private static async bufferToTempFile(buffer: Buffer, nome: string, mimeType: string): Promise<Express.Multer.File> {
     if (!buffer || buffer.length === 0) {
       throw new Error('Buffer inválido ou vazio');
@@ -53,9 +49,9 @@ export class ClienteArquivoService {
     const baseName = path.basename(nome, ext).replace(/[^a-zA-Z0-9.-]/g, '_');
     const tempFileName = `${baseName}_${Date.now()}${ext}`;
     const tempFilePath = path.join(tempDir, tempFileName);
-    
+
     await fs.writeFile(tempFilePath, buffer);
-    
+
     return {
       fieldname: 'arquivo',
       originalname: nome,
@@ -68,23 +64,15 @@ export class ClienteArquivoService {
     } as Express.Multer.File;
   }
 
-  /**
-   * Converte base64 para arquivo temporário (para compatibilidade com código legado)
-   */
   private static async base64ToTempFile(base64Data: string, nome: string, mimeType: string): Promise<Express.Multer.File> {
     const base64Content = base64Data.replace(/^data:.*,/, '');
-    
     if (!base64Content || base64Content.trim() === '') {
       throw new Error('Conteúdo base64 inválido ou vazio');
     }
-
     const buffer = Buffer.from(base64Content, 'base64');
     return this.bufferToTempFile(buffer, nome, mimeType);
   }
 
-  /**
-   * Cria arquivo a partir de Buffer (método direto para PDFs binários)
-   */
   static async createFromBuffer(data: {
     cliente_id: number;
     nome: string;
@@ -95,15 +83,12 @@ export class ClienteArquivoService {
     origem?: 'manual' | 'assinatura_digital' | 'sistema';
     referencia_id?: number;
     referencia_tipo?: string;
-  }): Promise<ClienteArquivo> {
-    // Converter Buffer para arquivo temporário
+  }) {
     const tempFile = await this.bufferToTempFile(
       data.arquivo_buffer,
       data.nome,
       data.mime_type || 'application/octet-stream'
     );
-    
-    // Usar o método create normal
     return this.create({
       cliente_id: data.cliente_id,
       nome: data.nome,
@@ -117,9 +102,6 @@ export class ClienteArquivoService {
     });
   }
 
-  /**
-   * Cria arquivo a partir de base64 (método auxiliar para compatibilidade)
-   */
   static async createFromBase64(data: {
     cliente_id: number;
     nome: string;
@@ -130,15 +112,12 @@ export class ClienteArquivoService {
     origem?: 'manual' | 'assinatura_digital' | 'sistema';
     referencia_id?: number;
     referencia_tipo?: string;
-  }): Promise<ClienteArquivo> {
-    // Converter base64 para arquivo temporário
+  }) {
     const tempFile = await this.base64ToTempFile(
       data.arquivo_base64,
       data.nome,
       data.mime_type || 'application/octet-stream'
     );
-    
-    // Usar o método create normal
     return this.create({
       cliente_id: data.cliente_id,
       nome: data.nome,
@@ -152,103 +131,60 @@ export class ClienteArquivoService {
     });
   }
 
-  /**
-   * Lista arquivos de um cliente
-   */
   static async list(
     clienteId: number,
     filters?: { tipo?: string; origem?: string; sortColumn?: string; sortDirection?: string }
-  ): Promise<ClienteArquivo[]> {
-    const { tipo, origem, sortColumn, sortDirection } = filters || {};
-    const where: any = { cliente_id: clienteId };
-    
-    if (tipo) {
-      where.tipo = tipo;
-    }
-    
-    if (origem) {
-      where.origem = origem;
-    }
-    
-    // Construir ordenação - ordena TODOS os dados antes da paginação
-    let order: any[] = [['id', 'DESC']]; // Padrão
-    
-    if (sortColumn && sortDirection) {
-      const { SortHelper } = await import('../../../utils/sortHelper');
-      const { CLIENTE_ARQUIVO_SORT_CONFIG } = await import('../../../config/sortConfigs');
-      
-      const sortResult = SortHelper.buildOrder(
-        CLIENTE_ARQUIVO_SORT_CONFIG,
-        sortColumn,
-        sortDirection.toUpperCase() as 'ASC' | 'DESC'
-      );
+  ) {
+    const { tipo, origem, sortColumn, sortDirection: direction } = filters || {};
+    const where: Prisma.clientes_arquivosWhereInput = { cliente_id: clienteId };
+    if (tipo) where.tipo = tipo as Prisma.clientes_arquivosWhereInput['tipo'];
+    if (origem) where.origem = origem as Prisma.clientes_arquivosWhereInput['origem'];
 
-      if (sortResult.isValid) {
-        order = sortResult.order;
-      }
-    }
-    
-    return ClienteArquivo.findAll({
-      where,
-      order
-    });
+    const dir = sortDirection(direction);
+    const orderBy: Prisma.clientes_arquivosOrderByWithRelationInput =
+      sortColumn && (SORT_COLUMNS as readonly string[]).includes(sortColumn)
+        ? { [sortColumn]: dir }
+        : { id: 'desc' };
+
+    return prisma.clientes_arquivos.findMany({ where, orderBy });
   }
 
-  /**
-   * Busca arquivo por ID
-   */
-  static async getById(id: number): Promise<ClienteArquivo | null> {
-    return ClienteArquivo.findByPk(id);
+  static async getById(id: number) {
+    return prisma.clientes_arquivos.findUnique({ where: { id } });
   }
 
-  /**
-   * Busca arquivo por referência (cliente_id, referencia_id e referencia_tipo)
-   */
-  static async findByReferencia(
-    clienteId: number,
-    referenciaId: number,
-    referenciaTipo: string
-  ): Promise<ClienteArquivo | null> {
-    return ClienteArquivo.findOne({
+  static async findByReferencia(clienteId: number, referenciaId: number, referenciaTipo: string) {
+    return prisma.clientes_arquivos.findFirst({
       where: {
         cliente_id: clienteId,
         referencia_id: referenciaId,
-        referencia_tipo: referenciaTipo
-      }
+        referencia_tipo: referenciaTipo,
+      },
     });
   }
 
-  /**
-   * Cria novo arquivo
-   */
-  static async create(data: CreateClienteArquivoData): Promise<ClienteArquivo> {
+  static async create(data: CreateClienteArquivoData) {
     try {
-      // Verificar se o cliente existe
-      const cliente = await Cliente.findByPk(data.cliente_id);
+      const cliente = await prisma.clientes.findUnique({
+        where: { id: data.cliente_id },
+        select: { id: true },
+      });
       if (!cliente) {
         throw new Error(`Cliente com ID ${data.cliente_id} não encontrado`);
       }
-
-      // Validar arquivo
       if (!data.arquivo) {
         throw new Error('Arquivo é obrigatório');
       }
 
-      // O multer já salvou o arquivo no diretório correto
       const clienteDir = path.join(this.UPLOAD_DIR, String(data.cliente_id));
       const fileName = path.basename(data.arquivo.path);
       const destinoPath = path.join(clienteDir, fileName);
-      
-      // Se não estiver no diretório do cliente, copiar e depois deletar o original
+
       if (!data.arquivo.path.startsWith(clienteDir)) {
         await this.ensureUploadDir();
         await fs.mkdir(clienteDir, { recursive: true });
-        
-        // Usar copyFile ao invés de rename para evitar erro EXDEV (cross-device link)
-        // Isso é necessário quando o arquivo temporário está em /tmp e o destino em outro sistema de arquivos
         try {
           await fs.copyFile(data.arquivo.path, destinoPath);
-          // Tentar deletar o arquivo temporário (não crítico se falhar)
           try {
             await fs.unlink(data.arquivo.path);
           } catch (unlinkError) {
@@ -266,24 +202,22 @@ export class ClienteArquivoService {
           throw copyError;
         }
       }
-      
+
       const caminho = path.join(String(data.cliente_id), fileName);
-      
-      // Obter tamanho do arquivo
-      const tamanho = data.arquivo.size;
-      
-      return await ClienteArquivo.create({
-        cliente_id: data.cliente_id,
-        empresa_id: data.empresa_id ?? null,
-        nome: data.nome,
-        tipo: data.tipo,
-        caminho,
-        tamanho,
-        mime_type: data.mime_type || data.arquivo.mimetype || null,
-        descricao: data.descricao || null,
-        origem: data.origem || 'manual',
-        referencia_id: data.referencia_id || null,
-        referencia_tipo: data.referencia_tipo || null
+      return await prisma.clientes_arquivos.create({
+        data: {
+          cliente_id: data.cliente_id,
+          empresa_id: data.empresa_id ?? null,
+          nome: data.nome,
+          tipo: data.tipo,
+          caminho,
+          tamanho: data.arquivo.size,
+          mime_type: data.mime_type || data.arquivo.mimetype || null,
+          descricao: data.descricao || null,
+          origem: data.origem || 'manual',
+          referencia_id: data.referencia_id || null,
+          referencia_tipo: data.referencia_tipo || null,
+        },
       });
     } catch (error) {
       logger.error('Erro ao criar arquivo do cliente', {
@@ -296,58 +230,42 @@ export class ClienteArquivoService {
     }
   }
 
-  /**
-   * Atualiza arquivo
-   */
-  static async update(id: number, data: UpdateClienteArquivoData): Promise<ClienteArquivo> {
-    const arquivo = await ClienteArquivo.findByPk(id);
-    if (!arquivo) {
-      throw new Error('Arquivo não encontrado');
-    }
-    
-    await arquivo.update(data);
-    return arquivo;
+  static async update(id: number, data: UpdateClienteArquivoData) {
+    const arquivo = await prisma.clientes_arquivos.findUnique({ where: { id } });
+    if (!arquivo) throw new Error('Arquivo não encontrado');
+    return prisma.clientes_arquivos.update({
+      where: { id },
+      data: {
+        ...(data.nome !== undefined ? { nome: data.nome } : {}),
+        ...(data.descricao !== undefined ? { descricao: data.descricao } : {}),
+      },
+    });
   }
 
-  /**
-   * Deleta arquivo
-   */
   static async delete(id: number): Promise<void> {
-    const arquivo = await ClienteArquivo.findByPk(id);
-    if (!arquivo) {
-      throw new Error('Arquivo não encontrado');
-    }
-    
-    // Deletar arquivo físico
+    const arquivo = await prisma.clientes_arquivos.findUnique({ where: { id } });
+    if (!arquivo) throw new Error('Arquivo não encontrado');
+
     try {
       const filePath = path.join(this.UPLOAD_DIR, arquivo.caminho);
       await fs.unlink(filePath);
     } catch (error) {
       logger.warn('Erro ao deletar arquivo físico', { id, error });
     }
-    
-    // Deletar registro no banco
-    await arquivo.destroy();
+
+    await prisma.clientes_arquivos.delete({ where: { id } });
   }
 
-  /**
-   * Obtém conteúdo do arquivo
-   */
   static async getFileContent(id: number): Promise<Buffer> {
-    const arquivo = await ClienteArquivo.findByPk(id);
-    if (!arquivo) {
-      throw new Error('Arquivo não encontrado');
-    }
-    
-    // Construir caminho do arquivo
-    // Se o caminho já começa com 'clientes/', remover para evitar duplicação
+    const arquivo = await prisma.clientes_arquivos.findUnique({ where: { id } });
+    if (!arquivo) throw new Error('Arquivo não encontrado');
+
     let caminhoRelativo = arquivo.caminho;
     if (caminhoRelativo.startsWith('clientes/')) {
       caminhoRelativo = caminhoRelativo.replace(/^clientes\//, '');
     }
-    
     const filePath = path.join(this.UPLOAD_DIR, caminhoRelativo);
-    
+
     try {
       return await fs.readFile(filePath);
     } catch (error) {

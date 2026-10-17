@@ -1,5 +1,5 @@
-import { MensagemWhatsApp } from '../../../models/comunicacao/MensagemWhatsApp';
-import { TemplateWhatsApp } from '../../../models/comunicacao/TemplateWhatsApp';
+import type { Prisma, comunicacao_mensagens_whatsapp } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { whereComunicacaoEmpresaEstrito } from '../../../utils/comunicacaoEmpresaWhere';
 
 export interface MensagemWhatsAppData {
@@ -15,64 +15,78 @@ export interface MensagemWhatsAppData {
   empresa_id?: number | null;
 }
 
-export class MensagemWhatsAppService {
-  static getDefaultIncludes() {
-    return [{ model: TemplateWhatsApp, as: 'template', required: false }];
-  }
+const mensagemWhatsAppInclude = {
+  comunicacao_templates_whatsapp: true,
+} satisfies Prisma.comunicacao_mensagens_whatsappInclude;
 
+type MensagemWhatsAppComTemplate = Prisma.comunicacao_mensagens_whatsappGetPayload<{
+  include: typeof mensagemWhatsAppInclude;
+}>;
+
+export class MensagemWhatsAppService {
   /**
    * Buscar mensagem por tipo (filtra estritamente por empresa_id quando informado)
    */
-  static async findByTipo(tipo: string, empresaId?: number | null): Promise<MensagemWhatsApp | null> {
+  static async findByTipo(tipo: string, empresaId?: number | null): Promise<MensagemWhatsAppComTemplate | null> {
     const whereEstrito = whereComunicacaoEmpresaEstrito(empresaId, { tipo });
-    const where = whereEstrito ?? { tipo };
-    return await MensagemWhatsApp.findOne({
+    const where = (whereEstrito ?? { tipo }) as Prisma.comunicacao_mensagens_whatsappWhereInput;
+    return prisma.comunicacao_mensagens_whatsapp.findFirst({
       where,
-      include: MensagemWhatsAppService.getDefaultIncludes(),
+      include: mensagemWhatsAppInclude,
     });
   }
 
   /**
    * Criar ou atualizar mensagem (upsert)
    */
-  static async upsert(dadosMensagem: MensagemWhatsAppData): Promise<MensagemWhatsApp> {
+  static async upsert(dadosMensagem: MensagemWhatsAppData): Promise<MensagemWhatsAppComTemplate> {
     const mensagemExistente = await this.findByTipo(dadosMensagem.tipo);
 
     if (mensagemExistente) {
-      await mensagemExistente.update(dadosMensagem as any);
-      await mensagemExistente.reload({ include: MensagemWhatsAppService.getDefaultIncludes() });
-      return mensagemExistente;
-    } else {
-      return await MensagemWhatsApp.create(dadosMensagem as any).then(async (created) => {
-        await created.reload({ include: MensagemWhatsAppService.getDefaultIncludes() });
-        return created;
+      return prisma.comunicacao_mensagens_whatsapp.update({
+        where: { id: mensagemExistente.id },
+        data: {
+          ...(dadosMensagem as Prisma.comunicacao_mensagens_whatsappUpdateInput),
+          updated_at: new Date(),
+        },
+        include: mensagemWhatsAppInclude,
       });
     }
+
+    return prisma.comunicacao_mensagens_whatsapp.create({
+      data: dadosMensagem as Prisma.comunicacao_mensagens_whatsappCreateInput,
+      include: mensagemWhatsAppInclude,
+    });
   }
 
   /**
    * Criar mensagem
    */
-  static async create(dadosMensagem: MensagemWhatsAppData): Promise<MensagemWhatsApp> {
-    return await MensagemWhatsApp.create(dadosMensagem as any);
+  static async create(dadosMensagem: MensagemWhatsAppData): Promise<comunicacao_mensagens_whatsapp> {
+    return prisma.comunicacao_mensagens_whatsapp.create({
+      data: dadosMensagem as Prisma.comunicacao_mensagens_whatsappCreateInput,
+    });
   }
 
   /**
    * Atualizar mensagem
    */
-  static async update(id: number, dadosMensagem: Partial<MensagemWhatsAppData>): Promise<MensagemWhatsApp> {
-    const mensagem = await MensagemWhatsApp.findByPk(id, {
-      include: MensagemWhatsAppService.getDefaultIncludes(),
+  static async update(id: number, dadosMensagem: Partial<MensagemWhatsAppData>): Promise<MensagemWhatsAppComTemplate> {
+    const mensagem = await prisma.comunicacao_mensagens_whatsapp.findUnique({
+      where: { id: Number(id) },
     });
-    
+
     if (!mensagem) {
       throw new Error('Mensagem não encontrada');
     }
 
-    await mensagem.update(dadosMensagem as any);
-    await mensagem.reload({ include: MensagemWhatsAppService.getDefaultIncludes() });
-    
-    return mensagem;
+    return prisma.comunicacao_mensagens_whatsapp.update({
+      where: { id: mensagem.id },
+      data: {
+        ...(dadosMensagem as Prisma.comunicacao_mensagens_whatsappUpdateInput),
+        updated_at: new Date(),
+      },
+      include: mensagemWhatsAppInclude,
+    });
   }
 }
-

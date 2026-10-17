@@ -1,25 +1,9 @@
-import { Op } from 'sequelize';
+import { prisma } from '../../../db/prisma';
 import { SAAS_PLANO_LIMITE_DEFS, type SaasPlanoLimiteRecursoId } from '../../../constants/saasPlanoLimites';
-import { Usuario } from '../../../models/cadastros/Usuario';
-import { Banco } from '../../../models/cadastros/Banco';
-import { Plano } from '../../../models/cadastros/Plano';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Contrato } from '../../../models/contratos/Contrato';
-import { ModeloDocumento } from '../../../models/documentos/ModeloDocumento';
-import { IntegracaoIxcProvedor } from '../../../models/integracao/IntegracaoIxcProvedor';
-import { OrdemServicoLocal } from '../../../models/ordens/OrdemServicoLocal';
-import { Agent } from '../../../models/agent/Agent';
-import { SshDevice } from '../../../models/ssh-manager/SshDevice';
-import { RpkiCa } from '../../../models/rpki/RpkiCa';
-import { RpkiCaParent } from '../../../models/rpki/RpkiCaParent';
-import { RpkiRepository } from '../../../models/rpki/RpkiRepository';
-import { RpkiRoa } from '../../../models/rpki/RpkiRoa';
-import { RpkiAspa } from '../../../models/rpki/RpkiAspa';
-import { SaasPlano } from '../../../models/saas/SaasPlano';
 import type { PlanoModuloId } from '../../../constants/planoModulos';
 
 export interface SaasPlanoLimitesContext {
-  plano: SaasPlano;
+  plano: { id: number } | null;
   modulos: PlanoModuloId[];
   limiteUsuarios: number;
   limites: Record<string, number>;
@@ -39,22 +23,22 @@ export interface EquipamentoUpdateLimitCheck extends EquipamentoLimitCheck {
 
 
 const LIMIT_COUNTERS: Record<SaasPlanoLimiteRecursoId, (empresaId: number) => Promise<number>> = {
-  cadastros_limite_clientes: (empresaId) => Cliente.count({ where: { empresa_id: empresaId } }),
-  cadastros_limite_bancos: (empresaId) => Banco.count({ where: { empresa_id: empresaId } }),
-  cadastros_limite_contratos: (empresaId) => Contrato.count({ where: { empresa_id: empresaId } }),
-  cadastros_limite_planos: (empresaId) => Plano.count({ where: { empresa_id: empresaId } }),
-  cadastros_limite_modelos_documento: (empresaId) => ModeloDocumento.count({ where: { empresa_id: empresaId } }),
-  ixc_provedor_limite_integracoes: (empresaId) => IntegracaoIxcProvedor.count({ where: { empresa_id: empresaId } }),
-  ordens_servico_limite_ordens_servico: (empresaId) => OrdemServicoLocal.count({ where: { empresa_id: empresaId } }),
-  equipamentos_limite_equipamentos: (empresaId) => SshDevice.count({ where: { empresa_id: empresaId } }),
-  equipamentos_limite_tuneis: (empresaId) => Agent.count({ where: { empresa_id: empresaId } }),
+  cadastros_limite_clientes: (empresaId) => prisma.clientes.count({ where: { empresa_id: empresaId } }),
+  cadastros_limite_bancos: (empresaId) => prisma.cadastros_bancos.count({ where: { empresa_id: empresaId } }),
+  cadastros_limite_contratos: (empresaId) => prisma.contratos.count({ where: { empresa_id: empresaId } }),
+  cadastros_limite_planos: (empresaId) => prisma.cadastros_planos.count({ where: { empresa_id: empresaId } }),
+  cadastros_limite_modelos_documento: (empresaId) => prisma.documentos_modelo.count({ where: { empresa_id: empresaId } }),
+  ixc_provedor_limite_integracoes: (empresaId) => prisma.integracao_ixc_provedor.count({ where: { empresa_id: empresaId } }),
+  ordens_servico_limite_ordens_servico: (empresaId) => prisma.ordens_servico.count({ where: { empresa_id: empresaId } }),
+  equipamentos_limite_equipamentos: (empresaId) => prisma.ssh_manager_devices.count({ where: { empresa_id: empresaId } }),
+  equipamentos_limite_tuneis: (empresaId) => prisma.agent_agents.count({ where: { empresa_id: empresaId } }),
   equipamentos_limite_backups: (empresaId) =>
-    SshDevice.count({ where: { empresa_id: empresaId, backup_enabled: true } }),
-  rpki_limite_cas: (empresaId) => RpkiCa.count({ where: { empresa_id: empresaId } }),
-  rpki_limite_cas_pai: (empresaId) => RpkiCaParent.count({ where: { empresa_id: empresaId } }),
-  rpki_limite_repositorios: (empresaId) => RpkiRepository.count({ where: { empresa_id: empresaId } }),
-  rpki_limite_roas: (empresaId) => RpkiRoa.count({ where: { empresa_id: empresaId } }),
-  rpki_limite_aspas: (empresaId) => RpkiAspa.count({ where: { empresa_id: empresaId } }),
+    prisma.ssh_manager_devices.count({ where: { empresa_id: empresaId, backup_enabled: true } }),
+  rpki_limite_cas: (empresaId) => prisma.rpki_cas.count({ where: { empresa_id: empresaId } }),
+  rpki_limite_cas_pai: (empresaId) => prisma.rpki_ca_parents.count({ where: { empresa_id: empresaId } }),
+  rpki_limite_repositorios: (empresaId) => prisma.rpki_repositories.count({ where: { empresa_id: empresaId } }),
+  rpki_limite_roas: (empresaId) => prisma.rpki_roas.count({ where: { empresa_id: empresaId } }),
+  rpki_limite_aspas: (empresaId) => prisma.rpki_aspas.count({ where: { empresa_id: empresaId } }),
 };
 
 export class SaasPlanoLimitesService {
@@ -105,12 +89,13 @@ export class SaasPlanoLimitesService {
     const context = await this.getContext(empresaId);
     if (!context) return null;
 
-    const where: Record<string | symbol, unknown> = { empresa_id: empresaId, ativo: true };
-    if (options.excludeUsuarioId != null) {
-      where.id = { [Op.ne]: options.excludeUsuarioId };
-    }
-
-    const count = await Usuario.count({ where });
+    const count = await prisma.cadastros_usuarios.count({
+      where: {
+        empresa_id: empresaId,
+        ativo: true,
+        ...(options.excludeUsuarioId != null ? { id: { not: options.excludeUsuarioId } } : {}),
+      },
+    });
     if (count >= context.limiteUsuarios) {
       return `Limite de usuários ativos do plano atingido (${context.limiteUsuarios}).`;
     }
@@ -136,7 +121,7 @@ export class SaasPlanoLimitesService {
     }
 
     if (context.limiteTuneis > 0) {
-      const countAgents = await Agent.count({ where: { empresa_id: empresaId } });
+      const countAgents = await prisma.agent_agents.count({ where: { empresa_id: empresaId } });
       if (countAgents >= context.limiteTuneis) {
         return `Limite de agentes do plano atingido (${context.limiteTuneis}).`;
       }
@@ -157,14 +142,14 @@ export class SaasPlanoLimitesService {
     }
 
     if (context.limiteEquipamentos > 0) {
-      const count = await SshDevice.count({ where: { empresa_id: empresaId } });
+      const count = await prisma.ssh_manager_devices.count({ where: { empresa_id: empresaId } });
       if (count >= context.limiteEquipamentos) {
         return `Limite de equipamentos do plano atingido (${context.limiteEquipamentos}).`;
       }
     }
 
     if (hasBackup && context.limiteBackups > 0) {
-      const countBackups = await SshDevice.count({ where: { empresa_id: empresaId, backup_enabled: true } });
+      const countBackups = await prisma.ssh_manager_devices.count({ where: { empresa_id: empresaId, backup_enabled: true } });
       if (countBackups >= context.limiteBackups) {
         return `Limite de backups do plano atingido (${context.limiteBackups}).`;
       }
@@ -187,7 +172,7 @@ export class SaasPlanoLimitesService {
 
     const isEnablingBackup = !currentHasBackup && hasBackup;
     if (isEnablingBackup && context.limiteBackups > 0) {
-      const countBackups = await SshDevice.count({ where: { empresa_id: empresaId, backup_enabled: true } });
+      const countBackups = await prisma.ssh_manager_devices.count({ where: { empresa_id: empresaId, backup_enabled: true } });
       if (countBackups >= context.limiteBackups) {
         return `Limite de backups do plano atingido (${context.limiteBackups}).`;
       }
@@ -209,7 +194,7 @@ export class SaasPlanoLimitesService {
     }
 
     if (context.limiteBackups > 0) {
-      const countBackups = await SshDevice.count({ where: { empresa_id: empresaId, backup_enabled: true } });
+      const countBackups = await prisma.ssh_manager_devices.count({ where: { empresa_id: empresaId, backup_enabled: true } });
       if (countBackups > context.limiteBackups) {
         return `Quantidade de backups ativos acima do limite do plano (${context.limiteBackups}). Ajuste os equipamentos com backup habilitado.`;
       }

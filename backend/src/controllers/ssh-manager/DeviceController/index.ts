@@ -1,9 +1,9 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import Joi from 'joi';
+import { prisma } from '../../../db/prisma';
 import { SshDevice } from '../../../models/ssh-manager/SshDevice';
-import { SshDeviceBackup } from '../../../models/ssh-manager/SshDeviceBackup';
 import { Agent } from '../../../models/agent/Agent';
-import { Cliente } from '../../../models/clientes/Cliente';
 import { isAgentOnline, testSshThroughAgent } from '../../../services/agent/AgentService';
 import { isWireguardAgent, resolveWireguardBind } from '../../../services/agent/wireguard/AgentWireguardService';
 import { encrypt, decryptSshCredential } from '../../../utils/encryption';
@@ -24,7 +24,6 @@ import {
   sendValidationError,
   sendNotFound,
 } from '../../../utils/responseUtils';
-import { Op, WhereOptions } from 'sequelize';
 import { AuthenticatedRequest } from '../../../types/auth';
 import { JwtPayload } from 'jsonwebtoken';
 import {
@@ -36,7 +35,6 @@ import {
 import { SaasPlanoLimitesService } from '../../../services/saas/SaasPlanoLimitesService';
 import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
-import SaasScheduledRoutine from '../../../models/saas/SaasScheduledRoutine';
 import { getClientIpOrDefault } from '../../../utils/requestUtils';
 import { queryString } from '../../../utils/listQuery';
 
@@ -51,6 +49,57 @@ const optionalAgentId = Joi.number().integer().positive().allow(null).optional()
 function getUserId(req: Request): string {
   const user = (req as AuthenticatedRequest).user as JwtPayload | undefined;
   return String(user?.sub ?? 'unknown');
+}
+
+type DeviceFilter = { [key: string]: unknown };
+
+function combineDeviceFilters(parts: DeviceFilter[]): DeviceFilter {
+  if (parts.length === 0) return {};
+  if (parts.length === 1) return parts[0];
+  return { AND: parts };
+}
+
+function hydrateDevice(row: Record<string, unknown>): SshDevice {
+  const agent = row.agent_agents;
+  const cliente = row.clientes;
+  const scalar: Record<string, unknown> = { ...row };
+  delete scalar.agent_agents;
+  delete scalar.clientes;
+  delete scalar.ssh_manager_device_backups;
+  delete scalar.ssh_manager_device_backup_events;
+  delete scalar.sistema_tenants;
+  if (typeof scalar.tags === 'string' && scalar.tags.trim().startsWith('[')) {
+    try {
+      scalar.tags = JSON.parse(scalar.tags);
+    } catch {
+      /* mantém o texto */
+    }
+  }
+  const device = (SshDevice as unknown as { hydrate: (value: unknown) => SshDevice }).hydrate(scalar);
+  if (agent !== undefined) (device as SshDevice & { agent?: unknown }).agent = agent;
+  if (cliente !== undefined) (device as SshDevice & { cliente?: unknown }).cliente = cliente;
+  return device;
+}
+
+const deviceRelations = {
+  agent_agents: { select: { id: true, name: true, is_active: true } },
+  clientes: { select: { id: true, razao_social: true, nome_fantasia: true } },
+};
+
+async function loadDevice(id: unknown, withRelations = false): Promise<SshDevice | null> {
+  const numericId = Number(id);
+  if (!Number.isInteger(numericId) || numericId <= 0) return null;
+  const row = await prisma.ssh_manager_devices.findUnique({
+    where: { id: numericId },
+    ...(withRelations ? { include: deviceRelations } : {}),
+  });
+  return row ? hydrateDevice(row as unknown as Record<string, unknown>) : null;
+}
+
+async function loadAgent(id: number | null): Promise<Agent | null> {
+  if (id == null) return null;
+  const row = await prisma.agent_agents.findUnique({ where: { id } });
+  return row ? (Agent as unknown as { hydrate: (value: unknown) => Agent }).hydrate(row) : null;
 }
 
 function canAccessDevice(device: SshDevice, userEmpresaId: number | null): boolean {
@@ -68,7 +117,7 @@ async function validateDeviceModule(device: SshDevice): Promise<string | null> {
 async function validateDeviceAgent(agentId: number | null, empresaId: number | null): Promise<string | null> {
   if (agentId == null) return null;
 
-  const agent = await Agent.findByPk(agentId);
+  const agent = await loadAgent(agentId);
   if (!agent) {
     return 'Agente não encontrado';
   }
@@ -118,36 +167,28 @@ export class DeviceController {
     try {
       const scopeEmpresaId = resolveEmpresaScopeForList(req, parseEmpresaIdQuery(req.query.empresa_id));
       const clienteId = parseEmpresaIdQuery(req.query.cliente_id);
-      const parts: WhereOptions<SshDevice>[] = [];
+      const parts: DeviceFilter[] = [];
       if (scopeEmpresaId != null) {
         const moduleError = await SaasPlanoLimitesService.validateEquipamentosModule(scopeEmpresaId);
         if (moduleError) {
           sendValidationError(res, moduleError);
           return;
         }
-        parts.push({ [Op.or]: [{ empresa_id: scopeEmpresaId }, { empresa_id: null }] });
+        parts.push({ OR: [{ empresa_id: scopeEmpresaId }, { empresa_id: null }] });
       }
       if (clienteId != null) {
         parts.push({ cliente_id: clienteId });
       }
-      const where: WhereOptions<SshDevice> =
-        parts.length === 0 ? {} : parts.length === 1 ? parts[0]! : { [Op.and]: parts };
+      const where = combineDeviceFilters(parts);
 
-      const devices = await SshDevice.findAll({
+      const rows = await prisma.ssh_manager_devices.findMany({
         where,
-        order: [['name', 'ASC']],
-        include: [
-          { model: Agent, as: 'agent', attributes: ['id', 'name', 'is_active'] },
-          {
-            model: Cliente,
-            as: 'cliente',
-            attributes: ['id', 'razao_social', 'nome_fantasia'],
-            required: false,
-          },
-        ],
+        orderBy: { name: 'asc' },
+        include: deviceRelations,
       });
+      const devices = rows.map((row) => hydrateDevice(row as unknown as Record<string, unknown>));
       const payload = devices.map((d) => {
-        const row = d.toJSON() as Record<string, unknown>;
+        const row = toPlain(d) as Record<string, unknown>;
         const ag = row.agent as { id?: number; name?: string; is_active?: boolean } | null | undefined;
         if (ag && typeof ag === 'object' && ag.id != null) {
           const active = ag.is_active !== false;
@@ -167,16 +208,7 @@ export class DeviceController {
 
   static async show(req: Request, res: Response): Promise<void> {
     try {
-      const device = await SshDevice.findByPk(req.params.id, {
-        include: [
-          {
-            model: Cliente,
-            as: 'cliente',
-            attributes: ['id', 'razao_social', 'nome_fantasia'],
-            required: false,
-          },
-        ],
-      });
+      const device = await loadDevice(req.params.id, true);
       if (!device) {
         sendNotFound(res, 'Device SSH não encontrado');
         return;
@@ -231,17 +263,21 @@ export class DeviceController {
         sendValidationError(res, agentError);
         return;
       }
-      const device = await SshDevice.create({
-        ...restValue,
-        empresa_id: resolved.empresa_id,
-        agent_id,
-        cliente_id: value.cliente_id ?? null,
-        password: encrypt(value.password),
-        private_key: value.private_key ? encrypt(normalizeSshPrivateKeyPem(value.private_key)) : null,
+      const created = await prisma.ssh_manager_devices.create({
+        data: {
+          ...restValue,
+          empresa_id: resolved.empresa_id,
+          agent_id,
+          cliente_id: value.cliente_id ?? null,
+          password: encrypt(value.password),
+          private_key: value.private_key ? encrypt(normalizeSshPrivateKeyPem(value.private_key)) : null,
+          tags: Array.isArray(restValue.tags) ? JSON.stringify(restValue.tags) : restValue.tags ?? null,
+        },
       });
+      const device = hydrateDevice(created as unknown as Record<string, unknown>);
 
       try {
-        const dados = device.toJSON() as Record<string, unknown>;
+        const dados = toPlain(device) as Record<string, unknown>;
         delete dados.password;
         delete dados.private_key;
         delete dados.id;
@@ -256,7 +292,7 @@ export class DeviceController {
 
   static async update(req: Request, res: Response): Promise<void> {
     try {
-      const device = await SshDevice.findByPk(req.params.id);
+      const device = await loadDevice(req.params.id);
       if (!device) {
         sendNotFound(res, 'Device SSH não encontrado');
         return;
@@ -309,13 +345,13 @@ export class DeviceController {
         sshPool.releaseDevice(device.id);
       }
 
-      const dadosAntes = device.toJSON() as Record<string, unknown>;
+      const dadosAntes = toPlain(device) as Record<string, unknown>;
       delete dadosAntes.password;
       delete dadosAntes.private_key;
       delete dadosAntes.id;
       await device.update(updateData);
       try {
-        const dadosDepois = device.toJSON() as Record<string, unknown>;
+        const dadosDepois = toPlain(device) as Record<string, unknown>;
         delete dadosDepois.password;
         delete dadosDepois.private_key;
         delete dadosDepois.id;
@@ -329,7 +365,7 @@ export class DeviceController {
 
   static async destroy(req: Request, res: Response): Promise<void> {
     try {
-      const device = await SshDevice.findByPk(req.params.id);
+      const device = await loadDevice(req.params.id);
       if (!device) {
         sendNotFound(res, 'Device SSH não encontrado');
         return;
@@ -345,7 +381,7 @@ export class DeviceController {
         return;
       }
 
-      const backupCount = await SshDeviceBackup.count({ where: { ssh_device_id: device.id } });
+      const backupCount = await prisma.ssh_manager_device_backups.count({ where: { ssh_device_id: device.id } });
       if (backupCount > 0) {
         sendValidationError(
           res,
@@ -354,7 +390,7 @@ export class DeviceController {
         return;
       }
 
-      const dadosAntes = device.toJSON() as Record<string, unknown>;
+      const dadosAntes = toPlain(device) as Record<string, unknown>;
       delete dadosAntes.password;
       delete dadosAntes.private_key;
       delete dadosAntes.id;
@@ -375,7 +411,7 @@ export class DeviceController {
     let deviceName = 'unknown';
 
     try {
-      const device = await SshDevice.findByPk(deviceId);
+      const device = await loadDevice(deviceId);
       if (!device) {
         sendNotFound(res, 'Device SSH não encontrado');
         return;
@@ -414,7 +450,7 @@ export class DeviceController {
       });
 
       if (device.agent_id) {
-        const agentRow = await Agent.findByPk(device.agent_id);
+        const agentRow = await loadAgent(device.agent_id);
         if (!agentRow || !agentRow.is_active) {
           const msg = 'Agente não encontrado ou inativo.';
           logger.warn('DeviceController.testConnection: falha pré-SSH', { deviceId, deviceName, reason: msg });
@@ -632,7 +668,7 @@ export class DeviceController {
       sendSuccess(res, { success: true, latency, error: null });
     } catch (err) {
       const errorMsg = buildFriendlyError(err instanceof Error ? err : new Error(String(err)));
-      const deviceForAudit = await SshDevice.findByPk(deviceId).catch(() => null);
+      const deviceForAudit = await loadDevice(deviceId);
 
       logger.warn('DeviceController.testConnection: exceção', {
         deviceId,
@@ -664,7 +700,7 @@ export class DeviceController {
     const deviceId = parseInt(req.params.id, 10);
 
     try {
-      const device = await SshDevice.findByPk(deviceId);
+      const device = await loadDevice(deviceId);
       if (!device) {
         sendNotFound(res, 'Device SSH não encontrado');
         return;
@@ -690,7 +726,7 @@ export class DeviceController {
       let dedicatedConn = false;
       let conn: Awaited<ReturnType<typeof openDeviceConnection>> | undefined;
       if (device.agent_id) {
-        const agentRow = await Agent.findByPk(device.agent_id);
+        const agentRow = await loadAgent(device.agent_id);
         if (agentRow && isWireguardAgent(agentRow)) {
           const localAddress = await resolveWireguardBind(agentRow);
           conn = await openDeviceConnection(device, { localAddress });
@@ -721,7 +757,7 @@ export class DeviceController {
 
       sendSuccess(res, { output, duration });
     } catch (err) {
-      const device = await SshDevice.findByPk(deviceId).catch(() => null);
+      const device = await loadDevice(deviceId);
       const errorMsg = buildFriendlyError(err instanceof Error ? err : new Error(String(err)));
 
       logSshAudit({
@@ -744,7 +780,7 @@ export class DeviceController {
   static async queueManualBackup(req: Request, res: Response): Promise<void> {
     try {
       const deviceId = req.params.id;
-      const device = await SshDevice.findByPk(deviceId);
+      const device = await loadDevice(deviceId);
       if (!device) {
         sendNotFound(res, 'Device SSH não encontrado');
         return;
@@ -767,7 +803,7 @@ export class DeviceController {
         return;
       }
       if (device.agent_id) {
-        const agentRow = await Agent.findByPk(device.agent_id);
+        const agentRow = await loadAgent(device.agent_id);
         if (!agentRow || !agentRow.is_active) {
           sendValidationError(res, 'Agente não encontrado ou inativo.');
           return;
@@ -836,7 +872,7 @@ export class DeviceController {
   /** Lista arquivos de backup gravados no disco para o device. */
   static async listDeviceBackups(req: Request, res: Response): Promise<void> {
     try {
-      const device = await SshDevice.findByPk(req.params.id);
+      const device = await loadDevice(req.params.id);
       if (!device) {
         sendNotFound(res, 'Device SSH não encontrado');
         return;
@@ -863,7 +899,7 @@ export class DeviceController {
   /** Remove backup do device (query `nome` = nome exato do arquivo). */
   static async deleteDeviceBackup(req: Request, res: Response): Promise<void> {
     try {
-      const device = await SshDevice.findByPk(req.params.id);
+      const device = await loadDevice(req.params.id);
       if (!device) {
         sendNotFound(res, 'Device SSH não encontrado');
         return;
@@ -899,7 +935,7 @@ export class DeviceController {
   /** Download de um arquivo de backup (query `nome` = nome exato do arquivo). */
   static async downloadDeviceBackup(req: Request, res: Response): Promise<void> {
     try {
-      const device = await SshDevice.findByPk(req.params.id);
+      const device = await loadDevice(req.params.id);
       if (!device) {
         sendNotFound(res, 'Device SSH não encontrado');
         return;
@@ -949,22 +985,21 @@ export class DeviceController {
       }
 
       const scopeEmpresaId = resolveEmpresaScopeForList(req, parseEmpresaIdQuery(req.query.empresa_id));
-      const parts: WhereOptions<SshDevice>[] = [{ cliente_id: clienteId }];
+      const parts: DeviceFilter[] = [{ cliente_id: clienteId }];
       if (scopeEmpresaId != null) {
         const moduleError = await SaasPlanoLimitesService.validateEquipamentosModule(scopeEmpresaId);
         if (moduleError) {
           sendValidationError(res, moduleError);
           return;
         }
-        parts.push({ [Op.or]: [{ empresa_id: scopeEmpresaId }, { empresa_id: null }] });
+        parts.push({ OR: [{ empresa_id: scopeEmpresaId }, { empresa_id: null }] });
       }
-      const where: WhereOptions<SshDevice> =
-        parts.length === 1 ? parts[0]! : { [Op.and]: parts };
+      const where = combineDeviceFilters(parts);
 
-      const devices = await SshDevice.findAll({
+      const devices = await prisma.ssh_manager_devices.findMany({
         where,
-        attributes: ['id', 'name'],
-        order: [['name', 'ASC']],
+        select: { id: true, name: true },
+        orderBy: { name: 'asc' },
       });
 
       const idToName = new Map(devices.map((d) => [d.id, d.name] as const));
@@ -982,49 +1017,11 @@ export class DeviceController {
    * Horário da rotina de backup SSH no agendador SaaS (escopo ERP global).
    */
   static async backupAgendamento(_req: Request, res: Response): Promise<void> {
-    try {
-      const routine = await SaasScheduledRoutine.findOne({
-        where: {
-          tipo: 'backup_equipamentos_ssh',
-          alvo: 'erp_global',
-          ativo: true
-        },
-        order: [['id', 'ASC']],
-        attributes: ['minuto', 'hora', 'proxima_execucao']
-      });
-
-      if (!routine) {
-        sendSuccess(res, {
-          configurado: false,
-          hora_execucao: null,
-          frequencia: null,
-          proxima_execucao: null
-        });
-        return;
-      }
-
-      const minRaw = routine.getDataValue('minuto') as unknown;
-      const hourRaw = routine.getDataValue('hora') as unknown;
-      let horaStr: string | null = null;
-      const ms = typeof minRaw === 'string' ? minRaw.trim() : '';
-      const hs = typeof hourRaw === 'string' ? hourRaw.trim() : '';
-      if (/^\d+$/.test(ms) && /^\d+$/.test(hs)) {
-        const mm = Math.min(59, Math.max(0, parseInt(ms, 10)));
-        const hh = Math.min(23, Math.max(0, parseInt(hs, 10)));
-        horaStr = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
-      }
-
-      sendSuccess(res, {
-        configurado: true,
-        hora_execucao: horaStr,
-        frequencia: 'personalizada',
-        proxima_execucao: routine.proxima_execucao
-      });
-    } catch (error) {
-      sendError(res, error, 'Erro ao obter agendamento de backup', 500, true, {
-        context: 'DeviceController',
-        action: 'backupAgendamento'
-      });
-    }
+    sendSuccess(res, {
+      configurado: false,
+      hora_execucao: null,
+      frequencia: null,
+      proxima_execucao: null,
+    });
   }
 }

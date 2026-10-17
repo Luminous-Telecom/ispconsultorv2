@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Response } from 'express';
 import Joi from 'joi';
 import { SaasServidorEmailService, SaasServidorWhatsappService, SaasBancoService } from '../../../services/saas/SaasConfigService';
@@ -41,7 +42,7 @@ export class SaasServidorEmailController {
       const { error, value } = emailSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) { sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details)); return; }
       const item = await SaasServidorEmailService.create(value);
-      await registrarCriacao(req as any, 'SaasServidorEmail', item.id, item.toJSON() as Record<string, unknown>);
+      await registrarCriacao(req as any, 'SaasServidorEmail', item.id, toPlain(item) as Record<string, unknown>);
       res.status(201).json({ success: true, message: 'Servidor criado com sucesso', data: item });
     } catch (err) { sendError(res, err, 'Erro ao criar servidor', 500, true); }
   }
@@ -53,8 +54,8 @@ export class SaasServidorEmailController {
       await SaasServidorEmailService.update(Number(req.params.id), value);
       if (antigo) {
         await registrarAtualizacao(req as any, 'SaasServidorEmail', Number(req.params.id),
-          antigo.toJSON() as Record<string, unknown>,
-          { ...antigo.toJSON(), ...value } as Record<string, unknown>);
+          toPlain(antigo) as Record<string, unknown>,
+          { ...toPlain(antigo), ...value } as Record<string, unknown>);
       }
       sendSuccess(res, null, 'Servidor atualizado com sucesso');
     } catch (err) { sendError(res, err, 'Erro ao atualizar servidor', 500, true); }
@@ -63,7 +64,7 @@ export class SaasServidorEmailController {
     try {
       const antigo = await SaasServidorEmailService.getById(Number(req.params.id));
       await SaasServidorEmailService.delete(Number(req.params.id));
-      if (antigo) await registrarExclusao(req as any, 'SaasServidorEmail', Number(req.params.id), antigo.toJSON() as Record<string, unknown>);
+      if (antigo) await registrarExclusao(req as any, 'SaasServidorEmail', Number(req.params.id), toPlain(antigo) as Record<string, unknown>);
       sendSuccess(res, null, 'Servidor removido');
     }
     catch (err) { sendError(res, err, 'Erro ao remover servidor', 500, true); }
@@ -100,7 +101,7 @@ export class SaasServidorWhatsappController {
       const { error, value } = whatsappSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) { sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details)); return; }
       const item = await SaasServidorWhatsappService.create(value);
-      await registrarCriacao(req as any, 'SaasServidorWhatsapp', item.id, item.toJSON() as Record<string, unknown>);
+      await registrarCriacao(req as any, 'SaasServidorWhatsapp', item.id, toPlain(item) as Record<string, unknown>);
       res.status(201).json({ success: true, message: 'Servidor criado com sucesso', data: item });
     } catch (err) { sendError(res, err, 'Erro ao criar servidor', 500, true); }
   }
@@ -112,8 +113,8 @@ export class SaasServidorWhatsappController {
       await SaasServidorWhatsappService.update(Number(req.params.id), value);
       if (antigo) {
         await registrarAtualizacao(req as any, 'SaasServidorWhatsapp', Number(req.params.id),
-          antigo.toJSON() as Record<string, unknown>,
-          { ...antigo.toJSON(), ...value } as Record<string, unknown>);
+          toPlain(antigo) as Record<string, unknown>,
+          { ...toPlain(antigo), ...value } as Record<string, unknown>);
       }
       sendSuccess(res, null, 'Servidor atualizado com sucesso');
     } catch (err) { sendError(res, err, 'Erro ao atualizar servidor', 500, true); }
@@ -122,7 +123,7 @@ export class SaasServidorWhatsappController {
     try {
       const antigo = await SaasServidorWhatsappService.getById(Number(req.params.id));
       await SaasServidorWhatsappService.delete(Number(req.params.id));
-      if (antigo) await registrarExclusao(req as any, 'SaasServidorWhatsapp', Number(req.params.id), antigo.toJSON() as Record<string, unknown>);
+      if (antigo) await registrarExclusao(req as any, 'SaasServidorWhatsapp', Number(req.params.id), toPlain(antigo) as Record<string, unknown>);
       sendSuccess(res, null, 'Servidor removido');
     }
     catch (err) { sendError(res, err, 'Erro ao remover servidor', 500, true); }
@@ -196,7 +197,7 @@ export class SaasBancoController {
       const { error, value } = bancoSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) { sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details)); return; }
       const item = await SaasBancoService.create(value);
-      await registrarCriacao(req as any, 'SaasBanco', item.id, item.toJSON() as Record<string, unknown>);
+      await registrarCriacao(req as any, 'SaasBanco', item.id, toPlain(item) as Record<string, unknown>);
       res.status(201).json({ success: true, message: 'Banco criado com sucesso', data: item });
     } catch (err) {
       if (err instanceof Error && err.message.includes('API Key do Asaas é obrigatória')) {
@@ -214,8 +215,8 @@ export class SaasBancoController {
       await SaasBancoService.update(Number(req.params.id), value);
       if (antigo) {
         await registrarAtualizacao(req as any, 'SaasBanco', Number(req.params.id),
-          antigo.toJSON() as Record<string, unknown>,
-          { ...antigo.toJSON(), ...value } as Record<string, unknown>);
+          toPlain(antigo) as Record<string, unknown>,
+          { ...toPlain(antigo), ...value } as Record<string, unknown>);
       }
       sendSuccess(res, null, 'Banco atualizado com sucesso');
     } catch (err) {
@@ -230,7 +231,7 @@ export class SaasBancoController {
     try {
       const antigo = await SaasBancoService.getById(Number(req.params.id));
       await SaasBancoService.delete(Number(req.params.id));
-      if (antigo) await registrarExclusao(req as any, 'SaasBanco', Number(req.params.id), antigo.toJSON() as Record<string, unknown>);
+      if (antigo) await registrarExclusao(req as any, 'SaasBanco', Number(req.params.id), toPlain(antigo) as Record<string, unknown>);
       sendSuccess(res, null, 'Banco removido');
     }
     catch (err) { sendError(res, err, 'Erro ao remover banco', 500, true); }

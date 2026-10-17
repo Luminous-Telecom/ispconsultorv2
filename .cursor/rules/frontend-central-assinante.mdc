@@ -17,7 +17,7 @@ alwaysApply: false
 // styles/CentralAssinante.scss — tokens --ca-*
 ```
 
-- `slug` na URL identifica o tenant (multiloja) — toda chamada de API passa o slug (`CentralAssinanteService.login(slug, data)`, etc.)
+- `slug` na URL identifica a empresa — toda chamada de API passa o slug (`CentralAssinanteService.login(slug, data)`, etc.)
 - Login, recuperar senha e trocar senha são **views locais** da própria página (`useCentralAssinanteAuth`), não modais do `ModalContext` do ERP
 - Tabs próprias (`resumo`, `financeiro`, `contratos`, `termos`) — navegação interna do componente, não `react-router`
 
@@ -29,7 +29,7 @@ alwaysApply: false
 
 ## Auth
 
-Ver `frontend-autenticacao.mdc` — token próprio via `useCentralAssinanteAuth(slug)`, escopado por tenant, não é JWT do ERP nem sessão SaaS.
+Ver `frontend-autenticacao.mdc` — token próprio via `useCentralAssinanteAuth(slug)`. Não é o JWT do ERP.
 
 ## Mobile
 

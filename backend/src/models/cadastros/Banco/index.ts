@@ -17,7 +17,7 @@ import {
   HasOneGetAssociationMixin,
   HasOneSetAssociationMixin,
   HasOneCreateAssociationMixin
-} from 'sequelize';
+} from '../../../db/orm';
 import { sequelize } from '../../../config/database';
 import { Cliente } from '../../clientes/Cliente';
 import { Titulo } from '../../financeiro/Titulo';

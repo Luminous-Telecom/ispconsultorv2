@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { IpPermitidoService } from '../../../services/blockdomi/IpPermitidoService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
@@ -50,7 +51,7 @@ export class IpPermitidoController {
         sendNotFound(res, 'Registro não encontrado');
         return;
       }
-      const json = row.toJSON() as Record<string, unknown>;
+      const json = toPlain(row) as Record<string, unknown>;
       const cliente = (row as { cliente?: { razao_social?: string; nome_fantasia?: string; cnpj?: string } }).cliente;
       json.cliente_nome = cliente ? (cliente.razao_social || cliente.nome_fantasia || cliente.cnpj || '-') : '-';
       sendSuccess(res, json);
@@ -77,7 +78,7 @@ export class IpPermitidoController {
         faixa_ips,
         empresa_id: empresaId
       });
-      const json = row.toJSON() as Record<string, unknown>;
+      const json = toPlain(row) as Record<string, unknown>;
       try {
         const empresaIdAudit = getEmpresaIdOrNull(req) ?? row.empresa_id ?? null;
         await registrarCriacao(req, 'IpPermitido', row.id, json, undefined, empresaIdAudit);
@@ -87,9 +88,9 @@ export class IpPermitidoController {
       sendSuccess(res, json, 'IPs permitidos cadastrados', 201);
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Erro ao cadastrar';
-      const name = error instanceof Error ? error.name : '';
+      const code = error && typeof error === 'object' && 'code' in error ? String((error as { code?: unknown }).code) : '';
       const isUniqueCliente =
-        name === 'SequelizeUniqueConstraintError' ||
+        code === 'P2002' ||
         msg.includes('cliente_id') ||
         msg.includes('Unique') ||
         msg === 'Validation error';
@@ -118,9 +119,9 @@ export class IpPermitidoController {
         sendNotFound(res, 'Registro não encontrado');
         return;
       }
-      const dadosAnteriores = existing.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(existing) as Record<string, unknown>;
       const row = await IpPermitidoService.update(id, { faixa_ips });
-      const dadosNovos = row.toJSON() as Record<string, unknown>;
+      const dadosNovos = toPlain(row) as Record<string, unknown>;
       try {
         const empresaIdAudit = getEmpresaIdOrNull(req) ?? row.empresa_id ?? null;
         await registrarAtualizacao(req, 'IpPermitido', row.id, dadosAnteriores, dadosNovos, undefined, empresaIdAudit);
@@ -154,11 +155,11 @@ export class IpPermitidoController {
         sendNotFound(res, 'Registro não encontrado');
         return;
       }
-      const dadosAnteriores = existing.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(existing) as Record<string, unknown>;
       await IpPermitidoService.delete(id);
       try {
         const empresaIdAudit = getEmpresaIdOrNull(req) ?? existing.empresa_id ?? null;
-        await registrarExclusao(req, 'IpPermitido', existing.id, dadosAnteriores, undefined, empresaIdAudit);
+        await registrarExclusao(req, 'IpPermitido', Number(existing.id), dadosAnteriores, undefined, empresaIdAudit);
       } catch {
         // Não interromper o fluxo
       }

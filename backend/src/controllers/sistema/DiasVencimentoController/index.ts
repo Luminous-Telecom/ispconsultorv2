@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { DiasVencimentoService } from '../../../services/cadastros/DiasVencimentoService';
 import { registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
@@ -28,12 +29,12 @@ export class DiasVencimentoController {
       const { dias } = req.body ?? {};
       const empresaId = getEmpresaIdOrNull(req);
       const diasAntes = await DiasVencimentoService.list(undefined, empresaId);
-      const dadosAnteriores = diasAntes.map(d => d.toJSON());
+      const dadosAnteriores = diasAntes.map(d => toPlain(d));
 
       await DiasVencimentoService.upsertDias(Array.isArray(dias) ? dias : [], empresaId);
 
       const diasDepois = await DiasVencimentoService.list(undefined, empresaId);
-      const dadosNovos = diasDepois.map(d => d.toJSON());
+      const dadosNovos = diasDepois.map(d => toPlain(d));
 
       // Registrar auditoria para cada dia que mudou
       for (const diaNovo of dadosNovos) {
@@ -76,7 +77,7 @@ export class DiasVencimentoController {
           'DiasVencimento',
           dia.id,
           { dia: dia.dia, ativo: false } as unknown as Record<string, unknown>,
-          dia.toJSON() as unknown as Record<string, unknown>,
+          toPlain(dia) as unknown as Record<string, unknown>,
           undefined,
           empresaIdAudit
         );

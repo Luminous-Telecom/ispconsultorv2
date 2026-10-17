@@ -1,13 +1,9 @@
-jest.mock('../../../models/financeiro/Titulo', () => ({
-  Titulo: { findByPk: jest.fn() },
+jest.mock('../../../db/prisma', () => ({
+  prisma: {
+    financeiro_titulos: { findUnique: jest.fn() },
+  },
 }));
 
-jest.mock('../../../models/clientes/Cliente', () => ({ Cliente: {} }));
-jest.mock('../../../models/cadastros/Plano', () => ({ Plano: {} }));
-jest.mock('../../../models/cadastros/Banco', () => ({ Banco: {} }));
-jest.mock('../../../models/comunicacao/MensagemHistorico', () => ({
-  MensagemHistorico: { findOne: jest.fn() },
-}));
 jest.mock('../../../utils/logger', () => ({
   logger: { info: jest.fn(), error: jest.fn(), warn: jest.fn() },
 }));
@@ -18,12 +14,12 @@ jest.mock('../WhatsAppBoletoService', () => ({
   WhatsAppBoletoService: { enviarReciboPagamento: jest.fn() },
 }));
 
-import { Titulo } from '../../../models/financeiro/Titulo';
+import { prisma } from '../../../db/prisma';
 import { EmailService } from '../EmailService';
 import { WhatsAppBoletoService } from '../WhatsAppBoletoService';
 import { ReciboPagamentoService } from './index';
 
-const findByPk = Titulo.findByPk as jest.Mock;
+const findUnique = prisma.financeiro_titulos.findUnique as jest.Mock;
 const enviarReciboPagamentoEmail = EmailService.enviarReciboPagamento as jest.Mock;
 const enviarReciboPagamentoWhatsApp = WhatsAppBoletoService.enviarReciboPagamento as jest.Mock;
 
@@ -33,13 +29,16 @@ function titulo(overrides: Record<string, unknown> = {}) {
     pago: true,
     status: 'pago',
     empresa_id: 10,
-    cliente: { id: 3, razao_social: 'Cliente' },
+    valor: '10.00',
+    clientes: { id: 3, razao_social: 'Cliente' },
+    cadastros_planos: null,
+    cadastros_bancos: null,
     ...overrides,
   };
 }
 
 beforeEach(() => {
-  findByPk.mockReset();
+  findUnique.mockReset();
   enviarReciboPagamentoEmail.mockReset();
   enviarReciboPagamentoWhatsApp.mockReset();
   enviarReciboPagamentoEmail.mockResolvedValue(true);
@@ -47,7 +46,7 @@ beforeEach(() => {
 });
 
 it('recusa recibo de título que não está pago e não dispara envio', async () => {
-  findByPk.mockResolvedValue(titulo({ pago: false, status: 'pendente' }));
+  findUnique.mockResolvedValue(titulo({ pago: false, status: 'pendente' }));
 
   const resultado = await ReciboPagamentoService.enviarReciboManual(7, 10);
 
@@ -60,7 +59,7 @@ it('recusa recibo de título que não está pago e não dispara envio', async ()
 });
 
 it('não envia recibo de título de outra empresa', async () => {
-  findByPk.mockResolvedValue(titulo({ empresa_id: 10 }));
+  findUnique.mockResolvedValue(titulo({ empresa_id: 10 }));
 
   const resultado = await ReciboPagamentoService.enviarReciboManual(7, 99);
 
@@ -69,7 +68,7 @@ it('não envia recibo de título de outra empresa', async () => {
 });
 
 it('envia recibo de título pago_atraso da mesma empresa', async () => {
-  findByPk.mockResolvedValue(titulo({ status: 'pago_atraso', pago: true }));
+  findUnique.mockResolvedValue(titulo({ status: 'pago_atraso', pago: true }));
 
   const resultado = await ReciboPagamentoService.enviarReciboManual(7, 10);
 
@@ -79,7 +78,7 @@ it('envia recibo de título pago_atraso da mesma empresa', async () => {
 });
 
 it('falha quando nenhum canal consegue enviar', async () => {
-  findByPk.mockResolvedValue(titulo());
+  findUnique.mockResolvedValue(titulo());
   enviarReciboPagamentoEmail.mockResolvedValue(false);
   enviarReciboPagamentoWhatsApp.mockResolvedValue(false);
 

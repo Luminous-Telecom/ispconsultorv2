@@ -3,11 +3,8 @@
  *
  * Rotinas agendadas delegadas ao Krill (sync parents/repo/publish).
  */
-import { Op } from 'sequelize';
+import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
-import { RpkiCa } from '../../../models/rpki/RpkiCa';
-import { RpkiCaParent } from '../../../models/rpki/RpkiCaParent';
-import { RpkiRepository } from '../../../models/rpki/RpkiRepository';
 import { RpkiProvisioningService } from '../RpkiProvisioningService';
 
 interface SchedulerResult {
@@ -37,13 +34,13 @@ export class RpkiSchedulerRoutineService {
     let sucesso = 0;
     let erro = 0;
 
-    const parents = await RpkiCaParent.findAll({
-      where: { provisioning_status: { [Op.ne]: 'error' } },
-      include: [{ model: RpkiCa, as: 'ca' }],
+    const parents = await prisma.rpki_ca_parents.findMany({
+      where: { provisioning_status: { not: 'error' } },
+      include: { rpki_cas: true },
     });
 
     for (const parent of parents) {
-      const ca = (parent as RpkiCaParent & { ca?: RpkiCa }).ca;
+      const ca = parent.rpki_cas;
       if (!ca?.handle) continue;
 
       try {
@@ -98,14 +95,14 @@ export class RpkiSchedulerRoutineService {
     let sucesso = 0;
     let erro = 0;
 
-    const repositories = await RpkiRepository.findAll({
-      include: [{ model: RpkiCa, as: 'ca' }],
+    const repositories = await prisma.rpki_repositories.findMany({
+      include: { rpki_cas: true },
     });
 
     const { RpkiCaService } = await import('../RpkiCaService');
 
     for (const repo of repositories) {
-      const ca = (repo as RpkiRepository & { ca?: RpkiCa }).ca;
+      const ca = repo.rpki_cas;
       if (!ca) continue;
 
       try {

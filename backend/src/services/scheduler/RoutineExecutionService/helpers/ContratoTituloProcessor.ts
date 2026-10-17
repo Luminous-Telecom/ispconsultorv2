@@ -1,7 +1,7 @@
 import { withTransaction } from '../../../../utils/transaction';
-import type { Transaction } from 'sequelize';
+import type { TransactionClient as Transaction } from '../../../../utils/transaction';
 import { TituloGenerationHelper } from './TituloGenerationHelper';
-import type Parametros from '../../../../models/sistema/Parametros';
+import type { sistema_parametros as Parametros } from '@prisma/client';
 
 type Periodicidade = 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal' | null | undefined;
 
@@ -45,7 +45,7 @@ interface ContratoPlanoAdicionalWithPlano {
   contrato_id: number;
 }
 
-type TituloInstance = InstanceType<typeof import('../../../../models/financeiro/Titulo').Titulo>;
+type TituloInstance = { id: number; empresa_id?: number | null };
 
 export class ContratoTituloProcessor {
   /**

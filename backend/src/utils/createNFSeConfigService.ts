@@ -1,9 +1,8 @@
-import { Op } from 'sequelize';
-import type { ModelStatic, Model, Transaction } from 'sequelize';
+import { prisma } from '../db/prisma';
 
 const DEFAULT_NFSE = {
   codigo_servico_municipal: null,
-  aliquota_iss: 0.00,
+  aliquota_iss: 0.0,
   descricao_servico: null,
   serie_nf: '80000',
   numero_dps: 1,
@@ -17,24 +16,58 @@ const DEFAULT_NFSE = {
   op_simples_nacional: 1,
   regime_especial_tributacao: 0,
   regime_apuracao_sn: null,
-  tp_ret_issqn: 1
+  tp_ret_issqn: 1,
 };
 
 export interface NFSeConfigServiceOptions {
-  transaction?: Transaction;
+  transaction?: { tx?: unknown };
 }
 
-export function createNFSeConfigService<T extends Model>(Model: ModelStatic<T>) {
-  const findConfig = async (empresaId?: number | null, options?: NFSeConfigServiceOptions): Promise<T | null> => {
-    const where = empresaId != null
-      ? { [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
-      : {};
+interface ConfigModel<T> {
+  new (): T;
+  tableName?: string;
+  hydrate?: (row: unknown) => T;
+}
 
-    return (await (Model as ModelStatic<Model>).findOne({
-      where,
-      order: [['id', 'ASC']],
-      transaction: options?.transaction
-    })) as T | null;
+type Delegate = {
+  findFirst: (args: Record<string, unknown>) => Promise<Record<string, unknown> | null>;
+  create: (args: Record<string, unknown>) => Promise<Record<string, unknown>>;
+  update: (args: Record<string, unknown>) => Promise<Record<string, unknown>>;
+};
+
+function clientOf(options?: NFSeConfigServiceOptions): typeof prisma {
+  const tx = options?.transaction?.tx;
+  if (tx && typeof tx === 'object') return tx as typeof prisma;
+  return prisma;
+}
+
+function delegateOf(tableName: string | undefined, options?: NFSeConfigServiceOptions): Delegate | null {
+  if (!tableName || tableName.startsWith('saas_')) return null;
+  const found = (clientOf(options) as unknown as Record<string, Delegate | undefined>)[tableName];
+  if (!found || typeof found.findFirst !== 'function') return null;
+  return found;
+}
+
+function materialize<T>(ModelClass: ConfigModel<T>, row: Record<string, unknown>): T {
+  if (typeof ModelClass.hydrate === 'function') return ModelClass.hydrate(row);
+  return row as T;
+}
+
+export function createNFSeConfigService<T>(ModelClass: ConfigModel<T>) {
+  const findConfig = async (
+    empresaId?: number | null,
+    options?: NFSeConfigServiceOptions
+  ): Promise<T | null> => {
+    const delegate = delegateOf(ModelClass.tableName, options);
+    if (!delegate) return null;
+
+    const where =
+      empresaId != null
+        ? { OR: [{ empresa_id: empresaId }, { empresa_id: null }] }
+        : {};
+
+    const row = await delegate.findFirst({ where, orderBy: { id: 'asc' } });
+    return row ? materialize(ModelClass, row) : null;
   };
 
   return {
@@ -50,18 +83,44 @@ export function createNFSeConfigService<T extends Model>(Model: ModelStatic<T>) 
       return this.get(empresaId);
     },
 
-    async update(dados: Partial<T>, empresaId?: number | null, options?: NFSeConfigServiceOptions): Promise<T> {
-      let config = await findConfig(empresaId, options);
+    async update(
+      dados: Partial<T>,
+      empresaId?: number | null,
+      options?: NFSeConfigServiceOptions
+    ): Promise<T> {
+      const delegate = delegateOf(ModelClass.tableName, options);
+      const payload = dados as Record<string, unknown>;
 
-      if (!config) {
-        const merged = { ...DEFAULT_NFSE, ...dados, empresa_id: (dados as { empresa_id?: number | null })?.empresa_id ?? empresaId ?? null } as never;
-        config = (await Model.create(merged, { transaction: options?.transaction })) as T;
-      } else {
-        await (config as unknown as { update: (d: object, o?: NFSeConfigServiceOptions) => Promise<void> }).update(dados as object, options);
-        await (config as unknown as { reload: (o?: NFSeConfigServiceOptions) => Promise<void> }).reload(options);
+      if (!delegate) {
+        return {
+          ...DEFAULT_NFSE,
+          ...payload,
+          empresa_id: (payload.empresa_id as number | null | undefined) ?? empresaId ?? null,
+        } as T;
       }
 
-      return config;
-    }
+      const where =
+        empresaId != null
+          ? { OR: [{ empresa_id: empresaId }, { empresa_id: null }] }
+          : {};
+      const existing = await delegate.findFirst({ where, orderBy: { id: 'asc' } });
+
+      if (!existing) {
+        const created = await delegate.create({
+          data: {
+            ...DEFAULT_NFSE,
+            ...payload,
+            empresa_id: (payload.empresa_id as number | null | undefined) ?? empresaId ?? null,
+          },
+        });
+        return materialize(ModelClass, created);
+      }
+
+      const updated = await delegate.update({
+        where: { id: existing.id },
+        data: payload,
+      });
+      return materialize(ModelClass, updated);
+    },
   };
 }

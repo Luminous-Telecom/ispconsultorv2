@@ -7,7 +7,7 @@ import {
   BelongsToGetAssociationMixin,
   BelongsToSetAssociationMixin,
   BelongsToCreateAssociationMixin
-} from 'sequelize';
+} from '../../../db/orm';
 import { sequelize } from '../../../config/database';
 import { Cliente } from '../Cliente';
 import { Plano } from '../../cadastros/Plano';

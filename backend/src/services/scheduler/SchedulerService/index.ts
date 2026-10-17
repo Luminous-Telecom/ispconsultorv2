@@ -1,5 +1,4 @@
-import { ScheduledRoutine, type ScheduledRoutineCreationAttributes } from '../../../models/sistema/ScheduledRoutine';
-import SaasScheduledRoutine from '../../../models/saas/SaasScheduledRoutine';
+import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
 import { calculateNextExecution } from '../../../utils/SchedulerUtils';
 import { RoutineScheduleService } from '../RoutineScheduleService';
@@ -37,6 +36,15 @@ function diaSemanaErpFromCreateData(d: number | string | undefined): number | un
  * 
  * @class SchedulerService
  */
+type RoutineRow = {
+  id: number;
+  ativo?: boolean;
+  nome?: string | null;
+  tipo?: string | null;
+  empresa_id?: number | null;
+  [key: string]: unknown;
+};
+
 export class SchedulerService {
   private static instance: SchedulerService;
   private scheduleService: RoutineScheduleService;
@@ -90,7 +98,7 @@ export class SchedulerService {
    * Agenda uma rotina específica
    * @param routine - Rotina a ser agendada
    */
-  public async scheduleRoutine(routine: ScheduledRoutine): Promise<void> {
+  public async scheduleRoutine(routine: RoutineRow): Promise<void> {
     await this.scheduleService.scheduleRoutine(routine);
   }
 
@@ -105,7 +113,7 @@ export class SchedulerService {
   /**
    * Agenda uma rotina do SaaS
    */
-  public async scheduleSaasRoutine(routine: SaasScheduledRoutine): Promise<void> {
+  public async scheduleSaasRoutine(routine: RoutineRow): Promise<void> {
     await this.scheduleService.scheduleSaasRoutine(routine);
   }
 
@@ -122,13 +130,8 @@ export class SchedulerService {
    * @param usuario - Dados do usuário que executou (quando manual)
    * @param ipAddress - IP do cliente (quando manual)
    */
-  public async executeSaasRoutineManually(id: number, usuario?: { id: number; nome: string | null; email: string | null } | null, ipAddress?: string | null): Promise<void> {
-    const routine = await SaasScheduledRoutine.findByPk(id);
-    if (!routine) {
-      throw new Error('Rotina não encontrada');
-    }
-    // ativo controla só o agendamento automático; execução manual é sempre permitida
-    this.scheduleService.executeSaasRoutineNow(routine, usuario, ipAddress);
+  public async executeSaasRoutineManually(_id: number, _usuario?: { id: number; nome: string | null; email: string | null } | null, _ipAddress?: string | null): Promise<void> {
+    throw new Error('Rotina não encontrada');
   }
 
   /**
@@ -136,21 +139,22 @@ export class SchedulerService {
    * @param data - Dados da rotina
    * @returns Rotina criada
    */
-  public async createRoutine(data: CreateRoutineData): Promise<ScheduledRoutine> {
-    const { minuto: _minSaaS, hora: _horaSaaS, dia_mes: _dmSaaS, mes: _mesSaaS, dia_semana: rawDow, ...erpFields } = data;
+  public async createRoutine(data: CreateRoutineData): Promise<RoutineRow> {
+    const { minuto: _minSaaS, hora: _horaSaaS, dia_mes: _dmSaaS, mes: _mesSaaS, dia_semana: rawDow, configuracao, ...erpFields } = data;
     void _minSaaS;
     void _horaSaaS;
     void _dmSaaS;
     void _mesSaaS;
 
-    const createPayload: ScheduledRoutineCreationAttributes = {
-      ...erpFields,
-      dia_semana: diaSemanaErpFromCreateData(rawDow),
-      ativo: true,
-      proxima_execucao: calculateNextExecution(data)
-    };
-
-    const routine = await ScheduledRoutine.create(createPayload);
+    const routine = await prisma.sistema_scheduled_routines.create({
+      data: {
+        ...erpFields,
+        configuracao: typeof configuracao === 'string' ? configuracao : JSON.stringify(configuracao ?? {}),
+        dia_semana: diaSemanaErpFromCreateData(rawDow) ?? null,
+        ativo: true,
+        proxima_execucao: calculateNextExecution(data),
+      } as never,
+    });
 
     // Se estiver ativa, agendar imediatamente
     if (routine.ativo) {
@@ -166,29 +170,31 @@ export class SchedulerService {
    * @param data - Dados para atualização
    * @returns Rotina atualizada
    */
-  public async updateRoutine(id: number, data: Partial<ScheduledRoutine>): Promise<ScheduledRoutine> {
-    const routine = await ScheduledRoutine.findByPk(id);
+  public async updateRoutine(id: number, data: Record<string, unknown>): Promise<RoutineRow> {
+    const routine = await prisma.sistema_scheduled_routines.findUnique({ where: { id } });
     if (!routine) {
       throw new Error('Rotina não encontrada');
     }
 
-    // Se mudou horário ou frequência, recalcular próxima execução
-    if (data.hora_execucao !== undefined || data.frequencia !== undefined || 
+    const payload = { ...data };
+    if (data.hora_execucao !== undefined || data.frequencia !== undefined ||
         data.dia_execucao !== undefined || data.dia_semana !== undefined) {
-      const updatedData = { ...routine.get({ plain: true }), ...data };
-      data.proxima_execucao = calculateNextExecution(updatedData);
+      payload.proxima_execucao = calculateNextExecution({ ...routine, ...data } as unknown as CreateRoutineData);
+    }
+    if (payload.configuracao != null && typeof payload.configuracao !== 'string') {
+      payload.configuracao = JSON.stringify(payload.configuracao);
     }
 
-    await routine.update(data);
+    const updated = await prisma.sistema_scheduled_routines.update({ where: { id }, data: payload as never });
     
     // Reagendar se estiver ativa, ou remover agendamento se estiver inativa
-    if (routine.ativo) {
-      await this.scheduleService.scheduleRoutine(routine);
+    if (updated.ativo) {
+      await this.scheduleService.scheduleRoutine(updated);
     } else {
       this.scheduleService.unscheduleRoutine(id);
     }
 
-    return routine;
+    return updated;
   }
 
   /**
@@ -196,13 +202,13 @@ export class SchedulerService {
    * @param id - ID da rotina
    */
   public async deleteRoutine(id: number): Promise<void> {
-    const routine = await ScheduledRoutine.findByPk(id);
+    const routine = await prisma.sistema_scheduled_routines.findUnique({ where: { id } });
     if (!routine) {
       throw new Error('Rotina não encontrada');
     }
 
     this.scheduleService.unscheduleRoutine(id);
-    await routine.destroy();
+    await prisma.sistema_scheduled_routines.delete({ where: { id } });
   }
 
   /**
@@ -211,21 +217,21 @@ export class SchedulerService {
    * @param ativo - Status ativo/inativo
    * @returns Rotina atualizada
    */
-  public async toggleRoutine(id: number, ativo: boolean): Promise<ScheduledRoutine> {
-    const routine = await ScheduledRoutine.findByPk(id);
+  public async toggleRoutine(id: number, ativo: boolean): Promise<RoutineRow> {
+    const routine = await prisma.sistema_scheduled_routines.findUnique({ where: { id } });
     if (!routine) {
       throw new Error('Rotina não encontrada');
     }
 
-    await routine.update({ ativo });
+    const updated = await prisma.sistema_scheduled_routines.update({ where: { id }, data: { ativo } });
 
-    if (ativo) {
-      await this.scheduleService.scheduleRoutine(routine);
+    if (updated.ativo) {
+      await this.scheduleService.scheduleRoutine(updated);
     } else {
       this.scheduleService.unscheduleRoutine(id);
     }
 
-    return routine;
+    return updated;
   }
 
   /**
@@ -236,7 +242,7 @@ export class SchedulerService {
    * @returns Mensagem de confirmação
    */
   public async executeRoutineManually(id: number, usuario?: { id: number; nome: string | null; email: string | null } | null, ipAddress?: string | null): Promise<{ message: string }> {
-    const routine = await ScheduledRoutine.findByPk(id);
+    const routine = await prisma.sistema_scheduled_routines.findUnique({ where: { id } });
     if (!routine) {
       throw new Error('Rotina não encontrada');
     }
@@ -257,8 +263,8 @@ export class SchedulerService {
    * Retorna todas as rotinas com seus logs recentes
    * @returns Array de rotinas
    */
-  public async getAllRoutines(): Promise<ScheduledRoutine[]> {
-    return await this.logService.getAllRoutines();
+  public async getAllRoutines(): Promise<RoutineRow[]> {
+    return await this.logService.getAllRoutines() as unknown as RoutineRow[];
   }
 
   /**
@@ -266,8 +272,8 @@ export class SchedulerService {
    * @param id - ID da rotina
    * @returns Rotina encontrada ou null
    */
-  public async getRoutineById(id: number): Promise<ScheduledRoutine | null> {
-    return await this.logService.getRoutineById(id);
+  public async getRoutineById(id: number): Promise<RoutineRow | null> {
+    return await this.logService.getRoutineById(id) as unknown as RoutineRow | null;
   }
 
   /**

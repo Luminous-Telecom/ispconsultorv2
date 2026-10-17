@@ -32,7 +32,7 @@ sendError(res, err, 'Erro ao processar cliente'); // 500 — loga automaticament
 - `sendError` mascara mensagem interna em produção (`NODE_ENV=production`) quando `statusCode >= 500` — cliente recebe `defaultMessage`, detalhe completo vai só para o `logger`
 - Nunca chamar `logger.error` manualmente antes de `sendError` — o helper já loga (evita log duplicado)
 - `res.headersSent` já é checado internamente — não precisa validar antes de chamar
-- Erros globais não tratados no controller caem no `errorHandlerMiddleware` (`middleware/errorHandlerMiddleware`), que trata `Joi.ValidationError`, `Sequelize.UniqueConstraintError` (409) e demais erros do Sequelize
+- Erros globais não tratados no controller caem no `errorHandlerMiddleware` (`middleware/errorHandlerMiddleware`), que trata `Joi.ValidationError` e o código Prisma `P2002` (conflito único, 409)
 
 ## Proibido
 

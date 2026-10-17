@@ -1,3 +1,4 @@
+import { prisma } from '../../../db/prisma';
 import { AtendimentoMensagem } from '../../../models/atendimentos/AtendimentoMensagem';
 import { AtendimentoLocal } from '../../../models/atendimentos/AtendimentoLocal';
 import { IntegracaoIxcProvedorService } from '../../integracao/IntegracaoIxcProvedorService';
@@ -552,9 +553,9 @@ export class IxcAtendimentoService {
           });
 
           const ticketAtualizado =
-            (await resolveTicketRegistroForSync(ixcId, record)) ??
+            (await resolveTicketRegistroForSync(ixcId, record as unknown as AtendimentoLocal)) ??
             (await fetchTicketRegistroById(ixcId)) ??
-            buildTicketRegistroFromLocal(record);
+            buildTicketRegistroFromLocal(record as unknown as AtendimentoLocal);
           await AtendimentoLocalService.syncFromIxcTicket(
             ixcId,
             ticketAtualizado,
@@ -602,7 +603,7 @@ export class IxcAtendimentoService {
         let atual = await fetchTicketRegistroById(ixcId);
         const atualVeioDoIxc = Boolean(atual);
         if (!atual && record) {
-          atual = buildTicketRegistroFromLocal(record);
+          atual = buildTicketRegistroFromLocal(record as unknown as AtendimentoLocal);
         }
         if (!atual) {
           throw new Error('Atendimento não encontrado');
@@ -642,7 +643,7 @@ export class IxcAtendimentoService {
           });
 
           const ticketPosSync =
-            (await resolveTicketRegistroForSync(ixcId, record ?? null)) ?? atual;
+            (await resolveTicketRegistroForSync(ixcId, (record ?? null) as unknown as AtendimentoLocal | null)) ?? atual;
           await AtendimentoLocalService.syncFromIxcTicket(ixcId, ticketPosSync, empresaId, payload);
 
           return { type: 'success', id: String(record?.id ?? ixcId), ixc_id: ixcId };
@@ -758,7 +759,7 @@ export class IxcAtendimentoService {
       if (statusInformado) {
         updates.su_status = statusInformado;
       }
-      await record.update(updates);
+      await prisma.atendimentos.update({ where: { id: record.id }, data: updates });
 
       return { type: 'success', id: String(created.id) };
     }
@@ -808,7 +809,7 @@ export class IxcAtendimentoService {
               if (mudouStatus) {
                 updates.su_status = statusAlvo;
               }
-              await record.update(updates);
+              await prisma.atendimentos.update({ where: { id: record.id }, data: updates });
             }
 
             return { type: 'success', id: response.data?.id };
@@ -819,9 +820,12 @@ export class IxcAtendimentoService {
               const ticket = await fetchTicketRegistroById(ticketId);
               if (String(ticket?.su_status ?? '').trim() === statusAlvo) {
                 if (record) {
-                  await record.update({
-                    ultima_atualizacao: nowIxcDateTime(),
-                    su_status: statusAlvo,
+                  await prisma.atendimentos.update({
+                    where: { id: record.id },
+                    data: {
+                      ultima_atualizacao: nowIxcDateTime(),
+                      su_status: statusAlvo,
+                    },
                   });
                 }
                 return { type: 'success' };

@@ -5,9 +5,9 @@ import { parseMetaTemplateStructure } from './parseMetaTemplateStructure';
 const langNorm = (l: string) => (l || '').toLowerCase().replace(/-/g, '_');
 
 async function resolveWabaId(servidor: {
-  whatsapp_cloud_token?: string;
-  whatsapp_cloud_business_account_id?: string;
-  whatsapp_cloud_phone_number_id?: string;
+  whatsapp_cloud_token?: string | null;
+  whatsapp_cloud_business_account_id?: string | null;
+  whatsapp_cloud_phone_number_id?: string | null;
 }): Promise<string | null> {
   if (servidor.whatsapp_cloud_business_account_id) {
     return servidor.whatsapp_cloud_business_account_id;
@@ -25,9 +25,9 @@ async function resolveWabaId(servidor: {
 
 export async function fetchMetaTemplateStructure(
   servidor: {
-    whatsapp_cloud_token?: string;
-    whatsapp_cloud_business_account_id?: string;
-    whatsapp_cloud_phone_number_id?: string;
+    whatsapp_cloud_token?: string | null;
+    whatsapp_cloud_business_account_id?: string | null;
+    whatsapp_cloud_phone_number_id?: string | null;
   },
   templateName: string,
   language: string

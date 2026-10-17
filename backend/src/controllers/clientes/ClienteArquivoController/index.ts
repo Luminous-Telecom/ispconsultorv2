@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { ClienteArquivoService, CreateClienteArquivoData, UpdateClienteArquivoData } from '../../../services/cadastros';
 import Joi from 'joi';
@@ -118,7 +119,7 @@ export class ClienteArquivoController {
           req as AuthenticatedRequest,
           'ClienteArquivo',
           arquivo.id,
-          arquivo.toJSON() as Record<string, unknown>,
+          toPlain(arquivo) as Record<string, unknown>,
           undefined,
           empresaIdAudit
         );
@@ -146,11 +147,11 @@ export class ClienteArquivoController {
       }
 
       const arquivoAntes = await ClienteArquivoService.getById(Number(id));
-      const dadosAnteriores = arquivoAntes ? arquivoAntes.toJSON() : null;
+      const dadosAnteriores = arquivoAntes ? toPlain(arquivoAntes) : null;
 
       const arquivo = await ClienteArquivoService.update(Number(id), value as UpdateClienteArquivoData);
 
-      const dadosNovos = arquivo.toJSON() as Record<string, unknown>;
+      const dadosNovos = toPlain(arquivo) as Record<string, unknown>;
       
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores as Record<string, unknown>, dadosNovos);
@@ -183,7 +184,7 @@ export class ClienteArquivoController {
     try {
       const { id } = req.params;
       const arquivo = await ClienteArquivoService.getById(Number(id));
-      const dadosAnteriores = arquivo ? arquivo.toJSON() : null;
+      const dadosAnteriores = arquivo ? toPlain(arquivo) : null;
 
       await ClienteArquivoService.delete(Number(id));
 

@@ -2,11 +2,11 @@
  * Provisioning RPKI (RFC 8183) — certificados, chaves e CMS são gerenciados pelo Krill.
  * ISP Consultor apenas parseia XML, persiste metadados no banco e delega operações à API Krill.
  */
-import { RpkiCa } from '../../../models/rpki/RpkiCa';
-import { RpkiCaParent } from '../../../models/rpki/RpkiCaParent';
-import { RpkiCaResource } from '../../../models/rpki/RpkiCaResource';
-import { RpkiRepository } from '../../../models/rpki/RpkiRepository';
+import type { rpki_cas, rpki_ca_parents, rpki_repositories } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { RpkiClientError } from '../../../utils/errorUtils';
+
+type CaRef = Pick<rpki_cas, 'id' | 'handle' | 'nome' | 'empresa_id'>;
 import { KrillApiService } from '../KrillApiService';
 import {
   extractResourcesFromParentStatuses,
@@ -281,21 +281,21 @@ async function syncResourcesFromParentResponse(params: {
       ? clean.split('-', 2).map((part) => part.trim())
       : [clean, null];
 
-    await RpkiCaResource.findOrCreate({
-      where: {
-        ca_id: params.caId,
-        resource_type: resourceType,
-        start_range: startRange,
-      },
-      defaults: {
-        empresa_id: params.empresaId,
-        ca_id: params.caId,
-        resource_type: resourceType,
-        start_range: startRange,
-        end_range: endRange,
-        source: 'parent',
-      },
+    const existing = await prisma.rpki_ca_resources.findFirst({
+      where: { ca_id: params.caId, resource_type: resourceType, start_range: startRange },
     });
+    if (!existing) {
+      await prisma.rpki_ca_resources.create({
+        data: {
+          empresa_id: params.empresaId,
+          ca_id: params.caId,
+          resource_type: resourceType,
+          start_range: startRange,
+          end_range: endRange,
+          source: 'parent',
+        },
+      });
+    }
   };
 
   for (const asn of params.asnResources) {
@@ -311,8 +311,8 @@ async function syncResourcesFromParentResponse(params: {
 
 export class RpkiProvisioningService {
   static async syncParentResources(params: {
-    ca: RpkiCa;
-    parent: RpkiCaParent;
+    ca: CaRef;
+    parent: Pick<rpki_ca_parents, 'id'>;
     empresaId: number | null;
   }): Promise<UpDownListResponseData> {
     const handle = params.ca.handle?.trim();
@@ -332,13 +332,14 @@ export class RpkiProvisioningService {
       ipv6Resources: resources.ipv6Resources,
     });
 
-    await params.ca.update({ status: 'active' });
-    await params.ca.reload();
-
-    await params.parent.update({
-      provisioning_status: 'active',
-      last_sync_at: new Date(),
-      last_error: null,
+    await prisma.rpki_cas.update({ where: { id: params.ca.id }, data: { status: 'active' } });
+    await prisma.rpki_ca_parents.update({
+      where: { id: params.parent.id },
+      data: {
+        provisioning_status: 'active',
+        last_sync_at: new Date(),
+        last_error: null,
+      },
     });
 
     const { SistemaLogOperacionalService } = await import('../../sistema/SistemaLogOperacionalService');
@@ -361,8 +362,8 @@ export class RpkiProvisioningService {
 
   /** Krill gerencia certificados de recurso automaticamente no sync/parents. */
   static async requestResourceCert(params: {
-    ca: RpkiCa;
-    parent: RpkiCaParent;
+    ca: CaRef;
+    parent: Pick<rpki_ca_parents, 'id'>;
   }): Promise<void> {
     await RpkiProvisioningService.syncParentResources({
       ca: params.ca,
@@ -371,11 +372,14 @@ export class RpkiProvisioningService {
     });
   }
 
-  static async generateChildRequest(ca: RpkiCa): Promise<{ xml: string; ca: RpkiCa }> {
+  static async generateChildRequest(ca: CaRef): Promise<{ xml: string; ca: CaRef }> {
     const protocolHandle = toProtocolSafeHandle(ca.handle || ca.nome);
     if (protocolHandle !== ca.handle) {
-      await ca.update({ handle: protocolHandle });
-      await ca.reload();
+      const updated = await prisma.rpki_cas.update({
+        where: { id: ca.id },
+        data: { handle: protocolHandle },
+      });
+      ca = updated;
     }
 
     await KrillApiService.ensureCa(protocolHandle);
@@ -384,11 +388,11 @@ export class RpkiProvisioningService {
   }
 
   static async importParentResponse(params: {
-    ca: RpkiCa;
+    ca: CaRef;
     parentName: string;
     responseXml: string;
     empresaId: number | null;
-  }): Promise<RpkiCaParent> {
+  }): Promise<rpki_ca_parents> {
     const parentResponseStored = normalizeIncomingXml(params.responseXml);
 
     const handle = params.ca.handle?.trim();
@@ -399,39 +403,30 @@ export class RpkiProvisioningService {
 
     const parsed = parseParentResponseXml(params.responseXml);
 
-    const [parent, created] = await RpkiCaParent.findOrCreate({
-      where: {
-        ca_id: params.ca.id,
-        parent_name: params.parentName,
-      },
-      defaults: {
-        empresa_id: params.empresaId,
-        ca_id: params.ca.id,
-        parent_name: params.parentName,
-        service_uri: parsed.serviceUri,
-        parent_handle: parsed.parentHandle,
-        child_handle: parsed.childHandle,
-        publication_referrer: parsed.publicationReferrer,
-        publication_referral_token: parsed.publicationReferralTokenBase64,
-        parent_response_xml: parentResponseStored,
-        provisioning_status: 'active',
-        last_sync_at: new Date(),
-        last_error: null,
-      },
+    const parentData = {
+      service_uri: parsed.serviceUri,
+      parent_handle: parsed.parentHandle,
+      child_handle: parsed.childHandle,
+      publication_referrer: parsed.publicationReferrer,
+      publication_referral_token: parsed.publicationReferralTokenBase64,
+      parent_response_xml: parentResponseStored,
+      provisioning_status: 'active' as const,
+      last_sync_at: new Date(),
+      last_error: null,
+    };
+    const existingParent = await prisma.rpki_ca_parents.findFirst({
+      where: { ca_id: params.ca.id, parent_name: params.parentName },
     });
-    if (!created) {
-      await parent.update({
-        service_uri: parsed.serviceUri,
-        parent_handle: parsed.parentHandle,
-        child_handle: parsed.childHandle,
-        publication_referrer: parsed.publicationReferrer,
-        publication_referral_token: parsed.publicationReferralTokenBase64,
-        parent_response_xml: parentResponseStored,
-        provisioning_status: 'active',
-        last_sync_at: new Date(),
-        last_error: null,
-      });
-    }
+    const parent = existingParent
+      ? await prisma.rpki_ca_parents.update({ where: { id: existingParent.id }, data: parentData })
+      : await prisma.rpki_ca_parents.create({
+          data: {
+            empresa_id: params.empresaId,
+            ca_id: params.ca.id,
+            parent_name: params.parentName,
+            ...parentData,
+          },
+        });
 
     await syncResourcesFromParentResponse({
       caId: params.ca.id,
@@ -441,16 +436,16 @@ export class RpkiProvisioningService {
       ipv6Resources: parsed.ipv6Resources,
     });
 
-    await params.ca.update({ status: 'active' });
+    await prisma.rpki_cas.update({ where: { id: params.ca.id }, data: { status: 'active' } });
 
     return parent;
   }
 
   static async generatePublisherRequest(params: {
-    ca: RpkiCa;
+    ca: CaRef;
     parentId?: number | null;
     tag?: string | null;
-  }): Promise<{ xml: string; tag: string; ca: RpkiCa; warning: string | null }> {
+  }): Promise<{ xml: string; tag: string; ca: CaRef; warning: string | null }> {
     const handle = params.ca.handle?.trim();
     if (!handle) throw new RpkiClientError('CA sem handle para publisher_request');
 
@@ -462,7 +457,7 @@ export class RpkiProvisioningService {
 
     const parentId = params.parentId != null && Number.isFinite(Number(params.parentId)) ? Number(params.parentId) : 0;
     if (parentId > 0) {
-      const parentRow = await RpkiCaParent.findOne({
+      const parentRow = await prisma.rpki_ca_parents.findFirst({
         where: { id: parentId, ca_id: params.ca.id },
       });
       if (!parentRow) {
@@ -479,9 +474,9 @@ export class RpkiProvisioningService {
           if (recovered?.referrer && recovered.tokenBase64) {
             ref = recovered.referrer;
             tok = recovered.tokenBase64;
-            await parentRow.update({
-              publication_referrer: ref,
-              publication_referral_token: tok,
+            await prisma.rpki_ca_parents.update({
+              where: { id: parentRow.id },
+              data: { publication_referrer: ref, publication_referral_token: tok },
             });
           }
         }
@@ -501,10 +496,10 @@ export class RpkiProvisioningService {
   }
 
   static async importRepositoryResponse(params: {
-    ca: RpkiCa;
+    ca: CaRef;
     responseXml: string;
     empresaId: number | null;
-  }): Promise<RpkiRepository> {
+  }): Promise<rpki_repositories> {
     const responseStored = normalizeIncomingXml(params.responseXml);
 
     const handle = params.ca.handle?.trim();
@@ -516,36 +511,29 @@ export class RpkiProvisioningService {
     const parsed = parseRepositoryResponseXml(params.responseXml);
     const repositoryName = parsed.publisherHandle || handle;
 
-    const [row, created] = await RpkiRepository.findOrCreate({
-      where: {
-        ca_id: params.ca.id,
-        repository_name: repositoryName,
-      },
-      defaults: {
-        empresa_id: params.empresaId,
-        ca_id: params.ca.id,
-        repository_name: repositoryName,
-        publication_service_uri: parsed.serviceUri,
-        rsync_base_uri: parsed.siaBase,
-        rrdp_notify_uri: parsed.rrdpNotificationUri,
-        publication_status: 'active',
-        last_publish_at: new Date(),
-        last_error: null,
-      },
+    const repoData = {
+      publication_service_uri: parsed.serviceUri,
+      rsync_base_uri: parsed.siaBase,
+      rrdp_notify_uri: parsed.rrdpNotificationUri,
+      publication_status: 'active' as const,
+      last_publish_at: new Date(),
+      last_error: null,
+    };
+    const existingRepo = await prisma.rpki_repositories.findFirst({
+      where: { ca_id: params.ca.id, repository_name: repositoryName },
     });
+    const row = existingRepo
+      ? await prisma.rpki_repositories.update({ where: { id: existingRepo.id }, data: repoData })
+      : await prisma.rpki_repositories.create({
+          data: {
+            empresa_id: params.empresaId,
+            ca_id: params.ca.id,
+            repository_name: repositoryName,
+            ...repoData,
+          },
+        });
 
-    if (!created) {
-      await row.update({
-        publication_service_uri: parsed.serviceUri,
-        rsync_base_uri: parsed.siaBase,
-        rrdp_notify_uri: parsed.rrdpNotificationUri,
-        publication_status: 'active',
-        last_publish_at: new Date(),
-        last_error: null,
-      });
-    }
-
-    await params.ca.update({ status: 'active' });
+    await prisma.rpki_cas.update({ where: { id: params.ca.id }, data: { status: 'active' } });
 
     return row;
   }

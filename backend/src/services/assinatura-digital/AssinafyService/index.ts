@@ -2,7 +2,7 @@ import axios, { AxiosInstance } from 'axios';
 import { logger } from '../../../utils/logger';
 import { PDFGenerationService } from '../../pdf-generation/PDFGenerationService';
 import { AssinaturaDigitalProviderService } from '../AssinaturaDigitalProviderService';
-import { AssinaturaDigital } from '../../../models/assinatura-digital/AssinaturaDigital';
+import { prisma } from '../../../db/prisma';
 
 interface AssinafyConfig {
   apiKey: string;
@@ -356,10 +356,10 @@ export class AssinafyService {
         const signingUrl = docData?.signing_url;
         
         if (signingUrl) {
-          await AssinaturaDigital.update(
-            { url_assinatura: signingUrl },
-            { where: { api_document_id: documentId } }
-          );
+          await prisma.assinatura_digital_assinaturas.updateMany({
+            where: { api_document_id: documentId },
+            data: { url_assinatura: signingUrl, updated_at: new Date() },
+          });
         }
       } catch (updateError) {
         // Não crítico, continua

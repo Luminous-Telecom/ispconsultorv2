@@ -1,5 +1,4 @@
-import { Op } from 'sequelize';
-import { RpkiAspa } from '../../../models/rpki/RpkiAspa';
+import { prisma } from '../../../db/prisma';
 import { SistemaLogOperacionalService } from '../../sistema/SistemaLogOperacionalService';
 import { RpkiClientError } from '../../../utils/errorUtils';
 import { syncKrillAspasForCa, syncAspasFromKrillToDb } from '../KrillSyncService';
@@ -31,25 +30,36 @@ interface CreateAspaInput {
   providers: string;
 }
 
+function plainAspa<T extends { customer_asn: bigint; providers_json: string }>(row: T) {
+  let providers: unknown = [];
+  try {
+    providers = JSON.parse(row.providers_json);
+  } catch {
+    providers = [];
+  }
+  return { ...row, customer_asn: row.customer_asn.toString(), providers_json: providers };
+}
+
 export class RpkiAspaService {
-  static async listByCa(caId: number): Promise<RpkiAspa[]> {
+  static async listByCa(caId: number) {
     await syncAspasFromKrillToDb(caId);
-    return RpkiAspa.findAll({
+    const rows = await prisma.rpki_aspas.findMany({
       where: { ca_id: caId, status: 'active' },
-      order: [['id', 'DESC']],
+      orderBy: { id: 'desc' },
     });
+    return rows.map(plainAspa);
   }
 
-  static async create(input: CreateAspaInput): Promise<RpkiAspa> {
+  static async create(input: CreateAspaInput) {
     const customerAsn = String(parseAsn(input.customerAsn));
     const providerNums = parseProviders(input.providers);
     const providersJson = providerNums.map(String);
 
-    const duplicate = await RpkiAspa.findOne({
+    const duplicate = await prisma.rpki_aspas.findFirst({
       where: {
         ca_id: input.caId,
-        customer_asn: customerAsn,
-        status: { [Op.ne]: 'revoked' },
+        customer_asn: BigInt(customerAsn),
+        status: { not: 'revoked' },
       },
     });
     if (duplicate) {
@@ -60,17 +70,19 @@ export class RpkiAspaService {
     const notAfter = new Date(now);
     notAfter.setFullYear(now.getFullYear() + 1);
 
-    const row = await RpkiAspa.create({
-      empresa_id: input.empresaId,
-      ca_id: input.caId,
-      customer_asn: customerAsn,
-      providers_json: providersJson,
-      afi: 'both',
-      status: 'active',
-      not_before: now,
-      not_after: notAfter,
-      revoked_at: null,
-    });
+    const row = plainAspa(await prisma.rpki_aspas.create({
+      data: {
+        empresa_id: input.empresaId,
+        ca_id: input.caId,
+        customer_asn: BigInt(customerAsn),
+        providers_json: JSON.stringify(providersJson),
+        afi: 'both',
+        status: 'active',
+        not_before: now,
+        not_after: notAfter,
+        revoked_at: null,
+      },
+    }));
 
     SistemaLogOperacionalService.registrarRpkiActivity({
       empresaId: input.empresaId,
@@ -85,12 +97,16 @@ export class RpkiAspaService {
     return row;
   }
 
-  static async revoke(caId: number, aspaId: number): Promise<RpkiAspa> {
-    const row = await RpkiAspa.findOne({ where: { id: aspaId, ca_id: caId } });
-    if (!row) throw new RpkiClientError('ASPA não encontrado para esta CA.');
-    if (row.status === 'revoked') return row;
+  static async revoke(caId: number, aspaId: number) {
+    const found = await prisma.rpki_aspas.findFirst({ where: { id: aspaId, ca_id: caId } });
+    if (!found) throw new RpkiClientError('ASPA não encontrado para esta CA.');
+    const current = plainAspa(found);
+    if (current.status === 'revoked') return current;
 
-    await row.update({ status: 'revoked', revoked_at: new Date() });
+    const row = plainAspa(await prisma.rpki_aspas.update({
+      where: { id: aspaId },
+      data: { status: 'revoked', revoked_at: new Date() },
+    }));
 
     SistemaLogOperacionalService.registrarRpkiActivity({
       empresaId: row.empresa_id,
@@ -106,10 +122,11 @@ export class RpkiAspaService {
   }
 
   static async delete(caId: number, aspaId: number): Promise<void> {
-    const row = await RpkiAspa.findOne({ where: { id: aspaId, ca_id: caId } });
-    if (!row) throw new RpkiClientError('ASPA não encontrado para exclusão.');
+    const found = await prisma.rpki_aspas.findFirst({ where: { id: aspaId, ca_id: caId } });
+    if (!found) throw new RpkiClientError('ASPA não encontrado para exclusão.');
+    const row = plainAspa(found);
 
-    await RpkiAspa.destroy({ where: { id: aspaId, ca_id: caId } });
+    await prisma.rpki_aspas.delete({ where: { id: aspaId } });
 
     SistemaLogOperacionalService.registrarRpkiActivity({
       empresaId: row.empresa_id,

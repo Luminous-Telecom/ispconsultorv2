@@ -1,5 +1,4 @@
 import { VariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis } from '../types';
-import { Cliente } from '../../../models/clientes/Cliente';
 import { Formatter } from '../utils/Formatter';
 import { VariableReplacer } from '../utils/VariableReplacer';
 
@@ -72,7 +71,7 @@ export class ClienteVariableHandler implements VariableHandler {
   /**
    * Constrói o mapa de substituições para variáveis de cliente
    */
-  private buildSubstitutions(cliente: Cliente): VariableSubstitutions {
+  private buildSubstitutions(cliente: NonNullable<VariableContext['cliente']>): VariableSubstitutions {
     const enderecoCompleto = Formatter.montarEnderecoCompleto([
       cliente.endereco,
       cliente.numero,

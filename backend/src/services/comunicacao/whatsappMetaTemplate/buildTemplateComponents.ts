@@ -1,6 +1,6 @@
 import { TituloPDFController } from '../../../controllers/titulos/TituloPDFController';
 import { gerarLinkPagamentoPublico, gerarLinkPdfPublico } from '../../../controllers/titulos/TituloHelpers';
-import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
+import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
 import { parseDateFromDb, formatDate } from '../../../utils/dateUtils';
 import { WhatsAppCloudService } from '../WhatsAppCloudService';
@@ -227,7 +227,9 @@ async function buildOrderDetailsButton(
 
   const pixCode = (titulo.qrcode || '').trim();
   const empresaId = titulo.empresa_id ?? cliente?.empresa_id;
-  const empresa = pixCode && empresaId ? await DadosEmpresa.findByPk(empresaId) : null;
+  const empresa = pixCode && empresaId
+    ? await prisma.sistema_tenants.findUnique({ where: { id: Number(empresaId) } })
+    : null;
   let pix: { code: string; merchantName: string; key: string; keyType: string } | null = null;
 
   if (pixCode) {

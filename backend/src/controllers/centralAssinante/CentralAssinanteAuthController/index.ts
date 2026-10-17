@@ -1,11 +1,9 @@
 import { Request, Response as ExpressResponse } from 'express';
 import bcrypt from 'bcryptjs';
 import Joi from 'joi';
-import { Op } from 'sequelize';
-import { sequelize } from '../../../config/database';
+import { prisma } from '../../../db/prisma';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { ParametrosService } from '../../../services/sistema/ParametrosService';
-import { ServidorEmail } from '../../../models/comunicacao/ServidorEmail';
 import { logger } from '../../../utils/logger';
 import { sendSuccess, sendError, sendValidationError, sendUnauthorized, sendForbidden, sendNotFound } from '../../../utils/responseUtils';
 import { CentralAssinanteController } from '../CentralAssinanteController';
@@ -13,6 +11,15 @@ import { DadosEmpresaService } from '../../../services/sistema/DadosEmpresaServi
 import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
 import nodemailer from 'nodemailer';
 import { SYSTEM_NAME } from '../../../constants/systemBrand';
+
+function hydrateCliente(row: unknown): Cliente {
+  return (Cliente as unknown as { hydrate: (value: unknown) => Cliente }).hydrate(row);
+}
+
+async function findCliente(where: Record<string, unknown>): Promise<Cliente | null> {
+  const row = await prisma.clientes.findFirst({ where: where as never });
+  return row ? hydrateCliente(row) : null;
+}
 
 const loginSchema = Joi.object({
   login: Joi.string().required().messages({
@@ -56,15 +63,11 @@ export class CentralAssinanteAuthController {
       let cliente: Cliente | null = null;
 
       if (metodoLogin === 'email') {
-        cliente = await Cliente.findOne({
-          where: { email: login, ativo: true, empresa_id: empresaId }
-        });
+        cliente = await findCliente({ email: login, ativo: true, empresa_id: empresaId });
       } else {
         // Remover formatação do CNPJ para busca
         const cnpjLimpo = login.replace(/\D/g, '');
-        cliente = await Cliente.findOne({
-          where: { cnpj: cnpjLimpo, ativo: true, empresa_id: empresaId }
-        });
+        cliente = await findCliente({ cnpj: cnpjLimpo, ativo: true, empresa_id: empresaId });
       }
 
       if (!cliente) {
@@ -167,19 +170,15 @@ export class CentralAssinanteAuthController {
       logger.info('Buscando cliente para recuperação de senha', { cnpjLimpo, emailLimpo, empresaId });
 
       // Buscar cliente por CNPJ e Email separadamente (filtrado pela empresa)
-      const clientePorCnpj = await Cliente.findOne({ where: { cnpj: cnpjLimpo, ativo: true, empresa_id: empresaId } });
-      const clientePorEmail = await Cliente.findOne({
-        where: {
-          [Op.and]: [
-            sequelize.where(
-              sequelize.fn('LOWER', sequelize.col('email')),
-              emailLimpo
-            )
-          ],
-          ativo: true,
-          empresa_id: empresaId,
-        }
-      });
+      const clientePorCnpj = await findCliente({ cnpj: cnpjLimpo, ativo: true, empresa_id: empresaId });
+      const emailRows = await prisma.$queryRawUnsafe<Array<{ id: number }>>(
+        'SELECT id FROM clientes WHERE ativo = 1 AND empresa_id = ? AND LOWER(email) = ? LIMIT 1',
+        empresaId,
+        emailLimpo,
+      );
+      const clientePorEmail = emailRows[0]?.id
+        ? await findCliente({ id: emailRows[0].id })
+        : null;
 
       // Verificar se encontrou cliente e se CNPJ e Email pertencem ao mesmo cliente
       let cliente: Cliente | null = null;
@@ -209,6 +208,11 @@ export class CentralAssinanteAuthController {
         return;
       }
 
+      if (!cliente) {
+        sendUnauthorized(res, 'CNPJ ou Email incorreto');
+        return;
+      }
+
       logger.info('Cliente encontrado para recuperação de senha', {
         clienteId: cliente.id,
         temSenhaCadastrada: !!cliente.central_assinante_senha
@@ -221,8 +225,8 @@ export class CentralAssinanteAuthController {
       }
 
       // Buscar servidor de email ativo (filtrado pela empresa)
-      const servidorEmail = await ServidorEmail.findOne({
-        where: { ativo: true, empresa_id: empresaId }
+      const servidorEmail = await prisma.comunicacao_servidores_email.findFirst({
+        where: { ativo: true, empresa_id: empresaId },
       });
 
       if (!servidorEmail) {
@@ -342,7 +346,7 @@ export class CentralAssinanteAuthController {
       const { senhaAtual, novaSenha } = value;
 
       // Buscar cliente
-      const cliente = await Cliente.findByPk(clienteId);
+      const cliente = await findCliente({ id: clienteId });
 
       if (!cliente) {
         sendNotFound(res, 'Cliente não encontrado');

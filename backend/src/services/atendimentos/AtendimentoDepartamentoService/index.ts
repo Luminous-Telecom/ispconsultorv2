@@ -1,12 +1,20 @@
-import { Op, WhereOptions } from 'sequelize';
-import { AtendimentoDepartamento } from '../../../models/atendimentos/AtendimentoDepartamento';
+import type { Prisma } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import type { LookupItem } from '../../externos/IxcOssChamadoService/types';
 import type {
   AtendimentoPagination,
   ListAtendimentosFilters,
 } from '../../externos/IxcAtendimentoService/types';
 
-function empresaWhere(empresaId: number | null): WhereOptions<AtendimentoDepartamento> {
+type DepartamentoRow = {
+  id: number;
+  nome: string;
+  ixc_id: string | null;
+  ixc: boolean;
+  empresa_id: number | null;
+};
+
+function empresaWhere(empresaId: number | null): Prisma.atendimentos_departamentosWhereInput {
   if (empresaId == null) return {};
   return { empresa_id: empresaId };
 }
@@ -37,7 +45,7 @@ export class AtendimentoDepartamentoService {
       const nome = String(item.nome ?? '').trim();
       if (!ixcId || !nome) continue;
 
-      const existente = await AtendimentoDepartamento.findOne({
+      const existente = await prisma.atendimentos_departamentos.findFirst({
         where: {
           integracao_ixc_provedor_id: integracaoIxcProvedorId,
           ixc_id: ixcId,
@@ -45,16 +53,21 @@ export class AtendimentoDepartamentoService {
       });
 
       if (existente) {
-        await existente.update({ nome, ixc: true });
+        await prisma.atendimentos_departamentos.update({
+          where: { id: existente.id },
+          data: { nome, ixc: true, updated_at: new Date() },
+        });
         continue;
       }
 
-      await AtendimentoDepartamento.create({
-        empresa_id: empresaId,
-        integracao_ixc_provedor_id: integracaoIxcProvedorId,
-        nome,
-        ixc_id: ixcId,
-        ixc: true,
+      await prisma.atendimentos_departamentos.create({
+        data: {
+          empresa_id: empresaId,
+          integracao_ixc_provedor_id: integracaoIxcProvedorId,
+          nome,
+          ixc_id: ixcId,
+          ixc: true,
+        },
       });
     }
   }
@@ -64,7 +77,7 @@ export class AtendimentoDepartamentoService {
     integracaoIxcProvedorId: number,
     allowedIxcIds: Set<string>
   ): Promise<void> {
-    const registros = await AtendimentoDepartamento.findAll({
+    const registros = await prisma.atendimentos_departamentos.findMany({
       where: {
         integracao_ixc_provedor_id: integracaoIxcProvedorId,
         ixc: true,
@@ -75,7 +88,7 @@ export class AtendimentoDepartamentoService {
     for (const registro of registros) {
       const ixcId = String(registro.ixc_id ?? '').trim();
       if (ixcId && !allowedIxcIds.has(ixcId)) {
-        await registro.destroy();
+        await prisma.atendimentos_departamentos.delete({ where: { id: registro.id } });
       }
     }
   }
@@ -87,12 +100,12 @@ export class AtendimentoDepartamentoService {
     const refs = [...new Set(referencias.map((ref) => String(ref).trim()).filter((ref) => ref && ref !== '0'))];
     if (refs.length === 0) return new Map();
 
-    const registros = await AtendimentoDepartamento.findAll({
+    const registros = await prisma.atendimentos_departamentos.findMany({
       where: {
-        ixc_id: { [Op.in]: refs },
+        ixc_id: { in: refs },
         ...empresaWhere(empresaId),
       },
-      attributes: ['ixc_id', 'nome'],
+      select: { ixc_id: true, nome: true },
     });
 
     const mapa = new Map<string, string>();
@@ -114,25 +127,28 @@ export class AtendimentoDepartamentoService {
     const page = filters.page && filters.page > 0 ? filters.page : 1;
     const limit = filters.limit && filters.limit > 0 ? filters.limit : 15;
     const search = filters.search?.trim();
-    const sortDirection = filters.sortDirection === 'asc' ? 'ASC' : 'DESC';
+    const sortDirection = filters.sortDirection === 'asc' ? 'asc' : 'desc';
     const sortColumn = filters.sortColumn === 'nome' ? 'nome' : 'id';
 
-    const where: WhereOptions<AtendimentoDepartamento> = {
+    const where: Prisma.atendimentos_departamentosWhereInput = {
       integracao_ixc_provedor_id: integracaoIxcProvedorId,
       ixc: true,
       ...empresaWhere(empresaId),
-      ...(search ? { nome: { [Op.like]: `%${search}%` } } : {}),
+      ...(search ? { nome: { contains: search } } : {}),
     };
 
-    const { rows, count } = await AtendimentoDepartamento.findAndCountAll({
-      where,
-      order: [[sortColumn, sortDirection]],
-      limit,
-      offset: (page - 1) * limit,
-    });
+    const [rows, count] = await Promise.all([
+      prisma.atendimentos_departamentos.findMany({
+        where,
+        orderBy: { [sortColumn]: sortDirection },
+        take: limit,
+        skip: (page - 1) * limit,
+      }),
+      prisma.atendimentos_departamentos.count({ where }),
+    ]);
 
     return {
-      data: rows.map((row) => ({
+      data: rows.map((row: DepartamentoRow) => ({
         id: String(row.ixc_id ?? ''),
         nome: row.nome,
       })),
@@ -144,7 +160,7 @@ export class AtendimentoDepartamentoService {
     integracaoIxcProvedorId: number,
     empresaId: number | null
   ): Promise<number> {
-    return AtendimentoDepartamento.count({
+    return prisma.atendimentos_departamentos.count({
       where: {
         integracao_ixc_provedor_id: integracaoIxcProvedorId,
         ixc: true,

@@ -1,8 +1,25 @@
-import { Op, UniqueConstraintError, WhereOptions } from 'sequelize';
-import { OrdemServicoLocal } from '../../../models/ordens/OrdemServicoLocal';
-import { OrdemServicoMensagem } from '../../../models/ordens/OrdemServicoMensagem';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Usuario } from '../../../models/cadastros/Usuario';
+import { Prisma } from '@prisma/client';
+import type { ordens_servico, ordens_servico_mensagens } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
+
+type OrdemServicoLocal = ordens_servico;
+type OrdemServicoMensagem = ordens_servico_mensagens;
+
+function isUniqueConstraintError(error: unknown): boolean {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
+}
+
+async function updateOrdem(
+  record: OrdemServicoLocal,
+  data: Prisma.ordens_servicoUpdateInput
+): Promise<OrdemServicoLocal> {
+  const updated = await prisma.ordens_servico.update({
+    where: { id: record.id },
+    data: { ...data, updated_at: new Date() },
+  });
+  Object.assign(record, updated);
+  return updated;
+}
 import { nowIxcDateTime } from '../../externos/IxcOssChamadoService/ixcHttp';
 import {
   IXC_EVENTO_ABERTURA,
@@ -38,7 +55,7 @@ function parseNumericId(id: string | number): number | null {
   return Number.isFinite(numericId) && numericId > 0 ? numericId : null;
 }
 
-function empresaWhere(empresaId: number | null): WhereOptions<OrdemServicoLocal> {
+function empresaWhere(empresaId: number | null): Prisma.ordens_servicoWhereInput {
   if (empresaId == null) return {};
   return { empresa_id: empresaId };
 }
@@ -77,10 +94,10 @@ async function nextProtocolo(): Promise<string> {
   const month = now.getMonth() + 1;
   const prefix = localProtocoloYearMonthPrefix(now);
 
-  const ultimo = await OrdemServicoLocal.findOne({
-    where: { protocolo: { [Op.like]: `${prefix}%` } },
-    attributes: ['protocolo'],
-    order: [['protocolo', 'DESC']],
+  const ultimo = await prisma.ordens_servico.findFirst({
+    where: { protocolo: { startsWith: prefix } },
+    select: { protocolo: true },
+    orderBy: { protocolo: 'desc' },
   });
 
   let sequence = 1;
@@ -120,9 +137,9 @@ function toIxcOssMensagem(
 async function fetchUsuarioNomes(usuarioIds: number[]): Promise<Map<number, string>> {
   if (usuarioIds.length === 0) return new Map();
 
-  const usuarios = await Usuario.findAll({
-    where: { id: { [Op.in]: usuarioIds } },
-    attributes: ['id', 'nome'],
+  const usuarios = await prisma.cadastros_usuarios.findMany({
+    where: { id: { in: usuarioIds } },
+    select: { id: true, nome: true },
   });
 
   return new Map(usuarios.map((usuario) => [usuario.id, usuario.nome?.trim() || String(usuario.id)]));
@@ -141,14 +158,14 @@ async function resolveUsuarioIdByNome(
   const trimmed = nome.trim();
   if (!trimmed) return null;
 
-  const where: WhereOptions = { nome: trimmed };
+  const where: Prisma.cadastros_usuariosWhereInput = { nome: trimmed };
   if (empresaId != null && empresaId > 0) {
     where.empresa_id = empresaId;
   }
 
-  const usuario = await Usuario.findOne({
+  const usuario = await prisma.cadastros_usuarios.findFirst({
     where,
-    attributes: ['id'],
+    select: { id: true },
   });
   return usuario?.id ?? null;
 }
@@ -173,9 +190,9 @@ async function fetchOperadorAberturaPorOrdemIds(
 ): Promise<Map<number, string>> {
   if (ordemIds.length === 0) return new Map();
 
-  const aberturas = await OrdemServicoMensagem.findAll({
+  const aberturas = await prisma.ordens_servico_mensagens.findMany({
     where: {
-      ordem_servico_id: { [Op.in]: ordemIds },
+      ordem_servico_id: { in: ordemIds },
       id_evento: IXC_EVENTO_ABERTURA,
     },
   });
@@ -203,12 +220,12 @@ async function fetchMensagemRespostaPorOrdemIds(
 ): Promise<Map<number, string>> {
   if (ordemIds.length === 0) return new Map();
 
-  const finalizacoes = await OrdemServicoMensagem.findAll({
+  const finalizacoes = await prisma.ordens_servico_mensagens.findMany({
     where: {
-      ordem_servico_id: { [Op.in]: ordemIds },
+      ordem_servico_id: { in: ordemIds },
       id_evento: IXC_EVENTO_FINALIZAR,
     },
-    order: [['id', 'DESC']],
+    orderBy: { id: 'desc' },
   });
 
   const mapa = new Map<number, string>();
@@ -313,9 +330,9 @@ async function mapLocalRegistros(
 
   const clienteIds = [...new Set(registros.map((r) => r.cliente_id))];
   const clientes = clienteIds.length
-    ? await Cliente.findAll({
-        where: { id: { [Op.in]: clienteIds } },
-        attributes: ['id', 'razao_social', 'nome_fantasia'],
+    ? await prisma.clientes.findMany({
+        where: { id: { in: clienteIds } },
+        select: { id: true, razao_social: true, nome_fantasia: true },
       })
     : [];
   const clienteNomes = new Map(
@@ -351,9 +368,9 @@ export class OrdemServicoLocalService {
     const page = filters.page && filters.page > 0 ? filters.page : 1;
     const limit = filters.limit && filters.limit > 0 ? filters.limit : 15;
 
-    const registros = await OrdemServicoLocal.findAll({
+    const registros = await prisma.ordens_servico.findMany({
       where: empresaWhere(empresaId),
-      order: [['id', 'DESC']],
+      orderBy: { id: 'desc' },
     });
 
     const data = applyListFilters(await mapLocalRegistros(registros, empresaId), filters);
@@ -381,12 +398,12 @@ export class OrdemServicoLocalService {
     atendimentoId: number,
     empresaId: number | null = null
   ): Promise<IxcOssChamado[]> {
-    const registros = await OrdemServicoLocal.findAll({
+    const registros = await prisma.ordens_servico.findMany({
       where: {
         atendimento_id: atendimentoId,
         ...empresaWhere(empresaId),
       },
-      order: [['id', 'DESC']],
+      orderBy: { id: 'desc' },
     });
 
     return mapLocalRegistros(registros, empresaId);
@@ -425,7 +442,7 @@ export class OrdemServicoLocalService {
     });
     const status = String(ixcOs.status ?? '').trim();
     if (status && status !== linked.status) {
-      await linked.update({ status });
+      await updateOrdem(linked, { status });
     }
     return linked;
   }
@@ -439,7 +456,7 @@ export class OrdemServicoLocalService {
     const record = await this.findByIxcId(ixcId, empresaId);
     if (!record) return;
 
-    const updates: Partial<OrdemServicoLocal> = {
+    const updates: Prisma.ordens_servicoUpdateInput = {
       prioridade: String(ixcOs.prioridade ?? record.prioridade).trim() || record.prioridade,
       melhor_horario_agenda:
         String(ixcOs.melhor_horario_agenda ?? record.melhor_horario_agenda).trim() ||
@@ -456,7 +473,7 @@ export class OrdemServicoLocalService {
       tipo: String(ixcOs.tipo ?? payload.tipo ?? record.tipo).trim() || record.tipo,
     };
 
-    await record.update(updates);
+    await updateOrdem(record, updates);
   }
 
   static async findByIxcId(
@@ -466,7 +483,7 @@ export class OrdemServicoLocalService {
     const normalized = String(ixcId).trim();
     if (!normalized) return null;
 
-    return OrdemServicoLocal.findOne({
+    return prisma.ordens_servico.findFirst({
       where: {
         ixc_id: normalized,
         ...empresaWhere(empresaId),
@@ -483,10 +500,10 @@ export class OrdemServicoLocalService {
 
     const numericId = parseNumericId(id);
     if (numericId != null) {
-      const byLocalId = await OrdemServicoLocal.findOne({
+      const byLocalId = await prisma.ordens_servico.findFirst({
         where: {
           id: numericId,
-          ixc_id: { [Op.ne]: null },
+          ixc_id: { not: null },
           ...empresaWhere(empresaId),
         },
       });
@@ -539,7 +556,7 @@ export class OrdemServicoLocalService {
       const protocolo = await nextProtocolo();
 
       try {
-        const record = await OrdemServicoLocal.create({
+        const record = await prisma.ordens_servico.create({ data: {
           empresa_id: empresaId,
           cliente_id: clienteId,
           ixc_id: null,
@@ -559,22 +576,23 @@ export class OrdemServicoLocalService {
           atendimento_id: atendimentoId,
           atendimento_ixc_id: atendimentoIxcId,
           integracao_ixc_provedor_id: integracaoIxcProvedorId,
+          },
         });
 
         if (criarMensagemAbertura) {
-          await OrdemServicoMensagem.create({
+          await prisma.ordens_servico_mensagens.create({ data: {
             empresa_id: empresaId,
             ordem_servico_id: record.id,
             id_evento: IXC_EVENTO_ABERTURA,
             mensagem,
             data: dataAbertura,
             usuario_id: usuarioId,
-          });
+          } });
         }
 
         return record;
       } catch (error) {
-        if (error instanceof UniqueConstraintError && attempt < PROTOCOLO_CREATE_MAX_RETRIES - 1) {
+        if (isUniqueConstraintError(error) && attempt < PROTOCOLO_CREATE_MAX_RETRIES - 1) {
           continue;
         }
         throw error;
@@ -596,7 +614,7 @@ export class OrdemServicoLocalService {
 
     const dataAbertura = String(meta.data_abertura ?? record.data_abertura).trim() || record.data_abertura;
 
-    await record.update({
+    await updateOrdem(record, {
       ixc_id: normalized,
       data_abertura: dataAbertura,
     });
@@ -614,7 +632,7 @@ export class OrdemServicoLocalService {
       throw new Error('Ordem de serviço não encontrada');
     }
 
-    const updates: Partial<OrdemServicoLocal> = {};
+    const updates: Prisma.ordens_servicoUpdateInput = {};
 
     if (payload.prioridade !== undefined) {
       updates.prioridade = String(payload.prioridade).trim() || record.prioridade;
@@ -656,7 +674,7 @@ export class OrdemServicoLocalService {
       updates.tipo = String(payload.tipo).trim() || record.tipo;
     }
 
-    await record.update(updates);
+    await updateOrdem(record, updates);
 
     return { type: 'success', id: String(record.id) };
   }
@@ -676,8 +694,8 @@ export class OrdemServicoLocalService {
   }
 
   static async destroyRecord(record: OrdemServicoLocal): Promise<void> {
-    await OrdemServicoMensagem.destroy({ where: { ordem_servico_id: record.id } });
-    await record.destroy();
+    await prisma.ordens_servico_mensagens.deleteMany({ where: { ordem_servico_id: record.id } });
+    await prisma.ordens_servico.delete({ where: { id: record.id } });
   }
 
   static async listMensagens(
@@ -689,9 +707,9 @@ export class OrdemServicoLocalService {
       throw new Error('Ordem de serviço não encontrada');
     }
 
-    const mensagens = await OrdemServicoMensagem.findAll({
+    const mensagens = await prisma.ordens_servico_mensagens.findMany({
       where: { ordem_servico_id: record.id },
-      order: [['id', 'ASC']],
+      orderBy: { id: 'asc' },
     });
 
     return mapMensagensComOperador(mensagens, record.id);
@@ -713,13 +731,15 @@ export class OrdemServicoLocalService {
       throw new Error('Mensagem é obrigatória');
     }
 
-    const registro = await OrdemServicoMensagem.create({
+    const registro = await prisma.ordens_servico_mensagens.create({
+      data: {
       empresa_id: empresaId,
       ordem_servico_id: record.id,
       id_evento: IXC_EVENTO_OBSERVACAO,
       mensagem,
       data: nowIxcDateTime(),
       usuario_id: usuarioId,
+      },
     });
 
     return { type: 'success', id: String(registro.id) };
@@ -741,15 +761,17 @@ export class OrdemServicoLocalService {
       throw new Error('Resposta é obrigatória');
     }
 
-    await record.update({ status: 'F' });
+    await updateOrdem(record, { status: 'F' });
 
-    await OrdemServicoMensagem.create({
+    await prisma.ordens_servico_mensagens.create({
+      data: {
       empresa_id: empresaId,
       ordem_servico_id: record.id,
       id_evento: IXC_EVENTO_FINALIZAR,
       mensagem: conclusao,
       data: nowIxcDateTime(),
       usuario_id: usuarioId,
+      },
     });
 
     return { type: 'success', id: String(record.id) };
@@ -762,7 +784,7 @@ export class OrdemServicoLocalService {
     const numericId = parseNumericId(id);
     if (numericId == null) return null;
 
-    return OrdemServicoLocal.findOne({
+    return prisma.ordens_servico.findFirst({
       where: {
         id: numericId,
         ixc_id: null,
@@ -778,10 +800,10 @@ export class OrdemServicoLocalService {
     const record = await this.findRecord(id, empresaId);
     if (!record) return 0;
 
-    return OrdemServicoMensagem.count({
+    return prisma.ordens_servico_mensagens.count({
       where: {
         ordem_servico_id: record.id,
-        id_evento: { [Op.ne]: IXC_EVENTO_ABERTURA },
+        id_evento: { not: IXC_EVENTO_ABERTURA },
       },
     });
   }
@@ -803,7 +825,7 @@ export class OrdemServicoLocalService {
       if (!mensagem) continue;
 
       if (ixcMsgId) {
-        const byIxc = await OrdemServicoMensagem.findOne({
+        const byIxc = await prisma.ordens_servico_mensagens.findFirst({
           where: { ordem_servico_id: record.id, ixc_id: ixcMsgId },
         });
         if (byIxc) continue;
@@ -817,7 +839,8 @@ export class OrdemServicoLocalService {
         }
       }
 
-      await OrdemServicoMensagem.create({
+      await prisma.ordens_servico_mensagens.create({
+        data: {
         empresa_id: empresaRef,
         ordem_servico_id: record.id,
         id_evento: idEvento,
@@ -825,6 +848,7 @@ export class OrdemServicoLocalService {
         data,
         usuario_id: resolvedUsuarioId,
         ixc_id: ixcMsgId || null,
+        },
       });
       inseridas.push(ixcMsg);
     }

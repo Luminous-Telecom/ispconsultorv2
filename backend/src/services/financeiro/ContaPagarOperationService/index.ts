@@ -1,8 +1,8 @@
-import { Transaction } from 'sequelize';
-import { ContaPagar } from '../../../models/financeiro/ContaPagar';
+import type { Prisma } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { ContaPagarService } from '../ContaPagarService';
 import { logger } from '../../../utils/logger';
-import { normalizeDateForDb } from '../../../utils/dateUtils';
+import { formatCreatedAt, normalizeDateForDb } from '../../../utils/dateUtils';
 import { registrarCriacao, registrarAtualizacao } from '../../sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../../../types/auth';
@@ -16,112 +16,103 @@ interface PagamentoData {
   observacao?: string;
 }
 
+function saldoDevedor(conta: { valor: unknown; valor_pago: unknown }): number {
+  return Number(conta.valor) - Number(conta.valor_pago || 0);
+}
+
+function contaParaAuditoria(conta: { valor: unknown; valor_pago: unknown; created_at?: unknown }) {
+  return {
+    ...conta,
+    created_at_formatada: formatCreatedAt(conta.created_at),
+    saldo_devedor: saldoDevedor(conta),
+  };
+}
+
 export class ContaPagarOperationService {
-  /**
-   * Registra pagamento de uma conta
-   */
   static async registrarPagamento(
     contaId: number,
     pagamentoData: PagamentoData,
     req: Request,
-    transaction: Transaction
-  ): Promise<{ conta: ContaPagar; status: 'PAGO' | 'PARCIAL' }> {
-    const conta = await ContaPagarService.getById(contaId, transaction);
-
-    if (!conta) {
-      throw new Error('Conta a pagar não encontrada');
-    }
-
-    if (conta.status === 'PAGO') {
-      throw new Error('Conta já está paga');
-    }
-
-    if (conta.status === 'CANCELADO') {
-      throw new Error('Não é possível pagar uma conta cancelada');
-    }
-
-    const saldoDevedor = conta.getSaldoDevedor();
-    const valorPagamento = Number(pagamentoData.valor);
-
-    if (valorPagamento > saldoDevedor) {
-      throw new Error(`Valor do pagamento excede o saldo devedor. Saldo devedor: R$ ${saldoDevedor.toFixed(2)}`);
-    }
-
-    let dataPagamento = pagamentoData.data 
-      ? (typeof pagamentoData.data === 'string' ? normalizeDateForDb(pagamentoData.data) : pagamentoData.data) 
-      : new Date();
-    if (!dataPagamento) {
-      dataPagamento = new Date();
-    }
-
-    const dadosAnteriores = conta.toJSON() as Record<string, unknown>;
-    const user = (req as AuthenticatedRequest).user;
-    const usuarioId = user && typeof user === 'object' && 'id' in user ? (user as { id: number }).id : null;
-
-    await ContaPagarService.createPagamento({
-      conta_pagar_id: conta.id,
-      empresa_id: conta.empresa_id ?? null,
-      data: dataPagamento,
-      valor: valorPagamento,
-      tipo_pagamento: pagamentoData.tipo_pagamento,
-      usuario_id: usuarioId,
-      observacao: pagamentoData.observacao || null
-    }, transaction);
-
-    const novoValorPago = Number(conta.valor_pago) + valorPagamento;
-    const novoStatus = novoValorPago >= Number(conta.valor) ? 'PAGO' : 'PARCIAL';
-
-    await ContaPagarService.updateInstance(conta, {
-      valor_pago: novoValorPago,
-      status: novoStatus,
-      data_pagamento: dataPagamento
-    }, transaction);
-
-    const dadosNovos = conta.toJSON() as Record<string, unknown>;
-    setAuditData(req, dadosAnteriores, dadosNovos);
-
-    try {
-      const empresaIdAudit = getEmpresaIdOrNull(req) ?? conta.empresa_id ?? null;
-      await registrarAtualizacao(
-        req as AuthenticatedRequest,
-        'ContaPagar',
-        conta.id,
-        dadosAnteriores,
-        dadosNovos,
-        undefined,
-        empresaIdAudit
-      );
-    } catch (auditError) {
-      logger.warn('Erro ao registrar auditoria de pagamento', {
-        conta_id: conta.id,
-        error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
+    _transaction?: unknown
+  ): Promise<{ conta: Awaited<ReturnType<typeof ContaPagarService.getById>>; status: 'PAGO' | 'PARCIAL' }> {
+    return prisma.$transaction(async (tx) => {
+      const conta = await tx.financeiro_contas_pagar.findUnique({
+        where: { id: contaId },
+        include: {
+          financeiro_fornecedores: true,
+          financeiro_conta_pagar_pagamentos: { orderBy: { created_at: 'desc' } },
+        },
       });
-    }
+      if (!conta) throw new Error('Conta a pagar não encontrada');
+      if (conta.status === 'PAGO') throw new Error('Conta já está paga');
+      if (conta.status === 'CANCELADO') throw new Error('Não é possível pagar uma conta cancelada');
 
-    return { conta, status: novoStatus };
+      const saldo = saldoDevedor(conta);
+      const valorPagamento = Number(pagamentoData.valor);
+      if (valorPagamento > saldo) {
+        throw new Error(`Valor do pagamento excede o saldo devedor. Saldo devedor: R$ ${saldo.toFixed(2)}`);
+      }
+
+      let dataPagamento = pagamentoData.data
+        ? (typeof pagamentoData.data === 'string' ? normalizeDateForDb(pagamentoData.data) : pagamentoData.data)
+        : new Date();
+      if (!dataPagamento) dataPagamento = new Date();
+
+      const dadosAnteriores = contaParaAuditoria(conta);
+      const user = (req as AuthenticatedRequest).user;
+      const usuarioId = user && typeof user === 'object' && 'id' in user ? (user as { id: number }).id : null;
+
+      await ContaPagarService.createPagamento({
+        conta_pagar_id: conta.id,
+        empresa_id: conta.empresa_id ?? null,
+        data: dataPagamento,
+        valor: valorPagamento,
+        tipo_pagamento: pagamentoData.tipo_pagamento,
+        usuario_id: usuarioId,
+        observacao: pagamentoData.observacao || null
+      }, tx);
+
+      const novoValorPago = Number(conta.valor_pago) + valorPagamento;
+      const novoStatus = novoValorPago >= Number(conta.valor) ? 'PAGO' : 'PARCIAL';
+      const atualizada = await ContaPagarService.updateInstance(conta, {
+        valor_pago: novoValorPago,
+        status: novoStatus,
+        data_pagamento: dataPagamento
+      }, tx);
+
+      const dadosNovos = contaParaAuditoria(atualizada);
+      setAuditData(req, dadosAnteriores, dadosNovos);
+
+      try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? conta.empresa_id ?? null;
+        await registrarAtualizacao(
+          req as AuthenticatedRequest,
+          'ContaPagar',
+          conta.id,
+          dadosAnteriores,
+          dadosNovos,
+          undefined,
+          empresaIdAudit
+        );
+      } catch (auditError) {
+        logger.warn('Erro ao registrar auditoria de pagamento', {
+          conta_id: conta.id,
+          error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
+        });
+      }
+
+      return { conta: atualizada, status: novoStatus };
+    });
   }
 
-  /**
-   * Cancela uma conta a pagar
-   */
-  static async cancelarConta(
-    contaId: number,
-    req: Request
-  ): Promise<ContaPagar> {
+  static async cancelarConta(contaId: number, req: Request) {
     const conta = await ContaPagarService.getById(contaId);
+    if (!conta) throw new Error('Conta a pagar não encontrada');
+    if (conta.status === 'PAGO') throw new Error('Não é possível cancelar uma conta já paga');
 
-    if (!conta) {
-      throw new Error('Conta a pagar não encontrada');
-    }
-
-    if (conta.status === 'PAGO') {
-      throw new Error('Não é possível cancelar uma conta já paga');
-    }
-
-    const dadosAnteriores = conta.toJSON() as Record<string, unknown>;
-    await ContaPagarService.updateInstance(conta, { status: 'CANCELADO' });
-    const dadosNovos = conta.toJSON() as Record<string, unknown>;
-    
+    const dadosAnteriores = contaParaAuditoria(conta);
+    const atualizada = await ContaPagarService.updateInstance(conta, { status: 'CANCELADO' });
+    const dadosNovos = contaParaAuditoria(atualizada);
     setAuditData(req, dadosAnteriores, dadosNovos);
 
     try {
@@ -142,27 +133,18 @@ export class ContaPagarOperationService {
       });
     }
 
-    return conta;
+    return atualizada;
   }
 
-  /**
-   * Duplica uma conta a pagar
-   */
-  static async duplicarConta(
-    contaId: number,
-    req: Request
-  ): Promise<ContaPagar> {
+  static async duplicarConta(contaId: number, req: Request) {
     const contaOriginal = await ContaPagarService.getById(contaId);
-
-    if (!contaOriginal) {
-      throw new Error('Conta a pagar não encontrada');
-    }
+    if (!contaOriginal) throw new Error('Conta a pagar não encontrada');
 
     const novaConta = await ContaPagarService.create({
       empresa_id: contaOriginal.empresa_id ?? null,
       fornecedor_id: contaOriginal.fornecedor_id,
       data_vencimento: contaOriginal.data_vencimento,
-      valor: contaOriginal.valor,
+      valor: contaOriginal.valor as Prisma.financeiro_contas_pagarUncheckedCreateInput['valor'],
       tipo_pagamento: contaOriginal.tipo_pagamento,
       numero_documento: contaOriginal.numero_documento,
       nota_fiscal: contaOriginal.nota_fiscal,
@@ -183,7 +165,7 @@ export class ContaPagarOperationService {
         req as AuthenticatedRequest,
         'ContaPagar',
         novaConta.id,
-        novaConta.toJSON() as Record<string, unknown>,
+        contaParaAuditoria(novaConta),
         undefined,
         empresaIdAudit
       );
@@ -199,12 +181,9 @@ export class ContaPagarOperationService {
       });
     }
 
-    return await ContaPagarService.getById(novaConta.id) as ContaPagar;
+    return ContaPagarService.getById(novaConta.id);
   }
 
-  /**
-   * Calcula resumo financeiro
-   */
   static async calcularResumo(): Promise<{
     total_a_pagar: number;
     total_pago: number;
@@ -213,11 +192,7 @@ export class ContaPagarOperationService {
     total_contas: number;
   }> {
     const contas = await ContaPagarService.findAllWithAttributes([
-      'id', 
-      'valor', 
-      'valor_pago', 
-      'status', 
-      'data_vencimento'
+      'id', 'valor', 'valor_pago', 'status', 'data_vencimento'
     ]);
 
     const hoje = new Date();
@@ -228,28 +203,19 @@ export class ContaPagarOperationService {
     let totalVencido = 0;
     let totalHoje = 0;
 
-    contas.forEach(conta => {
+    contas.forEach((conta) => {
       const valor = Number(conta.valor);
       const valorPago = Number(conta.valor_pago || 0);
       const saldo = valor - valorPago;
 
-      if (conta.status === 'A_PAGAR' || conta.status === 'PARCIAL') {
-        totalAPagar += saldo;
-      }
-
-      if (conta.status === 'PAGO') {
-        totalPago += valor;
-      }
+      if (conta.status === 'A_PAGAR' || conta.status === 'PARCIAL') totalAPagar += saldo;
+      if (conta.status === 'PAGO') totalPago += valor;
 
       if (conta.status !== 'PAGO' && conta.status !== 'CANCELADO') {
         const vencimento = new Date(conta.data_vencimento);
         vencimento.setHours(0, 0, 0, 0);
-
-        if (vencimento < hoje) {
-          totalVencido += saldo;
-        } else if (vencimento.getTime() === hoje.getTime()) {
-          totalHoje += saldo;
-        }
+        if (vencimento < hoje) totalVencido += saldo;
+        else if (vencimento.getTime() === hoje.getTime()) totalHoje += saldo;
       }
     });
 

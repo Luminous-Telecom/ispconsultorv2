@@ -1,8 +1,6 @@
-import { Op, UniqueConstraintError, WhereOptions } from 'sequelize';
-import { AtendimentoLocal } from '../../../models/atendimentos/AtendimentoLocal';
-import { AtendimentoMensagem } from '../../../models/atendimentos/AtendimentoMensagem';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Usuario } from '../../../models/cadastros/Usuario';
+import { Prisma } from '@prisma/client';
+import type { atendimentos } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { nowIxcDateTime } from '../../externos/IxcOssChamadoService/ixcHttp';
 import { parseClienteId } from '../../externos/IxcOssChamadoService/ossPayload';
 import type {
@@ -24,6 +22,12 @@ import {
 
 const PROTOCOLO_CREATE_MAX_RETRIES = 5;
 
+type AtendimentoRow = atendimentos;
+
+function isUniqueConstraintError(error: unknown): boolean {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
+}
+
 function resolveIxcIdRef(...values: (string | number | null | undefined)[]): string {
   for (const raw of values) {
     const value = String(raw ?? '').trim();
@@ -37,7 +41,7 @@ function parseNumericId(id: string | number): number | null {
   return Number.isFinite(numericId) && numericId > 0 ? numericId : null;
 }
 
-function empresaWhere(empresaId: number | null): WhereOptions<AtendimentoLocal> {
+function empresaWhere(empresaId: number | null): Prisma.atendimentosWhereInput {
   if (empresaId == null) return {};
   return { empresa_id: empresaId };
 }
@@ -52,9 +56,9 @@ async function fetchUsuarioNomes(usuarioIds: number[]): Promise<Map<number, stri
   const unique = [...new Set(usuarioIds.filter((id) => id > 0))];
   if (unique.length === 0) return new Map();
 
-  const usuarios = await Usuario.findAll({
-    where: { id: { [Op.in]: unique } },
-    attributes: ['id', 'nome'],
+  const usuarios = await prisma.cadastros_usuarios.findMany({
+    where: { id: { in: unique } },
+    select: { id: true, nome: true },
   });
 
   return new Map(
@@ -62,7 +66,7 @@ async function fetchUsuarioNomes(usuarioIds: number[]): Promise<Map<number, stri
   );
 }
 
-function toIxcAtendimento(record: AtendimentoLocal, clienteNome: string): IxcAtendimento {
+function toIxcAtendimento(record: AtendimentoRow, clienteNome: string): IxcAtendimento {
   const hasIxc = Boolean(record.ixc_id?.trim());
 
   return {
@@ -96,10 +100,10 @@ async function nextProtocolo(): Promise<string> {
   const month = now.getMonth() + 1;
   const prefix = localAtendimentoProtocoloYearMonthPrefix(now);
 
-  const ultimo = await AtendimentoLocal.findOne({
-    where: { protocolo: { [Op.like]: `${prefix}%` } },
-    attributes: ['protocolo'],
-    order: [['protocolo', 'DESC']],
+  const ultimo = await prisma.atendimentos.findFirst({
+    where: { protocolo: { startsWith: prefix } },
+    select: { protocolo: true },
+    orderBy: { protocolo: 'desc' },
   });
 
   let sequence = 1;
@@ -182,17 +186,29 @@ function applyListFilters(
   return sortRegistros(result, sortColumn, sortDirection);
 }
 
+async function updateAtendimento(
+  record: AtendimentoRow,
+  data: Prisma.atendimentosUpdateInput
+): Promise<AtendimentoRow> {
+  const updated = await prisma.atendimentos.update({
+    where: { id: record.id },
+    data: { ...data, updated_at: new Date() },
+  });
+  Object.assign(record, updated);
+  return updated;
+}
+
 async function mapLocalRegistros(
-  registros: AtendimentoLocal[],
+  registros: AtendimentoRow[],
   empresaId: number | null
 ): Promise<IxcAtendimento[]> {
   if (registros.length === 0) return [];
 
   const clienteIds = [...new Set(registros.map((r) => r.cliente_id))];
   const clientes = clienteIds.length
-    ? await Cliente.findAll({
-        where: { id: { [Op.in]: clienteIds } },
-        attributes: ['id', 'razao_social', 'nome_fantasia'],
+    ? await prisma.clientes.findMany({
+        where: { id: { in: clienteIds } },
+        select: { id: true, razao_social: true, nome_fantasia: true },
       })
     : [];
   const clienteNomes = new Map(
@@ -239,14 +255,14 @@ export class AtendimentoLocalService {
     const page = filters.page && filters.page > 0 ? filters.page : 1;
     const limit = filters.limit && filters.limit > 0 ? filters.limit : 15;
 
-    const where: WhereOptions<AtendimentoLocal> = { ...empresaWhere(empresaId) };
+    const where: Prisma.atendimentosWhereInput = { ...empresaWhere(empresaId) };
     if (filters.cliente_id) {
-      (where as Record<string, unknown>).cliente_id = filters.cliente_id;
+      where.cliente_id = Number(filters.cliente_id);
     }
 
-    const registros = await AtendimentoLocal.findAll({
+    const registros = await prisma.atendimentos.findMany({
       where,
-      order: [['id', 'DESC']],
+      orderBy: { id: 'desc' },
     });
 
     const data = applyListFilters(await mapLocalRegistros(registros, empresaId), filters);
@@ -271,11 +287,11 @@ export class AtendimentoLocalService {
   static async findByIxcId(
     ixcId: string | number,
     empresaId: number | null = null
-  ): Promise<AtendimentoLocal | null> {
+  ): Promise<AtendimentoRow | null> {
     const normalized = String(ixcId).trim();
     if (!normalized) return null;
 
-    return AtendimentoLocal.findOne({
+    return prisma.atendimentos.findFirst({
       where: {
         ixc_id: normalized,
         ...empresaWhere(empresaId),
@@ -286,13 +302,13 @@ export class AtendimentoLocalService {
   static async findRecord(
     id: string | number,
     empresaId: number | null = null
-  ): Promise<AtendimentoLocal | null> {
+  ): Promise<AtendimentoRow | null> {
     const byIxc = await this.findByIxcId(id, empresaId);
     if (byIxc) return byIxc;
 
     const numericId = parseNumericId(id);
     if (numericId != null) {
-      return AtendimentoLocal.findOne({
+      return prisma.atendimentos.findFirst({
         where: {
           id: numericId,
           ...empresaWhere(empresaId),
@@ -326,7 +342,7 @@ export class AtendimentoLocalService {
     payload: AtendimentoInput,
     empresaId: number | null = null,
     usuarioId: number | null = null
-  ): Promise<AtendimentoLocal> {
+  ): Promise<AtendimentoRow> {
     const clienteId = parseClienteId(payload.cliente_id);
     if (!clienteId) {
       throw new Error('Selecione o cliente');
@@ -338,46 +354,49 @@ export class AtendimentoLocalService {
     }
 
     const idEstrutura = String(payload.id_estrutura ?? '0').trim() || '0';
-
     const agora = nowIxcDateTime();
 
     for (let attempt = 0; attempt < PROTOCOLO_CREATE_MAX_RETRIES; attempt++) {
       const protocolo = await nextProtocolo();
 
       try {
-        const record = await AtendimentoLocal.create({
-          empresa_id: empresaId,
-          cliente_id: clienteId,
-          ixc_id: null,
-          protocolo,
-          id_filial: String(payload.id_filial ?? '').trim(),
-          id_estrutura: idEstrutura,
-          id_assunto: String(payload.id_assunto ?? '').trim(),
-          id_ticket_setor: String(payload.id_ticket_setor ?? '').trim(),
-          id_responsavel_technico: String(payload.id_responsavel_technico ?? '').trim(),
-          titulo: String(payload.titulo ?? '').trim(),
-          menssagem,
-          prioridade: String(payload.prioridade ?? 'N').trim() || 'N',
-          melhor_horario_reserve: String(payload.melhor_horario_reserve ?? 'Q').trim() || 'Q',
-          data_reservada: String(payload.data_reservada ?? '').trim() || null,
-          su_status: String(payload.su_status ?? 'N').trim() || 'N',
-          tipo: String(payload.tipo ?? 'E').trim() || 'E',
-          data_criacao: agora,
-          ultima_atualizacao: agora,
+        const record = await prisma.atendimentos.create({
+          data: {
+            empresa_id: empresaId,
+            cliente_id: clienteId,
+            ixc_id: null,
+            protocolo,
+            id_filial: String(payload.id_filial ?? '').trim(),
+            id_estrutura: idEstrutura,
+            id_assunto: String(payload.id_assunto ?? '').trim(),
+            id_ticket_setor: String(payload.id_ticket_setor ?? '').trim(),
+            id_responsavel_technico: String(payload.id_responsavel_technico ?? '').trim(),
+            titulo: String(payload.titulo ?? '').trim(),
+            menssagem,
+            prioridade: String(payload.prioridade ?? 'N').trim() || 'N',
+            melhor_horario_reserve: String(payload.melhor_horario_reserve ?? 'Q').trim() || 'Q',
+            data_reservada: String(payload.data_reservada ?? '').trim() || null,
+            su_status: String(payload.su_status ?? 'N').trim() || 'N',
+            tipo: String(payload.tipo ?? 'E').trim() || 'E',
+            data_criacao: agora,
+            ultima_atualizacao: agora,
+          },
         });
 
-        await AtendimentoMensagem.create({
-          empresa_id: empresaId,
-          atendimento_id: record.id,
-          mensagem: menssagem,
-          data: agora,
-          usuario_id: usuarioId,
-          visibilidade_mensagens: 'E',
+        await prisma.atendimentos_mensagens.create({
+          data: {
+            empresa_id: empresaId,
+            atendimento_id: record.id,
+            mensagem: menssagem,
+            data: agora,
+            usuario_id: usuarioId,
+            visibilidade_mensagens: 'E',
+          },
         });
 
         return record;
       } catch (error) {
-        if (error instanceof UniqueConstraintError && attempt < PROTOCOLO_CREATE_MAX_RETRIES - 1) {
+        if (isUniqueConstraintError(error) && attempt < PROTOCOLO_CREATE_MAX_RETRIES - 1) {
           continue;
         }
         throw error;
@@ -388,10 +407,10 @@ export class AtendimentoLocalService {
   }
 
   static async linkToIxc(
-    record: AtendimentoLocal,
+    record: AtendimentoRow,
     ixcId: string | number,
     meta: { protocolo?: string; su_status?: string } = {}
-  ): Promise<AtendimentoLocal> {
+  ): Promise<AtendimentoRow> {
     const normalized = String(ixcId).trim();
     if (!normalized) {
       throw new Error('IXC não retornou o ID do atendimento criado');
@@ -400,14 +419,12 @@ export class AtendimentoLocalService {
     const protocolo = String(meta.protocolo ?? record.protocolo).trim() || record.protocolo;
     const suStatus = String(meta.su_status ?? record.su_status).trim() || record.su_status;
 
-    await record.update({
+    return updateAtendimento(record, {
       ixc_id: normalized,
       protocolo,
       su_status: suStatus,
       ultima_atualizacao: nowIxcDateTime(),
     });
-
-    return record;
   }
 
   static async syncFromIxcTicket(
@@ -419,7 +436,7 @@ export class AtendimentoLocalService {
     const record = await this.findByIxcId(ixcId, empresaId);
     if (!record) return;
 
-    await record.update({
+    await updateAtendimento(record, {
       prioridade: String(ticket.prioridade ?? record.prioridade).trim() || record.prioridade,
       melhor_horario_reserve:
         String(ticket.melhor_horario_reserve ?? record.melhor_horario_reserve).trim() ||
@@ -455,7 +472,7 @@ export class AtendimentoLocalService {
       throw new Error('Atendimento não encontrado');
     }
 
-    const updates: Partial<AtendimentoLocal> = {
+    const updates: Prisma.atendimentosUpdateInput = {
       ultima_atualizacao: nowIxcDateTime(),
     };
 
@@ -497,13 +514,13 @@ export class AtendimentoLocalService {
       updates.id_responsavel_technico = String(payload.id_responsavel_technico).trim();
     }
 
-    await record.update(updates);
+    await updateAtendimento(record, updates);
     return { type: 'success', id: String(record.id) };
   }
 
-  static async destroyRecord(record: AtendimentoLocal): Promise<void> {
-    await AtendimentoMensagem.destroy({ where: { atendimento_id: record.id } });
-    await record.destroy();
+  static async destroyRecord(record: AtendimentoRow): Promise<void> {
+    await prisma.atendimentos_mensagens.deleteMany({ where: { atendimento_id: record.id } });
+    await prisma.atendimentos.delete({ where: { id: record.id } });
   }
 
   static async delete(id: string | number, empresaId: number | null = null): Promise<void> {
@@ -523,16 +540,16 @@ export class AtendimentoLocalService {
       throw new Error('Atendimento não encontrado');
     }
 
-    const mensagens = await AtendimentoMensagem.findAll({
+    const mensagens = await prisma.atendimentos_mensagens.findMany({
       where: { atendimento_id: record.id },
-      order: [['id', 'ASC']],
+      orderBy: { id: 'asc' },
     });
 
     const usuarioIds = [
       ...new Set(
         mensagens
           .map((item) => item.usuario_id)
-          .filter((id): id is number => id != null && id > 0)
+          .filter((usuarioId): usuarioId is number => usuarioId != null && usuarioId > 0)
       ),
     ];
     const usuarioNomes = await fetchUsuarioNomes(usuarioIds);
@@ -548,7 +565,7 @@ export class AtendimentoLocalService {
     }));
   }
 
-  static resolveIxcTicketId(record: AtendimentoLocal | null, id: string | number): string {
+  static resolveIxcTicketId(record: AtendimentoRow | null, id: string | number): string {
     const ixcId = record?.ixc_id?.trim();
     if (ixcId) return ixcId;
     return String(id).trim();

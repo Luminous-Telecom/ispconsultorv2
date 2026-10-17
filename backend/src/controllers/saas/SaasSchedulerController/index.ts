@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { SaasScheduledRoutineService } from '../../../services/saas/SaasScheduledRoutineService';
 import { SchedulerService } from '../../../services/scheduler/SchedulerService';
@@ -129,7 +130,7 @@ export class SaasSchedulerController {
       } as Parameters<typeof SaasScheduledRoutineService.create>[0];
 
       const routine = await SaasScheduledRoutineService.create(dadosComProximaExecucao);
-      await registrarCriacao(req as any, 'SaasScheduledRoutine', routine.id, routine.toJSON ? routine.toJSON() as Record<string, unknown> : routine as unknown as Record<string, unknown>);
+      await registrarCriacao(req as any, 'SaasScheduledRoutine', routine.id, toPlain(routine) as Record<string, unknown>);
       if (routine.ativo) {
         await SchedulerService.getInstance().scheduleSaasRoutine(routine);
       }
@@ -168,8 +169,8 @@ export class SaasSchedulerController {
       const routine = await SaasScheduledRoutineService.update(Number(id), updateData);
       if (routineAntiga && routine) {
         await registrarAtualizacao(req as any, 'SaasScheduledRoutine', Number(id),
-          routineAntiga.toJSON ? routineAntiga.toJSON() as Record<string, unknown> : routineAntiga as unknown as Record<string, unknown>,
-          routine.toJSON ? routine.toJSON() as Record<string, unknown> : routine as unknown as Record<string, unknown>);
+          toPlain(routineAntiga) as Record<string, unknown>,
+          toPlain(routine) as Record<string, unknown>);
       }
       const scheduler = SchedulerService.getInstance();
       if (routine.ativo) {
@@ -205,7 +206,7 @@ export class SaasSchedulerController {
       const ipAddress = getClientIp(req);
       await SchedulerService.getInstance().executeSaasRoutineManually(routineId, usuario, ipAddress);
       if (routine) {
-        const dados = routine.toJSON ? routine.toJSON() as Record<string, unknown> : routine as unknown as Record<string, unknown>;
+        const dados = toPlain(routine) as Record<string, unknown>;
         await registrarAtualizacao(req as any, 'SaasScheduledRoutine', routineId, dados, dados, 'Execução manual da rotina', null);
       }
       sendSuccess(res, { message: 'Rotina iniciada em background' }, 'Rotina iniciada em background');
@@ -232,7 +233,7 @@ export class SaasSchedulerController {
       await SaasScheduledRoutineService.delete(routineId);
       if (routineAntiga) {
         await registrarExclusao(req as any, 'SaasScheduledRoutine', routineId,
-          routineAntiga.toJSON ? routineAntiga.toJSON() as Record<string, unknown> : routineAntiga as unknown as Record<string, unknown>);
+          toPlain(routineAntiga) as Record<string, unknown>);
       }
       sendSuccess(res, undefined, 'Rotina deletada com sucesso');
     } catch (error: unknown) {

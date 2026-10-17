@@ -14,7 +14,7 @@ type TituloLike = { id: number; empresa_id?: number; valor: number; data_vencime
 export async function refetchResolvedTitulo(resolved: ResolvedTitulo): Promise<void> {
   const id = (resolved.titulo as { id: number }).id;
   const full = resolved.saas ? await SaasTituloService.getById(id) : await TituloService.getById(id);
-  if (full) resolved.titulo = full;
+  if (full) resolved.titulo = full as unknown as ResolvedTitulo['titulo'];
 }
 
 /**

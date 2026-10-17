@@ -1,6 +1,5 @@
 module.exports = {
   apps: [
-    // --- DESENVOLVIMENTO ---
     {
       name: 'backend-dev',
       cwd: './backend',
@@ -41,26 +40,6 @@ module.exports = {
       merge_logs: true
     },
     {
-      name: 'doc-dev',
-      cwd: './doc',
-      script: 'npm',
-      args: 'run dev',
-      interpreter: 'node',
-      instances: 1,
-      exec_mode: 'fork',
-      watch: false,
-      autorestart: true,
-      env: {
-        NODE_ENV: 'development'
-      },
-      log_file: './logs/doc-dev-combined.log',
-      out_file: './logs/doc-dev-out.log',
-      error_file: './logs/doc-dev-error.log',
-      log_date_format: 'DD/MM/YYYY HH:mm:ss',
-      merge_logs: true
-    },
-    // --- PRODUÇÃO ---
-    {
       name: 'backend',
       cwd: './backend',
       script: './dist/index.js',
@@ -85,26 +64,6 @@ module.exports = {
       kill_timeout: 5000,
       wait_ready: true,
       listen_timeout: 10000
-    },
-    {
-      name: 'doc',
-      cwd: '.',
-      script: 'npx',
-      args: '--yes serve doc/.vitepress/dist -l 4000 --no-request-logging',
-      interpreter: 'none',
-      exec_mode: 'fork',
-      instances: 1,
-      autorestart: true,
-      watch: false,
-      max_memory_restart: '500M',
-      env: {
-        NODE_ENV: 'production'
-      },
-      log_file: './logs/doc-combined.log',
-      out_file: './logs/doc-out.log',
-      error_file: './logs/doc-error.log',
-      log_date_format: 'DD/MM/YYYY HH:mm:ss',
-      merge_logs: true
     },
   ]
 };

@@ -1,9 +1,4 @@
-import { Op } from 'sequelize';
-import { Titulo } from '../../../models/financeiro/Titulo';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Plano } from '../../../models/cadastros/Plano';
-import { Banco } from '../../../models/cadastros/Banco';
-import { MensagemHistorico } from '../../../models/comunicacao/MensagemHistorico';
+import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
 import { EmailService } from '../EmailService';
 import { WhatsAppBoletoService } from '../WhatsAppBoletoService';
@@ -45,13 +40,7 @@ export class ReciboPagamentoService {
   }
 
   private static async enviarReciboAsync(tituloId: number): Promise<void> {
-    const titulo = await Titulo.findByPk(tituloId, {
-      include: [
-        { model: Cliente, as: 'cliente' },
-        { model: Plano, as: 'plano' },
-        { model: Banco, as: 'banco' }
-      ]
-    });
+    const titulo = await carregarTitulo(tituloId);
 
     if (!titulo) {
       recibosRecentes.delete(tituloId);
@@ -69,8 +58,14 @@ export class ReciboPagamentoService {
       return;
     }
 
-    const tituloComRelacoes = titulo as unknown as TituloComRelacoes;
-    const cliente = (tituloComRelacoes as TituloComRelacoes & { cliente?: Cliente }).cliente;
+    const tituloComRelacoes = {
+      ...titulo,
+      valor: Number(titulo.valor),
+      cliente: titulo.clientes,
+      plano: titulo.cadastros_planos,
+      banco: titulo.cadastros_bancos,
+    } as unknown as TituloComRelacoes;
+    const cliente = titulo.clientes;
     if (!cliente) {
       recibosRecentes.delete(tituloId);
       logger.info('[Recibo] Cliente não encontrado no título, ignorando', { titulo_id: tituloId });
@@ -107,13 +102,7 @@ export class ReciboPagamentoService {
     tituloId: number,
     empresaId: number | null
   ): Promise<{ sucesso: boolean; mensagem: string }> {
-    const titulo = await Titulo.findByPk(tituloId, {
-      include: [
-        { model: Cliente, as: 'cliente' },
-        { model: Plano, as: 'plano' },
-        { model: Banco, as: 'banco' }
-      ]
-    });
+    const titulo = await carregarTitulo(tituloId);
 
     if (!titulo) {
       return { sucesso: false, mensagem: 'Título não encontrado' };
@@ -128,8 +117,14 @@ export class ReciboPagamentoService {
       return { sucesso: false, mensagem: 'Só é possível enviar recibo de título pago' };
     }
 
-    const tituloComRelacoes = titulo as unknown as TituloComRelacoes;
-    const cliente = (tituloComRelacoes as TituloComRelacoes & { cliente?: Cliente }).cliente;
+    const tituloComRelacoes = {
+      ...titulo,
+      valor: Number(titulo.valor),
+      cliente: titulo.clientes,
+      plano: titulo.cadastros_planos,
+      banco: titulo.cadastros_bancos,
+    } as unknown as TituloComRelacoes;
+    const cliente = titulo.clientes;
     if (!cliente) {
       return { sucesso: false, mensagem: 'Cliente não encontrado' };
     }
@@ -157,15 +152,17 @@ export class ReciboPagamentoService {
   /** Recibo já registrado para este pagamento (desde o dia da baixa). */
   private static async reciboJaEnviado(tituloId: number, dataPagamento: Date | string | null): Promise<boolean> {
     const desde = ReciboPagamentoService.inicioDoDiaPagamento(dataPagamento);
-    const existente = await MensagemHistorico.findOne({
+    const existente = await prisma.sistema_logs_operacionais.findFirst({
       where: {
-        entidade_tipo: 'titulo',
-        entidade_id: tituloId,
-        status: 'enviada',
-        titulo: { [Op.like]: `%${RECIBO_HISTORICO_MARCADOR}%` },
-        ...(desde ? { created_at: { [Op.gte]: desde } } : {}),
+        canal: { in: ['email', 'whatsapp'] },
+        tipo: 'enviada',
+        tabela: 'titulo',
+        recurso_id: String(tituloId),
+        payload: { contains: `"log_contexto":"mensagem"` },
+        AND: [{ payload: { contains: RECIBO_HISTORICO_MARCADOR } }],
+        ...(desde ? { created_at: { gte: desde } } : {}),
       },
-      attributes: ['id'],
+      select: { id: true },
     });
     return existente != null;
   }
@@ -184,4 +181,15 @@ export class ReciboPagamentoService {
     if (Number.isNaN(parsed.getTime())) return null;
     return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
   }
+}
+
+function carregarTitulo(tituloId: number) {
+  return prisma.financeiro_titulos.findUnique({
+    where: { id: Number(tituloId) },
+    include: {
+      clientes: true,
+      cadastros_planos: true,
+      cadastros_bancos: true,
+    },
+  });
 }

@@ -43,7 +43,9 @@ export class TituloPDFService {
       return titulo;
     }
 
-    const resultado = await BancoApiService.gerarTitulo(titulo);
+    const resultado = await BancoApiService.gerarTitulo(
+      titulo as unknown as Parameters<typeof BancoApiService.gerarTitulo>[0],
+    );
     if (!resultado.success || !resultado.data) {
       const message = resultado.message || 'Erro desconhecido';
       if (options?.falharSeErro) {

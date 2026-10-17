@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { ModeloDocumentoService } from '../../../services/documentos/ModeloDocumentoService';
 import { ModeloDocumentoController } from '../ModeloDocumentoController';
@@ -33,7 +34,7 @@ export class ModeloTermoController {
         ...(typeof empresaId === 'number' && { empresa_id: empresaId }),
       });
       const data = result.data.map((d) => {
-        const j = d.toJSON() as unknown as Record<string, unknown>;
+        const j = toPlain(d) as unknown as Record<string, unknown>;
         return { ...j, tipo_termo: (j.tipo as string) || 'adesao' };
       });
       sendSuccess(res, data, 'Modelos de termo listados');
@@ -55,7 +56,7 @@ export class ModeloTermoController {
         sendNotFound(res, 'Modelo de termo não encontrado');
         return;
       }
-      const j = doc.toJSON() as unknown as Record<string, unknown>;
+      const j = toPlain(doc) as unknown as Record<string, unknown>;
       sendSuccess(res, { ...j, tipo_termo: (j.tipo as string) || 'adesao' }, 'Modelo de termo encontrado');
     } catch (error) {
       sendError(res, error, 'Erro ao buscar modelo de termo', 500, true);
@@ -70,7 +71,7 @@ export class ModeloTermoController {
         ...(typeof empresaId === 'number' && { empresa_id: empresaId }),
       });
       const data = result.data.map((d) => {
-        const j = d.toJSON() as unknown as Record<string, unknown>;
+        const j = toPlain(d) as unknown as Record<string, unknown>;
         return { ...j, tipo_termo: (j.tipo as string) || 'adesao' };
       });
       sendSuccess(res, data, 'Modelos de termo listados');
@@ -111,14 +112,14 @@ export class ModeloTermoController {
           req as AuthenticatedRequest,
           'ModeloTermo',
           doc.id,
-          doc.toJSON() as unknown as Record<string, unknown>,
+          toPlain(doc) as unknown as Record<string, unknown>,
           undefined,
           empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
       }
-      const j = doc.toJSON() as unknown as Record<string, unknown>;
+      const j = toPlain(doc) as unknown as Record<string, unknown>;
       sendSuccess(res, { ...j, tipo_termo: 'adesao' }, 'Modelo de termo criado', 201);
     } catch (error) {
       sendError(res, error, 'Erro ao criar modelo de termo', 500, true);
@@ -139,7 +140,7 @@ export class ModeloTermoController {
         sendNotFound(res, 'Modelo de termo não encontrado');
         return;
       }
-      const dadosAnteriores = doc.toJSON() as unknown as Record<string, unknown>;
+      const dadosAnteriores = toPlain(doc) as unknown as Record<string, unknown>;
       const updated = await ModeloDocumentoService.update(id, {
         nome: body.nome,
         descricao: body.descricao,
@@ -153,14 +154,14 @@ export class ModeloTermoController {
           'ModeloTermo',
           updated.id,
           dadosAnteriores,
-          updated.toJSON() as unknown as Record<string, unknown>,
+          toPlain(updated) as unknown as Record<string, unknown>,
           undefined,
           empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
       }
-      const j = updated.toJSON() as unknown as Record<string, unknown>;
+      const j = toPlain(updated) as unknown as Record<string, unknown>;
       sendSuccess(res, { ...j, tipo_termo: (j.tipo as string) || 'adesao' }, 'Modelo de termo atualizado');
     } catch (error) {
       sendError(res, error, 'Erro ao atualizar modelo de termo', 500, true);
@@ -180,7 +181,7 @@ export class ModeloTermoController {
         sendNotFound(res, 'Modelo de termo não encontrado');
         return;
       }
-      const dadosAnteriores = doc.toJSON() as unknown as Record<string, unknown>;
+      const dadosAnteriores = toPlain(doc) as unknown as Record<string, unknown>;
       await ModeloDocumentoService.delete(id);
       try {
         const empresaIdAudit = getEmpresaIdOrNull(req) ?? doc.empresa_id ?? null;

@@ -1,5 +1,5 @@
-import { MensagemEmail } from '../../../models/comunicacao/MensagemEmail';
-import { logger } from '../../../utils/logger';
+import type { Prisma, comunicacao_mensagens_email } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { whereComunicacaoEmpresaEstrito } from '../../../utils/comunicacaoEmpresaWhere';
 
 export interface MensagemEmailData {
@@ -15,50 +15,60 @@ export class MensagemEmailService {
   /**
    * Buscar mensagem por tipo (filtra estritamente por empresa_id quando informado)
    */
-  static async findByTipo(tipo: string, empresaId?: number | null): Promise<MensagemEmail | null> {
+  static async findByTipo(tipo: string, empresaId?: number | null): Promise<comunicacao_mensagens_email | null> {
     const whereEstrito = whereComunicacaoEmpresaEstrito(empresaId, { tipo });
-    const where = whereEstrito ?? { tipo };
-    return await MensagemEmail.findOne({
-      where
-    });
+    const where = (whereEstrito ?? { tipo }) as Prisma.comunicacao_mensagens_emailWhereInput;
+    return prisma.comunicacao_mensagens_email.findFirst({ where });
   }
 
   /**
    * Criar ou atualizar mensagem (upsert)
    */
-  static async upsert(dadosMensagem: MensagemEmailData): Promise<MensagemEmail> {
+  static async upsert(dadosMensagem: MensagemEmailData): Promise<comunicacao_mensagens_email> {
     const mensagemExistente = await this.findByTipo(dadosMensagem.tipo);
 
     if (mensagemExistente) {
-      await mensagemExistente.update(dadosMensagem as any);
-      await mensagemExistente.reload();
-      return mensagemExistente;
-    } else {
-      return await MensagemEmail.create(dadosMensagem as any);
+      return prisma.comunicacao_mensagens_email.update({
+        where: { id: mensagemExistente.id },
+        data: {
+          ...(dadosMensagem as Prisma.comunicacao_mensagens_emailUpdateInput),
+          updated_at: new Date(),
+        },
+      });
     }
+
+    return prisma.comunicacao_mensagens_email.create({
+      data: dadosMensagem as Prisma.comunicacao_mensagens_emailCreateInput,
+    });
   }
 
   /**
    * Criar mensagem
    */
-  static async create(dadosMensagem: MensagemEmailData): Promise<MensagemEmail> {
-    return await MensagemEmail.create(dadosMensagem as any);
+  static async create(dadosMensagem: MensagemEmailData): Promise<comunicacao_mensagens_email> {
+    return prisma.comunicacao_mensagens_email.create({
+      data: dadosMensagem as Prisma.comunicacao_mensagens_emailCreateInput,
+    });
   }
 
   /**
    * Atualizar mensagem
    */
-  static async update(id: number, dadosMensagem: Partial<MensagemEmailData>): Promise<MensagemEmail> {
-    const mensagem = await MensagemEmail.findByPk(id);
-    
+  static async update(id: number, dadosMensagem: Partial<MensagemEmailData>): Promise<comunicacao_mensagens_email> {
+    const mensagem = await prisma.comunicacao_mensagens_email.findUnique({
+      where: { id: Number(id) },
+    });
+
     if (!mensagem) {
       throw new Error('Mensagem não encontrada');
     }
 
-    await mensagem.update(dadosMensagem as any);
-    await mensagem.reload();
-    
-    return mensagem;
+    return prisma.comunicacao_mensagens_email.update({
+      where: { id: mensagem.id },
+      data: {
+        ...(dadosMensagem as Prisma.comunicacao_mensagens_emailUpdateInput),
+        updated_at: new Date(),
+      },
+    });
   }
 }
-

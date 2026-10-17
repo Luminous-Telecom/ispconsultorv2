@@ -1,5 +1,4 @@
-import { Contrato } from '../../../models/contratos/Contrato';
-import { ContratoIntegracaoIxcVinculo } from '../../../models/contratos/ContratoIntegracaoIxcVinculo';
+import { prisma } from '../../../db/prisma';
 import { IntegracaoIxcProvedorService } from '../../integracao/IntegracaoIxcProvedorService';
 
 export interface ContratoIntegracaoIxcItem {
@@ -16,24 +15,29 @@ export interface ContratoIntegracaoIxcResponse {
 
 export class ContratoIntegracaoIxcService {
   static async listByContrato(contratoId: number): Promise<ContratoIntegracaoIxcResponse> {
-    const contrato = await Contrato.findByPk(contratoId);
+    const contrato = await prisma.contratos.findUnique({
+      where: { id: contratoId },
+      select: { id: true },
+    });
     if (!contrato) {
       return { integracoes: [] };
     }
 
-    const integracoes = await contrato.getIntegracaoIxcProvedores({
-      order: [['nome', 'ASC']],
+    const vinculos = await prisma.contratos_integracao_ixc_vinculos.findMany({
+      where: { contrato_id: contratoId },
+      include: { integracao_ixc_provedor: true },
+      orderBy: { integracao_ixc_provedor: { nome: 'asc' } },
     });
 
     return {
-      integracoes: integracoes.map((integracao) => {
-        const json = integracao.toJSON() as Record<string, unknown>;
+      integracoes: vinculos.map((vinculo) => {
+        const integracao = vinculo.integracao_ixc_provedor;
         return {
-          id: Number(json.id),
-          nome: String(json.nome ?? ''),
-          api_url: (json.api_url as string | null | undefined) ?? null,
-          ativo: !!json.ativo,
-          has_api_token: !!json.has_api_token,
+          id: integracao.id,
+          nome: integracao.nome ?? '',
+          api_url: integracao.api_url ?? null,
+          ativo: !!integracao.ativo,
+          has_api_token: !!integracao.api_token,
         };
       }),
     };
@@ -44,7 +48,7 @@ export class ContratoIntegracaoIxcService {
     integracaoIxcProvedorId: number,
     empresaId: number | null
   ): Promise<ContratoIntegracaoIxcResponse> {
-    const contrato = await Contrato.findByPk(contratoId);
+    const contrato = await prisma.contratos.findUnique({ where: { id: contratoId } });
     if (!contrato) {
       throw new Error('Contrato não encontrado');
     }
@@ -57,7 +61,7 @@ export class ContratoIntegracaoIxcService {
       throw new Error('Integração IXC Provedor não encontrada');
     }
 
-    const existing = await ContratoIntegracaoIxcVinculo.findOne({
+    const existing = await prisma.contratos_integracao_ixc_vinculos.findFirst({
       where: {
         contrato_id: contratoId,
         integracao_ixc_provedor_id: integracaoIxcProvedorId,
@@ -65,10 +69,12 @@ export class ContratoIntegracaoIxcService {
     });
 
     if (!existing) {
-      await ContratoIntegracaoIxcVinculo.create({
-        empresa_id: contrato.empresa_id ?? empresaId,
-        contrato_id: contratoId,
-        integracao_ixc_provedor_id: integracaoIxcProvedorId,
+      await prisma.contratos_integracao_ixc_vinculos.create({
+        data: {
+          empresa_id: contrato.empresa_id ?? empresaId,
+          contrato_id: contratoId,
+          integracao_ixc_provedor_id: integracaoIxcProvedorId,
+        },
       });
     }
 
@@ -80,7 +86,7 @@ export class ContratoIntegracaoIxcService {
     integracaoIxcProvedorId: number,
     empresaId: number | null
   ): Promise<ContratoIntegracaoIxcResponse> {
-    const contrato = await Contrato.findByPk(contratoId);
+    const contrato = await prisma.contratos.findUnique({ where: { id: contratoId } });
     if (!contrato) {
       throw new Error('Contrato não encontrado');
     }
@@ -89,7 +95,7 @@ export class ContratoIntegracaoIxcService {
       throw new Error('Contrato não encontrado');
     }
 
-    await ContratoIntegracaoIxcVinculo.destroy({
+    await prisma.contratos_integracao_ixc_vinculos.deleteMany({
       where: {
         contrato_id: contratoId,
         integracao_ixc_provedor_id: integracaoIxcProvedorId,

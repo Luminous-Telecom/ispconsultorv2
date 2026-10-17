@@ -1,5 +1,3 @@
-import { Op } from 'sequelize';
-
 export type CanalNotificacao = 'email' | 'whatsapp';
 export type OrigemHistorico = 'erp' | 'saas';
 
@@ -131,23 +129,41 @@ export function montarWhereFalhasCobranca(input: {
   origens: OrigemHistorico[];
   empresaId: number | null;
   ids?: number[];
-}): Record<string, unknown> {
-  const where: Record<string, unknown> = {
+}): {
+  status: 'erro';
+  tipo: CanalNotificacao;
+  entidade_tipo: 'titulo';
+  entidade_id: { not: null };
+  historico_origem: OrigemHistorico | { in: OrigemHistorico[] };
+  OR: Array<Record<string, unknown>>;
+  empresa_id?: number;
+  id?: { in: number[] };
+} {
+  const where: {
+    status: 'erro';
+    tipo: CanalNotificacao;
+    entidade_tipo: 'titulo';
+    entidade_id: { not: null };
+    historico_origem: OrigemHistorico | { in: OrigemHistorico[] };
+    OR: Array<Record<string, unknown>>;
+    empresa_id?: number;
+    id?: { in: number[] };
+  } = {
     status: 'erro',
     tipo: input.tipo,
     entidade_tipo: 'titulo',
-    entidade_id: { [Op.ne]: null },
-    historico_origem: input.origens.length === 1 ? input.origens[0] : { [Op.in]: input.origens },
-    [Op.or]: [
-      { titulo: { [Op.is]: null } },
-      { titulo: { [Op.notLike]: '%recibo%' } },
+    entidade_id: { not: null },
+    historico_origem: input.origens.length === 1 ? input.origens[0] : { in: input.origens },
+    OR: [
+      { titulo: null },
+      { NOT: { titulo: { contains: 'recibo' } } },
     ],
   };
   if (input.empresaId != null) {
     where.empresa_id = input.empresaId;
   }
   if (input.ids && input.ids.length > 0) {
-    where.id = { [Op.in]: input.ids };
+    where.id = { in: input.ids };
   }
   return where;
 }

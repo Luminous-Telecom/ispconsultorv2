@@ -1,6 +1,8 @@
 import axios from 'axios';
-import { Cliente } from '../../../../models/clientes/Cliente';
-import { Banco } from '../../../../models/cadastros/Banco';
+import type { cadastros_bancos, clientes } from '@prisma/client';
+
+type Cliente = clientes;
+type Banco = cadastros_bancos;
 import { logger } from '../../../../utils/logger';
 
 interface AsaasClientePayload {

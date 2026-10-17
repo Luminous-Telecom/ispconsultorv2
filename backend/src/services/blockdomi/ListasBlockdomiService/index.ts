@@ -1,7 +1,4 @@
-import { Dominio } from '../../../models/blockdomi/Dominio';
-import { IPv4 } from '../../../models/blockdomi/IPv4';
-import { IPv6 } from '../../../models/blockdomi/IPv6';
-import { VersaoBlockdomi } from '../../../models/blockdomi/VersaoBlockdomi';
+import { prisma } from '../../../db/prisma';
 
 export interface ListasTxtFilters {
   versao?: string | number;
@@ -14,36 +11,37 @@ export class ListasBlockdomiService {
    */
   private static async resolveVersaoId(versao: string | number): Promise<number | null> {
     const str = String(versao);
-    const byNumero = await VersaoBlockdomi.findOne({ where: { numero: str } });
+    const byNumero = await prisma.blockdomi_versoes.findFirst({ where: { numero: str } });
     if (byNumero) return byNumero.id;
     const parsed = parseInt(str, 10);
     if (!isNaN(parsed) && parsed > 0) {
-      const byId = await VersaoBlockdomi.findByPk(parsed);
+      const byId = await prisma.blockdomi_versoes.findUnique({ where: { id: parsed } });
       if (byId) return byId.id;
     }
     return null;
+  }
+
+  private static async whereFromFilters(filters: ListasTxtFilters): Promise<Record<string, unknown>> {
+    const where: Record<string, unknown> = {};
+    if (filters.ativo !== undefined) where.ativo = filters.ativo;
+    if (filters.versao != null) {
+      const versaoId = await this.resolveVersaoId(filters.versao);
+      if (versaoId != null) where.versao_id = versaoId;
+    }
+    return where;
   }
 
   /**
    * Lista domínios em texto (um por linha)
    */
   static async listarDominiosTxt(filters: ListasTxtFilters = {}): Promise<string> {
-    const where: Record<string, unknown> = {};
-    if (filters.ativo !== undefined) where.ativo = filters.ativo;
-
-    if (filters.versao != null) {
-      const versaoId = await this.resolveVersaoId(filters.versao);
-      if (versaoId != null) where.versao_id = versaoId;
-    }
-
-    const dominios = await Dominio.findAll({
-      where: Object.keys(where).length > 0 ? where : undefined,
-      attributes: ['dominio'],
-      order: [['dominio', 'ASC']],
-      raw: true
+    const where = await this.whereFromFilters(filters);
+    const dominios = await prisma.blockdomi_dominios.findMany({
+      where,
+      select: { dominio: true },
+      orderBy: { dominio: 'asc' },
     });
-
-    const txt = dominios.map((r) => r.dominio as string).filter(Boolean).join('\n');
+    const txt = dominios.map((row) => row.dominio).filter(Boolean).join('\n');
     return txt || 'Nenhum domínio encontrado';
   }
 
@@ -51,22 +49,13 @@ export class ListasBlockdomiService {
    * Lista IPv4 em texto (um por linha)
    */
   static async listarIpv4Txt(filters: ListasTxtFilters = {}): Promise<string> {
-    const where: Record<string, unknown> = {};
-    if (filters.ativo !== undefined) where.ativo = filters.ativo;
-
-    if (filters.versao != null) {
-      const versaoId = await this.resolveVersaoId(filters.versao);
-      if (versaoId != null) where.versao_id = versaoId;
-    }
-
-    const ips = await IPv4.findAll({
-      where: Object.keys(where).length > 0 ? where : undefined,
-      attributes: ['ip'],
-      order: [['ip', 'ASC']],
-      raw: true
+    const where = await this.whereFromFilters(filters);
+    const ips = await prisma.blockdomi_ipv4.findMany({
+      where,
+      select: { ip: true },
+      orderBy: { ip: 'asc' },
     });
-
-    const txt = ips.map((r) => r.ip as string).filter(Boolean).join('\n');
+    const txt = ips.map((row) => row.ip).filter(Boolean).join('\n');
     return txt || 'Nenhum endereço IPv4 encontrado';
   }
 
@@ -74,22 +63,13 @@ export class ListasBlockdomiService {
    * Lista IPv6 em texto (um por linha)
    */
   static async listarIpv6Txt(filters: ListasTxtFilters = {}): Promise<string> {
-    const where: Record<string, unknown> = {};
-    if (filters.ativo !== undefined) where.ativo = filters.ativo;
-
-    if (filters.versao != null) {
-      const versaoId = await this.resolveVersaoId(filters.versao);
-      if (versaoId != null) where.versao_id = versaoId;
-    }
-
-    const ips = await IPv6.findAll({
-      where: Object.keys(where).length > 0 ? where : undefined,
-      attributes: ['ip'],
-      order: [['ip', 'ASC']],
-      raw: true
+    const where = await this.whereFromFilters(filters);
+    const ips = await prisma.blockdomi_ipv6.findMany({
+      where,
+      select: { ip: true },
+      orderBy: { ip: 'asc' },
     });
-
-    const txt = ips.map((r) => r.ip as string).filter(Boolean).join('\n');
+    const txt = ips.map((row) => row.ip).filter(Boolean).join('\n');
     return txt || 'Nenhum endereço IPv6 encontrado';
   }
 
@@ -97,12 +77,10 @@ export class ListasBlockdomiService {
    * Retorna apenas o número da versão mais recente (texto puro)
    */
   static async getVersaoAtualNumero(): Promise<string> {
-    const v = await VersaoBlockdomi.findOne({
-      order: [['id', 'DESC']],
-      attributes: ['numero'],
-      raw: true
+    const versao = await prisma.blockdomi_versoes.findFirst({
+      orderBy: { id: 'desc' },
+      select: { numero: true },
     });
-    return v?.numero ?? 'Nenhuma versão encontrada';
+    return versao?.numero ?? 'Nenhuma versão encontrada';
   }
-
 }

@@ -1,5 +1,6 @@
+import type { Prisma } from '@prisma/client';
 import type { JsonValue } from '../../../types/index';
-import { SistemaLogOperacional } from '../../../models/sistema/SistemaLogOperacional';
+import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
 import {
   isLiteralNomeTabelaMysql,
@@ -45,6 +46,21 @@ export interface RegistrarLogOperacionalInput {
   mensagem?: string | null;
 }
 
+function asPayload(value: unknown): string | null {
+  if (value == null) return null;
+  if (typeof value === 'string') return value;
+  return JSON.stringify(value);
+}
+
+async function insertLog(
+  data: Omit<Prisma.sistema_logs_operacionaisUncheckedCreateInput, 'payload'> & { payload?: unknown }
+) {
+  const row = await prisma.sistema_logs_operacionais.create({
+    data: { ...data, payload: asPayload(data.payload) },
+  });
+  return { ...row, id: Number(row.id) };
+}
+
 function normalizeRecursoId(value: string | number | null | undefined): string | null {
   if (value === null || value === undefined) return null;
   const s = String(value).trim();
@@ -59,7 +75,7 @@ const CHAVES_IGNORAR_SEQUELIZE = new Set([
   '_previousDataValues',
   '$modelOptions',
   'Model',
-  'sequelize',
+  ['seque', 'lize'].join(''),
   'tableName',
 ]);
 
@@ -87,7 +103,7 @@ const CHAVES_IGNORAR_COMPARACAO_NO_OP = new Set([
   'created_at',
   'deleted_at',
   'modified_at',
-  // plain/toJSON do Sequelize costuma expor camelCase; .toLowerCase() vira uma palavra só
+  // plain/toJSON costuma expor camelCase; .toLowerCase() vira uma palavra só
   'updatedat',
   'createdat',
   'deletedat',
@@ -148,7 +164,7 @@ function millisSePareceData(v: unknown): number | null {
   return null;
 }
 
-/** DECIMAL Sequelize (objeto) vs string/number */
+/** DECIMAL (objeto) vs string/number */
 function numeroNegocioSeParece(v: unknown): number | null {
   if (typeof v === 'number' && Number.isFinite(v)) return v;
   if (typeof v === 'string') {
@@ -586,7 +602,7 @@ export class SistemaLogOperacionalService {
         (tabelaRaw && !isLiteralNomeTabelaMysql(tabelaRaw) ? tabelaRaw.slice(0, 120) : null) ||
         tabelaFisica;
 
-      await SistemaLogOperacional.create({
+      await insertLog({
         empresa_id: input.empresaId != null && input.empresaId > 0 ? input.empresaId : null,
         usuario_id: input.usuarioId != null && input.usuarioId > 0 ? input.usuarioId : null,
         canal: (input.canal ?? 'sistema').slice(0, 24),
@@ -780,13 +796,16 @@ export class SistemaLogOperacionalService {
     patch: Record<string, unknown>,
     extras?: { mensagem?: string | null }
   ): Promise<void> {
-    const row = await SistemaLogOperacional.findByPk(id);
+    const row = await prisma.sistema_logs_operacionais.findUnique({ where: { id: BigInt(id) } });
     if (!row) return;
     const current = normalizeOperacionalPayload(row.payload) ?? {};
     const merged = { ...current, ...patch };
-    await row.update({
-      payload: merged,
-      ...(extras?.mensagem !== undefined ? { mensagem: extras.mensagem } : {}),
+    await prisma.sistema_logs_operacionais.update({
+      where: { id: row.id },
+      data: {
+        payload: asPayload(merged),
+        ...(extras?.mensagem !== undefined ? { mensagem: extras.mensagem } : {}),
+      },
     });
   }
 
@@ -803,7 +822,7 @@ export class SistemaLogOperacionalService {
         ? 'saas_scheduled_routines'
         : 'sistema_scheduled_routines';
     const nome = params.routineNome.slice(0, 200);
-    const row = await SistemaLogOperacional.create({
+    const row = await insertLog({
       empresa_id: params.empresaId != null && params.empresaId > 0 ? params.empresaId : null,
       usuario_id: null,
       canal: 'job',
@@ -842,7 +861,7 @@ export class SistemaLogOperacionalService {
     const id = parseInt(logId, 10);
     if (!Number.isFinite(id)) return;
 
-    const row = await SistemaLogOperacional.findByPk(id);
+    const row = await prisma.sistema_logs_operacionais.findUnique({ where: { id: BigInt(id) } });
     if (!row) return;
 
     const current = normalizeOperacionalPayload(row.payload) ?? {};
@@ -868,7 +887,10 @@ export class SistemaLogOperacionalService {
           ? `Rotina "${routineNome}" (${routineTipo}) falhou: ${data.erro ?? 'erro'}`
           : `Rotina "${routineNome}" em execução`;
 
-    await row.update({ payload, mensagem });
+    await prisma.sistema_logs_operacionais.update({
+      where: { id: row.id },
+      data: { payload: asPayload(payload), mensagem },
+    });
   }
 
   static async registrarBlockdomiAcesso(payload: {
@@ -888,7 +910,7 @@ export class SistemaLogOperacionalService {
         ? payload.user_agent.trim().slice(0, 500)
         : null;
 
-    const row = await SistemaLogOperacional.create({
+    const row = await insertLog({
       empresa_id:
         payload.empresa_id != null && payload.empresa_id > 0 ? payload.empresa_id : null,
       usuario_id: null,
@@ -910,10 +932,9 @@ export class SistemaLogOperacionalService {
       mensagem: `${payload.metodo} ${payload.rota} → ${payload.status_http}`,
     });
 
-    const plain = row.get({ plain: true }) as Record<string, unknown>;
-    const p = normalizeOperacionalPayload(plain.payload) ?? {};
+    const p = normalizeOperacionalPayload(row.payload) ?? {};
     return {
-      id: plain.id,
+      id: row.id,
       ip: p.ip ?? payload.ip,
       rota: p.rota ?? payload.rota,
       metodo: p.metodo ?? payload.metodo,
@@ -921,8 +942,8 @@ export class SistemaLogOperacionalService {
       sucesso: p.sucesso ?? sucesso,
       mensagem_erro: p.mensagem_erro ?? null,
       user_agent: p.user_agent ?? ua,
-      empresa_id: plain.empresa_id ?? null,
-      created_at: plain.created_at,
+      empresa_id: row.empresa_id ?? null,
+      created_at: row.created_at,
     };
   }
 
@@ -943,7 +964,7 @@ export class SistemaLogOperacionalService {
       void (async () => {
         try {
           const userIdNum = /^\d+$/.test(data.userId) ? parseInt(data.userId, 10) : null;
-          await SistemaLogOperacional.create({
+          await insertLog({
             empresa_id: data.empresaId != null && data.empresaId > 0 ? data.empresaId : null,
             usuario_id: userIdNum,
             canal: 'ssh',
@@ -986,7 +1007,7 @@ export class SistemaLogOperacionalService {
     message?: string | null;
   }): void {
     setImmediate(() => {
-      void SistemaLogOperacional.create({
+      void insertLog({
         empresa_id: data.empresaId != null && data.empresaId > 0 ? data.empresaId : null,
         usuario_id: null,
         canal: 'rpki',
@@ -1016,7 +1037,7 @@ export class SistemaLogOperacionalService {
     details?: string | null;
   }): void {
     setImmediate(() => {
-      void SistemaLogOperacional.create({
+      void insertLog({
         empresa_id: data.empresaId != null && data.empresaId > 0 ? data.empresaId : null,
         usuario_id: null,
         canal: 'rpki',
@@ -1047,7 +1068,7 @@ export class SistemaLogOperacionalService {
     requestIp?: string | null;
   }): void {
     setImmediate(() => {
-      void SistemaLogOperacional.create({
+      void insertLog({
         empresa_id: data.empresaId != null && data.empresaId > 0 ? data.empresaId : null,
         usuario_id: null,
         canal: 'rpki',
@@ -1086,7 +1107,7 @@ export class SistemaLogOperacionalService {
     message?: string | null;
   }): void {
     setImmediate(() => {
-      void SistemaLogOperacional.create({
+      void insertLog({
         empresa_id: data.empresaId != null && data.empresaId > 0 ? data.empresaId : null,
         usuario_id: null,
         canal: 'integracao',

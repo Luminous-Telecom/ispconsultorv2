@@ -1,15 +1,8 @@
-import { ContaPagar } from '../../../models/financeiro/ContaPagar';
-import { ContaPagarPagamento } from '../../../models/financeiro/ContaPagarPagamento';
-import { Fornecedor } from '../../../models/financeiro/Fornecedor';
-import { Op, WhereOptions, Transaction } from 'sequelize';
-import type { Order } from 'sequelize';
-import { sequelize } from '../../../config/database';
-import { normalizeDateForDb } from '../../../utils/dateUtils';
-import { buildDateFilter, buildNumericSearchFilter, buildDateSearchFilter, combineFilters } from '../../../utils/queryFilters';
+import type { Prisma } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
-import { SortHelper } from '../../../utils/sortHelper';
-import { CONTA_PAGAR_SORT_CONFIG } from '../../../config/sortConfigs';
 import { buildPagination } from '../../../utils/pagination';
+import { dateBounds, enumMatches, numericBounds, orderPageBySql, reorderByIds, sortDirection, sqlDirection } from '../../cadastros/prismaWhere';
 
 export interface ListContasPagarFilters {
   page?: number;
@@ -26,296 +19,229 @@ export interface ListContasPagarFilters {
   empresa_id?: number;
 }
 
-export interface ListContasPagarResponse {
-  success: boolean;
-  data: ContaPagar[];
-  pagination: {
-    current_page: number;
-    per_page: number;
-    total: number;
-    last_page: number;
-    from: number;
-    to: number;
+const STATUS_VALUES = ['A_PAGAR', 'PAGO', 'PARCIAL', 'CANCELADO'] as const;
+const TIPO_PAGAMENTO = ['DINHEIRO', 'BOLETO', 'CARTAO', 'DEPOSITO', 'DEBITO_CONTA', 'TRANSFERENCIA', 'PIX'] as const;
+const SORT_COLUMNS = [
+  'id', 'fornecedor_id', 'data_vencimento', 'valor', 'tipo_pagamento', 'numero_documento', 'nota_fiscal',
+  'status', 'valor_pago', 'data_pagamento', 'data_cadastro', 'created_at', 'updated_at', 'empresa_id',
+] as const;
+
+const contaInclude = {
+  financeiro_fornecedores: true,
+  financeiro_conta_pagar_pagamentos: { orderBy: { created_at: 'desc' as const } },
+};
+
+function shapeConta<T extends { financeiro_fornecedores?: unknown; financeiro_conta_pagar_pagamentos?: unknown; valor: unknown; valor_pago: unknown }>(row: T) {
+  return {
+    ...row,
+    fornecedor: row.financeiro_fornecedores ?? null,
+    pagamentos: row.financeiro_conta_pagar_pagamentos ?? [],
+    saldo_devedor: Number(row.valor) - Number(row.valor_pago || 0),
   };
 }
 
+function enumFilter<T extends string>(values: readonly T[], term: string): { in: T[] } | { in: [] } {
+  const matches = enumMatches(values, term);
+  return { in: matches };
+}
+
 export class ContaPagarService {
-  private static getDefaultIncludes() {
-    return [
-      { association: 'fornecedor' as const, required: false },
-      { association: 'pagamentos' as const, required: false, order: [['created_at', 'DESC']] as Order },
-    ];
-  }
-
-  /**
-   * Listar contas a pagar com filtros e paginação
-   */
-  static async list(filters: ListContasPagarFilters): Promise<ListContasPagarResponse> {
+  static async list(filters: ListContasPagarFilters) {
     const {
-      page = 1,
-      limit = 15,
-      search,
-      searchField,
-      status,
-      tipo_pagamento,
-      fornecedor_id,
-      data_inicio,
-      data_fim,
-      sortColumn,
-      sortDirection,
-      empresa_id
+      page = 1, limit = 15, search, searchField, status, tipo_pagamento, fornecedor_id,
+      data_inicio, data_fim, sortColumn, sortDirection: direction, empresa_id,
     } = filters;
-
     const offset = (page - 1) * limit;
-    const whereConditions: Array<WhereOptions> = [];
+    const and: Prisma.financeiro_contas_pagarWhereInput[] = [];
 
-    if (empresa_id !== undefined) {
-      whereConditions.push({ empresa_id });
-    }
-    
-    if (status) {
-      whereConditions.push({ status });
-    }
-
-    if (tipo_pagamento) {
-      whereConditions.push({ tipo_pagamento: tipo_pagamento });
-    }
-
+    if (empresa_id !== undefined) and.push({ empresa_id });
+    if (status) and.push({ status: status as (typeof STATUS_VALUES)[number] });
+    if (tipo_pagamento) and.push({ tipo_pagamento: tipo_pagamento as (typeof TIPO_PAGAMENTO)[number] });
     if (fornecedor_id) {
       const fornecedorIdNum = parseInt(fornecedor_id, 10);
-      if (!isNaN(fornecedorIdNum)) {
-        whereConditions.push({ fornecedor_id: fornecedorIdNum });
-      }
+      if (!Number.isNaN(fornecedorIdNum)) and.push({ fornecedor_id: fornecedorIdNum });
     }
+    const vencimento = dateBounds(data_inicio, data_fim);
+    if (vencimento) and.push({ data_vencimento: vencimento });
 
-    // Filtro de data usando helper
-    const dateFilter = buildDateFilter(data_inicio, data_fim, 'data_vencimento');
-    if (dateFilter) {
-      whereConditions.push(dateFilter);
-    }
-
-    if (search && search.trim()) {
-      const searchTerm = search.trim();
-      const numExact = /^\d+$/.test(searchTerm) ? parseInt(searchTerm, 10) : null;
-
+    const term = search?.trim() ?? '';
+    const shouldSearchFornecedor = Boolean(term && (searchField === 'fornecedor' || !searchField));
+    if (term) {
+      const numExact = /^\d+$/.test(term) ? parseInt(term, 10) : null;
       switch (searchField) {
         case 'id':
-          if (numExact !== null) {
-            whereConditions.push({ id: numExact });
-          } else {
-            whereConditions.push({ id: { [Op.lt]: 0 } });
-          }
+          and.push(numExact !== null ? { id: numExact } : { id: { lt: 0 } });
           break;
         case 'numero_documento':
-          whereConditions.push({ numero_documento: { [Op.like]: `%${searchTerm}%` } });
+          and.push({ numero_documento: { contains: term } });
           break;
         case 'nota_fiscal':
-          whereConditions.push({ nota_fiscal: { [Op.like]: `%${searchTerm}%` } });
+          and.push({ nota_fiscal: { contains: term } });
           break;
         case 'fornecedor':
           break;
-        case 'vencimento':
-          const dateSearchFilter = buildDateSearchFilter(searchTerm, 'data_vencimento');
-          if (dateSearchFilter) {
-            whereConditions.push(dateSearchFilter);
-          }
+        case 'vencimento': {
+          const day = dateBounds(term, term);
+          if (day) and.push({ data_vencimento: day });
           break;
-        case 'valor':
-          const numericFilter = buildNumericSearchFilter(searchTerm, 'valor', 0.1);
-          if (numericFilter) {
-            whereConditions.push(numericFilter);
-          }
+        }
+        case 'valor': {
+          const range = numericBounds(term, 0.1);
+          if (range) and.push({ valor: range });
           break;
+        }
         case 'status':
-          whereConditions.push({ status: { [Op.like]: `%${searchTerm.toUpperCase()}%` } });
+          and.push({ status: enumFilter(STATUS_VALUES, term.toUpperCase()) });
           break;
         case 'tipo':
-          whereConditions.push({ tipo_pagamento: { [Op.like]: `%${searchTerm.toUpperCase()}%` } });
+          and.push({ tipo_pagamento: enumFilter(TIPO_PAGAMENTO, term.toUpperCase()) });
           break;
         default: {
-          const orConditions: WhereOptions[] = [
-            { numero_documento: { [Op.like]: `%${searchTerm}%` } },
-            { nota_fiscal: { [Op.like]: `%${searchTerm}%` } }
+          const orConditions: Prisma.financeiro_contas_pagarWhereInput[] = [
+            { numero_documento: { contains: term } },
+            { nota_fiscal: { contains: term } },
           ];
-          if (numExact !== null) {
-            orConditions.unshift({ id: numExact });
-          }
-          whereConditions.push({ [Op.or]: orConditions } as WhereOptions);
+          if (numExact !== null) orConditions.unshift({ id: numExact });
+          and.push({ OR: orConditions });
           break;
         }
       }
     }
 
-    // Combinar todos os filtros usando helper
-    const where = combineFilters(...whereConditions) || {};
-
-    // Configurar include - se buscar por fornecedor, precisa incluir a associação com where
-    const shouldSearchFornecedor = Boolean(
-      search && search.trim() && (searchField === 'fornecedor' || !searchField)
-    );
-    
-    const fornecedorInclude: {
-      association: string;
-      required?: boolean;
-      where?: WhereOptions;
-    } = {
-      association: 'fornecedor',
-      required: shouldSearchFornecedor
-    };
-    
-    if (shouldSearchFornecedor && search) {
-      fornecedorInclude.where = {
-        [Op.or]: [
-          { nome_razao_social: { [Op.like]: `%${search.trim()}%` } },
-          { nome_fantasia: { [Op.like]: `%${search.trim()}%` } }
-        ]
-      } as WhereOptions;
+    if (shouldSearchFornecedor) {
+      and.push({
+        financeiro_fornecedores: {
+          OR: [
+            { nome_razao_social: { contains: term } },
+            { nome_fantasia: { contains: term } },
+          ],
+        },
+      });
     }
-    
-    const includeOptions = [
-      fornecedorInclude,
-      { association: 'pagamentos', required: false, limit: 5, order: [['created_at', 'DESC']] as [string, string][] }
+
+    const where: Prisma.financeiro_contas_pagarWhereInput = and.length > 0 ? { AND: and } : {};
+    const dir = sortDirection(direction);
+    let orderBy: Prisma.financeiro_contas_pagarOrderByWithRelationInput[] = [
+      { data_vencimento: 'asc' },
+      { created_at: 'desc' },
     ];
-
-    // Ordenação - ordena TODOS os dados antes da paginação
-    let order: any[] = [['data_vencimento', 'ASC'], ['created_at', 'DESC']]; // Padrão
-    if (sortColumn && sortDirection) {
-      const sortResult = SortHelper.buildOrder(
-        CONTA_PAGAR_SORT_CONFIG,
-        sortColumn,
-        sortDirection.toUpperCase() as 'ASC' | 'DESC'
-      );
-
-      if (sortResult.isValid) {
-        order = sortResult.order;
-      } else {
-        logger.warn('ContaPagarService.list - Coluna de ordenação inválida', {
-          column: sortColumn,
-          error: sortResult.error,
-          sortDirection,
-          order: JSON.stringify(sortResult.order)
-        });
-        // Manter ordenação padrão se coluna inválida
-      }
+    let virtual: string | null = null;
+    if (sortColumn === 'saldo_devedor') {
+      virtual = 'COALESCE(`valor`, 0) - COALESCE(`valor_pago`, 0)';
+    } else if (sortColumn === 'fornecedor') {
+      orderBy = [{ financeiro_fornecedores: { nome_razao_social: dir } }];
+    } else if (sortColumn && (SORT_COLUMNS as readonly string[]).includes(sortColumn)) {
+      orderBy = [{ [sortColumn]: dir }];
+    } else if (sortColumn) {
+      logger.warn('ContaPagarService.list - Coluna de ordenação inválida', { column: sortColumn });
     }
 
-    const count = shouldSearchFornecedor
-      ? (await ContaPagar.findAll({
-          where,
-          include: [includeOptions[0]],
-          order
-        })).length
-      : await ContaPagar.count({ where });
+    const include = {
+      financeiro_fornecedores: true,
+      financeiro_conta_pagar_pagamentos: { orderBy: { created_at: 'desc' as const }, take: 5 },
+    };
 
-    const contasPagar = await ContaPagar.findAll({
-      where,
-      include: includeOptions,
-      order,
-      limit,
-      offset
-    });
+    let rows;
+    let count: number;
+    if (virtual) {
+      const matching = await prisma.financeiro_contas_pagar.findMany({ where, select: { id: true } });
+      const pageIds = await orderPageBySql('financeiro_contas_pagar', virtual, sqlDirection(direction), matching.map((item) => item.id), limit, offset);
+      count = matching.length;
+      const found = pageIds.length
+        ? await prisma.financeiro_contas_pagar.findMany({ where: { id: { in: pageIds } }, include })
+        : [];
+      rows = reorderByIds(found, pageIds);
+    } else {
+      [count, rows] = await Promise.all([
+        prisma.financeiro_contas_pagar.count({ where }),
+        prisma.financeiro_contas_pagar.findMany({ where, include, orderBy, take: limit, skip: offset }),
+      ]);
+    }
 
     return {
       success: true,
-      data: contasPagar,
+      data: rows.map(shapeConta),
       pagination: buildPagination(page, limit, count),
     };
   }
 
-  /**
-   * Buscar conta a pagar por ID
-   */
-  static async getById(id: string | number, transaction?: Transaction): Promise<ContaPagar | null> {
-    return await ContaPagar.findByPk(id, {
-      include: ContaPagarService.getDefaultIncludes(),
-      transaction,
+  static async getById(id: string | number, _transaction?: unknown) {
+    const row = await prisma.financeiro_contas_pagar.findUnique({
+      where: { id: Number(id) },
+      include: contaInclude,
     });
+    return row ? shapeConta(row) : null;
   }
 
-  /**
-   * Criar conta a pagar
-   */
-  static async create(dadosContaPagar: Partial<ContaPagar>, transaction?: Transaction): Promise<ContaPagar> {
-    return await ContaPagar.create(dadosContaPagar as any, { transaction });
+  static async create(dadosContaPagar: Prisma.financeiro_contas_pagarUncheckedCreateInput, _transaction?: unknown) {
+    const data = { ...dadosContaPagar };
+    if (!data.data_cadastro) data.data_cadastro = new Date();
+    return prisma.financeiro_contas_pagar.create({ data });
   }
 
-  /**
-   * Atualizar conta a pagar
-   */
-  static async update(id: string | number, dadosContaPagar: Partial<ContaPagar>): Promise<ContaPagar> {
-    const contaPagar = await ContaPagar.findByPk(id);
-    
-    if (!contaPagar) {
-      throw new Error('Conta a pagar não encontrada');
-    }
-    
-    await contaPagar.update(dadosContaPagar);
-    await contaPagar.reload({ include: ContaPagarService.getDefaultIncludes() });
-
-    return contaPagar;
+  static async update(id: string | number, dadosContaPagar: Prisma.financeiro_contas_pagarUncheckedUpdateInput) {
+    const numericId = Number(id);
+    const conta = await prisma.financeiro_contas_pagar.findUnique({ where: { id: numericId } });
+    if (!conta) throw new Error('Conta a pagar não encontrada');
+    await prisma.financeiro_contas_pagar.update({ where: { id: numericId }, data: dadosContaPagar });
+    const atualizada = await ContaPagarService.getById(numericId);
+    if (!atualizada) throw new Error('Conta a pagar não encontrada');
+    return atualizada;
   }
 
-  /**
-   * Deletar conta a pagar
-   */
-  static async delete(id: string | number): Promise<ContaPagar> {
-    const contaPagar = await ContaPagar.findByPk(id);
-    
-    if (!contaPagar) {
-      throw new Error('Conta a pagar não encontrada');
-    }
-    
-    await contaPagar.destroy();
-    
-    return contaPagar;
+  static async delete(id: string | number) {
+    const numericId = Number(id);
+    const conta = await prisma.financeiro_contas_pagar.findUnique({ where: { id: numericId } });
+    if (!conta) throw new Error('Conta a pagar não encontrada');
+    await prisma.financeiro_contas_pagar.delete({ where: { id: numericId } });
+    return conta;
   }
 
-  /**
-   * Criar pagamento de conta a pagar
-   */
   static async createPagamento(
     dados: {
       conta_pagar_id: number;
       empresa_id?: number | null;
       data: Date;
       valor: number;
-      tipo_pagamento: 'DINHEIRO' | 'BOLETO' | 'CARTAO' | 'DEPOSITO' | 'DEBITO_CONTA' | 'TRANSFERENCIA' | 'PIX';
+      tipo_pagamento: (typeof TIPO_PAGAMENTO)[number];
       usuario_id?: number | null;
       observacao?: string | null;
     },
-    transaction?: Transaction
-  ): Promise<ContaPagarPagamento> {
-    return await ContaPagarPagamento.create({ ...dados, empresa_id: dados.empresa_id ?? null }, { transaction });
-  }
-
-  /**
-   * Atualizar conta a pagar (método auxiliar para atualizar instância existente)
-   */
-  static async updateInstance(
-    conta: ContaPagar,
-    dados: Partial<ContaPagar>,
-    transaction?: Transaction
-  ): Promise<ContaPagar> {
-    await conta.update(dados, { transaction });
-    await conta.reload({ transaction, include: ContaPagarService.getDefaultIncludes() });
-    return conta;
-  }
-
-  /**
-   * Buscar todas as contas a pagar com atributos específicos (para resumo/dashboard)
-   */
-  static async findAllWithAttributes(attributes: string[], where?: WhereOptions): Promise<ContaPagar[]> {
-    return await ContaPagar.findAll({
-      attributes,
-      where
+    tx?: Prisma.TransactionClient,
+  ) {
+    const db = tx ?? prisma;
+    return db.financeiro_conta_pagar_pagamentos.create({
+      data: { ...dados, empresa_id: dados.empresa_id ?? null },
     });
   }
 
-  /**
-   * Contar contas a pagar com filtros
-   */
-  static async count(where?: WhereOptions): Promise<number> {
-    return await ContaPagar.count({ where });
+  static async updateInstance(
+    conta: { id: number },
+    dados: Prisma.financeiro_contas_pagarUncheckedUpdateInput,
+    tx?: Prisma.TransactionClient,
+  ) {
+    const db = tx ?? prisma;
+    await db.financeiro_contas_pagar.update({ where: { id: conta.id }, data: dados });
+    const row = await db.financeiro_contas_pagar.findUnique({
+      where: { id: conta.id },
+      include: contaInclude,
+    });
+    if (!row) throw new Error('Conta a pagar não encontrada');
+    return shapeConta(row);
+  }
+
+  static async findAllWithAttributes(attributes: string[], where?: Prisma.financeiro_contas_pagarWhereInput) {
+    const select = attributes.reduce<Record<string, boolean>>((acc, field) => {
+      acc[field] = true;
+      return acc;
+    }, {});
+    return prisma.financeiro_contas_pagar.findMany({
+      where,
+      select: select as Prisma.financeiro_contas_pagarSelect,
+    });
+  }
+
+  static async count(where?: Prisma.financeiro_contas_pagarWhereInput): Promise<number> {
+    return prisma.financeiro_contas_pagar.count({ where });
   }
 }
-

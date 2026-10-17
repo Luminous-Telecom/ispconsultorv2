@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request } from 'express';
 import { Banco } from '../../../models/cadastros/Banco';
 import { Titulo } from '../../../models/financeiro/Titulo';
@@ -86,7 +87,7 @@ export class AsaasWebhookService {
         if (normalizedDate) updates.data_vencimento = normalizedDate as unknown as JsonValue;
       }
 
-      const dadosAnteriores = (titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain((titulo as { toJSON: () => Record<string, unknown> })) as Record<string, unknown>;
 
       if (novoStatus === 'pago' && !jaEstavaPago) {
         const dataPagamentoRaw = PaymentCommonService.pickAsaasWebhookPaymentDateRaw(
@@ -113,7 +114,7 @@ export class AsaasWebhookService {
 
       enviarReciboSeAdmin(resolved, jaEstavaPago);
 
-      const dadosNovos = (resolved.titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
+      const dadosNovos = toPlain((resolved.titulo as { toJSON: () => Record<string, unknown> })) as Record<string, unknown>;
       await registrarAuditoriaWebhook(req, resolved, dadosAnteriores, dadosNovos, `Atualização via webhook Asaas - Status: ${paymentStatus}`);
 
       return {
@@ -274,7 +275,7 @@ export class AsaasWebhookService {
       }
 
       // Buscar nota fiscal diretamente pelo asaas_invoice_id (identificador único do Asaas)
-      const { Op } = await import('sequelize');
+      const { Op } = await import('../../../db/orm');
       const { NotaFiscal } = await import('../../../models/nfse/NotaFiscal');
       
       // Priorizar busca pelo asaas_invoice_id (identificador único)
@@ -395,7 +396,7 @@ export class AsaasWebhookService {
             // Capturar dados anteriores antes de atualizar
             let dadosAnteriores: Record<string, unknown> | null = null;
             try {
-              dadosAnteriores = notaFiscalVinculada.toJSON() as Record<string, unknown>;
+              dadosAnteriores = toPlain(notaFiscalVinculada) as Record<string, unknown>;
             } catch (error) {
               logger.warn('Erro ao capturar dados anteriores para auditoria', {
                 nota_fiscal_id: notaFiscalVinculada.id,
@@ -413,7 +414,7 @@ export class AsaasWebhookService {
             // Capturar dados novos após atualização
             let dadosNovos: Record<string, unknown> | null = null;
             try {
-              dadosNovos = notaFiscalVinculada.toJSON() as Record<string, unknown>;
+              dadosNovos = toPlain(notaFiscalVinculada) as Record<string, unknown>;
             } catch (error) {
               logger.warn('Erro ao capturar dados novos para auditoria', {
                 nota_fiscal_id: notaFiscalVinculada.id,

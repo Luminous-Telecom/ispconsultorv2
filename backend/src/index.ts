@@ -10,7 +10,7 @@ import path from 'path';
 import cookieParser from 'cookie-parser';
 
 // Importar configurações
-import { sequelize } from './config/database';
+import { prisma, disconnectPrisma } from './db/prisma';
 import { logger } from './utils/logger';
 import { isProduction } from './utils/envUtils';
 import { resolveArquivosPath } from './utils/pathUtils';
@@ -251,7 +251,6 @@ app.use(ddosProtectionMiddleware({
     '/api/saas/auditoria/pdf', // Idem para auditoria no painel SaaS
     '/api/atualizacoes/update', // Atualização pode levar vários minutos (git pull, npm install, build, migrations, pm2 reload)
     '/api/atualizacoes/update-stream',
-    '/api/atualizacoes/update-doc-stream',
     '/api/pdf-extract', // Upload de PDF pode demorar (arquivo grande); processamento é assíncrono
     '/api/backups'
   ]
@@ -354,7 +353,7 @@ const startServer = async () => {
     const environment = isProduction() ? 'Produção' : 'Desenvolvimento';
     logger.info(`🚀 Iniciando aplicação em modo: ${environment}`);
 
-    await sequelize.authenticate();
+    await prisma.$queryRawUnsafe('SELECT 1');
     logger.info('Conexão com banco de dados estabelecida');
 
     httpServer.once('error', (error: NodeJS.ErrnoException) => {
@@ -414,7 +413,7 @@ const gracefulShutdown = async (signal: string, shouldExit = true) => {
     logger.error('Erro ao parar agendador:', error);
   }
 
-  await sequelize.close();
+  await disconnectPrisma();
   if (shouldExit) {
     process.exit(0);
   }

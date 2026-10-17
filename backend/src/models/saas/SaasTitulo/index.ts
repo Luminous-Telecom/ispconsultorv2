@@ -5,7 +5,7 @@ import {
   InferAttributes,
   InferCreationAttributes,
   BelongsToGetAssociationMixin,
-} from 'sequelize';
+} from '../../../db/orm';
 import { sequelize } from '../../../config/database';
 import { isTituloVencida } from '../../../utils/tituloVencimentoUtils';
 import { SaasPlano } from '../SaasPlano';

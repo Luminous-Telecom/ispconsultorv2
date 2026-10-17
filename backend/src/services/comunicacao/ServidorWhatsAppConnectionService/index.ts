@@ -1,4 +1,4 @@
-import { ServidorWhatsApp } from '../../../models/comunicacao/ServidorWhatsApp';
+import type { comunicacao_servidores_whatsapp } from '@prisma/client';
 import { ServidorWhatsAppService } from '../ServidorWhatsAppService';
 import { logger } from '../../../utils/logger';
 
@@ -6,7 +6,7 @@ export class ServidorWhatsAppConnectionService {
   /**
    * Conecta instância na Evolution API
    */
-  static async connectInstance(servidor: ServidorWhatsApp): Promise<void> {
+  static async connectInstance(servidor: comunicacao_servidores_whatsapp): Promise<void> {
     if (servidor.tipo_api !== 'evolution') {
       throw new Error('Método connectInstance só é válido para Evolution API');
     }

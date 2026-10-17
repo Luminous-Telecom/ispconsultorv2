@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { TermoContrato } from '../../../models/contratos/TermoContrato';
 import { TermoContratoService } from '../../../services/contratos/TermoContratoService';
@@ -135,7 +136,7 @@ export class TermoContratoController {
           req as AuthenticatedRequest,
           'TermoContrato',
           termo.id,
-          termo.toJSON() as Record<string, unknown>,
+          toPlain(termo) as Record<string, unknown>,
           undefined,
           empresaId
         );
@@ -146,7 +147,7 @@ export class TermoContratoController {
       sendSuccess(res, termo, 'Termo criado com sucesso', 201);
     } catch (error) {
       // Tratar erro de constraint de unicidade
-      if (error instanceof Error && (error as any).name === 'SequelizeUniqueConstraintError') {
+      if (error instanceof Error && (error as { code?: string }).code === 'P2002') {
         logger.warn('Tentativa de criar termo duplicado', {
           context: 'TermoContratoController',
           action: 'create',
@@ -178,7 +179,7 @@ export class TermoContratoController {
         return;
       }
 
-      const dadosAnteriores = termo.toJSON();
+      const dadosAnteriores = toPlain(termo);
       
       // Atualizar apenas campos permitidos
       if (ativo !== undefined) termo.ativo = ativo;
@@ -195,9 +196,9 @@ export class TermoContratoController {
       if (assinado !== undefined) termo.assinado = assinado;
 
       await termo.save();
-      await termo.reload({ include: TermoContratoService.getDefaultIncludes() });
+      await termo.reload();
 
-      const dadosNovos = termo.toJSON() as Record<string, unknown>;
+      const dadosNovos = toPlain(termo) as Record<string, unknown>;
       
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores as Record<string, unknown>, dadosNovos);
@@ -246,9 +247,9 @@ export class TermoContratoController {
         return;
       }
 
-      const dadosAnteriores = termo.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(termo) as Record<string, unknown>;
       await termo.marcarComoAceito(aceito_por);
-      await termo.reload({ include: TermoContratoService.getDefaultIncludes() });
+      await termo.reload();
 
       try {
         const empresaIdAudit = getEmpresaIdOrNull(req) ?? termo.empresa_id ?? null;
@@ -257,7 +258,7 @@ export class TermoContratoController {
           'TermoContrato',
           termo.id,
           dadosAnteriores,
-          termo.toJSON() as Record<string, unknown>,
+          toPlain(termo) as Record<string, unknown>,
           `Termo aceito por ${aceito_por}`,
           empresaIdAudit
         );
@@ -288,7 +289,7 @@ export class TermoContratoController {
         return;
       }
 
-      const dadosAnteriores = termo.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(termo) as Record<string, unknown>;
       termo.ativo = false;
       await termo.save();
 
@@ -299,7 +300,7 @@ export class TermoContratoController {
           'TermoContrato',
           termo.id,
           dadosAnteriores,
-          termo.toJSON() as Record<string, unknown>,
+          toPlain(termo) as Record<string, unknown>,
           'Termo desativado',
           empresaIdAudit
         );
@@ -329,7 +330,7 @@ export class TermoContratoController {
         return;
       }
 
-      const dadosAnteriores = termo.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(termo) as Record<string, unknown>;
       
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores);

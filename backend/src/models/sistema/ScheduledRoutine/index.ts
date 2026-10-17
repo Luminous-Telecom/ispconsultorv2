@@ -1,4 +1,4 @@
-import { DataTypes, Model, Optional } from 'sequelize';
+import { DataTypes, Model, Optional } from '../../../db/orm';
 import { sequelize } from '../../../config/database';
 import type { JsonValue } from '../../../types/index';
 import { formatCreatedAt } from '../../../utils/dateUtils';

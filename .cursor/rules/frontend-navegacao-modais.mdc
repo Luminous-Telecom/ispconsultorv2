@@ -17,7 +17,7 @@ openModal('clientes'); // não navigate('/adm/clientes')
 
 ## Como funciona
 
-1. **`ModalType`** (`contexts/ModalContext.tsx`) — união de todos os IDs de modal do sistema (ERP, SaaS, SSH Manager, RPKI, logs, agentes)
+1. **`ModalType`** (`contexts/ModalContext.tsx`) — união de todos os IDs de modal do sistema (ERP, SSH Manager, RPKI, logs, agentes)
 2. **`SingleModalWrapper`** (`components/common/SingleModalWrapper.tsx`) — registry único: `lazy(() => import(...))` para cada modal + `switch`/mapa de `ModalType` → componente
 3. **Menu** (`components/layout/layout/hooks/useMenuItems.ts`) — itens chamam `openModal('id')`, nunca `navigate(...)`
 
@@ -31,7 +31,7 @@ openModal('clientes'); // não navigate('/adm/clientes')
 
 ## Quando usar rota de verdade
 
-- Login, Dashboard, páginas públicas (site, `/login`), Central do Assinante (`/central-assinante/:slug`) e área SaaS (`/saas/*`, que espelha o mesmo padrão de modais do ERP)
+- Login, Dashboard, páginas públicas (site, `/login`) e Central do Assinante (`/central-assinante/:slug`)
 - Qualquer tela que precise de URL compartilhável/deep-link direto (raro no ERP)
 
 ## Proibido

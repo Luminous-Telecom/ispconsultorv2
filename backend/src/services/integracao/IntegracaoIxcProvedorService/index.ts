@@ -1,9 +1,6 @@
-import { Op, WhereOptions } from 'sequelize';
+import type { Prisma, integracao_ixc_provedor } from '@prisma/client';
 import axios, { isAxiosError } from 'axios';
-import { IntegracaoIxcProvedor } from '../../../models/integracao/IntegracaoIxcProvedor';
-import { Contrato } from '../../../models/contratos/Contrato';
-import { ContratoIntegracaoIxcVinculo } from '../../../models/contratos/ContratoIntegracaoIxcVinculo';
-import { Cliente } from '../../../models/clientes/Cliente';
+import { prisma } from '../../../db/prisma';
 import { buildPagination } from '../../../utils/pagination';
 import { runWithIntegracaoCredentials } from '../../externos/ixcApiContext';
 import { IxcOssChamadoService } from '../../externos/IxcOssChamadoService';
@@ -26,15 +23,26 @@ import { IXC_DEPARTAMENTO_RESOURCE } from '../../externos/IxcAtendimentoService/
 import { fetchFuncionariosForAtendimentoSync } from '../../externos/IxcAtendimentoService/atendimentoTecnicoContext';
 import { clienteDisplayName } from '../../../utils/clienteDisplayName';
 
-function clienteDisplayNameFromCliente(cliente: Pick<Cliente, 'id' | 'nome_fantasia' | 'razao_social'>): string {
+function clienteDisplayNameFromCliente(cliente: { id: number; nome_fantasia?: string | null; razao_social?: string | null }): string {
   return clienteDisplayName(cliente, cliente.id);
 }
 
 function contratoDisplayLabel(
-  contrato: Pick<Contrato, 'id'> & { plano?: { nome_plano?: string | null } | null }
+  contrato: { id: number; cadastros_planos?: { nome_plano?: string | null } | null }
 ): string {
-  const planoNome = contrato.plano?.nome_plano?.trim();
+  const planoNome = contrato.cadastros_planos?.nome_plano?.trim();
   return planoNome || `Contrato #${contrato.id}`;
+}
+
+const credenciaisPreenchidas: Prisma.integracao_ixc_provedorWhereInput[] = [
+  { NOT: { api_url: null } },
+  { NOT: { api_url: '' } },
+  { NOT: { api_token: null } },
+  { NOT: { api_token: '' } },
+];
+
+function empresaOuGlobal(empresaId: number): Prisma.integracao_ixc_provedorWhereInput {
+  return { OR: [{ empresa_id: empresaId }, { empresa_id: null }] };
 }
 
 async function resolveContratosVinculadosPorIntegracao(
@@ -43,35 +51,24 @@ async function resolveContratosVinculadosPorIntegracao(
   const contratosPorIntegracao = new Map<number, Array<{ id: number; label: string }>>();
   if (integracaoIds.length === 0) return contratosPorIntegracao;
 
-  const vinculos = (await ContratoIntegracaoIxcVinculo.findAll({
-    where: { integracao_ixc_provedor_id: { [Op.in]: integracaoIds } },
-    attributes: ['integracao_ixc_provedor_id', 'contrato_id'],
-    include: [
-      {
-        association: 'contrato',
-        attributes: ['id'],
-        required: true,
-        include: [
-          {
-            association: 'plano',
-            attributes: ['id', 'nome_plano'],
-            required: false,
-          },
-        ],
+  const vinculos = await prisma.contratos_integracao_ixc_vinculos.findMany({
+    where: { integracao_ixc_provedor_id: { in: integracaoIds } },
+    select: {
+      integracao_ixc_provedor_id: true,
+      contrato_id: true,
+      contratos: {
+        select: {
+          id: true,
+          cadastros_planos: { select: { id: true, nome_plano: true } },
+        },
       },
-    ],
-    order: [['contrato_id', 'ASC']],
-  })) as Array<
-    ContratoIntegracaoIxcVinculo & {
-      contrato?: (Pick<Contrato, 'id'> & {
-        plano?: { nome_plano?: string | null } | null;
-      }) | null;
-    }
-  >;
+    },
+    orderBy: { contrato_id: 'asc' },
+  });
 
   for (const vinculo of vinculos) {
     const integracaoId = vinculo.integracao_ixc_provedor_id;
-    const contrato = vinculo.contrato;
+    const contrato = vinculo.contratos;
     if (!integracaoId || !contrato) continue;
 
     const label = contratoDisplayLabel(contrato);
@@ -142,34 +139,29 @@ export class IntegracaoIxcProvedorService {
       empresa_id,
     } = filters;
 
-    const andConditions: WhereOptions<IntegracaoIxcProvedor>[] = [];
+    const andConditions: Prisma.integracao_ixc_provedorWhereInput[] = [];
 
     if (empresa_id != null) {
-      andConditions.push({
-        [Op.or]: [{ empresa_id }, { empresa_id: null }],
-      } as WhereOptions<IntegracaoIxcProvedor>);
+      andConditions.push(empresaOuGlobal(empresa_id));
     }
 
     if (search) {
-      const searchPattern = `%${search}%`;
       const numExact = /^\d+$/.test(search) ? parseInt(search, 10) : null;
-      let orConditions: Array<WhereOptions<IntegracaoIxcProvedor>> = [];
+      let orConditions: Prisma.integracao_ixc_provedorWhereInput[] = [];
 
       if (searchField === 'id') {
-        orConditions = numExact !== null
-          ? [{ id: numExact } as WhereOptions<IntegracaoIxcProvedor>]
-          : [{ id: { [Op.lt]: 0 } } as WhereOptions<IntegracaoIxcProvedor>];
+        orConditions = numExact !== null ? [{ id: numExact }] : [{ id: { lt: 0 } }];
       } else if (searchField === 'api_url') {
-        orConditions = [{ api_url: { [Op.like]: searchPattern } }];
+        orConditions = [{ api_url: { contains: search } }];
       } else {
-        orConditions = [{ nome: { [Op.like]: searchPattern } }];
+        orConditions = [{ nome: { contains: search } }];
         if (numExact !== null) {
-          orConditions.unshift({ id: numExact } as WhereOptions<IntegracaoIxcProvedor>);
+          orConditions.unshift({ id: numExact });
         }
       }
 
       if (orConditions.length > 0) {
-        andConditions.push({ [Op.or]: orConditions } as WhereOptions<IntegracaoIxcProvedor>);
+        andConditions.push({ OR: orConditions });
       }
     }
 
@@ -177,41 +169,37 @@ export class IntegracaoIxcProvedorService {
       andConditions.push({ ativo: ativo === 'ativo' });
     }
 
-    const where: WhereOptions<IntegracaoIxcProvedor> =
-      andConditions.length > 0 ? { [Op.and]: andConditions } : {};
+    const where: Prisma.integracao_ixc_provedorWhereInput =
+      andConditions.length > 0 ? { AND: andConditions } : {};
 
     const sortCol = sortColumn === 'api_url' ? 'api_url' : sortColumn === 'id' ? 'id' : 'nome';
-    const order: [string, string][] = [[sortCol, sortDirection?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC']];
+    const direction = sortDirection?.toUpperCase() === 'DESC' ? 'desc' : 'asc';
 
     const offset = (Number(page) - 1) * Number(limit);
-    const count = await IntegracaoIxcProvedor.count({ where });
-    const data = await IntegracaoIxcProvedor.findAll({
-      where,
-      order,
-      limit: Number(limit),
-      offset,
-      include: [
-        {
-          association: 'cliente',
-          attributes: ['id', 'razao_social', 'nome_fantasia'],
-          required: false,
+    const [count, data] = await Promise.all([
+      prisma.integracao_ixc_provedor.count({ where }),
+      prisma.integracao_ixc_provedor.findMany({
+        where,
+        orderBy: { [sortCol]: direction },
+        take: Number(limit),
+        skip: offset,
+        include: {
+          clientes: { select: { id: true, razao_social: true, nome_fantasia: true } },
         },
-      ],
-    });
+      }),
+    ]);
 
     const integracaoIds = data.map((item) => item.id);
     const contratosPorIntegracao = await resolveContratosVinculadosPorIntegracao(integracaoIds);
 
     const enrichedData = data.map((item) => {
-      const json = item.toJSON() as Record<string, unknown>;
-      const cliente = (item as IntegracaoIxcProvedor & { cliente?: Cliente | null }).cliente;
-      const clienteDireto = cliente ? clienteDisplayNameFromCliente(cliente) : null;
+      const clienteDireto = item.clientes ? clienteDisplayNameFromCliente(item.clientes) : null;
       const contratos = [...(contratosPorIntegracao.get(item.id) ?? [])].sort((a, b) =>
         a.label.localeCompare(b.label, 'pt-BR', { numeric: true })
       );
 
       return {
-        ...json,
+        ...item,
         cliente_id: item.cliente_id,
         cliente_nome: clienteDireto,
         contrato_id: contratos[0]?.id ?? null,
@@ -228,32 +216,28 @@ export class IntegracaoIxcProvedorService {
     };
   }
 
-  static async getById(id: string | number): Promise<IntegracaoIxcProvedor | null> {
-    return IntegracaoIxcProvedor.findByPk(id);
+  static async getById(id: string | number): Promise<integracao_ixc_provedor | null> {
+    return prisma.integracao_ixc_provedor.findUnique({ where: { id: Number(id) } });
   }
 
   /** Detalhe enriquecido com cliente e contratos vinculados. */
   static async getByIdEnriched(id: string | number): Promise<Record<string, unknown> | null> {
-    const item = await IntegracaoIxcProvedor.findByPk(id, {
-      include: [
-        {
-          association: 'cliente',
-          attributes: ['id', 'razao_social', 'nome_fantasia'],
-          required: false,
-        },
-      ],
+    const item = await prisma.integracao_ixc_provedor.findUnique({
+      where: { id: Number(id) },
+      include: {
+        clientes: { select: { id: true, razao_social: true, nome_fantasia: true } },
+      },
     });
     if (!item) return null;
 
-    const cliente = (item as IntegracaoIxcProvedor & { cliente?: Cliente | null }).cliente;
-    const clienteDireto = cliente ? clienteDisplayNameFromCliente(cliente) : null;
+    const clienteDireto = item.clientes ? clienteDisplayNameFromCliente(item.clientes) : null;
     const contratosPorIntegracao = await resolveContratosVinculadosPorIntegracao([item.id]);
     const contratos = [...(contratosPorIntegracao.get(item.id) ?? [])].sort((a, b) =>
       a.label.localeCompare(b.label, 'pt-BR', { numeric: true })
     );
 
     return {
-      ...item.toJSON(),
+      ...item,
       cliente_id: item.cliente_id,
       cliente_nome: clienteDireto,
       contrato_id: contratos[0]?.id ?? null,
@@ -263,29 +247,31 @@ export class IntegracaoIxcProvedorService {
     };
   }
 
-  static async findAtivos(empresaId?: number | null): Promise<IntegracaoIxcProvedor[]> {
-    const where: WhereOptions<IntegracaoIxcProvedor> =
+  static async findAtivos(empresaId?: number | null): Promise<integracao_ixc_provedor[]> {
+    const where: Prisma.integracao_ixc_provedorWhereInput =
       empresaId != null
-        ? { ativo: true, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
+        ? { ativo: true, ...empresaOuGlobal(empresaId) }
         : { ativo: true };
 
-    return IntegracaoIxcProvedor.findAll({
+    return prisma.integracao_ixc_provedor.findMany({
       where,
-      order: [['nome', 'ASC']],
+      orderBy: { nome: 'asc' },
     });
   }
 
   static async create(
     empresaId: number | null,
     dados: UpsertIntegracaoIxcProvedorInput
-  ): Promise<IntegracaoIxcProvedor> {
-    const item = await IntegracaoIxcProvedor.create({
-      empresa_id: empresaId,
-      cliente_id: dados.cliente_id,
-      nome: dados.nome?.trim() ?? '',
-      api_url: dados.api_url?.trim() || null,
-      api_token: dados.api_token?.trim() || null,
-      ativo: dados.ativo ?? false,
+  ): Promise<integracao_ixc_provedor> {
+    const item = await prisma.integracao_ixc_provedor.create({
+      data: {
+        empresa_id: empresaId,
+        cliente_id: dados.cliente_id,
+        nome: dados.nome?.trim() ?? '',
+        api_url: dados.api_url?.trim() || null,
+        api_token: dados.api_token?.trim() || null,
+        ativo: dados.ativo ?? false,
+      },
     });
 
     await IntegracaoIxcProvedorService.ensureContratoVinculo(
@@ -300,11 +286,11 @@ export class IntegracaoIxcProvedorService {
   static async update(
     id: string | number,
     dados: UpsertIntegracaoIxcProvedorInput
-  ): Promise<IntegracaoIxcProvedor> {
-    const item = await IntegracaoIxcProvedor.findByPk(id);
+  ): Promise<integracao_ixc_provedor> {
+    const item = await prisma.integracao_ixc_provedor.findUnique({ where: { id: Number(id) } });
     if (!item) throw new Error('Integração IXC Provedor não encontrada');
 
-    const payload: Partial<IntegracaoIxcProvedor> = {
+    const payload: Prisma.integracao_ixc_provedorUncheckedUpdateInput = {
       cliente_id: dados.cliente_id,
     };
     if (dados.nome !== undefined) payload.nome = dados.nome.trim();
@@ -316,13 +302,16 @@ export class IntegracaoIxcProvedorService {
       payload.api_token = token;
     }
 
-    await item.update(payload);
+    const updated = await prisma.integracao_ixc_provedor.update({
+      where: { id: item.id },
+      data: { ...payload, updated_at: new Date() },
+    });
     await IntegracaoIxcProvedorService.ensureContratoVinculo(
       item.id,
       dados.contrato_id,
       item.empresa_id
     );
-    return item;
+    return updated;
   }
 
   /** Garante o vínculo contrato ↔ integração (sem remover outros vínculos). */
@@ -331,12 +320,12 @@ export class IntegracaoIxcProvedorService {
     contratoId: number,
     empresaId: number | null
   ): Promise<void> {
-    const contrato = await Contrato.findByPk(contratoId);
+    const contrato = await prisma.contratos.findUnique({ where: { id: Number(contratoId) } });
     if (!contrato) {
       throw new Error('Contrato não encontrado');
     }
 
-    const existing = await ContratoIntegracaoIxcVinculo.findOne({
+    const existing = await prisma.contratos_integracao_ixc_vinculos.findFirst({
       where: {
         contrato_id: contratoId,
         integracao_ixc_provedor_id: integracaoId,
@@ -344,40 +333,39 @@ export class IntegracaoIxcProvedorService {
     });
     if (existing) return;
 
-    await ContratoIntegracaoIxcVinculo.create({
-      empresa_id: contrato.empresa_id ?? empresaId,
-      contrato_id: contratoId,
-      integracao_ixc_provedor_id: integracaoId,
+    await prisma.contratos_integracao_ixc_vinculos.create({
+      data: {
+        empresa_id: contrato.empresa_id ?? empresaId,
+        contrato_id: contratoId,
+        integracao_ixc_provedor_id: integracaoId,
+      },
     });
   }
 
   static async delete(id: string | number): Promise<void> {
-    const item = await IntegracaoIxcProvedor.findByPk(id);
+    const item = await prisma.integracao_ixc_provedor.findUnique({ where: { id: Number(id) } });
     if (!item) throw new Error('Integração IXC Provedor não encontrada');
 
-    await ContratoIntegracaoIxcVinculo.destroy({
+    await prisma.contratos_integracao_ixc_vinculos.deleteMany({
       where: { integracao_ixc_provedor_id: item.id },
     });
 
-    await item.destroy();
+    await prisma.integracao_ixc_provedor.delete({ where: { id: item.id } });
   }
 
   static async getActiveCredentials(empresaId: number | null): Promise<IxcApiCredentials | null> {
-    const where: WhereOptions<IntegracaoIxcProvedor> = {
+    const where: Prisma.integracao_ixc_provedorWhereInput = {
       ativo: true,
-      api_url: { [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: '' }] },
-      api_token: { [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: '' }] },
+      AND: credenciaisPreenchidas,
     };
 
     if (empresaId != null) {
-      Object.assign(where, {
-        [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }],
-      });
+      where.AND = [...credenciaisPreenchidas, empresaOuGlobal(empresaId)];
     }
 
-    const config = await IntegracaoIxcProvedor.findOne({
+    const config = await prisma.integracao_ixc_provedor.findFirst({
       where,
-      order: [['updated_at', 'DESC']],
+      orderBy: { updated_at: 'desc' },
     });
 
     if (!config) return null;
@@ -445,48 +433,36 @@ export class IntegracaoIxcProvedorService {
   static async findIntegracaoAtivaForCliente(
     clienteId: number,
     empresaId: number | null
-  ): Promise<IntegracaoIxcProvedor | null> {
-    const direta = await IntegracaoIxcProvedor.findOne({
+  ): Promise<integracao_ixc_provedor | null> {
+    const direta = await prisma.integracao_ixc_provedor.findFirst({
       where:
         empresaId != null
           ? {
-              [Op.and]: [
+              AND: [
                 { cliente_id: clienteId, ativo: true },
-                { [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] },
+                empresaOuGlobal(empresaId),
               ],
             }
           : { cliente_id: clienteId, ativo: true },
-      order: [['updated_at', 'DESC']],
+      orderBy: { updated_at: 'desc' },
     });
     if (direta?.api_url?.trim() && direta.api_token?.trim()) {
       return direta;
     }
 
-    const contratoWhere: WhereOptions<Contrato> = { cliente_id: clienteId };
+    const contratoWhere: Prisma.contratosWhereInput = { cliente_id: clienteId };
     if (empresaId != null) {
       contratoWhere.empresa_id = empresaId;
     }
 
-    const vinculos = (await ContratoIntegracaoIxcVinculo.findAll({
-      include: [
-        {
-          association: 'contrato',
-          where: contratoWhere,
-          required: true,
-          attributes: ['id'],
-        },
-        {
-          association: 'integracaoIxcProvedor',
-          required: true,
-        },
-      ],
-      order: [['updated_at', 'DESC']],
-    })) as Array<
-      ContratoIntegracaoIxcVinculo & { integracaoIxcProvedor?: IntegracaoIxcProvedor | null }
-    >;
+    const vinculos = await prisma.contratos_integracao_ixc_vinculos.findMany({
+      where: { contratos: contratoWhere },
+      include: { integracao_ixc_provedor: true },
+      orderBy: { updated_at: 'desc' },
+    });
 
     for (const vinculo of vinculos) {
-      const integracao = vinculo.integracaoIxcProvedor;
+      const integracao = vinculo.integracao_ixc_provedor;
       if (!integracao?.ativo) continue;
 
       const apiUrl = integracao.api_url?.trim();
@@ -514,8 +490,10 @@ export class IntegracaoIxcProvedorService {
   static async assertEmpresaAccess(
     integracaoId: number,
     empresaId: number | null
-  ): Promise<IntegracaoIxcProvedor | null> {
-    const integracao = await IntegracaoIxcProvedor.findByPk(integracaoId);
+  ): Promise<integracao_ixc_provedor | null> {
+    const integracao = await prisma.integracao_ixc_provedor.findUnique({
+      where: { id: integracaoId },
+    });
     if (!integracao) return null;
     if (empresaId !== null && integracao.empresa_id !== null && integracao.empresa_id !== empresaId) {
       return null;

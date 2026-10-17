@@ -1,8 +1,12 @@
-import { ServidorWhatsApp } from '../../../models/comunicacao/ServidorWhatsApp';
-import { MensagemWhatsApp } from '../../../models/comunicacao/MensagemWhatsApp';
-import { Titulo } from '../../../models/financeiro/Titulo';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Contrato } from '../../../models/contratos/Contrato';
+import type {
+  Prisma,
+  clientes,
+  contratos,
+  comunicacao_mensagens_whatsapp,
+  comunicacao_servidores_whatsapp,
+  financeiro_titulos,
+} from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
 import { VariaveisDocumentoService } from '../../documentos/VariaveisDocumentoService';
 import { TituloPDFController } from '../../../controllers/titulos/TituloPDFController';
@@ -10,7 +14,6 @@ import { WhatsAppSenderService } from '../WhatsAppSenderService';
 import { WhatsAppTemplateService } from '../WhatsAppTemplateService';
 import { WhatsAppCloudService } from '../WhatsAppCloudService';
 import { TemplateWhatsAppService } from '../TemplateWhatsAppService';
-import { TemplateWhatsApp } from '../../../models/comunicacao/TemplateWhatsApp';
 import type { ContextoHistorico } from '../RegistroMensagemHistoricoService';
 import { whereComunicacaoEmpresaEstrito } from '../../../utils/comunicacaoEmpresaWhere';
 
@@ -20,20 +23,21 @@ export class WhatsAppMessageService {
    */
   static async enviarTituloManual(tituloId: number): Promise<{ sucesso: boolean; mensagem?: string }> {
     try {
-      const titulo = await Titulo.findByPk(tituloId, {
-        include: [
-          { model: Cliente, as: 'cliente' },
-          { model: Contrato, as: 'contrato' },
-          { association: 'banco' },
-          { association: 'plano' }
-        ]
+      const titulo = await prisma.financeiro_titulos.findUnique({
+        where: { id: Number(tituloId) },
+        include: {
+          clientes: true,
+          contratos: true,
+          cadastros_bancos: true,
+          cadastros_planos: true,
+        },
       });
 
       if (!titulo) {
         return { sucesso: false, mensagem: 'Título não encontrado' };
       }
 
-      const cliente = (titulo as Titulo & { cliente?: Cliente | null }).cliente;
+      const cliente = titulo.clientes;
       if (!cliente) {
         return { sucesso: false, mensagem: 'Cliente não encontrado' };
       }
@@ -51,16 +55,18 @@ export class WhatsAppMessageService {
       if (!whereSrv) {
         return { sucesso: false, mensagem: 'Empresa do título não identificada para envio de WhatsApp' };
       }
-      const servidor = await ServidorWhatsApp.findOne({ where: whereSrv });
+      const servidor = await prisma.comunicacao_servidores_whatsapp.findFirst({
+        where: whereSrv as Prisma.comunicacao_servidores_whatsappWhereInput,
+      });
       if (!servidor) {
         return { sucesso: false, mensagem: 'Nenhum servidor WhatsApp ativo encontrado para esta empresa' };
       }
 
       const whereMsg = whereComunicacaoEmpresaEstrito(empresaId, { tipo: 'envio_manual', ativo: true });
       const mensagem = whereMsg
-        ? await MensagemWhatsApp.findOne({
-            where: whereMsg,
-            include: [{ model: TemplateWhatsApp, as: 'template', required: false }],
+        ? await prisma.comunicacao_mensagens_whatsapp.findFirst({
+            where: whereMsg as Prisma.comunicacao_mensagens_whatsappWhereInput,
+            include: { comunicacao_templates_whatsapp: true },
           })
         : null;
 
@@ -68,7 +74,7 @@ export class WhatsAppMessageService {
         return { sucesso: false, mensagem: 'Mensagem de envio manual não configurada' };
       }
 
-      const contrato = (titulo as Titulo & { contrato?: Contrato | null }).contrato;
+      const contrato = titulo.contratos;
       const telefone = this.formatarTelefone(cliente.telefone);
       const baseUrl = undefined;
       const contextoHistorico: ContextoHistorico = {
@@ -99,12 +105,12 @@ export class WhatsAppMessageService {
    * Envia via WhatsApp Cloud API
    */
   private static async enviarViaCloud(
-    mensagem: MensagemWhatsApp,
-    servidor: ServidorWhatsApp,
+    mensagem: comunicacao_mensagens_whatsapp,
+    servidor: comunicacao_servidores_whatsapp,
     telefone: string,
-    titulo: Titulo,
-    cliente: Cliente,
-    contrato: Contrato | null | undefined,
+    titulo: financeiro_titulos,
+    cliente: clientes,
+    contrato: contratos | null | undefined,
     mensagemTexto: string,
     baseUrl: undefined,
     contextoHistorico?: ContextoHistorico
@@ -154,12 +160,12 @@ export class WhatsAppMessageService {
    * Envia via Evolution API
    */
   private static async enviarViaEvolution(
-    mensagem: MensagemWhatsApp,
-    servidor: ServidorWhatsApp,
+    mensagem: comunicacao_mensagens_whatsapp,
+    servidor: comunicacao_servidores_whatsapp,
     telefone: string,
-    titulo: Titulo,
-    cliente: Cliente,
-    contrato: Contrato | null | undefined,
+    titulo: financeiro_titulos,
+    cliente: clientes,
+    contrato: contratos | null | undefined,
     mensagemTexto: string,
     baseUrl: undefined,
     contextoHistorico?: ContextoHistorico
@@ -176,7 +182,9 @@ export class WhatsAppMessageService {
     }, baseUrl);
     
     if (mensagem.tipo_envio === 'pdf') {
-      const base64 = await TituloPDFController.gerarPdfBase64(titulo);
+      const base64 = await TituloPDFController.gerarPdfBase64(
+        titulo as unknown as Parameters<typeof TituloPDFController.gerarPdfBase64>[0]
+      );
       if (!base64) {
         return { sucesso: false, mensagem: 'Erro ao gerar PDF do boleto' };
       }
@@ -200,12 +208,12 @@ export class WhatsAppMessageService {
    * Envia mensagens de interação
    */
   private static async enviarMensagensInteracao(
-    mensagem: MensagemWhatsApp,
-    servidor: ServidorWhatsApp,
+    mensagem: comunicacao_mensagens_whatsapp,
+    servidor: comunicacao_servidores_whatsapp,
     telefone: string,
-    cliente: Cliente,
-    contrato: Contrato | null | undefined,
-    titulo: Titulo,
+    cliente: clientes,
+    contrato: contratos | null | undefined,
+    titulo: financeiro_titulos,
     contextoHistorico?: ContextoHistorico
   ): Promise<void> {
     const interacoes = [mensagem.interacao1, mensagem.interacao2, mensagem.interacao3];

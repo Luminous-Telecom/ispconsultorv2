@@ -9,7 +9,7 @@ import {
   BelongsToCreateAssociationMixin,
   Op,
   Sequelize
-} from 'sequelize';
+} from '../../../db/orm';
 import { sequelize } from '../../../config/database';
 import { logger } from '../../../utils/logger';
 import { isTituloVencida, resolveStatusPagamentoTitulo } from '../../../utils/tituloVencimentoUtils';
@@ -213,7 +213,9 @@ export class Titulo extends Model<
         const tituloComBanco = this as Titulo & { banco?: Banco };
         
         // Liquidar título no banco externo
-        const resultado = await BancoApiService.liquidarTitulo(tituloComBanco);
+        const resultado = await BancoApiService.liquidarTitulo(
+          tituloComBanco as unknown as import('../../../services/bancos/types').TituloWithRelations
+        );
         
         if (!resultado.success) {
           logger.warn('Falha ao liquidar título no banco externo', {

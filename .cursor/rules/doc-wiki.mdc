@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Wiki doc — ISP Consultor
 
-A wiki em `doc/` faz parte do sistema. **Toda alteração visível ao usuário no ERP deve ser refletida na documentação** no mesmo PR/tarefa.
+A wiki fica fora da raiz do repositório, em `../backnet-docs/doc/`. **Toda alteração visível ao usuário no ERP deve ser refletida nessa documentação** no mesmo PR/tarefa. Não recriar `doc/` na raiz.
 
 > **Wiki pública vs docs internos:** `doc/` é a wiki VitePress (consultores, deploy em produção). Documentação só para desenvolvedores (setup, auditorias, arquitetura) fica em `docs/` — ver `docs-interno.mdc`. **Não** colocar conteúdo interno de dev em `doc/erp/` nem no sidebar da wiki.
 
@@ -64,7 +64,7 @@ Links internos e sidebar continuam com prefixo **`/doc/`** (rewrite automático 
 
 ## Deploy
 
-O self-update via SaaS já compila e reinicia a wiki (`BuildService` + PM2 `doc`). Garantir que os `.md` commitados estejam corretos — o build roda no servidor após `git pull`.
+Os `.md` ficam em `../backnet-docs/doc`. Este repositório não compila, não sobe e não atualiza a wiki.
 
 ## Build — somente quando o usuário pedir push/PR
 
@@ -76,7 +76,7 @@ Rode o build **apenas** se **todas** forem verdadeiras:
 2. Houve alteração em `doc/` (`.md`, `config.mjs`, `public/`, etc.)
 
 ```bash
-cd doc && npm run build
+cd ../backnet-docs/doc && npm run build
 ```
 
 O VitePress **falha o build** se houver links mortos (`ignoreDeadLinks` não está habilitado). Corrija **todos** os dead links antes do push.
@@ -95,4 +95,4 @@ Ao concluir tarefa que altera UI, API exposta ao usuário ou fluxo de negócio:
 
 **Quando o usuário pedir push/PR e houve alteração em `doc/`:**
 
-- [ ] `cd doc && npm run build` passou sem dead links
+- [ ] `cd ../backnet-docs/doc && npm run build` passou sem dead links

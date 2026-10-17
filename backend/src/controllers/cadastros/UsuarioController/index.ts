@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { UsuarioService } from '../../../services/cadastros/UsuarioService';
 import * as Joi from 'joi';
@@ -10,9 +11,7 @@ import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { buildPagination } from '../../../utils/pagination';
 import { ativoFilterForService, parseListQuery } from '../../../utils/listQuery';
 import { SaasPlanoLimitesService } from '../../../services/saas/SaasPlanoLimitesService';
-import { Usuario } from '../../../models/cadastros/Usuario';
-
-function canAccessUsuario(usuario: Usuario, empresaId: number | null): boolean {
+function canAccessUsuario(usuario: { empresa_id: number | null }, empresaId: number | null): boolean {
   if (usuario.empresa_id === null) return true;
   if (empresaId === null) return true;
   return usuario.empresa_id === empresaId;
@@ -125,7 +124,7 @@ export class UsuarioController {
           req,
           'Usuario',
           usuario.id,
-          { ...usuario.toJSON(), password_hash: '[REDACTED]' } as Record<string, unknown>,
+          { ...toPlain(usuario), password_hash: '[REDACTED]' } as Record<string, unknown>,
           undefined,
           empresaId
         );
@@ -158,7 +157,7 @@ export class UsuarioController {
       }
 
       // Capturar dados anteriores para auditoria
-      const dadosAnteriores = { ...usuario.toJSON(), password_hash: '[REDACTED]' } as Record<string, unknown>;
+      const dadosAnteriores = { ...toPlain(usuario), password_hash: '[REDACTED]' } as Record<string, unknown>;
 
       if (value.email && value.email !== usuario.email) {
         const emailExistente = await UsuarioService.existsByEmail(value.email, usuario.id);
@@ -188,7 +187,7 @@ export class UsuarioController {
       });
       
       // Registrar auditoria
-      const dadosNovos = { ...usuarioAtualizado.toJSON(), password_hash: '[REDACTED]' } as Record<string, unknown>;
+      const dadosNovos = { ...toPlain(usuarioAtualizado), password_hash: '[REDACTED]' } as Record<string, unknown>;
       setAuditData(req, dadosAnteriores, dadosNovos);
       
       try {
@@ -225,7 +224,7 @@ export class UsuarioController {
       }
 
       // Capturar dados anteriores para auditoria
-      const dadosAnteriores = { ...usuario.toJSON(), password_hash: '[REDACTED]' } as Record<string, unknown>;
+      const dadosAnteriores = { ...toPlain(usuario), password_hash: '[REDACTED]' } as Record<string, unknown>;
       
       // Registrar auditoria
       try {
@@ -262,7 +261,7 @@ export class UsuarioController {
         return;
       }
 
-      const dadosAnteriores = { ...usuario.toJSON(), password_hash: '[REDACTED]', webhook_secret: '[REDACTED]' } as Record<string, unknown>;
+      const dadosAnteriores = { ...toPlain(usuario), password_hash: '[REDACTED]', webhook_secret: '[REDACTED]' } as Record<string, unknown>;
       const novoSecret = randomBytes(32).toString('hex');
       const usuarioAtualizado = await UsuarioService.update(id, { webhook_secret: novoSecret });
 
@@ -273,7 +272,7 @@ export class UsuarioController {
           'Usuario',
           usuario.id,
           dadosAnteriores,
-          { ...usuarioAtualizado.toJSON(), password_hash: '[REDACTED]', webhook_secret: '[REDACTED]' } as Record<string, unknown>,
+          { ...toPlain(usuarioAtualizado), password_hash: '[REDACTED]', webhook_secret: '[REDACTED]' } as Record<string, unknown>,
           'Webhook secret regenerado',
           empresaIdAudit
         );

@@ -7,6 +7,7 @@ import { parseListQuery } from '../../../utils/listQuery';
 import { AuthTokenPayload, AuthenticatedRequest } from '../../../types/auth';
 import { getEmpresaId, getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
+import { toPlain } from '../../../utils/toPlain';
 
 const canManageEmpresas = (req: Request): boolean => {
   const user = (req as AuthenticatedRequest).user;
@@ -87,7 +88,7 @@ export class EmpresaController {
       const empresa = await EmpresaService.create(value);
       try {
         const empresaIdAudit = empresa.id ?? getEmpresaIdOrNull(req) ?? null;
-        await registrarCriacao(req as AuthenticatedRequest, 'Empresa', empresa.id, empresa.get({ plain: true }), undefined, empresaIdAudit);
+        await registrarCriacao(req as AuthenticatedRequest, 'Empresa', empresa.id, toPlain(empresa), undefined, empresaIdAudit);
       } catch (auditError) {
         // Não interromper o fluxo
       }
@@ -111,11 +112,11 @@ export class EmpresaController {
         if (cnpjExiste) { sendValidationError(res, 'Já existe outra empresa com este CNPJ'); return; }
       }
       const empresaAntiga = await EmpresaService.getById(id);
-      const dadosAnteriores = empresaAntiga ? empresaAntiga.get({ plain: true }) : {};
+      const dadosAnteriores = empresaAntiga ? toPlain(empresaAntiga) : {};
       const empresa = await EmpresaService.update(id, value);
       try {
         const empresaIdAudit = empresa.id ?? getEmpresaIdOrNull(req) ?? null;
-        await registrarAtualizacao(req as AuthenticatedRequest, 'Empresa', empresa.id, dadosAnteriores, empresa.get({ plain: true }), undefined, empresaIdAudit);
+        await registrarAtualizacao(req as AuthenticatedRequest, 'Empresa', empresa.id, dadosAnteriores, toPlain(empresa), undefined, empresaIdAudit);
       } catch (auditError) {
         // Não interromper o fluxo
       }
@@ -131,7 +132,7 @@ export class EmpresaController {
       const id = parseInt(req.params.id);
       const empresaAntiga = await EmpresaService.getById(id);
       if (empresaAntiga) {
-        const dadosAnteriores = empresaAntiga.get({ plain: true });
+        const dadosAnteriores = toPlain(empresaAntiga);
         await EmpresaService.delete(id);
         try {
           const empresaIdAudit = id ?? getEmpresaIdOrNull(req) ?? null;

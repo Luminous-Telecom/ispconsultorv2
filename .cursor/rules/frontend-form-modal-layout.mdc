@@ -10,7 +10,7 @@ alwaysApply: false
 
 Estilo IXC: **label à esquerda (coluna fixa)**, **input/control à direita**, **uma linha por campo** — em cadastro, edição **e visualização** (campos read-only).
 
-**Sem exceções** — todo modal (ADM, SaaS, blockdomi, RPKI, logs, auditoria, parâmetros) segue o mesmo padrão.
+**Sem exceções** — todo modal (ERP, blockdomi, RPKI, logs, auditoria, parâmetros) segue o mesmo padrão.
 
 ## CSS (já aplicado)
 
@@ -110,10 +110,6 @@ Para listas de flags independentes (ex.: dias de vencimento, colunas blockdomi):
 | Detalhe somente leitura (vários campos) | `DetailFieldGrid` |
 
 **Proibido** duplicar campos de endereço/contato inline — usar `AddressFields` / `ContactFields`.
-
-## ADM e SaaS
-
-O mesmo padrão vale para **ERP (adm)** e **SaaS** — não usar layout diferente entre os dois.
 
 ## Filtros de tabela (mostrar inativos, cancelados, etc.)
 

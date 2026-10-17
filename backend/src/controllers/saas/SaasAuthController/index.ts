@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import Joi from 'joi';
 import jwt, { Secret, SignOptions } from 'jsonwebtoken';
@@ -180,7 +181,7 @@ export class SaasAuthController {
       const usuarioAntes = await SaasAuthService.getById(id);
       await SaasAuthService.updateSenha(id, value.novaSenha);
       if (usuarioAntes) {
-        const dadosAntes = usuarioAntes.toJSON ? usuarioAntes.toJSON() as Record<string, unknown> : {};
+        const dadosAntes = toPlain(usuarioAntes) as Record<string, unknown>;
         delete (dadosAntes as Record<string, unknown>).senha_hash;
         await registrarAtualizacao(req as unknown as SaasAuthenticatedRequest, 'SaasUsuarioSuper', id, dadosAntes, { ...dadosAntes, senha_hash: '[ALTERADO]' }, 'Troca de senha', null);
       }

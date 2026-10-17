@@ -1,4 +1,4 @@
-export type SystemUpdateKind = 'system' | 'doc';
+export type SystemUpdateKind = 'system';
 export type SystemUpdatePhase = 'idle' | 'running' | 'failed';
 
 export interface SystemUpdateStatus {

@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import Parametros from '../../../models/sistema/Parametros';
 import { ParametrosService } from '../../../services/sistema/ParametrosService';
@@ -107,7 +108,7 @@ export class ParametrosController {
       const parametrosAntes = await ParametrosService.get(empresaId);
       logger.info('ParametrosController.update: ParametrosService.get ok', { id: parametrosAntes?.id });
 
-      const dadosAnteriores = parametrosAntes.toJSON();
+      const dadosAnteriores = toPlain(parametrosAntes);
 
       const parametros = await ParametrosService.update(value, empresaId);
       logger.info('ParametrosController.update: ParametrosService.update ok', { id: parametros?.id });
@@ -121,7 +122,7 @@ export class ParametrosController {
             req as AuthenticatedRequest,
             'Parametros',
             parametros.id,
-            parametros.toJSON() as unknown as Record<string, unknown>,
+            toPlain(parametros) as unknown as Record<string, unknown>,
             undefined,
             empresaIdAudit
           );
@@ -139,7 +140,7 @@ export class ParametrosController {
             'Parametros',
             parametros.id,
             dadosAnteriores as unknown as Record<string, unknown>,
-            parametros.toJSON() as unknown as Record<string, unknown>,
+            toPlain(parametros) as unknown as Record<string, unknown>,
             undefined,
             empresaIdAudit
           );

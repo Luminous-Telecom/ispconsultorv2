@@ -1,40 +1,26 @@
 ---
-description: Regras de banco de dados, migrations e models Sequelize no ISP Consultor
-globs: backend/migrations/**/*.js,backend/src/models/**/*.ts
+description: Banco via Prisma no ISP Consultor
+globs: backend/prisma/**,backend/src/models/**/*.ts,backend/src/db/**/*.ts
 alwaysApply: false
 ---
 
-# Banco de Dados e Migrations - ISP Consultor
+# Banco de Dados — Prisma
 
-## Migrations
-- SEMPRE em JavaScript (`.js`), nunca TypeScript
-- Use `queryInterface` para todas as operações
-- Implemente `up` E `down` para reversão completa
-- NÃO especifique nome do banco no código
+O schema ativo é `backend/prisma/schema.prisma`. O banco da instalação única já foi criado a partir dele.
 
-## Exemplo de Migration
-```js
-'use strict';
-module.exports = {
-  async up(queryInterface, Sequelize) {
-    await queryInterface.addColumn('tabela', 'coluna', {
-      type: Sequelize.STRING,
-      allowNull: true,
-    });
-  },
-  async down(queryInterface) {
-    await queryInterface.removeColumn('tabela', 'coluna');
-  },
-};
-```
+- Alteração de tabela: editar `schema.prisma` e aplicar com `npx prisma db push` no `backend/`
+- Não especificar o nome do banco no código
+- Consultas usam o Prisma Client em `src/db/prisma.ts` (`findMany`, `create`, `update`, `$transaction`, `$queryRaw`)
+- Não existe pasta de migrations de outro ORM
 
-## Models (Sequelize)
-- Use TypeScript com tipos do Sequelize
-- Defina associations corretamente no model
-- Use `allowNull` e `defaultValue` apropriadamente
-- Implemente índices adequados para campos de busca/join
+## Models
 
-## Boas Práticas
-- NÃO faça queries N+1 (use `include` para eager loading)
-- Use transações para operações críticas/múltiplas escritas
-- Nunca ignore índices em campos filtráveis
+- Tipos e regras de negócio ficam em `src/models`
+- Persistência é o delegate do Prisma (`prisma.clientes`, `prisma.financeiro_titulos`, etc.)
+- O acesso a dados é o Prisma Client (`src/db/prisma.ts`). Não reintroduzir outra camada de ORM
+
+## Boas práticas
+
+- Evitar consulta N+1: carregar relações com `include`
+- Usar transação quando uma operação grava em mais de uma tabela
+- Manter índice nos campos usados em filtro e junção

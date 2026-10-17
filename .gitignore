@@ -1,16 +1,14 @@
 # Dependencies
 node_modules/
 package-lock.json
-!doc/package-lock.json
 
 # Environment
 .env
 .env.local
 
-# Logs (não ignora frontend modals/logs nem wiki doc/erp/logs)
+# Logs (não ignora frontend modals/logs)
 logs/
 !frontend/src/components/modals/logs/
-!doc/erp/logs/
 *.log
 
 # Build artifacts
@@ -19,11 +17,3 @@ build/
 *.tsbuildinfo
 
 testesuploads/
-
-# Referência local Oxidized (modelos de device), não versionar
-model
-
-# VitePress (doc/)
-doc/node_modules/
-doc/.vitepress/cache/
-doc/.vitepress/dist/

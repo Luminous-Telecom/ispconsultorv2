@@ -1,12 +1,12 @@
+import type { contratos, cadastros_planos } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { VariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis } from '../types';
-import { Contrato } from '../../../models/contratos/Contrato';
-import { Plano } from '../../../models/cadastros/Plano';
-import { DiasVencimento } from '../../../models/cadastros/DiasVencimento';
 import { Formatter } from '../utils/Formatter';
 import { VariableReplacer } from '../utils/VariableReplacer';
 
-interface ContratoWithPlano extends Contrato {
-  plano?: Plano;
+interface ContratoWithPlano extends contratos {
+  plano?: cadastros_planos | null;
+  cadastros_planos?: cadastros_planos | null;
 }
 
 /**
@@ -70,21 +70,25 @@ export class ContratoVariableHandler implements VariableHandler {
    * Garante que o contrato tenha o plano carregado
    */
   private async ensureContratoWithPlano(
-    contrato: Contrato | (Partial<Contrato> & { id: number })
+    contrato: contratos | (Partial<contratos> & { id: number; plano?: cadastros_planos | null })
   ): Promise<ContratoWithPlano> {
     if ('plano' in contrato && contrato.plano) {
       return contrato as ContratoWithPlano;
     }
+    if ('cadastros_planos' in contrato && contrato.cadastros_planos) {
+      return { ...contrato, plano: contrato.cadastros_planos } as ContratoWithPlano;
+    }
 
-    const contratoCompleto = await Contrato.findByPk(contrato.id, {
-      include: [{ model: Plano, as: 'plano' }]
+    const contratoCompleto = await prisma.contratos.findUnique({
+      where: { id: Number(contrato.id) },
+      include: { cadastros_planos: true },
     });
 
     if (!contratoCompleto) {
       return contrato as ContratoWithPlano;
     }
 
-    return contratoCompleto as ContratoWithPlano;
+    return { ...contratoCompleto, plano: contratoCompleto.cadastros_planos };
   }
 
   /**
@@ -96,7 +100,9 @@ export class ContratoVariableHandler implements VariableHandler {
     }
 
     try {
-      const diaVencimento = await DiasVencimento.findByPk(contrato.dia_vencimento_id);
+      const diaVencimento = await prisma.cadastros_dias_vencimento.findUnique({
+        where: { id: Number(contrato.dia_vencimento_id) },
+      });
       return diaVencimento?.dia != null ? String(diaVencimento.dia) : '';
     } catch {
       return '';
@@ -108,10 +114,10 @@ export class ContratoVariableHandler implements VariableHandler {
    */
   private calcularValorContrato(contrato: ContratoWithPlano): number {
     if (contrato.valor_final) {
-      return contrato.valor_final;
+      return Number(contrato.valor_final);
     }
 
-    return contrato.plano?.valor_mensal || 0;
+    return Number(contrato.plano?.valor_mensal || 0);
   }
 
   /**
@@ -127,10 +133,10 @@ export class ContratoVariableHandler implements VariableHandler {
       '#contrato.id#': String(contrato.id),
       '#contrato.plano#': contrato.plano?.nome_plano || '',
       '#contrato.valor_contrato#': Formatter.formatarMoeda(valorContrato),
-      '#contrato.valor_mensal#': Formatter.formatarMoeda(contrato.plano?.valor_mensal || 0),
-      '#contrato.valor_final#': Formatter.formatarMoeda(contrato.valor_final || 0),
-      '#contrato.desconto_percentual#': `${contrato.desconto_percentual || 0}%`,
-      '#contrato.desconto_valor#': Formatter.formatarMoeda(contrato.desconto_valor || 0),
+      '#contrato.valor_mensal#': Formatter.formatarMoeda(Number(contrato.plano?.valor_mensal || 0)),
+      '#contrato.valor_final#': Formatter.formatarMoeda(Number(contrato.valor_final || 0)),
+      '#contrato.desconto_percentual#': `${Number(contrato.desconto_percentual || 0)}%`,
+      '#contrato.desconto_valor#': Formatter.formatarMoeda(Number(contrato.desconto_valor || 0)),
       '#contrato.data_inicio#': contrato.data_inicio 
         ? Formatter.formatarData(new Date(contrato.data_inicio)) 
         : '',

@@ -1,12 +1,4 @@
-import { Op } from 'sequelize';
-import { Banco } from '../../../models/cadastros/Banco';
-import { Titulo } from '../../../models/financeiro/Titulo';
-import SaasTitulo from '../../../models/saas/SaasTitulo';
-import SaasBanco from '../../../models/saas/SaasBanco';
-import { AsaasService } from '../../bancos/AsaasService';
-import { AsaasTituloService } from '../../bancos/AsaasService/AsaasTituloService';
-import { EfiService } from '../../bancos/EfiService';
-import { EfiTituloService } from '../../bancos/EfiService/EfiTituloService';
+import { prisma } from '../../../db/prisma';
 import { BancoApiService } from '../../bancos/BancoApiService';
 import { AsaasWebhookService } from '../../webhooks/AsaasWebhookService';
 import { EfiWebhookProcessorService } from '../../webhooks/EfiWebhookProcessorService';
@@ -26,33 +18,67 @@ export interface TituloSyncResult {
   sem_alteracao: number;
 }
 
-type BancoLike = Banco | InstanceType<typeof SaasBanco>;
-
-interface TituloSyncItem {
-  titulo: InstanceType<typeof Titulo> | InstanceType<typeof SaasTitulo>;
-  saas: boolean;
-  banco: BancoLike;
+interface BancoSync {
+  id: number;
+  nome: string;
+  tipo_banco: string;
+  api_key: string | null;
+  client_id_producao: string | null;
+  client_secret_producao: string | null;
+  identificador_conta: string | null;
+  sandbox: boolean;
+  url_retorno: string | null;
+  webhook_secret: string | null;
+  ativo: boolean;
 }
 
-const BANCO_CREDENCIAIS_ATTRS = [
-  'id',
-  'nome',
-  'tipo_banco',
-  'api_key',
-  'client_id_producao',
-  'client_secret_producao',
-  'identificador_conta',
-  'sandbox',
-  'url_retorno',
-  'webhook_secret',
-  'ativo',
-] as const;
+interface TituloSync {
+  id: number;
+  status: string;
+  pago: boolean;
+  charge_id: string | null;
+  banco_id: number;
+  [key: string]: unknown;
+}
 
-const WHERE_TITULO_PENDENTE = {
-  pago: false,
-  charge_id: { [Op.ne]: null as unknown as string },
-  status: { [Op.in]: ['pendente', 'vencido'] as const },
-};
+interface TituloSyncItem {
+  titulo: TituloSync;
+  banco: BancoSync;
+}
+
+const BANCO_SELECT = {
+  id: true,
+  nome: true,
+  tipo_banco: true,
+  api_key: true,
+  client_id_producao: true,
+  client_secret_producao: true,
+  identificador_conta: true,
+  sandbox: true,
+  url_retorno: true,
+  webhook_secret: true,
+  ativo: true,
+} as const;
+
+function asBool(value: unknown): boolean {
+  return value === true || value === 1 || value === '1';
+}
+
+function shapeBanco(row: Record<string, unknown>): BancoSync {
+  return {
+    id: Number(row.id),
+    nome: String(row.nome ?? ''),
+    tipo_banco: String(row.tipo_banco ?? ''),
+    api_key: (row.api_key as string | null) ?? null,
+    client_id_producao: (row.client_id_producao as string | null) ?? null,
+    client_secret_producao: (row.client_secret_producao as string | null) ?? null,
+    identificador_conta: (row.identificador_conta as string | null) ?? null,
+    sandbox: asBool(row.sandbox),
+    url_retorno: (row.url_retorno as string | null) ?? null,
+    webhook_secret: (row.webhook_secret as string | null) ?? null,
+    ativo: asBool(row.ativo),
+  };
+}
 
 export class TituloStatusSyncService {
   private static runningAsaas = false;
@@ -60,17 +86,8 @@ export class TituloStatusSyncService {
 
   static async syncAsaas(): Promise<TituloSyncResult> {
     if (this.runningAsaas) {
-      return {
-        success: true,
-        message: 'Consulta Asaas já em execução',
-        total: 0,
-        consultados: 0,
-        atualizados: 0,
-        erros: 0,
-        sem_alteracao: 0,
-      };
+      return { success: true, message: 'Consulta Asaas já em execução', total: 0, consultados: 0, atualizados: 0, erros: 0, sem_alteracao: 0 };
     }
-
     this.runningAsaas = true;
     try {
       return await this.syncByTipoBanco('asaas');
@@ -81,17 +98,8 @@ export class TituloStatusSyncService {
 
   static async syncEfi(): Promise<TituloSyncResult> {
     if (this.runningEfi) {
-      return {
-        success: true,
-        message: 'Consulta Efi já em execução',
-        total: 0,
-        consultados: 0,
-        atualizados: 0,
-        erros: 0,
-        sem_alteracao: 0,
-      };
+      return { success: true, message: 'Consulta Efi já em execução', total: 0, consultados: 0, atualizados: 0, erros: 0, sem_alteracao: 0 };
     }
-
     this.runningEfi = true;
     try {
       return await this.syncByTipoBanco('efi');
@@ -111,37 +119,31 @@ export class TituloStatusSyncService {
       try {
         const statusAntes = item.titulo.status;
         const pagoAntes = item.titulo.pago;
-        const resultado =
-          tipoBanco === 'asaas'
-            ? await this.syncTituloAsaas(item)
-            : await this.syncTituloEfi(item);
-
+        const resultado = tipoBanco === 'asaas' ? await this.syncTituloAsaas(item) : await this.syncTituloEfi(item);
         consultados++;
-
         if (resultado === 'erro') {
           erros++;
           continue;
         }
-
-        await item.titulo.reload();
-        if (item.titulo.status !== statusAntes || item.titulo.pago !== pagoAntes) {
-          atualizados++;
-        } else {
-          semAlteracao++;
+        const fresh = await this.reloadTitulo(item);
+        if (fresh) {
+          item.titulo.status = fresh.status;
+          item.titulo.pago = fresh.pago;
         }
+        if (item.titulo.status !== statusAntes || item.titulo.pago !== pagoAntes) atualizados++;
+        else semAlteracao++;
       } catch (error) {
         erros++;
         logger.error('TituloStatusSyncService - Erro ao sincronizar título', {
           tipo_banco: tipoBanco,
           titulo_id: item.titulo.id,
-          saas: item.saas,
+          saas: false,
           error: error instanceof Error ? error.message : 'Erro desconhecido',
         });
       }
     }
 
     const message = `Consulta ${tipoBanco}: ${consultados} título(s), ${atualizados} atualizado(s), ${semAlteracao} sem alteração, ${erros} erro(s)`;
-
     return {
       success: erros === 0 || consultados > erros,
       message,
@@ -154,54 +156,42 @@ export class TituloStatusSyncService {
   }
 
   private static async findTitulosPendentes(tipoBanco: 'asaas' | 'efi'): Promise<TituloSyncItem[]> {
-    const [erp, saas] = await Promise.all([
-      Titulo.findAll({
-        where: WHERE_TITULO_PENDENTE,
-        include: [
-          {
-            model: Banco,
-            as: 'banco',
-            required: true,
-            where: { tipo_banco: tipoBanco, ativo: true },
-            attributes: [...BANCO_CREDENCIAIS_ATTRS],
-          },
-        ],
-      }),
-      SaasTitulo.findAll({
-        where: WHERE_TITULO_PENDENTE,
-        include: [
-          {
-            model: SaasBanco,
-            as: 'banco',
-            required: true,
-            where: { tipo_banco: tipoBanco, ativo: true },
-            attributes: [...BANCO_CREDENCIAIS_ATTRS],
-          },
-        ],
-      }),
-    ]);
+    const erp = await prisma.financeiro_titulos.findMany({
+      where: {
+        pago: false,
+        charge_id: { not: null },
+        status: { in: ['pendente', 'vencido'] },
+        cadastros_bancos: { tipo_banco: tipoBanco, ativo: true },
+      },
+      include: { cadastros_bancos: { select: BANCO_SELECT } },
+    });
 
     const items: TituloSyncItem[] = [];
-
     for (const titulo of erp) {
-      const banco = (titulo as InstanceType<typeof Titulo> & { banco?: BancoLike }).banco;
-      if (banco) items.push({ titulo, saas: false, banco });
+      if (!titulo.cadastros_bancos) continue;
+      items.push({
+        titulo: {
+          ...titulo,
+          pago: titulo.pago,
+          charge_id: titulo.charge_id,
+        },
+        banco: shapeBanco(titulo.cadastros_bancos as unknown as Record<string, unknown>),
+      });
     }
-
-    for (const titulo of saas) {
-      const banco = (titulo as InstanceType<typeof SaasTitulo> & { banco?: BancoLike }).banco;
-      if (banco) items.push({ titulo, saas: true, banco });
-    }
-
     return items;
+  }
+
+  private static async reloadTitulo(item: TituloSyncItem): Promise<{ status: string; pago: boolean } | null> {
+    const row = await prisma.financeiro_titulos.findUnique({
+      where: { id: item.titulo.id },
+      select: { status: true, pago: true },
+    });
+    return row ? { status: row.status, pago: row.pago } : null;
   }
 
   private static async syncTituloAsaas(item: TituloSyncItem): Promise<'atualizado' | 'sem_alteracao' | 'erro'> {
     const resultado = await this.consultarTitulo(item, 'asaas');
-    if (!resultado.success || !resultado.data) {
-      return 'erro';
-    }
-
+    if (!resultado.success || !resultado.data) return 'erro';
     const payment = resultado.data as AsaasPaymentPayload['payment'];
     if (!payment?.id) {
       logger.warn('TituloStatusSyncService - Resposta Asaas sem payment.id', {
@@ -210,21 +200,16 @@ export class TituloStatusSyncService {
       });
       return 'erro';
     }
-
     await AsaasWebhookService.processWebhook(payment);
     return 'sem_alteracao';
   }
 
   private static async syncTituloEfi(item: TituloSyncItem): Promise<'atualizado' | 'sem_alteracao' | 'erro'> {
     const resultado = await this.consultarTitulo(item, 'efi');
-    if (!resultado.success || !resultado.data) {
-      return 'erro';
-    }
-
+    if (!resultado.success || !resultado.data) return 'erro';
     const dados = resultado.data as Record<string, JsonValue>;
     const chargeData = (EfiHelpers.getNestedValue(dados, 'data') ?? dados) as Record<string, JsonValue>;
     const status = typeof chargeData.status === 'string' ? chargeData.status : resultado.status;
-
     if (!status) {
       logger.warn('TituloStatusSyncService - Resposta Efi sem status', {
         titulo_id: item.titulo.id,
@@ -232,7 +217,6 @@ export class TituloStatusSyncService {
       });
       return 'erro';
     }
-
     const chargeId = chargeData.charge_id ?? item.titulo.charge_id;
     await EfiWebhookProcessorService.processChargeNotification({
       id: chargeId != null ? String(chargeId) : undefined,
@@ -243,52 +227,12 @@ export class TituloStatusSyncService {
       confirmed_at: typeof chargeData.confirmed_at === 'string' ? chargeData.confirmed_at : undefined,
       created_at: typeof chargeData.created_at === 'string' ? chargeData.created_at : undefined,
     });
-
     return 'sem_alteracao';
   }
 
-  private static async consultarTitulo(item: TituloSyncItem, tipoBanco: 'asaas' | 'efi'): Promise<ApiResponse> {
-    if (!item.saas) {
-      const tituloComRelacoes = {
-        ...(item.titulo.get({ plain: true }) as Record<string, unknown>),
-        banco: item.banco as Banco,
-      };
-      return BancoApiService.consultarStatus(tituloComRelacoes as Parameters<typeof BancoApiService.consultarStatus>[0]);
-    }
-
-    const banco = await this.reloadBanco(item.banco, true);
-    if (!banco) {
-      return { success: false, message: 'Banco SaaS não encontrado' };
-    }
-
-    const titulo = item.titulo as InstanceType<typeof Titulo>;
-    const bancoCast = banco as Banco;
-
-    if (tipoBanco === 'asaas') {
-      const asaasService = new AsaasService();
-      const token = await asaasService.obterToken(bancoCast);
-      if (!token) return { success: false, message: 'Falha ao obter token Asaas' };
-      return AsaasTituloService.consultarStatus(titulo, bancoCast, token);
-    }
-
-    const efiService = new EfiService();
-    const token = await efiService.obterToken(bancoCast);
-    if (!token) return { success: false, message: 'Falha ao obter token Efi' };
-    return EfiTituloService.consultarStatus(titulo, bancoCast, token);
-  }
-
-  private static async reloadBanco(banco: BancoLike, saas: boolean): Promise<BancoLike | null> {
-    if (saas) {
-      const instance = await SaasBanco.findByPk(banco.id, {
-        attributes: [...BANCO_CREDENCIAIS_ATTRS],
-      });
-      return instance;
-    }
-
-    const instance = await Banco.findByPk(banco.id, {
-      attributes: [...BANCO_CREDENCIAIS_ATTRS],
-    });
-    return instance;
+  private static async consultarTitulo(item: TituloSyncItem, _tipoBanco: 'asaas' | 'efi'): Promise<ApiResponse> {
+    const tituloComRelacoes = { ...item.titulo, banco: item.banco };
+    return BancoApiService.consultarStatus(tituloComRelacoes as Parameters<typeof BancoApiService.consultarStatus>[0]);
   }
 }
 

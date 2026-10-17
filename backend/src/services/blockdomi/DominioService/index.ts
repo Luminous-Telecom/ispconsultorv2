@@ -1,21 +1,24 @@
-import { Dominio } from '../../../models/blockdomi/Dominio';
-import { VersaoBlockdomi } from '../../../models/blockdomi/VersaoBlockdomi';
-import { NumeroSeiAnatelBlockdomi } from '../../../models/blockdomi/NumeroSeiAnatelBlockdomi';
-import { NumeroSeiAnatelBlockdomiService } from '../NumeroSeiAnatelBlockdomiService';
+import type { Prisma } from '@prisma/client';
 import fs from 'fs/promises';
 import path from 'path';
-import { Op, WhereOptions, Order } from 'sequelize';
+import { prisma } from '../../../db/prisma';
 import { sanitizeDominio } from '../../../utils/sanitize';
 import { logger } from '../../../utils/logger';
 import { SYSTEM_NAME } from '../../../constants/systemBrand';
-import { DOMINIO_SORT_CONFIG } from '../../../config/sortConfigs';
-import {
-  BLOCKDOMI_LIST_INCLUDES,
-  listBlockdomiPaginated,
-  type BlockdomiListFilters,
-} from '../../../utils/blockdomiListHelper';
+import { NumeroSeiAnatelBlockdomiService } from '../NumeroSeiAnatelBlockdomiService';
 import { VersaoBlockdomiService } from '../VersaoBlockdomiService';
 import { SeiAnatelExtractService } from '../SeiAnatelExtractService';
+import {
+  dateOnlyString,
+  findBlockdomiById,
+  listBlockdomi,
+  normalizeBlockdomiWrite,
+  plainBlockdomi,
+  registrarOperacaoDelete,
+  type BlockdomiTabela,
+} from '../blockdomiPrisma';
+
+const TABELA: BlockdomiTabela = 'blockdomi_dominios';
 
 /** Converte string vazia em null para campos DATEONLY/TEXT que aceitam null */
 function emptyToNull<T>(v: T): T | null {
@@ -23,7 +26,21 @@ function emptyToNull<T>(v: T): T | null {
   return v;
 }
 
-export type ListDominiosFilters = BlockdomiListFilters;
+function metadataDate(value: string | null | undefined): Date | null {
+  const normalized = emptyToNull(value ?? null);
+  if (!normalized) return null;
+  return new Date(`${String(normalized).slice(0, 10)}T00:00:00.000Z`);
+}
+
+export interface ListDominiosFilters {
+  page?: number;
+  limit?: number;
+  search?: string;
+  searchField?: string;
+  ativo?: boolean;
+  sortColumn?: string;
+  sortDirection?: string;
+}
 
 export interface ListDominiosResponse {
   data: Array<Record<string, unknown>>;
@@ -40,9 +57,7 @@ export interface ListDominiosResponse {
 export interface SincronizarSeiAnatelDominiosRow {
   link_oficio_anatel: string;
   quantidade_dominios: number;
-  /** Nome do ofício (referência ao primeiro domínio do grupo com esse PDF) */
   nome_oficio?: string | null;
-  /** Número da versão Blockdomi (blockdomi_versoes.numero), exibido como "serial" nos logs */
   versao_numero?: string | null;
   sei?: string;
   erro?: string;
@@ -61,6 +76,22 @@ export interface SincronizarSeiAnatelDominiosResult {
   resultados: SincronizarSeiAnatelDominiosRow[];
   auditoria: SincronizarSeiAnatelDominiosAuditEntry[];
 }
+
+type DominioWrite = {
+  dominio?: string;
+  descricao?: string | null;
+  nome_oficio?: string | null;
+  data_inicio_bloqueio?: string | Date | null;
+  data_fim_bloqueio?: string | Date | null;
+  link_oficio_anatel?: string | null;
+  link_oficio_justica?: string | null;
+  link_planilha_dominios?: string | null;
+  ativo?: boolean;
+  versao_id?: number | null;
+  empresa_id?: number | null;
+  numero_sei_anatel_id?: number | null;
+  numero_sei_anatel?: string | null;
+};
 
 function resolvePdfUrlParaDownload(link: string, publicBaseUrl: string): string {
   const t = link.trim();
@@ -116,43 +147,30 @@ async function baixarPdfParaArquivoTemporario(fullUrl: string): Promise<string> 
 }
 
 export class DominioService {
-  /**
-   * Listar domínios com filtros e paginação
-   */
   static async list(filters: ListDominiosFilters): Promise<ListDominiosResponse> {
-    return listBlockdomiPaginated({
-      model: Dominio,
+    return listBlockdomi({
+      tabela: TABELA,
+      primaryField: 'dominio',
       filters,
-      sortConfig: DOMINIO_SORT_CONFIG,
-      primarySearchField: 'dominio',
       logContext: 'DominioService.list',
     });
   }
 
-  /**
-   * Buscar domínio por ID
-   */
-  static async getById(id: string | number): Promise<Dominio | null> {
-    return await Dominio.findByPk(id, { include: BLOCKDOMI_LIST_INCLUDES });
+  static async getById(id: string | number): Promise<({ id: number; empresa_id?: number | null } & Record<string, unknown>) | null> {
+    return findBlockdomiById(TABELA, id);
   }
 
-  /**
-   * Buscar domínio por nome (para verificar duplicata)
-   */
-  static async findByDominio(dominio: string): Promise<Dominio | null> {
-    return await Dominio.findOne({ where: { dominio } });
+  static async findByDominio(dominio: string): Promise<Record<string, unknown> | null> {
+    const row = await prisma.blockdomi_dominios.findFirst({ where: { dominio } });
+    return row ? plainBlockdomi(row, false) : null;
   }
 
-  /**
-   * Criar domínio (individual). Atribui versão automaticamente.
-   */
-  static async create(dadosDominio: Partial<Dominio> & { numero_sei_anatel?: string | null }): Promise<Dominio> {
-    if (dadosDominio.descricao === undefined) {
-      dadosDominio.descricao = null;
-    }
-    const empresaId = dadosDominio.empresa_id ?? null;
+  static async create(dadosDominio: DominioWrite): Promise<{ id: number; empresa_id?: number | null } & Record<string, unknown>> {
+    const dados: Record<string, unknown> = { ...dadosDominio };
+    if (dados.descricao === undefined) dados.descricao = null;
+    const empresaId = (dados.empresa_id as number | null | undefined) ?? null;
     const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('dominio', undefined, empresaId);
-    const dados = { ...dadosDominio, versao_id: versaoId } as Record<string, unknown>;
+    dados.versao_id = versaoId;
     if ('numero_sei_anatel' in dados) {
       const raw = dados.numero_sei_anatel;
       delete dados.numero_sei_anatel;
@@ -160,22 +178,20 @@ export class DominioService {
         raw as string | null | undefined
       );
     }
-    const row = await Dominio.create(dados as never);
-    await row.reload({ include: BLOCKDOMI_LIST_INCLUDES });
-    return row;
+    const created = await prisma.blockdomi_dominios.create({
+      data: normalizeBlockdomiWrite(dados) as Prisma.blockdomi_dominiosUncheckedCreateInput,
+    });
+    const reloaded = await findBlockdomiById(TABELA, created.id);
+    if (!reloaded) throw new Error('Domínio não encontrado');
+    return reloaded;
   }
 
-  /**
-   * Atualizar domínio. Gera nova versão automaticamente.
-   */
-  static async update(id: string | number, dadosDominio: Partial<Dominio> & { numero_sei_anatel?: string | null }): Promise<Dominio> {
-    const existingDominio = await Dominio.findByPk(id);
-    
-    if (!existingDominio) {
-      throw new Error('Domínio não encontrado');
-    }
+  static async update(id: string | number, dadosDominio: DominioWrite): Promise<{ id: number; empresa_id?: number | null } & Record<string, unknown>> {
+    const numericId = Number(id);
+    const existingDominio = await prisma.blockdomi_dominios.findUnique({ where: { id: numericId } });
+    if (!existingDominio) throw new Error('Domínio não encontrado');
 
-    const allowedFields: Array<keyof Dominio> = [
+    const allowedFields = [
       'dominio',
       'descricao',
       'nome_oficio',
@@ -184,55 +200,46 @@ export class DominioService {
       'link_oficio_anatel',
       'link_oficio_justica',
       'link_planilha_dominios',
-      'ativo'
+      'ativo',
     ];
-
-    const updateData: Partial<Dominio> = {};
-    Object.keys(dadosDominio).forEach(key => {
-      if (allowedFields.includes(key as keyof Dominio)) {
-        const value = dadosDominio[key as keyof Dominio];
-        if (value !== undefined) {
-          (updateData as Record<string, unknown>)[key] = value;
-        }
+    const updateData: Record<string, unknown> = {};
+    for (const key of Object.keys(dadosDominio)) {
+      if (allowedFields.includes(key)) {
+        const value = dadosDominio[key as keyof DominioWrite];
+        if (value !== undefined) updateData[key] = value;
       }
-    });
-
-    const extDominio = dadosDominio as Partial<Dominio> & { numero_sei_anatel?: string | null };
-    if (extDominio.numero_sei_anatel !== undefined) {
+    }
+    if (dadosDominio.numero_sei_anatel !== undefined) {
       updateData.numero_sei_anatel_id = await NumeroSeiAnatelBlockdomiService.obterOuCriarPorNumero(
-        extDominio.numero_sei_anatel
+        dadosDominio.numero_sei_anatel
       );
     }
-
-    const empresaId = (existingDominio as { empresa_id?: number | null }).empresa_id ?? null;
-    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('dominio', undefined, empresaId);
+    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao(
+      'dominio',
+      undefined,
+      existingDominio.empresa_id ?? null
+    );
     updateData.versao_id = versaoId;
-
-    await existingDominio.update(updateData);
-    await existingDominio.reload({ include: BLOCKDOMI_LIST_INCLUDES });
-
-    return existingDominio;
+    await prisma.blockdomi_dominios.update({
+      where: { id: numericId },
+      data: normalizeBlockdomiWrite(updateData) as Prisma.blockdomi_dominiosUncheckedUpdateInput,
+    });
+    const reloaded = await findBlockdomiById(TABELA, numericId);
+    if (!reloaded) throw new Error('Domínio não encontrado');
+    return reloaded;
   }
 
-  /**
-   * Atualiza vários domínios com os mesmos campos (edição em lote). Gera uma única versão blockdomi.
-   * Não altera o campo `dominio` (cada registro mantém o FQDN).
-   */
   static async bulkUpdate(
     ids: (string | number)[],
-    dadosDominio: Partial<Dominio> & { numero_sei_anatel?: string | null }
+    dadosDominio: DominioWrite
   ): Promise<{ updated: number }> {
     const idsNum = ids.map((id) => Number(id)).filter((n) => !Number.isNaN(n));
-    if (idsNum.length === 0) {
-      throw new Error('Informe ao menos um domínio');
-    }
+    if (idsNum.length === 0) throw new Error('Informe ao menos um domínio');
 
-    const existentes = await Dominio.findAll({ where: { id: { [Op.in]: idsNum } } });
-    if (existentes.length === 0) {
-      throw new Error('Nenhum domínio encontrado para os IDs informados');
-    }
+    const existentes = await prisma.blockdomi_dominios.findMany({ where: { id: { in: idsNum } } });
+    if (existentes.length === 0) throw new Error('Nenhum domínio encontrado para os IDs informados');
 
-    const allowedFields: Array<keyof Dominio> = [
+    const allowedFields = [
       'descricao',
       'nome_oficio',
       'data_inicio_bloqueio',
@@ -240,54 +247,45 @@ export class DominioService {
       'link_oficio_anatel',
       'link_oficio_justica',
       'link_planilha_dominios',
-      'ativo'
+      'ativo',
     ];
-
-    const updateData: Partial<Dominio> = {};
-    Object.keys(dadosDominio).forEach((key) => {
-      if (allowedFields.includes(key as keyof Dominio)) {
-        const value = dadosDominio[key as keyof Dominio];
-        if (value !== undefined) {
-          (updateData as Record<string, unknown>)[key] = value;
-        }
+    const updateData: Record<string, unknown> = {};
+    for (const key of Object.keys(dadosDominio)) {
+      if (allowedFields.includes(key)) {
+        const value = dadosDominio[key as keyof DominioWrite];
+        if (value !== undefined) updateData[key] = value;
       }
-    });
-
+    }
     if (dadosDominio.numero_sei_anatel !== undefined) {
       updateData.numero_sei_anatel_id = await NumeroSeiAnatelBlockdomiService.obterOuCriarPorNumero(
         dadosDominio.numero_sei_anatel
       );
     }
+    if (Object.keys(updateData).length === 0) return { updated: 0 };
 
-    if (Object.keys(updateData).length === 0) {
-      return { updated: 0 };
-    }
-
-    const empresaId = (existentes[0] as { empresa_id?: number | null }).empresa_id ?? null;
-    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('dominio', undefined, empresaId);
+    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao(
+      'dominio',
+      undefined,
+      existentes[0].empresa_id ?? null
+    );
     updateData.versao_id = versaoId;
-
-    const [affected] = await Dominio.update(updateData, { where: { id: { [Op.in]: idsNum } } });
-    return { updated: affected };
+    const result = await prisma.blockdomi_dominios.updateMany({
+      where: { id: { in: idsNum } },
+      data: normalizeBlockdomiWrite(updateData) as Prisma.blockdomi_dominiosUncheckedUpdateInput,
+    });
+    return { updated: result.count };
   }
 
-  /**
-   * Buscar domínios existentes por lista (para verificar duplicatas em lote)
-   */
   static async findByDominios(dominios: string[]): Promise<Set<string>> {
     if (dominios.length === 0) return new Set();
     const unique = [...new Set(dominios)];
-    const found = await Dominio.findAll({
-      where: { dominio: { [Op.in]: unique } },
-      attributes: ['dominio'],
-      raw: true
+    const found = await prisma.blockdomi_dominios.findMany({
+      where: { dominio: { in: unique } },
+      select: { dominio: true },
     });
-    return new Set(found.map((r) => r.dominio as string));
+    return new Set(found.map((row) => row.dominio));
   }
 
-  /**
-   * Buscar domínios existentes com id, data_fim_bloqueio e links (para atualização condicional)
-   */
   static async findByDominiosWithData(dominios: string[]): Promise<Map<string, {
     id: number;
     data_fim_bloqueio: string | null;
@@ -298,11 +296,17 @@ export class DominioService {
   }>> {
     if (dominios.length === 0) return new Map();
     const unique = [...new Set(dominios)];
-    const found = await Dominio.findAll({
-      where: { dominio: { [Op.in]: unique } },
-      attributes: ['id', 'dominio', 'data_fim_bloqueio', 'link_oficio_anatel', 'link_oficio_justica', 'link_planilha_dominios'],
-      include: [{ model: NumeroSeiAnatelBlockdomi, as: 'numeroSeiRef', attributes: ['numero'], required: false }],
-      raw: false
+    const found = await prisma.blockdomi_dominios.findMany({
+      where: { dominio: { in: unique } },
+      select: {
+        id: true,
+        dominio: true,
+        data_fim_bloqueio: true,
+        link_oficio_anatel: true,
+        link_oficio_justica: true,
+        link_planilha_dominios: true,
+        blockdomi_numeros_sei_anatel: { select: { numero: true } },
+      },
     });
     const map = new Map<string, {
       id: number;
@@ -313,23 +317,18 @@ export class DominioService {
       numero_sei_anatel: string | null;
     }>();
     for (const row of found) {
-      const sei = (row as unknown as { numeroSeiRef?: { numero: string } }).numeroSeiRef?.numero ?? null;
-      map.set(row.dominio as string, {
-        id: row.id as number,
-        data_fim_bloqueio: row.data_fim_bloqueio as string | null,
-        link_oficio_anatel: row.link_oficio_anatel as string | null,
-        link_oficio_justica: row.link_oficio_justica as string | null,
-        link_planilha_dominios: row.link_planilha_dominios as string | null,
-        numero_sei_anatel: sei
+      map.set(row.dominio, {
+        id: row.id,
+        data_fim_bloqueio: dateOnlyString(row.data_fim_bloqueio),
+        link_oficio_anatel: row.link_oficio_anatel,
+        link_oficio_justica: row.link_oficio_justica,
+        link_planilha_dominios: row.link_planilha_dominios,
+        numero_sei_anatel: row.blockdomi_numeros_sei_anatel?.numero ?? null,
       });
     }
     return map;
   }
 
-  /**
-   * Criar múltiplos domínios em lote. Atualiza existentes apenas quando data_fim_bloqueio mudar (incluindo ficar vazia). data_inicio_bloqueio é obrigatória (validada no controller). Não usa data_inicio na decisão de atualizar para evitar reatualizar todo dia ao reimportar os mesmos domínios.
-   * Se getVersoesForNewRecords for passado, será chamado com a quantidade de novos registros e as versões retornadas serão atribuídas (versao_id).
-   */
   static async bulkCreate(
     items: string[],
     metadata: {
@@ -347,7 +346,7 @@ export class DominioService {
   ): Promise<{ created: number; updated: number; skipped: number; errors: string[]; primeiraVersao?: string; createdIds: number[]; updatedIds: number[] }> {
     const sanitized = items.map((d) => sanitizeDominio(d)).filter(Boolean) as string[];
     const existingMap = sanitized.length > 0 ? await this.findByDominiosWithData(sanitized) : new Map();
-    const toCreate: Array<{ dominio: string; [key: string]: unknown }> = [];
+    const toCreate: Prisma.blockdomi_dominiosCreateManyInput[] = [];
     const toUpdate: Array<{ id: number; dominio: string }> = [];
     const errors: string[] = [];
     const seen = new Set<string>();
@@ -380,14 +379,14 @@ export class DominioService {
         dominio,
         descricao: null,
         nome_oficio: emptyToNull(metadata.nome_oficio ?? null),
-        data_inicio_bloqueio: emptyToNull(metadata.data_inicio_bloqueio ?? null),
-        data_fim_bloqueio: emptyToNull(metadata.data_fim_bloqueio ?? null),
+        data_inicio_bloqueio: metadataDate(metadata.data_inicio_bloqueio),
+        data_fim_bloqueio: metadataDate(metadata.data_fim_bloqueio),
         link_oficio_anatel: emptyToNull(metadata.link_oficio_anatel ?? null),
         link_oficio_justica: emptyToNull(metadata.link_oficio_justica ?? null),
         link_planilha_dominios: emptyToNull(metadata.link_planilha_dominios ?? null),
         numero_sei_anatel_id: seiIdNovo,
         empresa_id: metadata.empresa_id ?? null,
-        ativo: true
+        ativo: true,
       });
     }
 
@@ -414,14 +413,13 @@ export class DominioService {
     if (toCreate.length > 0) {
       if (versaoId != null) {
         toCreate.forEach((rec) => {
-          (rec as Record<string, unknown>).versao_id = versaoId;
+          rec.versao_id = versaoId;
         });
       } else if (metadata.getVersoesForNewRecords) {
         const versoes = await metadata.getVersoesForNewRecords(toCreate.length);
         primeiraVersao = primeiraVersao ?? versoes[0]?.numero;
         toCreate.forEach((rec, i) => {
-          const v = versoes[i];
-          (rec as Record<string, unknown>).versao_id = v?.id ?? null;
+          rec.versao_id = versoes[i]?.id ?? null;
         });
       }
     }
@@ -430,36 +428,35 @@ export class DominioService {
     let created = 0;
     for (let i = 0; i < toCreate.length; i += BATCH) {
       const batch = toCreate.slice(i, i + BATCH);
-      await Dominio.bulkCreate(batch as never);
-      created += batch.length;
+      const result = await prisma.blockdomi_dominios.createMany({ data: batch });
+      created += result.count;
     }
 
     let createdIds: number[] = [];
     if (toCreate.length > 0) {
-      const dominiosCriados = await Dominio.findAll({
-        where: { dominio: { [Op.in]: toCreate.map((c) => c.dominio) } },
-        attributes: ['id'],
-        raw: true
+      const dominiosCriados = await prisma.blockdomi_dominios.findMany({
+        where: { dominio: { in: toCreate.map((c) => c.dominio) } },
+        select: { id: true },
       });
-      createdIds = dominiosCriados.map((r) => r.id as number);
+      createdIds = dominiosCriados.map((row) => row.id);
     }
 
     let updated = 0;
     const updatedIds = toUpdate.map((u) => u.id);
     if (toUpdate.length > 0 && versaoId != null) {
-      await Dominio.update(
-        {
+      await prisma.blockdomi_dominios.updateMany({
+        where: { id: { in: updatedIds } },
+        data: {
           nome_oficio: emptyToNull(metadata.nome_oficio ?? null),
-          data_inicio_bloqueio: emptyToNull(metadata.data_inicio_bloqueio ?? null),
-          data_fim_bloqueio: emptyToNull(newDataFim ?? null),
+          data_inicio_bloqueio: metadataDate(metadata.data_inicio_bloqueio),
+          data_fim_bloqueio: metadataDate(newDataFim),
           link_oficio_anatel: emptyToNull(metadata.link_oficio_anatel ?? null),
           link_oficio_justica: emptyToNull(metadata.link_oficio_justica ?? null),
           link_planilha_dominios: emptyToNull(metadata.link_planilha_dominios ?? null),
           numero_sei_anatel_id: seiIdNovo,
-          versao_id: versaoId
+          versao_id: versaoId,
         },
-        { where: { id: { [Op.in]: updatedIds } } }
-      );
+      });
       updated = toUpdate.length;
     }
 
@@ -471,112 +468,76 @@ export class DominioService {
     return { created, updated, skipped, errors, primeiraVersao, createdIds, updatedIds };
   }
 
-  /**
-   * Deletar domínio. Gera versão de exclusão e registra em operacoes_blockdomi.
-   */
-  static async delete(id: string | number): Promise<Dominio> {
-    const dominio = await Dominio.findByPk(id);
-    
-    if (!dominio) {
-      throw new Error('Domínio não encontrado');
-    }
+  static async delete(id: string | number): Promise<{ id: number; empresa_id?: number | null } & Record<string, unknown>> {
+    const numericId = Number(id);
+    const dominio = await prisma.blockdomi_dominios.findUnique({ where: { id: numericId } });
+    if (!dominio) throw new Error('Domínio não encontrado');
 
-    const empresaId = (dominio as { empresa_id?: number | null }).empresa_id ?? null;
-    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('dominio_delete', undefined, empresaId);
-    await dominio.destroy();
-
-    const { sequelize } = await import('../../../config/database');
-    const { QueryTypes } = await import('sequelize');
-    await sequelize.query(
-      `INSERT INTO blockdomi_operacoes (tipo, versao_id, quantidade, ids_deletados, created_at) 
-       VALUES ('dominio_delete', :versaoId, 1, :ids, NOW())`,
-      {
-        replacements: { versaoId, ids: JSON.stringify([Number(id)]) },
-        type: QueryTypes.INSERT
-      }
+    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao(
+      'dominio_delete',
+      undefined,
+      dominio.empresa_id ?? null
     );
-    
-    return dominio;
+    await prisma.blockdomi_dominios.delete({ where: { id: numericId } });
+    await registrarOperacaoDelete('dominio_delete', versaoId, 1, [numericId], dominio.empresa_id);
+    return plainBlockdomi(dominio, false);
   }
 
-  /**
-   * Deletar domínios em massa. Gera uma versão para toda a operação.
-   */
   static async bulkDelete(ids: (string | number)[]): Promise<{ deleted: number; versao: string; versaoId: number }> {
-    if (ids.length === 0) {
-      return { deleted: 0, versao: '', versaoId: 0 };
-    }
-
+    if (ids.length === 0) return { deleted: 0, versao: '', versaoId: 0 };
     const idsNum = ids.map((id) => Number(id)).filter((n) => !Number.isNaN(n));
-    if (idsNum.length === 0) {
-      return { deleted: 0, versao: '', versaoId: 0 };
-    }
+    if (idsNum.length === 0) return { deleted: 0, versao: '', versaoId: 0 };
 
     const { id: versaoId, numero: versao } = await VersaoBlockdomiService.obterProximaVersao('dominio_delete', undefined, null);
-
-    const { Op } = await import('sequelize');
-    const deleted = await Dominio.destroy({ where: { id: { [Op.in]: idsNum } } });
-
-    const { sequelize } = await import('../../../config/database');
-    const { QueryTypes } = await import('sequelize');
-    await sequelize.query(
-      `INSERT INTO blockdomi_operacoes (tipo, versao_id, quantidade, ids_deletados, created_at) 
-       VALUES ('dominio_delete', :versaoId, :qtd, :ids, NOW())`,
-      {
-        replacements: { versaoId, qtd: deleted, ids: JSON.stringify(idsNum) },
-        type: QueryTypes.INSERT
-      }
-    );
-
-    return { deleted, versao, versaoId };
+    const result = await prisma.blockdomi_dominios.deleteMany({ where: { id: { in: idsNum } } });
+    await registrarOperacaoDelete('dominio_delete', versaoId, result.count, idsNum);
+    return { deleted: result.count, versao, versaoId };
   }
 
-  /**
-   * Agrupa domínios sem SEI por `link_oficio_anatel` (trim), baixa cada PDF uma única vez,
-   * extrai o número SEI e atualiza todos os domínios daquele grupo via `bulkUpdate`.
-   */
   static async sincronizarSeiAnatelPorPdfOficio(opts: {
     empresaId: number | null;
     publicBaseUrl: string;
   }): Promise<SincronizarSeiAnatelDominiosResult> {
     const { empresaId, publicBaseUrl } = opts;
-    const whereEmpresa: WhereOptions<Dominio> =
-      empresaId != null ? { empresa_id: empresaId } : ({} as WhereOptions<Dominio>);
-
-    const rows = await Dominio.findAll({
-      attributes: ['id', 'link_oficio_anatel', 'numero_sei_anatel_id', 'empresa_id', 'nome_oficio', 'versao_id'],
-      where: whereEmpresa
+    const rows = await prisma.blockdomi_dominios.findMany({
+      where: empresaId != null ? { empresa_id: empresaId } : {},
+      select: {
+        id: true,
+        link_oficio_anatel: true,
+        numero_sei_anatel_id: true,
+        empresa_id: true,
+        nome_oficio: true,
+        versao_id: true,
+      },
     });
 
-    const candidatos = rows.filter((r) => {
-      const link = (r.link_oficio_anatel ?? '').trim();
-      const noSei = r.numero_sei_anatel_id == null;
-      return link.length > 0 && noSei;
+    const candidatos = rows.filter((row) => {
+      const link = (row.link_oficio_anatel ?? '').trim();
+      return link.length > 0 && row.numero_sei_anatel_id == null;
     });
 
     const byUrl = new Map<string, number[]>();
-    for (const r of candidatos) {
-      const url = (r.link_oficio_anatel ?? '').trim();
+    for (const row of candidatos) {
+      const url = (row.link_oficio_anatel ?? '').trim();
       const list = byUrl.get(url) ?? [];
-      list.push(r.id as number);
+      list.push(row.id);
       byUrl.set(url, list);
     }
 
-    const candidatosPorId = new Map(candidatos.map((row) => [row.id as number, row]));
-    const versaoIds = [...new Set(candidatos.map((r) => r.versao_id).filter((v): v is number => v != null))];
-    const versoes =
-      versaoIds.length > 0
-        ? await VersaoBlockdomi.findAll({
-            where: { id: versaoIds },
-            attributes: ['id', 'numero']
-          })
-        : [];
-    const versaoNumeroPorId = new Map(versoes.map((v) => [v.id as number, v.numero]));
+    const candidatosPorId = new Map(candidatos.map((row) => [row.id, row]));
+    const versaoIds = [...new Set(candidatos.map((row) => row.versao_id).filter((v): v is number => v != null))];
+    const versoes = versaoIds.length > 0
+      ? await prisma.blockdomi_versoes.findMany({
+          where: { id: { in: versaoIds } },
+          select: { id: true, numero: true },
+        })
+      : [];
+    const versaoNumeroPorId = new Map(versoes.map((v) => [v.id, v.numero]));
 
     const metaPorGrupo = (ids: number[]): { nome_oficio: string | null; versao_numero: string | null } => {
       const rep = candidatosPorId.get(ids[0]);
       const nome = rep?.nome_oficio?.trim() ? String(rep.nome_oficio).trim() : null;
-      const vid = rep?.versao_id != null ? (rep.versao_id as number) : null;
+      const vid = rep?.versao_id ?? null;
       const serial = vid != null ? versaoNumeroPorId.get(vid) ?? null : null;
       return { nome_oficio: nome, versao_numero: serial };
     };
@@ -587,9 +548,8 @@ export class DominioService {
 
     for (const [link, ids] of byUrl) {
       let tmpPath: string | null = null;
-      let urlDownload: string | undefined;
       try {
-        urlDownload = resolvePdfUrlParaDownload(link, publicBaseUrl);
+        const urlDownload = resolvePdfUrlParaDownload(link, publicBaseUrl);
         tmpPath = await baixarPdfParaArquivoTemporario(urlDownload);
         const extracted = await SeiAnatelExtractService.extractFromPdfPath(tmpPath);
         if (!extracted.success || !extracted.sei?.trim()) {
@@ -600,22 +560,20 @@ export class DominioService {
             quantidade_dominios: ids.length,
             nome_oficio: meta.nome_oficio,
             versao_numero: meta.versao_numero,
-            erro: erroMsg
+            erro: erroMsg,
           });
           continue;
         }
         const sei = extracted.sei.trim();
-        const antesRows = await Dominio.findAll({ where: { id: { [Op.in]: ids } } });
-        const antesMap = new Map(antesRows.map((d) => [d.id as number, d.toJSON() as Record<string, unknown>]));
+        const antesRows = await prisma.blockdomi_dominios.findMany({ where: { id: { in: ids } } });
+        const antesMap = new Map(antesRows.map((row) => [row.id, plainBlockdomi(row, false)]));
         await DominioService.bulkUpdate(ids, { numero_sei_anatel: sei });
-        const depoisRows = await Dominio.findAll({ where: { id: { [Op.in]: ids } } });
-        const depoisMap = new Map(depoisRows.map((d) => [d.id as number, d.toJSON() as Record<string, unknown>]));
+        const depoisRows = await prisma.blockdomi_dominios.findMany({ where: { id: { in: ids } } });
+        const depoisMap = new Map(depoisRows.map((row) => [row.id, plainBlockdomi(row, false)]));
         for (const id of ids) {
           const antes = antesMap.get(id);
           const depois = depoisMap.get(id);
-          if (antes && depois) {
-            auditoria.push({ id, antes, depois });
-          }
+          if (antes && depois) auditoria.push({ id, antes, depois });
         }
         dominiosAtualizados += ids.length;
         const metaOk = metaPorGrupo(ids);
@@ -624,7 +582,7 @@ export class DominioService {
           quantidade_dominios: ids.length,
           nome_oficio: metaOk.nome_oficio,
           versao_numero: metaOk.versao_numero,
-          sei
+          sei,
         });
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Erro desconhecido';
@@ -634,7 +592,7 @@ export class DominioService {
           quantidade_dominios: ids.length,
           nome_oficio: metaErr.nome_oficio,
           versao_numero: metaErr.versao_numero,
-          erro: msg
+          erro: msg,
         });
       } finally {
         if (tmpPath) {
@@ -652,7 +610,7 @@ export class DominioService {
       pdfsDistintos: byUrl.size,
       dominiosAtualizados,
       resultados,
-      auditoria
+      auditoria,
     };
   }
 }

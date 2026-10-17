@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { OrdemServicoArquivo } from '../../../models/ordens/OrdemServicoArquivo';
+import { prisma } from '../../../db/prisma';
 import { resolveArquivosPath } from '../../../utils/pathUtils';
 import { logger } from '../../../utils/logger';
 
@@ -24,7 +24,13 @@ export interface CreateOrdemServicoArquivoData {
 export class OrdemServicoArquivoService {
   private static readonly UPLOAD_DIR = resolveArquivosPath('ordens-servico');
 
-  private static toItem(record: OrdemServicoArquivo): OrdemServicoArquivoItem {
+  private static toItem(record: {
+    id: number;
+    ordem_servico_id: string;
+    descricao: string | null;
+    nome: string;
+    mime_type: string | null;
+  }): OrdemServicoArquivoItem {
     return {
       id: String(record.id),
       ordem_servico_id: record.ordem_servico_id,
@@ -35,9 +41,9 @@ export class OrdemServicoArquivoService {
   }
 
   static async list(ordemServicoId: string): Promise<OrdemServicoArquivoItem[]> {
-    const registros = await OrdemServicoArquivo.findAll({
+    const registros = await prisma.ordem_servico_arquivos.findMany({
       where: { ordem_servico_id: String(ordemServicoId) },
-      order: [['id', 'DESC']],
+      orderBy: { id: 'desc' },
     });
     return registros.map((registro) => this.toItem(registro));
   }
@@ -53,22 +59,24 @@ export class OrdemServicoArquivoService {
 
     await fs.writeFile(destinoPath, data.arquivo.buffer);
 
-    const registro = await OrdemServicoArquivo.create({
-      ordem_servico_id: String(data.ordem_servico_id),
-      empresa_id: data.empresa_id ?? null,
-      nome: data.nome,
-      descricao: data.descricao ?? null,
-      caminho: path.join(String(data.ordem_servico_id), fileName),
-      tamanho: data.arquivo.size,
-      mime_type: data.mime_type || data.arquivo.mimetype || null,
+    const registro = await prisma.ordem_servico_arquivos.create({
+      data: {
+        ordem_servico_id: String(data.ordem_servico_id),
+        empresa_id: data.empresa_id ?? null,
+        nome: data.nome,
+        descricao: data.descricao ?? null,
+        caminho: path.join(String(data.ordem_servico_id), fileName),
+        tamanho: data.arquivo.size,
+        mime_type: data.mime_type || data.arquivo.mimetype || null,
+      },
     });
 
     return this.toItem(registro);
   }
 
   static async delete(id: number, ordemServicoId: string): Promise<void> {
-    const registro = await OrdemServicoArquivo.findOne({
-      where: { id, ordem_servico_id: String(ordemServicoId) },
+    const registro = await prisma.ordem_servico_arquivos.findFirst({
+      where: { id: Number(id), ordem_servico_id: String(ordemServicoId) },
     });
     if (!registro) {
       throw new Error('Arquivo não encontrado');
@@ -80,15 +88,15 @@ export class OrdemServicoArquivoService {
       logger.warn('Erro ao deletar arquivo físico da OS', { id, error });
     }
 
-    await registro.destroy();
+    await prisma.ordem_servico_arquivos.delete({ where: { id: registro.id } });
   }
 
   static async getFileContent(
     id: number,
     ordemServicoId: string
   ): Promise<{ buffer: Buffer; nome: string; mimeType: string }> {
-    const registro = await OrdemServicoArquivo.findOne({
-      where: { id, ordem_servico_id: String(ordemServicoId) },
+    const registro = await prisma.ordem_servico_arquivos.findFirst({
+      where: { id: Number(id), ordem_servico_id: String(ordemServicoId) },
     });
     if (!registro) {
       throw new Error('Arquivo não encontrado');

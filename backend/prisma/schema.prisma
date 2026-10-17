@@ -1,0 +1,1959 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model agent_agents {
+  empresa_id           Int?
+  name                 String                @db.VarChar(100)
+  token_hash           String                @unique(map: "token_hash") @db.VarChar(64)
+  token_hint           String?               @db.VarChar(12)
+  description          String?               @db.VarChar(500)
+  is_active            Boolean               @default(true)
+  last_seen_at         DateTime?             @db.DateTime(0)
+  version              String?               @db.VarChar(50)
+  hostname             String?               @db.VarChar(255)
+  os_info              String?               @db.VarChar(255)
+  ip_address           String?               @db.VarChar(45)
+  created_at           DateTime              @default(now()) @db.DateTime(0)
+  updated_at           DateTime              @default(now()) @db.DateTime(0)
+  cliente_id           Int?
+  id                   Int                   @id @default(autoincrement())
+  connection_mode      String                @default("socket") @db.VarChar(20)
+  mikrotik_host        String?               @db.VarChar(255)
+  mikrotik_api_port    Int?
+  mikrotik_api_tls     Boolean               @default(false)
+  mikrotik_username    String?               @db.VarChar(64)
+  mikrotik_password    String?               @db.Text
+  wg_listen_port       Int?
+  wg_lan_cidrs         String?               @db.VarChar(500)
+  wg_interface_name    String?               @db.VarChar(15)
+  wg_our_public_key    String?               @db.VarChar(64)
+  wg_our_private_key   String?               @db.Text
+  wg_peer_public_key   String?               @db.VarChar(64)
+  wg_address_ours      String?               @db.VarChar(45)
+  wg_address_peer      String?               @db.VarChar(45)
+  wg_status            String                @default("idle") @db.VarChar(20)
+  wg_last_handshake_at DateTime?             @db.DateTime(0)
+  wg_last_error        String?               @db.VarChar(500)
+  clientes             clientes?             @relation(fields: [cliente_id], references: [id], map: "adm_agents_cliente_id_foreign_idx")
+  sistema_tenants      sistema_tenants?      @relation(fields: [empresa_id], references: [id], map: "agent_agents_ibfk_1")
+  ssh_manager_devices  ssh_manager_devices[]
+
+  @@index([cliente_id], map: "adm_agents_cliente_id")
+  @@index([empresa_id], map: "adm_agents_empresa_id")
+  @@index([is_active], map: "adm_agents_is_active")
+  @@index([token_hash], map: "adm_agents_token_hash")
+}
+
+model assinatura_digital_assinaturas {
+  id                  Int                                           @id @default(autoincrement())
+  termo_contrato_id   Int?
+  cliente_id          Int?
+  documento_tipo      assinatura_digital_assinaturas_documento_tipo @default(termo)
+  documento_id        Int?
+  api_provider        assinatura_digital_assinaturas_api_provider   @default(assinafy)
+  api_document_id     String?                                       @db.VarChar(255)
+  api_signature_id    String?                                       @db.VarChar(255)
+  status              assinatura_digital_assinaturas_status         @default(pendente)
+  url_assinatura      String?                                       @db.Text
+  email_assinante     String?                                       @db.VarChar(255)
+  nome_assinante      String?                                       @db.VarChar(255)
+  cpf_cnpj_assinante  String?                                       @db.VarChar(20)
+  data_envio          DateTime?                                     @db.DateTime(0)
+  data_assinatura     DateTime?                                     @db.DateTime(0)
+  data_expiracao      DateTime?                                     @db.DateTime(0)
+  pdf_assinado_url    String?                                       @db.Text
+  pdf_assinado_base64 String?                                       @db.LongText
+  metadata            String?                                       @db.LongText
+  erro_mensagem       String?                                       @db.Text
+  created_at          DateTime                                      @default(now()) @db.DateTime(0)
+  updated_at          DateTime                                      @default(now()) @db.DateTime(0)
+  empresa_id          Int?
+  contratos_termos    contratos_termos?                             @relation(fields: [termo_contrato_id], references: [id], onUpdate: Restrict, map: "assinatura_digital_assinaturas_ibfk_1")
+  clientes            clientes?                                     @relation(fields: [cliente_id], references: [id], onUpdate: Restrict, map: "assinatura_digital_assinaturas_ibfk_2")
+  sistema_tenants     sistema_tenants?                              @relation(fields: [empresa_id], references: [id], map: "assinaturas_digital_empresa_id_foreign_idx")
+
+  @@index([api_document_id], map: "assinaturas_digital_api_document_id")
+  @@index([api_signature_id], map: "assinaturas_digital_api_signature_id")
+  @@index([cliente_id], map: "assinaturas_digital_cliente_id")
+  @@index([email_assinante], map: "assinaturas_digital_email_assinante")
+  @@index([status], map: "assinaturas_digital_status")
+  @@index([termo_contrato_id], map: "assinaturas_digital_termo_contrato_id")
+  @@index([empresa_id], map: "idx_assinaturas_digital_empresa_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model assinatura_digital_providers {
+  id                    Int                                   @id @default(autoincrement())
+  provider              assinatura_digital_providers_provider @unique(map: "provider")
+  habilitado            Boolean                               @default(false)
+  api_key               String?                               @db.Text
+  account_id            String?                               @db.VarChar(255)
+  configuracao_extra    String?                               @db.LongText
+  dias_expiracao_padrao Int                                   @default(30)
+  created_at            DateTime                              @default(now()) @db.DateTime(0)
+  updated_at            DateTime                              @default(now()) @db.DateTime(0)
+  empresa_id            Int?
+  sistema_tenants       sistema_tenants?                      @relation(fields: [empresa_id], references: [id], map: "assinatura_digital_providers_empresa_id_foreign_idx")
+
+  @@unique([provider, empresa_id], map: "unique_provider_empresa")
+  @@index([empresa_id], map: "assinatura_digital_providers_empresa_id_foreign_idx")
+  @@index([habilitado], map: "idx_habilitado")
+}
+
+model atendimento_arquivos {
+  id             Int      @id @default(autoincrement())
+  empresa_id     Int?
+  atendimento_id String   @db.VarChar(32)
+  nome           String   @db.VarChar(255)
+  descricao      String?  @db.Text
+  caminho        String   @db.Text
+  tamanho        Int?
+  mime_type      String?  @db.VarChar(100)
+  created_at     DateTime @default(now()) @db.DateTime(0)
+  updated_at     DateTime @default(now()) @db.DateTime(0)
+
+  @@index([atendimento_id], map: "atendimento_arquivos_atendimento_id")
+  @@index([empresa_id], map: "atendimento_arquivos_empresa_id")
+}
+
+model atendimentos {
+  id                      Int                      @id @default(autoincrement())
+  empresa_id              Int?
+  cliente_id              Int
+  ixc_id                  String?                  @db.VarChar(32)
+  protocolo               String                   @unique(map: "atendimentos_protocolo_unique") @db.VarChar(32)
+  id_filial               String                   @default("") @db.VarChar(32)
+  id_estrutura            String                   @default("0") @db.VarChar(32)
+  id_assunto              String                   @default("") @db.VarChar(32)
+  id_ticket_setor         String                   @default("") @db.VarChar(32)
+  id_responsavel_technico String                   @default("") @db.VarChar(32)
+  titulo                  String                   @default("") @db.VarChar(255)
+  menssagem               String                   @db.Text
+  prioridade              String                   @default("N") @db.VarChar(1)
+  melhor_horario_reserve  String                   @default("Q") @db.VarChar(1)
+  data_reservada          String?                  @db.VarChar(19)
+  su_status               String                   @default("N") @db.VarChar(4)
+  tipo                    String                   @default("E") @db.VarChar(4)
+  data_criacao            String                   @db.VarChar(19)
+  ultima_atualizacao      String                   @db.VarChar(19)
+  created_at              DateTime                 @default(now()) @db.DateTime(0)
+  updated_at              DateTime                 @default(now()) @db.DateTime(0)
+  atendimentos_mensagens  atendimentos_mensagens[]
+  ordens_servico          ordens_servico[]
+
+  @@index([cliente_id], map: "atendimentos_cliente_id")
+  @@index([empresa_id], map: "atendimentos_empresa_id")
+  @@index([ixc_id], map: "atendimentos_ixc_id")
+}
+
+model atendimentos_departamentos {
+  id                         Int                      @id @default(autoincrement())
+  empresa_id                 Int?
+  integracao_ixc_provedor_id Int?
+  nome                       String                   @db.VarChar(255)
+  ixc_id                     String?                  @db.VarChar(32)
+  ixc                        Boolean                  @default(false)
+  created_at                 DateTime                 @default(now()) @db.DateTime(0)
+  updated_at                 DateTime                 @default(now()) @db.DateTime(0)
+  sistema_tenants            sistema_tenants?         @relation(fields: [empresa_id], references: [id], map: "atendimentos_departamentos_ibfk_1")
+  integracao_ixc_provedor    integracao_ixc_provedor? @relation(fields: [integracao_ixc_provedor_id], references: [id], map: "atendimentos_departamentos_ibfk_2")
+
+  @@unique([integracao_ixc_provedor_id, ixc_id], map: "atendimentos_departamentos_integracao_ixc_id")
+  @@index([empresa_id], map: "atendimentos_departamentos_empresa_id")
+  @@index([integracao_ixc_provedor_id], map: "atendimentos_departamentos_integracao_ixc_provedor_id")
+  @@index([ixc], map: "atendimentos_departamentos_ixc")
+  @@index([ixc_id], map: "atendimentos_departamentos_ixc_id")
+}
+
+model atendimentos_mensagens {
+  id                     Int          @id @default(autoincrement())
+  empresa_id             Int?
+  atendimento_id         Int
+  ixc_id                 String?      @db.VarChar(32)
+  mensagem               String       @db.Text
+  data                   String       @db.VarChar(19)
+  usuario_id             Int?
+  visibilidade_mensagens String       @default("E") @db.VarChar(1)
+  created_at             DateTime     @default(now()) @db.DateTime(0)
+  updated_at             DateTime     @default(now()) @db.DateTime(0)
+  atendimentos           atendimentos @relation(fields: [atendimento_id], references: [id], onDelete: Cascade, map: "atendimentos_mensagens_ibfk_1")
+
+  @@index([atendimento_id], map: "atendimentos_mensagens_atendimento_id")
+  @@index([empresa_id], map: "atendimentos_mensagens_empresa_id")
+}
+
+model atendimentos_tecnicos {
+  id                         Int                      @id @default(autoincrement())
+  empresa_id                 Int?
+  integracao_ixc_provedor_id Int?
+  nome                       String                   @db.VarChar(255)
+  ixc_id                     String?                  @db.VarChar(32)
+  ixc                        Boolean                  @default(false)
+  created_at                 DateTime                 @default(now()) @db.DateTime(0)
+  updated_at                 DateTime                 @default(now()) @db.DateTime(0)
+  sistema_tenants            sistema_tenants?         @relation(fields: [empresa_id], references: [id], map: "atendimentos_tecnicos_ibfk_1")
+  integracao_ixc_provedor    integracao_ixc_provedor? @relation(fields: [integracao_ixc_provedor_id], references: [id], map: "atendimentos_tecnicos_ibfk_2")
+
+  @@unique([integracao_ixc_provedor_id, ixc_id], map: "atendimentos_tecnicos_integracao_ixc_id")
+  @@index([empresa_id], map: "atendimentos_tecnicos_empresa_id")
+  @@index([integracao_ixc_provedor_id], map: "atendimentos_tecnicos_integracao_ixc_provedor_id")
+  @@index([ixc], map: "atendimentos_tecnicos_ixc")
+  @@index([ixc_id], map: "atendimentos_tecnicos_ixc_id")
+}
+
+model blockdomi_dominios {
+  id                           Int                           @id @default(autoincrement())
+  dominio                      String                        @unique(map: "dominios_dominio_unique") @db.VarChar(255)
+  descricao                    String?                       @db.Text
+  ativo                        Boolean                       @default(true)
+  created_at                   DateTime                      @default(now()) @db.DateTime(0)
+  updated_at                   DateTime                      @default(now()) @db.DateTime(0)
+  nome_oficio                  String?                       @db.VarChar(255)
+  data_inicio_bloqueio         DateTime?                     @db.Date
+  data_fim_bloqueio            DateTime?                     @db.Date
+  link_oficio_anatel           String?                       @db.Text
+  link_oficio_justica          String?                       @db.Text
+  link_planilha_dominios       String?                       @db.Text
+  versao_id                    Int?
+  empresa_id                   Int?
+  numero_sei_anatel_id         Int?
+  blockdomi_numeros_sei_anatel blockdomi_numeros_sei_anatel? @relation(fields: [numero_sei_anatel_id], references: [id], map: "adm_dominios_numero_sei_anatel_id_foreign_idx")
+  sistema_tenants              sistema_tenants?              @relation(fields: [empresa_id], references: [id], map: "dominios_empresa_id_foreign_idx")
+  blockdomi_versoes            blockdomi_versoes?            @relation(fields: [versao_id], references: [id], map: "dominios_versao_id_foreign_idx")
+
+  @@index([numero_sei_anatel_id], map: "adm_dominios_numero_sei_anatel_id_foreign_idx")
+  @@index([ativo], map: "dominios_ativo")
+  @@index([empresa_id], map: "dominios_empresa_id_foreign_idx")
+  @@index([versao_id], map: "dominios_versao_id_foreign_idx")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model blockdomi_ips_permitidos {
+  id              Int              @id @default(autoincrement())
+  cliente_id      Int              @unique(map: "ips_permitidos_blockdomi_cliente_id")
+  faixa_ips       String           @db.Text
+  created_at      DateTime         @default(now()) @db.DateTime(0)
+  updated_at      DateTime         @default(now()) @db.DateTime(0)
+  empresa_id      Int?
+  clientes        clientes         @relation(fields: [cliente_id], references: [id], onDelete: Cascade, map: "blockdomi_ips_permitidos_ibfk_1")
+  sistema_tenants sistema_tenants? @relation(fields: [empresa_id], references: [id], map: "ips_permitidos_blockdomi_empresa_id_foreign_idx")
+
+  @@index([empresa_id], map: "ips_permitidos_blockdomi_empresa_id_foreign_idx")
+}
+
+model blockdomi_ipv4 {
+  id                           Int                           @id @default(autoincrement())
+  ip                           String                        @unique(map: "ipv4_ip_unique") @db.VarChar(15)
+  descricao                    String?                       @db.Text
+  ativo                        Boolean                       @default(true)
+  created_at                   DateTime                      @default(now()) @db.DateTime(0)
+  updated_at                   DateTime                      @default(now()) @db.DateTime(0)
+  nome_oficio                  String?                       @db.VarChar(255)
+  data_inicio_bloqueio         DateTime?                     @db.Date
+  data_fim_bloqueio            DateTime?                     @db.Date
+  link_oficio_anatel           String?                       @db.Text
+  link_oficio_justica          String?                       @db.Text
+  link_planilha_dominios       String?                       @db.Text
+  versao_id                    Int?
+  empresa_id                   Int?
+  numero_sei_anatel_id         Int?
+  blockdomi_numeros_sei_anatel blockdomi_numeros_sei_anatel? @relation(fields: [numero_sei_anatel_id], references: [id], map: "adm_ipv4_numero_sei_anatel_id_foreign_idx")
+  sistema_tenants              sistema_tenants?              @relation(fields: [empresa_id], references: [id], map: "ipv4_empresa_id_foreign_idx")
+  blockdomi_versoes            blockdomi_versoes?            @relation(fields: [versao_id], references: [id], map: "ipv4_versao_id_foreign_idx")
+
+  @@index([numero_sei_anatel_id], map: "adm_ipv4_numero_sei_anatel_id_foreign_idx")
+  @@index([ativo], map: "ipv4_ativo")
+  @@index([empresa_id], map: "ipv4_empresa_id_foreign_idx")
+  @@index([versao_id], map: "ipv4_versao_id_foreign_idx")
+}
+
+model blockdomi_ipv6 {
+  id                           Int                           @id @default(autoincrement())
+  ip                           String                        @unique(map: "ipv6_ip_unique") @db.VarChar(45)
+  descricao                    String?                       @db.Text
+  ativo                        Boolean                       @default(true)
+  created_at                   DateTime                      @default(now()) @db.DateTime(0)
+  updated_at                   DateTime                      @default(now()) @db.DateTime(0)
+  nome_oficio                  String?                       @db.VarChar(255)
+  data_inicio_bloqueio         DateTime?                     @db.Date
+  data_fim_bloqueio            DateTime?                     @db.Date
+  link_oficio_anatel           String?                       @db.Text
+  link_oficio_justica          String?                       @db.Text
+  link_planilha_dominios       String?                       @db.Text
+  versao_id                    Int?
+  empresa_id                   Int?
+  numero_sei_anatel_id         Int?
+  blockdomi_numeros_sei_anatel blockdomi_numeros_sei_anatel? @relation(fields: [numero_sei_anatel_id], references: [id], map: "adm_ipv6_numero_sei_anatel_id_foreign_idx")
+  sistema_tenants              sistema_tenants?              @relation(fields: [empresa_id], references: [id], map: "ipv6_empresa_id_foreign_idx")
+  blockdomi_versoes            blockdomi_versoes?            @relation(fields: [versao_id], references: [id], map: "ipv6_versao_id_foreign_idx")
+
+  @@index([numero_sei_anatel_id], map: "adm_ipv6_numero_sei_anatel_id_foreign_idx")
+  @@index([ativo], map: "ipv6_ativo")
+  @@index([empresa_id], map: "ipv6_empresa_id_foreign_idx")
+  @@index([versao_id], map: "ipv6_versao_id_foreign_idx")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model blockdomi_numeros_sei_anatel {
+  id                 Int                  @id @default(autoincrement())
+  numero             String               @unique(map: "uniq_adm_numeros_sei_anatel_numero") @db.VarChar(32)
+  created_at         DateTime             @default(now()) @db.DateTime(0)
+  blockdomi_dominios blockdomi_dominios[]
+  blockdomi_ipv4     blockdomi_ipv4[]
+  blockdomi_ipv6     blockdomi_ipv6[]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model blockdomi_versoes {
+  id                  Int                   @id @default(autoincrement())
+  numero              String                @unique(map: "versoes_blockdomi_numero") @db.VarChar(12)
+  created_at          DateTime              @default(now()) @db.DateTime(0)
+  empresa_id          Int?
+  blockdomi_dominios  blockdomi_dominios[]
+  blockdomi_ipv4      blockdomi_ipv4[]
+  blockdomi_ipv6      blockdomi_ipv6[]
+  sistema_tenants     sistema_tenants?      @relation(fields: [empresa_id], references: [id], map: "versoes_blockdomi_empresa_id_foreign_idx")
+
+  @@index([empresa_id], map: "versoes_blockdomi_empresa_id_foreign_idx")
+}
+
+model cadastros_bancos {
+  id                         Int                         @id @default(autoincrement())
+  nome                       String                      @db.VarChar(255)
+  codigo                     String?                     @db.VarChar(10)
+  descricao                  String?                     @db.Text
+  ativo                      Boolean                     @default(true)
+  tipo_banco                 cadastros_bancos_tipo_banco @default(bancario)
+  api_url                    String?                     @db.VarChar(500)
+  api_key                    String?                     @db.VarChar(255)
+  api_secret                 String?                     @db.VarChar(255)
+  sandbox                    Boolean                     @default(true)
+  identificador_conta        String?                     @db.VarChar(100)
+  client_id_producao         String?                     @db.VarChar(255)
+  client_secret_producao     String?                     @db.VarChar(255)
+  url_retorno                String?                     @db.VarChar(500)
+  webhook_secret             String?                     @db.VarChar(255)
+  repassar_email_cliente     Boolean                     @default(false)
+  percentual_multa           Decimal?                    @default(2.00) @db.Decimal(5, 2)
+  percentual_juros           Decimal?                    @default(1.00) @db.Decimal(5, 2)
+  desconto_tipo              String?                     @db.VarChar(50)
+  desconto_valor             Decimal?                    @db.Decimal(10, 2)
+  contra_apresentacao        Boolean                     @default(false)
+  recalcular_segunda_via     Boolean                     @default(true)
+  maximo_dias_recalcular     Int?                        @default(30)
+  layout_web                 String?                     @db.Text
+  layout_pdf                 String?                     @db.Text
+  local_pagamento            String?                     @db.VarChar(255)
+  dados_avalista             String?                     @db.Text
+  exibir_mes_referente       Boolean                     @default(false)
+  taxa_cobranca              Decimal?                    @db.Decimal(10, 2)
+  incluir_taxa               Boolean                     @default(false)
+  observacao_linha_1         String?                     @db.VarChar(255)
+  observacao_linha_2         String?                     @db.VarChar(255)
+  observacao_linha_3         String?                     @db.VarChar(255)
+  observacao_linha_4         String?                     @db.VarChar(255)
+  instrucao_linha_1          String?                     @db.VarChar(255)
+  instrucao_linha_2          String?                     @db.VarChar(255)
+  instrucao_linha_3          String?                     @db.VarChar(255)
+  instrucao_linha_4          String?                     @db.VarChar(255)
+  instrucao_linha_5          String?                     @db.VarChar(255)
+  configuracoes              String?                     @db.LongText
+  logo                       String?                     @db.VarChar(500)
+  created_at                 DateTime                    @default(now()) @db.DateTime(0)
+  updated_at                 DateTime                    @default(now()) @db.DateTime(0)
+  empresa_id                 Int?
+  usar_integracao_banco_nfse Boolean                     @default(false)
+  sistema_tenants            sistema_tenants?            @relation(fields: [empresa_id], references: [id], map: "bancos_empresa_id_foreign_idx")
+  contratos                  contratos[]
+  financeiro_titulos         financeiro_titulos[]
+
+  @@index([ativo], map: "bancos_ativo")
+  @@index([nome], map: "bancos_nome")
+  @@index([tipo_banco], map: "bancos_tipo_banco")
+  @@index([empresa_id], map: "idx_bancos_empresa_id")
+}
+
+model cadastros_dias_vencimento {
+  id              Int              @id @default(autoincrement())
+  dia             Int?
+  dia_padrao      Int              @default(5)
+  ativo           Boolean          @default(true)
+  created_at      DateTime         @default(now()) @db.DateTime(0)
+  updated_at      DateTime         @default(now()) @db.DateTime(0)
+  empresa_id      Int?
+  sistema_tenants sistema_tenants? @relation(fields: [empresa_id], references: [id], map: "dias_vencimento_empresa_id_foreign_idx")
+  contratos       contratos[]
+
+  @@index([ativo], map: "dias_vencimento_ativo")
+  @@index([empresa_id], map: "dias_vencimento_empresa_id_foreign_idx")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model cadastros_planos {
+  id                          Int                             @id @default(autoincrement())
+  nome_plano                  String                          @db.VarChar(255)
+  descricao                   String?                         @db.Text
+  tipo_servico                cadastros_planos_tipo_servico   @default(consultoria)
+  servicos_inclusos           String?                         @db.LongText
+  quantidade_usuarios         Int?
+  valor_mensal                Decimal                         @db.Decimal(10, 2)
+  periodicidade               cadastros_planos_periodicidade? @default(mensal)
+  data_inicio                 DateTime?                       @db.DateTime(0)
+  data_fim                    DateTime?                       @db.DateTime(0)
+  status                      cadastros_planos_status         @default(ativo)
+  observacoes                 String?                         @db.Text
+  created_at                  DateTime                        @default(now()) @db.DateTime(0)
+  updated_at                  DateTime                        @default(now()) @db.DateTime(0)
+  empresa_id                  Int?
+  sistema_tenants             sistema_tenants?                @relation(fields: [empresa_id], references: [id], map: "planos_empresa_id_foreign_idx")
+  contratos                   contratos[]
+  contratos_planos_adicionais contratos_planos_adicionais[]
+  financeiro_titulos          financeiro_titulos[]
+
+  @@index([empresa_id], map: "idx_planos_empresa_id")
+  @@index([data_fim], map: "planos_data_fim")
+  @@index([data_inicio], map: "planos_data_inicio")
+  @@index([nome_plano], map: "planos_nome_plano")
+  @@index([status], map: "planos_status")
+  @@index([tipo_servico], map: "planos_tipo_servico")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model cadastros_tipos_cobranca_contrato {
+  id                 Int                                             @id @default(autoincrement())
+  nome               String                                          @db.VarChar(100)
+  quantidade_titulos Int
+  periodicidade      cadastros_tipos_cobranca_contrato_periodicidade @default(mensal)
+  ativo              Boolean                                         @default(true)
+  created_at         DateTime                                        @default(now()) @db.DateTime(0)
+  updated_at         DateTime                                        @default(now()) @db.DateTime(0)
+  empresa_id         Int?
+  sistema_tenants    sistema_tenants?                                @relation(fields: [empresa_id], references: [id], map: "tipos_cobranca_contrato_empresa_id_foreign_idx")
+  contratos          contratos[]
+
+  @@index([empresa_id], map: "idx_tipos_cobranca_contrato_empresa_id")
+}
+
+model cadastros_usuarios {
+  id                                Int                                 @id @default(autoincrement())
+  nome                              String                              @db.VarChar(150)
+  email                             String                              @unique(map: "email") @db.VarChar(180)
+  password_hash                     String                              @db.VarChar(255)
+  role                              String                              @default("admin") @db.VarChar(50)
+  ativo                             Boolean                             @default(true)
+  precisa_trocar_senha              Boolean                             @default(false)
+  ultimo_login                      DateTime?                           @db.DateTime(0)
+  webhook_secret                    String?                             @db.VarChar(255)
+  created_at                        DateTime                            @default(now()) @db.DateTime(0)
+  updated_at                        DateTime                            @default(now()) @db.DateTime(0)
+  empresa_id                        Int?
+  sistema_tenants                   sistema_tenants?                    @relation(fields: [empresa_id], references: [id], map: "usuarios_empresa_id_foreign_idx")
+  financeiro_conta_pagar_pagamentos financeiro_conta_pagar_pagamentos[]
+  ordens_servico_mensagens          ordens_servico_mensagens[]
+  sistema_logs_operacionais         sistema_logs_operacionais[]
+
+  @@index([empresa_id], map: "usuarios_empresa_id_foreign_idx")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model clientes {
+  id                             Int                              @id @default(autoincrement())
+  cnpj                           String                           @unique(map: "clientes_cnpj") @db.VarChar(18)
+  razao_social                   String                           @db.VarChar(255)
+  nome_fantasia                  String?                          @db.VarChar(255)
+  email                          String                           @db.VarChar(255)
+  telefone                       String?                          @db.VarChar(20)
+  whatsapp                       String?                          @db.VarChar(20)
+  cep                            String?                          @db.VarChar(10)
+  endereco                       String?                          @db.VarChar(255)
+  numero                         String?                          @db.VarChar(10)
+  complemento                    String?                          @db.VarChar(100)
+  bairro                         String?                          @db.VarChar(100)
+  cidade                         String?                          @db.VarChar(100)
+  estado                         String?                          @db.VarChar(2)
+  observacoes                    String?                          @db.Text
+  ativo                          Boolean                          @default(true)
+  tipo_cobranca                  clientes_tipo_cobranca           @default(titulo)
+  valor_primeiro_titulo          String                           @default("total") @db.VarChar(20)
+  recebe_email                   Boolean                          @default(true)
+  recebe_sms                     Boolean                          @default(false)
+  recebe_whatsapp                Boolean                          @default(false)
+  created_at                     DateTime                         @default(now()) @db.DateTime(0)
+  updated_at                     DateTime                         @default(now()) @db.DateTime(0)
+  central_assinante_senha        String?                          @db.VarChar(255)
+  empresa_id                     Int?
+  agent_agents                   agent_agents[]
+  assinatura_digital_assinaturas assinatura_digital_assinaturas[]
+  blockdomi_ips_permitidos       blockdomi_ips_permitidos?
+  sistema_tenants                sistema_tenants?                 @relation(fields: [empresa_id], references: [id], map: "clientes_empresa_id_foreign_idx")
+  clientes_arquivos              clientes_arquivos[]
+  contratos                      contratos[]
+  financeiro_titulos             financeiro_titulos[]
+  integracao_ixc_provedor        integracao_ixc_provedor[]
+  nfse_notas_fiscais             nfse_notas_fiscais[]
+  ordens_servico                 ordens_servico[]
+  rpki_cas                       rpki_cas[]
+  ssh_manager_devices            ssh_manager_devices[]
+
+  @@index([ativo], map: "clientes_ativo")
+  @@index([cidade], map: "clientes_cidade")
+  @@index([estado], map: "clientes_estado")
+  @@index([razao_social], map: "clientes_razao_social")
+  @@index([empresa_id], map: "idx_clientes_empresa_id")
+}
+
+model clientes_arquivos {
+  id              Int                      @id @default(autoincrement())
+  cliente_id      Int
+  nome            String                   @db.VarChar(255)
+  tipo            clientes_arquivos_tipo   @default(documento)
+  caminho         String                   @db.Text
+  tamanho         Int?
+  mime_type       String?                  @db.VarChar(100)
+  descricao       String?                  @db.Text
+  origem          clientes_arquivos_origem @default(manual)
+  referencia_id   Int?
+  referencia_tipo String?                  @db.VarChar(100)
+  created_at      DateTime                 @default(now()) @db.DateTime(0)
+  updated_at      DateTime                 @default(now()) @db.DateTime(0)
+  empresa_id      Int?
+  sistema_tenants sistema_tenants?         @relation(fields: [empresa_id], references: [id], map: "cliente_arquivos_empresa_id_foreign_idx")
+  clientes        clientes                 @relation(fields: [cliente_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "clientes_arquivos_ibfk_1")
+
+  @@index([cliente_id], map: "cliente_arquivos_cliente_id")
+  @@index([empresa_id], map: "cliente_arquivos_empresa_id_foreign_idx")
+  @@index([origem], map: "cliente_arquivos_origem")
+  @@index([referencia_tipo, referencia_id], map: "cliente_arquivos_referencia_tipo_referencia_id")
+  @@index([tipo], map: "cliente_arquivos_tipo")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model comunicacao_mensagens_email {
+  id              Int                                    @id @default(autoincrement())
+  tipo            String                                 @unique(map: "tipo") @db.VarChar(100)
+  tipo_envio      comunicacao_mensagens_email_tipo_envio @default(pdf)
+  mensagem_padrao String                                 @db.LongText
+  ativo           Boolean                                @default(true)
+  created_at      DateTime                               @default(now()) @db.DateTime(0)
+  updated_at      DateTime                               @default(now()) @db.DateTime(0)
+  mensagem_manual String?                                @db.LongText
+  empresa_id      Int?
+  sistema_tenants sistema_tenants?                       @relation(fields: [empresa_id], references: [id], map: "mensagens_email_empresa_id_foreign_idx")
+
+  @@index([empresa_id], map: "mensagens_email_empresa_id_foreign_idx")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model comunicacao_mensagens_whatsapp {
+  id                             Int                                       @id @default(autoincrement())
+  tipo                           String                                    @unique(map: "tipo") @db.VarChar(100)
+  tipo_envio                     comunicacao_mensagens_whatsapp_tipo_envio @default(pdf)
+  mensagem_padrao                String                                    @db.LongText
+  interacao1                     String?                                   @db.LongText
+  interacao2                     String?                                   @db.LongText
+  interacao3                     String?                                   @db.LongText
+  ativo                          Boolean                                   @default(true)
+  created_at                     DateTime                                  @default(now()) @db.DateTime(0)
+  updated_at                     DateTime                                  @default(now()) @db.DateTime(0)
+  mensagem_manual                String?                                   @db.LongText
+  empresa_id                     Int?
+  template_id                    Int?
+  sistema_tenants                sistema_tenants?                          @relation(fields: [empresa_id], references: [id], map: "mensagens_whatsapp_empresa_id_foreign_idx")
+  comunicacao_templates_whatsapp comunicacao_templates_whatsapp?           @relation(fields: [template_id], references: [id], map: "mensagens_whatsapp_template_id_foreign_idx")
+
+  @@index([empresa_id], map: "mensagens_whatsapp_empresa_id_foreign_idx")
+  @@index([template_id], map: "mensagens_whatsapp_template_id")
+}
+
+model comunicacao_servidores_email {
+  id                   Int              @id @default(autoincrement())
+  host                 String           @db.VarChar(255)
+  porta                Int
+  usuario              String           @db.VarChar(255)
+  senha                String           @db.VarChar(255)
+  ssl                  Boolean          @default(false)
+  tls                  Boolean          @default(true)
+  ativo                Boolean          @default(true)
+  nome_remetente       String           @db.VarChar(255)
+  email_remetente      String           @db.VarChar(255)
+  timeout              Int              @default(30000)
+  tentativas           Int              @default(3)
+  intervalo_tentativas Int              @default(5000)
+  created_at           DateTime         @default(now()) @db.DateTime(0)
+  updated_at           DateTime         @default(now()) @db.DateTime(0)
+  empresa_id           Int?
+  sistema_tenants      sistema_tenants? @relation(fields: [empresa_id], references: [id], map: "servidores_email_empresa_id_foreign_idx")
+
+  @@index([empresa_id], map: "comunicacao_servidores_email_empresa_id")
+  @@index([empresa_id, ativo], map: "comunicacao_servidores_email_empresa_id_ativo")
+  @@index([ativo], map: "servidores_email_ativo")
+  @@index([empresa_id], map: "servidores_email_empresa_id_foreign_idx")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model comunicacao_servidores_whatsapp {
+  id                                 Int                                            @id @default(autoincrement())
+  evolution_api_url                  String                                         @db.VarChar(500)
+  evolution_api_key                  String                                         @db.VarChar(500)
+  instance_name                      String                                         @db.VarChar(100)
+  qr_code                            String?                                        @db.Text
+  status_conexao                     comunicacao_servidores_whatsapp_status_conexao @default(disconnected)
+  webhook_url                        String?                                        @db.VarChar(500)
+  webhook_events                     String?                                        @db.Text
+  ativo                              Boolean                                        @default(true)
+  notificacoes_automaticas           Boolean                                        @default(false)
+  timeout                            Int                                            @default(30000)
+  tentativas                         Int                                            @default(3)
+  intervalo_tentativas               Int                                            @default(5000)
+  configuracao_extra                 String?                                        @db.Text
+  created_at                         DateTime                                       @default(now()) @db.DateTime(0)
+  updated_at                         DateTime                                       @default(now()) @db.DateTime(0)
+  tipo_api                           comunicacao_servidores_whatsapp_tipo_api       @default(evolution)
+  whatsapp_cloud_token               String?                                        @db.VarChar(500)
+  whatsapp_cloud_phone_number_id     String?                                        @db.VarChar(100)
+  whatsapp_cloud_business_account_id String?                                        @db.VarChar(100)
+  template_mapping                   String?                                        @db.Text
+  empresa_id                         Int?
+  sistema_tenants                    sistema_tenants?                               @relation(fields: [empresa_id], references: [id], map: "servidores_whatsapp_empresa_id_foreign_idx")
+
+  @@index([empresa_id], map: "comunicacao_servidores_whatsapp_empresa_id")
+  @@index([empresa_id, ativo], map: "comunicacao_servidores_whatsapp_empresa_id_ativo")
+  @@index([ativo], map: "servidores_whatsapp_ativo")
+  @@index([empresa_id], map: "servidores_whatsapp_empresa_id_foreign_idx")
+  @@index([instance_name], map: "servidores_whatsapp_instance_name")
+  @@index([status_conexao], map: "servidores_whatsapp_status_conexao")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model comunicacao_templates_whatsapp {
+  id                             Int                              @id @default(autoincrement())
+  empresa_id                     Int?
+  nome                           String                           @db.VarChar(100)
+  idioma                         String                           @default("pt_BR") @db.VarChar(20)
+  variables                      String?                          @db.Text
+  header_document                Boolean                          @default(false)
+  ativo                          Boolean                          @default(true)
+  created_at                     DateTime                         @default(now()) @db.DateTime(0)
+  updated_at                     DateTime                         @default(now()) @db.DateTime(0)
+  comunicacao_mensagens_whatsapp comunicacao_mensagens_whatsapp[]
+  sistema_tenants                sistema_tenants?                 @relation(fields: [empresa_id], references: [id], map: "comunicacao_templates_whatsapp_empresa_id_fk")
+
+  @@unique([nome, idioma], map: "templates_whatsapp_nome_idioma_unique")
+  @@index([empresa_id], map: "templates_whatsapp_empresa_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model contratos {
+  id                                Int                                 @id @default(autoincrement())
+  cliente_id                        Int
+  plano_id                          Int
+  desconto_percentual               Decimal?                            @db.Decimal(5, 2)
+  desconto_valor                    Decimal?                            @db.Decimal(10, 2)
+  valor_final                       Decimal?                            @db.Decimal(10, 2)
+  data_inicio                       DateTime?                           @db.DateTime(0)
+  data_fim                          DateTime?                           @db.DateTime(0)
+  status                            contratos_status                    @default(ativo)
+  observacoes                       String?                             @db.Text
+  isento_mensalidade                Boolean                             @default(false)
+  dia_vencimento_id                 Int?
+  conta_boleto                      Int?
+  data_validade_desconto            DateTime?                           @db.DateTime(0)
+  modelo_documento_id               Int?
+  created_at                        DateTime                            @default(now()) @db.DateTime(0)
+  updated_at                        DateTime                            @default(now()) @db.DateTime(0)
+  endereco                          String?                             @db.VarChar(255)
+  numero                            String?                             @db.VarChar(20)
+  complemento                       String?                             @db.VarChar(100)
+  bairro                            String?                             @db.VarChar(100)
+  cidade                            String?                             @db.VarChar(100)
+  estado                            String?                             @db.VarChar(2)
+  usar_endereco_cliente             Boolean                             @default(false)
+  tipo_cobranca_contrato_id         Int?
+  empresa_id                        Int?
+  sistema_tenants                   sistema_tenants?                    @relation(fields: [empresa_id], references: [id], map: "contratos_empresa_id_foreign_idx")
+  clientes                          clientes                            @relation(fields: [cliente_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "contratos_ibfk_1")
+  cadastros_planos                  cadastros_planos                    @relation(fields: [plano_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "contratos_ibfk_2")
+  cadastros_dias_vencimento         cadastros_dias_vencimento?          @relation(fields: [dia_vencimento_id], references: [id], map: "contratos_ibfk_3")
+  cadastros_bancos                  cadastros_bancos?                   @relation(fields: [conta_boleto], references: [id], onUpdate: Restrict, map: "contratos_ibfk_4")
+  documentos_modelo                 documentos_modelo?                  @relation(fields: [modelo_documento_id], references: [id], map: "contratos_modelo_documento_fk")
+  cadastros_tipos_cobranca_contrato cadastros_tipos_cobranca_contrato?  @relation(fields: [tipo_cobranca_contrato_id], references: [id], map: "contratos_tipo_cobranca_contrato_id_foreign_idx")
+  contratos_integracao_ixc_vinculos contratos_integracao_ixc_vinculos[]
+  contratos_planos_adicionais       contratos_planos_adicionais[]
+  contratos_termos                  contratos_termos[]
+  financeiro_titulos                financeiro_titulos[]
+
+  @@index([cliente_id], map: "contratos_cliente_id")
+  @@index([cliente_id, plano_id], map: "contratos_cliente_plano_index")
+  @@index([modelo_documento_id], map: "contratos_modelo_documento_fk")
+  @@index([plano_id], map: "contratos_plano_id")
+  @@index([status], map: "contratos_status")
+  @@index([dia_vencimento_id], map: "dia_vencimento_id")
+  @@index([cliente_id, status], map: "idx_contratos_cliente_status")
+  @@index([conta_boleto, status], map: "idx_contratos_conta_boleto_status")
+  @@index([empresa_id], map: "idx_contratos_empresa_id")
+  @@index([status, data_inicio], map: "idx_contratos_status_data_inicio")
+  @@index([tipo_cobranca_contrato_id], map: "tipo_cobranca_contrato_id")
+}
+
+model contratos_integracao_ixc_vinculos {
+  id                         Int                     @id @default(autoincrement())
+  empresa_id                 Int?
+  contrato_id                Int
+  integracao_ixc_provedor_id Int
+  created_at                 DateTime                @default(now()) @db.DateTime(0)
+  updated_at                 DateTime                @default(now()) @db.DateTime(0)
+  sistema_tenants            sistema_tenants?        @relation(fields: [empresa_id], references: [id], map: "contratos_integracao_ixc_vinculos_empresa_id_fk")
+  contratos                  contratos               @relation(fields: [contrato_id], references: [id], onDelete: Cascade, map: "contratos_integracao_ixc_vinculos_ibfk_1")
+  integracao_ixc_provedor    integracao_ixc_provedor @relation(fields: [integracao_ixc_provedor_id], references: [id], onDelete: Cascade, map: "contratos_integracao_ixc_vinculos_ibfk_2")
+
+  @@unique([contrato_id, integracao_ixc_provedor_id], map: "adm_contratos_ixc_vinculos_contrato_integracao_unique")
+  @@index([contrato_id], map: "adm_contratos_ixc_vinculos_contrato_id_idx")
+  @@index([integracao_ixc_provedor_id], map: "adm_contratos_ixc_vinculos_integracao_id_idx")
+  @@index([empresa_id], map: "contratos_integracao_ixc_vinculos_empresa_id_fk")
+}
+
+model contratos_planos_adicionais {
+  id                  Int                                @id @default(autoincrement())
+  contrato_id         Int
+  plano_id            Int
+  desconto_percentual Decimal?                           @db.Decimal(5, 2)
+  desconto_valor      Decimal?                           @db.Decimal(10, 2)
+  valor_final         Decimal?                           @db.Decimal(10, 2)
+  status              contratos_planos_adicionais_status @default(ativo)
+  observacoes         String?                            @db.Text
+  created_at          DateTime                           @default(now()) @db.DateTime(0)
+  updated_at          DateTime                           @default(now()) @db.DateTime(0)
+  empresa_id          Int?
+  sistema_tenants     sistema_tenants?                   @relation(fields: [empresa_id], references: [id], map: "contrato_planos_adicionais_empresa_id_foreign_idx")
+  contratos           contratos                          @relation(fields: [contrato_id], references: [id], onDelete: Cascade, map: "contratos_planos_adicionais_ibfk_1")
+  cadastros_planos    cadastros_planos                   @relation(fields: [plano_id], references: [id], onDelete: Cascade, map: "contratos_planos_adicionais_ibfk_2")
+
+  @@index([contrato_id], map: "contrato_planos_adicionais_contrato_id")
+  @@index([empresa_id], map: "contrato_planos_adicionais_empresa_id_foreign_idx")
+  @@index([plano_id], map: "contrato_planos_adicionais_plano_id")
+  @@index([status], map: "contrato_planos_adicionais_status")
+}
+
+model contratos_termos {
+  id                             Int                              @id @default(autoincrement())
+  contrato_id                    Int
+  modelo_documento_id            Int?
+  tipo_termo                     contratos_termos_tipo_termo
+  conteudo                       String                           @db.LongText
+  data_aceite                    DateTime?                        @db.DateTime(0)
+  aceito_por                     String?                          @db.VarChar(255)
+  assinado                       contratos_termos_assinado        @default(NAO)
+  observacoes                    String?                          @db.Text
+  ativo                          Boolean                          @default(true)
+  created_at                     DateTime                         @default(now()) @db.DateTime(0)
+  updated_at                     DateTime                         @default(now()) @db.DateTime(0)
+  empresa_id                     Int?
+  assinatura_digital_assinaturas assinatura_digital_assinaturas[]
+  contratos                      contratos                        @relation(fields: [contrato_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "contratos_termos_ibfk_1")
+  sistema_tenants                sistema_tenants?                 @relation(fields: [empresa_id], references: [id], map: "termos_contrato_empresa_id_foreign_idx")
+  documentos_modelo              documentos_modelo?               @relation(fields: [modelo_documento_id], references: [id], map: "termos_contrato_modelo_documento_fk")
+
+  @@index([ativo], map: "termos_contrato_ativo")
+  @@index([contrato_id], map: "termos_contrato_contrato_id")
+  @@index([empresa_id], map: "termos_contrato_empresa_id_foreign_idx")
+  @@index([modelo_documento_id], map: "termos_contrato_modelo_documento_id")
+  @@index([tipo_termo], map: "termos_contrato_tipo_termo")
+}
+
+model documentos_modelo {
+  id                   Int                    @id @default(autoincrement())
+  nome                 String                 @db.VarChar(255)
+  tipo                 documentos_modelo_tipo
+  conteudo             String?                @db.LongText
+  conteudo_adesao      String?                @db.LongText
+  conteudo_permanencia String?                @db.LongText
+  descricao            String?                @db.Text
+  ativo                Boolean                @default(true)
+  tamanho_maximo       Int                    @default(10485760)
+  tipos_permitidos     String                 @default("pdf,doc,docx,xls,xlsx") @db.VarChar(255)
+  retencao_dias        Int                    @default(365)
+  auto_backup          Boolean                @default(false)
+  criptografia         Boolean                @default(false)
+  created_at           DateTime               @default(now()) @db.DateTime(0)
+  updated_at           DateTime               @default(now()) @db.DateTime(0)
+  conteudo_recibo      String?                @db.LongText
+  conteudo_carta       String?                @db.LongText
+  empresa_id           Int?
+  contratos            contratos[]
+  contratos_termos     contratos_termos[]
+  sistema_tenants      sistema_tenants?       @relation(fields: [empresa_id], references: [id], map: "modelo_documento_empresa_id_foreign_idx")
+
+  @@index([empresa_id], map: "idx_modelo_documento_empresa_id")
+  @@index([ativo], map: "modelo_documento_ativo")
+  @@index([tipo], map: "modelo_documento_tipo")
+}
+
+model financeiro_conta_pagar_pagamentos {
+  id                      Int                                              @id @default(autoincrement())
+  conta_pagar_id          Int
+  data                    DateTime                                         @default(now()) @db.DateTime(0)
+  valor                   Decimal                                          @db.Decimal(10, 2)
+  tipo_pagamento          financeiro_conta_pagar_pagamentos_tipo_pagamento
+  usuario_id              Int?
+  observacao              String?                                          @db.Text
+  created_at              DateTime                                         @default(now()) @db.DateTime(0)
+  empresa_id              Int?
+  sistema_tenants         sistema_tenants?                                 @relation(fields: [empresa_id], references: [id], map: "conta_pagar_pagamentos_empresa_id_foreign_idx")
+  financeiro_contas_pagar financeiro_contas_pagar                          @relation(fields: [conta_pagar_id], references: [id], onDelete: Cascade, map: "financeiro_conta_pagar_pagamentos_ibfk_1")
+  cadastros_usuarios      cadastros_usuarios?                              @relation(fields: [usuario_id], references: [id], map: "financeiro_conta_pagar_pagamentos_ibfk_2")
+
+  @@index([conta_pagar_id], map: "conta_pagar_pagamentos_conta_pagar_id")
+  @@index([data], map: "conta_pagar_pagamentos_data")
+  @@index([empresa_id], map: "conta_pagar_pagamentos_empresa_id_foreign_idx")
+  @@index([tipo_pagamento], map: "conta_pagar_pagamentos_tipo_pagamento")
+  @@index([usuario_id], map: "conta_pagar_pagamentos_usuario_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model financeiro_contas_pagar {
+  id                                Int                                     @id @default(autoincrement())
+  fornecedor_id                     Int
+  data_vencimento                   DateTime                                @db.DateTime(0)
+  valor                             Decimal                                 @db.Decimal(10, 2)
+  tipo_pagamento                    financeiro_contas_pagar_tipo_pagamento  @default(PIX)
+  numero_documento                  String?                                 @db.VarChar(100)
+  nota_fiscal                       String?                                 @db.VarChar(100)
+  observacoes                       String?                                 @db.Text
+  status                            financeiro_contas_pagar_status          @default(A_PAGAR)
+  valor_pago                        Decimal                                 @default(0.00) @db.Decimal(10, 2)
+  data_pagamento                    DateTime?                               @db.DateTime(0)
+  data_cadastro                     DateTime                                @default(now()) @db.DateTime(0)
+  created_at                        DateTime                                @default(now()) @db.DateTime(0)
+  updated_at                        DateTime                                @default(now()) @db.DateTime(0)
+  linha_digitavel                   String?                                 @db.VarChar(200)
+  tipo_chave_pix                    financeiro_contas_pagar_tipo_chave_pix?
+  chave_pix                         String?                                 @db.VarChar(200)
+  descricao                         String?                                 @db.Text
+  empresa_id                        Int?
+  financeiro_conta_pagar_pagamentos financeiro_conta_pagar_pagamentos[]
+  sistema_tenants                   sistema_tenants?                        @relation(fields: [empresa_id], references: [id], map: "contas_pagar_empresa_id_foreign_idx")
+  financeiro_fornecedores           financeiro_fornecedores                 @relation(fields: [fornecedor_id], references: [id], map: "financeiro_contas_pagar_ibfk_1")
+
+  @@index([data_pagamento], map: "contas_pagar_data_pagamento")
+  @@index([data_vencimento], map: "contas_pagar_data_vencimento")
+  @@index([fornecedor_id], map: "contas_pagar_fornecedor_id")
+  @@index([status], map: "contas_pagar_status")
+  @@index([tipo_pagamento], map: "contas_pagar_tipo_pagamento")
+  @@index([empresa_id], map: "idx_contas_pagar_empresa_id")
+}
+
+model financeiro_fornecedores {
+  id                      Int                                 @id @default(autoincrement())
+  tipo_pessoa             financeiro_fornecedores_tipo_pessoa
+  nome_razao_social       String                              @db.VarChar(255)
+  nome_fantasia           String?                             @db.VarChar(255)
+  cpf_cnpj                String                              @unique(map: "cpf_cnpj") @db.VarChar(18)
+  cep                     String?                             @db.VarChar(10)
+  logradouro              String?                             @db.VarChar(255)
+  numero                  String?                             @db.VarChar(20)
+  complemento             String?                             @db.VarChar(100)
+  bairro                  String?                             @db.VarChar(100)
+  cidade                  String?                             @db.VarChar(100)
+  estado                  String?                             @db.VarChar(2)
+  pais                    String?                             @default("Brasil") @db.VarChar(100)
+  observacoes             String?                             @db.Text
+  created_at              DateTime                            @default(now()) @db.DateTime(0)
+  updated_at              DateTime                            @default(now()) @db.DateTime(0)
+  empresa_id              Int?
+  financeiro_contas_pagar financeiro_contas_pagar[]
+  sistema_tenants         sistema_tenants?                    @relation(fields: [empresa_id], references: [id], map: "fornecedores_empresa_id_foreign_idx")
+
+  @@index([cidade], map: "fornecedores_cidade")
+  @@index([estado], map: "fornecedores_estado")
+  @@index([nome_razao_social], map: "fornecedores_nome_razao_social")
+  @@index([tipo_pessoa], map: "fornecedores_tipo_pessoa")
+  @@index([empresa_id], map: "idx_fornecedores_empresa_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model financeiro_titulos {
+  id                                                                       Int                       @id @default(autoincrement())
+  cliente_id                                                               Int
+  plano_id                                                                 Int
+  banco_id                                                                 Int
+  contrato_id                                                              Int?
+  numero_titulo                                                            String                    @unique(map: "numero_titulo") @db.VarChar(100)
+  valor                                                                    Decimal                   @db.Decimal(10, 2)
+  data_vencimento                                                          DateTime                  @db.DateTime(0)
+  status                                                                   financeiro_titulos_status @default(pendente)
+  pago                                                                     Boolean                   @default(false)
+  data_pagamento                                                           DateTime?                 @db.DateTime(0)
+  valor_pago                                                               Decimal?                  @db.Decimal(10, 2)
+  valor_aberto                                                             Decimal?                  @db.Decimal(10, 2)
+  codigo_barras                                                            String?                   @db.VarChar(255)
+  linha_digitavel                                                          String?                   @db.VarChar(255)
+  qrcode                                                                   String?                   @db.Text
+  qrcode_image                                                             String?                   @db.Text
+  observacoes                                                              String?                   @db.Text
+  desconto_percentual                                                      Decimal?                  @db.Decimal(5, 2)
+  desconto_valor                                                           Decimal?                  @db.Decimal(10, 2)
+  acrescimo_percentual                                                     Decimal?                  @db.Decimal(5, 2)
+  acrescimo_valor                                                          Decimal?                  @db.Decimal(10, 2)
+  valor_final                                                              Decimal?                  @db.Decimal(10, 2)
+  descricao                                                                String?                   @db.Text
+  charge_id                                                                String?                   @db.VarChar(100)
+  url_boleto                                                               String?                   @db.VarChar(500)
+  nosso_numero                                                             String?                   @db.VarChar(50)
+  created_at                                                               DateTime                  @default(now()) @db.DateTime(0)
+  updated_at                                                               DateTime                  @default(now()) @db.DateTime(0)
+  is_avulso                                                                Boolean                   @default(false)
+  nota_fiscal_id                                                           Int?
+  empresa_id                                                               Int?
+  clientes                                                                 clientes                  @relation(fields: [cliente_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "financeiro_titulos_ibfk_1")
+  cadastros_planos                                                         cadastros_planos          @relation(fields: [plano_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "financeiro_titulos_ibfk_2")
+  cadastros_bancos                                                         cadastros_bancos          @relation(fields: [banco_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "financeiro_titulos_ibfk_3")
+  contratos                                                                contratos?                @relation(fields: [contrato_id], references: [id], onUpdate: Restrict, map: "financeiro_titulos_ibfk_4")
+  sistema_tenants                                                          sistema_tenants?          @relation(fields: [empresa_id], references: [id], map: "titulos_empresa_id_foreign_idx")
+  nfse_notas_fiscais_financeiro_titulos_nota_fiscal_idTonfse_notas_fiscais nfse_notas_fiscais?       @relation("financeiro_titulos_nota_fiscal_idTonfse_notas_fiscais", fields: [nota_fiscal_id], references: [id], map: "titulos_nota_fiscal_id_foreign_idx")
+  nfse_notas_fiscais_nfse_notas_fiscais_titulo_idTofinanceiro_titulos      nfse_notas_fiscais[]      @relation("nfse_notas_fiscais_titulo_idTofinanceiro_titulos")
+
+  @@index([charge_id], map: "idx_titulos_charge_id")
+  @@index([contrato_id, status], map: "idx_titulos_contrato_status")
+  @@index([data_pagamento], map: "idx_titulos_data_pagamento")
+  @@index([empresa_id], map: "idx_titulos_empresa_id")
+  @@index([nota_fiscal_id], map: "idx_titulos_nota_fiscal_id")
+  @@index([status, charge_id], map: "idx_titulos_status_charge_id")
+  @@index([status, data_vencimento], map: "idx_titulos_status_data_vencimento")
+  @@index([status, pago], map: "idx_titulos_status_pago")
+  @@index([banco_id], map: "titulos_banco_id")
+  @@index([cliente_id], map: "titulos_cliente_id")
+  @@index([contrato_id], map: "titulos_contrato_id")
+  @@index([data_vencimento], map: "titulos_data_vencimento")
+  @@index([pago], map: "titulos_pago")
+  @@index([plano_id], map: "titulos_plano_id")
+  @@index([status], map: "titulos_status")
+}
+
+model integracao_ixc_provedor {
+  id                                Int                                 @id @default(autoincrement())
+  empresa_id                        Int?
+  nome                              String                              @db.VarChar(200)
+  api_url                           String?                             @db.VarChar(500)
+  api_token                         String?                             @db.Text
+  ativo                             Boolean                             @default(false)
+  created_at                        DateTime                            @default(now()) @db.DateTime(0)
+  updated_at                        DateTime                            @default(now()) @db.DateTime(0)
+  cliente_id                        Int?
+  atendimentos_departamentos        atendimentos_departamentos[]
+  atendimentos_tecnicos             atendimentos_tecnicos[]
+  contratos_integracao_ixc_vinculos contratos_integracao_ixc_vinculos[]
+  clientes                          clientes?                           @relation(fields: [cliente_id], references: [id], onDelete: Restrict, map: "integracao_ixc_provedor_cliente_id_foreign_idx")
+  sistema_tenants                   sistema_tenants?                    @relation(fields: [empresa_id], references: [id], map: "integracao_ixc_provedor_empresa_id_fk")
+  ordens_servico                    ordens_servico[]
+  ordens_servico_assuntos           ordens_servico_assuntos[]
+  ordens_servico_estruturas         ordens_servico_estruturas[]
+  ordens_servico_filiais            ordens_servico_filiais[]
+  ordens_servico_setores            ordens_servico_setores[]
+  ordens_servico_tecnicos           ordens_servico_tecnicos[]
+
+  @@index([cliente_id])
+  @@index([empresa_id], map: "integracao_ixc_provedor_empresa_id_fk")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model nfse_config {
+  id                         Int                                  @id @unique(map: "nfse_config_id_unique") @default(autoincrement())
+  codigo_servico_municipal   String?                              @db.VarChar(20)
+  aliquota_iss               Decimal                              @default(0.00) @db.Decimal(5, 2)
+  descricao_servico          String?                              @db.Text
+  serie_nf                   String?                              @default("80000") @db.VarChar(10)
+  numero_dps                 Int?                                 @default(1)
+  portal_nacional_username   String?                              @db.VarChar(255)
+  portal_nacional_password   String?                              @db.VarChar(255)
+  portal_nacional_base_url   String?                              @default("https://sefin.producaorestrita.nfse.gov.br/API/SefinNacional") @db.VarChar(500)
+  portal_nacional_ambiente   nfse_config_portal_nacional_ambiente @default(HOMOLOGACAO)
+  asaas_api_key              String?                              @db.VarChar(255)
+  asaas_sandbox              Boolean                              @default(false)
+  provider                   nfse_config_provider                 @default(PORTAL_NACIONAL)
+  created_at                 DateTime                             @default(now()) @db.DateTime(0)
+  updated_at                 DateTime                             @default(now()) @db.DateTime(0)
+  empresa_id                 Int?
+  certificado_pfx            String?                              @db.MediumText
+  certificado_senha          String?                              @db.VarChar(512)
+  certificado_titular        String?                              @db.VarChar(255)
+  certificado_cnpj           String?                              @db.VarChar(14)
+  certificado_validade       DateTime?                            @db.DateTime(0)
+  op_simples_nacional        Int                                  @default(1)
+  regime_especial_tributacao Int                                  @default(0)
+  regime_apuracao_sn         Int?
+  tp_ret_issqn               Int                                  @default(1)
+  sistema_tenants            sistema_tenants?                     @relation(fields: [empresa_id], references: [id], map: "nfse_config_empresa_id_foreign_idx")
+
+  @@index([empresa_id], map: "nfse_config_empresa_id_foreign_idx")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model nfse_notas_fiscais {
+  id                                                                       Int                              @id @default(autoincrement())
+  cliente_id                                                               Int
+  titulo_id                                                                Int?
+  numero                                                                   String?                          @db.VarChar(50)
+  serie                                                                    String?                          @db.VarChar(10)
+  chave_acesso                                                             String?                          @unique(map: "chave_acesso") @db.VarChar(50)
+  status                                                                   nfse_notas_fiscais_status        @default(PENDENTE)
+  nfse_status                                                              nfse_notas_fiscais_nfse_status?
+  asaas_invoice_id                                                         String?                          @db.VarChar(50)
+  tipo_operacao                                                            nfse_notas_fiscais_tipo_operacao @default(SAIDA)
+  modelo                                                                   Int                              @default(55)
+  natureza_operacao                                                        String                           @default("PRESTAÇÃO DE SERVIÇOS") @db.VarChar(100)
+  data_emissao                                                             DateTime                         @default(now()) @db.DateTime(0)
+  data_vencimento                                                          DateTime?                        @db.DateTime(0)
+  valor_total                                                              Decimal                          @default(0.00) @db.Decimal(10, 2)
+  valor_produtos                                                           Decimal                          @default(0.00) @db.Decimal(10, 2)
+  valor_servicos                                                           Decimal                          @default(0.00) @db.Decimal(10, 2)
+  valor_desconto                                                           Decimal                          @default(0.00) @db.Decimal(10, 2)
+  valor_icms                                                               Decimal                          @default(0.00) @db.Decimal(10, 2)
+  valor_iss                                                                Decimal                          @default(0.00) @db.Decimal(10, 2)
+  aliquota_iss                                                             Decimal                          @default(0.00) @db.Decimal(5, 2)
+  cst_icms                                                                 String?                          @db.VarChar(3)
+  cfop                                                                     String?                          @db.VarChar(4)
+  descricao                                                                String?                          @db.Text
+  observacoes                                                              String?                          @db.Text
+  xml                                                                      String?                          @db.LongText
+  pdf_url                                                                  String?                          @db.VarChar(500)
+  pdf_base64                                                               String?                          @db.LongText
+  danfe_url                                                                String?                          @db.VarChar(500)
+  protocolo                                                                String?                          @db.VarChar(50)
+  data_autorizacao                                                         DateTime?                        @db.DateTime(0)
+  mensagem_erro                                                            String?                          @db.Text
+  codigo_erro                                                              String?                          @db.VarChar(10)
+  created_at                                                               DateTime                         @default(now()) @db.DateTime(0)
+  updated_at                                                               DateTime                         @default(now()) @db.DateTime(0)
+  empresa_id                                                               Int?
+  financeiro_titulos_financeiro_titulos_nota_fiscal_idTonfse_notas_fiscais financeiro_titulos[]             @relation("financeiro_titulos_nota_fiscal_idTonfse_notas_fiscais")
+  clientes                                                                 clientes                         @relation(fields: [cliente_id], references: [id], map: "nfse_notas_fiscais_ibfk_1")
+  financeiro_titulos_nfse_notas_fiscais_titulo_idTofinanceiro_titulos      financeiro_titulos?              @relation("nfse_notas_fiscais_titulo_idTofinanceiro_titulos", fields: [titulo_id], references: [id], map: "nfse_notas_fiscais_ibfk_2")
+  sistema_tenants                                                          sistema_tenants?                 @relation(fields: [empresa_id], references: [id], map: "notas_fiscais_empresa_id_foreign_idx")
+
+  @@index([asaas_invoice_id], map: "idx_notas_fiscais_asaas_invoice_id")
+  @@index([nfse_status], map: "idx_notas_fiscais_nfse_status")
+  @@index([titulo_id], map: "idx_notas_fiscais_titulo_id")
+  @@index([chave_acesso], map: "notas_fiscais_chave_acesso")
+  @@index([cliente_id], map: "notas_fiscais_cliente_id")
+  @@index([data_autorizacao], map: "notas_fiscais_data_autorizacao")
+  @@index([data_emissao], map: "notas_fiscais_data_emissao")
+  @@index([empresa_id], map: "notas_fiscais_empresa_id_foreign_idx")
+  @@index([numero], map: "notas_fiscais_numero")
+  @@index([status], map: "notas_fiscais_status")
+}
+
+model ordem_servico_arquivos {
+  id               Int              @id @default(autoincrement())
+  empresa_id       Int?
+  ordem_servico_id String           @db.VarChar(32)
+  nome             String           @db.VarChar(255)
+  descricao        String?          @db.Text
+  caminho          String           @db.Text
+  tamanho          Int?
+  mime_type        String?          @db.VarChar(100)
+  created_at       DateTime         @default(now()) @db.DateTime(0)
+  updated_at       DateTime         @default(now()) @db.DateTime(0)
+  sistema_tenants  sistema_tenants? @relation(fields: [empresa_id], references: [id], map: "ordem_servico_arquivos_empresa_id_fk")
+
+  @@index([empresa_id], map: "ordem_servico_arquivos_empresa_id")
+  @@index([ordem_servico_id], map: "ordem_servico_arquivos_ordem_servico_id")
+}
+
+model ordens_servico {
+  id                         Int                        @id @default(autoincrement())
+  empresa_id                 Int?
+  cliente_id                 Int
+  prioridade                 String                     @default("N") @db.VarChar(1)
+  melhor_horario_agenda      String                     @default("Q") @db.VarChar(1)
+  data_agenda                String?                    @db.VarChar(19)
+  mensagem                   String                     @db.Text
+  status                     String                     @default("A") @db.VarChar(4)
+  protocolo                  String                     @unique(map: "ordens_servico_protocolo_unique") @db.VarChar(32)
+  data_abertura              String                     @db.VarChar(19)
+  created_at                 DateTime                   @default(now()) @db.DateTime(0)
+  updated_at                 DateTime                   @default(now()) @db.DateTime(0)
+  ixc_id                     String?                    @db.VarChar(32)
+  id_filial                  String                     @default("") @db.VarChar(32)
+  id_estrutura               String                     @default("0") @db.VarChar(32)
+  id_assunto                 String                     @default("") @db.VarChar(32)
+  setor                      String                     @default("") @db.VarChar(32)
+  id_tecnico                 String                     @default("") @db.VarChar(32)
+  tipo                       String                     @default("E") @db.VarChar(4)
+  atendimento_id             Int?
+  atendimento_ixc_id         String?                    @db.VarChar(32)
+  integracao_ixc_provedor_id Int?
+  atendimentos               atendimentos?              @relation(fields: [atendimento_id], references: [id], map: "ordens_servico_atendimento_id_foreign_idx")
+  clientes                   clientes                   @relation(fields: [cliente_id], references: [id], onDelete: Cascade, map: "ordens_servico_cliente_id_fk")
+  sistema_tenants            sistema_tenants?           @relation(fields: [empresa_id], references: [id], map: "ordens_servico_empresa_id_fk")
+  integracao_ixc_provedor    integracao_ixc_provedor?   @relation(fields: [integracao_ixc_provedor_id], references: [id], map: "ordens_servico_integracao_ixc_provedor_id_foreign_idx")
+  ordens_servico_mensagens   ordens_servico_mensagens[]
+
+  @@index([atendimento_id], map: "ordens_servico_atendimento_id")
+  @@index([atendimento_ixc_id], map: "ordens_servico_atendimento_ixc_id")
+  @@index([cliente_id], map: "ordens_servico_cliente_id")
+  @@index([empresa_id], map: "ordens_servico_empresa_id")
+  @@index([integracao_ixc_provedor_id], map: "ordens_servico_integracao_ixc_provedor_id")
+  @@index([ixc_id], map: "ordens_servico_ixc_id")
+}
+
+model ordens_servico_assuntos {
+  id                         Int                      @id @default(autoincrement())
+  empresa_id                 Int?
+  nome                       String                   @db.VarChar(255)
+  ixc_id                     String?                  @db.VarChar(32)
+  ixc                        Boolean                  @default(false)
+  created_at                 DateTime                 @default(now()) @db.DateTime(0)
+  updated_at                 DateTime                 @default(now()) @db.DateTime(0)
+  integracao_ixc_provedor_id Int?
+  sistema_tenants            sistema_tenants?         @relation(fields: [empresa_id], references: [id], map: "ordens_servico_assuntos_empresa_id_fk")
+  integracao_ixc_provedor    integracao_ixc_provedor? @relation(fields: [integracao_ixc_provedor_id], references: [id], map: "ordens_servico_assuntos_integracao_ixc_provedor_id_foreign_idx")
+
+  @@unique([integracao_ixc_provedor_id, ixc_id], map: "ordens_servico_assuntos_integracao_ixc_id")
+  @@index([empresa_id], map: "ordens_servico_assuntos_empresa_id")
+  @@index([integracao_ixc_provedor_id], map: "ordens_servico_assuntos_integracao_ixc_provedor_id")
+  @@index([ixc], map: "ordens_servico_assuntos_ixc")
+  @@index([ixc_id], map: "ordens_servico_assuntos_ixc_id")
+}
+
+model ordens_servico_estruturas {
+  id                         Int                      @id @default(autoincrement())
+  empresa_id                 Int?
+  nome                       String                   @db.VarChar(255)
+  ixc_id                     String?                  @db.VarChar(32)
+  ixc                        Boolean                  @default(false)
+  created_at                 DateTime                 @default(now()) @db.DateTime(0)
+  updated_at                 DateTime                 @default(now()) @db.DateTime(0)
+  integracao_ixc_provedor_id Int?
+  sistema_tenants            sistema_tenants?         @relation(fields: [empresa_id], references: [id], map: "ordens_servico_estruturas_empresa_id_fk")
+  integracao_ixc_provedor    integracao_ixc_provedor? @relation(fields: [integracao_ixc_provedor_id], references: [id], map: "ordens_servico_estruturas_integracao_ixc_provedor_id_foreign_idx")
+
+  @@unique([integracao_ixc_provedor_id, ixc_id], map: "ordens_servico_estruturas_integracao_ixc_id")
+  @@index([empresa_id], map: "ordens_servico_estruturas_empresa_id")
+  @@index([integracao_ixc_provedor_id], map: "ordens_servico_estruturas_integracao_ixc_provedor_id")
+  @@index([ixc], map: "ordens_servico_estruturas_ixc")
+  @@index([ixc_id], map: "ordens_servico_estruturas_ixc_id")
+}
+
+model ordens_servico_filiais {
+  id                         Int                      @id @default(autoincrement())
+  empresa_id                 Int?
+  nome                       String                   @db.VarChar(255)
+  ixc_id                     String?                  @db.VarChar(32)
+  ixc                        Boolean                  @default(false)
+  created_at                 DateTime                 @default(now()) @db.DateTime(0)
+  updated_at                 DateTime                 @default(now()) @db.DateTime(0)
+  integracao_ixc_provedor_id Int?
+  sistema_tenants            sistema_tenants?         @relation(fields: [empresa_id], references: [id], map: "ordens_servico_filiais_empresa_id_fk")
+  integracao_ixc_provedor    integracao_ixc_provedor? @relation(fields: [integracao_ixc_provedor_id], references: [id], map: "ordens_servico_filiais_integracao_ixc_provedor_id_foreign_idx")
+
+  @@unique([integracao_ixc_provedor_id, ixc_id], map: "ordens_servico_filiais_integracao_ixc_id")
+  @@index([empresa_id], map: "ordens_servico_filiais_empresa_id")
+  @@index([integracao_ixc_provedor_id], map: "ordens_servico_filiais_integracao_ixc_provedor_id")
+  @@index([ixc], map: "ordens_servico_filiais_ixc")
+  @@index([ixc_id], map: "ordens_servico_filiais_ixc_id")
+}
+
+model ordens_servico_mensagens {
+  id                 Int                 @id @default(autoincrement())
+  empresa_id         Int?
+  ordem_servico_id   Int
+  id_evento          String              @default("12") @db.VarChar(4)
+  mensagem           String              @db.Text
+  data               String              @db.VarChar(19)
+  created_at         DateTime            @default(now()) @db.DateTime(0)
+  updated_at         DateTime            @default(now()) @db.DateTime(0)
+  usuario_id         Int?
+  ixc_id             String?             @db.VarChar(32)
+  sistema_tenants    sistema_tenants?    @relation(fields: [empresa_id], references: [id], map: "ordens_servico_mensagens_empresa_id_fk")
+  ordens_servico     ordens_servico      @relation(fields: [ordem_servico_id], references: [id], onDelete: Cascade, map: "ordens_servico_mensagens_ibfk_1")
+  cadastros_usuarios cadastros_usuarios? @relation(fields: [usuario_id], references: [id], map: "ordens_servico_mensagens_usuario_id_fk")
+
+  @@index([empresa_id], map: "ordens_servico_mensagens_empresa_id")
+  @@index([ordem_servico_id, ixc_id], map: "ordens_servico_mensagens_ordem_ixc_id_idx")
+  @@index([ordem_servico_id], map: "ordens_servico_mensagens_ordem_servico_id")
+  @@index([usuario_id], map: "ordens_servico_mensagens_usuario_id")
+}
+
+model ordens_servico_setores {
+  id                         Int                      @id @default(autoincrement())
+  empresa_id                 Int?
+  nome                       String                   @db.VarChar(255)
+  ixc_id                     String?                  @db.VarChar(32)
+  ixc                        Boolean                  @default(false)
+  created_at                 DateTime                 @default(now()) @db.DateTime(0)
+  updated_at                 DateTime                 @default(now()) @db.DateTime(0)
+  integracao_ixc_provedor_id Int?
+  sistema_tenants            sistema_tenants?         @relation(fields: [empresa_id], references: [id], map: "ordens_servico_setores_empresa_id_fk")
+  integracao_ixc_provedor    integracao_ixc_provedor? @relation(fields: [integracao_ixc_provedor_id], references: [id], map: "ordens_servico_setores_integracao_ixc_provedor_id_foreign_idx")
+
+  @@unique([integracao_ixc_provedor_id, ixc_id], map: "ordens_servico_setores_integracao_ixc_id")
+  @@index([empresa_id], map: "ordens_servico_setores_empresa_id")
+  @@index([integracao_ixc_provedor_id], map: "ordens_servico_setores_integracao_ixc_provedor_id")
+  @@index([ixc], map: "ordens_servico_setores_ixc")
+  @@index([ixc_id], map: "ordens_servico_setores_ixc_id")
+}
+
+model ordens_servico_tecnicos {
+  id                         Int                      @id @default(autoincrement())
+  empresa_id                 Int?
+  nome                       String                   @db.VarChar(255)
+  ixc_id                     String?                  @db.VarChar(32)
+  ixc                        Boolean                  @default(false)
+  created_at                 DateTime                 @default(now()) @db.DateTime(0)
+  updated_at                 DateTime                 @default(now()) @db.DateTime(0)
+  integracao_ixc_provedor_id Int?
+  sistema_tenants            sistema_tenants?         @relation(fields: [empresa_id], references: [id], map: "ordens_servico_tecnicos_empresa_id_fk")
+  integracao_ixc_provedor    integracao_ixc_provedor? @relation(fields: [integracao_ixc_provedor_id], references: [id], map: "ordens_servico_tecnicos_integracao_ixc_provedor_id_foreign_idx")
+
+  @@unique([integracao_ixc_provedor_id, ixc_id], map: "ordens_servico_tecnicos_integracao_ixc_id")
+  @@index([empresa_id], map: "ordens_servico_tecnicos_empresa_id")
+  @@index([integracao_ixc_provedor_id], map: "ordens_servico_tecnicos_integracao_ixc_provedor_id")
+  @@index([ixc], map: "ordens_servico_tecnicos_ixc")
+  @@index([ixc_id], map: "ordens_servico_tecnicos_ixc_id")
+}
+
+model rpki_alerts {
+  id              Int                  @id @default(autoincrement())
+  empresa_id      Int?
+  tipo            rpki_alerts_tipo
+  prefixo         String?              @db.VarChar(64)
+  asn             BigInt?              @db.UnsignedBigInt
+  roa_id          Int?
+  resolved_at     DateTime?            @db.DateTime(0)
+  severity        rpki_alerts_severity @default(medium)
+  created_at      DateTime             @default(now()) @db.DateTime(0)
+  updated_at      DateTime             @default(now()) @db.DateTime(0)
+  sistema_tenants sistema_tenants?     @relation(fields: [empresa_id], references: [id], map: "rpki_alerts_ibfk_1")
+  rpki_roas       rpki_roas?           @relation(fields: [roa_id], references: [id], map: "rpki_alerts_ibfk_2")
+
+  @@index([empresa_id], map: "rpki_alerts_empresa_id")
+  @@index([resolved_at], map: "rpki_alerts_resolved_at")
+  @@index([roa_id], map: "rpki_alerts_roa_id")
+  @@index([severity], map: "rpki_alerts_severity")
+  @@index([severity, resolved_at], map: "rpki_alerts_severity_resolved_at")
+  @@index([tipo], map: "rpki_alerts_tipo")
+}
+
+model rpki_aspas {
+  id                     Int                      @id @default(autoincrement())
+  empresa_id             Int?
+  ca_id                  Int
+  customer_asn           BigInt                   @db.UnsignedBigInt
+  providers_json         String                   @db.LongText
+  afi                    rpki_aspas_afi           @default(both)
+  status                 rpki_aspas_status        @default(active)
+  not_before             DateTime                 @db.DateTime(0)
+  not_after              DateTime                 @db.DateTime(0)
+  revoked_at             DateTime?                @db.DateTime(0)
+  created_at             DateTime                 @default(now()) @db.DateTime(0)
+  updated_at             DateTime                 @default(now()) @db.DateTime(0)
+  sistema_tenants        sistema_tenants?         @relation(fields: [empresa_id], references: [id], map: "rpki_aspas_ibfk_1")
+  rpki_cas               rpki_cas                 @relation(fields: [ca_id], references: [id], onDelete: Cascade, map: "rpki_aspas_ibfk_2")
+  rpki_published_objects rpki_published_objects[]
+
+  @@index([ca_id], map: "rpki_aspas_ca_id")
+  @@index([customer_asn], map: "rpki_aspas_customer_asn")
+  @@index([empresa_id], map: "rpki_aspas_empresa_id")
+  @@index([customer_asn, afi, status], map: "rpki_aspas_lookup")
+  @@index([status], map: "rpki_aspas_status")
+}
+
+model rpki_ca_parents {
+  id                         Int                                 @id @default(autoincrement())
+  empresa_id                 Int?
+  ca_id                      Int
+  parent_name                String                              @db.VarChar(120)
+  service_uri                String                              @db.VarChar(500)
+  parent_handle              String?                             @db.VarChar(120)
+  child_handle               String?                             @db.VarChar(120)
+  provisioning_status        rpki_ca_parents_provisioning_status @default(pending)
+  last_sync_at               DateTime?                           @db.DateTime(0)
+  last_error                 String?                             @db.Text
+  created_at                 DateTime                            @default(now()) @db.DateTime(0)
+  updated_at                 DateTime                            @default(now()) @db.DateTime(0)
+  publication_referrer       String?                             @db.VarChar(500)
+  publication_referral_token String?                             @db.Text
+  parent_response_xml        String?                             @db.LongText
+  sistema_tenants            sistema_tenants?                    @relation(fields: [empresa_id], references: [id], map: "rpki_ca_parents_ibfk_1")
+  rpki_cas                   rpki_cas                            @relation(fields: [ca_id], references: [id], onDelete: Cascade, map: "rpki_ca_parents_ibfk_2")
+
+  @@unique([ca_id, parent_name], map: "rpki_ca_parents_ca_parent_unique")
+  @@index([ca_id], map: "rpki_ca_parents_ca_id")
+  @@index([empresa_id], map: "rpki_ca_parents_empresa_id")
+  @@index([provisioning_status], map: "rpki_ca_parents_provisioning_status")
+}
+
+model rpki_ca_resources {
+  id              Int                             @id @default(autoincrement())
+  empresa_id      Int?
+  ca_id           Int
+  resource_type   rpki_ca_resources_resource_type
+  start_range     String                          @db.VarChar(100)
+  end_range       String?                         @db.VarChar(100)
+  max_length      Int?                            @db.UnsignedInt
+  source          rpki_ca_resources_source        @default(manual)
+  created_at      DateTime                        @default(now()) @db.DateTime(0)
+  updated_at      DateTime                        @default(now()) @db.DateTime(0)
+  sistema_tenants sistema_tenants?                @relation(fields: [empresa_id], references: [id], map: "rpki_ca_resources_ibfk_1")
+  rpki_cas        rpki_cas                        @relation(fields: [ca_id], references: [id], onDelete: Cascade, map: "rpki_ca_resources_ibfk_2")
+
+  @@index([ca_id], map: "rpki_ca_resources_ca_id")
+  @@index([empresa_id], map: "rpki_ca_resources_empresa_id")
+  @@index([ca_id, resource_type, start_range], map: "rpki_ca_resources_lookup")
+  @@index([resource_type], map: "rpki_ca_resources_resource_type")
+}
+
+model rpki_cas {
+  id                     Int                      @id @default(autoincrement())
+  empresa_id             Int?
+  nome                   String                   @db.VarChar(120)
+  handle                 String                   @db.VarChar(120)
+  status                 rpki_cas_status          @default(pending)
+  ca_cert_pem            String?                  @db.LongText
+  private_key_pem        String?                  @db.LongText
+  created_at             DateTime                 @default(now()) @db.DateTime(0)
+  updated_at             DateTime                 @default(now()) @db.DateTime(0)
+  cliente_id             Int?
+  resource_cert_pem      String?                  @db.LongText
+  resource_key_pem       String?                  @db.LongText
+  resource_cert_url      String?                  @db.VarChar(500)
+  resource_class_name    String?                  @db.VarChar(120)
+  manifest_number        BigInt                   @default(0) @db.UnsignedBigInt
+  crl_number             BigInt                   @default(0) @db.UnsignedBigInt
+  bpki_ta_cert_pem       String?                  @db.LongText
+  bpki_ee_key_pem        String?                  @db.LongText
+  rpki_aspas             rpki_aspas[]
+  rpki_ca_parents        rpki_ca_parents[]
+  rpki_ca_resources      rpki_ca_resources[]
+  clientes               clientes?                @relation(fields: [cliente_id], references: [id], map: "rpki_cas_cliente_id_foreign_idx")
+  sistema_tenants        sistema_tenants?         @relation(fields: [empresa_id], references: [id], map: "rpki_cas_ibfk_1")
+  rpki_published_objects rpki_published_objects[]
+  rpki_repositories      rpki_repositories[]
+  rpki_roas              rpki_roas[]
+
+  @@unique([empresa_id, handle], map: "rpki_cas_empresa_handle_unique")
+  @@index([cliente_id], map: "rpki_cas_cliente_id_foreign_idx")
+  @@index([empresa_id], map: "rpki_cas_empresa_id")
+  @@index([handle], map: "rpki_cas_handle")
+  @@index([status], map: "rpki_cas_status")
+}
+
+model rpki_published_objects {
+  id                Int                                @id @default(autoincrement())
+  ca_id             Int
+  repository_id     Int
+  uri               String                             @unique(map: "rpki_published_objects_uri") @db.VarChar(500)
+  hash_sha256_hex   String                             @db.VarChar(64)
+  object_type       rpki_published_objects_object_type
+  object_der_b64    String                             @db.LongText
+  roa_id            Int?
+  aspa_id           Int?
+  created_at        DateTime                           @db.DateTime(0)
+  updated_at        DateTime                           @db.DateTime(0)
+  rpki_aspas        rpki_aspas?                        @relation(fields: [aspa_id], references: [id], map: "rpki_published_objects_aspa_id_foreign_idx")
+  rpki_cas          rpki_cas                           @relation(fields: [ca_id], references: [id], onDelete: Cascade, map: "rpki_published_objects_ibfk_1")
+  rpki_repositories rpki_repositories                  @relation(fields: [repository_id], references: [id], onDelete: Cascade, map: "rpki_published_objects_ibfk_2")
+  rpki_roas         rpki_roas?                         @relation(fields: [roa_id], references: [id], map: "rpki_published_objects_ibfk_3")
+
+  @@index([roa_id], map: "roa_id")
+  @@index([aspa_id], map: "rpki_published_objects_aspa_id_foreign_idx")
+  @@index([ca_id], map: "rpki_published_objects_ca_id")
+  @@index([repository_id], map: "rpki_published_objects_repository_id")
+}
+
+model rpki_repositories {
+  id                      Int                                  @id @default(autoincrement())
+  empresa_id              Int?
+  ca_id                   Int
+  repository_name         String                               @db.VarChar(120)
+  rrdp_notify_uri         String?                              @db.VarChar(500)
+  rsync_base_uri          String?                              @db.VarChar(500)
+  publication_status      rpki_repositories_publication_status @default(pending)
+  last_publish_at         DateTime?                            @db.DateTime(0)
+  last_error              String?                              @db.Text
+  created_at              DateTime                             @default(now()) @db.DateTime(0)
+  updated_at              DateTime                             @default(now()) @db.DateTime(0)
+  publication_service_uri String?                              @db.VarChar(500)
+  rpki_published_objects  rpki_published_objects[]
+  sistema_tenants         sistema_tenants?                     @relation(fields: [empresa_id], references: [id], map: "rpki_repositories_ibfk_1")
+  rpki_cas                rpki_cas                             @relation(fields: [ca_id], references: [id], onDelete: Cascade, map: "rpki_repositories_ibfk_2")
+
+  @@unique([ca_id, repository_name], map: "rpki_repositories_ca_name_unique")
+  @@index([ca_id], map: "rpki_repositories_ca_id")
+  @@index([empresa_id], map: "rpki_repositories_empresa_id")
+  @@index([publication_status], map: "rpki_repositories_publication_status")
+}
+
+model rpki_roas {
+  id                     Int                      @id @default(autoincrement())
+  empresa_id             Int?
+  prefix                 String                   @db.VarChar(64)
+  asn                    BigInt                   @db.UnsignedBigInt
+  max_length             Int                      @db.UnsignedInt
+  not_before             DateTime                 @db.DateTime(0)
+  not_after              DateTime                 @db.DateTime(0)
+  status                 rpki_roas_status         @default(active)
+  revoked_at             DateTime?                @db.DateTime(0)
+  created_at             DateTime                 @default(now()) @db.DateTime(0)
+  updated_at             DateTime                 @default(now()) @db.DateTime(0)
+  ca_id                  Int?
+  rpki_alerts            rpki_alerts[]
+  rpki_published_objects rpki_published_objects[]
+  rpki_cas               rpki_cas?                @relation(fields: [ca_id], references: [id], onDelete: Cascade, map: "rpki_roas_ca_id_foreign_idx")
+  sistema_tenants        sistema_tenants?         @relation(fields: [empresa_id], references: [id], map: "rpki_roas_ibfk_1")
+
+  @@index([asn], map: "rpki_roas_asn")
+  @@index([ca_id], map: "rpki_roas_ca_id")
+  @@index([empresa_id], map: "rpki_roas_empresa_id")
+  @@index([prefix, asn, max_length, status], map: "rpki_roas_lookup")
+  @@index([not_after], map: "rpki_roas_not_after")
+  @@index([prefix], map: "rpki_roas_prefix")
+  @@index([status], map: "rpki_roas_status")
+}
+
+model rpki_sync_sessions {
+  id              Int                       @id @default(autoincrement())
+  empresa_id      Int?
+  host            String                    @db.VarChar(255)
+  port            Int                       @default(3323) @db.UnsignedInt
+  status          rpki_sync_sessions_status @default(idle)
+  last_sync       DateTime?                 @db.DateTime(0)
+  serial_number   BigInt?                   @db.UnsignedBigInt
+  created_at      DateTime                  @default(now()) @db.DateTime(0)
+  updated_at      DateTime                  @default(now()) @db.DateTime(0)
+  sistema_tenants sistema_tenants?          @relation(fields: [empresa_id], references: [id], map: "rpki_sync_sessions_ibfk_1")
+
+  @@index([empresa_id], map: "rpki_sync_sessions_empresa_id")
+  @@index([empresa_id, status], map: "rpki_sync_sessions_empresa_status")
+  @@index([last_sync], map: "rpki_sync_sessions_last_sync")
+  @@index([status], map: "rpki_sync_sessions_status")
+}
+
+model sistema_logs_operacionais {
+  id                 BigInt              @id @default(autoincrement()) @db.UnsignedBigInt
+  empresa_id         Int?
+  usuario_id         Int?
+  canal              String              @default("sistema") @db.VarChar(24)
+  tipo               String              @db.VarChar(120)
+  tabela             String?             @db.VarChar(120)
+  recurso            String?             @db.VarChar(120)
+  recurso_id         String?             @db.VarChar(64)
+  payload            String?             @db.LongText
+  ip_address         String?             @db.VarChar(45)
+  user_agent         String?             @db.VarChar(500)
+  mensagem           String?             @db.Text
+  created_at         DateTime            @default(now()) @db.DateTime(0)
+  sistema_tenants    sistema_tenants?    @relation(fields: [empresa_id], references: [id], map: "sistema_logs_operacionais_ibfk_1")
+  cadastros_usuarios cadastros_usuarios? @relation(fields: [usuario_id], references: [id], map: "sistema_logs_operacionais_ibfk_2")
+
+  @@index([empresa_id, created_at], map: "idx_adm_sistema_logs_op_empresa_created")
+  @@index([recurso, created_at], map: "idx_adm_sistema_logs_op_recurso_created")
+  @@index([tabela, created_at], map: "idx_adm_sistema_logs_op_tabela_created")
+  @@index([tipo, created_at], map: "idx_adm_sistema_logs_op_tipo_created")
+  @@index([usuario_id, created_at], map: "idx_adm_sistema_logs_op_usuario_created")
+}
+
+model sistema_parametros {
+  id                             Int              @id @default(autoincrement())
+  validar_cpf_cnpj               Boolean          @default(true)
+  validar_cep                    Boolean          @default(false)
+  titulos_vence_sabado           Boolean          @default(false)
+  titulos_vence_domingo          Boolean          @default(false)
+  created_at                     DateTime         @default(now()) @db.DateTime(0)
+  updated_at                     DateTime         @default(now()) @db.DateTime(0)
+  empresa_id                     Int?
+  central_assinante_metodo_login String?          @default("cnpj") @db.VarChar(20)
+  dias_suspender_atraso          Int?
+  sistema_tenants                sistema_tenants? @relation(fields: [empresa_id], references: [id], map: "parametros_empresa_id_foreign_idx")
+
+  @@index([empresa_id], map: "parametros_empresa_id_foreign_idx")
+}
+
+model sistema_scheduled_routines {
+  id                    Int                                   @id @default(autoincrement())
+  nome                  String                                @db.VarChar(255)
+  tipo                  sistema_scheduled_routines_tipo
+  descricao             String?                               @db.Text
+  configuracao          String                                @db.LongText
+  frequencia            sistema_scheduled_routines_frequencia
+  dia_execucao          Int?
+  hora_execucao         DateTime                              @db.Time(0)
+  dia_semana            Int?
+  cron_expression       String?                               @db.VarChar(255)
+  ativo                 Boolean                               @default(true)
+  proxima_execucao      DateTime                              @db.DateTime(0)
+  ultima_execucao       DateTime?                             @db.DateTime(0)
+  total_execucoes       Int                                   @default(0)
+  execucoes_com_sucesso Int                                   @default(0)
+  execucoes_com_erro    Int                                   @default(0)
+  created_at            DateTime                              @default(now()) @db.DateTime(0)
+  updated_at            DateTime                              @default(now()) @db.DateTime(0)
+  empresa_id            Int?
+  sistema_tenants       sistema_tenants?                      @relation(fields: [empresa_id], references: [id], map: "scheduled_routines_empresa_id_foreign_idx")
+
+  @@index([empresa_id], map: "idx_scheduled_routines_empresa_id")
+}
+
+model sistema_tenants {
+  id                                Int                                 @id @default(autoincrement())
+  razao_social                      String                              @db.VarChar(255)
+  nome_fantasia                     String?                             @db.VarChar(255)
+  cnpj                              String                              @unique(map: "cnpj") @db.VarChar(18)
+  inscricao_estadual                String?                             @db.VarChar(255)
+  inscricao_municipal               String?                             @db.VarChar(255)
+  cep                               String                              @db.VarChar(9)
+  endereco                          String                              @db.VarChar(255)
+  numero                            String                              @db.VarChar(255)
+  complemento                       String?                             @db.VarChar(255)
+  bairro                            String                              @db.VarChar(255)
+  cidade                            String                              @db.VarChar(255)
+  estado                            String                              @db.VarChar(2)
+  telefone                          String?                             @db.VarChar(255)
+  celular                           String?                             @db.VarChar(255)
+  email                             String                              @db.VarChar(255)
+  site                              String?                             @db.VarChar(255)
+  responsavel_nome                  String                              @db.VarChar(255)
+  responsavel_cpf                   String                              @db.VarChar(14)
+  responsavel_cargo                 String?                             @db.VarChar(255)
+  logo                              String?                             @db.VarChar(255)
+  created_at                        DateTime                            @default(now()) @db.DateTime(0)
+  updated_at                        DateTime                            @default(now()) @db.DateTime(0)
+  responsavel_assinatura            String?                             @db.VarChar(255)
+  bloqueado_por_atraso              Boolean                             @default(false)
+  data_fim_desbloqueio_manual       DateTime?                           @db.Date
+  agent_agents                      agent_agents[]
+  assinatura_digital_assinaturas    assinatura_digital_assinaturas[]
+  assinatura_digital_providers      assinatura_digital_providers[]
+  atendimentos_departamentos        atendimentos_departamentos[]
+  atendimentos_tecnicos             atendimentos_tecnicos[]
+  blockdomi_dominios                blockdomi_dominios[]
+  blockdomi_ips_permitidos          blockdomi_ips_permitidos[]
+  blockdomi_ipv4                    blockdomi_ipv4[]
+  blockdomi_ipv6                    blockdomi_ipv6[]
+  blockdomi_versoes                 blockdomi_versoes[]
+  cadastros_bancos                  cadastros_bancos[]
+  cadastros_dias_vencimento         cadastros_dias_vencimento[]
+  cadastros_planos                  cadastros_planos[]
+  cadastros_tipos_cobranca_contrato cadastros_tipos_cobranca_contrato[]
+  cadastros_usuarios                cadastros_usuarios[]
+  clientes                          clientes[]
+  clientes_arquivos                 clientes_arquivos[]
+  comunicacao_mensagens_email       comunicacao_mensagens_email[]
+  comunicacao_mensagens_whatsapp    comunicacao_mensagens_whatsapp[]
+  comunicacao_servidores_email      comunicacao_servidores_email[]
+  comunicacao_servidores_whatsapp   comunicacao_servidores_whatsapp[]
+  comunicacao_templates_whatsapp    comunicacao_templates_whatsapp[]
+  contratos                         contratos[]
+  contratos_integracao_ixc_vinculos contratos_integracao_ixc_vinculos[]
+  contratos_planos_adicionais       contratos_planos_adicionais[]
+  contratos_termos                  contratos_termos[]
+  documentos_modelo                 documentos_modelo[]
+  financeiro_conta_pagar_pagamentos financeiro_conta_pagar_pagamentos[]
+  financeiro_contas_pagar           financeiro_contas_pagar[]
+  financeiro_fornecedores           financeiro_fornecedores[]
+  financeiro_titulos                financeiro_titulos[]
+  integracao_ixc_provedor           integracao_ixc_provedor[]
+  nfse_config                       nfse_config[]
+  nfse_notas_fiscais                nfse_notas_fiscais[]
+  ordem_servico_arquivos            ordem_servico_arquivos[]
+  ordens_servico                    ordens_servico[]
+  ordens_servico_assuntos           ordens_servico_assuntos[]
+  ordens_servico_estruturas         ordens_servico_estruturas[]
+  ordens_servico_filiais            ordens_servico_filiais[]
+  ordens_servico_mensagens          ordens_servico_mensagens[]
+  ordens_servico_setores            ordens_servico_setores[]
+  ordens_servico_tecnicos           ordens_servico_tecnicos[]
+  rpki_alerts                       rpki_alerts[]
+  rpki_aspas                        rpki_aspas[]
+  rpki_ca_parents                   rpki_ca_parents[]
+  rpki_ca_resources                 rpki_ca_resources[]
+  rpki_cas                          rpki_cas[]
+  rpki_repositories                 rpki_repositories[]
+  rpki_roas                         rpki_roas[]
+  rpki_sync_sessions                rpki_sync_sessions[]
+  sistema_logs_operacionais         sistema_logs_operacionais[]
+  sistema_parametros                sistema_parametros[]
+  sistema_scheduled_routines        sistema_scheduled_routines[]
+  ssh_manager_devices               ssh_manager_devices[]
+
+  @@index([bloqueado_por_atraso], map: "adm_sistema_dados_empresa_bloqueado_por_atraso")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model ssh_manager_device_backups {
+  id                  Int                 @id @default(autoincrement())
+  file_name           String              @db.VarChar(255)
+  size_bytes          BigInt
+  created_at          DateTime            @default(now()) @db.DateTime(0)
+  started_at          DateTime            @db.DateTime(0)
+  finished_at         DateTime            @db.DateTime(0)
+  ssh_device_id       Int
+  ssh_manager_devices ssh_manager_devices @relation(fields: [ssh_device_id], references: [id], onDelete: Cascade, map: "adm_ssh_device_backups_device_fk")
+
+  @@unique([ssh_device_id, file_name], map: "adm_ssh_device_backups_device_file_unique")
+  @@index([created_at], map: "adm_ssh_device_backups_created_at")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model ssh_manager_devices {
+  empresa_id                       Int?
+  name                             String                             @db.VarChar(100)
+  host                             String                             @db.VarChar(255)
+  port                             Int                                @default(22)
+  username                         String                             @db.VarChar(100)
+  password                         String                             @db.VarChar(500)
+  private_key                      String?                            @db.Text
+  device_type                      ssh_manager_devices_device_type    @default(mikrotik)
+  description                      String?                            @db.VarChar(500)
+  is_active                        Boolean                            @default(true)
+  tags                             String?                            @db.LongText
+  created_at                       DateTime                           @default(now()) @db.DateTime(0)
+  updated_at                       DateTime                           @default(now()) @db.DateTime(0)
+  cliente_id                       Int?
+  backup_enabled                   Boolean                            @default(false)
+  agent_id                         Int?
+  id                               Int                                @id @default(autoincrement())
+  ssh_manager_device_backups       ssh_manager_device_backups[]
+  agent_agents                     agent_agents?                      @relation(fields: [agent_id], references: [id], map: "adm_ssh_devices_agent_fk")
+  clientes                         clientes?                          @relation(fields: [cliente_id], references: [id], map: "adm_ssh_devices_cliente_id_foreign_idx")
+  sistema_tenants                  sistema_tenants?                   @relation(fields: [empresa_id], references: [id], map: "ssh_manager_devices_ibfk_1")
+
+  @@index([agent_id], map: "adm_ssh_devices_agent_fk")
+  @@index([backup_enabled], map: "adm_ssh_devices_backup_enabled")
+  @@index([cliente_id], map: "adm_ssh_devices_cliente_id")
+  @@index([device_type], map: "adm_ssh_devices_device_type")
+  @@index([empresa_id], map: "adm_ssh_devices_empresa_id")
+  @@index([is_active], map: "adm_ssh_devices_is_active")
+}
+
+enum assinatura_digital_providers_provider {
+  assinafy
+  zapsign
+  govbr
+  outro
+}
+
+enum financeiro_fornecedores_tipo_pessoa {
+  FISICA
+  JURIDICA
+}
+
+enum comunicacao_mensagens_email_tipo_envio {
+  desativado
+  pdf
+}
+
+enum rpki_alerts_tipo {
+  hijack_detected @map("hijack-detected")
+  roa_expiring    @map("roa-expiring")
+}
+
+enum documentos_modelo_tipo {
+  contrato
+  recibo
+  carta
+  boleto
+  comprovante
+  outro
+  termo
+  ordem_servico
+  atendimento
+}
+
+enum sistema_scheduled_routines_tipo {
+  geracao_titulos
+  envio_boletos
+  remessa_bancaria
+  verificar_vencimentos
+  desbloquear_blockdomi
+  backup_equipamentos_ssh
+  outros
+}
+
+enum comunicacao_mensagens_whatsapp_tipo_envio {
+  desativado
+  pdf
+}
+
+enum rpki_ca_resources_resource_type {
+  asn
+  ipv4
+  ipv6
+}
+
+enum clientes_arquivos_tipo {
+  documento
+  foto
+  assinatura
+  outro
+}
+
+enum contratos_termos_tipo_termo {
+  adesao
+  permanencia
+  cancelamento
+  alteracao
+}
+
+enum assinatura_digital_assinaturas_documento_tipo {
+  termo
+  contrato
+  outro
+}
+
+enum cadastros_planos_tipo_servico {
+  infraestrutura
+  consultoria
+  blockdomi
+}
+
+enum cadastros_tipos_cobranca_contrato_periodicidade {
+  mensal
+  bimestral
+  trimestral
+  semestral
+  anual
+  quinzenal
+  semanal
+}
+
+enum rpki_sync_sessions_status {
+  idle
+  running
+  success
+  failed
+}
+
+enum rpki_cas_status {
+  pending
+  active
+  error
+  disabled
+}
+
+enum financeiro_conta_pagar_pagamentos_tipo_pagamento {
+  DINHEIRO
+  BOLETO
+  CARTAO
+  DEPOSITO
+  DEBITO_CONTA
+  TRANSFERENCIA
+  PIX
+}
+
+enum financeiro_contas_pagar_tipo_pagamento {
+  DINHEIRO
+  BOLETO
+  CARTAO
+  DEPOSITO
+  DEBITO_CONTA
+  TRANSFERENCIA
+  PIX
+}
+
+enum cadastros_bancos_tipo_banco {
+  efi
+  asaas
+  bancario
+  outros
+}
+
+enum comunicacao_servidores_whatsapp_status_conexao {
+  disconnected
+  connecting
+  connected
+  qr_required
+}
+
+enum assinatura_digital_assinaturas_api_provider {
+  assinafy
+  zapsign
+  govbr
+  outro
+}
+
+enum sistema_scheduled_routines_frequencia {
+  diaria
+  semanal
+  mensal
+  anual
+  personalizada
+}
+
+enum rpki_aspas_afi {
+  ipv4
+  ipv6
+  both
+}
+
+enum rpki_published_objects_object_type {
+  roa
+  mft
+  crl
+  cer
+  aspa
+}
+
+enum rpki_repositories_publication_status {
+  pending
+  active
+  error
+}
+
+enum contratos_planos_adicionais_status {
+  ativo
+  inativo
+  suspenso
+}
+
+enum rpki_aspas_status {
+  active
+  revoked
+  expired
+}
+
+enum nfse_notas_fiscais_status {
+  PENDENTE
+  PROCESSANDO
+  AUTORIZADA
+  CANCELADA
+  REJEITADA
+  ERRO
+}
+
+enum rpki_ca_parents_provisioning_status {
+  pending
+  active
+  error
+}
+
+enum rpki_ca_resources_source {
+  manual
+  parent
+  imported
+}
+
+enum ssh_manager_devices_device_type {
+  mikrotik
+  cisco
+  huawei
+  swos
+}
+
+enum rpki_alerts_severity {
+  low
+  medium
+  high
+  critical
+}
+
+enum contratos_termos_assinado {
+  SIM
+  NAO
+}
+
+enum rpki_roas_status {
+  active
+  revoked
+  expired
+}
+
+enum cadastros_planos_periodicidade {
+  mensal
+  trimestral
+  semestral
+  anual
+  bimestral
+  quinzenal
+  semanal
+}
+
+enum nfse_notas_fiscais_nfse_status {
+  agendado
+  emitida
+  cancelada
+  rejeitada
+  erro
+}
+
+enum clientes_arquivos_origem {
+  manual
+  assinatura_digital
+  sistema
+}
+
+enum financeiro_titulos_status {
+  pendente
+  pago
+  vencido
+  cancelado
+  parcial
+  pago_atraso
+}
+
+enum financeiro_contas_pagar_status {
+  A_PAGAR
+  PAGO
+  PARCIAL
+  CANCELADO
+}
+
+enum assinatura_digital_assinaturas_status {
+  pendente
+  enviado
+  assinado
+  cancelado
+  expirado
+  erro
+}
+
+enum contratos_status {
+  ativo
+  inativo
+  suspenso
+}
+
+enum nfse_config_portal_nacional_ambiente {
+  HOMOLOGACAO
+  PRODUCAO
+}
+
+enum nfse_notas_fiscais_tipo_operacao {
+  ENTRADA
+  SAIDA
+}
+
+enum cadastros_planos_status {
+  ativo
+  inativo
+}
+
+enum nfse_config_provider {
+  PORTAL_NACIONAL
+  ASAAS
+}
+
+enum financeiro_contas_pagar_tipo_chave_pix {
+  CPF_CNPJ
+  CELULAR
+  EMAIL
+  ALEATORIA
+  QRCODE
+}
+
+enum comunicacao_servidores_whatsapp_tipo_api {
+  evolution
+  whatsapp_cloud
+}
+
+enum clientes_tipo_cobranca {
+  titulo
+  carne
+}

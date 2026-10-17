@@ -1,4 +1,4 @@
-import { NumeroSeiAnatelBlockdomi } from '../../../models/blockdomi/NumeroSeiAnatelBlockdomi';
+import { prisma } from '../../../db/prisma';
 
 export class NumeroSeiAnatelBlockdomiService {
   static normalize(num: string | null | undefined): string | null {
@@ -10,10 +10,11 @@ export class NumeroSeiAnatelBlockdomiService {
   static async obterOuCriarPorNumero(num: string | null | undefined): Promise<number | null> {
     const n = NumeroSeiAnatelBlockdomiService.normalize(num);
     if (!n) return null;
-    const [row] = await NumeroSeiAnatelBlockdomi.findOrCreate({
+    const row = await prisma.blockdomi_numeros_sei_anatel.upsert({
       where: { numero: n },
-      defaults: { numero: n }
+      create: { numero: n },
+      update: {},
     });
-    return row.id as number;
+    return row.id;
   }
 }

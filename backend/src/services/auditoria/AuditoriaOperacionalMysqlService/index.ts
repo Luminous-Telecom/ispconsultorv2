@@ -1,13 +1,11 @@
-import { Op, literal, type WhereOptions } from 'sequelize';
-import { sequelize } from '../../../config/database';
-import { SistemaLogOperacional } from '../../../models/sistema/SistemaLogOperacional';
-import { Usuario } from '../../../models/cadastros/Usuario';
+import type { Prisma, sistema_logs_operacionais } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import {
   ENTIDADES_BLOCKDOMI,
   ENTIDADES_PAINEL_LOGS_SAAS,
   ENTIDADES_SAAS,
 } from '../auditoriaConstants';
-import { sqlExcluirLogContextosEspecializados } from '../../sistema/sistemaLogOperacionalContextos';
+import { LOG_CONTEXTO_ESPECIALIZADOS } from '../../sistema/sistemaLogOperacionalContextos';
 
 const TIPO_OPERACIONAL_TO_ACAO: Record<string, string> = {
   inseriu: 'create',
@@ -66,7 +64,7 @@ function acaoQueryToTipos(acaoRaw: string | undefined): string[] | null {
   return tipos.length ? tipos : null;
 }
 
-/** JSON no MySQL pode vir como objeto, string ou Buffer (driver/sequelize). */
+/** JSON no MySQL pode vir como objeto, string ou Buffer. */
 function normalizeOperacionalPayloadRaw(raw: unknown): Record<string, unknown> | null {
   if (raw == null) return null;
   if (Buffer.isBuffer(raw)) {
@@ -160,7 +158,7 @@ function extractDadosFromPayload(
 }
 
 function rowToListItem(
-  row: SistemaLogOperacional,
+  row: sistema_logs_operacionais,
   usuarioRow: { nome?: string | null; email?: string | null } | null | undefined,
   includeDados = false
 ): Record<string, unknown> {
@@ -208,15 +206,36 @@ function rowToListItem(
   };
 }
 
+type LogWhere = Prisma.sistema_logs_operacionaisWhereInput;
+
+function contextoEspecializadoExcluido(): LogWhere {
+  return {
+    OR: [
+      { payload: null },
+      {
+        NOT: {
+          OR: LOG_CONTEXTO_ESPECIALIZADOS.map((contexto) => ({
+            payload: { contains: `"log_contexto":"${contexto}"` },
+          })),
+        },
+      },
+    ],
+  };
+}
+
 export class AuditoriaOperacionalMysqlService {
   static async list(params: ListOperacionalMysqlParams): Promise<{
     logs: Record<string, unknown>[];
     total: number;
   }> {
-    const and: WhereOptions[] = [literal(sqlExcluirLogContextosEspecializados())];
+    if (params.filterAcessoUsuarioSuperSaas) {
+      return { logs: [], total: 0 };
+    }
+
+    const and: LogWhere[] = [contextoEspecializadoExcluido()];
 
     if (params.moduloBlockdomi) {
-      and.push({ recurso: { [Op.in]: [...ENTIDADES_BLOCKDOMI] } });
+      and.push({ recurso: { in: [...ENTIDADES_BLOCKDOMI] } });
     } else if (params.entidade?.trim()) {
       const parts = params.entidade
         .split(',')
@@ -225,7 +244,7 @@ export class AuditoriaOperacionalMysqlService {
       if (parts.length === 1) {
         and.push({ recurso: parts[0] });
       } else if (parts.length > 1) {
-        and.push({ recurso: { [Op.in]: parts } });
+        and.push({ recurso: { in: parts } });
       }
     }
 
@@ -235,71 +254,57 @@ export class AuditoriaOperacionalMysqlService {
 
     if (params.excludeSaasEntities) {
       and.push({
-        [Op.or]: [{ recurso: null }, { recurso: { [Op.notIn]: [...ENTIDADES_SAAS] } }],
+        OR: [{ recurso: null }, { recurso: { notIn: [...ENTIDADES_SAAS] } }],
       });
     }
     if (params.filterSaasOnly) {
-      and.push({ recurso: { [Op.in]: [...ENTIDADES_SAAS] } });
+      and.push({ recurso: { in: [...ENTIDADES_SAAS] } });
     }
     if (params.filterPainelLogsSaasOnly) {
-      and.push({ recurso: { [Op.in]: [...ENTIDADES_PAINEL_LOGS_SAAS] } });
-    }
-
-    if (params.filterAcessoUsuarioSuperSaas) {
-      and.push(
-        literal(
-          '`SistemaLogOperacional`.`usuario_id` IN (SELECT `id` FROM `saas_usuarios_super`)'
-        )
-      );
+      and.push({ recurso: { in: [...ENTIDADES_PAINEL_LOGS_SAAS] } });
     }
 
     if (params.usuario_id != null && params.usuario_id > 0) {
       and.push({ usuario_id: params.usuario_id });
     }
     if (params.comUsuarioObrigatorio) {
-      and.push(literal('`SistemaLogOperacional`.`usuario_id` IS NOT NULL'));
+      and.push({ usuario_id: { not: null } });
     }
     if (params.semUsuarioObrigatorio) {
-      and.push(literal('`SistemaLogOperacional`.`usuario_id` IS NULL'));
+      and.push({ usuario_id: null });
     }
 
     if (params.origemAuditoria?.trim()) {
-      const o = params.origemAuditoria.trim();
-      and.push(
-        literal(
-          `(JSON_UNQUOTE(JSON_EXTRACT(\`SistemaLogOperacional\`.\`payload\`, '$.origem_auditoria')) = ${sequelize.escape(o)})`
-        )
-      );
+      and.push({ payload: { contains: `"origem_auditoria":"${params.origemAuditoria.trim()}"` } });
     }
 
     const tipos = acaoQueryToTipos(params.acao);
     if (tipos) {
-      and.push({ tipo: { [Op.in]: tipos } });
+      and.push({ tipo: { in: tipos } });
     }
 
     if (params.dataInicio || params.dataFim) {
-      const range: { [Op.gte]?: Date; [Op.lte]?: Date } = {};
-      if (params.dataInicio) range[Op.gte] = new Date(params.dataInicio);
+      const range: { gte?: Date; lte?: Date } = {};
+      if (params.dataInicio) range.gte = new Date(params.dataInicio);
       if (params.dataFim) {
         const f = new Date(params.dataFim);
         f.setHours(23, 59, 59, 999);
-        range[Op.lte] = f;
+        range.lte = f;
       }
       and.push({ created_at: range });
     }
 
     const search = params.search?.trim();
     if (search) {
-      const like = `%${search.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_')}%`;
       const sf = params.searchField;
       if (sf === 'ip_address') {
-        and.push({ ip_address: { [Op.like]: like } });
+        and.push({ ip_address: { contains: search } });
       } else if (sf === 'entidade') {
-        and.push({ recurso: { [Op.like]: like } });
+        and.push({ recurso: { contains: search } });
       } else if (sf === 'usuario_email') {
-        and.push({ ['$usuario.email$' as never]: { [Op.like]: like } });
+        and.push({ cadastros_usuarios: { email: { contains: search } } });
       } else if (sf === 'usuario_nome') {
-        and.push({ ['$usuario.nome$' as never]: { [Op.like]: like } });
+        and.push({ cadastros_usuarios: { nome: { contains: search } } });
       } else if (sf === 'timestamp') {
         const digits = search.replace(/\D/g, '');
         if (digits.length >= 8) {
@@ -308,51 +313,44 @@ export class AuditoriaOperacionalMysqlService {
           const d = digits.slice(6, 8);
           const start = new Date(`${y}-${m}-${d}T00:00:00`);
           const end = new Date(`${y}-${m}-${d}T23:59:59.999`);
-          if (!Number.isNaN(start.getTime())) and.push({ created_at: { [Op.between]: [start, end] } });
+          if (!Number.isNaN(start.getTime())) and.push({ created_at: { gte: start, lte: end } });
         }
       } else {
         and.push({
-          [Op.or]: [
-            { mensagem: { [Op.like]: like } },
-            { recurso: { [Op.like]: like } },
-            { tipo: { [Op.like]: like } },
-            { ip_address: { [Op.like]: like } },
-            { ['$usuario.nome$' as never]: { [Op.like]: like } },
-            { ['$usuario.email$' as never]: { [Op.like]: like } },
+          OR: [
+            { mensagem: { contains: search } },
+            { recurso: { contains: search } },
+            { tipo: { contains: search } },
+            { ip_address: { contains: search } },
+            { cadastros_usuarios: { nome: { contains: search } } },
+            { cadastros_usuarios: { email: { contains: search } } },
           ],
         });
       }
     }
 
-    const where: WhereOptions = and.length > 0 ? { [Op.and]: and } : {};
-
-    const sortCol =
-      params.sortColumn === 'timestamp' || params.sortColumn === 'created_at' ? 'created_at' : 'created_at';
-    const sortDir = (params.sortDirection || 'desc').toLowerCase() === 'asc' ? 'ASC' : 'DESC';
-    const order: [string, string][] = [[sortCol, sortDir]];
-
+    const where: LogWhere = and.length > 0 ? { AND: and } : {};
+    const sortDir = (params.sortDirection || 'desc').toLowerCase() === 'asc' ? 'asc' : 'desc';
     const page = Math.max(1, params.page);
     const limit = Math.min(100, Math.max(1, params.limit));
     const offset = (page - 1) * limit;
 
-    const { rows, count } = await SistemaLogOperacional.findAndCountAll({
-      where,
-      include: [
-        {
-          model: Usuario,
-          as: 'usuario',
-          attributes: ['nome', 'email'],
-          required: false,
-        },
-      ],
-      order,
-      limit,
-      offset,
-      distinct: true,
-    });
+    const [count, rows] = await Promise.all([
+      prisma.sistema_logs_operacionais.count({ where }),
+      prisma.sistema_logs_operacionais.findMany({
+        where,
+        include: { cadastros_usuarios: { select: { nome: true, email: true } } },
+        orderBy: { created_at: sortDir },
+        take: limit,
+        skip: offset,
+      }),
+    ]);
 
     const logs = rows.map((r) =>
-      rowToListItem(r, (r as unknown as { usuario?: { nome?: string | null; email?: string | null } }).usuario)
+      rowToListItem(
+        r as sistema_logs_operacionais,
+        r.cadastros_usuarios
+      )
     );
 
     return { logs, total: count };
@@ -367,7 +365,7 @@ export class AuditoriaOperacionalMysqlService {
     limit?: number;
     sortDirection?: 'asc' | 'desc';
   }): Promise<Record<string, unknown>[]> {
-    const and: WhereOptions[] = [{ recurso: params.entidade }];
+    const and: LogWhere[] = [{ recurso: params.entidade }];
     const entidadeIdStr = String(params.entidadeId).trim();
     const isUuid = /^[a-f0-9-]{36}$/i.test(entidadeIdStr);
 
@@ -380,20 +378,20 @@ export class AuditoriaOperacionalMysqlService {
     }
     if (params.excludeSaasEntities) {
       and.push({
-        [Op.or]: [{ recurso: null }, { recurso: { [Op.notIn]: [...ENTIDADES_SAAS] } }],
+        OR: [{ recurso: null }, { recurso: { notIn: [...ENTIDADES_SAAS] } }],
       });
     }
     if (params.filterSaasOnly) {
-      and.push({ recurso: { [Op.in]: [...ENTIDADES_SAAS] } });
+      and.push({ recurso: { in: [...ENTIDADES_SAAS] } });
     }
 
-    const sortDir = params.sortDirection === 'desc' ? 'DESC' : 'ASC';
+    const sortDir = params.sortDirection === 'desc' ? 'desc' : 'asc';
     const limit = params.limit ?? 10000;
 
-    const { rows } = await SistemaLogOperacional.findAndCountAll({
-      where: { [Op.and]: and },
-      order: [['created_at', sortDir]],
-      limit,
+    const rows = await prisma.sistema_logs_operacionais.findMany({
+      where: { AND: and },
+      orderBy: { created_at: sortDir },
+      take: limit,
     });
 
     let logs = rows.map((r) => rowToListItem(r, null, true));

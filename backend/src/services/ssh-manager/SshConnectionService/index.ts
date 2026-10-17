@@ -1,6 +1,6 @@
 import { Client as SshClient, ConnectConfig } from 'ssh2';
 import { EventEmitter } from 'events';
-import { SshDevice } from '../../../models/ssh-manager/SshDevice';
+import type { SshDeviceShape as SshDevice } from '../sshDeviceShape';
 import { decryptSshCredential } from '../../../utils/encryption';
 import { privateKeyPemForSsh2 } from '../../../utils/sshPrivateKey';
 import { logger } from '../../../utils/logger';

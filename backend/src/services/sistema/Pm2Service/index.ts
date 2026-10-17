@@ -24,7 +24,7 @@ export class Pm2Service {
   }
 
   /**
-   * Recarrega apps a partir do ecosystem.config.js (necessário quando args/script mudam, ex.: PM2 doc).
+   * Recarrega apps a partir do ecosystem.config.js quando script ou args mudam.
    */
   scheduleReloadFromEcosystem(appNames: string[], delayMs: number = SCHEDULED_RESTART_DELAY_MS): CommandResult {
     if (!fs.existsSync(this.projectRoot)) {
@@ -72,12 +72,8 @@ export class Pm2Service {
     }
 
     const apps = uniqueApps.join(' ');
-    const docApp = process.env.PM2_DOC_PROCESS_NAME || 'doc';
     const delaySec = Math.max(1, Math.round(delayMs / 1000));
-    const script =
-      `sleep ${delaySec} && pm2 restart ${apps} --update-env` +
-      ` && pm2 startOrReload ecosystem.config.js --only ${docApp}` +
-      ' && pm2 save';
+    const script = `sleep ${delaySec} && pm2 restart ${apps} --update-env && pm2 save`;
 
     spawn('bash', ['-c', script], {
       detached: true,

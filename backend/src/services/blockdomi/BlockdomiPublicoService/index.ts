@@ -2,14 +2,7 @@
  * Serviço público do Blockdomi - dados para o site público.
  * Retorna ofícios, datas de bloqueio, versões e totais (sem listas de domínios/IPs).
  */
-import { Op } from 'sequelize';
-import { QueryTypes } from 'sequelize';
-import { sequelize } from '../../../config/database';
-import { Dominio } from '../../../models/blockdomi/Dominio';
-import { VersaoBlockdomi } from '../../../models/blockdomi/VersaoBlockdomi';
-import { NumeroSeiAnatelBlockdomi } from '../../../models/blockdomi/NumeroSeiAnatelBlockdomi';
-import { IPv4 } from '../../../models/blockdomi/IPv4';
-import { IPv6 } from '../../../models/blockdomi/IPv6';
+import { prisma } from '../../../db/prisma';
 
 export interface OficioDetalhes {
   qtd_dominios: number;
@@ -49,36 +42,26 @@ export class BlockdomiPublicoService {
    * Inclui ofícios de Dominio, IPv4 e IPv6 — antes só Dominio, ofícios só com IPs não apareciam.
    */
   static async listarDadosPublicos(): Promise<BlockdomiPublicoResponse> {
-    const versoes = await VersaoBlockdomi.findAll({ attributes: ['id', 'numero'], raw: true });
+    const versoes = await prisma.blockdomi_versoes.findMany({ select: { id: true, numero: true } });
     const versaoIdParaNumero = new Map<number | null, string | null>();
     versaoIdParaNumero.set(null, null);
     for (const v of versoes) {
       versaoIdParaNumero.set(v.id, v.numero ?? null);
     }
 
-    const oficioIncludes = [
-      { model: VersaoBlockdomi, as: 'versaoRef' as const, attributes: ['numero'], required: false },
-      { model: NumeroSeiAnatelBlockdomi, as: 'numeroSeiRef' as const, attributes: ['numero'], required: false }
-    ];
+    const oficioSelect = {
+      nome_oficio: true,
+      data_inicio_bloqueio: true,
+      data_fim_bloqueio: true,
+      versao_id: true,
+      created_at: true,
+      blockdomi_versoes: { select: { numero: true } },
+      blockdomi_numeros_sei_anatel: { select: { numero: true } },
+    } as const;
     const [dominios, ipv4s, ipv6s] = await Promise.all([
-      Dominio.findAll({
-        where: { ativo: true },
-        attributes: ['nome_oficio', 'data_inicio_bloqueio', 'data_fim_bloqueio', 'versao_id', 'created_at'],
-        include: oficioIncludes,
-        raw: false
-      }),
-      IPv4.findAll({
-        where: { ativo: true },
-        attributes: ['nome_oficio', 'data_inicio_bloqueio', 'data_fim_bloqueio', 'versao_id', 'created_at'],
-        include: oficioIncludes,
-        raw: false
-      }),
-      IPv6.findAll({
-        where: { ativo: true },
-        attributes: ['nome_oficio', 'data_inicio_bloqueio', 'data_fim_bloqueio', 'versao_id', 'created_at'],
-        include: oficioIncludes,
-        raw: false
-      })
+      prisma.blockdomi_dominios.findMany({ where: { ativo: true }, select: oficioSelect }),
+      prisma.blockdomi_ipv4.findMany({ where: { ativo: true }, select: oficioSelect }),
+      prisma.blockdomi_ipv6.findMany({ where: { ativo: true }, select: oficioSelect }),
     ]);
 
     const seen = new Map<string, OficioPublico>();
@@ -114,19 +97,23 @@ export class BlockdomiPublicoService {
       oficios.push(oficio);
     };
 
-    const toPlain = (d: { get: (opts: { plain: true }) => Record<string, unknown> }) => {
-      const p = d.get({ plain: true }) as Record<string, unknown>;
-      const seiRef = p.numeroSeiRef as { numero?: string } | null | undefined;
-      return {
-        nome_oficio: p.nome_oficio as string | null,
-        data_inicio_bloqueio: p.data_inicio_bloqueio,
-        data_fim_bloqueio: p.data_fim_bloqueio,
-        versao_id: p.versao_id as number | null,
-        numero_sei_anatel: seiRef?.numero ?? null,
-        created_at: p.created_at as string | Date | null | undefined,
-        versaoRef: p.versaoRef as { numero?: string } | undefined
-      };
-    };
+    const toPlain = (row: {
+      nome_oficio: string | null;
+      data_inicio_bloqueio: Date | null;
+      data_fim_bloqueio: Date | null;
+      versao_id: number | null;
+      created_at: Date;
+      blockdomi_versoes: { numero: string } | null;
+      blockdomi_numeros_sei_anatel: { numero: string } | null;
+    }) => ({
+      nome_oficio: row.nome_oficio,
+      data_inicio_bloqueio: row.data_inicio_bloqueio,
+      data_fim_bloqueio: row.data_fim_bloqueio,
+      versao_id: row.versao_id,
+      numero_sei_anatel: row.blockdomi_numeros_sei_anatel?.numero ?? null,
+      created_at: row.created_at,
+      versaoRef: row.blockdomi_versoes ?? undefined,
+    });
     const domPlain = dominios.map(toPlain);
     const ipv4Plain = ipv4s.map(toPlain);
     const ipv6Plain = ipv6s.map(toPlain);
@@ -168,20 +155,14 @@ export class BlockdomiPublicoService {
     }
 
     const [totalDominios, totalIpv4, totalIpv6, totalUrls] = await Promise.all([
-      Dominio.count({
-        where: {
-          ativo: true,
-          dominio: { [Op.notLike]: '%/%' }
-        }
+      prisma.blockdomi_dominios.count({
+        where: { ativo: true, dominio: { not: { contains: '/' } } },
       }),
-      IPv4.count({ where: { ativo: true } }),
-      IPv6.count({ where: { ativo: true } }),
-      Dominio.count({
-        where: {
-          ativo: true,
-          dominio: { [Op.like]: '%/%' }
-        }
-      })
+      prisma.blockdomi_ipv4.count({ where: { ativo: true } }),
+      prisma.blockdomi_ipv6.count({ where: { ativo: true } }),
+      prisma.blockdomi_dominios.count({
+        where: { ativo: true, dominio: { contains: '/' } },
+      }),
     ]);
 
     const stats = {
@@ -195,7 +176,7 @@ export class BlockdomiPublicoService {
   }
 
   /**
-   * Normaliza data para chave (YYYY-MM-DD) — evita mismatch entre Date do MySQL e string do Sequelize.
+   * Normaliza data para chave (YYYY-MM-DD).
    */
   private static normalizarDataParaChave(val: string | Date | null | undefined): string {
     if (val == null) return '';
@@ -229,10 +210,7 @@ export class BlockdomiPublicoService {
   private static async buscarDetalhesPorOficio(): Promise<Map<string, OficioDetalhes>> {
     const map = new Map<string, OficioDetalhes>();
 
-    const versoes = await VersaoBlockdomi.findAll({
-      attributes: ['id', 'numero'],
-      raw: true
-    });
+    const versoes = await prisma.blockdomi_versoes.findMany({ select: { id: true, numero: true } });
     const versaoIdParaNumero = new Map<number | null, string | null>();
     versaoIdParaNumero.set(null, null);
     for (const v of versoes) {
@@ -263,14 +241,14 @@ export class BlockdomiPublicoService {
     };
 
     const [rowsDominios, rowsUrls, rowsIpv4, rowsIpv6] = await Promise.all([
-      sequelize.query<{
+      prisma.$queryRawUnsafe<Array<{
         nome_oficio: string | null;
         di: string | null;
         df: string | null;
         versao_id: number | null;
         numero_sei_anatel: string | null;
         cnt: string;
-      }>(
+      }>>(
         `SELECT d.nome_oficio,
          DATE_FORMAT(d.data_inicio_bloqueio, '%Y-%m-%d') as di,
          DATE_FORMAT(d.data_fim_bloqueio, '%Y-%m-%d') as df,
@@ -278,17 +256,15 @@ export class BlockdomiPublicoService {
          FROM blockdomi_dominios d
          LEFT JOIN blockdomi_numeros_sei_anatel s ON d.numero_sei_anatel_id = s.id
          WHERE d.ativo = true AND d.dominio NOT LIKE '%/%'
-         GROUP BY d.nome_oficio, d.data_inicio_bloqueio, d.data_fim_bloqueio, d.versao_id, s.numero`,
-        { type: QueryTypes.SELECT }
-      ),
-      sequelize.query<{
+         GROUP BY d.nome_oficio, d.data_inicio_bloqueio, d.data_fim_bloqueio, d.versao_id, s.numero`),
+      prisma.$queryRawUnsafe<Array<{
         nome_oficio: string | null;
         di: string | null;
         df: string | null;
         versao_id: number | null;
         numero_sei_anatel: string | null;
         cnt: string;
-      }>(
+      }>>(
         `SELECT d.nome_oficio,
          DATE_FORMAT(d.data_inicio_bloqueio, '%Y-%m-%d') as di,
          DATE_FORMAT(d.data_fim_bloqueio, '%Y-%m-%d') as df,
@@ -296,17 +272,15 @@ export class BlockdomiPublicoService {
          FROM blockdomi_dominios d
          LEFT JOIN blockdomi_numeros_sei_anatel s ON d.numero_sei_anatel_id = s.id
          WHERE d.ativo = true AND d.dominio LIKE '%/%'
-         GROUP BY d.nome_oficio, d.data_inicio_bloqueio, d.data_fim_bloqueio, d.versao_id, s.numero`,
-        { type: QueryTypes.SELECT }
-      ),
-      sequelize.query<{
+         GROUP BY d.nome_oficio, d.data_inicio_bloqueio, d.data_fim_bloqueio, d.versao_id, s.numero`),
+      prisma.$queryRawUnsafe<Array<{
         nome_oficio: string | null;
         di: string | null;
         df: string | null;
         versao_id: number | null;
         numero_sei_anatel: string | null;
         cnt: string;
-      }>(
+      }>>(
         `SELECT d.nome_oficio,
          DATE_FORMAT(d.data_inicio_bloqueio, '%Y-%m-%d') as di,
          DATE_FORMAT(d.data_fim_bloqueio, '%Y-%m-%d') as df,
@@ -314,17 +288,15 @@ export class BlockdomiPublicoService {
          FROM blockdomi_ipv4 d
          LEFT JOIN blockdomi_numeros_sei_anatel s ON d.numero_sei_anatel_id = s.id
          WHERE d.ativo = true
-         GROUP BY d.nome_oficio, d.data_inicio_bloqueio, d.data_fim_bloqueio, d.versao_id, s.numero`,
-        { type: QueryTypes.SELECT }
-      ),
-      sequelize.query<{
+         GROUP BY d.nome_oficio, d.data_inicio_bloqueio, d.data_fim_bloqueio, d.versao_id, s.numero`),
+      prisma.$queryRawUnsafe<Array<{
         nome_oficio: string | null;
         di: string | null;
         df: string | null;
         versao_id: number | null;
         numero_sei_anatel: string | null;
         cnt: string;
-      }>(
+      }>>(
         `SELECT d.nome_oficio,
          DATE_FORMAT(d.data_inicio_bloqueio, '%Y-%m-%d') as di,
          DATE_FORMAT(d.data_fim_bloqueio, '%Y-%m-%d') as df,
@@ -332,9 +304,7 @@ export class BlockdomiPublicoService {
          FROM blockdomi_ipv6 d
          LEFT JOIN blockdomi_numeros_sei_anatel s ON d.numero_sei_anatel_id = s.id
          WHERE d.ativo = true
-         GROUP BY d.nome_oficio, d.data_inicio_bloqueio, d.data_fim_bloqueio, d.versao_id, s.numero`,
-        { type: QueryTypes.SELECT }
-      )
+         GROUP BY d.nome_oficio, d.data_inicio_bloqueio, d.data_fim_bloqueio, d.versao_id, s.numero`)
     ]);
 
     for (const r of rowsDominios) {
@@ -358,10 +328,9 @@ export class BlockdomiPublicoService {
   }
 
   static async getVersaoAtual(): Promise<string | null> {
-    const v = await VersaoBlockdomi.findOne({
-      order: [['id', 'DESC']],
-      attributes: ['numero'],
-      raw: true
+    const v = await prisma.blockdomi_versoes.findFirst({
+      orderBy: { id: 'desc' },
+      select: { numero: true },
     });
     return v?.numero ?? null;
   }

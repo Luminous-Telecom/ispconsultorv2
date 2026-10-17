@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { ServidorEmail } from '../../../models/comunicacao/ServidorEmail';
 import { MensagemEmail } from '../../../models/comunicacao/MensagemEmail';
@@ -6,14 +7,16 @@ import { ServidorEmailService } from '../../../services/comunicacao/ServidorEmai
 import { logger } from '../../../utils/logger';
 import { formatDateTime } from '../../../utils/dateUtils';
 import nodemailer from 'nodemailer';
-import { Op } from 'sequelize';
-import { ValidationError } from 'sequelize';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { SYSTEM_NAME } from '../../../constants/systemBrand';
 import { whereComunicacaoEmpresaEstrito, pertenceComunicacaoEmpresa } from '../../../utils/comunicacaoEmpresaWhere';
+
+function isModelValidationError(error: unknown): error is Error & { errors: Array<{ message?: string }> } {
+  return error instanceof Error && Array.isArray((error as { errors?: unknown }).errors);
+}
 
 export class ServidorEmailController {
   /**
@@ -106,7 +109,7 @@ export class ServidorEmailController {
           req as AuthenticatedRequest,
           'ServidorEmail',
           servidor.id,
-          servidor.toJSON() as unknown as Record<string, unknown>,
+          toPlain(servidor) as unknown as Record<string, unknown>,
           undefined,
           empresaIdAudit
         );
@@ -116,8 +119,8 @@ export class ServidorEmailController {
 
       sendSuccess(res, servidor, 'Servidor de email criado com sucesso', 201);
     } catch (error: unknown) {
-      if (error instanceof ValidationError) {
-        const errors = error.errors ? error.errors.map((err) => err.message) : [];
+      if (isModelValidationError(error)) {
+        const errors = error.errors.map((err) => err.message ?? '');
         sendValidationError(res, 'Dados inválidos', { errors });
         return;
       }
@@ -149,13 +152,13 @@ export class ServidorEmailController {
 
       const empresaIdServidor = (servidor as { empresa_id?: number | null }).empresa_id ?? empresaId ?? null;
       if (servidorData.ativo === true) {
-        const whereAtivo = whereComunicacaoEmpresaEstrito(empresaIdServidor, { ativo: true, id: { [Op.ne]: id } });
+        const whereAtivo = whereComunicacaoEmpresaEstrito(empresaIdServidor, { ativo: true, id: { not: id } });
         if (whereAtivo) {
           await ServidorEmailService.updateBulk(whereAtivo, { ativo: false });
         }
       }
 
-      const dadosAnteriores = servidor.toJSON();
+      const dadosAnteriores = toPlain(servidor);
       await ServidorEmailService.updateInstance(servidor, servidorData);
 
       try {
@@ -165,7 +168,7 @@ export class ServidorEmailController {
           'ServidorEmail',
           servidor.id,
           dadosAnteriores as unknown as Record<string, unknown>,
-          servidor.toJSON() as unknown as Record<string, unknown>,
+          toPlain(servidor) as unknown as Record<string, unknown>,
           undefined,
           empresaIdAudit
         );
@@ -175,8 +178,8 @@ export class ServidorEmailController {
 
       sendSuccess(res, servidor, 'Servidor de email atualizado com sucesso');
     } catch (error: unknown) {
-      if (error instanceof ValidationError) {
-        const errors = error.errors ? error.errors.map((err) => err.message) : [];
+      if (isModelValidationError(error)) {
+        const errors = error.errors.map((err) => err.message ?? '');
         sendValidationError(res, 'Dados inválidos', { errors });
         return;
       }
@@ -205,7 +208,7 @@ export class ServidorEmailController {
         return;
       }
 
-      const dadosAnteriores = servidor.toJSON();
+      const dadosAnteriores = toPlain(servidor);
       await ServidorEmailService.delete(servidor.id);
 
       try {
@@ -295,7 +298,7 @@ export class ServidorEmailController {
         secure: servidor.ssl,
         auth: {
           user: servidor.usuario,
-          pass: servidor.senha
+          pass: 'senha' in servidor ? String(servidor.senha ?? '') : ''
         },
         tls: servidor.tls ? {
           rejectUnauthorized: false
@@ -397,7 +400,7 @@ export class ServidorEmailController {
           delete servidorData.senha;
         }
 
-        const dadosAnteriores = servidor.toJSON();
+        const dadosAnteriores = toPlain(servidor);
         await ServidorEmailService.updateInstance(servidor, servidorData);
         
         try {
@@ -407,7 +410,7 @@ export class ServidorEmailController {
             'ServidorEmail',
             servidor.id,
             dadosAnteriores as unknown as Record<string, unknown>,
-            servidor.toJSON() as unknown as Record<string, unknown>,
+            toPlain(servidor) as unknown as Record<string, unknown>,
             undefined,
             empresaIdAudit
           );
@@ -425,17 +428,11 @@ export class ServidorEmailController {
         }
 
         servidorData.ativo = true;
-        const novoServidor = await ServidorEmailService.create({
+        const criado = await ServidorEmailService.create({
           ...servidorData,
           empresa_id: empresaId,
         });
-        
-        // Recarregar sem a senha
-        await novoServidor.reload({
-          attributes: {
-            exclude: ['senha'],
-          },
-        });
+        const novoServidor = (await ServidorEmailService.getById(criado.id)) ?? criado;
         
         try {
           const empresaIdAudit = getEmpresaIdOrNull(req) ?? novoServidor.empresa_id ?? null;
@@ -443,7 +440,7 @@ export class ServidorEmailController {
             req as AuthenticatedRequest,
             'ServidorEmail',
             novoServidor.id,
-            novoServidor.toJSON() as unknown as Record<string, unknown>,
+            toPlain(novoServidor) as unknown as Record<string, unknown>,
             undefined,
             empresaIdAudit
           );
@@ -454,8 +451,8 @@ export class ServidorEmailController {
         sendSuccess(res, novoServidor, 'Servidor de email criado com sucesso', 201);
       }
     } catch (error: unknown) {
-      if (error instanceof ValidationError) {
-        const errors = error.errors ? error.errors.map((err) => err.message) : [];
+      if (isModelValidationError(error)) {
+        const errors = error.errors.map((err) => err.message ?? '');
         sendValidationError(res, 'Dados inválidos', { errors });
         return;
       }
@@ -540,7 +537,7 @@ export class ServidorEmailController {
 
       try {
         if (mensagem) {
-          const dadosAnteriores = mensagem.toJSON();
+          const dadosAnteriores = toPlain(mensagem);
           mensagem = await MensagemEmailService.update(mensagem.id, mensagemData);
           
           const empresaIdAudit = getEmpresaIdOrNull(req) ?? mensagem.empresa_id ?? null;
@@ -549,7 +546,7 @@ export class ServidorEmailController {
             'MensagemEmail',
             mensagem.id,
             dadosAnteriores as unknown as Record<string, unknown>,
-            mensagem.toJSON() as unknown as Record<string, unknown>,
+            toPlain(mensagem) as unknown as Record<string, unknown>,
             undefined,
             empresaIdAudit
           );
@@ -560,7 +557,7 @@ export class ServidorEmailController {
             req as AuthenticatedRequest,
             'MensagemEmail',
             mensagem.id,
-            mensagem.toJSON() as unknown as Record<string, unknown>,
+            toPlain(mensagem) as unknown as Record<string, unknown>,
             undefined,
             empresaIdAudit
           );

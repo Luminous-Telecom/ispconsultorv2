@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Response } from 'express';
 import Joi from 'joi';
 import { UsuarioService } from '../../../services/cadastros/UsuarioService';
@@ -97,7 +98,7 @@ export class SaasTenantUsuarioController {
           req as unknown as import('express').Request,
           'Usuario',
           usuario.id,
-          { ...usuario.toJSON(), password_hash: '[REDACTED]' } as Record<string, unknown>
+          { ...toPlain(usuario), password_hash: '[REDACTED]' } as Record<string, unknown>
         );
       } catch {
         /* não interromper */
@@ -138,7 +139,7 @@ export class SaasTenantUsuarioController {
           return;
         }
       }
-      const dadosAnteriores = { ...usuario.toJSON(), password_hash: '[REDACTED]' } as Record<string, unknown>;
+      const dadosAnteriores = { ...toPlain(usuario), password_hash: '[REDACTED]' } as Record<string, unknown>;
       await UsuarioService.update(id, {
         nome: value.nome,
         email: value.email,
@@ -147,7 +148,7 @@ export class SaasTenantUsuarioController {
         ativo: value.ativo,
       });
       const usuarioAtualizado = await UsuarioService.getById(id);
-      const dadosNovos = usuarioAtualizado ? { ...usuarioAtualizado.toJSON(), password_hash: '[REDACTED]' } as Record<string, unknown> : dadosAnteriores;
+      const dadosNovos = usuarioAtualizado ? { ...toPlain(usuarioAtualizado), password_hash: '[REDACTED]' } as Record<string, unknown> : dadosAnteriores;
       try {
         await registrarAtualizacao(
           req as unknown as import('express').Request,
@@ -173,7 +174,7 @@ export class SaasTenantUsuarioController {
         sendNotFound(res, 'Usuário não encontrado');
         return;
       }
-      const dadosAnteriores = { ...usuario.toJSON(), password_hash: '[REDACTED]' } as Record<string, unknown>;
+      const dadosAnteriores = { ...toPlain(usuario), password_hash: '[REDACTED]' } as Record<string, unknown>;
       try {
         await registrarExclusao(
           req as unknown as import('express').Request,

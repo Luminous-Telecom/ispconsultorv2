@@ -1,3 +1,4 @@
+import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
 import { AssinaturaDigitalService } from '../AssinaturaDigitalService';
 import { TermoContratoService } from '../../contratos/TermoContratoService';
@@ -37,25 +38,35 @@ export class AssinaturaConsultaService {
 
     if (resultado.success && resultado.data) {
       if (resultado.data.status === 'signed' || resultado.data.status === 'completed') {
-        await assinatura.marcarComoAssinado();
-        
+        const dataAssinatura = new Date();
+        await prisma.assinatura_digital_assinaturas.update({
+          where: { id: assinatura.id },
+          data: { status: 'assinado', data_assinatura: dataAssinatura, updated_at: new Date() },
+        });
+        Object.assign(assinatura, { status: 'assinado', data_assinatura: dataAssinatura });
+
         if (assinatura.termo_contrato_id) {
           const termoContrato = await TermoContratoService.getById(assinatura.termo_contrato_id);
           if (termoContrato && termoContrato.assinado === 'NAO') {
-            termoContrato.assinado = 'SIM';
-            termoContrato.data_aceite = new Date();
-            termoContrato.aceito_por = assinatura.nome_assinante || 'Assinatura Digital';
-            await termoContrato.save();
+            const dataAceite = new Date();
+            const aceitoPor = assinatura.nome_assinante || 'Assinatura Digital';
+            await prisma.contratos_termos.update({
+              where: { id: termoContrato.id },
+              data: { assinado: 'SIM', data_aceite: dataAceite, aceito_por: aceitoPor, updated_at: new Date() },
+            });
           }
         }
       } else if (resultado.data.status === 'canceled') {
-        assinatura.status = 'cancelado';
-        await assinatura.save();
+        await prisma.assinatura_digital_assinaturas.update({
+          where: { id: assinatura.id },
+          data: { status: 'cancelado', updated_at: new Date() },
+        });
+        Object.assign(assinatura, { status: 'cancelado' });
       }
     }
 
     return {
-      assinatura: assinatura.toJSON(),
+      assinatura,
       status_api: resultado.data?.status
     };
   }
@@ -117,8 +128,11 @@ export class AssinaturaConsultaService {
     const resultado = await (signatureService as unknown as ISignatureService).cancelarAssinatura(assinatura.api_document_id);
 
     if (resultado.success) {
-      assinatura.status = 'cancelado';
-      await assinatura.save();
+      await prisma.assinatura_digital_assinaturas.update({
+        where: { id: assinatura.id },
+        data: { status: 'cancelado', updated_at: new Date() },
+      });
+      Object.assign(assinatura, { status: 'cancelado' });
     } else {
       throw new Error(resultado.error || 'Erro ao cancelar assinatura');
     }

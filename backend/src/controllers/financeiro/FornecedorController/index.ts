@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { FornecedorService } from '../../../services/financeiro/FornecedorService';
 import { fornecedorCreateSchema, fornecedorUpdateSchema } from '../../../validators/fornecedor.validator';
@@ -101,7 +102,7 @@ export class FornecedorController {
           req,
           'Fornecedor',
           fornecedor.id,
-          fornecedor.toJSON() as Record<string, unknown>,
+          toPlain(fornecedor) as Record<string, unknown>,
           undefined,
           empresaIdAudit
         );
@@ -161,12 +162,12 @@ export class FornecedorController {
       }
 
       // Capturar dados anteriores para auditoria
-      const dadosAnteriores = fornecedor.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(fornecedor) as Record<string, unknown>;
       
       const fornecedorAtualizado = await FornecedorService.update(id, value);
       
       // Registrar auditoria
-      const dadosNovos = fornecedorAtualizado.toJSON() as Record<string, unknown>;
+      const dadosNovos = toPlain(fornecedorAtualizado) as Record<string, unknown>;
       setAuditData(req, dadosAnteriores, dadosNovos);
       
       try {
@@ -220,7 +221,7 @@ export class FornecedorController {
       }
 
       // Capturar dados anteriores para auditoria
-      const dadosAnteriores = fornecedor.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(fornecedor) as Record<string, unknown>;
       
       await FornecedorService.delete(id);
 

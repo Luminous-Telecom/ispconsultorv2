@@ -5,7 +5,7 @@
 
 /**
  * Formata uma data para string ISO mantendo o horário local do servidor
- * O Sequelize já retorna a data no horário local (timezone: '-03:00')
+ * A data já chega no horário local do servidor (timezone: '-03:00')
  * Esta função apenas formata como string ISO com timezone local antes da serialização JSON
  * (evita que JSON.stringify converta automaticamente para UTC)
  * 
@@ -24,7 +24,7 @@ export function formatDateISOLocal(date: string | Date | null | undefined): stri
     
     if (isNaN(dateObj.getTime())) return null;
     
-    // Obter componentes locais (não UTC) - o Sequelize já retorna no horário local
+    // Componentes no horário local do servidor, sem converter para UTC
     const year = dateObj.getFullYear();
     const month = String(dateObj.getMonth() + 1).padStart(2, '0');
     const day = String(dateObj.getDate()).padStart(2, '0');

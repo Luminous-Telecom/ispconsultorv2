@@ -14,7 +14,7 @@ import {
   HasManyHasAssociationsMixin,
   HasManyCountAssociationsMixin,
   HasManyCreateAssociationMixin
-} from 'sequelize';
+} from '../../../db/orm';
 import { sequelize } from '../../../config/database';
 import { ContaPagar } from '../ContaPagar';
 import { formatCreatedAt } from '../../../utils/dateUtils';

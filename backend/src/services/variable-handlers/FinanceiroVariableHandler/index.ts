@@ -1,7 +1,6 @@
+import type { clientes, financeiro_titulos } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { VariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis } from '../types';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Titulo } from '../../../models/financeiro/Titulo';
-import { Op } from 'sequelize';
 import { Formatter } from '../utils/Formatter';
 import { VariableReplacer } from '../utils/VariableReplacer';
 import { FinancialCalculationsService } from '../../FinancialCalculationsService';
@@ -70,12 +69,12 @@ export class FinanceiroVariableHandler implements VariableHandler {
   /**
    * Busca títulos do cliente com status pendente ou vencido
    */
-  private async buscarTitulos(cliente: Cliente): Promise<Titulo[]> {
-    return Titulo.findAll({
+  private async buscarTitulos(cliente: { id: number }): Promise<financeiro_titulos[]> {
+    return prisma.financeiro_titulos.findMany({
       where: {
         cliente_id: cliente.id,
-        status: { [Op.in]: ['pendente', 'vencido'] }
-      }
+        status: { in: ['pendente', 'vencido'] },
+      },
     });
   }
 
@@ -83,7 +82,7 @@ export class FinanceiroVariableHandler implements VariableHandler {
    * Calcula valores financeiros agregados do cliente
    */
   private async calcularValoresFinanceiros(
-    cliente: Cliente,
+    cliente: clientes,
     dataRef: Date
   ): Promise<CalculosFinanceiros> {
     const titulos = await this.buscarTitulos(cliente);
@@ -101,8 +100,8 @@ export class FinanceiroVariableHandler implements VariableHandler {
     };
 
     for (const titulo of titulos) {
-      const valor = titulo.valor || 0;
-      const valorPago = titulo.valor_pago || 0;
+      const valor = Number(titulo.valor || 0);
+      const valorPago = Number(titulo.valor_pago || 0);
       const saldo = valor - valorPago;
 
       calculos.totalPago += valorPago;
@@ -144,21 +143,22 @@ export class FinanceiroVariableHandler implements VariableHandler {
    * não os juros e multa padrão do banco
    */
   private adicionarJurosEMulta(
-    titulo: Titulo,
+    titulo: financeiro_titulos,
     valor: number,
     calculos: CalculosFinanceiros
   ): void {
+    const acrescimoPercentual = titulo.acrescimo_percentual == null ? null : Number(titulo.acrescimo_percentual);
+    const acrescimoValor = titulo.acrescimo_valor == null ? null : Number(titulo.acrescimo_valor);
     const acrescimoResult = FinancialCalculationsService.calcularAcrescimo(valor, {
-      acrescimo_percentual: titulo.acrescimo_percentual,
-      acrescimo_valor: titulo.acrescimo_valor
+      acrescimo_percentual: acrescimoPercentual,
+      acrescimo_valor: acrescimoValor
     });
 
-    // Separar juros (percentual) e multa (valor fixo) para compatibilidade
-    const juros = titulo.acrescimo_percentual && titulo.acrescimo_percentual > 0
-      ? acrescimoResult.valorAcrescimo - (titulo.acrescimo_valor || 0)
+    const juros = acrescimoPercentual && acrescimoPercentual > 0
+      ? acrescimoResult.valorAcrescimo - (acrescimoValor || 0)
       : 0;
-    
-    const multa = titulo.acrescimo_valor || 0;
+
+    const multa = acrescimoValor || 0;
 
     calculos.totalJuros += juros;
     calculos.totalMulta += multa;

@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { PlanoService } from '../../../services/cadastros/PlanoService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
@@ -48,7 +49,7 @@ export class PlanoController {
       }
 
       // Garantir que servicos_inclusos seja um array
-      const planoData = plano.toJSON();
+      const planoData = toPlain(plano) as Record<string, unknown>;
       if (typeof planoData.servicos_inclusos === 'string') {
         try {
           planoData.servicos_inclusos = JSON.parse(planoData.servicos_inclusos);
@@ -90,7 +91,7 @@ export class PlanoController {
           req,
           'Plano',
           plano.id,
-          plano.toJSON() as Record<string, unknown>,
+          toPlain(plano) as Record<string, unknown>,
           undefined,
           empresaIdAudit
         );
@@ -119,7 +120,7 @@ export class PlanoController {
         return;
       }
       
-      const dadosAnteriores = existingPlano.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(existingPlano) as Record<string, unknown>;
       
       // Validar dados obrigatórios
       const { nome_plano, tipo_servico, valor_mensal } = req.body;
@@ -131,7 +132,7 @@ export class PlanoController {
       const plano = await PlanoService.update(id, req.body);
       
       // Registrar auditoria
-      const dadosNovos = plano.toJSON() as Record<string, unknown>;
+      const dadosNovos = toPlain(plano) as Record<string, unknown>;
       setAuditData(req, dadosAnteriores, dadosNovos);
       
       try {
@@ -172,7 +173,7 @@ export class PlanoController {
       }
       
       // Capturar dados anteriores para auditoria
-      const dadosAnteriores = plano.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(plano) as Record<string, unknown>;
       
       try {
         await PlanoService.delete(id);
@@ -244,8 +245,8 @@ export class PlanoController {
           req,
           'Plano',
           plano.id,
-          planoAntes ? (planoAntes.toJSON() as Record<string, unknown>) : {},
-          plano.toJSON() as Record<string, unknown>,
+          planoAntes ? (toPlain(planoAntes) as Record<string, unknown>) : {},
+          toPlain(plano) as Record<string, unknown>,
           `Status alterado para ${status}`,
           empresaIdAudit
         );

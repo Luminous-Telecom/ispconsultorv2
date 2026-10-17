@@ -1,7 +1,7 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { SchedulerService } from '../../../services/scheduler/SchedulerService';
 import { ScheduledRoutineService } from '../../../services/scheduler/ScheduledRoutineService';
-import { ScheduledRoutine } from '../../../models';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../../../utils/responseUtils';
@@ -128,7 +128,7 @@ export class SchedulerController {
           req,
           'ScheduledRoutine',
           routine.id,
-          routine.toJSON ? routine.toJSON() as Record<string, unknown> : (routine as unknown as Record<string, unknown>),
+          toPlain(routine) as Record<string, unknown>,
           undefined,
           empresaIdAudit
         );
@@ -174,7 +174,7 @@ export class SchedulerController {
         sendNotFound(res, 'Rotina não encontrada');
         return;
       }
-      const dadosAnteriores = routineBefore.toJSON ? routineBefore.toJSON() as Record<string, unknown> : (routineBefore as unknown as Record<string, unknown>);
+      const dadosAnteriores = toPlain(routineBefore) as Record<string, unknown>;
 
       const routine = await this.schedulerService.updateRoutine(Number(id), updateData);
       
@@ -186,7 +186,7 @@ export class SchedulerController {
       }
 
       // Registrar auditoria
-      const dadosNovos = routineAtualizada.toJSON ? routineAtualizada.toJSON() as Record<string, unknown> : (routineAtualizada as unknown as Record<string, unknown>);
+      const dadosNovos = toPlain(routineAtualizada) as Record<string, unknown>;
       
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores, dadosNovos);
@@ -235,7 +235,7 @@ export class SchedulerController {
         return;
       }
 
-      const dadosAnteriores = routine.toJSON ? routine.toJSON() as Record<string, unknown> : (routine as unknown as Record<string, unknown>);
+      const dadosAnteriores = toPlain(routine) as Record<string, unknown>;
       setAuditData(req, dadosAnteriores);
       try {
         const empresaIdAudit = getEmpresaIdOrNull(req) ?? (routine as { empresa_id?: number | null }).empresa_id ?? null;
@@ -282,7 +282,7 @@ export class SchedulerController {
 
       // Buscar rotina antes de atualizar para capturar dados anteriores
       const routineBefore = await ScheduledRoutineService.getById(Number(id), empresaId ?? undefined);
-      const dadosAnteriores = routineBefore ? (routineBefore.toJSON ? routineBefore.toJSON() as Record<string, unknown> : (routineBefore as unknown as Record<string, unknown>)) : {};
+      const dadosAnteriores = routineBefore ? (toPlain(routineBefore) as Record<string, unknown>) : {};
 
       await this.schedulerService.toggleRoutine(Number(id), ativo);
       
@@ -294,7 +294,7 @@ export class SchedulerController {
       }
 
       // Registrar auditoria
-      const dadosNovos = routineAtualizada.toJSON ? routineAtualizada.toJSON() as Record<string, unknown> : (routineAtualizada as unknown as Record<string, unknown>);
+      const dadosNovos = toPlain(routineAtualizada) as Record<string, unknown>;
       
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores, dadosNovos);
@@ -422,7 +422,7 @@ export class SchedulerController {
         limit: 500,
         empresa_id: empresaId,
       });
-      const allowed = new Set(routines.map((r) => Number((r as ScheduledRoutine).id)));
+      const allowed = new Set(routines.map((r) => Number(r.id)));
       const logs = (await this.schedulerService.getRecentExecutionLogs(50)).filter((log) =>
         allowed.has(Number(log.routine_id))
       );

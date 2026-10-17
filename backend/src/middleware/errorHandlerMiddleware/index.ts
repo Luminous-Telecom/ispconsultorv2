@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { ValidationError as SequelizeValidationError, UniqueConstraintError } from 'sequelize';
-import { ValidationError as JoiValidationError } from 'joi';
+import { Prisma } from '@prisma/client';
 import { logger } from '../../utils/logger';
 import { isJoiError, getErrorMessage, getErrorStack, getErrorName } from '../../utils/errorUtils';
 
@@ -58,32 +57,28 @@ export const errorHandlerMiddleware = (
     return;
   }
   
-  // Erro de validação Sequelize (verificar por instância ou nome)
-  if (err instanceof SequelizeValidationError || err.name === 'SequelizeValidationError') {
-    const sequelizeError = err as unknown as SequelizeValidationError;
-    res.status(400).json({
-      success: false,
-      message: 'Dados inválidos',
-      ...(!isProd && { error: errorMessage }),
-      details: sequelizeError.errors?.map(e => ({
-        field: (e.path || 'unknown') as string,
-        message: e.message
-      }))
-    });
-    return;
-  }
-  
-  // Erro de constraint de unicidade Sequelize (verificar por instância ou nome)
-  if (err instanceof UniqueConstraintError || err.name === 'SequelizeUniqueConstraintError') {
-    const uniqueError = err as unknown as UniqueConstraintError;
+  const prismaError = err instanceof Prisma.PrismaClientKnownRequestError ? err : null;
+
+  if (prismaError?.code === 'P2002') {
+    const target = prismaError.meta?.target;
+    const fields = Array.isArray(target) ? target.map(String) : target ? [String(target)] : [];
     res.status(409).json({
       success: false,
       message: 'Registro já existe',
       error: 'Este registro já existe no sistema',
-      details: uniqueError.errors?.map(e => ({
-        field: (e.path || 'unknown') as string,
-        message: e.message
-      }))
+      details: fields.map((field) => ({
+        field,
+        message: 'Valor já cadastrado',
+      })),
+    });
+    return;
+  }
+
+  if (prismaError?.code === 'P2025') {
+    res.status(404).json({
+      success: false,
+      message: 'Registro não encontrado',
+      error: 'Registro não encontrado',
     });
     return;
   }

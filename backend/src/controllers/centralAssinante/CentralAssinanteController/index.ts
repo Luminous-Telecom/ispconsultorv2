@@ -1,8 +1,4 @@
 import { Request, Response as ExpressResponse } from 'express';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Contrato } from '../../../models/contratos/Contrato';
-import { Titulo } from '../../../models/financeiro/Titulo';
-import { TermoContrato } from '../../../models/contratos/TermoContrato';
 import { ClienteService } from '../../../services/clientes/ClienteService';
 import { ContratoService } from '../../../services/contratos/ContratoService';
 import { TituloService } from '../../../services/financeiro/TituloService';
@@ -17,7 +13,7 @@ import { isTituloEmAbertoAtrasado } from '../../../utils/tituloVencimentoUtils';
 import { logger } from '../../../utils/logger';
 import crypto from 'crypto';
 import { sendSuccess, sendError, sendValidationError, sendForbidden, sendNotFound } from '../../../utils/responseUtils';
-import { Op } from 'sequelize';
+import { prisma } from '../../../db/prisma';
 import type { TituloComRelacoes } from '../../titulos/TituloHelpers/types';
 
 export class CentralAssinanteController {
@@ -167,55 +163,47 @@ export class CentralAssinanteController {
         return;
       }
 
-      // Buscar contratos do cliente
-      const contratos = await Contrato.findAll({
+      const contratoRows = await prisma.contratos.findMany({
         where: { cliente_id: clienteId },
-        include: [
-          { association: 'plano', attributes: ['id', 'nome_plano', 'valor_mensal'] },
-          { association: 'bancoBoleto', attributes: ['id', 'nome'] }
-        ],
-        order: [['created_at', 'DESC']]
+        include: {
+          cadastros_planos: { select: { id: true, nome_plano: true, valor_mensal: true } },
+          cadastros_bancos: { select: { id: true, nome: true } },
+        },
+        orderBy: { created_at: 'desc' },
       });
 
-      // Buscar títulos do cliente
-      const titulos = await Titulo.findAll({
+      const tituloRows = await prisma.financeiro_titulos.findMany({
         where: { cliente_id: clienteId },
-        include: [
-          { association: 'plano', attributes: ['id', 'nome_plano'] },
-          { association: 'banco', attributes: ['id', 'nome'] },
-          { association: 'contrato', attributes: ['id'] }
-        ],
-        order: [['data_vencimento', 'DESC']]
+        include: {
+          cadastros_planos: { select: { id: true, nome_plano: true } },
+          cadastros_bancos: { select: { id: true, nome: true } },
+          contratos: { select: { id: true } },
+        },
+        orderBy: { data_vencimento: 'desc' },
       });
 
-      // Buscar termos dos contratos do cliente
-      const contratoIds = contratos.map(c => c.id);
-      const termos = await TermoContrato.findAll({
-        where: { contrato_id: { [Op.in]: contratoIds } },
-        order: [['created_at', 'DESC']]
-      });
+      const contratoIds = contratoRows.map((c) => c.id);
+      const termoRows = contratoIds.length
+        ? await prisma.contratos_termos.findMany({
+            where: { contrato_id: { in: contratoIds } },
+            orderBy: { created_at: 'desc' },
+          })
+        : [];
 
-      // Converter para JSON para acessar relacionamentos
-      const contratosJson = contratos.map(c => {
-        const json = c.toJSON() as any;
-        return {
-          ...json,
-          plano: json.plano || null,
-          bancoBoleto: json.bancoBoleto || null
-        };
-      });
+      const contratosJson = contratoRows.map(({ cadastros_planos, cadastros_bancos, ...rest }) => ({
+        ...rest,
+        plano: cadastros_planos || null,
+        bancoBoleto: cadastros_bancos || null,
+      }));
 
-      const titulosJson = titulos.map(t => {
-        const json = t.toJSON() as any;
-        return {
-          ...json,
-          plano: json.plano || null,
-          banco: json.banco || null,
-          contrato: json.contrato || null
-        };
-      });
+      const titulosJson = tituloRows.map(({ cadastros_planos, cadastros_bancos, contratos, ...rest }) => ({
+        ...rest,
+        plano: cadastros_planos || null,
+        banco: cadastros_bancos || null,
+        contrato: contratos || null,
+      }));
 
-      const termosJson = termos.map(t => t.toJSON() as any);
+      const termosJson = termoRows;
 
       // Classificar títulos (usar JSON convertido)
       const hoje = new Date();
@@ -393,8 +381,8 @@ export class CentralAssinanteController {
       }
 
       // Verificar se o contrato pertence ao cliente
-      const contrato = await Contrato.findOne({
-        where: { id: contratoIdNum, cliente_id: clienteId }
+      const contrato = await prisma.contratos.findFirst({
+        where: { id: contratoIdNum, cliente_id: clienteId },
       });
 
       if (!contrato) {
@@ -420,7 +408,7 @@ export class CentralAssinanteController {
 
       const baseUrl = req.get('host') ? `${req.protocol}://${req.get('host')}` : undefined;
       const conteudoProcessado = await VariaveisDocumentoService.processarVariaveis(
-        modelo.conteudo,
+        modelo.conteudo ?? '',
         {
           cliente,
           contrato
@@ -469,8 +457,8 @@ export class CentralAssinanteController {
       }
 
       // Buscar termo
-      const termo = await TermoContrato.findOne({
-        where: { id: termoIdNum }
+      const termo = await prisma.contratos_termos.findUnique({
+        where: { id: termoIdNum },
       });
 
       if (!termo) {
@@ -479,8 +467,8 @@ export class CentralAssinanteController {
       }
 
       // Buscar contrato e verificar se pertence ao cliente
-      const contrato = await Contrato.findOne({
-        where: { id: termo.contrato_id, cliente_id: clienteId }
+      const contrato = await prisma.contratos.findFirst({
+        where: { id: termo.contrato_id, cliente_id: clienteId },
       });
 
       if (!contrato) {
@@ -507,7 +495,7 @@ export class CentralAssinanteController {
 
       const baseUrl = req.get('host') ? `${req.protocol}://${req.get('host')}` : undefined;
       const conteudoProcessado = await VariaveisDocumentoService.processarVariaveis(
-        modelo.conteudo,
+        modelo.conteudo ?? '',
         {
           cliente,
           contrato
@@ -592,7 +580,9 @@ export class CentralAssinanteController {
       if (!titulo.charge_id) {
         logger.info('Registrando título no banco antes de gerar boleto', { tituloId: tituloIdNum });
         try {
-          const resultado = await BancoApiService.gerarTitulo(titulo);
+          const resultado = await BancoApiService.gerarTitulo(
+            titulo as unknown as Parameters<typeof BancoApiService.gerarTitulo>[0]
+          );
           
           if (!resultado.success || !resultado.data) {
             logger.error('Falha ao registrar título no banco', { 

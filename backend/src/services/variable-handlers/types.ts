@@ -1,6 +1,4 @@
-import { Cliente } from '../../models/clientes/Cliente';
-import { Contrato } from '../../models/contratos/Contrato';
-import { Titulo } from '../../models/financeiro/Titulo';
+import type { clientes, contratos, financeiro_titulos } from '@prisma/client';
 import type { TituloComRelacoes } from '../../controllers/titulos/TituloHelpers/types';
 
 /**
@@ -86,9 +84,9 @@ export interface SuporteAtendimentoVars {
  * Contexto de dados disponíveis para processamento de variáveis
  */
 export interface VariableContext {
-  cliente?: Cliente;
-  contrato?: Contrato | (Partial<Contrato> & { id: number });
-  titulo?: Titulo | TituloComRelacoes;
+  cliente?: clientes;
+  contrato?: contratos | (Partial<contratos> & { id: number });
+  titulo?: financeiro_titulos | TituloComRelacoes;
   ordemServico?: SuporteOrdemServicoVars;
   atendimento?: SuporteAtendimentoVars;
   atendimentoMensagens?: Array<{ data: string; operador?: string; mensagem: string }>;

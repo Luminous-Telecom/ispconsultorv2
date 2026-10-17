@@ -1,8 +1,22 @@
 import { VariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis } from '../types';
-import { Titulo } from '../../../models/financeiro/Titulo';
 import { gerarLinkPagamentoPublico } from '../../../controllers/titulos/TituloHelpers';
 import { Formatter } from '../utils/Formatter';
 import { VariableReplacer } from '../utils/VariableReplacer';
+
+type TituloVars = {
+  id: number;
+  numero_titulo?: string | null;
+  valor?: unknown;
+  valor_pago?: unknown;
+  data_vencimento?: Date | string | null;
+  data_pagamento?: Date | string | null;
+  status?: string | null;
+  acrescimo_percentual?: unknown;
+  acrescimo_valor?: unknown;
+  descricao?: string | null;
+  qrcode?: string | null;
+  linha_digitavel?: string | null;
+};
 
 /**
  * Handler para processamento de variáveis relacionadas ao Título
@@ -59,7 +73,7 @@ export class TituloVariableHandler implements VariableHandler {
     }
 
     const dataRef = context.dataReferencia || new Date();
-    const titulo = context.titulo as Titulo;
+    const titulo = context.titulo;
     const substitutions = this.buildSubstitutions(titulo, dataRef, context.baseUrl);
     
     return VariableReplacer.replace(conteudo, substitutions);
@@ -68,7 +82,7 @@ export class TituloVariableHandler implements VariableHandler {
   /**
    * Calcula dias de atraso do título
    */
-  private calcularDiasAtraso(titulo: Titulo, dataRef: Date): number {
+  private calcularDiasAtraso(titulo: TituloVars, dataRef: Date): number {
     if (!titulo.data_vencimento) {
       return 0;
     }
@@ -85,34 +99,35 @@ export class TituloVariableHandler implements VariableHandler {
   /**
    * Calcula valor de juros do título
    */
-  private calcularJuros(titulo: Titulo): number {
-    if (!titulo.acrescimo_percentual || titulo.acrescimo_percentual <= 0) {
+  private calcularJuros(titulo: TituloVars): number {
+    const percentual = Number(titulo.acrescimo_percentual || 0);
+    if (percentual <= 0) {
       return 0;
     }
 
-    return (titulo.valor * titulo.acrescimo_percentual) / 100;
+    return (Number(titulo.valor) * percentual) / 100;
   }
 
   /**
    * Calcula valor de multa do título
    */
-  private calcularMulta(titulo: Titulo): number {
-    return titulo.acrescimo_valor || 0;
+  private calcularMulta(titulo: TituloVars): number {
+    return Number(titulo.acrescimo_valor || 0);
   }
 
   /**
    * Calcula saldo devedor do título
    */
-  private calcularSaldo(titulo: Titulo): number {
-    const valor = titulo.valor || 0;
-    const valorPago = titulo.valor_pago || 0;
+  private calcularSaldo(titulo: TituloVars): number {
+    const valor = Number(titulo.valor || 0);
+    const valorPago = Number(titulo.valor_pago || 0);
     return valor - valorPago;
   }
 
   /**
    * Gera link de pagamento público
    */
-  private gerarLinkPagamento(titulo: Titulo, baseUrl?: string): string {
+  private gerarLinkPagamento(titulo: TituloVars, baseUrl?: string): string {
     return gerarLinkPagamentoPublico(titulo.id, baseUrl);
   }
 
@@ -120,7 +135,7 @@ export class TituloVariableHandler implements VariableHandler {
    * Constrói o mapa de substituições para variáveis de título
    */
   private buildSubstitutions(
-    titulo: Titulo,
+    titulo: TituloVars,
     dataRef: Date,
     baseUrl?: string
   ): VariableSubstitutions {
@@ -133,8 +148,8 @@ export class TituloVariableHandler implements VariableHandler {
     return {
       '#titulo.id#': String(titulo.id),
       '#titulo.numero#': titulo.numero_titulo || String(titulo.id),
-      '#titulo.valor#': Formatter.formatarMoeda(titulo.valor || 0),
-      '#titulo.valor_pago#': Formatter.formatarMoeda(titulo.valor_pago || 0),
+      '#titulo.valor#': Formatter.formatarMoeda(Number(titulo.valor || 0)),
+      '#titulo.valor_pago#': Formatter.formatarMoeda(Number(titulo.valor_pago || 0)),
       '#titulo.saldo#': Formatter.formatarMoeda(saldo),
       '#titulo.vencimento#': titulo.data_vencimento 
         ? Formatter.formatarData(new Date(titulo.data_vencimento)) 

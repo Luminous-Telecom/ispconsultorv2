@@ -1,10 +1,11 @@
-import type { Transaction } from 'sequelize';
+import { toPlain } from '../../../../utils/toPlain';
+import type { TransactionClient as Transaction } from '../../../../utils/transaction';
 import { logger } from '../../../../utils/logger';
 import { normalizeDateForDb, formatDate, ajustarDataVencimento } from '../../../../utils/dateUtils';
 import { metrics, isMetricsEnabled } from '../../../../utils/metrics';
 import { registrarCriacao } from '../../../sistema/AuditoriaService';
 import type { Request } from 'express';
-import type Parametros from '../../../../models/sistema/Parametros';
+import type { sistema_parametros as Parametros } from '@prisma/client';
 
 type Periodicidade = 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal' | null | undefined;
 
@@ -113,7 +114,10 @@ export class TituloGenerationHelper {
     let dataVencimento = new Date(ano, mes, diaCorreto);
     dataVencimento.setHours(0, 0, 0, 0);
 
-    dataVencimento = await ajustarDataVencimento(dataVencimento, parametros);
+    dataVencimento = await ajustarDataVencimento(
+      dataVencimento,
+      parametros as unknown as Parameters<typeof ajustarDataVencimento>[1]
+    );
 
     return dataVencimento;
   }
@@ -298,26 +302,25 @@ export class TituloGenerationHelper {
     valorTitulo: number,
     numeroTitulo: string,
     transaction: Transaction
-  ): Promise<InstanceType<typeof import('../../../../models/financeiro/Titulo').Titulo>> {
-    const { Titulo } = await import('../../../../models/financeiro/Titulo');
+  ): Promise<{ id: number }> {
     const plano = contrato.plano;
-    
     const dataVencimentoNormalizada = normalizeDateForDb(dataVencimento) || dataVencimento;
-    
-    const titulo = await Titulo.create({
-      empresa_id: contrato.empresa_id ?? null,
-      contrato_id: contrato.id,
-      cliente_id: contrato.cliente_id,
-      plano_id: contrato.plano_id,
-      banco_id: contrato.conta_boleto,
-      valor: valorTitulo,
-      data_vencimento: dataVencimentoNormalizada,
-      status: 'pendente',
-      pago: false,
-      descricao: `${plano?.nome_plano || 'Mensalidade'}\n${formatDate(dataVencimento) || ''}`,
-      numero_titulo: numeroTitulo,
-      is_avulso: false
-    }, { transaction });
+    const titulo = await transaction.financeiro_titulos.create({
+      data: {
+        empresa_id: contrato.empresa_id ?? null,
+        contrato_id: contrato.id,
+        cliente_id: contrato.cliente_id,
+        plano_id: contrato.plano_id,
+        banco_id: contrato.conta_boleto,
+        valor: valorTitulo,
+        data_vencimento: dataVencimentoNormalizada,
+        status: 'pendente',
+        pago: false,
+        descricao: `${plano?.nome_plano || 'Mensalidade'}\n${formatDate(dataVencimento) || ''}`,
+        numero_titulo: numeroTitulo,
+        is_avulso: false,
+      },
+    });
 
     if (isMetricsEnabled() && metrics) {
       metrics.businessTitulosGerados.inc();
@@ -329,7 +332,7 @@ export class TituloGenerationHelper {
   /**
    * Registra auditoria para títulos criados
    */
-  static async registerAuditForTitulos(titulos: Array<InstanceType<typeof import('../../../../models/financeiro/Titulo').Titulo>>): Promise<void> {
+  static async registerAuditForTitulos(titulos: Array<{ id: number; empresa_id?: number | null; toJSON?: () => Record<string, unknown> }>): Promise<void> {
     const reqSimulado = {
       headers: {},
       socket: { remoteAddress: null },
@@ -338,7 +341,9 @@ export class TituloGenerationHelper {
 
     for (const titulo of titulos) {
       try {
-        const tituloData = titulo.toJSON() as Record<string, unknown>;
+        const tituloData = typeof titulo.toJSON === 'function'
+          ? toPlain(titulo)
+          : { ...titulo };
 
         const empId = titulo.empresa_id ?? null;
 

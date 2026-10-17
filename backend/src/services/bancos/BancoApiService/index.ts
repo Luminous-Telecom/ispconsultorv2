@@ -1,9 +1,6 @@
 import axios, { type AxiosResponse } from 'axios';
-import { Banco } from '../../../models/cadastros/Banco';
-import { Titulo } from '../../../models/financeiro/Titulo';
-import type { InferAttributes } from 'sequelize';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Plano } from '../../../models/cadastros/Plano';
+import type { cadastros_bancos, cadastros_planos, clientes, financeiro_titulos } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
 import { efiConfig } from '../../../config/bancos/efi';
 import asaasConfig from '../../../config/bancos/asaas';
@@ -68,7 +65,12 @@ export interface ApiResponse {
   status?: string;
 }
 
-interface TituloWithRelations extends InferAttributes<Titulo> {
+type Banco = cadastros_bancos;
+type Titulo = financeiro_titulos;
+type Cliente = clientes;
+type Plano = cadastros_planos;
+
+interface TituloWithRelations extends Titulo {
   banco?: Banco;
   cliente?: Cliente;
   plano?: Plano;
@@ -282,25 +284,30 @@ export class BancoApiService {
       }
 
       // Recarregar banco com credenciais completas (Banco ERP ou SaasBanco)
-      const attrs = [
-        'id',
-        'nome',
-        'tipo_banco',
-        'api_key',
-        'client_id_producao',
-        'client_secret_producao',
-        'sandbox',
-        'url_retorno',
-        'webhook_secret',
-        'percentual_multa',
-        'percentual_juros',
-        'desconto_tipo',
-        'desconto_valor'
-      ];
       const bancoInstanceCredenciais =
         options?.bancoTable === 'saas_bancos'
-          ? await (await import('../../../models/saas/SaasBanco')).SaasBanco.findByPk(banco.id, { attributes: attrs })
-          : await Banco.findByPk(banco.id, { attributes: attrs });
+          ? await prisma.$queryRawUnsafe<cadastros_bancos[]>(
+              `SELECT id, nome, tipo_banco, api_key, client_id_producao, client_secret_producao, sandbox, url_retorno, webhook_secret, percentual_multa, percentual_juros, desconto_tipo, desconto_valor FROM saas_bancos WHERE id = ? LIMIT 1`,
+              banco.id
+            ).then((rows) => rows[0] ?? null)
+          : await prisma.cadastros_bancos.findUnique({
+              where: { id: banco.id },
+              select: {
+                id: true,
+                nome: true,
+                tipo_banco: true,
+                api_key: true,
+                client_id_producao: true,
+                client_secret_producao: true,
+                sandbox: true,
+                url_retorno: true,
+                webhook_secret: true,
+                percentual_multa: true,
+                percentual_juros: true,
+                desconto_tipo: true,
+                desconto_valor: true,
+              },
+            });
 
       if (!bancoInstanceCredenciais) {
         return {
@@ -309,14 +316,12 @@ export class BancoApiService {
         };
       }
 
-      const bancoComCredenciais = bancoInstanceCredenciais.get({ plain: true }) as Banco & {
+      const bancoComCredenciais = bancoInstanceCredenciais as Banco & {
         webhook_secret?: string | null;
       };
 
       const isAsaas = banco.tipo_banco === 'asaas';
 
-      // Tipo para banco que pode ser instância do Model ou objeto plano
-      // Isso é necessário porque Sequelize pode retornar tanto Model quanto objeto simples
       type BancoLike = Banco | (Banco & { webhook_secret?: string | null });
       
       // Verificar credenciais usando banco recarregado
@@ -344,9 +349,9 @@ export class BancoApiService {
         };
       }
       
-      const tituloParaGeracao = options?.bancoTable === 'saas_bancos'
+      const tituloParaGeracao = (options?.bancoTable === 'saas_bancos'
         ? { ...titulo, __skipTituloUpdate: true }
-        : titulo;
+        : titulo) as TituloWithRelations;
 
       if (isAsaas) {
         return this.asaasService.gerarTitulo(tituloParaGeracao, bancoComCredenciais as BancoLike, token);

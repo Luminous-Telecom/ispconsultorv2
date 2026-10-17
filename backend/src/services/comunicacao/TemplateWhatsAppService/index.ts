@@ -1,5 +1,5 @@
-import { TemplateWhatsApp } from '../../../models/comunicacao/TemplateWhatsApp';
-import { WhereOptions } from 'sequelize';
+import type { Prisma, comunicacao_templates_whatsapp } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { whereComunicacaoEmpresaEstrito } from '../../../utils/comunicacaoEmpresaWhere';
 
 export interface TemplateWhatsAppData {
@@ -11,27 +11,40 @@ export interface TemplateWhatsAppData {
   empresa_id?: number | null;
 }
 
+type TemplateInfo = {
+  name: string;
+  language: string;
+  variables: string[];
+  header_document?: boolean;
+};
+
 export class TemplateWhatsAppService {
-  static async list(empresaId?: number | null): Promise<TemplateWhatsApp[]> {
+  static async list(empresaId?: number | null): Promise<comunicacao_templates_whatsapp[]> {
     const whereEstrito = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
-    const where: WhereOptions<TemplateWhatsApp> = whereEstrito ?? { ativo: true };
-    return await TemplateWhatsApp.findAll({
+    const where = (whereEstrito ?? { ativo: true }) as Prisma.comunicacao_templates_whatsappWhereInput;
+    return prisma.comunicacao_templates_whatsapp.findMany({
       where,
-      order: [['nome', 'ASC']],
+      orderBy: { nome: 'asc' },
     });
   }
 
-  static async getById(id: number): Promise<TemplateWhatsApp | null> {
-    return await TemplateWhatsApp.findByPk(id);
+  static async getById(id: number): Promise<comunicacao_templates_whatsapp | null> {
+    return prisma.comunicacao_templates_whatsapp.findUnique({
+      where: { id: Number(id) },
+    });
   }
 
-  static async findByNomeIdioma(nome: string, idioma: string, empresaId?: number | null): Promise<TemplateWhatsApp | null> {
+  static async findByNomeIdioma(
+    nome: string,
+    idioma: string,
+    empresaId?: number | null
+  ): Promise<comunicacao_templates_whatsapp | null> {
     const whereEstrito = whereComunicacaoEmpresaEstrito(empresaId, { nome, idioma });
-    const where: WhereOptions<TemplateWhatsApp> = whereEstrito ?? { nome, idioma };
-    return await TemplateWhatsApp.findOne({ where });
+    const where = (whereEstrito ?? { nome, idioma }) as Prisma.comunicacao_templates_whatsappWhereInput;
+    return prisma.comunicacao_templates_whatsapp.findFirst({ where });
   }
 
-  static async create(data: TemplateWhatsAppData): Promise<TemplateWhatsApp> {
+  static async create(data: TemplateWhatsAppData): Promise<comunicacao_templates_whatsapp> {
     const existing = await this.findByNomeIdioma(
       data.nome,
       data.idioma ?? 'pt_BR',
@@ -41,18 +54,22 @@ export class TemplateWhatsAppService {
       throw new Error(`Já existe um template com o nome "${data.nome}" e idioma "${data.idioma ?? 'pt_BR'}"`);
     }
 
-    return await TemplateWhatsApp.create({
-      nome: data.nome,
-      idioma: data.idioma ?? 'pt_BR',
-      variables: data.variables ?? JSON.stringify([]),
-      header_document: data.header_document ?? false,
-      ativo: data.ativo ?? true,
-      empresa_id: data.empresa_id ?? null,
-    } as any);
+    return prisma.comunicacao_templates_whatsapp.create({
+      data: {
+        nome: data.nome,
+        idioma: data.idioma ?? 'pt_BR',
+        variables: data.variables ?? JSON.stringify([]),
+        header_document: data.header_document ?? false,
+        ativo: data.ativo ?? true,
+        empresa_id: data.empresa_id ?? null,
+      },
+    });
   }
 
-  static async update(id: number, data: Partial<TemplateWhatsAppData>): Promise<TemplateWhatsApp> {
-    const template = await TemplateWhatsApp.findByPk(id);
+  static async update(id: number, data: Partial<TemplateWhatsAppData>): Promise<comunicacao_templates_whatsapp> {
+    const template = await prisma.comunicacao_templates_whatsapp.findUnique({
+      where: { id: Number(id) },
+    });
     if (!template) throw new Error('Template não encontrado');
 
     const nome = data.nome != null ? String(data.nome).trim() : template.nome;
@@ -64,21 +81,27 @@ export class TemplateWhatsAppService {
       }
     }
 
-    await template.update(data as any);
-    await template.reload();
-    return template;
+    return prisma.comunicacao_templates_whatsapp.update({
+      where: { id: template.id },
+      data: {
+        ...(data as Prisma.comunicacao_templates_whatsappUpdateInput),
+        updated_at: new Date(),
+      },
+    });
   }
 
   static async delete(id: number): Promise<void> {
-    const template = await TemplateWhatsApp.findByPk(id);
+    const template = await prisma.comunicacao_templates_whatsapp.findUnique({
+      where: { id: Number(id) },
+    });
     if (!template) throw new Error('Template não encontrado');
-    await template.destroy();
+    await prisma.comunicacao_templates_whatsapp.delete({ where: { id: template.id } });
   }
 
   /**
-   * Converte TemplateWhatsApp para o formato esperado por WhatsAppCloudService
+   * Converte o template para o formato esperado por WhatsAppCloudService
    */
-  static toTemplateInfo(template: TemplateWhatsApp): { name: string; language: string; variables: string[]; header_document?: boolean } {
+  static toTemplateInfo(template: Pick<comunicacao_templates_whatsapp, 'nome' | 'idioma' | 'variables' | 'header_document'>): TemplateInfo {
     let variables: string[] = [];
     if (template.variables) {
       try {
@@ -96,11 +119,13 @@ export class TemplateWhatsAppService {
   }
 
   /**
-   * Obtém templateInfo a partir da mensagem (com template carregado via include)
+   * Obtém templateInfo a partir da mensagem (relação comunicacao_templates_whatsapp)
    */
-  static getTemplateInfoForMensagem(mensagem: unknown): { name: string; language: string; variables: string[]; header_document?: boolean } | null {
-    const m = mensagem as { template?: TemplateWhatsApp | null };
-    if (m?.template) return this.toTemplateInfo(m.template);
+  static getTemplateInfoForMensagem(mensagem: unknown): TemplateInfo | null {
+    const m = mensagem as {
+      comunicacao_templates_whatsapp?: Pick<comunicacao_templates_whatsapp, 'nome' | 'idioma' | 'variables' | 'header_document'> | null;
+    };
+    if (m?.comunicacao_templates_whatsapp) return this.toTemplateInfo(m.comunicacao_templates_whatsapp);
     return null;
   }
 }

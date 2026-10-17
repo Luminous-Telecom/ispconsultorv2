@@ -1,7 +1,7 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { Titulo } from '../../../models/financeiro/Titulo';
 import { Cliente } from '../../../models/clientes/Cliente';
-import { Contrato } from '../../../models/contratos/Contrato';
 import { Plano } from '../../../models/cadastros/Plano';
 import { Banco } from '../../../models/cadastros/Banco';
 import { TituloService } from '../../../services/financeiro/TituloService';
@@ -9,7 +9,7 @@ import { ClienteService } from '../../../services/clientes/ClienteService';
 import { ContratoService } from '../../../services/contratos/ContratoService';
 import { PlanoService } from '../../../services/cadastros/PlanoService';
 import { BancoService } from '../../../services/cadastros/BancoService';
-import { Transaction, WhereOptions } from 'sequelize';
+import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
 import { normalizeDateForDb } from '../../../utils/dateUtils';
 import { formatDateOnly } from '../../../utils/timezoneUtils';
@@ -78,7 +78,7 @@ export class TituloCRUDController {
         sortDirection: req.query.sortDirection
       };
       
-      // Tentar extrair SQL do erro Sequelize
+      // Extrair SQL do erro, quando o driver o expõe
       if (sqlError?.sql) {
         errorDetails.sql = typeof sqlError.sql === 'string' ? sqlError.sql.substring(0, 1000) : sqlError.sql;
       }
@@ -124,7 +124,7 @@ export class TituloCRUDController {
       const linkPagamento = gerarLinkPagamentoPublico(titulo.id);
 
       const tituloComLink = {
-        ...titulo.toJSON(),
+        ...toPlain(titulo),
         link_pagamento_publico: linkPagamento
       };
 
@@ -175,7 +175,7 @@ export class TituloCRUDController {
         return;
       }
 
-      let contratoReferencia: Contrato | null = null;
+      let contratoReferencia: Awaited<ReturnType<typeof ContratoService.getById>> = null;
       if (contrato_id) {
         contratoReferencia = await ContratoService.getById(contrato_id);
         if (contratoReferencia && contratoReferencia.cliente_id !== cliente.id) {
@@ -197,8 +197,8 @@ export class TituloCRUDController {
           sendNotFound(res, 'Plano não encontrado');
           return;
         }
-      } else if (contratoReferencia) {
-        plano = await contratoReferencia.getPlano();
+      } else if (contratoReferencia?.plano_id) {
+        plano = await PlanoService.getById(contratoReferencia.plano_id);
         if (!plano) {
           sendValidationError(res, 'Contrato selecionado não possui plano associado');
           return;
@@ -289,7 +289,7 @@ export class TituloCRUDController {
       });
 
       // Registrar auditoria (já registra no Elasticsearch internamente)
-      const tituloData = titulo.toJSON() as Record<string, unknown>;
+      const tituloData = toPlain(titulo) as Record<string, unknown>;
       try {
         const empresaIdAudit = getEmpresaIdOrNull(req) ?? titulo.empresa_id ?? null;
         await registrarCriacao(
@@ -329,7 +329,7 @@ export class TituloCRUDController {
 
       // Capturar dados anteriores para auditoria
       const tituloModelUpdate = titulo as unknown as Titulo;
-      const dadosAnteriores = tituloModelUpdate.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(tituloModelUpdate) as Record<string, unknown>;
 
       // Validações de status
       if (status === 'cancelado' && titulo.status === 'pago') {
@@ -349,7 +349,9 @@ export class TituloCRUDController {
       if (status === 'cancelado' && titulo.status !== 'cancelado') {
         if (titulo.charge_id && titulo.banco && ['efi', 'asaas'].includes(titulo.banco?.tipo_banco ?? '')) {
           const { BancoApiService } = await import('../../../services/bancos/BancoApiService');
-          const resultadoCancelamento = await BancoApiService.cancelarTitulo(titulo as TituloComRelacoes);
+          const resultadoCancelamento = await BancoApiService.cancelarTitulo(
+            titulo as unknown as Parameters<typeof BancoApiService.cancelarTitulo>[0]
+          );
 
           if (!resultadoCancelamento.success) {
             logger.warn('Falha ao cancelar título no gateway bancário', { titulo_id: titulo.id, charge_id: titulo.charge_id, message: resultadoCancelamento.message });
@@ -435,13 +437,14 @@ export class TituloCRUDController {
       const tituloAtualizado = await TituloService.update(id, dadosParaUpdate);
       
       // Registrar auditoria
-      const dadosNovos = tituloAtualizado.toJSON() as Record<string, unknown>;
+      const dadosNovos = toPlain(tituloAtualizado) as Record<string, unknown>;
       
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores, dadosNovos);
       
       try {
-        const empresaIdAudit = getEmpresaIdOrNull(req) ?? tituloAtualizado.empresa_id ?? null;
+        const empresaDoTitulo = tituloAtualizado.empresa_id;
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? (typeof empresaDoTitulo === 'number' ? empresaDoTitulo : null);
         await registrarAtualizacao(
           req,
           'Titulo',
@@ -500,7 +503,7 @@ export class TituloCRUDController {
 
       // Capturar dados anteriores para auditoria
       const tituloModelCancel = titulo as unknown as Titulo;
-      const dadosAnteriores = tituloModelCancel.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(tituloModelCancel) as Record<string, unknown>;
 
       // Registrar auditoria
       try {
@@ -626,24 +629,34 @@ export class TituloCRUDController {
       const cliente_id = parseOptionalQueryInt(req.query.cliente_id);
       const empresaId = getEmpresaIdOrNull(req);
 
-      const where: WhereOptions = {};
+      const where: { cliente_id?: number; empresa_id?: number } = {};
       if (cliente_id) where.cliente_id = cliente_id;
       if (empresaId !== null) where.empresa_id = empresaId;
 
+      const countBy = (status?: string) =>
+        prisma.financeiro_titulos.count({ where: status ? { ...where, status: status as never } : where });
+      const sumBy = async (status?: string) => {
+        const aggregated = await prisma.financeiro_titulos.aggregate({
+          where: status ? { ...where, status: status as never } : where,
+          _sum: { valor: true },
+        });
+        return Number(aggregated._sum.valor ?? 0);
+      };
+
       const [totalTitulos, titulosPendentes, titulosPagos, titulosVencidos, titulosCancelados] = await Promise.all([
-        TituloService.count(where),
-        TituloService.count({ ...where, status: 'pendente' }),
-        TituloService.count({ ...where, status: 'pago' }),
-        TituloService.count({ ...where, status: 'vencido' }),
-        TituloService.count({ ...where, status: 'cancelado' })
+        countBy(),
+        countBy('pendente'),
+        countBy('pago'),
+        countBy('vencido'),
+        countBy('cancelado'),
       ]);
 
       const [valorTotal, valorPendente, valorPago, valorVencido, valorCancelado] = await Promise.all([
-        Titulo.sum('valor', { where }),
-        Titulo.sum('valor', { where: { ...where, status: 'pendente' } }),
-        Titulo.sum('valor', { where: { ...where, status: 'pago' } }),
-        Titulo.sum('valor', { where: { ...where, status: 'vencido' } }),
-        Titulo.sum('valor', { where: { ...where, status: 'cancelado' } })
+        sumBy(),
+        sumBy('pendente'),
+        sumBy('pago'),
+        sumBy('vencido'),
+        sumBy('cancelado'),
       ]);
 
       sendSuccess(res, {

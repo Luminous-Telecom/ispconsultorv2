@@ -1,4 +1,4 @@
-import { ServidorWhatsApp } from '../../../models/comunicacao/ServidorWhatsApp';
+import type { comunicacao_servidores_whatsapp } from '@prisma/client';
 import { logger } from '../../../utils/logger';
 
 export class ServidorWhatsAppMessageService {
@@ -6,7 +6,7 @@ export class ServidorWhatsAppMessageService {
    * Envia mensagem de teste via Evolution API
    */
   static async sendTestMessageEvolution(
-    servidor: ServidorWhatsApp,
+    servidor: comunicacao_servidores_whatsapp,
     phone: string,
     message: string
   ): Promise<Record<string, unknown>> {
@@ -112,7 +112,7 @@ export class ServidorWhatsAppMessageService {
    * Envia mensagem de teste via WhatsApp Cloud API
    */
   static async sendTestMessageWhatsAppCloud(
-    servidor: ServidorWhatsApp,
+    servidor: comunicacao_servidores_whatsapp,
     phone: string,
     message: string
   ): Promise<Record<string, unknown>> {
@@ -131,7 +131,7 @@ export class ServidorWhatsAppMessageService {
    * Envia mensagem de teste (detecta tipo de API automaticamente)
    */
   static async sendTestMessage(
-    servidor: ServidorWhatsApp,
+    servidor: comunicacao_servidores_whatsapp,
     phone: string,
     message: string
   ): Promise<Record<string, unknown>> {

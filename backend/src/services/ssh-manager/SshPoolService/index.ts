@@ -1,5 +1,5 @@
 import { Client as SshClient } from 'ssh2';
-import { SshDevice } from '../../../models/ssh-manager/SshDevice';
+import type { SshDeviceShape as SshDevice } from '../sshDeviceShape';
 import { openDeviceConnection } from '../SshConnectionService';
 import { logger } from '../../../utils/logger';
 

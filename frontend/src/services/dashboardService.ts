@@ -115,7 +115,7 @@ export interface DashboardData {
     queueConcurrency: number;
   };
   statsGraficos?: DashboardStatsGraficos;
-  /** ERP: contagem diária por status de backup (persistido em ssh_manager_device_backup_events) */
+  /** ERP: contagem diária por status de backup (log unificado, canal ssh) */
   backupStatusGrafico?: Array<{
     label: string;
     dataISO: string;

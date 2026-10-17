@@ -4,7 +4,7 @@ import {
   CreationOptional,
   InferAttributes,
   InferCreationAttributes
-} from 'sequelize';
+} from '../../../db/orm';
 import { sequelize } from '../../../config/database';
 
 /** Registro único por número SEI Anatel (protocolo), vinculado a domínios/IPs como versão_blockdomi. */

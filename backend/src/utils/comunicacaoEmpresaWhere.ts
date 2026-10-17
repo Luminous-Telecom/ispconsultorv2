@@ -1,14 +1,14 @@
-import type { WhereOptions } from 'sequelize';
+export type ComunicacaoWhere = { [key: string]: any };
 
 /**
- * Monta filtro WHERE estrito por tenant para servidores/mensagens de comunicação.
- * Não inclui registros legacy com empresa_id NULL — evita vazamento entre tenants.
- * Retorna null quando empresaId é inválido (caller deve abortar o envio).
+ * Filtro estrito por tenant para servidores e mensagens de comunicação.
+ * Não inclui registros com empresa_id nulo.
+ * Retorna null quando empresaId é inválido.
  */
 export function whereComunicacaoEmpresaEstrito(
   empresaId: number | null | undefined,
-  base: WhereOptions = {}
-): WhereOptions | null {
+  base: ComunicacaoWhere = {}
+): ComunicacaoWhere | null {
   if (empresaId == null || empresaId <= 0) {
     return null;
   }
@@ -16,7 +16,7 @@ export function whereComunicacaoEmpresaEstrito(
 }
 
 /**
- * Verifica se o registro pertence ao tenant (sem aceitar empresa_id NULL como global).
+ * Verifica se o registro pertence ao tenant (empresa_id nulo não é global).
  */
 export function pertenceComunicacaoEmpresa(
   registroEmpresaId: number | null | undefined,

@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request } from 'express';
 import { Banco } from '../../../models/cadastros/Banco';
 import { Titulo } from '../../../models/financeiro/Titulo';
@@ -87,7 +88,7 @@ export class EfiWebhookService {
           continue;
         }
         const resultado = await BancoApiService.consultarNotificacaoPorToken(
-          banco as unknown as Banco,
+          banco as unknown as Parameters<typeof BancoApiService.consultarNotificacaoPorToken>[0],
           notificationToken,
           'saas'
         );
@@ -220,14 +221,14 @@ export class EfiWebhookService {
           const statusString = typeof notification.status === 'string' ? notification.status : (notification.status as { current?: string })?.current || 'pendente';
           const novoStatus = EfiWebhookProcessorService.mapEfiStatus(statusString) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
           const isPago = ['pago', 'liquidado'].includes(novoStatus);
-          const dadosAnteriores = (titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
+          const dadosAnteriores = toPlain((titulo as { toJSON: () => Record<string, unknown> })) as Record<string, unknown>;
           if (isPago && !titulo.pago) {
             await applyPagoWebhook(resolved, Number(titulo.valor), new Date());
           } else {
             await (titulo as { update: (d: Record<string, unknown>) => Promise<unknown> }).update({ status: novoStatus, pago: isPago });
           }
           await refetchResolvedTitulo(resolved);
-          const dadosNovos = (resolved.titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
+          const dadosNovos = toPlain((resolved.titulo as { toJSON: () => Record<string, unknown> })) as Record<string, unknown>;
           enviarReciboSeAdmin(resolved, jaEstavaPago);
           await registrarAuditoriaWebhook(req, resolved, dadosAnteriores, dadosNovos, `Atualização via webhook EFI (generic) - Status: ${statusString}`);
           return {

@@ -9,7 +9,7 @@ const POLL_MS = 2000;
 interface SystemUpdateStatus {
   active: boolean;
   progress: number;
-  kind: 'system' | 'doc' | null;
+  kind: 'system' | null;
   phase: 'idle' | 'running' | 'failed';
 }
 
@@ -21,7 +21,7 @@ function parseStatus(body: unknown): SystemUpdateStatus | null {
   return {
     active: data.active,
     progress: typeof data.progress === 'number' ? data.progress : 0,
-    kind: data.kind === 'system' || data.kind === 'doc' ? data.kind : null,
+    kind: data.kind === 'system' ? data.kind : null,
     phase: data.phase === 'running' || data.phase === 'failed' ? data.phase : 'idle',
   };
 }

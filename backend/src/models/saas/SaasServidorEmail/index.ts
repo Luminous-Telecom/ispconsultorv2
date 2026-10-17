@@ -1,4 +1,4 @@
-import { Model, DataTypes, CreationOptional, InferAttributes, InferCreationAttributes } from 'sequelize';
+import { Model, DataTypes, CreationOptional, InferAttributes, InferCreationAttributes } from '../../../db/orm';
 import { sequelize } from '../../../config/database';
 
 export class SaasServidorEmail extends Model<

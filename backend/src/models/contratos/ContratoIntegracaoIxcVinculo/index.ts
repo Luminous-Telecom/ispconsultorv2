@@ -6,7 +6,7 @@ import {
   InferCreationAttributes,
   BelongsToGetAssociationMixin,
   BelongsToSetAssociationMixin,
-} from 'sequelize';
+} from '../../../db/orm';
 import { sequelize } from '../../../config/database';
 import { Contrato } from '../Contrato';
 import { IntegracaoIxcProvedor } from '../../integracao/IntegracaoIxcProvedor';

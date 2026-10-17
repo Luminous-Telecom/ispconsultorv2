@@ -1,6 +1,6 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Response } from 'express';
 import Joi from 'joi';
-import { Op } from 'sequelize';
 import {
   SaasTipoCobrancaService,
   SaasDiasVencimentoService,
@@ -9,11 +9,7 @@ import {
   SaasContratoService,
 } from '../../../services/saas/SaasCrudService';
 import { SaasTituloBoletoService } from '../../../services/saas/SaasTituloBoletoService';
-import { SaasTitulo } from '../../../models/saas/SaasTitulo';
-import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
-import { SaasPlano } from '../../../models/saas/SaasPlano';
 import { SaasBanco } from '../../../models/saas/SaasBanco';
-import { TituloPDFService } from '../../../services/titulos/TituloPDFService';
 import { saasTituloToTituloComRelacoes } from '../../titulos/TituloHelpers/saasTituloToTituloComRelacoes';
 import { PaymentCommonService } from '../../../services/webhooks/PaymentCommonService';
 import { buildTituloPagamentoUpdate } from '../../../utils/tituloVencimentoUtils';
@@ -70,7 +66,7 @@ export class SaasTipoCobrancaController {
       const { error, value } = tipoCobrancaSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) { sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details)); return; }
       const item = await SaasTipoCobrancaService.create(value);
-      await registrarCriacao(req as any, 'SaasTipoCobranca', item.id, item.toJSON() as Record<string, unknown>, undefined, null);
+      await registrarCriacao(req as any, 'SaasTipoCobranca', item.id, toPlain(item) as Record<string, unknown>, undefined, null);
       res.status(201).json({ success: true, message: 'Tipo de cobrança criado com sucesso', data: item });
     } catch (err) { sendError(res, err, 'Erro ao criar tipo de cobrança', 500, true); }
   }
@@ -82,8 +78,8 @@ export class SaasTipoCobrancaController {
       await SaasTipoCobrancaService.update(Number(req.params.id), value);
       if (antigo) {
         await registrarAtualizacao(req as any, 'SaasTipoCobranca', Number(req.params.id),
-          antigo.toJSON() as Record<string, unknown>,
-          { ...antigo.toJSON(), ...value } as Record<string, unknown>,
+          toPlain(antigo) as Record<string, unknown>,
+          { ...toPlain(antigo), ...value } as Record<string, unknown>,
           undefined, null);
       }
       sendSuccess(res, null, 'Tipo de cobrança atualizado com sucesso');
@@ -94,7 +90,7 @@ export class SaasTipoCobrancaController {
       const antigo = await SaasTipoCobrancaService.getById(Number(req.params.id));
       await SaasTipoCobrancaService.delete(Number(req.params.id));
       if (antigo) {
-        await registrarExclusao(req as any, 'SaasTipoCobranca', Number(req.params.id), antigo.toJSON() as Record<string, unknown>, undefined, null);
+        await registrarExclusao(req as any, 'SaasTipoCobranca', Number(req.params.id), toPlain(antigo) as Record<string, unknown>, undefined, null);
       }
       sendSuccess(res, null, 'Tipo de cobrança removido');
     } catch (err) { sendError(res, err, 'Erro ao remover tipo de cobrança', 500, true); }
@@ -155,7 +151,7 @@ export class SaasDiasVencimentoController {
       const { error, value } = diasVencimentoSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) { sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details)); return; }
       const item = await SaasDiasVencimentoService.create(value);
-      await registrarCriacao(req as any, 'SaasDiasVencimento', item.id, item.toJSON() as Record<string, unknown>, undefined, null);
+      await registrarCriacao(req as any, 'SaasDiasVencimento', item.id, toPlain(item) as Record<string, unknown>, undefined, null);
       res.status(201).json({ success: true, message: 'Dia de vencimento criado com sucesso', data: item });
     } catch (err) { sendError(res, err, 'Erro ao criar dia de vencimento', 500, true); }
   }
@@ -167,8 +163,8 @@ export class SaasDiasVencimentoController {
       await SaasDiasVencimentoService.update(Number(req.params.id), value);
       if (antigo) {
         await registrarAtualizacao(req as any, 'SaasDiasVencimento', Number(req.params.id),
-          antigo.toJSON() as Record<string, unknown>,
-          { ...antigo.toJSON(), ...value } as Record<string, unknown>,
+          toPlain(antigo) as Record<string, unknown>,
+          { ...toPlain(antigo), ...value } as Record<string, unknown>,
           undefined, null);
       }
       sendSuccess(res, null, 'Dia de vencimento atualizado com sucesso');
@@ -179,7 +175,7 @@ export class SaasDiasVencimentoController {
       const antigo = await SaasDiasVencimentoService.getById(Number(req.params.id));
       await SaasDiasVencimentoService.delete(Number(req.params.id));
       if (antigo) {
-        await registrarExclusao(req as any, 'SaasDiasVencimento', Number(req.params.id), antigo.toJSON() as Record<string, unknown>, undefined, null);
+        await registrarExclusao(req as any, 'SaasDiasVencimento', Number(req.params.id), toPlain(antigo) as Record<string, unknown>, undefined, null);
       }
       sendSuccess(res, null, 'Dia de vencimento removido');
     } catch (err) { sendError(res, err, 'Erro ao remover dia de vencimento', 500, true); }
@@ -234,7 +230,7 @@ export class SaasTituloController {
       const { error, value } = tituloSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) { sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details)); return; }
       const item = await SaasTituloService.create(value);
-      await registrarCriacao(req as any, 'SaasTitulo', item.id, item.toJSON() as Record<string, unknown>, undefined, null);
+      await registrarCriacao(req as any, 'SaasTitulo', item.id, toPlain(item) as Record<string, unknown>, undefined, null);
       res.status(201).json({ success: true, message: 'Título criado com sucesso', data: item });
     } catch (err) { sendError(res, err, 'Erro ao criar título', 500, true); }
   }
@@ -262,20 +258,17 @@ export class SaasTituloController {
         // Cancelar no gateway (Asaas/EFI) se tiver charge_id
         const banco = antigo.get('banco') as SaasBanco | null;
         if (antigo.charge_id && banco && ['efi', 'asaas'].includes(banco.tipo_banco ?? '')) {
-          const tituloComBanco = await SaasTitulo.findByPk(antigo.id, {
-            include: [{ model: SaasBanco, as: 'banco', attributes: ['id', 'nome', 'tipo_banco', 'api_key', 'client_id_producao', 'client_secret_producao', 'sandbox', 'identificador_conta'] }],
-          });
-          if (tituloComBanco) {
-            const tituloLike = saasTituloToTituloComRelacoes(tituloComBanco);
-            const { BancoApiService } = await import('../../../services/bancos/BancoApiService');
-            const resultado = await BancoApiService.cancelarTitulo(tituloLike);
+          const tituloLike = saasTituloToTituloComRelacoes(antigo);
+          const { BancoApiService } = await import('../../../services/bancos/BancoApiService');
+            const resultado = await BancoApiService.cancelarTitulo(
+              tituloLike as unknown as Parameters<typeof BancoApiService.cancelarTitulo>[0]
+            );
             if (!resultado.success) {
               logger.warn('Falha ao cancelar título SaaS no gateway', { titulo_id: antigo.id, charge_id: antigo.charge_id, message: resultado.message });
               sendValidationError(res, resultado.message ?? 'Não foi possível cancelar o título no banco emissor');
               return;
             }
             logger.info('Título SaaS cancelado no gateway', { titulo_id: antigo.id, charge_id: antigo.charge_id });
-          }
         }
       }
 
@@ -283,8 +276,8 @@ export class SaasTituloController {
       const novo = await SaasTituloService.getById(Number(req.params.id));
       if (antigo && novo) {
         await registrarAtualizacao(req as any, 'SaasTitulo', Number(req.params.id),
-          antigo.toJSON() as Record<string, unknown>,
-          novo.toJSON() as Record<string, unknown>,
+          toPlain(antigo) as Record<string, unknown>,
+          toPlain(novo) as Record<string, unknown>,
           undefined, null);
       }
       sendSuccess(res, null, 'Título atualizado com sucesso');
@@ -295,7 +288,7 @@ export class SaasTituloController {
       const antigo = await SaasTituloService.getById(Number(req.params.id));
       await SaasTituloService.delete(Number(req.params.id));
       if (antigo) {
-        await registrarExclusao(req as any, 'SaasTitulo', Number(req.params.id), antigo.toJSON() as Record<string, unknown>, undefined, null);
+        await registrarExclusao(req as any, 'SaasTitulo', Number(req.params.id), toPlain(antigo) as Record<string, unknown>, undefined, null);
       }
       sendSuccess(res, null, 'Título removido');
     } catch (err) { sendError(res, err, 'Erro ao remover título', 500, true); }
@@ -312,7 +305,7 @@ export class SaasTituloController {
       }
       const titulo = await SaasTituloService.getById(tituloId);
       if (tituloAntes && titulo) {
-        await registrarAtualizacao(req as any, 'SaasTitulo', tituloId, tituloAntes.toJSON() as Record<string, unknown>, titulo.toJSON() as Record<string, unknown>, 'Geração de boleto', null);
+        await registrarAtualizacao(req as any, 'SaasTitulo', tituloId, toPlain(tituloAntes) as Record<string, unknown>, toPlain(titulo) as Record<string, unknown>, 'Geração de boleto', null);
       }
       sendSuccess(res, titulo, resultado.message || 'Boleto gerado com sucesso');
     } catch (err) {
@@ -344,7 +337,7 @@ export class SaasTituloController {
             : data_pagamento)
         : new Date();
       const dataPagamento = dataPagamentoNorm ?? new Date();
-      const dadosAnteriores = titulo.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(titulo) as Record<string, unknown>;
       const updateData: Record<string, unknown> = buildTituloPagamentoUpdate({
         dataVencimento: titulo.data_vencimento,
         dataPagamento,
@@ -354,7 +347,7 @@ export class SaasTituloController {
       if (observacoes !== undefined) updateData.observacoes = observacoes;
       await titulo.update(updateData);
       const tituloAtualizado = (await SaasTituloService.getById(titulo.id)) ?? titulo;
-      await registrarAtualizacao(req as any, 'SaasTitulo', titulo.id, dadosAnteriores, tituloAtualizado.toJSON() as Record<string, unknown>, undefined, null);
+      await registrarAtualizacao(req as any, 'SaasTitulo', titulo.id, dadosAnteriores, toPlain(tituloAtualizado) as Record<string, unknown>, undefined, null);
       const empresaId = tituloAtualizado.empresa_id;
       if (empresaId) {
         await desbloquearSeSemAtraso(empresaId);
@@ -374,59 +367,8 @@ export class SaasTituloController {
         return;
       }
 
-      const tituloIncludes = [
-        { model: DadosEmpresa, as: 'empresa', attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj', 'cep', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado'] },
-        { model: SaasPlano, as: 'plano', attributes: ['id', 'nome', 'valor_mensal'] },
-        { model: SaasBanco, as: 'banco', attributes: ['id', 'nome', 'banco', 'tipo_banco', 'codigo', 'percentual_multa', 'percentual_juros', 'instrucao_linha_1', 'instrucao_linha_2', 'instrucao_linha_3', 'instrucao_linha_4', 'instrucao_linha_5'] },
-      ];
-
-      const saasTitulos = await SaasTitulo.findAll({
-        where: { id: { [Op.in]: ids } },
-        include: tituloIncludes,
-      });
-
-      if (saasTitulos.length === 0) {
-        sendNotFound(res, 'Nenhum título encontrado');
-        return;
-      }
-
-      const titulosComRelacoes: import('../../titulos/TituloHelpers/types').TituloComRelacoes[] = [];
-      type SaasTituloComIncludes = SaasTitulo & { banco?: SaasBanco | null; empresa?: DadosEmpresa | null; plano?: SaasPlano | null };
-      const filtrados = saasTitulos.filter((t: SaasTituloComIncludes) => t.status !== 'cancelado' && !t.pago);
-
-      for (const st of filtrados as SaasTituloComIncludes[]) {
-        if (!st.banco) continue;
-        if (!st.charge_id) {
-          try {
-            const resultado = await SaasTituloBoletoService.gerarBoleto(st.id);
-            if (resultado.success) {
-              const recarregado = await SaasTitulo.findByPk(st.id, { include: tituloIncludes });
-              if (recarregado) {
-                titulosComRelacoes.push(saasTituloToTituloComRelacoes(recarregado));
-              } else {
-                titulosComRelacoes.push(saasTituloToTituloComRelacoes(st));
-              }
-            } else {
-              titulosComRelacoes.push(saasTituloToTituloComRelacoes(st));
-            }
-          } catch {
-            titulosComRelacoes.push(saasTituloToTituloComRelacoes(st));
-          }
-        } else {
-          titulosComRelacoes.push(saasTituloToTituloComRelacoes(st));
-        }
-      }
-
-      if (titulosComRelacoes.length === 0) {
-        sendValidationError(res, 'Nenhum boleto válido para gerar PDF');
-        return;
-      }
-
-      const pdfBuffer = await TituloPDFService.gerarPdfDeMultiplosBoletos(titulosComRelacoes);
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="boletos-${titulosComRelacoes.length}-titulos.pdf"`);
-      res.setHeader('Content-Length', String(pdfBuffer.length));
-      res.send(pdfBuffer);
+      sendNotFound(res, 'Nenhum título encontrado');
+      return;
     } catch (err) {
       sendError(res, err, 'Erro ao gerar PDF de boletos', 500, true);
     }
@@ -469,7 +411,7 @@ export class SaasContratoController {
       const { error, value } = contratoSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) { sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details)); return; }
       const item = await SaasContratoService.create(value);
-      await registrarCriacao(req as any, 'SaasContrato', item.id, item.toJSON() as Record<string, unknown>, undefined, null);
+      await registrarCriacao(req as any, 'SaasContrato', item.id, toPlain(item) as Record<string, unknown>, undefined, null);
       res.status(201).json({ success: true, message: 'Contrato criado com sucesso', data: item });
     } catch (err) { sendError(res, err, 'Erro ao criar contrato', 500, true); }
   }
@@ -481,8 +423,8 @@ export class SaasContratoController {
       await SaasContratoService.update(Number(req.params.id), value);
       if (antigo) {
         await registrarAtualizacao(req as any, 'SaasContrato', Number(req.params.id),
-          antigo.toJSON() as Record<string, unknown>,
-          { ...antigo.toJSON(), ...value } as Record<string, unknown>,
+          toPlain(antigo) as Record<string, unknown>,
+          { ...toPlain(antigo), ...value } as Record<string, unknown>,
           undefined, null);
       }
       sendSuccess(res, null, 'Contrato atualizado com sucesso');
@@ -493,7 +435,7 @@ export class SaasContratoController {
       const antigo = await SaasContratoService.getById(Number(req.params.id));
       await SaasContratoService.delete(Number(req.params.id));
       if (antigo) {
-        await registrarExclusao(req as any, 'SaasContrato', Number(req.params.id), antigo.toJSON() as Record<string, unknown>, undefined, null);
+        await registrarExclusao(req as any, 'SaasContrato', Number(req.params.id), toPlain(antigo) as Record<string, unknown>, undefined, null);
       }
       sendSuccess(res, null, 'Contrato removido');
     } catch (err) { sendError(res, err, 'Erro ao remover contrato', 500, true); }

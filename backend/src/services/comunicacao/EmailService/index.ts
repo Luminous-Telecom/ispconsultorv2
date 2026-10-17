@@ -1,12 +1,6 @@
-import { Op } from 'sequelize';
-import { ServidorEmail } from '../../../models/comunicacao/ServidorEmail';
-import { MensagemEmail } from '../../../models/comunicacao/MensagemEmail';
+import type { Prisma, comunicacao_mensagens_email, comunicacao_servidores_email } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { registrarMensagemHistorico, type ContextoHistorico } from '../RegistroMensagemHistoricoService';
-import { Titulo } from '../../../models/financeiro/Titulo';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Plano } from '../../../models/cadastros/Plano';
-import { Banco } from '../../../models/cadastros/Banco';
-import { Contrato } from '../../../models/contratos/Contrato';
 import { logger } from '../../../utils/logger';
 import { VariaveisDocumentoService } from '../../documentos/VariaveisDocumentoService';
 import nodemailer, { SendMailOptions } from 'nodemailer';
@@ -67,21 +61,28 @@ export class EmailService {
     const saas = options?.saas ?? false;
     const empresaId = options?.empresa_id;
     try {
-      let servidor: ServidorEmail;
+      let servidor: comunicacao_servidores_email;
       if (saas) {
-        const SaasServidorEmail = (await import('../../../models/saas/SaasServidorEmail')).default;
-        const saasSrv = await SaasServidorEmail.findOne({ where: { status: 'ativo' } });
+        const rows = await prisma.$queryRawUnsafe<Array<{
+          id: number;
+          nome: string;
+          host_smtp: string;
+          porta: number;
+          usuario: string;
+          senha_criptografada: string;
+          ssl: boolean | number;
+        }>>("SELECT id, nome, host_smtp, porta, usuario, senha_criptografada, ssl FROM saas_servidores_email WHERE status = 'ativo' LIMIT 1");
+        const saasSrv = rows[0];
         if (!saasSrv) {
           return { sucesso: false, emailsEnviados: 0, erros: 0 };
         }
-        const srv = saasSrv.get({ plain: true }) as Record<string, unknown>;
         servidor = {
           id: saasSrv.id,
-          host: (srv.host_smtp as string) || '',
+          host: saasSrv.host_smtp || '',
           porta: saasSrv.porta,
           usuario: saasSrv.usuario,
-          senha: (srv.senha as string) || (srv.senha_criptografada as string) || '',
-          ssl: saasSrv.ssl,
+          senha: saasSrv.senha_criptografada || '',
+          ssl: !!saasSrv.ssl,
           tls: false,
           nome_remetente: saasSrv.nome,
           email_remetente: saasSrv.usuario,
@@ -89,14 +90,16 @@ export class EmailService {
           timeout: 30000,
           tentativas: 1,
           intervalo_tentativas: 0,
-        } as unknown as ServidorEmail;
+        } as unknown as comunicacao_servidores_email;
       } else {
         const whereSrv = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
         if (!whereSrv) {
           logger.info('[Email Boleto] empresa_id ausente — envio abortado (isolamento multi-tenant)');
           return { sucesso: false, emailsEnviados: 0, erros: 0 };
         }
-        const srv = await ServidorEmail.findOne({ where: whereSrv });
+        const srv = await prisma.comunicacao_servidores_email.findFirst({
+          where: whereSrv as Prisma.comunicacao_servidores_emailWhereInput,
+        });
         if (!srv) {
           return { sucesso: false, emailsEnviados: 0, erros: 0 };
         }
@@ -109,7 +112,9 @@ export class EmailService {
       if (!whereMsg) {
         return { sucesso: false, emailsEnviados: 0, erros: 0 };
       }
-      const mensagens = await MensagemEmail.findAll({ where: whereMsg });
+      const mensagens = await prisma.comunicacao_mensagens_email.findMany({
+        where: whereMsg as Prisma.comunicacao_mensagens_emailWhereInput,
+      });
       if (mensagens.length === 0) {
         return { sucesso: false, emailsEnviados: 0, erros: 0 };
       }
@@ -137,8 +142,8 @@ export class EmailService {
   }
 
   private static async processarEnvio(
-    mensagens: MensagemEmail[],
-    servidor: ServidorEmail,
+    mensagens: comunicacao_mensagens_email[],
+    servidor: comunicacao_servidores_email,
     tipoMensagem: string,
     dias: number,
     tipo: 'antes' | 'mesmo' | 'depois',
@@ -163,50 +168,84 @@ export class EmailService {
     const proximoDia = new Date(dataVencimento);
     proximoDia.setDate(proximoDia.getDate() + 1);
 
-    type TituloParaEnvio = { id: number; valor: number; data_vencimento: Date; numero_titulo?: string; linha_digitavel?: string | null; contrato_id?: number | null; cliente?: { razao_social?: string; nome_fantasia?: string; email?: string; telefone?: string }; banco?: unknown; plano?: unknown };
-    let titulos: Array<Titulo | TituloParaEnvio>;
+    type TituloParaEnvio = { id: number; valor: number; data_vencimento: Date; numero_titulo?: string; linha_digitavel?: string | null; contrato_id?: number | null; empresa_id?: number | null; cliente?: { id?: number; razao_social?: string | null; nome_fantasia?: string | null; email?: string | null; telefone?: string | null; recebe_email?: boolean | null; empresa_id?: number | null }; banco?: unknown; plano?: unknown };
+    let titulos: TituloParaEnvio[];
 
     if (saas) {
-      const { SaasTitulo } = await import('../../../models/saas/SaasTitulo');
-      const { DadosEmpresa } = await import('../../../models/sistema/DadosEmpresa');
-      const { SaasPlano } = await import('../../../models/saas/SaasPlano');
-      const { SaasBanco } = await import('../../../models/saas/SaasBanco');
-      const rows = await SaasTitulo.findAll({
-        where: { status: { [Op.in]: ['pendente', 'vencido'] } as never, pago: false, data_vencimento: { [Op.gte]: dataVencimento, [Op.lt]: proximoDia } },
-        include: [
-          { model: DadosEmpresa, as: 'empresa', required: true, attributes: ['id', 'razao_social', 'nome_fantasia', 'email', 'telefone'] },
-          { model: SaasPlano, as: 'plano', required: false },
-          { model: SaasBanco, as: 'banco', required: false },
-        ],
-      });
-      titulos = rows.map((t) => {
-        const emp = (t as unknown as { empresa?: { get: (o: { plain: boolean }) => Record<string, unknown> } }).empresa;
-        const empData = (emp?.get({ plain: true }) as Record<string, unknown>) || {};
-        const plain = t.get({ plain: true }) as Record<string, unknown>;
-        return {
-          ...plain,
-          cliente: { razao_social: empData.razao_social || empData.nome_fantasia, nome_fantasia: empData.nome_fantasia, email: empData.email },
-          banco: (t as unknown as { banco?: unknown }).banco,
-          plano: (t as unknown as { plano?: unknown }).plano,
-        } as TituloParaEnvio;
+      const rows = await prisma.$queryRawUnsafe<Array<Record<string, unknown>>>(
+        "SELECT * FROM saas_titulos WHERE status IN ('pendente', 'vencido') AND pago = 0 AND data_vencimento >= ? AND data_vencimento < ?",
+        dataVencimento,
+        proximoDia
+      );
+      const empresaIds = [...new Set(rows.map((row) => Number(row.empresa_id)).filter((id) => id > 0))];
+      const planoIds = [...new Set(rows.map((row) => Number(row.plano_id)).filter((id) => id > 0))];
+      const bancoIds = [...new Set(rows.map((row) => Number(row.banco_id)).filter((id) => id > 0))];
+      const [empresas, planos, bancos] = await Promise.all([
+        empresaIds.length
+          ? prisma.sistema_tenants.findMany({
+              where: { id: { in: empresaIds } },
+              select: { id: true, razao_social: true, nome_fantasia: true, email: true, telefone: true },
+            })
+          : Promise.resolve([]),
+        planoIds.length
+          ? prisma.$queryRawUnsafe<Array<Record<string, unknown>>>(
+              `SELECT * FROM saas_planos WHERE id IN (${planoIds.map(() => '?').join(',')})`,
+              ...planoIds
+            )
+          : Promise.resolve([]),
+        bancoIds.length
+          ? prisma.$queryRawUnsafe<Array<Record<string, unknown>>>(
+              `SELECT * FROM saas_bancos WHERE id IN (${bancoIds.map(() => '?').join(',')})`,
+              ...bancoIds
+            )
+          : Promise.resolve([]),
+      ]);
+      const empresaPorId = new Map(empresas.map((empresa) => [empresa.id, empresa]));
+      const planoPorId = new Map(planos.map((plano) => [Number(plano.id), plano]));
+      const bancoPorId = new Map(bancos.map((banco) => [Number(banco.id), banco]));
+      titulos = rows.flatMap((row) => {
+        const emp = empresaPorId.get(Number(row.empresa_id));
+        if (!emp) return [];
+        return [{
+          ...row,
+          id: Number(row.id),
+          valor: Number(row.valor),
+          data_vencimento: row.data_vencimento as Date,
+          numero_titulo: row.numero_titulo as string | undefined,
+          linha_digitavel: row.linha_digitavel as string | null | undefined,
+          contrato_id: row.contrato_id == null ? null : Number(row.contrato_id),
+          empresa_id: Number(row.empresa_id),
+          cliente: {
+            razao_social: emp.razao_social || emp.nome_fantasia || undefined,
+            nome_fantasia: emp.nome_fantasia || undefined,
+            email: emp.email || undefined,
+          },
+          banco: bancoPorId.get(Number(row.banco_id)),
+          plano: planoPorId.get(Number(row.plano_id)),
+        }];
       });
     } else {
-      const whereTitulo: Record<string, unknown> = {
-        status: { [Op.in]: ['pendente', 'vencido'] },
-        pago: false,
-        data_vencimento: { [Op.gte]: dataVencimento, [Op.lt]: proximoDia }
-      };
-      if (empresaId != null) {
-        whereTitulo.empresa_id = empresaId;
-      }
-      titulos = await Titulo.findAll({
-        where: whereTitulo as never,
-        include: [
-          { model: Cliente, as: 'cliente', required: true, where: { ativo: true, recebe_email: true } },
-          { model: Plano, as: 'plano', required: false },
-          { model: Banco, as: 'banco', required: false },
-        ],
+      const rows = await prisma.financeiro_titulos.findMany({
+        where: {
+          status: { in: ['pendente', 'vencido'] },
+          pago: false,
+          data_vencimento: { gte: dataVencimento, lt: proximoDia },
+          ...(empresaId != null ? { empresa_id: empresaId } : {}),
+          clientes: { ativo: true, recebe_email: true },
+        },
+        include: {
+          clientes: true,
+          cadastros_planos: true,
+          cadastros_bancos: true,
+        },
       });
+      titulos = rows.map((row) => ({
+        ...row,
+        valor: Number(row.valor),
+        cliente: row.clientes,
+        plano: row.cadastros_planos,
+        banco: row.cadastros_bancos,
+      }));
     }
 
     let enviadas = 0;
@@ -214,7 +253,7 @@ export class EmailService {
 
     for (const titulo of titulos) {
       try {
-        const tituloPlain = saas ? titulo : (titulo as Titulo).get({ plain: true });
+        const tituloPlain = titulo;
         const tituloObj = tituloPlain as TituloParaEnvio & { cliente?: { email?: string; recebe_email?: boolean; razao_social?: string; nome_fantasia?: string; telefone?: string } };
         const cliente = tituloObj.cliente;
         
@@ -224,20 +263,20 @@ export class EmailService {
         }
 
         if (!saas && cliente.recebe_email === false) {
-          logger.info(`Email não enviado para cliente ${(cliente as Cliente).id}: comunicação por email desativada`);
+          logger.info(`Email não enviado para cliente ${cliente.id}: comunicação por email desativada`);
           continue;
         }
 
         let corpoHtml = '';
         if (mensagem?.mensagem_padrao) {
-          const contratoRef: (Partial<Contrato> & { id: number }) | undefined = titulo.contrato_id ? { id: titulo.contrato_id } : undefined;
+          const contratoRef = titulo.contrato_id ? { id: titulo.contrato_id } : undefined;
           
           // baseUrl não é necessário - links serão relativos
           // Em produção, o navegador resolve automaticamente
           const baseUrl = undefined;
           
           corpoHtml = await VariaveisDocumentoService.processarVariaveis(mensagem.mensagem_padrao, {
-            cliente: cliente as Cliente,
+            cliente: cliente as never,
             contrato: contratoRef,
             titulo: tituloObj as unknown as TituloComRelacoes,
             dataReferencia: new Date()
@@ -260,9 +299,7 @@ export class EmailService {
 
         let base64Pdf: string | undefined = undefined;
         if ((mensagem && mensagem.tipo_envio === 'pdf') || !mensagem) {
-          const tituloPdf = saas
-            ? { ...tituloObj, cliente: cliente as Cliente & { nome?: string; cpf?: string; cnpj?: string }, banco: tituloObj.banco, plano: tituloObj.plano }
-            : (titulo as Titulo);
+          const tituloPdf = tituloObj;
           const pdf = await TituloPDFController.gerarPdfBase64(tituloPdf as unknown as TituloComRelacoes);
           if (pdf) {
             base64Pdf = pdf;
@@ -277,7 +314,7 @@ export class EmailService {
             ? { empresa_id: empresaIdHistorico }
             : undefined;
         const enviou = await this.enviarEmail(
-          servidor as ServidorEmail,
+          servidor,
           cliente.email,
           corpoHtml,
           base64Pdf,
@@ -305,7 +342,7 @@ export class EmailService {
   }
 
   private static async enviarEmail(
-    servidor: ServidorEmail,
+    servidor: comunicacao_servidores_email,
     emailDestino: string,
     mensagem: string,
     base64Pdf?: string,
@@ -425,7 +462,7 @@ export class EmailService {
     try {
       logger.info('[Recibo Email] Iniciando envio', { titulo_id: titulo.id });
 
-      const tituloComCliente = titulo as TituloComRelacoes & { cliente?: Cliente };
+      const tituloComCliente = titulo as TituloComRelacoes & { cliente?: { email?: string | null; recebe_email?: boolean; razao_social?: string | null; nome_fantasia?: string | null; telefone?: string | null; empresa_id?: number | null } };
       const cliente = tituloComCliente.cliente;
       if (!cliente) {
         logger.info('[Recibo Email] Cliente não encontrado', { titulo_id: titulo.id });
@@ -438,7 +475,9 @@ export class EmailService {
         logger.info('[Recibo Email] empresa_id ausente — envio abortado', { titulo_id: titulo.id });
         return false;
       }
-      const servidor = await ServidorEmail.findOne({ where: whereSrv });
+      const servidor = await prisma.comunicacao_servidores_email.findFirst({
+        where: whereSrv as Prisma.comunicacao_servidores_emailWhereInput,
+      });
       if (!servidor) {
         logger.info('[Recibo Email] Servidor de email inativo ou não configurado', { titulo_id: titulo.id, empresa_id: empresaId });
         return false;
@@ -446,7 +485,9 @@ export class EmailService {
 
       const whereMsg = whereComunicacaoEmpresaEstrito(empresaId, { tipo: 'recibo_pagamento', ativo: true });
       const mensagem = whereMsg
-        ? await MensagemEmail.findOne({ where: whereMsg })
+        ? await prisma.comunicacao_mensagens_email.findFirst({
+            where: whereMsg as Prisma.comunicacao_mensagens_emailWhereInput,
+          })
         : null;
       if (!mensagem || mensagem.tipo_envio === 'desativado') {
         logger.info('[Recibo Email] Mensagem recibo_pagamento não encontrada ou desativada', { titulo_id: titulo.id });
@@ -462,12 +503,12 @@ export class EmailService {
         return false;
       }
 
-      const contratoRef: (Partial<Contrato> & { id: number }) | undefined = titulo.contrato_id
+      const contratoRef = titulo.contrato_id
         ? { id: titulo.contrato_id }
         : undefined;
 
       const corpoHtml = await VariaveisDocumentoService.processarVariaveis(mensagem.mensagem_padrao, {
-        cliente,
+        cliente: cliente as never,
         contrato: contratoRef,
         titulo,
         dataReferencia: new Date()
@@ -510,19 +551,26 @@ export class EmailService {
    */
   static async enviarTituloManual(tituloId: number): Promise<{ sucesso: boolean; mensagem?: string }> {
     try {
-      const titulo = await Titulo.findByPk(tituloId, {
-        include: [
-          { model: Cliente, as: 'cliente' },
-          { model: Plano, as: 'plano' },
-          { model: Banco, as: 'banco' }
-        ]
+      const titulo = await prisma.financeiro_titulos.findUnique({
+        where: { id: Number(tituloId) },
+        include: {
+          clientes: true,
+          cadastros_planos: true,
+          cadastros_bancos: true,
+        },
       });
 
       if (!titulo) {
         return { sucesso: false, mensagem: 'Título não encontrado' };
       }
 
-      const tituloPlain = titulo.get({ plain: true }) as Titulo & { cliente: Cliente };
+      const tituloPlain = {
+        ...titulo,
+        valor: Number(titulo.valor),
+        cliente: titulo.clientes,
+        plano: titulo.cadastros_planos,
+        banco: titulo.cadastros_bancos,
+      };
       const cliente = tituloPlain.cliente;
 
       if (!cliente) {
@@ -542,14 +590,18 @@ export class EmailService {
       if (!whereSrv) {
         return { sucesso: false, mensagem: 'Empresa do título não identificada para envio de email' };
       }
-      const servidor = await ServidorEmail.findOne({ where: whereSrv });
+      const servidor = await prisma.comunicacao_servidores_email.findFirst({
+        where: whereSrv as Prisma.comunicacao_servidores_emailWhereInput,
+      });
       if (!servidor) {
         return { sucesso: false, mensagem: 'Nenhum servidor de email ativo encontrado para esta empresa' };
       }
 
       const whereMsg = whereComunicacaoEmpresaEstrito(empresaId, { tipo: 'envio_manual', ativo: true });
       const mensagem = whereMsg
-        ? await MensagemEmail.findOne({ where: whereMsg })
+        ? await prisma.comunicacao_mensagens_email.findFirst({
+            where: whereMsg as Prisma.comunicacao_mensagens_emailWhereInput,
+          })
         : null;
 
       if (!mensagem) {
@@ -587,7 +639,7 @@ export class EmailService {
         return { sucesso: false, mensagem: 'Mensagem de envio manual está vazia ou contém apenas tags HTML vazias. Adicione conteúdo à mensagem.' };
       }
 
-      const contratoRef: (Partial<Contrato> & { id: number }) | undefined = titulo.contrato_id 
+      const contratoRef = titulo.contrato_id 
         ? { id: titulo.contrato_id } 
         : undefined;
       
@@ -617,7 +669,9 @@ export class EmailService {
 
       let base64Pdf: string | undefined = undefined;
       if (mensagem.tipo_envio === 'pdf') {
-        const pdf = await TituloPDFController.gerarPdfBase64(titulo);
+        const pdf = await TituloPDFController.gerarPdfBase64(
+          titulo as unknown as Parameters<typeof TituloPDFController.gerarPdfBase64>[0]
+        );
         if (pdf) {
           base64Pdf = pdf;
         } else {
@@ -665,35 +719,43 @@ export class EmailService {
    */
   static async reenviarCobrancaSaas(tituloId: number): Promise<{ sucesso: boolean; mensagem?: string }> {
     try {
-      const { SaasTitulo } = await import('../../../models/saas/SaasTitulo');
-      const { DadosEmpresa } = await import('../../../models/sistema/DadosEmpresa');
-      const { SaasPlano } = await import('../../../models/saas/SaasPlano');
-      const { SaasBanco } = await import('../../../models/saas/SaasBanco');
-      const SaasServidorEmail = (await import('../../../models/saas/SaasServidorEmail')).default;
-
-      const titulo = await SaasTitulo.findByPk(tituloId, {
-        include: [
-          { model: DadosEmpresa, as: 'empresa', required: true, attributes: ['id', 'razao_social', 'nome_fantasia', 'email', 'telefone'] },
-          { model: SaasPlano, as: 'plano', required: false },
-          { model: SaasBanco, as: 'banco', required: false },
-        ],
-      });
+      const rows = await prisma.$queryRawUnsafe<Array<Record<string, unknown>>>(
+        'SELECT * FROM saas_titulos WHERE id = ? LIMIT 1',
+        tituloId
+      );
+      const titulo = rows[0];
       if (!titulo) {
         return { sucesso: false, mensagem: 'Título não encontrado' };
       }
-
-      const saasSrv = await SaasServidorEmail.findOne({ where: { status: 'ativo' } });
+      const empresa = await prisma.sistema_tenants.findUnique({
+        where: { id: Number(titulo.empresa_id) },
+        select: { id: true, razao_social: true, nome_fantasia: true, email: true, telefone: true },
+      });
+      if (!empresa) {
+        return { sucesso: false, mensagem: 'Título não encontrado' };
+      }
+      const [planoRows, bancoRows, srvRows] = await Promise.all([
+        titulo.plano_id
+          ? prisma.$queryRawUnsafe<Array<Record<string, unknown>>>('SELECT * FROM saas_planos WHERE id = ? LIMIT 1', Number(titulo.plano_id))
+          : Promise.resolve([]),
+        titulo.banco_id
+          ? prisma.$queryRawUnsafe<Array<Record<string, unknown>>>('SELECT * FROM saas_bancos WHERE id = ? LIMIT 1', Number(titulo.banco_id))
+          : Promise.resolve([]),
+        prisma.$queryRawUnsafe<Array<{
+          id: number; nome: string; host_smtp: string; porta: number; usuario: string; senha_criptografada: string; ssl: boolean | number;
+        }>>("SELECT id, nome, host_smtp, porta, usuario, senha_criptografada, ssl FROM saas_servidores_email WHERE status = 'ativo' LIMIT 1"),
+      ]);
+      const saasSrv = srvRows[0];
       if (!saasSrv) {
         return { sucesso: false, mensagem: 'Nenhum servidor de email ativo encontrado' };
       }
-      const srv = saasSrv.get({ plain: true }) as Record<string, unknown>;
       const servidor = {
         id: saasSrv.id,
-        host: (srv.host_smtp as string) || '',
+        host: saasSrv.host_smtp || '',
         porta: saasSrv.porta,
         usuario: saasSrv.usuario,
-        senha: (srv.senha as string) || (srv.senha_criptografada as string) || '',
-        ssl: saasSrv.ssl,
+        senha: saasSrv.senha_criptografada || '',
+        ssl: !!saasSrv.ssl,
         tls: false,
         nome_remetente: saasSrv.nome,
         email_remetente: saasSrv.usuario,
@@ -701,39 +763,42 @@ export class EmailService {
         timeout: 30000,
         tentativas: 1,
         intervalo_tentativas: 0,
-      } as unknown as ServidorEmail;
+      } as unknown as comunicacao_servidores_email;
 
-      const mensagens = await MensagemEmail.findAll({ where: { ativo: true, empresa_id: { [Op.is]: null } } });
-      const mensagem = escolherMensagemCobranca(mensagens.length > 0 ? mensagens : await MensagemEmail.findAll({ where: { ativo: true } }));
+      const globais = await prisma.comunicacao_mensagens_email.findMany({
+        where: { ativo: true, empresa_id: null },
+      });
+      const mensagem = escolherMensagemCobranca(
+        globais.length > 0 ? globais : await prisma.comunicacao_mensagens_email.findMany({ where: { ativo: true } })
+      );
       if (!mensagem) {
         return { sucesso: false, mensagem: 'Mensagem de cobrança não configurada' };
       }
 
-      const emp = (titulo as unknown as { empresa?: { get: (o: { plain: boolean }) => Record<string, unknown> } }).empresa;
-      const empData = (emp?.get({ plain: true }) as Record<string, unknown>) || {};
-      const email = typeof empData.email === 'string' ? empData.email : '';
+      const email = empresa.email || '';
       if (!email) {
         return { sucesso: false, mensagem: 'Empresa sem e-mail cadastrado' };
       }
 
-      const plain = titulo.get({ plain: true }) as Record<string, unknown>;
       const cliente = {
-        razao_social: (empData.razao_social || empData.nome_fantasia) as string,
-        nome_fantasia: empData.nome_fantasia as string,
+        razao_social: empresa.razao_social || empresa.nome_fantasia || '',
+        nome_fantasia: empresa.nome_fantasia || '',
         email,
-        telefone: empData.telefone as string | undefined,
+        telefone: empresa.telefone || undefined,
       };
       const tituloObj = {
-        ...plain,
+        ...titulo,
+        id: Number(titulo.id),
+        valor: Number(titulo.valor),
         cliente,
-        banco: (titulo as unknown as { banco?: unknown }).banco,
-        plano: (titulo as unknown as { plano?: unknown }).plano,
+        banco: bancoRows[0],
+        plano: planoRows[0],
       };
       const mensagemTexto = textoMensagemCobranca(mensagem);
-      const contratoRef = titulo.contrato_id ? { id: titulo.contrato_id } : undefined;
+      const contratoRef = titulo.contrato_id != null ? { id: Number(titulo.contrato_id) } : undefined;
       const corpoHtml = mensagemTexto
         ? await VariaveisDocumentoService.processarVariaveis(mensagemTexto, {
-          cliente: cliente as Cliente,
+          cliente: cliente as never,
           contrato: contratoRef,
           titulo: tituloObj as unknown as TituloComRelacoes,
           dataReferencia: new Date(),
@@ -752,12 +817,12 @@ export class EmailService {
         corpoHtml,
         base64Pdf,
         'titulo',
-        titulo.id,
+        Number(titulo.id),
         `${servidor.nome_remetente} - Boleto de Pagamento`,
         cliente.razao_social || cliente.nome_fantasia,
         email,
         cliente.telefone,
-        { saas: true, empresa_id: titulo.empresa_id, entidade_tipo: 'titulo', entidade_id: titulo.id, titulo_historico: 'Boleto de Pagamento' }
+        { saas: true, empresa_id: Number(titulo.empresa_id), entidade_tipo: 'titulo', entidade_id: Number(titulo.id), titulo_historico: 'Boleto de Pagamento' }
       );
       return enviou
         ? { sucesso: true, mensagem: 'Email enviado com sucesso' }

@@ -1,12 +1,9 @@
-import { Plano } from '../../../models/cadastros/Plano';
-import { Contrato } from '../../../models/contratos/Contrato';
-import { Op, WhereOptions, Order } from 'sequelize';
-import { sequelize } from '../../../config/database';
+import type { Prisma } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { cache } from '../../../utils/cache';
 import { logger } from '../../../utils/logger';
-import { SortHelper } from '../../../utils/sortHelper';
-import { PLANO_SORT_CONFIG } from '../../../config/sortConfigs';
 import { buildPagination } from '../../../utils/pagination';
+import { enumMatches, orderPageBySql, reorderByIds, sortDirection, sqlDirection } from '../prismaWhere';
 
 export interface ListPlanosFilters {
   page?: number;
@@ -20,410 +17,284 @@ export interface ListPlanosFilters {
   empresa_id?: number;
 }
 
-export interface ListPlanosResponse {
-  data: Array<Record<string, unknown> & { quantidade_clientes: number }>;
-  pagination: {
-    current_page: number;
-    per_page: number;
-    total: number;
-    last_page: number;
-    from: number;
-    to: number;
-  };
+const STATUS = ['ativo', 'inativo'] as const;
+const TIPO_SERVICO = ['infraestrutura', 'consultoria', 'blockdomi'] as const;
+const PERIODICIDADE = ['mensal', 'trimestral', 'semestral', 'anual', 'bimestral', 'quinzenal', 'semanal'] as const;
+const SORT_COLUMNS = [
+  'id', 'nome_plano', 'descricao', 'tipo_servico', 'quantidade_usuarios', 'valor_mensal',
+  'periodicidade', 'data_inicio', 'data_fim', 'status', 'created_at', 'updated_at', 'empresa_id',
+] as const;
+
+const LIST_SELECT = {
+  id: true, nome_plano: true, descricao: true, tipo_servico: true, servicos_inclusos: true,
+  quantidade_usuarios: true, valor_mensal: true, periodicidade: true, data_inicio: true,
+  data_fim: true, status: true, observacoes: true, created_at: true, updated_at: true,
+} as const;
+
+function shapePlano<T extends {
+  id: number;
+  servicos_inclusos?: string | null;
+  contratos?: Array<{
+    desconto_percentual: unknown;
+    desconto_valor: unknown;
+    valor_final: unknown;
+    status: string;
+    clientes: { id: number; razao_social: string; nome_fantasia: string | null };
+  }>;
+}>(plano: T, quantidade: number) {
+  let servicos: unknown = plano.servicos_inclusos;
+  if (typeof servicos === 'string') {
+    try {
+      servicos = JSON.parse(servicos);
+    } catch {
+      servicos = [];
+    }
+  }
+  const clientes = (plano.contratos ?? []).map((contrato) => ({
+    id: contrato.clientes.id,
+    razao_social: contrato.clientes.razao_social,
+    nome_fantasia: contrato.clientes.nome_fantasia,
+    Contrato: {
+      desconto_percentual: contrato.desconto_percentual,
+      desconto_valor: contrato.desconto_valor,
+      valor_final: contrato.valor_final,
+      status: contrato.status,
+    },
+  }));
+  return { ...plano, servicos_inclusos: servicos, clientes, quantidade_clientes: quantidade };
 }
 
 export class PlanoService {
-  private static getDefaultIncludes() {
-    return [
-      {
-        association: 'clientes' as const,
-        attributes: ['id', 'razao_social', 'nome_fantasia'],
-        through: { attributes: ['desconto_percentual', 'desconto_valor', 'valor_final', 'status'] },
-      },
-    ];
-  }
-
-  /**
-   * Listar planos com filtros e paginação
-   */
-  static async list(filters: ListPlanosFilters): Promise<ListPlanosResponse> {
-    const { page = 1, limit = 15, search, searchField, status, tipo_servico, sortColumn, sortDirection, empresa_id } = filters;
+  static async list(filters: ListPlanosFilters) {
+    const { page = 1, limit = 15, search, searchField, status, tipo_servico, sortColumn, sortDirection: direction, empresa_id } = filters;
     const offset = (page - 1) * limit;
-
-    // Cache key para planos ativos sem filtros
-    const cacheKey = `planos:list:${empresa_id || 0}:${page}:${limit}:${status || 'all'}:${tipo_servico || 'all'}:${search || ''}:${sortColumn || 'id'}:${sortDirection || 'DESC'}`;
-    
-    // Verificar cache apenas para listagem simples (sem busca)
+    const cacheKey = `planos:list:${empresa_id || 0}:${page}:${limit}:${status || 'all'}:${tipo_servico || 'all'}:${search || ''}:${sortColumn || 'id'}:${direction || 'DESC'}`;
     if (!search && !sortColumn) {
       const cached = cache.get(cacheKey);
-      if (cached) {
-        return cached as ListPlanosResponse;
-      }
+      if (cached) return cached as {
+        data: Array<Record<string, unknown> & { quantidade_clientes: number }>;
+        pagination: ReturnType<typeof buildPagination>;
+      };
     }
 
-    // Construir filtros
-    const whereConditions: Array<WhereOptions<Plano>> = [];
-    
+    const and: Prisma.cadastros_planosWhereInput[] = [];
     if (search) {
-      const searchPattern = `%${search}%`;
       const numExact = /^\d+$/.test(search) ? parseInt(search, 10) : null;
-      let orConditions: Array<WhereOptions<Plano>> = [];
+      let orConditions: Prisma.cadastros_planosWhereInput[] = [];
       if (searchField === 'id') {
-        orConditions = numExact !== null ? [{ id: numExact } as WhereOptions<Plano>] : [{ id: { [Op.lt]: 0 } } as WhereOptions<Plano>];
+        orConditions = numExact !== null ? [{ id: numExact }] : [{ id: { lt: 0 } }];
       } else if (searchField === 'valor_mensal' || searchField === 'quantidade_usuarios') {
-        orConditions = numExact !== null ? [{ [searchField]: numExact } as WhereOptions<Plano>] : [{ [searchField]: { [Op.lt]: 0 } } as WhereOptions<Plano>];
-      } else if (searchField === 'nome_plano' || searchField === 'descricao' || searchField === 'tipo_servico' || searchField === 'periodicidade' || searchField === 'status') {
-        orConditions = [{ [searchField]: { [Op.like]: searchPattern } } as WhereOptions<Plano>];
+        orConditions = numExact !== null ? [{ [searchField]: numExact }] : [{ id: { lt: 0 } }];
+      } else if (searchField === 'nome_plano' || searchField === 'descricao') {
+        orConditions = [{ [searchField]: { contains: search } }];
+      } else if (searchField === 'tipo_servico') {
+        const matches = enumMatches(TIPO_SERVICO, search);
+        orConditions = matches.length ? [{ tipo_servico: { in: matches } }] : [{ id: { lt: 0 } }];
+      } else if (searchField === 'periodicidade') {
+        const matches = enumMatches(PERIODICIDADE, search);
+        orConditions = matches.length ? [{ periodicidade: { in: matches } }] : [{ id: { lt: 0 } }];
+      } else if (searchField === 'status') {
+        const matches = enumMatches(STATUS, search);
+        orConditions = matches.length ? [{ status: { in: matches } }] : [{ id: { lt: 0 } }];
       } else {
         orConditions = [
-          { nome_plano: { [Op.like]: searchPattern } },
-          { descricao: { [Op.like]: searchPattern } },
-          { tipo_servico: { [Op.like]: searchPattern } },
-          { periodicidade: { [Op.like]: searchPattern } },
-          { status: { [Op.like]: searchPattern } }
-        ] as Array<WhereOptions<Plano>>;
+          { nome_plano: { contains: search } },
+          { descricao: { contains: search } },
+        ];
+        const tipos = enumMatches(TIPO_SERVICO, search);
+        const periodos = enumMatches(PERIODICIDADE, search);
+        const statuses = enumMatches(STATUS, search);
+        if (tipos.length) orConditions.push({ tipo_servico: { in: tipos } });
+        if (periodos.length) orConditions.push({ periodicidade: { in: periodos } });
+        if (statuses.length) orConditions.push({ status: { in: statuses } });
         if (numExact !== null) {
-          orConditions.unshift({ id: numExact } as WhereOptions<Plano>);
-          orConditions.push(
-            { valor_mensal: numExact } as WhereOptions<Plano>,
-            { quantidade_usuarios: numExact } as WhereOptions<Plano>
-          );
-        } else {
-          orConditions.unshift({ id: { [Op.like]: searchPattern } } as WhereOptions<Plano>);
+          orConditions.unshift({ id: numExact });
+          orConditions.push({ valor_mensal: numExact }, { quantidade_usuarios: numExact });
         }
       }
-      whereConditions.push({ [Op.or]: orConditions } as WhereOptions<Plano>);
+      and.push({ OR: orConditions });
     }
-
-    if (status) {
-      whereConditions.push({ status: status as 'ativo' | 'inativo' });
+    if (status && (STATUS as readonly string[]).includes(status)) and.push({ status: status as (typeof STATUS)[number] });
+    if (tipo_servico && (TIPO_SERVICO as readonly string[]).includes(tipo_servico)) {
+      and.push({ tipo_servico: tipo_servico as (typeof TIPO_SERVICO)[number] });
     }
+    if (empresa_id !== undefined) and.push({ empresa_id });
+    const where: Prisma.cadastros_planosWhereInput = and.length > 0 ? { AND: and } : {};
 
-    if (tipo_servico) {
-      whereConditions.push({ tipo_servico: tipo_servico as 'infraestrutura' | 'consultoria' | 'blockdomi' });
-    }
-
-    if (empresa_id !== undefined) {
-      whereConditions.push({ empresa_id });
-    }
-
-    const where: WhereOptions<Plano> = whereConditions.length > 0
-      ? { [Op.and]: whereConditions } as WhereOptions<Plano>
-      : {};
-
-    // Construir ordenação - ordena TODOS os dados antes da paginação
-    // Se for ordenar por quantidade_clientes, usar subquery especial
-    let order: Order = [['id', 'DESC']]; // Padrão
-    const isOrderingByQuantidadeClientes = sortColumn === 'quantidade_clientes' || sortColumn === 'clientes';
-    
-    if (sortColumn && sortDirection && !isOrderingByQuantidadeClientes) {
-      const sortResult = SortHelper.buildOrder(
-        PLANO_SORT_CONFIG,
-        sortColumn,
-        sortDirection.toUpperCase() as 'ASC' | 'DESC'
-      );
-
-      if (sortResult.isValid) {
-        order = sortResult.order;
-      } else {
-        logger.warn('PlanoService.list - Coluna de ordenação inválida', {
-          column: sortColumn,
-          error: sortResult.error
-        });
-        // Manter ordenação padrão se coluna inválida
-      }
-    } else if (isOrderingByQuantidadeClientes && sortDirection) {
-      // Ordenação especial por quantidade_clientes usando subquery
-      // IMPORTANTE: Usar cadastros_planos (tabela) na subquery de ordenação
-      const upperDirection = sortDirection.toUpperCase() as 'ASC' | 'DESC';
-      const subquerySql = `(SELECT COUNT(DISTINCT contratos.cliente_id) FROM contratos WHERE contratos.plano_id = cadastros_planos.id AND contratos.status = 'ativo')`;
-      order = [[sequelize.literal(subquerySql), upperDirection]];
-    }
-
-    const count = await Plano.count({ where });
-    
-    let planos;
-    try {
-      planos = await Plano.findAll({
-      where,
-      attributes: [
-        'id', 'nome_plano', 'descricao', 'tipo_servico', 'servicos_inclusos',
-        'quantidade_usuarios', 'valor_mensal', 'periodicidade', 'data_inicio',
-        'data_fim', 'status', 'observacoes', 'created_at', 'updated_at'
-      ],
-      include: [
-        { 
-          association: 'clientes', 
-          attributes: ['id', 'razao_social', 'nome_fantasia'],
-          through: { 
-            attributes: ['desconto_percentual', 'desconto_valor', 'valor_final', 'status']
+    const planoQuery = {
+      select: {
+        ...LIST_SELECT,
+        contratos: {
+          select: {
+            desconto_percentual: true,
+            desconto_valor: true,
+            valor_final: true,
+            status: true,
+            clientes: { select: { id: true, razao_social: true, nome_fantasia: true } },
           },
-          required: false
-        }
-      ],
-      order,
-      limit,
-      offset,
-      raw: false
-      });
-      
-    } catch (queryError: any) {
-      logger.error('PlanoService.list - Erro na query', {
-        error: queryError.message,
-        errorName: queryError.name,
-        sql: queryError.sql,
-        stack: queryError.stack,
-        sortColumn,
-        sortDirection,
-        order: JSON.stringify(order).substring(0, 300),
-        where: JSON.stringify(where).substring(0, 300),
-        isOrderingByQuantidadeClientes
-      });
+        },
+      },
+    };
+    const isOrderingByQuantidadeClientes = sortColumn === 'quantidade_clientes' || sortColumn === 'clientes';
+    const dir = sortDirection(direction);
+
+    try {
+      let planos;
+      let count: number;
+      if (isOrderingByQuantidadeClientes && direction) {
+        const matching = await prisma.cadastros_planos.findMany({ where, select: { id: true } });
+        const pageIds = await orderPageBySql(
+          'cadastros_planos',
+          `(SELECT COUNT(DISTINCT contratos.cliente_id) FROM contratos WHERE contratos.plano_id = cadastros_planos.id AND contratos.status = 'ativo')`,
+          sqlDirection(direction),
+          matching.map((item) => item.id),
+          limit,
+          offset,
+        );
+        count = matching.length;
+        const found = pageIds.length
+          ? await prisma.cadastros_planos.findMany({ where: { id: { in: pageIds } }, ...planoQuery })
+          : [];
+        planos = reorderByIds(found, pageIds);
+      } else {
+        let orderBy: Prisma.cadastros_planosOrderByWithRelationInput = { id: 'desc' };
+        if (sortColumn && (SORT_COLUMNS as readonly string[]).includes(sortColumn)) orderBy = { [sortColumn]: dir };
+        else if (sortColumn) logger.warn('PlanoService.list - Coluna de ordenação inválida', { column: sortColumn });
+        [count, planos] = await Promise.all([
+          prisma.cadastros_planos.count({ where }),
+          prisma.cadastros_planos.findMany({ where, ...planoQuery, orderBy, take: limit, skip: offset }),
+        ]);
+      }
+
+      const planoIds = planos.map((plano) => plano.id);
+      const grupos = planoIds.length
+        ? await prisma.contratos.groupBy({
+            by: ['plano_id'],
+            where: { plano_id: { in: planoIds }, status: 'ativo' },
+            _count: { id: true },
+          })
+        : [];
+      const quantidadeClientesMap = grupos.reduce<Record<number, number>>((acc, item) => {
+        acc[item.plano_id] = item._count.id;
+        return acc;
+      }, {});
+
+      const response = {
+        data: planos.map((plano) => shapePlano(plano, quantidadeClientesMap[plano.id] || 0)),
+        pagination: buildPagination(page, limit, count),
+      };
+      if (!search && !sortColumn) cache.set(cacheKey, response, 600000);
+      return response;
+    } catch (queryError: unknown) {
+      const error = queryError instanceof Error ? queryError : new Error('Erro desconhecido');
+      logger.error('PlanoService.list - Erro na query', { error: error.message, sortColumn, sortDirection: direction });
       throw queryError;
     }
+  }
 
-    // Buscar quantidade de contratos ativos por plano
-    const planoIds = planos.map(p => p.id);
-    const contratosAtivosPorPlano = await Contrato.findAll({
-      attributes: [
-        'plano_id',
-        [sequelize.fn('COUNT', sequelize.col('id')), 'total']
-      ],
-      where: {
-        plano_id: { [Op.in]: planoIds },
-        status: 'ativo'
+  static async getById(id: string | number, _transaction?: unknown) {
+    const plano = await prisma.cadastros_planos.findUnique({
+      where: { id: Number(id) },
+      include: {
+        contratos: {
+          include: { clientes: { select: { id: true, razao_social: true, nome_fantasia: true } } },
+        },
       },
-      group: ['plano_id'],
-      raw: true
     });
-
-    interface ContratoCountResult {
-      plano_id: number;
-      total: string | number;
-    }
-    const quantidadeClientesMap = (contratosAtivosPorPlano as unknown as ContratoCountResult[]).reduce((acc, item) => {
-      acc[item.plano_id] = typeof item.total === 'string' ? parseInt(item.total, 10) : item.total;
-      return acc;
-    }, {} as Record<number, number>);
-
-    interface PlanoWithCount extends Record<string, unknown> {
-      quantidade_clientes: number;
-      servicos_inclusos?: string | string[];
-    }
-    
-    const planosProcessados: PlanoWithCount[] = planos.map(plano => {
-      const planoJson = plano.toJSON();
-      const planoData = { ...planoJson, quantidade_clientes: 0 } as PlanoWithCount;
-      
-      if (typeof planoData.servicos_inclusos === 'string') {
-        try {
-          planoData.servicos_inclusos = JSON.parse(planoData.servicos_inclusos);
-        } catch {
-          planoData.servicos_inclusos = [];
-        }
-      }
-      const planoId = Number(plano.id);
-      planoData.quantidade_clientes = quantidadeClientesMap[planoId] || 0;
-      return planoData;
-    });
-
-    const response = {
-      data: planosProcessados,
-      pagination: buildPagination(page, limit, count),
-    };
-
-    // Cachear apenas se não tiver busca ou ordenação
-    if (!search && !sortColumn) {
-      cache.set(cacheKey, response, 600000);
-    }
-
-    return response;
+    return plano ? shapePlano(plano, 0) : null;
   }
 
-  /**
-   * Buscar plano por ID
-   */
-  static async getById(id: string | number, transaction?: any): Promise<Plano | null> {
-    const plano = await Plano.findByPk(id, {
-      include: PlanoService.getDefaultIncludes(),
-      transaction,
-    });
-
-    return plano;
-  }
-
-  /**
-   * Buscar planos ativos
-   */
-  static async findAtivos(): Promise<Plano[]> {
-    return await Plano.findAll({
+  static async findAtivos() {
+    const planos = await prisma.cadastros_planos.findMany({
       where: { status: 'ativo' },
-      order: [['nome_plano', 'ASC']]
+      orderBy: { nome_plano: 'asc' },
+      include: { contratos: { include: { clientes: { select: { id: true, razao_social: true, nome_fantasia: true } } } } },
+    });
+    return planos.map((plano) => shapePlano(plano, 0));
+  }
+
+  static async count(where?: unknown): Promise<number> {
+    const { toPrismaWhere } = await import('../prismaWhere');
+    return prisma.cadastros_planos.count({
+      where: (toPrismaWhere(where) ?? {}) as Prisma.cadastros_planosWhereInput,
     });
   }
 
-  /**
-   * Contar planos com filtros (para dashboard)
-   */
-  static async count(where?: WhereOptions): Promise<number> {
-    return await Plano.count({ where });
-  }
-
-  /**
-   * Criar plano
-   */
-  static async create(dadosPlano: Partial<Plano>): Promise<Plano> {
-    // Normalizar strings vazias e 'Invalid date' para null
-    const dataInicio = dadosPlano.data_inicio as any;
-    const dataFim = dadosPlano.data_fim as any;
-    
-    if (dataInicio === '' || dataInicio === 'Invalid date' || (typeof dataInicio === 'string' && dataInicio === 'Invalid date')) {
-      dadosPlano.data_inicio = null;
-    }
-    if (dataFim === '' || dataFim === 'Invalid date' || (typeof dataFim === 'string' && dataFim === 'Invalid date')) {
-      dadosPlano.data_fim = null;
-    }
-    
-    if (dadosPlano.descricao === undefined) {
-      dadosPlano.descricao = null;
-    }
-
-    const plano = await Plano.create(dadosPlano as any);
-    
-    // Invalidar cache
+  static async create(dadosPlano: Prisma.cadastros_planosUncheckedCreateInput & { data_inicio?: unknown; data_fim?: unknown; descricao?: unknown }) {
+    const dados = { ...dadosPlano };
+    if (dados.data_inicio === '' || dados.data_inicio === 'Invalid date') dados.data_inicio = null;
+    if (dados.data_fim === '' || dados.data_fim === 'Invalid date') dados.data_fim = null;
+    if (dados.descricao === undefined) dados.descricao = null;
+    if (Array.isArray(dados.servicos_inclusos)) dados.servicos_inclusos = JSON.stringify(dados.servicos_inclusos);
+    const plano = await prisma.cadastros_planos.create({
+      data: dados as Prisma.cadastros_planosUncheckedCreateInput,
+    });
     cache.deletePattern('planos:list:.*');
-    
     return plano;
   }
 
-  /**
-   * Atualizar plano
-   */
-  static async update(id: string | number, dadosPlano: Partial<Plano>): Promise<Plano> {
-    const existingPlano = await Plano.findByPk(id);
-    
-    if (!existingPlano) {
-      throw new Error('Plano não encontrado');
-    }
+  static async update(id: string | number, dadosPlano: Record<string, unknown>) {
+    const numericId = Number(id);
+    const existing = await prisma.cadastros_planos.findUnique({ where: { id: numericId } });
+    if (!existing) throw new Error('Plano não encontrado');
 
-    type AllowedField = 'nome_plano' | 'descricao' | 'tipo_servico' | 'servicos_inclusos' |
-      'quantidade_usuarios' | 'valor_mensal' | 'periodicidade' | 'data_inicio' |
-      'data_fim' | 'status' | 'observacoes';
-    
-    const allowedFields: AllowedField[] = [
-      'nome_plano', 'descricao', 'tipo_servico', 'servicos_inclusos',
-      'quantidade_usuarios', 'valor_mensal', 'periodicidade', 'data_inicio',
-      'data_fim', 'status', 'observacoes'
-    ];
-    
-    interface PlanoUpdateData {
-      nome_plano?: string;
-      descricao?: string | null;
-      tipo_servico?: 'infraestrutura' | 'consultoria' | 'blockdomi';
-      servicos_inclusos?: string[] | null;
-      quantidade_usuarios?: number | null;
-      valor_mensal?: number;
-      periodicidade?: 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal' | null;
-      data_inicio?: Date | null;
-      data_fim?: Date | null;
-      status?: 'ativo' | 'inativo';
-      observacoes?: string | null;
-    }
-    
-    const updateData: PlanoUpdateData = {};
-    Object.keys(dadosPlano).forEach(key => {
-      if (allowedFields.includes(key as AllowedField)) {
-        const fieldKey = key as AllowedField;
-        if (fieldKey === 'data_inicio' || fieldKey === 'data_fim') {
-          const dateValue = dadosPlano[fieldKey] as any;
-          if (dateValue && dateValue !== '' && dateValue !== 'Invalid date') {
-            if (typeof dateValue === 'string') {
-              const [year, month, day] = String(dateValue).split('-').map(Number);
-              if (!Number.isNaN(year) && !Number.isNaN(month) && !Number.isNaN(day)) {
-                const date = new Date(year, month - 1, day);
-                (updateData as Record<string, Date | null>)[fieldKey] = date;
-              }
-            } else if (dateValue instanceof Date) {
-              (updateData as Record<string, Date | null>)[fieldKey] = dateValue;
+    const allowed = ['nome_plano', 'descricao', 'tipo_servico', 'servicos_inclusos', 'quantidade_usuarios', 'valor_mensal', 'periodicidade', 'data_inicio', 'data_fim', 'status', 'observacoes'];
+    const updateData: Prisma.cadastros_planosUncheckedUpdateInput = {};
+    for (const key of Object.keys(dadosPlano)) {
+      if (!allowed.includes(key)) continue;
+      const value = dadosPlano[key];
+      if (key === 'data_inicio' || key === 'data_fim') {
+        if (value && value !== '' && value !== 'Invalid date') {
+          if (typeof value === 'string') {
+            const [year, month, day] = value.split('-').map(Number);
+            if (!Number.isNaN(year) && !Number.isNaN(month) && !Number.isNaN(day)) {
+              (updateData as Record<string, Date | null>)[key] = new Date(year, month - 1, day);
             }
-          }
-        } else {
-          const value = dadosPlano[fieldKey];
-          if (value === undefined) {
-            (updateData as Record<string, unknown>)[fieldKey] = null;
-          } else {
-            (updateData as Record<string, unknown>)[fieldKey] = value;
+          } else if (value instanceof Date) {
+            (updateData as Record<string, Date | null>)[key] = value;
           }
         }
+      } else if (key === 'servicos_inclusos' && Array.isArray(value)) {
+        updateData.servicos_inclusos = JSON.stringify(value);
+      } else {
+        (updateData as Record<string, unknown>)[key] = value === undefined ? null : value;
       }
-    });
-    
-    await Plano.update(updateData, {
-      where: { id }
-    });
-
-    const plano = await PlanoService.getById(id);
-
-    if (!plano) {
-      throw new Error('Plano não encontrado após atualização');
     }
 
-    // Invalidar cache
+    await prisma.cadastros_planos.update({ where: { id: numericId }, data: updateData });
+    const plano = await PlanoService.getById(numericId);
+    if (!plano) throw new Error('Plano não encontrado após atualização');
     cache.deletePattern('planos:list:.*');
-    
     return plano;
   }
 
-  /**
-   * Deletar plano
-   */
-  static async delete(id: string | number): Promise<Plano> {
-    const plano = await Plano.findByPk(id);
-    
-    if (!plano) {
-      throw new Error('Plano não encontrado');
-    }
-    
-    const titulosCount = await plano.countTitulos();
-    
+  static async delete(id: string | number) {
+    const numericId = Number(id);
+    const plano = await prisma.cadastros_planos.findUnique({ where: { id: numericId } });
+    if (!plano) throw new Error('Plano não encontrado');
+
+    const titulosCount = await prisma.financeiro_titulos.count({ where: { plano_id: numericId } });
     if (titulosCount > 0) {
       throw new Error(`Plano possui ${titulosCount} título(s) associado(s). Remova os títulos antes de excluir o plano.`);
     }
-    
-    const contratosCount = await plano.countClientes();
-    
+    const contratosCount = await prisma.contratos.count({ where: { plano_id: numericId } });
     if (contratosCount > 0) {
       throw new Error(`Plano possui ${contratosCount} contrato(s) de cliente(s) associado(s). Remova os contratos antes de excluir o plano.`);
     }
-    
-    await plano.destroy();
-    
-    // Invalidar cache
+
+    await prisma.cadastros_planos.delete({ where: { id: numericId } });
     cache.deletePattern('planos:list:.*');
-    
     return plano;
   }
 
-  /**
-   * Atualizar status do plano
-   */
-  static async updateStatus(id: string | number, status: 'ativo' | 'inativo'): Promise<Plano> {
-    const plano = await Plano.findByPk(id);
-    
-    if (!plano) {
-      throw new Error('Plano não encontrado');
-    }
-
-    await plano.update({ status });
-    
-    // Invalidar cache
+  static async updateStatus(id: string | number, status: 'ativo' | 'inativo') {
+    const numericId = Number(id);
+    const plano = await prisma.cadastros_planos.findUnique({ where: { id: numericId } });
+    if (!plano) throw new Error('Plano não encontrado');
+    await prisma.cadastros_planos.update({ where: { id: numericId }, data: { status } });
     cache.deletePattern('planos:list:.*');
-    
-    const atualizado = await PlanoService.getById(id);
-    if (!atualizado) {
-      throw new Error('Plano não encontrado');
-    }
+    const atualizado = await PlanoService.getById(numericId);
+    if (!atualizado) throw new Error('Plano não encontrado');
     return atualizado;
   }
 }
-

@@ -1,8 +1,39 @@
 import { EventEmitter } from 'events';
 import SchedulerWorker from '../SchedulerWorker';
-import ScheduledRoutine from '../../models/sistema/ScheduledRoutine';
-import { Op } from 'sequelize';
+import { prisma } from '../../db/prisma';
 import { logger } from '../../utils/logger';
+
+type RoutineRow = {
+  id: number;
+  configuracao: unknown;
+  hora_execucao: Date | string;
+  frequencia: string;
+};
+
+function configRecord(value: unknown): Record<string, never> {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, never>;
+  }
+  if (typeof value === 'string' && value.trim()) {
+    try {
+      const parsed = JSON.parse(value) as unknown;
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, never>;
+      }
+    } catch {
+      return {};
+    }
+  }
+  return {};
+}
+
+function horaHm(value: Date | string): string {
+  if (value instanceof Date) {
+    return `${String(value.getHours()).padStart(2, '0')}:${String(value.getMinutes()).padStart(2, '0')}`;
+  }
+  const parts = String(value).split(':');
+  return `${parts[0] ?? '00'}:${parts[1] ?? '00'}`;
+}
 
 export interface WorkerManagerConfig {
   maxWorkers?: number;
@@ -116,14 +147,12 @@ export class WorkerManager extends EventEmitter {
     const now = new Date();
     
     // Buscar rotinas que devem ser executadas
-    const routines = await ScheduledRoutine.findAll({
+    const routines = await prisma.sistema_scheduled_routines.findMany({
       where: {
         ativo: true,
-        proxima_execucao: {
-          [Op.lte]: now
-        }
+        proxima_execucao: { lte: now },
       },
-      order: [['proxima_execucao', 'ASC']]
+      orderBy: { proxima_execucao: 'asc' },
     });
 
     for (const routine of routines) {
@@ -148,14 +177,12 @@ export class WorkerManager extends EventEmitter {
    * Processa rotinas pendentes (para casos de reinicialização)
    */
   private async processPendingRoutines(): Promise<void> {
-    const routines = await ScheduledRoutine.findAll({
+    const routines = await prisma.sistema_scheduled_routines.findMany({
       where: {
         ativo: true,
-        proxima_execucao: {
-          [Op.lt]: new Date()
-        }
+        proxima_execucao: { lt: new Date() },
       },
-      order: [['proxima_execucao', 'ASC']]
+      orderBy: { proxima_execucao: 'asc' },
     });
 
     if (routines.length > 0) {
@@ -180,7 +207,7 @@ export class WorkerManager extends EventEmitter {
   /**
    * Executa uma rotina específica
    */
-  async executeRoutine(routine: ScheduledRoutine): Promise<void> {
+  async executeRoutine(routine: RoutineRow): Promise<void> {
     // Verificar se já está sendo executada
     if (this.activeExecutions.has(routine.id)) {
       return;
@@ -208,13 +235,13 @@ export class WorkerManager extends EventEmitter {
   /**
    * Executa rotina com retry automático
    */
-  private async executeWithRetry(routine: ScheduledRoutine): Promise<void> {
+  private async executeWithRetry(routine: RoutineRow): Promise<void> {
     let lastError: Error | null = null;
 
     for (let attempt = 1; attempt <= this.config.retryAttempts; attempt++) {
       try {
         
-        await SchedulerWorker.executeRoutine(routine.id, routine.configuracao);
+        await SchedulerWorker.executeRoutine(routine.id, configRecord(routine.configuracao));
         
         // Atualizar próxima execução
         await this.updateNextExecution(routine);
@@ -238,8 +265,8 @@ export class WorkerManager extends EventEmitter {
   /**
    * Atualiza a próxima execução da rotina
    */
-  private async updateNextExecution(routine: ScheduledRoutine): Promise<void> {
-    const [hours, minutes] = routine.hora_execucao.split(':');
+  private async updateNextExecution(routine: RoutineRow): Promise<void> {
+    const [hours, minutes] = horaHm(routine.hora_execucao).split(':');
     const nextExecution = new Date();
     
     // Definir a hora configurada
@@ -267,8 +294,9 @@ export class WorkerManager extends EventEmitter {
         nextExecution.setDate(nextExecution.getDate() + 1);
     }
 
-    await routine.update({
-      proxima_execucao: nextExecution
+    await prisma.sistema_scheduled_routines.update({
+      where: { id: routine.id },
+      data: { proxima_execucao: nextExecution },
     });
   }
 
@@ -276,7 +304,7 @@ export class WorkerManager extends EventEmitter {
    * Executa rotina manualmente
    */
   async executeRoutineManually(routineId: number): Promise<void> {
-    const routine = await ScheduledRoutine.findByPk(routineId);
+    const routine = await prisma.sistema_scheduled_routines.findUnique({ where: { id: routineId } });
     if (!routine) {
       throw new Error('Rotina não encontrada');
     }

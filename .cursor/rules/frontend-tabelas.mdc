@@ -122,8 +122,8 @@ render: (item) => (
 )
 
 // ✅ Uma coluna por limite
-{ key: 'equipamentos_limite_equipamentos', label: t('saas.planLimitEquipamentosShort'), render: ... }
-{ key: 'equipamentos_limite_tuneis', label: t('saas.planLimitTuneisShort'), render: ... }
+{ key: 'cidade', label: t('address.city'), render: ... }
+{ key: 'estado', label: t('address.state'), render: ... }
 ```
 
 ## Proibido

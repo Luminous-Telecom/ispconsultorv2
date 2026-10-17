@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request } from 'express';
 import { Banco } from '../../../models/cadastros/Banco';
 import { PaymentCommonService } from '../PaymentCommonService';
@@ -199,7 +200,7 @@ export class EfiWebhookProcessorService {
         if (normalizedDate) updateData.data_vencimento = normalizedDate;
       }
 
-      const dadosAnteriores = (titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain((titulo as { toJSON: () => Record<string, unknown> })) as Record<string, unknown>;
 
       if (isPago && !titulo.pago) {
         const dataPagamentoWebhook = PaymentCommonService.pickEfiWebhookPaymentDateRaw(dadosCompletos ?? {});
@@ -211,7 +212,7 @@ export class EfiWebhookProcessorService {
 
       await (titulo as { update: (d: Record<string, unknown>) => Promise<unknown> }).update(updateData);
       await refetchResolvedTitulo(resolved);
-      const dadosNovos = (resolved.titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
+      const dadosNovos = toPlain((resolved.titulo as { toJSON: () => Record<string, unknown> })) as Record<string, unknown>;
 
       enviarReciboSeAdmin(resolved, jaEstavaPago);
       await registrarAuditoriaWebhook(req, resolved, dadosAnteriores, dadosNovos, `Atualização via webhook EFI - Status: ${statusString}`);
@@ -256,7 +257,7 @@ export class EfiWebhookProcessorService {
       const jaEstavaPago = !!titulo.pago;
       const statusLocal = this.mapEfiStatus(status || 'pendente') as 'pendente' | 'pago' | 'vencido' | 'cancelado';
       const isPago = ['pago', 'liquidado'].includes(statusLocal);
-      const dadosAnteriores = (titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain((titulo as { toJSON: () => Record<string, unknown> })) as Record<string, unknown>;
 
       if (isPago && !titulo.pago) {
         const notif = notification as { created_at?: string; paid_at?: string; confirmed_at?: string; payment_date?: string };
@@ -270,7 +271,7 @@ export class EfiWebhookProcessorService {
         });
       }
       await refetchResolvedTitulo(resolved);
-      const dadosNovos = (resolved.titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
+      const dadosNovos = toPlain((resolved.titulo as { toJSON: () => Record<string, unknown> })) as Record<string, unknown>;
 
       enviarReciboSeAdmin(resolved, jaEstavaPago);
       await registrarAuditoriaWebhook(req, resolved, dadosAnteriores, dadosNovos, `Atualização via webhook EFI (charge notification) - Status: ${status}`);

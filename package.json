@@ -5,18 +5,14 @@
   "main": "index.js",
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "dev:pm2": "pm2 start ecosystem.config.js --only backend-dev,frontend-dev,doc-dev",
-    "dev:pm2:stop": "pm2 stop backend-dev frontend-dev doc-dev",
-    "prod:pm2": "pm2 start ecosystem.config.js --only backend,doc",
-    "prod:pm2:stop": "pm2 stop backend doc",
+    "dev:pm2": "pm2 start ecosystem.config.js --only backend-dev,frontend-dev",
+    "dev:pm2:stop": "pm2 stop backend-dev frontend-dev",
+    "prod:pm2": "pm2 start ecosystem.config.js --only backend",
+    "prod:pm2:stop": "pm2 stop backend",
     "pm2:restart": "pm2 restart ecosystem.config.js",
     "pm2:logs": "pm2 logs",
     "pm2:monit": "pm2 monit",
-    "pm2:delete": "pm2 delete backend backend-dev frontend frontend-dev doc doc-dev 2>/dev/null || true",
-    "doc": "cd doc && npm run dev",
-    "doc:build": "cd doc && npm run build",
-    "doc:start": "cd doc && npm run start",
-    "doc:update": "bash scripts/update-doc.sh",
+    "pm2:delete": "pm2 delete backend backend-dev frontend frontend-dev 2>/dev/null || true",
     "server": "cd backend && npm run dev",
     "client": "cd frontend && npm run dev",
     "build": "cd frontend && npm run build",
@@ -24,7 +20,7 @@
     "build:android": "cd frontend && npm run build:android",
     "start": "cd backend && npm start",
     "test": "npm test --prefix backend && npm test --prefix frontend -- --watchAll=false --watchman=false",
-    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install && cd ../doc && npm install"
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install"
   },
   "keywords": [
     "erp",

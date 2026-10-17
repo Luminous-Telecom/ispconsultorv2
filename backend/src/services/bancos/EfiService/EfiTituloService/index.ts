@@ -1,6 +1,9 @@
 import axios from 'axios';
-import { Banco } from '../../../../models/cadastros/Banco';
-import { Titulo } from '../../../../models/financeiro/Titulo';
+import type { cadastros_bancos, financeiro_titulos } from '@prisma/client';
+import { prisma } from '../../../../db/prisma';
+
+type Banco = cadastros_bancos;
+type Titulo = financeiro_titulos;
 import { logger } from '../../../../utils/logger';
 import { efiConfig } from '../../../../config/bancos/efi';
 import type { JsonValue } from '../../../../types/index';
@@ -177,17 +180,21 @@ export class EfiTituloService {
         ? String(nossoNumeroRaw)
         : null;
 
-    const tituloModel = titulo as unknown as Titulo & { __skipTituloUpdate?: boolean };
-    if (!tituloModel.__skipTituloUpdate && typeof tituloModel.update === 'function') {
-      await tituloModel.update({
-        charge_id: chargeIdString,
-        codigo_barras: codigoBarrasFinal,
-        url_boleto: typeof url === 'string' ? url : null,
-        linha_digitavel: linhaDigitavelFormatada,
-        qrcode: typeof pixQrcode === 'string' ? pixQrcode : null,
-        qrcode_image: typeof pixQrcodeImage === 'string' ? pixQrcodeImage : null,
-        nosso_numero: nossoNumero,
-        status: 'pendente'
+    const skipUpdate = Boolean((titulo as { __skipTituloUpdate?: boolean }).__skipTituloUpdate);
+    if (!skipUpdate) {
+      await prisma.financeiro_titulos.update({
+        where: { id: titulo.id },
+        data: {
+          charge_id: chargeIdString,
+          codigo_barras: codigoBarrasFinal,
+          url_boleto: typeof url === 'string' ? url : null,
+          linha_digitavel: linhaDigitavelFormatada,
+          qrcode: typeof pixQrcode === 'string' ? pixQrcode : null,
+          qrcode_image: typeof pixQrcodeImage === 'string' ? pixQrcodeImage : null,
+          nosso_numero: nossoNumero,
+          status: 'pendente',
+          updated_at: new Date(),
+        },
       });
     }
 
@@ -241,7 +248,13 @@ export class EfiTituloService {
       const headers = EfiHelpers.buildAuthHeaders(token);
 
       await axios.put(endpoint, {}, { headers, timeout: 30000 });
-      await titulo.update({ status: 'cancelado' });
+      const skipUpdate = Boolean((titulo as { __skipTituloUpdate?: boolean }).__skipTituloUpdate);
+      if (!skipUpdate) {
+        await prisma.financeiro_titulos.update({
+          where: { id: titulo.id },
+          data: { status: 'cancelado', updated_at: new Date() },
+        });
+      }
 
       return {
         success: true,
@@ -282,7 +295,9 @@ export class EfiTituloService {
       headers['Content-Type'] = 'application/json';
 
       await axios.put(endpoint, {}, { headers, timeout: 30000 });
-      await titulo.marcarComoPago(undefined, new Date(), true);
+      const { TituloService } = await import('../../../financeiro/TituloService');
+      const atual = await TituloService.getById(titulo.id);
+      if (atual) await atual.marcarComoPago(undefined, new Date(), true);
 
       return {
         success: true,

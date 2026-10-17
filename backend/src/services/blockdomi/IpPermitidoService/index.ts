@@ -1,5 +1,5 @@
-import { IpPermitidoBlockdomi } from '../../../models/blockdomi/IpPermitidoBlockdomi';
-import { Op, WhereOptions } from 'sequelize';
+import type { Prisma } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { buildPagination } from '../../../utils/pagination';
 
 export interface ListIpPermitidoFilters {
@@ -23,89 +23,83 @@ export interface ListIpPermitidoResponse {
   };
 }
 
-export class IpPermitidoService {
-  private static getDefaultIncludes() {
-    return [{ association: 'cliente' as const, attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj'] }];
-  }
+const CLIENTE_SELECT = { id: true, razao_social: true, nome_fantasia: true, cnpj: true } as const;
 
+function plainIp(row: {
+  clientes: { id: number; razao_social: string; nome_fantasia: string | null; cnpj: string } | null;
+  [key: string]: unknown;
+}, withClienteNome: boolean): { id: number; empresa_id?: number | null } & Record<string, unknown> {
+  const { clientes, ...rest } = row;
+  const json: Record<string, unknown> = { ...rest, cliente: clientes };
+  if (withClienteNome) {
+    json.cliente_nome = clientes
+      ? (clientes.razao_social || clientes.nome_fantasia || clientes.cnpj || '-')
+      : '-';
+  }
+  return json as { id: number; empresa_id?: number | null } & Record<string, unknown>;
+}
+
+export class IpPermitidoService {
   static async list(filters: ListIpPermitidoFilters): Promise<ListIpPermitidoResponse> {
     const { page = 1, limit = 15, search, searchField, sortColumn = 'id', sortDirection = 'DESC' } = filters;
-    const offset = (page - 1) * limit;
-    const dir = sortDirection?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+    const dir = sortDirection?.toUpperCase() === 'ASC' ? 'asc' as const : 'desc' as const;
+    const allowedCols = ['id', 'faixa_ips', 'created_at'] as const;
+    const col = (allowedCols as readonly string[]).includes(sortColumn) ? sortColumn : 'id';
 
-    const whereConditions: WhereOptions<IpPermitidoBlockdomi>[] = [];
+    const where: Prisma.blockdomi_ips_permitidosWhereInput = {};
     if (search?.trim()) {
       const term = search.trim();
-      const likePattern = `%${term}%`;
       if (searchField === 'id') {
         const num = /^\d+$/.test(term) ? parseInt(term, 10) : null;
-        if (num !== null) {
-          whereConditions.push({ id: num } as WhereOptions<IpPermitidoBlockdomi>);
-        }
+        if (num !== null) where.id = num;
       } else if (searchField === 'faixa_ips') {
-        whereConditions.push({ faixa_ips: { [Op.like]: likePattern } } as WhereOptions<IpPermitidoBlockdomi>);
+        where.faixa_ips = { contains: term };
       } else if (searchField === 'cliente_nome') {
-        whereConditions.push({
-          [Op.or]: [
-            { '$cliente.razao_social$': { [Op.like]: likePattern } },
-            { '$cliente.nome_fantasia$': { [Op.like]: likePattern } },
-            { '$cliente.cnpj$': { [Op.like]: likePattern } }
-          ]
-        } as WhereOptions<IpPermitidoBlockdomi>);
+        where.clientes = {
+          OR: [
+            { razao_social: { contains: term } },
+            { nome_fantasia: { contains: term } },
+            { cnpj: { contains: term } },
+          ],
+        };
       } else {
-        whereConditions.push({
-          [Op.or]: [
-            { faixa_ips: { [Op.like]: likePattern } },
-            { '$cliente.razao_social$': { [Op.like]: likePattern } },
-            { '$cliente.nome_fantasia$': { [Op.like]: likePattern } },
-            { '$cliente.cnpj$': { [Op.like]: likePattern } }
-          ]
-        } as WhereOptions<IpPermitidoBlockdomi>);
+        where.OR = [
+          { faixa_ips: { contains: term } },
+          { clientes: { razao_social: { contains: term } } },
+          { clientes: { nome_fantasia: { contains: term } } },
+          { clientes: { cnpj: { contains: term } } },
+        ];
       }
     }
 
-    const where: WhereOptions<IpPermitidoBlockdomi> =
-      whereConditions.length > 0 ? { [Op.and]: whereConditions } : {};
-
-    const allowedCols = ['id', 'faixa_ips', 'created_at'];
-    const col = allowedCols.includes(sortColumn) ? sortColumn : 'id';
-    const order = [[col, dir]] as [string, string][];
-
-    const { count, rows } = await IpPermitidoBlockdomi.findAndCountAll({
-      where,
-      include: [
-        {
-          association: 'cliente',
-          attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj'],
-          required: whereConditions.length > 0
-        }
-      ],
-      order,
-      limit,
-      offset,
-      distinct: true
-    });
-
-    const data = rows.map((r) => {
-      const json = r.toJSON() as Record<string, unknown>;
-      const cliente = json.cliente as Record<string, unknown> | undefined;
-      json.cliente_nome = cliente ? (cliente.razao_social || cliente.nome_fantasia || cliente.cnpj || '-') : '-';
-      return json;
-    });
+    const [count, rows] = await Promise.all([
+      prisma.blockdomi_ips_permitidos.count({ where }),
+      prisma.blockdomi_ips_permitidos.findMany({
+        where,
+        include: { clientes: { select: CLIENTE_SELECT } },
+        orderBy: { [col]: dir },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+    ]);
 
     return {
-      data,
+      data: rows.map((row) => plainIp(row, true)),
       pagination: buildPagination(page, limit, count),
     };
   }
 
-  static async getById(id: string | number): Promise<IpPermitidoBlockdomi | null> {
-    return IpPermitidoBlockdomi.findByPk(id, {
-      include: IpPermitidoService.getDefaultIncludes(),
+  static async getById(id: string | number): Promise<({ id: number; empresa_id?: number | null } & Record<string, unknown>) | null> {
+    const numericId = Number(id);
+    if (Number.isNaN(numericId)) return null;
+    const row = await prisma.blockdomi_ips_permitidos.findUnique({
+      where: { id: numericId },
+      include: { clientes: { select: CLIENTE_SELECT } },
     });
+    return row ? plainIp(row, false) : null;
   }
 
-  static async create(data: { cliente_id: number; faixa_ips: string; empresa_id?: number | null }): Promise<IpPermitidoBlockdomi> {
+  static async create(data: { cliente_id: number; faixa_ips: string; empresa_id?: number | null }): Promise<{ id: number; empresa_id?: number | null } & Record<string, unknown>> {
     const faixaNormalizada = (data.faixa_ips || '')
       .split(';')
       .map((s) => s.trim())
@@ -114,15 +108,20 @@ export class IpPermitidoService {
     if (!faixaNormalizada) {
       throw new Error('Faixa de IPs é obrigatória');
     }
-    return IpPermitidoBlockdomi.create({
-      cliente_id: data.cliente_id,
-      faixa_ips: faixaNormalizada,
-      empresa_id: data.empresa_id ?? null
+    const created = await prisma.blockdomi_ips_permitidos.create({
+      data: {
+        cliente_id: data.cliente_id,
+        faixa_ips: faixaNormalizada,
+        empresa_id: data.empresa_id ?? null,
+      },
+      include: { clientes: { select: CLIENTE_SELECT } },
     });
+    return plainIp(created, false);
   }
 
-  static async update(id: string | number, data: { faixa_ips?: string }): Promise<IpPermitidoBlockdomi> {
-    const row = await IpPermitidoBlockdomi.findByPk(id);
+  static async update(id: string | number, data: { faixa_ips?: string }): Promise<{ id: number; empresa_id?: number | null } & Record<string, unknown>> {
+    const numericId = Number(id);
+    const row = await prisma.blockdomi_ips_permitidos.findUnique({ where: { id: numericId } });
     if (!row) throw new Error('Registro não encontrado');
     if (data.faixa_ips !== undefined) {
       const faixaNormalizada = (data.faixa_ips || '')
@@ -131,15 +130,24 @@ export class IpPermitidoService {
         .filter(Boolean)
         .join('; ');
       if (!faixaNormalizada) throw new Error('Faixa de IPs é obrigatória');
-      await row.update({ faixa_ips: faixaNormalizada });
+      await prisma.blockdomi_ips_permitidos.update({
+        where: { id: numericId },
+        data: { faixa_ips: faixaNormalizada },
+      });
     }
-    return row.reload({ include: IpPermitidoService.getDefaultIncludes() });
+    const reloaded = await prisma.blockdomi_ips_permitidos.findUnique({
+      where: { id: numericId },
+      include: { clientes: { select: CLIENTE_SELECT } },
+    });
+    if (!reloaded) throw new Error('Registro não encontrado');
+    return plainIp(reloaded, false);
   }
 
   static async delete(id: string | number): Promise<void> {
-    const row = await IpPermitidoBlockdomi.findByPk(id);
+    const numericId = Number(id);
+    const row = await prisma.blockdomi_ips_permitidos.findUnique({ where: { id: numericId } });
     if (!row) throw new Error('Registro não encontrado');
-    await row.destroy();
+    await prisma.blockdomi_ips_permitidos.delete({ where: { id: numericId } });
   }
 
   /**
@@ -152,9 +160,9 @@ export class IpPermitidoService {
     }
 
     const ip = clientIp.trim();
-    const rows = await IpPermitidoBlockdomi.findAll({ attributes: ['faixa_ips'] });
+    const rows = await prisma.blockdomi_ips_permitidos.findMany({ select: { faixa_ips: true } });
     const allRanges = rows
-      .map((r) => (r.faixa_ips || '').split(';').map((s) => s.trim()).filter(Boolean))
+      .map((r) => (r.faixa_ips || '').split(';').map((s: string) => s.trim()).filter(Boolean))
       .flat();
 
     for (const range of allRanges) {

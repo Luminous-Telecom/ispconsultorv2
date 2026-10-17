@@ -44,7 +44,7 @@ Sincroniza busca/recarregar entre `Table` (`syncWithHeader`) e header da página
 
 ## DashboardFiltersContext
 
-Filtros compartilhados dashboard ERP / SaaS — não duplicar estado de filtro fora do provider.
+Filtros compartilhados do dashboard do ERP — não duplicar estado de filtro fora do provider.
 
 ## I18nProvider
 
@@ -53,7 +53,3 @@ import { useI18n } from 'contexts/I18nContext';
 ```
 
 Ver `frontend-i18n.mdc`.
-
-## SaasAuthContext
-
-Autenticação SuperAdmin — só rotas `/saas/*`.

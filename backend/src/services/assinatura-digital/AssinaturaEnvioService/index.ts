@@ -7,8 +7,8 @@ import { ModeloDocumentoService } from '../../documentos/ModeloDocumentoService'
 import { VariaveisDocumentoService } from '../../documentos/VariaveisDocumentoService';
 import { AssinafyService } from '../AssinafyService';
 import { ZapsignService } from '../ZapsignService';
-import type { Cliente } from '../../../models/clientes/Cliente';
-import type { Contrato } from '../../../models/contratos/Contrato';
+import type { clientes, contratos } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { registrarCriacao } from '../../sistema/AuditoriaService';
 import type { AuthenticatedRequest } from '../../../types/auth';
 
@@ -61,9 +61,9 @@ export class AssinaturaEnvioService {
   static async prepararConteudoDocumento(
     termo_contrato_id?: number,
     cliente_id?: number
-  ): Promise<{ conteudoHtml: string; cliente: Cliente | null; contrato: Contrato | null }> {
-    let cliente: Cliente | null = null;
-    let contrato: Contrato | null = null;
+  ): Promise<{ conteudoHtml: string; cliente: clientes | null; contrato: contratos | null }> {
+    let cliente: clientes | null = null;
+    let contrato: contratos | null = null;
     let conteudoHtml = '';
 
     if (termo_contrato_id) {
@@ -76,9 +76,12 @@ export class AssinaturaEnvioService {
         throw new Error('Termo de contrato não possui modelo de documento associado');
       }
 
-      contrato = await termoContrato.getContrato();
-      if (contrato) {
-        cliente = await contrato.getCliente();
+      const contratoId = (termoContrato as { contrato_id?: number | null }).contrato_id;
+      contrato = contratoId
+        ? await prisma.contratos.findUnique({ where: { id: contratoId } })
+        : null;
+      if (contrato?.cliente_id) {
+        cliente = await prisma.clientes.findUnique({ where: { id: contrato.cliente_id } });
       }
 
       const modeloDocumento = await ModeloDocumentoService.getById(termoContrato.modelo_documento_id);
@@ -116,8 +119,8 @@ export class AssinaturaEnvioService {
    */
   static async processarVariaveis(
     conteudoHtml: string,
-    cliente: Cliente | null,
-    contrato: Contrato | null
+    cliente: clientes | null,
+    contrato: contratos | null
   ): Promise<string> {
     if (conteudoHtml && cliente) {
       const contratoRef = contrato ? { id: contrato.id } : undefined;
@@ -251,7 +254,7 @@ export class AssinaturaEnvioService {
         req,
         'AssinaturaDigital',
         assinatura.id,
-        assinatura.toJSON() as Record<string, unknown>
+        { ...assinatura }
       );
     } catch (auditError) {
       // Não interromper o fluxo

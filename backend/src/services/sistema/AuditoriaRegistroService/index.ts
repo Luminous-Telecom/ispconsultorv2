@@ -7,7 +7,6 @@ import { AuthenticatedRequest } from '../../../types/auth';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { getClientIp } from '../../../utils/requestUtils';
 import { normalizarSnapshotAuditoria } from '../../auditoria/normalizarSnapshotAuditoria';
-import { SaasUsuarioSuper } from '../../../models/saas/SaasUsuarioSuper';
 import { SistemaLogOperacionalService, houveAlteracaoEfetivaEmUpdate } from '../SistemaLogOperacionalService';
 
 export type AcaoAuditoria = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'export' | 'import' | 'executar';
@@ -74,20 +73,8 @@ async function buildSaasActorPayload(req: Request | AuthenticatedRequest): Promi
   const saasId = parseInt(String(saasUser.sub), 10);
   if (!Number.isFinite(saasId) || saasId <= 0) return {};
 
-  let nome = typeof saasUser.nome === 'string' ? saasUser.nome : null;
-  let email = typeof saasUser.email === 'string' ? saasUser.email : null;
-
-  if (!nome || !email) {
-    try {
-      const row = await SaasUsuarioSuper.findByPk(saasId, { attributes: ['nome', 'email'] });
-      if (row) {
-        nome = nome ?? row.nome;
-        email = email ?? row.email;
-      }
-    } catch {
-      /* best-effort */
-    }
-  }
+  const nome = typeof saasUser.nome === 'string' ? saasUser.nome : null;
+  const email = typeof saasUser.email === 'string' ? saasUser.email : null;
 
   return {
     saas_usuario_id: saasId,

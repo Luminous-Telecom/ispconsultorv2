@@ -1,7 +1,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { SshDevice, SshDeviceType } from '../../../models/ssh-manager/SshDevice';
-import { Agent } from '../../../models/agent/Agent';
+import { prisma } from '../../../db/prisma';
+import type { SshDeviceShape as SshDevice, SshDeviceType } from '../sshDeviceShape';
 import { sshPool } from '../SshPoolService';
 import { executeCommand, openDeviceConnection } from '../SshConnectionService';
 import { isWireguardAgent, resolveWireguardBind } from '../../agent/wireguard/AgentWireguardService';
@@ -52,10 +52,10 @@ async function fetchSwosBackupBuffer(
   const viaAgent = Boolean(device.agent_id);
 
   if (viaAgent) {
-    const agentRow = await Agent.findByPk(device.agent_id!);
+    const agentRow = await prisma.agent_agents.findUnique({ where: { id: device.agent_id! } });
     if (agentRow && isWireguardAgent(agentRow)) {
       try {
-        const localAddress = await resolveWireguardBind(agentRow);
+        const localAddress = await resolveWireguardBind(agentRow as unknown as Parameters<typeof resolveWireguardBind>[0]);
         const res = await httpGetWithDigestAuth(url, user, passwordPlain, timeoutMs, { localAddress });
         if (!res.ok) {
           return { ok: false, error: res.error ?? `HTTP ${res.statusCode} ao baixar backup SwOS` };
@@ -145,7 +145,7 @@ async function runSwosHttpBackup(
   }
 
   if (device.agent_id) {
-    const agentRow = await Agent.findByPk(device.agent_id);
+    const agentRow = await prisma.agent_agents.findUnique({ where: { id: device.agent_id } });
     if (!agentRow || !agentRow.is_active) {
       return auditFail('Agente não encontrado ou inativo.');
     }
@@ -262,7 +262,7 @@ export async function runSshDeviceBackup(
     auditUserId,
   });
 
-  const device = await SshDevice.findByPk(deviceId);
+  const device = await prisma.ssh_manager_devices.findUnique({ where: { id: deviceId } });
   if (!device) {
     logger.warn('Backup SSH: device não encontrado', { context: 'SshDeviceBackupRunner', deviceId, manual });
     return { success: false, message: 'Device não encontrado.' };
@@ -371,14 +371,14 @@ export async function runSshDeviceBackup(
     let output = '';
 
     if (viaAgent) {
-      const agentRow = await Agent.findByPk(device.agent_id!);
+      const agentRow = await prisma.agent_agents.findUnique({ where: { id: device.agent_id! } });
       if (!agentRow || !agentRow.is_active) {
         return auditCommandFail(auditLabel, 'Agente não encontrado ou inativo.');
       }
       if (isWireguardAgent(agentRow)) {
         let localAddress: string;
         try {
-          localAddress = await resolveWireguardBind(agentRow);
+          localAddress = await resolveWireguardBind(agentRow as unknown as Parameters<typeof resolveWireguardBind>[0]);
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           return auditCommandFail(auditLabel, msg);

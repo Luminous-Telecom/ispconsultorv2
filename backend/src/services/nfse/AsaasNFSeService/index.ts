@@ -45,7 +45,7 @@ export class AsaasNFSeService {
         : (asaasConfig.api_base_url || asaasConfig.api_url);
 
       return {
-        apiKey: bancoAsaas.getDataValue('api_key') || '',
+        apiKey: bancoAsaas.api_key || '',
         sandbox: bancoAsaas.sandbox,
         baseUrl: baseUrl
       };

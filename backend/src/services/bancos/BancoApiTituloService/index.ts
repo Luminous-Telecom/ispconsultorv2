@@ -1,7 +1,6 @@
 import axios, { type AxiosResponse } from 'axios';
-import { Banco } from '../../../models/cadastros/Banco';
-import { Titulo } from '../../../models/financeiro/Titulo';
-import type { InferAttributes } from 'sequelize';
+import type { cadastros_bancos, financeiro_titulos } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
 import type { JsonValue } from '../../../types/index';
 import { BancoApiAuthService } from '../BancoApiAuthService';
@@ -11,7 +10,10 @@ import { EfiService } from '../EfiService';
 import { efiConfig } from '../../../config/bancos/efi';
 import asaasConfig from '../../../config/bancos/asaas';
 
-interface TituloWithRelations extends InferAttributes<Titulo> {
+type Banco = cadastros_bancos;
+type Titulo = financeiro_titulos;
+
+interface TituloWithRelations extends Titulo {
   banco?: Banco;
 }
 
@@ -76,11 +78,27 @@ export class BancoApiTituloService {
       return banco;
     }
 
-    const instance = await Banco.findByPk(banco.id, {
-      attributes: [...this.BANCO_CREDENCIAIS_ATTRS]
+    const instance = await prisma.cadastros_bancos.findUnique({
+      where: { id: banco.id },
+      select: {
+        id: true,
+        nome: true,
+        tipo_banco: true,
+        api_key: true,
+        client_id_producao: true,
+        client_secret_producao: true,
+        sandbox: true,
+        url_retorno: true,
+        webhook_secret: true,
+        percentual_multa: true,
+        percentual_juros: true,
+        desconto_tipo: true,
+        desconto_valor: true,
+      },
     });
 
-    return instance ? (instance.get({ plain: true }) as Banco) : null;
+    if (!instance) return null;
+    return { ...banco, ...instance };
   }
 
   private static async obterToken(banco: Banco, config: typeof efiConfig | typeof asaasConfig): Promise<string | null> {

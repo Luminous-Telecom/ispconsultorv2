@@ -1,5 +1,5 @@
 import { Worker, isMainThread, parentPort, workerData } from 'worker_threads';
-import ScheduledRoutine from '../../models/sistema/ScheduledRoutine';
+import { prisma } from '../../db/prisma';
 import { criarLogExecucaoMysql, atualizarLogExecucaoMysql } from '../../services/scheduler/RotinaExecucaoLogService';
 import { EnvioBoletosRoutine } from '../../services/scheduler/routines/EnvioBoletosRoutine';
 import { RemessaBancariaRoutine } from '../../services/scheduler/routines/RemessaBancariaRoutine';
@@ -31,6 +31,27 @@ interface ErrorMessageData {
 }
 
 type WorkerMessageData = StatusMessageData | CompleteMessageData | ErrorMessageData;
+
+async function loadRoutine(routineId: number) {
+  return prisma.sistema_scheduled_routines.findUnique({ where: { id: routineId } });
+}
+
+function configRecord(value: unknown): Record<string, JsonValue> {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, JsonValue>;
+  }
+  if (typeof value === 'string' && value.trim()) {
+    try {
+      const parsed = JSON.parse(value) as unknown;
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, JsonValue>;
+      }
+    } catch {
+      return {};
+    }
+  }
+  return {};
+}
 
 export interface WorkerMessage {
   type: 'execute' | 'status' | 'error' | 'complete';
@@ -64,7 +85,7 @@ class SchedulerWorker {
       throw new Error('Número máximo de workers ativos atingido');
     }
 
-    const routine = await ScheduledRoutine.findByPk(routineId);
+    const routine = await loadRoutine(routineId);
     if (!routine) {
       throw new Error('Rotina não encontrada');
     }
@@ -296,7 +317,7 @@ if (!isMainThread && workerData) {
         data: { message: 'Iniciando execução da rotina' }
       } as WorkerMessage);
 
-      const routine = await ScheduledRoutine.findByPk(routineId);
+      const routine = await loadRoutine(routineId);
 
       if (!routine) {
         throw new Error('Rotina não encontrada');
@@ -331,15 +352,18 @@ if (!isMainThread && workerData) {
         data: { message: `Executando rotina: ${routine.nome}` }
       } as WorkerMessage);
 
-      const result = await routineInstance.execute(routine.configuracao, {
+      const result = await routineInstance.execute(configRecord(routine.configuracao), {
         saas: false,
         empresa_id: routine.empresa_id ?? undefined,
       });
 
-      await routine.update({
-        total_execucoes: routine.total_execucoes + 1,
-        execucoes_com_sucesso: routine.execucoes_com_sucesso + 1,
-        ultima_execucao: new Date()
+      await prisma.sistema_scheduled_routines.update({
+        where: { id: routine.id },
+        data: {
+          total_execucoes: { increment: 1 },
+          execucoes_com_sucesso: { increment: 1 },
+          ultima_execucao: new Date(),
+        },
       });
 
       const duration = Date.now() - startTime;
@@ -359,12 +383,15 @@ if (!isMainThread && workerData) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
 
       try {
-        const routine = await ScheduledRoutine.findByPk(routineId);
+        const routine = await loadRoutine(routineId);
         if (routine) {
-          await routine.update({
-            total_execucoes: routine.total_execucoes + 1,
-            execucoes_com_erro: routine.execucoes_com_erro + 1,
-            ultima_execucao: new Date()
+          await prisma.sistema_scheduled_routines.update({
+            where: { id: routine.id },
+            data: {
+              total_execucoes: { increment: 1 },
+              execucoes_com_erro: { increment: 1 },
+              ultima_execucao: new Date(),
+            },
           });
         }
       } catch {

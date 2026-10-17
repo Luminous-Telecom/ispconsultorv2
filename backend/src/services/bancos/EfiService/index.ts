@@ -1,6 +1,8 @@
 import axios from 'axios';
-import { Banco } from '../../../models/cadastros/Banco';
-import { Titulo } from '../../../models/financeiro/Titulo';
+import type { cadastros_bancos, financeiro_titulos } from '@prisma/client';
+
+type Banco = cadastros_bancos;
+type Titulo = financeiro_titulos;
 import { logger } from '../../../utils/logger';
 import { efiConfig } from '../../../config/bancos/efi';
 import type { ApiResponse, TituloWithRelations, AxiosErrorResponse, IBancoService } from '../types';

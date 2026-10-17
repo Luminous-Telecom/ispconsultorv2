@@ -1,14 +1,18 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { BancoApiService } from '../../../services/bancos/BancoApiService';
 import { BancoService } from '../../../services/cadastros/BancoService';
 import { logger } from '../../../utils/logger';
-import { ValidationError } from 'sequelize';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { parseListQuery, queryString } from '../../../utils/listQuery';
 import { SaasPlanoLimitesService } from '../../../services/saas/SaasPlanoLimitesService';
+
+function isModelValidationError(error: unknown): error is Error & { errors: Array<{ message?: string }> } {
+  return error instanceof Error && Array.isArray((error as { errors?: unknown }).errors);
+}
 
 export class BancoController {
   /**
@@ -28,7 +32,7 @@ export class BancoController {
     try {
       const empresaId = getEmpresaIdOrNull(req);
       const bancos = await BancoService.findAtivos(empresaId ?? undefined);
-      const maskedData = bancos.map(b => BancoController.maskSensitiveFields(b.toJSON() as Record<string, unknown>));
+      const maskedData = bancos.map(b => BancoController.maskSensitiveFields(toPlain(b) as Record<string, unknown>));
       sendSuccess(res, maskedData);
     } catch (error: unknown) {
       sendError(res, error, 'Erro ao buscar bancos ativos', 500, true);
@@ -54,7 +58,7 @@ export class BancoController {
         empresa_id: empresaId ?? undefined,
       });
       
-      const maskedData = result.data.map(b => BancoController.maskSensitiveFields(b.toJSON ? (b.toJSON() as Record<string, unknown>) : (b as unknown as Record<string, unknown>)));
+      const maskedData = result.data.map(b => BancoController.maskSensitiveFields(toPlain(b) as Record<string, unknown>));
       sendSuccess(res, { ...result, data: maskedData });
     } catch (error: unknown) {
       sendError(res, error, 'Erro ao listar bancos', 500, true);
@@ -75,7 +79,7 @@ export class BancoController {
         return;
       }
       
-      sendSuccess(res, BancoController.maskSensitiveFields(banco.toJSON() as Record<string, unknown>));
+      sendSuccess(res, BancoController.maskSensitiveFields(toPlain(banco) as Record<string, unknown>));
     } catch (error: unknown) {
       sendError(res, error, 'Erro ao buscar banco', 500, true, {
         banco_id: req.params.id
@@ -120,7 +124,11 @@ export class BancoController {
       }
 
       const banco = await BancoService.create({ ...dadosBanco, empresa_id: empresaId ?? null });
-      
+      if (!banco) {
+        sendError(res, new Error('Banco não encontrado após o cadastro'), 'Erro ao cadastrar banco', 500, true);
+        return;
+      }
+
       // Registrar auditoria
       try {
         const empresaIdAudit = getEmpresaIdOrNull(req) ?? banco.empresa_id ?? null;
@@ -128,7 +136,7 @@ export class BancoController {
           req,
           'Banco',
           banco.id,
-          banco.toJSON() as Record<string, unknown>,
+          toPlain(banco) as Record<string, unknown>,
           undefined,
           empresaIdAudit
         );
@@ -144,10 +152,9 @@ export class BancoController {
       
       sendSuccess(res, banco, 'Banco cadastrado com sucesso!', 201);
     } catch (error: unknown) {
-      // Capturar erros de validação do Sequelize
-      if (error instanceof ValidationError) {
-        const errorMessages = error.errors.map(err => err.message);
-        sendValidationError(res, errorMessages.join(', '));
+      if (isModelValidationError(error)) {
+        const errors = error.errors.map((err) => err.message ?? '');
+        sendValidationError(res, errors.join(', '));
         return;
       }
 
@@ -186,7 +193,7 @@ export class BancoController {
       }
       
       // Capturar dados anteriores para auditoria
-      const dadosAnteriores = banco.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(banco) as Record<string, unknown>;
       
       // Verificar se já existe outro banco com mesmo nome
       if (dadosBanco.nome && dadosBanco.nome !== banco.nome) {
@@ -234,9 +241,13 @@ export class BancoController {
       delete dadosParaAtualizar.has_client_secret_producao;
       
       const bancoAtualizado = await BancoService.update(id, dadosParaAtualizar);
-      
+      if (!bancoAtualizado) {
+        sendError(res, new Error('Banco não encontrado após a atualização'), 'Erro ao atualizar banco', 500, true);
+        return;
+      }
+
       // Registrar auditoria
-      const dadosNovos = bancoAtualizado.toJSON() as Record<string, unknown>;
+      const dadosNovos = toPlain(bancoAtualizado) as Record<string, unknown>;
       
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores, dadosNovos);
@@ -266,10 +277,9 @@ export class BancoController {
       
       sendSuccess(res, bancoAtualizado, 'Banco atualizado com sucesso!');
     } catch (error: unknown) {
-      // Capturar erros de validação do Sequelize
-      if (error instanceof ValidationError) {
-        const errorMessages = error.errors.map(err => err.message);
-        sendValidationError(res, errorMessages.join(', '));
+      if (isModelValidationError(error)) {
+        const errors = error.errors.map((err) => err.message ?? '');
+        sendValidationError(res, errors.join(', '));
         return;
       }
 
@@ -301,7 +311,7 @@ export class BancoController {
       }
       
       // Capturar dados anteriores para auditoria
-      const dadosAnteriores = banco.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(banco) as Record<string, unknown>;
       
       try {
         await BancoService.delete(id);

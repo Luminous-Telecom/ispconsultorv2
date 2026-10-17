@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { Titulo } from '../../../models/financeiro/Titulo';
 import { TituloService } from '../../../services/financeiro/TituloService';
@@ -39,7 +40,7 @@ export class TituloBoletoController {
         return;
       }
 
-      const dadosAnteriores = titulo.toJSON();
+      const dadosAnteriores = toPlain(titulo);
       // Usar normalizePaymentDate para interpretar "YYYY-MM-DD" como data local (evita 21h por timezone UTC)
       const dataPagamentoNormalizada = data_pagamento
         ? (typeof data_pagamento === 'string'
@@ -56,7 +57,7 @@ export class TituloBoletoController {
         'Titulo',
         titulo.id,
         dadosAnteriores as Record<string, unknown>,
-        titulo.toJSON() as Record<string, unknown>,
+        toPlain(titulo) as Record<string, unknown>,
         undefined,
         empresaIdAudit
       );
@@ -86,7 +87,7 @@ export class TituloBoletoController {
         return;
       }
 
-      const dadosAnteriores = titulo.toJSON();
+      const dadosAnteriores = toPlain(titulo);
       await titulo.desmarcarPago();
       await TituloService.reloadTituloComRelacoes(titulo);
 
@@ -97,7 +98,7 @@ export class TituloBoletoController {
           'Titulo',
           titulo.id,
           dadosAnteriores as Record<string, unknown>,
-          titulo.toJSON() as Record<string, unknown>,
+          toPlain(titulo) as Record<string, unknown>,
           undefined,
           empresaIdAudit
         );
@@ -129,13 +130,15 @@ export class TituloBoletoController {
         return;
       }
 
-      const resultado = await BancoApiService.consultarStatus(titulo as unknown as TituloComRelacoes);
+      const resultado = await BancoApiService.consultarStatus(
+        titulo as unknown as Parameters<typeof BancoApiService.consultarStatus>[0]
+      );
 
       if (resultado.success && resultado.data) {
         const statusPago = resultado.data.status === 'paid' || resultado.data.status === 'settled';
         
         if (statusPago && !titulo.pago) {
-          const dadosAnteriores = titulo.toJSON();
+          const dadosAnteriores = toPlain(titulo);
           const valorPago = resultado.data.valor_pago || titulo.valor;
           const rawData = resultado.data.data_pagamento;
           const dataPagamento = rawData
@@ -156,7 +159,7 @@ export class TituloBoletoController {
               'Titulo',
               titulo.id,
               dadosAnteriores as Record<string, unknown>,
-              titulo.toJSON() as Record<string, unknown>,
+              toPlain(titulo) as Record<string, unknown>,
               undefined,
               empresaIdAudit
             );
@@ -198,7 +201,7 @@ export class TituloBoletoController {
         return;
       }
 
-      const dadosAnteriores = titulo.toJSON();
+      const dadosAnteriores = toPlain(titulo);
       await titulo.desmarcarPago();
       await TituloService.reloadTituloComRelacoes(titulo);
 
@@ -209,7 +212,7 @@ export class TituloBoletoController {
           'Titulo',
           titulo.id,
           dadosAnteriores as Record<string, unknown>,
-          titulo.toJSON() as Record<string, unknown>,
+          toPlain(titulo) as Record<string, unknown>,
           undefined,
           empresaIdAudit
         );

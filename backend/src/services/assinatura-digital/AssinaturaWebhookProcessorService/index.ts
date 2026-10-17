@@ -1,4 +1,6 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request } from 'express';
+import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
 import { AssinaturaDigitalService } from '../AssinaturaDigitalService';
 import { TermoContratoService } from '../../contratos/TermoContratoService';
@@ -32,10 +34,10 @@ export class AssinaturaWebhookProcessorService {
     }
 
     if (signingUrl && !assinatura.url_assinatura) {
-      const dadosAnteriores = assinatura.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = { ...assinatura };
       await AssinaturaDigitalService.updateById(assinatura.id, { url_assinatura: signingUrl });
       await AssinaturaDigitalService.reloadComRelacoes(assinatura);
-      const dadosNovos = assinatura.toJSON() as Record<string, unknown>;
+      const dadosNovos = { ...assinatura };
       
       if (req) {
         try {
@@ -96,11 +98,14 @@ export class AssinaturaWebhookProcessorService {
     req: Request | undefined,
     provider?: 'assinafy' | 'zapsign'
   ): Promise<void> {
-    const dadosAnteriores = assinatura.toJSON() as Record<string, unknown>;
-    assinatura.status = 'cancelado';
-    await assinatura.save();
+    const dadosAnteriores = { ...assinatura };
+    await prisma.assinatura_digital_assinaturas.update({
+      where: { id: assinatura.id },
+      data: { status: 'cancelado', updated_at: new Date() },
+    });
+    Object.assign(assinatura, { status: 'cancelado' });
     await AssinaturaDigitalService.reloadComRelacoes(assinatura);
-    const dadosNovos = assinatura.toJSON() as Record<string, unknown>;
+    const dadosNovos = { ...assinatura };
     
     if (req) {
       try {
@@ -185,10 +190,10 @@ export class AssinaturaWebhookProcessorService {
       }
     }
 
-    const dadosAnteriores = assinatura.toJSON() as Record<string, unknown>;
+    const dadosAnteriores = { ...assinatura };
     await AssinaturaDigitalService.updateById(assinatura.id, dadosParaAtualizar);
     await AssinaturaDigitalService.reloadComRelacoes(assinatura);
-    const dadosNovos = assinatura.toJSON() as Record<string, unknown>;
+    const dadosNovos = { ...assinatura };
     
     if (req) {
       try {
@@ -253,9 +258,7 @@ export class AssinaturaWebhookProcessorService {
         
         if (req && arquivoCriado) {
           try {
-            const dadosNovos = arquivoCriado.toJSON 
-              ? arquivoCriado.toJSON() as Record<string, unknown> 
-              : (arquivoCriado as unknown as Record<string, unknown>);
+            const dadosNovos = toPlain(arquivoCriado) as Record<string, unknown>;
             const empresaId = (assinatura as { empresa_id?: number | null }).empresa_id ?? null;
             await registrarCriacao(
               req,
@@ -292,7 +295,7 @@ export class AssinaturaWebhookProcessorService {
   ): Promise<void> {
     const termoContrato = await TermoContratoService.getById(assinatura.termo_contrato_id);
     if (termoContrato) {
-      const dadosAnteriores = termoContrato.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(termoContrato) as Record<string, unknown>;
       const dataAceite = new Date();
       const aceitoPor = assinatura.nome_assinante || 'Assinatura Digital';
       
@@ -302,7 +305,7 @@ export class AssinaturaWebhookProcessorService {
         aceito_por: aceitoPor
       });
       
-      const dadosNovos = termoAtualizado.toJSON() as Record<string, unknown>;
+      const dadosNovos = toPlain(termoAtualizado) as Record<string, unknown>;
       
       if (req) {
         try {

@@ -122,17 +122,17 @@ export type WhatsAppCloudTemplateComponentPayload = Array<{
 }>;
 
 export interface TemplateBuildContext {
-  servidor: { whatsapp_cloud_token?: string; whatsapp_cloud_phone_number_id?: string; tipo_api?: string };
+  servidor: { whatsapp_cloud_token?: string | null; whatsapp_cloud_phone_number_id?: string | null; tipo_api?: string | null };
   cliente?: { razao_social?: string | null; nome_fantasia?: string | null; empresa_id?: number | null };
   titulo: {
     id?: number;
     numero_titulo?: string | null;
     descricao?: string | null;
-    valor?: number | string | null;
-    valor_final?: number | string | null;
+    valor?: number | string | { toString(): string } | null;
+    valor_final?: number | string | { toString(): string } | null;
     data_vencimento?: Date | string | null;
     data_pagamento?: Date | string | null;
-    valor_pago?: number | string | null;
+    valor_pago?: number | string | { toString(): string } | null;
     qrcode?: string | null;
     linha_digitavel?: string | null;
     empresa_id?: number | null;

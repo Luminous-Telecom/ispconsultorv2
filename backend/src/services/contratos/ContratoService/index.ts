@@ -1,14 +1,8 @@
-import { Contrato } from '../../../models/contratos/Contrato';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Plano } from '../../../models/cadastros/Plano';
-import { Banco } from '../../../models/cadastros/Banco';
-import { TipoCobrancaContrato } from '../../../models/cadastros/TipoCobrancaContrato';
-import { Op, WhereOptions, Transaction } from 'sequelize';
-import { sequelize } from '../../../config/database';
+import type { Prisma } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
-import { SortHelper } from '../../../utils/sortHelper';
-import { CONTRATO_SORT_CONFIG } from '../../../config/sortConfigs';
 import { buildPagination } from '../../../utils/pagination';
+import { orderPageBySql, reorderByIds, sortDirection, sqlDirection, toPrismaWhere } from '../../cadastros/prismaWhere';
 
 export interface ListContratosFilters {
   page?: number;
@@ -21,365 +15,309 @@ export interface ListContratosFilters {
   isento_mensalidade?: boolean;
   plano_id?: number;
   tipo_servico?: string;
-  /** Contratos ativos com pelo menos um título não pago e vencido (vencimento antes de hoje) */
   em_atraso?: boolean;
-  /**
-   * Quando true (e sem `em_atraso`), exclui contratos que tenham título pendente/vencido não pago com vencimento antes de hoje.
-   * Usado para alinhar a fatia "Ativos" do dashboard com a listagem (ativos sem sobrepor "em atraso").
-   */
   excluir_em_atraso?: boolean;
   empresa_id?: number;
   cliente_id?: number;
 }
 
-export interface ListContratosResponse {
-  data: Contrato[];
-  pagination: {
-    current_page: number;
-    per_page: number;
-    total: number;
-    last_page: number;
-    from: number;
-    to: number;
+const CONTRATO_COLUMNS = [
+  'id', 'cliente_id', 'plano_id', 'desconto_percentual', 'desconto_valor', 'valor_final',
+  'data_inicio', 'data_fim', 'status', 'observacoes', 'isento_mensalidade', 'dia_vencimento_id',
+  'conta_boleto', 'data_validade_desconto', 'modelo_documento_id', 'created_at', 'updated_at',
+  'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado', 'usar_endereco_cliente',
+  'tipo_cobranca_contrato_id', 'empresa_id',
+] as const;
+
+const TEXT_FIELDS = ['observacoes', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado'] as const;
+const NUMERIC_FIELDS = ['valor_final', 'id', 'cliente_id', 'plano_id'] as const;
+const STATUS_VALUES = ['ativo', 'inativo', 'suspenso'] as const;
+const TIPO_SERVICO = ['infraestrutura', 'consultoria', 'blockdomi'] as const;
+
+const contratoInclude = {
+  clientes: true,
+  cadastros_planos: true,
+  cadastros_bancos: true,
+  cadastros_tipos_cobranca_contrato: true,
+} as const;
+
+function shapeContrato<T extends {
+  clientes?: unknown;
+  cadastros_planos?: unknown;
+  cadastros_bancos?: unknown;
+  cadastros_tipos_cobranca_contrato?: unknown;
+}>(row: T) {
+  return {
+    ...row,
+    cliente: row.clientes ?? null,
+    plano: row.cadastros_planos ?? null,
+    bancoBoleto: row.cadastros_bancos ?? null,
+    tipoCobrancaContrato: row.cadastros_tipos_cobranca_contrato ?? null,
   };
 }
 
-export class ContratoService {
-  /** Includes padrão do contrato — deve ser o mesmo em getById e após update/reload para auditoria/toJSON coerentes */
-  private static getDefaultIncludes() {
-    return [
-      { model: Cliente, as: 'cliente' },
-      { model: Plano, as: 'plano' },
-      { model: Banco, as: 'bancoBoleto' },
-      { model: TipoCobrancaContrato, as: 'tipoCobrancaContrato', required: false },
-    ];
-  }
+function inicioDeHoje(): Date {
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  return hoje;
+}
 
-  /**
-   * Normalizar data (evitar problemas de timezone)
-   */
+function filtroEmAtraso(): Prisma.contratosWhereInput {
+  return {
+    financeiro_titulos: {
+      some: {
+        pago: false,
+        status: { in: ['pendente', 'vencido'] },
+        data_vencimento: { lt: inicioDeHoje() },
+      },
+    },
+  };
+}
+
+function statusMatches(term: string): Prisma.contratosWhereInput | null {
+  const matches = STATUS_VALUES.filter((value) => value.includes(term.toLowerCase()));
+  if (matches.length === 0) return null;
+  return { status: { in: matches } };
+}
+
+export class ContratoService {
   private static normalizeDate(value: string | Date | null | undefined): Date | null {
     if (!value) return null;
-    
     if (typeof value === 'string') {
       const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
       if (match) {
         const [, year, month, day] = match;
-        return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        return new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10));
       }
       const date = new Date(value);
-      return isNaN(date.getTime()) ? null : new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      return Number.isNaN(date.getTime()) ? null : new Date(date.getFullYear(), date.getMonth(), date.getDate());
     }
-    
     if (value instanceof Date) {
       return new Date(value.getFullYear(), value.getMonth(), value.getDate());
     }
-    
     return null;
   }
 
-  /**
-   * Buscar IDs de clientes que têm contratos com critérios específicos
-   * Usado para filtros em webhooks
-   */
-  static async getClienteIdsByContratoFilters(where: WhereOptions): Promise<number[]> {
-    const contratos = await Contrato.findAll({
-      attributes: ['cliente_id'],
-      where,
-      group: ['cliente_id'],
-      raw: true
+  static async getClienteIdsByContratoFilters(where: unknown): Promise<number[]> {
+    const contratos = await prisma.contratos.findMany({
+      where: (toPrismaWhere(where) ?? {}) as Prisma.contratosWhereInput,
+      select: { cliente_id: true },
+      distinct: ['cliente_id'],
     });
-
-    return contratos.map((c: { cliente_id: number }) => c.cliente_id);
+    return contratos.map((contrato) => contrato.cliente_id);
   }
 
-  /**
-   * Listar contratos com filtros e paginação
-   */
-  static async list(filters: ListContratosFilters): Promise<ListContratosResponse> {
+  static async list(filters: ListContratosFilters) {
     const {
-      page = 1,
-      limit = 10,
-      search = '',
-      status,
-      searchField,
-      sortColumn,
-      sortDirection,
-      isento_mensalidade,
-      plano_id,
-      tipo_servico,
-      em_atraso,
-      excluir_em_atraso,
-      empresa_id,
-      cliente_id,
+      page = 1, limit = 10, search = '', status, searchField, sortColumn, sortDirection: direction,
+      isento_mensalidade, plano_id, tipo_servico, em_atraso, excluir_em_atraso, empresa_id, cliente_id,
     } = filters;
     const pageNum = Number(page);
     const limitNum = Number(limit);
     const offset = (pageNum - 1) * limitNum;
+    const and: Prisma.contratosWhereInput[] = [];
 
-    const whereClause: WhereOptions = {};
+    if (empresa_id !== undefined) and.push({ empresa_id });
 
-    if (empresa_id !== undefined) {
-      whereClause.empresa_id = empresa_id;
-    }
-    
     if (search) {
       const searchString = typeof search === 'string' ? search : String(search);
-      const searchPattern = `%${searchString}%`;
-      const escapedSearch = searchString.replace(/'/g, "''");
-      const escapedPattern = `%${escapedSearch}%`;
-      
-      if (searchField && typeof searchField === 'string') {
-        if (searchField === 'cliente' || searchField === 'cliente_razao_social') {
-          const clienteIdNum = /^\d+$/.test(searchString) ? parseInt(searchString, 10) : null;
-          const conditions: any[] = [
-            sequelize.literal(`EXISTS (SELECT 1 FROM clientes WHERE clientes.id = Contrato.cliente_id AND (clientes.razao_social LIKE '${escapedPattern}' OR clientes.nome_fantasia LIKE '${escapedPattern}'))`)
-          ];
-          if (clienteIdNum !== null) {
-            conditions.push(sequelize.literal(`Contrato.cliente_id = ${clienteIdNum}`));
-          }
-          (whereClause as Record<symbol, unknown>)[Op.or] = conditions;
-        } else if (searchField === 'plano' || searchField === 'plano_nome') {
-          const planoIdNum = /^\d+$/.test(searchString) ? parseInt(searchString, 10) : null;
-          const conditions: any[] = [
-            sequelize.literal(`EXISTS (SELECT 1 FROM cadastros_planos WHERE cadastros_planos.id = Contrato.plano_id AND cadastros_planos.nome_plano LIKE '${escapedPattern}')`)
-          ];
-          if (planoIdNum !== null) {
-            conditions.push(sequelize.literal(`Contrato.plano_id = ${planoIdNum}`));
-          }
-          (whereClause as Record<symbol, unknown>)[Op.or] = conditions;
+      const numExact = /^\d+$/.test(searchString) ? parseInt(searchString, 10) : null;
+      if (searchField === 'cliente' || searchField === 'cliente_razao_social') {
+        const conditions: Prisma.contratosWhereInput[] = [
+          { clientes: { razao_social: { contains: searchString } } },
+          { clientes: { nome_fantasia: { contains: searchString } } },
+        ];
+        if (numExact !== null) conditions.push({ cliente_id: numExact });
+        and.push({ OR: conditions });
+      } else if (searchField === 'plano' || searchField === 'plano_nome') {
+        const conditions: Prisma.contratosWhereInput[] = [
+          { cadastros_planos: { nome_plano: { contains: searchString } } },
+        ];
+        if (numExact !== null) conditions.push({ plano_id: numExact });
+        and.push({ OR: conditions });
+      } else if (searchField) {
+        const dbField = searchField === 'valor_final_num' ? 'valor_final' : searchField;
+        if ((NUMERIC_FIELDS as readonly string[]).includes(dbField)) {
+          and.push(numExact !== null ? { [dbField]: numExact } : { id: { lt: 0 } });
+        } else if (dbField === 'status') {
+          const match = statusMatches(searchString);
+          and.push(match ?? { id: { lt: 0 } });
+        } else if ((TEXT_FIELDS as readonly string[]).includes(dbField)) {
+          and.push({ [dbField]: { contains: searchString } });
         } else {
-          const dbField = searchField === 'valor_final_num' ? 'valor_final' : searchField;
-          const numExactField = /^\d+$/.test(searchString) ? parseInt(searchString, 10) : null;
-          // cliente_id/plano_id com LIKE quebrava o filtro (ex.: cliente 1 retornava 10, 11, 21…)
-          const isNumericField =
-            dbField === 'valor_final' ||
-            dbField === 'id' ||
-            dbField === 'cliente_id' ||
-            dbField === 'plano_id';
-          const fieldCondition = (isNumericField && numExactField !== null)
-            ? { [dbField]: numExactField }
-            : { [dbField]: { [Op.like]: searchPattern } };
-          (whereClause as Record<symbol, unknown>)[Op.or] = [fieldCondition];
+          and.push({ id: { lt: 0 } });
         }
       } else {
-        const numExact = /^\d+$/.test(searchString) ? parseInt(searchString, 10) : null;
-        const conditions: any[] = [
-          { status: { [Op.like]: searchPattern } },
-          sequelize.literal(`EXISTS (SELECT 1 FROM clientes WHERE clientes.id = Contrato.cliente_id AND (clientes.razao_social LIKE '${escapedPattern}' OR clientes.nome_fantasia LIKE '${escapedPattern}'))`),
-          sequelize.literal(`EXISTS (SELECT 1 FROM cadastros_planos WHERE cadastros_planos.id = Contrato.plano_id AND cadastros_planos.nome_plano LIKE '${escapedPattern}')`)
+        const conditions: Prisma.contratosWhereInput[] = [
+          { clientes: { razao_social: { contains: searchString } } },
+          { clientes: { nome_fantasia: { contains: searchString } } },
+          { cadastros_planos: { nome_plano: { contains: searchString } } },
         ];
+        const statusMatch = statusMatches(searchString);
+        if (statusMatch) conditions.unshift(statusMatch);
         if (numExact !== null) {
           conditions.unshift({ id: numExact });
           conditions.push({ cliente_id: numExact }, { plano_id: numExact }, { valor_final: numExact });
-        } else {
-          conditions.unshift({ id: { [Op.like]: searchPattern } });
         }
-        (whereClause as Record<symbol, unknown>)[Op.or] = conditions;
+        and.push({ OR: conditions });
       }
     }
 
     if (em_atraso) {
-      whereClause.status = 'ativo';
-      const emAtrasoLiteral = sequelize.literal(`EXISTS (
-        SELECT 1 FROM financeiro_titulos t
-        WHERE t.contrato_id = \`Contrato\`.\`id\`
-        AND t.pago = 0
-        AND t.status IN ('pendente', 'vencido')
-        AND DATE(t.data_vencimento) < CURDATE()
-      )`);
-      const wc = whereClause as Record<symbol, unknown>;
-      const prevAnd = wc[Op.and];
-      wc[Op.and] = Array.isArray(prevAnd)
-        ? [...prevAnd, emAtrasoLiteral]
-        : prevAnd != null
-          ? [prevAnd, emAtrasoLiteral]
-          : [emAtrasoLiteral];
-    } else if (status) {
-      whereClause.status = status;
+      and.push({ status: 'ativo' });
+      and.push(filtroEmAtraso());
+    } else if (status && (STATUS_VALUES as readonly string[]).includes(status)) {
+      and.push({ status: status as (typeof STATUS_VALUES)[number] });
     }
 
     if (excluir_em_atraso && !em_atraso) {
-      const semAtrasoLiteral = sequelize.literal(`NOT EXISTS (
-        SELECT 1 FROM financeiro_titulos t
-        WHERE t.contrato_id = \`Contrato\`.\`id\`
-        AND t.pago = 0
-        AND t.status IN ('pendente', 'vencido')
-        AND DATE(t.data_vencimento) < CURDATE()
-      )`);
-      const wc2 = whereClause as Record<symbol, unknown>;
-      const prevAnd2 = wc2[Op.and];
-      wc2[Op.and] = Array.isArray(prevAnd2)
-        ? [...prevAnd2, semAtrasoLiteral]
-        : prevAnd2 != null
-          ? [prevAnd2, semAtrasoLiteral]
-          : [semAtrasoLiteral];
+      and.push({ financeiro_titulos: { none: filtroEmAtraso().financeiro_titulos!.some } });
     }
 
     if (isento_mensalidade !== undefined && isento_mensalidade !== null) {
-      whereClause.isento_mensalidade = isento_mensalidade;
+      and.push({ isento_mensalidade });
     }
-
-    if (plano_id) {
-      whereClause.plano_id = plano_id;
-    }
-
-    if (cliente_id) {
-      whereClause.cliente_id = cliente_id;
-    }
-
-    if (tipo_servico) {
-      const escaped = String(tipo_servico).replace(/'/g, "''");
-      const subquery = `(
-        SELECT c.id FROM contratos c
-        WHERE EXISTS (SELECT 1 FROM cadastros_planos p WHERE p.id = c.plano_id AND p.tipo_servico = '${escaped}')
-        OR EXISTS (
-          SELECT 1 FROM contratos_planos_adicionais cpa
-          INNER JOIN cadastros_planos p ON cpa.plano_id = p.id
-          WHERE cpa.contrato_id = c.id AND cpa.status = 'ativo' AND p.tipo_servico = '${escaped}'
-        )
-      )`;
-      (whereClause as any).id = { [Op.in]: sequelize.literal(subquery) };
-    }
-
-    // Construir ordenação - ordena TODOS os dados antes da paginação
-    let order: any[] = [['id', 'DESC']]; // Padrão
-    if (sortColumn && sortDirection) {
-      const sortResult = SortHelper.buildOrder(
-        CONTRATO_SORT_CONFIG,
-        sortColumn,
-        sortDirection.toUpperCase() as 'ASC' | 'DESC'
-      );
-
-      if (sortResult.isValid) {
-        order = sortResult.order;
-      } else {
-        logger.warn('ContratoService.list - Coluna de ordenação inválida', {
-          column: sortColumn,
-          error: sortResult.error
-        });
-        // Manter ordenação padrão se coluna inválida
-      }
-    }
-
-    let count: number;
-    let rows: Contrato[];
-    try {
-      const result = await Contrato.findAndCountAll({
-        where: whereClause,
-        include: [
-          { model: Cliente, as: 'cliente' },
-          { model: Plano, as: 'plano' },
-          { model: Banco, as: 'bancoBoleto' },
-          { model: TipoCobrancaContrato, as: 'tipoCobrancaContrato', required: false }
+    if (plano_id) and.push({ plano_id });
+    if (cliente_id) and.push({ cliente_id });
+    if (tipo_servico && (TIPO_SERVICO as readonly string[]).includes(tipo_servico)) {
+      const tipo = tipo_servico as (typeof TIPO_SERVICO)[number];
+      and.push({
+        OR: [
+          { cadastros_planos: { tipo_servico: tipo } },
+          {
+            contratos_planos_adicionais: {
+              some: { status: 'ativo', cadastros_planos: { tipo_servico: tipo } },
+            },
+          },
         ],
-        order,
-        limit: limitNum,
-        offset
       });
-      count = result.count as number;
-      rows = result.rows;
-    } catch (queryError: any) {
+    }
+
+    const where: Prisma.contratosWhereInput = and.length > 0 ? { AND: and } : {};
+    const dir = sortDirection(direction);
+    const virtualSql: Record<string, string> = {
+      desconto: 'COALESCE(`desconto_valor`, 0)',
+      desconto_num: 'COALESCE(`desconto_valor`, 0)',
+      valor_final_num: 'COALESCE(`valor_final`, 0)',
+    };
+    const relationOrder: Record<string, Prisma.contratosOrderByWithRelationInput> = {
+      cliente: { clientes: { razao_social: dir } },
+      cliente_razao_social: { clientes: { razao_social: dir } },
+      plano: { cadastros_planos: { nome_plano: dir } },
+      plano_nome: { cadastros_planos: { nome_plano: dir } },
+      valor_plano_num: { cadastros_planos: { valor_mensal: dir } },
+      valor_mensal: { cadastros_planos: { valor_mensal: dir } },
+      banco_nome: { cadastros_bancos: { nome: dir } },
+    };
+
+    try {
+      let rows;
+      let count: number;
+      if (sortColumn && virtualSql[sortColumn]) {
+        const matching = await prisma.contratos.findMany({ where, select: { id: true } });
+        const pageIds = await orderPageBySql(
+          'contratos',
+          virtualSql[sortColumn],
+          sqlDirection(direction),
+          matching.map((item) => item.id),
+          limitNum,
+          offset,
+        );
+        count = matching.length;
+        const found = pageIds.length
+          ? await prisma.contratos.findMany({ where: { id: { in: pageIds } }, include: contratoInclude })
+          : [];
+        rows = reorderByIds(found, pageIds);
+      } else {
+        let orderBy: Prisma.contratosOrderByWithRelationInput = { id: 'desc' };
+        if (sortColumn && relationOrder[sortColumn]) {
+          orderBy = relationOrder[sortColumn];
+        } else if (sortColumn && (CONTRATO_COLUMNS as readonly string[]).includes(sortColumn)) {
+          orderBy = { [sortColumn]: dir };
+        } else if (sortColumn) {
+          logger.warn('ContratoService.list - Coluna de ordenação inválida', { column: sortColumn });
+        }
+        [count, rows] = await Promise.all([
+          prisma.contratos.count({ where }),
+          prisma.contratos.findMany({
+            where,
+            include: contratoInclude,
+            orderBy,
+            take: limitNum,
+            skip: offset,
+          }),
+        ]);
+      }
+
+      return {
+        data: rows.map(shapeContrato),
+        pagination: buildPagination(pageNum, limitNum, count),
+      };
+    } catch (queryError: unknown) {
+      const error = queryError instanceof Error ? queryError : new Error('Erro desconhecido');
       logger.error('[ContratoService.list] Erro na query', {
-        error: queryError.message,
-        errorName: queryError.name,
-        sql: queryError.sql,
-        stack: queryError.stack,
+        error: error.message,
         sortColumn,
-        sortDirection,
-        where: JSON.stringify(whereClause).substring(0, 300),
-        order: JSON.stringify(order).substring(0, 300)
+        sortDirection: direction,
       });
       throw queryError;
     }
-
-    return {
-      data: rows,
-      pagination: buildPagination(pageNum, limitNum, count),
-    };
   }
 
-  /**
-   * Buscar contrato por ID
-   */
-  static async getById(id: string | number): Promise<Contrato | null> {
-    return await Contrato.findByPk(id, {
-      include: ContratoService.getDefaultIncludes(),
+  static async getById(id: string | number) {
+    const row = await prisma.contratos.findUnique({
+      where: { id: Number(id) },
+      include: contratoInclude,
     });
+    return row ? shapeContrato(row) : null;
   }
 
-  /**
-   * Buscar contrato ativo por cliente
-   */
-  static async findAtivoByCliente(clienteId: number): Promise<Contrato | null> {
-    return await Contrato.findOne({
+  static async findAtivoByCliente(clienteId: number) {
+    const row = await prisma.contratos.findFirst({
       where: { cliente_id: clienteId, status: 'ativo' },
-      order: [['id', 'DESC']],
-      include: ContratoService.getDefaultIncludes(),
+      orderBy: { id: 'desc' },
+      include: contratoInclude,
     });
+    return row ? shapeContrato(row) : null;
   }
 
-  /**
-   * Criar contrato
-   */
-  static async create(dadosContrato: Partial<Contrato>, transaction?: Transaction): Promise<Contrato> {
-    // Normalizar datas
-    if (dadosContrato.data_inicio) {
-      dadosContrato.data_inicio = this.normalizeDate(dadosContrato.data_inicio as string | Date) as Date | null;
+  static async create(dadosContrato: Prisma.contratosUncheckedCreateInput, _transaction?: unknown) {
+    const dados = { ...dadosContrato };
+    if (dados.data_inicio) dados.data_inicio = ContratoService.normalizeDate(dados.data_inicio as string | Date);
+    if (dados.data_fim) dados.data_fim = ContratoService.normalizeDate(dados.data_fim as string | Date);
+    if (dados.data_validade_desconto) {
+      dados.data_validade_desconto = ContratoService.normalizeDate(dados.data_validade_desconto as string | Date);
     }
-    if (dadosContrato.data_fim) {
-      dadosContrato.data_fim = this.normalizeDate(dadosContrato.data_fim as string | Date) as Date | null;
-    }
-    if (dadosContrato.data_validade_desconto) {
-      dadosContrato.data_validade_desconto = this.normalizeDate(dadosContrato.data_validade_desconto as string | Date) as Date | null;
-    }
-
-    return await Contrato.create(dadosContrato as any, { transaction });
+    return prisma.contratos.create({ data: dados });
   }
 
-  /**
-   * Atualizar contrato
-   */
-  static async update(id: string | number, dadosContrato: Partial<Contrato>, transaction?: Transaction): Promise<Contrato> {
-    const contrato = await Contrato.findByPk(id, { transaction });
-    
-    if (!contrato) {
-      throw new Error('Contrato não encontrado');
+  static async update(id: string | number, dadosContrato: Prisma.contratosUncheckedUpdateInput, _transaction?: unknown) {
+    const numericId = Number(id);
+    const contrato = await prisma.contratos.findUnique({ where: { id: numericId } });
+    if (!contrato) throw new Error('Contrato não encontrado');
+
+    const dados = { ...dadosContrato };
+    if (dados.data_inicio !== undefined) {
+      dados.data_inicio = ContratoService.normalizeDate(dados.data_inicio as string | Date | null);
+    }
+    if (dados.data_fim !== undefined) {
+      dados.data_fim = ContratoService.normalizeDate(dados.data_fim as string | Date | null);
+    }
+    if (dados.data_validade_desconto !== undefined) {
+      dados.data_validade_desconto = ContratoService.normalizeDate(dados.data_validade_desconto as string | Date | null);
     }
 
-    // Normalizar datas
-    if (dadosContrato.data_inicio !== undefined) {
-      dadosContrato.data_inicio = this.normalizeDate(dadosContrato.data_inicio as string | Date) as Date | null;
-    }
-    if (dadosContrato.data_fim !== undefined) {
-      dadosContrato.data_fim = this.normalizeDate(dadosContrato.data_fim as string | Date) as Date | null;
-    }
-    if (dadosContrato.data_validade_desconto !== undefined) {
-      dadosContrato.data_validade_desconto = this.normalizeDate(dadosContrato.data_validade_desconto as string | Date) as Date | null;
-    }
-
-    await contrato.update(dadosContrato, { transaction });
-    await contrato.reload({
-      transaction,
-      include: ContratoService.getDefaultIncludes(),
-    });
-
-    return contrato;
+    await prisma.contratos.update({ where: { id: numericId }, data: dados });
+    const atualizado = await ContratoService.getById(numericId);
+    if (!atualizado) throw new Error('Contrato não encontrado');
+    return atualizado;
   }
 
-  /**
-   * Deletar contrato
-   */
-  static async delete(id: string | number, transaction?: Transaction): Promise<Contrato> {
-    const contrato = await Contrato.findByPk(id, { transaction });
-    
-    if (!contrato) {
-      throw new Error('Contrato não encontrado');
-    }
-    
-    await contrato.destroy({ transaction });
-    
+  static async delete(id: string | number, _transaction?: unknown) {
+    const numericId = Number(id);
+    const contrato = await prisma.contratos.findUnique({ where: { id: numericId } });
+    if (!contrato) throw new Error('Contrato não encontrado');
+    await prisma.contratos.delete({ where: { id: numericId } });
     return contrato;
   }
 }
-

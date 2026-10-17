@@ -1,11 +1,11 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
-import { Contrato } from '../../../models/contratos/Contrato';
 import { ContratoService } from '../../../services/contratos/ContratoService';
 import { ClienteService } from '../../../services/clientes/ClienteService';
 import { BancoService } from '../../../services/cadastros/BancoService';
 import { PlanoService } from '../../../services/cadastros/PlanoService';
 import { ContratoPlanoAdicionalService } from '../../../services/contratos/ContratoPlanoAdicionalService';
-import { Transaction } from 'sequelize';
+import { prisma } from '../../../db/prisma';
 import * as Joi from 'joi';
 import { logger } from '../../../utils/logger';
 import { divergenciasUpdateNoOp } from '../../../services/sistema/SistemaLogOperacionalService';
@@ -314,7 +314,7 @@ export class ContratoController {
       const temServicosAdicionais = Array.isArray(servicosAdicionais) && servicosAdicionais.length > 0;
 
       // Criar contrato e serviços adicionais dentro de uma transação
-      const resultado = await withTransaction(async (transaction: Transaction) => {
+      const resultado = await withTransaction(async (transaction) => {
         // Criar contrato
         const contrato = await ContratoService.create(value, transaction);
 
@@ -365,7 +365,7 @@ export class ContratoController {
           req,
           'Contrato',
           resultado.contrato.id,
-          resultado.contrato.toJSON() as Record<string, unknown>,
+          toPlain(resultado.contrato) as Record<string, unknown>,
           undefined,
           empresaId
         );
@@ -374,12 +374,12 @@ export class ContratoController {
       }
 
       sendSuccess(res, {
-        ...resultado.contrato.toJSON(),
+        ...toPlain(resultado.contrato),
         servicos_adicionais: resultado.servicosAdicionais
       }, `Contrato criado com sucesso${temServicosAdicionais ? ` e ${resultado.servicosAdicionais.length} serviço(s) adicional(is) vinculado(s)` : ''}`, 201);
     } catch (error: unknown) {
-      // Tratar erro de constraint de unicidade
-      if (error instanceof Error && error.name === 'SequelizeUniqueConstraintError') {
+      const prismaCode = (error as { code?: string; meta?: { field_name?: unknown; target?: unknown } }).code;
+      if (error instanceof Error && prismaCode === 'P2002') {
         logger.warn('Erro de constraint de unicidade ao criar contrato', {
           context: 'ContratoController',
           action: 'create'
@@ -387,20 +387,14 @@ export class ContratoController {
         sendError(res, error, 'Erro de constraint de unicidade no banco de dados', 409, false);
         return;
       }
-      
-      // Tratar erro de constraint de chave estrangeira
-      if (error instanceof Error && error.name === 'SequelizeForeignKeyConstraintError') {
-        interface ForeignKeyError extends Error {
-          table?: string;
-          fields?: string[];
-        }
-        const fkError = error as ForeignKeyError;
-        if (fkError.table === 'modelo_documento' || fkError.fields?.includes('modelo_documento_id')) {
+
+      if (error instanceof Error && prismaCode === 'P2003') {
+        const fieldName = String((error as { meta?: { field_name?: unknown } }).meta?.field_name ?? '');
+        if (fieldName.includes('modelo_documento')) {
           logger.warn('Modelo de documento não encontrado ao criar contrato', {
             context: 'ContratoController',
             action: 'create',
-            table: fkError.table,
-            fields: fkError.fields
+            field: fieldName,
           });
           sendNotFound(res, 'Modelo de documento não encontrado');
           return;
@@ -454,7 +448,7 @@ export class ContratoController {
       }
 
       // Capturar dados anteriores para auditoria
-      const dadosAnteriores = contrato.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(contrato) as Record<string, unknown>;
 
       // Normalizar datas inválidas para null
       if (value.data_fim === 'Invalid date' || value.data_fim === '' || (typeof value.data_fim === 'string' && isNaN(Date.parse(value.data_fim)))) {
@@ -501,15 +495,15 @@ export class ContratoController {
       // Recalcular valor_final só se plano ou descontos mudaram de fato
       if (planoIdMudou || descontoPctMudou || descontoValorMudou) {
         // Recalcular baseado no plano e descontos
-        const plano = await contratoAtualizado.getPlano();
-        let novoValorFinal = parseFloat(plano.valor_mensal.toString());
+        const plano = contratoAtualizado.cadastros_planos;
+        let novoValorFinal = parseFloat(String(plano.valor_mensal));
 
         // Sempre usar desconto em valor quando disponível (mais preciso)
         // Se não houver desconto em valor, calcular a partir do percentual
-        if (contratoAtualizado.desconto_valor && contratoAtualizado.desconto_valor > 0) {
+        if (contratoAtualizado.desconto_valor && Number(contratoAtualizado.desconto_valor) > 0) {
           const descontoValor = parseFloat(contratoAtualizado.desconto_valor.toString());
           novoValorFinal = Math.max(0, novoValorFinal - descontoValor);
-        } else if (contratoAtualizado.desconto_percentual && contratoAtualizado.desconto_percentual > 0) {
+        } else if (contratoAtualizado.desconto_percentual && Number(contratoAtualizado.desconto_percentual) > 0) {
           // Calcular valor do desconto a partir do percentual
           const descontoValor = novoValorFinal * (parseFloat(contratoAtualizado.desconto_percentual.toString()) / 100);
           novoValorFinal = Math.max(0, novoValorFinal - descontoValor);
@@ -521,7 +515,7 @@ export class ContratoController {
       }
       
       // Registrar auditoria
-      const dadosNovos = contratoAtualizado.toJSON() as Record<string, unknown>;
+      const dadosNovos = toPlain(contratoAtualizado) as Record<string, unknown>;
 
       const auditoriaLogUpdateDiff =
         process.env.AUDITORIA_LOG_UPDATE_DIFF === '1' ||
@@ -587,7 +581,7 @@ export class ContratoController {
       });
 
       // Capturar dados anteriores para auditoria
-      const dadosAnteriores = contrato.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(contrato) as Record<string, unknown>;
 
       if (titulosCount > 0) {
         sendForbidden(res, `Contrato possui ${titulosCount} título(s) financeiro(s) associado(s). Remova os títulos antes de excluir o contrato.`);
@@ -634,23 +628,28 @@ export class ContratoController {
       }
 
       const empresaId = getEmpresaIdOrNull(req);
-      const { Plano: PlanoModel } = await import('../../../models/cadastros/Plano');
-      const { Cliente: ClienteModel } = await import('../../../models/clientes/Cliente');
-      const { TipoCobrancaContrato } = await import('../../../models/cadastros/TipoCobrancaContrato');
-      const { default: Parametros } = await import('../../../models/sistema/Parametros');
 
-      const contrato = await Contrato.findByPk(contratoId, {
-        include: [
-          { model: PlanoModel, as: 'plano', attributes: ['id', 'nome_plano', 'valor_mensal', 'periodicidade'] },
-          { model: ClienteModel, as: 'cliente', attributes: ['id', 'ativo'] },
-          { model: TipoCobrancaContrato, as: 'tipoCobrancaContrato', attributes: ['id', 'quantidade_titulos', 'periodicidade'], required: false }
-        ]
+      const row = await prisma.contratos.findUnique({
+        where: { id: contratoId },
+        include: {
+          cadastros_planos: { select: { id: true, nome_plano: true, valor_mensal: true, periodicidade: true } },
+          clientes: { select: { id: true, ativo: true } },
+          cadastros_tipos_cobranca_contrato: { select: { id: true, quantidade_titulos: true, periodicidade: true } },
+        },
       });
 
-      if (!contrato) {
+      if (!row) {
         sendNotFound(res, 'Contrato não encontrado');
         return;
       }
+
+      const { cadastros_planos, clientes, cadastros_tipos_cobranca_contrato, ...contratoRest } = row;
+      const contrato = {
+        ...contratoRest,
+        plano: cadastros_planos,
+        cliente: clientes,
+        tipoCobrancaContrato: cadastros_tipos_cobranca_contrato,
+      };
 
       if (empresaId !== null && (contrato as unknown as { empresa_id?: number | null }).empresa_id !== empresaId) {
         sendNotFound(res, 'Contrato não encontrado');
@@ -675,16 +674,16 @@ export class ContratoController {
         tipoCobrancaContrato?: { quantidade_titulos: number } | null;
       };
 
-      const diaVencimentoIds = [contratoValidado.dia_vencimento_id].filter(Boolean);
+      const diaVencimentoIds = [contratoValidado.dia_vencimento_id].filter((id): id is number => Boolean(id));
       const { titulosEmAbertoTodos, todosTitulosTodos, diasVencimentoTodos, servicosAdicionaisTodos } =
         await ContratoDataLoader.loadRelatedData([contratoId], diaVencimentoIds);
 
       const { titulosEmAbertoPorContrato, todosTitulosPorContrato, diasVencimentoPorId, servicosAdicionaisPorContrato } =
         ContratoDataLoader.groupDataByContrato(
-          titulosEmAbertoTodos,
-          todosTitulosTodos,
-          diasVencimentoTodos,
-          servicosAdicionaisTodos
+          titulosEmAbertoTodos as never,
+          todosTitulosTodos as never,
+          diasVencimentoTodos as never,
+          servicosAdicionaisTodos as never
         );
 
       const titulosEmAberto = titulosEmAbertoPorContrato.get(contratoId) || [];
@@ -694,14 +693,14 @@ export class ContratoController {
         ? diaVencimentoConfig.dia
         : 15;
       const servicosAdicionais = (servicosAdicionaisPorContrato.get(contratoId) || []) as Parameters<typeof ContratoTituloProcessor.processContrato>[6];
-      const parametros = await Parametros.findOne();
+      const parametros = await prisma.sistema_parametros.findFirst();
       const quantidadeTitulos = contratoValidado.tipoCobrancaContrato?.quantidade_titulos ?? 12;
 
       const contratoWithPlano = contrato as unknown as Parameters<typeof ContratoTituloProcessor.processContrato>[0] & { conta_boleto: number; dia_vencimento_id: number };
       const resultado = await ContratoTituloProcessor.processContrato(
         contratoWithPlano,
-        titulosEmAberto,
-        todosTitulos,
+        titulosEmAberto as never,
+        todosTitulos as never,
         diaVencimento,
         quantidadeTitulos,
         parametros,

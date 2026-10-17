@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { SaasParametrosService } from '../../../services/saas/SaasParametrosService';
 import Joi from 'joi';
@@ -75,8 +76,8 @@ export class SaasParametrosController {
       const parametros = await SaasParametrosService.update(value);
       if (parametrosAntigos) {
         await registrarAtualizacao(req as any, 'SaasParametros', parametros.id,
-          parametrosAntigos.toJSON() as unknown as Record<string, unknown>,
-          parametros.toJSON() as unknown as Record<string, unknown>);
+          toPlain(parametrosAntigos) as unknown as Record<string, unknown>,
+          toPlain(parametros) as unknown as Record<string, unknown>);
       }
       sendSuccess(res, parametros, 'Parâmetros atualizados com sucesso');
       return res;

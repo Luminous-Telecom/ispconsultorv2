@@ -23,7 +23,7 @@ Sistema ERP completo para gestão de clientes, contratos e cobrança com integra
 
 ## Arquitetura Geral
 
-- **Backend**: Node.js + Express + Sequelize (MySQL) com serviços específicos por banco emissor (Asaas/Efí). Gera boletos, cancela/liquida cobranças, controla webhooks e agenda rotinas.
+- **Backend**: Node.js + Express + Prisma (MySQL) com serviços específicos por banco emissor (Asaas/Efí). Gera boletos, cancela/liquida cobranças, controla webhooks e agenda rotinas.
 - **Frontend**: React + TypeScript (CRA), Bootstrap e React Query. Interface administrativa com cadastros, financeiro e impressão de boletos.
 - **Nginx**: Servidor web reverso para servir arquivos estáticos do frontend e fazer proxy das requisições de API para o backend.
 
@@ -32,7 +32,7 @@ Sistema ERP completo para gestão de clientes, contratos e cobrança com integra
 ## Principais Funcionalidades
 
 - Cadastro e gestão de **clientes**, **contratos**, **planos** e **bancos**.
-- **Central do Assinante**: portal self-service para clientes consultarem contratos, faturas e boletos (veja `docs/CENTRAL_ASSINANTE.md`).
+- **Central do Assinante**: portal self-service para clientes consultarem contratos, faturas e boletos (veja `../backnet-docs/docs/CENTRAL_ASSINANTE.md`).
 - **Geração, cancelamento e liquidação** de boletos nos gateways Asaas e Efí.
 - Impressão de segunda via com **linha digitável**, **código de barras** e **PIX QR Code**.
 - Armazenamento do `nosso_numero`, `charge_id`, `url_boleto` e metadados FEBRABAN.
@@ -46,9 +46,9 @@ Sistema ERP completo para gestão de clientes, contratos e cobrança com integra
 
 - **Node.js** >= 18
 - **NPM** >= 9
-- **MySQL** 5.7+ ou **MariaDB** 10.3+ (compatível com Sequelize)
+- **MySQL** 5.7+ ou **MariaDB** 10.3+ (Prisma)
 - **Nginx** (para produção)
-- **PM2** (opcional, para gerenciamento de processos)
+- **PM2** (produção: API)
 - **Git** (para clonar o repositório)
 - **Python 3** e **pip3** (para extração de domínios de PDF no Blockdomi)
 - **Redis** (para processamento assíncrono da extração de PDF, evita timeout em PDFs grandes)
@@ -298,21 +298,7 @@ sudo systemctl enable mariadb
 sudo mysql_secure_installation
 ```
 
-### 3. Instalar PM2 (Gerenciador de Processos)
-
-```bash
-# Instalar PM2 globalmente
-sudo npm install -g pm2
-
-# Verificar instalação
-pm2 --version
-
-# Configurar PM2 para iniciar no boot do sistema
-pm2 startup
-# Siga as instruções exibidas pelo comando acima
-```
-
-### 4. Instalar Git
+### 3. Instalar Git
 
 **Ubuntu/Debian:**
 ```bash
@@ -601,7 +587,7 @@ O script pede interativamente:
 - **E-mail e senha** do SuperAdmin SaaS
 - Se instala **Nginx**
 
-Também gera `backend/.env`, executa migrations, configura o SuperAdmin SaaS, publica o front em `/var/www/ispconsultor` e sobe **PM2** (`backend` + wiki).
+Também gera `backend/.env`, executa migrations, publica o front em `/var/www/ispconsultor` e sobe o **PM2** da API.
 
 ### 6. Primeiro acesso
 
@@ -610,11 +596,6 @@ Também gera `backend/.env`, executa migrations, configura o SuperAdmin SaaS, pu
 - **URL:** `https://erp.suaempresa.com.br`
 - **E-mail:** `admin@ispconsultor.com.br`
 - **Senha:** `admin123` (troque no primeiro login)
-
-**SaaS SuperAdmin** (`/saas/login`):
-
-- **E-mail e senha:** os definidos durante o `install.sh` (padrão do e-mail: `superadmin@sistema.com` se você só pressionar Enter)
-- A migration cria um usuário temporário; o instalador substitui pelo e-mail e senha informados
 
 ### 7. Comandos úteis
 
@@ -628,8 +609,7 @@ npm run prod:pm2
 # Logs do Nginx
 sudo tail -f /var/log/nginx/ispconsultor-error.log
 
-# Republicar frontend manualmente (após git pull)
-sudo RUN_USER=ispconsultor bash scripts/publish-frontend-www.sh
+# Republicar o frontend: Parâmetros → Atualizações do sistema
 sudo nginx -t && sudo systemctl reload nginx
 
 # Migrations
@@ -647,7 +627,6 @@ cd /opt/ispconsultor
 git pull
 npm install --prefix backend
 npm run migrate --prefix backend
-sudo RUN_USER=ispconsultor bash scripts/publish-frontend-www.sh
 npm run prod:pm2
 ```
 
@@ -657,10 +636,10 @@ npm run prod:pm2
 |---|---|
 | `Execute como usuário normal com sudo` | Saia do `root` e use `su - ispconsultor` + `sudo bash scripts/install.sh` |
 | `Permission denied (publickey)` no `git pull` | Cadastre `~/.ssh/id_ed25519.pub` no GitHub |
-| Nginx `Permission denied` no front | Confirme que o `root` do site é `/var/www/ispconsultor` (não a home). Rode `scripts/publish-frontend-www.sh` |
+| Nginx `Permission denied` no front | Confirme que o `root` do site é `/var/www/ispconsultor` (não a home). Rode de novo `sudo bash scripts/install.sh` ou a atualização em Parâmetros → Atualizações |
 | `frontend/package.json` não encontrado | Normal no repo de produção — o instalador usa `frontend/build` versionado |
 
-Setup local só da infra (MariaDB, Redis, Krill), sem ERP completo: veja [`docs/SETUP-LOCAL.md`](docs/SETUP-LOCAL.md).
+A instalação do zero é só `sudo bash scripts/install.sh`.
 
 ---
 
@@ -731,13 +710,12 @@ mysql -u ispconsultor -p ispconsultor
 # Se conectar com sucesso, digite EXIT para sair
 ```
 
-### 4. Executar Migrations
+### 4. Sincronizar o schema
 
 ```bash
 cd backend
-npm run build
-npm run migrate  # Se houver script de migration configurado
-# Ou execute as migrations manualmente via Sequelize CLI
+npx prisma generate
+npm run migrate
 ```
 
 ---
@@ -1336,93 +1314,23 @@ sudo apt install -y python3 python3-pip
 │   ├── build/             # Arquivos estáticos do frontend
 │   ├── .env               # Variáveis de ambiente
 │   └── node_modules/      # Dependências
-└── logs/                  # Logs do PM2
+└── logs/                  # Log do reinício agendado
 ```
 
 ---
 
 ## Automação com PM2
 
-### Instalação do PM2
-
-Se ainda não instalou o PM2, execute:
+O `scripts/install.sh` sobe a API com o PM2 e registra o boot. O frontend continua no Nginx, em `/var/www/ispconsultor`.
 
 ```bash
-sudo npm install -g pm2
+npx pm2 list
+npx pm2 logs
+npm run prod:pm2
+npm run prod:pm2:stop
 ```
 
-### Configurar PM2 para iniciar no boot
-
-```bash
-# Gerar script de inicialização
-pm2 startup
-
-# Siga as instruções exibidas pelo comando acima
-# Geralmente será algo como:
-# sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u seu-usuario --hp /home/seu-usuario
-
-# Salvar configuração atual do PM2
-pm2 save
-```
-
-### Configuração do PM2
-
-O projeto já inclui `ecosystem.config.js` na raiz. Com Nginx servindo arquivos estáticos do frontend, apenas o backend precisa do PM2:
-
-```javascript
-module.exports = {
-  apps: [
-    {
-      name: 'backend',
-      cwd: './backend',
-      script: './dist/index.js',
-      interpreter: 'node',
-      instances: 1,
-      exec_mode: 'fork',
-      watch: false,
-      env: {
-        PORT: process.env.PORT || 3001
-      },
-      log_file: './logs/backend-combined.log',
-      out_file: './logs/backend-out.log',
-      error_file: './logs/backend-error.log',
-      log_date_format: 'DD/MM/YYYY HH:mm:ss',
-      merge_logs: true,
-      max_memory_restart: '2G',
-      autorestart: false,
-      kill_timeout: 5000,
-      wait_ready: true,
-      listen_timeout: 10000
-    }
-  ]
-};
-```
-
-**Nota:** Se preferir servir o frontend via Express em vez do Nginx, adicione um segundo app com `cwd: './frontend'` e `script: 'server.js'`.
-
-### Comandos PM2
-
-```bash
-# Iniciar aplicações
-pm2 start ecosystem.config.js
-
-# Ver status
-pm2 status
-
-# Ver logs
-pm2 logs
-
-# Reiniciar
-pm2 restart all
-# ou, se usar o nome 'backend': pm2 restart backend
-
-# Parar
-pm2 stop all
-
-# Salvar configuração para iniciar no boot
-pm2 save
-pm2 startup
-```
+A atualização em **Parâmetros → Atualizações** agenda o reinício do PM2. Em desenvolvimento use `npm run dev`; o hot reload dispensa o PM2.
 
 ---
 
@@ -1448,7 +1356,7 @@ pm2 startup
 ### Typebot
 
 - Integração via API existente: consulta cliente por CNPJ, contratos, títulos e criação de cliente.
-- Documentação em `doc/erp/integracoes/typebot.md` (wiki) e `doc/erp/integracoes/api.md` para a API REST.
+- Documentação em `../backnet-docs/doc/erp/integracoes/typebot.md` (wiki) e `../backnet-docs/doc/erp/integracoes/api.md` para a API REST.
 
 ### URLs de Webhook
 
@@ -1543,4 +1451,4 @@ Em produção, as configurações vêm do backend via `window.__APP_CONFIG__`.
 
 ---
 
-Para detalhes adicionais consulte a documentação em `docs/` ou os arquivos de serviço específicos (`backend/src/services/bancos/*.ts`).
+Para detalhes adicionais consulte a documentação em `../backnet-docs/docs/` ou os arquivos de serviço específicos (`backend/src/services/bancos/*.ts`).

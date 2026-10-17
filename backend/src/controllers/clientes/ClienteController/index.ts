@@ -1,6 +1,5 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Titulo } from '../../../models/financeiro/Titulo';
 import { ClienteService } from '../../../services/clientes/ClienteService';
 import { ViaCepService } from '../../../services/externos/ViaCepService';
 import { ReceitaWsService } from '../../../services/externos/ReceitaWsService';
@@ -163,32 +162,7 @@ export class ClienteController {
         return;
       }
 
-      // Serializar cliente e títulos relacionados usando toJSON()
-      // Os títulos relacionados precisam ser serializados explicitamente
-      // pois o Sequelize não chama toJSON() customizado em relacionamentos
-      // Primeiro, obter as instâncias dos títulos ANTES de serializar o cliente
-      interface ClienteWithTitulos extends Cliente {
-        titulos?: Titulo[];
-      }
-      
-      const clienteWithTitulos = cliente as ClienteWithTitulos;
-      const titulosInstances = clienteWithTitulos.titulos;
-      
-      // Serializar o cliente
-      const clienteData = cliente.toJSON() as Record<string, unknown>;
-      
-      // Serializar títulos relacionados explicitamente usando toJSON()
-      // Se temos instâncias de modelo, usar toJSON() customizado
-      if (titulosInstances && Array.isArray(titulosInstances)) {
-        clienteData.titulos = titulosInstances.map((titulo: Titulo) => {
-          if (titulo && typeof titulo.toJSON === 'function') {
-            return titulo.toJSON();
-          }
-          return titulo;
-        });
-      }
-
-      sendSuccess(res, clienteData);
+      sendSuccess(res, toPlain(cliente));
     } catch (error) {
       sendError(res, error, 'Erro ao buscar cliente', 500, true, {
         context: 'ClienteController',
@@ -245,7 +219,7 @@ export class ClienteController {
             req,
             'Cliente',
             clienteCriado.id,
-            clienteCriado.toJSON() as Record<string, unknown>,
+            toPlain(clienteCriado) as Record<string, unknown>,
             undefined,
             empresaId
           );
@@ -367,7 +341,7 @@ export class ClienteController {
       }
 
       // Capturar dados anteriores para auditoria
-      const dadosAnteriores = cliente.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(cliente) as Record<string, unknown>;
       
       // Atualizar cliente
       logger.debug('Atualizando cliente no banco de dados', {
@@ -380,7 +354,7 @@ export class ClienteController {
       const clienteAtualizado = await ClienteService.update(id, value);
       
       // Capturar dados novos para auditoria
-      const dadosNovos = clienteAtualizado.toJSON() as Record<string, unknown>;
+      const dadosNovos = toPlain(clienteAtualizado) as Record<string, unknown>;
       
       // Registrar dados para auditoria
       setAuditData(req, dadosAnteriores, dadosNovos);
@@ -421,28 +395,7 @@ export class ClienteController {
         return;
       }
 
-      // Serializar títulos relacionados usando toJSON()
-      interface ClienteWithTitulos extends Cliente {
-        titulos?: Titulo[];
-      }
-      
-      const clienteWithTitulos = clienteComRelacionamentos as ClienteWithTitulos;
-      const titulosInstances = clienteWithTitulos.titulos;
-      
-      // Serializar o cliente
-      const clienteData = clienteComRelacionamentos.toJSON() as Record<string, unknown>;
-      
-      // Serializar títulos relacionados explicitamente usando toJSON()
-      if (titulosInstances && Array.isArray(titulosInstances) && clienteData) {
-        clienteData.titulos = titulosInstances.map((titulo: Titulo) => {
-          if (titulo && typeof titulo.toJSON === 'function') {
-            return titulo.toJSON();
-          }
-          return titulo;
-        });
-      }
-
-      sendSuccess(res, clienteData || clienteComRelacionamentos, 'Cliente atualizado com sucesso');
+      sendSuccess(res, toPlain(clienteComRelacionamentos), 'Cliente atualizado com sucesso');
     } catch (error) {
       sendError(res, error, 'Erro interno do servidor', 500, true, {
         context: 'ClienteController',
@@ -466,7 +419,7 @@ export class ClienteController {
       }
 
       // Capturar dados anteriores para auditoria
-      const dadosAnteriores = cliente.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(cliente) as Record<string, unknown>;
       setAuditData(req, dadosAnteriores);
       
       try {

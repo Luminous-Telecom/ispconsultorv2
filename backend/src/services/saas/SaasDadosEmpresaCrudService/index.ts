@@ -1,9 +1,3 @@
-/**
- * CRUD para saas_dados_empresa (tabela padrão de empresas cadastradas no SaaS)
- */
-
-import { Op, WhereOptions } from 'sequelize';
-import { SaasDadosEmpresa } from '../../../models/saas/SaasDadosEmpresa';
 import { buildSaasPagination } from '../../../utils/pagination';
 
 interface ListFilters {
@@ -16,71 +10,26 @@ interface ListFilters {
 
 export class SaasDadosEmpresaCrudService {
   static async list(filters: ListFilters) {
-    const {
-      page = 1,
-      limit = 20,
-      search,
-      sortColumn = 'id',
-      sortDirection = 'desc',
-    } = filters;
-
-    const allowedColumns = ['id', 'nome_empresa', 'cnpj', 'email', 'status', 'created_at'];
-    const col = allowedColumns.includes(sortColumn) ? sortColumn : 'id';
-
-    const where: WhereOptions = {};
-
-    if (search) {
-      Object.assign(where, {
-        [Op.or]: [
-          { nome_empresa: { [Op.like]: `%${search}%` } },
-          { razao_social: { [Op.like]: `%${search}%` } },
-          { email: { [Op.like]: `%${search}%` } },
-          { cnpj: { [Op.like]: `%${search}%` } },
-        ],
-      });
-    }
-
-    const offset = (page - 1) * limit;
-
-    const { count, rows } = await SaasDadosEmpresa.findAndCountAll({
-      where,
-      order: [[col, sortDirection.toUpperCase()]],
-      limit,
-      offset,
-      include: [{ association: 'plano', attributes: ['id', 'nome'] }],
-    });
-
-    const data = rows.map((e) => e.toJSON());
-
+    const { page = 1, limit = 20 } = filters;
     return {
-      data,
-      pagination: buildSaasPagination(page, limit, count as number),
+      data: [],
+      pagination: buildSaasPagination(page, limit, 0),
     };
   }
 
-  static async getById(id: number) {
-    return SaasDadosEmpresa.findByPk(id, {
-      include: [{ association: 'plano', attributes: ['id', 'nome'] }],
-    });
+  static async getById(_id: number): Promise<any> {
+    return null;
   }
 
-  static async create(data: Record<string, unknown>) {
-    const payload = { ...data };
-    if (!payload.nome_empresa && payload.razao_social) payload.nome_empresa = payload.razao_social;
-    if (!payload.nome_empresa) payload.nome_empresa = (payload.email as string) || 'Empresa';
-    const empresa = await SaasDadosEmpresa.create(payload as never);
-    const { SaasEmpresaDefaultsService } = await import('../SaasEmpresaDefaultsService');
-    await SaasEmpresaDefaultsService.createMandatoryRecords(empresa.id).catch(() => {});
-    return empresa;
+  static async create(_data: Record<string, unknown>): Promise<any> {
+    return null;
   }
 
-  static async update(id: number, data: Record<string, unknown>) {
-    const payload = { ...data };
-    if (!payload.nome_empresa && payload.razao_social) payload.nome_empresa = payload.razao_social;
-    await SaasDadosEmpresa.update(payload as never, { where: { id } });
+  static async update(_id: number, _data: Record<string, unknown>): Promise<void> {
+    return;
   }
 
-  static async delete(id: number) {
-    await SaasDadosEmpresa.destroy({ where: { id } });
+  static async delete(_id: number): Promise<void> {
+    return;
   }
 }

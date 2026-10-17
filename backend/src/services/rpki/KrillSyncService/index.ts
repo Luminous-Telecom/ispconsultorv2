@@ -1,10 +1,8 @@
 /**
  * Sincroniza estado local (banco) com o Krill para ROAs e ASPAs.
  */
-import { RpkiCa } from '../../../models/rpki/RpkiCa';
-import { RpkiRoa } from '../../../models/rpki/RpkiRoa';
-import { RpkiAspa } from '../../../models/rpki/RpkiAspa';
-import { RpkiRepository } from '../../../models/rpki/RpkiRepository';
+import type { rpki_aspas, rpki_cas, rpki_repositories, rpki_roas } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { SistemaLogOperacionalService } from '../../sistema/SistemaLogOperacionalService';
 import { RpkiClientError } from '../../../utils/errorUtils';
 import { KrillApiService, type KrillAspaEntry, type KrillRoaEntry } from '../KrillApiService';
@@ -31,36 +29,45 @@ export async function syncRoasFromKrillToDb(caId: number): Promise<void> {
     const asn = String(entry.asn);
     krillKeys.add(roaKey(entry.asn, prefix, maxLength));
 
-    const [row] = await RpkiRoa.findOrCreate({
-      where: { ca_id: caId, prefix, asn, max_length: maxLength },
-      defaults: {
-        empresa_id: ca.empresa_id,
-        ca_id: caId,
-        prefix,
-        asn,
-        max_length: maxLength,
-        not_before: now,
-        not_after: defaultEnd,
-        status: 'active',
-        revoked_at: null,
-      },
+    const asnValue = BigInt(asn);
+    const existing = await prisma.rpki_roas.findFirst({
+      where: { ca_id: caId, prefix, asn: asnValue, max_length: maxLength },
     });
-
-    if (row.status !== 'active' || row.revoked_at) {
-      await row.update({ status: 'active', revoked_at: null });
+    if (!existing) {
+      await prisma.rpki_roas.create({
+        data: {
+          empresa_id: ca.empresa_id,
+          ca_id: caId,
+          prefix,
+          asn: asnValue,
+          max_length: maxLength,
+          not_before: now,
+          not_after: defaultEnd,
+          status: 'active',
+          revoked_at: null,
+        },
+      });
+    } else if (existing.status !== 'active' || existing.revoked_at) {
+      await prisma.rpki_roas.update({
+        where: { id: existing.id },
+        data: { status: 'active', revoked_at: null },
+      });
     }
   }
 
-  const activeDb = await RpkiRoa.findAll({ where: { ca_id: caId, status: 'active' } });
+  const activeDb = await prisma.rpki_roas.findMany({ where: { ca_id: caId, status: 'active' } });
   for (const roa of activeDb) {
     const key = roaKey(parseInt(String(roa.asn), 10), roa.prefix.trim(), roa.max_length);
     if (!krillKeys.has(key)) {
-      await roa.update({ status: 'revoked', revoked_at: new Date() });
+      await prisma.rpki_roas.update({
+        where: { id: roa.id },
+        data: { status: 'revoked', revoked_at: new Date() },
+      });
     }
   }
 }
 
-function dbRoaToKrill(roa: RpkiRoa): KrillRoaEntry {
+function dbRoaToKrill(roa: Pick<rpki_roas, 'asn' | 'prefix' | 'max_length'>): KrillRoaEntry {
   return {
     asn: parseInt(String(roa.asn), 10),
     prefix: roa.prefix.trim(),
@@ -73,7 +80,7 @@ function krillRoaToKey(entry: KrillRoaEntry): string {
   return roaKey(entry.asn, entry.prefix, maxLength);
 }
 
-function dbAspaToKrill(aspa: RpkiAspa): KrillAspaEntry {
+function dbAspaToKrill(aspa: Pick<rpki_aspas, 'customer_asn' | 'providers_json'>): KrillAspaEntry {
   const raw = aspa.providers_json;
   const providersList: string[] = Array.isArray(raw) ? raw : JSON.parse(String(raw));
   return {
@@ -86,7 +93,7 @@ function aspaKey(customer: number, providers: number[]): string {
   return `${customer}|${[...providers].sort((a, b) => a - b).join(',')}`;
 }
 
-function dbAspaKey(aspa: RpkiAspa): string {
+function dbAspaKey(aspa: Pick<rpki_aspas, 'customer_asn' | 'providers_json'>): string {
   const entry = dbAspaToKrill(aspa);
   return aspaKey(entry.customer, entry.providers);
 }
@@ -104,47 +111,55 @@ export async function syncAspasFromKrillToDb(caId: number): Promise<void> {
     const providersJson = entry.providers.map(String);
     krillKeys.add(aspaKey(entry.customer, entry.providers));
 
-    const [row] = await RpkiAspa.findOrCreate({
-      where: { ca_id: caId, customer_asn: customerAsn },
-      defaults: {
-        empresa_id: ca.empresa_id,
-        ca_id: caId,
-        customer_asn: customerAsn,
-        providers_json: providersJson,
-        afi: 'both',
-        status: 'active',
-        not_before: now,
-        not_after: defaultEnd,
-        revoked_at: null,
-      },
+    const customerValue = BigInt(customerAsn);
+    let row = await prisma.rpki_aspas.findFirst({
+      where: { ca_id: caId, customer_asn: customerValue },
     });
+    if (!row) {
+      row = await prisma.rpki_aspas.create({
+        data: {
+          empresa_id: ca.empresa_id,
+          ca_id: caId,
+          customer_asn: customerValue,
+          providers_json: JSON.stringify(providersJson),
+          afi: 'both',
+          status: 'active',
+          not_before: now,
+          not_after: defaultEnd,
+          revoked_at: null,
+        },
+      });
+    }
 
     const currentProviders = dbAspaToKrill(row).providers.map(String).sort().join(',');
     const newProviders = providersJson.slice().sort().join(',');
-    const payload: Record<string, unknown> = {};
+    const payload: { providers_json?: string; status?: 'active'; revoked_at?: null } = {};
 
     if (currentProviders !== newProviders) {
-      payload.providers_json = providersJson;
+      payload.providers_json = JSON.stringify(providersJson);
     }
     if (row.status !== 'active' || row.revoked_at) {
       payload.status = 'active';
       payload.revoked_at = null;
     }
     if (Object.keys(payload).length > 0) {
-      await row.update(payload);
+      await prisma.rpki_aspas.update({ where: { id: row.id }, data: payload });
     }
   }
 
-  const activeDb = await RpkiAspa.findAll({ where: { ca_id: caId, status: 'active' } });
+  const activeDb = await prisma.rpki_aspas.findMany({ where: { ca_id: caId, status: 'active' } });
   for (const aspa of activeDb) {
     if (!krillKeys.has(dbAspaKey(aspa))) {
-      await aspa.update({ status: 'revoked', revoked_at: new Date() });
+      await prisma.rpki_aspas.update({
+        where: { id: aspa.id },
+        data: { status: 'revoked', revoked_at: new Date() },
+      });
     }
   }
 }
 
-export async function resolveCaHandle(caId: number): Promise<{ ca: RpkiCa; handle: string }> {
-  const ca = await RpkiCa.findByPk(caId);
+export async function resolveCaHandle(caId: number): Promise<{ ca: rpki_cas; handle: string }> {
+  const ca = await prisma.rpki_cas.findUnique({ where: { id: caId } });
   if (!ca) throw new RpkiClientError('CA não encontrada');
   const handle = ca.handle?.trim();
   if (!handle) throw new RpkiClientError('CA sem handle configurado');
@@ -155,7 +170,7 @@ export async function resolveCaHandle(caId: number): Promise<{ ca: RpkiCa; handl
 export async function syncKrillRoutesForCa(caId: number, triggerType?: 'roa' | 'manual' | null): Promise<void> {
   const { ca, handle } = await resolveCaHandle(caId);
 
-  const activeRoas = await RpkiRoa.findAll({
+  const activeRoas = await prisma.rpki_roas.findMany({
     where: { ca_id: caId, status: 'active' },
   });
 
@@ -192,7 +207,7 @@ export async function syncKrillRoutesForCa(caId: number, triggerType?: 'roa' | '
   await KrillApiService.updateRoutes(handle, { added, removed });
   await KrillApiService.syncRepository(handle);
 
-  const repository = await RpkiRepository.findOne({ where: { ca_id: caId } });
+  const repository = await prisma.rpki_repositories.findFirst({ where: { ca_id: caId } });
   SistemaLogOperacionalService.registrarRpkiSync({
     empresaId: ca.empresa_id,
     caId,
@@ -204,10 +219,9 @@ export async function syncKrillRoutesForCa(caId: number, triggerType?: 'roa' | '
   });
 
   if (repository) {
-    await repository.update({
-      publication_status: 'active',
-      last_publish_at: new Date(),
-      last_error: null,
+    await prisma.rpki_repositories.update({
+      where: { id: repository.id },
+      data: { publication_status: 'active', last_publish_at: new Date(), last_error: null },
     });
   }
 }
@@ -215,7 +229,7 @@ export async function syncKrillRoutesForCa(caId: number, triggerType?: 'roa' | '
 export async function syncKrillAspasForCa(caId: number, triggerType?: 'aspa' | 'manual' | null): Promise<void> {
   const { ca, handle } = await resolveCaHandle(caId);
 
-  const activeAspas = await RpkiAspa.findAll({
+  const activeAspas = await prisma.rpki_aspas.findMany({
     where: { ca_id: caId, status: 'active' },
   });
 
@@ -246,7 +260,7 @@ export async function syncKrillAspasForCa(caId: number, triggerType?: 'aspa' | '
   await KrillApiService.updateAspas(handle, { add_or_replace: addOrReplace, remove });
   await KrillApiService.syncRepository(handle);
 
-  const repository = await RpkiRepository.findOne({ where: { ca_id: caId } });
+  const repository = await prisma.rpki_repositories.findFirst({ where: { ca_id: caId } });
   SistemaLogOperacionalService.registrarRpkiSync({
     empresaId: ca.empresa_id,
     caId,
@@ -258,10 +272,9 @@ export async function syncKrillAspasForCa(caId: number, triggerType?: 'aspa' | '
   });
 
   if (repository) {
-    await repository.update({
-      publication_status: 'active',
-      last_publish_at: new Date(),
-      last_error: null,
+    await prisma.rpki_repositories.update({
+      where: { id: repository.id },
+      data: { publication_status: 'active', last_publish_at: new Date(), last_error: null },
     });
   }
 }
@@ -270,24 +283,27 @@ export async function syncKrillRepositoryForCa(
   caId: number,
   repositoryId: number,
   triggerType?: 'roa' | 'aspa' | 'manual' | null
-): Promise<RpkiRepository> {
+): Promise<rpki_repositories> {
   const { ca, handle } = await resolveCaHandle(caId);
 
   await syncKrillRoutesForCa(caId, triggerType === 'roa' ? 'roa' : 'manual');
   await syncKrillAspasForCa(caId, triggerType === 'aspa' ? 'aspa' : 'manual');
   await KrillApiService.syncRepository(handle);
 
-  const repository = await RpkiRepository.findOne({ where: { id: repositoryId, ca_id: caId } });
+  const repository = await prisma.rpki_repositories.findFirst({ where: { id: repositoryId, ca_id: caId } });
   if (!repository) throw new RpkiClientError('Repositório não encontrado');
 
   const status = await KrillApiService.getRepoStatus(handle);
   const lastResult = status.last_exchange?.result?.toLowerCase();
   const hasFailure = lastResult != null && lastResult !== 'success';
 
-  await repository.update({
-    publication_status: hasFailure ? 'error' : 'active',
-    last_publish_at: new Date(),
-    last_error: hasFailure ? `Krill repo sync: ${status.last_exchange?.result ?? 'failure'}` : null,
+  const updated = await prisma.rpki_repositories.update({
+    where: { id: repository.id },
+    data: {
+      publication_status: hasFailure ? 'error' : 'active',
+      last_publish_at: new Date(),
+      last_error: hasFailure ? `Krill repo sync: ${status.last_exchange?.result ?? 'failure'}` : null,
+    },
   });
 
   SistemaLogOperacionalService.registrarRpkiSync({
@@ -302,7 +318,7 @@ export async function syncKrillRepositoryForCa(
       : 'Krill: repositório sincronizado com sucesso',
   });
 
-  return repository;
+  return updated;
 }
 
 /** Extrai recursos IPv4/IPv6/ASN do status de parents do Krill. */

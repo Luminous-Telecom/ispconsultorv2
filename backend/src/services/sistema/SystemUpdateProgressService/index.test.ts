@@ -17,7 +17,7 @@ describe('SystemUpdateProgressService', () => {
   });
 
   it('limita a porcentagem entre 0 e 100', () => {
-    SystemUpdateProgressService.begin('doc');
+    SystemUpdateProgressService.begin('system');
     SystemUpdateProgressService.report(140);
     expect(SystemUpdateProgressService.getSnapshot().progress).toBe(100);
 
@@ -25,7 +25,7 @@ describe('SystemUpdateProgressService', () => {
     expect(SystemUpdateProgressService.getSnapshot().progress).toBe(0);
   });
 
-  it('marca falha e encerra a atualização da wiki', () => {
+  it('marca falha e encerra a atualização', () => {
     SystemUpdateProgressService.begin('system');
     SystemUpdateProgressService.fail();
     expect(SystemUpdateProgressService.getSnapshot()).toMatchObject({
@@ -34,7 +34,7 @@ describe('SystemUpdateProgressService', () => {
       kind: 'system',
     });
 
-    SystemUpdateProgressService.begin('doc');
+    SystemUpdateProgressService.begin('system');
     SystemUpdateProgressService.report(60);
     SystemUpdateProgressService.end();
     expect(SystemUpdateProgressService.getSnapshot()).toEqual({

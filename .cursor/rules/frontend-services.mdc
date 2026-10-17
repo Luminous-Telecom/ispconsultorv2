@@ -42,16 +42,6 @@ export class PlanoService {
 - Endpoint custom fora do CRUD padrão → método próprio na classe usando `this.customGet`/`this.customPost` (não `this.apiClient` direto, para manter `ResponseTransformer`/`ErrorHandler` consistentes)
 - `list()` já normaliza formatos variados de paginação vindos do backend (`PaginatedResponse` completo, array puro, `ApiResponse<PaginatedResponse>`) — não duplicar essa normalização no hook consumidor
 
-## SaaS
-
-```typescript
-import { createSaasCrudService } from 'services/saas/createSaasCrudService';
-
-export const SaasPlanoService = createSaasCrudService<SaasPlano, CreateSaasPlano, UpdateSaasPlano>('/saas/planos');
-```
-
-CRUD simples em `/saas/*` → usar a factory `createSaasCrudService`, não replicar o boilerplate de `BaseService` manualmente.
-
 ## Proibido
 
 - Chamar `axios`/`fetch` direto num componente ou hook — sempre via um `XService`

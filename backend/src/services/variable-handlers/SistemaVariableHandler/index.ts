@@ -4,6 +4,7 @@ import { VariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis
 import { Formatter } from '../utils/Formatter';
 import { VariableReplacer } from '../utils/VariableReplacer';
 import { DadosEmpresaService } from '../../sistema/DadosEmpresaService';
+import { prisma } from '../../../db/prisma';
 
 /**
  * Handler para processamento de variáveis do sistema
@@ -77,14 +78,12 @@ export class SistemaVariableHandler implements VariableHandler {
       return '';
     }
 
-      const { ClienteArquivo } = await import('../../../models/clientes/ClienteArquivo');
-    
-    const assinaturaCliente = await ClienteArquivo.findOne({
+    const assinaturaCliente = await prisma.clientes_arquivos.findFirst({
       where: {
         cliente_id: context.cliente.id,
-        tipo: 'assinatura'
+        tipo: 'assinatura',
       },
-      order: [['created_at', 'DESC']]
+      orderBy: { created_at: 'desc' },
     });
 
     if (!assinaturaCliente) {

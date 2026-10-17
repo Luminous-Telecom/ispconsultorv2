@@ -14,7 +14,7 @@ import {
   HasManyHasAssociationsMixin,
   HasManyCountAssociationsMixin,
   HasManyCreateAssociationMixin
-} from 'sequelize';
+} from '../../../db/orm';
 import { sequelize } from '../../../config/database';
 import { Plano } from '../../cadastros/Plano';
 import { Contrato } from '../../contratos/Contrato';

@@ -1,7 +1,7 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
-import { Op } from 'sequelize';
+import { prisma } from '../../../db/prisma';
 import { IPv4Service } from '../../../services/blockdomi/IPv4Service';
-import { IPv4 } from '../../../models/blockdomi/IPv4';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
@@ -44,7 +44,7 @@ export class IPv4Controller {
         return;
       }
 
-      sendSuccess(res, ipv4.toJSON());
+      sendSuccess(res, toPlain(ipv4));
     } catch (error) {
       sendError(res, error, 'Erro ao buscar IPv4', 500, true, {
         context: 'IPv4Controller',
@@ -83,8 +83,8 @@ export class IPv4Controller {
       try {
         const allIds = [...result.createdIds, ...result.updatedIds];
         if (allIds.length > 0) {
-          const ipv4s = await IPv4.findAll({ where: { id: { [Op.in]: allIds } } });
-          const ipv4Map = new Map(ipv4s.map((d) => [d.id, d.toJSON() as Record<string, unknown>]));
+          const ipv4s = await prisma.blockdomi_ipv4.findMany({ where: { id: { in: allIds } } });
+          const ipv4Map = new Map(ipv4s.map((d) => [d.id, { ...d } as Record<string, unknown>]));
           for (const id of result.createdIds) {
             const dados = ipv4Map.get(id);
             if (dados) await registrarCriacao(req, 'IPv4', id, dados, 'Importação em lote', empresaIdAudit);
@@ -143,7 +143,7 @@ export class IPv4Controller {
           req,
           'IPv4',
           ipv4Criado.id,
-          ipv4Criado.toJSON() as Record<string, unknown>,
+          toPlain(ipv4Criado) as Record<string, unknown>,
           undefined,
           empresaIdAudit
         );
@@ -171,7 +171,7 @@ export class IPv4Controller {
         return;
       }
       
-      const dadosAnteriores = existingIPv4.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(existingIPv4) as Record<string, unknown>;
       
       const { ip } = req.body;
       if (!ip) {
@@ -193,7 +193,7 @@ export class IPv4Controller {
       const ipv4Atualizado = await IPv4Service.update(id, req.body);
       
       // Registrar auditoria
-      const dadosNovos = ipv4Atualizado.toJSON() as Record<string, unknown>;
+      const dadosNovos = toPlain(ipv4Atualizado) as Record<string, unknown>;
       setAuditData(req, dadosAnteriores, dadosNovos);
       
       try {
@@ -233,7 +233,7 @@ export class IPv4Controller {
         return;
       }
       
-      const dadosAnteriores = ipv4.toJSON() as Record<string, unknown>;
+      const dadosAnteriores = toPlain(ipv4) as Record<string, unknown>;
       
       await IPv4Service.delete(id);
       
@@ -273,12 +273,12 @@ export class IPv4Controller {
       const idsNum = ids.map((id: unknown) => Number(id)).filter((n: number) => !Number.isNaN(n));
       const empresaIdAudit = getEmpresaIdOrNull(req) ?? null;
 
-      const ipv4sAntes = idsNum.length > 0 ? await IPv4.findAll({ where: { id: { [Op.in]: idsNum } } }) : [];
+      const ipv4sAntes = idsNum.length > 0 ? await prisma.blockdomi_ipv4.findMany({ where: { id: { in: idsNum } } }) : [];
       const { deleted, versao } = await IPv4Service.bulkDelete(ids);
 
       try {
         for (const d of ipv4sAntes) {
-          await registrarExclusao(req, 'IPv4', d.id, d.toJSON() as Record<string, unknown>, 'Exclusão em lote', empresaIdAudit);
+          await registrarExclusao(req, 'IPv4', d.id, { ...d } as Record<string, unknown>, 'Exclusão em lote', empresaIdAudit);
         }
       } catch (auditError) {
         // Não interromper o fluxo

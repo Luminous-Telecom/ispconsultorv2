@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { Plano } from '../../../models/cadastros/Plano';
@@ -10,8 +11,7 @@ import { TituloService } from '../../../services/financeiro/TituloService';
 import { ClienteService } from '../../../services/clientes/ClienteService';
 import { PlanoService } from '../../../services/cadastros/PlanoService';
 import { BancoService } from '../../../services/cadastros/BancoService';
-import { Op } from 'sequelize';
-import { sequelize } from '../../../config/database';
+import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
 import { parseDateFromDb, formatDate } from '../../../utils/dateUtils';
 import { formatDateISOForAPI } from '../../../utils/timezoneUtils';
@@ -88,9 +88,9 @@ export class DashboardController {
       ]);
 
       const contratosAtrasoPeriodo = DashboardService.computeContratosAtrasoPeriodo(
-        contratosTodos.map((c) => c.toJSON() as { id: number; status: string; cliente_id: number }),
+        contratosTodos.map((c) => toPlain(c) as { id: number; status: string; cliente_id: number }),
         titulosTodos.map((t) =>
-          t.toJSON() as {
+          toPlain(t) as {
             contrato_id?: number | null;
             cliente_id: number;
             pago: boolean;
@@ -104,15 +104,15 @@ export class DashboardController {
         contratosAtivosTodos.length > 0 ? contratosAtivosTodos : contratos;
 
       const statsGraficos = buildErpDashboardStatsGraficos({
-        clientesTodos: clientesTodos.map((c) => c.toJSON() as { ativo: boolean }),
-        clientesPeriodo: clientesPeriodo.map((c) => c.toJSON() as { ativo: boolean; created_at?: string }),
-        planos: planos.map((p) => p.toJSON() as { id: number; status?: string; nome_plano: string }),
+        clientesTodos: clientesTodos.map((c) => toPlain(c) as { ativo: boolean }),
+        clientesPeriodo: clientesPeriodo.map((c) => toPlain(c) as { ativo: boolean; created_at?: string | Date }),
+        planos: planos.map((p) => toPlain(p) as { id: number; status?: string; nome_plano: string }),
         contratosTodos: contratosTodos.map(
-          (c) => c.toJSON() as { status: string; isento_mensalidade?: boolean }
+          (c) => toPlain(c) as { status: string; isento_mensalidade?: boolean }
         ),
         titulosTodos: titulosTodos.map(
           (t) =>
-            t.toJSON() as {
+            toPlain(t) as {
               status: string;
               pago?: boolean;
               data_vencimento: string | Date;
@@ -121,7 +121,7 @@ export class DashboardController {
         contratosEmAtraso: contratosAtrasoPeriodo.contratosEmAtraso,
         contratosAtivosDashboard: contratosAtrasoPeriodo.contratosAtivosDashboard,
         contratosParaPlano: contratosParaPlano.map(
-          (c) => c.toJSON() as { status: string; plano_id?: number; cliente_id?: number }
+          (c) => toPlain(c) as { status: string; plano_id?: number; cliente_id?: number }
         ),
         receitaUltimosMeses,
         recebidosPeriodo,
@@ -133,16 +133,16 @@ export class DashboardController {
         stats: statsData,
         titulosRecentes,
         titulosVencidos,
-        clientes: clientesPeriodo.map(c => c.toJSON()), // Clientes do período
-        clientesTodos: clientesTodos.map(c => c.toJSON()), // TODOS os clientes para gráficos
-        planos: planos.map(p => p.toJSON()),
-        contratos: contratos.map(c => c.toJSON()), // Contratos do período
-        contratosTodos: contratosTodos.map(c => c.toJSON()), // TODOS os contratos para gráficos
-        contratosAtivosTodos: contratosAtivosTodos.map(c => c.toJSON()),
+        clientes: clientesPeriodo.map(c => toPlain(c)), // Clientes do período
+        clientesTodos: clientesTodos.map(c => toPlain(c)), // TODOS os clientes para gráficos
+        planos: planos.map(p => toPlain(p)),
+        contratos: contratos.map(c => toPlain(c)), // Contratos do período
+        contratosTodos: contratosTodos.map(c => toPlain(c)), // TODOS os contratos para gráficos
+        contratosAtivosTodos: contratosAtivosTodos.map(c => toPlain(c)),
         clientesPorTipoPlano,
         ticketMedioPorTipoServico,
-        titulos: titulosPeriodo.map(t => t.toJSON()), // Títulos do período
-        titulosTodos: titulosTodos.map(t => t.toJSON()), // TODOS os títulos para gráficos
+        titulos: titulosPeriodo.map(t => toPlain(t)), // Títulos do período
+        titulosTodos: titulosTodos.map(t => toPlain(t)), // TODOS os títulos para gráficos
         receitaUltimosMeses,
         clientesPorStatus: {
           labels: ['Ativos', 'Inativos'],
@@ -294,9 +294,7 @@ export class DashboardController {
       hoje.setHours(23, 59, 59, 999);
 
       const titulos = await TituloService.findAllWithFilters({
-        data_vencimento: {
-          [Op.lte]: hoje
-        },
+        data_vencimento: { lte: hoje },
         status: 'pendente'
       }, {
         include: [
@@ -324,9 +322,7 @@ export class DashboardController {
       proximos7Dias.setDate(hoje.getDate() + 7);
 
       const titulos = await TituloService.findAllWithFilters({
-        data_vencimento: {
-          [Op.between]: [hoje, proximos7Dias]
-        },
+        data_vencimento: { gte: hoje, lte: proximos7Dias },
         status: 'pendente'
       }, {
         include: [
@@ -349,31 +345,14 @@ export class DashboardController {
   // Obter gráfico de títulos por status
   static async getGraficoTitulosPorStatus(req: Request, res: Response): Promise<void> {
     try {
-      if (!sequelize) {
-        throw new Error('Sequelize não está inicializado');
-      }
-
-      const titulosPorStatusRaw = await Titulo.findAll({
-        attributes: [
-          'status',
-          [sequelize.fn('COUNT', sequelize.col('id')), 'total']
-        ],
-        group: ['status'],
-        raw: true
+      const grouped = await prisma.financeiro_titulos.groupBy({
+        by: ['status'],
+        _count: { id: true },
       });
-
-      // Converter para objetos planos (raw: true retorna objetos planos)
-      const titulosConvertidos = extractRawData(
-        JSON.parse(JSON.stringify(titulosPorStatusRaw)) as Array<Record<string, string | number>>
-      );
-
-      const dados = titulosConvertidos.map((item) => {
-        const data = item as TituloStatusData;
-        return {
-          status: String(data.status || ''),
-          total: parseInt(String(data.total || 0))
-        };
-      });
+      const dados = grouped.map((item) => ({
+        status: String(item.status || ''),
+        total: item._count.id,
+      }));
 
       sendSuccess(res, dados);
     } catch (error) {
@@ -387,38 +366,17 @@ export class DashboardController {
   // Obter gráfico de clientes por cidade
   static async getGraficoClientesPorCidade(req: Request, res: Response): Promise<void> {
     try {
-      if (!sequelize) {
-        throw new Error('Sequelize não está inicializado');
-      }
-
-      const clientesPorCidadeRaw = await Cliente.findAll({
-        attributes: [
-          'cidade',
-          [sequelize.fn('COUNT', sequelize.col('id')), 'total']
-        ],
-        where: {
-          cidade: {
-            [Op.ne]: null
-          }
-        },
-        group: ['cidade'],
-        order: [[sequelize.fn('COUNT', sequelize.col('id')), 'DESC']],
-        limit: 10,
-        raw: true
+      const grouped = await prisma.clientes.groupBy({
+        by: ['cidade'],
+        where: { cidade: { not: null } },
+        _count: { id: true },
+        orderBy: { _count: { id: 'desc' } },
+        take: 10,
       });
-
-      // Converter para objetos planos (raw: true retorna objetos planos)
-      const clientesConvertidos = extractRawData(
-        JSON.parse(JSON.stringify(clientesPorCidadeRaw)) as Array<Record<string, string | number>>
-      );
-
-      const dados = clientesConvertidos.map((item) => {
-        const data = item as ClienteCidadeData;
-        return {
-          cidade: String(data.cidade || ''),
-          total: parseInt(String(data.total || 0))
-        };
-      });
+      const dados = grouped.map((item) => ({
+        cidade: String(item.cidade || ''),
+        total: item._count.id,
+      }));
 
       sendSuccess(res, dados);
     } catch (error) {
@@ -443,27 +401,21 @@ export class DashboardController {
       // Títulos criados no mês
       const titulosCriados = await TituloService.count({
         where: {
-          created_at: {
-            [Op.between]: [inicioMes, fimMes]
-          }
+          created_at: { gte: inicioMes, lte: fimMes }
         }
       });
 
       // Títulos pagos no mês
       const titulosPagos = await TituloService.count({
         where: {
-          data_pagamento: {
-            [Op.between]: [inicioMes, fimMes]
-          },
+          data_pagamento: { gte: inicioMes, lte: fimMes },
           pago: true
         }
       });
 
       // Valor total pago no mês
       const titulosPagasMes = await TituloService.findAllWithFilters({
-        data_pagamento: {
-          [Op.between]: [inicioMes, fimMes]
-        },
+        data_pagamento: { gte: inicioMes, lte: fimMes },
         pago: true
       });
 
@@ -473,9 +425,7 @@ export class DashboardController {
 
       // Clientes novos no mês
       const clientesNovos = await ClienteService.count({
-        created_at: {
-          [Op.between]: [inicioMes, fimMes]
-        }
+        created_at: { gte: inicioMes, lte: fimMes }
       });
 
       const resumo = {

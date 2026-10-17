@@ -1,9 +1,10 @@
-import type { Banco } from '../../models/cadastros/Banco';
-import type { Titulo } from '../../models/financeiro/Titulo';
-import type { Cliente } from '../../models/clientes/Cliente';
-import type { Plano } from '../../models/cadastros/Plano';
+import type { cadastros_bancos, cadastros_planos, clientes, financeiro_titulos } from '@prisma/client';
 import type { JsonValue } from '../../types/index';
-import type { InferAttributes } from 'sequelize';
+
+type Banco = cadastros_bancos;
+type Titulo = financeiro_titulos;
+type Cliente = clientes;
+type Plano = cadastros_planos;
 
 export interface ApiResponseData {
   charge_id?: string;
@@ -17,7 +18,7 @@ export interface ApiResponse {
   status?: string;
 }
 
-export interface TituloWithRelations extends InferAttributes<Titulo> {
+export interface TituloWithRelations extends Titulo {
   banco?: Banco;
   cliente?: Cliente;
   plano?: Plano;

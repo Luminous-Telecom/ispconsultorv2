@@ -6,50 +6,41 @@
  * Não precisa do backend rodando.
  */
 import 'dotenv/config';
+import { disconnectPrisma, prisma } from '../src/db/prisma';
 
 async function main(): Promise<void> {
   console.log('=== Teste da fila de rotinas ===\n');
 
-  const { sequelize } = await import('../src/config/database');
-  await import('../src/models');
-
-  await sequelize.authenticate();
+  await prisma.$queryRawUnsafe('SELECT 1');
   console.log('Banco conectado.\n');
 
-  const { ScheduledRoutine } = await import('../src/models/sistema/ScheduledRoutine');
-  const SaasScheduledRoutine = (await import('../src/models/saas/SaasScheduledRoutine')).default;
   const { SchedulerService } = await import('../src/services/scheduler/SchedulerService');
 
   const scheduler = SchedulerService.getInstance();
   await scheduler.start();
   console.log('Scheduler iniciado.\n');
 
-  const [erpRoutines, saasRoutines] = await Promise.all([
-    ScheduledRoutine.findAll({ where: { ativo: true }, attributes: ['id', 'nome', 'tipo'] }),
-    SaasScheduledRoutine.findAll({ where: { ativo: true }, attributes: ['id', 'nome', 'tipo'] }),
-  ]);
+  const rotinas = await prisma.sistema_scheduled_routines.findMany({
+    where: { ativo: true },
+    select: { id: true, nome: true, tipo: true },
+  });
 
-  const total = erpRoutines.length + saasRoutines.length;
-  if (total === 0) {
+  if (rotinas.length === 0) {
     console.log('Nenhuma rotina ativa. Crie rotinas no Agendador de Tarefas.');
     await scheduler.stop();
-    await sequelize.close();
+    await disconnectPrisma();
     process.exit(0);
   }
 
-  console.log(`Rotinas ativas: ${total} (ERP: ${erpRoutines.length}, SaaS: ${saasRoutines.length})\n`);
-  erpRoutines.forEach((r) => console.log(`  [ERP] ${r.nome} (id=${r.id})`));
-  saasRoutines.forEach((r) => console.log(`  [SaaS] ${r.nome} (id=${r.id})`));
+  console.log(`Rotinas ativas: ${rotinas.length}\n`);
+  rotinas.forEach((rotina) => console.log(`  ${rotina.nome} (id=${rotina.id})`));
   console.log('');
 
   console.log('Enfileirando todas as rotinas...');
-  for (const r of erpRoutines) {
-    scheduler.executeRoutineManually(r.id);
+  for (const rotina of rotinas) {
+    scheduler.executeRoutineManually(rotina.id);
   }
-  for (const r of saasRoutines) {
-    scheduler.executeSaasRoutineManually(r.id);
-  }
-  console.log(`${total} rotinas enfileiradas.\n`);
+  console.log(`${rotinas.length} rotinas enfileiradas.\n`);
 
   console.log('Monitorando fila (Ctrl+C para interromper):');
   const interval = setInterval(async () => {
@@ -59,14 +50,13 @@ async function main(): Promise<void> {
     if (status.queueSize === 0 && status.queueRunning === 0) {
       clearInterval(interval);
       console.log('\n\nFila vazia. Todas as rotinas foram processadas.');
-      scheduler.stop().then(() => sequelize.close()).then(() => process.exit(0));
+      scheduler.stop().then(() => disconnectPrisma()).then(() => process.exit(0));
     }
   }, 1000);
 }
 
-main().catch(async (e) => {
-  console.error(e);
-  const { sequelize } = await import('../src/config/database');
-  await sequelize.close();
+main().catch(async (error) => {
+  console.error(error);
+  await disconnectPrisma();
   process.exit(1);
 });

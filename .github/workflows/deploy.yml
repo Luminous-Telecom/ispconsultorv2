@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       force_full_build:
-        description: "Forçar build de backend+frontend+doc e nova release (use quando commits ficaram só em paths que não disparavam build)"
+        description: "Forçar build de backend+frontend e nova release (use quando commits ficaram só em paths que não disparavam build)"
         type: boolean
         default: true
 
@@ -49,7 +49,6 @@ jobs:
             echo "Primeiro commit — buildando tudo"
             echo "backend_changed=true"  >> $GITHUB_OUTPUT
             echo "frontend_changed=true" >> $GITHUB_OUTPUT
-            echo "doc_changed=true"     >> $GITHUB_OUTPUT
             echo "workflows_changed=true" >> $GITHUB_OUTPUT
           else
             CHANGED_FILES=$(git diff --name-only "${PREV_COMMIT}" "${CURRENT_COMMIT}" || echo "")
@@ -57,7 +56,6 @@ jobs:
 
             echo "${CHANGED_FILES}" | grep -qE '^backend/'  && echo "backend_changed=true"  >> $GITHUB_OUTPUT || echo "backend_changed=false"  >> $GITHUB_OUTPUT
             echo "${CHANGED_FILES}" | grep -qE '^frontend/' && echo "frontend_changed=true" >> $GITHUB_OUTPUT || echo "frontend_changed=false" >> $GITHUB_OUTPUT
-            echo "${CHANGED_FILES}" | grep -qE '^doc/'       && echo "doc_changed=true"     >> $GITHUB_OUTPUT || echo "doc_changed=false"     >> $GITHUB_OUTPUT
             # Workflow de deploy / infra na raiz também exige build + Release
             echo "${CHANGED_FILES}" | grep -qE '^\.github/workflows/|^scripts/|^ecosystem\.config\.js|^package\.json$' \
               && echo "workflows_changed=true" >> $GITHUB_OUTPUT || echo "workflows_changed=false" >> $GITHUB_OUTPUT
@@ -65,10 +63,9 @@ jobs:
 
           # Último valor no GITHUB_OUTPUT vence — sobrescreve detecção por arquivo.
           if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ inputs.force_full_build }}" == "true" ]; then
-            echo "::notice::workflow_dispatch: forçando build completo (backend + frontend + doc + release)."
+            echo "::notice::workflow_dispatch: forçando build completo (backend + frontend + release)."
             echo "backend_changed=true"  >> $GITHUB_OUTPUT
             echo "frontend_changed=true" >> $GITHUB_OUTPUT
-            echo "doc_changed=true"     >> $GITHUB_OUTPUT
             echo "workflows_changed=true" >> $GITHUB_OUTPUT
           fi
 
@@ -89,12 +86,11 @@ jobs:
           # Determinar se precisa buildar
           if [ "${{ steps.changes.outputs.backend_changed }}"  == "true" ] || \
              [ "${{ steps.changes.outputs.frontend_changed }}" == "true" ] || \
-             [ "${{ steps.changes.outputs.doc_changed }}"     == "true" ] || \
              [ "${{ steps.changes.outputs.workflows_changed }}" == "true" ]; then
             SHOULD_BUILD=true
           else
             SHOULD_BUILD=false
-            echo "Nenhuma mudança em backend, frontend, doc, workflows ou infra — build pulado"
+            echo "Nenhuma mudança em backend, frontend, workflows ou infra — build pulado"
           fi
 
           if [ "${SHOULD_BUILD}" == "true" ]; then
@@ -181,17 +177,6 @@ jobs:
             npm run build --prefix backend
             [ -d "backend/dist" ] || { echo "ERRO: backend build falhou!"; exit 1; }
             echo "✓ Backend buildado"
-
-            # ── Wiki (doc) ────────────────────────────────────────
-            if [ -f "doc/package.json" ]; then
-              echo "=== Buildando wiki (doc) ==="
-              npm ci --prefix doc --no-audit --no-fund --prefer-offline
-              npm run build --prefix doc
-              [ -f "doc/.vitepress/dist/index.html" ] || { echo "ERRO: doc build falhou!"; exit 1; }
-              echo "✓ Wiki (doc) buildada"
-            else
-              echo "AVISO: doc/package.json ausente — wiki não buildada"
-            fi
 
             echo "BUILD_EXECUTED=true" >> $GITHUB_ENV
           else
@@ -290,7 +275,7 @@ jobs:
       - name: Sincronizar Artefatos para Deploy
         run: |
           cd deployment
-          mkdir -p backend frontend scripts doc
+          mkdir -p backend frontend scripts
 
           # Nunca vai para produção
           rm -rf backend/src
@@ -328,7 +313,7 @@ jobs:
           echo "✓ Configuração do backend sincronizada"
 
           # ── frontend/build ────────────────────────────────────────
-          # Mantém estrutura build/ — alinhado com ecosystem.config.js: serve -s build
+          # Mantém estrutura build/ — o Nginx serve esses arquivos estáticos
           if [ -d "../frontend/build" ]; then
             mkdir -p frontend/build
             rsync -a --delete ../frontend/build/ frontend/build/
@@ -345,28 +330,9 @@ jobs:
             echo "AVISO: frontend/build não existe (mantendo existente)"
           fi
 
-          # ── doc/.vitepress/dist (wiki estática) ───────────────────
-          if [ -d "../doc/.vitepress/dist" ]; then
-            mkdir -p doc/.vitepress/dist
-            rsync -a --delete ../doc/.vitepress/dist/ doc/.vitepress/dist/
-            [ -f "doc/.vitepress/dist/index.html" ] || { echo "ERRO: doc/.vitepress/dist/index.html ausente!"; exit 1; }
-            mapfile -d '' -t _doc_rm < <(find doc -mindepth 1 -maxdepth 1 ! -name '.vitepress' -print0) || true
-            for p in "${_doc_rm[@]}"; do
-              [ -n "${p}" ] || continue
-              git rm -rf "${p}" 2>/dev/null || rm -rf "${p}"
-              echo "::notice::Removido do prod (só .vitepress/dist): ${p}"
-            done
-            if [ -d doc/.vitepress ]; then
-              mapfile -d '' -t _vp_rm < <(find doc/.vitepress -mindepth 1 -maxdepth 1 ! -name 'dist' -print0) || true
-              for p in "${_vp_rm[@]}"; do
-                [ -n "${p}" ] || continue
-                git rm -rf "${p}" 2>/dev/null || rm -rf "${p}"
-                echo "::notice::Removido do prod (só .vitepress/dist): ${p}"
-              done
-            fi
-            echo "✓ doc/.vitepress/dist sincronizado"
-          else
-            echo "AVISO: doc/.vitepress/dist não existe (wiki não incluída neste deploy)"
+          if [ -d "doc" ]; then
+            git rm -rf doc 2>/dev/null || rm -rf doc
+            echo "::notice::Removida doc/ do repositório de produção."
           fi
 
           # ── scripts de setup da raiz ─────────────────────────────
@@ -429,7 +395,6 @@ jobs:
           git add -A
           git add -f backend/dist/    || true
           git add -f frontend/build/  || true
-          git add -f doc/.vitepress/dist/ || true
           git rm -r --cached backend/src 2>/dev/null || true
 
           echo "=== Status antes do commit ==="
@@ -663,4 +628,3 @@ jobs:
           rm -rf deployment
           rm -rf backend/dist
           rm -rf frontend/build
-          rm -rf doc/.vitepress/dist doc/node_modules doc/.vitepress/cache

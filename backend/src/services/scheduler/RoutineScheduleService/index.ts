@@ -1,6 +1,5 @@
 import * as cron from 'node-cron';
-import { ScheduledRoutine } from '../../../models/sistema/ScheduledRoutine';
-import SaasScheduledRoutine from '../../../models/saas/SaasScheduledRoutine';
+import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
 import { buildCronExpression, validateCronExpression } from '../../../utils/SchedulerUtils';
 import { RoutineExecutionService } from '../RoutineExecutionService';
@@ -16,8 +15,27 @@ import type {
   DetailedStats
 } from '../../../types/scheduler';
 
+type RoutineRow = {
+  id: number;
+  nome?: string | null;
+  tipo?: string | null;
+  ativo?: boolean;
+  empresa_id?: number | null;
+  alvo?: string | null;
+  frequencia?: string;
+  hora_execucao?: string | Date;
+  dia_semana?: number | string | null;
+  dia_execucao?: number | null;
+  cron_expression?: string | null;
+  configuracao?: unknown;
+  minuto?: string | null;
+  hora?: string | null;
+  dia_mes?: string | null;
+  mes?: string | null;
+};
+
 type RoutineSource = 'erp' | 'saas';
-type AnyRoutine = ScheduledRoutine | SaasScheduledRoutine;
+type AnyRoutine = RoutineRow;
 
 function jobKey(source: RoutineSource, id: number): string {
   return `${source}:${id}`;
@@ -25,7 +43,7 @@ function jobKey(source: RoutineSource, id: number): string {
 
 /**
  * Serviço responsável por gerenciar agendamento de rotinas (CRON jobs).
- * Agenda rotinas no SaaS (saas_scheduled_routines). Rotinas sistema_scheduled_routines não são mais carregadas.
+ * Carrega as rotinas da instalação em sistema_scheduled_routines.
  *
  * @class RoutineScheduleService
  */
@@ -43,7 +61,7 @@ export class RoutineScheduleService {
   }
 
   /**
-   * Inicia o scheduler e carrega rotinas ativas do SaaS
+   * Inicia o scheduler e carrega rotinas ativas da instalação
    */
   public async start(): Promise<void> {
     if (this.isRunning) {
@@ -69,14 +87,14 @@ export class RoutineScheduleService {
   }
 
   /**
-   * Carrega rotinas ativas do SaaS e agenda cada uma
+   * Carrega rotinas ativas da instalação e agenda cada uma
    */
   private async loadRoutinesFromDatabase(): Promise<void> {
     try {
-      const saasRoutines = await SaasScheduledRoutine.findAll({ where: { ativo: true } });
+      const routines = await prisma.sistema_scheduled_routines.findMany({ where: { ativo: true } });
 
-      for (const routine of saasRoutines) {
-        await this.scheduleSaasRoutine(routine);
+      for (const routine of routines) {
+        await this.scheduleRoutine(routine);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
@@ -91,14 +109,14 @@ export class RoutineScheduleService {
   /**
    * Agenda uma rotina do ERP
    */
-  public async scheduleRoutine(routine: ScheduledRoutine): Promise<void> {
-    this.unscheduleRoutine(routine.id);
+  public async scheduleRoutine(routine: RoutineRow): Promise<void> {
+    await this.scheduleAnyRoutine(routine, 'erp');
   }
 
   /**
    * Agenda uma rotina do SaaS
    */
-  public async scheduleSaasRoutine(routine: SaasScheduledRoutine): Promise<void> {
+  public async scheduleSaasRoutine(routine: RoutineRow): Promise<void> {
     await this.scheduleAnyRoutine(routine, 'saas');
   }
 
@@ -110,7 +128,7 @@ export class RoutineScheduleService {
       this.unscheduleAnyRoutine(source, routine.id);
     }
 
-    const cronExpression = buildCronExpression(routine);
+    const cronExpression = buildCronExpression(routine as unknown as Parameters<typeof buildCronExpression>[0]);
     if (!validateCronExpression(cronExpression)) {
       logger.error('Expressão cron inválida para rotina', {
         context: 'RoutineScheduleService',
@@ -162,7 +180,7 @@ export class RoutineScheduleService {
   /**
    * Executa imediatamente uma rotina ERP (para chamada manual). Passa pela fila.
    */
-  public executeRoutineNow(routine: ScheduledRoutine, usuario?: { id: number; nome: string | null; email: string | null } | null, ipAddress?: string | null): void {
+  public executeRoutineNow(routine: RoutineRow, usuario?: { id: number; nome: string | null; email: string | null } | null, ipAddress?: string | null): void {
     this.executionQueue.enqueue({
       source: 'erp',
       routineId: routine.id,
@@ -177,7 +195,7 @@ export class RoutineScheduleService {
    * @param usuario - Usuário que executou manualmente (quando presente)
    * @param ipAddress - IP do cliente (quando manual)
    */
-  public executeSaasRoutineNow(routine: SaasScheduledRoutine, usuario?: { id: number; nome: string | null; email: string | null } | null, ipAddress?: string | null): void {
+  public executeSaasRoutineNow(routine: RoutineRow, usuario?: { id: number; nome: string | null; email: string | null } | null, ipAddress?: string | null): void {
     this.executionQueue.enqueue({
       source: 'saas',
       routineId: routine.id,
@@ -193,8 +211,8 @@ export class RoutineScheduleService {
   public async processRoutineJob(data: RoutineJobData): Promise<void> {
     const { source, routineId, usuario, ipAddress, manual } = data;
     const routine = source === 'erp'
-      ? await ScheduledRoutine.findByPk(routineId)
-      : await SaasScheduledRoutine.findByPk(routineId);
+      ? await prisma.sistema_scheduled_routines.findUnique({ where: { id: routineId } })
+      : null;
 
     if (!routine) {
       logger.warn('Rotina não encontrada para execução', {
@@ -222,16 +240,16 @@ export class RoutineScheduleService {
    */
   private async runAnyRoutine(routine: AnyRoutine, source: RoutineSource, usuario?: { id: number; nome: string | null; email: string | null } | null, ipAddress?: string | null): Promise<void> {
     if (source === 'saas') {
-      await this.runSaasRoutine(routine as SaasScheduledRoutine, usuario, ipAddress);
+      await this.runSaasRoutine(routine, usuario, ipAddress);
     } else {
-      await this.runRoutine(routine as ScheduledRoutine);
+      await this.runRoutine(routine);
     }
   }
 
   /**
    * Executa uma rotina do ERP (chamado pelo CRON job)
    */
-  private async runRoutine(routine: ScheduledRoutine): Promise<void> {
+  private async runRoutine(routine: RoutineRow): Promise<void> {
     const startTime = new Date();
     let executionLog = null;
 
@@ -240,7 +258,9 @@ export class RoutineScheduleService {
       executionLog = await this.logService.createExecutionLog(routine, startTime);
 
       // Executar a rotina baseada no tipo
-      const resultado = await this.executionService.executeRoutineByType(routine);
+      const resultado = await this.executionService.executeRoutineByType(
+        routine as unknown as Parameters<RoutineExecutionService['executeRoutineByType']>[0]
+      );
 
       const endTime = new Date();
       const duration = endTime.getTime() - startTime.getTime();
@@ -310,11 +330,13 @@ export class RoutineScheduleService {
    * @param usuario - Usuário que executou manualmente (quando presente)
    * @param ipAddress - IP do cliente (quando manual)
    */
-  private async runSaasRoutine(routine: SaasScheduledRoutine, usuario?: { id: number; nome: string | null; email: string | null } | null, ipAddress?: string | null): Promise<void> {
+  private async runSaasRoutine(routine: RoutineRow, usuario?: { id: number; nome: string | null; email: string | null } | null, ipAddress?: string | null): Promise<void> {
     const startTime = new Date();
 
     try {
-      const resultado = await this.executionService.executeRoutineByType(routine);
+      const resultado = await this.executionService.executeRoutineByType(
+        routine as unknown as Parameters<RoutineExecutionService['executeRoutineByType']>[0]
+      );
       const endTime = new Date();
       const duration = endTime.getTime() - startTime.getTime();
       const statusFinal = 'success' in resultado && resultado.success === false ? 'erro' : 'sucesso';

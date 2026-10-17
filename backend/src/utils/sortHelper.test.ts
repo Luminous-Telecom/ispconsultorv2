@@ -6,8 +6,6 @@ const config = {
       nome: { allowNull: false },
       cidade: { allowNull: true },
     },
-    sequelize: { literal: (sql: string) => ({ sql }) },
-    getTableName: () => 'clientes',
   },
   tableName: 'clientes',
   virtualColumns: {
@@ -35,6 +33,6 @@ describe('SortHelper — visualização ordenada', () => {
   it('monta ordem de relacionamento sem interpolar a direção fora de ASC/DESC', () => {
     const result = SortHelper.buildOrder(config, 'cliente', 'DESC');
     expect(result.isValid).toBe(true);
-    expect(result.order[0][1]).toBe('DESC');
+    expect(result.order).toEqual([{ cliente: { razao_social: 'desc' } }]);
   });
 });

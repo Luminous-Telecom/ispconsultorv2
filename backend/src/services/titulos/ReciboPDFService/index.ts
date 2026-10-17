@@ -1,17 +1,12 @@
-import { Titulo } from '../../../models/financeiro/Titulo';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Contrato } from '../../../models/contratos/Contrato';
-import type { InferAttributes } from 'sequelize';
-import type { TituloComRelacoes } from '../../../controllers/titulos/TituloHelpers/types';
 import { logger } from '../../../utils/logger';
 import { ModeloDocumentoService } from '../../documentos/ModeloDocumentoService';
-import { VariaveisDocumentoService } from '../../documentos/VariaveisDocumentoService';
+import { VariaveisDocumentoService, type DadosVariaveis } from '../../documentos/VariaveisDocumentoService';
 import { PDFGenerationService } from '../../pdf-generation/PDFGenerationService';
 import { ContratoService } from '../../contratos/ContratoService';
 
 interface ReciboPDFParams {
-  titulo: InferAttributes<Titulo> | Titulo;
-  cliente: Cliente;
+  titulo: { id: number; contrato_id?: number | null; empresa_id?: number | null };
+  cliente: { empresa_id?: number | null };
   contrato?: unknown;
   baseUrl?: string;
 }
@@ -30,10 +25,6 @@ const RECIBO_FALLBACK_STYLES = `
  * Gera PDF do recibo de pagamento a partir da aba Recibos do modelo de contrato.
  */
 export class ReciboPDFService {
-  /**
-   * Retorna o HTML processado do recibo (fragmento embedável em documento maior).
-   * Usa exclusivamente `conteudo_recibo` de modelo tipo contrato.
-   */
   static async gerarReciboConteudo(params: ReciboPDFParams): Promise<string | null> {
     const { titulo, cliente, baseUrl } = params;
     let contrato = params.contrato;
@@ -42,12 +33,8 @@ export class ReciboPDFService {
     }
 
     try {
-      const empresaId =
-        (cliente as { empresa_id?: number | null }).empresa_id ??
-        (titulo as { empresa_id?: number | null }).empresa_id ??
-        null;
-      const modeloDocumentoId =
-        (contrato as Contrato | undefined)?.modelo_documento_id ?? null;
+      const empresaId = cliente.empresa_id ?? titulo.empresa_id ?? null;
+      const modeloDocumentoId = (contrato as { modelo_documento_id?: number | null } | undefined)?.modelo_documento_id ?? null;
 
       const modelo = await ModeloDocumentoService.resolveModeloReciboContrato({
         empresaId,
@@ -67,9 +54,9 @@ export class ReciboPDFService {
       return await VariaveisDocumentoService.processarVariaveis(
         conteudoTemplate,
         {
-          cliente,
-          contrato: contrato ? (contrato as Contrato | (Partial<Contrato> & { id: number })) : undefined,
-          titulo: titulo as Titulo | TituloComRelacoes,
+          cliente: cliente as DadosVariaveis['cliente'],
+          contrato: contrato as DadosVariaveis['contrato'],
+          titulo: titulo as DadosVariaveis['titulo'],
         },
         baseUrl
       );
@@ -86,14 +73,9 @@ export class ReciboPDFService {
     return RECIBO_FALLBACK_STYLES;
   }
 
-  /**
-   * Gera o PDF do recibo em Buffer.
-   */
   static async gerarReciboPdfBuffer(params: ReciboPDFParams): Promise<Buffer | null> {
     const conteudoProcessado = await this.gerarReciboConteudo(params);
-    if (!conteudoProcessado) {
-      return null;
-    }
+    if (!conteudoProcessado) return null;
 
     try {
       return await PDFGenerationService.generateFromContent(
@@ -113,9 +95,6 @@ export class ReciboPDFService {
     }
   }
 
-  /**
-   * Gera o PDF do recibo e retorna em base64.
-   */
   static async gerarReciboBase64(params: ReciboPDFParams): Promise<string | null> {
     const pdfBuffer = await this.gerarReciboPdfBuffer(params);
     return pdfBuffer ? pdfBuffer.toString('base64') : null;

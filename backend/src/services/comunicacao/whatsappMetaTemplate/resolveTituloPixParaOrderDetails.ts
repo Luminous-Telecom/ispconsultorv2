@@ -1,5 +1,4 @@
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Titulo } from '../../../models/financeiro/Titulo';
+import { prisma } from '../../../db/prisma';
 import type { TituloComRelacoes } from '../../../controllers/titulos/TituloHelpers/types';
 import { logger } from '../../../utils/logger';
 import type { TemplateBuildContext } from './types';
@@ -15,20 +14,26 @@ export async function resolveTituloPixParaOrderDetails(
   if (!titulo.id) return titulo;
 
   try {
-    const full = await Titulo.findByPk(titulo.id, {
-      include: [
-        { model: Cliente, as: 'cliente' },
-        { association: 'banco' },
-        { association: 'contrato' },
-        { association: 'plano' },
-      ],
+    const full = await prisma.financeiro_titulos.findUnique({
+      where: { id: Number(titulo.id) },
+      include: {
+        clientes: true,
+        cadastros_bancos: true,
+        contratos: true,
+        cadastros_planos: true,
+      },
     });
     if (!full) return titulo;
 
     const { TituloPDFService } = await import('../../titulos/TituloPDFService');
-    const enriched = await TituloPDFService.registrarTituloNoBancoSeNecessario(
-      full as unknown as TituloComRelacoes
-    );
+    const enriched = await TituloPDFService.registrarTituloNoBancoSeNecessario({
+      ...full,
+      valor: Number(full.valor),
+      cliente: full.clientes,
+      banco: full.cadastros_bancos,
+      contrato: full.contratos,
+      plano: full.cadastros_planos,
+    } as unknown as TituloComRelacoes);
 
     if (!(enriched.qrcode || '').trim()) {
       logger.warn('[WhatsApp Template] Título sem QR Code PIX após registro no banco', {

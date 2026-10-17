@@ -1,6 +1,6 @@
-import { ServidorWhatsApp } from '../../../models/comunicacao/ServidorWhatsApp';
+import type { comunicacao_servidores_whatsapp } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { registrarMensagemHistorico, type ContextoHistorico } from '../RegistroMensagemHistoricoService';
-import { Cliente } from '../../../models/clientes/Cliente';
 import { logger } from '../../../utils/logger';
 import { clienteDisplayName } from '../../../utils/clienteDisplayName';
 import {
@@ -55,7 +55,7 @@ export class WhatsAppCloudService {
    * Enviar mensagem de texto via API oficial do WhatsApp
    */
   static async enviarTexto(
-    servidor: ServidorWhatsApp,
+    servidor: comunicacao_servidores_whatsapp,
     telefone: string,
     texto: string,
     contextoSaas?: ContextoHistorico
@@ -100,13 +100,9 @@ export class WhatsAppCloudService {
           if (telefone) {
             // Limpar telefone para busca (remover caracteres especiais)
             const telefoneLimpo = telefone.replace(/\D/g, '');
-            clienteData = await Cliente.findOne({
-              where: {
-                telefone: {
-                  [require('sequelize').Op.like]: `%${telefoneLimpo}%`
-                }
-              },
-              attributes: ['razao_social', 'nome_fantasia', 'email', 'telefone']
+            clienteData = await prisma.clientes.findFirst({
+              where: { telefone: { contains: telefoneLimpo } },
+              select: { razao_social: true, nome_fantasia: true, email: true, telefone: true },
             });
           }
 
@@ -184,13 +180,13 @@ export class WhatsAppCloudService {
    * Enviar template do Facebook via API oficial do WhatsApp
    */
   static async enviarTemplate(
-    servidor: ServidorWhatsApp,
+    servidor: comunicacao_servidores_whatsapp,
     telefone: string,
     templateName: string,
     languageCode = 'pt_BR',
     components?: WhatsAppCloudTemplateComponent[],
     cliente?: { nome_fantasia?: string; razao_social?: string } | null,
-    titulo?: { valor: number; data_vencimento: Date; numero_titulo?: string } | null,
+    titulo?: { valor: number | { toString(): string }; data_vencimento: Date | string; numero_titulo?: string | null } | null,
     contextoSaas?: ContextoHistorico
   ): Promise<boolean> {
     try {
@@ -352,13 +348,9 @@ export class WhatsAppCloudService {
           if (telefone) {
             // Limpar telefone para busca (remover caracteres especiais)
             const telefoneLimpo = telefone.replace(/\D/g, '');
-            clienteData = await Cliente.findOne({
-              where: {
-                telefone: {
-                  [require('sequelize').Op.like]: `%${telefoneLimpo}%`
-                }
-              },
-              attributes: ['razao_social', 'nome_fantasia', 'email', 'telefone']
+            clienteData = await prisma.clientes.findFirst({
+              where: { telefone: { contains: telefoneLimpo } },
+              select: { razao_social: true, nome_fantasia: true, email: true, telefone: true },
             });
           }
 
@@ -525,13 +517,9 @@ export class WhatsAppCloudService {
           if (telefone) {
             // Limpar telefone para busca (remover caracteres especiais)
             const telefoneLimpo = telefone.replace(/\D/g, '');
-            clienteData = await Cliente.findOne({
-              where: {
-                telefone: {
-                  [require('sequelize').Op.like]: `%${telefoneLimpo}%`
-                }
-              },
-              attributes: ['razao_social', 'nome_fantasia', 'email', 'telefone']
+            clienteData = await prisma.clientes.findFirst({
+              where: { telefone: { contains: telefoneLimpo } },
+              select: { razao_social: true, nome_fantasia: true, email: true, telefone: true },
             });
           }
 
@@ -586,7 +574,7 @@ export class WhatsAppCloudService {
    * Suporta URL pública ou base64
    */
   static async enviarDocumento(
-    servidor: ServidorWhatsApp,
+    servidor: comunicacao_servidores_whatsapp,
     telefone: string,
     documentUrlOrBase64: string,
     filename = 'boleto.pdf',
@@ -656,13 +644,9 @@ export class WhatsAppCloudService {
           if (telefone) {
             // Limpar telefone para busca (remover caracteres especiais)
             const telefoneLimpo = telefone.replace(/\D/g, '');
-            clienteData = await Cliente.findOne({
-              where: {
-                telefone: {
-                  [require('sequelize').Op.like]: `%${telefoneLimpo}%`
-                }
-              },
-              attributes: ['razao_social', 'nome_fantasia', 'email', 'telefone']
+            clienteData = await prisma.clientes.findFirst({
+              where: { telefone: { contains: telefoneLimpo } },
+              select: { razao_social: true, nome_fantasia: true, email: true, telefone: true },
             });
           }
 
@@ -710,13 +694,9 @@ export class WhatsAppCloudService {
           if (telefone) {
             // Limpar telefone para busca (remover caracteres especiais)
             const telefoneLimpo = telefone.replace(/\D/g, '');
-            clienteData = await Cliente.findOne({
-              where: {
-                telefone: {
-                  [require('sequelize').Op.like]: `%${telefoneLimpo}%`
-                }
-              },
-              attributes: ['razao_social', 'nome_fantasia', 'email', 'telefone']
+            clienteData = await prisma.clientes.findFirst({
+              where: { telefone: { contains: telefoneLimpo } },
+              select: { razao_social: true, nome_fantasia: true, email: true, telefone: true },
             });
           }
 
@@ -762,7 +742,7 @@ export class WhatsAppCloudService {
    * Usa multipart/form-data conforme documentação da API do WhatsApp
    */
   static async uploadMediaFromBase64(
-    servidor: ServidorWhatsApp,
+    servidor: comunicacao_servidores_whatsapp,
     base64Data: string,
     mediaType: 'image' | 'document' | 'video' | 'audio'
   ): Promise<string | null> {
@@ -841,7 +821,7 @@ export class WhatsAppCloudService {
    * Busca o template na Meta API e retorna a estrutura parseada.
    */
   static async buscarEstruturaTemplateMeta(
-    servidor: { whatsapp_cloud_token?: string; whatsapp_cloud_business_account_id?: string; whatsapp_cloud_phone_number_id?: string },
+    servidor: { whatsapp_cloud_token?: string | null; whatsapp_cloud_business_account_id?: string | null; whatsapp_cloud_phone_number_id?: string | null },
     templateName: string,
     language: string
   ): Promise<MetaTemplateStructure | null> {

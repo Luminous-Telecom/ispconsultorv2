@@ -1,5 +1,7 @@
 import axios from 'axios';
-import { Banco } from '../../../../models/cadastros/Banco';
+import type { cadastros_bancos } from '@prisma/client';
+
+type Banco = cadastros_bancos;
 import { logger } from '../../../../utils/logger';
 import asaasConfig from '../../../../config/bancos/asaas';
 import type { ApiResponse } from '../../types';
@@ -36,10 +38,14 @@ export class AsaasWebhookService {
     
     if (banco.webhook_secret && typeof banco.webhook_secret === 'string' && banco.webhook_secret.trim()) {
       webhookSecret = banco.webhook_secret;
-    } else if (banco.configuracoes && typeof banco.configuracoes === 'object') {
-      const webhookToken = banco.configuracoes.webhook_token;
-      if (typeof webhookToken === 'string' && webhookToken.trim()) {
-        webhookSecret = webhookToken;
+    } else if (typeof banco.configuracoes === 'string' && banco.configuracoes.trim()) {
+      try {
+        const parsed = JSON.parse(banco.configuracoes) as { webhook_token?: unknown };
+        if (typeof parsed.webhook_token === 'string' && parsed.webhook_token.trim()) {
+          webhookSecret = parsed.webhook_token;
+        }
+      } catch {
+        webhookSecret = undefined;
       }
     }
 

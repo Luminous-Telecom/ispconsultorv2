@@ -1,7 +1,7 @@
-import { Op, Order, WhereOptions, Model, ModelStatic } from 'sequelize';
+import { prisma } from '../db/prisma';
 import { VersaoBlockdomi } from '../models/blockdomi/VersaoBlockdomi';
 import { NumeroSeiAnatelBlockdomi } from '../models/blockdomi/NumeroSeiAnatelBlockdomi';
-import { SortHelper, SortConfig } from './sortHelper';
+import { SortHelper, SortConfig, type PrismaOrderBy } from './sortHelper';
 import { buildPagination, StandardPagination } from './pagination';
 import { logger } from './logger';
 
@@ -10,6 +10,11 @@ export const BLOCKDOMI_LIST_INCLUDES = [
   { model: NumeroSeiAnatelBlockdomi, as: 'numeroSeiRef' as const, attributes: ['numero'], required: false },
 ];
 
+const RELATION_FIELDS: Record<string, string> = {
+  versaoRef: 'blockdomi_versoes',
+  numeroSeiRef: 'blockdomi_numeros_sei_anatel',
+};
+
 const BLOCKDOMI_SHARED_TEXT_FIELDS = [
   'descricao',
   'nome_oficio',
@@ -17,6 +22,11 @@ const BLOCKDOMI_SHARED_TEXT_FIELDS = [
   'link_oficio_justica',
   'link_planilha_dominios',
 ] as const;
+
+const LIST_INCLUDE = {
+  blockdomi_versoes: { select: { numero: true } },
+  blockdomi_numeros_sei_anatel: { select: { numero: true } },
+};
 
 export interface BlockdomiListFilters {
   page?: number;
@@ -30,64 +40,84 @@ export interface BlockdomiListFilters {
 
 export type BlockdomiPrimarySearchField = 'ip' | 'dominio';
 
-export function buildBlockdomiSearchWhere<T>(
+type Where = { [key: string]: any };
+
+type ListDelegate = {
+  count: (args: Record<string, unknown>) => Promise<number>;
+  findMany: (args: Record<string, unknown>) => Promise<Array<Record<string, unknown>>>;
+};
+
+function contains(value: string): Where {
+  return { contains: value };
+}
+
+export function buildBlockdomiSearchWhere(
   search: string | undefined,
   searchField: string | undefined,
   primaryField: BlockdomiPrimarySearchField
-): WhereOptions<T> | null {
+): Where | null {
   if (!search?.trim()) return null;
 
-  const searchPattern = `%${search}%`;
-  const numExact = /^\d+$/.test(search) ? parseInt(search, 10) : null;
+  const term = search.trim();
+  const numExact = /^\d+$/.test(term) ? parseInt(term, 10) : null;
   const textFields = [primaryField, ...BLOCKDOMI_SHARED_TEXT_FIELDS];
 
-  let orConditions: WhereOptions<T>[] = [];
-
   if (searchField === 'id') {
-    orConditions = numExact !== null
-      ? ([{ id: numExact }] as unknown as WhereOptions<T>[])
-      : ([{ id: { [Op.lt]: 0 } }] as unknown as WhereOptions<T>[]);
-  } else if (searchField === 'numero_sei_anatel') {
-    orConditions = [{ '$numeroSeiRef.numero$': { [Op.like]: searchPattern } }] as unknown as WhereOptions<T>[];
-  } else if (searchField && textFields.includes(searchField as typeof textFields[number])) {
-    orConditions = [{ [searchField]: { [Op.like]: searchPattern } }] as unknown as WhereOptions<T>[];
-  } else {
-    orConditions = [
-      { [primaryField]: { [Op.like]: searchPattern } },
-      { descricao: { [Op.like]: searchPattern } },
-      { nome_oficio: { [Op.like]: searchPattern } },
-      { link_oficio_anatel: { [Op.like]: searchPattern } },
-      { link_oficio_justica: { [Op.like]: searchPattern } },
-      { link_planilha_dominios: { [Op.like]: searchPattern } },
-      { '$numeroSeiRef.numero$': { [Op.like]: searchPattern } },
-    ] as unknown as WhereOptions<T>[];
-    if (numExact !== null) {
-      orConditions.unshift({ id: numExact } as unknown as WhereOptions<T>);
-    } else {
-      orConditions.unshift({ id: { [Op.like]: searchPattern } } as unknown as WhereOptions<T>);
-    }
+    return numExact !== null ? { id: numExact } : { id: { lt: 0 } };
   }
 
-  return { [Op.or]: orConditions } as WhereOptions<T>;
+  if (searchField === 'numero_sei_anatel') {
+    return { blockdomi_numeros_sei_anatel: { numero: contains(term) } };
+  }
+
+  if (searchField && textFields.includes(searchField as (typeof textFields)[number])) {
+    return { [searchField]: contains(term) };
+  }
+
+  const orConditions: Where[] = [
+    { [primaryField]: contains(term) },
+    { descricao: contains(term) },
+    { nome_oficio: contains(term) },
+    { link_oficio_anatel: contains(term) },
+    { link_oficio_justica: contains(term) },
+    { link_planilha_dominios: contains(term) },
+    { blockdomi_numeros_sei_anatel: { numero: contains(term) } },
+  ];
+
+  if (numExact !== null) orConditions.unshift({ id: numExact });
+  return { OR: orConditions };
 }
 
-export function buildBlockdomiListWhere<T>(
+export function buildBlockdomiListWhere(
   filters: BlockdomiListFilters,
   primaryField: BlockdomiPrimarySearchField
-): WhereOptions<T> {
+): Where {
   const { search, searchField, ativo } = filters;
-  const whereConditions: WhereOptions<T>[] = [];
+  const whereConditions: Where[] = [];
 
-  const searchWhere = buildBlockdomiSearchWhere<T>(search, searchField, primaryField);
+  const searchWhere = buildBlockdomiSearchWhere(search, searchField, primaryField);
   if (searchWhere) whereConditions.push(searchWhere);
 
-  if (ativo !== undefined) {
-    whereConditions.push({ ativo } as unknown as WhereOptions<T>);
-  }
+  if (ativo !== undefined) whereConditions.push({ ativo });
 
-  if (whereConditions.length === 0) return {} as WhereOptions<T>;
+  if (whereConditions.length === 0) return {};
   if (whereConditions.length === 1) return whereConditions[0];
-  return { [Op.and]: whereConditions } as WhereOptions<T>;
+  return { AND: whereConditions };
+}
+
+function mapOrder(order: PrismaOrderBy[]): PrismaOrderBy[] {
+  return order.map((item) => {
+    const mapped: PrismaOrderBy = {};
+    for (const [key, value] of Object.entries(item)) {
+      const relation = RELATION_FIELDS[key];
+      if (relation && value && typeof value === 'object') {
+        mapped[relation] = value;
+      } else {
+        mapped[key] = value;
+      }
+    }
+    return mapped;
+  });
 }
 
 export function resolveBlockdomiOrder(
@@ -95,8 +125,8 @@ export function resolveBlockdomiOrder(
   sortColumn: string | undefined,
   sortDirection: string | undefined,
   logContext: string
-): Order {
-  let order: Order = [['id', 'DESC']];
+): PrismaOrderBy[] {
+  let order: PrismaOrderBy[] = [{ id: 'desc' }];
   if (!sortColumn || !sortDirection) return order;
 
   const sortResult = SortHelper.buildOrder(
@@ -106,7 +136,7 @@ export function resolveBlockdomiOrder(
   );
 
   if (sortResult.isValid) {
-    order = sortResult.order;
+    order = mapOrder(sortResult.order);
   } else {
     logger.warn(`${logContext} - Coluna de ordenação inválida`, {
       column: sortColumn,
@@ -117,8 +147,19 @@ export function resolveBlockdomiOrder(
   return order;
 }
 
-export async function listBlockdomiPaginated<M extends Model>(options: {
-  model: ModelStatic<M>;
+function presentRow(row: Record<string, unknown>): Record<string, unknown> {
+  const versao = row.blockdomi_versoes as { numero?: string } | null | undefined;
+  const sei = row.blockdomi_numeros_sei_anatel as { numero?: string } | null | undefined;
+  const { blockdomi_versoes: _versao, blockdomi_numeros_sei_anatel: _sei, ...rest } = row;
+  return {
+    ...rest,
+    versaoRef: versao ? { numero: versao.numero } : null,
+    numeroSeiRef: sei ? { numero: sei.numero } : null,
+  };
+}
+
+export async function listBlockdomiPaginated(options: {
+  model: { tableName?: string };
   filters: BlockdomiListFilters;
   sortConfig: SortConfig;
   primarySearchField: BlockdomiPrimarySearchField;
@@ -127,28 +168,32 @@ export async function listBlockdomiPaginated<M extends Model>(options: {
   const { model, filters, sortConfig, primarySearchField, logContext } = options;
   const { page = 1, limit = 15, sortColumn, sortDirection } = filters;
   const offset = (page - 1) * limit;
+  const tableName = model.tableName;
+  const delegate =
+    tableName && !tableName.startsWith('saas_')
+      ? (prisma as unknown as Record<string, ListDelegate | undefined>)[tableName]
+      : undefined;
 
-  const where = buildBlockdomiListWhere<M>(filters, primarySearchField);
-  const order = resolveBlockdomiOrder(sortConfig, sortColumn, sortDirection, logContext);
+  if (!delegate) {
+    return { data: [], pagination: buildPagination(page, limit, 0) };
+  }
 
-  const count = await model.count({
-    where,
-    include: BLOCKDOMI_LIST_INCLUDES,
-    distinct: true,
-    col: 'id',
-  });
+  const where = buildBlockdomiListWhere(filters, primarySearchField);
+  const orderBy = resolveBlockdomiOrder(sortConfig, sortColumn, sortDirection, logContext);
 
-  const rows = await model.findAll({
-    where,
-    order,
-    limit,
-    offset,
-    include: BLOCKDOMI_LIST_INCLUDES,
-    raw: false,
-  });
+  const [count, rows] = await Promise.all([
+    delegate.count({ where }),
+    delegate.findMany({
+      where,
+      orderBy,
+      take: limit,
+      skip: offset,
+      include: LIST_INCLUDE,
+    }),
+  ]);
 
   return {
-    data: rows.map((row) => row.toJSON() as Record<string, unknown>),
+    data: rows.map(presentRow),
     pagination: buildPagination(page, limit, count),
   };
 }

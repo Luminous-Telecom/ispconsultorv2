@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { AssinaturaDigitalProviderService, AssinaturaDigitalProviderType } from '../../../services/assinatura-digital/AssinaturaDigitalProviderService';
 import Joi from 'joi';
@@ -134,7 +135,7 @@ export class AssinaturaDigitalProviderController {
 
       const empresaId = getEmpresaIdOrNull(req);
       const providerConfigAntes = await AssinaturaDigitalProviderService.getByProvider(provider as AssinaturaDigitalProviderType, empresaId);
-      const dadosAnteriores = providerConfigAntes ? providerConfigAntes.toJSON() : null;
+      const dadosAnteriores = providerConfigAntes ? toPlain(providerConfigAntes) : null;
 
       const { provider: providerConfig, created } = await AssinaturaDigitalProviderService.upsert(
         provider as AssinaturaDigitalProviderType,
@@ -155,7 +156,7 @@ export class AssinaturaDigitalProviderController {
             req as AuthenticatedRequest,
             'AssinaturaDigitalProvider',
             providerConfig.id,
-            providerConfig.toJSON() as unknown as Record<string, unknown>,
+            toPlain(providerConfig) as unknown as Record<string, unknown>,
             undefined,
             empresaIdAudit
           );
@@ -170,7 +171,7 @@ export class AssinaturaDigitalProviderController {
             'AssinaturaDigitalProvider',
             providerConfig.id,
             dadosAnteriores as unknown as Record<string, unknown>,
-            providerConfig.toJSON() as unknown as Record<string, unknown>,
+            toPlain(providerConfig) as unknown as Record<string, unknown>,
             undefined,
             empresaIdAudit
           );
@@ -230,7 +231,7 @@ export class AssinaturaDigitalProviderController {
         return;
       }
 
-      const dadosAnteriores = providerConfig.toJSON();
+      const dadosAnteriores = toPlain(providerConfig);
       const updateData = AssinaturaDigitalProviderController.prepareUpdateData(value);
       
       const providerAtualizado = await AssinaturaDigitalProviderService.update(provider, {
@@ -245,7 +246,7 @@ export class AssinaturaDigitalProviderController {
           'AssinaturaDigitalProvider',
           providerAtualizado.id,
           dadosAnteriores as unknown as Record<string, unknown>,
-          providerAtualizado.toJSON() as unknown as Record<string, unknown>,
+          toPlain(providerAtualizado) as unknown as Record<string, unknown>,
           undefined,
           empresaIdAudit
         );
@@ -279,7 +280,7 @@ export class AssinaturaDigitalProviderController {
         return;
       }
 
-      const dadosAnteriores = providerConfig.toJSON();
+      const dadosAnteriores = toPlain(providerConfig);
       await AssinaturaDigitalProviderService.delete(provider as AssinaturaDigitalProviderType, empresaId);
 
       try {

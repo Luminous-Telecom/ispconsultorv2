@@ -1,3 +1,4 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import * as Joi from 'joi';
 import { IntegracaoIxcProvedorService } from '../../../services/integracao/IntegracaoIxcProvedorService';
@@ -10,8 +11,7 @@ import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
 import { SistemaLogOperacionalQueryService } from '../../../services/sistema/SistemaLogOperacionalQueryService';
 import { buildPagination } from '../../../utils/pagination';
 import { resolveListEmpresaId } from '../../../utils/tenantUtils';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Contrato } from '../../../models/contratos/Contrato';
+import { prisma } from '../../../db/prisma';
 
 export class IntegracaoIxcProvedorController {
   private static upsertSchema = Joi.object({
@@ -28,7 +28,7 @@ export class IntegracaoIxcProvedorController {
     clienteId: number,
     empresaId: number | null
   ): Promise<string | null> {
-    const contrato = await Contrato.findByPk(contratoId);
+    const contrato = await prisma.contratos.findUnique({ where: { id: contratoId } });
     if (!contrato) return 'Contrato não encontrado';
     if (Number(contrato.cliente_id) !== Number(clienteId)) {
       return 'Contrato não pertence ao cliente selecionado';
@@ -116,7 +116,7 @@ export class IntegracaoIxcProvedorController {
         return;
       }
 
-      const cliente = await Cliente.findByPk(value.cliente_id);
+      const cliente = await prisma.clientes.findUnique({ where: { id: value.cliente_id } });
       if (!cliente) {
         sendValidationError(res, 'Dados inválidos', { cliente_id: ['Cliente não encontrado'] });
         return;
@@ -169,7 +169,7 @@ export class IntegracaoIxcProvedorController {
           req,
           'IntegracaoIxcProvedor',
           item.id,
-          item.toJSON() as Record<string, unknown>,
+          toPlain(item) as Record<string, unknown>,
           undefined,
           empresaId ?? item.empresa_id ?? null
         );
@@ -209,7 +209,7 @@ export class IntegracaoIxcProvedorController {
         stripUnknown: true,
       });
 
-      const cliente = await Cliente.findByPk(value.cliente_id);
+      const cliente = await prisma.clientes.findUnique({ where: { id: value.cliente_id } });
       if (!cliente) {
         sendValidationError(res, 'Dados inválidos', { cliente_id: ['Cliente não encontrado'] });
         return;
@@ -255,8 +255,8 @@ export class IntegracaoIxcProvedorController {
           req,
           'IntegracaoIxcProvedor',
           item.id,
-          existing.toJSON() as Record<string, unknown>,
-          item.toJSON() as Record<string, unknown>,
+          toPlain(existing) as Record<string, unknown>,
+          toPlain(item) as Record<string, unknown>,
           undefined,
           empresaId ?? item.empresa_id ?? null
         );
@@ -411,7 +411,7 @@ export class IntegracaoIxcProvedorController {
         return;
       }
 
-      const before = existing.toJSON() as Record<string, unknown>;
+      const before = toPlain(existing) as Record<string, unknown>;
       await IntegracaoIxcProvedorService.delete(id);
 
       try {

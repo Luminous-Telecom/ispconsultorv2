@@ -126,7 +126,7 @@ export function parseDateAsLocal(dateInput: string | Date | null | undefined): D
 
 /**
  * Normaliza uma data para salvar no banco de dados
- * Observação: com o Sequelize usando `timezone: '-03:00'`, aqui evitamos lógica complexa.
+ * Strings YYYY-MM-DD são interpretadas como data local (00:00), para não caírem em UTC.
  * A única regra necessária é: strings no formato YYYY-MM-DD devem ser interpretadas como
  * data local (00:00 local), para não serem interpretadas como UTC pelo JS (o que poderia
  * "voltar" 3 horas e cair no dia anterior no banco).

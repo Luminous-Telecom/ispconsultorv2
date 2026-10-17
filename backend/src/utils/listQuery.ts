@@ -115,7 +115,7 @@ export function ativoFilterForService(ativo?: boolean): string | undefined {
   return undefined;
 }
 
-/** Ordenação Sequelize a partir de parseListQuery. */
+/** Direção de ordenação a partir de parseListQuery. */
 export function toSqlSortDirection(direction?: 'asc' | 'desc'): 'ASC' | 'DESC' {
   return direction === 'asc' ? 'ASC' : 'DESC';
 }

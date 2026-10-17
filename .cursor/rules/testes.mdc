@@ -22,13 +22,15 @@ Todo código novo ou alterado nas áreas abaixo sai com o `.test` no mesmo traba
 
 | Área | Onde | O teste prova |
 |---|---|---|
-| Segurança | `authMiddleware`, `saasAuthMiddleware`, token de API, `tenantUtils`, `SaasPlanoLimitesService`, CSRF | Sem sessão não entra. ERP, SaaS e Central não compartilham token. Não-admin não lê, edita nem vê outro `empresa_id`. Limite do plano bloqueia o create. Senha, JWT e `webhook_secret` não saem na resposta |
+| Segurança | `authMiddleware`, token de API, `tenantUtils`, CSRF | Sem sessão não entra. ERP e Central não compartilham token. `empresa_id` vem do token. Senha, JWT e `webhook_secret` não saem na resposta |
 | Validações | `backend/src/validators/**`, `validateMiddleware`, `frontend/src/schemas/**` | Válido passa. Obrigatório vazio, formato inválido e tamanho excedido falham no campo certo. Update parcial não exige o que não foi enviado |
 | Botões | `frontend/src/components/ui/buttons/**` | Texto de Salvar e Criar não muda com `isPending`. Fica `disabled` enquanto pendente. Ação vem de `components/ui/buttons` |
 | Componentes | `frontend/src/components/**` | Estado principal, vazio, erro e loading. Clique em salvar, cancelar ou selecionar dispara o callback certo |
-| Cadastro | `create` do service/controller e submit do form | Payload válido persiste. Inválido não persiste. `empresa_id` vem do token, não do body de não-admin |
-| Edição | `update` | Altera só o que foi enviado. Id de outro tenant não muda. Id inexistente não grava |
-| Visualização | `getById` / `list` e modal/lista somente leitura | Filtra `empresa_id`. Lista vazia não quebra. Campo sensível não aparece |
+| Cadastro | `create` do service/controller no backend **e** no `frontend/src/services`, e submit do form | Payload válido persiste. Inválido não persiste. `empresa_id` vem do token, não do body de não-admin |
+| Edição | `update` dos dois lados | Altera só o que foi enviado. Id de outra empresa não muda. Id inexistente não grava |
+| Visualização | `getById` / `list` dos dois lados e modal/lista somente leitura | Filtra `empresa_id`. Lista vazia não quebra. Campo sensível não aparece |
+
+Teste de backend **não substitui** o teste do frontend. Service, schema e formulário do ERP em `frontend/src` saem com `.test` no mesmo trabalho. `frontend/src/services/core` entra quando a regra é de sessão, token ou erro de API. Barrel só de reexport continua sem teste vazio.
 
 Fora dessa lista (migration, barrel `index.ts` só de reexport, tipo, locale, SCSS) não criar teste vazio.
 
@@ -77,7 +79,7 @@ cd frontend && npm test -- --watchAll=false --watchman=false src/schemas/cliente
 
 ## Checklist
 
-- [ ] `.test.ts` / `.test.tsx` ao lado do fonte alterado
+- [ ] `.test.ts` / `.test.tsx` ao lado do fonte alterado, no backend e no frontend quando os dois lados existem
 - [ ] Segurança: sessão e `empresa_id` quando o fluxo lê ou grava dado
 - [ ] Validação: aceita o válido e recusa o inválido no campo
 - [ ] Botão: texto fixo e `disabled` em `isPending`

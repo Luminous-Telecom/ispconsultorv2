@@ -7,7 +7,6 @@ import { logger } from '../../../utils/logger';
 import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../../../utils/responseUtils';
 import { parseListQuery, queryString } from '../../../utils/listQuery';
 import { buildPagination } from '../../../utils/pagination';
-import { SaasUsuarioSuper } from '../../../models/saas/SaasUsuarioSuper';
 import { parseEmpresaIdQuery } from '../../../utils/tenantUtils';
 import { parseAuditoriaListFilters } from '../../../utils/auditoriaQuery';
 
@@ -69,10 +68,7 @@ export class SaasAuditoriaController {
           ),
         ];
         if (uids.length > 0) {
-          const supers = await SaasUsuarioSuper.findAll({
-            where: { id: uids },
-            attributes: ['id', 'nome', 'email'],
-          });
+          const supers: Array<{ id: number; nome: string; email: string }> = [];
           const map = new Map(supers.map((u) => [u.id, { nome: u.nome, email: u.email }]));
           for (const log of rawLogs) {
             const uid = log.usuario_id;

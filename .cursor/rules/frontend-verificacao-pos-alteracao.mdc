@@ -68,12 +68,12 @@ cd frontend && npm run build
 
 - Corrija **todos** os erros de compilação antes do push
 
-### Wiki doc (`doc/`)
+### Wiki (`../backnet-docs/doc/`)
 
-Se houve alteração em `doc/` (`.md`, `config.mjs`, `public/`, etc.):
+Se houve alteração na wiki (`.md`, `config.mjs`, `public/`, etc.):
 
 ```bash
-cd doc && npm run build
+cd ../backnet-docs/doc && npm run build
 ```
 
 - O VitePress valida **dead links** — build falha se sidebar ou links internos apontam para páginas inexistentes
@@ -94,4 +94,4 @@ cd doc && npm run build
 
 **Quando usuário pedir push/PR:**
 - [ ] `cd frontend && npm run build` passou (se alterou frontend)
-- [ ] `cd doc && npm run build` passou (se alterou doc)
+- [ ] `cd ../backnet-docs/doc && npm run build` passou (se alterou a wiki)

@@ -129,7 +129,7 @@ function runPythonInBackground(scriptPath: string, tempFilePath: string, jobId: 
     for (const line of lines) {
       const trimmed = line.trim();
       if (!trimmed) continue;
-      // Atualiza Redis/SSE com progresso por página; não registrar cada linha no log (evita poluir PM2).
+      // Atualiza Redis/SSE com progresso por página; não registrar cada linha no log.
       const m = trimmed.match(/processando p[aá]gina\s+(\d+)\/(\d+)/i);
       if (m) {
         const current = parseInt(m[1], 10);

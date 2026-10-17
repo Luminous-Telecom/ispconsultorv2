@@ -20,13 +20,12 @@ export interface UpdateResult {
     npmInstall: CommandResult;
     build: CommandResult;
     migrate: CommandResult;
-    buildDoc: CommandResult;
     pm2Reload?: CommandResult;
   };
 }
 
 /**
- * Self-update no servidor: git pull → npm install (backend) → build (backend + frontend) → migrations → wiki (dist) → PM2.
+ * Self-update no servidor: git pull → npm install (backend) → build (backend + frontend) → migrations → PM2.
  */
 export class SelfUpdateService {
   private readonly projectRoot: string;
@@ -64,6 +63,15 @@ export class SelfUpdateService {
     this.migrationService = new MigrationService(this.backendPath);
     this.pm2Service = new Pm2Service(this.projectRoot, this.backendPath, this.pm2ProcessName);
     this.healthCheckService = new HealthCheckService(this.backendUrl);
+  }
+
+  private async publishFrontend(): Promise<void> {
+    const source = path.join(this.projectRoot, 'frontend', 'build');
+    const webRoot = process.env.NGINX_WEB_ROOT || '/var/www/ispconsultor';
+    await execAsync(`mkdir -p "${webRoot}" && rsync -a --delete "${source}/" "${webRoot}/"`, {
+      cwd: this.projectRoot,
+      maxBuffer: 10 * 1024 * 1024,
+    });
   }
 
   /**
@@ -135,7 +143,6 @@ export class SelfUpdateService {
           npmInstall: { success: false, stdout: '', stderr: '' },
           build: { success: false, stdout: '', stderr: '' },
           migrate: { success: false, stdout: '', stderr: '' },
-          buildDoc: { success: false, stdout: '', stderr: '' },
         },
       };
     }
@@ -152,7 +159,6 @@ export class SelfUpdateService {
       npmInstall: { success: false, stdout: '', stderr: '' } as CommandResult,
       build: { success: false, stdout: '', stderr: '' } as CommandResult,
       migrate: { success: false, stdout: '', stderr: '' } as CommandResult,
-      buildDoc: { success: false, stdout: '', stderr: '' } as CommandResult,
     };
 
     // Passo 1: Git Pull
@@ -252,8 +258,7 @@ export class SelfUpdateService {
     });
 
     const frontendIndex = path.join(this.projectRoot, 'frontend', 'build', 'index.html');
-    const publishScript = path.join(this.projectRoot, 'scripts', 'publish-frontend-www.sh');
-    if (fs.existsSync(frontendIndex) && fs.existsSync(publishScript)) {
+    if (fs.existsSync(frontendIndex)) {
       onProgress?.({
         step: 'build',
         progress: 72,
@@ -261,15 +266,12 @@ export class SelfUpdateService {
         logs: ['→ Copiando frontend/build para /var/www/ispconsultor...'],
       });
       try {
-        const { stdout, stderr } = await execAsync(`bash "${publishScript}"`, {
-          cwd: this.projectRoot,
-          maxBuffer: 10 * 1024 * 1024,
-        });
+        await this.publishFrontend();
         onProgress?.({
           step: 'build',
           progress: 74,
           message: 'Frontend publicado',
-          logs: [`✓ ${(stdout || stderr || 'Frontend publicado em /var/www/ispconsultor').trim()}`],
+          logs: ['✓ Frontend publicado em /var/www/ispconsultor'],
         });
       } catch (error) {
         const err = error as { message?: string; stderr?: string };
@@ -315,40 +317,9 @@ export class SelfUpdateService {
     });
 
     onProgress?.({
-      step: 'buildDoc',
-      progress: 87,
-      message: 'Preparando wiki (doc)...',
-      logs: ['→ Verificando doc/.vitepress/dist...'],
-    });
-    steps.buildDoc = await this.buildService.buildDoc();
-    if (!steps.buildDoc.success) {
-      logger.warn('Self-update: wiki não preparada, continuando atualização do ERP', {
-        error: steps.buildDoc.error || steps.buildDoc.stderr,
-      });
-      onProgress?.({
-        step: 'buildDoc',
-        progress: 87,
-        message: 'Wiki não atualizada (dist ausente ou inválida)',
-        logs: [`⚠ Wiki: ${steps.buildDoc.error || steps.buildDoc.stderr}`],
-      });
-      steps.buildDoc = {
-        success: true,
-        stdout: steps.buildDoc.stderr || steps.buildDoc.error || 'Wiki ignorada neste deploy',
-        stderr: '',
-      };
-    } else {
-      onProgress?.({
-        step: 'buildDoc',
-        progress: 88,
-        message: 'Wiki pronta',
-        logs: [`✓ ${steps.buildDoc.stdout || 'Wiki preparada'}`],
-      });
-    }
-
-    onProgress?.({
       step: 'concluido',
       progress: 90,
-      message: 'Atualização concluída. Reiniciando aplicação e wiki...',
+      message: 'Atualização concluída. Reiniciando aplicação...',
       logs: ['✓ Todos os passos concluídos com sucesso', '→ Aguardando reinicialização do PM2...']
     });
     
@@ -362,15 +333,14 @@ export class SelfUpdateService {
   /**
    * Agenda reinício do PM2 via processo filho desvinculado.
    * O processo atual não pode chamar "pm2 restart" diretamente (seria morto por SIGINT).
-   * Um filho espera alguns segundos (tempo para enviar SSE "finalizado"), depois executa o restart.
    * O frontend aguarda /health antes de recarregar a página.
    */
   async reloadPM2(onProgress?: (progress: { step: string; progress: number; message: string; logs?: string[] }) => void): Promise<CommandResult> {
     onProgress?.({
       step: 'pm2Reload',
       progress: 92,
-      message: 'Agendando reinício da aplicação e da wiki (PM2)...',
-      logs: ['→ Reinício backend + doc em 5 segundos (processo filho)...']
+      message: 'Agendando reinício da aplicação (PM2)...',
+      logs: ['→ Reinício do backend em 5 segundos (processo filho)...']
     });
     const reloadResult = this.pm2Service.scheduleRestart();
 
@@ -380,7 +350,7 @@ export class SelfUpdateService {
         progress: 100,
         message: 'Atualização concluída com sucesso!',
         logs: [
-          '✓ Reinício agendado (backend e wiki)',
+          '✓ Reinício agendado (backend)',
           '✓ O frontend aguardará o servidor ficar pronto antes de recarregar',
         ]
       });

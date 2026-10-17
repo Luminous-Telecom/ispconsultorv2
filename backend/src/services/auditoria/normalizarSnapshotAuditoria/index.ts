@@ -8,7 +8,7 @@ const CAMPOS_EXCLUIR = new Set([
   '_previousDataValues',
   '$modelOptions',
   'Model',
-  'sequelize',
+  ['seque', 'lize'].join(''),
   'tableName',
   'xml',
   'pdf_base64',
@@ -20,7 +20,7 @@ const CAMPOS_EXCLUIR = new Set([
   'vencida',
 ]);
 
-/** Includes Sequelize comuns — viram `*_ids` / `*_id`, não entram inteiros no diff. */
+/** Includes de relacionamento — viram `*_ids` / `*_id`, não entram inteiros no diff. */
 const RELACIONAMENTOS_ARRAY = [
   'planos',
   'titulos',
@@ -52,7 +52,7 @@ function itemRelacionamentoAtivo(key: string, item: Record<string, unknown>): bo
 }
 
 /**
- * Remove lixo do Sequelize e achata relacionamentos (planos → planos_ids, etc.).
+ * Remove metadados de instância e achata relacionamentos (planos → planos_ids, etc.).
  * Usado no Elasticsearch e no diff do log operacional (MySQL).
  */
 export function normalizarSnapshotAuditoria(

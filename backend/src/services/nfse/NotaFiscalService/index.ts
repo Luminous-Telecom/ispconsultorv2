@@ -1,12 +1,8 @@
-import { NotaFiscal } from '../../../models/nfse/NotaFiscal';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Op, WhereOptions } from 'sequelize';
-import { sequelize } from '../../../config/database';
+import type { Prisma } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { buildDateFilter, buildNumericSearchFilter, combineFilters } from '../../../utils/queryFilters';
 import { buildListPagination } from '../../../utils/pagination';
 import { logger } from '../../../utils/logger';
-import { SortHelper } from '../../../utils/sortHelper';
-import { NOTA_FISCAL_SORT_CONFIG } from '../../../config/sortConfigs';
 
 export interface ListNotasFiscaisFilters {
   page?: number;
@@ -22,9 +18,22 @@ export interface ListNotasFiscaisFilters {
   empresa_id?: number | null;
 }
 
+const clienteSelect = {
+  id: true,
+  razao_social: true,
+  nome_fantasia: true,
+  cnpj: true,
+} satisfies Prisma.clientesSelect;
+
+const notaListInclude = {
+  clientes: { select: clienteSelect },
+} satisfies Prisma.nfse_notas_fiscaisInclude;
+
+type NotaListItem = Prisma.nfse_notas_fiscaisGetPayload<{ include: typeof notaListInclude }>;
+
 export interface ListNotasFiscaisResponse {
   success: boolean;
-  data: NotaFiscal[];
+  data: NotaListItem[] | Prisma.nfse_notas_fiscaisGetPayload<object>[];
   pagination: {
     page: number;
     limit: number;
@@ -36,6 +45,36 @@ export interface ListNotasFiscaisResponse {
     from: number;
     to: number;
   };
+}
+
+const SORT_COLUMNS = new Set([
+  'id',
+  'numero',
+  'status',
+  'data_emissao',
+  'valor_total',
+  'created_at',
+  'chave_acesso',
+  'protocolo',
+  'nfse_status',
+  'titulo_id',
+]);
+
+function orderByNota(
+  sortColumn?: string,
+  sortDirection?: string
+): Prisma.nfse_notas_fiscaisOrderByWithRelationInput[] {
+  const direction = sortDirection?.toUpperCase() === 'ASC' ? 'asc' : 'desc';
+  if (sortColumn === 'cliente') {
+    return [{ clientes: { razao_social: direction } }];
+  }
+  if (sortColumn && SORT_COLUMNS.has(sortColumn)) {
+    return [{ [sortColumn]: direction }];
+  }
+  if (sortColumn) {
+    logger.warn('NotaFiscalService.list - Coluna de ordenação inválida', { column: sortColumn });
+  }
+  return [{ id: 'desc' }];
 }
 
 export class NotaFiscalService {
@@ -54,214 +93,192 @@ export class NotaFiscalService {
       data_fim,
       sortColumn,
       sortDirection,
-      empresa_id
+      empresa_id,
     } = filters;
 
     const pageNumber = Math.max(1, Number(page) || 1);
     const limitNumber = Math.max(1, Number(limit) || 15);
     const offset = (pageNumber - 1) * limitNumber;
 
-    // Include customizado para busca por cliente (INNER JOIN + where)
-    let clienteSearchInclude: { model: typeof Cliente; as: string; required: boolean; attributes: string[]; where: WhereOptions } | null = null;
-
-    // Construir filtros usando helpers
-    const whereConditions: (WhereOptions | null)[] = [];
+    const whereConditions: Array<Prisma.nfse_notas_fiscaisWhereInput | null> = [];
 
     if (empresa_id !== undefined && empresa_id !== null) {
-      whereConditions.push({ empresa_id } as WhereOptions);
+      whereConditions.push({ empresa_id });
     }
-
-    // Filtro de status
     if (status) {
-      whereConditions.push({ status } as WhereOptions);
+      whereConditions.push({ status: status as Prisma.nfse_notas_fiscaisWhereInput['status'] });
     }
-
-    // Filtro de cliente
     if (cliente_id) {
-      whereConditions.push({ cliente_id } as WhereOptions);
+      whereConditions.push({ cliente_id });
     }
-
-    // Filtro de data usando helper
     whereConditions.push(buildDateFilter(data_inicio, data_fim, 'data_emissao'));
 
-    // Filtro de busca
+    let clienteWhere: Prisma.clientesWhereInput | undefined;
+
     if (search) {
       const searchTerm = (search as string).trim();
       const isNumericSearch = !isNaN(Number(searchTerm));
       const termNum = parseInt(searchTerm, 10);
-      const likePattern = `%${searchTerm}%`;
-      const orConditions: WhereOptions[] = [];
+      const orConditions: Prisma.nfse_notas_fiscaisWhereInput[] = [];
 
       if (searchField && typeof searchField === 'string') {
         switch (searchField) {
           case 'id':
-            if (isNumericSearch) {
-              orConditions.push({ id: termNum } as WhereOptions);
-            } else {
-              whereConditions.push({ id: { [Op.eq]: -1 } } as WhereOptions);
-            }
+            if (isNumericSearch) orConditions.push({ id: termNum });
+            else whereConditions.push({ id: -1 });
             break;
           case 'numero':
-            orConditions.push({ numero: { [Op.like]: likePattern } } as WhereOptions);
+            orConditions.push({ numero: { contains: searchTerm } });
             break;
           case 'chave_acesso':
-            orConditions.push({ chave_acesso: { [Op.like]: likePattern } } as WhereOptions);
+            orConditions.push({ chave_acesso: { contains: searchTerm } });
             break;
           case 'protocolo':
-            orConditions.push({ protocolo: { [Op.like]: likePattern } } as WhereOptions);
+            orConditions.push({ protocolo: { contains: searchTerm } });
             break;
           case 'valor':
             if (isNumericSearch) {
               const numericFilter = buildNumericSearchFilter(searchTerm, 'valor_total', 0.1);
               if (numericFilter) orConditions.push(numericFilter);
             } else {
-              whereConditions.push({ id: { [Op.eq]: -1 } } as WhereOptions);
+              whereConditions.push({ id: -1 });
             }
             break;
           case 'status':
-            orConditions.push({ status: { [Op.like]: likePattern } } as WhereOptions);
+            orConditions.push({ status: { contains: searchTerm } } as Prisma.nfse_notas_fiscaisWhereInput);
             break;
           case 'nfse_status':
-            orConditions.push({ nfse_status: { [Op.like]: likePattern } } as WhereOptions);
+            orConditions.push({ nfse_status: { contains: searchTerm } } as Prisma.nfse_notas_fiscaisWhereInput);
             break;
           case 'titulo_id':
-            if (isNumericSearch) {
-              orConditions.push({ titulo_id: termNum } as WhereOptions);
-            } else {
-              whereConditions.push({ id: { [Op.eq]: -1 } } as WhereOptions);
-            }
+            if (isNumericSearch) orConditions.push({ titulo_id: termNum });
+            else whereConditions.push({ id: -1 });
             break;
           case 'cliente':
-            clienteSearchInclude = {
-              model: Cliente,
-              as: 'cliente',
-              required: true,
-              attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj'],
-              where: {
-                [Op.or]: [
-                  { razao_social: { [Op.like]: likePattern } },
-                  { nome_fantasia: { [Op.like]: likePattern } }
-                ]
-              }
+            clienteWhere = {
+              OR: [
+                { razao_social: { contains: searchTerm } },
+                { nome_fantasia: { contains: searchTerm } },
+              ],
             };
             break;
           default:
             orConditions.push(
-              { numero: { [Op.like]: likePattern } } as WhereOptions,
-              { chave_acesso: { [Op.like]: likePattern } } as WhereOptions,
-              { protocolo: { [Op.like]: likePattern } } as WhereOptions
+              { numero: { contains: searchTerm } },
+              { chave_acesso: { contains: searchTerm } },
+              { protocolo: { contains: searchTerm } }
             );
             break;
         }
       } else {
-        // Busca genérica
         orConditions.push(
-          { numero: { [Op.like]: likePattern } } as WhereOptions,
-          { chave_acesso: { [Op.like]: likePattern } } as WhereOptions,
-          { protocolo: { [Op.like]: likePattern } } as WhereOptions
+          { numero: { contains: searchTerm } },
+          { chave_acesso: { contains: searchTerm } },
+          { protocolo: { contains: searchTerm } }
         );
         if (isNumericSearch) {
-          orConditions.push({ id: termNum } as WhereOptions, { titulo_id: termNum } as WhereOptions);
+          orConditions.push({ id: termNum }, { titulo_id: termNum });
         }
       }
 
       if (orConditions.length > 0) {
-        whereConditions.push({ [Op.or]: orConditions } as WhereOptions);
+        whereConditions.push({ OR: orConditions });
+      }
+      if (clienteWhere) {
+        whereConditions.push({ clientes: { is: clienteWhere } });
       }
     }
 
-    // Combinar todos os filtros
-    const where = combineFilters(...whereConditions) || {};
+    const where = (combineFilters(...whereConditions) || {}) as Prisma.nfse_notas_fiscaisWhereInput;
+    const orderBy = orderByNota(sortColumn, sortDirection);
+    const include: Prisma.nfse_notas_fiscaisInclude = {
+      clientes: { select: clienteSearchIncludeSelect() },
+    };
 
-    // Construir ordenação - ordena TODOS os dados antes da paginação
-    let order: any[] = [['id', 'DESC']]; // Padrão
-    if (sortColumn && sortDirection) {
-      const sortResult = SortHelper.buildOrder(
-        NOTA_FISCAL_SORT_CONFIG,
-        sortColumn,
-        sortDirection.toUpperCase() as 'ASC' | 'DESC'
-      );
-
-      if (sortResult.isValid) {
-        order = sortResult.order;
-      } else {
-        logger.warn('NotaFiscalService.list - Coluna de ordenação inválida', {
-          column: sortColumn,
-          error: sortResult.error
-        });
-        // Manter ordenação padrão se coluna inválida
-      }
-    }
-
-    let count: number;
-    let rows: any[];
     try {
-      const result = await NotaFiscal.findAndCountAll({
-        where,
-        include: [
-          clienteSearchInclude ?? {
-            model: Cliente,
-            as: 'cliente',
-            attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj']
-          }
-        ],
-        order,
-        limit: limitNumber,
-        offset
-      });
-      count = result.count as number;
-      rows = result.rows;
-    } catch (queryError: any) {
+      const [count, rows] = await Promise.all([
+        prisma.nfse_notas_fiscais.count({ where }),
+        prisma.nfse_notas_fiscais.findMany({
+          where,
+          include,
+          orderBy,
+          take: limitNumber,
+          skip: offset,
+        }),
+      ]);
+
+      return {
+        success: true,
+        data: rows,
+        pagination: buildListPagination(pageNumber, limitNumber, count),
+      };
+    } catch (queryError: unknown) {
+      const message = queryError instanceof Error ? queryError.message : String(queryError);
       logger.error('NotaFiscalService.list - Erro na query', {
-        error: queryError.message,
-        stack: queryError.stack,
+        error: message,
         where: JSON.stringify(where).substring(0, 200),
-        order: JSON.stringify(order)
+        order: JSON.stringify(orderBy),
       });
       throw queryError;
     }
-
-    return {
-      success: true,
-      data: rows,
-      pagination: buildListPagination(pageNumber, limitNumber, count),
-    };
   }
 
   /**
    * Buscar nota fiscal por ID
    */
-  static async getById(id: string | number): Promise<NotaFiscal | null> {
-    return await NotaFiscal.findByPk(id, {
-      include: [
-        {
-          model: Cliente,
-          as: 'cliente',
-          attributes: ['id', 'empresa_id', 'razao_social', 'nome_fantasia', 'cnpj', 'email', 'telefone', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado', 'cep']
-        }
-      ]
+  static async getById(id: string | number) {
+    return prisma.nfse_notas_fiscais.findUnique({
+      where: { id: Number(id) },
+      include: {
+        clientes: {
+          select: {
+            id: true,
+            empresa_id: true,
+            razao_social: true,
+            nome_fantasia: true,
+            cnpj: true,
+            email: true,
+            telefone: true,
+            endereco: true,
+            numero: true,
+            complemento: true,
+            bairro: true,
+            cidade: true,
+            estado: true,
+            cep: true,
+          },
+        },
+      },
     });
   }
 
   /**
    * Buscar notas fiscais por cliente com paginação (filtra por empresa_id quando informado)
    */
-  static async findByCliente(cliente_id: number, page = 1, limit = 15, empresaId?: number | null): Promise<ListNotasFiscaisResponse> {
+  static async findByCliente(
+    cliente_id: number,
+    page = 1,
+    limit = 15,
+    empresaId?: number | null
+  ): Promise<ListNotasFiscaisResponse> {
     const pageNumber = Math.max(1, Number(page) || 1);
     const limitNumber = Math.max(1, Number(limit) || 15);
     const offset = (pageNumber - 1) * limitNumber;
 
-    const where: WhereOptions = { cliente_id };
+    const where: Prisma.nfse_notas_fiscaisWhereInput = { cliente_id };
     if (empresaId !== undefined && empresaId !== null) {
-      (where as Record<string, unknown>).empresa_id = empresaId;
+      where.empresa_id = empresaId;
     }
 
-    const { count, rows } = await NotaFiscal.findAndCountAll({
-      where,
-      order: [['created_at', 'DESC']],
-      limit: limitNumber,
-      offset
-    });
+    const [count, rows] = await Promise.all([
+      prisma.nfse_notas_fiscais.count({ where }),
+      prisma.nfse_notas_fiscais.findMany({
+        where,
+        orderBy: { created_at: 'desc' },
+        take: limitNumber,
+        skip: offset,
+      }),
+    ]);
 
     return {
       success: true,
@@ -271,3 +288,11 @@ export class NotaFiscalService {
   }
 }
 
+function clienteSearchIncludeSelect() {
+  return {
+    id: true,
+    razao_social: true,
+    nome_fantasia: true,
+    cnpj: true,
+  };
+}

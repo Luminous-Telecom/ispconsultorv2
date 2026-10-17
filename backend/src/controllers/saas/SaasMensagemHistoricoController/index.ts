@@ -1,9 +1,4 @@
 import { Response as ExpressResponse } from 'express';
-import { Op } from 'sequelize';
-import { sequelize } from '../../../config/database';
-import { MensagemHistorico } from '../../../models/comunicacao/MensagemHistorico';
-import { Usuario } from '../../../models/cadastros/Usuario';
-import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { logger } from '../../../utils/logger';
 import { sendSuccess, sendError, sendValidationError } from '../../../utils/responseUtils';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
@@ -16,6 +11,11 @@ import {
 } from '../../../services/comunicacao/mensagemHistoricoOrigens';
 import { parseReenviarFalhasBody } from '../../../services/comunicacao/ReenviarNotificacoesCobrancaService/selecao';
 import { ReenviarNotificacoesCobrancaService } from '../../../services/comunicacao/ReenviarNotificacoesCobrancaService';
+import {
+  buscarMensagemHistorico,
+  listarMensagensHistorico,
+  type FiltroMensagemHistorico,
+} from '../../../services/sistema/mensagemHistoricoLog';
 
 const VALID_SORT_COLUMNS = [
   'id',
@@ -30,7 +30,7 @@ const VALID_SORT_COLUMNS = [
   'mensagem',
 ];
 
-function buildWhereFromQuery(req: SaasAuthenticatedRequest): Record<string, unknown> {
+function buildWhereFromQuery(req: SaasAuthenticatedRequest): FiltroMensagemHistorico {
   const {
     data_inicio,
     data_fim,
@@ -44,93 +44,56 @@ function buildWhereFromQuery(req: SaasAuthenticatedRequest): Record<string, unkn
   const search = queryString(req.query.search);
   const searchField = queryString(req.query.searchField) || 'destinatario';
 
-  const where: Record<string, unknown> = {};
+  const where: FiltroMensagemHistorico = {};
 
-  if (tipo) {
-    where.tipo = tipo;
-  }
-  if (status) {
-    where.status = status;
-  }
+  if (tipo === 'email' || tipo === 'whatsapp') where.canal = tipo;
+  if (status === 'enviada' || status === 'erro') where.status = status;
 
   const searchTerm = search?.trim();
   if (searchTerm) {
     if (searchField === 'id') {
       const num = parseInt(searchTerm, 10);
-      if (!Number.isNaN(num) && String(num) === searchTerm) {
-        where.id = num;
-      } else {
-        (where as Record<string | symbol, unknown>)[Op.and] = [
-          sequelize.where(sequelize.cast(sequelize.col('id'), 'CHAR'), { [Op.like]: `%${searchTerm}%` }),
-        ];
-      }
-    } else if (searchField === 'tipo') {
-      where.tipo = searchTerm;
-    } else if (searchField === 'status') {
+      if (!Number.isNaN(num) && String(num) === searchTerm) where.id = num;
+      else where.idInexistente = true;
+    } else if (searchField === 'tipo' && (searchTerm === 'email' || searchTerm === 'whatsapp')) {
+      where.canal = searchTerm;
+    } else if (searchField === 'status' && (searchTerm === 'enviada' || searchTerm === 'erro')) {
       where.status = searchTerm;
-    } else if (['cliente_nome', 'titulo', 'destinatario', 'mensagem'].includes(searchField)) {
-      (where as Record<string, unknown>)[searchField] = { [Op.like]: `%${searchTerm}%` };
+    } else if (searchField === 'cliente_nome' || searchField === 'titulo' || searchField === 'destinatario' || searchField === 'mensagem') {
+      where.textoCampo = searchField;
+      where.texto = searchTerm;
     } else {
-      where.destinatario = { [Op.like]: `%${searchTerm}%` };
+      where.textoCampo = 'destinatario';
+      where.texto = searchTerm;
     }
   } else if (destinatario) {
-    where.destinatario = { [Op.like]: `%${destinatario}%` };
+    where.textoCampo = 'destinatario';
+    where.texto = destinatario;
   }
 
-  if (entidade_tipo) {
-    where.entidade_tipo = entidade_tipo;
-  }
-  if (entidade_id) {
-    where.entidade_id = entidade_id;
-  }
-  if (empresa_id) {
-    where.empresa_id = empresa_id;
-  }
-  if (data_inicio || data_fim) {
-    const createdAt: { [key: symbol]: Date } = {};
-    if (data_inicio) {
-      createdAt[Op.gte] = new Date(data_inicio);
-    }
-    if (data_fim) {
-      createdAt[Op.lte] = new Date(data_fim);
-    }
-    where.created_at = createdAt;
-  }
+  if (entidade_tipo) where.entidadeTipo = entidade_tipo;
+  if (entidade_id) where.entidadeId = entidade_id;
+  if (empresa_id) where.empresaId = Number(empresa_id);
+  if (data_inicio) where.createdFrom = new Date(data_inicio);
+  if (data_fim) where.createdTo = new Date(data_fim);
 
   return where;
 }
 
-function buildOrder(sortColumn: string, sortDirection: string): [string, string][] {
-  const col = sortColumn && VALID_SORT_COLUMNS.includes(sortColumn) ? sortColumn : 'created_at';
-  return [[col, (sortDirection ?? 'desc') === 'asc' ? 'ASC' : 'DESC']];
-}
 
-function includeForOrigem(origem: HistoricoOrigem | 'merged') {
-  if (origem === HISTORICO_ORIGEM_ERP) {
-    return [
-      {
-        model: Usuario,
-        as: 'usuario',
-        attributes: ['id', 'nome', 'email'],
-        required: false,
-      },
-    ];
-  }
-
-  return [
-    {
-      model: DadosEmpresa,
-      as: 'empresa',
-      attributes: ['id', 'razao_social', 'nome_fantasia'],
-      required: false,
-    },
-  ];
-}
-
-function mapRowToPlain(row: MensagemHistorico, origem: HistoricoOrigem): Record<string, unknown> {
-  const plain = row.get({ plain: true }) as unknown as Record<string, unknown>;
-  plain.historico_origem = origem;
-  return plain;
+function mapHistoricoRow(row: {
+  sistema_tenants?: unknown;
+  cadastros_usuarios?: unknown;
+  historico_origem?: string | null;
+  [key: string]: unknown;
+}, origem: HistoricoOrigem): Record<string, unknown> {
+  const { sistema_tenants, cadastros_usuarios, ...rest } = row;
+  return {
+    ...rest,
+    empresa: sistema_tenants ?? null,
+    usuario: cadastros_usuarios ?? null,
+    historico_origem: origem,
+  };
 }
 
 export class SaasMensagemHistoricoController {
@@ -158,46 +121,28 @@ export class SaasMensagemHistoricoController {
       const offset = (page - 1) * limit;
       const where = buildWhereFromQuery(req);
 
-      if (incluirErp) {
-        where.historico_origem = { [Op.in]: [HISTORICO_ORIGEM_SAAS, HISTORICO_ORIGEM_ERP] };
-      } else {
-        where.historico_origem = HISTORICO_ORIGEM_SAAS;
-      }
+      where.origens = incluirErp
+        ? [HISTORICO_ORIGEM_SAAS, HISTORICO_ORIGEM_ERP]
+        : [HISTORICO_ORIGEM_SAAS];
 
-      const { count, rows } = await MensagemHistorico.findAndCountAll({
-        where,
-        include: incluirErp
-          ? [
-              {
-                model: DadosEmpresa,
-                as: 'empresa',
-                attributes: ['id', 'razao_social', 'nome_fantasia'],
-                required: false,
-              },
-              {
-                model: Usuario,
-                as: 'usuario',
-                attributes: ['id', 'nome', 'email'],
-                required: false,
-              },
-            ]
-          : includeForOrigem(HISTORICO_ORIGEM_SAAS),
-        limit,
-        offset,
-        order: buildOrder(sortColumn, sortDirection),
-        distinct: true,
+      const col = sortColumn && VALID_SORT_COLUMNS.includes(sortColumn) ? sortColumn : 'created_at';
+      const { total, rows } = await listarMensagensHistorico(where, {
+        take: limit,
+        skip: offset,
+        sortColumn: col,
+        sortDirection: (sortDirection ?? 'desc') === 'asc' ? 'asc' : 'desc',
       });
 
       const data = rows.map((row) => {
-        const origem = (row.getDataValue('historico_origem') as HistoricoOrigem) ?? HISTORICO_ORIGEM_SAAS;
-        return mapRowToPlain(row, origem);
+        const origem = (row.historico_origem as HistoricoOrigem) ?? HISTORICO_ORIGEM_SAAS;
+        return mapHistoricoRow(row as never, origem);
       });
 
       sendSuccess(
         res,
         {
           data,
-          pagination: buildListPagination(page, limit, count),
+          pagination: buildListPagination(page, limit, total),
           filters: { tipo, status, destinatario, entidade_tipo, entidade_id, empresa_id, data_inicio, data_fim },
           sort: { column: sortColumn, direction: sortDirection },
         },
@@ -217,30 +162,15 @@ export class SaasMensagemHistoricoController {
         return;
       }
 
-      const mensagem = await MensagemHistorico.findByPk(idNum, {
-        include: [
-          {
-            model: DadosEmpresa,
-            as: 'empresa',
-            attributes: ['id', 'razao_social', 'nome_fantasia', 'email', 'telefone'],
-            required: false,
-          },
-          {
-            model: Usuario,
-            as: 'usuario',
-            attributes: ['id', 'nome', 'email'],
-            required: false,
-          },
-        ],
-      });
+      const mensagem = Number.isInteger(idNum) ? await buscarMensagemHistorico(idNum) : null;
 
       if (!mensagem) {
         sendError(res, null, 'Mensagem não encontrada', 404);
         return;
       }
 
-      const origem = (mensagem.getDataValue('historico_origem') as HistoricoOrigem) ?? HISTORICO_ORIGEM_SAAS;
-      sendSuccess(res, mapRowToPlain(mensagem, origem), 'Mensagem encontrada');
+      const origem = (mensagem.historico_origem as HistoricoOrigem) ?? HISTORICO_ORIGEM_SAAS;
+      sendSuccess(res, mapHistoricoRow(mensagem as never, origem), 'Mensagem encontrada');
     } catch (error) {
       logger.error('Erro ao buscar mensagem SaaS:', error);
       sendError(res, error, 'Erro ao buscar mensagem', 500, true);
@@ -253,28 +183,18 @@ export class SaasMensagemHistoricoController {
       const { page, limit, empresa_id } = parseListQuery(req.query, { defaultLimit: 10 });
       const offset = (page - 1) * limit;
 
-      const where: Record<string, unknown> = {
-        historico_origem: HISTORICO_ORIGEM_SAAS,
-        entidade_tipo,
-        entidade_id: Number(entidade_id),
-      };
-      if (empresa_id) {
-        where.empresa_id = Number(empresa_id);
-      }
-
-      const { count, rows } = await MensagemHistorico.findAndCountAll({
-        where,
-        include: includeForOrigem(HISTORICO_ORIGEM_SAAS),
-        limit,
-        offset,
-        order: [['created_at', 'DESC']],
-      });
+      const { total, rows } = await listarMensagensHistorico({
+        origens: [HISTORICO_ORIGEM_SAAS],
+        entidadeTipo: entidade_tipo,
+        entidadeId: Number(entidade_id),
+        ...(empresa_id ? { empresaId: Number(empresa_id) } : {}),
+      }, { take: limit, skip: offset, sortColumn: 'created_at', sortDirection: 'desc' });
 
       sendSuccess(
         res,
         {
-          data: rows.map((row) => mapRowToPlain(row, HISTORICO_ORIGEM_SAAS)),
-          pagination: buildListPagination(page, limit, count),
+          data: rows.map((row) => mapHistoricoRow(row as never, HISTORICO_ORIGEM_SAAS)),
+          pagination: buildListPagination(page, limit, total),
         },
         'Mensagens da entidade listadas com sucesso'
       );

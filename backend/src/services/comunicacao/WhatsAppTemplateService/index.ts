@@ -1,7 +1,9 @@
-import { ServidorWhatsApp } from '../../../models/comunicacao/ServidorWhatsApp';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Contrato } from '../../../models/contratos/Contrato';
-import { Titulo } from '../../../models/financeiro/Titulo';
+import type { clientes, comunicacao_servidores_whatsapp, contratos, financeiro_titulos } from '@prisma/client';
+
+type ServidorWhatsApp = comunicacao_servidores_whatsapp;
+type Cliente = clientes;
+type Contrato = contratos;
+type Titulo = financeiro_titulos;
 import { logger } from '../../../utils/logger';
 import {
   buildTemplateComponentsFromStructure,

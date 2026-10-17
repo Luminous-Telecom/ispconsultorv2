@@ -1,6 +1,7 @@
 import { WhatsAppService } from '../../comunicacao/WhatsAppService';
 import { EmailService } from '../../comunicacao/EmailService';
 import { logger } from '../../../utils/logger';
+import { prisma } from '../../../db/prisma';
 
 export interface EnvioBoletosConfig {
   antesVencimento?: number[];
@@ -32,8 +33,10 @@ export class EnvioBoletosRoutine {
     if (empresa_id != null && empresa_id > 0) {
       return [empresa_id];
     }
-    const { DadosEmpresa } = await import('../../../models/sistema/DadosEmpresa');
-    const empresas = await DadosEmpresa.findAll({ attributes: ['id'], order: [['id', 'ASC']] });
+    const empresas = await prisma.sistema_tenants.findMany({
+      select: { id: true },
+      orderBy: { id: 'asc' },
+    });
     const ids = empresas.map((e) => e.id).filter((id): id is number => id != null && id > 0);
     if (ids.length === 0) {
       logger.warn('EnvioBoletosRoutine - Nenhuma empresa encontrada para envio ERP global', {

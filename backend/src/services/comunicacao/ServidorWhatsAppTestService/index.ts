@@ -50,7 +50,12 @@ export class ServidorWhatsAppTestService {
     try {
       if (servidor.tipo_api === 'whatsapp_cloud') {
         const contextoHistorico = servidor.empresa_id != null ? { empresa_id: servidor.empresa_id } : undefined;
-        const enviou = await WhatsAppCloudService.enviarTexto(servidor, numero, mensagemTexto, contextoHistorico);
+        const enviou = await WhatsAppCloudService.enviarTexto(
+          servidor as Parameters<typeof WhatsAppCloudService.enviarTexto>[0],
+          numero,
+          mensagemTexto,
+          contextoHistorico
+        );
         
         if (!enviou) {
           return {
@@ -83,7 +88,7 @@ export class ServidorWhatsAppTestService {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'apikey': servidor.evolution_api_key || ''
+              'apikey': ('evolution_api_key' in servidor ? servidor.evolution_api_key : '') || ''
             },
             body: JSON.stringify(messageData),
             signal: controller.signal

@@ -1,12 +1,20 @@
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Plano } from '../../../models/cadastros/Plano';
-import { Titulo } from '../../../models/financeiro/Titulo';
-import { Contrato } from '../../../models/contratos/Contrato';
-import { ContaPagar } from '../../../models/financeiro/ContaPagar';
-import { Op, QueryTypes } from 'sequelize';
-import { sequelize } from '../../../config/database';
+import type { Prisma } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { formatDateISOForAPI, formatDateOnly } from '../../../utils/timezoneUtils';
 import { logger } from '../../../utils/logger';
+
+async function rawSelect<T>(sql: string, options?: { replacements?: Record<string, unknown>; type?: unknown }): Promise<T[]> {
+  const replacements = options?.replacements;
+  if (!replacements) return prisma.$queryRawUnsafe<T[]>(sql);
+  const params: unknown[] = [];
+  const converted = sql.replace(/:([A-Za-z_][A-Za-z0-9_]*)/g, (_match, name: string) => {
+    if (!(name in replacements)) return `:${name}`;
+    params.push(replacements[name]);
+    return '?';
+  });
+  return prisma.$queryRawUnsafe<T[]>(converted, ...params);
+}
+
 import { FinancialCalculationsService } from '../../FinancialCalculationsService';
 export type BackupStatusGraficoDia = {
   label: string;
@@ -76,70 +84,48 @@ export class DashboardService {
   /**
    * Buscar contratos do período
    */
-  static async getContratosPeriodo(inicioPeriodo: Date, fimPeriodo: Date, empresaId?: number | null): Promise<Contrato[]> {
-    const where: Record<string, unknown> = {
-      [Op.and]: [
-        {
-          data_inicio: {
-            [Op.lte]: fimPeriodo
-          }
-        },
-        {
-          [Op.or]: [
-            {
-              data_fim: {
-                [Op.gte]: inicioPeriodo
-              }
-            },
-            {
-              data_fim: null
-            }
-          ]
-        },
-        ...(empresaId != null ? [{ empresa_id: empresaId }] : [])
-      ]
-    };
-    return await Contrato.findAll({ 
-      attributes: ['id', 'status', 'plano_id', 'cliente_id', 'valor_final', 'data_inicio', 'data_fim', 'created_at'],
-      where: where as any
+  static async getContratosPeriodo(inicioPeriodo: Date, fimPeriodo: Date, empresaId?: number | null) {
+    return prisma.contratos.findMany({
+      where: {
+        AND: [
+          { data_inicio: { lte: fimPeriodo } },
+          { OR: [{ data_fim: { gte: inicioPeriodo } }, { data_fim: null }] },
+          ...(empresaId != null ? [{ empresa_id: empresaId }] : []),
+        ],
+      },
+      select: {
+        id: true, status: true, plano_id: true, cliente_id: true,
+        valor_final: true, data_inicio: true, data_fim: true, created_at: true,
+      },
     });
   }
 
-  /**
-   * Buscar contratos ativos
-   */
-  static async getContratosAtivos(empresaId?: number | null): Promise<Contrato[]> {
-    const where: Record<string, unknown> = { status: 'ativo' };
-    if (empresaId != null) {
-      where.empresa_id = empresaId;
-    }
-    return await Contrato.findAll({
-      attributes: [
-        'id',
-        'status',
-        'plano_id',
-        'cliente_id',
-        'valor_final',
-        'desconto_valor',
-        'desconto_percentual',
-        'isento_mensalidade',
-      ],
-      where,
-      include: [
-        {
-          association: 'cliente',
-          attributes: ['id', 'ativo'],
-          where: { ativo: true },
-          required: true,
-        },
-        {
-          association: 'plano',
-          attributes: ['id', 'nome_plano', 'valor_mensal', 'tipo_servico'],
-          where: { status: 'ativo' },
-          required: true,
-        },
-      ],
+  static async getContratosAtivos(empresaId?: number | null) {
+    const rows = await prisma.contratos.findMany({
+      where: {
+        status: 'ativo',
+        ...(empresaId != null ? { empresa_id: empresaId } : {}),
+        clientes: { ativo: true },
+        cadastros_planos: { status: 'ativo' },
+      },
+      select: {
+        id: true, status: true, plano_id: true, cliente_id: true,
+        valor_final: true, desconto_valor: true, desconto_percentual: true, isento_mensalidade: true,
+        clientes: { select: { id: true, ativo: true } },
+        cadastros_planos: { select: { id: true, nome_plano: true, valor_mensal: true, tipo_servico: true } },
+      },
     });
+    return rows.map((row) => ({
+      ...row,
+      valor_final: row.valor_final != null ? Number(row.valor_final) : null,
+      desconto_valor: row.desconto_valor != null ? Number(row.desconto_valor) : null,
+      desconto_percentual: row.desconto_percentual != null ? Number(row.desconto_percentual) : null,
+      cliente: row.clientes,
+      plano: {
+        ...row.cadastros_planos,
+        valor_mensal: Number(row.cadastros_planos.valor_mensal),
+      },
+    }));
   }
 
   /**
@@ -151,7 +137,7 @@ export class DashboardService {
     if (empresaId != null) {
       replacements.empresaId = empresaId;
     }
-    const rows = await sequelize.query<{ tipo_servico: string; quantidade: string }>(
+    const rows = await rawSelect<{ tipo_servico: string; quantidade: string }>(
       `SELECT tipo_servico, COUNT(*) as quantidade FROM (
         SELECT DISTINCT c.cliente_id, p.tipo_servico FROM contratos c
         INNER JOIN cadastros_planos p ON c.plano_id = p.id
@@ -164,7 +150,7 @@ export class DashboardService {
         INNER JOIN clientes cl ON c.cliente_id = cl.id
         WHERE c.status = 'ativo' AND cpa.status = 'ativo' AND cl.ativo = 1 AND p.status = 'ativo'${empresaFilter}
       ) AS sub GROUP BY tipo_servico`,
-      { type: QueryTypes.SELECT, replacements: Object.keys(replacements).length ? replacements : undefined }
+      { replacements: Object.keys(replacements).length ? replacements : undefined }
     );
     return rows.map((r) => ({ tipo_servico: r.tipo_servico, quantidade: parseInt(r.quantidade, 10) || 0 }));
   }
@@ -197,7 +183,7 @@ export class DashboardService {
     }
     const valorC = this.sqlValorMensalidadeContrato('c', 'p');
     const valorCpa = this.sqlValorMensalidadeContrato('cpa', 'p');
-    const rows = await sequelize.query<{ tipo_servico: string; quantidade: string; soma_valor: string }>(
+    const rows = await rawSelect<{ tipo_servico: string; quantidade: string; soma_valor: string }>(
       `SELECT tipo_servico,
         COUNT(DISTINCT cliente_id) AS quantidade,
         COALESCE(SUM(valor_contrato), 0) AS soma_valor
@@ -220,7 +206,7 @@ export class DashboardService {
       GROUP BY tipo_servico
       HAVING COUNT(DISTINCT cliente_id) > 0
       ORDER BY soma_valor DESC`,
-      { type: QueryTypes.SELECT, replacements: Object.keys(replacements).length ? replacements : undefined }
+      { replacements: Object.keys(replacements).length ? replacements : undefined }
     );
     return rows.map((r) => {
       const quantidade = parseInt(r.quantidade, 10) || 0;
@@ -236,101 +222,54 @@ export class DashboardService {
   /**
    * Buscar todos os contratos
    */
-  static async getAllContratos(empresaId?: number | null): Promise<Contrato[]> {
-    const where: Record<string, unknown> = {};
-    if (empresaId != null) {
-      where.empresa_id = empresaId;
-    }
-    return await Contrato.findAll({ 
-      attributes: ['id', 'status', 'plano_id', 'cliente_id', 'isento_mensalidade'],
-      where: Object.keys(where).length ? where : undefined
+  static async getAllContratos(empresaId?: number | null) {
+    return prisma.contratos.findMany({
+      where: empresaId != null ? { empresa_id: empresaId } : {},
+      select: { id: true, status: true, plano_id: true, cliente_id: true, isento_mensalidade: true },
     });
   }
 
-  /**
-   * Buscar clientes do período
-   */
-  static async getClientesPeriodo(inicioPeriodo: Date, fimPeriodo: Date, empresaId?: number | null): Promise<Cliente[]> {
-    const where: Record<string, unknown> = {
-      created_at: {
-        [Op.between]: [inicioPeriodo, fimPeriodo]
-      }
-    };
-    if (empresaId != null) {
-      where.empresa_id = empresaId;
-    }
-    return await Cliente.findAll({ 
-      attributes: ['id', 'ativo', 'created_at'],
-      where
+  static async getClientesPeriodo(inicioPeriodo: Date, fimPeriodo: Date, empresaId?: number | null) {
+    return prisma.clientes.findMany({
+      where: {
+        created_at: { gte: inicioPeriodo, lte: fimPeriodo },
+        ...(empresaId != null ? { empresa_id: empresaId } : {}),
+      },
+      select: { id: true, ativo: true, created_at: true },
     });
   }
 
-  /**
-   * Buscar todos os clientes
-   */
-  static async getAllClientes(empresaId?: number | null): Promise<Cliente[]> {
-    const where: Record<string, unknown> = {};
-    if (empresaId != null) {
-      where.empresa_id = empresaId;
-    }
-    return await Cliente.findAll({ 
-      attributes: ['id', 'ativo', 'created_at'],
-      where: Object.keys(where).length ? where : undefined
+  static async getAllClientes(empresaId?: number | null) {
+    return prisma.clientes.findMany({
+      where: empresaId != null ? { empresa_id: empresaId } : {},
+      select: { id: true, ativo: true, created_at: true },
     });
   }
 
-  /**
-   * Buscar planos ativos
-   */
-  static async getPlanosAtivos(empresaId?: number | null): Promise<Plano[]> {
-    const where: Record<string, unknown> = { status: 'ativo' };
-    if (empresaId != null) {
-      where.empresa_id = empresaId;
-    }
-    return await Plano.findAll({ 
-      attributes: ['id', 'status', 'nome_plano', 'tipo_servico'],
-      where
+  static async getPlanosAtivos(empresaId?: number | null) {
+    return prisma.cadastros_planos.findMany({
+      where: { status: 'ativo', ...(empresaId != null ? { empresa_id: empresaId } : {}) },
+      select: { id: true, status: true, nome_plano: true, tipo_servico: true },
     });
   }
 
-  /**
-   * Buscar títulos do período
-   */
-  static async getTitulosPeriodo(inicioPeriodo: Date, fimPeriodo: Date, empresaId?: number | null): Promise<Titulo[]> {
-    const where: Record<string, unknown> = {
-      data_vencimento: {
-        [Op.between]: [inicioPeriodo, fimPeriodo]
-      }
-    };
-    if (empresaId != null) {
-      where.empresa_id = empresaId;
-    }
-    return await Titulo.findAll({ 
-      attributes: ['id', 'valor', 'status', 'data_vencimento', 'created_at'],
-      where
+  static async getTitulosPeriodo(inicioPeriodo: Date, fimPeriodo: Date, empresaId?: number | null) {
+    return prisma.financeiro_titulos.findMany({
+      where: {
+        data_vencimento: { gte: inicioPeriodo, lte: fimPeriodo },
+        ...(empresaId != null ? { empresa_id: empresaId } : {}),
+      },
+      select: { id: true, valor: true, status: true, data_vencimento: true, created_at: true },
     });
   }
 
-  /**
-   * Buscar todos os títulos
-   */
-  static async getAllTitulos(empresaId?: number | null): Promise<Titulo[]> {
-    const where: Record<string, unknown> = {};
-    if (empresaId != null) {
-      where.empresa_id = empresaId;
-    }
-    return await Titulo.findAll({
-      attributes: [
-        'id',
-        'valor',
-        'status',
-        'data_vencimento',
-        'created_at',
-        'contrato_id',
-        'cliente_id',
-        'pago',
-      ],
-      where: Object.keys(where).length ? where : undefined
+  static async getAllTitulos(empresaId?: number | null) {
+    return prisma.financeiro_titulos.findMany({
+      where: empresaId != null ? { empresa_id: empresaId } : {},
+      select: {
+        id: true, valor: true, status: true, data_vencimento: true, created_at: true,
+        contrato_id: true, cliente_id: true, pago: true,
+      },
     });
   }
 
@@ -377,27 +316,21 @@ export class DashboardService {
   /**
    * Buscar títulos com filtros
    */
-  static async getTitulos(where: any, attributes?: string[]): Promise<Titulo[]> {
-    return await Titulo.findAll({
-      attributes: attributes || ['id', 'valor', 'status', 'data_vencimento', 'created_at'],
-      where
+  static async getTitulos(where: Prisma.financeiro_titulosWhereInput) {
+    return prisma.financeiro_titulos.findMany({
+      where,
+      select: { id: true, valor: true, status: true, data_vencimento: true, created_at: true },
     });
   }
 
-  /**
-   * Buscar clientes com filtros
-   */
-  static async getClientes(where: any, attributes?: string[]): Promise<Cliente[]> {
-    return await Cliente.findAll({
-      attributes: attributes || ['id', 'ativo', 'created_at'],
-      where
+  static async getClientes(where: Prisma.clientesWhereInput) {
+    return prisma.clientes.findMany({
+      where,
+      select: { id: true, ativo: true, created_at: true },
     });
   }
 
-  /**
-   * Buscar títulos com includes
-   */
-  static async getTitulosWithIncludes(where: any, options?: { limit?: number; order?: any[]; include?: any[] }): Promise<Titulo[]> {
+  static async getTitulosWithIncludes(where: Prisma.financeiro_titulosWhereInput, options?: { limit?: number; order?: unknown; include?: unknown[] }) {
     const { TituloService } = await import('../../financeiro/TituloService');
     return await TituloService.findAllWithFilters(where, {
       include: options?.include || [],
@@ -425,18 +358,14 @@ export class DashboardService {
 
     const clienteWhere = {
       ...(inicioPeriodo && fimPeriodo ? {
-        created_at: {
-          [Op.between]: [inicioPeriodo, fimPeriodo]
-        }
+        created_at: { gte: inicioPeriodo, lte: fimPeriodo }
       } : {}),
       ...empresaFilter
     };
 
     const planoWhere = {
       ...(inicioPeriodo && fimPeriodo ? {
-        created_at: {
-          [Op.between]: [inicioPeriodo, fimPeriodo]
-        }
+        created_at: { gte: inicioPeriodo, lte: fimPeriodo }
       } : {}),
       status: 'ativo',
       ...empresaFilter
@@ -444,9 +373,7 @@ export class DashboardService {
 
     const tituloWhere = {
       ...(inicioPeriodo && fimPeriodo ? {
-        data_vencimento: {
-          [Op.between]: [inicioPeriodo, fimPeriodo]
-        }
+        data_vencimento: { gte: inicioPeriodo, lte: fimPeriodo }
       } : {}),
       ...empresaFilter
     };
@@ -481,16 +408,11 @@ export class DashboardService {
     let totalValorContratos = 0;
     for (const contrato of contratos) {
       if (contrato.isento_mensalidade) continue;
-      const row = contrato.toJSON() as {
-        plano?: { valor_mensal?: number | string };
-        desconto_valor?: number | string | null;
-        desconto_percentual?: number | string | null;
-      };
       totalValorContratos += this.calcValorMensalidadeContrato({
         valor_final: contrato.valor_final,
-        desconto_valor: row.desconto_valor,
-        desconto_percentual: row.desconto_percentual,
-        valor_mensal: row.plano?.valor_mensal,
+        desconto_valor: contrato.desconto_valor,
+        desconto_percentual: contrato.desconto_percentual,
+        valor_mensal: contrato.plano?.valor_mensal,
       });
     }
 
@@ -498,15 +420,10 @@ export class DashboardService {
     hoje.setHours(23, 59, 59, 999);
     const titulosVencidosWhere = inicioPeriodo && fimPeriodo ? {
       ...tituloWhere,
-      data_vencimento: {
-        [Op.and]: [
-          { [Op.lte]: hoje },
-          { [Op.between]: [inicioPeriodo, fimPeriodo] }
-        ]
-      },
+      data_vencimento: { gte: inicioPeriodo, lte: fimPeriodo.getTime() < hoje.getTime() ? fimPeriodo : hoje },
       status: 'pendente'
     } : {
-      data_vencimento: { [Op.lte]: hoje },
+      data_vencimento: { lte: hoje },
       status: 'pendente',
       ...empresaFilter
     };
@@ -558,9 +475,9 @@ export class DashboardService {
       return {
         id: titulo.id,
         numero_titulo: titulo.numero_titulo,
-        cliente: tituloWithCliente.cliente?.razao_social || 'N/A',
-        valor: titulo.valor,
-        status: titulo.status,
+        cliente: String(tituloWithCliente.cliente?.razao_social || 'N/A'),
+        valor: Number(titulo.valor),
+        status: String(titulo.status),
         data: formatDate(new Date(titulo.created_at)) || 'N/A'
       };
     });
@@ -583,7 +500,7 @@ export class DashboardService {
     hoje.setHours(23, 59, 59, 999);
 
     const where: Record<string, unknown> = {
-      data_vencimento: { [Op.lte]: hoje },
+      data_vencimento: { lte: hoje },
       status: 'pendente'
     };
     if (empresaId != null) {
@@ -632,12 +549,8 @@ export class DashboardService {
     const dias = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
     const where: Record<string, unknown> = {
-      data_vencimento: {
-        [Op.between]: [inicio, fim]
-      },
-      status: {
-        [Op.in]: ['pendente', 'vencido']
-      }
+      data_vencimento: { gte: inicio, lte: fim },
+      status: { in: ['pendente', 'vencido'] }
     };
     if (empresaId != null) {
       where.empresa_id = empresaId;
@@ -691,12 +604,8 @@ export class DashboardService {
     const dias = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
     const where: Record<string, unknown> = {
-      data_pagamento: {
-        [Op.between]: [inicio, fim]
-      },
-      status: {
-        [Op.in]: ['pago', 'pago_atraso', 'parcial']
-      }
+      data_pagamento: { gte: inicio, lte: fim },
+      status: { in: ['pago', 'pago_atraso', 'parcial'] }
     };
     if (empresaId != null) {
       where.empresa_id = empresaId;
@@ -752,9 +661,7 @@ export class DashboardService {
     fim.setHours(23, 59, 59, 999);
 
     const where: Record<string, unknown> = {
-      data_vencimento: {
-        [Op.between]: [inicio, fim]
-      }
+      data_vencimento: { gte: inicio, lte: fim }
     };
     if (empresaId != null) {
       where.empresa_id = empresaId;
@@ -805,31 +712,20 @@ export class DashboardService {
     }
 
     const contratosAtivos = await this.getContratosAtivos(empresaId);
-    const { ContratoPlanoAdicional } = await import('../../../models/contratos/ContratoPlanoAdicional');
-    const adicionaisWhere: Record<string, unknown> = { status: 'ativo' };
-    if (empresaId != null) {
-      adicionaisWhere.empresa_id = empresaId;
-    }
-    const planosAdicionais = await ContratoPlanoAdicional.findAll({
-      where: adicionaisWhere,
-      attributes: ['valor_final', 'desconto_valor', 'desconto_percentual'],
-      include: [
-        {
-          association: 'contrato',
-          attributes: ['cliente_id', 'isento_mensalidade'],
-          where: { status: 'ativo' },
-          required: true,
-          include: [
-            { association: 'cliente', attributes: ['id'], where: { ativo: true }, required: true },
-          ],
-        },
-        {
-          association: 'plano',
-          attributes: ['valor_mensal'],
-          where: { status: 'ativo' },
-          required: true,
-        },
-      ],
+    const planosAdicionais = await prisma.contratos_planos_adicionais.findMany({
+      where: {
+        status: 'ativo',
+        ...(empresaId != null ? { empresa_id: empresaId } : {}),
+        contratos: { status: 'ativo', clientes: { ativo: true } },
+        cadastros_planos: { status: 'ativo' },
+      },
+      select: {
+        valor_final: true,
+        desconto_valor: true,
+        desconto_percentual: true,
+        contratos: { select: { cliente_id: true, isento_mensalidade: true } },
+        cadastros_planos: { select: { valor_mensal: true } },
+      },
     });
 
     let valorTotalPlanos = 0;
@@ -837,16 +733,11 @@ export class DashboardService {
 
     for (const contrato of contratosAtivos) {
       if (contrato.isento_mensalidade || !contrato.cliente_id) continue;
-      const row = contrato.toJSON() as {
-        plano?: { valor_mensal?: number | string };
-        desconto_valor?: number | string | null;
-        desconto_percentual?: number | string | null;
-      };
       const valor = this.calcValorMensalidadeContrato({
         valor_final: contrato.valor_final,
-        desconto_valor: row.desconto_valor,
-        desconto_percentual: row.desconto_percentual,
-        valor_mensal: row.plano?.valor_mensal,
+        desconto_valor: contrato.desconto_valor,
+        desconto_percentual: contrato.desconto_percentual,
+        valor_mensal: contrato.plano?.valor_mensal,
       });
       if (valor <= 0) continue;
       clientesComPlanos.add(contrato.cliente_id);
@@ -854,22 +745,15 @@ export class DashboardService {
     }
 
     for (const adicional of planosAdicionais) {
-      const row = adicional.toJSON() as {
-        valor_final?: number | string | null;
-        desconto_valor?: number | string | null;
-        desconto_percentual?: number | string | null;
-        contrato?: { cliente_id?: number; isento_mensalidade?: boolean };
-        plano?: { valor_mensal?: number | string };
-      };
-      if (row.contrato?.isento_mensalidade || !row.contrato?.cliente_id) continue;
+      if (adicional.contratos?.isento_mensalidade || !adicional.contratos?.cliente_id) continue;
       const valor = this.calcValorMensalidadeContrato({
-        valor_final: row.valor_final,
-        desconto_valor: row.desconto_valor,
-        desconto_percentual: row.desconto_percentual,
-        valor_mensal: row.plano?.valor_mensal,
+        valor_final: adicional.valor_final != null ? Number(adicional.valor_final) : null,
+        desconto_valor: adicional.desconto_valor != null ? Number(adicional.desconto_valor) : null,
+        desconto_percentual: adicional.desconto_percentual != null ? Number(adicional.desconto_percentual) : null,
+        valor_mensal: Number(adicional.cadastros_planos.valor_mensal),
       });
       if (valor <= 0) continue;
-      clientesComPlanos.add(row.contrato.cliente_id);
+      clientesComPlanos.add(adicional.contratos.cliente_id);
       valorTotalPlanos += valor;
     }
 
@@ -1006,9 +890,7 @@ export class DashboardService {
     const inicioPeriodo = new Date(hoje.getFullYear(), hoje.getMonth() - 11, 1, 0, 0, 0, 0);
 
     const where: Record<string, unknown> = {
-      data_vencimento: {
-        [Op.between]: [inicioPeriodo, fimPeriodo]
-      }
+      data_vencimento: { gte: inicioPeriodo, lte: fimPeriodo }
     };
     if (empresaId != null) {
       where.empresa_id = empresaId;
@@ -1068,7 +950,7 @@ export class DashboardService {
   }
 
   /**
-   * Série diária de status de backup (tabela ssh_manager_device_backup_events), para gráfico empilhado no dashboard.
+   * Série diária de status de backup (logs canal ssh), para gráfico empilhado no dashboard.
    */
   static async getBackupStatusGrafico(
     startDate: Date,
@@ -1090,13 +972,14 @@ export class DashboardService {
       replacements.empresaId = empresaId;
     }
 
-    const rows = await sequelize.query<{ dia: unknown; status: string; total: string | number }>(
-      `SELECT DATE_FORMAT(e.created_at, '%Y-%m-%d') AS dia, e.status, COUNT(*) AS total
-       FROM ssh_manager_device_backup_events e
-       INNER JOIN ssh_manager_devices d ON d.id = e.ssh_device_id
-       WHERE e.created_at >= :inicio AND e.created_at <= :fim${empresaClause}
-       GROUP BY DATE_FORMAT(e.created_at, '%Y-%m-%d'), e.status`,
-      { replacements, type: QueryTypes.SELECT }
+    const rows = await rawSelect<{ dia: unknown; status: string; total: string | number }>(
+      `SELECT DATE_FORMAT(e.created_at, '%Y-%m-%d') AS dia, e.tipo AS status, COUNT(*) AS total
+       FROM sistema_logs_operacionais e
+       INNER JOIN ssh_manager_devices d ON d.id = CAST(e.recurso_id AS UNSIGNED)
+       WHERE e.canal = 'ssh' AND e.recurso = 'ssh_manager_devices'
+         AND e.created_at >= :inicio AND e.created_at <= :fim${empresaClause}
+       GROUP BY DATE_FORMAT(e.created_at, '%Y-%m-%d'), e.tipo`,
+      { replacements,  }
     );
 
     const countsByDiaStatus = new Map<string, Record<string, number>>();
@@ -1220,7 +1103,7 @@ export class DashboardService {
 
     if (status === 'sucesso') {
       const empresaClauseD = empresaId != null ? ' AND d.empresa_id = :empresaId' : '';
-      const rows = await sequelize.query<{
+      const rows = await rawSelect<{
         id: string;
         deviceId: string;
         deviceName: string;
@@ -1240,7 +1123,7 @@ export class DashboardService {
          INNER JOIN ssh_manager_devices d ON d.id = b.ssh_device_id
          WHERE DATE(b.finished_at) = :dia${empresaClauseD}
          ORDER BY b.finished_at DESC, d.name, b.file_name`,
-        { replacements, type: QueryTypes.SELECT }
+        { replacements,  }
       );
 
       return rows.map((r) => {
@@ -1263,7 +1146,7 @@ export class DashboardService {
       empresaId != null
         ? ' AND (e.empresa_id = :empresaId OR (e.empresa_id IS NULL AND d.empresa_id = :empresaId))'
         : '';
-    const rows = await sequelize.query<{
+    const rows = await rawSelect<{
       id: string;
       deviceId: string;
       deviceName: string;
@@ -1274,18 +1157,19 @@ export class DashboardService {
       detail: string | null;
     }>(
       `SELECT CAST(e.id AS CHAR) AS id,
-        e.ssh_device_id AS deviceId,
+        e.recurso_id AS deviceId,
         d.name AS deviceName,
         NULL AS fileName,
         NULL AS sizeBytes,
         e.created_at AS startedAt,
         e.created_at AS finishedAt,
-        e.detail AS detail
-       FROM ssh_manager_device_backup_events e
-       INNER JOIN ssh_manager_devices d ON d.id = e.ssh_device_id
-       WHERE DATE(e.created_at) = :dia AND e.status = :status${empresaClauseE}
+        e.mensagem AS detail
+       FROM sistema_logs_operacionais e
+       INNER JOIN ssh_manager_devices d ON d.id = CAST(e.recurso_id AS UNSIGNED)
+       WHERE e.canal = 'ssh' AND e.recurso = 'ssh_manager_devices'
+         AND DATE(e.created_at) = :dia AND e.tipo = :status${empresaClauseE}
        ORDER BY e.created_at DESC, d.name`,
-      { replacements, type: QueryTypes.SELECT }
+      { replacements,  }
     );
 
     return rows.map((r) => ({

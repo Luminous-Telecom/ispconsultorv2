@@ -1,7 +1,6 @@
-import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
+import type { Prisma, sistema_tenants } from '@prisma/client';
+import { prisma } from '../../../db/prisma';
 import { buildPagination } from '../../../utils/pagination';
-import { Usuario } from '../../../models/cadastros/Usuario';
-import { Op, WhereOptions } from 'sequelize';
 
 export interface ListEmpresasFilters {
   page?: number;
@@ -12,7 +11,7 @@ export interface ListEmpresasFilters {
 
 export interface ListEmpresasResponse {
   success: boolean;
-  data: DadosEmpresa[];
+  data: sistema_tenants[];
   pagination: {
     current_page: number;
     per_page: number;
@@ -45,9 +44,7 @@ export interface CreateEmpresaData {
 export class EmpresaService {
   static async list(filters: ListEmpresasFilters = {}): Promise<ListEmpresasResponse> {
     const { page = 1, limit = 15, search, searchField } = filters;
-    const offset = (page - 1) * limit;
-
-    const where: WhereOptions = {};
+    const where: Prisma.sistema_tenantsWhereInput = {};
 
     if (search) {
       const searchCols = ['id', 'razao_social', 'nome_fantasia', 'cnpj', 'email', 'cidade'];
@@ -55,79 +52,83 @@ export class EmpresaService {
       if (field) {
         if (field === 'id') {
           const n = parseInt(search, 10);
-          if (!Number.isNaN(n)) (where as Record<string, number>)[field] = n;
+          if (!Number.isNaN(n)) where.id = n;
         } else {
-          (where as Record<string, { [Op.like]: string }>)[field] = { [Op.like]: `%${search}%` };
+          Object.assign(where, { [field]: { contains: search } });
         }
       } else {
-        (where as Record<symbol, unknown>)[Op.or] = [
-          { razao_social: { [Op.like]: `%${search}%` } },
-          { nome_fantasia: { [Op.like]: `%${search}%` } },
-          { cnpj: { [Op.like]: `%${search}%` } },
+        where.OR = [
+          { razao_social: { contains: search } },
+          { nome_fantasia: { contains: search } },
+          { cnpj: { contains: search } },
         ];
       }
     }
 
-    const { count, rows } = await DadosEmpresa.findAndCountAll({
-      where,
-      order: [['id', 'DESC']],
-      limit,
-      offset,
-    });
+    const [count, rows] = await Promise.all([
+      prisma.sistema_tenants.count({ where }),
+      prisma.sistema_tenants.findMany({
+        where,
+        orderBy: { id: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+    ]);
 
     return {
       success: true,
       data: rows,
-      pagination: buildPagination(page, limit, count as number),
+      pagination: buildPagination(page, limit, count),
     };
   }
 
-  static async getById(id: number): Promise<DadosEmpresa | null> {
-    return DadosEmpresa.findByPk(id);
+  static async getById(id: number): Promise<sistema_tenants | null> {
+    return prisma.sistema_tenants.findUnique({ where: { id } });
   }
 
-  static async create(dados: CreateEmpresaData): Promise<DadosEmpresa> {
-    return DadosEmpresa.create({
-      ...dados,
-      responsavel_cpf: dados.responsavel_cpf ?? '',
-      inscricao_estadual: null,
-      inscricao_municipal: null,
-      responsavel_assinatura: null,
-      logo: null,
-      site: null,
+  static async create(dados: CreateEmpresaData): Promise<sistema_tenants> {
+    return prisma.sistema_tenants.create({
+      data: {
+        ...dados,
+        responsavel_cpf: dados.responsavel_cpf ?? '',
+        inscricao_estadual: null,
+        inscricao_municipal: null,
+        responsavel_assinatura: null,
+        logo: null,
+        site: null,
+      },
     });
   }
 
-  static async update(id: number, dados: Partial<CreateEmpresaData>): Promise<DadosEmpresa> {
-    const empresa = await DadosEmpresa.findByPk(id);
+  static async update(id: number, dados: Partial<CreateEmpresaData>): Promise<sistema_tenants> {
+    const empresa = await prisma.sistema_tenants.findUnique({ where: { id } });
     if (!empresa) throw new Error('Empresa não encontrada');
-    const payload = { ...dados };
+    const payload: Prisma.sistema_tenantsUncheckedUpdateInput = { ...dados };
     if (Object.prototype.hasOwnProperty.call(dados, 'responsavel_cpf')) {
       payload.responsavel_cpf = dados.responsavel_cpf ?? '';
     }
-    await empresa.update(payload as Parameters<DadosEmpresa['update']>[0]);
-    await empresa.reload();
-    return empresa;
+    return prisma.sistema_tenants.update({ where: { id }, data: payload });
   }
 
   static async delete(id: number): Promise<void> {
-    const empresa = await DadosEmpresa.findByPk(id);
+    const empresa = await prisma.sistema_tenants.findUnique({ where: { id } });
     if (!empresa) throw new Error('Empresa não encontrada');
 
-    const totalUsuarios = await Usuario.count({ where: { empresa_id: id } });
+    const totalUsuarios = await prisma.cadastros_usuarios.count({ where: { empresa_id: id } });
     if (totalUsuarios > 0) {
       throw new Error(`Não é possível excluir empresa com ${totalUsuarios} usuário(s) vinculado(s)`);
     }
 
-    await empresa.destroy();
+    await prisma.sistema_tenants.delete({ where: { id } });
   }
 
   static async existsByCnpj(cnpj: string, excludeId?: number): Promise<boolean> {
-    const where: WhereOptions = { cnpj };
-    if (excludeId) {
-      where.id = { [Op.ne]: excludeId } as unknown as number;
-    }
-    const empresa = await DadosEmpresa.findOne({ where });
+    const empresa = await prisma.sistema_tenants.findFirst({
+      where: {
+        cnpj,
+        ...(excludeId ? { id: { not: excludeId } } : {}),
+      },
+    });
     return !!empresa;
   }
 }

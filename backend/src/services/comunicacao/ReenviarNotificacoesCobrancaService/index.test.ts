@@ -1,4 +1,3 @@
-import { Op } from 'sequelize';
 import {
   escolherMensagemCobranca,
   isFalhaCobranca,
@@ -10,19 +9,17 @@ import {
   type HistoricoCobrancaRow,
 } from './selecao';
 
-const findAll = jest.fn();
-const findByPk = jest.fn();
+const findMany = jest.fn();
+const findUnique = jest.fn();
 const enviarEmail = jest.fn();
 const enviarWhatsApp = jest.fn();
 
-jest.mock('../../../models/comunicacao/MensagemHistorico', () => ({
-  MensagemHistorico: { findAll: (...args: unknown[]) => findAll(...args) },
-}));
-jest.mock('../../../models/financeiro/Titulo', () => ({
-  Titulo: { findByPk: (...args: unknown[]) => findByPk(...args) },
-}));
-jest.mock('../../../models/saas/SaasTitulo', () => ({
-  SaasTitulo: { findByPk: jest.fn() },
+jest.mock('../../../db/prisma', () => ({
+  prisma: {
+    sistema_logs_operacionais: { findMany: (...args: unknown[]) => findMany(...args) },
+    financeiro_titulos: { findUnique: (...args: unknown[]) => findUnique(...args) },
+    $queryRawUnsafe: jest.fn(),
+  },
 }));
 jest.mock('../EmailService', () => ({
   EmailService: { enviarTituloManual: (...args: unknown[]) => enviarEmail(...args), reenviarCobrancaSaas: jest.fn() },
@@ -52,7 +49,26 @@ function falha(partial: Partial<HistoricoCobrancaRow> & Pick<HistoricoCobrancaRo
 }
 
 function modelo(row: HistoricoCobrancaRow) {
-  return { ...row, get: () => row };
+  return {
+    id: BigInt(row.id),
+    canal: row.tipo,
+    tipo: row.status,
+    tabela: row.entidade_tipo ?? null,
+    recurso: row.historico_origem,
+    recurso_id: row.entidade_id != null ? String(row.entidade_id) : null,
+    payload: JSON.stringify({
+      log_contexto: 'mensagem',
+      titulo: row.titulo ?? null,
+      destinatario: 'cliente@ispconsultor.com.br',
+      mensagem: 'cobranca',
+    }),
+    mensagem: 'cobranca',
+    empresa_id: 7,
+    usuario_id: null,
+    created_at: new Date(row.created_at),
+    cadastros_usuarios: null,
+    sistema_tenants: null,
+  };
 }
 
 describe('seleção de falhas de cobrança', () => {
@@ -117,30 +133,30 @@ describe('seleção de falhas de cobrança', () => {
     expect(where.tipo).toBe('email');
     expect(where.entidade_tipo).toBe('titulo');
     expect(where.status).toBe('erro');
-    expect(where.id).toEqual({ [Op.in]: [15, 16] });
+    expect(where.id).toEqual({ in: [15, 16] });
     expect(where.historico_origem).toBe('erp');
 
     const admin = montarWhereFalhasCobranca({ tipo: 'whatsapp', origens: ['erp', 'saas'], empresaId: null });
     expect(admin.empresa_id).toBeUndefined();
-    expect(admin.historico_origem).toEqual({ [Op.in]: ['erp', 'saas'] });
+    expect(admin.historico_origem).toEqual({ in: ['erp', 'saas'] });
   });
 });
 
 describe('ReenviarNotificacoesCobrancaService', () => {
   beforeEach(() => {
-    findAll.mockReset();
-    findByPk.mockReset();
+    findMany.mockReset();
+    findUnique.mockReset();
     enviarEmail.mockReset();
     enviarWhatsApp.mockReset();
   });
 
   it('filtra falhas pela empresa e reenvia o e-mail do título em aberto', async () => {
     const erro = falha({ id: 15, entidade_id: 44 });
-    findAll.mockImplementation(async (query: { where: { status: string } }) => {
-      if (query.where.status === 'erro') return [modelo(erro)];
+    findMany.mockImplementation(async (query: { where: { tipo: string } }) => {
+      if (query.where.tipo === 'erro') return [modelo(erro)];
       return [];
     });
-    findByPk.mockResolvedValue({ status: 'vencido', pago: false });
+    findUnique.mockResolvedValue({ status: 'vencido', pago: false });
     enviarEmail.mockResolvedValue({ sucesso: true, mensagem: 'Email enviado com sucesso' });
 
     const resultado = await ReenviarNotificacoesCobrancaService.reenviar({
@@ -150,16 +166,17 @@ describe('ReenviarNotificacoesCobrancaService', () => {
       ids: [15],
     });
 
-    expect(findAll.mock.calls[0][0].where.empresa_id).toBe(7);
-    expect(findAll.mock.calls[0][0].where.id).toEqual({ [Op.in]: [15] });
+    expect(findMany.mock.calls[0][0].where.empresa_id).toBe(7);
+    expect(findMany.mock.calls[0][0].where.canal).toBe('email');
+    expect(findMany.mock.calls[0][0].where.id).toEqual({ in: [BigInt(15)] });
     expect(enviarEmail).toHaveBeenCalledWith(44);
     expect(enviarWhatsApp).not.toHaveBeenCalled();
     expect(resultado).toEqual({ total: 1, reenviadas: 1, erros: 0, ignoradas: 0 });
   });
 
   it('não reenvia cobrança de título pago nem falha já sucedida', async () => {
-    findAll.mockImplementation(async (query: { where: { status: string } }) => {
-      if (query.where.status === 'erro') {
+    findMany.mockImplementation(async (query: { where: { tipo: string } }) => {
+      if (query.where.tipo === 'erro') {
         return [modelo(falha({ id: 1, entidade_id: 8 }))];
       }
       return [modelo(falha({
@@ -178,18 +195,18 @@ describe('ReenviarNotificacoesCobrancaService', () => {
     expect(jaEnviada.total).toBe(0);
     expect(enviarEmail).not.toHaveBeenCalled();
 
-    findAll.mockClear();
-    findAll.mockImplementation(async (query: { where: { status: string } }) => (
-      query.where.status === 'erro' ? [modelo(falha({ id: 3, entidade_id: 9 }))] : []
+    findMany.mockClear();
+    findMany.mockImplementation(async (query: { where: { tipo: string } }) => (
+      query.where.tipo === 'erro' ? [modelo(falha({ id: 3, entidade_id: 9 }))] : []
     ));
-    findByPk.mockResolvedValue({ status: 'pago', pago: true });
+    findUnique.mockResolvedValue({ status: 'pago', pago: true });
     const pago = await ReenviarNotificacoesCobrancaService.reenviar({
       tipo: 'email',
       empresaId: 3,
       origens: ['erp'],
     });
     expect(pago).toEqual({ total: 1, reenviadas: 0, erros: 0, ignoradas: 1 });
-    expect(findAll.mock.calls[0][0].where.empresa_id).toBe(3);
+    expect(findMany.mock.calls[0][0].where.empresa_id).toBe(3);
     expect(enviarEmail).not.toHaveBeenCalled();
   });
 });

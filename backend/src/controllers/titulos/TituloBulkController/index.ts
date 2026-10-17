@@ -1,10 +1,9 @@
+import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
-import { Titulo } from '../../../models/financeiro/Titulo';
 import { TituloService } from '../../../services/financeiro/TituloService';
 import { ClienteService } from '../../../services/clientes/ClienteService';
 import { PlanoService } from '../../../services/cadastros/PlanoService';
 import { BancoService } from '../../../services/cadastros/BancoService';
-import { Transaction } from 'sequelize';
 import { logger } from '../../../utils/logger';
 import { normalizeDateForDb } from '../../../utils/dateUtils';
 import { titulosBulkCreateSchema } from '../../../validators/titulo.validator';
@@ -33,8 +32,8 @@ export class TituloBulkController {
 
       const { titulos } = value;
 
-      const titulosCriados = await withTransaction(async (transaction: Transaction) => {
-        const resultados: Titulo[] = [];
+      const titulosCriados = await withTransaction(async (transaction) => {
+        const resultados: Awaited<ReturnType<typeof TituloService.create>>[] = [];
 
         for (const dadosTitulo of titulos) {
           const cliente = await ClienteService.getById(dadosTitulo.cliente_id);
@@ -95,7 +94,7 @@ export class TituloBulkController {
 
       // Registrar auditoria para cada título criado (já registra no Elasticsearch internamente)
       for (const titulo of titulosCriados) {
-        const tituloData = titulo.toJSON() as Record<string, unknown>;
+        const tituloData = toPlain(titulo) as Record<string, unknown>;
         try {
           const empresaIdAudit = getEmpresaIdOrNull(req) ?? titulo.empresa_id ?? null;
           await registrarCriacao(req as AuthenticatedRequest, 'Titulo', titulo.id, tituloData, undefined, empresaIdAudit);

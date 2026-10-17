@@ -1,7 +1,4 @@
-import { Op } from 'sequelize';
-import { Dominio } from '../../../models/blockdomi/Dominio';
-import { IPv4 } from '../../../models/blockdomi/IPv4';
-import { IPv6 } from '../../../models/blockdomi/IPv6';
+import { prisma } from '../../../db/prisma';
 import { sanitizeDominio } from '../../../utils/sanitize';
 import { DominioService } from '../DominioService';
 import { IPv4Service } from '../IPv4Service';
@@ -86,9 +83,9 @@ async function findExistingDominios(values: string[]): Promise<string[]> {
   const found = new Set<string>();
   for (let i = 0; i < values.length; i += ANALISAR_LISTA_BATCH_SIZE) {
     const chunk = values.slice(i, i + ANALISAR_LISTA_BATCH_SIZE);
-    const rows = await Dominio.findAll({
-      where: { dominio: { [Op.in]: chunk } },
-      attributes: ['dominio'],
+    const rows = await prisma.blockdomi_dominios.findMany({
+      where: { dominio: { in: chunk } },
+      select: { dominio: true },
     });
     for (const row of rows) {
       if (row.dominio?.trim()) {
@@ -106,9 +103,9 @@ async function findExistingIpv4(values: string[]): Promise<string[]> {
   const found = new Set<string>();
   for (let i = 0; i < values.length; i += ANALISAR_LISTA_BATCH_SIZE) {
     const chunk = values.slice(i, i + ANALISAR_LISTA_BATCH_SIZE);
-    const rows = await IPv4.findAll({
-      where: { ip: { [Op.in]: chunk } },
-      attributes: ['ip'],
+    const rows = await prisma.blockdomi_ipv4.findMany({
+      where: { ip: { in: chunk } },
+      select: { ip: true },
     });
     for (const row of rows) {
       if (row.ip?.trim()) {
@@ -126,9 +123,9 @@ async function findExistingIpv6(values: string[]): Promise<string[]> {
   const found = new Set<string>();
   for (let i = 0; i < values.length; i += ANALISAR_LISTA_BATCH_SIZE) {
     const chunk = values.slice(i, i + ANALISAR_LISTA_BATCH_SIZE);
-    const rows = await IPv6.findAll({
-      where: { ip: { [Op.in]: chunk } },
-      attributes: ['ip'],
+    const rows = await prisma.blockdomi_ipv6.findMany({
+      where: { ip: { in: chunk } },
+      select: { ip: true },
     });
     for (const row of rows) {
       if (row.ip?.trim()) {
@@ -211,9 +208,9 @@ export class ImportarListaBlockdomiService {
 
     const domRes = { ...empty };
     if (dominiosUniq.length > 0) {
-      const rows = await Dominio.findAll({
-        where: { dominio: { [Op.in]: dominiosUniq } },
-        attributes: ['id', 'dominio']
+      const rows = await prisma.blockdomi_dominios.findMany({
+        where: { dominio: { in: dominiosUniq } },
+        select: { id: true, dominio: true },
       });
       const encontrados = new Set(rows.map((r) => r.dominio));
       domRes.notFound = dominiosUniq.filter((d) => !encontrados.has(d)).length;
@@ -227,9 +224,9 @@ export class ImportarListaBlockdomiService {
 
     const ipv4Res = { ...empty };
     if (ipv4Uniq.length > 0) {
-      const rows = await IPv4.findAll({
-        where: { ip: { [Op.in]: ipv4Uniq } },
-        attributes: ['id', 'ip']
+      const rows = await prisma.blockdomi_ipv4.findMany({
+        where: { ip: { in: ipv4Uniq } },
+        select: { id: true, ip: true },
       });
       const encontrados = new Set(rows.map((r) => r.ip));
       ipv4Res.notFound = ipv4Uniq.filter((ip) => !encontrados.has(ip)).length;
@@ -243,9 +240,9 @@ export class ImportarListaBlockdomiService {
 
     const ipv6Res = { ...empty };
     if (ipv6Uniq.length > 0) {
-      const rows = await IPv6.findAll({
-        where: { ip: { [Op.in]: ipv6Uniq } },
-        attributes: ['id', 'ip']
+      const rows = await prisma.blockdomi_ipv6.findMany({
+        where: { ip: { in: ipv6Uniq } },
+        select: { id: true, ip: true },
       });
       const encontrados = new Set(rows.map((r) => r.ip));
       ipv6Res.notFound = ipv6Uniq.filter((ip) => !encontrados.has(ip)).length;

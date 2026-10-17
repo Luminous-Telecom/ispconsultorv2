@@ -1,5 +1,3 @@
-import { literal, type OrderItem } from 'sequelize';
-
 /** Colunas físicas comuns aos modelos de rotina (ERP e SaaS). */
 const BASE_MODEL_COLUMNS = new Set([
   'id',
@@ -18,30 +16,33 @@ const BASE_MODEL_COLUMNS = new Set([
 
 const SYNTHETIC_CRON_KEYS = new Set(['cron_minuto', 'cron_hora', 'cron_dia_mes', 'cron_mes', 'cron_dia_semana']);
 
-function sanitizeDirection(direction?: string): 'ASC' | 'DESC' {
-  return direction?.toLowerCase() === 'asc' ? 'ASC' : 'DESC';
+export type RoutineOrderBy = Array<Record<string, 'asc' | 'desc'>>;
+
+function sanitizeDirection(direction?: string): 'asc' | 'desc' {
+  return direction?.toLowerCase() === 'asc' ? 'asc' : 'desc';
 }
 
 /**
- * Monta `order` para listagem de rotinas: colunas do modelo, chaves sintéticas do grid de cron (MySQL).
+ * Monta orderBy da listagem de rotinas.
+ * Chaves sintéticas do cron caem na coluna persistida mais próxima.
  */
 export function resolveScheduledRoutineOrder(
   sort: string | undefined,
   direction: string | undefined,
   extraModelColumns?: string[]
-): OrderItem[] {
+): RoutineOrderBy {
   const dir = sanitizeDirection(direction);
   const col = (sort || 'created_at').trim();
 
   const whitelist = new Set(BASE_MODEL_COLUMNS);
   if (extraModelColumns?.length) {
-    for (const c of extraModelColumns) {
-      if (c) whitelist.add(c);
+    for (const extra of extraModelColumns) {
+      if (extra) whitelist.add(extra);
     }
   }
 
   if (whitelist.has(col) && !SYNTHETIC_CRON_KEYS.has(col)) {
-    return [[col, dir]];
+    return [{ [col]: dir }];
   }
 
   if (SYNTHETIC_CRON_KEYS.has(col)) {
@@ -49,48 +50,33 @@ export function resolveScheduledRoutineOrder(
     if (useSaasCronColumns) {
       switch (col) {
         case 'cron_minuto':
-          return [['minuto', dir]];
+          return [{ minuto: dir }];
         case 'cron_hora':
-          return [['hora', dir]];
+          return [{ hora: dir }];
         case 'cron_dia_mes':
-          return [['dia_mes', dir]];
+          return [{ dia_mes: dir }];
         case 'cron_mes':
-          return [['mes', dir]];
+          return [{ mes: dir }];
         case 'cron_dia_semana':
-          return [['dia_semana', dir]];
+          return [{ dia_semana: dir }];
         default:
           break;
       }
     }
     switch (col) {
       case 'cron_minuto':
-        return [[literal('MINUTE(hora_execucao)'), dir]];
       case 'cron_hora':
-        return [[literal('HOUR(hora_execucao)'), dir]];
+        return [{ hora_execucao: dir }];
       case 'cron_dia_mes':
-        return [[literal('COALESCE(dia_execucao, 0)'), dir]];
+        return [{ dia_execucao: dir }];
       case 'cron_mes':
-        return [
-          [
-            literal(
-              '(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(IFNULL(cron_expression, \"\")), \" \", 4), \" \", -1) AS UNSIGNED))'
-            ),
-            dir,
-          ],
-        ];
+        return [{ cron_expression: dir }];
       case 'cron_dia_semana':
-        return [
-          [
-            literal(
-              '(COALESCE(dia_semana, CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(IFNULL(cron_expression, \"\")), \" \", 5), \" \", -1) AS SIGNED)))'
-            ),
-            dir,
-          ],
-        ];
+        return [{ dia_semana: dir }];
       default:
         break;
     }
   }
 
-  return [['created_at', dir]];
+  return [{ created_at: dir }];
 }

@@ -1,5 +1,7 @@
 import axios from 'axios';
-import { Banco } from '../../../models/cadastros/Banco';
+import type { cadastros_bancos } from '@prisma/client';
+
+type Banco = cadastros_bancos;
 import { logger } from '../../../utils/logger';
 import type { BancoConfig } from '../BancoApiService';
 import type { JsonValue } from '../../../types/index';
@@ -14,24 +16,7 @@ export class BancoApiAuthService {
   static async obterToken(banco: Banco, config: BancoConfig): Promise<string | null> {
     // Asaas não usa OAuth, retorna API key diretamente
     if (banco.tipo_banco === 'asaas') {
-      let apiKey = banco.api_key;
-
-      // Banco pode vir como instância do Sequelize Model ou como objeto simples
-      interface BancoModelLike {
-        dataValues?: { api_key?: string | null };
-        getDataValue?: (key: string) => string | null;
-      }
-      const bancoModel = banco as BancoModelLike;
-
-      if (!apiKey && bancoModel.dataValues) {
-        apiKey = bancoModel.dataValues.api_key || null;
-      }
-
-      if (!apiKey && typeof bancoModel.getDataValue === 'function') {
-        const value = bancoModel.getDataValue('api_key');
-        apiKey = value || null;
-      }
-
+      const apiKey = banco.api_key?.trim() || null;
       if (!apiKey) {
         logger.error('API Key não configurada para Asaas', {
           banco_id: banco.id,
@@ -39,7 +24,6 @@ export class BancoApiAuthService {
         });
         return null;
       }
-
       return apiKey;
     }
 
