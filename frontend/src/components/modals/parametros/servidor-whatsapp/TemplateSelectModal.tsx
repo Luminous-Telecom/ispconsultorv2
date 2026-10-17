@@ -106,7 +106,6 @@ const TemplateSelectModal: React.FC<TemplateSelectModalProps> = ({
       key: 'id',
       label: t('table.id'),
       sortable: true,
-      width: '60px',
       render: (item: TemplateWhatsApp) => <span>{item.id}</span>
     },
     {

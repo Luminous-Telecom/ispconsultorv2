@@ -54,19 +54,6 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
   // Configurar colunas
   const tableColumns: TableConfig<Termo>['columns'] = useMemo(() => [
       {
-        key: 'id',
-        label: 'ID',
-        sortable: true,
-        width: '42px',
-        render: (termo: Termo) => <span>{termo.id}</span>
-      },
-      {
-        key: 'nome',
-        label: 'Nome',
-        sortable: true,
-        render: (termo: Termo) => termo.nome
-      },
-      {
         key: 'ativo',
         label: 'Status',
         sortable: true,
@@ -76,7 +63,19 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
             {termo.ativo ? 'Ativo' : 'Inativo'}
           </span>
         )
-      }
+      },
+      {
+        key: 'id',
+        label: 'ID',
+        sortable: true,
+        render: (termo: Termo) => <span>{termo.id}</span>
+      },
+      {
+        key: 'nome',
+        label: 'Nome',
+        sortable: true,
+        render: (termo: Termo) => termo.nome
+      },
     ], []);
 
   // Filtrar e ordenar termos

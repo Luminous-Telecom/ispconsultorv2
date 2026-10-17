@@ -112,7 +112,6 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({
         key: 'id',
         label: t('table.id'),
         sortable: true,
-        width: '56px',
         sortValue: (log: AuditoriaLog) => log.operacional_id ?? String(log.id),
         render: (log: AuditoriaLog) => {
           const { display, title } = formatAuditoriaListId(log);

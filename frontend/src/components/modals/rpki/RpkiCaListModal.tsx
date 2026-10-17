@@ -100,7 +100,13 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = ({
 
   const columns: ListModalConfig<RpkiCa>['columns'] = useMemo(() => {
     const base: ListModalConfig<RpkiCa>['columns'] = [
-      { key: 'id', label: 'ID', sortable: true, width: '50px', render: (item) => item.id },
+      {
+        key: 'status',
+        label: 'Status',
+        sortable: true,
+        render: (item) => renderStatusBadge(getRpkiCaStatusBadgeConfig(item.status)),
+      },
+      { key: 'id', label: 'ID', sortable: true, render: (item) => item.id },
       { key: 'nome', label: 'Nome', sortable: true, width: '220px', render: (item) => item.nome },
     ];
     if (clienteIdFilter == null) {
@@ -113,21 +119,13 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = ({
           item.cliente_id != null ? (clienteNomeById.get(item.cliente_id) ?? '—') : '—',
       });
     }
-    base.push(
-      {
-        key: 'handle',
-        label: 'Handle',
-        sortable: true,
-        width: '220px',
-        render: (item) => item.handle || '-',
-      },
-      {
-        key: 'status',
-        label: 'Status',
-        sortable: true,
-        render: (item) => renderStatusBadge(getRpkiCaStatusBadgeConfig(item.status)),
-      }
-    );
+    base.push({
+      key: 'handle',
+      label: 'Handle',
+      sortable: true,
+      width: '220px',
+      render: (item) => item.handle || '-',
+    });
     return base;
   }, [clienteIdFilter, clienteNomeById]);
 
@@ -184,10 +182,10 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = ({
           columns,
           searchPlaceholder: 'Buscar...',
           searchFields: [
+            { key: 'status', label: 'Status' },
             { key: 'id', label: 'ID' },
             { key: 'nome', label: 'Nome' },
             { key: 'handle', label: 'Handle' },
-            { key: 'status', label: 'Status' },
           ],
           emptyMessage: 'Nenhuma CA encontrada',
           multiSelect: false,

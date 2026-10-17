@@ -79,10 +79,19 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   const columns = useMemo(
     (): ListModalConfig<Cliente>['columns'] => [
       {
+        key: 'ativo',
+        label: t('table.status'),
+        sortable: true,
+        render: (item) => (
+          <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
+            {item.ativo ? t('status.active') : t('status.inactive')}
+          </span>
+        ),
+      },
+      {
         key: 'id',
         label: t('table.id'),
         sortable: true,
-        width: '42px',
         render: (item) => <span>{item.id}</span>,
       },
       {
@@ -161,16 +170,6 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
         sortable: true,
         width: '63px',
         render: (item) => <span>{item.estado || '-'}</span>,
-      },
-      {
-        key: 'ativo',
-        label: t('table.status'),
-        sortable: true,
-        render: (item) => (
-          <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
-            {item.ativo ? t('status.active') : t('status.inactive')}
-          </span>
-        ),
       },
       {
         key: 'created_at',

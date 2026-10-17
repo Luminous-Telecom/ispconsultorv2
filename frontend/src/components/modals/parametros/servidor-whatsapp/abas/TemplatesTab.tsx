@@ -100,7 +100,6 @@ const TemplatesTab: React.FC<TemplatesTabProps> = () => {
       key: 'id',
       label: t('table.id'),
       sortable: true,
-      width: '60px',
       render: (item: TemplateWhatsApp) => <span>{item.id}</span>
     },
     {

@@ -12,7 +12,18 @@ const STATUS_LABELS: Record<string, string> = {
 export function useRpkiRoaListColumns(clienteIdFilter?: number): ListModalConfig<RpkiRoaRow>['columns'] {
   return useMemo(() => {
     const cols: ListModalConfig<RpkiRoaRow>['columns'] = [
-      { key: 'id', label: 'ID', sortable: true, width: '42px', render: (item) => String(item.id ?? '-') },
+      {
+        key: 'status',
+        label: 'Status',
+        sortable: true,
+        badgeLabels: ['active', 'revoked', 'expired'],
+        render: (item) => {
+          const status = String(item.status ?? 'active');
+          const cor = status === 'active' ? 'bg-success' : status === 'revoked' ? 'bg-warning' : 'bg-secondary';
+          return <span className={`badge ${cor}`}>{STATUS_LABELS[status] ?? status}</span>;
+        },
+      },
+      { key: 'id', label: 'ID', sortable: true, render: (item) => String(item.id ?? '-') },
       { key: 'ca_nome', label: 'CA', sortable: true, width: '180px', render: (item) => String(item.ca_nome ?? '-') },
     ];
     if (clienteIdFilter == null) {
@@ -49,17 +60,6 @@ export function useRpkiRoaListColumns(clienteIdFilter?: number): ListModalConfig
         width: '165px',
         render: (item) => (item.revoked_at ? formatDateTime(item.revoked_at) : '-'),
       },
-      {
-        key: 'status',
-        label: 'Status',
-        sortable: true,
-        badgeLabels: ['active', 'revoked', 'expired'],
-        render: (item) => {
-          const status = String(item.status ?? 'active');
-          const cor = status === 'active' ? 'bg-success' : status === 'revoked' ? 'bg-warning' : 'bg-secondary';
-          return <span className={`badge ${cor}`}>{STATUS_LABELS[status] ?? status}</span>;
-        },
-      }
     );
     return cols;
   }, [clienteIdFilter]);
@@ -68,6 +68,7 @@ export function useRpkiRoaListColumns(clienteIdFilter?: number): ListModalConfig
 export function useRpkiRoaListSearchFields(clienteIdFilter?: number) {
   return useMemo(() => {
     const fields = [
+      { key: 'status', label: 'Status' },
       { key: 'id', label: 'ID' },
       { key: 'ca_nome', label: 'CA' },
     ];
@@ -77,7 +78,6 @@ export function useRpkiRoaListSearchFields(clienteIdFilter?: number) {
     fields.push(
       { key: 'prefix', label: 'Prefixo' },
       { key: 'asn', label: 'ASN' },
-      { key: 'status', label: 'Status' }
     );
     return fields;
   }, [clienteIdFilter]);

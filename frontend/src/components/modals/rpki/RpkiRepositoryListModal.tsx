@@ -144,7 +144,15 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = ({
 
   const columns: ListModalConfig<RepositoryRow>['columns'] = useMemo(() => {
     const cols: ListModalConfig<RepositoryRow>['columns'] = [
-      { key: 'id', label: 'ID', sortable: true, width: '50px', render: (item) => item.id },
+      {
+        key: 'publication_status',
+        label: 'Status',
+        sortable: true,
+        badgeLabels: ['pending', 'active', 'error'],
+        render: (item) =>
+          renderStatusBadge(getRpkiCaStatusBadgeConfig(item.publication_status)),
+      },
+      { key: 'id', label: 'ID', sortable: true, render: (item) => item.id },
       { key: 'ca_nome', label: 'CA', sortable: true, width: '180px', render: (item) => item.ca_nome || '-' },
     ];
     if (clienteIdFilter == null) {
@@ -166,14 +174,6 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = ({
       sortable: true,
       width: '170px',
       render: (item) => formatLastExchange(item.last_publish_at),
-    },
-    {
-      key: 'publication_status',
-      label: 'Status',
-      sortable: true,
-      badgeLabels: ['pending', 'active', 'error'],
-      render: (item) =>
-        renderStatusBadge(getRpkiCaStatusBadgeConfig(item.publication_status)),
     });
     return cols;
   }, [clienteIdFilter]);
@@ -224,11 +224,11 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = ({
           columns,
           searchPlaceholder: 'Buscar...',
           searchFields: [
+            { key: 'publication_status', label: 'Status' },
             { key: 'id', label: 'ID' },
             { key: 'ca_nome', label: 'CA' },
             { key: 'cliente_nome', label: 'Cliente' },
             { key: 'repository_name', label: 'Publisher Handle' },
-            { key: 'publication_status', label: 'Status' },
           ],
           emptyMessage: 'Nenhum repositório encontrado',
           multiSelect: false,

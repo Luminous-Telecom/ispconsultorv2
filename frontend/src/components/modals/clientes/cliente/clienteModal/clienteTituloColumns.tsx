@@ -11,26 +11,6 @@ type TranslateFn = (key: keyof TranslationKeys, params?: Record<string, string |
 export function buildClienteTituloColumns(t: TranslateFn): TableColumnType<CarneParcela>[] {
   return [
     {
-      key: 'id',
-      label: t('table.id'),
-      sortable: true,
-      searchable: true,
-      width: 42,
-      resizable: true,
-      render: (item) => item.id,
-    },
-    {
-      key: 'contrato_id',
-      label: t('table.contract'),
-      sortable: true,
-      searchable: true,
-      render: (item) => {
-        const itemAny = item as unknown as { contrato_id?: number; contrato?: { id?: number } };
-        const contratoId = itemAny.contrato_id || itemAny.contrato?.id;
-        return contratoId || '-';
-      },
-    },
-    {
       key: 'status',
       label: t('table.status'),
       sortable: true,
@@ -62,6 +42,25 @@ export function buildClienteTituloColumns(t: TranslateFn): TableColumnType<Carne
                       : status}
         </span>
         );
+      },
+    },
+    {
+      key: 'id',
+      label: t('table.id'),
+      sortable: true,
+      searchable: true,
+      resizable: true,
+      render: (item) => item.id,
+    },
+    {
+      key: 'contrato_id',
+      label: t('table.contract'),
+      sortable: true,
+      searchable: true,
+      render: (item) => {
+        const itemAny = item as unknown as { contrato_id?: number; contrato?: { id?: number } };
+        const contratoId = itemAny.contrato_id || itemAny.contrato?.id;
+        return contratoId || '-';
       },
     },
     {

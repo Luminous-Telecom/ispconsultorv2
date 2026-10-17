@@ -8,10 +8,38 @@ export function useContratoListColumns(): ListModalConfig<ContratoRow>['columns'
   return useMemo(
     (): ListModalConfig<ContratoRow>['columns'] => [
       {
+        key: 'status',
+        label: 'Status',
+        sortable: true,
+        badgeLabels: ['Ativo', 'Inativo', 'Suspenso', 'Cancelado'],
+        render: (item) => {
+          const getStatusColor = (status: string) => {
+            switch (status?.toLowerCase()) {
+              case 'ativo':
+                return 'bg-success';
+              case 'inativo':
+                return 'bg-danger';
+              case 'suspenso':
+                return 'bg-danger';
+              case 'cancelado':
+                return 'bg-secondary';
+              default:
+                return 'bg-warning text-dark';
+            }
+          };
+          return (
+            <span className={`badge ${getStatusColor(item.status || '')}`}>
+              {item.status
+                ? item.status.charAt(0).toUpperCase() + item.status.slice(1).toLowerCase()
+                : '-'}
+            </span>
+          );
+        },
+      },
+      {
         key: 'id',
         label: 'ID',
         sortable: true,
-        width: '42px',
         render: (item) => <span>{item.id}</span>,
       },
       {
@@ -112,35 +140,6 @@ export function useContratoListColumns(): ListModalConfig<ContratoRow>['columns'
           item.valor_final ? formatContratoCurrency(Number(item.valor_final)) : '-',
       },
       {
-        key: 'status',
-        label: 'Status',
-        sortable: true,
-        badgeLabels: ['Ativo', 'Inativo', 'Suspenso', 'Cancelado'],
-        render: (item) => {
-          const getStatusColor = (status: string) => {
-            switch (status?.toLowerCase()) {
-              case 'ativo':
-                return 'bg-success';
-              case 'inativo':
-                return 'bg-danger';
-              case 'suspenso':
-                return 'bg-danger';
-              case 'cancelado':
-                return 'bg-secondary';
-              default:
-                return 'bg-warning text-dark';
-            }
-          };
-          return (
-            <span className={`badge ${getStatusColor(item.status || '')}`}>
-              {item.status
-                ? item.status.charAt(0).toUpperCase() + item.status.slice(1).toLowerCase()
-                : '-'}
-            </span>
-          );
-        },
-      },
-      {
         key: 'data_inicio',
         label: 'Data Início',
         sortable: true,
@@ -169,10 +168,10 @@ export function useContratoListColumns(): ListModalConfig<ContratoRow>['columns'
 export const CONTRATO_LIST_DEFAULT_SEARCH_FIELD = 'cliente_razao_social';
 
 export const CONTRATO_LIST_SEARCH_FIELDS = [
+  { key: 'status', label: 'Status' },
   { key: 'id', label: 'ID' },
   { key: 'cliente_razao_social', label: 'Cliente' },
   { key: 'plano_nome', label: 'Plano' },
-  { key: 'status', label: 'Status' },
   { key: 'valor_final_num', label: 'Valor Final' },
   { key: 'endereco', label: 'Endereço' },
   { key: 'cidade', label: 'Cidade' },

@@ -124,7 +124,6 @@ const OrdemServicoArquivosList: React.FC<OrdemServicoArquivosListProps> = ({ ord
         label: 'ID',
         sortable: true,
         searchable: true,
-        width: '70px',
         render: (item) => item.id,
       },
       {

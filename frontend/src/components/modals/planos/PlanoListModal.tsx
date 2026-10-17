@@ -95,10 +95,25 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
   const columns = useMemo(
     (): ListModalConfig<Plano>['columns'] => [
       {
+        key: 'status',
+        label: t('table.status'),
+        sortable: true,
+        render: (item) => {
+          const statusMap: Record<string, string> = {
+            ativo: t('status.active'),
+            inativo: t('status.inactive'),
+          };
+          return (
+            <span className={`badge ${getStatusBadgeClass(item.status)}`}>
+              {statusMap[item.status] || item.status}
+            </span>
+          );
+        },
+      },
+      {
         key: 'id',
         label: t('table.id'),
         sortable: true,
-        width: '42px',
         render: (item) => <span>{item.id}</span>,
       },
       {
@@ -152,22 +167,6 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
         ),
       },
       {
-        key: 'status',
-        label: t('table.status'),
-        sortable: true,
-        render: (item) => {
-          const statusMap: Record<string, string> = {
-            ativo: t('status.active'),
-            inativo: t('status.inactive'),
-          };
-          return (
-            <span className={`badge ${getStatusBadgeClass(item.status)}`}>
-              {statusMap[item.status] || item.status}
-            </span>
-          );
-        },
-      },
-      {
         key: 'created_at',
         label: t('table.createdAt'),
         sortable: true,
@@ -184,13 +183,13 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
 
   const searchFields = useMemo(
     () => [
+      { key: 'status', label: t('table.status') },
       { key: 'id', label: t('table.id') },
       { key: 'nome_plano', label: t('table.planName') },
       { key: 'descricao', label: t('form.description') },
       { key: 'tipo_servico', label: t('table.serviceType') },
       { key: 'valor_mensal', label: t('table.monthlyValue') },
       { key: 'quantidade_usuarios', label: t('form.usersQuantity') },
-      { key: 'status', label: t('table.status') },
     ],
     [t]
   );

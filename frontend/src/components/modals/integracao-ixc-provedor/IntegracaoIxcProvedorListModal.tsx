@@ -176,10 +176,19 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
   const columns = useMemo(
     (): ListModalConfig<IntegracaoIxcProvedor>['columns'] => [
       {
+        key: 'ativo',
+        label: t('table.status'),
+        sortable: true,
+        render: (item) => (
+          <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
+            {item.ativo ? t('status.active') : t('status.inactive')}
+          </span>
+        ),
+      },
+      {
         key: 'id',
         label: t('table.id'),
         sortable: true,
-        width: '42px',
         render: (item) => <span>{item.id}</span>,
       },
       { key: 'nome', label: t('form.name'), sortable: true, render: (item) => item.nome },
@@ -200,16 +209,6 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
         label: 'URL da API',
         sortable: true,
         render: (item) => item.api_url || '-',
-      },
-      {
-        key: 'ativo',
-        label: t('table.status'),
-        sortable: true,
-        render: (item) => (
-          <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
-            {item.ativo ? t('status.active') : t('status.inactive')}
-          </span>
-        ),
       },
       {
         key: 'created_at',

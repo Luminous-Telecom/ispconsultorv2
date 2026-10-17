@@ -3,6 +3,22 @@ import { formatDateTime, formatDate } from 'utils/formatters';
 import type { ListModalColumn } from 'types/modal';
 import type { BlockdomiOficioListRow, BlockdomiTranslateFn } from './blockdomiListTypes';
 
+export function getBlockdomiAtivoColumn<T extends BlockdomiOficioListRow>(
+  t: BlockdomiTranslateFn
+): ListModalColumn<T> {
+  return {
+    key: 'ativo',
+    label: t('table.status'),
+    sortable: true,
+    badgeLabels: [t('status.active'), t('status.inactive')],
+    render: (item) => (
+      <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
+        {item.ativo ? t('status.active') : t('status.inactive')}
+      </span>
+    ),
+  };
+}
+
 export function getBlockdomiIdColumn<T extends BlockdomiOficioListRow>(
   t: BlockdomiTranslateFn
 ): ListModalColumn<T> {
@@ -10,7 +26,6 @@ export function getBlockdomiIdColumn<T extends BlockdomiOficioListRow>(
     key: 'id',
     label: t('table.id'),
     sortable: true,
-    width: '42px',
     render: (item) => <span>{item.id}</span>,
   };
 }
@@ -77,18 +92,6 @@ export function getBlockdomiCommonColumns<T extends BlockdomiOficioListRow>(
       width: '100px',
       sortValue: (item) => (item.link_planilha_dominios?.trim() ? 1 : 0),
       render: (item) => (item.link_planilha_dominios?.trim() ? t('ui.yes') : t('ui.no')),
-    },
-    {
-      key: 'ativo',
-      label: t('table.status'),
-      sortable: true,
-      width: '80px',
-      badgeLabels: [t('status.active'), t('status.inactive')],
-      render: (item) => (
-        <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
-          {item.ativo ? t('status.active') : t('status.inactive')}
-        </span>
-      ),
     },
     {
       key: 'descricao',

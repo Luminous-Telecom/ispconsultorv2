@@ -34,7 +34,6 @@ export function useLogsModalColumns({
         key: 'id' as const,
         label: t('table.id'),
         sortable: true,
-        width: '56px',
         sortValue: (log: AuditoriaLog) => log.operacional_id ?? String(log.id),
         render: (log: AuditoriaLog) => {
           const { display, title } = formatAuditoriaListId(log);
@@ -158,7 +157,6 @@ export function useLogsModalColumns({
         key: 'id' as const,
         label: t('table.id'),
         sortable: true,
-        width: '42px',
         render: (i) => <span className="small">{i.id}</span>,
       },
       {
@@ -251,10 +249,19 @@ export function useLogsModalColumns({
   const mensagemColumns: TableConfig<MensagemItem>['columns'] = useMemo(
     () => [
       {
+        key: 'status' as const,
+        label: t('history.status'),
+        sortable: true,
+        render: (i: MensagemItem) => (
+          <Badge variant={i.status === 'enviada' ? 'success' : 'danger'}>
+            {i.status === 'enviada' ? t('history.sent') : t('history.errorStatus')}
+          </Badge>
+        ),
+      },
+      {
         key: 'id' as const,
         label: t('table.id'),
         sortable: true,
-        width: '42px',
         sortValue: (i: MensagemItem) => i.historico_id_real ?? i.id,
         render: (i: MensagemItem) => <span>{i.historico_id_real ?? i.id}</span>,
       },
@@ -328,16 +335,6 @@ export function useLogsModalColumns({
           <div className="text-truncate truncate-max-300"  title={i.mensagem}>
             {i.mensagem.length > 50 ? `${i.mensagem.substring(0, 50)}...` : i.mensagem}
           </div>
-        ),
-      },
-      {
-        key: 'status' as const,
-        label: t('history.status'),
-        sortable: true,
-        render: (i: MensagemItem) => (
-          <Badge variant={i.status === 'enviada' ? 'success' : 'danger'}>
-            {i.status === 'enviada' ? t('history.sent') : t('history.errorStatus')}
-          </Badge>
         ),
       },
       {

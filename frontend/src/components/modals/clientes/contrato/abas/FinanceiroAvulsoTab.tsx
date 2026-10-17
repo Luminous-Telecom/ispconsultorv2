@@ -144,9 +144,9 @@ const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
               searchable: true,
               searchPlaceholder: t('layout.searchPlaceholder'),
               searchFields: [
+                { key: 'status', label: t('table.status') },
                 { key: 'id', label: t('table.id') },
                 { key: 'numero_titulo', label: t('table.titleNumber') },
-                { key: 'status', label: t('table.status') },
                 { key: 'cliente', label: t('table.client') },
                 { key: 'valor', label: t('form.value') },
                 { key: 'nfse_numero', label: t('table.nf') }

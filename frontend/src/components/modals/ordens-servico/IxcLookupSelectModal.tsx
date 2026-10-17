@@ -49,7 +49,6 @@ const IxcLookupSelectModal: React.FC<IxcLookupSelectModalProps> = ({
         key: 'id',
         label: 'ID',
         sortable: true,
-        width: '90px',
         render: (item) => <span>{item.id}</span>,
       },
       {

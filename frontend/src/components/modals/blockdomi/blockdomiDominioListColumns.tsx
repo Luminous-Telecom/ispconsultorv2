@@ -1,12 +1,17 @@
 import type { ListModalConfig } from 'types/modal';
 import { Dominio } from 'types';
 import type { BlockdomiTranslateFn } from './blockdomiListTypes';
-import { getBlockdomiCommonColumns, getBlockdomiIdColumn } from './blockdomiListCommonColumns';
+import {
+  getBlockdomiAtivoColumn,
+  getBlockdomiCommonColumns,
+  getBlockdomiIdColumn,
+} from './blockdomiListCommonColumns';
 
 export function getBlockdomiDominioColumns(
   t: BlockdomiTranslateFn
 ): ListModalConfig<Dominio>['columns'] {
   return [
+    getBlockdomiAtivoColumn<Dominio>(t),
     getBlockdomiIdColumn<Dominio>(t),
     {
       key: 'dominio',

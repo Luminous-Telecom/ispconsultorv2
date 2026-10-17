@@ -84,12 +84,17 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = ({
   );
 
   const columns: ListModalConfig<RpkiAspa>['columns'] = [
-    { key: 'id', label: 'ID', sortable: true, width: '60px', render: (item) => item.id },
+    {
+      key: 'status',
+      label: 'Status',
+      sortable: true,
+      render: (item) => renderStatusBadge(getRpkiAspaStatusBadgeConfig(item.status)),
+    },
+    { key: 'id', label: 'ID', sortable: true, render: (item) => item.id },
     {
       key: 'ca_id',
       label: 'CA',
       sortable: true,
-      width: '180px',
       render: (item) => caNomeById.get(item.ca_id) ?? `#${item.ca_id}`,
     },
     {
@@ -104,13 +109,6 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = ({
       label: 'Providers',
       sortable: false,
       render: (item) => (item.providers_json ?? []).map((p) => `AS${p}`).join(', ') || '-',
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      sortable: true,
-      width: '110px',
-      render: (item) => renderStatusBadge(getRpkiAspaStatusBadgeConfig(item.status)),
     },
   ];
 

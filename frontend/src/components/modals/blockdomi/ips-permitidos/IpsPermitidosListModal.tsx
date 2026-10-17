@@ -65,7 +65,6 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
         key: 'id',
         label: t('table.id'),
         sortable: true,
-        width: '60px',
         render: (item) => item.id,
       },
       {

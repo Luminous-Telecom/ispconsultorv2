@@ -138,12 +138,18 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
 
   const columns: ListModalConfig<RpkiCaParent>['columns'] = useMemo(() => {
     const cols: ListModalConfig<RpkiCaParent>['columns'] = [
-      { key: 'id', label: 'ID', sortable: true, width: '50px', render: (item) => item.id },
+      {
+        key: 'provisioning_status',
+        label: 'Status',
+        sortable: true,
+        badgeLabels: ['pending', 'active', 'error'],
+        render: (item) => renderStatusBadge(getRpkiCaStatusBadgeConfig(item.provisioning_status)),
+      },
+      { key: 'id', label: 'ID', sortable: true, render: (item) => item.id },
       {
         key: 'ca_id',
         label: 'CA',
         sortable: false,
-        width: '200px',
         render: (item) => caById.get(Number(item.ca_id))?.nome || `#${item.ca_id}`,
       },
     ];
@@ -213,13 +219,6 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
         if (item.last_sync_at) return <span className="badge bg-success">OK</span>;
         return <span className="badge bg-secondary">Pendente</span>;
       },
-    },
-    {
-      key: 'provisioning_status',
-      label: 'Status',
-      sortable: true,
-      badgeLabels: ['pending', 'active', 'error'],
-      render: (item) => renderStatusBadge(getRpkiCaStatusBadgeConfig(item.provisioning_status)),
     });
     return cols;
   }, [caById, clienteIdFilter, clienteNomeById, resourcesByCa]);
@@ -270,11 +269,11 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
           columns,
           searchPlaceholder: 'Buscar...',
           searchFields: [
+            { key: 'provisioning_status', label: 'Status' },
             { key: 'id', label: 'ID' },
             { key: 'parent_name', label: 'Nome da CA-pai' },
             { key: 'parent_handle', label: 'Parent Handle' },
             { key: 'child_handle', label: 'Child Handle' },
-            { key: 'provisioning_status', label: 'Status' },
           ],
           emptyMessage: 'Nenhuma CA-pai encontrada',
           multiSelect: false,

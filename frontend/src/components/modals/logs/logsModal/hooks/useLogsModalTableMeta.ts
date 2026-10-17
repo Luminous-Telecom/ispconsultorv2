@@ -214,11 +214,11 @@ export function useLogsModalTableMeta({
           { key: 'mensagem_erro', label: t('blockdomi.logsMensagemErro') },
         ]
       : [
+          { key: 'status', label: t('history.status') },
           { key: 'id', label: t('table.id') },
           { key: 'cliente_nome', label: t('history.client') },
           { key: 'destinatario', label: isEmail ? t('history.recipient') : t('history.phone') },
           { key: 'mensagem', label: t('history.message') },
-          { key: 'status', label: t('history.status') },
         ];
 
   const defaultSearchField = isBlockdomiApi ? 'ip' : isAuditoria ? 'timestamp' : 'destinatario';

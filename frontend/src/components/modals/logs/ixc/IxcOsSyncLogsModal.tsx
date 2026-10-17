@@ -239,7 +239,6 @@ const IxcOsSyncLogsModal: React.FC<IxcOsSyncLogsModalProps> = ({ show }) => {
       key: 'status',
       label: t('table.status'),
       sortable: false,
-      width: '90px',
       render: (item) => {
         const status = item.status ?? '';
         const variant = status === 'success' ? 'success' : status === 'failed' ? 'danger' : 'secondary';

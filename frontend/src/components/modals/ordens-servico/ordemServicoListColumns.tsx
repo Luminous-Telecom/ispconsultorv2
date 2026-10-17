@@ -21,22 +21,28 @@ const truncar = (texto?: string, max = 80): string => {
 };
 
 export const ORDEM_SERVICO_LIST_SEARCH_FIELDS = [
+  { key: 'status', label: 'Status' },
   { key: 'id', label: 'ID' },
   { key: 'cliente_nome', label: 'Cliente' },
   { key: 'operador_nome', label: 'Operador' },
   { key: 'estrutura_nome', label: 'Estrutura' },
   { key: 'mensagem', label: 'Descrição' },
   { key: 'protocolo', label: 'Protocolo' },
-  { key: 'status', label: 'Status' },
 ] as const;
 
 export function getOrdemServicoListColumns(): OrdemServicoListColumn[] {
   return [
     {
+      key: 'status',
+      label: 'Status',
+      sortable: true,
+      badgeLabels: ORDEM_SERVICO_STATUS_BADGE_LABELS,
+      render: (item) => renderStatusBadge(getOrdemServicoStatusBadgeConfig(item.status)),
+    },
+    {
       key: 'id',
       label: 'ID',
       sortable: true,
-      width: '65px',
       render: (item) => <span>{item.id_local ?? item.id}</span>,
     },
     {
@@ -80,14 +86,6 @@ export function getOrdemServicoListColumns(): OrdemServicoListColumn[] {
       sortable: false,
       width: '200px',
       render: (item) => <span title={item.mensagem || ''}>{truncar(item.mensagem, 60)}</span>,
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      sortable: true,
-      width: '130px',
-      badgeLabels: ORDEM_SERVICO_STATUS_BADGE_LABELS,
-      render: (item) => renderStatusBadge(getOrdemServicoStatusBadgeConfig(item.status)),
     },
     {
       key: 'id_tecnico',

@@ -72,10 +72,19 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
   const columns = useMemo(
     (): ListModalConfig<TipoCobrancaContrato>['columns'] => [
       {
+        key: 'ativo',
+        label: t('table.status'),
+        sortable: true,
+        render: (item) => (
+          <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
+            {item.ativo ? t('status.active') : t('status.inactive')}
+          </span>
+        ),
+      },
+      {
         key: 'id',
         label: t('table.id'),
         sortable: true,
-        width: '42px',
         render: (item) => <span>{item.id}</span>,
       },
       { key: 'nome', label: t('form.name'), sortable: true, render: (item) => item.nome },
@@ -90,16 +99,6 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
         label: t('table.periodicity'),
         sortable: true,
         render: (item) => <span>{formatPeriodicity(item.periodicidade)}</span>,
-      },
-      {
-        key: 'ativo',
-        label: t('table.status'),
-        sortable: true,
-        render: (item) => (
-          <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
-            {item.ativo ? t('status.active') : t('status.inactive')}
-          </span>
-        ),
       },
       {
         key: 'created_at',

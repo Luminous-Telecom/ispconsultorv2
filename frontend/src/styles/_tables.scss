@@ -340,39 +340,19 @@ label {
   color: var(--text-primary) !important;
 }
 
-/* Coluna ID: shrink-to-fit quando a tabela está em layout automático */
-.table:not(.table-columns-locked) th.col-id,
-.table:not(.table-columns-locked) td.col-id,
-.table:not(.table-columns-locked) colgroup col.col-id {
-  width: 1% !important;
+/* Coluna ID — largura fixa única em todas as tabelas (ID_COLUMN_WIDTH_PX) */
+.table th.col-id,
+.table td.col-id,
+colgroup col.col-id {
+  width: 52px !important;
   min-width: 52px !important;
-  max-width: none !important;
+  max-width: 52px !important;
   white-space: nowrap !important;
 }
 
-.table:not(.table-columns-locked) th.col-id,
-.table:not(.table-columns-locked) td.col-id {
-  overflow: visible !important;
-  text-overflow: clip !important;
-}
-
-.table:not(.table-columns-locked) tbody td.col-id {
-  max-width: none !important;
-}
-
-.table:not(.table-columns-locked) thead th.col-id .text-truncate {
-  overflow: visible;
-  text-overflow: clip;
-}
-
-/* Com colunas redimensionadas, ID respeita a largura definida */
-.table.table-columns-locked th.col-id,
-.table.table-columns-locked td.col-id,
-.table.table-columns-locked colgroup col.col-id {
+.table-resizable-enabled th.col-id {
   min-width: 52px !important;
-  white-space: nowrap !important;
-  overflow: visible !important;
-  text-overflow: clip !important;
+  max-width: 52px !important;
 }
 
 .table th.col-checkbox,
@@ -407,11 +387,27 @@ colgroup col.col-checkbox {
   max-width: 120px !important;
 }
 
+/* Status/Ativo — largura fixa única em todas as tabelas (STATUS_COLUMN_WIDTH_PX) */
 .table th.col-status,
-.table td.col-status {
-  width: 70px !important;
-  min-width: 70px !important;
-  max-width: 70px !important;
+.table td.col-status,
+colgroup col.col-status {
+  width: 80px !important;
+  min-width: 80px !important;
+  max-width: 80px !important;
+  white-space: nowrap !important;
+}
+
+.table-resizable-enabled th.col-status {
+  min-width: 80px !important;
+  max-width: 80px !important;
+}
+
+.table th.col-status .badge,
+.table td.col-status .badge {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
 }
 
 .table th.col-numero,

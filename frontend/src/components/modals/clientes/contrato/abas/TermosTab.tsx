@@ -57,11 +57,11 @@ const TermosTab: React.FC<TermosTabProps> = ({
               searchable: true,
               searchPlaceholder: t('layout.searchPlaceholder'),
               searchFields: [
+                { key: 'ativo', label: t('table.status') },
                 { key: 'id', label: t('table.id') },
                 { key: 'nome_termo', label: t('table.termName') },
                 { key: 'assinado', label: t('table.accepted') },
                 { key: 'aceito_por', label: t('table.acceptedBy') },
-                { key: 'ativo', label: t('table.status') }
               ],
               sortable: true,
               sortColumn,

@@ -1,7 +1,11 @@
 import React, { useMemo, useCallback, useRef, useEffect } from 'react';
 import { useElementProperties } from 'hooks/useElementProperties';
 import { useI18n } from 'contexts/I18nContext';
-import { getColumnMinWidth, ID_COLUMN_MIN_WIDTH_PX } from './columnWidthUtils';
+import {
+  getColumnMinWidth,
+  getFixedColumnWidthPx,
+  isStatusColumnKey,
+} from './columnWidthUtils';
 import { TableColumn as TableColumnType, SortDirection } from './types';
 
 interface TableColumnProps<T = Record<string, unknown>> {
@@ -30,7 +34,12 @@ const TableColumn = <T extends { id: number | string }>({
   const { t } = useI18n();
   const isSorted = sortColumn === column.key;
   const isSortable = column.sortable !== false && onSort && column.key !== 'acoes' && column.key !== 'actions';
-  const isResizable = (column.resizable ?? true) && column.key !== 'acoes' && column.key !== 'actions';
+  const isFixedWidthColumn = getFixedColumnWidthPx(column.key) != null;
+  const isResizable =
+    (column.resizable ?? true) &&
+    !isFixedWidthColumn &&
+    column.key !== 'acoes' &&
+    column.key !== 'actions';
   const wasResizingRef = useRef(false);
   const columnRef = useRef<HTMLTableHeaderCellElement>(null);
 
@@ -66,8 +75,16 @@ const TableColumn = <T extends { id: number | string }>({
 
   const columnStyles = useMemo(() => {
     const styles: Record<string, string> = {};
-    const isLockedWidth = columnWidth !== undefined;
+    const fixedWidth = getFixedColumnWidthPx(column.key);
+    if (fixedWidth != null) {
+      const widthValue = `${fixedWidth}px`;
+      styles.width = widthValue;
+      styles.minWidth = widthValue;
+      styles.maxWidth = widthValue;
+      return styles;
+    }
 
+    const isLockedWidth = columnWidth !== undefined;
     let effectiveWidth: number | string | undefined;
     if (isLockedWidth) {
       effectiveWidth = columnWidth;
@@ -82,15 +99,13 @@ const TableColumn = <T extends { id: number | string }>({
         typeof effectiveWidth === 'number'
           ? effectiveWidth
           : parseInt(String(effectiveWidth).replace('px', ''), 10);
-      const clampedPx =
-        column.key === 'id'
-          ? Math.max(ID_COLUMN_MIN_WIDTH_PX, Number.isNaN(widthPx) ? ID_COLUMN_MIN_WIDTH_PX : widthPx)
-          : widthPx;
-      const widthValue = `${clampedPx}px`;
-      styles.width = widthValue;
-      styles.minWidth = widthValue;
-      if (isLockedWidth) {
-        styles.maxWidth = widthValue;
+      if (!Number.isNaN(widthPx)) {
+        const widthValue = `${widthPx}px`;
+        styles.width = widthValue;
+        styles.minWidth = widthValue;
+        if (isLockedWidth) {
+          styles.maxWidth = widthValue;
+        }
       }
     } else {
       const colMin = getColumnMinWidth({
@@ -102,7 +117,7 @@ const TableColumn = <T extends { id: number | string }>({
       styles.minWidth = `${colMin ?? minWidthFromTitle}px`;
     }
 
-    if (column.minWidth && column.key !== 'id') {
+    if (column.minWidth) {
       styles.minWidth = typeof column.minWidth === 'number' ? `${column.minWidth}px` : column.minWidth;
     }
     if (column.maxWidth) {
@@ -124,6 +139,7 @@ const TableColumn = <T extends { id: number | string }>({
   const columnClasses = useMemo(() => {
     const classes: string[] = [];
     if (column.key === 'id') classes.push('col-id');
+    if (isStatusColumnKey(column.key)) classes.push('col-status');
     if (column.className) classes.push(column.className);
     if (column.align || column.headerAlign) {
       classes.push(`text-${column.headerAlign || column.align}`);

@@ -77,13 +77,13 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
 
   const searchFields = useMemo(
     () => [
+      { key: 'status', label: t('table.status') },
       { key: 'id', label: t('table.id') },
       { key: 'numero_documento', label: t('table.documentNumber') },
       { key: 'nota_fiscal', label: t('form.invoiceNumber') },
       { key: 'fornecedor', label: t('table.supplier') },
       { key: 'vencimento', label: t('table.dueDate') },
       { key: 'valor', label: t('table.value') },
-      { key: 'status', label: t('table.status') },
       { key: 'tipo', label: t('form.paymentType') },
     ],
     [t]

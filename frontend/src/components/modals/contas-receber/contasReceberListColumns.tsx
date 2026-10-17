@@ -12,11 +12,26 @@ export function useContasReceberListColumns(
   return useMemo(
     (): ListModalConfig<TituloItemUnion>['columns'] => [
       {
+        key: 'status',
+        label: t('table.status'),
+        sortable: true,
+        searchable: true,
+        badgeLabels: [
+          t('status.pending'),
+          t('status.paid'),
+          t('status.overdue'),
+          t('status.cancelled'),
+          t('status.partial'),
+          t('status.paidLate'),
+        ],
+        resizable: true,
+        render: (item: TituloItemUnion) => getStatusBadge(item),
+      },
+      {
         key: 'id',
         label: t('table.id'),
         sortable: true,
         searchable: true,
-        width: 42,
         resizable: true,
         render: (item: TituloItemUnion) => <span>{item.id}</span>,
       },
@@ -44,22 +59,6 @@ export function useContasReceberListColumns(
         width: 75,
         resizable: true,
         render: (item: TituloItemUnion) => item.contrato_id || '-',
-      },
-      {
-        key: 'status',
-        label: t('table.status'),
-        sortable: true,
-        searchable: true,
-        badgeLabels: [
-          t('status.pending'),
-          t('status.paid'),
-          t('status.overdue'),
-          t('status.cancelled'),
-          t('status.partial'),
-          t('status.paidLate'),
-        ],
-        resizable: true,
-        render: (item: TituloItemUnion) => getStatusBadge(item),
       },
       {
         key: 'plano_nome',

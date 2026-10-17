@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { TableColumn } from 'components/tables/types';
-import { ID_COLUMN_MIN_WIDTH_PX } from 'components/tables/columnWidthUtils';
+import { getFixedColumnWidthPx } from 'components/tables/columnWidthUtils';
 
 interface UseColumnResizingOptions<T = Record<string, unknown>> {
   tableId: string;
@@ -47,13 +47,11 @@ export function useColumnResizing<T = Record<string, unknown>>({
       const parsed = JSON.parse(saved) as Record<string, number>;
       const validWidths: Record<string, number> = {};
       columns.forEach((column) => {
+        // ID/Status têm largura fixa global — não restaurar do localStorage.
+        if (getFixedColumnWidthPx(column.key) != null) return;
         const w = parsed[column.key];
         if (w) {
-          let clamped = Math.max(minColumnWidth, Math.min(maxColumnWidth, w));
-          if (column.key === 'id') {
-            clamped = Math.max(ID_COLUMN_MIN_WIDTH_PX, clamped);
-          }
-          validWidths[column.key] = clamped;
+          validWidths[column.key] = Math.max(minColumnWidth, Math.min(maxColumnWidth, w));
         }
       });
       setColumnWidths(validWidths);
@@ -76,11 +74,17 @@ export function useColumnResizing<T = Record<string, unknown>>({
     currentWidth: number,
     snapshot?: Record<string, number>
   ) => {
+    if (getFixedColumnWidthPx(columnKey) != null) return;
+
     const startWidth = Math.round(currentWidth);
     const hasSnapshot = snapshot != null && Object.keys(snapshot).length > 0;
 
     if (hasSnapshot) {
-      setColumnWidths(snapshot);
+      const filtered: Record<string, number> = {};
+      Object.entries(snapshot).forEach(([key, value]) => {
+        if (getFixedColumnWidthPx(key) == null) filtered[key] = value;
+      });
+      setColumnWidths(filtered);
     }
 
     activeResizeRef.current = {
@@ -98,11 +102,8 @@ export function useColumnResizing<T = Record<string, unknown>>({
 
       const diff = e.clientX - active.startX;
       const columnMin = getMinWidthForColumn?.(active.columnKey) ?? minColumnWidth;
-      const floor = active.columnKey === 'id'
-        ? Math.max(ID_COLUMN_MIN_WIDTH_PX, columnMin)
-        : columnMin;
       active.pendingWidth = Math.max(
-        floor,
+        columnMin,
         Math.min(maxColumnWidth, active.startWidth + diff)
       );
       setResizeGuideX(active.startX + active.pendingWidth - active.startWidth);
@@ -116,18 +117,15 @@ export function useColumnResizing<T = Record<string, unknown>>({
           [active.columnKey]: active.pendingWidth,
         }));
       }
-
       activeResizeRef.current = null;
       setIsResizing(false);
       setResizeGuideX(null);
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
-      document.body.classList.remove('resizing-columns');
     };
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-    document.body.classList.add('resizing-columns');
   }, [getMinWidthForColumn, maxColumnWidth, minColumnWidth]);
 
   return {

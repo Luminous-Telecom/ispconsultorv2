@@ -50,41 +50,6 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
   const columns = useMemo(
     (): ListModalConfig<NotaFiscal>['columns'] => [
       {
-        key: 'id',
-        label: t('table.id'),
-        sortable: true,
-        width: '42px',
-        render: (item) => <span>{item.id}</span>,
-      },
-      {
-        key: 'numero',
-        label: t('table.number'),
-        sortable: true,
-        render: (item) => item.numero || '-',
-      },
-      {
-        key: 'cliente',
-        label: t('table.client'),
-        sortable: true,
-        render: (item) => (
-          <span>{item.cliente?.razao_social || item.cliente?.nome_fantasia || '-'}</span>
-        ),
-      },
-      {
-        key: 'data_emissao',
-        label: t('table.issueDate'),
-        sortable: true,
-        render: (item) => (item.data_emissao ? formatDate(item.data_emissao) : '-'),
-      },
-      {
-        key: 'valor_total',
-        label: t('table.totalValue'),
-        sortable: true,
-        render: (item) => (
-          <span className="text-success">{formatCurrency(item.valor_total || 0)}</span>
-        ),
-      },
-      {
         key: 'status',
         label: t('table.status'),
         sortable: true,
@@ -119,6 +84,40 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
             </span>
           );
         },
+      },
+      {
+        key: 'id',
+        label: t('table.id'),
+        sortable: true,
+        render: (item) => <span>{item.id}</span>,
+      },
+      {
+        key: 'numero',
+        label: t('table.number'),
+        sortable: true,
+        render: (item) => item.numero || '-',
+      },
+      {
+        key: 'cliente',
+        label: t('table.client'),
+        sortable: true,
+        render: (item) => (
+          <span>{item.cliente?.razao_social || item.cliente?.nome_fantasia || '-'}</span>
+        ),
+      },
+      {
+        key: 'data_emissao',
+        label: t('table.issueDate'),
+        sortable: true,
+        render: (item) => (item.data_emissao ? formatDate(item.data_emissao) : '-'),
+      },
+      {
+        key: 'valor_total',
+        label: t('table.totalValue'),
+        sortable: true,
+        render: (item) => (
+          <span className="text-success">{formatCurrency(item.valor_total || 0)}</span>
+        ),
       },
       {
         key: 'nfse_status',
@@ -197,12 +196,12 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
 
   const searchFields = useMemo(
     () => [
+      { key: 'status', label: t('table.status') },
       { key: 'id', label: t('table.id') },
       { key: 'numero', label: t('table.number') },
       { key: 'chave_acesso', label: t('table.accessKey') },
       { key: 'protocolo', label: t('table.protocol') },
       { key: 'valor', label: t('table.value') },
-      { key: 'status', label: t('table.status') },
       { key: 'nfse_status', label: t('params.nfse') + ' ' + t('table.status') },
       { key: 'titulo_id', label: t('table.id') + ' ' + t('table.contract') },
       { key: 'cliente', label: t('table.client') },

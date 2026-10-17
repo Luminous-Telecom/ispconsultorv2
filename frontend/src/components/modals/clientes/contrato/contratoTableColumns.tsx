@@ -35,22 +35,6 @@ function renderTituloStatusBadge(item: Titulo, t: TranslateFn) {
 function buildTituloBaseColumns(t: TranslateFn): TableColumnType<Titulo>[] {
   return [
     {
-      key: 'id',
-      label: t('table.id'),
-      sortable: true,
-      searchable: true,
-      width: 42,
-      resizable: true,
-      render: (item) => item.id,
-    },
-    {
-      key: 'contrato_id',
-      label: t('table.contract'),
-      sortable: true,
-      searchable: true,
-      render: (item) => item.contrato_id || '-',
-    },
-    {
       key: 'status',
       label: t('table.status'),
       sortable: true,
@@ -64,6 +48,21 @@ function buildTituloBaseColumns(t: TranslateFn): TableColumnType<Titulo>[] {
         t('status.cancelled'),
       ],
       render: (item) => renderTituloStatusBadge(item, t),
+    },
+    {
+      key: 'id',
+      label: t('table.id'),
+      sortable: true,
+      searchable: true,
+      resizable: true,
+      render: (item) => item.id,
+    },
+    {
+      key: 'contrato_id',
+      label: t('table.contract'),
+      sortable: true,
+      searchable: true,
+      render: (item) => item.contrato_id || '-',
     },
     {
       key: 'plano',
@@ -205,7 +204,18 @@ export function buildContratoTituloAvulsoColumns(t: TranslateFn): TableColumnTyp
 
 export function buildContratoTermosColumns(t: TranslateFn): TableColumnType<TermoContrato>[] {
   return [
-    { key: 'id', label: t('table.id'), sortable: true, width: 42, resizable: true },
+    {
+      key: 'ativo',
+      label: t('table.status'),
+      sortable: true,
+      badgeLabels: [t('status.active'), t('status.inactive')],
+      render: (item) => (
+        <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
+          {item.ativo ? t('status.active') : t('status.inactive')}
+        </span>
+      ),
+    },
+    { key: 'id', label: t('table.id'), sortable: true, resizable: true },
     {
       key: 'nome_termo',
       label: t('table.termName'),
@@ -236,17 +246,6 @@ export function buildContratoTermosColumns(t: TranslateFn): TableColumnType<Term
       render: (item) => item.aceito_por || '-',
     },
     {
-      key: 'ativo',
-      label: t('table.status'),
-      sortable: true,
-      badgeLabels: [t('status.active'), t('status.inactive')],
-      render: (item) => (
-        <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
-          {item.ativo ? t('status.active') : t('status.inactive')}
-        </span>
-      ),
-    },
-    {
       key: 'created_at',
       label: t('table.createdAt'),
       sortable: true,
@@ -260,11 +259,36 @@ export function buildContratoServicosAdicionaisColumns(
 ): TableColumnType<ContratoPlanoAdicional>[] {
   return [
     {
+      key: 'status',
+      label: t('table.status'),
+      sortable: true,
+      searchable: true,
+      badgeLabels: [t('status.active'), t('status.inactive'), t('status.suspended')],
+      render: (item) => {
+        const statusColors: Record<string, string> = {
+          ativo: 'success',
+          inativo: 'secondary',
+          suspenso: 'danger',
+        };
+        const color = statusColors[item.status] || 'secondary';
+        return (
+          <span className={`badge bg-${color}`}>
+            {item.status === 'ativo'
+              ? t('status.active')
+              : item.status === 'inativo'
+                ? t('status.inactive')
+                : item.status === 'suspenso'
+                  ? t('status.suspended')
+                  : item.status}
+          </span>
+        );
+      },
+    },
+    {
       key: 'id',
       label: t('table.id'),
       sortable: true,
       searchable: true,
-      width: 42,
       resizable: true,
       render: (item) => item.id,
     },
@@ -313,32 +337,6 @@ export function buildContratoServicosAdicionaisColumns(
       },
     },
     {
-      key: 'status',
-      label: t('table.status'),
-      sortable: true,
-      searchable: true,
-      badgeLabels: [t('status.active'), t('status.inactive'), t('status.suspended')],
-      render: (item) => {
-        const statusColors: Record<string, string> = {
-          ativo: 'success',
-          inativo: 'secondary',
-          suspenso: 'danger',
-        };
-        const color = statusColors[item.status] || 'secondary';
-        return (
-          <span className={`badge bg-${color}`}>
-            {item.status === 'ativo'
-              ? t('status.active')
-              : item.status === 'inativo'
-                ? t('status.inactive')
-                : item.status === 'suspenso'
-                  ? t('status.suspended')
-                  : item.status}
-          </span>
-        );
-      },
-    },
-    {
       key: 'observacoes',
       label: t('form.observations'),
       sortable: true,
@@ -353,11 +351,22 @@ export function buildContratoIxcColumns(
 ): TableColumnType<IntegracaoIxcProvedor>[] {
   return [
     {
+      key: 'ativo',
+      label: t('table.status'),
+      sortable: true,
+      searchable: true,
+      badgeLabels: [t('status.active'), t('status.inactive')],
+      render: (item) => (
+        <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
+          {item.ativo ? t('status.active') : t('status.inactive')}
+        </span>
+      ),
+    },
+    {
       key: 'id',
       label: t('table.id'),
       sortable: true,
       searchable: true,
-      width: 42,
       resizable: true,
       render: (item) => item.id,
     },
@@ -374,18 +383,6 @@ export function buildContratoIxcColumns(
       sortable: true,
       searchable: true,
       render: (item) => item.api_url || '-',
-    },
-    {
-      key: 'ativo',
-      label: t('table.status'),
-      sortable: true,
-      searchable: true,
-      badgeLabels: [t('status.active'), t('status.inactive')],
-      render: (item) => (
-        <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
-          {item.ativo ? t('status.active') : t('status.inactive')}
-        </span>
-      ),
     },
   ];
 }

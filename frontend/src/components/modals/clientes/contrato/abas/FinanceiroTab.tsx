@@ -136,9 +136,9 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
               searchable: true,
               searchPlaceholder: t('layout.searchPlaceholder'),
               searchFields: [
+                { key: 'status', label: t('table.status') },
                 { key: 'id', label: t('table.id') },
                 { key: 'numero_titulo', label: t('table.titleNumber') },
-                { key: 'status', label: t('table.status') },
                 { key: 'plano', label: t('table.plan') },
                 { key: 'cliente', label: t('table.client') },
                 { key: 'valor', label: t('form.value') },

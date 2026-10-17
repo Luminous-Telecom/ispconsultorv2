@@ -45,7 +45,25 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
             search=""
             config={{
             columns: [
-              { key: 'id', label: t('table.id'), sortable: true, searchable: true, width: 42, resizable: true, render: (contrato: Contrato) => contrato.id },
+              {
+                key: 'status',
+                label: t('form.status'),
+                sortable: true,
+                searchable: true,
+                badgeLabels: [t('status.active'), t('status.inactive')],
+                render: (contrato: Contrato) => (
+                  <span className={`badge ${
+                    contrato.status === 'ativo' ? 'bg-success' :
+                    contrato.status === 'inativo' ? 'bg-danger' :
+                    'bg-warning'
+                  }`}>
+                    {contrato.status === 'ativo' ? t('status.active') : 
+                     contrato.status === 'inativo' ? t('status.inactive') : 
+                     contrato.status}
+                  </span>
+                )
+              },
+              { key: 'id', label: t('table.id'), sortable: true, searchable: true, resizable: true, render: (contrato: Contrato) => contrato.id },
               { 
                 key: 'plano_nome', 
                 label: t('table.plan'), 
@@ -116,24 +134,6 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
                   const valor = contrato.plano?.valor_mensal;
                   return valor ? formatCurrency(valor) : '-';
                 }
-              },
-              {
-                key: 'status',
-                label: t('form.status'),
-                sortable: true,
-                searchable: true,
-                badgeLabels: [t('status.active'), t('status.inactive')],
-                render: (contrato: Contrato) => (
-                  <span className={`badge ${
-                    contrato.status === 'ativo' ? 'bg-success' :
-                    contrato.status === 'inativo' ? 'bg-danger' :
-                    'bg-warning'
-                  }`}>
-                    {contrato.status === 'ativo' ? t('status.active') : 
-                     contrato.status === 'inativo' ? t('status.inactive') : 
-                     contrato.status}
-                  </span>
-                )
               },
               { 
                 key: 'desconto_percentual', 
@@ -229,9 +229,9 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
             searchPlaceholder: '',
             searchField: 'plano_nome',
             searchFields: [
+              { key: 'status', label: t('form.status') },
               { key: 'id', label: t('table.id') },
               { key: 'plano_nome', label: t('table.plan') },
-              { key: 'status', label: t('form.status') },
               { key: 'valor_final', label: t('table.finalValue') },
               { key: 'desconto_percentual', label: t('table.discountPercent') },
               { key: 'desconto_valor', label: t('table.discountValue') },

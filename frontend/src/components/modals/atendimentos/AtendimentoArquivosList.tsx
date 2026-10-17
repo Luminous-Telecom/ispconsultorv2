@@ -146,7 +146,6 @@ const AtendimentoArquivosList: React.FC<AtendimentoArquivosListProps> = ({
         label: 'ID',
         sortable: true,
         searchable: true,
-        width: '70px',
         render: (item) => item.id,
       },
       {

@@ -51,9 +51,9 @@ const ServicosAdicionaisTab: React.FC<ServicosAdicionaisTabProps> = ({
             searchable: true,
             searchPlaceholder: t('placeholder.searchServices'),
             searchFields: [
+              { key: 'status', label: t('table.status') },
               { key: 'id', label: t('table.id') },
               { key: 'plano', label: t('table.plan') },
-              { key: 'status', label: t('table.status') },
               { key: 'observacoes', label: t('table.observations') }
             ],
             emptyMessage: t('empty.noAdditionalServices'),

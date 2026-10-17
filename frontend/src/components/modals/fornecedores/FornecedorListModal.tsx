@@ -72,7 +72,6 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
         key: 'id',
         label: t('table.id'),
         sortable: true,
-        width: '42px',
         render: (item) => <span className="text-nowrap">{item.id ?? '-'}</span>,
       },
       {

@@ -67,10 +67,19 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
   const columns = useMemo(
     (): ListModalConfig<Banco>['columns'] => [
       {
+        key: 'ativo',
+        label: t('table.status'),
+        sortable: true,
+        render: (item) => (
+          <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
+            {item.ativo ? t('status.active') : t('status.inactive')}
+          </span>
+        ),
+      },
+      {
         key: 'id',
         label: t('table.id'),
         sortable: true,
-        width: '42px',
         render: (item) => <span>{item.id}</span>,
       },
       {
@@ -116,16 +125,6 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         ),
       },
       {
-        key: 'ativo',
-        label: t('table.status'),
-        sortable: true,
-        render: (item) => (
-          <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
-            {item.ativo ? t('status.active') : t('status.inactive')}
-          </span>
-        ),
-      },
-      {
         key: 'created_at',
         label: t('table.createdAt'),
         sortable: true,
@@ -142,12 +141,12 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
 
   const searchFields = useMemo(
     () => [
+      { key: 'ativo', label: t('table.status') },
       { key: 'id', label: t('table.id') },
       { key: 'nome', label: t('form.name') },
       { key: 'descricao', label: t('form.description') },
       { key: 'tipo_banco', label: t('table.bankType') },
       { key: 'sandbox', label: t('table.sandbox') },
-      { key: 'ativo', label: t('table.status') },
     ],
     [t]
   );

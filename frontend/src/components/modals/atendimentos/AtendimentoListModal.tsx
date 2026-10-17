@@ -116,10 +116,16 @@ const AtendimentoListModal: React.FC<AtendimentoListModalProps> = ({
   const columns = useMemo(
     (): ListModalConfig<Atendimento>['columns'] => [
       {
+        key: 'su_status',
+        label: 'Status',
+        sortable: true,
+        badgeLabels: ATENDIMENTO_STATUS_BADGE_LABELS,
+        render: (item) => renderStatusBadge(getAtendimentoStatusBadgeConfig(item.su_status)),
+      },
+      {
         key: 'id',
         label: 'ID',
         sortable: true,
-        width: '70px',
         render: (item) => <span>{item.id_local ?? item.id}</span>,
       },
       {
@@ -167,14 +173,6 @@ const AtendimentoListModal: React.FC<AtendimentoListModalProps> = ({
         ),
       },
       {
-        key: 'su_status',
-        label: 'Status',
-        sortable: true,
-        width: '120px',
-        badgeLabels: ATENDIMENTO_STATUS_BADGE_LABELS,
-        render: (item) => renderStatusBadge(getAtendimentoStatusBadgeConfig(item.su_status)),
-      },
-      {
         key: 'prioridade',
         label: 'Prior.',
         sortable: true,
@@ -196,13 +194,13 @@ const AtendimentoListModal: React.FC<AtendimentoListModalProps> = ({
 
   const searchFields = useMemo(
     () => [
+      { key: 'su_status', label: 'Status' },
       { key: 'id', label: 'ID IXC' },
       { key: 'id_local', label: 'ID local' },
       { key: 'protocolo', label: 'Protocolo' },
       { key: 'titulo', label: 'Assunto' },
       { key: 'id_ticket_setor', label: 'Departamento (ID)' },
       { key: 'menssagem', label: 'Descrição' },
-      { key: 'su_status', label: 'Status' },
     ],
     []
   );

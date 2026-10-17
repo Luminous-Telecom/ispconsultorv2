@@ -50,7 +50,6 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
       key: 'id',
       label: 'ID',
       sortable: true,
-      width: '42px',
       render: (item: DocumentoSistema) => <span>{item.id}</span>
     },
     {

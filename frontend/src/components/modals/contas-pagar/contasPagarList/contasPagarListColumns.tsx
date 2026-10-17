@@ -18,10 +18,21 @@ export function useContasPagarListColumns({
   return useMemo(
     (): ListModalConfig<ContaPagar>['columns'] => [
       {
+        key: 'status',
+        label: t('table.status'),
+        sortable: true,
+        badgeLabels: [
+          t('financial.toPay'),
+          t('financial.paid'),
+          t('status.pending'),
+          t('status.rejected'),
+        ],
+        render: (item) => getStatusBadge(item.status),
+      },
+      {
         key: 'id',
         label: t('table.id'),
         sortable: true,
-        width: '42px',
         render: (item) => <span className="text-nowrap">{item.id ?? '-'}</span>,
       },
       {
@@ -78,18 +89,6 @@ export function useContasPagarListColumns({
             </span>
           );
         },
-      },
-      {
-        key: 'status',
-        label: t('table.status'),
-        sortable: true,
-        badgeLabels: [
-          t('financial.toPay'),
-          t('financial.paid'),
-          t('status.pending'),
-          t('status.rejected'),
-        ],
-        render: (item) => getStatusBadge(item.status),
       },
       {
         key: 'tipo_pagamento',

@@ -101,17 +101,17 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
 
   const searchFields = useMemo(
     () => [
-            { key: 'id', label: t('table.id') },
-            { key: 'numero_titulo', label: t('table.titleNumber') },
-            { key: 'cliente', label: t('table.client') },
-            { key: 'plano_nome', label: t('table.plan') },
-            { key: 'contrato_id', label: t('table.contract') },
-            { key: 'status', label: t('table.status') },
-            { key: 'valor', label: t('table.value') },
-            { key: 'valor_pago', label: t('table.paidValue') },
-            { key: 'charge_id', label: t('table.chargeId') },
-            { key: 'nosso_numero', label: t('table.ourNumber') },
-          ],
+      { key: 'status', label: t('table.status') },
+      { key: 'id', label: t('table.id') },
+      { key: 'numero_titulo', label: t('table.titleNumber') },
+      { key: 'cliente', label: t('table.client') },
+      { key: 'plano_nome', label: t('table.plan') },
+      { key: 'contrato_id', label: t('table.contract') },
+      { key: 'valor', label: t('table.value') },
+      { key: 'valor_pago', label: t('table.paidValue') },
+      { key: 'charge_id', label: t('table.chargeId') },
+      { key: 'nosso_numero', label: t('table.ourNumber') },
+    ],
     [t]
   );
 

@@ -9,6 +9,7 @@ import {
   CHECKBOX_COLUMN_WIDTH_PX,
   fixedWidthStyle,
   getColumnMinWidth,
+  isStatusColumnKey,
   parseColumnWidthPx,
   resolveColumnWidthPx,
 } from './columnWidthUtils';
@@ -183,7 +184,13 @@ function TableDesktopView<T extends { id: number | string }>({
               <ColWithWidth
                 key={column.key}
                 width={widthPx ?? 'auto'}
-                className={column.key === 'id' ? 'col-id' : undefined}
+                className={
+                  column.key === 'id'
+                    ? 'col-id'
+                    : isStatusColumnKey(column.key)
+                      ? 'col-status'
+                      : undefined
+                }
               />
             );
           })}
@@ -303,6 +310,7 @@ function TableDesktopView<T extends { id: number | string }>({
                         key={column.key}
                         className={[
                           column.key === 'id' ? 'col-id' : '',
+                          isStatusColumnKey(column.key) ? 'col-status' : '',
                           column.align ? `text-${column.align}` : '',
                           isUserResized ? 'column-has-custom-width' : '',
                           column.className,

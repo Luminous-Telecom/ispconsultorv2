@@ -166,14 +166,14 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
 
   const searchFields = useMemo(
     () => [
+      { key: 'online', label: 'Status' },
+      { key: 'is_active', label: 'Ativo' },
       { key: 'id', label: 'ID' },
       { key: 'name', label: 'Nome' },
       { key: 'cliente', label: 'Cliente' },
       { key: 'hostname', label: 'Host' },
       { key: 'ip_address', label: 'IP' },
       { key: 'os_info', label: 'OS' },
-      { key: 'online', label: 'Status' },
-      { key: 'is_active', label: 'Ativo' },
     ],
     []
   );
@@ -230,10 +230,29 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
   const columns = useMemo(
     (): ListModalConfig<Agent>['columns'] => [
       {
+        key: 'online',
+        label: 'Status',
+        sortable: true,
+        render: (item) => (
+          <span className={`badge ${item.online ? 'bg-success' : 'bg-secondary'}`}>
+            {item.online ? 'Online' : 'Offline'}
+          </span>
+        ),
+      },
+      {
+        key: 'is_active',
+        label: 'Ativo',
+        sortable: true,
+        render: (item) => (
+          <span className={`badge ${item.is_active ? 'bg-success' : 'bg-secondary'}`}>
+            {item.is_active ? 'Sim' : 'Não'}
+          </span>
+        ),
+      },
+      {
         key: 'id',
         label: 'ID',
         sortable: true,
-        width: '70px',
         render: (item) => <span className="font-monospace small">{item.id}</span>,
       },
       {
@@ -241,17 +260,6 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
         label: 'Nome',
         sortable: true,
         render: (item) => <span className="fw-semibold">{item.name}</span>,
-      },
-      {
-        key: 'online',
-        label: 'Status',
-        sortable: true,
-        width: '90px',
-        render: (item) => (
-          <span className={`badge ${item.online ? 'bg-success' : 'bg-secondary'}`}>
-            {item.online ? 'Online' : 'Offline'}
-          </span>
-        ),
       },
       {
         key: 'cliente',
@@ -286,17 +294,6 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
         label: 'Última conexão',
         render: (item) => (
           <span className="small">{item.last_seen_at ? formatDateTime(item.last_seen_at) : '—'}</span>
-        ),
-      },
-      {
-        key: 'is_active',
-        label: 'Ativo',
-        sortable: true,
-        width: '70px',
-        render: (item) => (
-          <span className={`badge ${item.is_active ? 'bg-success' : 'bg-secondary'}`}>
-            {item.is_active ? 'Sim' : 'Não'}
-          </span>
         ),
       },
     ],

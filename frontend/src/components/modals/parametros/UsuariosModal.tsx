@@ -62,10 +62,15 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({ show, onClose, skipWrappe
   const columns = useMemo(
     (): ListModalConfig<Usuario>['columns'] => [
       {
+        key: 'ativo',
+        label: list.t('table.status'),
+        sortable: true,
+        render: (item) => renderStatusBadge(getAtivoBadgeConfig(item.ativo, list.t)),
+      },
+      {
         key: 'id',
         label: list.t('table.id'),
         sortable: true,
-        width: '42px',
         render: (item) => <span>{item.id}</span>,
       },
       {
@@ -85,12 +90,6 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({ show, onClose, skipWrappe
         label: 'Perfil',
         sortable: true,
         render: () => renderStatusBadge({ label: 'Administrador', className: 'bg-info' }),
-      },
-      {
-        key: 'ativo',
-        label: list.t('table.status'),
-        sortable: true,
-        render: (item) => renderStatusBadge(getAtivoBadgeConfig(item.ativo, list.t)),
       },
       {
         key: 'webhook_secret',
@@ -118,11 +117,11 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({ show, onClose, skipWrappe
 
   const searchFields = useMemo(
     () => [
+      { key: 'ativo', label: list.t('table.status') },
       { key: 'id', label: list.t('table.id') },
       { key: 'nome', label: list.t('form.name') },
       { key: 'email', label: list.t('form.email') },
       { key: 'role', label: 'Perfil' },
-      { key: 'ativo', label: list.t('table.status') },
     ],
     [list]
   );

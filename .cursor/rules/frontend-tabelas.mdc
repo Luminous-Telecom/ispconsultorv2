@@ -84,19 +84,29 @@ Listagens na **página** (não modal) com busca/recarregar no header:
 - Provider `TableHeaderContext` no layout
 - Mobile: `ResponsiveDialog` consome o contexto
 
-## Status em colunas
+## Larguras padronizadas (ID e Status)
+
+Definidas em `components/tables/columnWidthUtils.ts` + CSS `col-id` / `col-status`:
+
+| Coluna | Keys | Largura |
+|--------|------|---------|
+| **ID** | `id` | `ID_COLUMN_WIDTH_PX` (52px) |
+| **Status** | `status`, `ativo`, `is_active`, `su_status`, `online`, `publication_status`, `provisioning_status`, `nfse_status` | `STATUS_COLUMN_WIDTH_PX` (80px) |
+
+- **Não** passar `width` / `minWidth` / `maxWidth` nessas colunas — o padrão central prevalece
+- Ordem: Status (se houver) **antes** de ID
+- Badge: `renderStatusBadge` / `createStatusBadgeRenderer` — ver `frontend-ui-centralizado.mdc`
 
 ```tsx
 import { renderStatusBadge, createStatusBadgeRenderer } from 'components/ui';
 
 // ✅
-render: createStatusBadgeRenderer(STATUS_MAP)
+{ key: 'ativo', label: t('table.status'), sortable: true, render: ... }
+{ key: 'id', label: t('table.id'), sortable: true, render: ... }
 
-// ❌
-<span className="badge bg-success">Ativo</span>
+// ❌ width local em Status/ID
+{ key: 'status', label: 'Status', width: '120px', ... }
 ```
-
-Ver badges em `frontend-ui-centralizado.mdc`.
 
 ## Uma coluna = um dado
 

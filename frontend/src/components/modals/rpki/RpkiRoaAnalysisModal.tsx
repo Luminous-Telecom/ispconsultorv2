@@ -62,7 +62,6 @@ const RpkiRoaAnalysisModal: React.FC<RpkiRoaAnalysisModalProps> = ({
       key: 'status',
       label: 'Status',
       sortable: true,
-      width: '130px',
       render: (item) => {
         if (item.status === 'ok') return <span className="badge bg-success">OK</span>;
         if (item.status === 'not_found') return <span className="badge bg-warning text-dark">Não encontrado</span>;

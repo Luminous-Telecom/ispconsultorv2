@@ -44,12 +44,12 @@ export const TableHeaderProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [searchField, setSearchField] = useState('todos');
   const [availableSearchFields, setAvailableSearchFields] = useState<SearchField[]>([
     { id: 'todos', label: 'Todos' },
+    { id: 'status', label: 'Status' },
     { id: 'id', label: 'ID' },
     { id: 'cnpj', label: 'CNPJ' },
     { id: 'razao_social', label: 'Razão Social' },
     { id: 'nome_fantasia', label: 'Nome Fantasia' },
     { id: 'email', label: 'Email' },
-    { id: 'status', label: 'Status' }
   ]);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -123,12 +123,12 @@ export const useTableHeader = () => {
       setSearchField: () => {},
       availableSearchFields: [
         { id: 'todos', label: 'Todos' },
+        { id: 'status', label: 'Status' },
         { id: 'id', label: 'ID' },
         { id: 'cnpj', label: 'CNPJ' },
         { id: 'razao_social', label: 'Razão Social' },
         { id: 'nome_fantasia', label: 'Nome Fantasia' },
         { id: 'email', label: 'Email' },
-        { id: 'status', label: 'Status' }
       ],
       setAvailableSearchFields: () => {},
       showMobileSearch: false,

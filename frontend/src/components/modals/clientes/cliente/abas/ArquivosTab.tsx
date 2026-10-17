@@ -98,7 +98,6 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({
         label: t('table.id'),
         sortable: true,
         searchable: true,
-        width: 42,
         resizable: true,
         render: (item: ClienteArquivo) => item.id
       },

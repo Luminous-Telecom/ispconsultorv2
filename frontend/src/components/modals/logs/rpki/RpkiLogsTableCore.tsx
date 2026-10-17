@@ -149,10 +149,19 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
 
     const base: LogColumns = [
       {
+        key: 'status',
+        label: 'Status',
+        sortable: true,
+        render: (item) => (
+          <Badge variant={item.status === 'success' ? 'success' : 'danger'} pill>
+            {item.status === 'success' ? t('logs.status.success') : t('logs.status.error')}
+          </Badge>
+        ),
+      },
+      {
         key: 'id',
         label: 'ID',
         sortable: true,
-        width: '42px',
         render: (item) => <span className="small">{item.id}</span>,
       },
       {
@@ -183,17 +192,6 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
     }
 
     base.push(
-      {
-        key: 'status',
-        label: 'Status',
-        sortable: true,
-        width: '110px',
-        render: (item) => (
-          <Badge variant={item.status === 'success' ? 'success' : 'danger'} pill>
-            {item.status === 'success' ? t('logs.status.success') : t('logs.status.error')}
-          </Badge>
-        ),
-      },
       ...scopeCols,
       {
         key: 'remote_host',

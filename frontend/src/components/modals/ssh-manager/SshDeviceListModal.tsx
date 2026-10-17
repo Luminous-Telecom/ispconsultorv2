@@ -146,10 +146,19 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
   const columns = useMemo(
     (): ListModalConfig<SshDevice>['columns'] => [
       {
+        key: 'is_active',
+        label: 'Situação',
+        sortable: true,
+        render: (item) => (
+          <span className={`badge ${item.is_active ? 'bg-success' : 'bg-secondary'}`}>
+            {item.is_active ? 'Ativo' : 'Inativo'}
+          </span>
+        ),
+      },
+      {
         key: 'id',
         label: 'ID',
         sortable: true,
-        width: '70px',
         render: (item) => <span className="font-monospace small">{item.id}</span>,
       },
       {
@@ -210,17 +219,6 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
             </span>
           );
         },
-      },
-      {
-        key: 'is_active',
-        label: 'Situação',
-        sortable: true,
-        width: '80px',
-        render: (item) => (
-          <span className={`badge ${item.is_active ? 'bg-success' : 'bg-secondary'}`}>
-            {item.is_active ? 'Ativo' : 'Inativo'}
-          </span>
-        ),
       },
       {
         key: 'backup_enabled',

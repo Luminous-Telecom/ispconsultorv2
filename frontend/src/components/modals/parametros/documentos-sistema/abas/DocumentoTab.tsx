@@ -137,10 +137,23 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
   // Definir colunas da tabela
   const columns: TableConfig<DocumentoUnion>['columns'] = [
     {
+      key: 'ativo',
+      label: 'Status',
+      sortable: true,
+      badgeLabels: ['Ativo', 'Inativo'],
+      render: (item: DocumentoUnion) => {
+        const isAtivo = 'ativo' in item ? item.ativo : true;
+        return (
+          <span className={`badge ${isAtivo ? 'bg-success' : 'bg-secondary'}`}>
+            {isAtivo ? 'Ativo' : 'Inativo'}
+          </span>
+        );
+      }
+    },
+    {
       key: 'id',
       label: 'ID',
       sortable: true,
-      width: 42,
       resizable: true,
       render: (item: DocumentoUnion) => (
         <div>{item.id}</div>
@@ -163,20 +176,6 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
           {item.descricao || '-'}
         </div>
       )
-    },
-    {
-      key: 'ativo',
-      label: 'Status',
-      sortable: true,
-      badgeLabels: ['Ativo', 'Inativo'],
-      render: (item: DocumentoUnion) => {
-        const isAtivo = 'ativo' in item ? item.ativo : true;
-        return (
-          <span className={`badge ${isAtivo ? 'bg-success' : 'bg-secondary'}`}>
-            {isAtivo ? 'Ativo' : 'Inativo'}
-          </span>
-        );
-      }
     },
     {
       key: 'created_at',
@@ -251,10 +250,10 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
           searchable: true,
           searchPlaceholder: `Buscar ${getTipoLabel(tipo).toLowerCase()}...`,
           searchFields: [
+            { key: 'status', label: 'Status' },
             { key: 'id', label: 'ID' },
             { key: 'nome', label: 'Nome' },
             { key: 'tipo', label: 'Tipo' },
-            { key: 'status', label: 'Status' }
           ],
           sortable: true,
           striped: true,
