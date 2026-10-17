@@ -21,7 +21,7 @@ interface BulkAction {
 }
 
 interface LogsModalTableProps {
-  effectiveVariant: 'erp' | 'saas';
+  effectiveVariant: 'erp';
   logType: string;
   ctx: LogsContent;
   columns: TableConfig<unknown>['columns'];

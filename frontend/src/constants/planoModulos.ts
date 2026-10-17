@@ -1,6 +1,6 @@
 /**
- * Módulos disponíveis nos planos SaaS.
- * Usado para filtrar menu e habilitar/desabilitar funcionalidades por plano.
+ * Módulos do ERP usados no menu.
+ * Sem lista de plano, todos os módulos ficam visíveis.
  */
 export const PLANO_MODULOS = [
   { id: 'cadastros', label: 'Cadastros' },

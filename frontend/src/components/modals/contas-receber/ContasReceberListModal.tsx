@@ -23,7 +23,8 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
   initialFilters,
   variant = 'admin',
 }) => {
-  const isSaas = variant === 'saas';
+  const isSaas = false;
+  void variant;
   const { t } = useI18n();
   const isMobile = useIsMobile();
 
@@ -66,8 +67,6 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
     handleImprimirSelecionados,
     handleImprimirRecibos,
     handleImprimirTodosEmAberto,
-    handleImprimirSelecionadosSaas,
-    handleImprimirTodosEmAbertoSaas,
     handleImprimirNFSe,
   } = useContasReceberPrintActions({ selectedItems, titulos });
 
@@ -86,8 +85,6 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
     handleImprimirSelecionados,
     handleImprimirRecibos,
     handleImprimirTodosEmAberto,
-    handleImprimirSelecionadosSaas,
-    handleImprimirTodosEmAbertoSaas,
     handleImprimirNFSe,
     getItensComNFSe,
   });
@@ -97,19 +94,13 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
 
   const handleAudit = useCallback(
     (item: TituloItemUnion) => {
-      list.auditoria.handleAudit(isSaas ? 'SaasTitulo' : 'Titulo', item.id);
+      list.auditoria.handleAudit('Titulo', item.id);
     },
-    [list.auditoria, isSaas]
+    [list.auditoria]
   );
 
   const searchFields = useMemo(
-    () =>
-      isSaas
-        ? [
-            { key: 'numero_titulo', label: t('table.titleNumber') },
-            { key: 'id', label: t('table.id') },
-          ]
-        : [
+    () => [
             { key: 'id', label: t('table.id') },
             { key: 'numero_titulo', label: t('table.titleNumber') },
             { key: 'cliente', label: t('table.client') },
@@ -121,7 +112,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
             { key: 'charge_id', label: t('table.chargeId') },
             { key: 'nosso_numero', label: t('table.ourNumber') },
           ],
-    [isSaas, t]
+    [t]
   );
 
   const handleLimitChange = useCallback(
@@ -230,7 +221,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
         onSelectionChange={onSelectTitulo ? list.handleSelectionChange : setSelectedItems}
         onRowDoubleClick={onSelectTitulo ? handleRowSelect : undefined}
         onAudit={handleAudit}
-        auditEntity={isSaas ? 'SaasTitulo' : 'Titulo'}
+        auditEntity="Titulo"
         customControls={customControls}
         customControlsAfterActions={customControlsAfterActions}
         tableId="financeiro-modal"

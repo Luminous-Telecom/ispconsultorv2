@@ -6,7 +6,6 @@ import path from 'path';
 import fs from 'fs';
 import { SelfUpdateService } from '../../../services/sistema/SelfUpdateService';
 import { AuthenticatedRequest } from '../../../types/auth';
-import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
 import { registrarCriacao } from '../../../services/sistema/AuditoriaService/index';
 import { sendSuccess, sendError, sendValidationError, sendNotFound, sendForbidden } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
@@ -126,13 +125,9 @@ export class AtualizacoesController {
   }
 
   /**
-   * Verifica se o usuário pode acessar (admin ERP ou super_admin SaaS)
+   * Verifica se o usuário administrador do ERP pode acessar
    */
   private static canAccess(req: Request): boolean {
-    const saasReq = req as SaasAuthenticatedRequest;
-    if (saasReq.saasUser?.saas && saasReq.saasUser?.tipo === 'super_admin') {
-      return true;
-    }
     const authenticatedReq = req as AuthenticatedRequest;
     const userPayload = authenticatedReq.user as JwtPayload;
     if (!userPayload || typeof userPayload === 'string') return false;

@@ -145,15 +145,6 @@ export class AsaasWebhookService {
       return banco ? PaymentCommonService.getWebhookToken(banco) : undefined;
     }
 
-    if (identifier === 'saas') {
-      const { default: SaasBanco } = await import('../../../models/saas/SaasBanco');
-      const banco = await SaasBanco.findOne({
-        where: { tipo_banco: 'asaas', ativo: true },
-        order: [['id', 'ASC']]
-      });
-      return banco ? PaymentCommonService.getWebhookToken(banco) : undefined;
-    }
-
     return undefined;
   }
 

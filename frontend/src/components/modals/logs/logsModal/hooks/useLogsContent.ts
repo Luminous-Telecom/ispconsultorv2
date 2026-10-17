@@ -7,15 +7,8 @@ import { useBlockdomiLogs } from 'hooks/useBlockdomiLogs';
 import { LOGS_AUDITORIA_CONFIG } from '../constants';
 import type { LogsModalType, MensagemItem } from '../types';
 
-export function useLogsContent(
-  logType: LogsModalType,
-  show: boolean,
-  apiVariant: 'erp' | 'saas',
-  painelSaasLogs: boolean,
-  mesclarMensagensErp: boolean
-) {
-  const isSaas = apiVariant === 'saas';
-  const mensagemService = getMensagemHistoricoService(isSaas);
+export function useLogsContent(logType: LogsModalType, show: boolean) {
+  const mensagemService = getMensagemHistoricoService();
 
   const isEquipamentosOuAgentes = logType === 'equipamentos' || logType === 'agentes';
   const isAuditoria = [
@@ -75,25 +68,14 @@ export function useLogsContent(
       searchField: tableFilters.searchField || (tableFilters.debouncedSearch ? 'destinatario' : undefined),
       sortColumn: tableFilters.sortColumn,
       sortDirection: tableFilters.sortDirection,
-      ...(mesclarMensagensErp && apiVariant === 'saas' ? { incluir_erp: true as const } : {}),
     }),
-    [tableFilters, isEmail, mesclarMensagensErp, apiVariant]
+    [tableFilters, isEmail]
   );
 
   const auditoriaQuery = useQuery({
-    queryKey: ['auditoria-operacional-logs', apiVariant, painelSaasLogs, logType, auditoriaFilters],
+    queryKey: ['auditoria-operacional-logs', logType, auditoriaFilters],
     queryFn: async () => {
-      const filtersSaas = painelSaasLogs
-        ? {
-            ...auditoriaFilters,
-            painelSaas: true as const,
-            ...(logType === 'acesso-sistema' ? { acessoPainelSaas: true as const } : {}),
-          }
-        : auditoriaFilters;
-      const r =
-        apiVariant === 'saas'
-          ? await auditoriaService.listOperacionalSaas(filtersSaas)
-          : await auditoriaService.listOperacional(auditoriaFilters);
+      const r = await auditoriaService.listOperacional(auditoriaFilters);
       if (!r.success) throw new Error(r.message);
       return r.data;
     },
@@ -105,8 +87,6 @@ export function useLogsContent(
     queryKey: [
       'mensagens-historico',
       isEmail ? 'email' : 'whatsapp',
-      isSaas ? 'saas' : 'tenant',
-      mesclarMensagensErp,
       mensagemFilters,
     ],
     queryFn: () => mensagemService.list(mensagemFilters),
@@ -134,7 +114,7 @@ export function useLogsContent(
 
   const blockdomiQuery = useBlockdomiLogs(blockdomiFilters, {
     enabled: show && isBlockdomiApi,
-    scope: apiVariant,
+    scope: 'erp',
   });
 
   const data = isAuditoria ? auditoriaQuery.data : isBlockdomiApi ? blockdomiQuery.data : mensagemQuery.data;

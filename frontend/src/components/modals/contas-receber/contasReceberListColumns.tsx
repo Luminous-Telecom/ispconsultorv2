@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { Titulo } from 'types';
-import { SaasTitulo } from 'services/saas/saasCrudService';
 import { formatDate, formatDateTime } from 'utils/formatters';
 import { ListModalConfig } from 'types/modal';
 import { ContasReceberTranslateFn, TituloItemUnion } from './contasReceberListTypes';
@@ -29,7 +28,7 @@ export function useContasReceberListColumns(
         width: 220,
         resizable: true,
         render: (item: TituloItemUnion) => {
-          const c = (item as Titulo).cliente || (item as SaasTitulo).empresa;
+          const c = (item as Titulo).cliente;
           if (c) {
             const r = c as { razao_social?: string; nome_fantasia?: string; nome_empresa?: string };
             return r.razao_social || r.nome_fantasia || r.nome_empresa || '-';
@@ -70,7 +69,7 @@ export function useContasReceberListColumns(
         width: 150,
         resizable: true,
         render: (item: TituloItemUnion) =>
-          (item as Titulo).plano?.nome_plano || (item as SaasTitulo).plano?.nome || '-',
+          (item as Titulo).plano?.nome_plano || '-',
       },
       {
         key: 'numero_titulo',
@@ -109,7 +108,7 @@ export function useContasReceberListColumns(
         resizable: true,
         render: (item: TituloItemUnion) => {
           const titulo = item as Titulo;
-          const vp = titulo.valor_pago ?? (item as SaasTitulo).valor;
+          const vp = titulo.valor_pago;
           return item.status === 'pago'
             ? formatContasReceberCurrency(Number(vp) || Number(item.valor) || 0)
             : formatContasReceberCurrency(0);
@@ -137,7 +136,7 @@ export function useContasReceberListColumns(
         render: (item: TituloItemUnion) => {
           const titulo = item as Titulo;
           if (titulo.data_pagamento_formatada) return titulo.data_pagamento_formatada;
-          const dp = titulo.data_pagamento ?? (item as SaasTitulo).data_pagamento;
+          const dp = titulo.data_pagamento;
           return dp ? formatDate(dp) : '-';
         },
       },
@@ -198,7 +197,7 @@ export function useContasReceberListColumns(
         render: (item: TituloItemUnion) => {
           const titulo = item as Titulo;
           if (titulo.created_at_formatada) return titulo.created_at_formatada;
-          const ca = titulo.created_at ?? (item as SaasTitulo & { created_at?: string }).created_at;
+          const ca = titulo.created_at;
           return ca ? formatDateTime(ca) : '-';
         },
       },

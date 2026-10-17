@@ -36,18 +36,7 @@ const IPv6ListModal = lazy(() => import('../modals/blockdomi/ipv6').then(m => ({
 const ImportarListaBlockdomiModal = lazy(() => import('../modals/blockdomi/ImportarListaBlockdomiModal'));
 const IpsPermitidosListModal = lazy(() => import('../modals/blockdomi/ips-permitidos').then(m => ({ default: m.IpsPermitidosListModal })));
 
-// SaaS Super Admin
-const SaasPlanoListModal = lazy(() => import('../modals/saas/SaasPlanoListModal'));
-const SaasUsuariosModal = lazy(() => import('../modals/saas/SaasUsuariosModal'));
-const SaasBancosModal = lazy(() => import('../modals/saas/SaasBancosModal'));
-/* eslint-disable @typescript-eslint/no-unused-vars -- usados em getModalConfigs */
-const SaasTipoCobrancaModal = lazy(() => import('../modals/saas/SaasTipoCobrancaModal'));
-const SaasClientesModal = lazy(() => import('../modals/saas/SaasClientesModal'));
-const SaasDadosEmpresaModal = lazy(() => import('../modals/saas/SaasDadosEmpresaModal'));
-const SaasRecursosSistemaModal = lazy(() => import('../modals/saas/SaasRecursosSistemaModal'));
 const AgendadorTarefasModal = lazy(() => import('../modals/parametros/AgendadorTarefasModal'));
-const SaasNfseModal = lazy(() => import('../modals/saas/SaasNfseModal'));
-/* eslint-enable @typescript-eslint/no-unused-vars */
 
 // SSH Manager
 const SshDeviceListModal = lazy(() => import('../modals/ssh-manager').then(m => ({ default: m.SshDeviceListModal })));
@@ -174,10 +163,7 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
   atualizacoes: { component: AtualizacoesModal, titleKey: 'updates.title', loadingMessageKey: 'ui.loadingPage' },
   backups: { component: BackupsModal, titleKey: 'modal.backups', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
   'documentos-sistema': { component: DocumentosSistemaModal, titleKey: 'modal.systemDocuments', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
-  // SaaS exclusivos (rotas /api/saas/* apenas)
-  'saas-auditoria': { component: AuditoriaModal, titleKey: 'modal.auditLogs', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
-  'saas-atualizacoes': { component: AtualizacoesModal, titleKey: 'updates.title', loadingMessageKey: 'ui.loadingPage' },
-  'saas-backups': { component: BackupsModal, titleKey: 'modal.backups', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
+  'agendador-tarefas': { component: AgendadorTarefasModal, titleKey: 'params.taskScheduler', loadingMessageKey: 'ui.loadingPage', size: 'lg', className: 'no-padding' },
   // SSH Manager
   'ssh-devices': { component: SshDeviceListModal, titleKey: 'modal.sshDevices', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
   'dashboard-backup-equipamentos': {
@@ -201,21 +187,7 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
     size: 'xl',
     className: 'no-padding list-modal-no-body-scroll',
   },
-  // Logs ERP/SaaS: resolveLogsModal (logsModalRegistry.ts) — não duplicar aqui
-  // SaaS Super Admin
-  'saas-planos': { component: SaasPlanoListModal, titleKey: 'modal.plans', loadingMessageKey: 'ui.loadingPage', size: 'lg', className: 'no-padding' },
-  'saas-usuarios': { component: SaasUsuariosModal, titleKey: 'modal.users', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
-  'saas-servidores-email': { component: ServidorEmailModal, titleKey: 'modal.emailServer', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
-  'saas-servidores-whatsapp': { component: ServidorWhatsappModal, titleKey: 'modal.whatsappServer', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
-  'saas-bancos': { component: SaasBancosModal, titleKey: 'modal.banks', loadingMessageKey: 'ui.loadingPage', size: 'lg', className: 'no-padding' },
-  'saas-tipos-cobranca': { component: SaasTipoCobrancaModal, titleKey: 'modal.billingType', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
-  'saas-dias-vencimento': { component: DiasVencimentoModal, titleKey: 'modal.dueDays', loadingMessageKey: 'ui.loadingPage', size: 'xl' },
-  'saas-clientes': { component: SaasClientesModal, titleKey: 'modal.clientsTenants', loadingMessageKey: 'ui.loadingPage', size: 'lg', className: 'no-padding' },
-  'saas-dados-empresa': { component: SaasDadosEmpresaModal, titleKey: 'modal.companyData', loadingMessageKey: 'ui.loadingPage', size: 'xl' },
-  'saas-titulos': { component: ContasReceberListModal, titleKey: 'modal.accountsReceivable', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
-  'saas-recursos-sistema': { component: SaasRecursosSistemaModal, titleKey: 'params.systemResources', loadingMessageKey: 'ui.loadingPage', size: 'lg' },
-  'saas-agendador-tarefas': { component: AgendadorTarefasModal, titleKey: 'params.taskScheduler', loadingMessageKey: 'ui.loadingPage', size: 'lg', className: 'no-padding' },
-  'saas-nfse': { component: SaasNfseModal, titleKey: 'params.nfse', loadingMessageKey: 'ui.loadingPage', size: 'lg' },
+  // Logs: resolveLogsModal (logsModalRegistry.ts) — não duplicar aqui
 });
 
 const SingleModalWrapper: React.FC = () => {
@@ -333,16 +305,8 @@ const SingleModalWrapper: React.FC = () => {
     show: true,
     onClose: closeModal,
     onHeaderActionsReady: setHeaderActions,
-    ...(['clientes', 'planos', 'bancos', 'tipos-cobranca-contrato', 'contratos', 'saas-bancos'].includes(activeModal) && { title: modalTitle }),
-    // Para o cliente-modal, passamos clienteId como prop específica
+    ...(['clientes', 'planos', 'bancos', 'tipos-cobranca-contrato', 'contratos'].includes(activeModal) && { title: modalTitle }),
     ...(isClienteModal && { clienteId }),
-    // Para saas-dias-vencimento, reaproveita DiasVencimentoModal com variant saas
-    ...(activeModal === 'saas-dias-vencimento' && { variant: 'saas' }),
-    ...(activeModal === 'saas-titulos' && { variant: 'saas' }),
-    // SaaS exclusivos — variant força uso exclusivo de /api/saas/*
-    ...(activeModal === 'saas-servidores-email' && { variant: 'saas' }),
-    ...(activeModal === 'saas-servidores-whatsapp' && { variant: 'saas' }),
-    ...(activeModal === 'saas-auditoria' && { variant: 'saas' }),
     // Para outros modais, passamos os dados adicionais normalmente
     ...(!isClienteModal && modalData && modalData),
     // Por último: modalData nunca pode desativar o wrapper único (evita segundo DraggableModal / cabeçalho duplicado)

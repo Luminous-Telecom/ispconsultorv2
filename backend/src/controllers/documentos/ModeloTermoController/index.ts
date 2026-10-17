@@ -6,7 +6,6 @@ import { ContratoService } from '../../../services/contratos/ContratoService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { sendSuccess, sendError, sendNotFound, sendForbidden } from '../../../utils/responseUtils';
-import { SaasPlanoLimitesService } from '../../../services/saas/SaasPlanoLimitesService';
 import type { AuthenticatedRequest } from '../../../types/auth';
 
 /**
@@ -84,14 +83,6 @@ export class ModeloTermoController {
     try {
       const body = req.body;
       const empresaId = getEmpresaIdOrNull(req);
-      const limitError = await SaasPlanoLimitesService.validateLimiteCreate(
-        empresaId,
-        'cadastros_limite_modelos_documento'
-      );
-      if (limitError) {
-        sendForbidden(res, limitError);
-        return;
-      }
 
       const doc = await ModeloDocumentoService.create({
         nome: body.nome,

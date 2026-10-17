@@ -19,7 +19,7 @@ interface AuditoriaModalProps {
   show: boolean;
   onClose: () => void;
   skipWrapper?: boolean;
-  variant?: 'erp' | 'saas';
+  variant?: 'erp';
 }
 
 const DEFAULT_SEARCH_FIELD = 'usuario_email';
@@ -73,10 +73,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['auditoria-operacional', variant, filters],
     queryFn: async () => {
-      const response =
-        variant === 'saas'
-          ? await auditoriaService.listOperacionalSaas(filters)
-          : await auditoriaService.listOperacional(filters);
+      const response = await auditoriaService.listOperacional(filters);
       if (!response.success) {
         throw new Error(response.message || CONTEXT_ERROR_MESSAGES.AUDIT_LOAD_ERROR);
       }
@@ -153,19 +150,6 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({
           <span className="small text-muted">{log.ip_address || '—'}</span>
         ),
       },
-      ...(variant === 'saas'
-        ? [
-            {
-              key: 'empresa_nome' as const,
-              label: t('audit.tenants'),
-              sortable: true,
-              width: '140px',
-              render: (log: AuditoriaLog) => (
-                <span className="small">{log.empresa_nome || '—'}</span>
-              ),
-            },
-          ]
-        : []),
       {
         key: 'acao',
         label: t('table.action'),
@@ -207,7 +191,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({
         render: (log: AuditoriaLog) => <span className="small">{log.rota || '—'}</span>,
       },
     ],
-    [t, formatTimestamp, formatAcao, getAcaoBadgeVariant, variant]
+    [t, formatTimestamp, formatAcao, getAcaoBadgeVariant]
   );
 
   const pagination = useMemo(
@@ -369,9 +353,9 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({
         setSelectedLog(null);
       }}
       detalhe={auditoriaExibirDetalhe}
-      modalId={variant === 'saas' ? 'saas-auditoria-detalhes' : 'auditoria-detalhes'}
-      showEmpresaColumn={variant === 'saas'}
-      showClienteColumn={variant === 'saas'}
+      modalId="auditoria-detalhes"
+      showEmpresaColumn={false}
+      showClienteColumn={false}
     />
   );
 
@@ -395,7 +379,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({
         title={t('audit.title')}
         size="xl"
         className="no-padding"
-        modalId={variant === 'saas' ? 'saas-auditoria-modal' : 'auditoria-modal'}
+        modalId="auditoria-modal"
       >
         {tablePanel}
       </DraggableModal>

@@ -10,9 +10,9 @@ interface ConfiguracoesEnvios {
 export class WhatsAppService {
   /**
    * Envia boletos baseado em configurações (delegado para WhatsAppBoletoService)
-   * @param options.saas - Se true, usa saas_titulos e saas_dados_empresa
+   * @param options.empresa_id - Filtra títulos por empresa
    */
-  static async enviarBoletos(config: ConfiguracoesEnvios, options?: { saas?: boolean; empresa_id?: number }): Promise<{
+  static async enviarBoletos(config: ConfiguracoesEnvios, options?: { empresa_id?: number }): Promise<{
     sucesso: boolean;
     mensagensEnviadas: number;
     erros: number;

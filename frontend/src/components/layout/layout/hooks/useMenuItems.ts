@@ -56,6 +56,7 @@ export const useMenuItems = ({ t, openModal, hasModulo, userRole }: UseMenuItems
         { id: 'usuarios', modalId: 'usuarios', label: t('params.users'), icon: 'bi-people-fill', onClick: () => handleOpenModal('usuarios') },
         { id: 'recursos-sistema', modalId: 'recursos-sistema', label: t('params.systemResources'), icon: 'bi-gear', onClick: () => handleOpenModal('recursos-sistema') },
         { id: 'dias-vencimento', modalId: 'dias-vencimento', label: t('params.dueDays'), icon: 'bi-calendar-event', onClick: () => handleOpenModal('dias-vencimento') },
+        { id: 'agendador-tarefas', modalId: 'agendador-tarefas', label: t('params.taskScheduler'), icon: 'bi-clock-history', onClick: () => handleOpenModal('agendador-tarefas') },
         ...(canManageSystemMaintenance(userRole)
           ? [
               { id: 'atualizacoes', modalId: 'atualizacoes', label: t('modal.updates'), icon: 'bi-arrow-clockwise', onClick: () => handleOpenModal('atualizacoes') },

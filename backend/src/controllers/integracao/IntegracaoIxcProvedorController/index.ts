@@ -4,7 +4,6 @@ import * as Joi from 'joi';
 import { IntegracaoIxcProvedorService } from '../../../services/integracao/IntegracaoIxcProvedorService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull, resolveEmpresaIdForScopedCreate } from '../../../utils/tenantUtils';
-import { SaasPlanoLimitesService } from '../../../services/saas/SaasPlanoLimitesService';
 import { parseListQuery, queryString } from '../../../utils/listQuery';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
@@ -153,14 +152,6 @@ export class IntegracaoIxcProvedorController {
         return;
       }
 
-      const limitError = await SaasPlanoLimitesService.validateLimiteCreate(
-        empresaId,
-        'ixc_provedor_limite_integracoes'
-      );
-      if (limitError) {
-        sendForbidden(res, limitError);
-        return;
-      }
 
       const item = await IntegracaoIxcProvedorService.create(empresaId, value);
 

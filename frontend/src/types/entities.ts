@@ -651,9 +651,7 @@ export interface BulkAction<T = unknown> {
 export interface RotinaAgendada {
   id: number;
   nome: string;
-  tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'backup_equipamentos_ssh' | 'bloquear_saas_atraso' | 'rpki_sync_parent_resources' | 'rpki_sync_repositories' | 'consulta_titulos_asaas' | 'consulta_titulos_efi' | 'ixc_sync_ordens_servico' | 'suspender_contratos_atraso' | 'outros';
-  /** Presente nas rotinas do agendador SaaS */
-  alvo?: 'saas' | 'erp_global';
+  tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'backup_equipamentos_ssh' | 'rpki_sync_parent_resources' | 'rpki_sync_repositories' | 'consulta_titulos_asaas' | 'consulta_titulos_efi' | 'ixc_sync_ordens_servico' | 'suspender_contratos_atraso' | 'outros';
   dia_semana?: string | number;
   minuto?: string;
   hora?: string;

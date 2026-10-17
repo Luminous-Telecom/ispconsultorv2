@@ -40,5 +40,5 @@ export interface LogsModalProps {
   skipWrapper?: boolean;
   logType?: LogsModalType;
   /** Origem ERP vs SaaS — definido pelo registro de modais (não inferir pela URL). */
-  variant?: 'erp' | 'saas';
+  variant?: 'erp';
 }

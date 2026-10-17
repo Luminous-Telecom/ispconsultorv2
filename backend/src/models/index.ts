@@ -71,21 +71,6 @@ import {
   RpkiAspa,
 } from './rpki';
 
-// SaaS
-import { SaasPlano } from './saas/SaasPlano';
-import { SaasDadosEmpresa } from './saas/SaasDadosEmpresa';
-import { SaasContrato } from './saas/SaasContrato';
-import { SaasUsuarioSuper } from './saas/SaasUsuarioSuper';
-import { SaasServidorEmail } from './saas/SaasServidorEmail';
-import { SaasServidorWhatsapp } from './saas/SaasServidorWhatsapp';
-import { SaasBanco } from './saas/SaasBanco';
-import { SaasTipoCobranca } from './saas/SaasTipoCobranca';
-import { SaasDiasVencimento } from './saas/SaasDiasVencimento';
-import { SaasTitulo } from './saas/SaasTitulo';
-import SaasParametros from './saas/SaasParametros';
-import { SaasScheduledRoutine } from './saas/SaasScheduledRoutine';
-import { SaasNFSeConfig } from './saas/SaasNFSeConfig';
-
 // Importar associações específicas
 import './associations';
 
@@ -358,31 +343,6 @@ ContaPagarPagamento.belongsTo(Usuario, {
 SistemaLogOperacional.belongsTo(DadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
 SistemaLogOperacional.belongsTo(Usuario, { foreignKey: 'usuario_id', as: 'usuario' });
 
-// SaaS — tenants em sistema_tenants; saas_dados_empresa = empresa operadora do SaaS
-DadosEmpresa.hasMany(SaasContrato, { foreignKey: 'empresa_id', as: 'saasContratos' });
-SaasContrato.belongsTo(DadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
-SaasPlano.hasMany(SaasContrato, { foreignKey: 'plano_id', as: 'contratos' });
-SaasContrato.belongsTo(SaasPlano, { foreignKey: 'plano_id', as: 'plano' });
-
-
-DadosEmpresa.hasMany(SaasTitulo, { foreignKey: 'empresa_id', as: 'titulos' });
-SaasTitulo.belongsTo(DadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
-
-SaasPlano.hasMany(SaasDadosEmpresa, { foreignKey: 'plano_id', as: 'empresas' });
-SaasDadosEmpresa.belongsTo(SaasPlano, { foreignKey: 'plano_id', as: 'plano' });
-
-SaasPlano.hasMany(SaasTitulo, { foreignKey: 'plano_id', as: 'titulos' });
-SaasTitulo.belongsTo(SaasPlano, { foreignKey: 'plano_id', as: 'plano' });
-
-SaasBanco.hasMany(SaasTitulo, { foreignKey: 'banco_id', as: 'titulos' });
-SaasTitulo.belongsTo(SaasBanco, { foreignKey: 'banco_id', as: 'banco' });
-
-SaasContrato.hasMany(SaasTitulo, { foreignKey: 'contrato_id', as: 'titulos' });
-SaasTitulo.belongsTo(SaasContrato, { foreignKey: 'contrato_id', as: 'contrato' });
-
-SaasBanco.hasMany(SaasContrato, { foreignKey: 'banco_id', as: 'contratos' });
-SaasContrato.belongsTo(SaasBanco, { foreignKey: 'banco_id', as: 'banco' });
-
 // TemplateWhatsApp e MensagemWhatsApp
 TemplateWhatsApp.hasMany(MensagemWhatsApp, {
   foreignKey: 'template_id',
@@ -513,19 +473,6 @@ export {
   IpPermitidoBlockdomi,
   MensagemWhatsApp,
   TemplateWhatsApp,
-  SaasPlano,
-  SaasDadosEmpresa,
-  SaasContrato,
-  SaasUsuarioSuper,
-  SaasServidorEmail,
-  SaasServidorWhatsapp,
-  SaasBanco,
-  SaasTipoCobranca,
-  SaasDiasVencimento,
-  SaasTitulo,
-  SaasParametros,
-  SaasScheduledRoutine,
-  SaasNFSeConfig,
   SshDevice,
   SshDeviceBackup,
   Agent,

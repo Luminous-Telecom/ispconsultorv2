@@ -1,10 +1,7 @@
 /**
  * Registra e-mail e WhatsApp na tabela única sistema_logs_operacionais.
  */
-import {
-  HISTORICO_ORIGEM_ERP,
-  HISTORICO_ORIGEM_SAAS,
-} from '../mensagemHistoricoOrigens';
+import { HISTORICO_ORIGEM_ERP } from '../mensagemHistoricoOrigens';
 import { gravarMensagemHistoricoLog } from '../../sistema/mensagemHistoricoLog';
 import { logger } from '../../../utils/logger';
 
@@ -23,15 +20,7 @@ export interface DadosRegistroHistorico {
   cliente_telefone?: string;
 }
 
-export interface ContextoSaas {
-  saas: true;
-  empresa_id: number;
-  entidade_tipo?: string;
-  entidade_id?: number;
-  titulo_historico?: string;
-}
-
-/** Contexto para ERP: empresa_id para isolar dados por empresa */
+/** Contexto do envio: empresa_id isola o histórico por empresa */
 export interface ContextoErp {
   empresa_id?: number;
   /** Preenchido no recibo para o histórico impedir reenvio do mesmo pagamento */
@@ -40,8 +29,7 @@ export interface ContextoErp {
   titulo_historico?: string;
 }
 
-/** Contexto passado aos serviços de envio (SaaS ou ERP) */
-export type ContextoHistorico = ContextoSaas | ContextoErp;
+export type ContextoHistorico = ContextoErp;
 
 /**
  * Registra mensagem no histórico unificado, discriminando por historico_origem.
@@ -52,7 +40,6 @@ export async function registrarMensagemHistorico(
 ): Promise<void> {
   try {
     const empresaId = contexto?.empresa_id;
-    const isSaas = !!(contexto && 'saas' in contexto && contexto.saas);
     const vinculo = contexto && 'entidade_tipo' in contexto ? contexto : undefined;
     await gravarMensagemHistoricoLog({
       tipo: dados.tipo,
@@ -67,13 +54,12 @@ export async function registrarMensagemHistorico(
       cliente_nome: dados.cliente_nome,
       cliente_email: dados.cliente_email,
       cliente_telefone: dados.cliente_telefone,
-      historico_origem: isSaas ? HISTORICO_ORIGEM_SAAS : HISTORICO_ORIGEM_ERP,
+      historico_origem: HISTORICO_ORIGEM_ERP,
       empresa_id: empresaId ?? null,
     });
   } catch (error) {
     logger.error('Erro ao registrar mensagem no histórico:', {
       context: 'RegistroMensagemHistoricoService',
-      saas: !!(contexto && 'saas' in contexto && contexto.saas),
       error: error instanceof Error ? error.message : String(error),
     });
     throw error;

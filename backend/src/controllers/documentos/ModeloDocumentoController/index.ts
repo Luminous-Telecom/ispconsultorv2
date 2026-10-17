@@ -13,7 +13,6 @@ import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 import { logger } from '../../../utils/logger';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
-import { SaasPlanoLimitesService } from '../../../services/saas/SaasPlanoLimitesService';
 import { parseOptionalQueryInt, queryString } from '../../../utils/listQuery';
 
 function isModelValidationError(error: unknown): error is Error & { errors: Array<{ message?: string }> } {
@@ -81,14 +80,6 @@ export class ModeloDocumentoController {
       }
 
       const empresaId = documentoData.empresa_id ?? getEmpresaIdOrNull(req) ?? null;
-      const limitError = await SaasPlanoLimitesService.validateLimiteCreate(
-        empresaId,
-        'cadastros_limite_modelos_documento'
-      );
-      if (limitError) {
-        sendForbidden(res, limitError);
-        return;
-      }
 
       const documento = await ModeloDocumentoService.create({
         ...documentoData,

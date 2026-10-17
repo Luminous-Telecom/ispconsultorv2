@@ -5,13 +5,6 @@ import { formatCEP } from './dateUtils';
 import { getClientIpFromSource } from './requestUtils';
 import { pertenceComunicacaoEmpresa, whereComunicacaoEmpresaEstrito } from './comunicacaoEmpresaWhere';
 import { normalizeSshPrivateKeyPem } from './sshPrivateKey';
-import {
-  appendLegacyModulosFromRecursos,
-  parseLimiteRecursosNumber,
-  readLimiteFromRecursos,
-  stripLegacyLimiteKeys,
-} from './saasPlanoLimiteRecursosUtils';
-import { syntheticHoraExecucaoFromSaasBody } from './saasScheduledRoutineCronPayload';
 
 describe('exibição e slug', () => {
   it('prioriza razão social e cai para o id', () => {
@@ -70,19 +63,3 @@ describe('chave SSH', () => {
   });
 });
 
-describe('limites do plano', () => {
-  it('lê número, cai na chave legada e remove as chaves antigas', () => {
-    expect(parseLimiteRecursosNumber('12')).toBe(12);
-    expect(parseLimiteRecursosNumber(-1, 0)).toBe(0);
-    expect(readLimiteFromRecursos({ cadastros_limite_ixc_provedor: 3 }, 'ixc_provedor_limite_integracoes')).toBe(3);
-    const recursos: Record<string, unknown> = { cadastros_limite_ixc_provedor: 1, nome: 'Pro' };
-    stripLegacyLimiteKeys(recursos);
-    expect(recursos.cadastros_limite_ixc_provedor).toBeUndefined();
-    expect(appendLegacyModulosFromRecursos([], { ixc_provedor_limite_integracoes: 1 })).toContain('ixc_provedor');
-  });
-
-  it('monta hora de execução a partir das colunas do SaaS', () => {
-    expect(syntheticHoraExecucaoFromSaasBody({ hora: '8', minuto: '5' })).toBe('08:05');
-    expect(syntheticHoraExecucaoFromSaasBody({ hora: '*', minuto: '5' })).toBe('00:00');
-  });
-});

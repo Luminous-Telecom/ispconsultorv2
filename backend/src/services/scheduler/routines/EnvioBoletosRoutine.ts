@@ -11,7 +11,6 @@ export interface EnvioBoletosConfig {
 }
 
 export interface EnvioBoletosOptions {
-  saas?: boolean;
   empresa_id?: number;
 }
 
@@ -22,14 +21,10 @@ interface DetalhesEnvio {
 
 export class EnvioBoletosRoutine {
   /**
-   * ERP global (SaaS alvo erp_global): sem empresa_id → percorre todos os tenants.
-   * SaaS cobrança: saas=true. ERP por tenant: passa empresa_id.
+   * Sem empresa_id, percorre todas as empresas. Com empresa_id, envia só dela.
    */
   private async resolveEmpresaIds(options: EnvioBoletosOptions): Promise<Array<number | undefined>> {
-    const { saas = false, empresa_id } = options;
-    if (saas) {
-      return [undefined];
-    }
+    const { empresa_id } = options;
     if (empresa_id != null && empresa_id > 0) {
       return [empresa_id];
     }
@@ -71,14 +66,12 @@ export class EnvioBoletosRoutine {
       let totalEnviados = 0;
       let totalErros = 0;
 
-      const { saas = false } = options;
       const empresaIds = await this.resolveEmpresaIds(options);
 
       for (const empresaId of empresaIds) {
         if (canais.includes('whatsapp')) {
           try {
             const resultado = await WhatsAppService.enviarBoletos(configuracoes, {
-              saas,
               empresa_id: empresaId
             });
 
@@ -106,7 +99,6 @@ export class EnvioBoletosRoutine {
         if (canais.includes('email')) {
           try {
             const resultado = await EmailService.enviarBoletos(configuracoes, {
-              saas,
               empresa_id: empresaId
             });
 

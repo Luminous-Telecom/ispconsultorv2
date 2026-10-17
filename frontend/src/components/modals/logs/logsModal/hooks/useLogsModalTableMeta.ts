@@ -24,7 +24,6 @@ interface UseLogsModalTableMetaParams {
   selectedItem: { id: number | string } | null;
   handleViewDetails: (item: unknown) => void;
   canal: 'email' | 'whatsapp' | null;
-  isSaasApi: boolean;
   incluirErp: boolean;
 }
 
@@ -40,7 +39,6 @@ export function useLogsModalTableMeta({
   selectedItem,
   handleViewDetails,
   canal,
-  isSaasApi,
   incluirErp,
 }: UseLogsModalTableMetaParams) {
   const { t } = useI18n();
@@ -106,7 +104,7 @@ export function useLogsModalTableMeta({
 
     setIsResending(true);
     try {
-      const response = await getMensagemHistoricoService(isSaasApi).reenviarFalhas({
+      const response = await getMensagemHistoricoService().reenviarFalhas({
         tipo: canal,
         ...(ids ? { ids } : {}),
         ...(incluirErp ? { incluir_erp: true } : {}),
@@ -127,7 +125,7 @@ export function useLogsModalTableMeta({
     } finally {
       setIsResending(false);
     }
-  }, [canal, isResending, isSaasApi, incluirErp, info, t, error, success, refetch, showApiError]);
+  }, [canal, isResending, incluirErp, info, t, error, success, refetch, showApiError]);
 
   const bulkActions = useMemo(() => {
     if (isBlockdomiApi) {

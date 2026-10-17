@@ -18,10 +18,4 @@ describe('auditoriaService', () => {
     expect(url).not.toContain('empresa_id');
     expect(url).not.toContain('senha');
   });
-
-  it('lista do painel SaaS fica em outra rota', async () => {
-    getHttp().get.mockResolvedValue(okPage([]));
-    await auditoriaService.listOperacionalSaas();
-    expect(String(getHttp().get.mock.calls[0][0])).toContain('/saas/auditoria/operacional-list');
-  });
 });

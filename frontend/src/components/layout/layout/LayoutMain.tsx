@@ -10,7 +10,6 @@ import { useApiLoading } from 'hooks/useApiLoading';
 import { usePlanoModulos } from 'hooks/usePlanoModulos';
 import { LoadingBar } from 'components/ui';
 import SingleModalWrapper from '../../common/SingleModalWrapper';
-import BloqueioAtrasoOverlayComponent from '../../common/BloqueioAtrasoOverlay';
 import ServerUnavailableScreen from './ServerUnavailableScreen';
 import SidebarOverlay from './SidebarOverlay';
 import Sidebar from './Sidebar';
@@ -75,8 +74,6 @@ const LayoutMain: React.FC = () => {
 
   return (
     <div className="app-layout">
-      <BloqueioAtrasoOverlayComponent />
-
       {isMobile && sidebarOpen && (
         <SidebarOverlay onClose={() => setSidebarOpen(false)} />
       )}

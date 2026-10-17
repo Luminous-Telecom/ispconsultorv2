@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Titulo } from 'types';
 import { TituloService } from 'services/tituloService';
-import { saasTituloService, type SaasTitulo } from 'services/saas/saasCrudService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
@@ -140,57 +139,6 @@ export function useContasReceberPrintActions({
     }
   }, [titulos, showApiError, success, openPrintModal, t]);
 
-  const handleImprimirSelecionadosSaas = useCallback(async (items?: TituloItemUnion[]) => {
-    const toPrint = resolveItems(items);
-    if (toPrint.length === 0) {
-      showApiError(t('messages.noTitleSelected'));
-      return;
-    }
-    const emAberto = (toPrint as SaasTitulo[]).filter(
-      (item) => item.status === 'pendente' || item.status === 'vencido'
-    );
-    if (emAberto.length === 0) {
-      showApiError(t('messages.noOpenTitlesFound'));
-      return;
-    }
-    openPrintModal();
-    try {
-      const ids = emAberto.map((item) => item.id);
-      const pdfBlob = await saasTituloService.gerarPdfBoletosMultiplos(ids);
-      const url = window.URL.createObjectURL(pdfBlob);
-      setPdfUrl(url);
-      setIsGeneratingPdf(false);
-      success(t('messages.successPrintSelected'));
-    } catch {
-      showApiError(t('messages.errorPrintSelected'));
-      setShowImprimirModal(false);
-      setIsGeneratingPdf(false);
-    }
-  }, [resolveItems, showApiError, success, openPrintModal, t]);
-
-  const handleImprimirTodosEmAbertoSaas = useCallback(async () => {
-    const emAberto = (titulos as SaasTitulo[]).filter(
-      (item) => item.status === 'pendente' || item.status === 'vencido'
-    );
-    if (emAberto.length === 0) {
-      showApiError(t('messages.noOpenTitlesFound'));
-      return;
-    }
-    openPrintModal();
-    try {
-      const ids = emAberto.map((item: SaasTitulo) => item.id);
-      const pdfBlob = await saasTituloService.gerarPdfBoletosMultiplos(ids);
-      const url = window.URL.createObjectURL(pdfBlob);
-      setPdfUrl(url);
-      setIsGeneratingPdf(false);
-      success(t('messages.successPrintOpen'));
-    } catch {
-      showApiError(t('messages.errorPrintOpen'));
-      setShowImprimirModal(false);
-      setIsGeneratingPdf(false);
-    }
-  }, [titulos, showApiError, success, openPrintModal, t]);
-
   const handleImprimirNFSe = useCallback(
     async (items: Titulo[]) => {
       if (!items || items.length === 0) {
@@ -242,8 +190,6 @@ export function useContasReceberPrintActions({
     handleImprimirSelecionados,
     handleImprimirRecibos,
     handleImprimirTodosEmAberto,
-    handleImprimirSelecionadosSaas,
-    handleImprimirTodosEmAbertoSaas,
     handleImprimirNFSe,
   };
 }

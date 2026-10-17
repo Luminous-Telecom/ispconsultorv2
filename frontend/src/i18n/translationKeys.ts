@@ -1266,28 +1266,6 @@ export interface TranslationKeys {
   'status.overdueUnpaid': string;
   'status.paidLate': string;
 
-  'saas.manualUnblock': string;
-  'saas.confirmManualUnblock': string;
-  'saas.dataNaoBloquearAte': string;
-  'saas.planModules': string;
-  'saas.planModulesHelp': string;
-  'saas.planLimitZeroHelp': string;
-  'saas.planTableEquipmentLimits': string;
-  'saas.planLimitEquipamentosShort': string;
-  'saas.planLimitTuneisShort': string;
-  'saas.planLimitBackupsPerDeviceShort': string;
-  'saas.planFinalPriceHelp': string;
-  'saas.planMonthlyPriceHelp': string;
-  'saas.planAnnualPriceHelp': string;
-  'saas.planHotsiteDiscount': string;
-  'saas.planHotsiteDiscountHelp': string;
-  'saas.planShowOnHotsite': string;
-  'saas.planShowOnHotsiteLabel': string;
-  'saas.planShowOnHotsiteHelp': string;
-  'saas.planShowOnHotsiteShort': string;
-  'saas.planModuleLimitsTab': string;
-  'saas.planModuleLimitsEmpty': string;
-  'saas.planLimitUsersShort': string;
 
   // Placeholders
   'placeholder.cnpj': string;

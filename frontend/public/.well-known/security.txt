@@ -1,4 +1,4 @@
-Contact: mailto:lucas.consultor@luminoustelecom.com.br
+Contact: mailto:lucasmidiadivulgacoes@gmail.com
 Expires: 2026-12-31T23:59:59.000Z
 Preferred-Languages: pt-BR, en
 Canonical: https://ispconsultor.com.br/.well-known/security.txt

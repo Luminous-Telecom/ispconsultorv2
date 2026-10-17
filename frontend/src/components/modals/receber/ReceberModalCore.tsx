@@ -1,18 +1,13 @@
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMarcarTituloPago } from 'hooks/useTitulos';
 import { useI18n } from 'contexts/I18nContext';
-import { useNotificationContext } from 'components/notifications/NotificationProvider';
-import { useApiError } from 'hooks/useApiError';
-import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { formatDate } from 'utils/formatters';
 import { receberSchema, ReceberFormData } from 'schemas/receber.schema';
 import DraggableModal from 'components/common/DraggableModal';
 import { CancelarButton, ReceberButton } from 'components/ui';
 import FormField from 'components/ui/FormField';
-import { saasTituloService } from 'services/saas/saasCrudService';
 import type { ReceberModalVariant, ReceberTarget } from './receberModalTypes';
 
 export interface ReceberModalCoreProps {
@@ -24,39 +19,14 @@ export interface ReceberModalCoreProps {
 }
 
 const ReceberModalCore: React.FC<ReceberModalCoreProps> = ({
-  variant,
   isOpen,
   onClose,
   target,
   onSuccess,
 }) => {
   const { t } = useI18n();
-  const { success } = useNotificationContext();
-  const { showApiError } = useApiError();
-  const queryClient = useQueryClient();
   const erpMutation = useMarcarTituloPago();
-
-  const saasMutation = useMutation({
-    mutationFn: ({
-      id,
-      dataPagamento,
-      valorPago,
-      observacoes,
-    }: {
-      id: number;
-      dataPagamento?: string;
-      valorPago?: number;
-      observacoes?: string;
-    }) => saasTituloService.marcarPago(id, dataPagamento, valorPago, observacoes),
-    onSuccess: (res) => {
-      queryClient.invalidateQueries({ queryKey: ['saas-titulos'] });
-      success((res as { message?: string }).message || 'Título marcado como pago');
-      onSuccess?.();
-    },
-    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.TITULO_MARK_PAID_ERROR),
-  });
-
-  const isPending = variant === 'erp' ? erpMutation.isPending : saasMutation.isPending;
+  const isPending = erpMutation.isPending;
 
   const {
     handleSubmit: rhfHandleSubmit,
@@ -89,22 +59,13 @@ const ReceberModalCore: React.FC<ReceberModalCoreProps> = ({
   const handleSubmit = async (data: ReceberFormData) => {
     if (!target) return;
     try {
-      if (variant === 'erp') {
-        await erpMutation.mutateAsync({
-          id: target.id,
-          dataPagamento: data.data_pagamento,
-          valorPago: parseFloat(data.valor_pago),
-          observacoes: data.observacoes || '',
-        });
-        onSuccess?.();
-      } else {
-        await saasMutation.mutateAsync({
-          id: target.id,
-          dataPagamento: data.data_pagamento,
-          valorPago: parseFloat(data.valor_pago),
-          observacoes: data.observacoes || '',
-        });
-      }
+      await erpMutation.mutateAsync({
+        id: target.id,
+        dataPagamento: data.data_pagamento,
+        valorPago: parseFloat(data.valor_pago),
+        observacoes: data.observacoes || '',
+      });
+      onSuccess?.();
     } catch {
       // Erro tratado pelo hook/mutation
     }
@@ -126,7 +87,7 @@ const ReceberModalCore: React.FC<ReceberModalCoreProps> = ({
       onClose={onClose}
       title={`${t('financial.receiveTitle')} ${tituloLabel}`}
       size="lg"
-      modalId={variant === 'saas' ? 'saas-receber-modal' : 'receber-modal'}
+      modalId="receber-modal"
     >
       <form onSubmit={rhfHandleSubmit(handleSubmit)} className="form-modal-simple">
         <div className="mb-3">

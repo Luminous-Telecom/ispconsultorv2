@@ -1,8 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTitulosFinanceiro } from 'hooks/useTitulosFinanceiro';
 import { Titulo, TituloFilters } from 'types';
-import { saasTituloService, type SaasTitulo } from 'services/saas/saasCrudService';
 import { useEntityListModal } from 'hooks/useEntityListModal';
 import { TituloItemUnion } from './contasReceberListTypes';
 
@@ -15,7 +14,7 @@ interface UseContasReceberListDataParams {
 
 export function useContasReceberListData({
   show,
-  isSaas,
+  isSaas: _isSaas,
   initialFilters,
   list,
 }: UseContasReceberListDataParams) {
@@ -96,79 +95,17 @@ export function useContasReceberListData({
     sortDirection: list.tableFilters.apiParams.sortDirection,
   };
 
-  const { data: titulosData, isLoading, refetch } = useTitulosFinanceiro(filters, !isSaas);
-  const {
-    data: saasData,
-    isLoading: saasLoading,
-    refetch: saasRefetch,
-  } = useQuery({
-    queryKey: [
-      'saas-titulos',
-      list.tableFilters.page,
-      list.tableFilters.limit,
-      list.tableFilters.debouncedSearch,
-      list.tableFilters.sortColumn,
-      list.tableFilters.sortDirection,
-      showCancelados,
-      pagamentoInicio,
-      pagamentoFim,
-      vencimentoInicio,
-      vencimentoFim,
-      statusFilter,
-      filterByPaymentDate,
-    ],
-    queryFn: () =>
-      saasTituloService.list({
-        page: list.tableFilters.page,
-        limit: list.tableFilters.limit,
-        search: list.tableFilters.debouncedSearch || undefined,
-        sortColumn: list.tableFilters.sortColumn,
-        sortDirection: list.tableFilters.sortDirection,
-        ...(statusFilter && { status: statusFilter }),
-        ...(filterByPaymentDate
-          ? {
-              ...(pagamentoInicio && { data_pagamento_inicio: pagamentoInicio }),
-              ...(pagamentoFim && { data_pagamento_fim: pagamentoFim }),
-            }
-          : {
-              ...(vencimentoInicio && { data_vencimento_inicio: vencimentoInicio }),
-              ...(vencimentoFim && { data_vencimento_fim: vencimentoFim }),
-            }),
-      }),
-    enabled: isSaas && show,
-    staleTime: 0,
-  });
-
-  const isLoadingData = isSaas ? saasLoading : isLoading;
-  const refetchData = isSaas ? saasRefetch : refetch;
+  const { data: titulosData, isLoading, refetch } = useTitulosFinanceiro(filters, show);
+  const isLoadingData = isLoading;
+  const refetchData = refetch;
 
   const handleRefreshData = useCallback(async () => {
-    if (isSaas) {
-      await queryClient.invalidateQueries({ queryKey: ['saas-titulos'] });
-      await saasRefetch();
-    } else {
-      await queryClient.invalidateQueries({ queryKey: ['titulos-financeiro'] });
-      await refetch();
-    }
-  }, [isSaas, queryClient, refetch, saasRefetch]);
+    await queryClient.invalidateQueries({ queryKey: ['titulos-financeiro'] });
+    await refetch();
+  }, [queryClient, refetch]);
 
-  const titulos = useMemo(() => {
-    if (isSaas) {
-      const listRes = saasData?.data as { data?: SaasTitulo[] } | undefined;
-      return listRes?.data || [];
-    }
-    return titulosData?.data || [];
-  }, [isSaas, saasData?.data, titulosData?.data]);
-
-  const pagination = useMemo(() => {
-    if (isSaas) {
-      const p = (saasData?.data as { pagination?: { total: number; page: number; limit: number; totalPages: number } } | undefined)
-        ?.pagination;
-      if (!p) return undefined;
-      return { total: p.total, page: p.page, limit: p.limit, totalPages: p.totalPages };
-    }
-    return titulosData?.pagination;
-  }, [isSaas, saasData?.data, titulosData?.pagination]);
+  const titulos = useMemo(() => titulosData?.data || [], [titulosData?.data]);
+  const pagination = titulosData?.pagination;
 
   useEffect(() => {
     if (!show) {

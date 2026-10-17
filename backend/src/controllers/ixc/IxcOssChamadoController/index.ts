@@ -7,7 +7,6 @@ import {
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 import { parseListQuery } from '../../../utils/listQuery';
 import { getEmpresaIdOrNull, getUsuarioIdOrNull } from '../../../utils/tenantUtils';
-import { SaasPlanoLimitesService } from '../../../services/saas/SaasPlanoLimitesService';
 import { SuporteDocumentoPdfService } from '../../../services/documentos/SuporteDocumentoPdfService';
 
 function parseOptionalPositiveInt(value: unknown): number | null {
@@ -190,14 +189,6 @@ export class IxcOssChamadoController {
   static async create(req: Request, res: Response): Promise<void> {
     try {
       const empresaId = getEmpresaIdOrNull(req);
-      const limitError = await SaasPlanoLimitesService.validateLimiteCreate(
-        empresaId,
-        'ordens_servico_limite_ordens_servico'
-      );
-      if (limitError) {
-        sendForbidden(res, limitError);
-        return;
-      }
 
       const usuarioId = getUsuarioIdOrNull(req);
       const resultado = await IxcOssChamadoService.create(req.body, empresaId, usuarioId);

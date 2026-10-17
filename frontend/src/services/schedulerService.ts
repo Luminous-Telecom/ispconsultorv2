@@ -4,13 +4,14 @@ import {
   type CreateRotinaData,
   type UpdateRotinaData,
   type SchedulerResponse,
-} from '../createSchedulerService';
+} from './createSchedulerService';
 
 export type { RotinaAgendada, CreateRotinaData, UpdateRotinaData };
 
-export type SaasSchedulerResponse = SchedulerResponse;
+export type SchedulerListResponse = SchedulerResponse;
 
-export const SaasSchedulerService = createSchedulerService('/saas/scheduler', {
+export const SchedulerService = createSchedulerService('/scheduler', {
+  hasToggle: true,
   hasExecute: true,
   hasLogs: true,
 });

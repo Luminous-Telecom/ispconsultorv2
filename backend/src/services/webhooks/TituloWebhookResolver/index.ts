@@ -1,124 +1,54 @@
 import { Titulo } from '../../../models/financeiro/Titulo';
 import { Banco } from '../../../models/cadastros/Banco';
-import type SaasTitulo from '../../../models/saas/SaasTitulo';
-import type SaasBanco from '../../../models/saas/SaasBanco';
 
 export type ResolvedTitulo = {
-  titulo: Titulo | InstanceType<typeof SaasTitulo>;
-  saas: boolean;
-  banco: Banco | InstanceType<typeof SaasBanco> | null;
+  titulo: Titulo;
+  banco: Banco | null;
 };
 
 export type WebhookEmpresaScope = {
-  /** 'saas' = só saas_titulos; ID do banco (ex: 42) = só títulos admin daquele banco */
+  /** ID do banco na URL do webhook */
   empresaIdentifier?: string;
 };
 
 /**
- * Centraliza a resolução de títulos para webhooks.
- * Busca em titulos (admin) e saas_titulos (SaaS).
- * @param scope.empresaIdentifier - 'saas' para só SaaS; ID do banco para só ERP daquele banco
+ * Resolve títulos do ERP para webhooks de pagamento.
+ * O identificador na URL é o ID do banco.
  */
 export class TituloWebhookResolver {
-  /**
-   * Busca título por charge_id em titulos ou saas_titulos
-   */
   static async findByChargeId(chargeId: string, scope?: WebhookEmpresaScope): Promise<ResolvedTitulo | null> {
-    const identifier = scope?.empresaIdentifier?.toLowerCase();
+    const bancoId = parseBancoId(scope?.empresaIdentifier);
+    if (bancoId == null) return null;
 
-    // Só admin/ERP: buscar em titulos
-    if (identifier && identifier !== 'saas') {
-      const bancoId = parseInt(identifier, 10);
-      if (!Number.isInteger(bancoId)) return null;
-      const TituloModel = await import('../../../models/financeiro/Titulo').then(m => m.Titulo);
-      const tituloAdmin = await TituloModel.findOne({
-        where: {
-          charge_id: chargeId,
-          banco_id: bancoId
-        },
-        include: [{ model: Banco, as: 'banco' }]
-      }) as (Titulo & { banco?: Banco | null }) | null;
+    const TituloModel = await import('../../../models/financeiro/Titulo').then(m => m.Titulo);
+    const titulo = await TituloModel.findOne({
+      where: { charge_id: chargeId, banco_id: bancoId },
+      include: [{ model: Banco, as: 'banco' }]
+    }) as (Titulo & { banco?: Banco | null }) | null;
 
-      if (tituloAdmin) {
-        return {
-          titulo: tituloAdmin,
-          saas: false,
-          banco: tituloAdmin.banco ?? null
-        };
-      }
-      return null;
-    }
-
-    // Só SaaS: buscar em saas_titulos
-    if (identifier === 'saas') {
-      const { default: SaasTituloModel } = await import('../../../models/saas/SaasTitulo');
-      const { default: SaasBancoModel } = await import('../../../models/saas/SaasBanco');
-      const tituloSaas = await SaasTituloModel.findOne({
-        where: { charge_id: chargeId },
-        include: [{ model: SaasBancoModel, as: 'banco' }]
-      }) as (InstanceType<typeof SaasTituloModel> & { banco?: InstanceType<typeof SaasBancoModel> | null }) | null;
-
-      if (tituloSaas) {
-        return {
-          titulo: tituloSaas,
-          saas: true,
-          banco: tituloSaas.banco ?? null
-        };
-      }
-      return null;
-    }
-
-    return null;
+    if (!titulo) return null;
+    return { titulo, banco: titulo.banco ?? null };
   }
 
-  /**
-   * Busca título por id (custom_id) em titulos ou saas_titulos
-   */
   static async findByCustomId(customId: string, scope?: WebhookEmpresaScope): Promise<ResolvedTitulo | null> {
     const id = parseInt(customId, 10);
-    if (isNaN(id)) return null;
+    if (Number.isNaN(id)) return null;
+    const bancoId = parseBancoId(scope?.empresaIdentifier);
+    if (bancoId == null) return null;
 
-    const identifier = scope?.empresaIdentifier?.toLowerCase();
+    const TituloModel = await import('../../../models/financeiro/Titulo').then(m => m.Titulo);
+    const titulo = await TituloModel.findOne({
+      where: { id, banco_id: bancoId },
+      include: [{ model: Banco, as: 'banco' }]
+    }) as (Titulo & { banco?: Banco | null }) | null;
 
-    if (identifier && identifier !== 'saas') {
-      const bancoId = parseInt(identifier, 10);
-      if (!Number.isInteger(bancoId)) return null;
-      const TituloModel = await import('../../../models/financeiro/Titulo').then(m => m.Titulo);
-      const tituloAdmin = await TituloModel.findOne({
-        where: {
-          id,
-          banco_id: bancoId
-        },
-        include: [{ model: Banco, as: 'banco' }]
-      }) as (Titulo & { banco?: Banco | null }) | null;
-
-      if (tituloAdmin) {
-        return {
-          titulo: tituloAdmin,
-          saas: false,
-          banco: tituloAdmin.banco ?? null
-        };
-      }
-      return null;
-    }
-
-    if (identifier === 'saas') {
-      const { default: SaasTituloModel } = await import('../../../models/saas/SaasTitulo');
-      const { default: SaasBancoModel } = await import('../../../models/saas/SaasBanco');
-      const tituloSaas = await SaasTituloModel.findByPk(id, {
-        include: [{ model: SaasBancoModel, as: 'banco' }]
-      }) as (InstanceType<typeof SaasTituloModel> & { banco?: InstanceType<typeof SaasBancoModel> | null }) | null;
-
-      if (tituloSaas) {
-        return {
-          titulo: tituloSaas,
-          saas: true,
-          banco: tituloSaas.banco ?? null
-        };
-      }
-      return null;
-    }
-
-    return null;
+    if (!titulo) return null;
+    return { titulo, banco: titulo.banco ?? null };
   }
+}
+
+function parseBancoId(identifier: string | undefined): number | null {
+  if (!identifier || !/^\d+$/.test(identifier)) return null;
+  const bancoId = parseInt(identifier, 10);
+  return Number.isInteger(bancoId) ? bancoId : null;
 }

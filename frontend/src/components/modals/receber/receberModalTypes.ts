@@ -1,4 +1,4 @@
-export type ReceberModalVariant = 'erp' | 'saas';
+export type ReceberModalVariant = 'erp';
 
 export interface ReceberTarget {
   id: number;

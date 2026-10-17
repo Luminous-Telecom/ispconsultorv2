@@ -117,7 +117,6 @@ export function buildCreatePayloadWithCron(
   return {
     nome: base.nome,
     tipo: base.tipo,
-    alvo: base.alvo,
     ...agenda,
   };
 }

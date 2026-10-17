@@ -52,7 +52,6 @@ export interface MensagemHistoricoFilters {
   limit?: number;
   sortColumn?: string;
   sortDirection?: 'asc' | 'desc';
-  /** SuperAdmin: mesclar ERP + SaaS na rota `/saas/mensagens-historico` */
   incluir_erp?: boolean;
   [key: string]: string | number | boolean | undefined;
 }
@@ -78,15 +77,10 @@ class MensagemHistoricoServiceClass extends BaseService<MensagemHistorico, Recor
   }
 }
 
-// Instâncias do serviço (tenant e SaaS)
 const mensagemHistoricoServiceInstance = new MensagemHistoricoServiceClass();
-const saasMensagemHistoricoServiceInstance = new MensagemHistoricoServiceClass('/saas/mensagens-historico');
 
-/**
- * Retorna a instância correta conforme o contexto (SaaS ou tenant)
- */
-export function getMensagemHistoricoService(isSaas: boolean) {
-  return isSaas ? saasMensagemHistoricoServiceInstance : mensagemHistoricoServiceInstance;
+export function getMensagemHistoricoService() {
+  return mensagemHistoricoServiceInstance;
 }
 
 /**

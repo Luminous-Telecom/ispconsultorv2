@@ -34,10 +34,10 @@ const HomeHero: React.FC<HomeHeroProps> = ({ scrollTo, onOpenLightbox }) => {
           <div className="home-hero-buttons">
             <AppButton
               type="button"
-              label="Ver planos"
+              label="Ver módulos"
               variant="unstyled"
               className="home-btn home-btn-accent"
-              onClick={() => scrollTo('planos')}
+              onClick={() => scrollTo('modulos')}
             />
             <AppButton
               type="button"

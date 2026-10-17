@@ -2,7 +2,6 @@ import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { DadosEmpresaService } from '../../../services/sistema/DadosEmpresaService';
-import { SaasTituloService } from '../../../services/saas/SaasCrudService';
 import { logger } from '../../../utils/logger';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { getEmpresaIdOrNull, isAdminRequest, parseEmpresaIdQuery } from '../../../utils/tenantUtils';
@@ -106,60 +105,6 @@ export class DadosEmpresaController {
         context: 'DadosEmpresaController',
         action: 'getPublicBySlug'
       });
-    }
-  }
-
-  /**
-   * Lista saas_titulos por empresa_id (sistema_tenants).
-   * Usa auth admin para permitir visualizar titulos SaaS da empresa no modal Dados Empresa.
-   * Query: tipo=abertas (pendente,vencido) ou tipo=pagas (pago,pago_atraso,parcial). Default: abertas.
-   */
-  static async getTitulosSaas(req: Request, res: Response): Promise<void> {
-    try {
-      const empresaId = parseEmpresaIdQuery(req.query.empresa_id);
-      if (empresaId == null) {
-        sendError(res, new Error('empresa_id inválido'), 'empresa_id obrigatório e deve ser maior que zero', 400);
-        return;
-      }
-      const tipo = queryString(req.query.tipo) || 'abertas';
-      const statusFilter = tipo === 'pagas' ? 'pago,pago_atraso,parcial' : 'pendente,vencido';
-      const result = await SaasTituloService.list({
-        empresa_id: empresaId,
-        status: statusFilter,
-        limit: 50,
-        sortColumn: 'data_vencimento',
-        sortDirection: tipo === 'pagas' ? 'desc' : 'asc',
-      });
-      sendSuccess(res, result);
-    } catch (error) {
-      sendError(res, error, 'Erro ao listar títulos da empresa', 500, true, {
-        context: 'DadosEmpresaController',
-        action: 'getTitulosSaas',
-      });
-    }
-  }
-
-  /**
-   * Gera PDF de boletos de saas_titulos (admin auth).
-   * Requer ids e empresa_id para validar que os títulos pertencem à empresa.
-   */
-  static async getTitulosSaasBoletosPdf(req: Request, res: Response): Promise<void> {
-    try {
-      const empresaId = parseEmpresaIdQuery(req.query.empresa_id);
-      if (empresaId == null) {
-        sendValidationError(res, 'empresa_id obrigatório e deve ser maior que zero');
-        return;
-      }
-      const ids = parseIdsFromQueryParam(req.query.ids);
-      if (ids.length === 0) {
-        sendValidationError(res, 'IDs dos títulos não fornecidos');
-        return;
-      }
-
-      sendNotFound(res, 'Nenhum título encontrado');
-      return;
-    } catch (err) {
-      sendError(res, err, 'Erro ao gerar PDF de boletos', 500, true);
     }
   }
 

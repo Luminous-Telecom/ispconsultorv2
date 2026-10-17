@@ -3,7 +3,6 @@ import HomeHeader from './HomeHeader';
 import HomeHero from './HomeHero';
 import HomeStatsStrip from './HomeStatsStrip';
 import HomeModulesSection from './HomeModulesSection';
-import HomePlanosSection from './HomePlanosSection';
 import HomeFaqSection from './HomeFaqSection';
 import HomeCtaSection from './HomeCtaSection';
 import HomeFooter from './HomeFooter';
@@ -40,7 +39,6 @@ const Home: React.FC = () => {
       <main className="home-main">
         <HomeHero scrollTo={scrollTo} onOpenLightbox={setLightboxSrc} />
         <HomeStatsStrip />
-        <HomePlanosSection />
         <HomeModulesSection />
         <HomeFaqSection faqOpen={faqOpen} setFaqOpen={setFaqOpen} />
         <HomeCtaSection

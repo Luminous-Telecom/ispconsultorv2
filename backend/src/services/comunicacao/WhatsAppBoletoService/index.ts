@@ -37,38 +37,17 @@ const mensagemInclude = {
 export class WhatsAppBoletoService {
   /**
    * Envia boletos baseado em configurações
-   * @param options.saas - Se true, usa saas_titulos e saas_dados_empresa
+   * @param options.empresa_id - Filtra títulos por empresa
    */
-  static async enviarBoletos(config: ConfiguracoesEnvios, options?: { saas?: boolean; empresa_id?: number }): Promise<{
+  static async enviarBoletos(config: ConfiguracoesEnvios, options?: { empresa_id?: number }): Promise<{
     sucesso: boolean;
     mensagensEnviadas: number;
     erros: number;
   }> {
-    const saas = options?.saas ?? false;
     const empresaId = options?.empresa_id;
     try {
       let servidor: ServidorWhatsApp;
-      if (saas) {
-        const rows = await prisma.$queryRawUnsafe<Array<{
-          id: number; nome: string; url_api: string | null; token: string | null; numero: string | null;
-        }>>("SELECT id, nome, url_api, token, numero FROM saas_servidores_whatsapp WHERE status = 'ativo' LIMIT 1");
-        const saasSrv = rows[0];
-        if (!saasSrv) {
-          return { sucesso: false, mensagensEnviadas: 0, erros: 0 };
-        }
-        servidor = {
-          id: saasSrv.id,
-          tipo_api: 'evolution' as const,
-          evolution_api_url: saasSrv.url_api || '',
-          evolution_api_key: saasSrv.token || '',
-          instance_name: saasSrv.numero || saasSrv.nome,
-          ativo: true,
-          timeout: 30000,
-          notificacoes_automaticas: false,
-          tentativas: 1,
-          intervalo_tentativas: 0,
-        } as unknown as ServidorWhatsApp;
-      } else {
+      
         const whereSrv = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
         if (!whereSrv) {
           logger.info('[WhatsApp Boleto] empresa_id ausente — envio abortado (isolamento multi-tenant)');
@@ -81,11 +60,9 @@ export class WhatsAppBoletoService {
           return { sucesso: false, mensagensEnviadas: 0, erros: 0 };
         }
         servidor = srv;
-      }
+      
 
-      const whereMsg = saas
-        ? { ativo: true }
-        : whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
+      const whereMsg = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
       if (!whereMsg) {
         return { sucesso: false, mensagensEnviadas: 0, erros: 0 };
       }
@@ -108,7 +85,7 @@ export class WhatsAppBoletoService {
 
       for (const envio of envios) {
         try {
-          const resultado = await this.processarEnvio(mensagens, servidor, envio.tipoMensagem, envio.dias, envio.tipo, saas, empresaId);
+          const resultado = await this.processarEnvio(mensagens, servidor, envio.tipoMensagem, envio.dias, envio.tipo, empresaId);
           mensagensEnviadas += resultado.enviadas;
           erros += resultado.erros;
         } catch (processError) {
@@ -142,7 +119,6 @@ export class WhatsAppBoletoService {
     tipoMensagem: string,
     dias: number,
     tipo: 'antes' | 'mesmo' | 'depois',
-    saas = false,
     empresaId?: number
   ): Promise<{ enviadas: number; erros: number }> {
     const mensagem = mensagens.find((msg) => msg.tipo === tipoMensagem);
@@ -188,55 +164,7 @@ export class WhatsAppBoletoService {
 
     let titulos: Titulo[];
 
-    if (saas) {
-      const rows = await prisma.$queryRawUnsafe<Array<Record<string, unknown>>>(
-        "SELECT * FROM saas_titulos WHERE status IN ('pendente', 'vencido') AND pago = 0 AND data_vencimento >= ? AND data_vencimento < ? ORDER BY data_vencimento ASC, id ASC",
-        dataVencimento,
-        proximoDia
-      );
-      const empresaIds = [...new Set(rows.map((row) => Number(row.empresa_id)).filter((id) => Number.isFinite(id)))];
-      const planoIds = [...new Set(rows.map((row) => Number(row.plano_id)).filter((id) => Number.isFinite(id) && id > 0))];
-      const bancoIds = [...new Set(rows.map((row) => Number(row.banco_id)).filter((id) => Number.isFinite(id) && id > 0))];
-      const [empresas, planos, bancos] = await Promise.all([
-        empresaIds.length
-          ? prisma.sistema_tenants.findMany({
-              where: { id: { in: empresaIds } },
-              select: { id: true, razao_social: true, nome_fantasia: true, telefone: true, celular: true },
-            })
-          : Promise.resolve([]),
-        planoIds.length
-          ? prisma.$queryRawUnsafe<Array<Record<string, unknown>>>(
-              `SELECT * FROM saas_planos WHERE id IN (${planoIds.map(() => '?').join(',')})`,
-              ...planoIds
-            )
-          : Promise.resolve([]),
-        bancoIds.length
-          ? prisma.$queryRawUnsafe<Array<Record<string, unknown>>>(
-              `SELECT * FROM saas_bancos WHERE id IN (${bancoIds.map(() => '?').join(',')})`,
-              ...bancoIds
-            )
-          : Promise.resolve([]),
-      ]);
-      const empresaPorId = new Map(empresas.map((empresa) => [empresa.id, empresa]));
-      const planoPorId = new Map(planos.map((plano) => [Number(plano.id), plano]));
-      const bancoPorId = new Map(bancos.map((banco) => [Number(banco.id), banco]));
-      titulos = rows.flatMap((row) => {
-        const empresa = empresaPorId.get(Number(row.empresa_id));
-        if (!empresa) return [];
-        return [{
-          ...row,
-          id: Number(row.id),
-          valor: Number(row.valor),
-          cliente: {
-            telefone: empresa.telefone || empresa.celular,
-            razao_social: empresa.razao_social || empresa.nome_fantasia,
-          },
-          contrato: null,
-          banco: bancoPorId.get(Number(row.banco_id)),
-          plano: planoPorId.get(Number(row.plano_id)),
-        } as unknown as Titulo];
-      });
-    } else {
+    
       const whereTitulo: Prisma.financeiro_titulosWhereInput = {
         status: { in: ['pendente', 'vencido'] },
         pago: false,
@@ -264,7 +192,7 @@ export class WhatsAppBoletoService {
         banco: row.cadastros_bancos,
         plano: row.cadastros_planos,
       })) as unknown as Titulo[];
-    }
+    
 
     logger.info('WhatsAppBoletoService.processarEnvio - Títulos encontrados', {
       context: 'WhatsAppBoletoService',
@@ -285,13 +213,10 @@ export class WhatsAppBoletoService {
     for (const titulo of titulos) {
       let cliente: Cliente | null;
       let contrato: Contrato | null | undefined;
-      if (saas) {
-        cliente = (titulo.cliente ?? null) as Cliente | null;
-        contrato = null;
-      } else {
+      
         cliente = titulo.cliente ?? null;
         contrato = titulo.contrato;
-      }
+      
 
       logger.info('WhatsAppBoletoService.processarEnvio - Processando título', {
         context: 'WhatsAppBoletoService',
@@ -300,7 +225,6 @@ export class WhatsAppBoletoService {
         clienteNome: cliente?.razao_social,
         clienteTelefone: cliente?.telefone,
         contratoId: contrato?.id,
-        saas,
       });
 
       if (!cliente?.telefone) {
@@ -327,12 +251,10 @@ export class WhatsAppBoletoService {
           entidade_id: titulo.id,
           titulo_historico: 'Boleto de Pagamento',
         };
-        const contextoSaas = saas && (titulo as { empresa_id?: number }).empresa_id
-          ? { saas: true as const, empresa_id: (titulo as { empresa_id: number }).empresa_id, ...vinculoCobranca }
-          : empresaIdHistorico != null
-            ? { empresa_id: empresaIdHistorico, ...vinculoCobranca }
-            : vinculoCobranca;
-        const resultado = await this.enviarParaTitulo(mensagem, servidor, tituloParaEnvio as Titulo, cliente, contrato, contextoSaas);
+        const contextoHistorico = empresaIdHistorico != null
+          ? { empresa_id: empresaIdHistorico, ...vinculoCobranca }
+          : vinculoCobranca;
+        const resultado = await this.enviarParaTitulo(mensagem, servidor, tituloParaEnvio as Titulo, cliente, contrato, contextoHistorico);
 
         logger.info('WhatsAppBoletoService.processarEnvio - Resultado do envio', {
           context: 'WhatsAppBoletoService',
@@ -688,113 +610,6 @@ export class WhatsAppBoletoService {
     }
   }
 
-  /**
-   * Reenvia a cobrança de um título SaaS que falhou.
-   */
-  static async reenviarCobrancaSaas(tituloId: number): Promise<{ sucesso: boolean; mensagem?: string }> {
-    try {
-      const srvRows = await prisma.$queryRawUnsafe<Array<{
-        id: number; nome: string; url_api: string | null; token: string | null; numero: string | null;
-      }>>("SELECT id, nome, url_api, token, numero FROM saas_servidores_whatsapp WHERE status = 'ativo' LIMIT 1");
-      const saasSrv = srvRows[0];
-      if (!saasSrv) {
-        return { sucesso: false, mensagem: 'Nenhum servidor WhatsApp ativo encontrado' };
-      }
-      const servidor = {
-        id: saasSrv.id,
-        tipo_api: 'evolution' as const,
-        evolution_api_url: saasSrv.url_api || '',
-        evolution_api_key: saasSrv.token || '',
-        instance_name: saasSrv.numero || saasSrv.nome,
-        ativo: true,
-        timeout: 30000,
-        notificacoes_automaticas: false,
-        tentativas: 1,
-        intervalo_tentativas: 0,
-      } as unknown as ServidorWhatsApp;
-
-      const doTenant = await prisma.comunicacao_mensagens_whatsapp.findMany({
-        where: { ativo: true, empresa_id: null },
-        include: mensagemInclude,
-      });
-      const mensagens = doTenant.length > 0
-        ? doTenant
-        : await prisma.comunicacao_mensagens_whatsapp.findMany({
-          where: { ativo: true },
-          include: mensagemInclude,
-        });
-      const mensagem = escolherMensagemCobranca(mensagens);
-      if (!mensagem) {
-        return { sucesso: false, mensagem: 'Mensagem de cobrança não configurada' };
-      }
-
-      const tituloRows = await prisma.$queryRawUnsafe<Array<Record<string, unknown>>>(
-        'SELECT * FROM saas_titulos WHERE id = ? LIMIT 1',
-        tituloId
-      );
-      const titulo = tituloRows[0];
-      if (!titulo) {
-        return { sucesso: false, mensagem: 'Título não encontrado' };
-      }
-      const empresa = await prisma.sistema_tenants.findUnique({
-        where: { id: Number(titulo.empresa_id) },
-        select: { id: true, razao_social: true, nome_fantasia: true, telefone: true, celular: true },
-      });
-      if (!empresa) {
-        return { sucesso: false, mensagem: 'Título não encontrado' };
-      }
-      const telefone = empresa.telefone || empresa.celular || undefined;
-      if (!telefone) {
-        return { sucesso: false, mensagem: 'Empresa sem telefone cadastrado' };
-      }
-      const [planoRows, bancoRows] = await Promise.all([
-        titulo.plano_id
-          ? prisma.$queryRawUnsafe<Array<Record<string, unknown>>>('SELECT * FROM saas_planos WHERE id = ? LIMIT 1', Number(titulo.plano_id))
-          : Promise.resolve([]),
-        titulo.banco_id
-          ? prisma.$queryRawUnsafe<Array<Record<string, unknown>>>('SELECT * FROM saas_bancos WHERE id = ? LIMIT 1', Number(titulo.banco_id))
-          : Promise.resolve([]),
-      ]);
-      const cliente = {
-        telefone,
-        razao_social: empresa.razao_social || empresa.nome_fantasia || '',
-      } as Cliente;
-      const tituloParaEnvio = {
-        ...titulo,
-        id: Number(titulo.id),
-        empresa_id: titulo.empresa_id,
-        valor: Number(titulo.valor),
-        cliente,
-        contrato: null,
-        banco: bancoRows[0],
-        plano: planoRows[0],
-      } as unknown as Titulo;
-
-      const enviou = await this.enviarParaTitulo(
-        mensagem,
-        servidor,
-        tituloParaEnvio,
-        cliente,
-        null,
-        {
-          saas: true,
-          empresa_id: Number(titulo.empresa_id),
-          entidade_tipo: 'titulo',
-          entidade_id: Number(titulo.id),
-          titulo_historico: 'Boleto de Pagamento',
-        }
-      );
-      return enviou
-        ? { sucesso: true, mensagem: 'Mensagem enviada com sucesso' }
-        : { sucesso: false, mensagem: 'Erro ao enviar mensagem' };
-    } catch (error) {
-      logger.error('Erro ao reenviar cobrança SaaS por WhatsApp', {
-        tituloId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      return { sucesso: false, mensagem: 'Erro interno ao enviar mensagem' };
-    }
-  }
 
   /**
    * Formata telefone para padrão brasileiro

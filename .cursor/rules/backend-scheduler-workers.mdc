@@ -38,4 +38,4 @@ await SchedulerService.getInstance().stop();  // no graceful shutdown
 
 - Lógica de negócio pesada direto no boot — extrair para uma classe `IRoutine` e chamar a partir do `RoutineExecutionService`
 - Nova dependência de fila sem alinhar antes
-- Reintroduzir rotina ou tabela de agendamento do painel SaaS
+- Reintroduzir a tabela ou o login do agendador do painel SaaS. As tarefas (títulos, boletos, remessa, vencimentos, Blockdomi, backup SSH, RPKI, consulta Asaas/Efí, OS do IXC, suspender contratos) ficam em `sistema_scheduled_routines` e no menu **Parâmetros → Agendador de Tarefas**

@@ -269,7 +269,6 @@ import {
 import { SshDevice } from '../models/ssh-manager/SshDevice';
 import { decryptSshCredential } from '../utils/encryption';
 import { privateKeyPemForSsh2 } from '../utils/sshPrivateKey';
-import { SaasPlanoLimitesService } from '../services/saas/SaasPlanoLimitesService';
 
 function verifyJwt(token: string): JwtPayload | null {
   const secret = process.env.JWT_SECRET;
@@ -298,10 +297,8 @@ function canAgentServeDevice(agent: Agent, device: SshDevice): boolean {
   return agent.empresa_id === device.empresa_id;
 }
 
-async function validateEquipamentosModule(empresaId: number | null | undefined): Promise<string | null> {
-  return empresaId == null
-    ? null
-    : SaasPlanoLimitesService.validateEquipamentosModule(empresaId);
+async function validateEquipamentosModule(_empresaId: number | null | undefined): Promise<string | null> {
+  return null;
 }
 
 export function registerAgentTerminalNamespace(io: SocketIOServer): void {

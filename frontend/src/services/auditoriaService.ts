@@ -41,15 +41,7 @@ export interface AuditoriaFilters {
   semUsuarioObrigatorio?: boolean;
   origemAuditoria?: string;
   moduloBlockdomi?: boolean;
-  painelSaas?: boolean;
-  acessoPainelSaas?: boolean;
 }
-
-const ENTIDADES_SAAS = [
-  'SaasPlano', 'SaasContrato', 'SaasDadosEmpresa', 'SaasDadosEmpresaCrud', 'SaasBanco',
-  'SaasTitulo', 'SaasTipoCobranca', 'SaasDiasVencimento', 'SaasNFSeConfig', 'SaasParametros',
-  'SaasServidorEmail', 'SaasServidorWhatsapp', 'SaasUsuarioSuper', 'SaasScheduledRoutine',
-];
 
 class AuditoriaService {
   private appendOperacionalListParams(params: URLSearchParams, filters: AuditoriaFilters): void {
@@ -69,8 +61,6 @@ class AuditoriaService {
     if (filters.semUsuarioObrigatorio) params.append('sem_usuario_obrigatorio', 'true');
     if (filters.origemAuditoria) params.append('origem_auditoria', filters.origemAuditoria);
     if (filters.moduloBlockdomi) params.append('modulo_blockdomi', 'true');
-    if (filters.painelSaas) params.append('painel_saas', 'true');
-    if (filters.acessoPainelSaas) params.append('acesso_painel_saas', 'true');
   }
 
   async listOperacional(filters: AuditoriaFilters = {}): Promise<ApiResponse<PaginatedResponse<AuditoriaLog>>> {
@@ -79,26 +69,11 @@ class AuditoriaService {
     return defaultApiClient.get<PaginatedResponse<AuditoriaLog>>(`/auditoria/operacional-list?${params}`);
   }
 
-  async listOperacionalSaas(filters: AuditoriaFilters = {}): Promise<ApiResponse<PaginatedResponse<AuditoriaLog>>> {
-    const params = new URLSearchParams();
-    this.appendOperacionalListParams(params, filters);
-    return defaultApiClient.get<PaginatedResponse<AuditoriaLog>>(`/saas/auditoria/operacional-list?${params}`);
-  }
-
-  async listOperacionalByTenant(
-    filters: AuditoriaFilters & { empresa_id: number }
-  ): Promise<ApiResponse<PaginatedResponse<AuditoriaLog>>> {
-    const params = new URLSearchParams();
-    this.appendOperacionalListParams(params, filters);
-    return defaultApiClient.get<PaginatedResponse<AuditoriaLog>>(`/saas/auditoria/operacional-list?${params}`);
-  }
-
   async generatePdf(entidade: string, entidadeId: number | string): Promise<Blob> {
     const params = new URLSearchParams();
     params.append('entidade', entidade);
     params.append('entidade_id', String(entidadeId));
-    const baseUrl = ENTIDADES_SAAS.includes(entidade) ? '/saas/auditoria' : '/auditoria';
-    const url = `${baseUrl}/pdf?${params.toString()}`;
+    const url = `/auditoria/pdf?${params.toString()}`;
 
     interface ApiClientWithApi {
       api: import('axios').AxiosInstance;

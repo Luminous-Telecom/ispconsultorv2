@@ -1,19 +1,16 @@
 import { ReciboPagamentoService } from '../../comunicacao/ReciboPagamentoService';
 import { logger } from '../../../utils/logger';
 import { registrarAtualizacao } from '../../sistema/AuditoriaRegistroService';
-import { desbloquearSeSemAtraso } from '../../saas/BloqueioAtrasoService';
 import type { Request } from 'express';
-import { buildTituloPagamentoUpdate } from '../../../utils/tituloVencimentoUtils';
 import type { ResolvedTitulo } from '../TituloWebhookResolver';
 import { TituloService } from '../../financeiro/TituloService';
-import { SaasTituloService } from '../../saas/SaasCrudService';
 
 type TituloLike = { id: number; empresa_id?: number; valor: number; data_vencimento: string | Date; pago: boolean; status: string; update: (data: Record<string, unknown>) => Promise<unknown>; reload: () => Promise<unknown>; toJSON: () => Record<string, unknown>; marcarComoPago?: (valor: number, data?: Date, skipLiquidacao?: boolean) => Promise<void> };
 
 /** Recarrega `resolved.titulo` com o mesmo shape de `getById` (antes ou depois das alterações). */
 export async function refetchResolvedTitulo(resolved: ResolvedTitulo): Promise<void> {
   const id = (resolved.titulo as { id: number }).id;
-  const full = resolved.saas ? await SaasTituloService.getById(id) : await TituloService.getById(id);
+  const full = await TituloService.getById(id);
   if (full) resolved.titulo = full as unknown as ResolvedTitulo['titulo'];
 }
 
@@ -25,23 +22,8 @@ export async function applyPagoWebhook(
   valorPago: number,
   dataPagamento: Date
 ): Promise<void> {
-  const { titulo, saas } = resolved;
-  const t = titulo as TituloLike;
-
-  if (saas) {
-    const pagamentoUpdate = buildTituloPagamentoUpdate({
-      dataVencimento: t.data_vencimento,
-      dataPagamento,
-      valorPago,
-      valorTotal: Number(t.valor),
-    });
-    await t.update(pagamentoUpdate);
-    const empresaId = (t as TituloLike & { empresa_id: number }).empresa_id;
-    if (empresaId) {
-      await desbloquearSeSemAtraso(empresaId);
-      logger.info('Webhook - Empresa desbloqueada após pagamento', { empresa_id: empresaId });
-    }
-  } else if (typeof t.marcarComoPago === 'function') {
+  const t = resolved.titulo as TituloLike;
+  if (typeof t.marcarComoPago === 'function') {
     await t.marcarComoPago(valorPago, dataPagamento, true);
   }
 }
@@ -78,7 +60,7 @@ function pagamentoRecenteParaRecibo(dataPagamento: Date | string | null | undefi
  * Webhook repetido de título já pago, ou baixa de pagamento com mais de 7 dias, não reenvia.
  */
 export function enviarReciboSeAdmin(resolved: ResolvedTitulo, jaEstavaPago: boolean): void {
-  if (resolved.saas || jaEstavaPago || !resolved.titulo.pago) return;
+  if (jaEstavaPago || !resolved.titulo.pago) return;
 
   const titulo = resolved.titulo as { id: number; data_pagamento?: Date | string | null };
   if (!pagamentoRecenteParaRecibo(titulo.data_pagamento)) {
@@ -104,7 +86,7 @@ export async function registrarAuditoriaWebhook(
   mensagem: string
 ): Promise<void> {
   if (!req) return;
-  const nomeEntidade = resolved.saas ? 'SaasTitulo' : 'Titulo';
+  const nomeEntidade = 'Titulo';
   const empresaId = (resolved.titulo as { empresa_id?: number | null }).empresa_id ?? null;
   try {
     await registrarAtualizacao(

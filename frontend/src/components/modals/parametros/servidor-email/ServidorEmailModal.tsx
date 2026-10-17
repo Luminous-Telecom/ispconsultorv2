@@ -13,8 +13,6 @@ import { formatDateTime } from 'utils/formatters';
 import { ServidorEmailForm, ServidorEmailModalProps } from './types';
 import ServidorTab from './abas/ServidorTab';
 import MensagensTab from './abas/MensagensTab';
-import SaasServidorEmailModal from 'components/modals/saas/SaasServidorEmailModal';
-
 const INITIAL_FORM_DATA: ServidorEmailForm = {
   host: '',
   porta: 587,
@@ -403,9 +401,6 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
 };
 
 const ServidorEmailModal: React.FC<ServidorEmailModalProps> = (props) => {
-  if (props.variant === 'saas') {
-    return <SaasServidorEmailModal show={props.show} onClose={props.onClose} skipWrapper={props.skipWrapper} />;
-  }
   return <ServidorEmailModalAdm {...props} />;
 };
 

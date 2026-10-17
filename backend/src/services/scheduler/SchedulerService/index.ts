@@ -26,6 +26,15 @@ function diaSemanaErpFromCreateData(d: number | string | undefined): number | un
   return undefined;
 }
 
+/** Coluna TIME do Prisma exige Date, não "HH:mm". */
+function horaExecucaoParaColuna(value: unknown): Date | undefined {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
+  if (typeof value !== 'string') return undefined;
+  const match = value.match(/^(\d{2}):(\d{2})/);
+  if (!match) return undefined;
+  return new Date(`1970-01-01T${match[1]}:${match[2]}:00.000Z`);
+}
+
 /**
  * Serviço orquestrador responsável por coordenar os serviços especializados:
  * - RoutineScheduleService: Agendamento CRON
@@ -111,35 +120,11 @@ export class SchedulerService {
   }
 
   /**
-   * Agenda uma rotina do SaaS
-   */
-  public async scheduleSaasRoutine(routine: RoutineRow): Promise<void> {
-    await this.scheduleService.scheduleSaasRoutine(routine);
-  }
-
-  /**
-   * Remove o agendamento de uma rotina do SaaS
-   */
-  public unscheduleSaasRoutine(routineId: number): void {
-    this.scheduleService.unscheduleSaasRoutine(routineId);
-  }
-
-  /**
-   * Executa uma rotina SaaS manualmente (em background, retorna imediatamente)
-   * @param id - ID da rotina
-   * @param usuario - Dados do usuário que executou (quando manual)
-   * @param ipAddress - IP do cliente (quando manual)
-   */
-  public async executeSaasRoutineManually(_id: number, _usuario?: { id: number; nome: string | null; email: string | null } | null, _ipAddress?: string | null): Promise<void> {
-    throw new Error('Rotina não encontrada');
-  }
-
-  /**
    * Cria uma nova rotina e agenda
    * @param data - Dados da rotina
    * @returns Rotina criada
    */
-  public async createRoutine(data: CreateRoutineData): Promise<RoutineRow> {
+  public async createRoutine(data: CreateRoutineData & { empresa_id?: number | null }): Promise<RoutineRow> {
     const { minuto: _minSaaS, hora: _horaSaaS, dia_mes: _dmSaaS, mes: _mesSaaS, dia_semana: rawDow, configuracao, ...erpFields } = data;
     void _minSaaS;
     void _horaSaaS;
@@ -151,6 +136,7 @@ export class SchedulerService {
         ...erpFields,
         configuracao: typeof configuracao === 'string' ? configuracao : JSON.stringify(configuracao ?? {}),
         dia_semana: diaSemanaErpFromCreateData(rawDow) ?? null,
+        hora_execucao: horaExecucaoParaColuna(erpFields.hora_execucao) ?? horaExecucaoParaColuna('00:00'),
         ativo: true,
         proxima_execucao: calculateNextExecution(data),
       } as never,
@@ -183,6 +169,9 @@ export class SchedulerService {
     }
     if (payload.configuracao != null && typeof payload.configuracao !== 'string') {
       payload.configuracao = JSON.stringify(payload.configuracao);
+    }
+    if (payload.hora_execucao !== undefined) {
+      payload.hora_execucao = horaExecucaoParaColuna(payload.hora_execucao) ?? horaExecucaoParaColuna('00:00');
     }
 
     const updated = await prisma.sistema_scheduled_routines.update({ where: { id }, data: payload as never });

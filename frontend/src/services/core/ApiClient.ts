@@ -12,7 +12,7 @@ export interface ApiClientConfig {
 }
 
 export interface ApiRequestConfig extends AxiosRequestConfig {
-  /** Força barra de loading mesmo em rotas SaaS/públicas (operações longas). */
+  /** Força barra de loading mesmo em rotas públicas (operações longas). */
   forceLoading?: boolean;
 }
 
@@ -28,8 +28,6 @@ const AUTH_HEADER_SKIP_ROUTES = [
   '/api/health',
   '/api/pagamento/',
   '/central-assinante/',
-  '/api/saas/',
-  '/saas/',
 ];
 
 const LOADING_SKIP_ROUTES = [

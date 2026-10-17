@@ -3,8 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
-import { SaasSchedulerService, type CreateRotinaData, type UpdateRotinaData } from 'services/saas/saasSchedulerService';
-import { usePlanoModulos } from 'hooks/usePlanoModulos';
+import { SchedulerService, type CreateRotinaData, type UpdateRotinaData } from 'services/schedulerService';
 import DraggableModal from 'components/common/DraggableModal';
 import { DeletarButton, FormField, Loading, ModalFormActions, NovoButton } from 'components/ui';
 import CronFieldSection from './CronFieldSection';
@@ -23,7 +22,6 @@ const NOMES_POR_TIPO: Record<string, string> = {
   remessa_bancaria: 'Remessa bancária',
   verificar_vencimentos: 'Verificar vencimentos',
   desbloquear_blockdomi: 'Desbloquear domínios (data fim)',
-  bloquear_saas_atraso: 'Bloquear acesso por atraso',
   backup_equipamentos_ssh: 'Backup equipamentos SSH',
   rpki_sync_parent_resources: 'RPKI: sincronizar recursos da CA-pai',
   rpki_sync_repositories: 'RPKI: sincronizar repositórios',
@@ -34,37 +32,20 @@ const NOMES_POR_TIPO: Record<string, string> = {
   outros: 'Outros',
 };
 
-function buildTipoOptionsSaaS(alvo: 'saas' | 'erp_global', hasBlockdomi: boolean) {
-  if (alvo === 'saas') {
-    return [
-      { value: 'geracao_titulos', label: 'Geração de títulos (cobrança SaaS)' },
-      { value: 'envio_boletos', label: 'Envio de boletos (cobrança SaaS)' },
-      { value: 'remessa_bancaria', label: 'Remessa bancária (cobrança SaaS)' },
-      { value: 'bloquear_saas_atraso', label: 'Bloquear acesso por atraso' },
-    ];
-  }
-  const opts = [
-    { value: 'geracao_titulos', label: 'Geração de títulos (ERP — todos os clientes)' },
-    { value: 'envio_boletos', label: 'Envio de boletos (ERP — todos)' },
-    { value: 'remessa_bancaria', label: 'Remessa bancária (ERP — todos)' },
-    { value: 'verificar_vencimentos', label: 'Verificar vencimentos' },
-    { value: 'desbloquear_blockdomi', label: 'Desbloquear domínios (data fim)' },
-    { value: 'backup_equipamentos_ssh', label: 'Backup equipamentos SSH (ERP — todos)' },
-    { value: 'rpki_sync_parent_resources', label: 'RPKI: sincronizar recursos da CA-pai' },
-    { value: 'rpki_sync_repositories', label: 'RPKI: sincronizar repositórios' },
-    { value: 'consulta_titulos_asaas', label: 'Consulta títulos Asaas (ERP + SaaS)' },
-    { value: 'consulta_titulos_efi', label: 'Consulta títulos Efi (ERP + SaaS)' },
-    { value: 'ixc_sync_ordens_servico', label: 'Sincronizar ordens de serviço IXC (ERP — todos)' },
-    { value: 'suspender_contratos_atraso', label: 'Suspender contratos por atraso (ERP — todos)' },
-    { value: 'outros', label: 'Outros' },
-  ];
-  if (!hasBlockdomi) return opts.filter((o) => o.value !== 'desbloquear_blockdomi');
-  return opts;
-}
-
-const ALVO_OPTIONS = [
-  { value: 'saas', label: 'SaaS' },
-  { value: 'erp_global', label: 'ISP Consultor' },
+const TIPO_OPTIONS = [
+  { value: 'geracao_titulos', label: 'Geração de títulos' },
+  { value: 'envio_boletos', label: 'Envio de boletos' },
+  { value: 'remessa_bancaria', label: 'Remessa bancária' },
+  { value: 'verificar_vencimentos', label: 'Verificar vencimentos' },
+  { value: 'desbloquear_blockdomi', label: 'Desbloquear domínios (data fim)' },
+  { value: 'backup_equipamentos_ssh', label: 'Backup equipamentos SSH' },
+  { value: 'rpki_sync_parent_resources', label: 'RPKI: sincronizar recursos da CA-pai' },
+  { value: 'rpki_sync_repositories', label: 'RPKI: sincronizar repositórios' },
+  { value: 'consulta_titulos_asaas', label: 'Consulta títulos Asaas' },
+  { value: 'consulta_titulos_efi', label: 'Consulta títulos Efi' },
+  { value: 'ixc_sync_ordens_servico', label: 'Sincronizar ordens de serviço IXC' },
+  { value: 'suspender_contratos_atraso', label: 'Suspender contratos por atraso' },
+  { value: 'outros', label: 'Outros' },
 ];
 
 interface RotinaAgendadaModalProps {
@@ -77,7 +58,6 @@ interface RotinaAgendadaModalProps {
 const emptyForm = (): CreateRotinaData => ({
   nome: NOMES_POR_TIPO.geracao_titulos,
   tipo: 'geracao_titulos',
-  alvo: 'saas',
 });
 
 const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose, rotinaId = null, onSuccess }) => {
@@ -86,17 +66,10 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
   const { showApiError } = useApiError();
   const queryClient = useQueryClient();
   const isEditMode = !!rotinaId;
-
-  const { hasModulo } = usePlanoModulos();
-  const invalidateKey = 'saas-agendador-tarefas';
+  const invalidateKey = 'agendador-tarefas';
 
   const [formData, setFormData] = useState<CreateRotinaData>(emptyForm);
   const [cronParts, setCronParts] = useState<CronPartState[]>(() => defaultCronParts());
-
-  const tipoOptions = useMemo(() => {
-    const alvo = (formData.alvo ?? 'saas') as 'saas' | 'erp_global';
-    return buildTipoOptionsSaaS(alvo, hasModulo('blockdomi'));
-  }, [formData.alvo, hasModulo]);
 
   const cronRowLabels = useMemo(
     () => [
@@ -109,12 +82,12 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
     [t]
   );
 
-  const formId = 'saas-rotina-agendada-form';
+  const formId = 'rotina-agendada-form';
 
   const { data: rotinaData, isLoading } = useQuery({
-    queryKey: ['saas-rotina', rotinaId],
+    queryKey: ['rotina-agendada', rotinaId],
     queryFn: async () => {
-      const response = await SaasSchedulerService.getRotinaById(rotinaId!);
+      const response = await SchedulerService.getRotinaById(rotinaId!);
       return response.data;
     },
     enabled: isEditMode && !!rotinaId && show,
@@ -136,14 +109,13 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
       setFormData({
         nome: rotinaData.nome || '',
         tipo: rotinaData.tipo || 'geracao_titulos',
-        alvo: (rotinaData.alvo ?? 'saas') as 'saas' | 'erp_global',
       });
       setCronParts(cronPartsFromRotina(rotinaData));
     }
   }, [rotinaData, isEditMode]);
 
   const createMutation = useMutation({
-    mutationFn: (data: CreateRotinaData) => SaasSchedulerService.createRotina(data),
+    mutationFn: (data: CreateRotinaData) => SchedulerService.createRotina(data),
     onSuccess: () => {
       success('Rotina salva com sucesso!');
       queryClient.invalidateQueries({ queryKey: [invalidateKey] });
@@ -154,18 +126,18 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: UpdateRotinaData) => SaasSchedulerService.updateRotina(rotinaId!, data),
+    mutationFn: (data: UpdateRotinaData) => SchedulerService.updateRotina(rotinaId!, data),
     onSuccess: () => {
       success('Rotina atualizada com sucesso!');
       queryClient.invalidateQueries({ queryKey: [invalidateKey] });
-      queryClient.invalidateQueries({ queryKey: ['saas-rotina', rotinaId] });
+      queryClient.invalidateQueries({ queryKey: ['rotina-agendada', rotinaId] });
       onSuccess?.();
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.ROTINA_UPDATE_ERROR),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: () => SaasSchedulerService.deleteRotina(rotinaId!),
+    mutationFn: () => SchedulerService.deleteRotina(rotinaId!),
     onSuccess: () => {
       success('Rotina deletada com sucesso!');
       queryClient.invalidateQueries({ queryKey: [invalidateKey] });
@@ -184,7 +156,6 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
       {
         nome: formData.nome,
         tipo: formData.tipo,
-        alvo: formData.alvo ?? 'saas',
       },
       cronParts
     );
@@ -237,7 +208,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
       onClose={handleClose}
       title={t('scheduler.formModalTitle')}
       size="lg"
-      modalId="saas-rotina-agendada-form-modal"
+      modalId="rotina-agendada-form-modal"
       headerActions={
         <div className="d-flex gap-2 modal-header-actions">
           <ModalFormActions
@@ -263,28 +234,6 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
         <div className="row g-2">
           <div className="col-12">
               <FormField
-                name="alvo"
-                label={t('scheduler.scope')}
-                type="select"
-                size="md"
-                value={formData.alvo ?? 'saas'}
-                onChange={(value) => {
-                  const alvoVal = (value === 'erp_global' ? 'erp_global' : 'saas') as 'saas' | 'erp_global';
-                  const opts = buildTipoOptionsSaaS(alvoVal, hasModulo('blockdomi'));
-                  const first = (opts[0]?.value ?? 'geracao_titulos') as CreateRotinaData['tipo'];
-                  setFormData({
-                    ...formData,
-                    alvo: alvoVal,
-                    tipo: first,
-                    nome: NOMES_POR_TIPO[first] || formData.nome,
-                  });
-                }}
-                required
-                options={ALVO_OPTIONS}
-              />
-            </div>
-            <div className="col-12">
-              <FormField
                 name="tipo"
                 label={t('scheduler.type')}
                 type="select"
@@ -299,7 +248,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
                   });
                 }}
                 required
-                options={tipoOptions}
+                options={TIPO_OPTIONS}
               />
             </div>
           {cronRowLabels.map((label, idx) => (

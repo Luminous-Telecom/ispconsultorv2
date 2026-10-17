@@ -6,13 +6,10 @@ import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../..
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
-import { getModulosDoPlano, tenantTemModulo } from '../../../services/saas/PlanoModulosService';
 import { getClientIp } from '../../../utils/requestUtils';
 import { parseSchedulerListQuery } from '../../../utils/listQuery';
 import { buildPagination } from '../../../utils/pagination';
-
-/** Boletos, títulos, remessa e backup SSH ficam no agendador SaaS. No ERP só rotinas por tenant (ex.: outros). */
-const TIPOS_AGENDADOR_PERMITIDOS_NO_ERP = ['outros'] as const;
+import { erpRoutineFromForm, formHasCron, withCronParts } from '../../../utils/erpScheduledRoutinePayload';
 
 export class SchedulerController {
   private schedulerService: SchedulerService;
@@ -53,7 +50,10 @@ export class SchedulerController {
         direction: sortDirection ?? 'desc',
         empresa_id: empresaId ?? undefined,
       });
-      res.json(result);
+      res.json({
+        ...result,
+        data: result.data.map((row) => withCronParts(row as Record<string, unknown>)),
+      });
     } catch (error: unknown) {
       sendError(res, error, 'Erro interno do servidor', 500, true, {
         context: 'SchedulerController',
@@ -78,7 +78,7 @@ export class SchedulerController {
         return;
       }
 
-      sendSuccess(res, routine);
+      sendSuccess(res, withCronParts(routine as unknown as Record<string, unknown>));
     } catch (error: unknown) {
       sendError(res, error, 'Erro interno do servidor', 500, true, {
         context: 'SchedulerController',
@@ -91,34 +91,15 @@ export class SchedulerController {
   // Criar nova rotina
   public async store(req: Request, res: Response): Promise<void> {
     try {
-      const routineData = req.body;
-
-      // Validações básicas
-      if (!routineData.nome || !routineData.tipo || !routineData.frequencia || !routineData.hora_execucao) {
-        sendValidationError(res, 'Campos obrigatórios: nome, tipo, frequencia, hora_execucao');
-        return;
-      }
-
-      if (!TIPOS_AGENDADOR_PERMITIDOS_NO_ERP.includes(routineData.tipo)) {
-        sendValidationError(
-          res,
-          'Rotinas globais (boletos, títulos, remessa, backup SSH, etc.) são configuradas no painel SaaS — Agendador, com alvo "ERP (todos os clientes)".'
-        );
+      const routineData = req.body as Record<string, unknown>;
+      const parsed = erpRoutineFromForm(routineData);
+      if (!parsed.ok) {
+        sendValidationError(res, parsed.message);
         return;
       }
 
       const empresaId = getEmpresaIdOrNull(req);
-      if (routineData.tipo === 'desbloquear_blockdomi') {
-        if (empresaId != null) {
-          const modulos = await getModulosDoPlano(empresaId);
-          if (!tenantTemModulo(modulos, 'blockdomi')) {
-            sendValidationError(res, 'Módulo blockdomi não está ativo no plano. A rotina de desbloquear domínios só pode ser criada quando o módulo está habilitado.');
-            return;
-          }
-        }
-      }
-
-      const dadosComEmpresa = { ...routineData, empresa_id: empresaId ?? routineData.empresa_id };
+      const dadosComEmpresa = { ...parsed.data, empresa_id: empresaId ?? null };
       const routine = await this.schedulerService.createRoutine(dadosComEmpresa);
 
       // Registrar auditoria
@@ -150,7 +131,7 @@ export class SchedulerController {
   public async update(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const updateData = req.body;
+      const body = req.body as Record<string, unknown>;
       const empresaId = getEmpresaIdOrNull(req);
 
       if (empresaId === null || empresaId === undefined) {
@@ -158,14 +139,29 @@ export class SchedulerController {
         return;
       }
 
-      if (updateData.tipo === 'desbloquear_blockdomi') {
-        if (empresaId != null) {
-          const modulos = await getModulosDoPlano(empresaId);
-          if (!tenantTemModulo(modulos, 'blockdomi')) {
-            sendValidationError(res, 'Módulo blockdomi não está ativo no plano. A rotina de desbloquear domínios só pode ser usada quando o módulo está habilitado.');
-            return;
-          }
+      let updatePayload: Record<string, unknown> = body;
+      if (formHasCron(body)) {
+        const parsed = erpRoutineFromForm(body);
+        if (!parsed.ok) {
+          sendValidationError(res, parsed.message);
+          return;
         }
+        const dia = parsed.data.dia_semana;
+        updatePayload = {
+          nome: parsed.data.nome,
+          tipo: parsed.data.tipo,
+          frequencia: parsed.data.frequencia,
+          hora_execucao: parsed.data.hora_execucao,
+          cron_expression: parsed.data.cron_expression,
+          dia_semana: typeof dia === 'number'
+            ? dia
+            : typeof dia === 'string' && /^\d+$/.test(dia)
+              ? parseInt(dia, 10)
+              : null,
+        };
+        if (typeof body.ativo === 'boolean') updatePayload.ativo = body.ativo;
+      } else if (body.ativo !== undefined) {
+        updatePayload = { ativo: Boolean(body.ativo) };
       }
 
       // Buscar rotina antes de atualizar para capturar dados anteriores
@@ -176,7 +172,7 @@ export class SchedulerController {
       }
       const dadosAnteriores = toPlain(routineBefore) as Record<string, unknown>;
 
-      const routine = await this.schedulerService.updateRoutine(Number(id), updateData);
+      await this.schedulerService.updateRoutine(Number(id), updatePayload);
       
       // Recarregar rotina para obter dados atualizados
       const routineAtualizada = await ScheduledRoutineService.getById(Number(id), empresaId ?? undefined);
@@ -206,7 +202,7 @@ export class SchedulerController {
         // Não interromper o fluxo
       }
 
-      sendSuccess(res, routineAtualizada, 'Rotina atualizada com sucesso');
+      sendSuccess(res, withCronParts(routineAtualizada as unknown as Record<string, unknown>), 'Rotina atualizada com sucesso');
     } catch (error: unknown) {
       sendError(res, error, 'Erro interno do servidor', 500, true, {
         context: 'SchedulerController',

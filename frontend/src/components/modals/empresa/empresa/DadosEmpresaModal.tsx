@@ -2,9 +2,7 @@ import React, { useState, useMemo, useLayoutEffect, useCallback, useEffect, useR
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DadosEmpresaService, DadosEmpresa as DadosEmpresaType } from 'services/dadosEmpresaService';
 import { authService } from 'services/authService';
-import { saasDadosEmpresaService, type SaasDadosEmpresaItem } from 'services/saas/saasDadosEmpresaService';
 import { ParametrosService } from 'services/parametrosService';
-import { SaasParametrosService } from 'services/saas/saasParametrosService';
 import { ClienteService } from 'services/clienteService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
@@ -13,66 +11,13 @@ import { useFormReset } from 'hooks/useFormReset';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
 import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
-import { CancelarButton, Loading, SalvarButton } from 'components/ui';
+import { CancelarButton, SalvarButton } from 'components/ui';
 import { DadosEmpresaForm, DadosEmpresaModalProps } from './types';
 import DadosBasicosTab from './abas/DadosBasicosTab';
 import EnderecoTab from './abas/EnderecoTab';
 import ContatoTab from './abas/ContatoTab';
 import ResponsavelTab from './abas/ResponsavelTab';
 import { isValidCNPJ } from 'utils/validators';
-
-function toFormData(item: SaasDadosEmpresaItem): DadosEmpresaForm {
-  return {
-    id: item.id,
-    razao_social: item.razao_social ?? item.nome_empresa ?? '',
-    nome_fantasia: item.nome_fantasia ?? '',
-    cnpj: item.cnpj ?? '',
-    inscricao_estadual: item.inscricao_estadual ?? '',
-    inscricao_municipal: item.inscricao_municipal ?? '',
-    cep: item.cep ?? '',
-    endereco: item.endereco ?? '',
-    numero: item.numero ?? '',
-    complemento: item.complemento ?? '',
-    bairro: item.bairro ?? '',
-    cidade: item.cidade ?? '',
-    estado: item.estado ?? '',
-    telefone: item.telefone ?? '',
-    celular: item.celular ?? '',
-    email: item.email ?? '',
-    site: item.site ?? '',
-    responsavel_nome: item.responsavel_nome ?? '',
-    responsavel_cpf: item.responsavel_cpf ?? '',
-    responsavel_cargo: item.responsavel_cargo ?? '',
-    responsavel_assinatura: item.responsavel_assinatura ?? undefined,
-    logo: item.logo ?? item.logo_url ?? undefined,
-  };
-}
-
-function toSaasPayload(d: DadosEmpresaForm): Partial<SaasDadosEmpresaItem> {
-  return {
-    razao_social: d.razao_social || null,
-    nome_fantasia: d.nome_fantasia || null,
-    cnpj: d.cnpj || null,
-    inscricao_estadual: d.inscricao_estadual || null,
-    inscricao_municipal: d.inscricao_municipal || null,
-    cep: d.cep || null,
-    endereco: d.endereco || null,
-    numero: d.numero || null,
-    complemento: d.complemento || null,
-    bairro: d.bairro || null,
-    cidade: d.cidade || null,
-    estado: d.estado || null,
-    telefone: d.telefone || null,
-    celular: d.celular || null,
-    email: d.email,
-    site: d.site || null,
-    responsavel_nome: d.responsavel_nome || null,
-    responsavel_cpf: d.responsavel_cpf || null,
-    responsavel_cargo: d.responsavel_cargo || null,
-    responsavel_assinatura: d.responsavel_assinatura || null,
-    logo: d.logo || null,
-  };
-}
 
 const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   show,
@@ -81,16 +26,15 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   onHeaderActionsReady,
   variant = 'admin',
   itemId = null,
-  onSuccess,
+  onSuccess: _onSuccess,
   modalId: propModalId,
   companyOptions,
   selectedCompanyId,
   onCompanyChange,
 }) => {
   const isMobile = useIsMobile();
-  const isSaas = variant === 'saas';
-  const isSaasCreate = isSaas && itemId == null;
-  const isSaasEdit = isSaas && itemId != null;
+  void variant;
+  void itemId;
 
   const [activeTab, setActiveTab] = useState<'basico' | 'endereco' | 'contato' | 'responsavel'>('basico');
   const { success, info } = useNotificationContext();
@@ -135,36 +79,20 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
         return DadosEmpresaService.get();
       }
     },
-    enabled: show && !isSaas,
+    enabled: show,
     staleTime: 0,
     refetchOnMount: true,
   });
 
-  const { data: empresaRes, isLoading: isLoadingSaas } = useQuery({
-    queryKey: ['saas-dados-empresa', itemId],
-    queryFn: () => saasDadosEmpresaService.getById(itemId!),
-    enabled: show && isSaasEdit,
-  });
-
-  const { data: parametrosAdmin } = useQuery({
+  const { data: parametros } = useQuery({
     queryKey: ['parametros'],
     queryFn: () => ParametrosService.get(),
     staleTime: 60 * 1000,
-    enabled: show && !isSaas
+    enabled: show,
   });
-
-  const { data: parametrosSaas } = useQuery({
-    queryKey: ['saas-parametros'],
-    queryFn: () => SaasParametrosService.get(),
-    staleTime: 60 * 1000,
-    enabled: show && isSaas
-  });
-
-  const parametros = isSaas ? parametrosSaas : parametrosAdmin;
   const lastCnpjConsulted = useRef<string>('');
 
-  const empresaData = empresaRes?.data as SaasDadosEmpresaItem | undefined;
-  const customData = isSaasEdit && empresaData ? toFormData(empresaData) : !isSaas ? dadosEmpresa : undefined;
+  const customData = dadosEmpresa;
 
   useFormReset({
     show,
@@ -226,28 +154,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.EMPRESA_DATA_UPDATE_ERROR),
   });
 
-  const createSaasMutation = useMutation({
-    mutationFn: (data: DadosEmpresaForm) => saasDadosEmpresaService.create(toSaasPayload(data)),
-    onSuccess: () => {
-      success('Empresa cadastrada com sucesso!');
-      queryClient.invalidateQueries({ queryKey: ['saas-dados-empresa-list'] });
-      onSuccess?.();
-    },
-    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.EMPRESA_CREATE_ERROR),
-  });
-
-  const updateSaasMutation = useMutation({
-    mutationFn: (data: DadosEmpresaForm) => saasDadosEmpresaService.update(itemId!, toSaasPayload(data)),
-    onSuccess: () => {
-      success('Empresa atualizada com sucesso!');
-      queryClient.invalidateQueries({ queryKey: ['saas-dados-empresa-list'] });
-      queryClient.invalidateQueries({ queryKey: ['saas-dados-empresa', itemId] });
-      onSuccess?.();
-    },
-    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.EMPRESA_UPDATE_ERROR),
-  });
-
-  const isPending = updateAdminMutation.isPending || createSaasMutation.isPending || updateSaasMutation.isPending;
+  const isPending = updateAdminMutation.isPending;
 
   const handleInputChange = useCallback((field: keyof DadosEmpresaForm, value: string) => {
     setDados((prev) => ({ ...prev, [field]: value ?? '' }));
@@ -256,19 +163,13 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
-      if (isSaas && !dados.razao_social?.trim() && !dados.nome_fantasia?.trim()) {
-        showApiError('Razão social ou nome fantasia é obrigatório');
-        return;
-      }
       if (!dados.email?.trim()) {
         showApiError('E-mail é obrigatório');
         return;
       }
-      if (isSaasCreate) createSaasMutation.mutate(dados);
-      else if (isSaasEdit) updateSaasMutation.mutate(dados);
-      else updateAdminMutation.mutate(dados);
+      updateAdminMutation.mutate(dados);
     },
-    [dados, showApiError, isSaas, isSaasCreate, isSaasEdit, createSaasMutation, updateSaasMutation, updateAdminMutation]
+    [dados, showApiError, updateAdminMutation]
   );
 
   const handleCancel = useCallback(() => {
@@ -279,58 +180,32 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
     async (file: File | null) => {
       if (!file) return;
       try {
-        if (isSaasEdit) {
-          const resp = await saasDadosEmpresaService.uploadLogo(itemId!, file);
-          const data = (resp as { data?: { logo?: string } }).data;
-          const logo = data?.logo;
-          if (logo) {
-            setDados((prev) => ({ ...prev, logo }));
-            success('Logo atualizada com sucesso!');
-            queryClient.invalidateQueries({ queryKey: ['saas-dados-empresa', itemId] });
-          }
-        } else if (!isSaas) {
-          const empresaId = dados.id > 0 ? dados.id : undefined;
-          const resp = await DadosEmpresaService.uploadLogo(file, empresaId);
-          setDados((prev) => ({ ...prev, logo: resp.logo }));
-          success('Logo atualizada com sucesso!');
-          queryClient.invalidateQueries({ queryKey: ['dados-empresa'] });
-        } else {
-          showApiError('Salve a empresa primeiro para enviar a logo');
-        }
+        const empresaId = dados.id > 0 ? dados.id : undefined;
+        const resp = await DadosEmpresaService.uploadLogo(file, empresaId);
+        setDados((prev) => ({ ...prev, logo: resp.logo }));
+        success('Logo atualizada com sucesso!');
+        queryClient.invalidateQueries({ queryKey: ['dados-empresa'] });
       } catch (err) {
         showApiError(err, CONTEXT_ERROR_MESSAGES.EMPRESA_LOGO_ERROR);
       }
     },
-    [dados.id, isSaas, isSaasEdit, itemId, success, showApiError, queryClient]
+    [dados.id, success, showApiError, queryClient]
   );
 
   const onAssinaturaChange = useCallback(
     async (file: File | null) => {
       if (!file) return;
       try {
-        if (isSaasEdit) {
-          const resp = await saasDadosEmpresaService.uploadAssinatura(itemId!, file);
-          const data = (resp as { data?: { responsavel_assinatura?: string } }).data;
-          const assinatura = data?.responsavel_assinatura;
-          if (assinatura) {
-            setDados((prev) => ({ ...prev, responsavel_assinatura: assinatura }));
-            success('Assinatura atualizada com sucesso!');
-            queryClient.invalidateQueries({ queryKey: ['saas-dados-empresa', itemId] });
-          }
-        } else if (!isSaas) {
-          const empresaId = dados.id > 0 ? dados.id : undefined;
-          const resp = await DadosEmpresaService.uploadAssinatura(file, empresaId);
-          setDados((prev) => ({ ...prev, responsavel_assinatura: resp.responsavel_assinatura }));
-          success('Assinatura atualizada com sucesso!');
-          queryClient.invalidateQueries({ queryKey: ['dados-empresa'] });
-        } else {
-          showApiError('Salve a empresa primeiro para enviar a assinatura');
-        }
+        const empresaId = dados.id > 0 ? dados.id : undefined;
+        const resp = await DadosEmpresaService.uploadAssinatura(file, empresaId);
+        setDados((prev) => ({ ...prev, responsavel_assinatura: resp.responsavel_assinatura }));
+        success('Assinatura atualizada com sucesso!');
+        queryClient.invalidateQueries({ queryKey: ['dados-empresa'] });
       } catch (err) {
         showApiError(err, CONTEXT_ERROR_MESSAGES.EMPRESA_SIGNATURE_ERROR);
       }
     },
-    [dados.id, isSaas, isSaasEdit, itemId, success, showApiError, queryClient]
+    [dados.id, success, showApiError, queryClient]
   );
 
   type EmpresaTabId = 'basico' | 'endereco' | 'contato' | 'responsavel';
@@ -391,7 +266,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
       <div className="tab-content empresa-tab-content empresa-tab-content-padded" id="empresaTabContent">
         <form id="empresa-form" onSubmit={handleSubmit} className="form-modal-simple">
           {activeTab === 'basico' && <DadosBasicosTab dados={dados} onChange={handleInputChange} isPending={isPending} onLogoChange={onLogoChange} />}
-          {activeTab === 'endereco' && <EnderecoTab dados={dados} onChange={handleInputChange} isPending={isPending} parametrosOverride={isSaas && parametros?.data ? { validar_cep: parametros.data.validar_cep } : undefined} />}
+          {activeTab === 'endereco' && <EnderecoTab dados={dados} onChange={handleInputChange} isPending={isPending} />}
           {activeTab === 'contato' && <ContatoTab dados={dados} onChange={handleInputChange} isPending={isPending} />}
           {activeTab === 'responsavel' && <ResponsavelTab dados={dados} onChange={handleInputChange} isPending={isPending} onAssinaturaChange={onAssinaturaChange} />}
         </form>
@@ -402,14 +277,6 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   if (skipWrapper) return modalContent;
 
   const modalId = propModalId ?? 'dados-empresa-modal';
-
-  if (isSaasEdit && isLoadingSaas) {
-    return (
-      <DraggableModal show={show} onClose={onClose} title="Empresa" size="xl" modalId={modalId}>
-        <Loading variant="modal" />
-      </DraggableModal>
-    );
-  }
 
   return (
     <DraggableModal show={show} onClose={handleCancel} title="Empresa" size="xl" modalId={modalId} headerActions={headerActionsContent}>

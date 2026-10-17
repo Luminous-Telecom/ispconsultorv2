@@ -10,14 +10,9 @@ jest.mock('../../services/sistema/AuditoriaRegistroService', () => ({
   registrarAuditoria: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock('../../services/saas/BloqueioAtrasoService', () => ({
-  getBloqueioAtrasoInfo: jest.fn(),
-}));
-
 import jwt from 'jsonwebtoken';
 import { authMiddleware } from './index';
 import { UsuarioService } from '../../services/cadastros/UsuarioService';
-import { getBloqueioAtrasoInfo } from '../../services/saas/BloqueioAtrasoService';
 
 process.env.JWT_SECRET = 'segredo-de-teste';
 
@@ -79,7 +74,6 @@ describe('authMiddleware', () => {
   });
 
   it('coloca a empresa do JWT no request', async () => {
-    (getBloqueioAtrasoInfo as jest.Mock).mockResolvedValue({ bloqueado: false });
     const token = jwt.sign({ id: 1, empresa_id: 10 }, process.env.JWT_SECRET as string);
     const next = jest.fn();
     const req = pedido('/api/clientes', `Bearer ${token}`);

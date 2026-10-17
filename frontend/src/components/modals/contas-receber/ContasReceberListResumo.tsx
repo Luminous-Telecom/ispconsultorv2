@@ -1,6 +1,5 @@
 import React from 'react';
 import { Titulo } from 'types';
-import { SaasTitulo } from 'services/saas/saasCrudService';
 import { formatContasReceberCurrency } from './contasReceberListUtils';
 import { TituloItemUnion, ContasReceberTranslateFn } from './contasReceberListTypes';
 
@@ -57,7 +56,7 @@ export const ContasReceberListResumo: React.FC<ContasReceberListResumoProps> = (
             {formatContasReceberCurrency(
               (filteredData as TituloItemUnion[]).reduce((sum: number, item: TituloItemUnion) => {
                 if (item.status === 'pago' || item.status === 'cancelado') return sum;
-                if ('pago' in item && (item as SaasTitulo).pago) return sum;
+                if ('pago' in item && (item as Titulo).pago) return sum;
                 const v = Number(
                   (item as { valor?: number }).valor ??
                     (item as Titulo).valor_final ??

@@ -3,7 +3,6 @@
  * Conteúdo e dados variam conforme logType.
  */
 import React, { useState, useCallback, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
 import { useModalSelect } from 'hooks/useModalSelect';
 import { AuditoriaLog } from 'services/auditoriaService';
 import { TableConfig } from 'components/tables/types';
@@ -20,15 +19,12 @@ const LogsModal: React.FC<LogsModalProps> = ({
   show,
   onClose: _onClose,
   logType = 'usuarios',
-  variant = 'erp',
+  variant: _variant = 'erp',
 }) => {
-  const { pathname } = useLocation();
-  /** SuperAdmin em /saas: modais `logs-*` do registry vêm como erp, mas devem usar APIs agregadas (`/saas/*`). */
-  const effectiveVariant = variant === 'erp' && pathname.startsWith('/saas') ? 'saas' : variant;
-  const mesclarMensagensErp = variant === 'erp' && pathname.startsWith('/saas');
-  const showEmpresaColumn = pathname.startsWith('/saas');
+  const effectiveVariant = 'erp' as const;
+  const showEmpresaColumn = false;
 
-  const ctx = useLogsContent(logType, show, effectiveVariant, variant === 'saas', mesclarMensagensErp);
+  const ctx = useLogsContent(logType, show);
   const [showBlockdomiLogsReal, setShowBlockdomiLogsReal] = useState(false);
   const [whoisIp, setWhoisIp] = useState<string | null>(null);
 
@@ -93,8 +89,7 @@ const LogsModal: React.FC<LogsModalProps> = ({
     selectedItem,
     handleViewDetails,
     canal: logType === 'email' ? 'email' : logType === 'whatsapp' ? 'whatsapp' : null,
-    isSaasApi: effectiveVariant === 'saas',
-    incluirErp: mesclarMensagensErp,
+    incluirErp: false,
   });
 
   const columns = isAuditoria

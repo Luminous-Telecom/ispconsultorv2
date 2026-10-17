@@ -3,12 +3,12 @@ import { wikiUrl } from 'constants/siteWiki';
 export const HERO_CHECKS = [
   'Clientes, contratos, financeiro e NFS-e centralizados',
   'Equipamentos, SSH, backup e RPKI na mesma plataforma',
-  '60 dias de teste grátis · wiki e suporte incluídos',
+  'Wiki e suporte incluídos',
 ];
 
 export const STATS_STRIP = [
   { value: '10+', label: 'Módulos do ERP' },
-  { value: '60', label: 'Dias de teste grátis' },
+  { value: 'Wiki', label: 'Tutoriais de cada tela' },
   { value: 'API', label: 'REST + Webhooks' },
   { value: '24/7', label: 'Wiki e tutoriais' },
 ];
@@ -54,12 +54,12 @@ export const ERP_MODULES = [
 
 export const FAQ_ITEMS = [
   {
-    question: 'Como funciona o período de teste?',
-    answer: 'São 60 dias gratuitos para explorar o ERP, sem cartão de crédito.',
+    question: 'Como acesso o sistema?',
+    answer: 'Pelo login do ERP, com o usuário da empresa. A Central do Assinante usa outro acesso.',
   },
   {
-    question: 'Como escolho o plano?',
-    answer: 'Compare limites e módulos na tabela de planos. Para algo sob medida, fale conosco pelo WhatsApp.',
+    question: 'Onde ficam os tutoriais?',
+    answer: 'Na wiki, com o passo a passo de cada tela do ERP.',
   },
   {
     question: 'O sistema é seguro?',
@@ -76,14 +76,13 @@ export const FAQ_ITEMS = [
 ];
 
 export const CONTATO = {
-  whatsapp: 'https://wa.me/5584998667245?text=Ol%C3%A1,%20queria%20acesso%20de%2060%20dias%20ao%20sistema%20ISP%20Consultor',
+  whatsapp: 'https://wa.me/5584998667245?text=Ol%C3%A1,%20queria%20falar%20sobre%20o%20ISP%20Consultor',
   telegram: 'https://t.me/LucasMidia',
 };
 
 export const WIKI_HOME_URL = wikiUrl('/doc/');
 
 export const NAV_ITEMS = [
-  { id: 'planos', label: 'Planos' },
   { id: 'modulos', label: 'Módulos' },
   { id: 'faq', label: 'FAQ' },
 ] as const;

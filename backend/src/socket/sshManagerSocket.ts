@@ -15,7 +15,6 @@ import { registrarExecucaoParaSocket } from '../services/sistema/AuditoriaServic
 import { logger } from '../utils/logger';
 import { isSshTerminalLatencyDebugEnabled } from '../utils/terminalLatencyDebug';
 import { getClientIpFromHandshake } from '../utils/requestUtils';
-import { SaasPlanoLimitesService } from '../services/saas/SaasPlanoLimitesService';
 
 function verifySocketToken(token: string): JwtPayload | null {
   const secret = process.env.JWT_SECRET;
@@ -43,10 +42,8 @@ function canAccessDevice(device: SshDevice, userEmpresaId: number | null): boole
   return device.empresa_id === userEmpresaId;
 }
 
-async function validateDeviceModule(device: SshDevice): Promise<string | null> {
-  return device.empresa_id == null
-    ? null
-    : SaasPlanoLimitesService.validateEquipamentosModule(device.empresa_id);
+async function validateDeviceModule(_device: SshDevice): Promise<string | null> {
+  return null;
 }
 
 /**

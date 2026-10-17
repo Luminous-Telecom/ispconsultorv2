@@ -1,6 +1,5 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useSaasPortalPath } from 'hooks/useSaasPortalPath';
 import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import { TableConfig } from 'components/tables/types';
 import { Badge, ElementWithMaxWidth } from 'components/ui';
@@ -45,7 +44,6 @@ type LogColumns = TableConfig<RpkiSyncLogRow>['columns'];
 const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => {
   const config = RPKI_LOGS_BY_KIND[kind];
   const { t } = useI18n();
-  const isSaasPortal = useSaasPortalPath();
   const tableFilters = useTableFilters({
     initialSearch: '',
     initialPage: 1,
@@ -116,25 +114,7 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
   );
 
   const columns = useMemo((): LogColumns => {
-    const scopeCols: LogColumns = isSaasPortal
-      ? [
-          {
-            key: 'empresa_saas',
-            label: t('audit.tenants'),
-            sortable: false,
-            width: '200px',
-            render: (item) => (
-              <span
-                className="small text-truncate d-inline-block truncate-max-190"
-                
-                title={item.empresa_saas ?? undefined}
-              >
-                {item.empresa_saas ?? '—'}
-              </span>
-            ),
-          },
-        ]
-      : [
+    const scopeCols: LogColumns = [
           {
             key: 'ca_nome',
             label: 'CA',
@@ -247,7 +227,7 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
     );
 
     return base;
-  }, [config, isSaasPortal, t]);
+  }, [config, t]);
 
   const searchFields = useMemo(
     () => [
@@ -280,18 +260,10 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
       colClassName: 'col-12',
     });
 
-    if (isSaasPortal) {
-      fields.push({
-        label: t('audit.tenants'),
-        value: selectedLog.empresa_saas ?? '—',
-        colClassName: 'col-12',
-      });
-    } else {
-      fields.push(
-        { label: 'CA', value: selectedLog.ca_nome ?? '—' },
-        { label: 'Cliente', value: selectedLog.cliente_nome ?? '—' }
-      );
-    }
+    fields.push(
+      { label: 'CA', value: selectedLog.ca_nome ?? '—' },
+      { label: 'Cliente', value: selectedLog.cliente_nome ?? '—' }
+    );
 
     fields.push({
       label: config.remoteHostColumnLabel,
@@ -301,7 +273,7 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
     });
 
     return fields;
-  }, [config.remoteHostColumnLabel, config.showTypeColumn, isSaasPortal, selectedLog, t]);
+  }, [config.remoteHostColumnLabel, config.showTypeColumn, selectedLog, t]);
 
   return (
     <>

@@ -10,7 +10,6 @@ import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../..
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { buildPagination } from '../../../utils/pagination';
 import { ativoFilterForService, parseListQuery } from '../../../utils/listQuery';
-import { SaasPlanoLimitesService } from '../../../services/saas/SaasPlanoLimitesService';
 function canAccessUsuario(usuario: { empresa_id: number | null }, empresaId: number | null): boolean {
   if (usuario.empresa_id === null) return true;
   if (empresaId === null) return true;
@@ -99,13 +98,6 @@ export class UsuarioController {
 
       const empresaId = getEmpresaIdOrNull(req);
       if (empresaId != null) {
-        const limitError = await SaasPlanoLimitesService.validateUsuarioAtivoLimit(empresaId, {
-          willBeActive: value.ativo !== false,
-        });
-        if (limitError) {
-          sendValidationError(res, limitError);
-          return;
-        }
       }
 
       const usuario = await UsuarioService.create({
@@ -168,14 +160,6 @@ export class UsuarioController {
         }
       }
       if (value.ativo === true && usuario.ativo !== true && usuario.empresa_id != null) {
-        const limitError = await SaasPlanoLimitesService.validateUsuarioAtivoLimit(usuario.empresa_id, {
-          willBeActive: true,
-          excludeUsuarioId: usuario.id,
-        });
-        if (limitError) {
-          sendValidationError(res, limitError);
-          return;
-        }
       }
 
       const usuarioAtualizado = await UsuarioService.update(id, {

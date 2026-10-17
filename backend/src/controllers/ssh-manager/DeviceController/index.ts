@@ -32,7 +32,6 @@ import {
   resolveEmpresaScopeForList,
   resolveEmpresaIdForScopedCreate,
 } from '../../../utils/tenantUtils';
-import { SaasPlanoLimitesService } from '../../../services/saas/SaasPlanoLimitesService';
 import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { getClientIpOrDefault } from '../../../utils/requestUtils';
@@ -108,10 +107,8 @@ function canAccessDevice(device: SshDevice, userEmpresaId: number | null): boole
   return device.empresa_id === userEmpresaId;
 }
 
-async function validateDeviceModule(device: SshDevice): Promise<string | null> {
-  return device.empresa_id == null
-    ? null
-    : SaasPlanoLimitesService.validateEquipamentosModule(device.empresa_id);
+async function validateDeviceModule(_device: SshDevice): Promise<string | null> {
+  return null;
 }
 
 async function validateDeviceAgent(agentId: number | null, empresaId: number | null): Promise<string | null> {
@@ -169,11 +166,6 @@ export class DeviceController {
       const clienteId = parseEmpresaIdQuery(req.query.cliente_id);
       const parts: DeviceFilter[] = [];
       if (scopeEmpresaId != null) {
-        const moduleError = await SaasPlanoLimitesService.validateEquipamentosModule(scopeEmpresaId);
-        if (moduleError) {
-          sendValidationError(res, moduleError);
-          return;
-        }
         parts.push({ OR: [{ empresa_id: scopeEmpresaId }, { empresa_id: null }] });
       }
       if (clienteId != null) {
@@ -247,14 +239,6 @@ export class DeviceController {
       }
       const empresaId = resolved.empresa_id;
       if (empresaId != null) {
-        const limitError = await SaasPlanoLimitesService.validateEquipamentoCreate({
-          empresaId,
-          hasBackup: value.backup_enabled === true,
-        });
-        if (limitError) {
-          sendValidationError(res, limitError);
-          return;
-        }
       }
       const { empresa_id: _e, agent_id: _agentRaw, ...restValue } = value;
       const agent_id = normalizeOptionalAgentId(value.agent_id);
@@ -314,15 +298,6 @@ export class DeviceController {
         const willHaveBackup = value.backup_enabled !== undefined
           ? value.backup_enabled === true
           : !!device.backup_enabled;
-        const limitError = await SaasPlanoLimitesService.validateEquipamentoUpdate({
-          empresaId: devEmpresaId,
-          hasBackup: willHaveBackup,
-          currentHasBackup: !!device.backup_enabled,
-        });
-        if (limitError) {
-          sendValidationError(res, limitError);
-          return;
-        }
       }
 
       const updateData: Partial<typeof value> = { ...value };
@@ -790,14 +765,6 @@ export class DeviceController {
         sendNotFound(res, 'Device SSH não encontrado');
         return;
       }
-      const backupLimitError = device.empresa_id == null
-        ? null
-        : await SaasPlanoLimitesService.validateBackupExecution(device.empresa_id, !!device.backup_enabled);
-      if (backupLimitError) {
-        sendValidationError(res, backupLimitError);
-        return;
-      }
-
       if (!device.is_active) {
         sendValidationError(res, 'Device inativo não pode receber backup.');
         return;
@@ -987,11 +954,6 @@ export class DeviceController {
       const scopeEmpresaId = resolveEmpresaScopeForList(req, parseEmpresaIdQuery(req.query.empresa_id));
       const parts: DeviceFilter[] = [{ cliente_id: clienteId }];
       if (scopeEmpresaId != null) {
-        const moduleError = await SaasPlanoLimitesService.validateEquipamentosModule(scopeEmpresaId);
-        if (moduleError) {
-          sendValidationError(res, moduleError);
-          return;
-        }
         parts.push({ OR: [{ empresa_id: scopeEmpresaId }, { empresa_id: null }] });
       }
       const where = combineDeviceFilters(parts);

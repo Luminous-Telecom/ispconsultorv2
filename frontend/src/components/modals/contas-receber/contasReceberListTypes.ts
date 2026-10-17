@@ -1,13 +1,12 @@
 import type { TranslationKeys } from 'contexts/I18nContext';
 import { Titulo, TituloFilters } from 'types';
-import { SaasTitulo } from 'services/saas/saasCrudService';
 
 export type ContasReceberTranslateFn = (
   key: keyof TranslationKeys,
   params?: Record<string, unknown>
 ) => string;
 
-export type TituloItemUnion = Titulo | SaasTitulo;
+export type TituloItemUnion = Titulo;
 
 export interface SelectedParcela {
   id: number;
@@ -23,5 +22,5 @@ export interface ContasReceberListModalProps {
   onSelectTitulo?: (titulo: Titulo) => void;
   skipWrapper?: boolean;
   initialFilters?: Partial<TituloFilters>;
-  variant?: 'admin' | 'saas';
+  variant?: 'admin';
 }

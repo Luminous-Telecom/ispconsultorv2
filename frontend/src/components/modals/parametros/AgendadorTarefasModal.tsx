@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { SaasSchedulerService, type RotinaAgendada } from 'services/saas/saasSchedulerService';
+import { SchedulerService, type RotinaAgendada } from 'services/schedulerService';
 import { useEntityListModal } from 'hooks/useEntityListModal';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
@@ -20,10 +20,10 @@ function displayProximaUltima(iso: string | undefined): string {
   return d === '-' ? '—' : d;
 }
 
-const QUERY_KEY = 'saas-agendador-tarefas';
-const MODAL_ID = 'saas-agendador-tarefas-modal';
-const TABLE_ID = 'saas-agendador-tarefas';
-const AUDITORIA_MODAL_ID = 'saas-auditoria-scheduled-routine-modal';
+const QUERY_KEY = 'agendador-tarefas';
+const MODAL_ID = 'agendador-tarefas-modal';
+const TABLE_ID = 'agendador-tarefas';
+const AUDITORIA_MODAL_ID = 'auditoria-scheduled-routine-modal';
 
 interface AgendadorTarefasModalProps {
   show: boolean;
@@ -51,7 +51,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
       list.tableFilters.sortDirection,
     ],
     queryFn: () =>
-      SaasSchedulerService.getRotinas({
+      SchedulerService.getRotinas({
         page: list.tableFilters.page,
         limit: list.tableFilters.limit,
         search: list.tableFilters.debouncedSearch,
@@ -69,12 +69,6 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
         label: list.t('scheduler.task'),
         sortable: true,
         render: (item) => <span title={item.nome}>{item.nome}</span>,
-      },
-      {
-        key: 'alvo',
-        label: list.t('scheduler.scope'),
-        sortable: true,
-        render: (item) => <span>{item.alvo === 'saas' ? 'SaaS' : 'ISP Consultor'}</span>,
       },
       {
         key: 'cron_minuto',
@@ -155,9 +149,8 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
   const searchFields = useMemo(
     () => [
       { key: 'id', label: list.t('table.id') },
+      { key: 'nome', label: list.t('scheduler.task') },
       { key: 'tipo', label: list.t('scheduler.type') },
-      { key: 'alvo', label: list.t('scheduler.scope') },
-      { key: 'minuto', label: list.t('scheduler.cronMinute') },
     ],
     [list]
   );
@@ -175,7 +168,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
 
   const toggleAtivoMutation = useMutation({
     mutationFn: ({ id, ativo }: { id: number; ativo: boolean }) =>
-      SaasSchedulerService.updateRotina(id, { ativo }),
+      SchedulerService.updateRotina(id, { ativo }),
     onSuccess: (_data, vars) => {
       success(
         vars.ativo
@@ -191,7 +184,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
     async (rotina: RotinaAgendada) => {
       if (!window.confirm(list.t('scheduler.confirmExecute'))) return;
       try {
-        await SaasSchedulerService.executeRotina?.(rotina.id);
+        await SchedulerService.executeRotina?.(rotina.id);
         success(list.t('scheduler.routineStarted'));
         queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
       } catch (err: unknown) {
@@ -205,7 +198,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
     async (rotina: RotinaAgendada) => {
       if (!window.confirm(list.t('scheduler.confirmDelete'))) return;
       try {
-        await SaasSchedulerService.deleteRotina(rotina.id);
+        await SchedulerService.deleteRotina(rotina.id);
         success(list.t('scheduler.successDelete'));
         queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
       } catch (err: unknown) {
@@ -217,7 +210,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
 
   const handleAudit = useCallback(
     (rotina: RotinaAgendada) => {
-      list.auditoria.handleAudit('SaasScheduledRoutine', rotina.id);
+      list.auditoria.handleAudit('ScheduledRoutine', rotina.id);
     },
     [list.auditoria]
   );
@@ -326,7 +319,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
         bulkActions={bulkActions}
         onSelectionChange={list.handleSelectionChange}
         onAudit={handleAudit}
-        auditEntity="SaasScheduledRoutine"
+        auditEntity="ScheduledRoutine"
         tableId={TABLE_ID}
         modalId={MODAL_ID}
       />

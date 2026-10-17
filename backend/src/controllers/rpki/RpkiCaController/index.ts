@@ -24,7 +24,6 @@ async function findHydrated<T>(
 }
 import { sendError, sendNotFound, sendSuccess, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 import { isRpkiClientError } from '../../../utils/errorUtils';
-import { SaasPlanoLimitesService } from '../../../services/saas/SaasPlanoLimitesService';
 import {
   getEmpresaIdOrNull,
   isAdminRequest,
@@ -186,14 +185,6 @@ export class RpkiCaController {
       }
 
       const empresa_id = getEmpresaIdOrNull(req) ?? null;
-      const limitError = await SaasPlanoLimitesService.validateLimiteCreate(
-        empresa_id,
-        'rpki_limite_cas'
-      );
-      if (limitError) {
-        sendForbidden(res, limitError);
-        return;
-      }
 
       const data = await RpkiCaService.create({ empresa_id, nome, cliente_id });
       await auditarRpki(async () => {
@@ -300,14 +291,6 @@ export class RpkiCaController {
       }
 
       const empresaId = getEmpresaIdOrNull(req);
-      const limitError = await SaasPlanoLimitesService.validateLimiteCreate(
-        empresaId ?? ca.empresa_id,
-        'rpki_limite_cas_pai'
-      );
-      if (limitError) {
-        sendForbidden(res, limitError);
-        return;
-      }
 
       const parent = await RpkiProvisioningService.importParentResponse({
         ca,
@@ -736,14 +719,6 @@ export class RpkiCaController {
       }
 
       const empresaId = getEmpresaIdOrNull(req);
-      const limitError = await SaasPlanoLimitesService.validateLimiteCreate(
-        empresaId ?? ca.empresa_id,
-        'rpki_limite_repositorios'
-      );
-      if (limitError) {
-        sendForbidden(res, limitError);
-        return;
-      }
 
       const row = await RpkiProvisioningService.importRepositoryResponse({
         ca,
@@ -824,14 +799,6 @@ export class RpkiCaController {
         return;
       }
 
-      const limitError = await SaasPlanoLimitesService.validateLimiteCreate(
-        ca.empresa_id,
-        'rpki_limite_roas'
-      );
-      if (limitError) {
-        sendForbidden(res, limitError);
-        return;
-      }
 
       const row = await RpkiRoaService.create({
         caId: ca.id,
@@ -1147,14 +1114,6 @@ export class RpkiCaController {
       if (!customerAsn) { sendValidationError(res, 'customerAsn é obrigatório'); return; }
       if (!providers) { sendValidationError(res, 'providers é obrigatório'); return; }
 
-      const limitError = await SaasPlanoLimitesService.validateLimiteCreate(
-        ca.empresa_id,
-        'rpki_limite_aspas'
-      );
-      if (limitError) {
-        sendForbidden(res, limitError);
-        return;
-      }
 
       const data = await RpkiAspaService.create({
         caId,

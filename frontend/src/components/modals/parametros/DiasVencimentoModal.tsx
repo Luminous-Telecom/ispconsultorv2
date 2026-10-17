@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useLayoutEffect } from 'react';
 import { DiasVencimentoService, type DiasVencimento } from 'services/diasVencimentoService';
-import { saasDiasVencimentoService } from 'services/saas/saasCrudService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
@@ -11,7 +10,7 @@ import { useI18n } from 'contexts/I18nContext';
 interface DiasVencimentoModalProps {
   show: boolean;
   onClose: () => void;
-  variant?: 'erp' | 'saas';
+  variant?: 'erp';
   skipWrapper?: boolean;
   onHeaderActionsReady?: (actions: React.ReactNode) => void;
 }
@@ -29,24 +28,12 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
   const { t } = useI18n();
-  const formId = variant === 'saas' ? 'saas-dias-vencimento-form' : 'dias-vencimento-form';
+  const formId = 'dias-vencimento-form';
 
   const loadDiasAtivosErp = useCallback(async () => {
     const response = await DiasVencimentoService.get();
     if (response.success && Array.isArray(response.data)) {
       const dias = response.data
-        .filter((item: DiasVencimento) => item.ativo)
-        .map((item: DiasVencimento) => item.dia ?? item.dia_padrao)
-        .filter((dia): dia is number => dia !== undefined);
-      setDiasAtivos(dias);
-    }
-  }, []);
-
-  const loadDiasAtivosSaas = useCallback(async () => {
-    const response = await saasDiasVencimentoService.getConfig();
-    const data = (response as { data?: { data?: DiasVencimento[] } })?.data?.data ?? (response as { data?: DiasVencimento[] })?.data ?? [];
-    if (Array.isArray(data)) {
-      const dias = data
         .filter((item: DiasVencimento) => item.ativo)
         .map((item: DiasVencimento) => item.dia ?? item.dia_padrao)
         .filter((dia): dia is number => dia !== undefined);
@@ -60,11 +47,7 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({
     const loadDiasAtivos = async () => {
       setIsLoading(true);
       try {
-        if (variant === 'erp') {
-          await loadDiasAtivosErp();
-        } else {
-          await loadDiasAtivosSaas();
-        }
+        await loadDiasAtivosErp();
       } catch (err) {
         showApiError(err, CONTEXT_ERROR_MESSAGES.PARAMS_UPDATE_ERROR);
       } finally {
@@ -73,7 +56,7 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({
     };
 
     void loadDiasAtivos();
-  }, [show, variant, loadDiasAtivosErp, loadDiasAtivosSaas, showApiError]);
+  }, [show, loadDiasAtivosErp, showApiError]);
 
   useEffect(() => {
     if (!show) {
@@ -95,19 +78,14 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({
     event.preventDefault();
     try {
       setIsSaving(true);
-      if (variant === 'erp') {
-        await DiasVencimentoService.update({ dias: diasAtivos });
-      } else {
-        await saasDiasVencimentoService.updateConfig(diasAtivos);
-        await loadDiasAtivosSaas();
-      }
+      await DiasVencimentoService.update({ dias: diasAtivos });
       success(t('params.dueDaysSaveSuccess'));
     } catch (err: unknown) {
       showApiError(err, CONTEXT_ERROR_MESSAGES.PARAMS_UPDATE_ERROR);
     } finally {
       setIsSaving(false);
     }
-  }, [variant, diasAtivos, success, showApiError, loadDiasAtivosSaas, t]);
+  }, [diasAtivos, success, showApiError, t]);
 
   const headerActionsContent = useMemo(
     () => (
@@ -160,7 +138,7 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({
       onClose={onClose}
       title={t('params.dueDays')}
       size="xl"
-      modalId={variant === 'saas' ? 'saas-dias-vencimento-modal' : 'dias-vencimento-modal'}
+      modalId="dias-vencimento-modal"
       headerActions={headerActionsContent}
     >
       {content}

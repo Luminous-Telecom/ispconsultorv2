@@ -42,7 +42,6 @@ import ipv6Routes from './ipv6Routes';
 import blockdomiRoutes from './blockdomiRoutes';
 import blockdomiListasRoutes from './blockdomiListasRoutes';
 import blockdomiPublicoRoutes from './blockdomiPublicoRoutes';
-import publicSaasPlanosRoutes from './publicSaasPlanosRoutes';
 import backupRoutes from './backupRoutes';
 import atualizacoesRoutes from './atualizacoesRoutes';
 import ipsPermitidosRoutes from './ipsPermitidosRoutes';
@@ -50,7 +49,6 @@ import pdfExtractRoutes from './pdfExtractRoutes';
 import tipoCobrancaContratoRoutes from './tipoCobrancaContratoRoutes';
 import empresaRoutes from './empresaRoutes';
 import sistemaAtualizacaoRoutes from './sistemaAtualizacaoRoutes';
-import tenantRoutes from './tenantRoutes';
 import sshManagerRoutes from './sshManagerRoutes';
 import agentRoutes from './agentRoutes';
 import rpkiRoutes from './rpkiRoutes';
@@ -115,8 +113,6 @@ const routes = [
     { path: '/api/ixc/atendimentos', route: ixcAtendimentoRoutes },
     { path: '/api/ixc', route: ixcLookupRoutes },
     { path: '/api', route: centralAssinanteRoutes },
-    { path: '/api/public', route: publicSaasPlanosRoutes },
-
     // Rotas de webhook
     { path: '/webhook', route: webhookRoutes },
     
@@ -127,7 +123,6 @@ const routes = [
     { path: '/api/backups', route: backupRoutes },
     { path: '/api/atualizacoes', route: atualizacoesRoutes },
     { path: '/api/sistema', route: sistemaAtualizacaoRoutes },
-    { path: '/api/tenant', route: tenantRoutes },
     { path: '/api/ssh-manager', route: sshManagerRoutes },
 
     // API pública Blockdomi (site público) - sem auth, sem IP

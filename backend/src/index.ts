@@ -201,8 +201,6 @@ const ddosMaxProcessingTime = parseInt(process.env.DDOS_MAX_PROCESSING_TIME || '
 const ddosMaxConcurrentRequests = parseInt(process.env.DDOS_MAX_CONCURRENT_REQUESTS || '100'); // 100 requisições concorrentes
 /** Análise RPKI + download/stream RIS (Krill-like) pode ultrapassar minutos em rede lenta */
 const ddosRpkiRoaAnalyzeMaxMs = parseInt(process.env.DDOS_RPKI_ROA_ANALYZE_MAX_MS || '600000', 10); // 10 minutos
-/** Lista de releases no GitHub pode ultrapassar 15s (rede lenta, rate limit, repositório grande) */
-const ddosSaasAtualizacoesMaxMs = parseInt(process.env.DDOS_SAAS_ATUALIZACOES_MAX_MS || '120000', 10); // 2 minutos
 /** Criação/sync de OS IXC pode ultrapassar 15s */
 const ddosIxcOsMaxMs = parseInt(process.env.DDOS_IXC_OS_MAX_MS || '120000', 10); // 2 minutos
 
@@ -213,11 +211,6 @@ app.use(ddosProtectionMiddleware({
     {
       test: (pathname) => /\/rpki\/cas\/[^/]+\/roas\/analyze\/?$/.test(pathname),
       maxProcessingTime: Number.isFinite(ddosRpkiRoaAnalyzeMaxMs) ? ddosRpkiRoaAnalyzeMaxMs : 600_000,
-    },
-    {
-      test: (pathname) =>
-        /^\/api\/saas\/atualizacoes\/?$/.test(pathname),
-      maxProcessingTime: Number.isFinite(ddosSaasAtualizacoesMaxMs) ? ddosSaasAtualizacoesMaxMs : 120_000,
     },
     {
       test: (pathname) =>
@@ -246,9 +239,7 @@ app.use(ddosProtectionMiddleware({
     '/api/assinaturas-digital/webhook', // Webhooks de assinatura digital não devem ter proteção DDoS
     '/arquivos',
     '/api/titulos/boletos-multiplos-pdf', // Geração de PDF pode demorar mais que 15s
-    '/api/saas/titulos/boletos-multiplos-pdf', // Idem para SaaS
     '/api/auditoria/pdf', // Geração de PDF de auditoria pode demorar mais que 15s
-    '/api/saas/auditoria/pdf', // Idem para auditoria no painel SaaS
     '/api/atualizacoes/update', // Atualização pode levar vários minutos (git pull, npm install, build, migrations, pm2 reload)
     '/api/atualizacoes/update-stream',
     '/api/pdf-extract', // Upload de PDF pode demorar (arquivo grande); processamento é assíncrono
@@ -294,10 +285,6 @@ app.use(authMiddleware);
 import { auditCaptureMiddleware, auditLogMiddleware } from './middleware/auditMiddleware';
 app.use(auditCaptureMiddleware);
 app.use(auditLogMiddleware);
-
-// Bloqueia acesso a APIs quando o plano do tenant não inclui o módulo
-import { planoModuloMiddleware } from './middleware/planoModuloMiddleware';
-app.use(planoModuloMiddleware);
 
 // Servir arquivos estáticos de arquivos (ANTES das rotas, mas DEPOIS dos middlewares de proteção)
 // Em produção serve de dist/arquivos/, em dev serve da raiz arquivos/

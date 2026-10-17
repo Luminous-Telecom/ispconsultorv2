@@ -17,17 +17,7 @@ interface SchedulerResult {
 
 export class RpkiSchedulerRoutineService {
   static async syncAllParentResources(): Promise<SchedulerResult> {
-    const empresaRpkiAtivoCache = new Map<number, boolean>();
-    const canEmpresaExecRpki = async (empresaId: number): Promise<boolean> => {
-      const cached = empresaRpkiAtivoCache.get(empresaId);
-      if (cached !== undefined) return cached;
-
-      const { getModulosDoPlano, tenantTemModulo } = await import('../../saas/PlanoModulosService');
-      const modulos = await getModulosDoPlano(empresaId);
-      const enabled = tenantTemModulo(modulos, 'rpki');
-      empresaRpkiAtivoCache.set(empresaId, enabled);
-      return enabled;
-    };
+    const canEmpresaExecRpki = async (_empresaId: number): Promise<boolean> => true;
 
     let total = 0;
     let skipped = 0;
@@ -78,17 +68,7 @@ export class RpkiSchedulerRoutineService {
   }
 
   static async syncAllRepositories(): Promise<SchedulerResult> {
-    const empresaRpkiAtivoCache = new Map<number, boolean>();
-    const canEmpresaExecRpki = async (empresaId: number): Promise<boolean> => {
-      const cached = empresaRpkiAtivoCache.get(empresaId);
-      if (cached !== undefined) return cached;
-
-      const { getModulosDoPlano, tenantTemModulo } = await import('../../saas/PlanoModulosService');
-      const modulos = await getModulosDoPlano(empresaId);
-      const enabled = tenantTemModulo(modulos, 'rpki');
-      empresaRpkiAtivoCache.set(empresaId, enabled);
-      return enabled;
-    };
+    const canEmpresaExecRpki = async (_empresaId: number): Promise<boolean> => true;
 
     let total = 0;
     let skipped = 0;

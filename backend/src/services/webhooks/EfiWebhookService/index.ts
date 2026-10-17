@@ -70,44 +70,9 @@ export class EfiWebhookService {
         };
       }
 
-      if (!identifier || identifier !== 'saas') {
-        return {
-          success: false,
-          message: 'Identificador do banco é obrigatório no webhook',
-          status: 400
-        };
-      }
-
-      const { default: SaasBanco } = await import('../../../models/saas/SaasBanco');
-      const bancosSaasEfi = await SaasBanco.findAll({
-        where: { tipo_banco: 'efi', ativo: true }
-      });
-
-      for (const banco of bancosSaasEfi) {
-        if (receivedSecret && !PaymentCommonService.validateWebhookSecret(banco, receivedSecret)) {
-          continue;
-        }
-        const resultado = await BancoApiService.consultarNotificacaoPorToken(
-          banco as unknown as Parameters<typeof BancoApiService.consultarNotificacaoPorToken>[0],
-          notificationToken,
-          'saas'
-        );
-        if (resultado.success && resultado.data) {
-          return await EfiWebhookProcessorService.processNotificationData(
-            resultado.data as NotificationData | NotificationItem[] | NotificationItem,
-            banco as unknown as Banco,
-            receivedSecret,
-            req
-          );
-        }
-        if (resultado.message?.includes('não encontrado') || resultado.message?.includes('expirado') || resultado.message?.includes('property_does_not_exists')) {
-          break;
-        }
-      }
-
       return {
         success: false,
-        message: 'Não foi possível consultar a notificação',
+        message: 'Identificador do banco é obrigatório no webhook',
         status: 400
       };
 

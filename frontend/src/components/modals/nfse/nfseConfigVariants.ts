@@ -5,13 +5,8 @@ import {
   type NFSeConfigUpdate,
   type NFSeConfigTestAuth,
 } from 'services/nfseConfigService';
-import {
-  SaasNFSeConfigService,
-  type SaasNFSeConfigUpdate,
-  type SaasNFSeConfigTestAuth,
-} from 'services/saas/saasNfseConfigService';
 
-export type NFSeConfigVariant = 'erp' | 'saas';
+export type NFSeConfigVariant = 'erp';
 
 export interface NFSeConfigApi {
   get(): Promise<ApiResponse<NFSeConfig>>;
@@ -32,15 +27,5 @@ export const NFSE_CONFIG_BY_VARIANT: Record<NFSeConfigVariant, NFSeConfigVariant
     formId: 'nfse-config-form',
     modalId: 'nfse-modal',
     api: NFSeConfigService,
-  },
-  saas: {
-    queryKey: ['saas-nfse-config'],
-    formId: 'saas-nfse-config-form',
-    modalId: 'saas-nfse-modal',
-    api: {
-      get: SaasNFSeConfigService.get,
-      update: (data) => SaasNFSeConfigService.update(data as SaasNFSeConfigUpdate),
-      testAuth: (data) => SaasNFSeConfigService.testAuth(data as SaasNFSeConfigTestAuth),
-    },
   },
 };

@@ -34,7 +34,7 @@ type RoutineRow = {
   mes?: string | null;
 };
 
-type RoutineSource = 'erp' | 'saas';
+type RoutineSource = 'erp';
 type AnyRoutine = RoutineRow;
 
 function jobKey(source: RoutineSource, id: number): string {
@@ -113,13 +113,6 @@ export class RoutineScheduleService {
     await this.scheduleAnyRoutine(routine, 'erp');
   }
 
-  /**
-   * Agenda uma rotina do SaaS
-   */
-  public async scheduleSaasRoutine(routine: RoutineRow): Promise<void> {
-    await this.scheduleAnyRoutine(routine, 'saas');
-  }
-
   private async scheduleAnyRoutine(routine: AnyRoutine, source: RoutineSource): Promise<void> {
     if (!routine.ativo) return;
 
@@ -155,13 +148,6 @@ export class RoutineScheduleService {
   }
 
   /**
-   * Remove o agendamento de uma rotina do SaaS
-   */
-  public unscheduleSaasRoutine(routineId: number): void {
-    this.unscheduleAnyRoutine('saas', routineId);
-  }
-
-  /**
    * Retorna a Queue BullMQ para monitoramento (Bull Board). null quando usa fila em memória.
    */
   public getQueueForMonitoring(): ReturnType<RoutineExecutionQueue['getQueue']> {
@@ -191,28 +177,11 @@ export class RoutineScheduleService {
   }
 
   /**
-   * Executa imediatamente uma rotina SaaS (para chamada manual). Passa pela fila.
-   * @param usuario - Usuário que executou manualmente (quando presente)
-   * @param ipAddress - IP do cliente (quando manual)
-   */
-  public executeSaasRoutineNow(routine: RoutineRow, usuario?: { id: number; nome: string | null; email: string | null } | null, ipAddress?: string | null): void {
-    this.executionQueue.enqueue({
-      source: 'saas',
-      routineId: routine.id,
-      manual: true,
-      usuario: usuario ?? undefined,
-      ipAddress: ipAddress ?? undefined
-    });
-  }
-
-  /**
    * Processa um job da fila (chamado pelo worker BullMQ ou fila em memória)
    */
   public async processRoutineJob(data: RoutineJobData): Promise<void> {
-    const { source, routineId, usuario, ipAddress, manual } = data;
-    const routine = source === 'erp'
-      ? await prisma.sistema_scheduled_routines.findUnique({ where: { id: routineId } })
-      : null;
+    const { source, routineId, manual } = data;
+    const routine = await prisma.sistema_scheduled_routines.findUnique({ where: { id: routineId } });
 
     if (!routine) {
       logger.warn('Rotina não encontrada para execução', {
@@ -232,18 +201,7 @@ export class RoutineScheduleService {
       return;
     }
 
-    await this.runAnyRoutine(routine as AnyRoutine, source, usuario ?? null, ipAddress ?? null);
-  }
-
-  /**
-   * Executa uma rotina (chamado pelo CRON job ou manualmente)
-   */
-  private async runAnyRoutine(routine: AnyRoutine, source: RoutineSource, usuario?: { id: number; nome: string | null; email: string | null } | null, ipAddress?: string | null): Promise<void> {
-    if (source === 'saas') {
-      await this.runSaasRoutine(routine, usuario, ipAddress);
-    } else {
-      await this.runRoutine(routine);
-    }
+    await this.runRoutine(routine as AnyRoutine);
   }
 
   /**
@@ -321,62 +279,6 @@ export class RoutineScheduleService {
         empresaId: (routine as { empresa_id?: number }).empresa_id,
         saas: false,
         erro: errorMessage
-      });
-    }
-  }
-
-  /**
-   * Executa uma rotina do SaaS (chamado pelo CRON job ou manualmente)
-   * @param usuario - Usuário que executou manualmente (quando presente)
-   * @param ipAddress - IP do cliente (quando manual)
-   */
-  private async runSaasRoutine(routine: RoutineRow, usuario?: { id: number; nome: string | null; email: string | null } | null, ipAddress?: string | null): Promise<void> {
-    const startTime = new Date();
-
-    try {
-      const resultado = await this.executionService.executeRoutineByType(
-        routine as unknown as Parameters<RoutineExecutionService['executeRoutineByType']>[0]
-      );
-      const endTime = new Date();
-      const duration = endTime.getTime() - startTime.getTime();
-      const statusFinal = 'success' in resultado && resultado.success === false ? 'erro' : 'sucesso';
-
-      await this.logService.updateRoutineCounters(routine, statusFinal as 'sucesso' | 'erro', endTime);
-
-      await registrarExecucaoRotinaAuditoria({
-        routineId: routine.id,
-        routineNome: routine.nome ?? 'Rotina',
-        routineTipo: routine.tipo ?? 'unknown',
-        status: statusFinal as 'sucesso' | 'erro',
-        duracaoMs: duration,
-        saas: true,
-        resultado: resultado as Record<string, unknown>,
-        usuario: usuario ?? undefined,
-        ipAddress: ipAddress ?? undefined
-      });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      const endTime = new Date();
-      const duration = endTime.getTime() - startTime.getTime();
-
-      await this.logService.updateRoutineCounters(routine, 'erro', endTime);
-
-      await registrarExecucaoRotinaAuditoria({
-        routineId: routine.id,
-        routineNome: routine.nome ?? 'Rotina',
-        routineTipo: routine.tipo ?? 'unknown',
-        status: 'erro',
-        duracaoMs: duration,
-        saas: true,
-        erro: errorMessage,
-        usuario: usuario ?? undefined,
-        ipAddress: ipAddress ?? undefined
-      });
-
-      logger.error('Erro ao executar rotina SaaS', {
-        context: 'RoutineScheduleService',
-        rotinaId: routine.id,
-        error: errorMessage
       });
     }
   }

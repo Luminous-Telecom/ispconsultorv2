@@ -2,8 +2,7 @@ import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
 import { EmailService } from '../EmailService';
 import { WhatsAppService } from '../WhatsAppService';
-import { WhatsAppBoletoService } from '../WhatsAppBoletoService';
-import { HISTORICO_ORIGEM_ERP, HISTORICO_ORIGEM_SAAS } from '../mensagemHistoricoOrigens';
+import { HISTORICO_ORIGEM_ERP } from '../mensagemHistoricoOrigens';
 import {
   mensagemHistoricoFromLog,
   whereFalhasCobrancaLog,
@@ -115,16 +114,7 @@ export class ReenviarNotificacoesCobrancaService {
     };
   }
 
-  private static async carregarEstadoTitulo(origem: OrigemHistorico, tituloId: number) {
-    if (origem === HISTORICO_ORIGEM_SAAS) {
-      const rows = await prisma.$queryRawUnsafe<Array<{ status: string; pago: boolean | number }>>(
-        'SELECT id, status, pago FROM saas_titulos WHERE id = ? LIMIT 1',
-        tituloId
-      );
-      const titulo = rows[0];
-      if (!titulo) return null;
-      return { status: titulo.status, pago: !!titulo.pago };
-    }
+  private static async carregarEstadoTitulo(_origem: OrigemHistorico, tituloId: number) {
     const titulo = await prisma.financeiro_titulos.findUnique({
       where: { id: Number(tituloId) },
       select: { id: true, status: true, pago: true },
@@ -138,10 +128,6 @@ export class ReenviarNotificacoesCobrancaService {
     tipo: CanalNotificacao,
     tituloId: number
   ): Promise<{ sucesso: boolean; mensagem?: string }> {
-    if (origem === HISTORICO_ORIGEM_SAAS) {
-      if (tipo === 'email') return EmailService.reenviarCobrancaSaas(tituloId);
-      return WhatsAppBoletoService.reenviarCobrancaSaas(tituloId);
-    }
     if (tipo === 'email') return EmailService.enviarTituloManual(tituloId);
     return WhatsAppService.enviarTituloManual(tituloId);
   }

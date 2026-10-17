@@ -8,11 +8,8 @@ export interface DadosEmpresaModalProps {
   onClose: () => void;
   skipWrapper?: boolean;
   onHeaderActionsReady?: (actions: React.ReactNode) => void;
-  /** Admin: dados_empresa (único). SaaS: saas_dados_empresa por itemId */
-  variant?: 'admin' | 'saas';
-  /** Em variant=saas: id para editar, null para criar */
+  variant?: 'admin';
   itemId?: number | null;
-  /** Em variant=saas: callback após salvar */
   onSuccess?: () => void;
   /** ID do modal (para evitar conflito quando múltiplas instâncias) */
   modalId?: string;

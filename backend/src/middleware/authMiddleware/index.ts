@@ -3,8 +3,6 @@ import jwt from 'jsonwebtoken';
 import { logger } from '../../utils/logger';
 import { UsuarioService } from '../../services/cadastros/UsuarioService';
 import { registrarAuditoria } from '../../services/sistema/AuditoriaRegistroService';
-import { getBloqueioAtrasoInfo } from '../../services/saas/BloqueioAtrasoService';
-
 interface AuthenticatedRequest extends Request {
   user?: jwt.JwtPayload | string;
 }
@@ -36,7 +34,6 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { method: 'GET', path: /^\/api\/dados-empresa\/logo\/?$/i }, // GET logo da empresa (público)
   { method: 'GET', path: /^\/api\/dados-empresa\/public\/?$/i }, // GET logo e nome da empresa (para login e central do assinante)
   { method: 'GET', path: /^\/api\/dados-empresa\/public\/[a-z0-9-]+$/i }, // GET logo e nome da empresa por slug (multiloja)
-  { method: 'GET', path: /^\/api\/public\/saas-planos\/?$/i }, // Planos do hotsite (site público)
   { method: 'POST', path: /^\/api\/pagamento\/session$/i }, // POST troca token por cookie (token no body)
   { method: 'GET', path: /^\/api\/pagamento\/\d+$/i }, // GET título por sessão (cookie)
   { method: 'GET', path: /^\/api\/pagamento\/\d+\/pdf$/i }, // GET PDF por sessão (cookie)
@@ -192,25 +189,6 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
   try {
     const payload = jwt.verify(token, jwtSecret) as jwt.JwtPayload & { empresa_id?: number; api_token?: boolean };
     req.user = payload;
-
-    const empresaId = payload.empresa_id;
-    const isSaasAdminRoute = /^\/api\/saas\//i.test(cleanedPath);
-    const isTenantBoletoAtrasoRoute = /^\/api\/tenant\/boleto-atraso(-pdf)?\/?$/i.test(cleanedPath);
-    if (empresaId && !isSaasAdminRoute && !payload.api_token) {
-      const bloqueio = await getBloqueioAtrasoInfo(empresaId);
-      if (bloqueio.bloqueado && !isTenantBoletoAtrasoRoute) {
-        res.status(403).json({
-          success: false,
-          code: 'EMPRESA_BLOQUEADA_ATRASO',
-          message: bloqueio.mensagem ?? 'Acesso bloqueado devido a fatura em atraso.',
-          data: {
-            titulo_id: bloqueio.titulo_id,
-            url_pagamento: bloqueio.url_pagamento
-          }
-        });
-        return;
-      }
-    }
 
     next();
   } catch (error) {

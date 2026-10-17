@@ -41,7 +41,7 @@ const HomeCtaSection: React.FC<HomeCtaSectionProps> = ({
           </>
         )}
       </div>
-      <p className="home-cta-note">60 dias de teste gratuito. Sem cartão de crédito necessário.</p>
+      <p className="home-cta-note">Fale com o suporte pelo WhatsApp ou pelo Telegram.</p>
     </div>
   </section>
 );
