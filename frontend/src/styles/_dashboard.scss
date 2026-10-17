@@ -6,6 +6,7 @@
 .dashboard-container {
   --dashboard-chart-radius: 0.625rem;
   --dashboard-card-gap: 12px;
+  --dashboard-compact-card-body: 100px;
 
   /* Gap vertical entre linhas de cards */
   > .container-fluid:has(> .row) {
@@ -457,26 +458,26 @@
   }
 }
 
-/* Variante compacta dos cards de pizza: sem rodapé, header/paddings menores e
-   altura ajustada ao conteúdo (não acompanha a altura igualada da linha) — donut maior. */
-/* Linha de cards compactos (pizza / ticket / backup): preenche a largura disponível */
+/* Linha de cards compactos (pizza / ticket / backup): mesma largura e mesma altura. */
 .dashboard-container > .container-fluid > .row.dashboard-pie-charts-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
-  align-items: start;
+  align-items: stretch;
 }
 
 .dashboard-container
   > .container-fluid
   > .row.dashboard-pie-charts-row
   > [class*='col'].dashboard-col--compact {
-  align-self: start;
+  align-self: stretch;
+  height: auto;
 
   > .chart-card {
-    flex: 0 0 auto;
-    height: auto;
-    align-self: flex-start;
+    flex: 1 1 auto;
+    height: 100%;
+    align-self: stretch;
     min-height: 0;
+    width: 100%;
   }
 }
 
@@ -484,7 +485,7 @@
   > .container-fluid
   > .row
   > [class*='col'].dashboard-col--compact {
-  align-self: flex-start;
+  align-self: stretch;
   flex: none;
   width: 100%;
   max-width: none;
@@ -494,10 +495,10 @@
 }
 
 .dashboard-container .chart-card-pie--compact {
-  height: auto;
+  height: 100%;
   min-height: 0;
-  flex: 0 0 auto;
-  align-self: flex-start;
+  flex: 1 1 auto;
+  align-self: stretch;
   width: 100%;
   max-width: none;
   padding: 0.5rem;
@@ -508,17 +509,37 @@
 
   .chart-container-pie {
     gap: 0;
-    height: auto !important;
+    flex: 1 1 auto;
+    height: 100% !important;
+    min-height: 0;
   }
 
-  .chart-title-pie {
+  .chart-title,
+  .chart-title-pie,
+  .ticket-medio-card__title {
     margin-bottom: 1px;
+    font-size: 0.625rem;
+    font-weight: 700;
+    line-height: 1.2;
+    min-height: 1.2em;
+    letter-spacing: -0.01em;
+    text-transform: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .chart-empty-state--compact {
+    flex: 0 0 var(--dashboard-compact-card-body);
+    height: var(--dashboard-compact-card-body) !important;
+    min-height: var(--dashboard-compact-card-body) !important;
+    max-height: var(--dashboard-compact-card-body);
   }
 
   .pie-chart-body {
     flex: 0 0 auto;
-    min-height: 100px;
-    max-height: 100px;
+    min-height: var(--dashboard-compact-card-body);
+    max-height: var(--dashboard-compact-card-body);
     align-items: center;
     justify-content: space-between;
     gap: 4px;
@@ -547,8 +568,8 @@
     max-width: 48%;
     min-width: 0;
     height: 100%;
-    min-height: 100px;
-    max-height: 100px;
+    min-height: var(--dashboard-compact-card-body);
+    max-height: var(--dashboard-compact-card-body);
     align-self: stretch;
   }
 
@@ -561,8 +582,8 @@
 
   .backup-status-card__body {
     flex: 0 0 auto;
-    min-height: 100px;
-    max-height: 100px;
+    min-height: var(--dashboard-compact-card-body);
+    max-height: var(--dashboard-compact-card-body);
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
@@ -589,7 +610,7 @@
   .ticket-medio-card {
     display: flex;
     flex-direction: column;
-    height: auto;
+    height: 100%;
     min-height: 0;
     overflow: hidden;
   }
@@ -601,18 +622,16 @@
   }
 
   .ticket-medio-card__title {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
+    margin-bottom: 0;
     text-align: center;
-    font-size: 0.625rem;
-    font-weight: 700;
-    text-transform: none;
-    letter-spacing: normal;
+    letter-spacing: -0.01em;
   }
 
   .ticket-medio-card__body {
-    flex: 0 0 100px;
-    height: 100px;
-    max-height: 100px;
+    flex: 0 0 var(--dashboard-compact-card-body);
+    height: var(--dashboard-compact-card-body);
+    max-height: var(--dashboard-compact-card-body);
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -646,7 +665,7 @@
     .pie-chart-body--chart-first {
       flex-direction: row-reverse;
       flex: 0 0 auto;
-      min-height: 100px;
+      min-height: var(--dashboard-compact-card-body);
       max-height: none;
       align-items: center;
       justify-content: space-between;
@@ -661,7 +680,7 @@
         width: 42%;
         max-width: 42%;
         min-width: 0;
-        max-height: 100px;
+        max-height: var(--dashboard-compact-card-body);
         overflow-y: auto;
         align-self: center;
         padding: 0;
@@ -674,8 +693,8 @@
       width: 42%;
       max-width: 42%;
       min-width: 0;
-      min-height: 90px;
-      max-height: 100px;
+      min-height: var(--dashboard-compact-card-body);
+      max-height: var(--dashboard-compact-card-body);
       height: 100%;
       align-self: stretch;
     }
@@ -690,7 +709,7 @@
       flex-direction: row;
       align-items: center;
       justify-content: space-between;
-      min-height: 100px;
+      min-height: var(--dashboard-compact-card-body);
       max-height: none;
       overflow: visible;
       gap: 4px;
@@ -710,7 +729,7 @@
       flex-direction: column;
       align-items: flex-end;
       justify-content: center;
-      max-height: 100px;
+      max-height: var(--dashboard-compact-card-body);
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
     }
