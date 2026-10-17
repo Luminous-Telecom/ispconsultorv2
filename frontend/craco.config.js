@@ -64,6 +64,15 @@ module.exports = {
       // SCSS usa só data: URLs — resolve-url-loader exige source-map e quebra com GENERATE_SOURCEMAP=false
       stripResolveUrlLoader(webpackConfig.module.rules);
 
+      // src/test só existe para o Jest. O build de produção não pode exigir o namespace jest.
+      for (const plugin of webpackConfig.plugins) {
+        if (!(plugin instanceof ForkTsCheckerWebpackPlugin)) continue;
+        const exclude = plugin.options?.issue?.exclude;
+        if (Array.isArray(exclude)) {
+          exclude.push({ file: '**/src/test/**' });
+        }
+      }
+
       if (env === 'development') {
         const ESLintWebpackPlugin = require('eslint-webpack-plugin');
         // Typecheck fica no IDE; ForkTsChecker recompila ~850 arquivos .ts/.tsx em paralelo

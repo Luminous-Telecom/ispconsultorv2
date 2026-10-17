@@ -295,8 +295,24 @@ jobs:
             ../backend/.env.example \
             backend/
 
-          rsync -a --delete ../backend/migrations/ backend/migrations/
-          rsync -a --delete ../backend/config/     backend/config/
+          if [ -d "../backend/prisma" ]; then
+            rsync -a --delete ../backend/prisma/ backend/prisma/
+            echo "✓ backend/prisma sincronizado"
+          fi
+
+          if [ -d "../backend/migrations" ]; then
+            rsync -a --delete ../backend/migrations/ backend/migrations/
+          elif [ -d "backend/migrations" ]; then
+            git rm -rf backend/migrations 2>/dev/null || rm -rf backend/migrations
+            echo "::notice::Removida backend/migrations (ausente no fonte)."
+          fi
+
+          if [ -d "../backend/config" ]; then
+            rsync -a --delete ../backend/config/ backend/config/
+          elif [ -d "backend/config" ]; then
+            git rm -rf backend/config 2>/dev/null || rm -rf backend/config
+            echo "::notice::Removida backend/config (ausente no fonte)."
+          fi
 
           if [ -d "../backend/agent" ]; then
             rsync -a --delete \
@@ -307,7 +323,12 @@ jobs:
           fi
 
           for f in .sequelizerc .gitignore tsconfig.json; do
-            [ -f "../backend/${f}" ] && cp "../backend/${f}" "backend/${f}"
+            if [ -f "../backend/${f}" ]; then
+              cp "../backend/${f}" "backend/${f}"
+            elif [ -e "backend/${f}" ]; then
+              git rm -f "backend/${f}" 2>/dev/null || rm -f "backend/${f}"
+              echo "::notice::Removido backend/${f} (ausente no fonte)."
+            fi
           done
 
           echo "✓ Configuração do backend sincronizada"
