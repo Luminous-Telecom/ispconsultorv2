@@ -54,20 +54,21 @@ export function enrichAuditoriaLogFromOperacionalPayload(log: AuditoriaLog): Aud
   const payload = parseAuditoriaPayload(log.payload);
   if (!payload || Object.keys(payload).length === 0) return log;
 
-  const antesPayload = payload.dados_anteriores;
   const depoisPayload = payload.dados_novos;
-  if (
-    antesPayload != null &&
-    typeof antesPayload === 'object' &&
-    !Array.isArray(antesPayload) &&
-    depoisPayload != null &&
-    typeof depoisPayload === 'object' &&
-    !Array.isArray(depoisPayload)
-  ) {
+  if (depoisPayload != null && typeof depoisPayload === 'object' && !Array.isArray(depoisPayload)) {
+    return {
+      ...log,
+      dados_anteriores: null,
+      dados_novos: depoisPayload as Record<string, unknown>,
+    };
+  }
+
+  const antesPayload = payload.dados_anteriores;
+  if (antesPayload != null && typeof antesPayload === 'object' && !Array.isArray(antesPayload)) {
     return {
       ...log,
       dados_anteriores: antesPayload as Record<string, unknown>,
-      dados_novos: depoisPayload as Record<string, unknown>,
+      dados_novos: null,
     };
   }
 

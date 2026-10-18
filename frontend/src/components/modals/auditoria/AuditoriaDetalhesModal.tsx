@@ -57,15 +57,9 @@ const AuditoriaDetalhesModal: React.FC<AuditoriaDetalhesModalProps> = ({
   );
   if (d.rota) fields.push({ label: t('audit.route'), value: d.rota });
 
-  const dadosJson = (d.dados_anteriores || d.dados_novos)
-    ? JSON.stringify(
-        d.dados_anteriores && d.dados_novos
-          ? { anterior: d.dados_anteriores, novo: d.dados_novos }
-          : d.dados_novos || d.dados_anteriores,
-        null,
-        2
-      )
-    : '';
+  // Update: só valor novo; delete: snapshot anterior.
+  const dadosParaExibir = d.dados_novos ?? d.dados_anteriores;
+  const dadosJson = dadosParaExibir ? JSON.stringify(dadosParaExibir, null, 2) : '';
 
   return (
     <DraggableModal

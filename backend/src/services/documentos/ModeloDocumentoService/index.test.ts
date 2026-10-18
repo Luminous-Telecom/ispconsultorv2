@@ -42,12 +42,25 @@ describe('ModeloDocumentoService', () => {
   });
 
   it('altera só o nome e não grava id inexistente', async () => {
-    (modelos.findUnique as jest.Mock).mockResolvedValueOnce({ id: 3, nome: 'Antigo' });
     (modelos.update as jest.Mock).mockResolvedValue({ id: 3, nome: 'Novo' });
-    await ModeloDocumentoService.update(3, { nome: 'Novo' });
-    expect((modelos.update as jest.Mock).mock.calls[0][0].data.nome).toBe('Novo');
+    await ModeloDocumentoService.update(3, { nome: 'Novo', id: 999 } as { nome: string; id: number });
+    const data = (modelos.update as jest.Mock).mock.calls[0][0].data;
+    expect(data.nome).toBe('Novo');
+    expect(data.id).toBeUndefined();
 
-    (modelos.findUnique as jest.Mock).mockResolvedValueOnce(null);
+    const { Prisma } = jest.requireActual('@prisma/client') as typeof import('@prisma/client');
+    (modelos.update as jest.Mock).mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError('No record', { code: 'P2025', clientVersion: 'test' })
+    );
     await expect(ModeloDocumentoService.update(99, { nome: 'X' })).rejects.toThrow('não encontrado');
+  });
+
+  it('repete o update quando o MySQL sinaliza registro alterado', async () => {
+    (modelos.update as jest.Mock)
+      .mockRejectedValueOnce(new Error('Record has changed since last read in table \'documentos_modelo\''))
+      .mockResolvedValueOnce({ id: 3, nome: 'Ok' });
+
+    await expect(ModeloDocumentoService.update(3, { nome: 'Ok' })).resolves.toEqual({ id: 3, nome: 'Ok' });
+    expect(modelos.update).toHaveBeenCalledTimes(2);
   });
 });

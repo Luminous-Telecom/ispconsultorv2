@@ -1,4 +1,5 @@
 import type { Prisma, documentos_modelo } from '@prisma/client';
+import { Prisma as PrismaNs } from '@prisma/client';
 import { prisma } from '../../../db/prisma';
 
 export interface ListModeloDocumentoFilters {
@@ -7,8 +8,51 @@ export interface ListModeloDocumentoFilters {
   empresa_id?: number | null;
 }
 
+const UPDATABLE_FIELDS = [
+  'nome',
+  'tipo',
+  'conteudo',
+  'conteudo_adesao',
+  'conteudo_permanencia',
+  'conteudo_recibo',
+  'conteudo_carta',
+  'descricao',
+  'ativo',
+  'tamanho_maximo',
+  'tipos_permitidos',
+  'retencao_dias',
+  'auto_backup',
+  'criptografia',
+  'empresa_id',
+] as const satisfies ReadonlyArray<keyof documentos_modelo>;
+
+type UpdatableField = (typeof UPDATABLE_FIELDS)[number];
+
+const UPDATE_MAX_ATTEMPTS = 4;
+
 function whereEmpresaOuGlobal(empresaId: number): Prisma.documentos_modeloWhereInput {
   return { OR: [{ empresa_id: empresaId }, { empresa_id: null }] };
+}
+
+function pickUpdateData(dados: Partial<documentos_modelo>): Prisma.documentos_modeloUpdateInput {
+  const data: Prisma.documentos_modeloUpdateInput = {};
+  for (const field of UPDATABLE_FIELDS) {
+    if (Object.prototype.hasOwnProperty.call(dados, field) && dados[field as UpdatableField] !== undefined) {
+      (data as Record<string, unknown>)[field] = dados[field as UpdatableField];
+    }
+  }
+  data.updated_at = new Date();
+  return data;
+}
+
+/** MariaDB/MySQL 1020: update concorrente na mesma linha (ex.: várias abas em paralelo). */
+function isMysqlRecordChangedError(error: unknown): boolean {
+  const text = error instanceof Error ? error.message : String(error ?? '');
+  return text.includes('Record has changed since last read') || text.includes('code: 1020');
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export class ModeloDocumentoService {
@@ -130,39 +174,51 @@ export class ModeloDocumentoService {
   }
 
   /**
-   * Atualizar modelo de documento
+   * Atualizar modelo de documento (um UPDATE; retry em concorrência MySQL 1020).
    */
   static async update(id: string | number, dados: Partial<documentos_modelo>): Promise<documentos_modelo> {
-    const documento = await prisma.documentos_modelo.findUnique({
-      where: { id: Number(id) },
-    });
+    const numericId = Number(id);
+    const data = pickUpdateData(dados);
 
-    if (!documento) {
-      throw new Error('Modelo de documento não encontrado');
+    for (let attempt = 1; attempt <= UPDATE_MAX_ATTEMPTS; attempt += 1) {
+      try {
+        return await prisma.documentos_modelo.update({
+          where: { id: numericId },
+          data,
+        });
+      } catch (error) {
+        if (
+          error instanceof PrismaNs.PrismaClientKnownRequestError &&
+          error.code === 'P2025'
+        ) {
+          throw new Error('Modelo de documento não encontrado');
+        }
+        if (isMysqlRecordChangedError(error) && attempt < UPDATE_MAX_ATTEMPTS) {
+          await sleep(40 * attempt);
+          continue;
+        }
+        throw error;
+      }
     }
 
-    return prisma.documentos_modelo.update({
-      where: { id: documento.id },
-      data: {
-        ...(dados as Prisma.documentos_modeloUpdateInput),
-        updated_at: new Date(),
-      },
-    });
+    throw new Error('Modelo de documento não encontrado');
   }
 
   /**
    * Deletar modelo de documento
    */
   static async delete(id: string | number): Promise<documentos_modelo> {
-    const documento = await prisma.documentos_modelo.findUnique({
-      where: { id: Number(id) },
-    });
-
-    if (!documento) {
-      throw new Error('Modelo de documento não encontrado');
+    const numericId = Number(id);
+    try {
+      return await prisma.documentos_modelo.delete({ where: { id: numericId } });
+    } catch (error) {
+      if (
+        error instanceof PrismaNs.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new Error('Modelo de documento não encontrado');
+      }
+      throw error;
     }
-
-    await prisma.documentos_modelo.delete({ where: { id: documento.id } });
-    return documento;
   }
 }

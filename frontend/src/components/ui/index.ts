@@ -1,5 +1,7 @@
 // Exportar todos os componentes UI base
 export * from './buttons';
+export { AppMenuDropdown } from './AppMenuDropdown';
+export type { AppMenuDropdownProps, AppMenuDropdownItem } from './AppMenuDropdown';
 export type { ButtonVariant, ButtonSize } from './Button';
 export { default as Input } from './Input';
 export { default as CopyableInput } from './CopyableInput';

@@ -74,7 +74,16 @@ export const PositionedFixed: React.FC<PositionedFixedProps> = ({
   children,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
-  useElementProperties(ref, { left: `${left}px`, top: `${top}px`, transform: transform ?? undefined }, [left, top, transform]);
+  useElementProperties(
+    ref,
+    {
+      position: 'fixed',
+      left: `${left}px`,
+      top: `${top}px`,
+      transform: transform ?? undefined,
+    },
+    [left, top, transform]
+  );
 
   return (
     <div ref={ref} className={className}>

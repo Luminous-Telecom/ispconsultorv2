@@ -1,0 +1,92 @@
+/* ============================================
+   APP MENU DROPDOWN — padrão do menu superior
+   Portal fixed; cantos arredondados + hover em item
+   ============================================ */
+
+.app-menu-dropdown {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+
+.app-menu-dropdown__host {
+  position: fixed !important;
+  z-index: 100020;
+  margin: 0;
+}
+
+.app-menu-dropdown__panel {
+  min-width: 200px;
+  max-width: min(320px, 90vw);
+  max-height: min(70vh, 480px);
+  overflow-y: auto;
+  padding: 0.4rem;
+  margin: 0;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow:
+    0 4px 6px color-mix(in srgb, var(--color-black) 6%, transparent),
+    0 12px 28px color-mix(in srgb, var(--color-black) 14%, transparent);
+  animation: app-menu-dropdown-in 0.14s ease;
+}
+
+@keyframes app-menu-dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-menu-dropdown__panel {
+    animation: none;
+  }
+}
+
+.app-menu-dropdown__item {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 2.25rem;
+  margin: 0;
+  padding: 0.48rem 0.75rem;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  background: transparent;
+  font-family: var(--font-family-base);
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--text-secondary);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.app-menu-dropdown__item:hover:not(:disabled) {
+  background-color: var(--sidebar-hover);
+  color: var(--sidebar-text);
+}
+
+.app-menu-dropdown__item.active {
+  background-color: color-mix(in srgb, var(--sidebar-active) 70%, var(--bg-tertiary));
+  color: var(--sidebar-text);
+  font-weight: 600;
+}
+
+.app-menu-dropdown__item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.app-menu-dropdown__item:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--sidebar-accent) 55%, transparent);
+  outline-offset: 1px;
+}

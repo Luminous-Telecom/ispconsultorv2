@@ -7,6 +7,10 @@ export interface DocumentoSistema {
   nome: string;
   tipo: string;
   conteudo: string;
+  conteudo_adesao?: string | null;
+  conteudo_permanencia?: string | null;
+  conteudo_recibo?: string | null;
+  conteudo_carta?: string | null;
   descricao?: string;
   ativo: boolean;
   tamanho_maximo: number;
@@ -22,6 +26,10 @@ export interface CreateDocumentoSistema {
   nome: string;
   tipo: string;
   conteudo: string;
+  conteudo_adesao?: string;
+  conteudo_permanencia?: string;
+  conteudo_recibo?: string;
+  conteudo_carta?: string;
   descricao?: string;
   ativo?: boolean;
   tamanho_maximo?: number;

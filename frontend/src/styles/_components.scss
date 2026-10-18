@@ -1778,31 +1778,6 @@ button {
   position: absolute !important;
 }
 
-/* Dropdowns em portal fixed no header do modal — evita clip do overflow */
-.documento-imprimir-dropdown,
-.titulo-enviar-dropdown {
-  display: inline-flex;
-  align-items: center;
-  position: relative;
-}
-
-.documento-imprimir-dropdown-menu,
-.titulo-enviar-dropdown-menu {
-  position: fixed !important;
-  z-index: 100020 !important;
-  min-width: 200px;
-}
-
-.documento-imprimir-dropdown-menu > .dropdown-menu,
-.titulo-enviar-dropdown-menu > .dropdown-menu {
-  position: static !important;
-  display: block !important;
-  min-width: 200px;
-  margin: 0;
-  padding: 0.35rem 0;
-  overflow: visible;
-}
-
 /* Global: layout header unificado (botões acima das abas) */
 [class*="-header-unified"] {
   display: flex !important;
@@ -1892,47 +1867,10 @@ button {
   border-bottom-color: var(--bg-primary) !important;
 }
 
-.modal-tabs-overflow-dropdown {
-  position: fixed !important;
-  z-index: 100010 !important;
-  min-width: 180px !important;
-  max-width: 280px !important;
-  max-height: 280px !important;
-  overflow-y: auto !important;
-  background: var(--bg-secondary) !important;
-  border: 1px solid var(--border-color) !important;
-  border-radius: var(--border-radius) !important;
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--color-black) 25%, transparent) !important;
-  padding: 0.35rem 0 !important;
-}
-
-.modal-tabs-overflow-dropdown-item {
-  display: block !important;
-  width: 100% !important;
-  padding: 0.5rem 0.875rem !important;
-  border: none !important;
-  background: transparent !important;
-  color: var(--text-primary) !important;
-  text-align: left !important;
-  font-size: var(--font-size-sm) !important;
-  cursor: pointer !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-}
-
-.modal-tabs-overflow-dropdown-item:hover:not(:disabled) {
-  background: var(--bg-tertiary) !important;
-}
-
-.modal-tabs-overflow-dropdown-item.active {
-  background: var(--bg-tertiary) !important;
-  font-weight: 400 !important;
-}
-
-.modal-tabs-overflow-dropdown-item:disabled {
-  opacity: 0.6 !important;
-  cursor: not-allowed !important;
+/* Overflow de abas: reutiliza .app-menu-dropdown__* (só ajustes de largura) */
+.modal-tabs-overflow-dropdown.app-menu-dropdown__panel {
+  min-width: 180px;
+  max-width: min(280px, 90vw);
 }
 
 /* Loading component */

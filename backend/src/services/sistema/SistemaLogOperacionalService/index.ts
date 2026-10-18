@@ -39,7 +39,7 @@ export interface RegistrarLogOperacionalInput {
   /** Rótulo lógico da auditoria (ex.: Titulo, Cliente); usado para resolver `tabela` quando não for literal */
   recurso?: string | null;
   recursoId?: string | number | null;
-  /** MySQL: em `update`, só campos alterados (`dados_anteriores` / `dados_novos` parciais); demais ações sanitizadas. */
+  /** MySQL: em `update`, só campos alterados em `dados_novos`; demais ações sanitizadas. */
   payload?: Record<string, unknown> | null;
   ipAddress?: string | null;
   userAgent?: string | null;
@@ -412,25 +412,26 @@ function objetoAninhadoComparavel(v: unknown): v is Record<string, unknown> {
 }
 
 /**
- * Em `update`, persiste no MySQL apenas chaves que mudaram (antes/depois parciais).
- * Monta payload JSON para registro operacional a partir de snapshot de auditoria.
+ * Em `update`, persiste no MySQL apenas o valor novo dos campos que mudaram
+ * (não grava o valor antigo).
  */
 export function extrairCamposAlteradosParaPayload(
   antes: Record<string, unknown> | null | undefined,
   depois: Record<string, unknown> | null | undefined,
   maxDepth = 6
-): { dados_anteriores: Record<string, unknown>; dados_novos: Record<string, unknown> } {
-  const dados_anteriores: Record<string, unknown> = {};
+): { dados_novos: Record<string, unknown> } {
   const dados_novos: Record<string, unknown> = {};
 
-  const aPlain = plainObjectFromAuditoria(normalizarSnapshotAuditoria(antes));
-  const bPlain = plainObjectFromAuditoria(normalizarSnapshotAuditoria(depois));
-  if (!aPlain || !bPlain) return { dados_anteriores, dados_novos };
+  // Snapshot vazio (só nulls) vira {} — senão perda de campo limpo não entra no diff.
+  const aPlain = plainObjectFromAuditoria(normalizarSnapshotAuditoria(antes)) ?? {};
+  const bPlain = plainObjectFromAuditoria(normalizarSnapshotAuditoria(depois)) ?? {};
+  if (Object.keys(aPlain).length === 0 && Object.keys(bPlain).length === 0) {
+    return { dados_novos };
+  }
 
   function walk(
     a: Record<string, unknown>,
     b: Record<string, unknown>,
-    outA: Record<string, unknown>,
     outB: Record<string, unknown>,
     depth: number
   ): void {
@@ -442,27 +443,22 @@ export function extrairCamposAlteradosParaPayload(
       if (valoresEquivalentesNoOp(va, vb, 0)) continue;
 
       if (objetoAninhadoComparavel(va) && objetoAninhadoComparavel(vb) && depth < maxDepth) {
-        const nestedA: Record<string, unknown> = {};
         const nestedB: Record<string, unknown> = {};
-        walk(va, vb, nestedA, nestedB, depth + 1);
-        if (Object.keys(nestedA).length > 0) {
-          outA[k] = nestedA;
+        walk(va, vb, nestedB, depth + 1);
+        if (Object.keys(nestedB).length > 0) {
           outB[k] = nestedB;
         }
         continue;
       }
 
-      if (!vazioParaComparacao(va)) {
-        outA[k] = sanitizarValorParaPayload(k, va, depth);
-      }
-      if (!vazioParaComparacao(vb)) {
-        outB[k] = sanitizarValorParaPayload(k, vb, depth);
-      }
+      // Snapshot normalizado omite null — se o campo sumiu/foi limpo, grava null.
+      const sanitized = sanitizarValorParaPayload(k, vb, depth);
+      outB[k] = sanitized === undefined ? null : sanitized;
     }
   }
 
-  walk(aPlain, bPlain, dados_anteriores, dados_novos, 0);
-  return { dados_anteriores, dados_novos };
+  walk(aPlain, bPlain, dados_novos, 0);
+  return { dados_novos };
 }
 
 function aplicarRotaNoPayload(out: Record<string, unknown>, rota: string | null): void {
@@ -486,7 +482,8 @@ function limitarTamanhoPayload(out: Record<string, unknown>, rota: string | null
 }
 
 /**
- * Payload no MySQL: em `update` só campos alterados; create/delete sanitizados (ES = detalhe completo).
+ * Payload no MySQL: em `update` só valores novos dos campos alterados;
+ * create/delete sanitizados.
  */
 function montarPayloadCorpoRequisicao(p: {
   acao: AcaoOperacionalAuditoria;
@@ -495,19 +492,14 @@ function montarPayloadCorpoRequisicao(p: {
   rota: string | null;
 }): Record<string, unknown> | null {
   if (p.acao === 'update') {
-    const { dados_anteriores, dados_novos } = extrairCamposAlteradosParaPayload(
-      p.dadosAnteriores,
-      p.dadosNovos
-    );
-    if (Object.keys(dados_anteriores).length === 0 && Object.keys(dados_novos).length === 0) {
+    const { dados_novos } = extrairCamposAlteradosParaPayload(p.dadosAnteriores, p.dadosNovos);
+    if (Object.keys(dados_novos).length === 0) {
       if (p.rota != null && String(p.rota).trim() !== '') {
         return { request: String(p.rota).trim().slice(0, 2000) };
       }
       return null;
     }
-    const out: Record<string, unknown> = {};
-    if (Object.keys(dados_anteriores).length > 0) out.dados_anteriores = dados_anteriores;
-    if (Object.keys(dados_novos).length > 0) out.dados_novos = dados_novos;
+    const out: Record<string, unknown> = { dados_novos };
     aplicarRotaNoPayload(out, p.rota);
     return limitarTamanhoPayload(out, p.rota);
   }
@@ -624,7 +616,7 @@ export class SistemaLogOperacionalService {
     }
   }
 
-  /** Espelha auditoria no MySQL: em `update` o payload traz só campos alterados. */
+  /** Espelha auditoria no MySQL: em `update` o payload traz só o valor novo dos campos alterados. */
   static registrarFromAuditoriaSnapshot(p: {
     acao: AcaoOperacionalAuditoria;
     entidade: string;

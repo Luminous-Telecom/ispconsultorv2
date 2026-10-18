@@ -73,63 +73,25 @@ export class AuditoriaPDFService {
 
     const gerarCamposHtml = (dadosAnt: any, dadosNov: any): string => {
       const camposExcluir = ['created_at', 'updated_at', 'deleted_at', 'password', 'senha', 'token', 'api_key', 'empresa_id'];
-      const dadosParaExibir: Record<string, { anterior?: unknown; novo?: unknown }> = {};
+      // Em update preferimos só o valor novo; delete usa o anterior.
+      const fonte =
+        dadosNov && typeof dadosNov === 'object' && Object.keys(dadosNov).length > 0
+          ? dadosNov
+          : dadosAnt && typeof dadosAnt === 'object'
+            ? dadosAnt
+            : null;
+      if (!fonte || Object.keys(fonte).length === 0) return '';
 
-      if (dadosAnt && dadosNov) {
-        const todosCampos = new Set([
-          ...Object.keys(dadosAnt || {}),
-          ...Object.keys(dadosNov || {})
-        ]);
-        
-        for (const campo of todosCampos) {
-          if (camposExcluir.includes(campo)) continue;
-          
-          const valorAnterior = dadosAnt[campo];
-          const valorNovo = dadosNov[campo];
-          
-          dadosParaExibir[campo] = { anterior: valorAnterior, novo: valorNovo };
-        }
-      } else {
-        const dados = dadosNov || dadosAnt || {};
-        if (dados && typeof dados === 'object' && Object.keys(dados).length > 0) {
-          for (const [key, value] of Object.entries(dados)) {
-            if (camposExcluir.includes(key)) continue;
-            dadosParaExibir[key] = { anterior: undefined, novo: value };
-          }
-        }
-      }
-      
-      if (Object.keys(dadosParaExibir).length === 0) return '';
-      
-      return Object.entries(dadosParaExibir)
-        .map(([key, valores]) => {
-          const valorAnterior = valores.anterior !== undefined ? formatarValor(valores.anterior) : '';
-          const valorNovo = valores.novo !== undefined ? formatarValor(valores.novo) : '';
-          
-          if (valores.anterior !== undefined && valores.novo !== undefined) {
-            if (JSON.stringify(valores.anterior) === JSON.stringify(valores.novo)) {
-              return `
+      return Object.entries(fonte)
+        .filter(([key]) => !camposExcluir.includes(key))
+        .map(([key, value]) => {
+          const valorFormatado = formatarValor(value);
+          return `
                 <tr>
                   <td>${escapeHtml(key)}</td>
-                  <td>${escapeHtml(valorNovo)}</td>
+                  <td>${escapeHtml(valorFormatado)}</td>
                 </tr>
               `;
-            } else {
-              return `
-                <tr>
-                  <td>${escapeHtml(key)}</td>
-                  <td>${escapeHtml(valorAnterior)} → ${escapeHtml(valorNovo)}</td>
-                </tr>
-              `;
-            }
-          } else {
-            return `
-              <tr>
-                <td>${escapeHtml(key)}</td>
-                <td>${escapeHtml(valorNovo || valorAnterior)}</td>
-              </tr>
-            `;
-          }
         }).join('');
     };
 

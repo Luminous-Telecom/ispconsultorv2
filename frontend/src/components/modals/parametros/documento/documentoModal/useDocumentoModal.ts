@@ -193,33 +193,27 @@ export function useDocumentoModal({
       const service = getService();
 
       if (tipo === 'contrato') {
-        const promises = [];
+        // Um único UPDATE — evita MySQL 1020 (updates paralelos na mesma linha).
+        const payload: Record<string, string | undefined> = {
+          nome: data.nome,
+          descricao: data.descricao,
+        };
         if (data.conteudo_contrato !== undefined) {
-          promises.push(
-            DocumentoSistemaService.saveModeloContratoConteudo(currentDocumento.id, data.conteudo_contrato || '')
-          );
+          payload.conteudo = data.conteudo_contrato || '';
         }
         if (data.conteudo_adesao !== undefined) {
-          promises.push(DocumentoSistemaService.saveModeloTermoAdesao(currentDocumento.id, data.conteudo_adesao || ''));
+          payload.conteudo_adesao = data.conteudo_adesao || '';
         }
         if (data.conteudo_permanencia !== undefined) {
-          promises.push(
-            DocumentoSistemaService.saveModeloContratoPermanencia(currentDocumento.id, data.conteudo_permanencia || '')
-          );
+          payload.conteudo_permanencia = data.conteudo_permanencia || '';
         }
         if (data.conteudo_recibo !== undefined) {
-          promises.push(DocumentoSistemaService.saveModeloRecibo(currentDocumento.id, data.conteudo_recibo || ''));
+          payload.conteudo_recibo = data.conteudo_recibo || '';
         }
         if (data.conteudo_carta !== undefined) {
-          promises.push(DocumentoSistemaService.saveModeloCarta(currentDocumento.id, data.conteudo_carta || ''));
+          payload.conteudo_carta = data.conteudo_carta || '';
         }
-        if (data.nome || data.descricao) {
-          promises.push(
-            DocumentoSistemaService.update(currentDocumento.id, { nome: data.nome, descricao: data.descricao })
-          );
-        }
-        await Promise.all(promises);
-        const updatedResponse = await DocumentoSistemaService.getById(currentDocumento.id);
+        const updatedResponse = await DocumentoSistemaService.update(currentDocumento.id, payload);
         return updatedResponse.data;
       }
 

@@ -304,10 +304,11 @@ function ModalTabsOverflow<T extends string = string>({
             <PositionedFixed
               left={dropdownPosition.left}
               top={dropdownPosition.top}
-              className="modal-tabs-overflow-dropdown"
+              className="app-menu-dropdown__host"
             >
               <div
                 ref={dropdownRef}
+                className="app-menu-dropdown__panel modal-tabs-overflow-dropdown"
                 role="menu"
                 onMouseEnter={clearHoverTimer}
                 onMouseLeave={() => {
@@ -319,7 +320,7 @@ function ModalTabsOverflow<T extends string = string>({
                 {overflowTabs.map((tab) => (
                   <NavLinkButton
                     key={tab.id}
-                    className={`modal-tabs-overflow-dropdown-item ${activeTab === tab.id ? 'active' : ''}`}
+                    className={`app-menu-dropdown__item ${activeTab === tab.id ? 'active' : ''}`}
                     onClick={() => handleTabChange(tab)}
                     onMouseEnter={() => scheduleTabChange(tab)}
                     onMouseLeave={clearHoverTimer}
