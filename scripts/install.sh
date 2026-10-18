@@ -13,7 +13,6 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 ENV_FILE="$PROJECT_ROOT/backend/.env"
-ENV_EXAMPLE="$PROJECT_ROOT/backend/.env.example"
 NODE_MAJOR="${NODE_MAJOR:-24}"
 DB_NAME="${DB_NAME:-ispconsultor}"
 DB_USER="${DB_USER:-ispconsultor}"
@@ -293,6 +292,32 @@ write_database_url() {
   chmod 600 "$ENV_FILE"
 }
 
+# .env de produção enxuto — não copia .env.example (template de desenvolvimento).
+write_production_env() {
+  umask 077
+  : > "$ENV_FILE"
+  set_env_var "$ENV_FILE" "NODE_ENV" "production"
+  set_env_var "$ENV_FILE" "PORT" "3001"
+  set_env_var "$ENV_FILE" "BASE_URL" "$BASE_URL"
+  set_env_var "$ENV_FILE" "DB_HOST" "localhost"
+  set_env_var "$ENV_FILE" "DB_PORT" "3306"
+  set_env_var "$ENV_FILE" "DB_NAME" "$DB_NAME"
+  set_env_var "$ENV_FILE" "DB_USER" "$DB_USER"
+  set_env_var "$ENV_FILE" "DB_PASSWORD" "$DB_PASSWORD"
+  set_env_var "$ENV_FILE" "JWT_SECRET" "$JWT_SECRET"
+  set_env_var "$ENV_FILE" "JWT_EXPIRES_IN" "24h"
+  set_env_var "$ENV_FILE" "ALLOWED_ORIGINS" "${BASE_URL},https://localhost"
+  set_env_var "$ENV_FILE" "REDIS_URL" "redis://:${REDIS_PASSWORD}@localhost:6379"
+  set_env_var "$ENV_FILE" "REDIS_PASSWORD" "$REDIS_PASSWORD"
+  set_env_var "$ENV_FILE" "SSH_ENCRYPTION_KEY" "$SSH_ENCRYPTION_KEY"
+  set_env_var "$ENV_FILE" "KRILL_API_URL" "https://127.0.0.1:3100"
+  set_env_var "$ENV_FILE" "KRILL_API_TOKEN" "$KRILL_API_TOKEN"
+  set_env_var "$ENV_FILE" "NFSE_SEFIN_URL_HOMOLOGACAO" "https://sefin.producaorestrita.nfse.gov.br/SefinNacional"
+  set_env_var "$ENV_FILE" "NFSE_SEFIN_URL_PRODUCAO" "https://sefin.nfse.gov.br/SefinNacional"
+  chown "$RUN_USER:$RUN_USER" "$ENV_FILE"
+  chmod 600 "$ENV_FILE"
+}
+
 # ---------------------------------------------------------------------------
 # Início
 # ---------------------------------------------------------------------------
@@ -305,8 +330,8 @@ echo "Projeto: $PROJECT_ROOT"
 echo "Usuário da aplicação: $RUN_USER"
 echo ""
 
-if [ ! -f "$ENV_EXAMPLE" ]; then
-  die "Arquivo não encontrado: $ENV_EXAMPLE (execute a partir do repositório clonado)."
+if [ ! -f "$PROJECT_ROOT/backend/package.json" ]; then
+  die "backend/package.json não encontrado (execute a partir do repositório clonado)."
 fi
 
 # ---------------------------------------------------------------------------
@@ -326,27 +351,8 @@ DOMAIN="${DOMAIN%%:*}"
 JWT_SECRET="$(generate_secret 64)"
 SSH_ENCRYPTION_KEY="$(generate_ssh_key)"
 
-log "Gerando backend/.env..."
-cp "$ENV_EXAMPLE" "$ENV_FILE"
-set_env_var "$ENV_FILE" "PORT" "3001"
-set_env_var "$ENV_FILE" "BASE_URL" "$BASE_URL"
-set_env_var "$ENV_FILE" "DB_HOST" "localhost"
-set_env_var "$ENV_FILE" "DB_PORT" "3306"
-set_env_var "$ENV_FILE" "DB_NAME" "$DB_NAME"
-set_env_var "$ENV_FILE" "DB_USER" "$DB_USER"
-set_env_var "$ENV_FILE" "DB_PASSWORD" "$DB_PASSWORD"
-set_env_var "$ENV_FILE" "JWT_SECRET" "$JWT_SECRET"
-set_env_var "$ENV_FILE" "JWT_EXPIRES_IN" "24h"
-set_env_var "$ENV_FILE" "ALLOWED_ORIGINS" "${BASE_URL},https://localhost"
-set_env_var "$ENV_FILE" "REDIS_URL" "redis://:${REDIS_PASSWORD}@localhost:6379"
-set_env_var "$ENV_FILE" "REDIS_PASSWORD" "$REDIS_PASSWORD"
-set_env_var "$ENV_FILE" "KRILL_API_URL" "https://127.0.0.1:3100"
-set_env_var "$ENV_FILE" "KRILL_API_TOKEN" "$KRILL_API_TOKEN"
-set_env_var "$ENV_FILE" "SSH_ENCRYPTION_KEY" "$SSH_ENCRYPTION_KEY"
-set_env_var "$ENV_FILE" "NODE_ENV" "production"
-
-chown "$RUN_USER:$RUN_USER" "$ENV_FILE"
-chmod 600 "$ENV_FILE"
+log "Gerando backend/.env (produção)..."
+write_production_env
 
 # ---------------------------------------------------------------------------
 # Pacotes de sistema

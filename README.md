@@ -107,7 +107,7 @@ O script pergunta:
 Em seguida ele:
 
 - Instala Node.js 24, MariaDB, Redis, Krill, Nginx e dependências nativas
-- Gera `backend/.env` (JWT, SSH encryption key, `DATABASE_URL`, etc.)
+- Gera `backend/.env` enxuto de produção (sem template/comentários de desenvolvimento)
 - Cria o banco e o usuário da aplicação
 - Instala npm, faz build do backend e do frontend
 - Publica o front em `/var/www/ispconsultor`
@@ -379,4 +379,4 @@ npm run dev
 | `../backnet-docs/docs/BUILD-MOBILE.md` | Build Capacitor |
 | `../backnet-docs/doc/` | Wiki pública (consultores) |
 | `scripts/install.sh` | Instalador de produção |
-| `backend/.env.example` | Referência completa de variáveis |
+| `backend/.env.example` | Template para desenvolvimento local (não usado pelo install.sh) |
