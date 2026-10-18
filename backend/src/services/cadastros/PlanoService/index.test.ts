@@ -80,6 +80,26 @@ describe('PlanoService', () => {
     });
   });
 
+  it('cadastro converte data_inicio YYYY-MM-DD em Date para o Prisma', async () => {
+    (planos.create as jest.Mock).mockImplementation(async ({ data }) => ({ id: 4, ...data }));
+
+    await PlanoService.create({
+      nome_plano: '100 Reais',
+      tipo_servico: 'consultoria',
+      valor_mensal: 100,
+      empresa_id: 1,
+      data_inicio: '2026-10-18',
+      data_fim: '',
+    });
+
+    const data = (planos.create as jest.Mock).mock.calls[0][0].data;
+    expect(data.data_inicio).toBeInstanceOf(Date);
+    expect((data.data_inicio as Date).getFullYear()).toBe(2026);
+    expect((data.data_inicio as Date).getMonth()).toBe(9);
+    expect((data.data_inicio as Date).getDate()).toBe(18);
+    expect(data.data_fim).toBeNull();
+  });
+
   it('edição altera só o nome e ignora empresa de outro cadastro', async () => {
     (planos.findUnique as jest.Mock).mockResolvedValue(row);
 

@@ -1,9 +1,19 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../../../db/prisma';
 import { cache } from '../../../utils/cache';
+import { normalizeDateForDb } from '../../../utils/dateUtils';
 import { logger } from '../../../utils/logger';
 import { buildPagination } from '../../../utils/pagination';
 import { enumMatches, orderPageBySql, reorderByIds, sortDirection, sqlDirection } from '../prismaWhere';
+
+/** Converte YYYY-MM-DD / Date / vazio para Date|null aceito pelo Prisma DateTime. */
+function normalizePlanoDate(value: unknown): Date | null {
+  if (value === '' || value === 'Invalid date' || value == null) return null;
+  if (value instanceof Date || typeof value === 'string') {
+    return normalizeDateForDb(value);
+  }
+  return null;
+}
 
 export interface ListPlanosFilters {
   page?: number;
@@ -222,8 +232,8 @@ export class PlanoService {
 
   static async create(dadosPlano: Prisma.cadastros_planosUncheckedCreateInput & { data_inicio?: unknown; data_fim?: unknown; descricao?: unknown }) {
     const dados = { ...dadosPlano };
-    if (dados.data_inicio === '' || dados.data_inicio === 'Invalid date') dados.data_inicio = null;
-    if (dados.data_fim === '' || dados.data_fim === 'Invalid date') dados.data_fim = null;
+    dados.data_inicio = normalizePlanoDate(dados.data_inicio);
+    dados.data_fim = normalizePlanoDate(dados.data_fim);
     if (dados.descricao === undefined) dados.descricao = null;
     if (Array.isArray(dados.servicos_inclusos)) dados.servicos_inclusos = JSON.stringify(dados.servicos_inclusos);
     const plano = await prisma.cadastros_planos.create({
@@ -244,16 +254,7 @@ export class PlanoService {
       if (!allowed.includes(key)) continue;
       const value = dadosPlano[key];
       if (key === 'data_inicio' || key === 'data_fim') {
-        if (value && value !== '' && value !== 'Invalid date') {
-          if (typeof value === 'string') {
-            const [year, month, day] = value.split('-').map(Number);
-            if (!Number.isNaN(year) && !Number.isNaN(month) && !Number.isNaN(day)) {
-              (updateData as Record<string, Date | null>)[key] = new Date(year, month - 1, day);
-            }
-          } else if (value instanceof Date) {
-            (updateData as Record<string, Date | null>)[key] = value;
-          }
-        }
+        (updateData as Record<string, Date | null>)[key] = normalizePlanoDate(value);
       } else if (key === 'servicos_inclusos' && Array.isArray(value)) {
         updateData.servicos_inclusos = JSON.stringify(value);
       } else {

@@ -13,14 +13,17 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
   isSubmitting
 }) => {
   const { t } = useI18n();
-  const { modulos } = usePlanoModulos();
-  const temBlockdomi = modulos !== null && modulos.includes('blockdomi');
+  const { hasModulo } = usePlanoModulos();
+  // modulos === null = sem restrição → hasModulo('blockdomi') é true
+  const temBlockdomi = hasModulo('blockdomi');
   const planoJaBlockdomi = formData.tipo_servico === 'blockdomi';
 
   const tipoServicoOptions = [
     { value: 'infraestrutura', label: t('form.serviceTypeInfrastructure') },
     { value: 'consultoria', label: t('form.serviceTypeConsulting') },
-    ...(temBlockdomi || planoJaBlockdomi ? [{ value: 'blockdomi', label: t('form.serviceTypeBlockdomi') }] : [])
+    ...(temBlockdomi || planoJaBlockdomi
+      ? [{ value: 'blockdomi', label: t('form.serviceTypeBlockdomi') }]
+      : []),
   ];
 
   return (
