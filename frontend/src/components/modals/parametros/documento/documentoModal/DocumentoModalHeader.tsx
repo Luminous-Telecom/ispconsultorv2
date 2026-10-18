@@ -1,8 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { TranslationKeys } from 'contexts/I18nContext';
-import { CancelarButton, ImprimirButton, SalvarButton, DropdownItemButton } from 'components/ui';
+import { CancelarButton, ImprimirButton, SalvarButton, DropdownItemButton, PositionedFixed } from 'components/ui';
 import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
 import { useI18n } from 'contexts/I18nContext';
+import { computeFixedDropdownPosition } from 'utils/fixedDropdownPosition';
 import { DocumentoModalProps } from '../types';
 import { DocumentoActiveTab } from './constants';
 
@@ -57,6 +59,9 @@ function DocumentoModalHeader({
   onClose,
 }: DocumentoModalHeaderProps) {
   const { t } = useI18n();
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLUListElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
   const tabs = useMemo(
     (): ModalTabItem<DocumentoActiveTab>[] =>
@@ -64,9 +69,27 @@ function DocumentoModalHeader({
     [t]
   );
 
+  const calculateDropdownPosition = useCallback(() => {
+    if (!triggerRef.current) return;
+    const triggerRect = triggerRef.current.getBoundingClientRect();
+    const menuRect = dropdownRef.current?.getBoundingClientRect();
+    setDropdownPosition(
+      computeFixedDropdownPosition(triggerRect, {
+        align: 'start',
+        menuWidth: menuRect?.width ?? 200,
+        menuHeight: menuRect?.height,
+      })
+    );
+  }, []);
+
   const handleToggleDropdown = (e: React.MouseEvent) => {
     stopDropdownEvent(e);
-    setShowImprimirDropdown(!showImprimirDropdown);
+    if (!showImprimirDropdown) {
+      calculateDropdownPosition();
+      setShowImprimirDropdown(true);
+      return;
+    }
+    setShowImprimirDropdown(false);
   };
 
   const handlePrintOption = (e: React.MouseEvent, documentoTipo?: DocumentoActiveTab) => {
@@ -75,37 +98,81 @@ function DocumentoModalHeader({
     onPrint(documentoTipo);
   };
 
+  useEffect(() => {
+    if (!showImprimirDropdown) return undefined;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (triggerRef.current?.contains(target) || dropdownRef.current?.contains(target)) {
+        return;
+      }
+      setShowImprimirDropdown(false);
+    };
+
+    const handleScrollOrResize = () => {
+      calculateDropdownPosition();
+    };
+
+    const timeoutId = window.setTimeout(() => {
+      document.addEventListener('click', handleClickOutside);
+      window.addEventListener('scroll', handleScrollOrResize, true);
+      window.addEventListener('resize', handleScrollOrResize);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      document.removeEventListener('click', handleClickOutside);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+      window.removeEventListener('resize', handleScrollOrResize);
+    };
+  }, [calculateDropdownPosition, setShowImprimirDropdown, showImprimirDropdown]);
+
+  const printOptions =
+    tipo === 'contrato'
+      ? CONTRATO_PRINT_OPTIONS.map(({ tipo: docTipo, labelKey }) => ({
+          key: docTipo,
+          label: t(labelKey),
+          onClick: (e: React.MouseEvent) => handlePrintOption(e, docTipo),
+        }))
+      : [
+          {
+            key: 'current',
+            label: tipoLabel,
+            onClick: (e: React.MouseEvent) => handlePrintOption(e),
+          },
+        ];
+
   const imprimirDropdown = (
-    <div className="dropdown">
+    <div className="documento-imprimir-dropdown" ref={triggerRef}>
       <ImprimirButton
-        className="dropdown-toggle"
         type="button"
         onClick={handleToggleDropdown}
         disabled={!isEditing}
+        aria-expanded={showImprimirDropdown}
+        aria-haspopup="menu"
       />
-      {showImprimirDropdown && (
-        <ul className="dropdown-menu show dropdown-menu-block" >
-          {tipo === 'contrato'
-            ? CONTRATO_PRINT_OPTIONS.map(({ tipo: docTipo, labelKey }) => (
-                <li key={docTipo}>
+      {showImprimirDropdown &&
+        createPortal(
+          <PositionedFixed
+            left={dropdownPosition.left}
+            top={dropdownPosition.top}
+            className="documento-imprimir-dropdown-menu"
+          >
+            <ul ref={dropdownRef} className="dropdown-menu show" role="menu">
+              {printOptions.map((option) => (
+                <li key={option.key} role="none">
                   <DropdownItemButton
-                    label={t(labelKey)}
-                    onClick={(e) => handlePrintOption(e, docTipo)}
+                    label={option.label}
+                    role="menuitem"
+                    onClick={option.onClick}
                     disabled={!isEditing}
                   />
                 </li>
-              ))
-            : (
-                <li>
-                  <DropdownItemButton
-                    label={tipoLabel}
-                    onClick={(e) => handlePrintOption(e)}
-                    disabled={!isEditing}
-                  />
-                </li>
-              )}
-        </ul>
-      )}
+              ))}
+            </ul>
+          </PositionedFixed>,
+          document.body
+        )}
     </div>
   );
 

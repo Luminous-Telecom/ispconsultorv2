@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { TituloService } from 'services/tituloService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { isTituloPagoParaRecibo } from 'utils/tituloRecibo';
-import { CancelarButton, SalvarButton, AppButton, DropdownItemButton } from 'components/ui';
+import { computeFixedDropdownPosition } from 'utils/fixedDropdownPosition';
+import { CancelarButton, SalvarButton, AppButton, DropdownItemButton, PositionedFixed } from 'components/ui';
 
 interface TituloModalHeaderProps {
   isEditMode: boolean;
@@ -33,11 +35,60 @@ const TituloModalHeader: React.FC<TituloModalHeaderProps> = ({
 }) => {
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLUListElement>(null);
+  const [showSendDropdown, setShowSendDropdown] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ left: 0, top: 0 });
+
+  const calculateDropdownPosition = useCallback(() => {
+    if (!triggerRef.current) return;
+    const triggerRect = triggerRef.current.getBoundingClientRect();
+    const menuRect = dropdownRef.current?.getBoundingClientRect();
+    setDropdownPosition(
+      computeFixedDropdownPosition(triggerRect, {
+        align: 'start',
+        menuWidth: menuRect?.width,
+        menuHeight: menuRect?.height,
+      })
+    );
+  }, []);
+
+  useEffect(() => {
+    if (!showSendDropdown) return undefined;
+
+    calculateDropdownPosition();
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (triggerRef.current?.contains(target) || dropdownRef.current?.contains(target)) {
+        return;
+      }
+      setShowSendDropdown(false);
+    };
+
+    const handleScrollOrResize = () => {
+      calculateDropdownPosition();
+    };
+
+    const timeoutId = window.setTimeout(() => {
+      document.addEventListener('click', handleClickOutside);
+      window.addEventListener('scroll', handleScrollOrResize, true);
+      window.addEventListener('resize', handleScrollOrResize);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      document.removeEventListener('click', handleClickOutside);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+      window.removeEventListener('resize', handleScrollOrResize);
+    };
+  }, [calculateDropdownPosition, showSendDropdown]);
 
   const handleEnviarWhatsApp = async () => {
     if (!internalTituloId) {
       return;
     }
+    setShowSendDropdown(false);
     try {
       const response = await TituloService.enviarWhatsApp(internalTituloId);
       if (response.success) {
@@ -54,6 +105,7 @@ const TituloModalHeader: React.FC<TituloModalHeaderProps> = ({
     if (!internalTituloId) {
       return;
     }
+    setShowSendDropdown(false);
     try {
       const response = await TituloService.enviarEmail(internalTituloId);
       if (response.success) {
@@ -70,6 +122,7 @@ const TituloModalHeader: React.FC<TituloModalHeaderProps> = ({
     if (!internalTituloId || !isTituloPagoParaRecibo(tituloStatus)) {
       return;
     }
+    setShowSendDropdown(false);
     try {
       const response = await TituloService.enviarRecibo(internalTituloId);
       if (response.success) {
@@ -84,41 +137,68 @@ const TituloModalHeader: React.FC<TituloModalHeaderProps> = ({
 
   const reciboDesabilitado = !isTituloPagoParaRecibo(tituloStatus);
 
+  const handleToggleSendDropdown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!showSendDropdown) {
+      calculateDropdownPosition();
+      setShowSendDropdown(true);
+      return;
+    }
+    setShowSendDropdown(false);
+  };
+
   return (
     <div className="d-flex gap-2 modal-header-actions">
       {isEditMode && internalTituloId && (
-        <div className="btn-group">
+        <div className="titulo-enviar-dropdown" ref={triggerRef}>
           <AppButton
             label={sendLabel}
             variant="primary"
-            className="dropdown-toggle"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
+            type="button"
+            onClick={handleToggleSendDropdown}
+            aria-expanded={showSendDropdown}
+            aria-haspopup="menu"
             disabled={isPending}
           />
-          <ul className="dropdown-menu">
-            <li>
-              <DropdownItemButton label={sendViaWhatsAppLabel} onClick={handleEnviarWhatsApp} />
-            </li>
-            <li>
-              <DropdownItemButton label={sendViaEmailLabel} onClick={handleEnviarEmail} />
-            </li>
-            <li>
-              <DropdownItemButton
-                label={sendReceiptLabel}
-                onClick={handleEnviarRecibo}
-                disabled={reciboDesabilitado}
-              />
-            </li>
-          </ul>
+          {showSendDropdown &&
+            createPortal(
+              <PositionedFixed
+                left={dropdownPosition.left}
+                top={dropdownPosition.top}
+                className="titulo-enviar-dropdown-menu"
+              >
+                <ul ref={dropdownRef} className="dropdown-menu show" role="menu">
+                  <li role="none">
+                    <DropdownItemButton
+                      label={sendViaWhatsAppLabel}
+                      role="menuitem"
+                      onClick={handleEnviarWhatsApp}
+                    />
+                  </li>
+                  <li role="none">
+                    <DropdownItemButton
+                      label={sendViaEmailLabel}
+                      role="menuitem"
+                      onClick={handleEnviarEmail}
+                    />
+                  </li>
+                  <li role="none">
+                    <DropdownItemButton
+                      label={sendReceiptLabel}
+                      role="menuitem"
+                      onClick={handleEnviarRecibo}
+                      disabled={reciboDesabilitado}
+                    />
+                  </li>
+                </ul>
+              </PositionedFixed>,
+              document.body
+            )}
         </div>
       )}
       <CancelarButton type="button" onClick={onClose} isPending={isPending} />
-      {isEditMode ? (
-        <SalvarButton type="submit" form="titulo-form" isPending={isPending} />
-      ) : (
-        <SalvarButton type="submit" form="titulo-form" isPending={isPending} />
-      )}
+      <SalvarButton type="submit" form="titulo-form" isPending={isPending} />
     </div>
   );
 };

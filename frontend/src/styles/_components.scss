@@ -1778,6 +1778,31 @@ button {
   position: absolute !important;
 }
 
+/* Dropdowns em portal fixed no header do modal — evita clip do overflow */
+.documento-imprimir-dropdown,
+.titulo-enviar-dropdown {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+
+.documento-imprimir-dropdown-menu,
+.titulo-enviar-dropdown-menu {
+  position: fixed !important;
+  z-index: 100020 !important;
+  min-width: 200px;
+}
+
+.documento-imprimir-dropdown-menu > .dropdown-menu,
+.titulo-enviar-dropdown-menu > .dropdown-menu {
+  position: static !important;
+  display: block !important;
+  min-width: 200px;
+  margin: 0;
+  padding: 0.35rem 0;
+  overflow: visible;
+}
+
 /* Global: layout header unificado (botões acima das abas) */
 [class*="-header-unified"] {
   display: flex !important;

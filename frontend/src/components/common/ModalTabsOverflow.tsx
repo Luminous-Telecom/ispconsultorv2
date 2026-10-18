@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import { createPortal } from 'react-dom';
 import { PositionedFixed, NavLinkButton } from 'components/ui';
 import { usePrefersRealHover } from 'hooks/usePrefersRealHover';
+import { computeFixedDropdownPosition } from 'utils/fixedDropdownPosition';
 
 export interface ModalTabItem<T extends string = string> {
   id: T;
@@ -140,11 +141,15 @@ function ModalTabsOverflow<T extends string = string>({
   const calculateDropdownPosition = useCallback(() => {
     if (!triggerRef.current) return;
 
-    const rect = triggerRef.current.getBoundingClientRect();
-    setDropdownPosition({
-      top: rect.bottom + 4,
-      left: rect.right,
-    });
+    const triggerRect = triggerRef.current.getBoundingClientRect();
+    const menuRect = dropdownRef.current?.getBoundingClientRect();
+    setDropdownPosition(
+      computeFixedDropdownPosition(triggerRect, {
+        align: 'end',
+        menuWidth: menuRect?.width ?? 180,
+        menuHeight: menuRect?.height,
+      })
+    );
   }, []);
 
   const openDropdown = useCallback(() => {
@@ -299,7 +304,6 @@ function ModalTabsOverflow<T extends string = string>({
             <PositionedFixed
               left={dropdownPosition.left}
               top={dropdownPosition.top}
-              transform="translateX(-100%)"
               className="modal-tabs-overflow-dropdown"
             >
               <div

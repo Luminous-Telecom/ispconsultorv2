@@ -42,16 +42,22 @@ function renderHeader(tituloStatus: string) {
   );
 }
 
+function openSendDropdown() {
+  fireEvent.click(screen.getByRole('button', { name: 'Enviar' }));
+}
+
 it('desabilita Recibo quando o título não está pago', () => {
   renderHeader('pendente');
-  expect((screen.getByRole('button', { name: 'Recibo' }) as HTMLButtonElement).disabled).toBe(true);
+  openSendDropdown();
+  expect((screen.getByRole('menuitem', { name: 'Recibo' }) as HTMLButtonElement).disabled).toBe(true);
 });
 
 it('envia o recibo quando o título está pago', async () => {
   enviarRecibo.mockResolvedValue({ success: true, message: 'Recibo enviado com sucesso' });
   renderHeader('pago');
+  openSendDropdown();
 
-  const botao = screen.getByRole('button', { name: 'Recibo' }) as HTMLButtonElement;
+  const botao = screen.getByRole('menuitem', { name: 'Recibo' }) as HTMLButtonElement;
   expect(botao.disabled).toBe(false);
   fireEvent.click(botao);
 

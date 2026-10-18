@@ -9,6 +9,7 @@ import { authService, isRequires2fa, type TwoFactorLoginMethods } from 'services
 import { DadosEmpresaService } from 'services/dadosEmpresaService';
 import { removeAuthToken } from 'services/core';
 import { useI18n } from 'contexts/I18nContext';
+import { withCacheBust } from 'utils/urlUtils';
 import LoginScreen, { LoginCredentials } from './login/LoginScreen';
 import LoginTwoFactorStep from './login/LoginTwoFactorStep';
 import LoginForgotPasswordStep from './login/LoginForgotPasswordStep';
@@ -35,7 +36,9 @@ const Login: React.FC = () => {
     retry: false,
   });
 
-  const empresaLogo = empresaPublica?.logo || null;
+  const empresaLogo = empresaPublica?.logo
+    ? withCacheBust(empresaPublica.logo, empresaPublica.updated_at)
+    : null;
   const empresaLogoAlt = empresaPublica?.nome_fantasia || empresaPublica?.razao_social
     ? t('login.companyLogoAltNamed', {
         name: empresaPublica.nome_fantasia || empresaPublica.razao_social,

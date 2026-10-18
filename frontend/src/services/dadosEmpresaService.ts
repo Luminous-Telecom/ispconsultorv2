@@ -35,6 +35,8 @@ export interface DadosEmpresa {
   responsavel_cargo: string;
   responsavel_assinatura?: string;
   logo?: string;
+  /** Usado para cache-bust da logo (mesmo path no disco). */
+  updated_at?: string | Date | null;
 }
 
 export interface UpdateDadosEmpresa {
@@ -140,11 +142,18 @@ export class DadosEmpresaService {
     throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.EMPRESA_DATA_UPDATE_ERROR));
   }
 
-  static async uploadLogo(file: File, empresaId?: number | null): Promise<{ success: boolean; logo: string }> {
+  static async uploadLogo(
+    file: File,
+    empresaId?: number | null
+  ): Promise<{ success: boolean; logo: string; updated_at?: string | Date | null }> {
     const formData = new FormData();
     formData.append('logo', file);
     
-    const response = await apiService.post<{ success: boolean; logo: string }>(
+    const response = await apiService.post<{
+      success: boolean;
+      logo: string;
+      updated_at?: string | Date | null;
+    }>(
       DadosEmpresaService.buildEmpresaPath(empresaId, '/logo'),
       formData
     );
@@ -156,25 +165,30 @@ export class DadosEmpresaService {
     
     // Tentar extrair logo de diferentes formatos de resposta
     let logo: string | undefined;
+    let updated_at: string | Date | null | undefined;
     
     // Formato 1: response.data.logo (quando ResponseTransformer envolve)
     if (response.data && typeof response.data === 'object' && 'logo' in response.data) {
-      logo = (response.data as { logo?: string }).logo;
+      const data = response.data as { logo?: string; updated_at?: string | Date | null };
+      logo = data.logo;
+      updated_at = data.updated_at;
     }
     
     // Formato 2: response.logo (resposta direta do backend)
     if (!logo && 'logo' in response) {
       logo = (response as { logo?: string }).logo;
+      updated_at = (response as { updated_at?: string | Date | null }).updated_at;
     }
     
     // Formato 3: response.data é o objeto direto
     if (!logo && response.data && typeof response.data === 'object') {
-      const data = response.data as { logo?: string; success?: boolean };
+      const data = response.data as { logo?: string; success?: boolean; updated_at?: string | Date | null };
       logo = data.logo;
+      updated_at = data.updated_at;
     }
     
     if (logo) {
-      return { success: true, logo };
+      return { success: true, logo, updated_at };
     }
     
     throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.EMPRESA_LOGO_ERROR));

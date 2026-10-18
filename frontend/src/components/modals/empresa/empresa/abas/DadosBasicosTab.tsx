@@ -2,6 +2,7 @@ import React from 'react';
 import { formatCNPJ } from 'utils/formatters';
 import { CartaoCnpjButton, FormField } from 'components/ui';
 import { openCartaoCnpj } from 'utils/cartaoCnpj';
+import { withCacheBust } from 'utils/urlUtils';
 import { DadosEmpresaTabProps } from '../types';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -98,10 +99,10 @@ const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: Fi
             <div className="empresa-logo-wrap">
               {dados.logo ? (
                 <img 
-                  src={dados.logo} 
+                  src={withCacheBust(dados.logo, dados.updated_at)} 
                   alt={t('company.logo')} 
                   className="empresa-logo-img border rounded p-2 bg-light"
-                  
+                  key={withCacheBust(dados.logo, dados.updated_at)}
                 />
               ) : (
                 <div 

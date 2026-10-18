@@ -64,6 +64,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
     responsavel_cargo: '',
     responsavel_assinatura: undefined,
     logo: undefined,
+    updated_at: undefined,
   };
 
   const [dados, setDados] = useState<DadosEmpresaForm>(initialFormData);
@@ -182,9 +183,15 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
       try {
         const empresaId = dados.id > 0 ? dados.id : undefined;
         const resp = await DadosEmpresaService.uploadLogo(file, empresaId);
-        setDados((prev) => ({ ...prev, logo: resp.logo }));
+        const updatedAt = resp.updated_at ?? new Date().toISOString();
+        setDados((prev) => ({ ...prev, logo: resp.logo, updated_at: updatedAt }));
+        queryClient.setQueryData(['dados-empresa'], (old: DadosEmpresaType | undefined) =>
+          old ? { ...old, logo: resp.logo, updated_at: updatedAt } : old
+        );
         success('Logo atualizada com sucesso!');
         queryClient.invalidateQueries({ queryKey: ['dados-empresa'] });
+        queryClient.invalidateQueries({ queryKey: ['dados-empresa-public-login'] });
+        queryClient.invalidateQueries({ queryKey: ['dados-empresa-public'] });
       } catch (err) {
         showApiError(err, CONTEXT_ERROR_MESSAGES.EMPRESA_LOGO_ERROR);
       }

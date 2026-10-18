@@ -20,6 +20,7 @@ import {
   temContratoComAssinaturaPendente,
   temTermosComAssinaturaPendente,
 } from './centralAssinante/centralAssinanteUtils';
+import { withCacheBust } from 'utils/urlUtils';
 import 'styles/CentralAssinante.scss';
 
 const CentralAssinante: React.FC = () => {
@@ -103,7 +104,11 @@ const CentralAssinante: React.FC = () => {
   if (!isAuthenticated) {
     return (
       <CentralAssinanteLoginView
-        empresaLogo={empresaData?.logo}
+        empresaLogo={
+          empresaData?.logo
+            ? withCacheBust(empresaData.logo, empresaData.updated_at)
+            : undefined
+        }
         loginForm={loginForm}
         onLoginFormChange={setLoginForm}
         onSubmit={handleLogin}

@@ -76,6 +76,7 @@ export class DadosEmpresaController {
         logo: DadosEmpresaController.normalizePath(data.logo as string | undefined),
         nome_fantasia: (data.nome_fantasia as string) || null,
         razao_social: (data.razao_social as string) || null,
+        updated_at: data.updated_at ?? null,
       });
     } catch (error) {
       sendError(res, error, 'Erro ao buscar dados públicos da empresa', 500, true, {
@@ -99,6 +100,7 @@ export class DadosEmpresaController {
         logo: DadosEmpresaController.normalizePath(data.logo as string | undefined),
         nome_fantasia: (data.nome_fantasia as string) || null,
         razao_social: (data.razao_social as string) || null,
+        updated_at: data.updated_at ?? null,
       });
     } catch (error) {
       sendError(res, error, 'Erro ao buscar dados públicos da empresa por slug', 500, true, {
@@ -247,7 +249,11 @@ export class DadosEmpresaController {
           sendNotFound(res, 'Dados da empresa não encontrados');
           return;
         }
-        dadosEmpresa = await DadosEmpresaService.create({ ...DadosEmpresaController.getDefaultData(), logo: filePath });
+        dadosEmpresa = await DadosEmpresaService.create({
+          ...DadosEmpresaController.getDefaultData(),
+          logo: filePath,
+          updated_at: new Date(),
+        });
         try {
           const empresaIdAudit = empresaId ?? dadosEmpresa.id ?? null;
           await registrarCriacao(
@@ -282,7 +288,11 @@ export class DadosEmpresaController {
           }
         }
         const dadosAnteriores = toPlain(dadosEmpresa);
-        dadosEmpresa = await DadosEmpresaService.update({ logo: filePath }, empresaId ?? undefined);
+        // updated_at força cache-bust no frontend (mesmo path logo.png)
+        dadosEmpresa = await DadosEmpresaService.update(
+          { logo: filePath, updated_at: new Date() },
+          empresaId ?? undefined
+        );
         
         try {
           const empresaIdAudit = empresaId ?? dadosEmpresa.id ?? null;
@@ -300,7 +310,11 @@ export class DadosEmpresaController {
         }
       }
 
-      sendSuccess(res, { success: true, logo: filePath });
+      sendSuccess(res, {
+        success: true,
+        logo: filePath,
+        updated_at: dadosEmpresa.updated_at,
+      });
     } catch (error) {
       sendError(res, error, 'Erro ao fazer upload da logo', 500, true, {
         context: 'DadosEmpresaController',

@@ -292,6 +292,17 @@
   align-self: stretch;
 }
 
+.line-chart-point-label__bg {
+  fill: var(--bg-tertiary);
+  stroke: var(--border-color);
+  stroke-width: 1;
+}
+
+.line-chart-point-label__text {
+  fill: var(--text-primary);
+  pointer-events: none;
+}
+
 .imprimir-modal-overlay {
   position: absolute;
   top: 0;

@@ -188,8 +188,9 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(
       }
 
       const LABEL_CHAR_W = format === 'currency' ? 5.4 : 5.8;
-      const LABEL_H = 11;
-      const LABEL_GAP = 3;
+      const LABEL_PAD_X = 5;
+      const LABEL_H = 16;
+      const LABEL_GAP = 4;
 
       type PointLabel = { text: string; x: number; y: number; w: number; show: boolean };
 
@@ -208,11 +209,11 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(
         const text = formatPointLabel(d.value);
         const x = xScale(i);
         const baseY = yScale(d.value);
-        const w = Math.max(24, text.length * LABEL_CHAR_W);
-        const candidates = [baseY - 10, baseY + 14, baseY - 22, baseY + 26].filter(
+        const w = Math.max(20, text.length * LABEL_CHAR_W) + LABEL_PAD_X * 2;
+        const candidates = [baseY - 12, baseY + 16, baseY - 26, baseY + 30].filter(
           (y) => y >= LABEL_H / 2 && y <= chartHeight - LABEL_H / 2
         );
-        const label: PointLabel = { text, x, y: candidates[0] ?? baseY - 10, w, show: false };
+        const label: PointLabel = { text, x, y: candidates[0] ?? baseY - 12, w, show: false };
         for (const y of candidates) {
           label.y = y;
           if (!pointLabels.some((prev) => prev.show && overlaps(label, prev))) {
@@ -223,24 +224,41 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(
         pointLabels.push(label);
       });
 
-      g.append('g')
-        .selectAll('text')
+      const labelNodes = g
+        .append('g')
+        .attr('class', 'line-chart-point-labels')
+        .selectAll('g')
         .data(pointLabels.filter((l) => l.show))
-        .join('text')
-        .attr('x', (d) => d.x)
-        .attr('y', (d) => d.y)
+        .join('g')
+        .attr('class', 'line-chart-point-label')
+        .attr('transform', (d) => `translate(${d.x},${d.y})`)
+        .attr('opacity', 0);
+
+      labelNodes
+        .append('rect')
+        .attr('class', 'line-chart-point-label__bg')
+        .attr('x', (d) => -d.w / 2)
+        .attr('y', -LABEL_H / 2)
+        .attr('width', (d) => d.w)
+        .attr('height', LABEL_H)
+        .attr('rx', 3)
+        .attr('ry', 3);
+
+      labelNodes
+        .append('text')
+        .attr('class', 'line-chart-point-label__text')
         .attr('text-anchor', 'middle')
         .attr('dominant-baseline', 'central')
         .attr('font-size', '9px')
         .attr('font-weight', '600')
         .attr('font-family', FONT_FAMILY_BASE)
-        .attr('fill', lineColor)
-        .attr('opacity', 0)
-        .text((d) => d.text)
+        .text((d) => d.text);
+
+      labelNodes
         .transition()
         .delay(600)
         .duration(400)
-        .attr('opacity', 0.9);
+        .attr('opacity', 1);
 
       const focus = g.append('g').style('opacity', 0);
       focus
