@@ -2,22 +2,27 @@ import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { I18nProvider } from 'contexts/I18nContext';
 import SidebarAccordionFolder from './SidebarAccordionFolder';
-import { usePrefersRealHover } from 'hooks/usePrefersRealHover';
 import type { SidebarMenuItem } from './types';
 
-jest.mock('hooks/usePrefersRealHover', () => ({
-  usePrefersRealHover: jest.fn(),
-}));
-
-const mockPrefersHover = usePrefersRealHover as jest.MockedFunction<typeof usePrefersRealHover>;
-
 const items: SidebarMenuItem[] = [
-  { id: 'clientes', label: 'Clientes', onClick: jest.fn() },
+  { id: 'clientes', modalId: 'clientes', label: 'Clientes', icon: '', onClick: jest.fn() },
 ];
 
-function renderFolder() {
+function renderFolder(overrides: {
+  isOpen?: boolean;
+  selectedItemId?: string | null;
+  onHoverIntent?: (folderId: string) => void;
+  onHoverCancel?: (folderId: string) => void;
+  onToggle?: (folderId: string) => void;
+  onItemClick?: (item: SidebarMenuItem, folderPath: string[]) => void;
+} = {}) {
   localStorage.setItem('app-language', 'pt-BR');
-  return render(
+  const onHoverIntent = overrides.onHoverIntent ?? jest.fn();
+  const onHoverCancel = overrides.onHoverCancel ?? jest.fn();
+  const onToggle = overrides.onToggle ?? jest.fn();
+  const onItemClick = overrides.onItemClick ?? jest.fn();
+
+  render(
     <I18nProvider>
       <SidebarAccordionFolder
         accordionId="cadastrosAccordion"
@@ -26,63 +31,49 @@ function renderFolder() {
         title="Cadastros"
         items={items}
         t={(key) => key}
-        onItemClick={jest.fn()}
+        isOpen={overrides.isOpen ?? false}
+        selectedItemId={overrides.selectedItemId ?? null}
+        isNestedOpen={() => false}
+        onHoverIntent={onHoverIntent}
+        onHoverCancel={onHoverCancel}
+        onToggle={onToggle}
+        onItemClick={onItemClick}
       />
     </I18nProvider>
   );
-}
 
-function getCollapse() {
-  return document.getElementById('cadastrosCollapse');
+  return { onHoverIntent, onHoverCancel, onToggle, onItemClick };
 }
 
 describe('SidebarAccordionFolder', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('abre a pasta ao passar o mouse quando o ambiente tem hover real', () => {
-    mockPrefersHover.mockReturnValue(true);
-    renderFolder();
-
-    const folderButton = screen.getByRole('button', { name: 'Cadastros' });
-    expect(folderButton.getAttribute('aria-expanded')).toBe('false');
-    expect(getCollapse()?.classList.contains('show')).toBe(false);
-
-    fireEvent.mouseEnter(folderButton.closest('.accordion-item')!);
-
-    expect(folderButton.getAttribute('aria-expanded')).toBe('true');
-    expect(getCollapse()?.classList.contains('show')).toBe(true);
-  });
-
-  it('fecha a pasta ao sair com o mouse quando o ambiente tem hover real', () => {
-    mockPrefersHover.mockReturnValue(true);
-    renderFolder();
-
+  it('avisa intenção de hover e cancela ao sair da pasta', () => {
+    const { onHoverIntent, onHoverCancel } = renderFolder();
     const item = screen.getByRole('button', { name: 'Cadastros' }).closest('.accordion-item')!;
     fireEvent.mouseEnter(item);
-    expect(getCollapse()?.classList.contains('show')).toBe(true);
-
+    expect(onHoverIntent).toHaveBeenCalledWith('cadastrosAccordion');
     fireEvent.mouseLeave(item);
-    expect(screen.getByRole('button', { name: 'Cadastros' }).getAttribute('aria-expanded')).toBe(
-      'false'
-    );
-    expect(getCollapse()?.classList.contains('show')).toBe(false);
+    expect(onHoverCancel).toHaveBeenCalledWith('cadastrosAccordion');
   });
 
-  it('abre e fecha a pasta por clique quando não há hover real', () => {
-    mockPrefersHover.mockReturnValue(false);
-    renderFolder();
+  it('mostra a pasta aberta quando isOpen e marca o item selecionado', () => {
+    renderFolder({ isOpen: true, selectedItemId: 'clientes' });
 
-    const folderButton = screen.getByRole('button', { name: 'Cadastros' });
-    expect(folderButton.getAttribute('aria-expanded')).toBe('false');
+    expect(screen.getByRole('button', { name: 'Cadastros' }).getAttribute('aria-expanded')).toBe(
+      'true'
+    );
+    expect(document.getElementById('cadastrosCollapse')?.classList.contains('show')).toBe(true);
+    expect(screen.getByRole('button', { name: 'Clientes' }).classList.contains('active')).toBe(true);
+  });
 
-    fireEvent.click(folderButton);
-    expect(folderButton.getAttribute('aria-expanded')).toBe('true');
-    expect(getCollapse()?.classList.contains('show')).toBe(true);
+  it('dispara onItemClick com o caminho da pasta', () => {
+    const { onItemClick } = renderFolder({ isOpen: true });
+    fireEvent.click(screen.getByRole('button', { name: 'Clientes' }));
+    expect(onItemClick).toHaveBeenCalledWith(items[0], ['cadastrosAccordion']);
+  });
 
-    fireEvent.click(folderButton);
-    expect(folderButton.getAttribute('aria-expanded')).toBe('false');
-    expect(getCollapse()?.classList.contains('show')).toBe(false);
+  it('dispara onToggle ao clicar no cabeçalho da pasta', () => {
+    const { onToggle } = renderFolder();
+    fireEvent.click(screen.getByRole('button', { name: 'Cadastros' }));
+    expect(onToggle).toHaveBeenCalledWith('cadastrosAccordion');
   });
 });

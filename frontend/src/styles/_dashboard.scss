@@ -7,6 +7,8 @@
   --dashboard-chart-radius: 0.625rem;
   --dashboard-card-gap: 12px;
   --dashboard-compact-card-body: 100px;
+  /* Laterais/topo/base iguais ao espaço entre cards */
+  padding: var(--dashboard-card-gap);
 
   /* Gap vertical entre linhas de cards */
   > .container-fluid:has(> .row) {

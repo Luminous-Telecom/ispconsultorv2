@@ -23,6 +23,11 @@ export const useLayoutMenus = () => {
         return;
       }
 
+      const userMenuFlyout = (target as Element).closest?.('[data-user-menu-flyout]');
+      if (userMenuFlyout) {
+        return;
+      }
+
       setShowUserMenu(false);
       setShowLanguageDropdown(false);
     };

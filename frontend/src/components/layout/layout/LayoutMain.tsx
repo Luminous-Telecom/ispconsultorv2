@@ -73,21 +73,23 @@ const LayoutMain: React.FC = () => {
   }
 
   return (
-    <div className="app-layout">
+    <div className="app-layout app-layout--top-nav">
       {isMobile && sidebarOpen && (
         <SidebarOverlay onClose={() => setSidebarOpen(false)} />
       )}
 
-      <Sidebar
-        sidebarRef={sidebarRef}
-        sidebarOpen={sidebarOpen}
-        companyName={companyName}
-        isMobile={isMobile}
-        isLoadingModulos={isLoadingModulos}
-        folders={sidebarFolders}
-        t={t}
-        onCloseSidebar={() => setSidebarOpen(false)}
-      />
+      {isMobile && (
+        <Sidebar
+          sidebarRef={sidebarRef}
+          sidebarOpen={sidebarOpen}
+          companyName={companyName}
+          isMobile={isMobile}
+          isLoadingModulos={isLoadingModulos}
+          folders={sidebarFolders}
+          t={t}
+          onCloseSidebar={() => setSidebarOpen(false)}
+        />
+      )}
 
       <div className="main-layout">
         <LayoutHeader
@@ -115,6 +117,8 @@ const LayoutMain: React.FC = () => {
           onSelectLanguage={handleSelectLanguage}
           onLogout={handleLogout}
           onSearch={handleSearch}
+          menuFolders={sidebarFolders}
+          isLoadingModulos={isLoadingModulos}
         />
 
         {isLoading && (

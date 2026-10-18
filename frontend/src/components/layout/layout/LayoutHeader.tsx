@@ -3,7 +3,7 @@ import type { CurrentUser } from 'services/authService';
 import type { Language } from 'contexts/I18nContext';
 import AppLayoutHeader from '../appLayout/AppLayoutHeader';
 import type { SearchFieldOption } from './LayoutSearchBar';
-import type { TranslateFn } from './types';
+import type { SidebarFolderConfig, TranslateFn } from './types';
 
 interface LanguageOption {
   code: Language;
@@ -36,6 +36,8 @@ interface LayoutHeaderProps {
   onSelectLanguage: (code: Language) => void;
   onLogout: () => void;
   onSearch: (value: string) => void;
+  menuFolders?: SidebarFolderConfig[];
+  isLoadingModulos?: boolean;
 }
 
 const LayoutHeader: React.FC<LayoutHeaderProps> = (props) => (
@@ -60,6 +62,8 @@ const LayoutHeader: React.FC<LayoutHeaderProps> = (props) => (
     searchBarIdPrefix="app"
     menuAriaLabel={props.t('layout.openMenu')}
     userTitleFallback={props.t('layout.user')}
+    menuFolders={props.menuFolders}
+    isLoadingModulos={props.isLoadingModulos}
     userMenuProps={{
       showLanguage: true,
       showLanguageDropdown: props.showLanguageDropdown,

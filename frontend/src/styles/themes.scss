@@ -4,12 +4,25 @@
 
 /* Hover usa variáveis CSS para consistência */
 
-/* Layout principal */
+/* Layout principal — viewport fixo; scroll só no conteúdo */
+.app-layout {
+  display: flex;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
 .main-layout {
+  flex: 1 1 auto;
   margin-left: 0;
-  min-height: 100vh;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   transition: margin-left 0.3s ease-in-out;
 }
 
@@ -18,6 +31,8 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
 }
 
 /* Mobile: conteúdo em tela cheia */
@@ -28,14 +43,18 @@
   }
 }
 
-/* Desktop: sidebar sempre visível */
+/* Desktop: menu superior (top-nav); sidebar só no mobile */
 @media (min-width: 768px) {
-  .sidebar {
+  .app-layout:not(.app-layout--top-nav) .sidebar {
     transform: translateX(0) !important;
   }
-  
-  .main-layout {
+
+  .app-layout:not(.app-layout--top-nav) .main-layout {
     margin-left: 260px;
+  }
+
+  .app-layout--top-nav .main-layout {
+    margin-left: 0;
   }
 }
 

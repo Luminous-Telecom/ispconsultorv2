@@ -1,8 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useModal } from 'contexts/ModalContext';
 import SidebarAccordionFolder from '../layout/SidebarAccordionFolder';
 import SidebarMenuSearch from '../sidebar/SidebarMenuSearch';
 import SidebarMenuSearchResults from '../sidebar/SidebarMenuSearchResults';
 import { buildSearchMenuGroups } from '../sidebar/sidebarMenuSearchUtils';
+import { useSidebarFolderHover } from '../layout/hooks/useSidebarFolderHover';
+import { findFolderPathForItem } from '../layout/sidebarFolderPath';
 import type { SidebarFolderConfig, SidebarMenuItem, TranslateFn } from '../layout/types';
 
 export interface AppSidebarProps {
@@ -26,8 +29,21 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
   header,
   shouldRenderFolder = defaultShouldRenderFolder,
 }) => {
+  const { activeModal } = useModal();
   const [menuSearch, setMenuSearch] = useState('');
   const isSearching = menuSearch.trim().length > 0;
+  const {
+    selectedItemId,
+    selectedModalId,
+    isFolderOpen,
+    scheduleFolderOpen,
+    cancelFolderOpen,
+    handleSidebarMouseEnter,
+    handleSidebarMouseLeave,
+    toggleFolder,
+    selectItem,
+    clearSelection,
+  } = useSidebarFolderHover();
 
   const visibleFolders = useMemo(
     () => folders.filter(shouldRenderFolder),
@@ -39,7 +55,18 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
     [visibleFolders, menuSearch, t]
   );
 
-  const handleItemClick = (item: SidebarMenuItem) => {
+  useEffect(() => {
+    if (!selectedModalId) {
+      return;
+    }
+    if (activeModal !== selectedModalId) {
+      clearSelection();
+    }
+  }, [activeModal, selectedModalId, clearSelection]);
+
+  const handleItemClick = (item: SidebarMenuItem, folderPath?: string[]) => {
+    const path = folderPath ?? findFolderPathForItem(visibleFolders, item.id);
+    selectItem(item.id, item.modalId, path);
     item.onClick();
     setMenuSearch('');
     onCloseSidebar();
@@ -49,6 +76,8 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
     <aside
       ref={sidebarRef}
       className={`d-flex flex-column flex-shrink-0 sidebar ${sidebarOpen ? 'open' : ''}`}
+      onMouseEnter={handleSidebarMouseEnter}
+      onMouseLeave={handleSidebarMouseLeave}
     >
       <div className="sidebar-header-fixed d-flex flex-column">
         {header}
@@ -65,7 +94,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
               groups={searchGroups}
               emptyMessage={t('layout.sidebarMenuSearchEmpty')}
               t={t}
-              onItemClick={handleItemClick}
+              onItemClick={(item) => handleItemClick(item)}
             />
           ) : (
             visibleFolders.map((folder) => (
@@ -78,6 +107,12 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                 items={folder.items}
                 nestedFolders={folder.nestedFolders}
                 t={t}
+                isOpen={isFolderOpen(folder.accordionId)}
+                selectedItemId={selectedItemId}
+                isNestedOpen={isFolderOpen}
+                onHoverIntent={scheduleFolderOpen}
+                onHoverCancel={cancelFolderOpen}
+                onToggle={toggleFolder}
                 onItemClick={handleItemClick}
               />
             ))

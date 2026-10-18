@@ -9,7 +9,7 @@
   box-sizing: border-box;
 }
 
-/* HTML e Body */
+/* HTML e Body — escala global de fontes (menu do usuário) */
 html {
   font-size: 16px;
   line-height: 1.5;
@@ -17,6 +17,18 @@ html {
   -webkit-text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+html[data-font-size='sm'] {
+  font-size: 14px;
+}
+
+html[data-font-size='md'] {
+  font-size: 16px;
+}
+
+html[data-font-size='lg'] {
+  font-size: 18px;
 }
 
 body {
@@ -34,6 +46,17 @@ body[data-app="system"],
   background-attachment: fixed;
   color: var(--text-primary) !important;
   font-family: var(--font-family-base) !important;
+}
+
+/* ERP autenticado: scroll só na área de conteúdo, não na página */
+body[data-app="system"]:has(.app-layout) {
+  overflow: hidden;
+  height: 100%;
+}
+
+html:has(body[data-app="system"]:has(.app-layout)) {
+  overflow: hidden;
+  height: 100%;
 }
 
 /* Site público: fundo neutro; cada página define o seu */

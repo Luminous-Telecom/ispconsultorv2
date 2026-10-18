@@ -61,20 +61,13 @@
    DRAGGABLE MODAL - Substitutos para estilos inline
    ============================================ */
 
-/* Backdrop customizado - overlay semitransparente (padrão dos modais), não cobre a sidebar */
+/* Backdrop abaixo do menu superior; top/height vêm do DraggableModal */
 .draggable-modal-backdrop {
   position: fixed !important;
-  top: 0 !important;
-  left: 260px !important; /* Offset da sidebar desktop (260px) */
-  width: calc(100% - 260px) !important;
-  height: 100% !important;
+  left: 0 !important;
+  width: 100% !important;
   background-color: color-mix(in srgb, var(--color-black) 50%, transparent) !important;
   pointer-events: none !important;
-
-  @media (max-width: 767.98px) {
-    left: 0 !important; // mobile fix: P4 — sidebar oculta no mobile, backdrop cobre tela toda
-    width: 100% !important; // mobile fix: P4
-  }
 }
 
 /* Overlay para drag events */

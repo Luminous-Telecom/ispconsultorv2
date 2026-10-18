@@ -239,7 +239,12 @@ export interface TranslationKeys {
   'layout.user': string;
   'layout.darkMode': string;
   'layout.lightMode': string;
+  'layout.theme': string;
   'layout.language': string;
+  'layout.fontSize': string;
+  'layout.fontSizeSmall': string;
+  'layout.fontSizeMedium': string;
+  'layout.fontSizeLarge': string;
   'layout.parameters': string;
   'layout.search': string;
   'layout.searchPlaceholder': string;

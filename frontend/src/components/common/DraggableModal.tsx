@@ -12,6 +12,22 @@ import ResponsiveDialog from './ResponsiveDialog';
 
 const MODAL_EDGE_MARGIN_PX = 8;
 const MODAL_EDGE_MARGIN_RIGHT_MIN_PX = 12;
+const MODAL_CHROME_FALLBACK_TOP_PX = 96;
+
+/** Altura do header + menu superior — modais abrem abaixo (exceto ao arrastar). */
+export function getModalContentTopOffset(): number {
+  if (typeof document === 'undefined') {
+    return MODAL_EDGE_MARGIN_PX;
+  }
+  const stack = document.querySelector('.layout-header-stack');
+  if (stack instanceof HTMLElement) {
+    const bottom = stack.getBoundingClientRect().bottom;
+    if (bottom > 0) {
+      return Math.ceil(bottom) + MODAL_EDGE_MARGIN_PX;
+    }
+  }
+  return MODAL_CHROME_FALLBACK_TOP_PX;
+}
 
 function hasHeaderUnifiedClass(node: React.ReactNode): boolean {
   if (node == null || typeof node === 'boolean') return false;
@@ -80,36 +96,38 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     return propModalId || `draggable-modal-${Math.random().toString(36).substr(2, 9)}`;
   }, [propModalId]);
 
-  // Calcular posição e tamanho baseado no sidebar (240px) - igual ao original
+  // Abre abaixo do menu; ao arrastar pode cobrir o chrome
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [modalSize, setModalSize] = useState({ width: 0, height: 0 });
+  const [contentTopOffset, setContentTopOffset] = useState(MODAL_CHROME_FALLBACK_TOP_PX);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isVisible, setIsVisible] = useState(false);
 
-  // Função para calcular dimensões e posição
   const calculateDimensions = useCallback(() => {
     if (typeof window === 'undefined') return;
 
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
+    const topOffset = getModalContentTopOffset();
 
-    const sidebarWidth = 260;
     const scrollbarWidth = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
     const edgeMarginRight = MODAL_EDGE_MARGIN_PX + Math.max(scrollbarWidth, MODAL_EDGE_MARGIN_RIGHT_MIN_PX);
 
-    const availableWidth = Math.max(0, screenWidth - sidebarWidth);
+    const modalWidth = Math.max(320, screenWidth - MODAL_EDGE_MARGIN_PX - edgeMarginRight);
+    const availableHeight = Math.max(
+      320,
+      screenHeight - topOffset - MODAL_EDGE_MARGIN_PX
+    );
 
-    const modalWidth = Math.max(320, availableWidth - MODAL_EDGE_MARGIN_PX - edgeMarginRight);
-    const modalHeight = Math.max(400, screenHeight - MODAL_EDGE_MARGIN_PX * 2);
-
+    setContentTopOffset(topOffset);
     setPosition({
-      x: sidebarWidth + MODAL_EDGE_MARGIN_PX,
-      y: MODAL_EDGE_MARGIN_PX,
+      x: MODAL_EDGE_MARGIN_PX,
+      y: topOffset,
     });
 
-    setModalSize({ width: modalWidth, height: modalHeight });
+    setModalSize({ width: modalWidth, height: availableHeight });
   }, []);
 
   // Gerenciar pilha de modais (apenas desktop)
@@ -264,7 +282,15 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   const noScrollBody =
     className?.includes('no-padding') || className?.includes('list-modal-no-body-scroll');
 
-  useElementProperties(backdropRef, { zIndex: zIndex - 1 }, [zIndex]);
+  useElementProperties(
+    backdropRef,
+    {
+      zIndex: zIndex - 1,
+      top: `${contentTopOffset}px`,
+      height: `calc(100% - ${contentTopOffset}px)`,
+    },
+    [zIndex, contentTopOffset],
+  );
   useElementProperties(
     overlayRef,
     { zIndex: isDragging ? zIndex + 100 : -1 },
@@ -277,12 +303,16 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
       top: `${position.y}px`,
       width: `${modalSize.width}px`,
       height: modalSize.height > 0 ? `${modalSize.height}px` : 'auto',
-      maxHeight: `${typeof window !== 'undefined' ? window.innerHeight - MODAL_EDGE_MARGIN_PX * 2 : 0}px`,
+      maxHeight: `${
+        typeof window !== 'undefined'
+          ? Math.max(320, window.innerHeight - contentTopOffset - MODAL_EDGE_MARGIN_PX)
+          : 0
+      }px`,
       zIndex,
       opacity: isVisible ? 1 : 0,
       transform: isVisible ? 'scale(1)' : 'scale(0.95)',
     },
-    [position.x, position.y, modalSize.width, modalSize.height, zIndex, isVisible],
+    [position.x, position.y, modalSize.width, modalSize.height, contentTopOffset, zIndex, isVisible],
   );
   useElementProperties(
     bodyRef,

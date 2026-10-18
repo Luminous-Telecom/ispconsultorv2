@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NotificationProvider } from './components/notifications/NotificationProvider';
 import { RouteAwareThemeProvider } from './contexts/ThemeContext';
+import { FontSizeProvider } from './contexts/FontSizeContext';
 import { I18nProvider, useI18n } from './contexts/I18nContext';
 import { DashboardFiltersProvider } from './contexts/DashboardFiltersContext';
 import { TableHeaderProvider } from './contexts/TableHeaderContext';
@@ -86,6 +87,7 @@ function AppContent() {
             <NotificationProvider>
               <Router>
                 <RouteAwareThemeProvider>
+                <FontSizeProvider>
                 <RouteAppContext />
                 <Suspense fallback={<Loading message={t('ui.loadingApplication')} />}>
                   <Routes>
@@ -150,6 +152,7 @@ function AppContent() {
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </Suspense>
+                </FontSizeProvider>
                 </RouteAwareThemeProvider>
               </Router>
             </NotificationProvider>
