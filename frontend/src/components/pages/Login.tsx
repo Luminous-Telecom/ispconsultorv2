@@ -52,6 +52,39 @@ const Login: React.FC = () => {
     setView('reset');
   }, [searchParams]);
 
+  useEffect(() => {
+    const confirmToken = searchParams.get('confirmar_email_recuperacao');
+    if (!confirmToken) return;
+
+    let cancelled = false;
+    const confirm = async () => {
+      try {
+        const res = await authService.confirmRecoveryEmail(confirmToken);
+        if (cancelled) return;
+        if (res.success) {
+          success(t('userConfig.recoveryEmailConfirmSuccess'));
+        } else {
+          showApiError(res.message || t('userConfig.recoveryEmailConfirmSuccess'));
+        }
+      } catch (err) {
+        if (!cancelled) {
+          showApiError(err);
+        }
+      } finally {
+        if (!cancelled) {
+          const next = new URLSearchParams(searchParams);
+          next.delete('confirmar_email_recuperacao');
+          const qs = next.toString();
+          navigate({ pathname: '/login', search: qs ? `?${qs}` : '' }, { replace: true });
+        }
+      }
+    };
+    void confirm();
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams, navigate, showApiError, success, t]);
+
   const clearResetQuery = () => {
     const next = new URLSearchParams(searchParams);
     next.delete('redefinir_senha');

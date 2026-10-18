@@ -867,6 +867,11 @@ export interface TranslationKeys {
   'buttons.validate': string;
   'buttons.cartaoCnpj': string;
   'buttons.apply': string;
+  'buttons.changePassword': string;
+  'buttons.enable2fa': string;
+  'buttons.reconfigure2fa': string;
+  'buttons.disable2fa': string;
+  'buttons.addPasskey': string;
   'agent.install': string;
   'agent.configureVpn': string;
   'agent.tabWireguard': string;
@@ -1444,6 +1449,9 @@ export interface TranslationKeys {
   'security.disableCodeHelp': string;
   'security.disableFieldsRequired': string;
   'security.confirmDisable': string;
+  'security.confirmReconfigure': string;
+  'security.reconfigure': string;
+  'security.reconfigureHelp': string;
   'security.adminReset': string;
   'security.adminResetHelp': string;
   'security.adminResetConfirm': string;
@@ -1478,6 +1486,13 @@ export interface TranslationKeys {
 
   // Conf. do usuário
   'userConfig.title': string;
+  'userConfig.changePassword': string;
+  'userConfig.currentPassword': string;
+  'userConfig.newPassword': string;
+  'userConfig.confirmPassword': string;
+  'userConfig.changePasswordSuccess': string;
+  'userConfig.changePasswordMismatch': string;
+  'userConfig.changePasswordMin': string;
   'userConfig.tabSettings': string;
   'userConfig.tabSecurity': string;
   'userConfig.tabTrustedDevices': string;

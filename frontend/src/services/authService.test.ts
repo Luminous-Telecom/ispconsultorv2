@@ -77,6 +77,13 @@ describe('authService', () => {
     expect(getHttp().post.mock.calls[0][0]).toContain('/auth/me/email-recuperacao/enviar');
   });
 
+  it('confirmRecoveryEmail posta token no endpoint público', async () => {
+    getHttp().post.mockResolvedValue(ok({ verified: true }));
+    await authService.confirmRecoveryEmail('token-confirmacao');
+    expect(getHttp().post.mock.calls[0][0]).toContain('/auth/email-recuperacao/confirmar');
+    expect(getHttp().post.mock.calls[0][1]).toEqual({ token: 'token-confirmacao' });
+  });
+
   it('forgotPassword posta e-mail no endpoint público', async () => {
     getHttp().post.mockResolvedValue(ok(undefined));
     await authService.forgotPassword('ana@test.com');
@@ -93,5 +100,25 @@ describe('authService', () => {
       password: 'senha123',
       password_confirmation: 'senha123',
     });
+  });
+
+  it('changePassword posta senha atual e nova', async () => {
+    getHttp().post.mockResolvedValue(ok({ changed: true }));
+    await authService.changePassword('atual123', 'nova1234', 'nova1234');
+    expect(getHttp().post.mock.calls[0][0]).toContain('/auth/me/change-password');
+    expect(getHttp().post.mock.calls[0][1]).toEqual({
+      current_password: 'atual123',
+      password: 'nova1234',
+      password_confirmation: 'nova1234',
+    });
+  });
+
+  it('reconfigureTwoFactor posta senha e código', async () => {
+    getHttp().post.mockResolvedValue(
+      ok({ secret: 's', otpauth_url: 'otpauth://', qr_data_url: 'data:image/png;base64,x' })
+    );
+    await authService.reconfigureTwoFactor('senha123', '123456');
+    expect(getHttp().post.mock.calls[0][0]).toContain('/auth/2fa/reconfigure');
+    expect(getHttp().post.mock.calls[0][1]).toEqual({ password: 'senha123', code: '123456' });
   });
 });

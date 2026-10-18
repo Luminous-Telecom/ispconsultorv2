@@ -580,6 +580,44 @@ export class AuthController {
     }
   }
 
+  static async twoFactorReconfigure(req: Request, res: Response): Promise<void> {
+    try {
+      const usuarioId = getAuthenticatedUserId(req);
+      if (!usuarioId) {
+        sendUnauthorized(res, 'Token inválido');
+        return;
+      }
+      const { error, value } = disable2faSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
+      if (error) {
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
+        return;
+      }
+      const usuario = await UsuarioService.getById(usuarioId);
+      if (!usuario) {
+        sendNotFound(res, 'Usuário não encontrado');
+        return;
+      }
+      const setup = await TwoFactorService.reconfigure(
+        usuarioId,
+        usuario.email,
+        value.password,
+        value.code
+      );
+      sendSuccess(res, setup, 'Escaneie o novo QR Code no aplicativo autenticador');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro ao reconfigurar';
+      if (
+        message.includes('incorreta') ||
+        message.includes('inválido') ||
+        message.includes('não está ativada')
+      ) {
+        sendValidationError(res, message);
+        return;
+      }
+      sendError(res, err, 'Erro ao reconfigurar autenticação em duas etapas', 500, true);
+    }
+  }
+
   static async setEmail2fa(req: Request, res: Response): Promise<void> {
     try {
       const usuarioId = getAuthenticatedUserId(req);
@@ -851,6 +889,48 @@ export class AuthController {
         return;
       }
       sendError(res, err, 'Erro ao atualizar perfil', 500, true);
+    }
+  }
+
+  static async changePassword(req: Request, res: Response): Promise<void> {
+    try {
+      const usuarioId = getAuthenticatedUserId(req);
+      if (!usuarioId) {
+        sendUnauthorized(res, 'Token inválido');
+        return;
+      }
+      const schema = Joi.object({
+        current_password: Joi.string().min(6).required().messages({
+          'any.required': 'Senha atual é obrigatória',
+        }),
+        password: Joi.string().min(6).required().messages({
+          'string.min': 'Nova senha deve ter pelo menos 6 caracteres',
+          'any.required': 'Nova senha é obrigatória',
+        }),
+        password_confirmation: Joi.string().required().valid(Joi.ref('password')).messages({
+          'any.only': 'A confirmação de senha não confere',
+          'any.required': 'Confirmação de senha é obrigatória',
+        }),
+      });
+      const { error, value } = schema.validate(req.body, { abortEarly: false, stripUnknown: true });
+      if (error) {
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
+        return;
+      }
+      await UserProfileService.changePassword(usuarioId, value.current_password, value.password);
+      sendSuccess(res, { changed: true }, 'Senha alterada com sucesso');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro';
+      if (
+        message.includes('incorreta') ||
+        message.includes('diferente') ||
+        message.includes('pelo menos') ||
+        message.includes('não encontrado')
+      ) {
+        sendValidationError(res, message);
+        return;
+      }
+      sendError(res, err, 'Erro ao alterar senha', 500, true);
     }
   }
 

@@ -3,16 +3,20 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { startRegistration } from '@simplewebauthn/browser';
 import DraggableModal from 'components/common/DraggableModal';
 import {
-  AppButton,
+  AdicionarChaveAcessoButton,
+  Ativar2faButton,
   AtivoInativoField,
   BaixarButton,
+  CancelarButton,
   ConfirmarButton,
   CopiarIconButton,
   CopyableFormField,
+  Desativar2faButton,
   FormField,
   LabelWithHelp,
   Loading,
   ModalFormActions,
+  Reconfigurar2faButton,
   RemoverButton,
 } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
@@ -20,7 +24,6 @@ import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { authService } from 'services/authService';
 import { useI18n } from 'contexts/I18nContext';
-import { useModal } from 'contexts/ModalContext';
 import { CACHE_CONFIG } from 'config/api';
 
 export type SegurancaUsuarioPanel = 'all' | 'security';
@@ -34,7 +37,7 @@ interface SegurancaUsuarioModalProps {
   panel?: SegurancaUsuarioPanel;
 }
 
-type Step = 'status' | 'setup' | 'recovery' | 'disable';
+type Step = 'status' | 'setup' | 'recovery' | 'disable' | 'reconfigure';
 
 const SegurancaUsuarioModal: React.FC<SegurancaUsuarioModalProps> = ({
   show,
@@ -46,7 +49,6 @@ const SegurancaUsuarioModal: React.FC<SegurancaUsuarioModalProps> = ({
   const { t } = useI18n();
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
-  const { openModal } = useModal();
   const queryClient = useQueryClient();
 
   const [step, setStep] = useState<Step>('status');
@@ -72,9 +74,9 @@ const SegurancaUsuarioModal: React.FC<SegurancaUsuarioModalProps> = ({
     gcTime: CACHE_CONFIG.DEFAULT_CACHE_TIME,
   });
 
-  const invalidateStatus = () => {
+  const invalidateStatus = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['auth-2fa-status'] });
-  };
+  }, [queryClient]);
 
   const resetLocal = useCallback(() => {
     setStep('status');
@@ -98,7 +100,14 @@ const SegurancaUsuarioModal: React.FC<SegurancaUsuarioModalProps> = ({
     onClose();
   }, [onClose, resetLocal]);
 
-  const handleStartSetup = async () => {
+  const applySetupPayload = useCallback((data: { secret: string; qr_data_url: string }) => {
+    setSetupSecret(data.secret);
+    setQrDataUrl(data.qr_data_url);
+    setConfirmCode('');
+    setStep('setup');
+  }, []);
+
+  const handleStartSetup = useCallback(async () => {
     setIsPending(true);
     try {
       const res = await authService.setupTwoFactor();
@@ -106,16 +115,13 @@ const SegurancaUsuarioModal: React.FC<SegurancaUsuarioModalProps> = ({
         showApiError(res.message || CONTEXT_ERROR_MESSAGES.USER_UPDATE_ERROR);
         return;
       }
-      setSetupSecret(res.data.secret);
-      setQrDataUrl(res.data.qr_data_url);
-      setConfirmCode('');
-      setStep('setup');
+      applySetupPayload(res.data);
     } catch (err) {
       showApiError(err, CONTEXT_ERROR_MESSAGES.USER_UPDATE_ERROR);
     } finally {
       setIsPending(false);
     }
-  };
+  }, [applySetupPayload, showApiError]);
 
   const handleConfirmSetup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -167,6 +173,33 @@ const SegurancaUsuarioModal: React.FC<SegurancaUsuarioModalProps> = ({
     }
   };
 
+  const handleReconfigure = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!disablePassword || !disableCode.trim()) {
+      showApiError(t('security.disableFieldsRequired'));
+      return;
+    }
+    if (!window.confirm(t('security.confirmReconfigure'))) {
+      return;
+    }
+    setIsPending(true);
+    try {
+      const res = await authService.reconfigureTwoFactor(disablePassword, disableCode.trim());
+      if (!res.success || !res.data) {
+        showApiError(res.message || CONTEXT_ERROR_MESSAGES.USER_UPDATE_ERROR);
+        return;
+      }
+      setDisablePassword('');
+      setDisableCode('');
+      applySetupPayload(res.data);
+      invalidateStatus();
+    } catch (err) {
+      showApiError(err, CONTEXT_ERROR_MESSAGES.USER_UPDATE_ERROR);
+    } finally {
+      setIsPending(false);
+    }
+  };
+
   const handleToggleEmail2fa = async (enabled: boolean) => {
     if (!status?.smtp_configured && enabled) {
       showApiError(t('security.emailSmtpRequired'));
@@ -188,7 +221,7 @@ const SegurancaUsuarioModal: React.FC<SegurancaUsuarioModalProps> = ({
     }
   };
 
-  const handleAddPasskey = async () => {
+  const handleAddPasskey = useCallback(async () => {
     setIsPending(true);
     try {
       const optionsRes = await authService.webauthnRegisterOptions();
@@ -213,7 +246,7 @@ const SegurancaUsuarioModal: React.FC<SegurancaUsuarioModalProps> = ({
     } finally {
       setIsPending(false);
     }
-  };
+  }, [invalidateStatus, showApiError, success, t]);
 
   const handleRemovePasskey = async (id: number) => {
     if (!window.confirm(t('security.passkeyRemoveConfirm'))) return;
@@ -270,6 +303,15 @@ const SegurancaUsuarioModal: React.FC<SegurancaUsuarioModalProps> = ({
         />
       );
     }
+    if (step === 'reconfigure') {
+      return (
+        <ModalFormActions
+          onCancel={() => setStep('status')}
+          formId="seguranca-2fa-reconfigure-form"
+          isPending={isPending}
+        />
+      );
+    }
     if (step === 'recovery') {
       return (
         <div className="modal-header-buttons d-flex gap-2 modal-header-actions">
@@ -277,9 +319,56 @@ const SegurancaUsuarioModal: React.FC<SegurancaUsuarioModalProps> = ({
         </div>
       );
     }
-    // Status: só o X do DraggableModal (sem Fechar no header)
-    return null;
-  }, [step, isPending, handleClose]);
+
+    return (
+      <>
+        <CancelarButton type="button" onClick={handleClose} isPending={isPending} />
+        {!status?.totp_enabled ? (
+          <Ativar2faButton
+            type="button"
+            onClick={handleStartSetup}
+            disabled={isPending || isLoading}
+            isPending={isPending}
+          />
+        ) : (
+          <>
+            <Reconfigurar2faButton
+              type="button"
+              onClick={() => {
+                setDisablePassword('');
+                setDisableCode('');
+                setStep('reconfigure');
+              }}
+              disabled={isPending}
+            />
+            <Desativar2faButton
+              type="button"
+              onClick={() => {
+                setDisablePassword('');
+                setDisableCode('');
+                setStep('disable');
+              }}
+              disabled={isPending}
+            />
+          </>
+        )}
+        <AdicionarChaveAcessoButton
+          type="button"
+          onClick={handleAddPasskey}
+          disabled={isPending || isLoading}
+          isPending={isPending}
+        />
+      </>
+    );
+  }, [
+    step,
+    isPending,
+    handleClose,
+    status?.totp_enabled,
+    isLoading,
+    handleStartSetup,
+    handleAddPasskey,
+  ]);
 
   useLayoutEffect(() => {
     if (!skipWrapper || !onHeaderActionsReady) return;
@@ -303,13 +392,45 @@ const SegurancaUsuarioModal: React.FC<SegurancaUsuarioModalProps> = ({
 
   const showSecurityPanel = panel === 'all' || panel === 'security';
 
+  const challengeFields = (
+    <>
+      <div className="col-12">
+        <FormField
+          name="challenge_password"
+          type="password"
+          label={t('form.password')}
+          value={disablePassword}
+          onChange={(v) => setDisablePassword(String(v))}
+          required
+          size="sm"
+          autoComplete="current-password"
+          helpText={
+            step === 'reconfigure' ? t('security.reconfigureHelp') : t('security.disableHelp')
+          }
+        />
+      </div>
+      <div className="col-12">
+        <FormField
+          name="challenge_code"
+          type="text"
+          label={t('security.confirmCode')}
+          value={disableCode}
+          onChange={(v) => setDisableCode(String(v))}
+          required
+          size="sm"
+          autoComplete="one-time-code"
+          helpText={t('security.disableCodeHelp')}
+        />
+      </div>
+    </>
+  );
+
   const content = isLoading ? (
     <Loading variant="modal" />
   ) : (
     <div className="form-modal-simple">
       {step === 'status' && showSecurityPanel && (
         <>
-          {/* Aplicativo autenticador (TOTP) */}
           <div className="form-section-heading-row">
             <span className="form-section-heading-pill">{t('security.totpSection')}</span>
             <div className="form-section-heading-line" aria-hidden />
@@ -338,31 +459,8 @@ const SegurancaUsuarioModal: React.FC<SegurancaUsuarioModalProps> = ({
                 />
               </div>
             )}
-            <div className="col-12">
-              <div className="form-modal-input-col d-flex flex-wrap gap-2">
-                {!status?.totp_enabled ? (
-                  <AppButton
-                    label={t('security.enable')}
-                    variant="primary"
-                    size="sm"
-                    onClick={handleStartSetup}
-                    disabled={isPending}
-                    isPending={isPending}
-                  />
-                ) : (
-                  <AppButton
-                    label={t('security.disable')}
-                    variant="danger"
-                    size="sm"
-                    onClick={() => setStep('disable')}
-                    disabled={isPending}
-                  />
-                )}
-              </div>
-            </div>
           </div>
 
-          {/* Chaves de acesso (passkeys) */}
           <div className="form-section-heading-row">
             <span className="form-section-heading-pill">{t('security.passkeySection')}</span>
             <div className="form-section-heading-line" aria-hidden />
@@ -375,37 +473,33 @@ const SegurancaUsuarioModal: React.FC<SegurancaUsuarioModalProps> = ({
                 </LabelWithHelp>
                 <div className="form-field-control">
                   <div className="d-flex flex-column gap-2 w-100">
-                    {(status?.passkeys || []).map((pk) => (
-                      <div
-                        key={pk.id}
-                        className="d-flex align-items-center justify-content-between gap-2 flex-wrap"
-                      >
-                        <span className="small">
-                          {pk.device_name || t('security.passkeyDefaultName')} — {formatDateTime(pk.created_at)}
-                        </span>
-                        <RemoverButton
-                          type="button"
-                          size="sm"
-                          onClick={() => handleRemovePasskey(pk.id)}
-                          disabled={isPending}
-                        />
-                      </div>
-                    ))}
-                    <AppButton
-                      label={t('security.passkeyAdd')}
-                      variant="primary"
-                      size="sm"
-                      onClick={handleAddPasskey}
-                      disabled={isPending}
-                      isPending={isPending}
-                    />
+                    {(status?.passkeys || []).length === 0 ? (
+                      <span className="small text-muted">—</span>
+                    ) : (
+                      (status?.passkeys || []).map((pk) => (
+                        <div
+                          key={pk.id}
+                          className="d-flex align-items-center justify-content-between gap-2 flex-wrap"
+                        >
+                          <span className="small">
+                            {pk.device_name || t('security.passkeyDefaultName')} —{' '}
+                            {formatDateTime(pk.created_at)}
+                          </span>
+                          <RemoverButton
+                            type="button"
+                            size="sm"
+                            onClick={() => handleRemovePasskey(pk.id)}
+                            disabled={isPending}
+                          />
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Autenticação por e-mail */}
           <div className="form-section-heading-row">
             <span className="form-section-heading-pill">{t('security.emailSection')}</span>
             <div className="form-section-heading-line" aria-hidden />
@@ -425,22 +519,6 @@ const SegurancaUsuarioModal: React.FC<SegurancaUsuarioModalProps> = ({
                 disabled={isPending || !status?.smtp_configured}
               />
             </div>
-            {!status?.smtp_configured && (
-              <div className="col-12">
-                <div className="form-modal-input-col">
-                  <AppButton
-                    label={t('security.emailConfigureSmtp')}
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => {
-                      handleClose();
-                      openModal('servidor-email');
-                    }}
-                    disabled={isPending}
-                  />
-                </div>
-              </div>
-            )}
           </div>
         </>
       )}
@@ -538,34 +616,17 @@ const SegurancaUsuarioModal: React.FC<SegurancaUsuarioModalProps> = ({
             <span className="form-section-heading-pill">{t('security.disable')}</span>
             <div className="form-section-heading-line" aria-hidden />
           </div>
-          <div className="row g-2">
-            <div className="col-12">
-              <FormField
-                name="disable_password"
-                type="password"
-                label={t('form.password')}
-                value={disablePassword}
-                onChange={(v) => setDisablePassword(String(v))}
-                required
-                size="sm"
-                autoComplete="current-password"
-                helpText={t('security.disableHelp')}
-              />
-            </div>
-            <div className="col-12">
-              <FormField
-                name="disable_code"
-                type="text"
-                label={t('security.confirmCode')}
-                value={disableCode}
-                onChange={(v) => setDisableCode(String(v))}
-                required
-                size="sm"
-                autoComplete="one-time-code"
-                helpText={t('security.disableCodeHelp')}
-              />
-            </div>
+          <div className="row g-2">{challengeFields}</div>
+        </form>
+      )}
+
+      {step === 'reconfigure' && showSecurityPanel && (
+        <form id="seguranca-2fa-reconfigure-form" onSubmit={handleReconfigure}>
+          <div className="form-section-heading-row">
+            <span className="form-section-heading-pill">{t('security.reconfigure')}</span>
+            <div className="form-section-heading-line" aria-hidden />
           </div>
+          <div className="row g-2">{challengeFields}</div>
         </form>
       )}
     </div>

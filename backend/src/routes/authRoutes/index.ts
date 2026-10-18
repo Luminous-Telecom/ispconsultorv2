@@ -16,6 +16,7 @@ router.get('/2fa/status', AuthController.twoFactorStatus);
 router.post('/2fa/setup', AuthController.twoFactorSetup);
 router.post('/2fa/confirm', AuthController.twoFactorConfirm);
 router.post('/2fa/disable', AuthController.twoFactorDisable);
+router.post('/2fa/reconfigure', AuthController.twoFactorReconfigure);
 router.post('/2fa/email', AuthController.setEmail2fa);
 
 router.post('/2fa/webauthn/register-options', AuthController.webauthnRegisterOptions);
@@ -27,6 +28,7 @@ router.delete('/2fa/trusted-devices', AuthController.revokeAllTrustedDevices);
 
 router.get('/me', AuthController.me);
 router.patch('/me', AuthController.updateMe);
+router.post('/me/change-password', AuthController.changePassword);
 router.post('/me/email-recuperacao/enviar', AuthController.sendRecoveryEmailValidation);
 router.post('/email-recuperacao/confirmar', authRateLimitMiddleware(), AuthController.confirmRecoveryEmail);
 // Retorna o JWT para uso no Socket.IO (lido do cookie HttpOnly)

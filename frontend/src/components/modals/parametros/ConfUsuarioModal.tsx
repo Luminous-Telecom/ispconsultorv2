@@ -7,6 +7,7 @@ import {
   FormField,
   Loading,
   SalvarButton,
+  TrocarSenhaButton,
   ValidarButton,
 } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
@@ -51,6 +52,10 @@ const ConfUsuarioModal: React.FC<ConfUsuarioModalProps> = ({
   const [emailRecuperacaoVerificado, setEmailRecuperacaoVerificado] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
+  const [isPasswordStep, setIsPasswordStep] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [securityHeaderActions, setSecurityHeaderActions] = useState<React.ReactNode>(null);
 
   const { data: profile, isLoading } = useQuery({
@@ -80,20 +85,35 @@ const ConfUsuarioModal: React.FC<ConfUsuarioModalProps> = ({
     }
   }, [profile, syncFromProfile]);
 
+  const resetPasswordFields = useCallback(() => {
+    setIsPasswordStep(false);
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+  }, []);
+
   useEffect(() => {
     if (!show) {
       setActiveTab('configuracoes');
       setIsPending(false);
       setIsValidating(false);
       setSecurityHeaderActions(null);
+      resetPasswordFields();
     }
-  }, [show]);
+  }, [show, resetPasswordFields]);
+
+  useEffect(() => {
+    if (activeTab !== 'configuracoes') {
+      resetPasswordFields();
+    }
+  }, [activeTab, resetPasswordFields]);
 
   const handleClose = useCallback(() => {
     setActiveTab('configuracoes');
     setSecurityHeaderActions(null);
+    resetPasswordFields();
     onClose();
-  }, [onClose]);
+  }, [onClose, resetPasswordFields]);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,6 +131,36 @@ const ConfUsuarioModal: React.FC<ConfUsuarioModalProps> = ({
       syncFromProfile(res.data);
       queryClient.setQueryData(['auth-me-profile'], res.data);
       success(t('userConfig.saveSuccess'));
+    } catch (err) {
+      showApiError(err, CONTEXT_ERROR_MESSAGES.USER_UPDATE_ERROR);
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPassword || newPassword.length < 6) {
+      showApiError(t('userConfig.changePasswordMin'));
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      showApiError(t('userConfig.changePasswordMismatch'));
+      return;
+    }
+    setIsPending(true);
+    try {
+      const res = await authService.changePassword(
+        currentPassword,
+        newPassword,
+        confirmPassword
+      );
+      if (!res.success) {
+        showApiError(res.message || CONTEXT_ERROR_MESSAGES.USER_UPDATE_ERROR);
+        return;
+      }
+      success(t('userConfig.changePasswordSuccess'));
+      resetPasswordFields();
     } catch (err) {
       showApiError(err, CONTEXT_ERROR_MESSAGES.USER_UPDATE_ERROR);
     } finally {
@@ -206,17 +256,41 @@ const ConfUsuarioModal: React.FC<ConfUsuarioModalProps> = ({
   );
 
   const headerActionsContent = useMemo(() => {
-    const headerButtons =
-      activeTab === 'seguranca' && securityHeaderActions ? (
-        securityHeaderActions
-      ) : (
+    let headerButtons: React.ReactNode;
+    if (activeTab === 'seguranca' && securityHeaderActions) {
+      headerButtons = securityHeaderActions;
+    } else if (activeTab === 'configuracoes' && isPasswordStep) {
+      headerButtons = (
+        <>
+          <CancelarButton
+            type="button"
+            onClick={resetPasswordFields}
+            isPending={isPending}
+          />
+          <TrocarSenhaButton
+            type="submit"
+            form="conf-usuario-password-form"
+            isPending={isPending}
+          />
+        </>
+      );
+    } else {
+      headerButtons = (
         <>
           <CancelarButton type="button" onClick={handleClose} isPending={isPending} />
           {activeTab === 'configuracoes' ? (
-            <SalvarButton type="submit" form="conf-usuario-form" isPending={isPending} />
+            <>
+              <TrocarSenhaButton
+                type="button"
+                onClick={() => setIsPasswordStep(true)}
+                disabled={isPending}
+              />
+              <SalvarButton type="submit" form="conf-usuario-form" isPending={isPending} />
+            </>
           ) : null}
         </>
       );
+    }
 
     return (
       <div className="conf-usuario-header-unified">
@@ -233,7 +307,16 @@ const ConfUsuarioModal: React.FC<ConfUsuarioModalProps> = ({
         </div>
       </div>
     );
-  }, [activeTab, securityHeaderActions, tabs, isMobile, handleClose, isPending]);
+  }, [
+    activeTab,
+    securityHeaderActions,
+    isPasswordStep,
+    tabs,
+    isMobile,
+    handleClose,
+    isPending,
+    resetPasswordFields,
+  ]);
 
   useLayoutEffect(() => {
     if (!skipWrapper || !onHeaderActionsReady) return;
@@ -247,7 +330,61 @@ const ConfUsuarioModal: React.FC<ConfUsuarioModalProps> = ({
     };
   }, [skipWrapper, onHeaderActionsReady, headerActionsContent, show]);
 
-  const settingsContent = (
+  const passwordContent = (
+    <form
+      id="conf-usuario-password-form"
+      onSubmit={handleChangePassword}
+      className="form-modal-simple"
+    >
+      <div className="form-section-heading-row">
+        <span className="form-section-heading-pill">{t('userConfig.changePassword')}</span>
+        <div className="form-section-heading-line" aria-hidden />
+      </div>
+      <div className="row g-2">
+        <div className="col-12">
+          <FormField
+            name="current_password"
+            type="password"
+            label={t('userConfig.currentPassword')}
+            value={currentPassword}
+            onChange={(v) => setCurrentPassword(String(v))}
+            required
+            size="sm"
+            autoComplete="current-password"
+          />
+        </div>
+        <div className="col-12">
+          <FormField
+            name="new_password"
+            type="password"
+            label={t('userConfig.newPassword')}
+            value={newPassword}
+            onChange={(v) => setNewPassword(String(v))}
+            required
+            size="sm"
+            autoComplete="new-password"
+            helpText={t('userConfig.changePasswordMin')}
+          />
+        </div>
+        <div className="col-12">
+          <FormField
+            name="confirm_password"
+            type="password"
+            label={t('userConfig.confirmPassword')}
+            value={confirmPassword}
+            onChange={(v) => setConfirmPassword(String(v))}
+            required
+            size="sm"
+            autoComplete="new-password"
+          />
+        </div>
+      </div>
+    </form>
+  );
+
+  const settingsContent = isPasswordStep ? (
+    passwordContent
+  ) : (
     <form id="conf-usuario-form" onSubmit={handleSaveProfile} className="form-modal-simple">
       <div className="form-section-heading-row">
         <span className="form-section-heading-pill">{t('userConfig.profileSection')}</span>

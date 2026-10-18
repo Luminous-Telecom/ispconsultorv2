@@ -201,6 +201,17 @@ export class TwoFactorService {
     });
   }
 
+  /** Desativa o 2FA atual (com senha + código) e inicia um novo setup com QR. */
+  static async reconfigure(
+    usuarioId: number,
+    email: string,
+    password: string,
+    code: string
+  ): Promise<{ secret: string; otpauth_url: string; qr_data_url: string }> {
+    await this.disable(usuarioId, password, code);
+    return this.startSetup(usuarioId, email);
+  }
+
   /** Admin remove 2FA do usuário (ex.: perdeu o autenticador). */
   static async adminReset(usuarioId: number): Promise<void> {
     const usuario = await prisma.cadastros_usuarios.findUnique({ where: { id: usuarioId } });

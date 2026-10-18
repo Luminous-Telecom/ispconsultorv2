@@ -167,6 +167,13 @@ export const authService = {
     return defaultApiClient.post<{ enabled: boolean }>('/auth/2fa/disable', { password, code });
   },
 
+  async reconfigureTwoFactor(
+    password: string,
+    code: string
+  ): Promise<ApiResponse<TwoFactorSetup>> {
+    return defaultApiClient.post<TwoFactorSetup>('/auth/2fa/reconfigure', { password, code });
+  },
+
   async setEmailTwoFactor(enabled: boolean): Promise<ApiResponse<{ email_2fa_enabled: boolean }>> {
     return defaultApiClient.post<{ email_2fa_enabled: boolean }>('/auth/2fa/email', { enabled });
   },
@@ -205,6 +212,18 @@ export const authService = {
     payload: UpdateCurrentUserPayload
   ): Promise<ApiResponse<CurrentUser>> {
     return defaultApiClient.patch<CurrentUser>('/auth/me', payload);
+  },
+
+  async changePassword(
+    currentPassword: string,
+    password: string,
+    passwordConfirmation: string
+  ): Promise<ApiResponse<{ changed: boolean }>> {
+    return defaultApiClient.post<{ changed: boolean }>('/auth/me/change-password', {
+      current_password: currentPassword,
+      password,
+      password_confirmation: passwordConfirmation,
+    });
   },
 
   async sendRecoveryEmailValidation(): Promise<ApiResponse<{ sent_to: string }>> {

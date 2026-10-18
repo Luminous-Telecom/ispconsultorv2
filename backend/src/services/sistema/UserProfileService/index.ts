@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from 'crypto';
+import * as bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
 import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
@@ -104,6 +105,35 @@ export class UserProfileService {
     return this.getProfile(usuarioId);
   }
 
+  static async changePassword(
+    usuarioId: number,
+    currentPassword: string,
+    newPassword: string
+  ): Promise<void> {
+    const usuario = await prisma.cadastros_usuarios.findUnique({ where: { id: usuarioId } });
+    if (!usuario) {
+      throw new Error('Usuário não encontrado');
+    }
+    const ok = await bcrypt.compare(currentPassword, usuario.password_hash);
+    if (!ok) {
+      throw new Error('Senha atual incorreta');
+    }
+    if (!newPassword || newPassword.length < 6) {
+      throw new Error('Nova senha deve ter pelo menos 6 caracteres');
+    }
+    if (currentPassword === newPassword) {
+      throw new Error('A nova senha deve ser diferente da atual');
+    }
+    await prisma.cadastros_usuarios.update({
+      where: { id: usuarioId },
+      data: {
+        password_hash: await bcrypt.hash(newPassword, 10),
+        precisa_trocar_senha: false,
+        updated_at: new Date(),
+      },
+    });
+  }
+
   /** Envia link de confirmação para o e-mail de recuperação cadastrado. */
   static async sendRecoveryEmailValidation(
     usuarioId: number,
@@ -139,7 +169,8 @@ export class UserProfileService {
       },
     });
 
-    const confirmUrl = `${confirmBaseUrl.replace(/\/$/, '')}/adm?confirmar_email_recuperacao=${encodeURIComponent(token)}`;
+    // Link público em /login (igual redefinir_senha) — /adm exige sessão e descartava o token
+    const confirmUrl = `${confirmBaseUrl.replace(/\/$/, '')}/login?confirmar_email_recuperacao=${encodeURIComponent(token)}`;
 
     const transporter = nodemailer.createTransport({
       host: servidor.host,

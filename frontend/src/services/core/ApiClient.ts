@@ -27,6 +27,7 @@ const AUTH_HEADER_SKIP_ROUTES = [
   '/api/auth/login',
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
+  '/api/auth/email-recuperacao/confirmar',
   '/api/auth/2fa/verify',
   '/api/auth/2fa/email/send',
   '/api/auth/2fa/webauthn/login-options',

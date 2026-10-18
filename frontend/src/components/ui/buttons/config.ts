@@ -57,6 +57,11 @@ export type SystemButtonAction =
   | 'entrar'
   | 'enviarSenha'
   | 'alterarSenha'
+  | 'trocarSenha'
+  | 'ativar2fa'
+  | 'reconfigurar2fa'
+  | 'desativar2fa'
+  | 'adicionarChaveAcesso'
   | 'copiarCodigoBarras'
   | 'copiarPix'
   | 'aplicar'
@@ -141,6 +146,11 @@ export const SYSTEM_BUTTON_CONFIG: Record<SystemButtonAction, SystemButtonStyleC
   entrar: { variant: 'primary', defaultSize: 'md', i18nKey: 'login.enter' },
   enviarSenha: { variant: 'primary', defaultSize: 'md', defaultType: 'submit', i18nKey: 'central.sendPassword' },
   alterarSenha: { variant: 'primary', defaultSize: 'md', defaultType: 'submit', i18nKey: 'central.changePassword' },
+  trocarSenha: { variant: 'primary', defaultSize: 'sm', i18nKey: 'buttons.changePassword' },
+  ativar2fa: { variant: 'primary', defaultSize: 'sm', i18nKey: 'buttons.enable2fa' },
+  reconfigurar2fa: { variant: 'primary', defaultSize: 'sm', i18nKey: 'buttons.reconfigure2fa' },
+  desativar2fa: { variant: 'danger', defaultSize: 'sm', i18nKey: 'buttons.disable2fa' },
+  adicionarChaveAcesso: { variant: 'primary', defaultSize: 'sm', i18nKey: 'buttons.addPasskey' },
   copiarCodigoBarras: { variant: 'secondary', defaultSize: 'sm', i18nKey: 'central.copyBarcode' },
   copiarPix: { variant: 'secondary', defaultSize: 'sm', i18nKey: 'central.copyPix' },
   aplicar: { variant: 'primary', defaultSize: 'sm', i18nKey: 'buttons.apply' },
@@ -257,6 +267,11 @@ export const SYSTEM_BUTTON_EXPORT_NAMES: Record<SystemButtonAction, string> = {
   entrar: 'EntrarButton',
   enviarSenha: 'EnviarSenhaButton',
   alterarSenha: 'AlterarSenhaButton',
+  trocarSenha: 'TrocarSenhaButton',
+  ativar2fa: 'Ativar2faButton',
+  reconfigurar2fa: 'Reconfigurar2faButton',
+  desativar2fa: 'Desativar2faButton',
+  adicionarChaveAcesso: 'AdicionarChaveAcessoButton',
   copiarCodigoBarras: 'CopiarCodigoBarrasButton',
   copiarPix: 'CopiarPixButton',
   aplicar: 'AplicarButton',

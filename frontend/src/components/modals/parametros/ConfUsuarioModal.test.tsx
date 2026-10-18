@@ -136,6 +136,14 @@ describe('ConfUsuarioModal', () => {
     expect(screen.getByRole('button', { name: 'buttons.validate' })).toBeTruthy();
   });
 
+  it('mostra Trocar senha nos botões de ação da aba Configurações', async () => {
+    renderModal();
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('Ana')).toBeTruthy();
+    });
+    expect(screen.getByRole('button', { name: 'buttons.changePassword' })).toBeTruthy();
+  });
+
   it('mostra V quando e-mail de recuperação está validado', async () => {
     mockGetCurrentUser.mockResolvedValue({
       success: true,
