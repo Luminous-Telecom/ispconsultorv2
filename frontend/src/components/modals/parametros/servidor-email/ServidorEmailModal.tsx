@@ -140,23 +140,29 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
   });
 
   useEffect(() => {
-    if (servidorAtivo?.data) {
-      setFormData({
-        host: servidorAtivo.data.host,
-        porta: servidorAtivo.data.porta,
-        usuario: servidorAtivo.data.usuario,
-        senha: '',
-        ssl: servidorAtivo.data.ssl,
-        tls: servidorAtivo.data.tls,
-        nome_remetente: servidorAtivo.data.nome_remetente,
-        email_remetente: servidorAtivo.data.email_remetente,
-        timeout: servidorAtivo.data.timeout,
-        tentativas: servidorAtivo.data.tentativas,
-        intervalo_tentativas: servidorAtivo.data.intervalo_tentativas
-      });
+    if (!show) {
+      setFormData(INITIAL_FORM_DATA);
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [servidorAtivo?.data?.id]);
+    if (servidorAtivo?.data) {
+      const data = servidorAtivo.data;
+      setFormData({
+        host: data.host ?? '',
+        porta: data.porta ?? 587,
+        usuario: data.usuario ?? '',
+        senha: '',
+        ssl: Boolean(data.ssl),
+        tls: data.tls !== false,
+        nome_remetente: data.nome_remetente ?? '',
+        email_remetente: data.email_remetente ?? '',
+        timeout: data.timeout ?? 30000,
+        tentativas: data.tentativas ?? 3,
+        intervalo_tentativas: data.intervalo_tentativas ?? 5000,
+      });
+    } else if (servidorAtivo !== undefined) {
+      setFormData(INITIAL_FORM_DATA);
+    }
+  }, [show, servidorAtivo]);
 
   useEffect(() => {
     if (!mensagemType) {
@@ -340,7 +346,11 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
       <div className="email-modal-content">
         {/* Conteúdo das Abas */}
         <div
-          className={`tab-content email-tab-content email-tab-content-padded ${activeTab === 'mensagens' ? 'email-tab-content-scrollable' : ''}`}
+          className={
+            activeTab === 'mensagens'
+              ? 'tab-content email-tab-content email-tab-content-padded email-tab-content-scrollable'
+              : 'tab-content email-tab-content email-tab-content-padded'
+          }
           id="emailTabContent"
         >
           <form id="servidor-email-form" onSubmit={handleSubmit} className="form-modal-simple">

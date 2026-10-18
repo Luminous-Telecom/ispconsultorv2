@@ -37,7 +37,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
             placeholder="587"
             required={true}
             size="sm"
-            value={formData.porta.toString()}
+            value={String(formData.porta ?? 587)}
             onChange={(value) => onChange('porta', parseInt(value as string) || 587)}
           />
         </div>
@@ -121,7 +121,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
             type="number"
             label={t('emailServer.timeout')}
             size="sm"
-            value={formData.timeout.toString()}
+            value={String(formData.timeout ?? 30000)}
             onChange={(value) => onChange('timeout', parseInt(value as string) || 30000)}
           />
         </div>

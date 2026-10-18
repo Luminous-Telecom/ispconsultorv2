@@ -264,8 +264,8 @@ body .draggable-modal-container-custom .modal-body.draggable-modal-body-custom:h
 }
 
 /* Rich text redimensionável: aba rola quando o TinyMCE cresce */
-[class$='-tab-content-padded']:has(.modal-rich-text-editor),
-form.form-modal-simple:has(.modal-rich-text-editor) > [class$='-tab-content-padded'] {
+[class*='-tab-content-padded']:has(.modal-rich-text-editor),
+form.form-modal-simple:has(.modal-rich-text-editor) > [class*='-tab-content-padded'] {
   flex: 0 0 auto !important;
   min-height: auto !important;
   overflow-y: auto !important;
@@ -330,8 +330,8 @@ form.form-modal-simple:has(.modal-rich-text-editor) > [class$='-tab-content-padd
   min-height: 0 !important;
 }
 
-/* Modal tabs - conteúdo com padding (qualquer *-tab-content-padded) */
-[class$='-tab-content-padded'] {
+/* Modal tabs - conteúdo com padding (qualquer *-tab-content-padded; *= tolera classes extras/espaços) */
+[class*='-tab-content-padded'] {
   flex: 1 1 0 !important;
   min-height: 0 !important;
   display: flex !important;
@@ -4819,7 +4819,7 @@ textarea:focus {
 }
 
 /* Abas com padding próprio: evitar padding duplicado em wrapper interno */
-[class$='-tab-content-padded'] > .form-modal-simple {
+[class*='-tab-content-padded'] > .form-modal-simple {
   padding: 0 !important;
 }
 
@@ -4970,7 +4970,7 @@ form p.text-muted.small {
 
 /* Responsividade */
 @media (max-width: 767.98px) {
-  [class$='-tab-content-padded'] {
+  [class*='-tab-content-padded'] {
     padding: 16px;
 
     .form-field {

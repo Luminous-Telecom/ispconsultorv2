@@ -108,7 +108,7 @@ const headerActionsContent = (
 
 - **Abas (visual)**: usar `tabsClassName` com `*-tabs-unified` (padrão Agente: `banco-tabs-unified`). Aba ativa = `bg-primary`; corpo do modal = mesma cor via `*-modal-content`.
 - **`*-modal-content`**: nome da classe **deve** terminar/conter `-modal-content` (ex.: `conf-usuario-modal-content`, `banco-modal-content`) — sem isso o fundo fica `bg-modal` e a aba ativa “não continua” no conteúdo.
-- **`*-tab-content-padded`**: obrigatório em aba de formulário — layout horizontal (label à esquerda, input à direita). Sem `-padded`, o form fica vertical / fora do padrão.
+- **`*-tab-content-padded`**: obrigatório em aba de formulário — layout horizontal (label à esquerda, input à direita). CSS usa `[class*='-tab-content-padded']` (não `$=` — espaço no fim do `className` quebrava o padding). Sem `-padded`, o form fica vertical / fora do padrão.
 - Aba com tabela → `EmbeddedTablePanel` / `*-tab-content-scrollable` / `no-padding` — **não** usar `-padded` nem `form-modal-simple`
 - Layout de campos: `frontend-form-modal-layout.mdc`
 - Referências: `AgentModalHeader` (abas), `DadosEmpresaModal`, `ServidorEmailModal`, `ConfUsuarioModal`
