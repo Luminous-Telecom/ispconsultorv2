@@ -320,7 +320,7 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
                   placeholder="AA.AAA.AAA/AAAA-00"
                   maxLength={18}
                   required
-                  leading={<CartaoCnpjButton type="button" onClick={openCartaoCnpj} />}
+                  trailing={<CartaoCnpjButton type="button" onClick={openCartaoCnpj} />}
                 />
               </div>
             </div>

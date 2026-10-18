@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PositionedFixed, NavLinkButton } from 'components/ui';
+import { usePrefersRealHover } from 'hooks/usePrefersRealHover';
 
 export interface ModalTabItem<T extends string = string> {
   id: T;
@@ -20,6 +21,9 @@ interface ModalTabsOverflowProps<T extends string = string> {
 
 const OVERFLOW_BUTTON_WIDTH = 44;
 
+/** Mesmo atraso do menu superior (~0,25 s) ao passar o mouse nas abas. */
+export const MODAL_TAB_HOVER_DELAY_MS = 250;
+
 function ModalTabsOverflow<T extends string = string>({
   tabs,
   activeTab,
@@ -29,15 +33,26 @@ function ModalTabsOverflow<T extends string = string>({
   isMobile = false,
   id,
 }: ModalTabsOverflowProps<T>) {
+  const prefersHover = usePrefersRealHover();
   const containerRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLUListElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [visibleCount, setVisibleCount] = useState(tabs.length);
   const [showDropdown, setShowDropdown] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
   const tabsClassNames = `nav nav-tabs ${tabsClassName}`.trim();
+
+  const clearHoverTimer = useCallback(() => {
+    if (hoverTimerRef.current !== null) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => () => clearHoverTimer(), [clearHoverTimer]);
 
   const calculateVisibleCount = useCallback(() => {
     if (isMobile || tabs.length === 0) {
@@ -132,14 +147,20 @@ function ModalTabsOverflow<T extends string = string>({
     });
   }, []);
 
+  const openDropdown = useCallback(() => {
+    calculateDropdownPosition();
+    setShowDropdown(true);
+  }, [calculateDropdownPosition]);
+
   const handleToggleDropdown = (event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
 
     if (!showDropdown) {
-      calculateDropdownPosition();
+      openDropdown();
+      return;
     }
-    setShowDropdown((current) => !current);
+    setShowDropdown(false);
   };
 
   useEffect(() => {
@@ -176,16 +197,48 @@ function ModalTabsOverflow<T extends string = string>({
     };
   }, [calculateDropdownPosition, showDropdown]);
 
-  const handleTabClick = (tab: ModalTabItem<T>) => {
-    if (tab.disabled) return;
-    onTabChange(tab.id);
-    setShowDropdown(false);
-  };
+  const handleTabChange = useCallback(
+    (tab: ModalTabItem<T>) => {
+      if (tab.disabled) return;
+      clearHoverTimer();
+      onTabChange(tab.id);
+      setShowDropdown(false);
+    },
+    [clearHoverTimer, onTabChange]
+  );
+
+  const scheduleTabChange = useCallback(
+    (tab: ModalTabItem<T>) => {
+      if (!prefersHover || isMobile || tab.disabled || tab.id === activeTab) {
+        return;
+      }
+      clearHoverTimer();
+      hoverTimerRef.current = setTimeout(() => {
+        hoverTimerRef.current = null;
+        onTabChange(tab.id);
+        setShowDropdown(false);
+      }, MODAL_TAB_HOVER_DELAY_MS);
+    },
+    [activeTab, clearHoverTimer, isMobile, onTabChange, prefersHover]
+  );
+
+  const scheduleOverflowOpen = useCallback(() => {
+    if (!prefersHover || isMobile) {
+      return;
+    }
+    clearHoverTimer();
+    hoverTimerRef.current = setTimeout(() => {
+      hoverTimerRef.current = null;
+      openDropdown();
+    }, MODAL_TAB_HOVER_DELAY_MS);
+  }, [clearHoverTimer, isMobile, openDropdown, prefersHover]);
 
   const renderTabButton = (tab: ModalTabItem<T>) => (
     <NavLinkButton
       className={`nav-link modal-tab-hover ${activeTab === tab.id ? 'active' : ''} ${tab.disabled && disabledClassName ? disabledClassName : ''}`}
-      onClick={() => handleTabClick(tab)}
+      onClick={() => handleTabChange(tab)}
+      onMouseEnter={() => scheduleTabChange(tab)}
+      onMouseLeave={clearHoverTimer}
       disabled={tab.disabled}
       ariaLabel={tab.label}
     >
@@ -226,7 +279,11 @@ function ModalTabsOverflow<T extends string = string>({
       </ul>
 
       {hasOverflow && (
-        <div className="modal-tabs-overflow-menu">
+        <div
+          className="modal-tabs-overflow-menu"
+          onMouseEnter={scheduleOverflowOpen}
+          onMouseLeave={clearHoverTimer}
+        >
           <NavLinkButton
             ref={triggerRef}
             className={`nav-link modal-tab-hover modal-tabs-overflow-trigger ${isOverflowActive ? 'active' : ''} ${showDropdown ? 'open' : ''}`}
@@ -245,12 +302,23 @@ function ModalTabsOverflow<T extends string = string>({
               transform="translateX(-100%)"
               className="modal-tabs-overflow-dropdown"
             >
-              <div ref={dropdownRef} role="menu">
+              <div
+                ref={dropdownRef}
+                role="menu"
+                onMouseEnter={clearHoverTimer}
+                onMouseLeave={() => {
+                  if (prefersHover) {
+                    setShowDropdown(false);
+                  }
+                }}
+              >
                 {overflowTabs.map((tab) => (
                   <NavLinkButton
                     key={tab.id}
                     className={`modal-tabs-overflow-dropdown-item ${activeTab === tab.id ? 'active' : ''}`}
-                    onClick={() => handleTabClick(tab)}
+                    onClick={() => handleTabChange(tab)}
+                    onMouseEnter={() => scheduleTabChange(tab)}
+                    onMouseLeave={clearHoverTimer}
                     disabled={tab.disabled}
                     role="menuitem"
                     ariaLabel={tab.label}

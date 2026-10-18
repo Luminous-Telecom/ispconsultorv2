@@ -62,7 +62,8 @@ const UserMenuFlyout: React.FC<UserMenuFlyoutProps> = ({
       return;
     }
     const rect = el.getBoundingClientRect();
-    const flyoutWidth = 180;
+    const flyout = document.querySelector<HTMLElement>('[data-user-menu-flyout]');
+    const flyoutWidth = flyout?.offsetWidth || 128;
     const gap = 6;
     const openLeft = rect.left - flyoutWidth - gap;
     const left = openLeft >= 8 ? openLeft : Math.round(rect.right + gap);
@@ -77,7 +78,9 @@ const UserMenuFlyout: React.FC<UserMenuFlyoutProps> = ({
       return;
     }
     updatePosition();
-  }, [isOpen, updatePosition]);
+    const frame = window.requestAnimationFrame(() => updatePosition());
+    return () => window.cancelAnimationFrame(frame);
+  }, [isOpen, updatePosition, options]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -172,9 +175,11 @@ const UserMenuFlyout: React.FC<UserMenuFlyoutProps> = ({
                 }}
                 ariaLabel={option.label}
               >
-                {option.icon && <span className="me-2">{option.icon}</span>}
-                <span className="text-truncate">{option.label}</span>
-                {option.active && <i className="bi bi-check-lg ms-auto" aria-hidden />}
+                {option.icon && <span>{option.icon}</span>}
+                <span>{option.label}</span>
+                {option.active && (
+                  <i className="bi bi-check-lg layout-user-menu-flyout__check" aria-hidden />
+                )}
               </NavLinkButton>
             ))}
           </DynamicStyledElement>,

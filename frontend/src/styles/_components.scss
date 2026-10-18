@@ -4764,25 +4764,45 @@ textarea:focus {
   margin-bottom: 0.5rem;
 }
 
-.form-field-with-leading {
+/* Botão colado à direita do input (mesma altura, sem gap) */
+.form-field-with-trailing {
   display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
+  align-items: stretch;
+  gap: 0;
   width: 100%;
 }
 
-.form-field-with-leading > .btn {
-  flex: 0 0 auto;
-}
-
-.form-field-with-leading-input {
+.form-field-with-trailing-input {
   flex: 1 1 auto;
   min-width: 0;
 
   > .form-control,
   > .input-wrapper {
     width: 100%;
+    height: 100%;
   }
+
+  .form-control {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+  }
+}
+
+.form-field-with-trailing > .btn {
+  flex: 0 0 auto;
+  align-self: stretch;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center;
+  margin: 0 0 0 -1px;
+  height: auto !important;
+  min-height: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  white-space: nowrap;
+  box-sizing: border-box !important;
 }
 
 .form-field .form-label {

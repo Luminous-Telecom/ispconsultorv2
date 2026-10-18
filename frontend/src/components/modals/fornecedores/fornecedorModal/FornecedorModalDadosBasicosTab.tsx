@@ -60,7 +60,7 @@ const FornecedorModalDadosBasicosTab: React.FC<FornecedorModalDadosBasicosTabPro
         required
         error={errors.cpf_cnpj}
         formPrefix={formPrefix}
-        leading={formData.tipo_pessoa === 'JURIDICA' ? <CartaoCnpjButton type="button" onClick={openCartaoCnpj} /> : undefined}
+        trailing={formData.tipo_pessoa === 'JURIDICA' ? <CartaoCnpjButton type="button" onClick={openCartaoCnpj} /> : undefined}
       />
     </div>
 

@@ -72,7 +72,7 @@ const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: Fi
             value={dados.cnpj}
             onChange={(value) => handleInputChange('cnpj', String(value ?? ''))}
             disabled={isPending}
-            leading={<CartaoCnpjButton type="button" onClick={openCartaoCnpj} />}
+            trailing={<CartaoCnpjButton type="button" onClick={openCartaoCnpj} />}
           />
         </div>
         <div className="col-12">

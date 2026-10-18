@@ -307,7 +307,8 @@
     > textarea.form-control,
     > .input-group,
     > .copyable-input,
-    > .input-wrapper {
+    > .input-wrapper,
+    > .form-field-with-trailing {
       width: 100%;
     }
 
@@ -328,10 +329,6 @@
     > .form-check {
       padding-top: 0.25rem;
       margin-bottom: 0;
-    }
-
-    &:has(> .form-field-with-leading) {
-      max-width: calc(var(--form-input-max-width) + 9rem);
     }
   }
 

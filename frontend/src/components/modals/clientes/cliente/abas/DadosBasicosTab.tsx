@@ -30,7 +30,7 @@ const DadosBasicosTab: React.FC<ClienteTabProps> = ({
         disabled={isSubmitting}
         formPrefix={formPrefix}
         error={errors.cnpj}
-        leading={<CartaoCnpjButton type="button" onClick={openCartaoCnpj} />}
+        trailing={<CartaoCnpjButton type="button" onClick={openCartaoCnpj} />}
         />
       </div>
       <div className="col-12">

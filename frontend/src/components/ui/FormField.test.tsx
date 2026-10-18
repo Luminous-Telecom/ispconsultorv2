@@ -14,19 +14,22 @@ function renderField(ui: React.ReactElement) {
 }
 
 describe('FormField', () => {
-  it('coloca o conteúdo leading antes do input', () => {
+  it('coloca o trailing depois do input, como extensão na mesma coluna', () => {
     renderField(
       <FormField
         name="cnpj"
         label="CNPJ"
         value=""
         onChange={jest.fn()}
-        leading={<button type="button">Cartão CNPJ</button>}
+        trailing={<button type="button">Cartão CNPJ</button>}
       />,
     );
 
     const botao = screen.getByRole('button', { name: 'Cartão CNPJ' });
     const input = screen.getByRole('textbox', { name: 'CNPJ' });
-    expect(botao.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const group = botao.parentElement;
+    expect(input.compareDocumentPosition(botao) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(group?.classList.contains('form-field-with-trailing')).toBe(true);
+    expect(group?.parentElement?.classList.contains('form-field-control')).toBe(true);
   });
 });
