@@ -3,8 +3,8 @@ import { createPortal } from 'react-dom';
 import { DynamicStyledElement } from 'components/ui/DynamicStyleElements';
 import { NavLinkButton } from 'components/ui';
 
-const OPEN_DELAY_MS = 200;
-const CLOSE_DELAY_MS = 200;
+const OPEN_DELAY_MS = 40;
+const CLOSE_DELAY_MS = 80;
 /** Espaço entre o painel do menu e o flyout (igual ao gap do dropdown do usuário). */
 const FLYOUT_GAP_PX = 8;
 const VIEWPORT_MARGIN_PX = 8;
