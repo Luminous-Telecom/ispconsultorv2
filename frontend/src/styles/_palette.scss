@@ -1,3 +1,6 @@
+@use "sass:map";
+@use "sass:string";
+
 // Paleta — único lugar com valor hexadecimal.
 // O tema emite --color-* e o restante do front reutiliza var(--color-*) ou palette-color().
 
@@ -135,7 +138,7 @@ $palette-tokens: (
 );
 
 @function palette-color($name) {
-  $value: map-get($palette-tokens, $name);
+  $value: map.get($palette-tokens, $name);
   @if $value == null {
     @error "Cor ausente na paleta: #{$name}";
   }
@@ -150,6 +153,6 @@ $palette-tokens: (
 
 @function select-chevron($color) {
   $hex: "#{$color}";
-  $bare: str-slice($hex, 2);
+  $bare: string.slice($hex, 2);
   @return url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23#{$bare}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
 }

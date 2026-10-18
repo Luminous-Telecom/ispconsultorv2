@@ -12,6 +12,11 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { path: /^\/client-ip$/i },
   { path: /^\/api\/health/i },
   { path: /^\/api\/auth\/login$/i },
+  { method: 'POST', path: /^\/api\/auth\/2fa\/verify$/i }, // Segundo passo do login (token temporário)
+  { method: 'POST', path: /^\/api\/auth\/2fa\/email\/send$/i }, // Envio de OTP por e-mail no login (token 2fa_pending)
+  { method: 'POST', path: /^\/api\/auth\/2fa\/webauthn\/login-options$/i },
+  { method: 'POST', path: /^\/api\/auth\/2fa\/webauthn\/login-verify$/i },
+  { method: 'POST', path: /^\/api\/auth\/email-recuperacao\/confirmar$/i }, // Confirmação de e-mail de recuperação (token no body)
   { method: 'POST', path: /^\/api\/auth\/logout$/i }, // Logout limpa cookie — não exige token válido
   // Rotas TXT Blockdomi (protegidas por IP no blockdomiIpsPermitidosMiddleware)
   { path: /^\/api\/domain\/version\/?$/i },
@@ -186,7 +191,16 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
   }
 
   try {
-    const payload = jwt.verify(token, jwtSecret) as jwt.JwtPayload & { empresa_id?: number; api_token?: boolean };
+    const payload = jwt.verify(token, jwtSecret) as jwt.JwtPayload & {
+      empresa_id?: number;
+      api_token?: boolean;
+      purpose?: string;
+    };
+    // Token intermediário do 2FA não autoriza rotas do ERP
+    if (payload.purpose === '2fa_pending') {
+      res.status(404).end();
+      return;
+    }
     req.user = payload;
 
     next();

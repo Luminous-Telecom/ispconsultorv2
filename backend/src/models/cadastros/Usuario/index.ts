@@ -22,6 +22,10 @@ export class Usuario extends Model<
   declare precisa_trocar_senha: CreationOptional<boolean>;
   declare ultimo_login: CreationOptional<Date | null>;
   declare webhook_secret: CreationOptional<string | null>;
+  declare totp_enabled: CreationOptional<boolean>;
+  declare totp_secret_encrypted: CreationOptional<string | null>;
+  declare totp_temp_secret_encrypted: CreationOptional<string | null>;
+  declare totp_recovery_hashes: CreationOptional<string | null>;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 
@@ -91,6 +95,23 @@ Usuario.init(
       type: DataTypes.STRING(255),
       allowNull: true,
     },
+    totp_enabled: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    totp_secret_encrypted: {
+      type: DataTypes.STRING(512),
+      allowNull: true,
+    },
+    totp_temp_secret_encrypted: {
+      type: DataTypes.STRING(512),
+      allowNull: true,
+    },
+    totp_recovery_hashes: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,
@@ -110,7 +131,12 @@ Usuario.init(
     updatedAt: 'updated_at',
     defaultScope: {
       attributes: {
-        exclude: ['password_hash'],
+        exclude: [
+          'password_hash',
+          'totp_secret_encrypted',
+          'totp_temp_secret_encrypted',
+          'totp_recovery_hashes',
+        ],
       },
     },
     scopes: {

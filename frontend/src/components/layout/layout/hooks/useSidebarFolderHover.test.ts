@@ -136,7 +136,7 @@ describe('useSidebarFolderHover', () => {
     });
     act(() => {
       result.current.handleSidebarMouseLeave();
-      jest.advanceTimersByTime(500);
+      jest.advanceTimersByTime(SIDEBAR_FOLDER_CLOSE_DELAY_MS - 1);
       result.current.handleSidebarMouseEnter();
       jest.advanceTimersByTime(SIDEBAR_FOLDER_CLOSE_DELAY_MS);
     });

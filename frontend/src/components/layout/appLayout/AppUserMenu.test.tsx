@@ -4,6 +4,8 @@ import { I18nProvider } from 'contexts/I18nContext';
 import { FontSizeProvider } from 'contexts/FontSizeContext';
 import AppUserMenu from './AppUserMenu';
 
+const mockOpenModal = jest.fn();
+
 jest.mock('contexts/ThemeContext', () => ({
   useTheme: () => ({
     theme: 'light',
@@ -12,7 +14,16 @@ jest.mock('contexts/ThemeContext', () => ({
   }),
 }));
 
-function renderMenu() {
+jest.mock('contexts/ModalContext', () => ({
+  useModal: () => ({
+    openModal: mockOpenModal,
+    closeModal: jest.fn(),
+    activeModal: null,
+    modalData: null,
+  }),
+}));
+
+function renderMenu(onToggleUserMenu = jest.fn()) {
   localStorage.setItem('app-language', 'pt-BR');
   const userMenuRef = { current: null as HTMLDivElement | null };
   return render(
@@ -23,7 +34,7 @@ function renderMenu() {
           showUserMenu
           userMenuRef={userMenuRef}
           t={(key) => key}
-          onToggleUserMenu={jest.fn()}
+          onToggleUserMenu={onToggleUserMenu}
           onLogout={jest.fn()}
           userTitleFallback="Usuário"
         />
@@ -33,11 +44,16 @@ function renderMenu() {
 }
 
 describe('AppUserMenu', () => {
-  it('mostra tema, idioma e tamanho da fonte no menu', () => {
+  beforeEach(() => {
+    mockOpenModal.mockClear();
+  });
+
+  it('mostra tema, tamanho da fonte, conf do usuário e logout', () => {
     renderMenu();
     expect(screen.getByRole('button', { name: 'layout.theme' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'layout.language' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'layout.fontSize' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'layout.userConfig' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'nav.logout' })).toBeTruthy();
   });
 
   it('abre o flyout de tamanho da fonte no clique', () => {
@@ -46,5 +62,13 @@ describe('AppUserMenu', () => {
     expect(screen.getByRole('button', { name: 'layout.fontSizeSmall' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'layout.fontSizeMedium' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'layout.fontSizeLarge' })).toBeTruthy();
+  });
+
+  it('abre o modal conf-usuario ao clicar', () => {
+    const onToggleUserMenu = jest.fn();
+    renderMenu(onToggleUserMenu);
+    fireEvent.click(screen.getByRole('button', { name: 'layout.userConfig' }));
+    expect(onToggleUserMenu).toHaveBeenCalled();
+    expect(mockOpenModal).toHaveBeenCalledWith('conf-usuario');
   });
 });

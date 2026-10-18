@@ -1,6 +1,7 @@
 import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { UsuarioService } from '../../../services/cadastros/UsuarioService';
+import { TwoFactorService } from '../../../services/sistema/TwoFactorService';
 import * as Joi from 'joi';
 import { randomBytes } from 'crypto';
 import { logger } from '../../../utils/logger';
@@ -230,6 +231,55 @@ export class UsuarioController {
       sendSuccess(res, undefined, 'Usuário excluído com sucesso');
     } catch (error) {
       sendError(res, error, 'Erro ao excluir usuário', 500, true);
+    }
+  }
+
+  static async reset2fa(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+
+      const usuario = await UsuarioService.getById(id);
+      const empresaId = getEmpresaIdOrNull(req);
+
+      if (!usuario || !canAccessUsuario(usuario, empresaId)) {
+        sendNotFound(res, 'Usuário não encontrado');
+        return;
+      }
+
+      if (!usuario.totp_enabled) {
+        sendValidationError(res, 'Este usuário não possui autenticação em duas etapas ativada');
+        return;
+      }
+
+      const dadosAnteriores = {
+        ...toPlain(usuario),
+        password_hash: '[REDACTED]',
+        totp_enabled: true,
+      } as Record<string, unknown>;
+
+      await TwoFactorService.adminReset(usuario.id);
+
+      try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? usuario.empresa_id ?? null;
+        await registrarAtualizacao(
+          req,
+          'Usuario',
+          usuario.id,
+          dadosAnteriores,
+          { ...dadosAnteriores, totp_enabled: false },
+          'Autenticação em duas etapas redefinida pelo administrador',
+          empresaIdAudit
+        );
+      } catch {
+        /* não crítico */
+      }
+
+      logger.info('2FA redefinido para usuário', { usuario_id: usuario.id });
+      sendSuccess(res, { totp_enabled: false }, 'Autenticação em duas etapas redefinida');
+    } catch (error) {
+      sendError(res, error, 'Erro ao redefinir autenticação em duas etapas', 500, true, {
+        usuario_id: req.params.id,
+      });
     }
   }
 

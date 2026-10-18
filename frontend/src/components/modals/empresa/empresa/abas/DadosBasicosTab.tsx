@@ -27,17 +27,6 @@ const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: Fi
       <div className="row g-2">
         <div className="col-12">
           <FormField
-            name="id"
-            type="text"
-            label={t('company.id')}
-            size="md"
-            value={dados.id > 0 ? String(dados.id) : ''}
-            readOnly
-            disabled
-          />
-        </div>
-        <div className="col-12">
-          <FormField
             name="razao_social"
             type="text"
             label={t('company.razaoSocial')}

@@ -23,6 +23,8 @@ const FornecedorListModal = lazy(() => import('../modals/fornecedores').then(m =
 const ContasPagarListModal = lazy(() => import('../modals/contas-pagar').then(m => ({ default: m.ContasPagarListModal })));
 const NotaFiscalListModal = lazy(() => import('../modals/notas-fiscais/NotaFiscalListModal'));
 const UsuariosModal = lazy(() => import('../modals/parametros/UsuariosModal'));
+const SegurancaUsuarioModal = lazy(() => import('../modals/parametros/SegurancaUsuarioModal'));
+const ConfUsuarioModal = lazy(() => import('../modals/parametros/ConfUsuarioModal'));
 const RecursosSistemaModal = lazy(() => import('../modals/parametros/RecursosSistemaModal'));
 const DiasVencimentoModal = lazy(() => import('../modals/parametros/DiasVencimentoModal'));
 const AtualizacoesModal = lazy(() => import('../modals/parametros/AtualizacoesModal'));
@@ -153,6 +155,8 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
   'notas-fiscais': { component: NotaFiscalListModal, titleKey: 'modal.invoices', loadingMessageKey: 'ui.loadingPage', className: 'no-padding list-modal-no-body-scroll' },
   'dados-empresa': { component: DadosEmpresaModal, titleKey: 'modal.companyData', loadingMessageKey: 'ui.loadingPage' },
   usuarios: { component: UsuariosModal, titleKey: 'modal.users', loadingMessageKey: 'ui.loadingPage' },
+  'seguranca-usuario': { component: SegurancaUsuarioModal, titleKey: 'security.title', loadingMessageKey: 'ui.loadingPage', size: 'lg' },
+  'conf-usuario': { component: ConfUsuarioModal, titleKey: 'userConfig.title', loadingMessageKey: 'ui.loadingPage', size: 'lg' },
   'recursos-sistema': { component: RecursosSistemaModal, titleKey: 'modal.systemResources', loadingMessageKey: 'ui.loadingPage' },
   'servidor-email': { component: ServidorEmailModal, titleKey: 'modal.emailServer', loadingMessageKey: 'ui.loadingPage' },
   'servidor-whatsapp': { component: ServidorWhatsappModal, titleKey: 'modal.whatsappServer', loadingMessageKey: 'ui.loadingPage' },

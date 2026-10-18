@@ -495,10 +495,10 @@
   background: transparent;
 }
 
-/* Abertura/fechamento: altura animada empurra as pastas abaixo (Bootstrap .collapsing) */
+/* Abertura/fechamento: mesma duração/easing nos dois sentidos */
 .sidebar-accordion {
-  --sidebar-folder-collapse-duration: 0.45s;
-  --sidebar-folder-collapse-easing: cubic-bezier(0.33, 1, 0.68, 1);
+  --sidebar-folder-collapse-duration: 0.18s;
+  --sidebar-folder-collapse-easing: ease-in-out;
 }
 
 .sidebar .sidebar-accordion .accordion-collapse.show,

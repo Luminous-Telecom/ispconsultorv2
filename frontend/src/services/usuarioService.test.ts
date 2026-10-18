@@ -52,4 +52,11 @@ describe('UsuarioService', () => {
       expect(error).toBeTruthy();
     }
   });
+
+  it('reset2fa chama o endpoint do usuário', async () => {
+    getHttp().post.mockResolvedValue(ok({ totp_enabled: false }));
+    const result = await UsuarioService.reset2fa(9);
+    expect(String(getHttp().post.mock.calls[0][0])).toContain('/9/reset-2fa');
+    expect(result.data?.totp_enabled).toBe(false);
+  });
 });

@@ -245,6 +245,8 @@ export interface TranslationKeys {
   'layout.fontSizeSmall': string;
   'layout.fontSizeMedium': string;
   'layout.fontSizeLarge': string;
+  'layout.security': string;
+  'layout.userConfig': string;
   'layout.parameters': string;
   'layout.search': string;
   'layout.searchPlaceholder': string;
@@ -1414,6 +1416,81 @@ export interface TranslationKeys {
   'user.errorCreate': string;
   'user.errorUpdate': string;
 
+  // Security / 2FA
+  'security.title': string;
+  'security.twoFactorEnabled': string;
+  'security.totpSection': string;
+  'security.description': string;
+  'security.enable': string;
+  'security.disable': string;
+  'security.setupHelp': string;
+  'security.qrAlt': string;
+  'security.manualSecret': string;
+  'security.confirmCode': string;
+  'security.confirmCodeHelp': string;
+  'security.invalidCode': string;
+  'security.enabledSuccess': string;
+  'security.disabledSuccess': string;
+  'security.recoveryCodes': string;
+  'security.recoveryHelp': string;
+  'security.recoveryRemaining': string;
+  'security.disableHelp': string;
+  'security.disableCodeHelp': string;
+  'security.disableFieldsRequired': string;
+  'security.confirmDisable': string;
+  'security.adminReset': string;
+  'security.adminResetHelp': string;
+  'security.adminResetConfirm': string;
+  'security.adminResetSuccess': string;
+  'security.downloadRecoverySuccess': string;
+  'security.passkeySection': string;
+  'security.passkeyHelp': string;
+  'security.passkeyAdd': string;
+  'security.passkeyDefaultName': string;
+  'security.passkeyAddedSuccess': string;
+  'security.passkeyRemoveConfirm': string;
+  'security.passkeyRemovedSuccess': string;
+  'security.emailSection': string;
+  'security.emailEnabled': string;
+  'security.emailHelp': string;
+  'security.emailSmtpRequired': string;
+  'security.emailConfigureSmtp': string;
+  'security.emailEnabledSuccess': string;
+  'security.emailDisabledSuccess': string;
+  'security.trustedDevicesSection': string;
+  'security.trustedDevicesHelp': string;
+  'security.trustedDevicesEmpty': string;
+  'security.trustedDeviceUnknown': string;
+  'security.trustedDeviceExpires': string;
+  'security.trustedDeviceIp': string;
+  'security.trustedDeviceSavedAt': string;
+  'security.trustedDeviceRemoveConfirm': string;
+  'security.trustedDeviceRemovedSuccess': string;
+  'security.trustedDevicesRevokeAll': string;
+  'security.trustedDevicesRevokeAllConfirm': string;
+  'security.trustedDevicesRevokeAllSuccess': string;
+
+  // Conf. do usuário
+  'userConfig.title': string;
+  'userConfig.tabSettings': string;
+  'userConfig.tabSecurity': string;
+  'userConfig.tabTrustedDevices': string;
+  'userConfig.profileSection': string;
+  'userConfig.preferencesSection': string;
+  'userConfig.name': string;
+  'userConfig.email': string;
+  'userConfig.emailHelp': string;
+  'userConfig.recoveryEmail': string;
+  'userConfig.recoveryEmailHelp': string;
+  'userConfig.recoveryEmailRequired': string;
+  'userConfig.recoveryEmailVerified': string;
+  'userConfig.recoveryEmailSent': string;
+  'userConfig.recoveryEmailConfirmSuccess': string;
+  'userConfig.languageHelp': string;
+  'userConfig.themeHelp': string;
+  'userConfig.fontSizeHelp': string;
+  'userConfig.saveSuccess': string;
+
   // Email Server
   'emailServer.title': string;
   'emailServer.smtpHost': string;
@@ -1546,6 +1623,21 @@ export interface TranslationKeys {
   'login.allRightsReserved': string;
   'login.copyIp': string;
   'login.ipCopied': string;
+  'login.companyLogoAlt': string;
+  'login.companyLogoAltNamed': string;
+  'login.twoFactorTitle': string;
+  'login.twoFactorCode': string;
+  'login.twoFactorPlaceholder': string;
+  'login.twoFactorHelp': string;
+  'login.twoFactorHelpTotp': string;
+  'login.twoFactorHelpEmail': string;
+  'login.twoFactorHelpPasskey': string;
+  'login.twoFactorCodeRequired': string;
+  'login.twoFactorRemember': string;
+  'login.twoFactorSendEmail': string;
+  'login.twoFactorEmailSent': string;
+  'login.twoFactorEmailSentTo': string;
+  'login.twoFactorPasskey': string;
 
   // Layout
   'layout.logoutSuccess': string;

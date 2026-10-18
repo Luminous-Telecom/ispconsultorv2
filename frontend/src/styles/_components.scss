@@ -198,11 +198,15 @@ body .draggable-modal-container-custom .modal-body.draggable-modal-body-custom:h
   overflow: hidden !important;
 }
 
-/* Conteúdo com abas/tabelas: preencher todo o espaço disponível */
+/* Conteúdo com abas/tabelas: preencher o modal e fundo bg-primary (continua a aba ativa) */
 .draggable-modal-body-custom > [class*="-modal-content"] {
   flex: 1 1 0 !important;
   min-height: 0 !important;
   overflow: hidden !important;
+  height: 100%;
+  display: flex !important;
+  flex-direction: column !important;
+  background-color: var(--bg-primary) !important;
 }
 
 /* Form que envolve *-modal-content (ex: SaasEmpresaFormModal, BancoModal): preencher todo o modal */
@@ -326,18 +330,8 @@ form.form-modal-simple:has(.modal-rich-text-editor) > [class$='-tab-content-padd
   min-height: 0 !important;
 }
 
-/* Modal tabs - conteúdo com padding (estilo reutilizável para todos os modais com abas) */
-.cliente-tab-content-padded,
-.contrato-tab-content-padded,
-.plano-tab-content-padded,
-.fornecedor-tab-content-padded,
-.banco-tab-content-padded,
-.documento-tab-content-padded,
-.empresa-tab-content-padded,
-.whatsapp-tab-content-padded,
-.email-tab-content-padded,
-.ordem-servico-tab-content-padded,
-.sistema-tab-content-padded {
+/* Modal tabs - conteúdo com padding (qualquer *-tab-content-padded) */
+[class$='-tab-content-padded'] {
   flex: 1 1 0 !important;
   min-height: 0 !important;
   display: flex !important;
@@ -3321,7 +3315,11 @@ textarea:focus {
   opacity: 0.6 !important;
 }
 
-/* Estilo das abas no header unificado */
+/*
+ * Abas no header unificado — padrão Agente/Banco.
+ * Qualquer classe `*-tabs-unified` herda (não inventar classe sem estilo).
+ */
+[class*='-tabs-unified'],
 .banco-tabs-unified {
   --bs-nav-tabs-border-color: transparent !important;
   border-bottom: none !important;
@@ -3349,6 +3347,8 @@ textarea:focus {
     transition: all 0.2s ease !important;
     white-space: nowrap !important;
     cursor: pointer !important;
+    text-decoration: none !important;
+    outline: none !important;
   }
 
   .nav-link:hover,
@@ -3358,11 +3358,14 @@ textarea:focus {
     cursor: pointer !important;
   }
 
-  .nav-link.active {
+  .nav-link.active,
+  .nav-link.active:hover,
+  .nav-link.active:focus {
     background-color: var(--bg-primary) !important;
     color: var(--text-primary) !important;
     border: 1px solid var(--border-color) !important;
     border-bottom-color: var(--bg-primary) !important;
+    font-weight: 400 !important;
   }
 
   .nav-link:disabled,
@@ -3380,7 +3383,8 @@ textarea:focus {
 }
 
 /* Para mobile */
-.banco-tabs-mobile.banco-tabs-unified {
+.banco-tabs-mobile.banco-tabs-unified,
+[class*='-tabs-mobile'][class$='-tabs-unified'] {
   .nav-item {
     flex: 0 0 auto;
     margin-right: 0.0625rem !important;
@@ -4564,31 +4568,19 @@ textarea:focus {
 }
 
 /* Modo escuro — abas unificadas nos modais */
-[data-theme="dark"] {
-  .cliente-tabs-unified,
-  .contrato-tabs-unified,
-  .plano-tabs-unified,
-  .fornecedor-tabs-unified,
-  .banco-tabs-unified,
-  .documento-tabs-unified,
-  .empresa-tabs-unified,
-  .whatsapp-tabs-unified,
-  .email-tabs-unified,
-  .sistema-tabs-unified,
-  .ordem-servico-tabs-unified {
-    .nav-link:not(.active):not(:disabled):not(.disabled) {
-      color: var(--text-secondary) !important;
-      background-color: var(--bg-secondary) !important;
-    }
+[data-theme='dark'] [class*='-tabs-unified'] {
+  .nav-link:not(.active):not(:disabled):not(.disabled) {
+    color: var(--text-secondary) !important;
+    background-color: var(--bg-secondary) !important;
+  }
 
-    .nav-link.active,
-    .nav-link.active:hover,
-    .nav-link.active:focus {
-      color: var(--text-primary) !important;
-      background-color: var(--bg-primary) !important;
-      border-bottom-color: var(--bg-primary) !important;
-      font-weight: 400 !important;
-    }
+  .nav-link.active,
+  .nav-link.active:hover,
+  .nav-link.active:focus {
+    color: var(--text-primary) !important;
+    background-color: var(--bg-primary) !important;
+    border-bottom-color: var(--bg-primary) !important;
+    font-weight: 400 !important;
   }
 }
 
@@ -4788,7 +4780,8 @@ textarea:focus {
   }
 }
 
-.form-field-with-trailing > .btn {
+.form-field-with-trailing > .btn,
+.form-field-with-trailing > .form-field-verified {
   flex: 0 0 auto;
   align-self: stretch;
   display: inline-flex !important;
@@ -4803,6 +4796,17 @@ textarea:focus {
   border-bottom-left-radius: 0 !important;
   white-space: nowrap;
   box-sizing: border-box !important;
+}
+
+.form-field-with-trailing > .form-field-verified {
+  min-width: 2.25rem;
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+  border: 1px solid var(--border-color, var(--bs-border-color, #dee2e6));
+  border-left: 0;
+  background: var(--input-bg, var(--bs-body-bg, #fff));
+  font-size: 1.1rem;
+  line-height: 1;
 }
 
 .form-field .form-label {
@@ -4966,17 +4970,7 @@ form p.text-muted.small {
 
 /* Responsividade */
 @media (max-width: 767.98px) {
-  .cliente-tab-content-padded,
-  .contrato-tab-content-padded,
-  .plano-tab-content-padded,
-  .fornecedor-tab-content-padded,
-  .banco-tab-content-padded,
-  .documento-tab-content-padded,
-  .empresa-tab-content-padded,
-  .whatsapp-tab-content-padded,
-  .email-tab-content-padded,
-  .ordem-servico-tab-content-padded,
-  .sistema-tab-content-padded {
+  [class$='-tab-content-padded'] {
     padding: 16px;
 
     .form-field {
@@ -5234,31 +5228,60 @@ input[type='file'].form-control:focus-visible {
   visibility: visible !important;
 }
 
+/* Disabled/readonly: sem opacity no controle inteiro — no escuro isso igualava fundo e texto */
 .form-control:disabled,
 .form-select:disabled {
-  background-color: var(--color-bg);
-  opacity: 0.6;
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-muted) !important;
+  -webkit-text-fill-color: var(--text-muted) !important;
+  border-color: var(--border-color) !important;
+  opacity: 1 !important;
+  cursor: not-allowed;
 }
 
 [data-theme="dark"] .form-control:disabled,
 [data-theme="dark"] .form-select:disabled {
-  background-color: var(--bg-tertiary);
-  opacity: 0.6;
-  border-color: var(--border-color);
+  background-color: var(--bg-primary) !important;
+  color: var(--text-secondary) !important;
+  -webkit-text-fill-color: var(--text-secondary) !important;
+  border-color: var(--border-color) !important;
+  opacity: 1 !important;
 }
 
 /* Readonly estático (não .entity-select-input — listagem/busca) */
 .form-control[readonly]:not(.entity-select-input),
 .form-control[readonly]:not(.entity-select-input):focus {
-  background-color: var(--color-bg) !important;
-  opacity: 0.6;
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-secondary) !important;
+  -webkit-text-fill-color: var(--text-secondary) !important;
+  border-color: var(--border-color) !important;
+  opacity: 1 !important;
 }
 
 [data-theme="dark"] .form-control[readonly]:not(.entity-select-input),
 [data-theme="dark"] .form-control[readonly]:not(.entity-select-input):focus {
-  background-color: var(--bg-tertiary) !important;
-  opacity: 0.6;
+  background-color: var(--bg-primary) !important;
+  color: var(--text-secondary) !important;
+  -webkit-text-fill-color: var(--text-secondary) !important;
   border-color: var(--border-color) !important;
+  opacity: 1 !important;
+}
+
+/* Readonly + disabled juntos (ex.: códigos de recuperação) */
+.form-control[readonly]:disabled:not(.entity-select-input),
+.form-control[readonly]:disabled:not(.entity-select-input):focus {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-secondary) !important;
+  -webkit-text-fill-color: var(--text-secondary) !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] .form-control[readonly]:disabled:not(.entity-select-input),
+[data-theme="dark"] .form-control[readonly]:disabled:not(.entity-select-input):focus {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-secondary) !important;
+  -webkit-text-fill-color: var(--text-secondary) !important;
+  opacity: 1 !important;
 }
 
 /* Campos de data (calendários) - cursor pointer */
@@ -6210,4 +6233,63 @@ input[type="week"]::-moz-calendar-picker-indicator {
   background-color: var(--border-color);
   opacity: 0.75;
   min-width: 1rem;
+}
+
+/* Navegadores confiáveis — lista compacta no modal Segurança */
+.trusted-device-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  width: 100%;
+}
+
+.trusted-device-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  background: color-mix(in srgb, var(--bg-primary) 55%, var(--bg-tertiary));
+}
+
+.trusted-device-row__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.trusted-device-row__name {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.25;
+}
+
+.trusted-device-row__meta {
+  font-size: var(--font-size-2xs);
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.trusted-device-row__ip {
+  font-family: var(--font-family-mono);
+  letter-spacing: 0.01em;
+}
+
+.trusted-device-list__actions {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 0.25rem;
+}
+
+.trusted-device-row .btn,
+.trusted-device-list__actions .btn {
+  padding: 0.15rem 0.45rem !important;
+  font-size: var(--font-size-2xs) !important;
+  line-height: 1.2 !important;
+  min-height: 0 !important;
 }

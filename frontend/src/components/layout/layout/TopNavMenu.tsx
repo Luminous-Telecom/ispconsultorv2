@@ -117,7 +117,7 @@ const TopNavNestedFolder: React.FC<TopNavNestedFolderProps> = ({
               position: 'fixed',
               left: `${flyoutPos.left}px`,
               top: `${flyoutPos.top}px`,
-              zIndex: 1080,
+              zIndex: 2120,
             }}
             deps={[flyoutPos.left, flyoutPos.top]}
             onMouseEnter={onFlyoutEnter}

@@ -15,7 +15,7 @@ Estilo IXC: **label à esquerda (coluna fixa)**, **input/control à direita**, *
 ## CSS (já aplicado)
 
 - `.draggable-modal-body-custom`: uma coluna por linha em `.row` (sobrescreve `col-md-6` etc.)
-- Abas com `*-tab-content-padded` e forms `form-modal-simple` usam mixin `form-modal-tab-padding`
+- Abas com `*-tab-content-padded` e forms `form-modal-simple` usam mixin `form-modal-tab-padding` (CSS: `[class$='-tab-content-padded']` — **sempre** terminar o nome da classe com `-tab-content-padded`)
 - Variáveis em `_variables.scss`: `--form-label-width`, `--form-input-max-width`, `--form-block-padding-left`
 - Classe `.form-field` → label + `.form-field-control`
 

@@ -5,6 +5,7 @@ import { CACHE_CONFIG } from '../config/api';
 import { UsuarioFilters  } from '../types';
 import { useApiError } from './useApiError';
 import { CONTEXT_ERROR_MESSAGES, ERROR_MESSAGES } from '../constants/ErrorMessages';
+import { useI18n } from 'contexts/I18nContext';
 
 export type { Usuario } from '../types';
 
@@ -57,6 +58,23 @@ export const useGerarWebhookSecret = () => {
       queryClient.invalidateQueries({ queryKey: ['usuarios'] });
       queryClient.invalidateQueries({ queryKey: ['usuario', id] });
       success('Webhook secret gerado com sucesso!');
+    },
+    onError: (err) => showApiError(err, ERROR_MESSAGES.OPERATION_FAILED)
+  });
+};
+
+export const useResetUsuario2fa = () => {
+  const queryClient = useQueryClient();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
+  const { t } = useI18n();
+
+  return useMutation({
+    mutationFn: UsuarioService.reset2fa,
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['usuarios'] });
+      queryClient.invalidateQueries({ queryKey: ['usuario', id] });
+      success(t('security.adminResetSuccess'));
     },
     onError: (err) => showApiError(err, ERROR_MESSAGES.OPERATION_FAILED)
   });

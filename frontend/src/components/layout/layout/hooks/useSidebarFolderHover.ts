@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePrefersRealHover } from 'hooks/usePrefersRealHover';
 
-/** Abre com atraso curto; fecha mais lento só ao sair do menu lateral. */
-export const SIDEBAR_FOLDER_OPEN_DELAY_MS = 250;
-export const SIDEBAR_FOLDER_CLOSE_DELAY_MS = 1000;
+/** Hover: mesmo atraso curto para abrir e fechar (sair do menu lateral). */
+export const SIDEBAR_FOLDER_OPEN_DELAY_MS = 100;
+export const SIDEBAR_FOLDER_CLOSE_DELAY_MS = 100;
 
 function toIdSet(ids: Iterable<string>): Set<string> {
   return new Set(ids);

@@ -67,13 +67,51 @@ if (!window.confirm(t('messages.confirmDelete'))) return;
 
 **Proibido** modal custom de confirmação.
 
-## Abas
+## Abas — molde obrigatório (header unificado)
 
-- Várias abas + overflow mobile → `ModalTabsOverflow`
-- Conteúdo de aba com tabela → `EmbeddedTablePanel` com `title` igual ao label da aba (ex.: `Histórico`, `Arquivos`)
-- Aba de formulário → `*-tab-content-padded` + `form-modal-simple`
-- Aba de tabela/listagem → `*-tab-content-scrollable` ou corpo `no-padding`; não usar `*-tab-content-padded`, `form-modal-simple` nem margens negativas para compensar padding
-- Layout de campos: ver `frontend-form-modal-layout.mdc` — label à esquerda, input à direita, `col-12` por campo (cadastro, edição e visualização)
+Todo modal com abas (ex.: Empresa, Servidor de E-mail, Conf. do usuário) usa este esqueleto:
+
+```tsx
+const headerActionsContent = (
+  <div className="entidade-header-unified">
+    <div className="entidade-header-buttons modal-header-actions">
+      <CancelarButton type="button" onClick={onClose} isPending={isPending} />
+      <SalvarButton type="submit" form="entidade-form" isPending={isPending} />
+    </div>
+    <div className="entidade-header-tabs">
+      <ModalTabsOverflow
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        tabsClassName={`entidade-tabs-unified ${isMobile ? 'entidade-tabs-mobile' : ''}`}
+        isMobile={isMobile}
+        id="entidadeTab"
+      />
+    </div>
+  </div>
+);
+
+<div className="entidade-modal-content">
+  <div className="tab-content entidade-tab-content entidade-tab-content-padded">
+    <form id="entidade-form" className="form-modal-simple">...</form>
+  </div>
+</div>
+```
+
+| Peça | Classe / regra |
+|------|----------------|
+| Header | `*-header-unified` → botões + abas (nessa ordem) |
+| Botões | `*-header-buttons modal-header-actions` — Cancelar/Fechar + Salvar (não só Salvar solto) |
+| Abas | `*-header-tabs` + `ModalTabsOverflow` com `tabsClassName="banco-tabs-unified"` (ou outro `*-tabs-unified`) |
+| Corpo | `*-modal-content` (fundo `bg-primary`, igual à aba ativa) > `tab-content *-tab-content *-tab-content-padded` |
+| Form | `form-modal-simple` + `col-12` por campo |
+
+- **Abas (visual)**: usar `tabsClassName` com `*-tabs-unified` (padrão Agente: `banco-tabs-unified`). Aba ativa = `bg-primary`; corpo do modal = mesma cor via `*-modal-content`.
+- **`*-modal-content`**: nome da classe **deve** terminar/conter `-modal-content` (ex.: `conf-usuario-modal-content`, `banco-modal-content`) — sem isso o fundo fica `bg-modal` e a aba ativa “não continua” no conteúdo.
+- **`*-tab-content-padded`**: obrigatório em aba de formulário — layout horizontal (label à esquerda, input à direita). Sem `-padded`, o form fica vertical / fora do padrão.
+- Aba com tabela → `EmbeddedTablePanel` / `*-tab-content-scrollable` / `no-padding` — **não** usar `-padded` nem `form-modal-simple`
+- Layout de campos: `frontend-form-modal-layout.mdc`
+- Referências: `AgentModalHeader` (abas), `DadosEmpresaModal`, `ServidorEmailModal`, `ConfUsuarioModal`
 
 ### Abas secundárias — exigem registro salvo
 
@@ -118,6 +156,8 @@ const handleTabChange = (tab: TabId) => {
 
 1. Form/detalhe → `DraggableModal`
 2. Listagem CRUD → `ListModal`
-3. Abrir do menu global → `ModalContext`
+3. Abrir do menu global → `ModalContext` + entrada em `SingleModalWrapper`
 4. Fechar → limpar estado e seleção
-5. Botões → `ModalFormActions` + rule `frontend-botoes.mdc`
+5. Botões → `CancelarButton`/`SalvarButton` ou `ModalFormActions` + rule `frontend-botoes.mdc`
+6. Com abas → `*-header-unified` + `*-tab-content-padded` (form) conforme molde acima
+7. Campos → `form-modal-simple` + `FormField` + `col-12` (`frontend-form-modal-layout.mdc`)

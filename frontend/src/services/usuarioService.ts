@@ -9,6 +9,10 @@ class UsuarioServiceClass extends BaseService<Usuario, CreateUsuario, UpdateUsua
   async gerarWebhookSecret(id: number): Promise<ApiResponse<{ webhook_secret: string }>> {
     return this.customPost<{ webhook_secret: string }>(`/${id}/gerar-webhook-secret`);
   }
+
+  async reset2fa(id: number): Promise<ApiResponse<{ totp_enabled: boolean }>> {
+    return this.customPost<{ totp_enabled: boolean }>(`/${id}/reset-2fa`);
+  }
 }
 
 const usuarioServiceInstance = new UsuarioServiceClass();
@@ -40,6 +44,10 @@ export class UsuarioService {
 
   static async gerarWebhookSecret(id: number): Promise<ApiResponse<{ webhook_secret: string }>> {
     return usuarioServiceInstance.gerarWebhookSecret(id);
+  }
+
+  static async reset2fa(id: number): Promise<ApiResponse<{ totp_enabled: boolean }>> {
+    return usuarioServiceInstance.reset2fa(id);
   }
 }
 

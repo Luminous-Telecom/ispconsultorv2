@@ -2,9 +2,12 @@
    TOP NAV — menu suspenso superior (desktop)
    ============================================ */
 
+/* Acima dos modais (base 1100): o backdrop não cobre o chrome, então o menu precisa
+   continuar clicável e os dropdowns não podem ficar atrás do modal. */
 .layout-header-stack {
+  position: relative;
   flex-shrink: 0;
-  z-index: 1030;
+  z-index: 2100;
 }
 
 .layout-header-stack .main-navbar {
@@ -129,7 +132,7 @@
   position: absolute;
   top: calc(100% + 0.3rem);
   left: 0;
-  z-index: 1060;
+  z-index: 2110;
   min-width: 232px;
   max-width: min(320px, 90vw);
   max-height: min(70vh, 480px);

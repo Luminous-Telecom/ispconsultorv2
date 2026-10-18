@@ -2,7 +2,8 @@ import React, { useMemo } from 'react';
 import { NavLinkButton } from 'components/ui';
 import { useTheme } from 'contexts/ThemeContext';
 import { useFontSize, type FontSize } from 'contexts/FontSizeContext';
-import { useI18n, type Language } from 'contexts/I18nContext';
+import { useModal } from 'contexts/ModalContext';
+import type { Language } from 'contexts/I18nContext';
 import UserMenuFlyout from '../layout/UserMenuFlyout';
 import type { TranslateFn } from '../layout/types';
 
@@ -54,7 +55,7 @@ const AppUserMenu: React.FC<AppUserMenuProps> = ({
 }) => {
   const { theme, setTheme } = useTheme();
   const { fontSize, setFontSize } = useFontSize();
-  const { language, setLanguage, availableLanguages } = useI18n();
+  const { openModal } = useModal();
 
   const displayName = currentUser?.nome || userTitleFallback;
   const initials = getInitials(currentUser?.nome, userTitleFallback.charAt(0).toUpperCase() || 'U');
@@ -75,22 +76,6 @@ const AppUserMenu: React.FC<AppUserMenuProps> = ({
       },
     ],
     [t, theme, setTheme]
-  );
-
-  const languageOptions = useMemo(
-    () =>
-      availableLanguages.map((lang) => ({
-        id: lang.code,
-        label: lang.name,
-        icon: lang.flag,
-        active: language === lang.code,
-        onSelect: () => {
-          if (language !== lang.code) {
-            setLanguage(lang.code);
-          }
-        },
-      })),
-    [availableLanguages, language, setLanguage]
   );
 
   const fontSizeOptions = useMemo(() => {
@@ -145,18 +130,25 @@ const AppUserMenu: React.FC<AppUserMenuProps> = ({
             />
 
             <UserMenuFlyout
-              label={t('layout.language')}
-              iconClassName="bi bi-translate"
-              ariaLabel={t('layout.language')}
-              options={languageOptions}
-            />
-
-            <UserMenuFlyout
               label={t('layout.fontSize')}
               iconClassName="bi bi-fonts"
               ariaLabel={t('layout.fontSize')}
               options={fontSizeOptions}
             />
+
+            <li>
+              <NavLinkButton
+                className="layout-user-dropdown__row"
+                onClick={() => {
+                  onToggleUserMenu();
+                  openModal('conf-usuario');
+                }}
+                ariaLabel={t('layout.userConfig')}
+              >
+                <i className="bi bi-gear" aria-hidden />
+                <span>{t('layout.userConfig')}</span>
+              </NavLinkButton>
+            </li>
 
             <li className="layout-user-dropdown__footer">
               <NavLinkButton

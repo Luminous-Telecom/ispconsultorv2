@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePrefersRealHover } from 'hooks/usePrefersRealHover';
 
-export const TOP_NAV_OPEN_DELAY_MS = 250;
-export const TOP_NAV_CLOSE_DELAY_MS = 1000;
+/** Hover: mesmo atraso curto para abrir e fechar. */
+export const TOP_NAV_OPEN_DELAY_MS = 100;
+export const TOP_NAV_CLOSE_DELAY_MS = 100;
 
 export function useTopNavMenu() {
   const prefersHover = usePrefersRealHover();

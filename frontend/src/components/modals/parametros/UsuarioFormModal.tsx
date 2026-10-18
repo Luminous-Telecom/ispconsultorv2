@@ -5,9 +5,9 @@ import { useNotificationContext } from 'components/notifications/NotificationPro
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useFormReset } from 'hooks/useFormReset';
-import { useUsuario, useGerarWebhookSecret } from 'hooks/useUsuarios';
+import { useUsuario, useGerarWebhookSecret, useResetUsuario2fa } from 'hooks/useUsuarios';
 import DraggableModal from 'components/common/DraggableModal';
-import { CopyableFormField, AtivoInativoField, GerarTokenButton, ModalFormActions } from 'components/ui';
+import { AppButton, CopyableFormField, AtivoInativoField, GerarTokenButton, ModalFormActions } from 'components/ui';
 import UsuarioAccountFormFields from 'components/forms/UsuarioAccountFormFields';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -52,6 +52,8 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
 
   const { data: usuarioData } = useUsuario(usuarioId || 0);
   const gerarWebhookSecretMutation = useGerarWebhookSecret();
+  const reset2faMutation = useResetUsuario2fa();
+  const [totpEnabled, setTotpEnabled] = useState(false);
 
   useEffect(() => {
     if (isEditing && usuarioData) {
@@ -63,6 +65,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
         ativo: usuarioData.ativo !== undefined ? usuarioData.ativo : true
       });
       setWebhookSecret(usuarioData.webhook_secret || '');
+      setTotpEnabled(!!usuarioData.totp_enabled);
       setErrors({});
     }
   }, [usuarioData, isEditing]);
@@ -152,7 +155,21 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
     }
   };
 
-  const isPending = createUsuarioMutation.isPending || updateUsuarioMutation.isPending;
+  const handleReset2fa = async () => {
+    if (!usuarioId || !totpEnabled) return;
+    if (!window.confirm(t('security.adminResetConfirm'))) return;
+    try {
+      await reset2faMutation.mutateAsync(usuarioId);
+      setTotpEnabled(false);
+    } catch {
+      // Erro já tratado no mutation
+    }
+  };
+
+  const isPending =
+    createUsuarioMutation.isPending ||
+    updateUsuarioMutation.isPending ||
+    reset2faMutation.isPending;
 
   return (
     <DraggableModal
@@ -230,6 +247,31 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
                 }
               />
             </div>
+            <div className="col-12">
+              <AtivoInativoField
+                value={totpEnabled}
+                onChange={() => undefined}
+                label={t('security.twoFactorEnabled')}
+                name="usuario-totp-enabled"
+                disabled
+              />
+            </div>
+            {totpEnabled && (
+              <div className="col-12 form-modal-input-col">
+                <AppButton
+                  label={t('security.adminReset')}
+                  variant="danger"
+                  size="sm"
+                  type="button"
+                  onClick={handleReset2fa}
+                  disabled={isPending}
+                  isPending={reset2faMutation.isPending}
+                />
+                <small className="form-helper-message mt-1 d-block">
+                  {t('security.adminResetHelp')}
+                </small>
+              </div>
+            )}
           </div>
         )}
       </div>

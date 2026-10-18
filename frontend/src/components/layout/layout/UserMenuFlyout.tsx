@@ -158,7 +158,7 @@ const UserMenuFlyout: React.FC<UserMenuFlyoutProps> = ({
               position: 'fixed',
               left: `${pos.left}px`,
               top: `${pos.top}px`,
-              zIndex: 1080,
+              zIndex: 2120,
             }}
             deps={[pos.left, pos.top]}
             onMouseEnter={keepOpen}

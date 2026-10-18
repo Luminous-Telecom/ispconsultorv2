@@ -14,6 +14,8 @@ export type ModalType =
   | 'contas-pagar'
   | 'notas-fiscais'
   | 'usuarios'
+  | 'seguranca-usuario'
+  | 'conf-usuario'
   | 'auditoria'
   | 'recursos-sistema'
   | 'servidor-email'

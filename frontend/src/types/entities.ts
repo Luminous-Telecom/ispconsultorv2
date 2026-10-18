@@ -702,6 +702,7 @@ export interface Usuario {
   precisa_trocar_senha: boolean;
   ultimo_login?: string | null;
   webhook_secret?: string | null;
+  totp_enabled?: boolean;
   created_at?: string;
   created_at_formatada?: string | null;
   updated_at?: string;

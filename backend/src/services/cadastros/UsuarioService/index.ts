@@ -18,8 +18,29 @@ export interface ListUsuariosFilters {
 
 const SORT_COLUMNS = ['id', 'nome', 'email', 'role', 'ativo', 'ultimo_login', 'created_at', 'updated_at', 'empresa_id'] as const;
 
-function withoutPassword<T extends { password_hash?: string }>(usuario: T) {
-  const { password_hash: _passwordHash, ...safe } = usuario;
+type UsuarioSensitive = {
+  password_hash?: string;
+  totp_secret_encrypted?: string | null;
+  totp_temp_secret_encrypted?: string | null;
+  totp_recovery_hashes?: string | null;
+  email_otp_hash?: string | null;
+  email_otp_expires_at?: Date | null;
+  email_recuperacao_token_hash?: string | null;
+  email_recuperacao_token_expires?: Date | null;
+};
+
+function withoutPassword<T extends UsuarioSensitive>(usuario: T) {
+  const {
+    password_hash: _passwordHash,
+    totp_secret_encrypted: _totpSecret,
+    totp_temp_secret_encrypted: _totpTemp,
+    totp_recovery_hashes: _totpRecovery,
+    email_otp_hash: _emailOtp,
+    email_otp_expires_at: _emailOtpExp,
+    email_recuperacao_token_hash: _emailRecToken,
+    email_recuperacao_token_expires: _emailRecExp,
+    ...safe
+  } = usuario;
   return safe;
 }
 
@@ -82,6 +103,12 @@ export class UsuarioService {
   static async findByEmailWithPassword(email: string, ativo = true) {
     return prisma.cadastros_usuarios.findFirst({
       where: { email: email.toLowerCase(), ativo },
+    });
+  }
+
+  static async findByIdWithPassword(id: number, ativo = true) {
+    return prisma.cadastros_usuarios.findFirst({
+      where: { id, ...(ativo ? { ativo: true } : {}) },
     });
   }
 

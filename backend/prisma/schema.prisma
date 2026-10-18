@@ -451,6 +451,17 @@ model cadastros_usuarios {
   precisa_trocar_senha              Boolean                             @default(false)
   ultimo_login                      DateTime?                           @db.DateTime(0)
   webhook_secret                    String?                             @db.VarChar(255)
+  totp_enabled                      Boolean                             @default(false)
+  totp_secret_encrypted             String?                             @db.VarChar(512)
+  totp_temp_secret_encrypted        String?                             @db.VarChar(512)
+  totp_recovery_hashes              String?                             @db.Text
+  email_2fa_enabled                 Boolean                             @default(false)
+  email_otp_hash                    String?                             @db.VarChar(255)
+  email_otp_expires_at              DateTime?                           @db.DateTime(0)
+  email_recuperacao                 String?                             @db.VarChar(180)
+  email_recuperacao_verificado      Boolean                             @default(false)
+  email_recuperacao_token_hash      String?                             @db.VarChar(64)
+  email_recuperacao_token_expires   DateTime?                           @db.DateTime(0)
   created_at                        DateTime                            @default(now()) @db.DateTime(0)
   updated_at                        DateTime                            @default(now()) @db.DateTime(0)
   empresa_id                        Int?
@@ -458,8 +469,43 @@ model cadastros_usuarios {
   financeiro_conta_pagar_pagamentos financeiro_conta_pagar_pagamentos[]
   ordens_servico_mensagens          ordens_servico_mensagens[]
   sistema_logs_operacionais         sistema_logs_operacionais[]
+  dispositivos_confiaveis           cadastros_usuarios_dispositivos_confiaveis[]
+  webauthn_credentials              cadastros_usuarios_webauthn[]
 
   @@index([empresa_id], map: "usuarios_empresa_id_foreign_idx")
+}
+
+model cadastros_usuarios_dispositivos_confiaveis {
+  id             Int                @id @default(autoincrement())
+  usuario_id     Int
+  token_hash     String             @db.VarChar(64)
+  label          String?            @db.VarChar(255)
+  ip             String?            @db.VarChar(45)
+  expires_at     DateTime           @db.DateTime(0)
+  created_at     DateTime           @default(now()) @db.DateTime(0)
+  empresa_id     Int?
+  usuario        cadastros_usuarios @relation(fields: [usuario_id], references: [id], onDelete: Cascade, map: "usuarios_dispositivos_usuario_id_fk")
+
+  @@index([usuario_id, token_hash], map: "usuarios_dispositivos_usuario_token")
+  @@index([expires_at], map: "usuarios_dispositivos_expires")
+  @@index([empresa_id], map: "usuarios_dispositivos_empresa_id")
+}
+
+model cadastros_usuarios_webauthn {
+  id            Int                @id @default(autoincrement())
+  usuario_id    Int
+  credential_id String             @db.VarChar(512)
+  public_key    String             @db.Text
+  counter       BigInt             @default(0)
+  transports    String?            @db.VarChar(255)
+  device_name   String?            @db.VarChar(150)
+  created_at    DateTime           @default(now()) @db.DateTime(0)
+  empresa_id    Int?
+  usuario       cadastros_usuarios @relation(fields: [usuario_id], references: [id], onDelete: Cascade, map: "usuarios_webauthn_usuario_id_fk")
+
+  @@unique([credential_id], map: "usuarios_webauthn_credential_id")
+  @@index([usuario_id], map: "usuarios_webauthn_usuario_id")
+  @@index([empresa_id], map: "usuarios_webauthn_empresa_id")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
