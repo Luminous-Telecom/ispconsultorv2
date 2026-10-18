@@ -1,6 +1,7 @@
 import type { MensagemTipoEnvio } from 'components/modals/parametros/servidor-shared';
 
 export interface ServidorWhatsAppForm {
+  descricao: string;
   tipo_api: 'evolution' | 'whatsapp_cloud';
   evolution_api_url: string;
   evolution_api_key: string;

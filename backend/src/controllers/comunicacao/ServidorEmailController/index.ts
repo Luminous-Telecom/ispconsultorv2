@@ -399,6 +399,9 @@ export class ServidorEmailController {
         if (!servidorData.senha || servidorData.senha.trim() === '') {
           delete servidorData.senha;
         }
+        if (typeof servidorData.descricao === 'string' && servidorData.descricao.trim() === '') {
+          servidorData.descricao = null;
+        }
 
         const dadosAnteriores = toPlain(servidor);
         await ServidorEmailService.updateInstance(servidor, servidorData);
@@ -425,6 +428,10 @@ export class ServidorEmailController {
         if (!servidorData.host || !servidorData.porta || !servidorData.usuario || !servidorData.senha) {
           sendValidationError(res, 'Host, porta, usuário e senha são obrigatórios');
           return;
+        }
+
+        if (typeof servidorData.descricao === 'string' && servidorData.descricao.trim() === '') {
+          servidorData.descricao = null;
         }
 
         servidorData.ativo = true;

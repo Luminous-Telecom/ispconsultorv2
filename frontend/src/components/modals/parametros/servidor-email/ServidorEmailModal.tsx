@@ -14,6 +14,7 @@ import { ServidorEmailForm, ServidorEmailModalProps } from './types';
 import ServidorTab from './abas/ServidorTab';
 import MensagensTab from './abas/MensagensTab';
 const INITIAL_FORM_DATA: ServidorEmailForm = {
+  descricao: '',
   host: '',
   porta: 587,
   usuario: '',
@@ -147,6 +148,7 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
     if (servidorAtivo?.data) {
       const data = servidorAtivo.data;
       setFormData({
+        descricao: data.descricao ?? '',
         host: data.host ?? '',
         porta: data.porta ?? 587,
         usuario: data.usuario ?? '',

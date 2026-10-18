@@ -622,6 +622,7 @@ model comunicacao_mensagens_whatsapp {
 
 model comunicacao_servidores_email {
   id                   Int              @id @default(autoincrement())
+  descricao            String?          @db.VarChar(500)
   host                 String           @db.VarChar(255)
   porta                Int
   usuario              String           @db.VarChar(255)
@@ -648,6 +649,7 @@ model comunicacao_servidores_email {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model comunicacao_servidores_whatsapp {
   id                                 Int                                            @id @default(autoincrement())
+  descricao                          String?                                        @db.VarChar(500)
   evolution_api_url                  String                                         @db.VarChar(500)
   evolution_api_key                  String                                         @db.VarChar(500)
   instance_name                      String                                         @db.VarChar(100)

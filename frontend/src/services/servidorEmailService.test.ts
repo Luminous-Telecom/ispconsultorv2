@@ -24,7 +24,7 @@ describe('ServidorEmailService', () => {
   });
 
   it('edição envia só o campo informado', async () => {
-    const patch = {"host":"smtp.novo.test"};
+    const patch = { descricao: 'SMTP cobrança' };
     getHttp().put.mockResolvedValue(ok({ id: 4, ...patch }));
     await ServidorEmailService.update(4, patch);
     const body = getHttp().put.mock.calls[0][1];

@@ -8,6 +8,7 @@ export interface GrupoVariaveis {
 }
 
 export const INITIAL_FORM_DATA: ServidorWhatsAppForm = {
+  descricao: '',
   tipo_api: 'evolution',
   evolution_api_url: 'https://evo-api.example.com',
   evolution_api_key: '',

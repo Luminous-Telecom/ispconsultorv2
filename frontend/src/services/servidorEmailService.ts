@@ -4,6 +4,7 @@ import type { ApiResponse } from '../types';
 
 export interface ServidorEmail {
   id: number;
+  descricao?: string | null;
   host: string;
   porta: number;
   usuario: string;
@@ -21,6 +22,7 @@ export interface ServidorEmail {
 }
 
 export interface CreateServidorEmail {
+  descricao?: string | null;
   host: string;
   porta: number;
   usuario: string;

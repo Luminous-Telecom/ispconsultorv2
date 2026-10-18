@@ -1,6 +1,7 @@
 import type { MensagemTipoEnvio } from 'components/modals/parametros/servidor-shared';
 
 export interface ServidorEmailForm {
+  descricao: string;
   host: string;
   porta: number;
   usuario: string;

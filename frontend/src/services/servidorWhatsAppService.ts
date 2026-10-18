@@ -5,6 +5,7 @@ import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 
 export interface ServidorWhatsApp {
   id: number;
+  descricao?: string | null;
   tipo_api: 'evolution' | 'whatsapp_cloud';
   evolution_api_url: string;
   evolution_api_key: string;
@@ -28,6 +29,7 @@ export interface ServidorWhatsApp {
 }
 
 export interface CreateServidorWhatsApp {
+  descricao?: string | null;
   tipo_api?: 'evolution' | 'whatsapp_cloud';
   evolution_api_url?: string;
   evolution_api_key?: string;

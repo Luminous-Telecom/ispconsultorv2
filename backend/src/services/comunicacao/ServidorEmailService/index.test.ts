@@ -43,10 +43,16 @@ describe('ServidorEmailService', () => {
 
   it('grava host e empresa recebidos', async () => {
     (servidores.create as jest.Mock).mockImplementation(async ({ data }) => ({ id: 2, ...data }));
-    await ServidorEmailService.create({ host: 'smtp.exemplo.com', empresa_id: 10, senha: 'oculta' });
+    await ServidorEmailService.create({
+      host: 'smtp.exemplo.com',
+      empresa_id: 10,
+      senha: 'oculta',
+      descricao: 'SMTP principal',
+    });
     const data = (servidores.create as jest.Mock).mock.calls[0][0].data;
     expect(data.empresa_id).toBe(10);
     expect(data.host).toBe('smtp.exemplo.com');
+    expect(data.descricao).toBe('SMTP principal');
   });
 
   it('altera só o host e não grava id inexistente', async () => {
@@ -58,5 +64,13 @@ describe('ServidorEmailService', () => {
 
     (servidores.findUnique as jest.Mock).mockResolvedValueOnce(null);
     await expect(ServidorEmailService.update(99, { host: 'x' })).rejects.toThrow('não encontrado');
+  });
+
+  it('altera só a descrição', async () => {
+    (servidores.findUnique as jest.Mock).mockResolvedValueOnce({ id: 2 });
+    (servidores.update as jest.Mock).mockResolvedValue({ id: 2, descricao: 'Cobrança' });
+    await ServidorEmailService.update(2, { descricao: 'Cobrança' });
+    expect((servidores.update as jest.Mock).mock.calls[0][0].data.descricao).toBe('Cobrança');
+    expect((servidores.update as jest.Mock).mock.calls[0][0].data.senha).toBeUndefined();
   });
 });

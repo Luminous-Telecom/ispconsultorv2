@@ -3,6 +3,7 @@ import { sequelize } from '../../../config/database';
 
 interface ServidorEmailAttributes {
   id: number;
+  descricao?: string | null;
   host: string;
   porta: number;
   usuario: string;
@@ -24,6 +25,7 @@ type ServidorEmailCreationAttributes = Optional<ServidorEmailAttributes, 'id' | 
 
 export class ServidorEmail extends Model<ServidorEmailAttributes, ServidorEmailCreationAttributes> implements ServidorEmailAttributes {
   public id!: number;
+  public descricao!: string | null;
   public host!: string;
   public porta!: number;
   public usuario!: string;
@@ -47,6 +49,10 @@ ServidorEmail.init(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
+    },
+    descricao: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
     },
     host: {
       type: DataTypes.STRING(255),

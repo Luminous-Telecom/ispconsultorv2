@@ -186,6 +186,7 @@ export function useServidorWhatsappModal({ show, onClose }: UseServidorWhatsappM
     if (servidorAtivo?.data) {
       const servidor = servidorAtivo.data;
       setFormData({
+        descricao: servidor.descricao || '',
         tipo_api: servidor.tipo_api || 'evolution',
         evolution_api_url: servidor.evolution_api_url || '',
         evolution_api_key: '',

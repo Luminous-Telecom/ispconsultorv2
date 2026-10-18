@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import ServidorTab from './ServidorTab';
 import type { ServidorEmailForm } from '../types';
 
@@ -12,6 +12,7 @@ jest.mock('components/notifications/NotificationProvider', () => ({
 }));
 
 const baseForm: ServidorEmailForm = {
+  descricao: '',
   host: 'smtp.gmail.com',
   porta: 587,
   usuario: 'a@b.com',
@@ -47,5 +48,25 @@ describe('ServidorTab', () => {
 
     expect(screen.getByDisplayValue('587')).toBeTruthy();
     expect(screen.getByDisplayValue('30000')).toBeTruthy();
+  });
+
+  it('exibe o campo descrição e dispara onChange ao digitar', () => {
+    const onChange = jest.fn();
+
+    render(
+      <ServidorTab
+        formData={baseForm}
+        onChange={onChange}
+        isPending={false}
+        emailTeste=""
+        onEmailTesteChange={jest.fn()}
+        onSendTestEmail={jest.fn()}
+        isSendingTest={false}
+      />
+    );
+
+    const campo = screen.getByLabelText('form.description');
+    fireEvent.change(campo, { target: { value: 'SMTP principal' } });
+    expect(onChange).toHaveBeenCalledWith('descricao', 'SMTP principal');
   });
 });

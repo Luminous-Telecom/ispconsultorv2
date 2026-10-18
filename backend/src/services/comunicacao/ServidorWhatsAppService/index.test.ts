@@ -46,9 +46,21 @@ describe('ServidorWhatsAppService', () => {
 
   it('grava o servidor na empresa informada', async () => {
     (servidores.create as jest.Mock).mockImplementation(async ({ data }) => ({ id: 4, ...data }));
-    await ServidorWhatsAppService.create({ instance_name: 'Fila', empresa_id: 10 });
-    expect((servidores.create as jest.Mock).mock.calls[0][0].data).toEqual({ instance_name: 'Fila', empresa_id: 10 });
+    await ServidorWhatsAppService.create({ instance_name: 'Fila', empresa_id: 10, descricao: 'Atendimento' });
+    expect((servidores.create as jest.Mock).mock.calls[0][0].data).toEqual({
+      instance_name: 'Fila',
+      empresa_id: 10,
+      descricao: 'Atendimento',
+    });
   });
+
+  it('altera só a descrição', async () => {
+    (servidores.update as jest.Mock).mockResolvedValue({ id: 4, descricao: 'Cobrança' });
+    await ServidorWhatsAppService.updateInstance({ id: 4 }, { descricao: 'Cobrança' });
+    expect((servidores.update as jest.Mock).mock.calls[0][0].data.descricao).toBe('Cobrança');
+    expect((servidores.update as jest.Mock).mock.calls[0][0].data.evolution_api_key).toBeUndefined();
+  });
+
 
   it('não exclui servidor inexistente', async () => {
     (servidores.findUnique as jest.Mock).mockResolvedValue(null);

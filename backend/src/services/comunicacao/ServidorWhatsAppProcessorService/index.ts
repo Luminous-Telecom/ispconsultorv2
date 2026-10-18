@@ -8,6 +8,7 @@ import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { whereComunicacaoEmpresaEstrito, pertenceComunicacaoEmpresa } from '../../../utils/comunicacaoEmpresaWhere';
 
 export interface ServidorWhatsAppData {
+  descricao?: string | null;
   tipo_api?: 'evolution' | 'whatsapp_cloud';
   evolution_api_url?: string;
   evolution_api_key?: string;
@@ -64,6 +65,9 @@ export class ServidorWhatsAppProcessorService {
     // Tratar webhook_url vazio como null
     if (servidorData.webhook_url && servidorData.webhook_url.trim() === '') {
       servidorData.webhook_url = null;
+    }
+    if (typeof servidorData.descricao === 'string' && servidorData.descricao.trim() === '') {
+      servidorData.descricao = null;
     }
 
     const dadosAnteriores = { ...servidor };
@@ -126,6 +130,9 @@ export class ServidorWhatsAppProcessorService {
     // Tratar webhook_url vazio como null
     if (servidorData.webhook_url && servidorData.webhook_url.trim() === '') {
       servidorData.webhook_url = null;
+    }
+    if (typeof servidorData.descricao === 'string' && servidorData.descricao.trim() === '') {
+      servidorData.descricao = null;
     }
     
     const criado = await ServidorWhatsAppService.create(servidorData as Partial<comunicacao_servidores_whatsapp>);

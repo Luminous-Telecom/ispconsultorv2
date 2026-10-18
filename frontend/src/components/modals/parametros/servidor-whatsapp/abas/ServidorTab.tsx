@@ -24,6 +24,18 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
       <div className="row g-2">
         <div className="col-12">
           <FormField
+            name="descricao"
+            type="text"
+            label={t('form.description')}
+            placeholder={t('placeholder.briefDescription')}
+            size="sm"
+            value={formData.descricao}
+            onChange={(e) => onChange('descricao', String(e ?? ''))}
+          />
+        </div>
+
+        <div className="col-12">
+          <FormField
             name="tipo_api"
             type="select"
             label="Tipo de API"

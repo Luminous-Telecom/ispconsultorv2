@@ -19,6 +19,17 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
       <div className="row g-2">
         <div className="col-12">
           <FormField
+            name="descricao"
+            type="text"
+            label={t('form.description')}
+            placeholder={t('placeholder.briefDescription')}
+            size="sm"
+            value={formData.descricao}
+            onChange={(value) => onChange('descricao', String(value ?? ''))}
+          />
+        </div>
+        <div className="col-12">
+          <FormField
             name="host"
             type="text"
             label={t('emailServer.smtpHost')}
