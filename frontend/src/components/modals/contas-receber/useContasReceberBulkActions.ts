@@ -7,7 +7,10 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useBulkBtn } from 'components/ui';
 import { useI18n } from 'contexts/I18nContext';
 import { BulkAction } from 'components/tables/types';
-import { createTituloEnviarAction } from 'components/modals/clientes/contrato/contratoTituloBulkActionHelpers';
+import {
+  createTituloConsultarPagamentoAction,
+  createTituloEnviarAction,
+} from 'components/modals/clientes/contrato/contratoTituloBulkActionHelpers';
 import { formatContasReceberCurrency } from './contasReceberListUtils';
 import { SelectedParcela, TituloItemUnion } from './contasReceberListTypes';
 
@@ -165,6 +168,24 @@ export function useContasReceberBulkActions({
         disabled: (s: TituloItemUnion[]): boolean => {
           if (s.length === 0) return true;
           return (s as Titulo[]).every((i) => i.status === 'pago' || i.status === 'cancelado');
+        },
+      });
+
+      const consultarAction = createTituloConsultarPagamentoAction(
+        { t, success, showApiError, bulkBtn },
+        handleRefreshData
+      );
+      actions.push({
+        key: 'consultarPagamento',
+        label: consultarAction.label,
+        variant: consultarAction.variant,
+        onClick: (s: TituloItemUnion[]) => {
+          void consultarAction.action?.(s as Titulo[]);
+        },
+        disabled: (s: TituloItemUnion[]): boolean => {
+          const { disabled } = consultarAction;
+          if (typeof disabled === 'function') return disabled(s as Titulo[]);
+          return Boolean(disabled);
         },
       });
     }

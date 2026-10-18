@@ -171,7 +171,13 @@ export class EfiWebhookService {
         return await EfiWebhookProcessorService.processChargeNotification(notification, receivedSecret, undefined, req);
       } else if (customId) {
         const { TituloWebhookResolver } = await import('../TituloWebhookResolver');
-        const { applyPagoWebhook, enviarReciboSeAdmin, registrarAuditoriaWebhook, refetchResolvedTitulo } = await import('../WebhookTituloUpdater');
+        const {
+          applyPagoWebhook,
+          enviarReciboSeAdmin,
+          registrarAuditoriaWebhook,
+          refetchResolvedTitulo,
+          updateTituloWebhook,
+        } = await import('../WebhookTituloUpdater');
         const scope = PaymentCommonService.getWebhookScope(req);
         const resolved = await TituloWebhookResolver.findByCustomId(String(customId), scope);
         if (resolved) {
@@ -190,7 +196,7 @@ export class EfiWebhookService {
           if (isPago && !titulo.pago) {
             await applyPagoWebhook(resolved, Number(titulo.valor), new Date());
           } else {
-            await (titulo as { update: (d: Record<string, unknown>) => Promise<unknown> }).update({ status: novoStatus, pago: isPago });
+            await updateTituloWebhook(resolved, { status: novoStatus, pago: isPago });
           }
           await refetchResolvedTitulo(resolved);
           const dadosNovos = toPlain((resolved.titulo as { toJSON: () => Record<string, unknown> })) as Record<string, unknown>;

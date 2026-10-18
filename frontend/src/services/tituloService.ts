@@ -129,10 +129,16 @@ class TituloServiceClass extends BaseService<CarneParcela, CreateCarneParcela, P
   /**
    * Consultar recebimento na API do banco
    */
-  async consultarRecebimento(id: number): Promise<ApiResponse<{ 
-    success: boolean; 
-    message: string; 
-    data?: {
+  async consultarRecebimento(id: number): Promise<ApiResponse<{
+    titulo_id?: number;
+    status_anterior?: string;
+    status_novo?: string;
+    status?: string;
+    status_banco?: string;
+    valor_pago?: number;
+    data_pagamento?: string | Date;
+  }>> {
+    return this.customPost<{
       titulo_id?: number;
       status_anterior?: string;
       status_novo?: string;
@@ -140,20 +146,6 @@ class TituloServiceClass extends BaseService<CarneParcela, CreateCarneParcela, P
       status_banco?: string;
       valor_pago?: number;
       data_pagamento?: string | Date;
-    }
-  }>> {
-    return this.customPost<{ 
-      success: boolean; 
-      message: string; 
-      data?: {
-        titulo_id?: number;
-        status_anterior?: string;
-        status_novo?: string;
-        status?: string;
-        status_banco?: string;
-        valor_pago?: number;
-        data_pagamento?: string | Date;
-      }
     }>(`/${id}/consultar-recebimento`);
   }
 
@@ -383,9 +375,9 @@ export class TituloService {
   /**
    * Consultar recebimento na API do banco
    */
-  static async consultarRecebimento(id: number): Promise<{ 
-    success: boolean; 
-    message: string; 
+  static async consultarRecebimento(id: number): Promise<{
+    success: boolean;
+    message: string;
     data?: {
       titulo_id?: number;
       status_anterior?: string;
@@ -394,24 +386,13 @@ export class TituloService {
       status_banco?: string;
       valor_pago?: number;
       data_pagamento?: string | Date;
-    }
+    };
   }> {
     const response = await tituloServiceInstance.consultarRecebimento(id);
-    if (response.data) {
-      return response.data;
-    }
-    return response as unknown as { 
-      success: boolean; 
-      message: string; 
-      data?: {
-        titulo_id?: number;
-        status_anterior?: string;
-        status_novo?: string;
-        status?: string;
-        status_banco?: string;
-        valor_pago?: number;
-        data_pagamento?: string | Date;
-      }
+    return {
+      success: response.success !== false,
+      message: response.message || '',
+      data: response.data,
     };
   }
 

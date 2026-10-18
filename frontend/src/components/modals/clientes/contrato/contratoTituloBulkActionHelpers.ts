@@ -63,6 +63,80 @@ export function createTituloReceberAction(
   };
 }
 
+function isTituloConsultavelNoBanco(item: Titulo): boolean {
+  return Boolean(item.charge_id) && item.status !== 'cancelado';
+}
+
+/**
+ * Consulta na API do banco (EFI/Asaas) se o título já foi pago e baixa automaticamente se constar recebido.
+ */
+export function createTituloConsultarPagamentoAction(
+  ctx: BulkActionContext,
+  onDone: () => void | Promise<void>
+): BulkAction<Titulo> {
+  return {
+    label: ctx.bulkBtn.consultarPagamento.label,
+    variant: ctx.bulkBtn.consultarPagamento.variant,
+    action: async (selectedItems: Titulo[]) => {
+      const consultaveis = selectedItems.filter(isTituloConsultavelNoBanco);
+      if (consultaveis.length === 0) {
+        ctx.showApiError(ctx.t('financial.canOnlyConsultRegistered'));
+        return;
+      }
+
+      let successCount = 0;
+      let errorCount = 0;
+      let lastSuccessMessage = '';
+      let firstErrorMessage = '';
+
+      for (const item of consultaveis) {
+        try {
+          const response = await TituloService.consultarRecebimento(item.id);
+          if (response.success) {
+            successCount++;
+            if (response.message) lastSuccessMessage = response.message;
+          } else {
+            errorCount++;
+            if (!firstErrorMessage && response.message) firstErrorMessage = response.message;
+          }
+        } catch (err) {
+          errorCount++;
+          if (!firstErrorMessage) {
+            if (err && typeof err === 'object' && 'message' in err) {
+              firstErrorMessage = (err as { message: string }).message;
+            } else if (err instanceof Error) {
+              firstErrorMessage = err.message;
+            }
+          }
+        }
+      }
+
+      await onDone();
+
+      if (successCount > 0) {
+        ctx.success(
+          lastSuccessMessage ||
+            (successCount === 1
+              ? ctx.t('financial.paymentConsulted')
+              : ctx.t('financial.paymentsConsulted', { count: successCount }))
+        );
+      }
+      if (errorCount > 0) {
+        ctx.showApiError(
+          firstErrorMessage ||
+            (errorCount === 1
+              ? ctx.t('financial.paymentConsultError')
+              : ctx.t('financial.paymentsConsultError', { count: errorCount }))
+        );
+      }
+    },
+    disabled: (selectedItems: Titulo[]) => {
+      if (selectedItems.length === 0) return true;
+      return selectedItems.every((item) => !isTituloConsultavelNoBanco(item));
+    },
+  };
+}
+
 export function createTituloCancelarAction(
   ctx: BulkActionContext,
   variant: TituloListVariant

@@ -11,8 +11,10 @@ import { formatCurrency } from '../../utils/formatters';
 import { BulkAction } from '../../components/modals/clientes/cliente/types';
 import { useI18n } from '../../contexts/I18nContext';
 import { useBulkBtn } from '../../components/ui';
+import { createTituloConsultarPagamentoAction } from '../../components/modals/clientes/contrato/contratoTituloBulkActionHelpers';
 import { isTituloPagoParaRecibo } from '../../utils/tituloRecibo';
 import { awaitRefreshResult, isTituloDeletavel } from './utils';
+import type { Titulo } from '../../types';
 
 interface UseTituloActionsParams {
   effectiveClienteId: number | null;
@@ -331,6 +333,30 @@ export function useTituloActions({
         }
       },
     },
+    (() => {
+      const consultarAction = createTituloConsultarPagamentoAction(
+        { t, success, showApiError, bulkBtn },
+        async () => {
+          await queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', effectiveClienteId] });
+          await awaitRefreshResult(onRefreshParcelas());
+        }
+      );
+      return {
+        key: 'consultarPagamento',
+        label: consultarAction.label,
+        variant: consultarAction.variant,
+        disabled: (selectedItems: CarneParcela[]) => {
+          const { disabled } = consultarAction;
+          if (typeof disabled === 'function') {
+            return disabled(selectedItems as unknown as Titulo[]);
+          }
+          return Boolean(disabled);
+        },
+        onClick: (selectedItems: CarneParcela[]) => {
+          void consultarAction.action?.(selectedItems as unknown as Titulo[]);
+        },
+      };
+    })(),
     {
       key: 'cancelar',
       label: bulkBtn.cancelar.label,
@@ -457,6 +483,11 @@ export function useTituloActions({
     handleImprimirTodosEmAberto,
     handleImprimirRecibosWrapper,
     error,
+    success,
+    showApiError,
+    queryClient,
+    effectiveClienteId,
+    onRefreshParcelas,
     getItemsCompletos,
     selectedItems,
   ]);

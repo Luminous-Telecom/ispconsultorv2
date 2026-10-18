@@ -92,6 +92,7 @@ export const CONTEXT_ERROR_MESSAGES = {
   TITULO_UNPAY_ERROR: 'Erro ao desmarcar pagamento da parcela',
   TITULO_MARK_PAID_ERROR: 'Erro ao marcar título como pago',
   TITULO_REVERSE_ERROR: 'Erro ao estornar título.',
+  TITULO_CONSULT_PAYMENT_ERROR: 'Erro ao consultar pagamento no banco',
   TITULO_CANCEL_ERROR: 'Erro ao cancelar títulos',
   TITULO_DELETE_SINGLE_ERROR: 'Não foi possível excluir 1 título.',
   TITULO_DELETE_PLURAL_ERROR: 'Erro ao excluir títulos.',

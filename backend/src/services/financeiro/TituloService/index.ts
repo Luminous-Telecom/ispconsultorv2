@@ -99,7 +99,27 @@ function shapeTitulo<T extends TituloComRelacoesRow>(row: T) {
     nota_fiscal: nota,
   };
 
+  const TITULO_UPDATE_KEYS = new Set([
+    'status', 'pago', 'data_pagamento', 'valor_pago', 'valor_aberto', 'data_vencimento',
+    'codigo_barras', 'linha_digitavel', 'qrcode', 'qrcode_image', 'observacoes',
+    'charge_id', 'url_boleto', 'nosso_numero', 'descricao',
+  ]);
+
   return withToJson(Object.assign(shaped, {
+    /** Compatível com Sequelize Model#update — usado por webhooks após refetch via getById. */
+    async update(data: Record<string, unknown>) {
+      const patch: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(data)) {
+        if (TITULO_UPDATE_KEYS.has(key)) patch[key] = value;
+      }
+      if (Object.keys(patch).length === 0) return shaped;
+      await prisma.financeiro_titulos.update({
+        where: { id: shaped.id },
+        data: patch as Prisma.financeiro_titulosUncheckedUpdateInput,
+      });
+      Object.assign(shaped, patch);
+      return shaped;
+    },
     async marcarComoPago(valorPago?: number, dataPagamento?: Date, skipLiquidacaoBanco = false) {
       const valor = valorPago ?? Number(shaped.valor);
       const agora = new Date();

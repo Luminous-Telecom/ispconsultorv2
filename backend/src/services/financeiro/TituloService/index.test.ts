@@ -61,6 +61,25 @@ describe('TituloService', () => {
     await expect(TituloService.getById(99)).resolves.toBeNull();
   });
 
+  it('getById devolve shape com update para webhooks', async () => {
+    (titulos.findUnique as jest.Mock).mockResolvedValue({ ...row });
+    (titulos.update as jest.Mock).mockResolvedValue({ ...row, status: 'pago', pago: true });
+
+    const titulo = await TituloService.getById(12);
+    expect(titulo).not.toBeNull();
+    expect(typeof (titulo as { update?: unknown }).update).toBe('function');
+
+    await (titulo as { update: (d: Record<string, unknown>) => Promise<unknown> }).update({
+      status: 'pago',
+      pago: true,
+    });
+
+    expect(titulos.update).toHaveBeenCalledWith({
+      where: { id: 12 },
+      data: { status: 'pago', pago: true },
+    });
+  });
+
   it('cadastro persiste empresa, cliente e valor', async () => {
     (titulos.create as jest.Mock).mockImplementation(async ({ data }) => ({ id: 12, ...data }));
 

@@ -2,7 +2,13 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { I18nProvider } from 'contexts/I18nContext';
 import { translations } from 'i18n/translations';
-import { CartaoCnpjButton, NovoButton, SalvarButton, VisualizarButton } from './buttons';
+import {
+  CartaoCnpjButton,
+  ConsultarPagamentoButton,
+  NovoButton,
+  SalvarButton,
+  VisualizarButton,
+} from './buttons';
 import { getSystemButtonBulkProps, SYSTEM_BUTTON_CONFIG, toBulkVariant } from './config';
 
 function renderButton(ui: React.ReactElement) {
@@ -43,6 +49,13 @@ describe('botões do sistema', () => {
     const botao = screen.getByRole('button', { name: 'Cartão CNPJ' });
     expect((botao as HTMLButtonElement).disabled).toBe(false);
     expect(botao.getAttribute('type')).toBe('button');
+  });
+
+  it('Consultar pagamento mantém o texto e fica desabilitado enquanto isPending', () => {
+    renderButton(<ConsultarPagamentoButton isPending onClick={jest.fn()} />);
+    const botao = screen.getByRole('button', { name: 'Consultar pagamento' });
+    expect((botao as HTMLButtonElement).disabled).toBe(true);
+    expect(botao.textContent).toBe('Consultar pagamento');
   });
 
   it('variante em massa não usa outline e o rótulo de criar inclui a entidade', () => {

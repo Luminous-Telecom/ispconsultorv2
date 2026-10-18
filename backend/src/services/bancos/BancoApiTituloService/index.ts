@@ -449,6 +449,10 @@ export class BancoApiTituloService {
         return await this.asaasService.liquidarTitulo(titulo as unknown as Titulo, bancoComCredenciais, token);
       }
 
+      if (bancoComCredenciais.tipo_banco === 'efi') {
+        return await this.efiService.liquidarTitulo(titulo as unknown as Titulo, bancoComCredenciais, token);
+      }
+
       const baseUrlCobranca = banco.sandbox 
         ? (config.sandbox_url || config.cobranca_base_url)
         : config.cobranca_base_url;
@@ -462,17 +466,13 @@ export class BancoApiTituloService {
 
       const headers = BancoApiRequestService.buildRequestHeaders(banco.tipo_banco, token, config);
 
-      // Para EFI, usar settle: true, para outros bancos usar payload padrão
-      const payload = banco.tipo_banco === 'efi'
-        ? { settle: true }
-        : {
-            paymentDate: new Date().toISOString().split('T')[0],
-            value: Number(titulo.valor),
-            notifyCustomer: false
-          };
+      const payload = {
+        paymentDate: new Date().toISOString().split('T')[0],
+        value: Number(titulo.valor),
+        notifyCustomer: false
+      };
 
-      const method = banco.tipo_banco === 'efi' ? 'put' : 'post';
-      const response = await axios[method](endpoint, payload, { headers, timeout: 30000 });
+      const response = await axios.post(endpoint, payload, { headers, timeout: 30000 });
 
       if (response.status >= 200 && response.status < 300) {
         logger.info('Título liquidado com sucesso', {

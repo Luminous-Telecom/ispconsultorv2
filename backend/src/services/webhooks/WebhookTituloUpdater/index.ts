@@ -28,6 +28,29 @@ export async function applyPagoWebhook(
   }
 }
 
+/**
+ * Atualiza campos do título no webhook.
+ * Após `refetchResolvedTitulo`, o objeto vem do Prisma (shapeTitulo) — usa `.update` se existir,
+ * senão cai no TituloService.update.
+ */
+export async function updateTituloWebhook(
+  resolved: ResolvedTitulo,
+  data: Record<string, unknown>
+): Promise<void> {
+  const entries = Object.entries(data).filter(([, value]) => value !== undefined);
+  if (entries.length === 0) return;
+
+  const patch = Object.fromEntries(entries);
+  const t = resolved.titulo as TituloLike;
+  if (typeof t.update === 'function') {
+    await t.update(patch);
+    return;
+  }
+
+  await TituloService.update(t.id, patch);
+  await refetchResolvedTitulo(resolved);
+}
+
 /** Baixa automática só dispara recibo se o pagamento caiu nesta janela (evita recibo de cobrança antiga). */
 const RECIBO_AUTOMATICO_MAX_DIAS = 7;
 

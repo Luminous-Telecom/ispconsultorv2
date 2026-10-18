@@ -8,12 +8,18 @@ import { Banco } from '../../../models/cadastros/Banco';
 import { logger } from '../../../utils/logger';
 import { BancoApiService } from '../../../services/bancos/BancoApiService';
 import { TituloComRelacoes } from '../TituloHelpers/types';
+import {
+  extrairStatusConsultaBanco,
+  extrairValorPagoConsultaBanco,
+  isStatusPagoNoBanco,
+} from '../TituloHelpers';
 import { registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { PaymentCommonService } from '../../../services/webhooks/PaymentCommonService';
 import { ReciboPagamentoService } from '../../../services/comunicacao/ReciboPagamentoService';
+import type { JsonValue } from '../../../types/index';
 
 export class TituloBoletoController {
   
@@ -134,13 +140,20 @@ export class TituloBoletoController {
         titulo as unknown as Parameters<typeof BancoApiService.consultarStatus>[0]
       );
 
-      if (resultado.success && resultado.data) {
-        const statusPago = resultado.data.status === 'paid' || resultado.data.status === 'settled';
-        
+      if (resultado.success && (resultado.data || resultado.status)) {
+        const statusBanco = extrairStatusConsultaBanco({
+          status: resultado.status,
+          data: resultado.data as Record<string, JsonValue | undefined> | undefined,
+        });
+        const statusPago = isStatusPagoNoBanco(statusBanco);
+
         if (statusPago && !titulo.pago) {
           const dadosAnteriores = toPlain(titulo);
-          const valorPago = resultado.data.valor_pago || titulo.valor;
-          const rawData = resultado.data.data_pagamento;
+          const valorPago = extrairValorPagoConsultaBanco(
+            { data: resultado.data as Record<string, JsonValue | undefined> | undefined },
+            Number(titulo.valor)
+          );
+          const rawData = (resultado.data as { data_pagamento?: unknown } | undefined)?.data_pagamento;
           const dataPagamento = rawData
             ? (typeof rawData === 'string'
                 ? PaymentCommonService.normalizePaymentDate(rawData) ?? new Date()
@@ -149,7 +162,8 @@ export class TituloBoletoController {
                   : new Date())
             : new Date();
 
-          await titulo.marcarComoPago(Number(valorPago), dataPagamento);
+          // Banco já confirma o pagamento — não chamar /settle de novo (EFI retorna 500 se já settled).
+          await titulo.marcarComoPago(Number(valorPago), dataPagamento, true);
           await TituloService.reloadTituloComRelacoes(titulo);
 
           try {
@@ -168,11 +182,11 @@ export class TituloBoletoController {
           }
 
           ReciboPagamentoService.enviarRecibo(titulo.id);
-          sendSuccess(res, { titulo_id: titulo.id, status_novo: titulo.status, valor_pago: valorPago, data_pagamento: dataPagamento }, 'Título atualizado com sucesso');
+          sendSuccess(res, { titulo_id: titulo.id, status_novo: titulo.status, valor_pago: valorPago, data_pagamento: dataPagamento }, 'Título atualizado com sucesso — pagamento confirmado no banco');
         } else if (statusPago) {
-          sendSuccess(res, { titulo_id: titulo.id, status: titulo.status }, 'Título já estava pago');
+          sendSuccess(res, { titulo_id: titulo.id, status: titulo.status, status_banco: statusBanco }, 'Título já estava pago');
         } else {
-          sendSuccess(res, { titulo_id: titulo.id, status: titulo.status, status_banco: resultado.data.status }, 'Título consultado - sem alterações (ainda não foi pago)');
+          sendSuccess(res, { titulo_id: titulo.id, status: titulo.status, status_banco: statusBanco }, 'Título consultado - sem alterações (ainda não foi pago)');
         }
       } else {
         sendError(res, new Error(resultado.message || 'Erro ao consultar status no banco'), resultado.message || 'Erro ao consultar status no banco', 400, false);

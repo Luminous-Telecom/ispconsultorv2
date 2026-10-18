@@ -5,6 +5,90 @@ import { logger } from '../../../utils/logger';
 import { parseDateFromDb, formatDate } from '../../../utils/dateUtils';
 import { resolveImagePath, resolveArquivosPath } from '../../../utils/pathUtils';
 import { TituloComRelacoes } from './types';
+import type { JsonValue } from '../../../types/index';
+
+/** Status da EFI/Asaas que significam título já recebido/liquidado. */
+const STATUS_PAGO_BANCO = new Set([
+  'paid',
+  'settled',
+  'received',
+  'confirmed',
+  'received_in_cash',
+]);
+
+/**
+ * Extrai o status da cobrança a partir da resposta de consultarStatus.
+ * EFI: status em resultado.status (mapeado) ou em data.data.status.
+ * Asaas: status em resultado.status ou data.status.
+ */
+export function extrairStatusConsultaBanco(resultado: {
+  status?: string;
+  data?: Record<string, JsonValue | undefined> | null;
+}): string | null {
+  if (typeof resultado.status === 'string' && resultado.status.trim()) {
+    return resultado.status.trim().toLowerCase();
+  }
+
+  const data = resultado.data;
+  if (!data || typeof data !== 'object') {
+    return null;
+  }
+
+  if (typeof data.status === 'string' && data.status.trim()) {
+    return data.status.trim().toLowerCase();
+  }
+
+  const nested = data.data;
+  if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
+    const nestedStatus = (nested as Record<string, JsonValue>).status;
+    if (typeof nestedStatus === 'string' && nestedStatus.trim()) {
+      return nestedStatus.trim().toLowerCase();
+    }
+  }
+
+  return null;
+}
+
+export function isStatusPagoNoBanco(status: string | null | undefined): boolean {
+  if (!status) return false;
+  return STATUS_PAGO_BANCO.has(status.trim().toLowerCase());
+}
+
+/**
+ * Valor pago na resposta do banco. EFI usa centavos em paid_value; Asaas usa reais em value/netValue.
+ */
+export function extrairValorPagoConsultaBanco(
+  resultado: { data?: Record<string, JsonValue | undefined> | null },
+  valorTitulo: number
+): number {
+  const data = resultado.data;
+  if (!data || typeof data !== 'object') {
+    return valorTitulo;
+  }
+
+  const charge =
+    data.data && typeof data.data === 'object' && !Array.isArray(data.data)
+      ? (data.data as Record<string, JsonValue>)
+      : data;
+
+  const paidValue = charge.paid_value;
+  if (typeof paidValue === 'number' && Number.isFinite(paidValue)) {
+    // EFI: paid_value em centavos (ex.: 10000 = R$ 100,00)
+    return paidValue / 100;
+  }
+
+  const valorPago = charge.valor_pago;
+  if (typeof valorPago === 'number' && Number.isFinite(valorPago)) {
+    return valorPago;
+  }
+
+  const value = charge.value ?? charge.netValue ?? charge.net_value;
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  return valorTitulo;
+}
 
 /**
  * Converte logo para base64

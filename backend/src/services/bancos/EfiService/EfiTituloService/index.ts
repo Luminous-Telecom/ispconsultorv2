@@ -286,6 +286,25 @@ export class EfiTituloService {
         };
       }
 
+      // Já settled/paid: /settle retorna 500 — tratar como sucesso.
+      const statusAtual = await this.consultarStatus(titulo, banco, token);
+      const statusStr =
+        typeof statusAtual.status === 'string'
+          ? statusAtual.status.toLowerCase()
+          : undefined;
+      if (statusStr === 'settled' || statusStr === 'paid') {
+        logger.info('Cobrança EFI já liquidada — skip /settle', {
+          titulo_id: titulo.id,
+          charge_id: titulo.charge_id,
+          status: statusStr,
+        });
+        return {
+          success: true,
+          message: 'Cobrança já estava liquidada na Efi',
+          status: statusStr,
+        };
+      }
+
       const baseUrlCobranca = banco.sandbox
         ? efiConfig.sandbox_url
         : efiConfig.cobranca_base_url;
@@ -293,6 +312,11 @@ export class EfiTituloService {
       const endpoint = `${baseUrlCobranca}${efiConfig.api_endpoints.liquidar.replace(':id', titulo.charge_id)}`;
       const headers = EfiHelpers.buildAuthHeaders(token);
       headers['Content-Type'] = 'application/json';
+
+      logger.info('Liquidando título no banco', {
+        titulo_id: titulo.id,
+        charge_id: titulo.charge_id,
+      });
 
       await axios.put(endpoint, {}, { headers, timeout: 30000 });
       const { TituloService } = await import('../../../financeiro/TituloService');
@@ -305,6 +329,31 @@ export class EfiTituloService {
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+
+      // Corrida: settle falhou mas a cobrança já estava (ou ficou) liquidada.
+      try {
+        const statusAtual = await this.consultarStatus(titulo, banco, token);
+        const statusStr =
+          typeof statusAtual.status === 'string'
+            ? statusAtual.status.toLowerCase()
+            : undefined;
+        if (statusStr === 'settled' || statusStr === 'paid') {
+          logger.info('Settle EFI falhou mas cobrança já está liquidada', {
+            titulo_id: titulo.id,
+            charge_id: titulo.charge_id,
+            status: statusStr,
+            error: errorMessage,
+          });
+          return {
+            success: true,
+            message: 'Cobrança já estava liquidada na Efi',
+            status: statusStr,
+          };
+        }
+      } catch {
+        // ignora e devolve o erro original
+      }
+
       logger.error('Erro ao liquidar título na Efi', {
         titulo_id: titulo.id,
         error: errorMessage

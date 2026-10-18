@@ -45,6 +45,7 @@ export const AnteriorButton = createButton('anterior');
 export const FinalizarButton = createButton('finalizar');
 export const EnviarButton = createButton('enviar');
 export const ReceberButton = createButton('receber');
+export const ConsultarPagamentoButton = createButton('consultarPagamento');
 export const EstornarButton = createButton('estornar');
 export const ViaWhatsAppButton = createButton('viaWhatsApp');
 export const ViaEmailButton = createButton('viaEmail');

@@ -33,6 +33,7 @@ export type SystemButtonAction =
   | 'finalizar'
   | 'enviar'
   | 'receber'
+  | 'consultarPagamento'
   | 'estornar'
   | 'viaWhatsApp'
   | 'viaEmail'
@@ -116,6 +117,7 @@ export const SYSTEM_BUTTON_CONFIG: Record<SystemButtonAction, SystemButtonStyleC
   finalizar: { variant: 'primary', defaultSize: 'sm', i18nKey: 'buttons.finish' },
   enviar: { variant: 'primary', defaultSize: 'sm', i18nKey: 'buttons.send' },
   receber: { variant: 'primary', defaultSize: 'sm', i18nKey: 'buttons.receive' },
+  consultarPagamento: { variant: 'primary', defaultSize: 'sm', i18nKey: 'buttons.consultPayment' },
   estornar: { variant: 'danger', defaultSize: 'sm', i18nKey: 'buttons.reverse' },
   viaWhatsApp: { variant: 'primary', defaultSize: 'sm', i18nKey: 'buttons.viaWhatsApp' },
   viaEmail: { variant: 'primary', defaultSize: 'sm', i18nKey: 'buttons.viaEmail' },
@@ -231,6 +233,7 @@ export const SYSTEM_BUTTON_EXPORT_NAMES: Record<SystemButtonAction, string> = {
   finalizar: 'FinalizarButton',
   enviar: 'EnviarButton',
   receber: 'ReceberButton',
+  consultarPagamento: 'ConsultarPagamentoButton',
   estornar: 'EstornarButton',
   viaWhatsApp: 'ViaWhatsAppButton',
   viaEmail: 'ViaEmailButton',

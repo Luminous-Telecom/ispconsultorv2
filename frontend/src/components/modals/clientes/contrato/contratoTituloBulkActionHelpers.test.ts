@@ -1,16 +1,21 @@
 import { Titulo } from 'types';
 import { TituloService } from 'services/tituloService';
-import { createTituloEnviarAction } from './contratoTituloBulkActionHelpers';
+import {
+  createTituloConsultarPagamentoAction,
+  createTituloEnviarAction,
+} from './contratoTituloBulkActionHelpers';
 
 jest.mock('services/tituloService', () => ({
   TituloService: {
     enviarWhatsApp: jest.fn(),
     enviarEmail: jest.fn(),
     enviarRecibo: jest.fn(),
+    consultarRecebimento: jest.fn(),
   },
 }));
 
 const enviarRecibo = TituloService.enviarRecibo as jest.Mock;
+const consultarRecebimento = TituloService.consultarRecebimento as jest.Mock;
 
 function criarAcao() {
   const success = jest.fn();
@@ -54,4 +59,45 @@ it('envia recibo só dos títulos pagos', async () => {
   expect(enviarRecibo).toHaveBeenCalledTimes(1);
   expect(enviarRecibo).toHaveBeenCalledWith(1);
   expect(success).toHaveBeenCalledWith('messages.successSendReceipt');
+});
+
+it('consulta pagamento só de títulos com charge_id e não cancelados', async () => {
+  consultarRecebimento.mockResolvedValue({
+    success: true,
+    message: 'Título consultado - sem alterações (ainda não foi pago)',
+  });
+  const success = jest.fn();
+  const showApiError = jest.fn();
+  const onDone = jest.fn().mockResolvedValue(undefined);
+  const t = (key: string, params?: Record<string, string | number>) =>
+    params?.count != null ? `${key}:${params.count}` : key;
+
+  const action = createTituloConsultarPagamentoAction(
+    {
+      t: t as never,
+      success,
+      showApiError,
+      bulkBtn: { consultarPagamento: { label: 'Consultar pagamento', variant: 'primary' } } as never,
+    },
+    onDone
+  );
+
+  expect(action.disabled?.([])).toBe(true);
+  expect(
+    action.disabled?.([{ id: 1, status: 'pendente' } as Titulo])
+  ).toBe(true);
+  expect(
+    action.disabled?.([{ id: 2, status: 'pendente', charge_id: '123' } as Titulo])
+  ).toBe(false);
+
+  await action.action([
+    { id: 1, status: 'pendente' } as Titulo,
+    { id: 2, status: 'pendente', charge_id: '123' } as Titulo,
+    { id: 3, status: 'cancelado', charge_id: '456' } as Titulo,
+  ]);
+
+  expect(consultarRecebimento).toHaveBeenCalledTimes(1);
+  expect(consultarRecebimento).toHaveBeenCalledWith(2);
+  expect(onDone).toHaveBeenCalled();
+  expect(success).toHaveBeenCalledWith('Título consultado - sem alterações (ainda não foi pago)');
 });

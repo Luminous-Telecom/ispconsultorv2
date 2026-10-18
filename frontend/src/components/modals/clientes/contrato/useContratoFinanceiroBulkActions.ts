@@ -10,6 +10,7 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { BulkAction } from './types';
 import {
   createTituloCancelarAction,
+  createTituloConsultarPagamentoAction,
   createTituloEditAction,
   createTituloEnviarAction,
   createTituloEstornarAction,
@@ -102,6 +103,10 @@ export function useContratoFinanceiroBulkActions({
       },
       createTituloEditAction(ctx, setSelectedTituloId, setShowTituloEditModal),
       createTituloReceberAction(ctx, setSelectedParcela, setShowReceberModal),
+      createTituloConsultarPagamentoAction(ctx, async () => {
+        await queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId] });
+        await refetchTitulos();
+      }),
       createTituloCancelarAction(ctx, sharedVariant),
       createTituloEstornarAction(ctx, sharedVariant),
       createTituloImprimirAction(ctx, handleImprimirSelecionados, handleImprimirTodosEmAberto),
@@ -150,6 +155,12 @@ export function useContratoFinanceiroBulkActions({
       },
       createTituloEditAction(ctx, setSelectedTituloId, setShowTituloEditModal),
       createTituloReceberAction(ctx, setSelectedParcela, setShowReceberModal),
+      createTituloConsultarPagamentoAction(ctx, async () => {
+        await queryClient.invalidateQueries({
+          queryKey: ['titulos', 'contrato', internalContratoId, 'avulsos'],
+        });
+        await refetchTitulosAvulsos();
+      }),
       createTituloCancelarAction(ctx, avulsoVariant),
       createTituloEstornarAction(ctx, avulsoVariant),
       createTituloImprimirAction(ctx, handleImprimirSelecionadosAvulsos, handleImprimirTodosEmAbertoAvulsos),

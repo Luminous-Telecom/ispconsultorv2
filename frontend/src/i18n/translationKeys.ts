@@ -804,6 +804,11 @@ export interface TranslationKeys {
   'financial.titlesNotCanceled': string;
   'financial.errorCanceling': string;
   'financial.canOnlyReversePaid': string;
+  'financial.canOnlyConsultRegistered': string;
+  'financial.paymentConsulted': string;
+  'financial.paymentsConsulted': string;
+  'financial.paymentConsultError': string;
+  'financial.paymentsConsultError': string;
   'financial.titleReversed': string;
   'financial.errorReversing': string;
   'financial.titleWillReturnPending': string;
@@ -847,6 +852,7 @@ export interface TranslationKeys {
   'buttons.finish': string;
   'buttons.send': string;
   'buttons.receive': string;
+  'buttons.consultPayment': string;
   'buttons.reverse': string;
   'buttons.audit': string;
   'buttons.reload': string;

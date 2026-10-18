@@ -5,7 +5,13 @@ import { Titulo } from '../../../models/financeiro/Titulo';
 import { BarcodeService } from '../../bancos/BarcodeService';
 import { PaymentCommonService } from '../PaymentCommonService';
 import { TituloWebhookResolver } from '../TituloWebhookResolver';
-import { applyPagoWebhook, enviarReciboSeAdmin, registrarAuditoriaWebhook, refetchResolvedTitulo } from '../WebhookTituloUpdater';
+import {
+  applyPagoWebhook,
+  enviarReciboSeAdmin,
+  registrarAuditoriaWebhook,
+  refetchResolvedTitulo,
+  updateTituloWebhook,
+} from '../WebhookTituloUpdater';
 import { logger } from '../../../utils/logger';
 import { JsonValue } from '../../../types/index';
 import { AsaasPaymentPayload } from '../../../types/webhooks';
@@ -108,7 +114,7 @@ export class AsaasWebhookService {
 
       if (titulo.status === 'cancelado' && updates.status) delete updates.status;
       if (Object.keys(updates).length > 0) {
-        await (titulo as { update: (d: Record<string, unknown>) => Promise<unknown> }).update(updates);
+        await updateTituloWebhook(resolved, updates);
       }
       await refetchResolvedTitulo(resolved);
 

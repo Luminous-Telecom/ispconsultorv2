@@ -3,7 +3,13 @@ import { Request } from 'express';
 import { Banco } from '../../../models/cadastros/Banco';
 import { PaymentCommonService } from '../PaymentCommonService';
 import { TituloWebhookResolver } from '../TituloWebhookResolver';
-import { applyPagoWebhook, enviarReciboSeAdmin, registrarAuditoriaWebhook, refetchResolvedTitulo } from '../WebhookTituloUpdater';
+import {
+  applyPagoWebhook,
+  enviarReciboSeAdmin,
+  registrarAuditoriaWebhook,
+  refetchResolvedTitulo,
+  updateTituloWebhook,
+} from '../WebhookTituloUpdater';
 import { logger } from '../../../utils/logger';
 import {
   WebhookResponse,
@@ -214,7 +220,7 @@ export class EfiWebhookProcessorService {
         delete updateData.pago;
       }
 
-      await (titulo as { update: (d: Record<string, unknown>) => Promise<unknown> }).update(updateData);
+      await updateTituloWebhook(resolved, updateData);
       await refetchResolvedTitulo(resolved);
       const dadosNovos = toPlain((resolved.titulo as { toJSON: () => Record<string, unknown> })) as Record<string, unknown>;
 
@@ -269,9 +275,9 @@ export class EfiWebhookProcessorService {
         const dataPagamentoNormalizada = dataPagamentoWebhook ? PaymentCommonService.normalizePaymentDate(dataPagamentoWebhook) : new Date();
         await applyPagoWebhook(resolved, Number(titulo.valor), dataPagamentoNormalizada || new Date());
       } else {
-        await (titulo as { update: (d: Record<string, unknown>) => Promise<unknown> }).update({
+        await updateTituloWebhook(resolved, {
           status: statusLocal,
-          pago: isPago
+          pago: isPago,
         });
       }
       await refetchResolvedTitulo(resolved);
