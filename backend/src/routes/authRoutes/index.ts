@@ -5,6 +5,8 @@ import { authRateLimitMiddleware } from '../../middleware/rateLimitMiddleware';
 const router = Router();
 
 router.post('/login', authRateLimitMiddleware(), AuthController.login);
+router.post('/forgot-password', authRateLimitMiddleware(), AuthController.forgotPassword);
+router.post('/reset-password', authRateLimitMiddleware(), AuthController.resetPassword);
 router.post('/2fa/verify', authRateLimitMiddleware(), AuthController.verify2fa);
 router.post('/2fa/email/send', authRateLimitMiddleware(), AuthController.sendEmail2faCode);
 router.post('/2fa/webauthn/login-options', authRateLimitMiddleware(), AuthController.webauthnLoginOptions);

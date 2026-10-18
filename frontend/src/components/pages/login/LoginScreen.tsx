@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { EntrarButton, Input } from 'components/ui';
+import { EntrarButton, Input, NavLinkButton } from 'components/ui';
 import IspConsultorLogo from 'components/common/IspConsultorLogo';
 import './LoginScreen.scss';
 
@@ -27,6 +27,8 @@ export interface LoginScreenProps {
   empresaLogo?: string | null;
   /** Texto alternativo da logo da empresa. */
   empresaLogoAlt?: string;
+  forgotPasswordLabel?: string;
+  onForgotPassword?: () => void;
   onSubmit: (credentials: LoginCredentials) => Promise<void> | void;
 }
 
@@ -44,6 +46,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
   logoHeight,
   empresaLogo,
   empresaLogoAlt = 'Logo da empresa',
+  forgotPasswordLabel,
+  onForgotPassword,
   onSubmit,
 }) => {
   const [email, setEmail] = useState('');
@@ -125,6 +129,20 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
                     placeholder={passwordPlaceholder}
                   />
                 </div>
+
+                {onForgotPassword && forgotPasswordLabel ? (
+                  <div className="login-forgot">
+                    <NavLinkButton
+                      type="button"
+                      className="login-forgot__link"
+                      onClick={onForgotPassword}
+                      disabled={isLoading}
+                      ariaLabel={forgotPasswordLabel}
+                    >
+                      {forgotPasswordLabel}
+                    </NavLinkButton>
+                  </div>
+                ) : null}
 
                 <div className="login-submit">
                   <EntrarButton type="submit" disabled={isLoading} isPending={isLoading} />

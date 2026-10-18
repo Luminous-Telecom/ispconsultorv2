@@ -12,6 +12,8 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { path: /^\/client-ip$/i },
   { path: /^\/api\/health/i },
   { path: /^\/api\/auth\/login$/i },
+  { method: 'POST', path: /^\/api\/auth\/forgot-password$/i }, // Esqueci minha senha (público)
+  { method: 'POST', path: /^\/api\/auth\/reset-password$/i }, // Redefinir senha com token (público)
   { method: 'POST', path: /^\/api\/auth\/2fa\/verify$/i }, // Segundo passo do login (token temporário)
   { method: 'POST', path: /^\/api\/auth\/2fa\/email\/send$/i }, // Envio de OTP por e-mail no login (token 2fa_pending)
   { method: 'POST', path: /^\/api\/auth\/2fa\/webauthn\/login-options$/i },

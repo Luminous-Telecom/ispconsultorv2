@@ -76,4 +76,22 @@ describe('authService', () => {
     await authService.sendRecoveryEmailValidation();
     expect(getHttp().post.mock.calls[0][0]).toContain('/auth/me/email-recuperacao/enviar');
   });
+
+  it('forgotPassword posta e-mail no endpoint público', async () => {
+    getHttp().post.mockResolvedValue(ok(undefined));
+    await authService.forgotPassword('ana@test.com');
+    expect(getHttp().post.mock.calls[0][0]).toContain('/auth/forgot-password');
+    expect(getHttp().post.mock.calls[0][1]).toEqual({ email: 'ana@test.com' });
+  });
+
+  it('resetPassword posta token e senhas', async () => {
+    getHttp().post.mockResolvedValue(ok(undefined));
+    await authService.resetPassword('token-abc', 'senha123', 'senha123');
+    expect(getHttp().post.mock.calls[0][0]).toContain('/auth/reset-password');
+    expect(getHttp().post.mock.calls[0][1]).toEqual({
+      token: 'token-abc',
+      password: 'senha123',
+      password_confirmation: 'senha123',
+    });
+  });
 });

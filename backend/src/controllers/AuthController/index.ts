@@ -903,6 +903,70 @@ export class AuthController {
       sendError(res, err, 'Erro ao confirmar e-mail de recuperação', 500, true);
     }
   }
+
+  static async forgotPassword(req: Request, res: Response): Promise<void> {
+    try {
+      const schema = Joi.object({
+        email: Joi.string().email().required().messages({
+          'string.email': 'E-mail inválido',
+          'any.required': 'E-mail é obrigatório',
+          'string.empty': 'E-mail é obrigatório',
+        }),
+      });
+      const { error, value } = schema.validate(req.body, { abortEarly: false, stripUnknown: true });
+      if (error) {
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
+        return;
+      }
+      const { PasswordResetService } = await import('../../services/sistema/PasswordResetService');
+      const origin = getRequestOrigin(req) || process.env.BASE_URL || 'http://localhost:3000';
+      const result = await PasswordResetService.requestReset(value.email, origin);
+      sendSuccess(res, undefined, result.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro';
+      if (message.includes('inválido')) {
+        sendValidationError(res, message);
+        return;
+      }
+      sendError(res, err, 'Erro ao solicitar redefinição de senha', 500, true);
+    }
+  }
+
+  static async resetPassword(req: Request, res: Response): Promise<void> {
+    try {
+      const schema = Joi.object({
+        token: Joi.string().trim().required(),
+        password: Joi.string().min(6).required().messages({
+          'string.min': 'A senha deve ter no mínimo 6 caracteres',
+          'any.required': 'Senha é obrigatória',
+          'string.empty': 'Senha é obrigatória',
+        }),
+        password_confirmation: Joi.string().required().valid(Joi.ref('password')).messages({
+          'any.only': 'A confirmação de senha não confere',
+          'any.required': 'Confirmação de senha é obrigatória',
+        }),
+      });
+      const { error, value } = schema.validate(req.body, { abortEarly: false, stripUnknown: true });
+      if (error) {
+        sendValidationError(res, 'Dados inválidos', joiErrorsToFieldMap(error.details));
+        return;
+      }
+      const { PasswordResetService } = await import('../../services/sistema/PasswordResetService');
+      await PasswordResetService.resetPassword(value.token, value.password);
+      sendSuccess(res, undefined, 'Senha redefinida com sucesso. Faça login com a nova senha.');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro';
+      if (
+        message.includes('inválido') ||
+        message.includes('expirado') ||
+        message.includes('mínimo')
+      ) {
+        sendValidationError(res, message);
+        return;
+      }
+      sendError(res, err, 'Erro ao redefinir senha', 500, true);
+    }
+  }
 }
 
 export default AuthController;

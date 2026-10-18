@@ -84,6 +84,24 @@ describe('LoginScreen', () => {
     });
   });
 
+  it('mostra Esqueci minha senha e dispara o callback', () => {
+    const onForgotPassword = jest.fn();
+
+    renderLogin(
+      <LoginScreen
+        subtitle="Acesse o painel administrativo"
+        emailPlaceholder="E-mail"
+        passwordPlaceholder="Senha"
+        forgotPasswordLabel="Esqueci minha senha"
+        onForgotPassword={onForgotPassword}
+        onSubmit={jest.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Esqueci minha senha' }));
+    expect(onForgotPassword).toHaveBeenCalled();
+  });
+
   it('mantém o texto Entrar e fica desabilitado enquanto o submit está pendente', async () => {
     let resolveSubmit: (() => void) | undefined;
     const onSubmit = jest.fn(

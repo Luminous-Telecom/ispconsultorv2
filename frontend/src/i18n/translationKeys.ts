@@ -1638,6 +1638,19 @@ export interface TranslationKeys {
   'login.twoFactorEmailSent': string;
   'login.twoFactorEmailSentTo': string;
   'login.twoFactorPasskey': string;
+  'login.forgotPassword': string;
+  'login.forgotTitle': string;
+  'login.forgotHelp': string;
+  'login.forgotEmailRequired': string;
+  'login.forgotSuccess': string;
+  'login.resetTitle': string;
+  'login.resetHelp': string;
+  'login.resetPasswordPlaceholder': string;
+  'login.resetConfirmPlaceholder': string;
+  'login.resetPasswordMin': string;
+  'login.resetPasswordMismatch': string;
+  'login.resetInvalidLink': string;
+  'login.resetSuccess': string;
 
   // Layout
   'layout.logoutSuccess': string;

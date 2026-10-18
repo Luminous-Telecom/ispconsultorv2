@@ -163,6 +163,34 @@
   margin-bottom: 0.75rem;
 }
 
+.login-help {
+  margin: 0.5rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.login-forgot {
+  display: flex;
+  justify-content: flex-end;
+  margin: -0.15rem 0 0.15rem;
+}
+
+.login-forgot__link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.login-forgot__link:hover:not(:disabled),
+.login-forgot__link:focus-visible {
+  color: var(--text-primary);
+}
+
 .login-submit {
   display: flex;
   justify-content: center;
@@ -172,6 +200,11 @@
 .login-submit .btn {
   width: 100%;
   flex: 1 1 100%;
+}
+
+.login-submit--stack {
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 /* No mobile o sistema força width: auto nos .btn; o Entrar continua na largura do card. */

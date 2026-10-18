@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { startAuthentication } from '@simplewebauthn/browser';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
@@ -10,14 +11,22 @@ import { removeAuthToken } from 'services/core';
 import { useI18n } from 'contexts/I18nContext';
 import LoginScreen, { LoginCredentials } from './login/LoginScreen';
 import LoginTwoFactorStep from './login/LoginTwoFactorStep';
+import LoginForgotPasswordStep from './login/LoginForgotPasswordStep';
+import LoginResetPasswordStep from './login/LoginResetPasswordStep';
 import LoginFooter from './login/LoginFooter';
+
+type LoginView = 'login' | 'forgot' | 'reset' | '2fa';
 
 const Login: React.FC = () => {
   const { t } = useI18n();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
+  const [view, setView] = useState<LoginView>('login');
   const [tempToken, setTempToken] = useState<string | null>(null);
   const [methods, setMethods] = useState<TwoFactorLoginMethods | undefined>();
+  const [resetToken, setResetToken] = useState<string | null>(null);
 
   const { data: empresaPublica } = useQuery({
     queryKey: ['dados-empresa-public-login'],
@@ -32,6 +41,20 @@ const Login: React.FC = () => {
         name: empresaPublica.nome_fantasia || empresaPublica.razao_social,
       })
     : t('login.companyLogoAlt');
+
+  useEffect(() => {
+    const token = searchParams.get('redefinir_senha');
+    if (!token) return;
+    setResetToken(token);
+    setView('reset');
+  }, [searchParams]);
+
+  const clearResetQuery = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete('redefinir_senha');
+    const qs = next.toString();
+    navigate({ pathname: '/login', search: qs ? `?${qs}` : '' }, { replace: true });
+  };
 
   const finishLogin = () => {
     sessionStorage.setItem('last_login_time', Date.now().toString());
@@ -51,6 +74,7 @@ const Login: React.FC = () => {
         if (isRequires2fa(response.data)) {
           setTempToken(response.data.temp_token);
           setMethods(response.data.methods);
+          setView('2fa');
           return;
         }
         finishLogin();
@@ -60,6 +84,52 @@ const Login: React.FC = () => {
       }
     } catch (err) {
       removeAuthToken();
+      showApiError(err, ERROR_MESSAGES.GENERIC_ERROR);
+    }
+  };
+
+  const handleForgotPassword = async (email: string) => {
+    if (!email) {
+      showApiError(t('login.forgotEmailRequired'));
+      return;
+    }
+    try {
+      const response = await authService.forgotPassword(email);
+      if (response.success) {
+        success(response.message || t('login.forgotSuccess'));
+        setView('login');
+      } else {
+        showApiError(response.message || ERROR_MESSAGES.GENERIC_ERROR);
+      }
+    } catch (err) {
+      showApiError(err, ERROR_MESSAGES.GENERIC_ERROR);
+    }
+  };
+
+  const handleResetPassword = async (password: string, passwordConfirmation: string) => {
+    if (!resetToken) {
+      showApiError(t('login.resetInvalidLink'));
+      return;
+    }
+    if (!password || password.length < 6) {
+      showApiError(t('login.resetPasswordMin'));
+      return;
+    }
+    if (password !== passwordConfirmation) {
+      showApiError(t('login.resetPasswordMismatch'));
+      return;
+    }
+    try {
+      const response = await authService.resetPassword(resetToken, password, passwordConfirmation);
+      if (response.success) {
+        success(response.message || t('login.resetSuccess'));
+        setResetToken(null);
+        setView('login');
+        clearResetQuery();
+      } else {
+        showApiError(response.message || ERROR_MESSAGES.GENERIC_ERROR);
+      }
+    } catch (err) {
       showApiError(err, ERROR_MESSAGES.GENERIC_ERROR);
     }
   };
@@ -137,7 +207,7 @@ const Login: React.FC = () => {
     return parts.length ? parts.join(' ') : t('login.twoFactorHelp');
   })();
 
-  if (tempToken) {
+  if (view === '2fa' && tempToken) {
     return (
       <LoginTwoFactorStep
         subtitle={t('login.twoFactorTitle')}
@@ -157,6 +227,44 @@ const Login: React.FC = () => {
         onBack={() => {
           setTempToken(null);
           setMethods(undefined);
+          setView('login');
+        }}
+        footer={<LoginFooter />}
+      />
+    );
+  }
+
+  if (view === 'forgot') {
+    return (
+      <LoginForgotPasswordStep
+        subtitle={t('login.forgotTitle')}
+        helpText={t('login.forgotHelp')}
+        emailPlaceholder={t('form.email')}
+        logoWidth={250}
+        empresaLogo={empresaLogo}
+        empresaLogoAlt={empresaLogoAlt}
+        onSubmit={handleForgotPassword}
+        onBack={() => setView('login')}
+        footer={<LoginFooter />}
+      />
+    );
+  }
+
+  if (view === 'reset' && resetToken) {
+    return (
+      <LoginResetPasswordStep
+        subtitle={t('login.resetTitle')}
+        helpText={t('login.resetHelp')}
+        passwordPlaceholder={t('login.resetPasswordPlaceholder')}
+        confirmPlaceholder={t('login.resetConfirmPlaceholder')}
+        logoWidth={250}
+        empresaLogo={empresaLogo}
+        empresaLogoAlt={empresaLogoAlt}
+        onSubmit={handleResetPassword}
+        onBack={() => {
+          setResetToken(null);
+          setView('login');
+          clearResetQuery();
         }}
         footer={<LoginFooter />}
       />
@@ -172,6 +280,8 @@ const Login: React.FC = () => {
       logoWidth={250}
       empresaLogo={empresaLogo}
       empresaLogoAlt={empresaLogoAlt}
+      forgotPasswordLabel={t('login.forgotPassword')}
+      onForgotPassword={() => setView('forgot')}
       onSubmit={handleLogin}
       footer={<LoginFooter />}
     />

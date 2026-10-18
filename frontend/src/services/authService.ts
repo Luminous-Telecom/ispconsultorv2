@@ -217,6 +217,22 @@ export const authService = {
     });
   },
 
+  async forgotPassword(email: string): Promise<ApiResponse<void>> {
+    return defaultApiClient.post<void>('/auth/forgot-password', { email });
+  },
+
+  async resetPassword(
+    token: string,
+    password: string,
+    passwordConfirmation: string
+  ): Promise<ApiResponse<void>> {
+    return defaultApiClient.post<void>('/auth/reset-password', {
+      token,
+      password,
+      password_confirmation: passwordConfirmation,
+    });
+  },
+
   /**
    * Recupera o token JWT do servidor (lido do cookie HttpOnly).
    * Necessário após reload de página, quando o token em memória foi perdido.

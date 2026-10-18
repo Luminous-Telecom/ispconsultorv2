@@ -27,6 +27,8 @@ type UsuarioSensitive = {
   email_otp_expires_at?: Date | null;
   email_recuperacao_token_hash?: string | null;
   email_recuperacao_token_expires?: Date | null;
+  password_reset_token_hash?: string | null;
+  password_reset_token_expires?: Date | null;
 };
 
 function withoutPassword<T extends UsuarioSensitive>(usuario: T) {
@@ -39,6 +41,8 @@ function withoutPassword<T extends UsuarioSensitive>(usuario: T) {
     email_otp_expires_at: _emailOtpExp,
     email_recuperacao_token_hash: _emailRecToken,
     email_recuperacao_token_expires: _emailRecExp,
+    password_reset_token_hash: _pwdResetToken,
+    password_reset_token_expires: _pwdResetExp,
     ...safe
   } = usuario;
   return safe;
