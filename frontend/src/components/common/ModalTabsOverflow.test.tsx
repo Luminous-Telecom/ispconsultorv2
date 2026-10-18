@@ -1,11 +1,7 @@
 import React from 'react';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { I18nProvider } from 'contexts/I18nContext';
-import ModalTabsOverflow, { MODAL_TAB_HOVER_DELAY_MS } from './ModalTabsOverflow';
-
-jest.mock('hooks/usePrefersRealHover', () => ({
-  usePrefersRealHover: () => true,
-}));
+import ModalTabsOverflow from './ModalTabsOverflow';
 
 beforeAll(() => {
   global.ResizeObserver = class {
@@ -30,48 +26,22 @@ function renderTabs(onTabChange: jest.Mock, activeTab: string = 'a') {
 }
 
 describe('ModalTabsOverflow', () => {
-  beforeEach(() => {
-    jest.useFakeTimers();
-  });
-
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
-  it('troca de aba ao passar o mouse após o atraso do menu', () => {
+  it('troca de aba apenas no clique', () => {
     const onTabChange = jest.fn();
     renderTabs(onTabChange);
 
     fireEvent.mouseEnter(screen.getByRole('button', { name: 'Endereço' }));
     expect(onTabChange).not.toHaveBeenCalled();
 
-    act(() => {
-      jest.advanceTimersByTime(MODAL_TAB_HOVER_DELAY_MS);
-    });
-
-    expect(onTabChange).toHaveBeenCalledWith('b');
-  });
-
-  it('cancela a troca se o mouse sair antes do atraso', () => {
-    const onTabChange = jest.fn();
-    renderTabs(onTabChange);
-
-    const tab = screen.getByRole('button', { name: 'Endereço' });
-    fireEvent.mouseEnter(tab);
-    fireEvent.mouseLeave(tab);
-
-    act(() => {
-      jest.advanceTimersByTime(MODAL_TAB_HOVER_DELAY_MS);
-    });
-
-    expect(onTabChange).not.toHaveBeenCalled();
-  });
-
-  it('mantém clique imediato para trocar de aba', () => {
-    const onTabChange = jest.fn();
-    renderTabs(onTabChange);
-
     fireEvent.click(screen.getByRole('button', { name: 'Endereço' }));
     expect(onTabChange).toHaveBeenCalledWith('b');
+  });
+
+  it('não troca de aba ao passar o mouse', () => {
+    const onTabChange = jest.fn();
+    renderTabs(onTabChange);
+
+    fireEvent.mouseEnter(screen.getByRole('button', { name: 'Endereço' }));
+    expect(onTabChange).not.toHaveBeenCalled();
   });
 });

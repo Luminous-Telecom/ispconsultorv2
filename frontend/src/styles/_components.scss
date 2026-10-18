@@ -4547,13 +4547,6 @@ textarea:focus {
   }
 }
 
-/* Hover unificado para abas de modais: só cor, sem movimento nem sombra */
-.modal-tab-hover:hover:not(.active) {
-  background-color: var(--bg-tertiary) !important;
-  color: var(--text-primary) !important;
-  cursor: pointer !important;
-}
-
 /* FinanceiroModal - Layout principal */
 .financeiro-modal-content {
   height: 100%;
