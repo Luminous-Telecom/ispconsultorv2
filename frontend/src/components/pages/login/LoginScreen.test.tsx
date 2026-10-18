@@ -8,6 +8,35 @@ function renderLogin(ui: React.ReactElement) {
   return render(<I18nProvider>{ui}</I18nProvider>);
 }
 
+const originalGetContext = HTMLCanvasElement.prototype.getContext;
+
+beforeAll(() => {
+  HTMLCanvasElement.prototype.getContext = jest.fn(() => {
+    const ctx = {
+      setTransform: jest.fn(),
+      createLinearGradient: jest.fn(() => ({ addColorStop: jest.fn() })),
+      createRadialGradient: jest.fn(() => ({ addColorStop: jest.fn() })),
+      fillRect: jest.fn(),
+      beginPath: jest.fn(),
+      moveTo: jest.fn(),
+      lineTo: jest.fn(),
+      arc: jest.fn(),
+      stroke: jest.fn(),
+      fill: jest.fn(),
+      save: jest.fn(),
+      restore: jest.fn(),
+      fillStyle: '',
+      strokeStyle: '',
+      lineWidth: 1,
+    };
+    return ctx as unknown as CanvasRenderingContext2D;
+  }) as typeof HTMLCanvasElement.prototype.getContext;
+});
+
+afterAll(() => {
+  HTMLCanvasElement.prototype.getContext = originalGetContext;
+});
+
 describe('LoginScreen', () => {
   it('mostra a logo ISP Consultor acima do texto de acesso ao painel', () => {
     renderLogin(
@@ -40,6 +69,8 @@ describe('LoginScreen', () => {
     const empresaLogo = screen.getByAltText('Logo da empresa') as HTMLImageElement;
     expect(empresaLogo.getAttribute('src')).toBe('/arquivos/empresa/1/logo.png');
     expect(empresaLogo.className).toContain('login-branding__empresa-logo');
+    expect(empresaLogo.closest('.login-branding__empresa')).toBeTruthy();
+    expect(document.querySelector('.tech-background-canvas')).toBeTruthy();
     expect(screen.getByAltText(/ISP Consultor/i).closest('.login-brand__logo')).toBeTruthy();
   });
 

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { EntrarButton, Input, NavLinkButton } from 'components/ui';
 import IspConsultorLogo from 'components/common/IspConsultorLogo';
+import LoginEmpresaBranding from './LoginEmpresaBranding';
+import TechBackground from './TechBackground';
 import './LoginScreen.scss';
 
 export interface LoginCredentials {
@@ -69,19 +71,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
 
   return (
     <div className="login-page">
+      <TechBackground />
       <div className={`login-shell${empresaLogo ? '' : ' login-shell--form-only'}`}>
         {empresaLogo ? (
-          <aside className="login-branding" aria-label="Marca">
-            <div className="login-branding__logos">
-              <div className="login-branding__empresa">
-                <img
-                  src={empresaLogo}
-                  alt={empresaLogoAlt}
-                  className="login-branding__empresa-logo"
-                />
-              </div>
-            </div>
-          </aside>
+          <LoginEmpresaBranding empresaLogo={empresaLogo} empresaLogoAlt={empresaLogoAlt} />
         ) : null}
 
         <main className="login-panel">

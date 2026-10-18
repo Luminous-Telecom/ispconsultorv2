@@ -458,6 +458,9 @@
 
 .layout-user-dropdown {
   list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
   margin: 0;
   padding: 0.3rem;
   width: 12.5rem;
@@ -511,7 +514,7 @@
 
 .layout-user-dropdown__header {
   padding: 0.6rem 0.65rem 0.7rem;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0;
   border-bottom: 1px solid var(--border-light);
   text-align: left;
   min-width: 0;
@@ -547,7 +550,7 @@
 }
 
 .layout-user-dropdown__footer {
-  margin-top: 0.3rem;
+  margin-top: 0;
   padding-top: 0.3rem;
   border-top: 1px solid var(--border-light);
 }
@@ -637,9 +640,10 @@ button.layout-user-dropdown__row:hover,
 .layout-user-menu-flyout {
   display: inline-flex;
   flex-direction: column;
+  gap: 0.25rem;
   width: max-content;
   max-width: min(14rem, calc(100vw - 1rem));
-  padding: 0.25rem;
+  padding: 0.3rem;
   margin: 0;
   background: var(--bg-dropdown);
   border: 1px solid var(--border-light);

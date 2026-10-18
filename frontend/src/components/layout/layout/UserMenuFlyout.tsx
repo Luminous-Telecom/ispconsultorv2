@@ -5,6 +5,10 @@ import { NavLinkButton } from 'components/ui';
 
 const OPEN_DELAY_MS = 200;
 const CLOSE_DELAY_MS = 200;
+/** Espaço entre o painel do menu e o flyout (igual ao gap do dropdown do usuário). */
+const FLYOUT_GAP_PX = 8;
+const VIEWPORT_MARGIN_PX = 8;
+const FALLBACK_FLYOUT_WIDTH_PX = 160;
 
 export interface UserMenuFlyoutOption {
   id: string;
@@ -61,15 +65,20 @@ const UserMenuFlyout: React.FC<UserMenuFlyoutProps> = ({
     if (!el) {
       return;
     }
-    const rect = el.getBoundingClientRect();
+    const rowRect = el.getBoundingClientRect();
+    const panel = el.closest('.layout-user-dropdown');
+    const panelRect = panel?.getBoundingClientRect() ?? rowRect;
     const flyout = document.querySelector<HTMLElement>('[data-user-menu-flyout]');
-    const flyoutWidth = flyout?.offsetWidth || 128;
-    const gap = 6;
-    const openLeft = rect.left - flyoutWidth - gap;
-    const left = openLeft >= 8 ? openLeft : Math.round(rect.right + gap);
+    const flyoutWidth = flyout?.offsetWidth || FALLBACK_FLYOUT_WIDTH_PX;
+    const openLeft = panelRect.left - flyoutWidth - FLYOUT_GAP_PX;
+    const openRight = panelRect.right + FLYOUT_GAP_PX;
+    const left =
+      openLeft >= VIEWPORT_MARGIN_PX
+        ? openLeft
+        : Math.min(openRight, window.innerWidth - flyoutWidth - VIEWPORT_MARGIN_PX);
     setPos({
       left: Math.round(left),
-      top: Math.round(rect.top),
+      top: Math.round(rowRect.top),
     });
   }, []);
 

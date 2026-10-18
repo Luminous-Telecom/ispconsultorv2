@@ -128,7 +128,7 @@
   }
 }
 
-/* Tema escuro — grafite frio */
+/* Tema escuro — grafite azulado com accents saturados */
 [data-theme="dark"] {
   --bg-primary: var(--color-bg-dark);
   --bg-secondary: var(--color-bg-secondary-dark);
@@ -151,18 +151,18 @@
   --primary-color: var(--color-accent-dark);
   --primary-hover: var(--color-primary-fill-dark);
   --link-color: var(--color-accent-dark);
-  --link-hover-color: var(--color-text-dark);
+  --link-hover-color: var(--color-blue-soft);
   --focus-color: var(--color-accent-dark);
   --sidebar-bg: var(--bg-secondary);
   --sidebar-text: var(--text-primary);
-  --sidebar-hover: #{rgba(palette-color('accent-dark'), 0.16)};
+  --sidebar-hover: #{rgba(palette-color('accent-dark'), 0.18)};
   --sidebar-active: var(--color-accent-dark);
   --sidebar-section-accent: var(--color-accent-dark);
 
   --navbar-bg: var(--bg-primary);
   --navbar-text: var(--text-primary);
   --navbar-border: var(--border-color);
-  --navbar-input-bg: #{rgba(palette-color('white'), 0.06)};
+  --navbar-input-bg: #{rgba(palette-color('accent-dark'), 0.1)};
   --navbar-input-text: var(--color-white);
 
   --btn-primary-color: var(--color-primary-fill-dark);
@@ -175,7 +175,19 @@
   --warning-color: var(--color-warning-dark);
   --info-color: var(--color-info-dark);
 
+  --accent-pending: var(--color-accent-pending-dark);
+  --accent-complete: var(--color-accent-complete-dark);
   --card-border-primary: var(--color-card-border-dark);
-  --card-border-info: var(--card-border-primary);
+  --card-border-success: var(--accent-complete);
+  --card-border-warning: var(--accent-pending);
+  --card-border-info: var(--color-info-dark);
+  --chart-color-1: var(--color-accent-dark);
+  --chart-color-2: var(--accent-complete);
+  --chart-color-3: var(--accent-pending);
+  --chart-color-4: var(--color-chart-coral);
+  --chart-color-5: var(--color-chart-purple);
+  --chart-color-6: var(--color-chart-sky);
+  --chart-color-7: var(--color-chart-lime);
+  --chart-color-8: var(--color-chart-gold);
   --bs-form-select-bg-img: #{select-chevron(palette-color('text-dark'))};
 }
