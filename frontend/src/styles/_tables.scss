@@ -344,15 +344,8 @@ label {
 .table th.col-id,
 .table td.col-id,
 colgroup col.col-id {
-  width: 52px !important;
-  min-width: 52px !important;
-  max-width: 52px !important;
+  min-width: 40px !important;
   white-space: nowrap !important;
-}
-
-.table-resizable-enabled th.col-id {
-  min-width: 52px !important;
-  max-width: 52px !important;
 }
 
 .table th.col-checkbox,
@@ -391,15 +384,8 @@ colgroup col.col-checkbox {
 .table th.col-status,
 .table td.col-status,
 colgroup col.col-status {
-  width: 80px !important;
-  min-width: 80px !important;
-  max-width: 80px !important;
+  min-width: 60px !important;
   white-space: nowrap !important;
-}
-
-.table-resizable-enabled th.col-status {
-  min-width: 80px !important;
-  max-width: 80px !important;
 }
 
 .table th.col-status .badge,

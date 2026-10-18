@@ -4,12 +4,12 @@ export const DEFAULT_COLUMN_WIDTH_PX = 120;
 export const CHECKBOX_COLUMN_WIDTH_PX = 35;
 export const ACTIONS_COLUMN_WIDTH_PX = 120;
 
-/** Largura fixa padrão da coluna ID em todas as tabelas. */
+/** Largura padrão inicial da coluna ID (redimensionável). */
 export const ID_COLUMN_WIDTH_PX = 52;
 /** @deprecated use ID_COLUMN_WIDTH_PX */
 export const ID_COLUMN_MIN_WIDTH_PX = ID_COLUMN_WIDTH_PX;
 
-/** Largura fixa padrão da coluna Status/Ativo em todas as tabelas. */
+/** Largura padrão inicial da coluna Status/Ativo (redimensionável). */
 export const STATUS_COLUMN_WIDTH_PX = 80;
 /** @deprecated use STATUS_COLUMN_WIDTH_PX */
 export const STATUS_COLUMN_MIN_WIDTH_PX = STATUS_COLUMN_WIDTH_PX;
@@ -31,15 +31,21 @@ export function isStatusColumnKey(key?: string): boolean {
   return key != null && STATUS_COLUMN_KEYS.has(key);
 }
 
-/** Largura fixa de colunas padronizadas (ID, Status). Ignora width local da coluna. */
-export function getFixedColumnWidthPx(key?: string): number | undefined {
+/** Largura padrão de colunas ID/Status (não trava o resize). */
+export function getDefaultColumnWidthPx(key?: string): number | undefined {
   if (key === 'id') return ID_COLUMN_WIDTH_PX;
   if (isStatusColumnKey(key)) return STATUS_COLUMN_WIDTH_PX;
   return undefined;
 }
 
-export function clampStatusColumnWidthPx(_widthPx: number): number {
-  return STATUS_COLUMN_WIDTH_PX;
+/** @deprecated use getDefaultColumnWidthPx */
+export function getFixedColumnWidthPx(key?: string): number | undefined {
+  return getDefaultColumnWidthPx(key);
+}
+
+/** @deprecated resize de status não é mais travado */
+export function clampStatusColumnWidthPx(widthPx: number): number {
+  return Math.max(40, widthPx);
 }
 
 export function getMinWidthFromBadgeLabels(labels: string[]): number {
@@ -64,17 +70,16 @@ export function resolveColumnWidthPx(
   columnWidths: Record<string, number>,
   hasCustomWidths: boolean
 ): number | undefined {
-  const fixed = getFixedColumnWidthPx(column.key);
-  if (fixed != null) {
-    // ID/Status: sempre o padrão — não herda localStorage nem width da coluna.
-    return fixed;
-  }
   if (columnWidths[column.key] != null) {
     return columnWidths[column.key];
   }
   const configured = parseColumnWidthPx(column.width);
   if (configured != null) {
     return configured;
+  }
+  const defaults = getDefaultColumnWidthPx(column.key);
+  if (defaults != null) {
+    return defaults;
   }
   return hasCustomWidths ? DEFAULT_COLUMN_WIDTH_PX : undefined;
 }
@@ -93,8 +98,8 @@ export function getColumnMinWidth(column: {
   minWidth?: string | number;
   label?: string;
 }): number | undefined {
-  const fixed = getFixedColumnWidthPx(column.key);
-  if (fixed != null) return fixed;
+  if (column.key === 'id') return 40;
+  if (isStatusColumnKey(column.key)) return 60;
 
   const titleMin = getTitleMinWidth(column.label);
   if (column.badgeLabels?.length) {

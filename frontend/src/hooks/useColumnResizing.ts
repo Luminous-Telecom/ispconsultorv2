@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { TableColumn } from 'components/tables/types';
-import { getFixedColumnWidthPx } from 'components/tables/columnWidthUtils';
+import { getColumnMinWidth } from 'components/tables/columnWidthUtils';
 
 interface UseColumnResizingOptions<T = Record<string, unknown>> {
   tableId: string;
@@ -47,18 +47,21 @@ export function useColumnResizing<T = Record<string, unknown>>({
       const parsed = JSON.parse(saved) as Record<string, number>;
       const validWidths: Record<string, number> = {};
       columns.forEach((column) => {
-        // ID/Status têm largura fixa global — não restaurar do localStorage.
-        if (getFixedColumnWidthPx(column.key) != null) return;
+        if (column.key === 'acoes' || column.key === 'actions') return;
         const w = parsed[column.key];
         if (w) {
-          validWidths[column.key] = Math.max(minColumnWidth, Math.min(maxColumnWidth, w));
+          const columnMin =
+            getMinWidthForColumn?.(column.key) ??
+            getColumnMinWidth({ key: column.key, label: column.label }) ??
+            minColumnWidth;
+          validWidths[column.key] = Math.max(columnMin, Math.min(maxColumnWidth, w));
         }
       });
       setColumnWidths(validWidths);
     } catch {
       // ignore
     }
-  }, [tableId, columns, minColumnWidth, maxColumnWidth, storageKey]);
+  }, [tableId, columns, minColumnWidth, maxColumnWidth, storageKey, getMinWidthForColumn]);
 
   useEffect(() => {
     try {
@@ -74,17 +77,13 @@ export function useColumnResizing<T = Record<string, unknown>>({
     currentWidth: number,
     snapshot?: Record<string, number>
   ) => {
-    if (getFixedColumnWidthPx(columnKey) != null) return;
+    if (columnKey === 'acoes' || columnKey === 'actions') return;
 
     const startWidth = Math.round(currentWidth);
     const hasSnapshot = snapshot != null && Object.keys(snapshot).length > 0;
 
     if (hasSnapshot) {
-      const filtered: Record<string, number> = {};
-      Object.entries(snapshot).forEach(([key, value]) => {
-        if (getFixedColumnWidthPx(key) == null) filtered[key] = value;
-      });
-      setColumnWidths(filtered);
+      setColumnWidths(snapshot);
     }
 
     activeResizeRef.current = {

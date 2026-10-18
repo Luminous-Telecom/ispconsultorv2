@@ -194,7 +194,7 @@ const ptBR: TranslationKeys = {
     'dashboard.averageTicketMainCaption': 'Média geral por cliente',
     'dashboard.averageTicketInfoSingle':
       'Média da mensalidade dos contratos ativos por cliente com plano (não isentos), com base nos contratos vigentes.',
-    'dashboard.months12': '12 meses',
+    'dashboard.months12': 'últimos 12 meses',
     'dashboard.chartCurrentMonth': 'mês atual',
     'dashboard.newClients': 'Novos Clientes',
     'dashboard.receivablesVsPayables': 'Contas a Receber vs Contas a Pagar',
@@ -243,7 +243,7 @@ const ptBR: TranslationKeys = {
       'Quantidade de clientes distintos com contrato ativo em cada plano. Clique na barra para filtrar.',
     'dashboard.backupLogStartAt': 'Início do backup',
     'dashboard.backupLogEndAt': 'Fim do backup',
-    'dashboard.monthlyRevenueTitle': 'Faturamento Mensal',
+    'dashboard.monthlyRevenueTitle': 'Faturamento',
 
     // Pagination
     'pagination.to': 'a',

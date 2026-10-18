@@ -194,7 +194,7 @@ const enUS: TranslationKeys = {
     'dashboard.averageTicketMainCaption': 'Overall average per client',
     'dashboard.averageTicketInfoSingle':
       'Average monthly fee of active contracts per client with a plan (non-exempt), based on current contracts.',
-    'dashboard.months12': '12 months',
+    'dashboard.months12': 'last 12 months',
     'dashboard.chartCurrentMonth': 'current month',
     'dashboard.newClients': 'New Clients',
     'dashboard.receivablesVsPayables': 'Receivables vs Payables',
@@ -243,7 +243,7 @@ const enUS: TranslationKeys = {
       'Distinct clients with an active contract per plan. Click a bar to filter.',
     'dashboard.backupLogStartAt': 'Backup started',
     'dashboard.backupLogEndAt': 'Backup finished',
-    'dashboard.monthlyRevenueTitle': 'Monthly Revenue',
+    'dashboard.monthlyRevenueTitle': 'Revenue',
 
     // Pagination
     'pagination.to': 'to',

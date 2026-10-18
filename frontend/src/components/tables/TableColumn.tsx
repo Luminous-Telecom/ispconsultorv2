@@ -3,7 +3,7 @@ import { useElementProperties } from 'hooks/useElementProperties';
 import { useI18n } from 'contexts/I18nContext';
 import {
   getColumnMinWidth,
-  getFixedColumnWidthPx,
+  getDefaultColumnWidthPx,
   isStatusColumnKey,
 } from './columnWidthUtils';
 import { TableColumn as TableColumnType, SortDirection } from './types';
@@ -34,10 +34,8 @@ const TableColumn = <T extends { id: number | string }>({
   const { t } = useI18n();
   const isSorted = sortColumn === column.key;
   const isSortable = column.sortable !== false && onSort && column.key !== 'acoes' && column.key !== 'actions';
-  const isFixedWidthColumn = getFixedColumnWidthPx(column.key) != null;
   const isResizable =
     (column.resizable ?? true) &&
-    !isFixedWidthColumn &&
     column.key !== 'acoes' &&
     column.key !== 'actions';
   const wasResizingRef = useRef(false);
@@ -75,37 +73,28 @@ const TableColumn = <T extends { id: number | string }>({
 
   const columnStyles = useMemo(() => {
     const styles: Record<string, string> = {};
-    const fixedWidth = getFixedColumnWidthPx(column.key);
-    if (fixedWidth != null) {
-      const widthValue = `${fixedWidth}px`;
-      styles.width = widthValue;
-      styles.minWidth = widthValue;
-      styles.maxWidth = widthValue;
-      return styles;
-    }
-
     const isLockedWidth = columnWidth !== undefined;
-    let effectiveWidth: number | string | undefined;
+    let effectiveWidth: number | undefined;
     if (isLockedWidth) {
       effectiveWidth = columnWidth;
     } else if (column.width !== undefined) {
-      effectiveWidth = typeof column.width === 'string'
-        ? parseInt(column.width.replace('px', ''), 10)
-        : column.width;
+      effectiveWidth =
+        typeof column.width === 'string'
+          ? parseInt(column.width.replace('px', ''), 10)
+          : column.width;
+      if (effectiveWidth != null && Number.isNaN(effectiveWidth)) {
+        effectiveWidth = undefined;
+      }
+    } else {
+      effectiveWidth = getDefaultColumnWidthPx(column.key);
     }
 
-    if (effectiveWidth !== undefined && effectiveWidth !== '') {
-      const widthPx =
-        typeof effectiveWidth === 'number'
-          ? effectiveWidth
-          : parseInt(String(effectiveWidth).replace('px', ''), 10);
-      if (!Number.isNaN(widthPx)) {
-        const widthValue = `${widthPx}px`;
-        styles.width = widthValue;
-        styles.minWidth = widthValue;
-        if (isLockedWidth) {
-          styles.maxWidth = widthValue;
-        }
+    if (effectiveWidth !== undefined) {
+      const widthValue = `${effectiveWidth}px`;
+      styles.width = widthValue;
+      styles.minWidth = widthValue;
+      if (isLockedWidth) {
+        styles.maxWidth = widthValue;
       }
     } else {
       const colMin = getColumnMinWidth({
