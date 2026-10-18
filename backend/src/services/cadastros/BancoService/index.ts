@@ -24,6 +24,18 @@ const SORT_COLUMNS = [
   'id', 'nome', 'codigo', 'descricao', 'ativo', 'tipo_banco', 'sandbox', 'created_at', 'updated_at', 'empresa_id',
 ] as const;
 
+/** Escalares de `cadastros_bancos` — ignora campos fantasma do frontend (ex.: layout_carne). */
+const BANCO_WRITE_FIELDS = [
+  'nome', 'codigo', 'descricao', 'ativo', 'tipo_banco', 'api_url', 'api_key', 'api_secret', 'sandbox',
+  'identificador_conta', 'client_id_producao', 'client_secret_producao', 'url_retorno', 'webhook_secret',
+  'repassar_email_cliente', 'percentual_multa', 'percentual_juros', 'desconto_tipo', 'desconto_valor',
+  'contra_apresentacao', 'recalcular_segunda_via', 'maximo_dias_recalcular', 'layout_web', 'layout_pdf',
+  'local_pagamento', 'dados_avalista', 'exibir_mes_referente', 'taxa_cobranca', 'incluir_taxa',
+  'observacao_linha_1', 'observacao_linha_2', 'observacao_linha_3', 'observacao_linha_4',
+  'instrucao_linha_1', 'instrucao_linha_2', 'instrucao_linha_3', 'instrucao_linha_4', 'instrucao_linha_5',
+  'configuracoes', 'logo', 'empresa_id', 'usar_integracao_banco_nfse',
+] as const;
+
 const BANCO_PADRAO: Record<string, Record<string, unknown>> = {
   efi: {
     percentual_multa: 2, percentual_juros: 1, contra_apresentacao: false, recalcular_segunda_via: true,
@@ -72,10 +84,16 @@ export class BancoService {
   }
 
   private static prepararDadosBanco(dadosBanco: Record<string, unknown>) {
-    if (dadosBanco.tipo_banco && dadosBanco.tipo_banco !== 'asaas') {
-      return { ...dadosBanco, usar_integracao_banco_nfse: false };
+    const filtrados: Record<string, unknown> = {};
+    for (const key of BANCO_WRITE_FIELDS) {
+      if (Object.prototype.hasOwnProperty.call(dadosBanco, key) && dadosBanco[key] !== undefined) {
+        filtrados[key] = dadosBanco[key];
+      }
     }
-    return dadosBanco;
+    if (filtrados.tipo_banco && filtrados.tipo_banco !== 'asaas') {
+      filtrados.usar_integracao_banco_nfse = false;
+    }
+    return filtrados;
   }
 
   private static async sincronizarNFSeAsaas(banco: { tipo_banco: string; usar_integracao_banco_nfse: boolean; api_key: string | null; sandbox: boolean; empresa_id: number | null }) {

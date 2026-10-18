@@ -16,10 +16,11 @@ module.exports = function(app) {
     })
   );
 
-  // Proxy para Socket.IO (WebSocket em tempo real)
+  // Socket.IO — o path DEVE ir no createProxyMiddleware (não só no app.use).
+  // Com `ws: true` sem contexto, o upgrade captura também o `/ws` do HMR do webpack
+  // e gera "WebSocket ... reserved bits are on" no console.
   app.use(
-    '/socket.io',
-    createProxyMiddleware({
+    createProxyMiddleware('/socket.io', {
       target: backendUrl,
       changeOrigin: true,
       secure: false,

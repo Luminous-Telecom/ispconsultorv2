@@ -9,7 +9,7 @@ const router = Router();
 const efiRouter = Router();
 efiRouter.use(ValidateEfiWebhook.validate);
 
-// Webhook Efí: /webhook/efi/:empresaIdentifier (ex: /saas ou ID do banco)
+// Webhook Efí: /webhook/efi/:empresaIdentifier (ID do banco ou identificador_conta / payee_code)
 efiRouter.post('/:empresaIdentifier', EfiWebhookController.handle);
 
 router.use('/efi', efiRouter);

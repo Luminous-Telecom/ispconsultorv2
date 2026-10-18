@@ -2,6 +2,7 @@ import { toPlain } from '../../../utils/toPlain';
 import { Request } from 'express';
 import { Banco } from '../../../models/cadastros/Banco';
 import { Titulo } from '../../../models/financeiro/Titulo';
+import { prisma } from '../../../db/prisma';
 import { BancoApiService } from '../../bancos/BancoApiService';
 import { PaymentCommonService } from '../PaymentCommonService';
 import { logger } from '../../../utils/logger';
@@ -28,51 +29,50 @@ export class EfiWebhookService {
   ): Promise<WebhookResponse> {
     try {
       const scope = PaymentCommonService.getWebhookScope(req);
-      const identifier = scope?.empresaIdentifier?.toLowerCase();
-      const bancoId = identifier && /^\d+$/.test(identifier) ? Number(identifier) : null;
+      const { TituloWebhookResolver } = await import('../TituloWebhookResolver');
+      const banco = await TituloWebhookResolver.resolveBancoFromWebhookIdentifier(
+        scope?.empresaIdentifier,
+        'efi'
+      );
 
-      if (bancoId != null) {
-        const banco = await Banco.findOne({
-          where: {
-            id: bancoId,
-            tipo_banco: 'efi',
-            ativo: true
-          }
-        });
-
-        if (!banco) {
-          return {
-            success: false,
-            message: 'Banco informado no webhook não encontrado',
-            status: 404
-          };
-        }
-
-        const resultado = await BancoApiService.consultarNotificacaoPorToken(
-          banco,
-          notificationToken,
-          'admin'
-        );
-
-        if (resultado.success && resultado.data) {
-          return await EfiWebhookProcessorService.processNotificationData(
-            resultado.data as NotificationData | NotificationItem[] | NotificationItem,
-            banco,
-            receivedSecret,
-            req
-          );
-        }
-
+      if (!banco) {
         return {
           success: false,
-          message: resultado.message || 'Não foi possível consultar a notificação',
-          status: 400
+          message: scope?.empresaIdentifier
+            ? 'Banco informado no webhook não encontrado (ID ou identificador da conta Efi)'
+            : 'Identificador do banco é obrigatório no webhook',
+          status: scope?.empresaIdentifier ? 404 : 400
         };
+      }
+
+      // BancoApiService tipa Prisma; o resolver devolve o model Sequelize.
+      const bancoPrisma = await prisma.cadastros_bancos.findUnique({ where: { id: banco.id } });
+      if (!bancoPrisma) {
+        return {
+          success: false,
+          message: 'Banco informado no webhook não encontrado',
+          status: 404
+        };
+      }
+
+      const resultado = await BancoApiService.consultarNotificacaoPorToken(
+        bancoPrisma,
+        notificationToken,
+        'admin'
+      );
+
+      if (resultado.success && resultado.data) {
+        return await EfiWebhookProcessorService.processNotificationData(
+          resultado.data as NotificationData | NotificationItem[] | NotificationItem,
+          banco,
+          receivedSecret,
+          req
+        );
       }
 
       return {
         success: false,
-        message: 'Identificador do banco é obrigatório no webhook',
+        message: resultado.message || 'Não foi possível consultar a notificação',
         status: 400
       };
 

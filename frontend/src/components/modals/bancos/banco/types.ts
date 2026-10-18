@@ -26,7 +26,6 @@ export interface BancoForm {
   maximo_dias_recalcular: number;
   layout_web: string;
   layout_pdf: string;
-  layout_carne: string;
   local_pagamento: string;
   dados_avalista: string;
   exibir_mes_referente: boolean;

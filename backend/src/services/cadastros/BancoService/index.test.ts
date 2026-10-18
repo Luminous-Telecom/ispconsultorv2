@@ -67,12 +67,18 @@ describe('BancoService', () => {
     (bancos.create as jest.Mock).mockResolvedValue({ ...row, id: 1 });
     (bancos.findUnique as jest.Mock).mockResolvedValue(row);
 
-    await BancoService.create({ nome: 'Banco A', tipo_banco: 'bancario', empresa_id: 10 });
+    await BancoService.create({
+      nome: 'Banco A',
+      tipo_banco: 'bancario',
+      empresa_id: 10,
+      layout_carne: '',
+    });
 
     const data = (bancos.create as jest.Mock).mock.calls[0][0].data;
     expect(data.empresa_id).toBe(10);
     expect(data.nome).toBe('Banco A');
     expect(data.usar_integracao_banco_nfse).toBe(false);
+    expect(data).not.toHaveProperty('layout_carne');
   });
 
   it('edição altera só o nome', async () => {

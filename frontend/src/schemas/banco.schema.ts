@@ -155,13 +155,6 @@ export const bancoSchema = z.object({
     .default('normal')
     .optional(),
   
-  layout_carne: z
-    .string()
-    .max(50, 'Layout carnê deve ter no máximo 50 caracteres')
-    .trim()
-    .default('')
-    .optional(),
-  
   local_pagamento: z
     .string()
     .max(200, 'Local de pagamento deve ter no máximo 200 caracteres')
