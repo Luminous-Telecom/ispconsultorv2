@@ -37,14 +37,38 @@ describe('EmailTwoFactorService', () => {
   });
 
   it('setEnabled recusa ativar sem SMTP', async () => {
-    findUsuario.mockResolvedValue({ id: 1, email: 'a@b.com', empresa_id: 10 });
+    findUsuario.mockResolvedValue({
+      id: 1,
+      email_recuperacao: 'rec@b.com',
+      email_recuperacao_verificado: true,
+      empresa_id: 10,
+    });
     findServidor.mockResolvedValue(null);
     await expect(EmailTwoFactorService.setEnabled(1, true)).rejects.toThrow(/Configure o servidor/);
     expect(updateUsuario).not.toHaveBeenCalled();
   });
 
-  it('setEnabled ativa quando SMTP está configurado', async () => {
-    findUsuario.mockResolvedValue({ id: 1, email: 'a@b.com', empresa_id: 10 });
+  it('setEnabled recusa ativar sem e-mail de recuperação validado', async () => {
+    findUsuario.mockResolvedValue({
+      id: 1,
+      email_recuperacao: 'rec@b.com',
+      email_recuperacao_verificado: false,
+      empresa_id: 10,
+    });
+    findServidor.mockResolvedValue({ id: 1 });
+    await expect(EmailTwoFactorService.setEnabled(1, true)).rejects.toThrow(
+      /Valide o e-mail de recuperação/
+    );
+    expect(updateUsuario).not.toHaveBeenCalled();
+  });
+
+  it('setEnabled ativa quando SMTP e e-mail de recuperação estão ok', async () => {
+    findUsuario.mockResolvedValue({
+      id: 1,
+      email_recuperacao: 'rec@b.com',
+      email_recuperacao_verificado: true,
+      empresa_id: 10,
+    });
     findServidor.mockResolvedValue({ id: 1 });
     updateUsuario.mockResolvedValue({});
     await EmailTwoFactorService.setEnabled(1, true);

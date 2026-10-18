@@ -79,6 +79,8 @@ export class TwoFactorService {
       select: {
         totp_enabled: true,
         email_2fa_enabled: true,
+        email_recuperacao: true,
+        email_recuperacao_verificado: true,
         empresa_id: true,
       },
     });
@@ -90,7 +92,9 @@ export class TwoFactorService {
       WebAuthnService.count(usuarioId),
     ]);
     const totp = !!usuario.totp_enabled;
-    const email = !!usuario.email_2fa_enabled && smtp_configured;
+    const recoveryOk =
+      !!usuario.email_recuperacao?.trim() && !!usuario.email_recuperacao_verificado;
+    const email = !!usuario.email_2fa_enabled && smtp_configured && recoveryOk;
     const webauthn = passkeyCount > 0;
     return {
       totp,

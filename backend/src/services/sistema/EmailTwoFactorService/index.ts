@@ -30,8 +30,15 @@ export class EmailTwoFactorService {
       if (!smtpOk) {
         throw new Error('Configure o servidor de e-mail em Parâmetros → Servidor de E-Mail antes de ativar');
       }
-      if (!usuario.email) {
-        throw new Error('Usuário sem e-mail cadastrado');
+      if (!usuario.email_recuperacao?.trim()) {
+        throw new Error(
+          'Cadastre e valide o e-mail de recuperação em Conf. do usuário antes de ativar'
+        );
+      }
+      if (!usuario.email_recuperacao_verificado) {
+        throw new Error(
+          'Valide o e-mail de recuperação em Conf. do usuário antes de ativar'
+        );
       }
     }
     await prisma.cadastros_usuarios.update({
@@ -43,7 +50,7 @@ export class EmailTwoFactorService {
     });
   }
 
-  /** Gera e envia OTP de 6 dígitos para o e-mail do usuário. */
+  /** Gera e envia OTP de 6 dígitos para o e-mail de recuperação do usuário. */
   static async sendLoginCode(usuarioId: number): Promise<{ sent_to: string }> {
     const usuario = await prisma.cadastros_usuarios.findUnique({ where: { id: usuarioId } });
     if (!usuario) {
@@ -54,6 +61,13 @@ export class EmailTwoFactorService {
     }
     if (usuario.empresa_id == null) {
       throw new Error('Usuário sem empresa vinculada');
+    }
+
+    const recoveryEmail = usuario.email_recuperacao?.trim().toLowerCase() || '';
+    if (!recoveryEmail || !usuario.email_recuperacao_verificado) {
+      throw new Error(
+        'E-mail de recuperação ausente ou não validado. Configure em Conf. do usuário.'
+      );
     }
 
     const servidor = await prisma.comunicacao_servidores_email.findFirst({
@@ -88,7 +102,7 @@ export class EmailTwoFactorService {
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h2 style="color: #3f4852;">Código de verificação</h2>
-        <p>Olá <strong>${usuario.nome || usuario.email}</strong>,</p>
+        <p>Olá <strong>${usuario.nome || recoveryEmail}</strong>,</p>
         <p>Use o código abaixo para concluir o login no ${SYSTEM_NAME}:</p>
         <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; margin: 20px 0; text-align: center;">
           <p style="margin: 0; font-size: 28px; font-weight: bold; letter-spacing: 6px; font-family: monospace;">${code}</p>
@@ -99,7 +113,7 @@ export class EmailTwoFactorService {
 
     await transporter.sendMail({
       from: `"${servidor.nome_remetente}" <${servidor.email_remetente}>`,
-      to: usuario.email,
+      to: recoveryEmail,
       subject: `Código de verificação — ${SYSTEM_NAME}`,
       html: emailHtml,
       text: `Seu código de verificação é: ${code}. Expira em 10 minutos.`,
@@ -110,7 +124,7 @@ export class EmailTwoFactorService {
       empresa_id: usuario.empresa_id,
     });
 
-    const [local, domain] = usuario.email.split('@');
+    const [local, domain] = recoveryEmail.split('@');
     const masked =
       local.length <= 2
         ? `${local[0] || '*'}***@${domain || '***'}`
