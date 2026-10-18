@@ -361,6 +361,7 @@ npm run dev
 |---------|-------------|
 | `Execute como usuário normal com sudo` | Não rode o script como login root. Use `su - ispconsultor` e `sudo bash scripts/install.sh` |
 | `Permission denied (publickey)` no Git | Cadastre `~/.ssh/id_ed25519.pub` no GitHub com acesso ao repo |
+| `env: 'pm2': Arquivo ou diretório inexistente` no boot | O PM2 é local (`node_modules`). Rode: `sudo ln -sfn /opt/ispconsultor/node_modules/.bin/pm2 /usr/local/bin/pm2` e depois `sudo env PATH="/usr/local/bin:/usr/bin:$PATH" /usr/local/bin/pm2 startup systemd -u ispconsultor --hp /home/ispconsultor` (execute o `sudo env ...` que o PM2 imprimir) |
 | Nginx não serve o front | Confirme `root` em `/var/www/ispconsultor` e que `frontend/build` foi publicado |
 | 502 Bad Gateway | `npx pm2 list` — API deve estar up na porta 3001 |
 | Extração de PDF / fila 503 | Redis rodando e `REDIS_URL` correta no `.env` |

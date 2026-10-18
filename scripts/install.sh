@@ -566,14 +566,30 @@ systemctl disable --now ispconsultor-doc >/dev/null 2>&1 || true
 rm -f /etc/systemd/system/ispconsultor-backend.service /etc/systemd/system/ispconsultor-doc.service \
   /usr/local/sbin/ispconsultor-restart.sh /etc/sudoers.d/ispconsultor-restart
 systemctl daemon-reload >/dev/null 2>&1 || true
+
+# PM2 vem do node_modules da raiz (devDependency). Sem link global, o
+# `sudo env ... pm2` do startup falha com: env: 'pm2': Arquivo ou diretório inexistente
+PM2_BIN="$PROJECT_ROOT/node_modules/.bin/pm2"
+[ -x "$PM2_BIN" ] || die "pm2 não encontrado em $PM2_BIN (npm install na raiz falhou?)."
+ln -sfn "$PM2_BIN" /usr/local/bin/pm2
+mkdir -p "$PROJECT_ROOT/backend/logs" "$PROJECT_ROOT/logs"
+chown -R "$RUN_USER:$RUN_USER" "$PROJECT_ROOT/backend/logs" "$PROJECT_ROOT/logs"
+
 run_as_app_user "npm run pm2:delete 2>/dev/null || true"
 run_as_app_user "npm run prod:pm2"
 run_as_app_user "npx pm2 save"
 
-PM2_STARTUP="$(run_as_app_user "npx pm2 startup systemd -u $RUN_USER --hp $(eval echo ~$RUN_USER)" 2>&1 | grep -E '^sudo env' || true)"
+HOME_DIR="$(eval echo ~"$RUN_USER")"
+PM2_STARTUP="$(run_as_app_user "npx pm2 startup systemd -u $RUN_USER --hp '$HOME_DIR'" 2>&1 | grep -E '^sudo env' || true)"
 if [ -n "$PM2_STARTUP" ]; then
   log "Registrando PM2 no boot..."
-  eval "$PM2_STARTUP"
+  # Troca o binário bare `pm2` pelo caminho absoluto (PATH do systemd pode não ter /usr/local/bin)
+  PM2_STARTUP="$(printf '%s\n' "$PM2_STARTUP" | sed -E "s#(^|[[:space:]])pm2([[:space:]]|$)#\\1${PM2_BIN}\\2#")"
+  if ! eval "$PM2_STARTUP"; then
+    log "Aviso: falha ao registrar PM2 no boot. Rode como root:"
+    echo "  sudo ln -sfn $PM2_BIN /usr/local/bin/pm2"
+    echo "  sudo env PATH=\"/usr/local/bin:/usr/bin:\$PATH\" $PM2_BIN startup systemd -u $RUN_USER --hp $HOME_DIR"
+  fi
 fi
 
 # ---------------------------------------------------------------------------
