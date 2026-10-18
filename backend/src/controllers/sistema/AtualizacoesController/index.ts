@@ -7,7 +7,7 @@ import fs from 'fs';
 import { SelfUpdateService } from '../../../services/sistema/SelfUpdateService';
 import { AuthenticatedRequest } from '../../../types/auth';
 import { registrarCriacao } from '../../../services/sistema/AuditoriaService/index';
-import { sendSuccess, sendError, sendValidationError, sendNotFound, sendForbidden } from '../../../utils/responseUtils';
+import { sendSuccess, sendError, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { SYSTEM_NAME } from '../../../constants/systemBrand';
 import { SystemUpdateProgressService } from '../../../services/sistema/SystemUpdateProgressService';
@@ -201,11 +201,15 @@ export class AtualizacoesController {
           return;
         }
         if (error.response?.status === 404) {
-          sendNotFound(res, 'Repositório não encontrado ou sem releases. Verifique a configuração GITHUB_REPO.');
+          // Não usar 404 HTTP: o frontend trata 404 genérico como sessão expirada.
+          sendValidationError(
+            res,
+            'Repositório não encontrado ou inacessível. Confira GITHUB_REPO e defina GITHUB_TOKEN se o repositório for privado.'
+          );
           return;
         }
-        if (error.response?.status === 403) {
-          sendForbidden(res, 'Acesso negado ao repositório. Verifique o GITHUB_TOKEN se o repositório for privado.');
+        if (error.response?.status === 403 || error.response?.status === 401) {
+          sendForbidden(res, 'Acesso negado ao repositório. Configure GITHUB_TOKEN com permissão de leitura no repositório privado.');
           return;
         }
         if (error.response == null) {

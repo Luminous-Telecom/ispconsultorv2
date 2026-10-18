@@ -127,6 +127,8 @@ export class ErrorHandler {
             'saas/auditoria/',
             '/ixc/atendimentos',
             '/ixc/ordens-servico',
+            // GitHub API 404 (repo privado/sem token) não é sessão expirada
+            '/atualizacoes',
           ];
           
           const isOptionalRoute = optionalRoutes.some(route => 

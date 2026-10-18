@@ -59,16 +59,37 @@ describe('UserProfileService', () => {
     });
   });
 
-  it('updateProfile recusa e-mail de recuperação igual ao de login', async () => {
-    findUnique.mockResolvedValue({
-      id: 1,
-      nome: 'Ana',
-      email: 'ana@test.com',
-      email_recuperacao: null,
+  it('updateProfile aceita e-mail de recuperação igual ao de login', async () => {
+    findUnique
+      .mockResolvedValueOnce({
+        id: 1,
+        nome: 'Ana',
+        email: 'ana@test.com',
+        email_recuperacao: null,
+      })
+      .mockResolvedValueOnce({
+        id: 1,
+        nome: 'Ana',
+        email: 'ana@test.com',
+        role: 'admin',
+        empresa_id: 1,
+        email_recuperacao: 'ana@test.com',
+        email_recuperacao_verificado: false,
+        totp_enabled: false,
+      });
+    update.mockResolvedValue({});
+    const profile = await UserProfileService.updateProfile(1, {
+      email_recuperacao: 'ana@test.com',
     });
-    await expect(
-      UserProfileService.updateProfile(1, { email_recuperacao: 'ana@test.com' })
-    ).rejects.toThrow('diferente');
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          email_recuperacao: 'ana@test.com',
+          email_recuperacao_verificado: false,
+        }),
+      })
+    );
+    expect(profile.email_recuperacao).toBe('ana@test.com');
   });
 
   it('confirmRecoveryEmail marca verificado com token válido', async () => {

@@ -257,7 +257,8 @@ cd frontend && npm run dev
 | `SSH_ENCRYPTION_KEY` | sim para SSH | 32 caracteres (AES-256) |
 | `ALLOWED_ORIGINS` | produção | Origens CORS (vírgula). Dev: vazio aceita tudo |
 | `KRILL_API_URL` / `KRILL_API_TOKEN` | RPKI | Motor Krill local |
-| `GITHUB_REPO` / `GITHUB_TOKEN` | atualização pelo ERP | Pull/build via Parâmetros |
+| `GITHUB_REPO` | atualização pelo ERP | Ex.: `Luminous-Telecom/ispconsultorv2` |
+| `GITHUB_TOKEN` | atualização (repo privado) | PAT com leitura de releases; sem token o GitHub responde 404 |
 | `PDF_EXTRACT_PYTHON` | opcional | Python do venv com `pymupdf` (Debian PEP 668) |
 
 \* Sem Redis, recursos que usam fila (ex.: extração de PDF) falham.

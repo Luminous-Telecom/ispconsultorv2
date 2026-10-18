@@ -194,10 +194,10 @@ body[data-app="system"] .login-card * {
   color-scheme: light;
 }
 
+/* Só campos de texto — não aplicar em checkbox/radio (quebra o "90 dias") */
 body[data-app="system"] .login-card .form-control,
 body[data-app="system"] .login-card .form-control-sm,
 body[data-app="system"] .login-card .form-select,
-body[data-app="system"] .login-card input,
 body[data-app="system"] .login-card input[type="text"],
 body[data-app="system"] .login-card input[type="email"],
 body[data-app="system"] .login-card input[type="password"],
@@ -214,7 +214,9 @@ body[data-app="system"] .login-card textarea {
 }
 
 body[data-app="system"] .login-card .form-control::placeholder,
-body[data-app="system"] .login-card input::placeholder {
+body[data-app="system"] .login-card input[type="text"]::placeholder,
+body[data-app="system"] .login-card input[type="email"]::placeholder,
+body[data-app="system"] .login-card input[type="password"]::placeholder {
   color: var(--color-text-muted) !important;
   -webkit-text-fill-color: var(--color-text-muted) !important;
   opacity: 1 !important;
@@ -223,7 +225,6 @@ body[data-app="system"] .login-card input::placeholder {
 body[data-app="system"] .login-card .form-control:focus,
 body[data-app="system"] .login-card .form-control-sm:focus,
 body[data-app="system"] .login-card .form-select:focus,
-body[data-app="system"] .login-card input:focus,
 body[data-app="system"] .login-card input[type="text"]:focus,
 body[data-app="system"] .login-card input[type="email"]:focus,
 body[data-app="system"] .login-card input[type="password"]:focus,
@@ -238,7 +239,9 @@ body[data-app="system"] .login-card textarea:focus {
 }
 
 body[data-app="system"] .login-card .form-control:disabled,
-body[data-app="system"] .login-card input:disabled {
+body[data-app="system"] .login-card input[type="text"]:disabled,
+body[data-app="system"] .login-card input[type="email"]:disabled,
+body[data-app="system"] .login-card input[type="password"]:disabled {
   background-color: var(--color-gray-100) !important;
   color: var(--color-text-soft) !important;
   -webkit-text-fill-color: var(--color-text-soft) !important;
@@ -247,14 +250,43 @@ body[data-app="system"] .login-card input:disabled {
 body[data-app="system"] .login-card .form-control:-webkit-autofill,
 body[data-app="system"] .login-card .form-control:-webkit-autofill:hover,
 body[data-app="system"] .login-card .form-control:-webkit-autofill:focus,
-body[data-app="system"] .login-card input:-webkit-autofill,
-body[data-app="system"] .login-card input:-webkit-autofill:hover,
-body[data-app="system"] .login-card input:-webkit-autofill:focus {
+body[data-app="system"] .login-card input[type="text"]:-webkit-autofill,
+body[data-app="system"] .login-card input[type="text"]:-webkit-autofill:hover,
+body[data-app="system"] .login-card input[type="text"]:-webkit-autofill:focus,
+body[data-app="system"] .login-card input[type="email"]:-webkit-autofill,
+body[data-app="system"] .login-card input[type="email"]:-webkit-autofill:hover,
+body[data-app="system"] .login-card input[type="email"]:-webkit-autofill:focus,
+body[data-app="system"] .login-card input[type="password"]:-webkit-autofill,
+body[data-app="system"] .login-card input[type="password"]:-webkit-autofill:hover,
+body[data-app="system"] .login-card input[type="password"]:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0 1000px var(--color-white) inset !important;
   box-shadow: 0 0 0 1000px var(--color-white) inset !important;
   -webkit-text-fill-color: var(--color-text-ink) !important;
   caret-color: var(--color-text-ink) !important;
   transition: background-color 99999s ease-out;
+}
+
+body[data-app="system"] .login-card .form-check-input {
+  pointer-events: auto !important;
+  cursor: pointer;
+  float: none;
+  margin-left: 0;
+  margin-top: 0.15em;
+  flex-shrink: 0;
+  accent-color: var(--color-primary, #3f4852);
+}
+
+body[data-app="system"] .login-card .form-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  min-height: auto;
+  padding-left: 0;
+}
+
+body[data-app="system"] .login-card .form-check-label {
+  cursor: pointer;
+  line-height: 1.35;
 }
 
 body[data-app="system"] .login-card .form-check-label,

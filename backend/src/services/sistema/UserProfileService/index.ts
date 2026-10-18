@@ -87,9 +87,6 @@ export class UserProfileService {
       if (raw && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw)) {
         throw new Error('E-mail de recuperação inválido');
       }
-      if (raw && raw === (data.email ?? usuario.email).toLowerCase()) {
-        throw new Error('E-mail de recuperação deve ser diferente do e-mail de login');
-      }
       const changed = (raw || null) !== (usuario.email_recuperacao || null);
       updateData.email_recuperacao = raw;
       if (changed) {
