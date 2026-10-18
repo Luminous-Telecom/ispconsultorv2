@@ -164,6 +164,15 @@ function Table<T extends { id: number | string }>({
 
   const selectedSearchField = syncWithHeader ? headerSearchField || localSearchField : localSearchField;
 
+  const getMinWidthForColumn = useCallback((columnKey: string) => {
+    const column = config.columns.find((col) => col.key === columnKey);
+    if (!column) return 40;
+    const colMin = getColumnMinWidth(column);
+    if (colMin != null) return colMin;
+    if (!column.label) return 40;
+    return Math.max(40, column.label.length * 6 + 24);
+  }, [config.columns]);
+
   const {
     columnWidths,
     handleResizeStart,
@@ -172,14 +181,7 @@ function Table<T extends { id: number | string }>({
   } = useColumnResizing({
     tableId: uniqueTableId,
     columns: config.columns,
-    getMinWidthForColumn: (columnKey: string) => {
-      const column = config.columns.find((col) => col.key === columnKey);
-      if (!column) return 40;
-      const colMin = getColumnMinWidth(column);
-      if (colMin != null) return colMin;
-      if (!column.label) return 40;
-      return Math.max(40, column.label.length * 6 + 24);
-    },
+    getMinWidthForColumn,
   });
 
   const tableRef = useRef<HTMLTableElement>(null);

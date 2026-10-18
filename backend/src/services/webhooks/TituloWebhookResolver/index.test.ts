@@ -7,9 +7,11 @@ jest.mock('../../../models/financeiro/Titulo', () => ({
 }));
 
 import { Banco } from '../../../models/cadastros/Banco';
+import { Titulo } from '../../../models/financeiro/Titulo';
 import { TituloWebhookResolver } from './index';
 
 const findOne = Banco.findOne as jest.Mock;
+const tituloFindOne = Titulo.findOne as jest.Mock;
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -44,5 +46,19 @@ describe('TituloWebhookResolver.resolveBancoFromWebhookIdentifier', () => {
       TituloWebhookResolver.resolveBancoFromWebhookIdentifier(undefined, 'efi')
     ).resolves.toBeNull();
     expect(findOne).not.toHaveBeenCalled();
+  });
+});
+
+describe('TituloWebhookResolver.findByChargeId', () => {
+  it('converte charge_id numérico da Efi para string no where', async () => {
+    findOne.mockResolvedValue({ id: 1, tipo_banco: 'efi' });
+    tituloFindOne.mockResolvedValue({ id: 10, charge_id: '45049929', banco: null });
+
+    await TituloWebhookResolver.findByChargeId(45049929, { empresaIdentifier: '1' });
+
+    expect(tituloFindOne).toHaveBeenCalledWith({
+      where: { charge_id: '45049929', banco_id: 1 },
+      include: [{ model: Banco, as: 'banco' }],
+    });
   });
 });

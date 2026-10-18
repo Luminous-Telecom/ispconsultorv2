@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { TableColumn } from 'components/tables/types';
 import { getColumnMinWidth } from 'components/tables/columnWidthUtils';
 
@@ -22,6 +22,16 @@ interface UseColumnResizingReturn {
   resizeGuideX: number | null;
 }
 
+function widthsEqual(
+  a: Record<string, number>,
+  b: Record<string, number>
+): boolean {
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) return false;
+  return keysA.every((key) => a[key] === b[key]);
+}
+
 export function useColumnResizing<T = Record<string, unknown>>({
   tableId,
   columns,
@@ -39,6 +49,13 @@ export function useColumnResizing<T = Record<string, unknown>>({
     startWidth: number;
     pendingWidth: number;
   } | null>(null);
+  const getMinWidthRef = useRef(getMinWidthForColumn);
+  getMinWidthRef.current = getMinWidthForColumn;
+
+  const columnKeysSignature = useMemo(
+    () => columns.map((column) => column.key).join('|'),
+    [columns]
+  );
 
   useEffect(() => {
     try {
@@ -51,17 +68,19 @@ export function useColumnResizing<T = Record<string, unknown>>({
         const w = parsed[column.key];
         if (w) {
           const columnMin =
-            getMinWidthForColumn?.(column.key) ??
+            getMinWidthRef.current?.(column.key) ??
             getColumnMinWidth({ key: column.key, label: column.label }) ??
             minColumnWidth;
           validWidths[column.key] = Math.max(columnMin, Math.min(maxColumnWidth, w));
         }
       });
-      setColumnWidths(validWidths);
+      setColumnWidths((prev) => (widthsEqual(prev, validWidths) ? prev : validWidths));
     } catch {
       // ignore
     }
-  }, [tableId, columns, minColumnWidth, maxColumnWidth, storageKey, getMinWidthForColumn]);
+    // columns via signature — evita loop quando o array é recriado a cada render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableId, columnKeysSignature, minColumnWidth, maxColumnWidth, storageKey]);
 
   useEffect(() => {
     try {
@@ -82,8 +101,8 @@ export function useColumnResizing<T = Record<string, unknown>>({
     const startWidth = Math.round(currentWidth);
     const hasSnapshot = snapshot != null && Object.keys(snapshot).length > 0;
 
-    if (hasSnapshot) {
-      setColumnWidths(snapshot);
+    if (hasSnapshot && snapshot) {
+      setColumnWidths((prev) => (widthsEqual(prev, snapshot) ? prev : snapshot));
     }
 
     activeResizeRef.current = {
@@ -100,7 +119,7 @@ export function useColumnResizing<T = Record<string, unknown>>({
       if (!active) return;
 
       const diff = e.clientX - active.startX;
-      const columnMin = getMinWidthForColumn?.(active.columnKey) ?? minColumnWidth;
+      const columnMin = getMinWidthRef.current?.(active.columnKey) ?? minColumnWidth;
       active.pendingWidth = Math.max(
         columnMin,
         Math.min(maxColumnWidth, active.startWidth + diff)
@@ -125,7 +144,7 @@ export function useColumnResizing<T = Record<string, unknown>>({
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-  }, [getMinWidthForColumn, maxColumnWidth, minColumnWidth]);
+  }, [maxColumnWidth, minColumnWidth]);
 
   return {
     columnWidths,

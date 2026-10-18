@@ -36,13 +36,14 @@ export interface NotificationItem {
 }
 
 export interface NotificationIdentifiers {
-  charge_id?: string | null;
+  /** Efi pode enviar número no JSON; normalizar com String() antes do Prisma. */
+  charge_id?: string | number | null;
   [key: string]: JsonValue | undefined;
 }
 
 export interface ChargeNotification {
-  id?: string;
-  charge_id?: string | null;
+  id?: string | number;
+  charge_id?: string | number | null;
   status?: string;
   custom_id?: string;
 }

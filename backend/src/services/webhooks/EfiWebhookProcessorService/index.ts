@@ -163,7 +163,11 @@ export class EfiWebhookProcessorService {
     receivedSecret?: string,
     req?: Request
   ): Promise<number> {
-    const chargeId = identifiers.charge_id || null;
+    const chargeIdRaw = identifiers.charge_id ?? null;
+    const chargeId =
+      chargeIdRaw != null && String(chargeIdRaw).trim() !== ''
+        ? String(chargeIdRaw).trim()
+        : null;
     if (!chargeId) {
       logger.warn('Charge ID não encontrado na notificação de título');
       return 0;

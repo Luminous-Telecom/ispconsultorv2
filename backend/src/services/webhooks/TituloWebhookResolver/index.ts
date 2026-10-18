@@ -61,14 +61,23 @@ export class TituloWebhookResolver {
     return banco?.id ?? null;
   }
 
-  static async findByChargeId(chargeId: string, scope?: WebhookEmpresaScope): Promise<ResolvedTitulo | null> {
+  static async findByChargeId(
+    chargeId: string | number,
+    scope?: WebhookEmpresaScope
+  ): Promise<ResolvedTitulo | null> {
+    // Efi manda charge_id como número no JSON; coluna Prisma é String.
+    const chargeIdStr = String(chargeId).trim();
+    if (!chargeIdStr || chargeIdStr === 'null' || chargeIdStr === 'undefined') {
+      return null;
+    }
+
     // Sem filtrar tipo: Asaas e Efi usam ID numérico; payee_code não numérico resolve como Efi.
     const bancoId = await this.resolveBancoId(scope);
     if (bancoId == null) return null;
 
     const TituloModel = await import('../../../models/financeiro/Titulo').then(m => m.Titulo);
     const titulo = await TituloModel.findOne({
-      where: { charge_id: chargeId, banco_id: bancoId },
+      where: { charge_id: chargeIdStr, banco_id: bancoId },
       include: [{ model: Banco, as: 'banco' }]
     }) as (Titulo & { banco?: Banco | null }) | null;
 
