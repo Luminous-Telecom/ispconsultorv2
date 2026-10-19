@@ -1,4 +1,4 @@
-import { canSeeDashboardSection, canSeeModal, userRoleLabelKey } from './userRoles';
+import { canSeeDashboardSection, canSeeFinanceAreas, canSeeModal, userRoleLabelKey } from './userRoles';
 
 describe('perfis do ERP', () => {
   it('financeiro vê só a parte financeira da dashboard e os menus financeiros', () => {
@@ -34,6 +34,9 @@ describe('perfis do ERP', () => {
     expect(canSeeModal('user', 'bancos')).toBe(false);
     expect(canSeeModal('user', 'nfse')).toBe(false);
     expect(canSeeModal('user', 'usuarios')).toBe(false);
+    expect(canSeeFinanceAreas('user')).toBe(false);
+    expect(canSeeFinanceAreas('financeiro')).toBe(true);
+    expect(canSeeFinanceAreas('admin')).toBe(true);
   });
 
   it('administrador vê dashboard e menus, e o perfil padrão do funcionário é usuário', () => {

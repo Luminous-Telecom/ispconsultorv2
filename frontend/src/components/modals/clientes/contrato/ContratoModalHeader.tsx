@@ -3,11 +3,14 @@ import { useI18n } from 'contexts/I18nContext';
 import { ImprimirButton, ModalFormActions } from 'components/ui';
 import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
 
+const CONTRACT_FINANCE_TABS = new Set(['financeiro', 'financeiro-avulso']);
+
 interface ContratoModalHeaderProps {
   isEditMode: boolean;
   isMobile: boolean;
   activeTab: string;
   isSubmitting: boolean;
+  showFinanceTabs?: boolean;
   formId?: string;
   onClose: () => void;
   onPrintContract: () => void;
@@ -19,6 +22,7 @@ function ContratoModalHeader({
   isMobile,
   activeTab,
   isSubmitting,
+  showFinanceTabs = true,
   formId = 'contrato-form',
   onClose,
   onPrintContract,
@@ -26,8 +30,8 @@ function ContratoModalHeader({
 }: ContratoModalHeaderProps) {
   const { t } = useI18n();
 
-  const tabs = useMemo(
-    (): ModalTabItem[] => [
+  const tabs = useMemo((): ModalTabItem[] => {
+    const items: ModalTabItem[] = [
       { id: 'contrato', label: t('tabs.contractData') },
       { id: 'endereco', label: t('tabs.address') },
       { id: 'termos', label: t('tabs.terms'), disabled: !isEditMode },
@@ -35,9 +39,10 @@ function ContratoModalHeader({
       { id: 'financeiro-avulso', label: t('tabs.financialMisc'), disabled: !isEditMode },
       { id: 'servicos-adicionais', label: t('tabs.additionalServices'), disabled: !isEditMode },
       { id: 'ixc-provedor', label: t('tabs.ixcProvedor'), disabled: !isEditMode },
-    ],
-    [isEditMode, t]
-  );
+    ];
+    if (showFinanceTabs) return items;
+    return items.filter((tab) => !CONTRACT_FINANCE_TABS.has(tab.id));
+  }, [isEditMode, showFinanceTabs, t]);
 
   const handleTabChange = (tab: string) => {
     const requiresEdit = tab !== 'contrato' && tab !== 'endereco';

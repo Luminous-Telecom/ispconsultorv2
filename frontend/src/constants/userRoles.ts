@@ -41,6 +41,11 @@ export function isErpRole(role: string | null | undefined): role is ErpRole {
   return role === 'admin' || role === 'financeiro' || role === 'user';
 }
 
+export function canSeeFinanceAreas(role: string | null | undefined): boolean {
+  if (!role) return false;
+  return role !== 'user';
+}
+
 export function canSeeModal(role: string | null | undefined, modalId: string): boolean {
   if (!role) return false;
   if (ALWAYS_VISIBLE_MODALS.has(modalId)) return true;

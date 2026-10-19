@@ -6,7 +6,8 @@ import { isEquipamentosTab, isRpkiTab } from './clienteParcelaUtils';
 export function useClienteModalActiveTab(
   show: boolean,
   hasModuloEquipamentos: boolean,
-  hasModuloRpki: boolean
+  hasModuloRpki: boolean,
+  showFinanceTabs = true
 ) {
   const [activeTab, setActiveTab] = useState('dados-basicos');
 
@@ -27,6 +28,12 @@ export function useClienteModalActiveTab(
       setActiveTab('dados-basicos');
     }
   }, [hasModuloRpki, activeTab]);
+
+  useEffect(() => {
+    if (!showFinanceTabs && activeTab === 'financeiro') {
+      setActiveTab('dados-basicos');
+    }
+  }, [showFinanceTabs, activeTab]);
 
   return { activeTab, setActiveTab };
 }

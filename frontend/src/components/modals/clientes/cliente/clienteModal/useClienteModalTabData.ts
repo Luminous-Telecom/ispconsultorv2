@@ -11,12 +11,14 @@ interface UseClienteModalTabDataParams {
   clienteId?: number | null;
   createdClienteId: number | null;
   showCancelados: boolean;
+  showFinanceTabs?: boolean;
 }
 
 export function useClienteModalTabData({
   clienteId,
   createdClienteId,
   showCancelados,
+  showFinanceTabs = true,
 }: UseClienteModalTabDataParams) {
   const contratosTableFilters = useTableFilters({
     initialPage: 1,
@@ -56,7 +58,7 @@ export function useClienteModalTabData({
         sortColumn: titulosTableFilters.sortColumn,
         sortDirection: titulosTableFilters.sortDirection,
       }),
-    enabled: !!effectiveClienteIdForParcelas,
+    enabled: showFinanceTabs && !!effectiveClienteIdForParcelas,
   });
 
   const sortedData = useMemo(() => {

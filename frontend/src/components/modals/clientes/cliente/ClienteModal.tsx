@@ -27,7 +27,7 @@ import {
 } from './clienteModal/useClienteModalTabs';
 import { ClienteModalProps } from './clienteModal/types';
 import { authService } from 'services/authService';
-import { canSeeModal } from 'constants/userRoles';
+import { canSeeFinanceAreas, canSeeModal } from 'constants/userRoles';
 
 const ClienteModal = ({
   show,
@@ -50,13 +50,15 @@ const ClienteModal = ({
   });
   const hasModuloEquipamentos = hasModulo('equipamentos') && canSeeModal(currentUser?.role, 'ssh-devices');
   const hasModuloRpki = hasModulo('rpki') && canSeeModal(currentUser?.role, 'rpki-cas');
+  const showFinanceTabs = canSeeFinanceAreas(currentUser?.role);
 
   const [showCancelados, setShowCancelados] = useState(false);
 
   const { activeTab, setActiveTab } = useClienteModalActiveTab(
     show,
     hasModuloEquipamentos,
-    hasModuloRpki
+    hasModuloRpki,
+    showFinanceTabs
   );
 
   const nestedModals = useClienteModalNestedModals();
@@ -71,6 +73,7 @@ const ClienteModal = ({
     clienteId,
     createdClienteId: formHook.createdClienteId,
     showCancelados,
+    showFinanceTabs,
   });
 
   const contratosHook = useClienteContratos({
@@ -132,6 +135,7 @@ const ClienteModal = ({
     canEditContratosFinanceiro,
     hasModuloEquipamentos,
     hasModuloRpki,
+    showFinanceTabs,
   });
 
   const handleClose = useCallback(() => {

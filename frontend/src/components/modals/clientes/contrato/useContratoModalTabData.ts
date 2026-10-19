@@ -20,6 +20,7 @@ interface UseContratoModalTabDataParams {
   setSelectedAvulsosItems: React.Dispatch<React.SetStateAction<Titulo[]>>;
   showCancelados: boolean;
   showCanceladosAvulsos: boolean;
+  showFinanceTabs?: boolean;
 }
 
 export function useContratoModalTabData({
@@ -34,6 +35,7 @@ export function useContratoModalTabData({
   setSelectedAvulsosItems,
   showCancelados,
   showCanceladosAvulsos,
+  showFinanceTabs = true,
 }: UseContratoModalTabDataParams) {
   const titulosTableFilters = useTableFilters({
     initialPage: 1,
@@ -94,7 +96,7 @@ export function useContratoModalTabData({
       });
       return { data: titulos };
     },
-    enabled: isEditMode && !!internalContratoId,
+    enabled: showFinanceTabs && isEditMode && !!internalContratoId,
     staleTime: 30 * 1000,
   });
 
@@ -114,7 +116,7 @@ export function useContratoModalTabData({
       });
       return { data: titulos };
     },
-    enabled: isEditMode && !!internalContratoId,
+    enabled: showFinanceTabs && isEditMode && !!internalContratoId,
     staleTime: 30 * 1000,
   });
 

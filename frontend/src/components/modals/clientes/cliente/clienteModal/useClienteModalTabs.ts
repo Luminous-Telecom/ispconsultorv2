@@ -6,12 +6,14 @@ interface UseClienteModalTabsParams {
   canEditContratosFinanceiro: boolean;
   hasModuloEquipamentos: boolean;
   hasModuloRpki: boolean;
+  showFinanceTabs?: boolean;
 }
 
 export function useClienteModalTabs({
   canEditContratosFinanceiro,
   hasModuloEquipamentos,
   hasModuloRpki,
+  showFinanceTabs = true,
 }: UseClienteModalTabsParams): ModalTabItem[] {
   const { t } = useI18n();
 
@@ -25,11 +27,13 @@ export function useClienteModalTabs({
         label: t('tabs.contracts'),
         disabled: !canEditContratosFinanceiro,
       },
-      {
-        id: 'financeiro',
-        label: t('tabs.financial'),
-        disabled: !canEditContratosFinanceiro,
-      },
+      ...(showFinanceTabs
+        ? [{
+          id: 'financeiro',
+          label: t('tabs.financial'),
+          disabled: !canEditContratosFinanceiro,
+        }]
+        : []),
       { id: 'observacoes', label: t('tabs.observations') },
       {
         id: 'arquivos',
@@ -69,7 +73,7 @@ export function useClienteModalTabs({
     }
 
     return tabs;
-  }, [canEditContratosFinanceiro, hasModuloEquipamentos, hasModuloRpki, t]);
+  }, [canEditContratosFinanceiro, hasModuloEquipamentos, hasModuloRpki, showFinanceTabs, t]);
 }
 
 export function shouldRenderClienteHeader(

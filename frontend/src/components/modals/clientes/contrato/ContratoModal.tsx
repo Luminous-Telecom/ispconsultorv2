@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useApiError } from 'hooks/useApiError';
 import { useContratoForm } from 'hooks/useContratoForm';
 import { TermoContrato } from 'services/termoContratoService';
@@ -42,6 +42,8 @@ import {
 } from 'hooks/useIntegracaoIxcProvedor';
 import type { ContratoIntegracaoIxcItem } from 'services/contratoIntegracaoIxcService';
 import type { IntegracaoIxcProvedorRow } from './useContratoIxcBulkActions';
+import { authService } from 'services/authService';
+import { canSeeFinanceAreas } from 'constants/userRoles';
 
 interface ContratoModalProps {
   show: boolean;
@@ -65,6 +67,18 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   const queryClient = useQueryClient();
 
   const [internalContratoId, setInternalContratoId] = useState<number | null>(contratoId);
+  const { data: currentUser } = useQuery({
+    queryKey: ['auth-me-profile'],
+    queryFn: async () => {
+      const res = await authService.getCurrentUser();
+      if (!res.success || !res.data) return null;
+      return res.data;
+    },
+    staleTime: 0,
+    enabled: show,
+  });
+  const showFinanceTabs = canSeeFinanceAreas(currentUser?.role);
+
   const [activeTab, setActiveTab] = useState('contrato');
   const [showTermoModal, setShowTermoModal] = useState(false);
   const [showSelecionarTermoModal, setShowSelecionarTermoModal] = useState(false);
@@ -208,19 +222,27 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     setSelectedAvulsosItems,
     showCancelados,
     showCanceladosAvulsos,
+    showFinanceTabs,
   });
 
   const impressaoHook = useImpressaoContrato({ clienteId: contratoData?.cliente_id || undefined });
   const titulosPrint = useContratoTitulosPrint();
 
+  useEffect(() => {
+    if (!showFinanceTabs && (activeTab === 'financeiro' || activeTab === 'financeiro-avulso')) {
+      setActiveTab('contrato');
+    }
+  }, [showFinanceTabs, activeTab]);
+
   const handleTabChange = useCallback((newTab: string) => {
+    if (!showFinanceTabs && (newTab === 'financeiro' || newTab === 'financeiro-avulso')) return;
     setActiveTab(newTab);
     setSelectedItems([]);
     setSelectedAvulsosItems([]);
     setSelectedTermosItems([]);
     setSelectedServicosAdicionaisItems([]);
     setSelectedIntegracaoIxcItems([]);
-  }, []);
+  }, [showFinanceTabs]);
 
   const handlePlanoSelect = useCallback(
     (plano: Plano) => {
@@ -486,6 +508,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             isMobile={isMobile}
             activeTab={activeTab}
             isSubmitting={formHook.isSubmitting}
+            showFinanceTabs={showFinanceTabs}
             formId="contrato-form"
             onClose={onClose}
             onPrintContract={handleImprimirContrato}
