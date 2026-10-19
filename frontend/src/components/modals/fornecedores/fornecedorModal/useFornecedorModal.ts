@@ -269,6 +269,7 @@ export function useFornecedorModal({
     formData,
     errors,
     isEditing,
+    fornecedorId,
     isLoadingFornecedor,
     handleInputChange,
     handleTipoPessoaChange,

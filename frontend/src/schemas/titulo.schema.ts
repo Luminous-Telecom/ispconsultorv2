@@ -4,6 +4,15 @@
  */
 
 import { z } from 'zod';
+import { getTodayISO } from '../utils/dateUtils';
+
+const MSG_VENCIMENTO_PASSADO = 'Data de vencimento não pode ser anterior a hoje';
+
+/** Rejeita YYYY-MM-DD anterior ao calendário de hoje (hora local). */
+export const isDataVencimentoNaoAnteriorAHoje = (val: string): boolean => {
+  if (!val || val.trim() === '') return false;
+  return val.slice(0, 10) >= getTodayISO();
+};
 
 /**
  * Schema completo para criação/atualização de Título
@@ -107,7 +116,7 @@ export const tituloSchema = z.object({
     .default(0)
     .optional(),
   
-  // Data de vencimento (obrigatória)
+  // Data de vencimento (obrigatória; ≥ hoje só na criação — ver createTituloSchema / useTituloForm)
   data_vencimento: z
     .string()
     .min(1, 'Data de vencimento é obrigatória')
@@ -171,14 +180,38 @@ export const tituloSchema = z.object({
 });
 
 /**
- * Schema para criação de Título (todos os campos obrigatórios)
+ * Schema para criação de Título — vencimento não pode ser anterior a hoje
  */
-export const createTituloSchema = tituloSchema;
+export const createTituloSchema = tituloSchema.superRefine((data, ctx) => {
+  if (data.data_vencimento && !isDataVencimentoNaoAnteriorAHoje(data.data_vencimento)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['data_vencimento'],
+      message: MSG_VENCIMENTO_PASSADO,
+    });
+  }
+});
 
 /**
- * Schema para atualização de Título (campos opcionais)
+ * Schema para atualização de Título (campos opcionais; títulos já vencidos podem manter a data)
  */
 export const updateTituloSchema = tituloSchema.partial();
+
+/** Aplica a regra de vencimento ≥ hoje em um schema de formulário (modo criação). */
+export const withDataVencimentoMinHoje = <T extends z.ZodTypeAny>(schema: T) =>
+  schema.superRefine((data: unknown, ctx) => {
+    const vencimento =
+      data && typeof data === 'object' && 'data_vencimento' in data
+        ? String((data as { data_vencimento?: unknown }).data_vencimento ?? '')
+        : '';
+    if (vencimento && !isDataVencimentoNaoAnteriorAHoje(vencimento)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['data_vencimento'],
+        message: MSG_VENCIMENTO_PASSADO,
+      });
+    }
+  });
 
 /**
  * Tipo TypeScript inferido do schema de Título

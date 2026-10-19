@@ -47,6 +47,37 @@ export const formatTituloReadOnlyValue = (value: string | number | null | undefi
   return String(value);
 };
 
+export const formatTituloCurrency = (value: number | string | null | undefined): string => {
+  const num = Number(value);
+  if (value === null || value === undefined || Number.isNaN(num)) {
+    return '-';
+  }
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(num);
+};
+
+export const getTituloStatusLabel = (
+  status: string | undefined,
+  labels: {
+    statusPending: string;
+    statusPaid: string;
+    statusOverdue: string;
+    statusCancelled: string;
+    statusPartial: string;
+    statusPaidLate: string;
+  }
+): string => {
+  if (!status) return '-';
+  const map: Record<string, string> = {
+    pendente: labels.statusPending,
+    pago: labels.statusPaid,
+    vencido: labels.statusOverdue,
+    cancelado: labels.statusCancelled,
+    parcial: labels.statusPartial,
+    pago_atraso: labels.statusPaidLate,
+  };
+  return map[status] || status;
+};
+
 export const getPlanoDisplayLabel = (
   titulo: TituloComCliente | undefined,
   planoId: number | undefined,

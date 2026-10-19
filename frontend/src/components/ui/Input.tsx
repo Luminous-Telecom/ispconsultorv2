@@ -14,8 +14,8 @@ interface InputProps extends BaseComponentProps, ValidationProps, IconProps, Too
   onFocus?: (event: React.FocusEvent<HTMLInputElement>) => void;
   onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   onKeyUp?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
-  min?: number;
-  max?: number;
+  min?: number | string;
+  max?: number | string;
   step?: number | 'any';
   minLength?: number;
   maxLength?: number;

@@ -57,10 +57,18 @@ Complementa layout horizontal: `frontend-form-modal-layout.mdc` — **referênci
 | Tipo | Componente |
 |------|------------|
 | Texto, email, number, date, select, textarea | `FormField` |
+| ID da entidade (só edição, read-only) | `EntityIdField` — primeira linha do form |
 | Ativo/inativo, sim/não | `AtivoInativoField` |
 | Email + WhatsApp flags | `ComunicacaoPreferenciasField` |
 | Upload | `FormField type="file"` — `frontend-file-input.mdc` |
 | Filtro booleano em lista | `TableFilterCheckbox` |
+
+```tsx
+<div className="row g-2">
+  <EntityIdField id={entityId} formPrefix={formPrefix} />
+  {/* demais campos */}
+</div>
+```
 
 `Input` / `Select` / `Checkbox` diretos só quando **não** couber em `FormField` (ex.: login sem label lateral).
 

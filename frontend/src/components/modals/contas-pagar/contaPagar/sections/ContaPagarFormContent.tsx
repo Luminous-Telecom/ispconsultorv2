@@ -1,6 +1,6 @@
 import React from 'react';
 import { useI18n } from 'contexts/I18nContext';
-import { Loading } from 'components/ui';
+import { EntityIdField, Loading } from 'components/ui';
 import ContaPagarFornecedorSection from './ContaPagarFornecedorSection';
 import ContaPagarVencimentoSection from './ContaPagarVencimentoSection';
 import ContaPagarValorTipoPagamentoSection from './ContaPagarValorTipoPagamentoSection';
@@ -12,6 +12,7 @@ interface ContaPagarFormContentProps {
   isEditing: boolean;
   isLoading: boolean;
   isMobile: boolean;
+  entityId?: number | null;
   formData: ContaPagarFormData;
   errors: ContaPagarFormErrors;
   fornecedores: Array<{ id: number; nome: string }>;
@@ -28,6 +29,7 @@ const ContaPagarFormContent: React.FC<ContaPagarFormContentProps> = ({
   isEditing,
   isLoading,
   isMobile: _isMobile,
+  entityId,
   formData,
   errors,
   fornecedores,
@@ -54,6 +56,7 @@ const ContaPagarFormContent: React.FC<ContaPagarFormContentProps> = ({
       className="form-modal-simple"
     >
       <div className="row g-2">
+        <EntityIdField id={entityId} />
         <div className="col-12">
           <ContaPagarFornecedorSection
             formData={formData}

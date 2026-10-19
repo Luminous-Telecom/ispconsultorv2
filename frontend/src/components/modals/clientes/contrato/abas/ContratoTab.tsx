@@ -8,9 +8,11 @@ import { TipoCobrancaContrato } from 'services/tipoCobrancaContratoService';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import FormField from 'components/ui/FormField';
 import AtivoInativoField from 'components/ui/AtivoInativoField';
+import { EntityIdField } from 'components/ui';
 import { ContratoForm } from '../types';
 
 interface ContratoTabProps {
+  entityId?: number | null;
   formData: ContratoForm;
   errors: Partial<ContratoForm>;
   handleInputChange: (field: keyof ContratoForm, value: string | number | boolean | null) => void;
@@ -35,6 +37,7 @@ interface ContratoTabProps {
 }
 
 const ContratoTab: React.FC<ContratoTabProps> = ({
+  entityId,
   formData,
   errors,
   handleInputChange,
@@ -200,6 +203,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
 
   return (
     <div className="row g-2">
+      <EntityIdField id={entityId} />
       <div className="col-12">
         <EntitySelectField
           value={formData.plano_id || planoSelecionado?.id || 0}

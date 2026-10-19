@@ -2,6 +2,28 @@
  * Validadores centralizados para Título
  */
 import Joi from 'joi';
+import { formatDateOnly } from '../../utils/timezoneUtils';
+
+const MSG_VENCIMENTO_PASSADO = 'Data de vencimento não pode ser anterior a hoje';
+
+/** Aceita string YYYY-MM-DD ou Date; rejeita calendário anterior a hoje (hora local). */
+const dataVencimentoCreateSchema = Joi.alternatives()
+  .try(Joi.string().pattern(/^\d{4}-\d{2}-\d{2}/), Joi.date())
+  .required()
+  .custom((value, helpers) => {
+    const dateOnly =
+      typeof value === 'string' ? value.slice(0, 10) : formatDateOnly(value);
+    const today = formatDateOnly(new Date());
+    if (!dateOnly || !today || dateOnly < today) {
+      return helpers.error('any.custom');
+    }
+    return value;
+  })
+  .messages({
+    'alternatives.match': 'Data de vencimento deve ser uma data válida (YYYY-MM-DD)',
+    'any.required': 'Data de vencimento é obrigatória',
+    'any.custom': MSG_VENCIMENTO_PASSADO,
+  });
 
 export const tituloCreateSchema = Joi.object({
   cliente_id: Joi.number().integer().min(1).required().messages({
@@ -32,13 +54,7 @@ export const tituloCreateSchema = Joi.object({
     'number.positive': 'Valor deve ser maior que zero',
     'number.precision': 'Valor deve ter no máximo 2 casas decimais'
   }),
-  data_vencimento: Joi.alternatives().try(
-    Joi.string().pattern(/^\d{4}-\d{2}-\d{2}/),
-    Joi.date()
-  ).required().messages({
-    'alternatives.match': 'Data de vencimento deve ser uma data válida (YYYY-MM-DD)',
-    'any.required': 'Data de vencimento é obrigatória'
-  }),
+  data_vencimento: dataVencimentoCreateSchema,
   descricao: Joi.string().max(500).allow(null, '').optional(),
   status: Joi.string().valid('pendente', 'pago', 'vencido', 'cancelado', 'parcial', 'pago_atraso').default('pendente'),
   pago: Joi.boolean().default(false),

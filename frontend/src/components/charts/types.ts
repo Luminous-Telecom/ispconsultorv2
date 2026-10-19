@@ -43,7 +43,7 @@ export interface PieChartProps {
   hiddenItems: Set<number>;
   onToggleItem: (index: number) => void;
   onSliceClick?: (item: ChartDataItem, index: number) => void;
-  /** Ex.: `true` (clientes ativos), `'ativo'` (contratos), `'pendente'` (pagamentos) — % no buraco do donut */
+  /** Ex.: `true` (clientes ativos), `'ativo'` (contratos), `'pago,pago_atraso,parcial'` (pagamentos) — % no buraco do donut */
   centerHighlightFilterValue?: string | boolean;
   /** Donut à esquerda, legenda à direita (layout tipo cards de métrica) */
   chartLeading?: boolean;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormField, EntitySelectField } from 'components/ui';
+import { FormField, EntitySelectField, EntityIdField } from 'components/ui';
 import type { EntityItem, StringEntityItem } from 'components/ui/EntitySelectField';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -110,19 +110,7 @@ const AtendimentoFormFields: React.FC<AtendimentoFormFieldsProps> = ({
 
   return (
     <div className="row g-2">
-      {idLocal ? (
-        <div className="col-12">
-          <FormField
-            name="id_local"
-            type="text"
-            label="ID"
-            value={idLocal}
-            onChange={() => undefined}
-            size="sm"
-            readOnly
-          />
-        </div>
-      ) : null}
+      <EntityIdField id={idLocal || null} name="id_local" />
       {ixcId ? (
         <div className="col-12">
           <FormField

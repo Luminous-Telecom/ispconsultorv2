@@ -43,6 +43,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = (props) => {
                 formData={modal.formData}
                 errors={modal.errors}
                 formPrefix={modal.formPrefix}
+                entityId={modal.fornecedorId}
                 personTypeLabel={modal.t('form.personType')}
                 personTypePhysicalLabel={modal.t('form.personTypePhysical')}
                 personTypeLegalLabel={modal.t('form.personTypeLegal')}

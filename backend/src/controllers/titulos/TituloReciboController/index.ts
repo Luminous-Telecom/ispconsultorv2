@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { TituloService } from '../../../services/financeiro/TituloService';
 import { ReciboPDFService } from '../../../services/titulos/ReciboPDFService';
+import { RECIBO_MODELO_NAO_CONFIGURADO } from '../../../services/titulos/ReciboPDFService/messages';
 import { PDFGenerationService } from '../../../services/pdf-generation/PDFGenerationService';
 import { logger } from '../../../utils/logger';
 import { TituloComRelacoes } from '../TituloHelpers/types';
@@ -59,7 +60,7 @@ export class TituloReciboController {
           if (!conteudo || conteudo.trim().length === 0) {
             errosDetalhados.push({
               titulo_id: titulo.id,
-              motivo: 'Modelo de recibo não configurado no modelo de contrato',
+              motivo: RECIBO_MODELO_NAO_CONFIGURADO,
             });
             continue;
           }

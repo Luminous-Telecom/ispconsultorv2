@@ -50,5 +50,6 @@ export interface BancoTabProps {
   isPending: boolean;
   formPrefix: string;
   renderBancoEspecificoCampos: () => React.ReactNode;
+  entityId?: number | null;
 }
 

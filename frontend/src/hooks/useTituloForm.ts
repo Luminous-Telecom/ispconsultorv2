@@ -16,7 +16,7 @@ import { useApiError } from './useApiError';
 import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 import { CarneParcela, CreateCarneParcela } from '../types';
 import { TituloForm, TituloFormErrors } from '../components/modals/titulos/titulo/types';
-import { tituloSchema } from '../schemas/titulo.schema';
+import { tituloSchema, withDataVencimentoMinHoje } from '../schemas/titulo.schema';
 import type { TituloFormData as ZodTituloFormData } from '../schemas/titulo.schema';
 import {
   getRequiredValidationMessage,
@@ -86,14 +86,20 @@ export const useTituloForm = ({
   // Criar schema sem cliente_id para o formulário (cliente_id será adicionado no submit)
   // Se for título avulso, tornar valor obrigatório
   // No modo edição, valor é opcional (pode já estar preenchido)
-  const tituloFormSchema = isAvulso && !isEditing
-    ? tituloSchema.omit({ cliente_id: true }).extend({
-        valor: z
-          .number()
-          .min(0.01, 'Valor deve ser maior que zero')
-          .max(999999.99, 'Valor muito alto')
-      })
-    : tituloSchema.omit({ cliente_id: true });
+  // Na criação, vencimento não pode ser anterior a hoje
+  const tituloFormSchema = useMemo(() => {
+    const base = tituloSchema.omit({ cliente_id: true });
+    const withValorAvulso =
+      isAvulso && !isEditing
+        ? base.extend({
+            valor: z
+              .number()
+              .min(0.01, 'Valor deve ser maior que zero')
+              .max(999999.99, 'Valor muito alto'),
+          })
+        : base;
+    return isEditing ? withValorAvulso : withDataVencimentoMinHoje(withValorAvulso);
+  }, [isAvulso, isEditing]);
 
   // React Hook Form com Zod
   const {
@@ -270,19 +276,22 @@ export const useTituloForm = ({
     const typedData = data as Omit<ZodTituloFormData, 'cliente_id'>;
     
     if (isEditing && tituloId) {
-      // Modo edição - apenas campos editáveis conforme backend
-      // Backend aceita: status, data_vencimento, observacoes
-      // Se título foi gerado, não permite alterar data_vencimento
+      // Modo edição — backend aceita observacoes/descricao sempre;
+      // valor, vencimento e descontos/acréscimos só se não registrado no banco
       const dataToSend: Partial<CarneParcela> = {
         observacoes: typedData.observacoes || undefined,
+        descricao: typedData.descricao || undefined,
       };
       
-      // Só incluir data_vencimento e valor se o título não foi registrado no banco
       if (!tituloRegistradoNoBanco) {
         dataToSend.data_vencimento = typedData.data_vencimento;
         if (typedData.valor && typedData.valor > 0) {
           dataToSend.valor = typedData.valor;
         }
+        dataToSend.desconto_percentual = typedData.desconto_percentual ?? 0;
+        dataToSend.desconto_valor = typedData.desconto_valor ?? 0;
+        dataToSend.acrescimo_percentual = typedData.acrescimo_percentual ?? 0;
+        dataToSend.acrescimo_valor = typedData.acrescimo_valor ?? 0;
       }
       
       updateTituloMutation.mutate(dataToSend);

@@ -1002,7 +1002,9 @@ export interface TranslationKeys {
   'form.pixKeyType': string;
   'form.pixKey': string;
   'form.qrCodeCopiaECola': string;
+  'form.barcode': string;
   'form.barcodeLine': string;
+  'form.boletoUrl': string;
   'form.discountPercentShort': string;
   'form.discountValueShort': string;
   'form.increasePercentShort': string;

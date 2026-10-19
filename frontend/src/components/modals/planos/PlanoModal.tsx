@@ -76,6 +76,7 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
                 handleServiceToggle={formHook.handleServiceToggle}
                 servicosDisponiveis={[]}
                 isSubmitting={formHook.isSubmitting}
+                entityId={planoId}
               />
             )}
 

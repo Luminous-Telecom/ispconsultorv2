@@ -3,7 +3,7 @@ import { FormValue } from 'types/common';
 import { useI18n } from 'contexts/I18nContext';
 import FormField from 'components/ui/FormField';
 import AtivoInativoField from 'components/ui/AtivoInativoField';
-import { CartaoCnpjButton } from 'components/ui';
+import { CartaoCnpjButton, EntityIdField } from 'components/ui';
 import { openCartaoCnpj } from 'utils/cartaoCnpj';
 import { ClienteTabProps } from '../types';
 
@@ -12,11 +12,13 @@ const DadosBasicosTab: React.FC<ClienteTabProps> = ({
   errors,
   handleInputChange,
   isSubmitting,
-  formPrefix
+  formPrefix,
+  entityId,
 }) => {
   const { t } = useI18n();
   return (
     <div className="row g-2">
+      <EntityIdField id={entityId} formPrefix={formPrefix} size="md" />
       <div className="col-12">
         <FormField
           name="cnpj"

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormField, AtivoInativoField } from 'components/ui';
+import { FormField, AtivoInativoField, EntityIdField } from 'components/ui';
 import { BancoTabProps } from '../types';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -8,13 +8,15 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
   errors,
   handleInputChange,
   isPending,
-  formPrefix
+  formPrefix,
+  entityId,
 }) => {
   const { t } = useI18n();
 
   return (
     <>
       <div className="row g-2">
+        <EntityIdField id={entityId} formPrefix={formPrefix} />
         <div className="col-12">
           <FormField
             name="nome"

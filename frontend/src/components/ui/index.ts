@@ -13,6 +13,8 @@ export type { FileInputProps, FileInputSize } from './FileInput';
 export { default as Select } from './Select';
 export { default as Checkbox } from './Checkbox';
 export { default as FormField } from './FormField';
+export { default as EntityIdField } from './EntityIdField';
+export type { EntityIdFieldProps } from './EntityIdField';
 export { default as AtivoInativoField } from './AtivoInativoField';
 export type { AtivoInativoFieldProps } from './AtivoInativoField';
 export { default as ComunicacaoPreferenciasField } from './ComunicacaoPreferenciasField';

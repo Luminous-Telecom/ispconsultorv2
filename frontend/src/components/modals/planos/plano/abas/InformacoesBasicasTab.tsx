@@ -3,6 +3,7 @@ import { FormValue } from 'types/common';
 import { useI18n } from 'contexts/I18nContext';
 import FormField from 'components/ui/FormField';
 import AtivoInativoField from 'components/ui/AtivoInativoField';
+import { EntityIdField } from 'components/ui';
 import { usePlanoModulos } from 'hooks/usePlanoModulos';
 import { PlanoTabProps } from '../types';
 
@@ -10,7 +11,8 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
   formData,
   errors,
   handleInputChange,
-  isSubmitting
+  isSubmitting,
+  entityId,
 }) => {
   const { t } = useI18n();
   const { hasModulo } = usePlanoModulos();
@@ -28,6 +30,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
 
   return (
     <div className="row g-2">
+      <EntityIdField id={entityId} />
       <div className="col-12">
         <FormField
           name="nome_plano"

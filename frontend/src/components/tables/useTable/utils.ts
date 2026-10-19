@@ -81,14 +81,13 @@ export function syncSelectedItemsWithData<T extends { id: number | string }>(
   const syncedSelectedItems = selectedItems
     .map((sel) => idToItem.get(sel.id))
     .filter((item): item is T => item !== undefined);
+  // Só notifica o pai quando o conjunto de IDs muda. Atualizar refs dos itens
+  // (mesmo ID, novo objeto) sem notificar — senão onSelectionChange → novo data → loop.
   const selectionIdsChanged =
     syncedSelectedItems.length !== selectedItems.length ||
     syncedSelectedItems.some((item, i) => item.id !== selectedItems[i]?.id);
-  const selectionRefsStale = syncedSelectedItems.some(
-    (item, i) => item !== selectedItems[i]
-  );
   return {
     syncedSelectedItems,
-    shouldNotify: selectionIdsChanged || selectionRefsStale,
+    shouldNotify: selectionIdsChanged,
   };
 }

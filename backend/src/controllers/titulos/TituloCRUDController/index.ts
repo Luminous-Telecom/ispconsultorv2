@@ -318,7 +318,17 @@ export class TituloCRUDController {
   public static async update(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const { status, data_vencimento, observacoes, valor } = req.body;
+      const {
+        status,
+        data_vencimento,
+        observacoes,
+        valor,
+        descricao,
+        desconto_percentual,
+        desconto_valor,
+        acrescimo_percentual,
+        acrescimo_valor,
+      } = req.body;
 
       const titulo = await TituloService.getById(id) as TituloComRelacoes | null;
 
@@ -371,16 +381,20 @@ export class TituloCRUDController {
         titulo.url_boleto
       );
 
-      // Validar alteração de valor
-      if (valor !== undefined && valor !== null) {
-        if (tituloRegistradoNoBanco) {
-          sendValidationError(res, 'Não é possível alterar o valor de um título já registrado no banco emissor');
-          return;
-        }
-        if (valor <= 0) {
-          sendValidationError(res, 'Valor deve ser maior que zero');
-          return;
-        }
+      const temAlteracaoDescontoAcrescimo =
+        desconto_percentual !== undefined ||
+        desconto_valor !== undefined ||
+        acrescimo_percentual !== undefined ||
+        acrescimo_valor !== undefined;
+
+      // Validar alteração de valor / descontos / acréscimos
+      if (((valor !== undefined && valor !== null) || temAlteracaoDescontoAcrescimo) && tituloRegistradoNoBanco) {
+        sendValidationError(res, 'Não é possível alterar o valor de um título já registrado no banco emissor');
+        return;
+      }
+      if (valor !== undefined && valor !== null && valor <= 0) {
+        sendValidationError(res, 'Valor deve ser maior que zero');
+        return;
       }
 
       // Lógica de alteração de vencimento
@@ -417,7 +431,11 @@ export class TituloCRUDController {
         observacoes: observacoes !== undefined ? observacoes : titulo.observacoes
       };
 
-      // Só atualizar data_vencimento e valor se não estiver registrado no banco
+      if (descricao !== undefined) {
+        dadosParaUpdate.descricao = descricao;
+      }
+
+      // Só atualizar data_vencimento, valor e descontos se não estiver registrado no banco
       if (!tituloRegistradoNoBanco) {
         if (dataVencimentoParaUpdate) {
           dadosParaUpdate.data_vencimento = dataVencimentoParaUpdate;
@@ -425,8 +443,22 @@ export class TituloCRUDController {
           dadosParaUpdate.data_vencimento = normalizeDateForDb(data_vencimento) || new Date(data_vencimento);
         }
         
+        if (desconto_percentual !== undefined) {
+          dadosParaUpdate.desconto_percentual = desconto_percentual;
+        }
+        if (desconto_valor !== undefined) {
+          dadosParaUpdate.desconto_valor = desconto_valor;
+        }
+        if (acrescimo_percentual !== undefined) {
+          dadosParaUpdate.acrescimo_percentual = acrescimo_percentual;
+        }
+        if (acrescimo_valor !== undefined) {
+          dadosParaUpdate.acrescimo_valor = acrescimo_valor;
+        }
+
         if (valor !== undefined && valor !== null && valor > 0) {
           dadosParaUpdate.valor = valor;
+          dadosParaUpdate.valor_final = valor;
         }
       } else if (dataVencimentoParaUpdate) {
         // Se estiver registrado, só atualizar data se foi fornecida e diferente

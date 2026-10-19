@@ -7,9 +7,10 @@ import { WhatsAppSenderService } from '../WhatsAppSenderService';
 import { WhatsAppTemplateService } from '../WhatsAppTemplateService';
 import { WhatsAppCloudService } from '../WhatsAppCloudService';
 import { TemplateWhatsAppService } from '../TemplateWhatsAppService';
-import type { ContextoHistorico } from '../RegistroMensagemHistoricoService';
+import { registrarMensagemHistorico, type ContextoHistorico } from '../RegistroMensagemHistoricoService';
 import { whereComunicacaoEmpresaEstrito } from '../../../utils/comunicacaoEmpresaWhere';
 import { escolherMensagemCobranca } from '../ReenviarNotificacoesCobrancaService/selecao';
+import { RECIBO_MODELO_NAO_CONFIGURADO } from '../../titulos/ReciboPDFService/messages';
 
 interface ConfiguracoesEnvios {
   antesVencimento?: number[];
@@ -472,6 +473,59 @@ export class WhatsAppBoletoService {
   }
 
   /**
+   * Registra falha de recibo no histórico (Logs → WhatsApp).
+   * Abortos cedo (sem template, mensagem desativada, etc.) antes só iam para o Winston.
+   */
+  private static async registrarFalhaReciboNoHistorico(params: {
+    titulo: Titulo;
+    cliente: Cliente;
+    motivo: string;
+    mensagem?: string;
+    telefone?: string;
+    servidor?: ServidorWhatsApp | null;
+    contextoHistorico?: ContextoHistorico;
+  }): Promise<void> {
+    const { titulo, cliente, motivo, mensagem, servidor, contextoHistorico } = params;
+    const telefoneRaw = params.telefone || cliente.telefone?.trim();
+    if (!telefoneRaw) return;
+    const telefone = this.formatarTelefone(telefoneRaw);
+    const empresaId =
+      (titulo as { empresa_id?: number | null }).empresa_id ??
+      (cliente as { empresa_id?: number | null }).empresa_id ??
+      undefined;
+    const contexto: ContextoHistorico = contextoHistorico ?? {
+      ...(empresaId != null ? { empresa_id: empresaId } : {}),
+      entidade_tipo: 'titulo',
+      entidade_id: titulo.id,
+      titulo_historico: 'Recibo de Pagamento',
+    };
+    try {
+      await registrarMensagemHistorico(
+        {
+          tipo: 'whatsapp',
+          destinatario: telefone,
+          titulo: 'Recibo de Pagamento',
+          mensagem: mensagem || 'Recibo de pagamento não enviado',
+          status: 'erro',
+          erro_mensagem: motivo,
+          entidade_tipo: 'titulo',
+          entidade_id: titulo.id,
+          servidor_id: servidor?.id,
+          cliente_nome: cliente.razao_social || cliente.nome_fantasia || undefined,
+          cliente_email: cliente.email || undefined,
+          cliente_telefone: cliente.telefone || undefined,
+        },
+        contexto
+      );
+    } catch (registroError) {
+      logger.error('Erro ao registrar falha de recibo no histórico WhatsApp', {
+        titulo_id: titulo.id,
+        error: registroError instanceof Error ? registroError.message : String(registroError),
+      });
+    }
+  }
+
+  /**
    * Envia mensagem de recibo de pagamento por WhatsApp.
    * Se tipo_envio === 'pdf', envia o PDF do recibo (aba Recibos do modelo de contrato) com a mensagem como descrição.
    */
@@ -487,14 +541,18 @@ export class WhatsAppBoletoService {
       const empresaId = (titulo as { empresa_id?: number | null }).empresa_id ?? (cliente as { empresa_id?: number | null }).empresa_id ?? undefined;
       const whereSrv = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
       if (!whereSrv) {
-        logger.info('[Recibo WhatsApp] empresa_id ausente — envio abortado', { titulo_id: titulo.id });
+        const motivo = 'empresa_id ausente — envio de recibo WhatsApp abortado';
+        logger.info(`[Recibo WhatsApp] ${motivo}`, { titulo_id: titulo.id });
+        await this.registrarFalhaReciboNoHistorico({ titulo, cliente, motivo });
         return false;
       }
       const servidor = await prisma.comunicacao_servidores_whatsapp.findFirst({
         where: whereSrv as Prisma.comunicacao_servidores_whatsappWhereInput,
       });
       if (!servidor) {
-        logger.info('[Recibo WhatsApp] Servidor WhatsApp inativo ou não configurado', { titulo_id: titulo.id, empresa_id: empresaId });
+        const motivo = 'Servidor WhatsApp inativo ou não configurado';
+        logger.info(`[Recibo WhatsApp] ${motivo}`, { titulo_id: titulo.id, empresa_id: empresaId });
+        await this.registrarFalhaReciboNoHistorico({ titulo, cliente, motivo });
         return false;
       }
 
@@ -506,14 +564,21 @@ export class WhatsAppBoletoService {
           })
         : null;
       if (!mensagem || mensagem.tipo_envio === 'desativado') {
-        logger.info('[Recibo WhatsApp] Mensagem recibo_pagamento não encontrada ou desativada', { titulo_id: titulo.id });
+        const motivo = 'Mensagem recibo_pagamento não encontrada ou desativada';
+        logger.info(`[Recibo WhatsApp] ${motivo}`, { titulo_id: titulo.id });
+        await this.registrarFalhaReciboNoHistorico({ titulo, cliente, servidor, motivo });
         return false;
       }
 
       const temTemplate = !!mensagem.template_id;
       const temMensagemPadrao = !!(mensagem.mensagem_padrao && mensagem.mensagem_padrao.trim());
       if (!temTemplate && !temMensagemPadrao) {
-        logger.info('[Recibo WhatsApp] Nem template_mapping nem mensagem_padrao configurados', { titulo_id: titulo.id });
+        const motivo =
+          'Mensagem de recibo sem template Meta e sem texto padrão — configure em Integrações → Servidor WhatsApp';
+        logger.info('[Recibo WhatsApp] Nem template_mapping nem mensagem_padrao configurados', {
+          titulo_id: titulo.id,
+        });
+        await this.registrarFalhaReciboNoHistorico({ titulo, cliente, servidor, motivo });
         return false;
       }
 
@@ -530,7 +595,16 @@ export class WhatsAppBoletoService {
       if (servidor.tipo_api === 'whatsapp_cloud' && temTemplate) {
         const templateInfo = TemplateWhatsAppService.getTemplateInfoForMensagem(mensagem);
         if (!templateInfo) {
-          logger.info('[Recibo WhatsApp] template_mapping inválido (Cloud API)', { titulo_id: titulo.id });
+          const motivo = 'template_mapping inválido para recibo_pagamento (Cloud API)';
+          logger.info(`[Recibo WhatsApp] ${motivo}`, { titulo_id: titulo.id });
+          await this.registrarFalhaReciboNoHistorico({
+            titulo,
+            cliente,
+            servidor,
+            telefone,
+            contextoHistorico,
+            motivo,
+          });
           return false;
         }
         const mensagemTexto = mensagem.mensagem_padrao || '';
@@ -556,7 +630,24 @@ export class WhatsAppBoletoService {
         });
         const bodyComp = components.find((c) => c.type === 'body');
         const bodyParamsPreview = bodyComp?.parameters?.map((p) => (p.type === 'text' ? p.text : p.type)) ?? [];
+        const temHeaderDocumento = components.some(
+          (c) =>
+            c.type === 'header' &&
+            Array.isArray(c.parameters) &&
+            c.parameters.some((p) => p.type === 'document')
+        );
         logger.info(`[Recibo WhatsApp] Componentes: total=${components.length}, tem_header=${components.some((c) => c.type === 'header')}, body_params_count=${bodyComp?.parameters?.length ?? 0}, body_params_preview=${JSON.stringify(bodyParamsPreview)}`);
+        if (mensagem.tipo_envio === 'pdf' && !temHeaderDocumento) {
+          await this.registrarFalhaReciboNoHistorico({
+            telefone,
+            titulo,
+            cliente,
+            servidor,
+            contextoHistorico,
+            motivo: RECIBO_MODELO_NAO_CONFIGURADO,
+            mensagem: 'PDF do recibo não gerado',
+          });
+        }
         const enviou = await WhatsAppCloudService.enviarTemplate(
           servidor,
           telefone,
@@ -576,7 +667,17 @@ export class WhatsAppBoletoService {
       }
 
       if (servidor.tipo_api === 'whatsapp_cloud') {
-        logger.info('[Recibo WhatsApp] Cloud API exige template - recibo_pagamento sem template configurado, não enviando', { titulo_id: titulo.id });
+        const motivo =
+          'Cloud API exige template Meta — configure o template em recibo_pagamento';
+        logger.info(`[Recibo WhatsApp] ${motivo}`, { titulo_id: titulo.id });
+        await this.registrarFalhaReciboNoHistorico({
+          titulo,
+          cliente,
+          servidor,
+          telefone,
+          contextoHistorico,
+          motivo,
+        });
         return false;
       }
 
@@ -595,7 +696,19 @@ export class WhatsAppBoletoService {
           logger.info('[Recibo WhatsApp] Envio PDF via Evolution concluído', { titulo_id: titulo.id, sucesso: enviou });
           return enviou;
         }
-        logger.warn('Falha ao gerar PDF do recibo para WhatsApp, enviando só texto', { titulo_id: titulo.id });
+        await this.registrarFalhaReciboNoHistorico({
+          telefone,
+          titulo,
+          cliente,
+          servidor,
+          contextoHistorico,
+          motivo: RECIBO_MODELO_NAO_CONFIGURADO,
+          mensagem: 'PDF do recibo não gerado',
+        });
+        logger.warn('Falha ao gerar PDF do recibo para WhatsApp, enviando só texto', {
+          titulo_id: titulo.id,
+          motivo: RECIBO_MODELO_NAO_CONFIGURADO,
+        });
       }
 
       const enviou = await WhatsAppSenderService.enviarTexto(servidor, telefone, msg, contextoHistorico);

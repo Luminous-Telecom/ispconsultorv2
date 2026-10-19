@@ -137,6 +137,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
             isEditing={isEditing}
             isLoading={isLoadingContaPagar}
             isMobile={isMobile}
+            entityId={contaPagarId}
             formData={formData}
             errors={errors}
             fornecedores={fornecedores}

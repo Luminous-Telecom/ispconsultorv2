@@ -3,6 +3,9 @@ import { ModeloDocumentoService } from '../../documentos/ModeloDocumentoService'
 import { VariaveisDocumentoService, type DadosVariaveis } from '../../documentos/VariaveisDocumentoService';
 import { PDFGenerationService } from '../../pdf-generation/PDFGenerationService';
 import { ContratoService } from '../../contratos/ContratoService';
+import { RECIBO_MODELO_NAO_CONFIGURADO } from './messages';
+
+export { RECIBO_MODELO_NAO_CONFIGURADO } from './messages';
 
 interface ReciboPDFParams {
   titulo: { id: number; contrato_id?: number | null; empresa_id?: number | null };
@@ -43,7 +46,7 @@ export class ReciboPDFService {
 
       const conteudoTemplate = modelo?.conteudo_recibo?.trim();
       if (!conteudoTemplate) {
-        logger.warn('ReciboPDFService - Modelo de recibo não configurado no modelo de contrato', {
+        logger.warn(`ReciboPDFService - ${RECIBO_MODELO_NAO_CONFIGURADO}`, {
           titulo_id: titulo.id,
           empresa_id: empresaId,
           modelo_documento_id: modeloDocumentoId,

@@ -83,7 +83,7 @@ const DashboardPieChartsRow: React.FC<DashboardPieChartsRowProps> = ({
         hiddenItems={hiddenItems.hiddenPagamentos}
         onToggleItem={toggles.togglePagamento}
         onSliceClick={clicks.handleStatusPagamentoSliceClick}
-        centerHighlightFilterValue="pendente"
+        centerHighlightFilterValue="pago,pago_atraso,parcial"
       />
     </div>
 

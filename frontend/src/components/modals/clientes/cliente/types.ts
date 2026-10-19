@@ -49,6 +49,7 @@ export interface ClienteTabProps {
   handleInputChange: (field: keyof ClienteFormData, value: string | number | boolean) => void | Promise<void>;
   isSubmitting: boolean;
   formPrefix: string;
+  entityId?: number | null;
 }
 
 export interface ContratosTabProps {

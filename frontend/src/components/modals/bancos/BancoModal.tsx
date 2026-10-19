@@ -176,6 +176,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
                 isPending={formHook.isSubmitting}
                 formPrefix={formPrefix}
                 renderBancoEspecificoCampos={renderBancoEspecificoCampos}
+                entityId={bancoId}
               />
             )}
 

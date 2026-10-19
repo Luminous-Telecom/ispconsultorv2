@@ -5184,60 +5184,44 @@ input[type='file'].form-control:focus-visible {
   visibility: visible !important;
 }
 
-/* Disabled/readonly: sem opacity no controle inteiro — no escuro isso igualava fundo e texto */
+/* Editável nos modais: fundo distinto do somente leitura */
+.form-modal-simple .form-control:not([readonly]):not(:disabled):not(.entity-select-input),
+.form-modal-simple .form-select:not(:disabled) {
+  background-color: var(--input-bg) !important;
+  color: var(--text-primary) !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
+}
+
+/* Disabled/readonly: tom diferente do editável (sem opacity no controle) */
 .form-control:disabled,
 .form-select:disabled {
-  background-color: var(--bg-tertiary) !important;
-  color: var(--text-muted) !important;
-  -webkit-text-fill-color: var(--text-muted) !important;
+  background-color: var(--input-readonly-bg) !important;
+  color: var(--input-readonly-color) !important;
+  -webkit-text-fill-color: var(--input-readonly-color) !important;
   border-color: var(--border-color) !important;
   opacity: 1 !important;
   cursor: not-allowed;
 }
 
-[data-theme="dark"] .form-control:disabled,
-[data-theme="dark"] .form-select:disabled {
-  background-color: var(--bg-primary) !important;
-  color: var(--text-secondary) !important;
-  -webkit-text-fill-color: var(--text-secondary) !important;
-  border-color: var(--border-color) !important;
-  opacity: 1 !important;
-}
-
 /* Readonly estático (não .entity-select-input — listagem/busca) */
 .form-control[readonly]:not(.entity-select-input),
 .form-control[readonly]:not(.entity-select-input):focus {
-  background-color: var(--bg-tertiary) !important;
-  color: var(--text-secondary) !important;
-  -webkit-text-fill-color: var(--text-secondary) !important;
+  background-color: var(--input-readonly-bg) !important;
+  color: var(--input-readonly-color) !important;
+  -webkit-text-fill-color: var(--input-readonly-color) !important;
   border-color: var(--border-color) !important;
   opacity: 1 !important;
+  cursor: default;
 }
 
-[data-theme="dark"] .form-control[readonly]:not(.entity-select-input),
-[data-theme="dark"] .form-control[readonly]:not(.entity-select-input):focus {
-  background-color: var(--bg-primary) !important;
-  color: var(--text-secondary) !important;
-  -webkit-text-fill-color: var(--text-secondary) !important;
-  border-color: var(--border-color) !important;
-  opacity: 1 !important;
-}
-
-/* Readonly + disabled juntos (ex.: códigos de recuperação) */
+/* Readonly + disabled juntos (ex.: ID, campos fixos do título) */
 .form-control[readonly]:disabled:not(.entity-select-input),
 .form-control[readonly]:disabled:not(.entity-select-input):focus {
-  background-color: var(--bg-tertiary) !important;
-  color: var(--text-secondary) !important;
-  -webkit-text-fill-color: var(--text-secondary) !important;
+  background-color: var(--input-readonly-bg) !important;
+  color: var(--input-readonly-color) !important;
+  -webkit-text-fill-color: var(--input-readonly-color) !important;
   opacity: 1 !important;
-}
-
-[data-theme="dark"] .form-control[readonly]:disabled:not(.entity-select-input),
-[data-theme="dark"] .form-control[readonly]:disabled:not(.entity-select-input):focus {
-  background-color: var(--bg-primary) !important;
-  color: var(--text-secondary) !important;
-  -webkit-text-fill-color: var(--text-secondary) !important;
-  opacity: 1 !important;
+  cursor: default;
 }
 
 /* Campos de data (calendários) - cursor pointer */

@@ -7,7 +7,7 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useFormReset } from 'hooks/useFormReset';
 import { useUsuario, useGerarWebhookSecret, useResetUsuario2fa } from 'hooks/useUsuarios';
 import DraggableModal from 'components/common/DraggableModal';
-import { AppButton, CopyableFormField, AtivoInativoField, GerarTokenButton, ModalFormActions } from 'components/ui';
+import { AppButton, CopyableFormField, AtivoInativoField, EntityIdField, GerarTokenButton, ModalFormActions } from 'components/ui';
 import UsuarioAccountFormFields from 'components/forms/UsuarioAccountFormFields';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -185,6 +185,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
     <form id="usuario-form" onSubmit={handleSubmit} className="form-modal-simple">
       <div>
         <div className="row g-1 mb-0">
+          <EntityIdField id={usuarioId} />
           <UsuarioAccountFormFields
             form={{
               nome: formData.nome,

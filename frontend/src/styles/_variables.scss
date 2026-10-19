@@ -74,6 +74,10 @@
   --bg-modal: var(--bg-tertiary);
   --bg-dropdown: var(--color-bg-dropdown);
   --bg-dropdown-hover: var(--color-bg-dropdown-hover);
+  /* Inputs: editável claro vs somente leitura acinzentado */
+  --input-bg: var(--color-white);
+  --input-readonly-bg: var(--color-bg);
+  --input-readonly-color: var(--color-text-muted);
   --border-color: var(--color-border);
   --border-light: var(--border-color);
   --btn-close-filter: none;
@@ -136,6 +140,10 @@
   --bg-modal: var(--bg-tertiary);
   --bg-dropdown: var(--color-bg-dropdown-dark);
   --bg-dropdown-hover: var(--color-bg-dropdown-hover-dark);
+  /* Inputs: editável elevado vs somente leitura rebaixado */
+  --input-bg: var(--color-bg-dropdown-dark);
+  --input-readonly-bg: var(--color-bg-dark);
+  --input-readonly-color: var(--color-text-muted-dark);
   --border-color: var(--color-border-dark);
   --btn-close-filter: invert(1);
 

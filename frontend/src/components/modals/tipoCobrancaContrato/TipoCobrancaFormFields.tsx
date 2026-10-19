@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormField, AtivoInativoField } from 'components/ui';
+import { FormField, AtivoInativoField, EntityIdField } from 'components/ui';
 import { useI18n } from 'contexts/I18nContext';
 import { getTipoCobrancaPeriodicityOptions } from 'constants/tipoCobrancaPeriodicity';
 
@@ -16,6 +16,7 @@ export interface TipoCobrancaFormFieldsProps {
   onChange: (field: keyof TipoCobrancaFormData, value: string | number | boolean) => void;
   disabled?: boolean;
   ativoFieldName?: string;
+  entityId?: number | null;
 }
 
 const TipoCobrancaFormFields: React.FC<TipoCobrancaFormFieldsProps> = ({
@@ -24,12 +25,14 @@ const TipoCobrancaFormFields: React.FC<TipoCobrancaFormFieldsProps> = ({
   onChange,
   disabled = false,
   ativoFieldName = 'tipo-cobranca-ativo',
+  entityId,
 }) => {
   const { t } = useI18n();
   const periodicityOptions = getTipoCobrancaPeriodicityOptions(t);
 
   return (
     <div className="row g-2">
+      <EntityIdField id={entityId} />
       <div className="col-12">
         <FormField
           name="nome"

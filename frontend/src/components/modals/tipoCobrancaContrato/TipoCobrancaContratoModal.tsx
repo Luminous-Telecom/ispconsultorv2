@@ -125,6 +125,7 @@ const TipoCobrancaContratoModal: React.FC<TipoCobrancaContratoModalProps> = ({
             errors={errors}
             onChange={handleChange}
             disabled={isPending}
+            entityId={tipoId}
           />
         </form>
       )}

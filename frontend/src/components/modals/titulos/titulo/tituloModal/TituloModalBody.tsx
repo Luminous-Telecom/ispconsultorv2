@@ -4,13 +4,18 @@ import type { PaginatedResponse } from 'types/api';
 import { FormValue } from 'types/common';
 import FormField from 'components/ui/FormField';
 import EntitySelectField from 'components/ui/EntitySelectField';
+import { EntityIdField } from 'components/ui';
 import { TituloForm, TituloFormErrors } from '../types';
 import {
+  formatTituloCurrency,
   formatTituloReadOnlyValue,
   getClienteDisplayLabel,
   getContratoDisplayLabel,
   getPlanoDisplayLabel,
+  getTituloStatusLabel,
 } from './tituloModalUtils';
+import { getTodayISO } from 'utils/dateUtils';
+import { formatDate } from 'utils/formatters';
 
 interface TituloModalBodyProps {
   isMobile: boolean;
@@ -48,11 +53,26 @@ interface TituloModalBodyProps {
     clientNotFound: string;
     loading: string;
     titleNumber: string;
+    chargeId: string;
     ourNumber: string;
     contract: string;
+    status: string;
+    paidValue: string;
+    openValue: string;
+    paymentDate: string;
+    bank: string;
+    barcode: string;
+    barcodeLine: string;
+    boletoUrl: string;
     statusActive: string;
     statusInactive: string;
     statusSuspended: string;
+    statusPending: string;
+    statusPaid: string;
+    statusOverdue: string;
+    statusCancelled: string;
+    statusPartial: string;
+    statusPaidLate: string;
   };
 }
 
@@ -90,8 +110,24 @@ const TituloModalBody: React.FC<TituloModalBodyProps> = ({
     statusInactive: labels.statusInactive,
     statusSuspended: labels.statusSuspended,
   });
-  const numeroTituloDisplay = formatTituloReadOnlyValue(tituloData?.data?.numero_titulo);
-  const nossoNumeroDisplay = formatTituloReadOnlyValue(tituloData?.data?.nosso_numero);
+  const titulo = tituloData?.data;
+  const numeroTituloDisplay = formatTituloReadOnlyValue(titulo?.numero_titulo);
+  const chargeIdDisplay = formatTituloReadOnlyValue(titulo?.charge_id);
+  const nossoNumeroDisplay = formatTituloReadOnlyValue(titulo?.nosso_numero);
+  const statusDisplay = getTituloStatusLabel(titulo?.status, labels);
+  const bancoDisplay = formatTituloReadOnlyValue(
+    titulo && 'banco' in titulo ? titulo.banco?.nome : undefined
+  );
+  const valorPagoDisplay = formatTituloCurrency(titulo?.valor_pago);
+  const valorAbertoDisplay = formatTituloCurrency(titulo?.valor_aberto);
+  const dataPagamentoRaw = titulo?.data_pagamento_formatada || titulo?.data_pagamento;
+  const dataPagamentoDisplay = dataPagamentoRaw
+    ? titulo?.data_pagamento_formatada || formatDate(titulo?.data_pagamento) || '-'
+    : '-';
+  const codigoBarrasDisplay = formatTituloReadOnlyValue(titulo?.codigo_barras);
+  const linhaDigitavelDisplay = formatTituloReadOnlyValue(titulo?.linha_digitavel);
+  const urlBoletoDisplay = formatTituloReadOnlyValue(titulo?.url_boleto);
+  const discountsLocked = isEditMode && tituloRegistradoNoBanco;
 
   return (
     <form id="titulo-form" onSubmit={onSubmit} className="form-modal-simple">
@@ -111,6 +147,7 @@ const TituloModalBody: React.FC<TituloModalBodyProps> = ({
       <div className="row g-2">
         {isEditMode && (
           <>
+            <EntityIdField id={titulo?.id} />
             <div className="col-12">
               <FormField
                 name="numero_titulo"
@@ -119,6 +156,19 @@ const TituloModalBody: React.FC<TituloModalBodyProps> = ({
                 value={numeroTituloDisplay}
                 onChange={() => {}}
                 readOnly
+                disabled
+                size="sm"
+              />
+            </div>
+            <div className="col-12">
+              <FormField
+                name="status_readonly"
+                type="text"
+                label={labels.status}
+                value={statusDisplay}
+                onChange={() => {}}
+                readOnly
+                disabled
                 size="sm"
               />
             </div>
@@ -130,6 +180,7 @@ const TituloModalBody: React.FC<TituloModalBodyProps> = ({
                 value={clienteDisplayLabel}
                 onChange={() => {}}
                 readOnly
+                disabled
                 helpText={labels.clientCannotBeChanged}
                 size="sm"
               />
@@ -142,6 +193,7 @@ const TituloModalBody: React.FC<TituloModalBodyProps> = ({
                 value={contratoDisplayLabel}
                 onChange={() => {}}
                 readOnly
+                disabled
                 size="sm"
               />
             </div>
@@ -153,7 +205,32 @@ const TituloModalBody: React.FC<TituloModalBodyProps> = ({
                 value={planoDisplayLabel}
                 onChange={() => {}}
                 readOnly
+                disabled
                 helpText={labels.planoCannotBeChanged}
+                size="sm"
+              />
+            </div>
+            <div className="col-12">
+              <FormField
+                name="banco_readonly"
+                type="text"
+                label={labels.bank}
+                value={bancoDisplay}
+                onChange={() => {}}
+                readOnly
+                disabled
+                size="sm"
+              />
+            </div>
+            <div className="col-12">
+              <FormField
+                name="charge_id"
+                type="text"
+                label={labels.chargeId}
+                value={chargeIdDisplay}
+                onChange={() => {}}
+                readOnly
+                disabled
                 size="sm"
               />
             </div>
@@ -165,6 +242,79 @@ const TituloModalBody: React.FC<TituloModalBodyProps> = ({
                 value={nossoNumeroDisplay}
                 onChange={() => {}}
                 readOnly
+                disabled
+                size="sm"
+              />
+            </div>
+            <div className="col-12">
+              <FormField
+                name="codigo_barras"
+                type="text"
+                label={labels.barcode}
+                value={codigoBarrasDisplay}
+                onChange={() => {}}
+                readOnly
+                disabled
+                size="sm"
+              />
+            </div>
+            <div className="col-12">
+              <FormField
+                name="linha_digitavel"
+                type="text"
+                label={labels.barcodeLine}
+                value={linhaDigitavelDisplay}
+                onChange={() => {}}
+                readOnly
+                disabled
+                size="sm"
+              />
+            </div>
+            <div className="col-12">
+              <FormField
+                name="url_boleto"
+                type="text"
+                label={labels.boletoUrl}
+                value={urlBoletoDisplay}
+                onChange={() => {}}
+                readOnly
+                disabled
+                size="sm"
+              />
+            </div>
+            <div className="col-12">
+              <FormField
+                name="valor_pago"
+                type="text"
+                label={labels.paidValue}
+                value={valorPagoDisplay}
+                onChange={() => {}}
+                readOnly
+                disabled
+                size="sm"
+              />
+            </div>
+            <div className="col-12">
+              <FormField
+                name="valor_aberto"
+                type="text"
+                label={labels.openValue}
+                value={valorAbertoDisplay}
+                onChange={() => {}}
+                readOnly
+                disabled
+                size="sm"
+              />
+            </div>
+            <div className="col-12">
+              <FormField
+                name="data_pagamento"
+                type="text"
+                label={labels.paymentDate}
+                value={dataPagamentoDisplay}
+                onChange={() => {}}
+                readOnly
+                disabled
                 size="sm"
               />
             </div>
@@ -197,9 +347,10 @@ const TituloModalBody: React.FC<TituloModalBodyProps> = ({
                 name="valor_readonly"
                 type="text"
                 label={labels.value}
-                value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTitulo)}
+                value={formatTituloCurrency(valorTitulo)}
                 onChange={() => {}}
                 readOnly
+                disabled
                 helpText={labels.valorCannotBeChanged}
                 size="sm"
               />
@@ -257,106 +408,91 @@ const TituloModalBody: React.FC<TituloModalBodyProps> = ({
             isInvalid={!!errors.data_vencimento}
             disabled={isPending || tituloRegistradoNoBanco}
             readOnly={tituloRegistradoNoBanco}
+            min={isEditMode ? undefined : getTodayISO()}
             helpText={tituloRegistradoNoBanco ? labels.dataVencimentoCannotBeChanged : undefined}
           />
         </div>
 
-        {!isEditMode && !isAvulso && (
-          <div className="col-12">
-            <FormField
-              name="descricao"
-              type="text"
-              label={labels.description}
-              placeholder={labels.descriptionPlaceholder}
-              size="sm"
-              value={formData.descricao}
-              onChange={(value: FormValue) => onInputChange('descricao', value as string)}
-              disabled={isPending}
-            />
-          </div>
-        )}
+        <div className="col-12">
+          <FormField
+            name="descricao"
+            type="text"
+            label={labels.description}
+            placeholder={labels.descriptionPlaceholder}
+            size="sm"
+            value={formData.descricao}
+            onChange={(value: FormValue) => onInputChange('descricao', value as string)}
+            disabled={isPending}
+          />
+        </div>
 
-        {!isEditMode && isAvulso && (
-          <div className="col-12">
-            <FormField
-              name="descricao"
-              type="text"
-              label={labels.description}
-              placeholder={labels.descriptionPlaceholder}
-              size="sm"
-              value={formData.descricao}
-              onChange={(value: FormValue) => onInputChange('descricao', value as string)}
-              disabled={isPending}
-            />
-          </div>
-        )}
-
-        {!isEditMode && (
-          <>
-            <div className="col-12">
-              <FormField
-                name="desconto_percentual"
-                type="number"
-                label={labels.discountPercent}
-                placeholder="0.00"
-                size="sm"
-                value={formData.desconto_percentual}
-                onChange={(value: FormValue) =>
-                  onInputChange('desconto_percentual', parseFloat(String(value)) || 0)
-                }
-                disabled={isPending}
-                min={0}
-                max={100}
-                step={0.01}
-              />
-            </div>
-            <div className="col-12">
-              <FormField
-                name="desconto_valor"
-                type="number"
-                label={labels.discountValue}
-                placeholder="0.00"
-                size="sm"
-                value={formData.desconto_valor}
-                onChange={(value: FormValue) => onInputChange('desconto_valor', parseFloat(String(value)) || 0)}
-                disabled={isPending}
-                min={0}
-                step={0.01}
-              />
-            </div>
-            <div className="col-12">
-              <FormField
-                name="acrescimo_percentual"
-                type="number"
-                label={labels.additionPercent}
-                placeholder="0.00"
-                size="sm"
-                value={formData.acrescimo_percentual}
-                onChange={(value: FormValue) =>
-                  onInputChange('acrescimo_percentual', parseFloat(String(value)) || 0)
-                }
-                disabled={isPending}
-                min={0}
-                max={100}
-                step={0.01}
-              />
-            </div>
-            <div className="col-12">
-              <FormField
-                name="acrescimo_valor"
-                type="number"
-                label={labels.additionValue}
-                placeholder="0.00"
-                size="sm"
-                value={formData.acrescimo_valor}
-                onChange={(value: FormValue) => onInputChange('acrescimo_valor', parseFloat(String(value)) || 0)}
-                disabled={isPending}
-                min={0}
-                step={0.01}
-              />
-            </div>
-          </>
-        )}
+        <div className="col-12">
+          <FormField
+            name="desconto_percentual"
+            type="number"
+            label={labels.discountPercent}
+            placeholder="0.00"
+            size="sm"
+            value={formData.desconto_percentual}
+            onChange={(value: FormValue) =>
+              onInputChange('desconto_percentual', parseFloat(String(value)) || 0)
+            }
+            disabled={isPending || discountsLocked}
+            readOnly={discountsLocked}
+            helpText={discountsLocked ? labels.valorCannotBeChanged : undefined}
+            min={0}
+            max={100}
+            step={0.01}
+          />
+        </div>
+        <div className="col-12">
+          <FormField
+            name="desconto_valor"
+            type="number"
+            label={labels.discountValue}
+            placeholder="0.00"
+            size="sm"
+            value={formData.desconto_valor}
+            onChange={(value: FormValue) => onInputChange('desconto_valor', parseFloat(String(value)) || 0)}
+            disabled={isPending || discountsLocked}
+            readOnly={discountsLocked}
+            min={0}
+            step={0.01}
+          />
+        </div>
+        <div className="col-12">
+          <FormField
+            name="acrescimo_percentual"
+            type="number"
+            label={labels.additionPercent}
+            placeholder="0.00"
+            size="sm"
+            value={formData.acrescimo_percentual}
+            onChange={(value: FormValue) =>
+              onInputChange('acrescimo_percentual', parseFloat(String(value)) || 0)
+            }
+            disabled={isPending || discountsLocked}
+            readOnly={discountsLocked}
+            min={0}
+            max={100}
+            step={0.01}
+          />
+        </div>
+        <div className="col-12">
+          <FormField
+            name="acrescimo_valor"
+            type="number"
+            label={labels.additionValue}
+            placeholder="0.00"
+            size="sm"
+            value={formData.acrescimo_valor}
+            onChange={(value: FormValue) => onInputChange('acrescimo_valor', parseFloat(String(value)) || 0)}
+            disabled={isPending || discountsLocked}
+            readOnly={discountsLocked}
+            min={0}
+            step={0.01}
+          />
+        </div>
 
         <div className="col-12">
           <FormField

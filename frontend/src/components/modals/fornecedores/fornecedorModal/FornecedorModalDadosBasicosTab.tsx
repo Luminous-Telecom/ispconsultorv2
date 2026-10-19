@@ -1,5 +1,5 @@
 import React from 'react';
-import { AtivoInativoField, CartaoCnpjButton, FormField } from 'components/ui';
+import { AtivoInativoField, CartaoCnpjButton, EntityIdField, FormField } from 'components/ui';
 import { openCartaoCnpj } from 'utils/cartaoCnpj';
 import { FornecedorFormData, FornecedorFormErrors } from './types';
 
@@ -7,6 +7,7 @@ interface FornecedorModalDadosBasicosTabProps {
   formData: FornecedorFormData;
   errors: FornecedorFormErrors;
   formPrefix: string;
+  entityId?: number | null;
   personTypeLabel: string;
   personTypePhysicalLabel: string;
   personTypeLegalLabel: string;
@@ -24,6 +25,7 @@ const FornecedorModalDadosBasicosTab: React.FC<FornecedorModalDadosBasicosTabPro
   formData,
   errors,
   formPrefix,
+  entityId,
   personTypeLabel,
   personTypePhysicalLabel,
   personTypeLegalLabel,
@@ -37,6 +39,7 @@ const FornecedorModalDadosBasicosTab: React.FC<FornecedorModalDadosBasicosTabPro
   onTipoPessoaChange,
 }) => (
   <div className="row g-2">
+    <EntityIdField id={entityId} formPrefix={formPrefix} />
     <div className="col-12">
       <AtivoInativoField
         value={formData.tipo_pessoa === 'FISICA'}

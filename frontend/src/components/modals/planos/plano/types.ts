@@ -18,5 +18,6 @@ export interface PlanoTabProps {
   handleServiceToggle: (service: string) => void;
   servicosDisponiveis: string[];
   isSubmitting: boolean;
+  entityId?: number | null;
 }
 

@@ -122,7 +122,7 @@ function Placeholder({ messageKey }: { messageKey: 'placeholder.contractCreation
 function ContratoModalTabPanels({
   activeTab,
   isEditMode,
-  contratoId: _contratoId,
+  contratoId,
   formData,
   errors,
   handleInputChange,
@@ -209,6 +209,7 @@ function ContratoModalTabPanels({
   if (activeTab === 'contrato') {
     return (
       <ContratoTab
+        entityId={contratoId}
         formData={formData}
         errors={errors}
         handleInputChange={handleInputChange}
