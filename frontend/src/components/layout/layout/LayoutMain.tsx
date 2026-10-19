@@ -20,6 +20,7 @@ import { useLayoutMenus } from './hooks/useLayoutMenus';
 import { useLayoutAuth } from './hooks/useLayoutAuth';
 import { useCompanyName } from './hooks/useCompanyName';
 import { useMenuItems } from './hooks/useMenuItems';
+import { canSeeModal } from 'constants/userRoles';
 
 const LayoutMain: React.FC = () => {
   const location = useLocation();
@@ -56,7 +57,11 @@ const LayoutMain: React.FC = () => {
   const handleSearch = (value: string) => {
     if (tableHeader.onSearchClick) {
       tableHeader.onSearchClick(value);
-    } else if (location.pathname !== '/adm' && location.pathname !== '/adm/dashboard') {
+    } else if (
+      location.pathname !== '/adm' &&
+      location.pathname !== '/adm/dashboard' &&
+      canSeeModal(currentUser?.role, 'clientes')
+    ) {
       handleOpenModal('clientes');
     }
   };

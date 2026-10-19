@@ -41,6 +41,9 @@ interface DashboardPieChartsRowProps {
     | 'handleContratoSliceClick'
   >;
   ticketMedioCardData: TicketMedioData;
+  showFinanceiro: boolean;
+  showOperacional: boolean;
+  showCadastros: boolean;
 }
 
 const DashboardPieChartsRow: React.FC<DashboardPieChartsRowProps> = ({
@@ -52,8 +55,16 @@ const DashboardPieChartsRow: React.FC<DashboardPieChartsRowProps> = ({
   toggles,
   clicks,
   ticketMedioCardData,
-}) => (
+  showFinanceiro,
+  showOperacional,
+  showCadastros,
+}) => {
+  const showClientesContratos = showOperacional || showCadastros;
+  if (!showFinanceiro && !showClientesContratos && !showOperacional) return null;
+
+  return (
   <div className="row align-items-stretch dashboard-pie-charts-row">
+    {showClientesContratos && (
     <div className="col-auto dashboard-col--compact">
       <PieStatusCard
         data={charts.clientesChartData}
@@ -64,7 +75,9 @@ const DashboardPieChartsRow: React.FC<DashboardPieChartsRowProps> = ({
         centerHighlightFilterValue
       />
     </div>
+    )}
 
+    {showClientesContratos && (
     <div className="col-auto dashboard-col--compact">
       <PieStatusCard
         data={charts.contratosChartData}
@@ -75,7 +88,9 @@ const DashboardPieChartsRow: React.FC<DashboardPieChartsRowProps> = ({
         centerHighlightFilterValue="ativo"
       />
     </div>
+    )}
 
+    {showFinanceiro && (
     <div className="col-auto dashboard-col--compact">
       <PieStatusCard
         data={charts.statusPagamentoData}
@@ -86,7 +101,9 @@ const DashboardPieChartsRow: React.FC<DashboardPieChartsRowProps> = ({
         centerHighlightFilterValue="pago,pago_atraso,parcial"
       />
     </div>
+    )}
 
+    {showOperacional && (
     <div className="col-auto dashboard-col--compact">
       <PieStatusCard
         data={charts.distribuicaoPlanos}
@@ -97,11 +114,15 @@ const DashboardPieChartsRow: React.FC<DashboardPieChartsRowProps> = ({
         centerHighlightFilterValue={metrics.distribuicaoPlanoMetric.centerFv}
       />
     </div>
+    )}
 
+    {showFinanceiro && (
     <div className="col-auto dashboard-col--compact">
       <AverageTicketCard data={ticketMedioCardData} />
     </div>
+    )}
 
+    {showOperacional && (
     <div className="col-auto dashboard-col--compact">
       <BackupStatusCard
         days={backupStatus.backupStatusGraficoUltimos7Dias}
@@ -114,7 +135,9 @@ const DashboardPieChartsRow: React.FC<DashboardPieChartsRowProps> = ({
         periodHasBackupEvents={backupStatus.backupStatusPeriodoTemEventos}
       />
     </div>
+    )}
   </div>
-);
+  );
+};
 
 export default DashboardPieChartsRow;

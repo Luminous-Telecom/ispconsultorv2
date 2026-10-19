@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useFormPrefix } from 'hooks/useFormId';
 import { useClienteForm } from 'hooks/useClienteForm';
 import { useClienteContratos } from 'hooks/useClienteContratos';
@@ -25,6 +26,8 @@ import {
   shouldRenderClienteHeader,
 } from './clienteModal/useClienteModalTabs';
 import { ClienteModalProps } from './clienteModal/types';
+import { authService } from 'services/authService';
+import { canSeeModal } from 'constants/userRoles';
 
 const ClienteModal = ({
   show,
@@ -36,8 +39,17 @@ const ClienteModal = ({
   const { hasModulo } = usePlanoModulos();
   const formPrefix = useFormPrefix('ClienteEditModal');
   const isMobile = useIsMobile();
-  const hasModuloEquipamentos = hasModulo('equipamentos');
-  const hasModuloRpki = hasModulo('rpki');
+  const { data: currentUser } = useQuery({
+    queryKey: ['auth-me-profile'],
+    queryFn: async () => {
+      const res = await authService.getCurrentUser();
+      if (!res.success || !res.data) return null;
+      return res.data;
+    },
+    staleTime: 0,
+  });
+  const hasModuloEquipamentos = hasModulo('equipamentos') && canSeeModal(currentUser?.role, 'ssh-devices');
+  const hasModuloRpki = hasModulo('rpki') && canSeeModal(currentUser?.role, 'rpki-cas');
 
   const [showCancelados, setShowCancelados] = useState(false);
 

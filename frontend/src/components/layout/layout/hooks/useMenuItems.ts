@@ -3,6 +3,7 @@ import type { ModalType } from 'contexts/ModalContext';
 import type { SidebarFolderConfig, SidebarMenuItem, TranslateFn } from '../types';
 import { filterByModulo } from '../utils';
 import { canManageSystemMaintenance } from '../systemMaintenanceAccess';
+import { canSeeModal } from 'constants/userRoles';
 import type { PlanoModuloId } from 'services/planoModulosService';
 
 interface UseMenuItemsParams {
@@ -21,8 +22,9 @@ export const useMenuItems = ({ t, openModal, hasModulo, userRole }: UseMenuItems
   );
 
   const filterItem = useCallback(
-    (item: SidebarMenuItem) => filterByModulo(item.modalId, hasModulo),
-    [hasModulo]
+    (item: SidebarMenuItem) =>
+      canSeeModal(userRole, item.modalId) && filterByModulo(item.modalId, hasModulo),
+    [hasModulo, userRole]
   );
 
   const cadastrosFolderItems = useMemo(
@@ -56,6 +58,9 @@ export const useMenuItems = ({ t, openModal, hasModulo, userRole }: UseMenuItems
         { id: 'usuarios', modalId: 'usuarios', label: t('params.users'), icon: 'bi-people-fill', onClick: () => handleOpenModal('usuarios') },
         { id: 'recursos-sistema', modalId: 'recursos-sistema', label: t('params.systemResources'), icon: 'bi-gear', onClick: () => handleOpenModal('recursos-sistema') },
         { id: 'dias-vencimento', modalId: 'dias-vencimento', label: t('params.dueDays'), icon: 'bi-calendar-event', onClick: () => handleOpenModal('dias-vencimento') },
+        ...(userRole === 'financeiro'
+          ? [{ id: 'nfse', modalId: 'nfse', label: t('params.nfse'), icon: 'bi-file-earmark-text', onClick: () => handleOpenModal('nfse') }]
+          : []),
         { id: 'agendador-tarefas', modalId: 'agendador-tarefas', label: t('params.taskScheduler'), icon: 'bi-clock-history', onClick: () => handleOpenModal('agendador-tarefas') },
         ...(canManageSystemMaintenance(userRole)
           ? [
@@ -115,7 +120,9 @@ export const useMenuItems = ({ t, openModal, hasModulo, userRole }: UseMenuItems
       [
         { id: 'servidor-email', modalId: 'servidor-email', label: t('params.emailServer'), icon: 'bi-envelope', onClick: () => handleOpenModal('servidor-email') },
         { id: 'servidor-whatsapp', modalId: 'servidor-whatsapp', label: t('params.whatsappServer'), icon: 'bi-whatsapp', onClick: () => handleOpenModal('servidor-whatsapp') },
-        { id: 'nfse', modalId: 'nfse', label: t('params.nfse'), icon: 'bi-file-earmark-text', onClick: () => handleOpenModal('nfse') },
+        ...(userRole === 'financeiro'
+          ? []
+          : [{ id: 'nfse', modalId: 'nfse', label: t('params.nfse'), icon: 'bi-file-earmark-text', onClick: () => handleOpenModal('nfse') }]),
         { id: 'assinatura-digital', modalId: 'assinatura-digital', label: t('params.digitalSignature'), icon: 'bi-pen', onClick: () => handleOpenModal('assinatura-digital') },
         {
           id: 'integracao-ixc-provedor',
@@ -125,7 +132,7 @@ export const useMenuItems = ({ t, openModal, hasModulo, userRole }: UseMenuItems
           onClick: () => handleOpenModal('integracao-ixc-provedor'),
         },
       ].filter(filterItem),
-    [t, handleOpenModal, filterItem]
+    [t, handleOpenModal, filterItem, userRole]
   );
 
   const logsFolderItems = useMemo(

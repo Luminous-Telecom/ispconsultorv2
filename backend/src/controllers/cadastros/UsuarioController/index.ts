@@ -11,6 +11,7 @@ import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../..
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { buildPagination } from '../../../utils/pagination';
 import { ativoFilterForService, parseListQuery } from '../../../utils/listQuery';
+import { ERP_ROLES } from '../../../utils/userRoles';
 function canAccessUsuario(usuario: { empresa_id: number | null }, empresaId: number | null): boolean {
   if (usuario.empresa_id === null) return true;
   if (empresaId === null) return true;
@@ -22,7 +23,7 @@ export class UsuarioController {
     nome: Joi.string().min(3).max(150).required(),
     email: Joi.string().email().max(180).required(),
     password: Joi.string().min(6).required(),
-    role: Joi.string().valid('admin').default('admin'),
+    role: Joi.string().valid(...ERP_ROLES).default('user'),
     ativo: Joi.boolean().default(true)
   });
 
@@ -30,7 +31,7 @@ export class UsuarioController {
     nome: Joi.string().min(3).max(150),
     email: Joi.string().email().max(180),
     password: Joi.string().min(6),
-    role: Joi.string().valid('admin'),
+    role: Joi.string().valid(...ERP_ROLES),
     ativo: Joi.boolean()
   });
 
@@ -105,7 +106,7 @@ export class UsuarioController {
         nome: value.nome,
         email: value.email,
         password: value.password,
-        role: value.role || 'admin',
+        role: value.role || 'user',
         ativo: value.ativo !== undefined ? value.ativo : true,
         empresa_id: empresaId ?? undefined,
       });

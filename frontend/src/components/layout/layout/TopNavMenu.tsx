@@ -5,6 +5,7 @@ import { NavLinkButton } from 'components/ui';
 import { DynamicStyledElement } from 'components/ui/DynamicStyleElements';
 import SidebarFolderItemButton from '../SidebarFolderItemButton';
 import { findFolderPathForItem } from './sidebarFolderPath';
+import { isMenuFolderVisible } from './utils';
 import { useTopNavMenu } from './hooks/useTopNavMenu';
 import type {
   SidebarFolderConfig,
@@ -160,15 +161,7 @@ const TopNavMenu: React.FC<TopNavMenuProps> = ({ folders, isLoadingModulos, t })
 
   const visibleFolders = useMemo(
     () =>
-      folders.filter((folder) => {
-        if (folder.requireModulosLoaded) {
-          return !isLoadingModulos && folder.items.length > 0;
-        }
-        if (folder.accordionId === 'rpkiAccordion') {
-          return folder.items.length > 0;
-        }
-        return true;
-      }),
+      folders.filter((folder) => isMenuFolderVisible(folder, isLoadingModulos)),
     [folders, isLoadingModulos]
   );
 

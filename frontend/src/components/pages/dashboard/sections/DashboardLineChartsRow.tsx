@@ -18,14 +18,22 @@ interface DashboardLineChartsRowProps {
     | 'handleCrescimentoClientesPointClick'
     | 'handleContasPagarPointClick'
   >;
+  showFinanceiro: boolean;
+  showOperacional: boolean;
 }
 
 const DashboardLineChartsRow: React.FC<DashboardLineChartsRowProps> = ({
   charts,
   t,
   clicks,
-}) => (
+  showFinanceiro,
+  showOperacional,
+}) => {
+  if (!showFinanceiro && !showOperacional) return null;
+
+  return (
   <div className="row align-items-stretch">
+    {showFinanceiro && (
     <div className="col-12 col-md-6">
       <LineChartCard
         data={charts.recebidosPeriodoChartData}
@@ -35,7 +43,9 @@ const DashboardLineChartsRow: React.FC<DashboardLineChartsRowProps> = ({
         onPointClick={clicks.handleRecebidosPeriodoPointClick}
       />
     </div>
+    )}
 
+    {showFinanceiro && (
     <div className="col-12 col-md-6">
       <LineChartCard
         data={charts.receberPeriodoChartData}
@@ -45,7 +55,9 @@ const DashboardLineChartsRow: React.FC<DashboardLineChartsRowProps> = ({
         onPointClick={clicks.handleReceberPeriodoPointClick}
       />
     </div>
+    )}
 
+    {showFinanceiro && (
     <div className="col-12 col-md-6">
       <LineChartCard
         data={charts.receitaMensalChartData}
@@ -54,7 +66,9 @@ const DashboardLineChartsRow: React.FC<DashboardLineChartsRowProps> = ({
         onPointClick={clicks.handleReceitaMensalPointClick}
       />
     </div>
+    )}
 
+    {showOperacional && (
     <div className="col-12 col-md-6">
       <LineChartCard
         data={charts.crescimentoClientes}
@@ -63,7 +77,9 @@ const DashboardLineChartsRow: React.FC<DashboardLineChartsRowProps> = ({
         onPointClick={clicks.handleCrescimentoClientesPointClick}
       />
     </div>
+    )}
 
+    {showFinanceiro && (
     <div className="col-12 col-md-6">
       <LineChartCard
         data={charts.contasPagarChartData}
@@ -73,7 +89,9 @@ const DashboardLineChartsRow: React.FC<DashboardLineChartsRowProps> = ({
         onPointClick={clicks.handleContasPagarPointClick}
       />
     </div>
+    )}
 
+    {showOperacional && (
     <div className="col-12 col-md-6">
       <ClientsByPlanCard
         data={charts.clientesPorPlano}
@@ -81,7 +99,9 @@ const DashboardLineChartsRow: React.FC<DashboardLineChartsRowProps> = ({
         onBarClick={clicks.handleClientesPorPlanoBarClick}
       />
     </div>
+    )}
   </div>
-);
+  );
+};
 
 export default DashboardLineChartsRow;

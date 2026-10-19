@@ -159,7 +159,11 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
         res.status(403).json({ success: false, message: 'Rota não disponível via token de API' });
         return;
       }
-      req.user = { empresa_id: usuario.empresa_id, api_token: true } as jwt.JwtPayload;
+      req.user = {
+        empresa_id: usuario.empresa_id,
+        api_token: true,
+        role: usuario.role,
+      } as jwt.JwtPayload;
 
       registrarAuditoria(req, {
         acao: 'login',

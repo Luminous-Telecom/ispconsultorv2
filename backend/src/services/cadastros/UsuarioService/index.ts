@@ -148,7 +148,7 @@ export class UsuarioService {
     nome: string;
     email: string;
     password: string;
-    role?: 'admin' | 'user';
+    role?: 'admin' | 'financeiro' | 'user';
     ativo?: boolean;
     empresa_id?: number;
   }) {
@@ -158,7 +158,7 @@ export class UsuarioService {
         nome: dadosUsuario.nome,
         email: dadosUsuario.email,
         password_hash: passwordHash,
-        role: dadosUsuario.role || 'admin',
+        role: dadosUsuario.role || 'user',
         ativo: dadosUsuario.ativo !== undefined ? dadosUsuario.ativo : true,
         empresa_id: dadosUsuario.empresa_id ?? null,
       },
@@ -170,7 +170,7 @@ export class UsuarioService {
     nome?: string;
     email?: string;
     password?: string;
-    role?: 'admin' | 'user';
+    role?: 'admin' | 'financeiro' | 'user';
     ativo?: boolean;
     webhook_secret?: string;
   }) {

@@ -13,7 +13,7 @@ helmet → cors → cookieParser → X-Request-ID → json/urlencoded → saniti
   → (csrf opcional, ENABLE_CSRF) → (metrics opcional, ENABLE_METRICS)
   → ddosProtectionMiddleware → rateLimitMiddleware('/api')
   → copyProtection/devTools/file/api/image/configProtection
-  → blockdomiIpsPermitidosMiddleware → authMiddleware
+  → blockdomiIpsPermitidosMiddleware → authMiddleware → roleAccessMiddleware
   → auditCaptureMiddleware → auditLogMiddleware
   → planoModuloMiddleware → static (/arquivos, /images) → routes
   → errorHandlerMiddleware → 404 handler (/api/*)

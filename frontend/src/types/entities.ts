@@ -696,7 +696,7 @@ export interface Usuario {
   id: number;
   nome: string;
   email: string;
-  role: 'admin' | 'user';
+  role: 'admin' | 'financeiro' | 'user';
   ativo: boolean;
   precisa_trocar_senha: boolean;
   ultimo_login?: string | null;
@@ -711,7 +711,7 @@ export interface CreateUsuario {
   nome: string;
   email: string;
   password: string;
-  role?: 'admin' | 'user';
+  role?: 'admin' | 'financeiro' | 'user';
   ativo?: boolean;
 }
 
@@ -719,7 +719,7 @@ export interface UpdateUsuario {
   nome?: string;
   email?: string;
   password?: string;
-  role?: 'admin' | 'user';
+  role?: 'admin' | 'financeiro' | 'user';
   ativo?: boolean;
 }
 

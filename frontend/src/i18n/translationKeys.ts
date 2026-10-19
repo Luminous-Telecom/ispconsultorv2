@@ -1413,11 +1413,15 @@ export interface TranslationKeys {
   'user.title': string;
   'user.profile': string;
   'user.admin': string;
+  'user.financeiro': string;
   'user.user': string;
   'user.newPassword': string;
   'user.passwordPlaceholder': string;
   'user.newPasswordPlaceholder': string;
   'user.generateWebhookHelp': string;
+  'user.apiKeyAfterSave': string;
+  'user.apiKeyConfigured': string;
+  'user.apiKeyMissing': string;
   'user.webhookSecret': string;
   'user.generateToken': string;
   'user.copy': string;

@@ -36,6 +36,7 @@ import routes from './routes';
 
 // Importar middlewares de autenticação
 import { authMiddleware } from './middleware/authMiddleware';
+import { roleAccessMiddleware } from './middleware/roleAccessMiddleware';
 import { blockdomiIpsPermitidosMiddleware } from './middleware/blockdomiIpsPermitidosMiddleware';
 
 // Carregar variáveis de ambiente
@@ -280,6 +281,7 @@ app.use(configProtectionMiddleware);
 app.use(blockdomiIpsPermitidosMiddleware);
 
 app.use(authMiddleware);
+app.use(roleAccessMiddleware);
 
 // Middleware de auditoria (deve vir depois do authMiddleware)
 import { auditCaptureMiddleware, auditLogMiddleware } from './middleware/auditMiddleware';

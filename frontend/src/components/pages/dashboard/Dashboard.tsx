@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useDebouncedValue } from 'hooks/useDebouncedValue';
 import { useDashboard } from 'hooks/useDashboard';
 import { useDashboardFilters } from 'contexts/DashboardFiltersContext';
@@ -19,18 +20,39 @@ import { DASHBOARD_SEARCH_DEBOUNCE_MS } from './constants';
 import { useDashboardBackupStatus } from './hooks/useDashboardBackupStatus';
 import { useDashboardMetrics } from './hooks/useDashboardMetrics';
 import DashboardContent from './DashboardContent';
+import { authService } from 'services/authService';
+import { canSeeDashboardSection } from 'constants/userRoles';
 
 const Dashboard: React.FC = () => {
   const { t } = useI18n();
+  const { data: currentUser, isLoading: loadingUser } = useQuery({
+    queryKey: ['auth-me-profile'],
+    queryFn: async () => {
+      const res = await authService.getCurrentUser();
+      if (!res.success || !res.data) return null;
+      return res.data;
+    },
+    staleTime: 0,
+  });
+  const showFinanceiro = canSeeDashboardSection(currentUser?.role, 'financeiro');
+  const showOperacional = canSeeDashboardSection(currentUser?.role, 'operacional');
+  const showCadastros = canSeeDashboardSection(currentUser?.role, 'cadastros');
+  const showClientSearch = showOperacional || showCadastros;
   const { searchValue, searchField, setAvailableSearchFields, setSearchPlaceholder } = useTableHeader();
   const debouncedSearch = useDebouncedValue(searchValue.trim(), DASHBOARD_SEARCH_DEBOUNCE_MS);
 
   useEffect(() => {
+    if (!currentUser) return;
+    if (!showClientSearch) {
+      setAvailableSearchFields([]);
+      setSearchPlaceholder('');
+      return;
+    }
     setAvailableSearchFields(
       DASHBOARD_SEARCH_HEADER_FIELDS.map((f) => ({ id: f.key ?? '', label: f.label }))
     );
     setSearchPlaceholder(DASHBOARD_SEARCH_PLACEHOLDER);
-  }, [setAvailableSearchFields, setSearchPlaceholder]);
+  }, [currentUser, setAvailableSearchFields, setSearchPlaceholder, showClientSearch]);
   const { activeModal, openModal } = useModal();
   const { startDate, endDate } = useDashboardFilters();
 
@@ -54,7 +76,7 @@ const Dashboard: React.FC = () => {
     t,
   });
 
-  if (loadingDashboard) {
+  if (loadingDashboard || (loadingUser && !currentUser)) {
     return (
       <div className="dashboard-container dashboard-container--loading">
         <Loading message={t('ui.loadingDashboard')} variant="page" />
@@ -62,7 +84,7 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  if (debouncedSearch && !activeModal) {
+  if (showClientSearch && debouncedSearch && !activeModal) {
     return (
       <div className="dashboard-container">
         <div className="container-fluid px-0">
@@ -81,6 +103,9 @@ const Dashboard: React.FC = () => {
         backupStatus={backupStatus}
         hiddenItems={hiddenItems}
         chartClicks={chartClicks}
+        showFinanceiro={showFinanceiro}
+        showOperacional={showOperacional}
+        showCadastros={showCadastros}
       />
     </div>
   );

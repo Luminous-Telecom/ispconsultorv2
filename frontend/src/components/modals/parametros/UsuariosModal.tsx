@@ -10,6 +10,7 @@ import { renderStatusBadge } from 'components/ui/StatusBadge';
 import ListModal from 'components/common/ListModal';
 import { ListModalConfig } from 'types/modal';
 import { Usuario } from 'types';
+import { userRoleBadgeClass, userRoleLabelKey } from 'constants/userRoles';
 import UsuarioFormModal from './UsuarioFormModal';
 import ImprimirModal from 'components/common/ImprimirModal';
 
@@ -87,17 +88,20 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({ show, onClose, skipWrappe
       },
       {
         key: 'role',
-        label: 'Perfil',
+        label: list.t('user.profile'),
         sortable: true,
-        render: () => renderStatusBadge({ label: 'Administrador', className: 'bg-info' }),
+        render: (item) => renderStatusBadge({
+          label: list.t(userRoleLabelKey(item.role)),
+          className: userRoleBadgeClass(item.role),
+        }),
       },
       {
         key: 'webhook_secret',
-        label: 'Webhook Secret',
+        label: list.t('user.webhookSecret'),
         sortable: true,
         render: (item) => (
           <span className="small text-muted">
-            {item.webhook_secret ? 'Configurado' : 'Não configurado'}
+            {item.webhook_secret ? list.t('user.apiKeyConfigured') : list.t('user.apiKeyMissing')}
           </span>
         ),
       },
@@ -121,7 +125,7 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({ show, onClose, skipWrappe
       { key: 'id', label: list.t('table.id') },
       { key: 'nome', label: list.t('form.name') },
       { key: 'email', label: list.t('form.email') },
-      { key: 'role', label: 'Perfil' },
+      { key: 'role', label: list.t('user.profile') },
     ],
     [list]
   );

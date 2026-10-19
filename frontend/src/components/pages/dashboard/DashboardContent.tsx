@@ -15,6 +15,9 @@ interface DashboardContentProps {
   backupStatus: ReturnType<typeof useDashboardBackupStatus>;
   hiddenItems: ReturnType<typeof useChartHiddenItems>;
   chartClicks: ReturnType<typeof useDashboardChartClicks>;
+  showFinanceiro: boolean;
+  showOperacional: boolean;
+  showCadastros: boolean;
 }
 
 const DashboardContent: React.FC<DashboardContentProps> = ({
@@ -24,6 +27,9 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   backupStatus,
   hiddenItems,
   chartClicks,
+  showFinanceiro,
+  showOperacional,
+  showCadastros,
 }) => (
   <div className="container-fluid px-0">
     <DashboardPieChartsRow
@@ -35,8 +41,17 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
       toggles={hiddenItems}
       clicks={chartClicks}
       ticketMedioCardData={metrics.ticketMedioCardData}
+      showFinanceiro={showFinanceiro}
+      showOperacional={showOperacional}
+      showCadastros={showCadastros}
     />
-    <DashboardLineChartsRow charts={charts} t={t} clicks={chartClicks} />
+    <DashboardLineChartsRow
+      charts={charts}
+      t={t}
+      clicks={chartClicks}
+      showFinanceiro={showFinanceiro}
+      showOperacional={showOperacional}
+    />
   </div>
 );
 

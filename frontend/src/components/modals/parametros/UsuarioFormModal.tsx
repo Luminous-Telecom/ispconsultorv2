@@ -7,16 +7,22 @@ import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useFormReset } from 'hooks/useFormReset';
 import { useUsuario, useGerarWebhookSecret, useResetUsuario2fa } from 'hooks/useUsuarios';
 import DraggableModal from 'components/common/DraggableModal';
-import { AppButton, CopyableFormField, AtivoInativoField, EntityIdField, GerarTokenButton, ModalFormActions } from 'components/ui';
+import { AppButton, CopyableFormField, AtivoInativoField, EntityIdField, FormField, GerarTokenButton, ModalFormActions } from 'components/ui';
 import UsuarioAccountFormFields from 'components/forms/UsuarioAccountFormFields';
 import { useI18n } from 'contexts/I18nContext';
+import { ErpRole } from 'constants/userRoles';
 
 interface UsuarioForm {
   nome: string;
   email: string;
   password: string;
-  role: 'admin';
+  role: ErpRole;
   ativo: boolean;
+}
+
+function asErpRole(role: string | undefined): ErpRole {
+  if (role === 'admin' || role === 'financeiro' || role === 'user') return role;
+  return 'user';
 }
 
 interface UsuarioFormModalProps {
@@ -38,7 +44,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
     nome: '',
     email: '',
     password: '',
-    role: 'admin',
+    role: 'user',
     ativo: true
   };
 
@@ -61,7 +67,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
         nome: usuarioData.nome || '',
         email: usuarioData.email || '',
         password: '',
-        role: 'admin',
+        role: asErpRole(usuarioData.role),
         ativo: usuarioData.ativo !== undefined ? usuarioData.ativo : true
       });
       setWebhookSecret(usuarioData.webhook_secret || '');
@@ -123,7 +129,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
         const updateData: Partial<UsuarioForm> = {
           nome: formData.nome,
           email: formData.email,
-          role: 'admin',
+          role: formData.role,
           ativo: formData.ativo
         };
         if (formData.password) {
@@ -131,7 +137,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
         }
         await updateUsuarioMutation.mutateAsync(updateData);
       } else {
-        await createUsuarioMutation.mutateAsync({ ...formData, role: 'admin' });
+        await createUsuarioMutation.mutateAsync(formData);
       }
     } catch (err) {
       // Erro já tratado no mutation
@@ -146,7 +152,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
       const result = await gerarWebhookSecretMutation.mutateAsync(usuarioId);
       if (result.data?.webhook_secret) {
         setWebhookSecret(result.data.webhook_secret);
-        success('Webhook secret gerado com sucesso!');
+        success(t('user.successGenerateSecret'));
       }
     } catch (err) {
       // Erro já tratado no mutation
@@ -210,6 +216,22 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
             isEditing={isEditing}
           />
           <div className="col-12">
+            <FormField
+              name="role"
+              type="select"
+              label={t('user.profile')}
+              value={formData.role}
+              onChange={(value) => setFormData((prev) => ({ ...prev, role: asErpRole(String(value)) }))}
+              options={[
+                { value: 'user', label: t('user.user') },
+                { value: 'financeiro', label: t('user.financeiro') },
+                { value: 'admin', label: t('user.admin') },
+              ]}
+              required
+              size="sm"
+            />
+          </div>
+          <div className="col-12">
             <AtivoInativoField
               value={formData.ativo}
               onChange={(v) => setFormData(prev => ({ ...prev, ativo: v }))}
@@ -218,29 +240,34 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
           </div>
         </div>
 
-        {isEditing && (
-          <div className="row g-1 mb-0">
+        <div className="row g-1 mb-0">
             <div className="col-12">
               <CopyableFormField
                 name="webhook_secret"
                 type="text"
                 label={t('user.webhookSecret')}
-                placeholder={t('user.generateWebhookHelp')}
+                placeholder={isEditing ? t('user.generateWebhookHelp') : t('user.apiKeyAfterSave')}
                 size="sm"
                 value={webhookSecret}
                 readOnly
                 autoComplete="off"
                 copyKey="usuario-webhook-secret"
                 footerActions={
-                  <GerarTokenButton
-                    type="button"
-                    onClick={handleGenerateWebhookSecret}
-                    isPending={isPending || isGeneratingSecret}
-                    disabled={isPending || isGeneratingSecret}
-                  />
+                  isEditing ? (
+                    <GerarTokenButton
+                      type="button"
+                      onClick={handleGenerateWebhookSecret}
+                      isPending={isPending || isGeneratingSecret}
+                      disabled={isPending || isGeneratingSecret}
+                    />
+                  ) : undefined
                 }
                 footerHint={
-                  !webhookSecret ? (
+                  !isEditing ? (
+                    <small className="form-helper-message mt-1">
+                      {t('user.apiKeyAfterSave')}
+                    </small>
+                  ) : !webhookSecret ? (
                     <small className="form-helper-message mt-1">
                       {t('user.generateWebhookHelp')}
                     </small>
@@ -248,6 +275,8 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
                 }
               />
             </div>
+            {isEditing && (
+              <>
             <div className="col-12">
               <AtivoInativoField
                 value={totpEnabled}
@@ -273,8 +302,9 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
                 </small>
               </div>
             )}
-          </div>
-        )}
+              </>
+            )}
+        </div>
       </div>
     </form>
   </DraggableModal>

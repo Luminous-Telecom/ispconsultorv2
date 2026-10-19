@@ -2,6 +2,7 @@ import React from 'react';
 import LayoutSidebarHeader from '../LayoutSidebarHeader';
 import AppSidebar from '../appLayout/AppSidebar';
 import type { SidebarFolderConfig, SidebarMenuItem, TranslateFn } from './types';
+import { isMenuFolderVisible } from './utils';
 
 interface SidebarProps {
   sidebarRef: React.RefObject<HTMLElement | null>;
@@ -24,15 +25,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   t,
   onCloseSidebar,
 }) => {
-  const shouldRenderFolder = (folder: SidebarFolderConfig): boolean => {
-    if (folder.requireModulosLoaded) {
-      return !isLoadingModulos && folder.items.length > 0;
-    }
-    if (folder.accordionId === 'rpkiAccordion') {
-      return folder.items.length > 0;
-    }
-    return true;
-  };
+  const shouldRenderFolder = (folder: SidebarFolderConfig): boolean =>
+    isMenuFolderVisible(folder, isLoadingModulos);
 
   return (
     <AppSidebar

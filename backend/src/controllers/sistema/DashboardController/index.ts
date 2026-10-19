@@ -18,6 +18,7 @@ import { formatDateISOForAPI } from '../../../utils/timezoneUtils';
 import { sendSuccess, sendError } from '../../../utils/responseUtils';
 import { parseListQuery, queryString } from '../../../utils/listQuery';
 import { buildErpDashboardStatsGraficos } from '../../../services/sistema/dashboardGraficosStats';
+import { scopeDashboardPayload } from '../../../services/sistema/dashboardRoleScope';
 
 interface TituloWithCliente extends Titulo {
   cliente?: Cliente | null;
@@ -163,7 +164,9 @@ export class DashboardController {
       };
 
 
-      sendSuccess(res, dashboardData);
+      const role = (req as Request & { user?: { role?: string } | string }).user;
+      const userRole = role && typeof role !== 'string' ? role.role : undefined;
+      sendSuccess(res, scopeDashboardPayload(userRole, dashboardData));
     } catch (error) {
       sendError(res, error, 'Erro ao obter dados do dashboard', 500, true, {
         context: 'DashboardController',

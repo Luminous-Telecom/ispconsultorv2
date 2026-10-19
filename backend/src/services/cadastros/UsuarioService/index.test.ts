@@ -85,6 +85,23 @@ describe('UsuarioService cadastro e edição', () => {
     expect(data.password_hash).not.toBe('senha-plana');
     expect(String(data.password_hash).startsWith('$2')).toBe(true);
     expect(criado).not.toHaveProperty('password_hash');
+    expect(data.role).toBe('user');
+  });
+
+  it('grava o perfil financeiro quando informado', async () => {
+    (usuarios.create as jest.Mock).mockImplementation(async ({ data }) => ({ id: 4, ...data }));
+
+    await UsuarioService.create({
+      nome: 'Financeiro',
+      email: 'fin@ispconsultor.com.br',
+      password: 'senha-plana',
+      empresa_id: 10,
+      role: 'financeiro',
+    });
+
+    const data = (usuarios.create as jest.Mock).mock.calls[0][0].data;
+    expect(data.role).toBe('financeiro');
+    expect(data.password_hash).not.toBe('senha-plana');
   });
 
   it('edição parcial não troca e-mail nem senha', async () => {
