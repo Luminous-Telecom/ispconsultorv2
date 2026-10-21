@@ -366,7 +366,7 @@ npm run dev
 | Nginx não serve o front | Confirme `root` em `/var/www/ispconsultor` e que `frontend/build` foi publicado |
 | 502 Bad Gateway | `npx pm2 list` — API deve estar up na porta 3001 |
 | Extração de PDF / fila 503 | Redis rodando e `REDIS_URL` correta no `.env` |
-| Puppeteer / PDF quebrado | Instale libs do Chromium (o install.sh já traz várias deps nativas; em instalação manual veja dependências do Puppeteer no SO) |
+| Puppeteer / PDF quebrado (`libnspr4.so` ou outra `.so`) | Instalação nova: o `install.sh` instala as libs do Chrome. Servidor já no ar: rode de novo o bloco `apt-get install` de bibliotecas do Chrome em `scripts/install.sh` |
 | RPKI indisponível | Krill instalado e `KRILL_API_*` no `.env` |
 
 ---
