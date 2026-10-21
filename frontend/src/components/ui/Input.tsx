@@ -1,6 +1,7 @@
 import React, { forwardRef } from 'react';
 import { BaseComponentProps, ValidationProps, IconProps, TooltipProps, InputType, InputSize, ChangeEvent } from './types';
 import { getBootstrapTooltipProps } from './tooltipProps';
+import { useAutofillGuard } from './useAutofillGuard';
 
 interface InputProps extends BaseComponentProps, ValidationProps, IconProps, TooltipProps {
   type?: InputType;
@@ -66,6 +67,23 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   id,
   'data-testid': dataTestId,
 }, ref) => {
+  const blockAutofill = autoComplete === 'off';
+  const autofill = useAutofillGuard(blockAutofill, readOnly);
+
+  const handleFocus = (event: React.FocusEvent<HTMLInputElement>) => {
+    autofill.unlock(event.currentTarget);
+    onFocus?.(event);
+  };
+
+  const handleMouseDown = (event: React.MouseEvent<HTMLInputElement>) => {
+    autofill.unlock(event.currentTarget);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    autofill.unlock(event.currentTarget);
+    onKeyDown?.(event);
+  };
+
   // Construir classes CSS
   const getInputClasses = () => {
     const classes = ['form-control'];
@@ -156,8 +174,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
           name={name}
           onChange={handleChange}
           onBlur={onBlur}
-          onFocus={onFocus}
-          onKeyDown={onKeyDown}
+          onFocus={handleFocus}
+          onMouseDown={handleMouseDown}
+          onKeyDown={handleKeyDown}
           onKeyUp={onKeyUp}
           min={min}
           max={max}
@@ -166,7 +185,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
           maxLength={maxLength}
           pattern={pattern}
           required={required}
-          readOnly={readOnly}
+          readOnly={autofill.readOnly}
           disabled={disabled}
           autoComplete={autoComplete}
           autoFocus={autoFocus}
@@ -174,6 +193,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
           inputMode={inputMode}
           id={id}
           data-testid={dataTestId}
+          {...autofill.domProps}
           {...getBootstrapTooltipProps(tooltip, tooltipPosition)}
         />
         {renderValidationMessage()}
@@ -193,8 +213,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         name={name}
         onChange={handleChange}
         onBlur={onBlur}
-        onFocus={onFocus}
-        onKeyDown={onKeyDown}
+        onFocus={handleFocus}
+        onMouseDown={handleMouseDown}
+        onKeyDown={handleKeyDown}
         onKeyUp={onKeyUp}
         min={min}
         max={max}
@@ -203,7 +224,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         maxLength={maxLength}
         pattern={pattern}
         required={required}
-        readOnly={readOnly}
+        readOnly={autofill.readOnly}
         disabled={disabled}
         autoComplete={autoComplete}
         autoFocus={autoFocus}
@@ -211,6 +232,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         inputMode={inputMode}
         id={id}
         data-testid={dataTestId}
+        {...autofill.domProps}
         {...getBootstrapTooltipProps(tooltip, tooltipPosition)}
       />
       {renderValidationMessage()}

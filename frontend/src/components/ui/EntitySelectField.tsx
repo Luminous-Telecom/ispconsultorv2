@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useI18n } from 'contexts/I18nContext';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { LabelWithHelp } from './LabelWithHelp';
+import { useAutofillGuard } from './useAutofillGuard';
 import { IconOnlyButton } from './buttons';
 import {
   isRequiredValidationMessage,
@@ -73,6 +74,7 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = (props) => {
   const entities = props.entities ?? [];
   const fieldKey = label.toLowerCase().replace(/\s+/g, '_');
   const fieldId = `${fieldKey}_id_field`;
+  const idGuard = useAutofillGuard(true, false);
   const idPlaceholder = props.idPlaceholder ?? (stringIdMode ? 'UUID' : t('table.id'));
   const idTitle = idFieldTitle ?? (stringIdMode ? 'UUID' : 'Digite o ID');
   const errorMessage = error != null ? String(error) : undefined;
@@ -115,14 +117,18 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = (props) => {
           <input
             id={fieldId}
             title={idTitle}
-            autoComplete="off"
             type="text"
             className="form-control text-center id-field"
             placeholder={idPlaceholder}
             name={fieldId}
             disabled={disabled}
+            readOnly={idGuard.readOnly}
+            onFocus={(event) => idGuard.unlock(event.currentTarget)}
+            onMouseDown={(event) => idGuard.unlock(event.currentTarget)}
+            onKeyDown={(event) => idGuard.unlock(event.currentTarget)}
             onChange={(e) => handleIdChange(e.target.value)}
             value={props.value ? String(props.value) : ''}
+            {...idGuard.domProps}
           />
           <input
             placeholder={defaultPlaceholder}

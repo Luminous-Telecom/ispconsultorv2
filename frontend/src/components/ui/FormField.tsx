@@ -14,6 +14,7 @@ import {
   shouldNotifyRequiredValidationToast,
   shouldShowInlineValidationMessage,
 } from 'utils/requiredValidationToast';
+import { resolveFormFieldAutoComplete, useAutofillGuard } from './useAutofillGuard';
 
 type FieldType = 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'datetime-local' | 'time' | 'month' | 'week' | 'select' | 'checkbox' | 'textarea' | 'file';
 
@@ -119,6 +120,9 @@ const FormField: React.FC<FormFieldProps> = ({
   const { t } = useI18n();
   const { error: notifyError } = useNotificationContext();
   const lastRequiredToastRef = useRef<string | null>(null);
+  const resolvedAutoComplete = resolveFormFieldAutoComplete(autoComplete);
+  const blockAutofill = resolvedAutoComplete === 'off';
+  const textareaGuard = useAutofillGuard(blockAutofill && type === 'textarea', readOnly);
   
   const defaultLoadingText = loadingText || t('messages.loading');
   const defaultEmptyText = emptyText || t('ui.noOptionsAvailable');
@@ -148,42 +152,6 @@ const FormField: React.FC<FormFieldProps> = ({
   
   // Gerar ID único usando prefixo do formulário
   const fieldId = id || `${formPrefix ? `${formPrefix}-` : ''}field-${name}`;
-
-  // Função para determinar autocomplete baseado no name ou type
-  const getAutoComplete = () => {
-    if (autoComplete) return autoComplete;
-    
-    // Mapear nomes comuns para valores de autocomplete
-    const nameMap: Record<string, string> = {
-      email: 'email',
-      telefone: 'tel',
-      whatsapp: 'tel',
-      celular: 'tel',
-      cnpj: 'off',
-      cpf: 'off',
-      cep: 'postal-code',
-      endereco: 'street-address',
-      rua: 'street-address',
-      numero: 'address-line2',
-      complemento: 'address-line2',
-      bairro: 'address-level2',
-      cidade: 'address-level1',
-      estado: 'address-level1',
-      password: 'current-password',
-      senha: 'current-password',
-      nome: 'name',
-      razao_social: 'organization',
-      nome_fantasia: 'organization',
-    };
-
-    if (nameMap[name]) return nameMap[name];
-    
-    if (type === 'email') return 'email';
-    if (type === 'tel') return 'tel';
-    if (type === 'password') return 'current-password';
-    
-    return 'off';
-  };
 
   // Handler para onChange
   const handleChange = (changeValue: FormValue | { value: FormValue }, changeName?: string) => {
@@ -288,14 +256,19 @@ const FormField: React.FC<FormFieldProps> = ({
             placeholder={placeholder}
             required={required}
             disabled={disabled}
-            readOnly={readOnly}
+            readOnly={textareaGuard.readOnly}
+            autoComplete={resolvedAutoComplete}
             autoFocus={autoFocus}
+            onFocus={(event) => textareaGuard.unlock(event.currentTarget)}
+            onMouseDown={(event) => textareaGuard.unlock(event.currentTarget)}
+            onKeyDown={(event) => textareaGuard.unlock(event.currentTarget)}
             rows={rows}
             cols={cols}
             minLength={minLength}
             maxLength={maxLength}
             className={`form-control ${size !== 'md' ? `form-control-${size}` : ''} ${className}`}
             data-testid={dataTestId}
+            {...textareaGuard.domProps}
             {...getBootstrapTooltipProps(tooltip, tooltipPosition)}
           />
         );
@@ -334,7 +307,7 @@ const FormField: React.FC<FormFieldProps> = ({
             minLength={minLength}
             maxLength={maxLength}
             pattern={pattern}
-            autoComplete={getAutoComplete()}
+            autoComplete={resolvedAutoComplete}
             autoFocus={autoFocus}
             readOnly={readOnly}
             icon={icon}
