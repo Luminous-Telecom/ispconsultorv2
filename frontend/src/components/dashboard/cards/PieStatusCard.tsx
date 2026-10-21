@@ -9,6 +9,7 @@ export interface PieStatusCardProps {
   onToggleItem: (index: number) => void;
   onSliceClick?: (item: ChartDataItem, index: number) => void;
   centerHighlightFilterValue?: string | boolean;
+  centerHighlightColor?: string;
   /** `compact` (dashboard principal) ou `metric` (SaaS, com rodapé e ícone). */
   variant?: 'compact' | 'metric';
   metricHeaderIcon?: 'contracts' | 'payments' | 'clients' | 'plans';
@@ -25,6 +26,7 @@ const PieStatusCard: React.FC<PieStatusCardProps> = ({
   onToggleItem,
   onSliceClick,
   centerHighlightFilterValue,
+  centerHighlightColor,
   variant = 'compact',
   metricHeaderIcon,
   metricHeaderInfo,
@@ -43,6 +45,7 @@ const PieStatusCard: React.FC<PieStatusCardProps> = ({
         onToggleItem={onToggleItem}
         onSliceClick={onSliceClick}
         centerHighlightFilterValue={centerHighlightFilterValue}
+        centerHighlightColor={centerHighlightColor}
         chartLeading
         {...(isMetric
           ? { metricLayout: true, metricHeaderIcon, metricHeaderInfo, footerLeft, footerRight }

@@ -46,3 +46,21 @@ export interface PieCenterLabel {
   text: string;
   color: string;
 }
+
+/** Percentual do destaque no centro do donut. Fatia ausente (quantidade 0) conta como 0%. */
+export function resolveCenterLabel(
+  data: ChartDataItem[] | undefined,
+  centerHighlightFilterValue: string | boolean | undefined,
+  fallbackColor: string,
+): PieCenterLabel | null {
+  if (centerHighlightFilterValue === undefined || !data?.length) return null;
+  const grandTotal = data.reduce((sum, item) => sum + getItemValue(item), 0);
+  if (grandTotal <= 0) return null;
+  const hit = resolveHighlightItem(data, centerHighlightFilterValue);
+  const value = hit ? getItemValue(hit) : 0;
+  const pct = Math.round((value / grandTotal) * 100);
+  return {
+    text: `${pct}%`,
+    color: hit?.color || fallbackColor,
+  };
+}

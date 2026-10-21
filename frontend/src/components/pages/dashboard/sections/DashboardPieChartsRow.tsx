@@ -11,6 +11,7 @@ import type { useDashboardBackupStatus } from '../hooks/useDashboardBackupStatus
 import type { useDashboardMetrics } from '../hooks/useDashboardMetrics';
 import type { useDashboardChartClicks } from 'hooks/useDashboardChartClicks';
 import type { useChartHiddenItems } from 'hooks/useChartHiddenItems';
+import { COLOR } from 'constants/colors';
 
 interface DashboardPieChartsRowProps {
   charts: ReturnType<typeof useDashboardCharts>;
@@ -99,6 +100,7 @@ const DashboardPieChartsRow: React.FC<DashboardPieChartsRowProps> = ({
         onToggleItem={toggles.togglePagamento}
         onSliceClick={clicks.handleStatusPagamentoSliceClick}
         centerHighlightFilterValue="pago,pago_atraso,parcial"
+        centerHighlightColor={COLOR.emerald}
       />
     </div>
     )}

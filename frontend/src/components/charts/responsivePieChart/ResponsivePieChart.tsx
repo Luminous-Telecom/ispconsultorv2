@@ -3,7 +3,7 @@ import { PieChartProps } from '../types';
 import { ChartEmptyState } from '../ChartEmptyState';
 import { LabelWithHelp, DynamicStyledElement } from 'components/ui';
 import { ChartFloatingTooltipHost } from '../ChartFloatingTooltip';
-import { formatPieValue, getItemValue, resolveHighlightItem } from './utils';
+import { formatPieValue, getItemValue, resolveCenterLabel } from './utils';
 import { MetricPieHeaderIcon } from './MetricPieHeaderIcon';
 import { PieSidebarLegend } from './PieSidebarLegend';
 import { usePieChartD3Render } from './usePieChartD3Render';
@@ -17,6 +17,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(
     onToggleItem,
     onSliceClick,
     centerHighlightFilterValue,
+    centerHighlightColor,
     chartLeading = false,
     metricLayout = false,
     footerLeft,
@@ -118,19 +119,10 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(
     );
 
     /** Texto e cor do % central (cor = mesma da fatia / legenda do destaque). */
-    const centerLabel = useMemo(() => {
-      if (centerHighlightFilterValue === undefined || !data?.length) return null;
-      const grandTotal = data.reduce((sum, item) => sum + getItemValue(item), 0);
-      if (grandTotal <= 0) return null;
-      const hit = resolveHighlightItem(data, centerHighlightFilterValue);
-      if (!hit) return null;
-      const v = getItemValue(hit);
-      const pct = Math.round((v / grandTotal) * 100);
-      return {
-        text: `${pct}%`,
-        color: hit.color || CHART_MUTED_COLOR,
-      };
-    }, [data, centerHighlightFilterValue]);
+    const centerLabel = useMemo(
+      () => resolveCenterLabel(data, centerHighlightFilterValue, centerHighlightColor || CHART_MUTED_COLOR),
+      [data, centerHighlightFilterValue, centerHighlightColor],
+    );
 
     usePieChartD3Render({
       svgRef,

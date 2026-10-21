@@ -45,6 +45,8 @@ export interface PieChartProps {
   onSliceClick?: (item: ChartDataItem, index: number) => void;
   /** Ex.: `true` (clientes ativos), `'ativo'` (contratos), `'pago,pago_atraso,parcial'` (pagamentos) — % no buraco do donut */
   centerHighlightFilterValue?: string | boolean;
+  /** Cor do % central quando a fatia de destaque não entra nos dados (quantidade 0). */
+  centerHighlightColor?: string;
   /** Donut à esquerda, legenda à direita (layout tipo cards de métrica) */
   chartLeading?: boolean;
   /** Título em caixa alta e rodapé com duas métricas (quando `footerLeft` / `footerRight` forem passados) */

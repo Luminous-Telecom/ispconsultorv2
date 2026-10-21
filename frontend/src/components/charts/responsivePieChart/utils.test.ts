@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { getItemValue, resolveHighlightItem } from './utils';
+import { getItemValue, resolveCenterLabel, resolveHighlightItem } from './utils';
 import type { ChartDataItem } from '../types';
 
 const pagamentoData: ChartDataItem[] = [
@@ -19,9 +19,18 @@ describe('resolveHighlightItem', () => {
   });
 
   it('calcula percentual de pagos sobre o total', () => {
-    const hit = resolveHighlightItem(pagamentoData, 'pago,pago_atraso,parcial');
-    const total = pagamentoData.reduce((sum, item) => sum + getItemValue(item), 0);
-    const pct = Math.round((getItemValue(hit!) / total) * 100);
-    expect(pct).toBe(43);
+    const label = resolveCenterLabel(pagamentoData, 'pago,pago_atraso,parcial', '#94a3b8');
+    expect(label?.text).toBe('43%');
+    expect(label?.color).toBe('#10b981');
+  });
+
+  it('mostra 0% quando não há fatia de pagos', () => {
+    const semPagos: ChartDataItem[] = [
+      { label: 'Pendente', value: 21, color: '#38bdf8', filterValue: 'pendente' },
+      { label: 'Cancelada', value: 14, color: '#94a3b8', filterValue: 'cancelado' },
+    ];
+    const label = resolveCenterLabel(semPagos, 'pago,pago_atraso,parcial', '#94a3b8');
+    expect(label?.text).toBe('0%');
+    expect(label?.color).toBe('#94a3b8');
   });
 });
