@@ -25,7 +25,6 @@ export interface BoletoPlanoData {
   nome: string;
   descricao: string;
   tipoServico: string;
-  quantidadeUsuarios: string;
   valor: string;
   periodicidade: string;
 }

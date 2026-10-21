@@ -125,7 +125,6 @@ export async function buildBoletoRenderData(titulo: TituloComRelacoes): Promise<
       nome: titulo.plano?.nome_plano || '',
       descricao: titulo.plano?.descricao || '',
       tipoServico: titulo.plano?.tipo_servico || '',
-      quantidadeUsuarios: String(titulo.plano?.quantidade_usuarios || '1'),
       valor: valorBoleto,
       periodicidade: resolvePeriodicidade(titulo.plano?.periodicidade),
     },

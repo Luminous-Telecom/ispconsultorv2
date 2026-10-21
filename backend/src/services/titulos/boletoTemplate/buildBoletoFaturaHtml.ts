@@ -61,7 +61,6 @@ export function buildBoletoFaturaHtml(data: BoletoRenderData): string {
       ${infoItem('Nome do plano', plano.nome, true)}
       ${infoItem('Descrição', plano.descricao, true)}
       ${infoItem('Tipo de serviço', plano.tipoServico)}
-      ${infoItem('Usuários', plano.quantidadeUsuarios)}
       ${infoItem('Valor do plano', `R$ ${plano.valor}`)}
       ${infoItem('Periodicidade', plano.periodicidade)}
     </div>
