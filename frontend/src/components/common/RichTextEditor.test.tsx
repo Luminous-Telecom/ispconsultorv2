@@ -3,14 +3,14 @@ import { render, screen } from '@testing-library/react';
 import { I18nProvider } from 'contexts/I18nContext';
 
 jest.mock('@tinymce/tinymce-react', () => ({
-  Editor: ({ init }: { init: { toolbar_mode?: string; menubar?: boolean; skin?: boolean; skin_url?: string; content_css?: string | false } }) => (
+  Editor: ({ init }: { init: { toolbar_mode?: string; menubar?: boolean; skin?: string | boolean; skin_url?: string; content_css?: string | false } }) => (
     <div
       data-testid="tinymce"
       data-toolbar-mode={init.toolbar_mode}
       data-menubar={String(init.menubar)}
-      data-skin={String(init.skin)}
+      data-skin={init.skin === undefined ? '' : String(init.skin)}
       data-skin-url={init.skin_url ?? ''}
-      data-content-css={String(init.content_css ?? '')}
+      data-content-css={init.content_css === undefined ? '' : String(init.content_css)}
     />
   ),
 }));
@@ -48,8 +48,8 @@ describe('RichTextEditor', () => {
     const editor = screen.getByTestId('tinymce');
     expect(editor.getAttribute('data-toolbar-mode')).toBe('wrap');
     expect(editor.getAttribute('data-menubar')).toBe('false');
-    expect(editor.getAttribute('data-skin')).toBe('false');
+    expect(editor.getAttribute('data-skin')).toBe('oxide');
     expect(editor.getAttribute('data-skin-url')).toBe('');
-    expect(editor.getAttribute('data-content-css')).toBe('false');
+    expect(editor.getAttribute('data-content-css')).toBe('default');
   });
 });
