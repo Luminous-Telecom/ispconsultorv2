@@ -9,22 +9,18 @@ import 'tinymce/themes/silver';
 import 'tinymce/icons/default';
 import 'tinymce/models/dom';
 import 'tinymce/plugins/advlist';
-import 'tinymce/plugins/anchor';
 import 'tinymce/plugins/autolink';
-import 'tinymce/plugins/charmap';
 import 'tinymce/plugins/code';
-import 'tinymce/plugins/fullscreen';
 import 'tinymce/plugins/image';
-import 'tinymce/plugins/insertdatetime';
 import 'tinymce/plugins/link';
 import 'tinymce/plugins/lists';
-import 'tinymce/plugins/media';
 import 'tinymce/plugins/searchreplace';
 import 'tinymce/plugins/table';
-import 'tinymce/plugins/visualblocks';
 import 'tinymce/plugins/wordcount';
 import 'tinymce/plugins/autoresize';
-import 'tinymce/skins/ui/oxide/skin.min.css';
+import 'tinymce/skins/ui/oxide/skin';
+import 'tinymce/skins/ui/oxide/content';
+import 'tinymce/skins/content/default/content';
 import 'tinymce-i18n/langs/pt_BR';
 
 interface RichTextEditorProps {
@@ -98,9 +94,6 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
           resize,
           menubar: false,
           toolbar_mode: 'wrap',
-          // Usa skins via CDN para evitar 404 e não poluir o CSS global do app
-          skin_url: 'https://cdn.jsdelivr.net/npm/tinymce@7.9.1/skins/ui/oxide',
-          content_css: 'https://cdn.jsdelivr.net/npm/tinymce@7.9.1/skins/content/default/content.css',
           plugins: [
             'advlist', 'autolink', 'lists', 'link', 'image',
             'searchreplace', 'code',
