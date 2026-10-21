@@ -687,10 +687,14 @@ $truncate-widths: (
   min-width: 0;
 }
 
-/* TinyMCE usa skin claro (oxide); menus auxiliares ficam no body fora do modal */
-body[data-app="system"] .tox-tinymce-aux,
-body[data-app="system"] .tox-tinymce-aux .tox {
+/* TinyMCE usa skin claro (oxide). O sink fica no body e precisa passar do menu (z-index 2100). */
+.tox-tinymce-aux,
+.tox-tinymce-aux .tox {
   color: #222f3e;
+}
+
+.tox-tinymce-aux {
+  z-index: 100000 !important;
 }
 
 /* --- Imprimir modal --- */
@@ -1018,7 +1022,7 @@ body[data-app="system"] .tox-tinymce-aux .tox {
 
   &:has(.modal-rich-text-editor) {
     flex: 0 0 auto;
-    min-height: auto;
+    min-height: 32rem;
     height: auto;
     width: 100%;
   }
@@ -1039,7 +1043,7 @@ body[data-app="system"] .tox-tinymce-aux .tox {
   .documento-editor-layout:has(.modal-rich-text-editor) {
     flex: 0 0 auto !important;
     height: auto !important;
-    min-height: auto !important;
+    min-height: 32rem !important;
   }
 }
 

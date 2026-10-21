@@ -7,6 +7,7 @@ import {
   sanitizeEmail,
   sanitizeInteger,
   sanitizeNumber,
+  sanitizeObject,
   sanitizePhone,
   sanitizeString,
   sanitizeText,
@@ -41,5 +42,22 @@ describe('sanitize', () => {
     expect(isValidIPv4('45.224.181.')).toBe(false);
     expect(isValidIPv6('2001:db8::1')).toBe(true);
     expect(isValidIPv6('nao-ip')).toBe(false);
+  });
+});
+
+describe('sanitizeObject modelos de documento', () => {
+  it('preserva HTML de recibo e carta', () => {
+    const result = sanitizeObject({
+      conteudo_recibo: '<p>Recibo <strong>ok</strong></p>',
+      conteudo_carta: '<p>Carta</p>',
+    });
+
+    expect(result.conteudo_recibo).toBe('<p>Recibo <strong>ok</strong></p>');
+    expect(result.conteudo_carta).toBe('<p>Carta</p>');
+  });
+
+  it('escapa HTML fora dos campos de documento', () => {
+    const result = sanitizeObject({ observacao: '<script>alert(1)</script>' });
+    expect(String(result.observacao)).not.toContain('<script>');
   });
 });

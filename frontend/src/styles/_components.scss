@@ -341,7 +341,11 @@ form.form-modal-simple:has(.modal-rich-text-editor) > [class*='-tab-content-padd
   @include form-modal-tab-padding;
 }
 
-.documento-editor-layout:has(.modal-rich-text-editor),
+.documento-editor-layout:has(.modal-rich-text-editor) {
+  flex: 0 0 auto !important;
+  min-height: 32rem !important;
+}
+
 .modal-rich-text-editor-host {
   flex: 0 0 auto !important;
   min-height: auto !important;
@@ -3417,8 +3421,18 @@ textarea:focus {
 
   .documento-editor-layout:has(.modal-rich-text-editor) {
     flex: 0 0 auto !important;
-    min-height: auto !important;
+    min-height: 32rem !important;
     height: auto !important;
+  }
+
+  .documento-editor-layout .tinymce-wrapper > .tox-tinymce {
+    min-height: 32rem !important;
+    max-height: none !important;
+  }
+
+  .documento-editor-layout .tox-edit-area,
+  .documento-editor-layout .tox-edit-area__iframe {
+    min-height: 24rem;
   }
 }
 

@@ -21,6 +21,7 @@ const AdesaoTab: React.FC<DocumentoTabProps> = ({
       value={value}
       onChange={onChange}
       placeholder={placeholder}
+      expandWithContent
     />
   );
 };

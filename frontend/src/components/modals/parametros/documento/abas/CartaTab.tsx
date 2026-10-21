@@ -22,6 +22,7 @@ const CartaTab: React.FC<DocumentoTabProps> = ({
       value={value}
       onChange={onChange}
       placeholder={t('placeholder.letterContent')}
+      expandWithContent
     />
   );
 };

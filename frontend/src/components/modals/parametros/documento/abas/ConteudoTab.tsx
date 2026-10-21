@@ -21,6 +21,7 @@ const ConteudoTab: React.FC<DocumentoTabProps> = ({
       value={value}
       onChange={onChange}
       placeholder={placeholder}
+      expandWithContent
     />
   );
 };

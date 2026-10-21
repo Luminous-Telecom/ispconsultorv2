@@ -21,6 +21,7 @@ const PermanenciaTab: React.FC<DocumentoTabProps> = ({
       value={value}
       onChange={onChange}
       placeholder={placeholder}
+      expandWithContent
     />
   );
 };

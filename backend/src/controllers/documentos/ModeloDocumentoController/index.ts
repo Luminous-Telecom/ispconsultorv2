@@ -671,21 +671,17 @@ export class ModeloDocumentoController {
       }
 
       const filePath = `/arquivos/documentos/${req.file.filename}`;
-      // Construir URL completa da imagem
-      const baseUrl = req.get('host') ? `${req.protocol}://${req.get('host')}` : '';
-      const fullUrl = `${baseUrl}${filePath}`;
 
       logger.info('Upload de imagem (modelo documento) concluído', {
         filename: req.file.filename,
         originalname: req.file.originalname,
         mimetype: req.file.mimetype,
         size: req.file.size,
-        filePath,
-        fullUrl
+        filePath
       });
 
       sendSuccess(res, {
-        url: fullUrl,
+        url: filePath,
         path: filePath
       });
     } catch (error) {

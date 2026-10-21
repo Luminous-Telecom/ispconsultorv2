@@ -22,6 +22,7 @@ const ReciboTab: React.FC<DocumentoTabProps> = ({
       value={value}
       onChange={onChange}
       placeholder={t('placeholder.receiptContent')}
+      expandWithContent
     />
   );
 };

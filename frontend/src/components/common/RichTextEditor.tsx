@@ -3,6 +3,7 @@ import { Editor } from '@tinymce/tinymce-react';
 import type { Editor as TinyMCEEditor } from 'tinymce';
 import { useI18n } from '../../contexts/I18nContext';
 import { FONT_FAMILY_BASE } from 'constants/typography';
+import { prepareDocumentEditorHtml } from 'utils/documentoHtml';
 import 'tinymce/tinymce';
 import 'tinymce/themes/silver';
 import 'tinymce/icons/default';
@@ -22,6 +23,7 @@ import 'tinymce/plugins/searchreplace';
 import 'tinymce/plugins/table';
 import 'tinymce/plugins/visualblocks';
 import 'tinymce/plugins/wordcount';
+import 'tinymce/plugins/autoresize';
 import 'tinymce/skins/ui/oxide/skin.min.css';
 import 'tinymce-i18n/langs/pt_BR';
 
@@ -30,6 +32,8 @@ interface RichTextEditorProps {
   onChange: (value: string) => void;
   placeholder?: string;
   height?: string;
+  /** Cresce com o conteúdo para o modal mostrar o documento inteiro. */
+  expandWithContent?: boolean;
   resize?: boolean | 'both';
   id?: string;
   name?: string;
@@ -45,6 +49,7 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
   onChange,
   placeholder = 'Digite aqui...',
   height = '250px',
+  expandWithContent = false,
   resize = true,
   id,
   name: _name,
@@ -53,21 +58,7 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
   const { t } = useI18n();
   const editorRef = useRef<TinyMCEEditor | null>(null);
   
-  const decodeHtmlEntities = (text: string): string => {
-    const textarea = document.createElement('textarea');
-    textarea.innerHTML = text;
-    return textarea.value;
-  };
-  
-  // Remover apenas blob URLs inválidos (não converter URLs absolutas válidas)
-  const cleanBlobUrls = (html: string): string => {
-    if (!html) return html;
-    // Remover apenas imagens com blob URLs inválidos
-    // Não converter URLs absolutas - elas são necessárias para o PDF
-    return html.replace(/<img[^>]*src=["']blob:[^"']*["'][^>]*>/gi, '');
-  };
-  
-  const safeValue = value ? cleanBlobUrls(decodeHtmlEntities(value)) : '';
+  const safeValue = value ? prepareDocumentEditorHtml(value) : '';
   const safePlaceholder = placeholder || 'Digite aqui...';
 
   const insertVariable = (variable: string) => {
@@ -102,18 +93,23 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
         init={{
           language: 'pt_BR',
           width: '100%',
-          height: height || 500,
-          min_height: 240,
+          height: expandWithContent ? 560 : (height || 500),
+          min_height: expandWithContent ? 420 : 240,
           resize,
           menubar: false,
+          toolbar_mode: 'wrap',
           // Usa skins via CDN para evitar 404 e não poluir o CSS global do app
           skin_url: 'https://cdn.jsdelivr.net/npm/tinymce@7.9.1/skins/ui/oxide',
           content_css: 'https://cdn.jsdelivr.net/npm/tinymce@7.9.1/skins/content/default/content.css',
           plugins: [
             'advlist', 'autolink', 'lists', 'link', 'image',
             'searchreplace', 'code',
-            'table', 'wordcount'
+            'table', 'wordcount',
+            ...(expandWithContent ? ['autoresize'] : []),
           ],
+          autoresize_bottom_margin: 24,
+          convert_urls: false,
+          relative_urls: false,
           toolbar: 'undo redo | fontfamily fontsize variables | ' +
             'bold italic underline forecolor backcolor | ' +
             'alignleft aligncenter alignright alignjustify | ' +

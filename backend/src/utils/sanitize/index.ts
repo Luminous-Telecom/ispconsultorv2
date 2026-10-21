@@ -248,6 +248,8 @@ export function sanitizeObject<T extends Record<string, unknown>>(
     'conteudo_contrato', 
     'conteudo_adesao', 
     'conteudo_permanencia', 
+    'conteudo_recibo',
+    'conteudo_carta',
     'modelo',
     'mensagem_padrao',
     'mensagem_manual'

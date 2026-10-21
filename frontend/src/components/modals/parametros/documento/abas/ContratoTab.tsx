@@ -22,6 +22,7 @@ const ContratoTab: React.FC<DocumentoTabProps> = ({
       value={value}
       onChange={onChange}
       placeholder={t('placeholder.contractContent')}
+      expandWithContent
     />
   );
 };

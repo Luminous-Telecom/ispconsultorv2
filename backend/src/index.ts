@@ -232,6 +232,10 @@ app.use(ddosProtectionMiddleware({
       test: (pathname) => /\/mensagens-historico\/reenviar-falhas\/?$/.test(pathname),
       maxProcessingTime: 180_000,
     },
+    {
+      test: (pathname) => /\/api\/modelos-documento\/[^/]+\/pdf/.test(pathname),
+      maxProcessingTime: 120_000,
+    },
   ],
   skipRoutes: [
     '/health',

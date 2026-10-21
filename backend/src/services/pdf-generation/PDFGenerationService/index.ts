@@ -1,5 +1,6 @@
 import puppeteer, { type PDFOptions as PuppeteerPdfOptions, type PaperFormat } from 'puppeteer';
 import { logger } from '../../../utils/logger';
+import { inlineArquivosImages } from '../inlineArquivosImages';
 import { PDFOptions, HtmlPdfNodeOptions } from '../types';
 
 const DEFAULT_MARGIN = {
@@ -37,7 +38,7 @@ export class PDFGenerationService {
         args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
       });
       const page = await browser.newPage();
-      await page.setContent(html, { waitUntil: 'load' });
+      await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 20000 });
       const pdfBuffer = await page.pdf(toPuppeteerPdfOptions(options));
       return Buffer.from(pdfBuffer);
     } catch (error) {
@@ -84,7 +85,7 @@ export class PDFGenerationService {
         ${baseHref ? `<base href="${normalizedBase}">` : ''}
       </head>
       <body style="margin:0;padding:0;width:100%;">
-        <div style="width:100%;max-width:100%;box-sizing:border-box;">${content}</div>
+        <div style="width:100%;max-width:100%;box-sizing:border-box;">${inlineArquivosImages(content)}</div>
       </body>
       </html>
     `;
