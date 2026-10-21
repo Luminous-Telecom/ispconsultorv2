@@ -9,6 +9,7 @@ export interface TemplateWhatsAppData {
   header_document?: boolean;
   ativo?: boolean;
   empresa_id?: number | null;
+  servidor_whatsapp_id?: number | null;
 }
 
 type TemplateInfo = {
@@ -19,9 +20,13 @@ type TemplateInfo = {
 };
 
 export class TemplateWhatsAppService {
-  static async list(empresaId?: number | null): Promise<comunicacao_templates_whatsapp[]> {
-    const whereEstrito = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
-    const where = (whereEstrito ?? { ativo: true }) as Prisma.comunicacao_templates_whatsappWhereInput;
+  static async list(empresaId?: number | null, servidorWhatsappId?: number | null): Promise<comunicacao_templates_whatsapp[]> {
+    const extra: Prisma.comunicacao_templates_whatsappWhereInput = { ativo: true };
+    if (servidorWhatsappId != null && servidorWhatsappId > 0) {
+      extra.servidor_whatsapp_id = servidorWhatsappId;
+    }
+    const whereEstrito = whereComunicacaoEmpresaEstrito(empresaId, extra);
+    const where = (whereEstrito ?? extra) as Prisma.comunicacao_templates_whatsappWhereInput;
     return prisma.comunicacao_templates_whatsapp.findMany({
       where,
       orderBy: { nome: 'asc' },
@@ -37,10 +42,15 @@ export class TemplateWhatsAppService {
   static async findByNomeIdioma(
     nome: string,
     idioma: string,
-    empresaId?: number | null
+    empresaId?: number | null,
+    servidorWhatsappId?: number | null
   ): Promise<comunicacao_templates_whatsapp | null> {
-    const whereEstrito = whereComunicacaoEmpresaEstrito(empresaId, { nome, idioma });
-    const where = (whereEstrito ?? { nome, idioma }) as Prisma.comunicacao_templates_whatsappWhereInput;
+    const extra: Prisma.comunicacao_templates_whatsappWhereInput = { nome, idioma };
+    if (servidorWhatsappId != null && servidorWhatsappId > 0) {
+      extra.servidor_whatsapp_id = servidorWhatsappId;
+    }
+    const whereEstrito = whereComunicacaoEmpresaEstrito(empresaId, extra);
+    const where = (whereEstrito ?? extra) as Prisma.comunicacao_templates_whatsappWhereInput;
     return prisma.comunicacao_templates_whatsapp.findFirst({ where });
   }
 
@@ -48,7 +58,8 @@ export class TemplateWhatsAppService {
     const existing = await this.findByNomeIdioma(
       data.nome,
       data.idioma ?? 'pt_BR',
-      data.empresa_id ?? undefined
+      data.empresa_id ?? undefined,
+      data.servidor_whatsapp_id
     );
     if (existing) {
       throw new Error(`Já existe um template com o nome "${data.nome}" e idioma "${data.idioma ?? 'pt_BR'}"`);
@@ -62,6 +73,7 @@ export class TemplateWhatsAppService {
         header_document: data.header_document ?? false,
         ativo: data.ativo ?? true,
         empresa_id: data.empresa_id ?? null,
+        servidor_whatsapp_id: data.servidor_whatsapp_id ?? null,
       },
     });
   }
@@ -75,7 +87,12 @@ export class TemplateWhatsAppService {
     const nome = data.nome != null ? String(data.nome).trim() : template.nome;
     const idioma = data.idioma ?? template.idioma;
     if (nome !== template.nome || idioma !== template.idioma) {
-      const existing = await this.findByNomeIdioma(nome, idioma, template.empresa_id ?? undefined);
+      const existing = await this.findByNomeIdioma(
+        nome,
+        idioma,
+        template.empresa_id ?? undefined,
+        data.servidor_whatsapp_id ?? template.servidor_whatsapp_id
+      );
       if (existing && existing.id !== id) {
         throw new Error(`Já existe um template com o nome "${nome}" e idioma "${idioma}"`);
       }

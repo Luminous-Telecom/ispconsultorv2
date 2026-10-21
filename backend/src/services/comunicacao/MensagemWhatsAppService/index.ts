@@ -13,6 +13,7 @@ export interface MensagemWhatsAppData {
   interacao3?: string | null;
   ativo?: boolean;
   empresa_id?: number | null;
+  servidor_whatsapp_id?: number | null;
 }
 
 const mensagemWhatsAppInclude = {
@@ -27,9 +28,17 @@ export class MensagemWhatsAppService {
   /**
    * Buscar mensagem por tipo (filtra estritamente por empresa_id quando informado)
    */
-  static async findByTipo(tipo: string, empresaId?: number | null): Promise<MensagemWhatsAppComTemplate | null> {
-    const whereEstrito = whereComunicacaoEmpresaEstrito(empresaId, { tipo });
-    const where = (whereEstrito ?? { tipo }) as Prisma.comunicacao_mensagens_whatsappWhereInput;
+  static async findByTipo(
+    tipo: string,
+    empresaId?: number | null,
+    servidorWhatsappId?: number | null
+  ): Promise<MensagemWhatsAppComTemplate | null> {
+    const extra: Prisma.comunicacao_mensagens_whatsappWhereInput = { tipo };
+    if (servidorWhatsappId != null && servidorWhatsappId > 0) {
+      extra.servidor_whatsapp_id = servidorWhatsappId;
+    }
+    const whereEstrito = whereComunicacaoEmpresaEstrito(empresaId, extra);
+    const where = (whereEstrito ?? extra) as Prisma.comunicacao_mensagens_whatsappWhereInput;
     return prisma.comunicacao_mensagens_whatsapp.findFirst({
       where,
       include: mensagemWhatsAppInclude,
@@ -40,7 +49,11 @@ export class MensagemWhatsAppService {
    * Criar ou atualizar mensagem (upsert)
    */
   static async upsert(dadosMensagem: MensagemWhatsAppData): Promise<MensagemWhatsAppComTemplate> {
-    const mensagemExistente = await this.findByTipo(dadosMensagem.tipo);
+    const mensagemExistente = await this.findByTipo(
+      dadosMensagem.tipo,
+      dadosMensagem.empresa_id,
+      dadosMensagem.servidor_whatsapp_id
+    );
 
     if (mensagemExistente) {
       return prisma.comunicacao_mensagens_whatsapp.update({

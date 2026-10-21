@@ -234,6 +234,8 @@ export interface Banco {
   taxa_cobranca?: number;
   incluir_taxa: boolean;
   usar_integracao_banco_nfse: boolean;
+  servidor_email_cobranca_id?: number | null;
+  servidor_whatsapp_cobranca_id?: number | null;
   observacao_linha_1?: string;
   observacao_linha_2?: string;
   observacao_linha_3?: string;

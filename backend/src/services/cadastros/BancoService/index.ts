@@ -34,6 +34,7 @@ const BANCO_WRITE_FIELDS = [
   'observacao_linha_1', 'observacao_linha_2', 'observacao_linha_3', 'observacao_linha_4',
   'instrucao_linha_1', 'instrucao_linha_2', 'instrucao_linha_3', 'instrucao_linha_4', 'instrucao_linha_5',
   'configuracoes', 'logo', 'empresa_id', 'usar_integracao_banco_nfse',
+  'servidor_email_cobranca_id', 'servidor_whatsapp_cobranca_id',
 ] as const;
 
 const BANCO_PADRAO: Record<string, Record<string, unknown>> = {
@@ -92,6 +93,15 @@ export class BancoService {
     }
     if (filtrados.tipo_banco && filtrados.tipo_banco !== 'asaas') {
       filtrados.usar_integracao_banco_nfse = false;
+    }
+    for (const campo of ['servidor_email_cobranca_id', 'servidor_whatsapp_cobranca_id'] as const) {
+      if (!Object.prototype.hasOwnProperty.call(filtrados, campo)) continue;
+      const valor = filtrados[campo];
+      if (valor === '' || valor === null || valor === undefined || Number(valor) <= 0) {
+        filtrados[campo] = null;
+      } else {
+        filtrados[campo] = Number(valor);
+      }
     }
     return filtrados;
   }

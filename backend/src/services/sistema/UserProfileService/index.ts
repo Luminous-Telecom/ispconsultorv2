@@ -155,6 +155,7 @@ export class UserProfileService {
 
     const servidor = await prisma.comunicacao_servidores_email.findFirst({
       where: { ativo: true, empresa_id: usuario.empresa_id },
+      orderBy: [{ padrao: 'desc' }, { id: 'asc' }],
     });
     if (!servidor) {
       throw new Error('Configure o servidor de e-mail em Parâmetros → Servidor de E-Mail');

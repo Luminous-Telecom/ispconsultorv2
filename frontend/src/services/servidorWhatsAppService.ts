@@ -19,6 +19,7 @@ export interface ServidorWhatsApp {
   whatsapp_cloud_business_account_id?: string;
   template_mapping?: string;
   ativo: boolean;
+  padrao: boolean;
   notificacoes_automaticas: boolean;
   timeout: number;
   tentativas: number;
@@ -41,6 +42,7 @@ export interface CreateServidorWhatsApp {
   webhook_url?: string;
   webhook_events?: string;
   ativo?: boolean;
+  padrao?: boolean;
   notificacoes_automaticas?: boolean;
   timeout?: number;
   tentativas?: number;
@@ -67,6 +69,7 @@ export interface MensagemWhatsApp {
   interacao3?: string;
   template_id?: number | null;
   template?: TemplateWhatsAppRef | null;
+  servidor_whatsapp_id?: number | null;
   ativo: boolean;
 }
 
@@ -78,9 +81,10 @@ const normalizeResponse = <T>(response: ApiResponse<T>, fallback: T): ApiRespons
 });
 
 export class ServidorWhatsAppService {
-  static async getByTipo(mensagemType: string): Promise<MensagemWhatsApp | null> {
+  static async getByTipo(mensagemType: string, servidorWhatsappId?: number | null): Promise<MensagemWhatsApp | null> {
     try {
-      const response = await apiService.get<MensagemWhatsApp>(`/mensagens-whatsapp/tipo/${mensagemType}`);
+      const query = servidorWhatsappId ? `?servidor_whatsapp_id=${servidorWhatsappId}` : '';
+      const response = await apiService.get<MensagemWhatsApp>(`/mensagens-whatsapp/tipo/${mensagemType}${query}`);
       return response.data ?? null;
     } catch (error) {
       const axiosError = error as AxiosError<{ message?: string; type?: string }> & { type?: string };
@@ -104,9 +108,29 @@ export class ServidorWhatsAppService {
     return normalizeResponse(response, {} as MensagemWhatsApp);
   }
 
-  static async list(): Promise<ApiResponse<ServidorWhatsApp[]>> {
-    const response = await apiService.get<ServidorWhatsApp[]>('/servidores-whatsapp');
-    return normalizeResponse(response, []);
+  static async list(filters?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    searchField?: string;
+    sortColumn?: string;
+    sortDirection?: 'asc' | 'desc';
+  }): Promise<ApiResponse<ServidorWhatsApp[]> & { pagination?: { current_page: number; per_page: number; total: number; last_page: number } }> {
+    const response = await apiService.get<{ data: ServidorWhatsApp[]; pagination?: { current_page: number; per_page: number; total: number; last_page: number } } | ServidorWhatsApp[]>(
+      '/servidores-whatsapp',
+      { params: filters }
+    );
+    const payload = response.data;
+    if (payload && !Array.isArray(payload) && Array.isArray(payload.data)) {
+      return {
+        success: response.success,
+        data: payload.data,
+        pagination: payload.pagination,
+        message: response.message ?? '',
+        errors: response.errors,
+      };
+    }
+    return normalizeResponse(response as ApiResponse<ServidorWhatsApp[]>, []);
   }
 
   static async getById(id: number): Promise<ApiResponse<ServidorWhatsApp>> {

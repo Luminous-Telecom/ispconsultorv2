@@ -15,13 +15,15 @@ interface TemplateSelectModalProps {
   onClose: () => void;
   onSelect: (data: { template_id: number; nome: string; idioma: string }) => void;
   title?: string;
+  servidorWhatsappId?: number | null;
 }
 
 const TemplateSelectModal: React.FC<TemplateSelectModalProps> = ({
   show,
   onClose,
   onSelect,
-  title
+  title,
+  servidorWhatsappId,
 }) => {
   const { t } = useI18n();
   const bulkBtn = useBulkBtn();
@@ -44,9 +46,9 @@ const TemplateSelectModal: React.FC<TemplateSelectModalProps> = ({
   });
 
   const { data: templatesData, isLoading, error, refetch } = useQuery<ApiResponse<TemplateWhatsApp[]>>({
-    queryKey: ['templates-whatsapp'],
-    queryFn: () => TemplateWhatsAppService.list(),
-    enabled: show,
+    queryKey: ['templates-whatsapp', servidorWhatsappId ?? null],
+    queryFn: () => TemplateWhatsAppService.list(servidorWhatsappId),
+    enabled: show && !!servidorWhatsappId,
   });
 
   const templates = useMemo((): TemplateWhatsApp[] => templatesData?.data ?? [], [templatesData?.data]);

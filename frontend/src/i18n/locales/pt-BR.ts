@@ -1569,6 +1569,16 @@ const ptBR: TranslationKeys = {
     'whatsappServer.messages': 'Mensagens',
     'whatsappServer.templatesMeta': 'Templates Meta',
     'whatsappServer.templates': 'Templates',
+    'whatsappServer.empty': 'Nenhum servidor de WhatsApp cadastrado',
+    'emailServer.empty': 'Nenhum servidor de e-mail cadastrado',
+    'form.defaultServer': 'Padrão',
+    'form.defaultServerHelp': 'O envio usa este servidor quando o banco não escolhe outro.',
+    'form.billingEmailServer': 'Servidor de e-mail da cobrança',
+    'form.billingWhatsappServer': 'Servidor de WhatsApp da cobrança',
+    'form.billingServerHelp': 'Usado no envio deste banco. Em branco, usa o servidor marcado como padrão.',
+    'form.serverNone': 'Usar o padrão',
+    'table.apiType': 'Tipo de API',
+    'table.instance': 'Instância',
 
     // Scheduler
     'scheduler.title': 'Agendador de Tarefas',

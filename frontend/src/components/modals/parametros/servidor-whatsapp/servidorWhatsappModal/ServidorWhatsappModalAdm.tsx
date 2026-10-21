@@ -12,8 +12,10 @@ const ServidorWhatsappModalAdm: React.FC<ServidorWhatsappModalAdmProps> = ({
   onClose,
   skipWrapper = false,
   onHeaderActionsReady,
+  servidorId,
+  onSaved,
 }) => {
-  const modal = useServidorWhatsappModal({ show, onClose });
+  const modal = useServidorWhatsappModal({ show, onClose, servidorId, onSaved });
 
   const headerActionsContent = useMemo(
     () => (
@@ -27,6 +29,7 @@ const ServidorWhatsappModalAdm: React.FC<ServidorWhatsappModalAdmProps> = ({
         onClose={modal.handleClose}
         onReset={modal.handleReset}
         onSaveMensagem={modal.handleSaveMensagem}
+        isPersisted={!!modal.persistedId}
       />
     ),
     [
@@ -39,6 +42,7 @@ const ServidorWhatsappModalAdm: React.FC<ServidorWhatsappModalAdmProps> = ({
       modal.handleReset,
       modal.handleSaveMensagem,
       modal.setActiveTab,
+      modal.persistedId,
     ]
   );
 
@@ -84,6 +88,7 @@ const ServidorWhatsappModalAdm: React.FC<ServidorWhatsappModalAdmProps> = ({
       onTestMessageChange={modal.setTestMessage}
       onSendTestMessage={modal.handleSendTestMessage}
       isSendingTest={modal.sendTestMessageMutation.isPending}
+      servidorWhatsappId={modal.persistedId}
       onSubmit={modal.handleSubmit}
       interacao1={modal.interacao1}
       interacao2={modal.interacao2}

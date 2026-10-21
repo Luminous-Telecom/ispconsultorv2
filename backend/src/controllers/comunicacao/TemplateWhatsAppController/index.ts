@@ -11,7 +11,11 @@ export class TemplateWhatsAppController {
   static async list(req: Request, res: ExpressResponse): Promise<void> {
     try {
       const empresaId = getEmpresaIdOrNull(req);
-      const templates = await TemplateWhatsAppService.list(empresaId);
+      const servidorWhatsappId = Number(req.query.servidor_whatsapp_id);
+      const templates = await TemplateWhatsAppService.list(
+        empresaId,
+        Number.isFinite(servidorWhatsappId) && servidorWhatsappId > 0 ? servidorWhatsappId : null
+      );
       sendSuccess(res, templates);
     } catch (error) {
       sendError(res, error, 'Erro ao listar templates', 500, true);
@@ -35,7 +39,7 @@ export class TemplateWhatsAppController {
 
   static async create(req: Request, res: ExpressResponse): Promise<void> {
     try {
-      const { nome, idioma, variables, header_document, ativo } = req.body;
+      const { nome, idioma, variables, header_document, ativo, servidor_whatsapp_id } = req.body;
       const empresaId = getEmpresaIdOrNull(req);
 
       if (!nome || typeof nome !== 'string' || !nome.trim()) {
@@ -46,6 +50,11 @@ export class TemplateWhatsAppController {
         sendError(res, null, 'Empresa não identificada para criar template', 400);
         return;
       }
+      const servidorId = Number(servidor_whatsapp_id);
+      if (!Number.isFinite(servidorId) || servidorId <= 0) {
+        sendError(res, null, 'Template precisa estar vinculado a um servidor de WhatsApp', 400);
+        return;
+      }
 
       const template = await TemplateWhatsAppService.create({
         nome: nome.trim(),
@@ -54,6 +63,7 @@ export class TemplateWhatsAppController {
         header_document: !!header_document,
         ativo: ativo !== false,
         empresa_id: empresaId,
+        servidor_whatsapp_id: servidorId,
       });
       try {
         const empresaId = getEmpresaIdOrNull(req) ?? (template as { empresa_id?: number | null }).empresa_id ?? null;

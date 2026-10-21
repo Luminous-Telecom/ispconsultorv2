@@ -5,7 +5,8 @@ import { logger } from '../../../utils/logger';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { registrarCriacao, registrarAtualizacao } from '../../sistema/AuditoriaService';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
-import { whereComunicacaoEmpresaEstrito, pertenceComunicacaoEmpresa } from '../../../utils/comunicacaoEmpresaWhere';
+import { pertenceComunicacaoEmpresa } from '../../../utils/comunicacaoEmpresaWhere';
+import { aplicarFlagPadrao } from '../resolverServidorCobranca';
 
 export interface ServidorWhatsAppData {
   descricao?: string | null;
@@ -29,16 +30,11 @@ export class ServidorWhatsAppProcessorService {
     req: AuthenticatedRequest
   ): Promise<{ servidor: comunicacao_servidores_whatsapp; isNew: boolean }> {
     const empresaId = getEmpresaIdOrNull(req);
-    const whereAtivo = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
-    if (!whereAtivo) {
-      throw new Error('Empresa não identificada para configurar servidor de WhatsApp');
-    }
-
-    const servidor = await ServidorWhatsAppService.findOne(whereAtivo);
-
-    if (servidor) {
-      if (!pertenceComunicacaoEmpresa(servidor.empresa_id, empresaId)) {
-        return await this.processCreate(servidorData, req);
+    const servidorId = Number(servidorData.id);
+    if (Number.isFinite(servidorId) && servidorId > 0) {
+      const servidor = await ServidorWhatsAppService.getById(servidorId);
+      if (!servidor || !pertenceComunicacaoEmpresa(servidor.empresa_id, empresaId)) {
+        throw new Error('Servidor de WhatsApp não encontrado');
       }
       return await this.processUpdate(servidor, servidorData, req);
     }
@@ -102,8 +98,7 @@ export class ServidorWhatsAppProcessorService {
     req: AuthenticatedRequest
   ): Promise<{ servidor: comunicacao_servidores_whatsapp; isNew: boolean }> {
     const empresaId = getEmpresaIdOrNull(req);
-    const whereAtivo = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
-    if (!whereAtivo) {
+    if (empresaId == null || empresaId <= 0) {
       throw new Error('Empresa não identificada para configurar servidor de WhatsApp');
     }
 
@@ -115,15 +110,13 @@ export class ServidorWhatsAppProcessorService {
       throw new Error(validation.error || 'Dados inválidos');
     }
 
-    const servidorAtivoExistente = await ServidorWhatsAppService.findOne(whereAtivo);
-    
-    if (servidorAtivoExistente) {
-      return await this.processUpdate(servidorAtivoExistente, servidorData, req);
-    }
-
-    await ServidorWhatsAppService.updateBulk(whereAtivo, { ativo: false });
-    
-    servidorData.ativo = true;
+    servidorData.ativo = servidorData.ativo !== false;
+    servidorData.padrao = await aplicarFlagPadrao(
+      'comunicacao_servidores_whatsapp',
+      empresaId,
+      null,
+      typeof servidorData.padrao === 'boolean' ? servidorData.padrao : undefined
+    );
     servidorData.status_conexao = 'disconnected';
     servidorData.empresa_id = empresaId;
     

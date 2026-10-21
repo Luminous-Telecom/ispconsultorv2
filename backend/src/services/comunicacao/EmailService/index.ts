@@ -8,6 +8,7 @@ import { TituloPDFController } from '../../../controllers/titulos/TituloPDFContr
 import type { TituloComRelacoes } from '../../../controllers/titulos/TituloHelpers/types';
 import { parseDateFromDb, formatDate } from '../../../utils/dateUtils';
 import { whereComunicacaoEmpresaEstrito } from '../../../utils/comunicacaoEmpresaWhere';
+import { resolverServidorEmailCobranca } from '../resolverServidorCobranca';
 import { escolherMensagemCobranca, textoMensagemCobranca } from '../ReenviarNotificacoesCobrancaService/selecao';
 
 interface ConfiguracoesEnvios {
@@ -59,20 +60,15 @@ export class EmailService {
   }> {
     const empresaId = options?.empresa_id;
     try {
-      let servidor: comunicacao_servidores_email;
-      
-        const whereSrv = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
-        if (!whereSrv) {
-          logger.info('[Email Boleto] empresa_id ausente — envio abortado (isolamento multi-tenant)');
-          return { sucesso: false, emailsEnviados: 0, erros: 0 };
-        }
-        const srv = await prisma.comunicacao_servidores_email.findFirst({
-          where: whereSrv as Prisma.comunicacao_servidores_emailWhereInput,
-        });
-        if (!srv) {
-          return { sucesso: false, emailsEnviados: 0, erros: 0 };
-        }
-        servidor = srv;
+      const whereSrv = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
+      if (!whereSrv) {
+        logger.info('[Email Boleto] empresa_id ausente — envio abortado (isolamento multi-tenant)');
+        return { sucesso: false, emailsEnviados: 0, erros: 0 };
+      }
+      const servidor = await resolverServidorEmailCobranca(empresaId);
+      if (!servidor) {
+        return { sucesso: false, emailsEnviados: 0, erros: 0 };
+      }
       
 
       const whereMsg = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
@@ -163,6 +159,7 @@ export class EmailService {
 
     let enviadas = 0;
     let erros = 0;
+    const cacheServidor = new Map<string, comunicacao_servidores_email | null>();
 
     for (const titulo of titulos) {
       try {
@@ -224,14 +221,20 @@ export class EmailService {
         const contextoHistorico = empresaIdHistorico != null
           ? { empresa_id: empresaIdHistorico }
           : undefined;
+        const bancoSrvId = (titulo.banco as { servidor_email_cobranca_id?: number | null } | null | undefined)?.servidor_email_cobranca_id ?? null;
+        const cacheKey = bancoSrvId ? String(bancoSrvId) : 'padrao';
+        if (!cacheServidor.has(cacheKey)) {
+          cacheServidor.set(cacheKey, await resolverServidorEmailCobranca(empresaId, bancoSrvId));
+        }
+        const servidorTitulo = cacheServidor.get(cacheKey) ?? servidor;
         const enviou = await this.enviarEmail(
-          servidor,
+          servidorTitulo,
           cliente.email,
           corpoHtml,
           base64Pdf,
           'titulo',
           titulo.id,
-          `${servidor.nome_remetente} - Boleto de Pagamento`,
+          `${servidorTitulo.nome_remetente} - Boleto de Pagamento`,
           cliente.razao_social || cliente.nome_fantasia || undefined,
           cliente.email,
           cliente.telefone || undefined,
@@ -381,14 +384,13 @@ export class EmailService {
       }
 
       const empresaId = (titulo as { empresa_id?: number }).empresa_id ?? (cliente as { empresa_id?: number }).empresa_id ?? undefined;
-      const whereSrv = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
-      if (!whereSrv) {
+      const bancoSrvId = (titulo as { banco?: { servidor_email_cobranca_id?: number | null } | null }).banco?.servidor_email_cobranca_id
+        ?? (titulo as { cadastros_bancos?: { servidor_email_cobranca_id?: number | null } | null }).cadastros_bancos?.servidor_email_cobranca_id;
+      if (empresaId == null || empresaId <= 0) {
         logger.info('[Recibo Email] empresa_id ausente — envio abortado', { titulo_id: titulo.id });
         return false;
       }
-      const servidor = await prisma.comunicacao_servidores_email.findFirst({
-        where: whereSrv as Prisma.comunicacao_servidores_emailWhereInput,
-      });
+      const servidor = await resolverServidorEmailCobranca(empresaId, bancoSrvId);
       if (!servidor) {
         logger.info('[Recibo Email] Servidor de email inativo ou não configurado', { titulo_id: titulo.id, empresa_id: empresaId });
         return false;
@@ -497,13 +499,9 @@ export class EmailService {
       }
 
       const empresaId = (titulo as { empresa_id?: number }).empresa_id ?? (cliente as { empresa_id?: number }).empresa_id ?? undefined;
-      const whereSrv = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
-      if (!whereSrv) {
-        return { sucesso: false, mensagem: 'Empresa do título não identificada para envio de email' };
-      }
-      const servidor = await prisma.comunicacao_servidores_email.findFirst({
-        where: whereSrv as Prisma.comunicacao_servidores_emailWhereInput,
-      });
+      const bancoSrvId = (titulo as { cadastros_bancos?: { servidor_email_cobranca_id?: number | null } | null }).cadastros_bancos?.servidor_email_cobranca_id
+        ?? (titulo as { banco?: { servidor_email_cobranca_id?: number | null } | null }).banco?.servidor_email_cobranca_id;
+      const servidor = await resolverServidorEmailCobranca(empresaId, bancoSrvId);
       if (!servidor) {
         return { sucesso: false, mensagem: 'Nenhum servidor de email ativo encontrado para esta empresa' };
       }

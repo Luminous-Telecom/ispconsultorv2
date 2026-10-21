@@ -25,10 +25,12 @@ const INITIAL_FORM_DATA: ServidorEmailForm = {
   email_remetente: '',
   timeout: 30000,
   tentativas: 3,
-  intervalo_tentativas: 5000
+  intervalo_tentativas: 5000,
+  ativo: true,
+  padrao: false,
 };
 
-const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> = ({ show, onClose, skipWrapper = false, onHeaderActionsReady }) => {
+const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> = ({ show, onClose, skipWrapper = false, onHeaderActionsReady, servidorId = null, onSaved }) => {
   const { t } = useI18n();
   const isMobile = useIsMobile();
   const { success } = useNotificationContext();
@@ -37,6 +39,7 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
   const [activeTab, setActiveTab] = useState<'servidor' | 'mensagens'>('servidor');
   const [emailTeste, setEmailTeste] = useState<string>('');
   const [formData, setFormData] = useState<ServidorEmailForm>(INITIAL_FORM_DATA);
+  const [persistedId, setPersistedId] = useState<number | null>(servidorId);
   const [mensagemTexto, setMensagemTexto] = useState<string>('<p></p>');
   const [mensagemManual, setMensagemManual] = useState<string>('<p></p>');
   const [tipoEnvio, setTipoEnvio] = useState<'desativado' | 'pdf'>('pdf');
@@ -95,23 +98,32 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
 
   // Buscar servidor ativo
   const { data: servidorAtivo, isLoading } = useQuery({
-    queryKey: ['servidor-email-ativo'],
+    queryKey: ['servidor-email', persistedId],
     queryFn: async () => {
+      if (!persistedId) return null;
       try {
-        return await ServidorEmailService.getActive();
+        return await ServidorEmailService.getById(persistedId);
       } catch {
         return null;
       }
     },
-    enabled: show,
+    enabled: show && !!persistedId,
     retry: false,
   });
 
   const saveServidorMutation = useMutation({
-    mutationFn: ServidorEmailService.createOrUpdate,
-    onSuccess: () => {
-      success('Configurações salvas!');
-      queryClient.invalidateQueries({ queryKey: ['servidor-email-ativo'] });
+    mutationFn: (data: ServidorEmailForm) => {
+      const payload = { ...data, senha: data.senha || undefined };
+      if (persistedId) return ServidorEmailService.update(persistedId, payload);
+      return ServidorEmailService.create({ ...payload, senha: data.senha });
+    },
+    onSuccess: (response) => {
+      const novoId = response.data?.id;
+      if (novoId) setPersistedId(novoId);
+      success(t('messages.success'));
+      queryClient.invalidateQueries({ queryKey: ['servidores-email'] });
+      queryClient.invalidateQueries({ queryKey: ['servidor-email'] });
+      onSaved?.();
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.SERVER_EMAIL_SAVE_ERROR)
   });
@@ -142,6 +154,7 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
 
   useEffect(() => {
     if (!show) {
+      setPersistedId(null);
       setFormData(INITIAL_FORM_DATA);
       return;
     }
@@ -149,6 +162,8 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
       const data = servidorAtivo.data;
       setFormData({
         descricao: data.descricao ?? '',
+        ativo: data.ativo !== false,
+        padrao: !!data.padrao,
         host: data.host ?? '',
         porta: data.porta ?? 587,
         usuario: data.usuario ?? '',
@@ -165,6 +180,10 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
       setFormData(INITIAL_FORM_DATA);
     }
   }, [show, servidorAtivo]);
+
+  useEffect(() => {
+    if (show) setPersistedId(servidorId ?? null);
+  }, [show, servidorId]);
 
   useEffect(() => {
     if (!mensagemType) {
@@ -237,7 +256,8 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
     if (servidorAtivo?.data?.id) {
       ServidorEmailService.delete(servidorAtivo.data.id).then(() => {
         success('Servidor removido!');
-        queryClient.invalidateQueries({ queryKey: ['servidor-email-ativo'] });
+        queryClient.invalidateQueries({ queryKey: ['servidores-email'] });
+        setPersistedId(null);
       });
     }
     resetForm();
@@ -348,11 +368,7 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
       <div className="email-modal-content">
         {/* Conteúdo das Abas */}
         <div
-          className={
-            activeTab === 'mensagens'
-              ? 'tab-content email-tab-content email-tab-content-padded email-tab-content-scrollable'
-              : 'tab-content email-tab-content email-tab-content-padded'
-          }
+          className="tab-content email-tab-content email-tab-content-padded email-tab-content-scrollable"
           id="emailTabContent"
         >
           <form id="servidor-email-form" onSubmit={handleSubmit} className="form-modal-simple">

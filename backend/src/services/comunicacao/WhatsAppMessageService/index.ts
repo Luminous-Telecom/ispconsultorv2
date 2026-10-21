@@ -16,6 +16,7 @@ import { WhatsAppCloudService } from '../WhatsAppCloudService';
 import { TemplateWhatsAppService } from '../TemplateWhatsAppService';
 import type { ContextoHistorico } from '../RegistroMensagemHistoricoService';
 import { whereComunicacaoEmpresaEstrito } from '../../../utils/comunicacaoEmpresaWhere';
+import { resolverServidorWhatsAppCobranca } from '../resolverServidorCobranca';
 
 export class WhatsAppMessageService {
   /**
@@ -51,18 +52,17 @@ export class WhatsAppMessageService {
       }
 
       const empresaId = (titulo as { empresa_id?: number }).empresa_id ?? (cliente as { empresa_id?: number }).empresa_id ?? undefined;
-      const whereSrv = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
-      if (!whereSrv) {
-        return { sucesso: false, mensagem: 'Empresa do título não identificada para envio de WhatsApp' };
-      }
-      const servidor = await prisma.comunicacao_servidores_whatsapp.findFirst({
-        where: whereSrv as Prisma.comunicacao_servidores_whatsappWhereInput,
-      });
+      const banco = titulo.cadastros_bancos as { servidor_whatsapp_cobranca_id?: number | null } | null;
+      const servidor = await resolverServidorWhatsAppCobranca(empresaId, banco?.servidor_whatsapp_cobranca_id);
       if (!servidor) {
         return { sucesso: false, mensagem: 'Nenhum servidor WhatsApp ativo encontrado para esta empresa' };
       }
 
-      const whereMsg = whereComunicacaoEmpresaEstrito(empresaId, { tipo: 'envio_manual', ativo: true });
+      const whereMsg = whereComunicacaoEmpresaEstrito(empresaId, {
+        tipo: 'envio_manual',
+        ativo: true,
+        servidor_whatsapp_id: servidor.id,
+      });
       const mensagem = whereMsg
         ? await prisma.comunicacao_mensagens_whatsapp.findFirst({
             where: whereMsg as Prisma.comunicacao_mensagens_whatsappWhereInput,

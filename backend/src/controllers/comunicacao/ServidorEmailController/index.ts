@@ -13,6 +13,8 @@ import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../..
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { SYSTEM_NAME } from '../../../constants/systemBrand';
 import { whereComunicacaoEmpresaEstrito, pertenceComunicacaoEmpresa } from '../../../utils/comunicacaoEmpresaWhere';
+import { aplicarFlagPadrao, resolverServidorEmailCobranca } from '../../../services/comunicacao/resolverServidorCobranca';
+import { parseListQuery } from '../../../utils/listQuery';
 
 function isModelValidationError(error: unknown): error is Error & { errors: Array<{ message?: string }> } {
   return error instanceof Error && Array.isArray((error as { errors?: unknown }).errors);
@@ -25,9 +27,10 @@ export class ServidorEmailController {
   static async list(req: Request, res: Response): Promise<void> {
     try {
       const empresaId = getEmpresaIdOrNull(req);
-      const result = await ServidorEmailService.list(empresaId);
+      const filters = parseListQuery(req.query, { defaultLimit: 15, maxLimit: 100 });
+      const result = await ServidorEmailService.listPaginated(empresaId, filters);
 
-      sendSuccess(res, result.data, 'Servidores de email listados com sucesso');
+      sendSuccess(res, result, 'Servidores de email listados com sucesso');
     } catch (error) {
       sendError(res, error, 'Erro ao listar servidores de email', 500, true);
     }
@@ -90,17 +93,18 @@ export class ServidorEmailController {
         sendValidationError(res, 'Empresa não identificada para configurar servidor de email');
         return;
       }
-      if (servidorData.ativo !== false) {
-        const whereAtivo = whereComunicacaoEmpresaEstrito(empresaIdServidor, { ativo: true });
-        if (whereAtivo) {
-          await ServidorEmailService.updateBulk(whereAtivo, { ativo: false });
-        }
-        servidorData.ativo = true;
-      }
+      const padrao = await aplicarFlagPadrao(
+        'comunicacao_servidores_email',
+        empresaIdServidor,
+        null,
+        servidorData.padrao
+      );
 
       const servidor = await ServidorEmailService.create({
         ...servidorData,
-        empresa_id: empresaIdServidor
+        empresa_id: empresaIdServidor,
+        padrao,
+        ativo: servidorData.ativo !== false,
       });
 
       try {
@@ -151,11 +155,16 @@ export class ServidorEmailController {
       }
 
       const empresaIdServidor = (servidor as { empresa_id?: number | null }).empresa_id ?? empresaId ?? null;
-      if (servidorData.ativo === true) {
-        const whereAtivo = whereComunicacaoEmpresaEstrito(empresaIdServidor, { ativo: true, id: { not: id } });
-        if (whereAtivo) {
-          await ServidorEmailService.updateBulk(whereAtivo, { ativo: false });
-        }
+      if (!servidorData.senha || String(servidorData.senha).trim() === '') {
+        delete servidorData.senha;
+      }
+      if (empresaIdServidor != null && empresaIdServidor > 0 && servidorData.padrao !== undefined) {
+        servidorData.padrao = await aplicarFlagPadrao(
+          'comunicacao_servidores_email',
+          empresaIdServidor,
+          Number(id),
+          servidorData.padrao
+        );
       }
 
       const dadosAnteriores = toPlain(servidor);
@@ -349,14 +358,9 @@ export class ServidorEmailController {
   static async getActive(req: Request, res: Response): Promise<void> {
     try {
       const empresaId = getEmpresaIdOrNull(req);
-      const where = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
-      const servidor = where
-        ? await ServidorEmailService.findOne({
-            where,
-            attributes: {
-              exclude: ['senha'],
-            },
-          })
+      const encontrado = await resolverServidorEmailCobranca(empresaId);
+      const servidor = encontrado
+        ? await ServidorEmailService.getById(encontrado.id, { excludePassword: true })
         : null;
 
       if (!servidor) {

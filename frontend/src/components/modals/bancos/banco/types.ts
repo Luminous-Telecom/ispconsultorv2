@@ -41,6 +41,8 @@ export interface BancoForm {
   instrucao_linha_3: string;
   instrucao_linha_4: string;
   instrucao_linha_5: string;
+  servidor_email_cobranca_id: number | null;
+  servidor_whatsapp_cobranca_id: number | null;
 }
 
 export interface BancoTabProps {

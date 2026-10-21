@@ -1569,6 +1569,16 @@ const enUS: TranslationKeys = {
     'whatsappServer.messages': 'Messages',
     'whatsappServer.templatesMeta': 'Meta Templates',
     'whatsappServer.templates': 'Templates',
+    'whatsappServer.empty': 'No WhatsApp server registered',
+    'emailServer.empty': 'No email server registered',
+    'form.defaultServer': 'Default',
+    'form.defaultServerHelp': 'Sending uses this server when the bank does not choose another.',
+    'form.billingEmailServer': 'Billing email server',
+    'form.billingWhatsappServer': 'Billing WhatsApp server',
+    'form.billingServerHelp': 'Used when sending for this bank. Blank uses the server marked as default.',
+    'form.serverNone': 'Use the default',
+    'table.apiType': 'API type',
+    'table.instance': 'Instance',
 
     // Scheduler
     'scheduler.title': 'Task Scheduler',

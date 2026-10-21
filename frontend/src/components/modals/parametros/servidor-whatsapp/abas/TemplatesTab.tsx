@@ -17,9 +17,10 @@ import ImprimirModal from 'components/common/ImprimirModal';
 export interface TemplatesTabProps {
   /** Placeholder para compatibilidade */
   embedded?: boolean;
+  servidorWhatsappId?: number | null;
 }
 
-const TemplatesTab: React.FC<TemplatesTabProps> = () => {
+const TemplatesTab: React.FC<TemplatesTabProps> = ({ servidorWhatsappId }) => {
   const { t } = useI18n();
   const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
@@ -38,8 +39,9 @@ const TemplatesTab: React.FC<TemplatesTabProps> = () => {
   const { handleSelectionChange } = useModalSelect<TemplateWhatsApp>(undefined);
 
   const { data: templatesData, isLoading, error, refetch } = useQuery<ApiResponse<TemplateWhatsApp[]>>({
-    queryKey: ['templates-whatsapp'],
-    queryFn: () => TemplateWhatsAppService.list(),
+    queryKey: ['templates-whatsapp', servidorWhatsappId],
+    queryFn: () => TemplateWhatsAppService.list(servidorWhatsappId),
+    enabled: !!servidorWhatsappId,
   });
 
   const templates = useMemo((): TemplateWhatsApp[] => templatesData?.data ?? [], [templatesData?.data]);

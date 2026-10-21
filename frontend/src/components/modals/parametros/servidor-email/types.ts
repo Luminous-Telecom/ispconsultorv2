@@ -13,6 +13,8 @@ export interface ServidorEmailForm {
   timeout: number;
   tentativas: number;
   intervalo_tentativas: number;
+  ativo: boolean;
+  padrao: boolean;
 }
 
 export interface ServidorEmailModalProps {
@@ -22,6 +24,8 @@ export interface ServidorEmailModalProps {
   onHeaderActionsReady?: (actions: React.ReactNode) => void;
   /** adm: servidor único por tenant; saas: lista de servidores multi-tenant */
   variant?: 'adm' | 'saas';
+  servidorId?: number | null;
+  onSaved?: () => void;
 }
 
 export interface ServidorTabProps {

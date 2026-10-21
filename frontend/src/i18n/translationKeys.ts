@@ -1559,6 +1559,16 @@ export interface TranslationKeys {
   'whatsappServer.messages': string;
   'whatsappServer.templatesMeta': string;
   'whatsappServer.templates': string;
+  'whatsappServer.empty': string;
+  'emailServer.empty': string;
+  'form.defaultServer': string;
+  'form.defaultServerHelp': string;
+  'form.billingEmailServer': string;
+  'form.billingWhatsappServer': string;
+  'form.billingServerHelp': string;
+  'form.serverNone': string;
+  'table.apiType': string;
+  'table.instance': string;
 
   // Scheduler
   'scheduler.title': string;

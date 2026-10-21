@@ -19,11 +19,13 @@ export interface CreateTemplateWhatsApp {
   variables?: string | string[];
   header_document?: boolean;
   ativo?: boolean;
+  servidor_whatsapp_id?: number | null;
 }
 
 export class TemplateWhatsAppService {
-  static async list(): Promise<ApiResponse<TemplateWhatsApp[]>> {
-    const response = await apiService.get<TemplateWhatsApp[]>('/templates-whatsapp');
+  static async list(servidorWhatsappId?: number | null): Promise<ApiResponse<TemplateWhatsApp[]>> {
+    const query = servidorWhatsappId ? `?servidor_whatsapp_id=${servidorWhatsappId}` : '';
+    const response = await apiService.get<TemplateWhatsApp[]>(`/templates-whatsapp${query}`);
     return {
       success: response.success,
       data: response.data ?? [],

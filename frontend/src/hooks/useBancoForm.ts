@@ -94,7 +94,9 @@ const initialFormData: BancoForm = {
   instrucao_linha_2: '',
   instrucao_linha_3: '',
   instrucao_linha_4: '',
-  instrucao_linha_5: ''
+  instrucao_linha_5: '',
+  servidor_email_cobranca_id: null,
+  servidor_whatsapp_cobranca_id: null,
 };
 
 const mapBancoToForm = (banco: Banco): BancoForm => ({
@@ -142,7 +144,9 @@ const mapBancoToForm = (banco: Banco): BancoForm => ({
   instrucao_linha_2: banco.instrucao_linha_2 || '',
   instrucao_linha_3: banco.instrucao_linha_3 || '',
   instrucao_linha_4: banco.instrucao_linha_4 || '',
-  instrucao_linha_5: banco.instrucao_linha_5 || ''
+  instrucao_linha_5: banco.instrucao_linha_5 || '',
+  servidor_email_cobranca_id: banco.servidor_email_cobranca_id ?? null,
+  servidor_whatsapp_cobranca_id: banco.servidor_whatsapp_cobranca_id ?? null,
 });
 
 export const useBancoForm = ({

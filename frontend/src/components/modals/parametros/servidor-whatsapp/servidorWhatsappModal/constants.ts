@@ -16,4 +16,6 @@ export const INITIAL_FORM_DATA: ServidorWhatsAppForm = {
   whatsapp_cloud_token: '',
   whatsapp_cloud_phone_number_id: '',
   whatsapp_cloud_business_account_id: '',
+  ativo: true,
+  padrao: false,
 };

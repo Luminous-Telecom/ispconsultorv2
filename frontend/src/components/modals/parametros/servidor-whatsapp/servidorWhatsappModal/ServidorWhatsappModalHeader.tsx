@@ -16,6 +16,7 @@ interface ServidorWhatsappModalHeaderProps {
   onClose: () => void;
   onReset: () => void;
   onSaveMensagem: () => void;
+  isPersisted?: boolean;
 }
 
 const ServidorWhatsappModalHeader: React.FC<ServidorWhatsappModalHeaderProps> = ({
@@ -28,6 +29,7 @@ const ServidorWhatsappModalHeader: React.FC<ServidorWhatsappModalHeaderProps> = 
   onClose,
   onReset,
   onSaveMensagem,
+  isPersisted = false,
 }) => {
   const { t } = useI18n();
   const isMobile = useIsMobile();
@@ -38,16 +40,21 @@ const ServidorWhatsappModalHeader: React.FC<ServidorWhatsappModalHeaderProps> = 
   const tabs = useMemo((): ModalTabItem<WhatsappActiveTab>[] => {
     const items: ModalTabItem<WhatsappActiveTab>[] = [
       { id: 'servidor', label: t('whatsappServer.server') },
-      { id: 'mensagens', label: t('whatsappServer.messages') },
+      { id: 'mensagens', label: t('whatsappServer.messages'), disabled: !isPersisted },
     ];
     if (showCloudTabs) {
       items.push(
-        { id: 'templates_meta', label: t('whatsappServer.templatesMeta') },
-        { id: 'templates', label: t('whatsappServer.templates') }
+        { id: 'templates_meta', label: t('whatsappServer.templatesMeta'), disabled: !isPersisted },
+        { id: 'templates', label: t('whatsappServer.templates'), disabled: !isPersisted }
       );
     }
     return items;
-  }, [showCloudTabs, t]);
+  }, [showCloudTabs, isPersisted, t]);
+
+  const handleTabChange = (tab: WhatsappActiveTab) => {
+    if (tab !== 'servidor' && !isPersisted) return;
+    setActiveTab(tab);
+  };
 
   return (
     <div className="whatsapp-header-unified">
@@ -78,7 +85,8 @@ const ServidorWhatsappModalHeader: React.FC<ServidorWhatsappModalHeaderProps> = 
         <ModalTabsOverflow
           tabs={tabs}
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={handleTabChange}
+          disabledClassName="whatsapp-tab-disabled"
           tabsClassName={`whatsapp-tabs-unified ${isMobile ? 'whatsapp-tabs-mobile' : ''}`}
           isMobile={isMobile}
           id="whatsappTab"

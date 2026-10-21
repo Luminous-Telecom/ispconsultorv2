@@ -1,6 +1,8 @@
 import type { Prisma, comunicacao_servidores_whatsapp } from '@prisma/client';
 import { prisma } from '../../../db/prisma';
 import { whereComunicacaoEmpresaEstrito } from '../../../utils/comunicacaoEmpresaWhere';
+import { buildPagination } from '../../../utils/pagination';
+import type { ParsedListQuery } from '../../../utils/listQuery';
 
 const TOKEN_FIELDS = ['evolution_api_key', 'whatsapp_cloud_token'] as const;
 
@@ -29,9 +31,53 @@ export class ServidorWhatsAppService {
     };
   }
 
+  static async listPaginated(empresaId: number | null | undefined, filters: ParsedListQuery) {
+    const where = (whereComunicacaoEmpresaEstrito(empresaId) ?? {}) as Prisma.comunicacao_servidores_whatsappWhereInput;
+    const termo = filters.search?.trim();
+    if (termo) {
+      const campo = filters.searchField;
+      if (campo === 'id' && /^\d+$/.test(termo)) where.id = Number(termo);
+      else if (campo === 'instance_name') where.instance_name = { contains: termo };
+      else if (campo === 'descricao') where.descricao = { contains: termo };
+      else if (campo === 'tipo_api') where.tipo_api = termo as comunicacao_servidores_whatsapp['tipo_api'];
+      else {
+        where.OR = [
+          { descricao: { contains: termo } },
+          { instance_name: { contains: termo } },
+        ];
+      }
+    }
+
+    const colunas = ['id', 'descricao', 'tipo_api', 'instance_name', 'ativo', 'padrao', 'status_conexao', 'created_at'] as const;
+    const direcao = filters.sortDirection === 'asc' ? 'asc' : 'desc';
+    const coluna = colunas.includes(filters.sortColumn as (typeof colunas)[number])
+      ? (filters.sortColumn as (typeof colunas)[number])
+      : 'id';
+    const page = filters.page;
+    const limit = filters.limit;
+
+    const [rows, total] = await Promise.all([
+      prisma.comunicacao_servidores_whatsapp.findMany({
+        where,
+        orderBy: { [coluna]: direcao },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.comunicacao_servidores_whatsapp.count({ where }),
+    ]);
+
+    return {
+      success: true,
+      data: rows.map(semTokens),
+      pagination: buildPagination(page, limit, total),
+    };
+  }
+
   /**
    * Buscar servidor por ID
    */
+  static async getById(id: string | number, options: { excludeTokens: true }): Promise<ServidorWhatsAppSemTokens | null>;
+  static async getById(id: string | number, options?: { excludeTokens?: false }): Promise<comunicacao_servidores_whatsapp | null>;
   static async getById(
     id: string | number,
     options?: { excludeTokens?: boolean }

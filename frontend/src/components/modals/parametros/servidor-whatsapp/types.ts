@@ -10,6 +10,8 @@ export interface ServidorWhatsAppForm {
   whatsapp_cloud_phone_number_id?: string;
   whatsapp_cloud_business_account_id?: string;
   template_mapping?: string;
+  ativo: boolean;
+  padrao: boolean;
 }
 
 export interface ServidorWhatsappModalProps {
@@ -17,13 +19,15 @@ export interface ServidorWhatsappModalProps {
   onClose: () => void;
   skipWrapper?: boolean;
   onHeaderActionsReady?: (actions: React.ReactNode) => void;
+  servidorId?: number | null;
+  onSaved?: () => void;
   /** adm: servidor único por tenant; saas: lista de servidores multi-tenant */
   variant?: 'adm' | 'saas';
 }
 
 export interface ServidorTabProps {
   formData: ServidorWhatsAppForm;
-  onChange: (field: keyof ServidorWhatsAppForm, value: string | 'evolution' | 'whatsapp_cloud') => void;
+  onChange: (field: keyof ServidorWhatsAppForm, value: string | boolean | 'evolution' | 'whatsapp_cloud') => void;
   isPending: boolean;
   servidorAtivo?: { data?: { id?: number; tipo_api?: 'evolution' | 'whatsapp_cloud' } } | null;
   testPhone: string;

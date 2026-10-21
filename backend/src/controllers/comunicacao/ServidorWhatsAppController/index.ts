@@ -12,8 +12,10 @@ import { logger } from '../../../utils/logger';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
-import { whereComunicacaoEmpresaEstrito, pertenceComunicacaoEmpresa } from '../../../utils/comunicacaoEmpresaWhere';
+import { pertenceComunicacaoEmpresa } from '../../../utils/comunicacaoEmpresaWhere';
 import { parseMetaTemplateStructure, toSuggestedTemplateMapping } from '../../../services/comunicacao/whatsappMetaTemplate';
+import { aplicarFlagPadrao, resolverServidorWhatsAppCobranca } from '../../../services/comunicacao/resolverServidorCobranca';
+import { parseListQuery } from '../../../utils/listQuery';
 
 function isModelValidationError(error: unknown): error is Error & { errors: Array<{ message?: string }> } {
   return error instanceof Error && Array.isArray((error as { errors?: unknown }).errors);
@@ -36,9 +38,10 @@ export class ServidorWhatsAppController {
   static async list(req: Request, res: ExpressResponse): Promise<void> {
     try {
       const empresaId = getEmpresaIdOrNull(req);
-      const result = await ServidorWhatsAppService.list(empresaId);
+      const filters = parseListQuery(req.query, { defaultLimit: 15, maxLimit: 100 });
+      const result = await ServidorWhatsAppService.listPaginated(empresaId, filters);
 
-      sendSuccess(res, result.data, 'Servidores de WhatsApp listados com sucesso');
+      sendSuccess(res, result, 'Servidores de WhatsApp listados com sucesso');
     } catch (error) {
       sendError(res, error, 'Erro ao listar servidores de WhatsApp', 500, true);
     }
@@ -88,9 +91,17 @@ export class ServidorWhatsAppController {
         return;
       }
 
+      const padrao = await aplicarFlagPadrao(
+        'comunicacao_servidores_whatsapp',
+        empresaId,
+        null,
+        servidorData.padrao
+      );
       const servidor = await ServidorWhatsAppService.create({
         ...servidorData,
         empresa_id: empresaId,
+        padrao,
+        ativo: servidorData.ativo !== false,
       });
 
       try {
@@ -138,6 +149,21 @@ export class ServidorWhatsAppController {
       if (!ServidorWhatsAppController.pertenceEmpresa(servidor, empresaId)) {
         sendNotFound(res, 'Servidor de WhatsApp não encontrado');
         return;
+      }
+
+      if (!servidorData.evolution_api_key || String(servidorData.evolution_api_key).trim() === '') {
+        delete servidorData.evolution_api_key;
+      }
+      if (!servidorData.whatsapp_cloud_token || String(servidorData.whatsapp_cloud_token).trim() === '') {
+        delete servidorData.whatsapp_cloud_token;
+      }
+      if (empresaId != null && empresaId > 0 && servidorData.padrao !== undefined) {
+        servidorData.padrao = await aplicarFlagPadrao(
+          'comunicacao_servidores_whatsapp',
+          empresaId,
+          Number(id),
+          servidorData.padrao
+        );
       }
 
       const dadosAnteriores = toPlain(servidor);
@@ -249,8 +275,10 @@ export class ServidorWhatsAppController {
   static async getActive(req: Request, res: ExpressResponse): Promise<void> {
     try {
       const empresaId = getEmpresaIdOrNull(req);
-      const where = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
-      const servidor = where ? await ServidorWhatsAppService.findOne(where) : null;
+      const encontrado = await resolverServidorWhatsAppCobranca(empresaId);
+      const servidor = encontrado
+        ? await ServidorWhatsAppService.getById(encontrado.id, { excludeTokens: true })
+        : null;
 
       if (!servidor) {
         sendSuccess(res, null, 'Nenhum servidor de WhatsApp ativo encontrado');
@@ -382,9 +410,14 @@ export class ServidorWhatsAppController {
     try {
       const { tipo } = req.params;
       const empresaId = getEmpresaIdOrNull(req);
-      logger.info('Buscando mensagem WhatsApp por tipo:', { tipo, empresaId });
+      const servidorWhatsappId = Number(req.query.servidor_whatsapp_id);
+      logger.info('Buscando mensagem WhatsApp por tipo:', { tipo, empresaId, servidorWhatsappId });
 
-      const mensagem = await MensagemWhatsAppService.findByTipo(tipo, empresaId);
+      const mensagem = await MensagemWhatsAppService.findByTipo(
+        tipo,
+        empresaId,
+        Number.isFinite(servidorWhatsappId) && servidorWhatsappId > 0 ? servidorWhatsappId : null
+      );
 
       if (!mensagem) {
         logger.info('Mensagem não encontrada para o tipo:', { tipo });
@@ -406,7 +439,7 @@ export class ServidorWhatsAppController {
    */
   static async saveMensagem(req: Request, res: ExpressResponse): Promise<void> {
     try {
-      const { tipo, tipo_envio, mensagem_padrao, mensagem_manual, template_id, interacao1, interacao2, interacao3, ativo } = req.body;
+      const { tipo, tipo_envio, mensagem_padrao, mensagem_manual, template_id, interacao1, interacao2, interacao3, ativo, servidor_whatsapp_id } = req.body;
 
       logger.info('Salvando mensagem WhatsApp:', { 
         tipo, 
@@ -458,6 +491,16 @@ export class ServidorWhatsAppController {
         sendValidationError(res, 'Empresa não identificada para salvar mensagem');
         return;
       }
+      const servidorId = Number(servidor_whatsapp_id);
+      if (!Number.isFinite(servidorId) || servidorId <= 0) {
+        sendValidationError(res, 'Mensagem precisa estar vinculada a um servidor de WhatsApp');
+        return;
+      }
+      const servidorMensagem = await ServidorWhatsAppService.getById(servidorId, { excludeTokens: true });
+      if (!servidorMensagem || !ServidorWhatsAppController.pertenceEmpresa(servidorMensagem, empresaIdMsg)) {
+        sendNotFound(res, 'Servidor de WhatsApp não encontrado');
+        return;
+      }
 
       const mensagemData = {
         tipo,
@@ -470,10 +513,11 @@ export class ServidorWhatsAppController {
         interacao3: interacao3 || null,
         ativo,
         empresa_id: empresaIdMsg,
+        servidor_whatsapp_id: servidorId,
       };
 
       // Buscar mensagem existente
-      let mensagem = await MensagemWhatsAppService.findByTipo(tipo, empresaIdMsg);
+      let mensagem = await MensagemWhatsAppService.findByTipo(tipo, empresaIdMsg, servidorId);
 
       if (mensagem && !pertenceComunicacaoEmpresa(mensagem.empresa_id, empresaIdMsg)) {
         mensagem = null;
@@ -572,10 +616,12 @@ export class ServidorWhatsAppController {
   static async getTemplates(req: Request, res: ExpressResponse): Promise<void> {
     try {
       const empresaId = getEmpresaIdOrNull(req);
-      const where = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
-      const servidor = where ? await ServidorWhatsAppService.findOne(where) : null;
+      const servidorId = Number(req.query.servidor_id);
+      const servidor = Number.isFinite(servidorId) && servidorId > 0
+        ? await ServidorWhatsAppService.getById(servidorId)
+        : await resolverServidorWhatsAppCobranca(empresaId);
 
-      if (!servidor) {
+      if (!servidor || !ServidorWhatsAppController.pertenceEmpresa(servidor, empresaId)) {
         logger.warn('Tentativa de buscar templates sem servidor ativo');
         sendSuccess(res, { total: 0, aprovados: 0, templates: [] }, 'Nenhum servidor WhatsApp ativo configurado');
         return;

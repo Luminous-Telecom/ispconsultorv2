@@ -227,6 +227,7 @@ export class CentralAssinanteAuthController {
       // Buscar servidor de email ativo (filtrado pela empresa)
       const servidorEmail = await prisma.comunicacao_servidores_email.findFirst({
         where: { ativo: true, empresa_id: empresaId },
+        orderBy: [{ padrao: 'desc' }, { id: 'asc' }],
       });
 
       if (!servidorEmail) {

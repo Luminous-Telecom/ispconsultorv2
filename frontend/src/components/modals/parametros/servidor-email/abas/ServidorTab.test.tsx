@@ -24,6 +24,8 @@ const baseForm: ServidorEmailForm = {
   timeout: 30000,
   tentativas: 3,
   intervalo_tentativas: 5000,
+  ativo: true,
+  padrao: false,
 };
 
 describe('ServidorTab', () => {
@@ -68,5 +70,25 @@ describe('ServidorTab', () => {
     const campo = screen.getByLabelText('form.description');
     fireEvent.change(campo, { target: { value: 'SMTP principal' } });
     expect(onChange).toHaveBeenCalledWith('descricao', 'SMTP principal');
+  });
+
+  it('mostra o envio de teste quando o servidor já foi salvo', () => {
+    const onSendTestEmail = jest.fn();
+
+    render(
+      <ServidorTab
+        formData={baseForm}
+        onChange={jest.fn()}
+        isPending={false}
+        servidorAtivo={{ data: { id: 4 } }}
+        emailTeste="destino@empresa.com"
+        onEmailTesteChange={jest.fn()}
+        onSendTestEmail={onSendTestEmail}
+        isSendingTest={false}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'emailServer.testEmailButton' }));
+    expect(onSendTestEmail).toHaveBeenCalled();
   });
 });

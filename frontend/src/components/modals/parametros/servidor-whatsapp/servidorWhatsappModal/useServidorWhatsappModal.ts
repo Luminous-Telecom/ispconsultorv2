@@ -19,7 +19,7 @@ function formatTemplateEntityNome(nome: string, idioma: string): string {
   return `${nome} (${idioma})`;
 }
 
-export function useServidorWhatsappModal({ show, onClose }: UseServidorWhatsappModalParams) {
+export function useServidorWhatsappModal({ show, onClose, servidorId, onSaved }: UseServidorWhatsappModalParams) {
   const { t } = useI18n();
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
@@ -28,6 +28,7 @@ export function useServidorWhatsappModal({ show, onClose }: UseServidorWhatsappM
   const initialFormData = useMemo(() => ({ ...INITIAL_FORM_DATA }), []);
 
   const [formData, setFormData] = useState<ServidorWhatsAppForm>(initialFormData);
+  const [persistedId, setPersistedId] = useState<number | null>(servidorId ?? null);
   const [testPhone, setTestPhone] = useState<string>('');
   const [testMessage, setTestMessage] = useState<string>('');
   const [activeTab, setActiveTab] = useState<WhatsappActiveTab>('servidor');
@@ -51,11 +52,11 @@ export function useServidorWhatsappModal({ show, onClose }: UseServidorWhatsappM
   const interacao3Ref = useRef<string>('');
 
   const { data: mensagemData } = useQuery({
-    queryKey: ['mensagem-whatsapp', mensagemType],
+    queryKey: ['mensagem-whatsapp', mensagemType, persistedId],
     queryFn: async () => {
-      if (!mensagemType) return null;
+      if (!mensagemType || !persistedId) return null;
       try {
-        return await ServidorWhatsAppService.getByTipo(mensagemType);
+        return await ServidorWhatsAppService.getByTipo(mensagemType, persistedId);
       } catch (err: unknown) {
         const axiosErr = err as { response?: { status?: number } };
         if (axiosErr?.response?.status === 404) {
@@ -64,7 +65,7 @@ export function useServidorWhatsappModal({ show, onClose }: UseServidorWhatsappM
         throw err;
       }
     },
-    enabled: !!mensagemType,
+    enabled: !!mensagemType && !!persistedId,
   });
 
   const { data: variaveisData } = useQuery<Record<string, GrupoVariaveis>>({
@@ -119,24 +120,25 @@ export function useServidorWhatsappModal({ show, onClose }: UseServidorWhatsappM
   }, [mensagemData]);
 
   const { data: servidorAtivo, isLoading, refetch: refetchServidorAtivo } = useQuery({
-    queryKey: ['servidor-whatsapp-ativo'],
+    queryKey: ['servidor-whatsapp', persistedId],
     queryFn: async () => {
+      if (!persistedId) return null;
       try {
-        return await ServidorWhatsAppService.getActive();
+        return await ServidorWhatsAppService.getById(persistedId);
       } catch {
         return null;
       }
     },
-    enabled: show,
+    enabled: show && !!persistedId,
     retry: false,
   });
 
   const isWhatsAppCloud = servidorAtivo?.data?.tipo_api === 'whatsapp_cloud';
 
   const { data: templatesData } = useQuery({
-    queryKey: ['templates-whatsapp'],
-    queryFn: () => TemplateWhatsAppService.list(),
-    enabled: show && isWhatsAppCloud,
+    queryKey: ['templates-whatsapp', persistedId],
+    queryFn: () => TemplateWhatsAppService.list(persistedId),
+    enabled: show && isWhatsAppCloud && !!persistedId,
     staleTime: 60 * 1000,
   });
 
@@ -150,11 +152,21 @@ export function useServidorWhatsappModal({ show, onClose }: UseServidorWhatsappM
 
   const saveServidorMutation = useMutation({
     mutationFn: (data: ServidorWhatsAppForm) => {
-      return ServidorWhatsAppService.createOrUpdate(data);
+      const payload = {
+        ...data,
+        evolution_api_key: data.evolution_api_key || undefined,
+        whatsapp_cloud_token: data.whatsapp_cloud_token || undefined,
+      };
+      if (persistedId) return ServidorWhatsAppService.update(persistedId, payload);
+      return ServidorWhatsAppService.create(payload);
     },
-    onSuccess: async () => {
+    onSuccess: async (response) => {
+      const novoId = response.data?.id;
+      if (novoId) setPersistedId(novoId);
       success(t('whatsappServer.successSave'));
-      queryClient.invalidateQueries({ queryKey: ['servidor-whatsapp-ativo'] });
+      queryClient.invalidateQueries({ queryKey: ['servidores-whatsapp'] });
+      queryClient.invalidateQueries({ queryKey: ['servidor-whatsapp'] });
+      onSaved?.();
       await refetchServidorAtivo();
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.SERVER_WHATSAPP_SAVE_ERROR),
@@ -176,8 +188,8 @@ export function useServidorWhatsappModal({ show, onClose }: UseServidorWhatsappM
     },
     onSuccess: () => {
       success(t('whatsappServer.successMessageSave'));
-      queryClient.invalidateQueries({ queryKey: ['mensagem-whatsapp', mensagemTypeRef.current] });
-      queryClient.invalidateQueries({ queryKey: ['templates-whatsapp'] });
+      queryClient.invalidateQueries({ queryKey: ['mensagem-whatsapp', mensagemTypeRef.current, persistedId] });
+      queryClient.invalidateQueries({ queryKey: ['templates-whatsapp', persistedId] });
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.SERVER_SEND_ERROR),
   });
@@ -187,6 +199,8 @@ export function useServidorWhatsappModal({ show, onClose }: UseServidorWhatsappM
       const servidor = servidorAtivo.data;
       setFormData({
         descricao: servidor.descricao || '',
+        ativo: servidor.ativo !== false,
+        padrao: !!servidor.padrao,
         tipo_api: servidor.tipo_api || 'evolution',
         evolution_api_url: servidor.evolution_api_url || '',
         evolution_api_key: '',
@@ -202,11 +216,15 @@ export function useServidorWhatsappModal({ show, onClose }: UseServidorWhatsappM
   }, [servidorAtivo?.data?.id, initialFormData]);
 
   useEffect(() => {
-    if (show) {
-      queryClient.invalidateQueries({ queryKey: ['servidor-whatsapp-ativo'] });
+    if (!show) {
+      setPersistedId(null);
+      setFormData(initialFormData);
+      setActiveTab('servidor');
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [show]);
+    setPersistedId(servidorId ?? null);
+    if (!servidorId) setFormData(initialFormData);
+  }, [show, servidorId, initialFormData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -226,6 +244,11 @@ export function useServidorWhatsappModal({ show, onClose }: UseServidorWhatsappM
     const currentInteracao1 = interacao1Ref.current;
     const currentInteracao2 = interacao2Ref.current;
     const currentInteracao3 = interacao3Ref.current;
+
+    if (!persistedId) {
+      showApiError(t('whatsappServer.configureFirst'));
+      return;
+    }
 
     if (!currentMensagemType) {
       showApiError(t('whatsappServer.selectMessageType'));
@@ -255,16 +278,19 @@ export function useServidorWhatsappModal({ show, onClose }: UseServidorWhatsappM
       interacao1: currentInteracao1 || undefined,
       interacao2: currentInteracao2 || undefined,
       interacao3: currentInteracao3 || undefined,
+      servidor_whatsapp_id: persistedId,
       ativo: true,
     });
-  }, [mensagemType, servidorAtivo?.data?.tipo_api, saveMensagemMutation, showApiError, t]);
+  }, [mensagemType, persistedId, servidorAtivo?.data?.tipo_api, saveMensagemMutation, showApiError, t]);
 
   const handleReset = useCallback(async () => {
     if (servidorAtivo?.data?.id) {
       try {
         await ServidorWhatsAppService.delete(servidorAtivo.data.id);
         success(t('whatsappServer.successRemove'));
-        queryClient.invalidateQueries({ queryKey: ['servidor-whatsapp-ativo'] });
+        queryClient.invalidateQueries({ queryKey: ['servidores-whatsapp'] });
+        queryClient.invalidateQueries({ queryKey: ['servidor-whatsapp'] });
+        setPersistedId(null);
       } catch (err: unknown) {
         showApiError(err, CONTEXT_ERROR_MESSAGES.SERVER_WHATSAPP_DELETE_ERROR);
       }
@@ -309,7 +335,7 @@ export function useServidorWhatsappModal({ show, onClose }: UseServidorWhatsappM
   };
 
   const handleFormFieldChange = useCallback(
-    (field: keyof ServidorWhatsAppForm, value: string | 'evolution' | 'whatsapp_cloud') => {
+    (field: keyof ServidorWhatsAppForm, value: string | boolean | 'evolution' | 'whatsapp_cloud') => {
       setFormData((prev) => ({ ...prev, [field]: value }));
     },
     []
@@ -354,6 +380,7 @@ export function useServidorWhatsappModal({ show, onClose }: UseServidorWhatsappM
     mensagemData,
     variaveisData,
     servidorAtivo,
+    persistedId,
     saveServidorMutation,
     saveMensagemMutation,
     sendTestMessageMutation,

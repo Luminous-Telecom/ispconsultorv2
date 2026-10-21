@@ -242,7 +242,10 @@ export const bancoSchema = z.object({
     .max(200, 'Instrução linha 5 deve ter no máximo 200 caracteres')
     .trim()
     .default('')
-    .optional()
+    .optional(),
+
+  servidor_email_cobranca_id: z.number().int().positive().nullable().optional(),
+  servidor_whatsapp_cobranca_id: z.number().int().positive().nullable().optional(),
 });
 
 /**

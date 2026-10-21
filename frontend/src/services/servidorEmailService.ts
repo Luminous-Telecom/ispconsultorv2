@@ -12,6 +12,7 @@ export interface ServidorEmail {
   ssl: boolean;
   tls: boolean;
   ativo: boolean;
+  padrao: boolean;
   nome_remetente: string;
   email_remetente: string;
   timeout: number;
@@ -30,6 +31,7 @@ export interface CreateServidorEmail {
   ssl?: boolean;
   tls?: boolean;
   ativo?: boolean;
+  padrao?: boolean;
   nome_remetente: string;
   email_remetente: string;
   timeout?: number;
@@ -57,9 +59,29 @@ const normalizeResponse = <T>(response: ApiResponse<T>, fallback: T): ApiRespons
 });
 
 export class ServidorEmailService {
-  static async list(): Promise<ApiResponse<ServidorEmail[]>> {
-    const response = await apiService.get<ServidorEmail[]>('/servidores-email');
-    return normalizeResponse(response, []);
+  static async list(filters?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    searchField?: string;
+    sortColumn?: string;
+    sortDirection?: 'asc' | 'desc';
+  }): Promise<ApiResponse<ServidorEmail[]> & { pagination?: { current_page: number; per_page: number; total: number; last_page: number } }> {
+    const response = await apiService.get<{ data: ServidorEmail[]; pagination?: { current_page: number; per_page: number; total: number; last_page: number } } | ServidorEmail[]>(
+      '/servidores-email',
+      { params: filters }
+    );
+    const payload = response.data;
+    if (payload && !Array.isArray(payload) && Array.isArray(payload.data)) {
+      return {
+        success: response.success,
+        data: payload.data,
+        pagination: payload.pagination,
+        message: response.message ?? '',
+        errors: response.errors,
+      };
+    }
+    return normalizeResponse(response as ApiResponse<ServidorEmail[]>, []);
   }
 
   static async getById(id: number): Promise<ApiResponse<ServidorEmail>> {

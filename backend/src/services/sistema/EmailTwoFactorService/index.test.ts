@@ -32,6 +32,7 @@ describe('EmailTwoFactorService', () => {
     await expect(EmailTwoFactorService.isSmtpConfigured(10)).resolves.toBe(true);
     expect(findServidor).toHaveBeenCalledWith({
       where: { ativo: true, empresa_id: 10 },
+      orderBy: [{ padrao: 'desc' }, { id: 'asc' }],
       select: { id: true },
     });
   });

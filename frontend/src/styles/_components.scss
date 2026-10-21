@@ -279,7 +279,8 @@ form.form-modal-simple:has(.modal-rich-text-editor) > [class*='-tab-content-padd
 
 /*
  * Modais com botões de ação (Salvar/Cancelar) e sem abas:
- * header claro (bg-modal) + faixa de respiro + conteúdo escuro (bg-primary).
+ * header e corpo no mesmo fundo. O form não encolhe — senão o fundo
+ * só pinta a área visível e o scroll mostra outra cor.
  */
 .draggable-modal-container-custom:not(:has(.modal-tabs-overflow-container)):has(
     > .draggable-modal-header-custom .modal-header-actions
@@ -299,10 +300,10 @@ form.form-modal-simple:has(.modal-rich-text-editor) > [class*='-tab-content-padd
         :has(> [class*='-modal-content'])
       ),
     > .form-modal-simple:not(:has([class*='-tab-content'])):not(:has(> [class*='-modal-content'])) {
-      flex: 1 1 auto !important;
-      min-height: 0 !important;
+      flex: 1 0 auto !important;
+      min-height: auto !important;
       display: block !important;
-      background-color: var(--bg-primary) !important;
+      background-color: var(--bg-modal) !important;
     }
 
     > .modal-inner-padding,
@@ -310,9 +311,9 @@ form.form-modal-simple:has(.modal-rich-text-editor) > [class*='-tab-content-padd
     > .modal-inner-padding-sm,
     > .modal-inner-padding-audit,
     > .modal-inner-padding-recursos {
-      flex: 1 1 auto !important;
-      min-height: 0 !important;
-      background-color: var(--bg-primary) !important;
+      flex: 1 0 auto !important;
+      min-height: auto !important;
+      background-color: var(--bg-modal) !important;
     }
   }
 }
@@ -515,7 +516,7 @@ form.form-modal-simple:has(.modal-rich-text-editor) > [class*='-tab-content-padd
   background-color: var(--bg-secondary) !important;
 }
 
-/* Mobile: formulário sem abas — header claro + faixa + conteúdo escuro */
+/* Mobile: formulário sem abas — o mesmo fundo no header e no corpo */
 .responsive-dialog-mobile-custom:not(:has(.modal-tabs-overflow-container)):not(.no-padding):not(
     :has(.table-container-custom)
   ):has(.form-modal-simple:not(:has([class*='-tab-content']))) {
@@ -530,7 +531,8 @@ form.form-modal-simple:has(.modal-rich-text-editor) > [class*='-tab-content-padd
 
   .responsive-dialog-mobile-content {
     padding: 0 !important;
-    background-color: var(--bg-primary) !important;
+    background-color: var(--bg-modal) !important;
+    flex: 1 0 auto !important;
     min-height: 100% !important;
   }
 }
@@ -4075,6 +4077,7 @@ textarea:focus {
   min-height: 0 !important;
 }
 
+.email-modal-content > .email-tab-content-scrollable > form.form-modal-simple,
 .email-tab-content-scrollable > form.form-modal-simple:has(.modal-rich-text-editor) {
   flex: 0 0 auto !important;
   min-height: auto !important;

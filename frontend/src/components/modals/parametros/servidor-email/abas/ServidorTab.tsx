@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormField, Checkbox, EnviarButton } from 'components/ui';
+import { AtivoInativoField, FormField, Checkbox, EnviarButton } from 'components/ui';
 import { ServidorTabProps } from '../types';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -26,6 +26,23 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
             size="sm"
             value={formData.descricao}
             onChange={(value) => onChange('descricao', String(value ?? ''))}
+          />
+        </div>
+        <div className="col-12">
+          <AtivoInativoField
+            name="email-ativo"
+            value={formData.ativo}
+            onChange={(value) => onChange('ativo', value)}
+            label={t('status.active')}
+          />
+        </div>
+        <div className="col-12">
+          <AtivoInativoField
+            name="email-padrao"
+            value={formData.padrao}
+            onChange={(value) => onChange('padrao', value)}
+            label={t('form.defaultServer')}
+            helpText={t('form.defaultServerHelp')}
           />
         </div>
         <div className="col-12">

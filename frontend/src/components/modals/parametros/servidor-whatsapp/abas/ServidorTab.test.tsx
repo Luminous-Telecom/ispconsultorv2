@@ -20,9 +20,30 @@ const baseForm: ServidorWhatsAppForm = {
   whatsapp_cloud_token: '',
   whatsapp_cloud_phone_number_id: '',
   whatsapp_cloud_business_account_id: '',
+  ativo: true,
+  padrao: false,
 };
 
 describe('ServidorTab (WhatsApp)', () => {
+  it('marca o servidor como padrão', () => {
+    const onChange = jest.fn();
+    render(
+      <ServidorTab
+        formData={baseForm}
+        onChange={onChange}
+        isPending={false}
+        testPhone=""
+        testMessage=""
+        onTestPhoneChange={jest.fn()}
+        onTestMessageChange={jest.fn()}
+        onSendTestMessage={jest.fn()}
+        isSendingTest={false}
+      />
+    );
+    fireEvent.click(screen.getAllByLabelText('ui.yes')[1]);
+    expect(onChange).toHaveBeenCalledWith('padrao', true);
+  });
+
   it('exibe o campo descrição e dispara onChange ao digitar', () => {
     const onChange = jest.fn();
 

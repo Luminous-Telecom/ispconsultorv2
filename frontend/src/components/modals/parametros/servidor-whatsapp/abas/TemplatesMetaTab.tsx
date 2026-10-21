@@ -52,6 +52,7 @@ interface TemplatesResponse {
 export interface TemplatesMetaTabProps {
   /** Habilita a query de templates */
   enabled?: boolean;
+  servidorWhatsappId?: number | null;
   mensagemType?: string;
   onSalvarVincular?: (data: { template_id: number }) => Promise<void>;
   onClose?: () => void;
@@ -130,6 +131,7 @@ function formatTemplateStatus(status: string): string {
 
 const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
   enabled = true,
+  servidorWhatsappId,
   mensagemType,
   onSalvarVincular,
   onClose
@@ -147,15 +149,16 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
   }, []);
 
   const { data: templatesConfigurados } = useQuery<ApiResponse<TemplateWhatsApp[]>>({
-    queryKey: ['templates-whatsapp'],
-    queryFn: () => TemplateWhatsAppService.list(),
-    enabled: true,
+    queryKey: ['templates-whatsapp', servidorWhatsappId],
+    queryFn: () => TemplateWhatsAppService.list(servidorWhatsappId),
+    enabled: !!servidorWhatsappId,
   });
 
   const { data, isLoading, error, refetch } = useQuery<TemplatesResponse['data']>({
-    queryKey: ['whatsapp-templates'],
+    queryKey: ['whatsapp-templates', servidorWhatsappId],
     queryFn: async () => {
-      const response = await defaultApiClient.get<TemplatesResponse>('/servidores-whatsapp/templates');
+      const query = servidorWhatsappId ? `?servidor_id=${servidorWhatsappId}` : '';
+      const response = await defaultApiClient.get<TemplatesResponse>(`/servidores-whatsapp/templates${query}`);
       if (!response.success) {
         throw new Error(response.message || CONTEXT_ERROR_MESSAGES.TEMPLATE_LOAD_ERROR);
       }
@@ -176,6 +179,7 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
         idioma: mapping.language,
         variables: mapping.variables,
         header_document: mapping.header_document,
+        servidor_whatsapp_id: servidorWhatsappId,
       });
     },
     onSuccess: (res) => {
@@ -239,6 +243,7 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
       idioma: mapping.language,
       variables: mapping.variables,
       header_document: mapping.header_document,
+      servidor_whatsapp_id: servidorWhatsappId,
     });
     if (!res.success || !res.data?.id) {
       throw new Error(res.message || CONTEXT_ERROR_MESSAGES.TEMPLATE_CREATE_ERROR);

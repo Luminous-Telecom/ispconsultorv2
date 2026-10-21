@@ -13,7 +13,8 @@ interface ServidorWhatsappModalBodyProps {
   loadingLabel: string;
   activeTab: WhatsappActiveTab;
   formData: ServidorWhatsAppForm;
-  onFormFieldChange: (field: keyof ServidorWhatsAppForm, value: string | 'evolution' | 'whatsapp_cloud') => void;
+  onFormFieldChange: (field: keyof ServidorWhatsAppForm, value: string | boolean | 'evolution' | 'whatsapp_cloud') => void;
+  servidorWhatsappId?: number | null;
   isSaveServidorPending: boolean;
   servidorAtivo?: { data?: { id?: number; tipo_api?: 'evolution' | 'whatsapp_cloud' } } | null;
   testPhone: string;
@@ -64,6 +65,7 @@ const ServidorWhatsappModalBody: React.FC<ServidorWhatsappModalBodyProps> = ({
   onTestMessageChange,
   onSendTestMessage,
   isSendingTest,
+  servidorWhatsappId,
   onSubmit,
   mensagemType,
   tipoEnvio,
@@ -147,8 +149,10 @@ const ServidorWhatsappModalBody: React.FC<ServidorWhatsappModalBodyProps> = ({
             />
           )}
 
-          {activeTab === 'templates_meta' && <TemplatesMetaTab enabled={true} />}
-          {activeTab === 'templates' && <TemplatesTab />}
+          {activeTab === 'templates_meta' && (
+            <TemplatesMetaTab enabled={!!servidorWhatsappId} servidorWhatsappId={servidorWhatsappId} />
+          )}
+          {activeTab === 'templates' && <TemplatesTab servidorWhatsappId={servidorWhatsappId} />}
         </div>
       </div>
     )}
@@ -158,6 +162,7 @@ const ServidorWhatsappModalBody: React.FC<ServidorWhatsappModalBodyProps> = ({
         show={showTemplateSelectModal}
         onClose={onCloseTemplateSelectModal}
         onSelect={onTemplateSelect}
+        servidorWhatsappId={servidorWhatsappId}
       />
     )}
   </>

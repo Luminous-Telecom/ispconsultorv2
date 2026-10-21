@@ -15,6 +15,7 @@ export class EmailTwoFactorService {
     if (empresaId == null) return false;
     const servidor = await prisma.comunicacao_servidores_email.findFirst({
       where: { ativo: true, empresa_id: empresaId },
+      orderBy: [{ padrao: 'desc' }, { id: 'asc' }],
       select: { id: true },
     });
     return !!servidor;
@@ -72,6 +73,7 @@ export class EmailTwoFactorService {
 
     const servidor = await prisma.comunicacao_servidores_email.findFirst({
       where: { ativo: true, empresa_id: usuario.empresa_id },
+      orderBy: [{ padrao: 'desc' }, { id: 'asc' }],
     });
     if (!servidor) {
       throw new Error('Servidor de e-mail não configurado. Configure em Parâmetros → Servidor de E-Mail.');

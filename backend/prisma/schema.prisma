@@ -370,7 +370,11 @@ model cadastros_bancos {
   updated_at                 DateTime                    @default(now()) @db.DateTime(0)
   empresa_id                 Int?
   usar_integracao_banco_nfse Boolean                     @default(false)
+  servidor_email_cobranca_id    Int?
+  servidor_whatsapp_cobranca_id Int?
   sistema_tenants            sistema_tenants?            @relation(fields: [empresa_id], references: [id], map: "bancos_empresa_id_foreign_idx")
+  comunicacao_servidores_email    comunicacao_servidores_email?    @relation("BancoEmailCobranca", fields: [servidor_email_cobranca_id], references: [id], onDelete: SetNull, onUpdate: Restrict, map: "bancos_servidor_email_cobranca_fk")
+  comunicacao_servidores_whatsapp comunicacao_servidores_whatsapp? @relation("BancoWhatsappCobranca", fields: [servidor_whatsapp_cobranca_id], references: [id], onDelete: SetNull, onUpdate: Restrict, map: "bancos_servidor_whatsapp_cobranca_fk")
   contratos                  contratos[]
   financeiro_titulos         financeiro_titulos[]
 
@@ -378,6 +382,8 @@ model cadastros_bancos {
   @@index([nome], map: "bancos_nome")
   @@index([tipo_banco], map: "bancos_tipo_banco")
   @@index([empresa_id], map: "idx_bancos_empresa_id")
+  @@index([servidor_email_cobranca_id], map: "bancos_servidor_email_cobranca_id")
+  @@index([servidor_whatsapp_cobranca_id], map: "bancos_servidor_whatsapp_cobranca_id")
 }
 
 model cadastros_dias_vencimento {
@@ -601,7 +607,8 @@ model comunicacao_mensagens_email {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model comunicacao_mensagens_whatsapp {
   id                             Int                                       @id @default(autoincrement())
-  tipo                           String                                    @unique(map: "tipo") @db.VarChar(100)
+  tipo                           String                                    @db.VarChar(100)
+  servidor_whatsapp_id           Int?
   tipo_envio                     comunicacao_mensagens_whatsapp_tipo_envio @default(pdf)
   mensagem_padrao                String                                    @db.LongText
   interacao1                     String?                                   @db.LongText
@@ -615,9 +622,13 @@ model comunicacao_mensagens_whatsapp {
   template_id                    Int?
   sistema_tenants                sistema_tenants?                          @relation(fields: [empresa_id], references: [id], map: "mensagens_whatsapp_empresa_id_foreign_idx")
   comunicacao_templates_whatsapp comunicacao_templates_whatsapp?           @relation(fields: [template_id], references: [id], map: "mensagens_whatsapp_template_id_foreign_idx")
+  comunicacao_servidores_whatsapp comunicacao_servidores_whatsapp?         @relation(fields: [servidor_whatsapp_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "mensagens_whatsapp_servidor_fk")
 
+  @@unique([servidor_whatsapp_id, tipo], map: "mensagens_whatsapp_servidor_tipo")
+  @@index([tipo], map: "mensagens_whatsapp_tipo")
   @@index([empresa_id], map: "mensagens_whatsapp_empresa_id_foreign_idx")
   @@index([template_id], map: "mensagens_whatsapp_template_id")
+  @@index([servidor_whatsapp_id], map: "mensagens_whatsapp_servidor_whatsapp_id")
 }
 
 model comunicacao_servidores_email {
@@ -638,9 +649,12 @@ model comunicacao_servidores_email {
   created_at           DateTime         @default(now()) @db.DateTime(0)
   updated_at           DateTime         @default(now()) @db.DateTime(0)
   empresa_id           Int?
+  padrao               Boolean          @default(false)
   sistema_tenants      sistema_tenants? @relation(fields: [empresa_id], references: [id], map: "servidores_email_empresa_id_foreign_idx")
+  cadastros_bancos     cadastros_bancos[] @relation("BancoEmailCobranca")
 
   @@index([empresa_id], map: "comunicacao_servidores_email_empresa_id")
+  @@index([empresa_id, padrao], map: "comunicacao_servidores_email_empresa_id_padrao")
   @@index([empresa_id, ativo], map: "comunicacao_servidores_email_empresa_id_ativo")
   @@index([ativo], map: "servidores_email_ativo")
   @@index([empresa_id], map: "servidores_email_empresa_id_foreign_idx")
@@ -671,9 +685,14 @@ model comunicacao_servidores_whatsapp {
   whatsapp_cloud_business_account_id String?                                        @db.VarChar(100)
   template_mapping                   String?                                        @db.Text
   empresa_id                         Int?
+  padrao                             Boolean                                        @default(false)
   sistema_tenants                    sistema_tenants?                               @relation(fields: [empresa_id], references: [id], map: "servidores_whatsapp_empresa_id_foreign_idx")
+  comunicacao_mensagens_whatsapp     comunicacao_mensagens_whatsapp[]
+  comunicacao_templates_whatsapp     comunicacao_templates_whatsapp[]
+  cadastros_bancos                   cadastros_bancos[]                             @relation("BancoWhatsappCobranca")
 
   @@index([empresa_id], map: "comunicacao_servidores_whatsapp_empresa_id")
+  @@index([empresa_id, padrao], map: "comunicacao_servidores_whatsapp_empresa_id_padrao")
   @@index([empresa_id, ativo], map: "comunicacao_servidores_whatsapp_empresa_id_ativo")
   @@index([ativo], map: "servidores_whatsapp_ativo")
   @@index([empresa_id], map: "servidores_whatsapp_empresa_id_foreign_idx")
@@ -685,6 +704,7 @@ model comunicacao_servidores_whatsapp {
 model comunicacao_templates_whatsapp {
   id                             Int                              @id @default(autoincrement())
   empresa_id                     Int?
+  servidor_whatsapp_id           Int?
   nome                           String                           @db.VarChar(100)
   idioma                         String                           @default("pt_BR") @db.VarChar(20)
   variables                      String?                          @db.Text
@@ -694,9 +714,11 @@ model comunicacao_templates_whatsapp {
   updated_at                     DateTime                         @default(now()) @db.DateTime(0)
   comunicacao_mensagens_whatsapp comunicacao_mensagens_whatsapp[]
   sistema_tenants                sistema_tenants?                 @relation(fields: [empresa_id], references: [id], map: "comunicacao_templates_whatsapp_empresa_id_fk")
+  comunicacao_servidores_whatsapp comunicacao_servidores_whatsapp? @relation(fields: [servidor_whatsapp_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "templates_whatsapp_servidor_fk")
 
-  @@unique([nome, idioma], map: "templates_whatsapp_nome_idioma_unique")
+  @@unique([servidor_whatsapp_id, nome, idioma], map: "templates_whatsapp_servidor_nome_idioma")
   @@index([empresa_id], map: "templates_whatsapp_empresa_id")
+  @@index([servidor_whatsapp_id], map: "templates_whatsapp_servidor_whatsapp_id")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments

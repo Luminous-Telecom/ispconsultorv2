@@ -1,6 +1,8 @@
 import type { Prisma, comunicacao_servidores_email } from '@prisma/client';
 import { prisma } from '../../../db/prisma';
 import { whereComunicacaoEmpresaEstrito } from '../../../utils/comunicacaoEmpresaWhere';
+import { buildPagination } from '../../../utils/pagination';
+import type { ParsedListQuery } from '../../../utils/listQuery';
 
 type ServidorEmailSemSenha = Omit<comunicacao_servidores_email, 'senha'>;
 
@@ -33,6 +35,50 @@ export class ServidorEmailService {
     return {
       success: true,
       data: servidores.map(semSenha),
+    };
+  }
+
+  static async listPaginated(empresaId: number | null | undefined, filters: ParsedListQuery) {
+    const where = (whereComunicacaoEmpresaEstrito(empresaId) ?? {}) as Prisma.comunicacao_servidores_emailWhereInput;
+    const termo = filters.search?.trim();
+    if (termo) {
+      const campo = filters.searchField;
+      if (campo === 'id' && /^\d+$/.test(termo)) where.id = Number(termo);
+      else if (campo === 'host') where.host = { contains: termo };
+      else if (campo === 'email_remetente') where.email_remetente = { contains: termo };
+      else if (campo === 'descricao') where.descricao = { contains: termo };
+      else {
+        where.OR = [
+          { descricao: { contains: termo } },
+          { host: { contains: termo } },
+          { email_remetente: { contains: termo } },
+          { nome_remetente: { contains: termo } },
+        ];
+      }
+    }
+
+    const colunas = ['id', 'descricao', 'host', 'email_remetente', 'nome_remetente', 'ativo', 'padrao', 'created_at'] as const;
+    const direcao = filters.sortDirection === 'asc' ? 'asc' : 'desc';
+    const coluna = colunas.includes(filters.sortColumn as (typeof colunas)[number])
+      ? (filters.sortColumn as (typeof colunas)[number])
+      : 'id';
+    const page = filters.page;
+    const limit = filters.limit;
+
+    const [rows, total] = await Promise.all([
+      prisma.comunicacao_servidores_email.findMany({
+        where,
+        orderBy: { [coluna]: direcao },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.comunicacao_servidores_email.count({ where }),
+    ]);
+
+    return {
+      success: true,
+      data: rows.map(semSenha),
+      pagination: buildPagination(page, limit, total),
     };
   }
 

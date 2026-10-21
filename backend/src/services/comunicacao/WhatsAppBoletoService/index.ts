@@ -9,6 +9,7 @@ import { WhatsAppCloudService } from '../WhatsAppCloudService';
 import { TemplateWhatsAppService } from '../TemplateWhatsAppService';
 import { registrarMensagemHistorico, type ContextoHistorico } from '../RegistroMensagemHistoricoService';
 import { whereComunicacaoEmpresaEstrito } from '../../../utils/comunicacaoEmpresaWhere';
+import { resolverServidorWhatsAppCobranca } from '../resolverServidorCobranca';
 import { escolherMensagemCobranca } from '../ReenviarNotificacoesCobrancaService/selecao';
 import { RECIBO_MODELO_NAO_CONFIGURADO } from '../../titulos/ReciboPDFService/messages';
 
@@ -47,20 +48,15 @@ export class WhatsAppBoletoService {
   }> {
     const empresaId = options?.empresa_id;
     try {
-      let servidor: ServidorWhatsApp;
-      
-        const whereSrv = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
-        if (!whereSrv) {
-          logger.info('[WhatsApp Boleto] empresa_id ausente — envio abortado (isolamento multi-tenant)');
-          return { sucesso: false, mensagensEnviadas: 0, erros: 0 };
-        }
-        const srv = await prisma.comunicacao_servidores_whatsapp.findFirst({
-          where: whereSrv as Prisma.comunicacao_servidores_whatsappWhereInput,
-        });
-        if (!srv) {
-          return { sucesso: false, mensagensEnviadas: 0, erros: 0 };
-        }
-        servidor = srv;
+      const whereSrv = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
+      if (!whereSrv) {
+        logger.info('[WhatsApp Boleto] empresa_id ausente — envio abortado (isolamento multi-tenant)');
+        return { sucesso: false, mensagensEnviadas: 0, erros: 0 };
+      }
+      const servidor = await resolverServidorWhatsAppCobranca(empresaId);
+      if (!servidor) {
+        return { sucesso: false, mensagensEnviadas: 0, erros: 0 };
+      }
       
 
       const whereMsg = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
@@ -122,10 +118,12 @@ export class WhatsAppBoletoService {
     tipo: 'antes' | 'mesmo' | 'depois',
     empresaId?: number
   ): Promise<{ enviadas: number; erros: number }> {
-    const mensagem = mensagens.find((msg) => msg.tipo === tipoMensagem);
-    if (!mensagem || mensagem.tipo_envio === 'desativado') {
+    const mensagemPadrao = mensagens.find((msg) => msg.tipo === tipoMensagem && msg.servidor_whatsapp_id === servidor.id)
+      ?? mensagens.find((msg) => msg.tipo === tipoMensagem && msg.servidor_whatsapp_id == null);
+    if (!mensagemPadrao || mensagemPadrao.tipo_envio === 'desativado') {
       return { enviadas: 0, erros: 0 };
     }
+    const cacheServidor = new Map<string, ServidorWhatsApp | null>();
 
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
@@ -246,6 +244,18 @@ export class WhatsAppBoletoService {
         });
 
         const tituloParaEnvio = titulo;
+        const bancoSrvId = (titulo.banco as { servidor_whatsapp_cobranca_id?: number | null } | null | undefined)?.servidor_whatsapp_cobranca_id ?? null;
+        const cacheKey = bancoSrvId ? String(bancoSrvId) : 'padrao';
+        if (!cacheServidor.has(cacheKey)) {
+          cacheServidor.set(cacheKey, await resolverServidorWhatsAppCobranca(empresaId, bancoSrvId));
+        }
+        const servidorTitulo = cacheServidor.get(cacheKey) ?? servidor;
+        const mensagem = mensagens.find((msg) => msg.tipo === tipoMensagem && msg.servidor_whatsapp_id === servidorTitulo.id)
+          ?? (servidorTitulo.id === servidor.id ? mensagemPadrao : undefined);
+        if (!mensagem || mensagem.tipo_envio === 'desativado') {
+          erros++;
+          continue;
+        }
         const empresaIdHistorico = (titulo as { empresa_id?: number }).empresa_id ?? (cliente as { empresa_id?: number }).empresa_id ?? empresaId;
         const vinculoCobranca = {
           entidade_tipo: 'titulo' as const,
@@ -255,7 +265,7 @@ export class WhatsAppBoletoService {
         const contextoHistorico = empresaIdHistorico != null
           ? { empresa_id: empresaIdHistorico, ...vinculoCobranca }
           : vinculoCobranca;
-        const resultado = await this.enviarParaTitulo(mensagem, servidor, tituloParaEnvio as Titulo, cliente, contrato, contextoHistorico);
+        const resultado = await this.enviarParaTitulo(mensagem, servidorTitulo, tituloParaEnvio as Titulo, cliente, contrato, contextoHistorico);
 
         logger.info('WhatsAppBoletoService.processarEnvio - Resultado do envio', {
           context: 'WhatsAppBoletoService',
@@ -539,16 +549,15 @@ export class WhatsAppBoletoService {
       }
 
       const empresaId = (titulo as { empresa_id?: number | null }).empresa_id ?? (cliente as { empresa_id?: number | null }).empresa_id ?? undefined;
-      const whereSrv = whereComunicacaoEmpresaEstrito(empresaId, { ativo: true });
-      if (!whereSrv) {
+      const bancoSrvId = (titulo as { banco?: { servidor_whatsapp_cobranca_id?: number | null } | null }).banco?.servidor_whatsapp_cobranca_id
+        ?? (titulo as { cadastros_bancos?: { servidor_whatsapp_cobranca_id?: number | null } | null }).cadastros_bancos?.servidor_whatsapp_cobranca_id;
+      if (empresaId == null || empresaId <= 0) {
         const motivo = 'empresa_id ausente — envio de recibo WhatsApp abortado';
         logger.info(`[Recibo WhatsApp] ${motivo}`, { titulo_id: titulo.id });
         await this.registrarFalhaReciboNoHistorico({ titulo, cliente, motivo });
         return false;
       }
-      const servidor = await prisma.comunicacao_servidores_whatsapp.findFirst({
-        where: whereSrv as Prisma.comunicacao_servidores_whatsappWhereInput,
-      });
+      const servidor = await resolverServidorWhatsAppCobranca(empresaId, bancoSrvId);
       if (!servidor) {
         const motivo = 'Servidor WhatsApp inativo ou não configurado';
         logger.info(`[Recibo WhatsApp] ${motivo}`, { titulo_id: titulo.id, empresa_id: empresaId });
@@ -556,7 +565,11 @@ export class WhatsAppBoletoService {
         return false;
       }
 
-      const whereMsg = whereComunicacaoEmpresaEstrito(empresaId, { tipo: 'recibo_pagamento', ativo: true });
+      const whereMsg = whereComunicacaoEmpresaEstrito(empresaId, {
+        tipo: 'recibo_pagamento',
+        ativo: true,
+        servidor_whatsapp_id: servidor.id,
+      });
       const mensagem = whereMsg
         ? await prisma.comunicacao_mensagens_whatsapp.findFirst({
             where: whereMsg as Prisma.comunicacao_mensagens_whatsappWhereInput,
