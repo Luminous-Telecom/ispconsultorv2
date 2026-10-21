@@ -11,14 +11,10 @@ const items: SidebarMenuItem[] = [
 function renderFolder(overrides: {
   isOpen?: boolean;
   selectedItemId?: string | null;
-  onHoverIntent?: (folderId: string) => void;
-  onHoverCancel?: (folderId: string) => void;
   onToggle?: (folderId: string) => void;
   onItemClick?: (item: SidebarMenuItem, folderPath: string[]) => void;
 } = {}) {
   localStorage.setItem('app-language', 'pt-BR');
-  const onHoverIntent = overrides.onHoverIntent ?? jest.fn();
-  const onHoverCancel = overrides.onHoverCancel ?? jest.fn();
   const onToggle = overrides.onToggle ?? jest.fn();
   const onItemClick = overrides.onItemClick ?? jest.fn();
 
@@ -34,25 +30,25 @@ function renderFolder(overrides: {
         isOpen={overrides.isOpen ?? false}
         selectedItemId={overrides.selectedItemId ?? null}
         isNestedOpen={() => false}
-        onHoverIntent={onHoverIntent}
-        onHoverCancel={onHoverCancel}
         onToggle={onToggle}
         onItemClick={onItemClick}
       />
     </I18nProvider>
   );
 
-  return { onHoverIntent, onHoverCancel, onToggle, onItemClick };
+  return { onToggle, onItemClick };
 }
 
 describe('SidebarAccordionFolder', () => {
-  it('avisa intenção de hover e cancela ao sair da pasta', () => {
-    const { onHoverIntent, onHoverCancel } = renderFolder();
+  it('não abre a pasta ao passar o mouse', () => {
+    const { onToggle } = renderFolder();
     const item = screen.getByRole('button', { name: 'Cadastros' }).closest('.accordion-item')!;
     fireEvent.mouseEnter(item);
-    expect(onHoverIntent).toHaveBeenCalledWith('cadastrosAccordion');
     fireEvent.mouseLeave(item);
-    expect(onHoverCancel).toHaveBeenCalledWith('cadastrosAccordion');
+    expect(onToggle).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Cadastros' }).getAttribute('aria-expanded')).toBe(
+      'false'
+    );
   });
 
   it('mostra a pasta aberta quando isOpen e marca o item selecionado', () => {

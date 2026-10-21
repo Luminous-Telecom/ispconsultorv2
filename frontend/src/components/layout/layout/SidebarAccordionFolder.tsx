@@ -11,13 +11,11 @@ interface SidebarFolderShellProps {
   title: string;
   borderless?: boolean;
   isOpen: boolean;
-  onHoverIntent: () => void;
-  onHoverCancel: () => void;
   onToggle: () => void;
   children: React.ReactNode;
 }
 
-/** Pasta controlada pelo menu: hover abre; fechamento só ao sair do lateral. */
+/** Pasta do menu lateral: abre e fecha só no clique. */
 const SidebarFolderShell: React.FC<SidebarFolderShellProps> = ({
   accordionId,
   collapseId,
@@ -25,8 +23,6 @@ const SidebarFolderShell: React.FC<SidebarFolderShellProps> = ({
   title,
   borderless = false,
   isOpen,
-  onHoverIntent,
-  onHoverCancel,
   onToggle,
   children,
 }) => (
@@ -34,11 +30,7 @@ const SidebarFolderShell: React.FC<SidebarFolderShellProps> = ({
     className={`accordion sidebar-accordion${borderless ? ' border-0' : ''}`}
     id={accordionId}
   >
-    <div
-      className="accordion-item border-0 bg-transparent"
-      onMouseEnter={onHoverIntent}
-      onMouseLeave={onHoverCancel}
-    >
+    <div className="accordion-item border-0 bg-transparent">
       <h2 className="accordion-header" id={headingId}>
         <NavLinkButton
           className={`accordion-button${isOpen ? '' : ' collapsed'} nav-link text-start w-100 d-flex align-items-center`}
@@ -69,8 +61,6 @@ interface SidebarNestedFolderProps {
   t: TranslateFn;
   isOpen: boolean;
   selectedItemId: string | null;
-  onHoverIntent: () => void;
-  onHoverCancel: () => void;
   onToggle: () => void;
   onItemClick: (item: SidebarMenuItem, folderPath: string[]) => void;
 }
@@ -81,8 +71,6 @@ const SidebarNestedFolder: React.FC<SidebarNestedFolderProps> = ({
   t,
   isOpen,
   selectedItemId,
-  onHoverIntent,
-  onHoverCancel,
   onToggle,
   onItemClick,
 }) => {
@@ -100,8 +88,6 @@ const SidebarNestedFolder: React.FC<SidebarNestedFolderProps> = ({
       title={t(folder.titleKey)}
       borderless
       isOpen={isOpen}
-      onHoverIntent={onHoverIntent}
-      onHoverCancel={onHoverCancel}
       onToggle={onToggle}
     >
       {folder.items.map((item) => (
@@ -127,8 +113,6 @@ interface SidebarAccordionFolderProps {
   isOpen: boolean;
   selectedItemId: string | null;
   isNestedOpen: (folderId: string) => boolean;
-  onHoverIntent: (folderId: string) => void;
-  onHoverCancel: (folderId: string) => void;
   onToggle: (folderId: string) => void;
   onItemClick: (item: SidebarMenuItem, folderPath: string[]) => void;
 }
@@ -144,8 +128,6 @@ const SidebarAccordionFolder: React.FC<SidebarAccordionFolderProps> = ({
   isOpen,
   selectedItemId,
   isNestedOpen,
-  onHoverIntent,
-  onHoverCancel,
   onToggle,
   onItemClick,
 }) => (
@@ -155,8 +137,6 @@ const SidebarAccordionFolder: React.FC<SidebarAccordionFolderProps> = ({
     headingId={headingId}
     title={title}
     isOpen={isOpen}
-    onHoverIntent={() => onHoverIntent(accordionId)}
-    onHoverCancel={() => onHoverCancel(accordionId)}
     onToggle={() => onToggle(accordionId)}
   >
     {items.map((item) => (
@@ -175,8 +155,6 @@ const SidebarAccordionFolder: React.FC<SidebarAccordionFolderProps> = ({
         t={t}
         isOpen={isNestedOpen(folder.accordionId)}
         selectedItemId={selectedItemId}
-        onHoverIntent={() => onHoverIntent(folder.accordionId)}
-        onHoverCancel={() => onHoverCancel(folder.accordionId)}
         onToggle={() => onToggle(folder.accordionId)}
         onItemClick={onItemClick}
       />

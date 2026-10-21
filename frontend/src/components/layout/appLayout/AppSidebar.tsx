@@ -36,10 +36,6 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
     selectedItemId,
     selectedModalId,
     isFolderOpen,
-    scheduleFolderOpen,
-    cancelFolderOpen,
-    handleSidebarMouseEnter,
-    handleSidebarMouseLeave,
     toggleFolder,
     selectItem,
     clearSelection,
@@ -76,8 +72,6 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
     <aside
       ref={sidebarRef}
       className={`d-flex flex-column flex-shrink-0 sidebar ${sidebarOpen ? 'open' : ''}`}
-      onMouseEnter={handleSidebarMouseEnter}
-      onMouseLeave={handleSidebarMouseLeave}
     >
       <div className="sidebar-header-fixed d-flex flex-column">
         {header}
@@ -110,8 +104,6 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                 isOpen={isFolderOpen(folder.accordionId)}
                 selectedItemId={selectedItemId}
                 isNestedOpen={isFolderOpen}
-                onHoverIntent={scheduleFolderOpen}
-                onHoverCancel={cancelFolderOpen}
                 onToggle={toggleFolder}
                 onItemClick={handleItemClick}
               />
