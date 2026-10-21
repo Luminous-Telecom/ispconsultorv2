@@ -35,6 +35,7 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { path: /^\/api\/assinatura-digital\/webhook/i }, // Alias sem "s" - aceita qualquer path depois
   { path: /^\/api\/assinatura-digital\/webhook\/.*$/i }, // Alias sem "s" com qualquer provider
   { path: /^\/arquivos(\/.*)?$/i },
+  { path: /^\/uploads(\/.*)?$/i },
   // Download de arquivos de cliente (visualização pública controlada)
   { method: 'GET', path: /^\/api\/cliente-arquivos\/\d+\/download\/?$/i },
   { method: 'GET', path: /^\/api\/dados-empresa\/logo\/?$/i }, // GET logo da empresa (público)

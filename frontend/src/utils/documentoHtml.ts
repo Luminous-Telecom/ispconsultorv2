@@ -22,12 +22,17 @@ export function decodeEscapedDocumentHtml(html: string): string {
   return current;
 }
 
-/** `http://host/arquivos/...` vira `/arquivos/...` para carregar no mesmo origem (HTTPS). */
+function toArquivosPath(path: string): string {
+  const withSlash = path.startsWith('/') ? path : `/${path}`;
+  return withSlash.replace(/^\/uploads\//i, '/arquivos/');
+}
+
+/** `http://host/arquivos/...` e o caminho antigo `uploads/...` viram `/arquivos/...`. */
 export function normalizeDocumentImageUrls(html: string): string {
   if (!html) return html;
   return html.replace(
-    /(<img\b[^>]*?\bsrc\s*=\s*["'])(?:https?:)?\/\/[^/"']+(\/arquivos\/[^"']+)(["'])/gi,
-    '$1$2$3'
+    /(<img\b[^>]*?\bsrc\s*=\s*["'])(?:(?:https?:)?\/\/[^/"']+)?(\/?(?:arquivos|uploads)\/[^"']+)(["'])/gi,
+    (_match, prefix: string, path: string, suffix: string) => `${prefix}${toArquivosPath(path)}${suffix}`
   );
 }
 

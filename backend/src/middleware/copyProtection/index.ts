@@ -70,7 +70,7 @@ export const apiProtectionMiddleware = (req: Request, res: Response, next: NextF
 };
 
 export const imageProtectionMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  if (req.path.startsWith('/arquivos/')) {
+  if (req.path.startsWith('/arquivos/') || req.path.startsWith('/uploads/')) {
     return next();
   }
   

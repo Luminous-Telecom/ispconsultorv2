@@ -296,6 +296,7 @@ app.use(auditLogMiddleware);
 // Em produção serve de dist/arquivos/, em dev serve da raiz arquivos/
 const arquivosStaticPath = resolveArquivosPath();
 app.use('/arquivos', express.static(arquivosStaticPath));
+app.use('/uploads', express.static(arquivosStaticPath));
 
 // Servir arquivos estáticos (imagens, etc.)
 // Usar __dirname para navegar relativamente - em produção está em dist/, em dev está em src/

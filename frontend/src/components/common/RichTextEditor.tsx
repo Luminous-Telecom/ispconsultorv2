@@ -94,6 +94,8 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
           resize,
           menubar: false,
           toolbar_mode: 'wrap',
+          skin: false,
+          content_css: false,
           plugins: [
             'advlist', 'autolink', 'lists', 'link', 'image',
             'searchreplace', 'code',

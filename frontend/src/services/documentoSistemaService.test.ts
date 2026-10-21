@@ -43,6 +43,20 @@ describe('DocumentoSistemaService', () => {
     expect(String(getHttp().put.mock.calls[0][0])).toContain('4');
   });
 
+  it('impressão com conteúdo devolve o PDF', async () => {
+    const pdf = new Blob(['%PDF-1.4'], { type: 'application/pdf' });
+    getHttp().post.mockResolvedValue({ success: true, data: pdf, message: '' });
+
+    const blob = await DocumentoSistemaService.generatePdfWithContent(1, '<p>Contrato</p>');
+
+    expect(blob).toBe(pdf);
+    expect(getHttp().post.mock.calls[0][0]).toBe('/modelos-documento/1/pdf-conteudo');
+    expect(getHttp().post.mock.calls[0][2]).toEqual(expect.objectContaining({
+      responseType: 'blob',
+      timeout: 120000,
+    }));
+  });
+
   it('id inexistente não devolve registro gravado', async () => {
     getHttp().get.mockResolvedValue(ok(null));
     try {

@@ -38,6 +38,15 @@ export class PDFGenerationService {
         args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
       });
       const page = await browser.newPage();
+      await page.setRequestInterception(true);
+      page.on('request', (request) => {
+        const url = request.url();
+        if (url.startsWith('data:') || url.startsWith('about:')) {
+          request.continue().catch(() => undefined);
+          return;
+        }
+        request.abort().catch(() => undefined);
+      });
       await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 20000 });
       const pdfBuffer = await page.pdf(toPuppeteerPdfOptions(options));
       return Buffer.from(pdfBuffer);

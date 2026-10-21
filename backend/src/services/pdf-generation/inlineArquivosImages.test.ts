@@ -36,6 +36,17 @@ describe('inlineArquivosImages', () => {
     expect(readFileSync).toHaveBeenCalledTimes(1);
   });
 
+  it('embute imagem no caminho antigo uploads/', () => {
+    existsSync.mockReturnValue(true);
+    readFileSync.mockReturnValue(Buffer.from('png'));
+
+    const html = '<img src="uploads/documentos/assinatura.png" alt="">';
+    const result = inlineArquivosImages(html);
+
+    expect(result).toContain('src="data:image/png;base64,');
+    expect(readFileSync).toHaveBeenCalledWith('/data/arquivos/documentos/assinatura.png');
+  });
+
   it('não lê caminho fora da pasta de arquivos', () => {
     const html = '<img src="/arquivos/../segredo.png">';
     expect(inlineArquivosImages(html)).toBe(html);

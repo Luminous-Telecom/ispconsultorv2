@@ -11,6 +11,15 @@ const MIME_BY_EXT: Record<string, string> = {
   '.svg': 'image/svg+xml',
 };
 
+function storageRelative(pathname: string): string | null {
+  const marked = pathname.match(/\/(?:arquivos|uploads)\/([^?#]+)/i);
+  if (marked?.[1]) return marked[1];
+
+  const bare = pathname.replace(/^\.?\//, '');
+  const prefix = bare.match(/^(?:arquivos|uploads)\/([^?#]+)/i);
+  return prefix?.[1] ?? null;
+}
+
 function arquivoPathFromSrc(src: string): string | null {
   let pathname = src.trim();
   if (!pathname || pathname.startsWith('data:')) return null;
@@ -23,11 +32,10 @@ function arquivoPathFromSrc(src: string): string | null {
     }
   }
 
-  const marker = '/arquivos/';
-  const index = pathname.indexOf(marker);
-  if (index === -1) return null;
+  const relativeRaw = storageRelative(pathname);
+  if (!relativeRaw) return null;
 
-  const relative = decodeURIComponent(pathname.slice(index + marker.length).split('?')[0].split('#')[0]);
+  const relative = decodeURIComponent(relativeRaw.split('?')[0].split('#')[0]);
   if (!relative || relative.includes('..')) return null;
 
   const parts = relative.split('/').filter(Boolean);

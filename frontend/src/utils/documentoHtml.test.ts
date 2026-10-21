@@ -11,6 +11,11 @@ describe('documentoHtml', () => {
     expect(decodeEscapedDocumentHtml(escaped)).toBe('<p>Contrato</p>');
   });
 
+  it('troca o caminho antigo uploads pelo de arquivos', () => {
+    const html = '<img src="uploads/documentos/assinatura.png" alt="">';
+    expect(normalizeDocumentImageUrls(html)).toBe('<img src="/arquivos/documentos/assinatura.png" alt="">');
+  });
+
   it('troca URL absoluta de arquivos por caminho do sistema', () => {
     const html = '<img src="http://consultor.ispvision.com.br/arquivos/documentos/logo.png" alt="logo">';
     expect(normalizeDocumentImageUrls(html)).toBe('<img src="/arquivos/documentos/logo.png" alt="logo">');

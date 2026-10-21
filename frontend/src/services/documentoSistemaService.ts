@@ -206,10 +206,11 @@ class DocumentoSistemaService {
   static async generatePdfWithContent(id: number, conteudo: string): Promise<Blob> {
     try {
       const response = await apiService.post<Blob>(`/modelos-documento/${id}/pdf-conteudo`, { conteudo }, {
-        responseType: 'blob'
+        responseType: 'blob',
+        timeout: 120000,
       });
 
-      const blob = response.data;
+      const blob = response instanceof Blob ? response : response.data;
 
       if (!blob || !(blob instanceof Blob)) {
         throw new Error('Resposta do servidor não é um Blob válido');
