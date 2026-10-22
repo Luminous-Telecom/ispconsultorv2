@@ -308,15 +308,28 @@ body[data-app="system"] .login-card .login-ip-copy:hover {
 
 /* No mobile o sistema força width: auto nos .btn; o Entrar continua na largura do card. */
 @media (max-width: 767.98px) {
+  .login-page {
+    min-height: 100vh;
+    min-height: 100dvh;
+    align-items: center;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
   .login-shell {
     flex-direction: column;
-    min-height: auto;
+    justify-content: safe center;
+    align-items: center;
+    min-height: 100vh;
+    min-height: 100dvh;
   }
 
   .login-panel {
-    flex: 1 1 auto;
-    padding: 1.5rem 1.25rem 2rem;
-    align-items: flex-start;
+    flex: 0 1 auto;
+    width: 100%;
+    padding: 1.5rem 1.25rem;
+    align-items: center;
+    justify-content: center;
   }
 
   .login-submit .btn:not(.btn-link):not(.btn-sm):not(.btn-lg):not(.table-mobile-fab-btn):not(.mobile-menu-btn):not([style*='width']) {
