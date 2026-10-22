@@ -49,13 +49,7 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
   const mensagemManualRef = useRef<string>('<p></p>');
   const tipoEnvioRef = useRef<'desativado' | 'pdf'>('pdf');
   const lastLoadedMensagemIdRef = useRef<number | undefined>(undefined);
-
-  useEffect(() => {
-    mensagemTypeRef.current = mensagemType;
-    if (mensagemType) {
-      lastLoadedMensagemIdRef.current = undefined;
-    }
-  }, [mensagemType]);
+  const loadedMensagemTypeRef = useRef<string>('');
 
   // Ao abrir a aba Mensagens, garantir que um tipo esteja selecionado (evita "Selecione um tipo" ao salvar)
   useEffect(() => {
@@ -185,24 +179,39 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
     if (show) setPersistedId(servidorId ?? null);
   }, [show, servidorId]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    mensagemTypeRef.current = mensagemType;
+
     if (!mensagemType) {
       setTipoEnvio('pdf');
       setMensagemTexto('<p></p>');
       setMensagemManual('<p></p>');
       lastLoadedMensagemIdRef.current = undefined;
+      loadedMensagemTypeRef.current = '';
       return;
     }
 
-    if (mensagemData?.id && mensagemData.id !== lastLoadedMensagemIdRef.current) {
+    if (loadedMensagemTypeRef.current !== mensagemType) {
+      setTipoEnvio('pdf');
+      setMensagemTexto('<p></p>');
+      setMensagemManual('<p></p>');
+      setEditorKey((prev) => prev + 1);
+      lastLoadedMensagemIdRef.current = undefined;
+      loadedMensagemTypeRef.current = mensagemType;
+    }
+
+    if (!mensagemData?.id || mensagemData.tipo !== mensagemType) {
+      return;
+    }
+
+    if (mensagemData.id !== lastLoadedMensagemIdRef.current) {
       setTipoEnvio(mensagemData.tipo_envio);
       setMensagemTexto(mensagemData.mensagem_padrao || '<p></p>');
       setMensagemManual(mensagemData.mensagem_manual || '<p></p>');
-      setEditorKey(prev => prev + 1);
+      setEditorKey((prev) => prev + 1);
       lastLoadedMensagemIdRef.current = mensagemData.id;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mensagemData?.id, mensagemType]);
+  }, [mensagemData, mensagemType]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -250,6 +259,7 @@ const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> 
     setActiveTab('servidor');
     setEmailTeste('');
     lastLoadedMensagemIdRef.current = undefined;
+    loadedMensagemTypeRef.current = '';
   }, []);
 
   const handleReset = useCallback(() => {
