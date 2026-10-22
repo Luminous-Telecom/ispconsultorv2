@@ -199,11 +199,14 @@
   }
 }
 
-/* Esconder sidebar por padrão no mobile quando o header navbar é usado */
+/* Menu mobile cobre cabeçalho, busca e dashboard */
 @media (max-width: 767.98px) {
+  .sidebar-overlay {
+    z-index: 2200;
+  }
+
   .sidebar {
-    top: 0;
-    height: 100vh;
+    z-index: 2210;
   }
 }
 

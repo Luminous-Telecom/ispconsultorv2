@@ -178,6 +178,7 @@ const esES: TranslationKeys = {
     'dashboard.clientsTotalMetric': 'Total de clientes',
     'dashboard.planStatus': 'Estado de los Planes',
     'dashboard.paymentStatus': 'Estado de los Pagos',
+    'dashboard.paymentStatusCurrentMonth': 'Estado de los Pagos (mes actual)',
     'dashboard.planDistribution': 'Distribución por Tipo de Plan',
     'dashboard.planDistributionTopShare': 'Participación principal',
     'dashboard.paymentRate': 'Tasa de Pago',
@@ -226,7 +227,9 @@ const esES: TranslationKeys = {
     'dashboard.contractStatusInfo':
       'Contratos por estado. Parte inferior: suma mostrada y porcentaje de activos sobre esa suma. Pulse la porción para filtrar.',
     'dashboard.paymentStatusInfo':
-      'Cobros con vencimiento en el mes actual por estado: pagados, pendientes (en plazo), atrasadas (vencimiento pasado y no pagadas) y canceladas. Pulse la porción para abrir Cuentas por Cobrar con el filtro correspondiente.',
+      'Todos los cobros, de cualquier mes: pagados, pendientes (en plazo), atrasadas (vencimiento pasado y no pagadas) y canceladas. Pulse la porción para abrir Cuentas por Cobrar con el filtro correspondiente.',
+    'dashboard.paymentStatusCurrentMonthInfo':
+      'Cobros con vencimiento en el mes actual: pagados, pendientes (en plazo), atrasadas (vencimiento pasado y no pagadas) y canceladas. Pulse la porción para abrir Cuentas por Cobrar filtrado por el mes y el estado.',
     'dashboard.backupStatusInfo':
       'Ventana reciente: por día, barras apilan éxito y fallo. Use la leyenda. Pulse un segmento para listar equipos.',
     'dashboard.chartReceivedInfo':
@@ -1685,8 +1688,6 @@ const esES: TranslationKeys = {
     'login.twoFactorEmailSent': 'Código enviado por correo.',
     'login.twoFactorEmailSentTo': 'Código enviado a ${email}.',
     'login.twoFactorPasskey': 'Usar clave de acceso',
-    'login.companyLogoAlt': 'Logo de la empresa',
-    'login.companyLogoAltNamed': 'Logo de ${name}',
     'login.forgotPassword': 'Olvidé mi contraseña',
     'login.forgotTitle': 'Recuperar contraseña',
     'login.forgotHelp': 'Informe el correo de recuperación (validado en Conf. del usuario). El enlace se envía solo a esa dirección.',

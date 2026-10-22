@@ -90,6 +90,7 @@ export function scopeDashboardPayload<T extends DashboardPayload>(role: unknown,
             ...sg,
             titulos: { totalTitulosTodos: 0, taxaPagamento: 0 },
             statusPagamento: { pagos: 0, pendentes: 0, vencidos: 0, cancelados: 0 },
+            statusPagamentoMesAtual: { pagos: 0, pendentes: 0, vencidos: 0, cancelados: 0 },
             totais: {
               totalRecebidosPeriodo: 0,
               totalReceberPeriodo: 0,

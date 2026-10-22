@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { EnviarButton, Input, VoltarButton } from 'components/ui';
 import IspConsultorLogo from 'components/common/IspConsultorLogo';
-import LoginEmpresaBranding from './LoginEmpresaBranding';
 import TechBackground from './TechBackground';
 import './LoginScreen.scss';
 
@@ -11,8 +10,6 @@ export interface LoginForgotPasswordStepProps {
   emailPlaceholder: string;
   footer?: React.ReactNode;
   logoWidth?: number;
-  empresaLogo?: string | null;
-  empresaLogoAlt?: string;
   onSubmit: (email: string) => Promise<void> | void;
   onBack: () => void;
 }
@@ -23,8 +20,6 @@ const LoginForgotPasswordStep: React.FC<LoginForgotPasswordStepProps> = ({
   emailPlaceholder,
   footer,
   logoWidth = 250,
-  empresaLogo,
-  empresaLogoAlt = 'Logo da empresa',
   onSubmit,
   onBack,
 }) => {
@@ -44,11 +39,7 @@ const LoginForgotPasswordStep: React.FC<LoginForgotPasswordStepProps> = ({
   return (
     <div className="login-page">
       <TechBackground />
-      <div className={`login-shell${empresaLogo ? '' : ' login-shell--form-only'}`}>
-        {empresaLogo ? (
-          <LoginEmpresaBranding empresaLogo={empresaLogo} empresaLogoAlt={empresaLogoAlt} />
-        ) : null}
-
+      <div className="login-shell">
         <main className="login-panel">
           <div className="login-card">
             <div className="login-card__accent" />

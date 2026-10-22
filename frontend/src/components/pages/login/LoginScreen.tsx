@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { EntrarButton, Input, NavLinkButton } from 'components/ui';
 import IspConsultorLogo from 'components/common/IspConsultorLogo';
-import LoginEmpresaBranding from './LoginEmpresaBranding';
 import TechBackground from './TechBackground';
 import './LoginScreen.scss';
 
@@ -25,10 +24,6 @@ export interface LoginScreenProps {
   footer?: React.ReactNode;
   logoWidth?: number;
   logoHeight?: number;
-  /** URL da logo da empresa cadastrada (painel esquerdo, abaixo da marca). */
-  empresaLogo?: string | null;
-  /** Texto alternativo da logo da empresa. */
-  empresaLogoAlt?: string;
   forgotPasswordLabel?: string;
   onForgotPassword?: () => void;
   onSubmit: (credentials: LoginCredentials) => Promise<void> | void;
@@ -46,8 +41,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
   footer,
   logoWidth = 250,
   logoHeight,
-  empresaLogo,
-  empresaLogoAlt = 'Logo da empresa',
   forgotPasswordLabel,
   onForgotPassword,
   onSubmit,
@@ -72,11 +65,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
   return (
     <div className="login-page">
       <TechBackground />
-      <div className={`login-shell${empresaLogo ? '' : ' login-shell--form-only'}`}>
-        {empresaLogo ? (
-          <LoginEmpresaBranding empresaLogo={empresaLogo} empresaLogoAlt={empresaLogoAlt} />
-        ) : null}
-
+      <div className="login-shell">
         <main className="login-panel">
           <div className="login-card">
             <div className="login-card__accent" />

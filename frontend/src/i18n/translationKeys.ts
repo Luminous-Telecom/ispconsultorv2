@@ -176,6 +176,7 @@ export interface TranslationKeys {
   'dashboard.clientsTotalMetric': string;
   'dashboard.planStatus': string;
   'dashboard.paymentStatus': string;
+  'dashboard.paymentStatusCurrentMonth': string;
   'dashboard.planDistribution': string;
   'dashboard.planDistributionTopShare': string;
   'dashboard.paymentRate': string;
@@ -220,6 +221,7 @@ export interface TranslationKeys {
   'dashboard.planDistributionInfo': string;
   'dashboard.contractStatusInfo': string;
   'dashboard.paymentStatusInfo': string;
+  'dashboard.paymentStatusCurrentMonthInfo': string;
   'dashboard.backupStatusInfo': string;
   'dashboard.chartReceivedInfo': string;
   'dashboard.chartToReceiveInfo': string;
@@ -1660,8 +1662,6 @@ export interface TranslationKeys {
   'login.allRightsReserved': string;
   'login.copyIp': string;
   'login.ipCopied': string;
-  'login.companyLogoAlt': string;
-  'login.companyLogoAltNamed': string;
   'login.twoFactorTitle': string;
   'login.twoFactorCode': string;
   'login.twoFactorPlaceholder': string;

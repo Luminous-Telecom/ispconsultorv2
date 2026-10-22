@@ -29,12 +29,6 @@ jest.mock('services/authService', () => ({
   isRequires2fa: () => false,
 }));
 
-jest.mock('services/dadosEmpresaService', () => ({
-  DadosEmpresaService: {
-    getPublic: jest.fn().mockResolvedValue({}),
-  },
-}));
-
 jest.mock('components/notifications/NotificationProvider', () => ({
   useNotificationContext: () => ({
     success: (...args: unknown[]) => mockSuccess(...args),

@@ -18,6 +18,7 @@ const payload = {
     },
     titulos: { totalTitulosTodos: 5, taxaPagamento: 50 },
     statusPagamento: { pagos: 1, pendentes: 1, vencidos: 1, cancelados: 0 },
+    statusPagamentoMesAtual: { pagos: 2, pendentes: 0, vencidos: 0, cancelados: 0 },
     crescimentoClientes: [{ mes: '01/26', valor: 1, data_inicio: '', data_fim: '' }],
     clientesPorPlano: [{ plano_id: 1, nome_plano: 'A', value: 1 }],
     totais: {
@@ -45,6 +46,7 @@ describe('scopeDashboardPayload', () => {
     expect(scoped.statsGraficos?.totais.totalReceitaMensal).toBe(30);
     expect(scoped.statsGraficos?.clientes.clientesAtivos).toBe(3);
     expect(scoped.statsGraficos?.statusPagamento.pagos).toBe(1);
+    expect(scoped.statsGraficos?.statusPagamentoMesAtual.pagos).toBe(2);
     expect(scoped.backupStatusGrafico).toEqual([]);
     expect(scoped.statsGraficos?.crescimentoClientes).toEqual([]);
     expect(scoped.statsGraficos?.clientesPorPlano).toEqual([]);
@@ -59,6 +61,12 @@ describe('scopeDashboardPayload', () => {
     expect(scoped.statsGraficos?.totais.totalReceitaMensal).toBe(0);
     expect(scoped.statsGraficos?.totais.totalNovosClientes).toBe(2);
     expect(scoped.stats?.valorTotalReceber).toBe(0);
+    expect(scoped.statsGraficos?.statusPagamentoMesAtual).toEqual({
+      pagos: 0,
+      pendentes: 0,
+      vencidos: 0,
+      cancelados: 0,
+    });
   });
 
   it('administrador recebe o payload inteiro', () => {

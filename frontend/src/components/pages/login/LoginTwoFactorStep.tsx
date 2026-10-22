@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { AppButton, ConfirmarButton, Input, VoltarButton } from 'components/ui';
 import IspConsultorLogo from 'components/common/IspConsultorLogo';
 import type { TwoFactorLoginMethods } from 'services/authService';
-import LoginEmpresaBranding from './LoginEmpresaBranding';
 import TechBackground from './TechBackground';
 import './LoginScreen.scss';
 
@@ -18,8 +17,6 @@ export interface LoginTwoFactorStepProps {
   footer?: React.ReactNode;
   logoWidth?: number;
   logoHeight?: number;
-  empresaLogo?: string | null;
-  empresaLogoAlt?: string;
   onSubmit: (code: string, rememberBrowser: boolean) => Promise<void> | void;
   onSendEmail?: () => Promise<void> | void;
   onPasskey?: (rememberBrowser: boolean) => Promise<void> | void;
@@ -38,8 +35,6 @@ const LoginTwoFactorStep: React.FC<LoginTwoFactorStepProps> = ({
   footer,
   logoWidth = 250,
   logoHeight,
-  empresaLogo,
-  empresaLogoAlt = 'Logo da empresa',
   onSubmit,
   onSendEmail,
   onPasskey,
@@ -87,11 +82,7 @@ const LoginTwoFactorStep: React.FC<LoginTwoFactorStepProps> = ({
   return (
     <div className="login-page">
       <TechBackground />
-      <div className={`login-shell${empresaLogo ? '' : ' login-shell--form-only'}`}>
-        {empresaLogo ? (
-          <LoginEmpresaBranding empresaLogo={empresaLogo} empresaLogoAlt={empresaLogoAlt} />
-        ) : null}
-
+      <div className="login-shell">
         <main className="login-panel">
           <div className="login-card">
             <div className="login-card__accent" />

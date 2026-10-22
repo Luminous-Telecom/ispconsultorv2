@@ -1,15 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { startAuthentication } from '@simplewebauthn/browser';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { authService, isRequires2fa, type TwoFactorLoginMethods } from 'services/authService';
-import { DadosEmpresaService } from 'services/dadosEmpresaService';
 import { removeAuthToken } from 'services/core';
 import { useI18n } from 'contexts/I18nContext';
-import { withCacheBust } from 'utils/urlUtils';
 import LoginScreen, { LoginCredentials } from './login/LoginScreen';
 import LoginTwoFactorStep from './login/LoginTwoFactorStep';
 import LoginForgotPasswordStep from './login/LoginForgotPasswordStep';
@@ -28,22 +25,6 @@ const Login: React.FC = () => {
   const [tempToken, setTempToken] = useState<string | null>(null);
   const [methods, setMethods] = useState<TwoFactorLoginMethods | undefined>();
   const [resetToken, setResetToken] = useState<string | null>(null);
-
-  const { data: empresaPublica } = useQuery({
-    queryKey: ['dados-empresa-public-login'],
-    queryFn: () => DadosEmpresaService.getPublic(),
-    staleTime: 5 * 60 * 1000,
-    retry: false,
-  });
-
-  const empresaLogo = empresaPublica?.logo
-    ? withCacheBust(empresaPublica.logo, empresaPublica.updated_at)
-    : null;
-  const empresaLogoAlt = empresaPublica?.nome_fantasia || empresaPublica?.razao_social
-    ? t('login.companyLogoAltNamed', {
-        name: empresaPublica.nome_fantasia || empresaPublica.razao_social,
-      })
-    : t('login.companyLogoAlt');
 
   useEffect(() => {
     const token = searchParams.get('redefinir_senha');
@@ -255,8 +236,6 @@ const Login: React.FC = () => {
         passkeyLabel={t('login.twoFactorPasskey')}
         methods={methods}
         logoWidth={250}
-        empresaLogo={empresaLogo}
-        empresaLogoAlt={empresaLogoAlt}
         onSubmit={handleVerify2fa}
         onSendEmail={methods?.email ? handleSendEmail : undefined}
         onPasskey={methods?.webauthn ? handlePasskey : undefined}
@@ -277,8 +256,6 @@ const Login: React.FC = () => {
         helpText={t('login.forgotHelp')}
         emailPlaceholder={t('form.email')}
         logoWidth={250}
-        empresaLogo={empresaLogo}
-        empresaLogoAlt={empresaLogoAlt}
         onSubmit={handleForgotPassword}
         onBack={() => setView('login')}
         footer={<LoginFooter />}
@@ -294,8 +271,6 @@ const Login: React.FC = () => {
         passwordPlaceholder={t('login.resetPasswordPlaceholder')}
         confirmPlaceholder={t('login.resetConfirmPlaceholder')}
         logoWidth={250}
-        empresaLogo={empresaLogo}
-        empresaLogoAlt={empresaLogoAlt}
         onSubmit={handleResetPassword}
         onBack={() => {
           setResetToken(null);
@@ -314,8 +289,6 @@ const Login: React.FC = () => {
       passwordPlaceholder={t('form.password')}
       idPrefix="login"
       logoWidth={250}
-      empresaLogo={empresaLogo}
-      empresaLogoAlt={empresaLogoAlt}
       forgotPasswordLabel={t('login.forgotPassword')}
       onForgotPassword={() => setView('forgot')}
       onSubmit={handleLogin}

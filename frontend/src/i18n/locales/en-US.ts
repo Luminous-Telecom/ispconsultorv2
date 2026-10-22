@@ -178,6 +178,7 @@ const enUS: TranslationKeys = {
     'dashboard.clientsTotalMetric': 'Total clients',
     'dashboard.planStatus': 'Plan Status',
     'dashboard.paymentStatus': 'Payment Status',
+    'dashboard.paymentStatusCurrentMonth': 'Payment Status (current month)',
     'dashboard.planDistribution': 'Plan Type Distribution',
     'dashboard.planDistributionTopShare': 'Top segment share',
     'dashboard.paymentRate': 'Payment Rate',
@@ -226,7 +227,9 @@ const enUS: TranslationKeys = {
     'dashboard.contractStatusInfo':
       'Contracts by status (active, inactive, suspended, exempt, blocked, in arrears). Footer: sum shown and active percent of that sum. Click a slice to filter.',
     'dashboard.paymentStatusInfo':
-      'Charges due in the current month by status: paid, pending (still on time), overdue (past due and unpaid), and cancelled. Click a slice to open Accounts Receivable with the matching filter.',
+      'All charges, any month: paid, pending (still on time), overdue (past due and unpaid), and cancelled. Click a slice to open Accounts Receivable with the matching filter.',
+    'dashboard.paymentStatusCurrentMonthInfo':
+      'Charges due in the current month: paid, pending (still on time), overdue (past due and unpaid), and cancelled. Click a slice to open Accounts Receivable filtered by this month and status.',
     'dashboard.backupStatusInfo':
       'Recent window: stacked success vs failure per day. Toggle segments in the legend. Click a segment to list devices.',
     'dashboard.chartReceivedInfo':
@@ -1683,8 +1686,6 @@ const enUS: TranslationKeys = {
     'login.twoFactorEmailSent': 'Code sent by email.',
     'login.twoFactorEmailSentTo': 'Code sent to ${email}.',
     'login.twoFactorPasskey': 'Use passkey',
-    'login.companyLogoAlt': 'Company logo',
-    'login.companyLogoAltNamed': 'Logo of ${name}',
     'login.forgotPassword': 'Forgot my password',
     'login.forgotTitle': 'Reset password',
     'login.forgotHelp': 'Enter your recovery email (validated in User settings). The link is sent only to that address.',

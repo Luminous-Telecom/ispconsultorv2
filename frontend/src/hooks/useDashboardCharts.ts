@@ -3,7 +3,7 @@ import { DashboardData } from '../services/dashboardService';
 import { ChartDataItem } from '../components/charts/types';
 import type { useDashboardStats } from './useDashboardStats';
 import type { TranslationKeys } from '../contexts/I18nContext';
-import { isTituloEmAbertoAtrasado } from '../utils/dashboardPaymentStatus';
+import { countStatusPagamento, isVencimentoNoMesAtual } from '../utils/dashboardPaymentStatus';
 import { CHART_SERIES_COLORS, CHART_TYPE_COLORS } from '../components/charts/chartColors';
 import { COLOR } from '../constants/colors';
 
@@ -11,6 +11,7 @@ interface DashboardCharts {
   clientesChartData: ChartDataItem[];
   planosChartData: ChartDataItem[];
   statusPagamentoData: ChartDataItem[];
+  statusPagamentoMesAtualData: ChartDataItem[];
   distribuicaoPlanos: ChartDataItem[];
   contratosChartData: ChartDataItem[];
   receitaMensalChartData: ChartDataItem[];
@@ -64,13 +65,11 @@ export const useDashboardCharts = (
     [stats.planosAtivos, stats.planosInativos, t]
   );
 
-  const statusPagamentoData = useMemo(() => {
-    const buildItems = (counts: {
-      pagos: number;
-      pendentes: number;
-      vencidos: number;
-      cancelados: number;
-    }) =>
+  const buildStatusPagamentoItems = useCallback(
+    (
+      counts: { pagos: number; pendentes: number; vencidos: number; cancelados: number },
+      periodo?: 'mesAtual'
+    ): ChartDataItem[] =>
       [
         { label: t('status.paid'), value: counts.pagos, color: COLOR.emerald, filterValue: 'pago,pago_atraso,parcial' },
         { label: t('status.pending'), value: counts.pendentes, color: COLOR.sky, filterValue: 'pendente' },
@@ -81,31 +80,28 @@ export const useDashboardCharts = (
           filterValue: 'atraso',
         },
         { label: t('status.cancelled'), value: counts.cancelados, color: COLOR.slateLight, filterValue: 'cancelado' },
-      ].filter((item) => item.value > 0);
+      ]
+        .filter((item) => item.value > 0)
+        .map((item) => (periodo ? { ...item, periodo } : item)),
+    [t]
+  );
 
+  const statusPagamentoData = useMemo(() => {
     if (sg?.statusPagamento) {
-      return buildItems(sg.statusPagamento);
+      return buildStatusPagamentoItems(sg.statusPagamento);
     }
     if (!titulosTodos.length) return [];
-    const hoje = new Date();
-    const hojeSemHora = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
-    const counts = titulosTodos.reduce(
-      (acc, titulo) => {
-        if (titulo.status === 'pago' || titulo.status === 'pago_atraso' || titulo.status === 'parcial') {
-          acc.pagos++;
-        } else if (titulo.status === 'cancelado') {
-          acc.cancelados++;
-        } else if (isTituloEmAbertoAtrasado(titulo, hojeSemHora)) {
-          acc.vencidos++;
-        } else if (titulo.status === 'pendente') {
-          acc.pendentes++;
-        }
-        return acc;
-      },
-      { pagos: 0, pendentes: 0, vencidos: 0, cancelados: 0 }
-    );
-    return buildItems(counts);
-  }, [sg, titulosTodos, t]);
+    return buildStatusPagamentoItems(countStatusPagamento(titulosTodos));
+  }, [sg, titulosTodos, buildStatusPagamentoItems]);
+
+  const statusPagamentoMesAtualData = useMemo(() => {
+    if (sg?.statusPagamentoMesAtual) {
+      return buildStatusPagamentoItems(sg.statusPagamentoMesAtual, 'mesAtual');
+    }
+    const doMes = titulosTodos.filter((titulo) => isVencimentoNoMesAtual(titulo.data_vencimento));
+    if (!doMes.length) return [];
+    return buildStatusPagamentoItems(countStatusPagamento(doMes), 'mesAtual');
+  }, [sg, titulosTodos, buildStatusPagamentoItems]);
 
   const clientesPorTipoPlano = useMemo(
     () => dashboardData?.clientesPorTipoPlano || [],
@@ -383,6 +379,7 @@ export const useDashboardCharts = (
     clientesChartData,
     planosChartData,
     statusPagamentoData,
+    statusPagamentoMesAtualData,
     distribuicaoPlanos,
     contratosChartData,
     receitaMensalChartData,

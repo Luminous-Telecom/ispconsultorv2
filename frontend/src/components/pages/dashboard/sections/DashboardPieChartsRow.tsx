@@ -22,6 +22,7 @@ interface DashboardPieChartsRowProps {
     ReturnType<typeof useChartHiddenItems>,
     | 'hiddenClientes'
     | 'hiddenPagamentos'
+    | 'hiddenPagamentosMesAtual'
     | 'hiddenDistribuicao'
     | 'hiddenContratos'
     | 'hiddenBackupStatus'
@@ -30,6 +31,7 @@ interface DashboardPieChartsRowProps {
     ReturnType<typeof useChartHiddenItems>,
     | 'toggleCliente'
     | 'togglePagamento'
+    | 'togglePagamentoMesAtual'
     | 'toggleDistribuicao'
     | 'toggleContratos'
     | 'toggleBackupStatus'
@@ -98,6 +100,20 @@ const DashboardPieChartsRow: React.FC<DashboardPieChartsRowProps> = ({
         title={t('dashboard.paymentStatus')}
         hiddenItems={hiddenItems.hiddenPagamentos}
         onToggleItem={toggles.togglePagamento}
+        onSliceClick={clicks.handleStatusPagamentoSliceClick}
+        centerHighlightFilterValue="pago,pago_atraso,parcial"
+        centerHighlightColor={COLOR.emerald}
+      />
+    </div>
+    )}
+
+    {showFinanceiro && (
+    <div className="col-auto dashboard-col--compact">
+      <PieStatusCard
+        data={charts.statusPagamentoMesAtualData}
+        title={t('dashboard.paymentStatusCurrentMonth')}
+        hiddenItems={hiddenItems.hiddenPagamentosMesAtual}
+        onToggleItem={toggles.togglePagamentoMesAtual}
         onSliceClick={clicks.handleStatusPagamentoSliceClick}
         centerHighlightFilterValue="pago,pago_atraso,parcial"
         centerHighlightColor={COLOR.emerald}

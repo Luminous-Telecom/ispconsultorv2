@@ -54,27 +54,7 @@ describe('LoginScreen', () => {
     expect(screen.getByText('Acesse o painel administrativo')).toBeTruthy();
   });
 
-  it('exibe a logo da empresa no painel esquerdo quando informada', () => {
-    renderLogin(
-      <LoginScreen
-        subtitle="Acesse o painel administrativo"
-        emailPlaceholder="E-mail"
-        passwordPlaceholder="Senha"
-        empresaLogo="/arquivos/empresa/1/logo.png"
-        empresaLogoAlt="Logo da empresa"
-        onSubmit={jest.fn()}
-      />
-    );
-
-    const empresaLogo = screen.getByAltText('Logo da empresa') as HTMLImageElement;
-    expect(empresaLogo.getAttribute('src')).toBe('/arquivos/empresa/1/logo.png');
-    expect(empresaLogo.className).toContain('login-branding__empresa-logo');
-    expect(empresaLogo.closest('.login-branding__empresa')).toBeTruthy();
-    expect(document.querySelector('.tech-background-canvas')).toBeTruthy();
-    expect(screen.getByAltText(/ISP Consultor/i).closest('.login-brand__logo')).toBeTruthy();
-  });
-
-  it('não renderiza a logo da empresa quando ela não foi informada', () => {
+  it('não exibe a logo da empresa cadastrada', () => {
     renderLogin(
       <LoginScreen
         subtitle="Acesse o painel administrativo"
@@ -85,6 +65,8 @@ describe('LoginScreen', () => {
     );
 
     expect(screen.queryByAltText('Logo da empresa')).toBeNull();
+    expect(document.querySelector('.login-branding')).toBeNull();
+    expect(screen.getByAltText(/ISP Consultor/i).closest('.login-brand__logo')).toBeTruthy();
   });
 
   it('envia email e senha ao submeter o formulário', async () => {

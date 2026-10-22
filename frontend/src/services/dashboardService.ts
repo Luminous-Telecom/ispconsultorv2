@@ -53,6 +53,12 @@ export interface DashboardStatsGraficos {
     vencidos: number;
     cancelados: number;
   };
+  statusPagamentoMesAtual?: {
+    pagos: number;
+    pendentes: number;
+    vencidos: number;
+    cancelados: number;
+  };
   crescimentoClientes: Array<{ mes: string; valor: number; data_inicio: string; data_fim: string }>;
   clientesPorPlano: Array<{ plano_id: number; nome_plano: string; value: number }>;
   totais: {

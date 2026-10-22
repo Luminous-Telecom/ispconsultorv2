@@ -178,6 +178,7 @@ const ptBR: TranslationKeys = {
     'dashboard.clientsTotalMetric': 'Total de clientes',
     'dashboard.planStatus': 'Status dos Planos',
     'dashboard.paymentStatus': 'Status dos Pagamentos',
+    'dashboard.paymentStatusCurrentMonth': 'Status dos Pagamentos (mês atual)',
     'dashboard.planDistribution': 'Distribuição por Tipo de Plano',
     'dashboard.planDistributionTopShare': 'Participação principal',
     'dashboard.paymentRate': 'Taxa de Pagamento',
@@ -226,7 +227,9 @@ const ptBR: TranslationKeys = {
     'dashboard.contractStatusInfo':
       'Contratos por status (ativo, inativo, suspenso, isento, bloqueado, em atraso). Rodapé: soma das quantidades exibidas e percentual de ativos sobre essa soma. Clique na fatia para filtrar.',
     'dashboard.paymentStatusInfo':
-      'Cobranças com vencimento no mês corrente, por status: pagas, pendentes (ainda no prazo), atrasadas (vencimento já passou e não pagas) e canceladas. Clique na fatia para abrir Contas A Receber com o filtro correspondente.',
+      'Todos os títulos, de qualquer mês: pagos, pendentes (ainda no prazo), atrasadas (vencimento já passou e não pagas) e canceladas. Clique na fatia para abrir Contas a Receber com o filtro correspondente.',
+    'dashboard.paymentStatusCurrentMonthInfo':
+      'Títulos com vencimento no mês corrente: pagos, pendentes (ainda no prazo), atrasadas (vencimento já passou e não pagas) e canceladas. Clique na fatia para abrir Contas a Receber filtrado pelo mês e pelo status.',
     'dashboard.backupStatusInfo':
       'Janela recente: por dia, barras empilham sucesso e falha nos eventos de backup. Use a legenda para ocultar fatias. Clique em um segmento para listar equipamentos.',
     'dashboard.chartReceivedInfo':
@@ -1683,8 +1686,6 @@ const ptBR: TranslationKeys = {
     'login.twoFactorEmailSent': 'Código enviado por e-mail.',
     'login.twoFactorEmailSentTo': 'Código enviado para ${email}.',
     'login.twoFactorPasskey': 'Usar chave de acesso',
-    'login.companyLogoAlt': 'Logo da empresa',
-    'login.companyLogoAltNamed': 'Logo de ${name}',
     'login.forgotPassword': 'Esqueci minha senha',
     'login.forgotTitle': 'Recuperar senha',
     'login.forgotHelp': 'Informe o e-mail de recuperação (validado em Conf. do usuário). O link será enviado só para esse endereço.',

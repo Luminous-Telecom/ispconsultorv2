@@ -27,7 +27,9 @@ export const useDashboardChartClicks = () => {
     const fv = item.filterValue as string | undefined;
     if (!fv) return;
     openModal('contas-receber' as ModalType, {
-      initialFilters: buildDashboardPaymentStatusSliceFilters(fv),
+      initialFilters: buildDashboardPaymentStatusSliceFilters(fv, {
+        mesAtual: item.periodo === 'mesAtual',
+      }),
     });
   }, [openModal]);
 

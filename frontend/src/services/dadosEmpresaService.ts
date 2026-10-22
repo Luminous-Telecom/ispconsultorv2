@@ -97,7 +97,7 @@ export class DadosEmpresaService {
     };
   }
 
-  // Buscar dados públicos da empresa (logo e nome — para login e central do assinante)
+  // Buscar dados públicos da empresa (logo e nome — central do assinante)
   static async getPublic(): Promise<Partial<DadosEmpresa>> {
     const response = await publicApiClient.get<{ success: boolean; data: Partial<DadosEmpresa> }>('/dados-empresa/public');
     return response.data.data || {};

@@ -34,6 +34,13 @@ export interface DashboardStatsGraficos {
     vencidos: number;
     cancelados: number;
   };
+  /** Títulos com vencimento no mês calendário corrente. */
+  statusPagamentoMesAtual: {
+    pagos: number;
+    pendentes: number;
+    vencidos: number;
+    cancelados: number;
+  };
   crescimentoClientes: Array<{ mes: string; valor: number; data_inicio: string; data_fim: string }>;
   clientesPorPlano: Array<{ plano_id: number; nome_plano: string; value: number }>;
   totais: {
@@ -75,6 +82,26 @@ function parseDataLabelToRange(label: string): { data_inicio: string; data_fim: 
   if (isNaN(d.getTime())) return null;
   const iso = formatDateISOForAPI(d) || '';
   return { data_inicio: iso, data_fim: iso };
+}
+
+/** Ano-mês civil do vencimento (prefixo YYYY-MM), sem deslocar o dia por fuso. */
+export function anoMesVencimento(dataVencimento: string | Date | null | undefined): string | null {
+  if (typeof dataVencimento === 'string') {
+    const match = dataVencimento.match(/^(\d{4})-(\d{2})-\d{2}/);
+    if (match) return `${match[1]}-${match[2]}`;
+  }
+  if (dataVencimento instanceof Date && !Number.isNaN(dataVencimento.getTime())) {
+    return dataVencimento.toISOString().slice(0, 7);
+  }
+  return null;
+}
+
+export function isVencimentoNoMesAtual(
+  dataVencimento: string | Date | null | undefined,
+  refDate: Date = new Date()
+): boolean {
+  const alvo = `${refDate.getFullYear()}-${String(refDate.getMonth() + 1).padStart(2, '0')}`;
+  return anoMesVencimento(dataVencimento) === alvo;
 }
 
 function computeStatusPagamento(
@@ -201,6 +228,9 @@ export function buildErpDashboardStatsGraficos(input: BuildErpDashboardGraficosI
   const taxaPagamento = totalTitulosTodos > 0 ? (titulosPagos / totalTitulosTodos) * 100 : 0;
 
   const statusPagamento = computeStatusPagamento(titulosTodos);
+  const statusPagamentoMesAtual = computeStatusPagamento(
+    titulosTodos.filter((titulo) => isVencimentoNoMesAtual(titulo.data_vencimento))
+  );
   const crescimentoClientes = computeCrescimentoClientes(clientesTodos);
   const clientesPorPlano = computeClientesPorPlano(planos, contratosParaPlano).sort((a, b) => b.value - a.value);
 
@@ -279,6 +309,7 @@ export function buildErpDashboardStatsGraficos(input: BuildErpDashboardGraficosI
       taxaPagamento,
     },
     statusPagamento,
+    statusPagamentoMesAtual,
     crescimentoClientes,
     clientesPorPlano,
     totais: {
