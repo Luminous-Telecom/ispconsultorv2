@@ -901,7 +901,7 @@ $truncate-widths: (
     }
 
     &:disabled,
-    &[readonly] {
+    &[readonly]:not([data-autofill-guard]) {
       background-color: var(--bg-secondary);
     }
   }

@@ -332,8 +332,9 @@
     }
   }
 
-  /* Readonly simples e datas: largura pelo conteúdo (ignora .input-group / EntitySelect) */
-  > .form-field-control:has(> input.form-control[readonly]),
+  /* Readonly de verdade e datas: largura pelo conteúdo.
+     data-autofill-guard é editável (bloqueio temporário) e permanece na largura cheia. */
+  > .form-field-control:has(> input.form-control[readonly]:not([data-autofill-guard])),
   > .form-field-control:has(
       > input.form-control:is([type='date'], [type='datetime-local'], [type='time'], [type='month'], [type='week'])
     ) {

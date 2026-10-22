@@ -5201,8 +5201,10 @@ input[type='file'].form-control:focus-visible {
   visibility: visible !important;
 }
 
-/* Editável nos modais: fundo distinto do somente leitura */
+/* Editável nos modais: fundo distinto do somente leitura.
+   data-autofill-guard continua readonly no DOM, mas é campo editável. */
 .form-modal-simple .form-control:not([readonly]):not(:disabled):not(.entity-select-input),
+.form-modal-simple .form-control[data-autofill-guard]:not(:disabled):not(.entity-select-input),
 .form-modal-simple .form-select:not(:disabled) {
   background-color: var(--input-bg) !important;
   color: var(--text-primary) !important;
@@ -5220,9 +5222,9 @@ input[type='file'].form-control:focus-visible {
   cursor: not-allowed;
 }
 
-/* Readonly estático (não .entity-select-input — listagem/busca) */
-.form-control[readonly]:not(.entity-select-input),
-.form-control[readonly]:not(.entity-select-input):focus {
+/* Readonly estático (não .entity-select-input — listagem/busca; não o bloqueio de autofill) */
+.form-control[readonly]:not(.entity-select-input):not([data-autofill-guard]),
+.form-control[readonly]:not(.entity-select-input):not([data-autofill-guard]):focus {
   background-color: var(--input-readonly-bg) !important;
   color: var(--input-readonly-color) !important;
   -webkit-text-fill-color: var(--input-readonly-color) !important;

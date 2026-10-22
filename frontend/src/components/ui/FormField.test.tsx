@@ -47,9 +47,27 @@ describe('FormField', () => {
     const input = screen.getByRole('textbox', { name: 'Razão social' }) as HTMLInputElement;
     expect(input.getAttribute('autocomplete')).toBe('off');
     expect(input.readOnly).toBe(true);
+    expect(input.hasAttribute('data-autofill-guard')).toBe(true);
 
     fireEvent.focus(input);
     expect(input.readOnly).toBe(false);
+    expect(input.hasAttribute('data-autofill-guard')).toBe(false);
+  });
+
+  it('campo somente leitura de verdade não usa a marca de editável', () => {
+    renderField(
+      <FormField
+        name="numero"
+        label="Número"
+        value="10"
+        readOnly
+        onChange={jest.fn()}
+      />,
+    );
+
+    const input = screen.getByRole('textbox', { name: 'Número' }) as HTMLInputElement;
+    expect(input.readOnly).toBe(true);
+    expect(input.hasAttribute('data-autofill-guard')).toBe(false);
   });
 
   it('mantém autocomplete de senha nova quando o campo pede', () => {

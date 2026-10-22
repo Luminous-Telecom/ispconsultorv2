@@ -22,8 +22,10 @@ describe('EntitySelectField', () => {
     const input = screen.getByTitle('Digite o ID') as HTMLInputElement;
     expect(input.getAttribute('autocomplete')).toBe('off');
     expect(input.readOnly).toBe(true);
+    expect(input.hasAttribute('data-autofill-guard')).toBe(true);
 
     fireEvent.focus(input);
     expect(input.readOnly).toBe(false);
+    expect(input.hasAttribute('data-autofill-guard')).toBe(false);
   });
 });

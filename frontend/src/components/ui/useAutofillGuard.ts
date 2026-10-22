@@ -30,17 +30,22 @@ export function useAutofillGuard(enabled: boolean, readOnly: boolean) {
     [enabled, readOnly]
   );
 
+  const isLocked = enabled && !readOnly && !isUnlocked;
+
   return {
     enabled,
-    readOnly: readOnly || (enabled && !isUnlocked),
+    readOnly: readOnly || isLocked,
     unlock,
-    domProps: enabled
-      ? {
-          autoComplete: 'off' as const,
-          'data-1p-ignore': 'true',
-          'data-lpignore': 'true',
-          'data-form-type': 'other',
-        }
-      : {},
+    domProps: {
+      ...(enabled
+        ? {
+            autoComplete: 'off' as const,
+            'data-1p-ignore': 'true',
+            'data-lpignore': 'true',
+            'data-form-type': 'other',
+          }
+        : {}),
+      ...(isLocked ? { 'data-autofill-guard': '' } : {}),
+    },
   };
 }
