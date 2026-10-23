@@ -5,7 +5,35 @@ jest.mock('../../db/prisma', () => ({
 }));
 
 import { prisma } from '../../db/prisma';
-import { registrarOperacaoDelete } from './blockdomiPrisma';
+import { plainBlockdomi, registrarOperacaoDelete } from './blockdomiPrisma';
+
+describe('plainBlockdomi', () => {
+  it('expõe versão e número SEI para a listagem', () => {
+    const plain = plainBlockdomi({
+      id: 137954,
+      data_inicio_bloqueio: new Date('2026-10-14T00:00:00.000Z'),
+      data_fim_bloqueio: null,
+      blockdomi_versoes: { numero: '2026101412' },
+      blockdomi_numeros_sei_anatel: { numero: '16430998' },
+    }, true);
+
+    expect(plain.versao).toBe('2026101412');
+    expect(plain.numero_sei_anatel).toBe('16430998');
+  });
+
+  it('deixa versão e SEI vazios quando o domínio não tem vínculo', () => {
+    const plain = plainBlockdomi({
+      id: 1,
+      data_inicio_bloqueio: null,
+      data_fim_bloqueio: null,
+      blockdomi_versoes: null,
+      blockdomi_numeros_sei_anatel: null,
+    }, true);
+
+    expect(plain.versao).toBeNull();
+    expect(plain.numero_sei_anatel).toBeNull();
+  });
+});
 
 describe('registrarOperacaoDelete', () => {
   beforeEach(() => {

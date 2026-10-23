@@ -91,6 +91,8 @@ export function plainBlockdomi<T extends BlockdomiRow>(row: T, withRefs: boolean
   if (withRefs) {
     plain.versaoRef = blockdomi_versoes ? { numero: blockdomi_versoes.numero } : null;
     plain.numeroSeiRef = blockdomi_numeros_sei_anatel ? { numero: blockdomi_numeros_sei_anatel.numero } : null;
+    plain.versao = blockdomi_versoes?.numero ?? null;
+    plain.numero_sei_anatel = blockdomi_numeros_sei_anatel?.numero ?? null;
   }
   return plain as T & Record<string, unknown>;
 }
