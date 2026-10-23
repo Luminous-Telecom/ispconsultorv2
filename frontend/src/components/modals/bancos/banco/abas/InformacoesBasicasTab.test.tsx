@@ -40,13 +40,13 @@ const formData = {
   servidor_whatsapp_cobranca_id: null,
 } as BancoForm;
 
-function renderTab() {
+function renderTab(data: BancoForm = formData) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const handleInputChange = jest.fn();
   render(
     <QueryClientProvider client={client}>
       <InformacoesBasicasTab
-        formData={formData}
+        formData={data}
         errors={{}}
         handleInputChange={handleInputChange}
         isPending={false}
@@ -85,5 +85,16 @@ describe('InformacoesBasicasTab', () => {
     fireEvent.click(await screen.findByText('SMTP principal'));
     fireEvent.click(screen.getByRole('button', { name: 'actions.insert' }));
     expect(handleInputChange).toHaveBeenCalledWith('servidor_email_cobranca_id', 3);
+  });
+
+  it('mostra o nome do servidor quando o id veio como texto', async () => {
+    renderTab({
+      ...formData,
+      servidor_email_cobranca_id: '3' as unknown as number,
+      servidor_whatsapp_cobranca_id: '8' as unknown as number,
+    });
+
+    expect(await screen.findByDisplayValue('SMTP principal')).toBeTruthy();
+    expect(await screen.findByDisplayValue('WhatsApp cobrança')).toBeTruthy();
   });
 });

@@ -266,6 +266,17 @@ export const useBancoForm = ({
 
   // Handler de mudança de input (mantido para compatibilidade)
   const handleInputChange = (field: keyof BancoForm, value: FormValue) => {
+    const nullableIdFields: (keyof BancoForm)[] = [
+      'servidor_email_cobranca_id',
+      'servidor_whatsapp_cobranca_id',
+    ];
+    if (nullableIdFields.includes(field)) {
+      const bruto = value === null || value === undefined || value === '' ? null : Number(value);
+      const id = bruto != null && Number.isInteger(bruto) && bruto > 0 ? bruto : null;
+      setValue(field as keyof ZodBancoFormData, id as never, { shouldValidate: true });
+      return;
+    }
+
     // Normalizar o valor baseado no tipo esperado do campo
     let normalizedValue: string | boolean | number;
     

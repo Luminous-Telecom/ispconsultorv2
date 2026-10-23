@@ -28,4 +28,18 @@ describe('EntitySelectField', () => {
     expect(input.readOnly).toBe(false);
     expect(input.hasAttribute('data-autofill-guard')).toBe(false);
   });
+
+  it('mostra o nome quando o id selecionado chega como texto', () => {
+    renderField(
+      <EntitySelectField
+        label="Servidor"
+        value={'1' as unknown as number}
+        onChange={jest.fn()}
+        entities={[{ id: 1, nome: 'SMTP principal' }]}
+      />,
+    );
+
+    expect(screen.getByDisplayValue('1')).toBeTruthy();
+    expect(screen.getByDisplayValue('SMTP principal')).toBeTruthy();
+  });
 });

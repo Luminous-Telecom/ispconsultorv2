@@ -97,7 +97,7 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = (props) => {
 
   const selectedNome = stringIdMode
     ? (entities as StringEntityItem[]).find((e) => String(e.id) === String(props.value))?.nome
-    : (entities as EntityItem[]).find((e) => e.id === props.value)?.nome;
+    : (entities as EntityItem[]).find((e) => Number(e.id) === Number(props.value))?.nome;
 
   const handleIdChange = (raw: string) => {
     if (stringIdMode) {
