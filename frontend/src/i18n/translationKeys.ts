@@ -459,8 +459,14 @@ export interface TranslationKeys {
   'blockdomi.syncSeiAnatelError': string;
   'blockdomi.downloadPdfs': string;
   'blockdomi.downloadPdfsConfirm': string;
+  'blockdomi.downloadPdfsStarted': string;
+  'blockdomi.downloadPdfsProgressTitle': string;
+  'blockdomi.downloadPdfsReading': string;
+  'blockdomi.downloadPdfsProgress': string;
   'blockdomi.downloadPdfsDone': string;
   'blockdomi.downloadPdfsPartial': string;
+  'blockdomi.downloadPdfsError': string;
+  'blockdomi.downloadPdfsSocket': string;
   'blockdomi.seiExtractSuccess': string;
   'blockdomi.seiExtractError': string;
   'blockdomi.seiExtractNoPdf': string;

@@ -44,6 +44,18 @@ export interface BaixarPdfsOficioResult {
 
 export type BaixarPdfFn = (url: string) => Promise<Buffer>;
 
+export interface ProgressoBaixarPdfs {
+  fase: 'lendo' | 'baixando';
+  total: number;
+  processados: number;
+  pdfsBaixados: number;
+  pdfsJaLocais: number;
+  registrosAtualizados: number;
+  falhas: number;
+  ignoradosNaoPdf: number;
+  atual: string | null;
+}
+
 export function extrairUrlsDeCampo(valor: string | null | undefined): string[] {
   if (!valor?.trim()) return [];
   return valor.split(',').map((parte) => parte.trim()).filter((parte) => parte.length > 0);
@@ -169,11 +181,26 @@ export class BaixarPdfsBlockdomiService {
     publicBaseUrl: string;
     baixar?: BaixarPdfFn;
     diretorio?: string;
+    onProgresso?: (progresso: ProgressoBaixarPdfs) => void;
   }): Promise<BaixarPdfsOficioResult> {
     const publicBaseUrl = opts.publicBaseUrl.replace(/\/$/, '');
     const baixar = opts.baixar ?? baixarPdfPadrao;
     const diretorio = opts.diretorio ?? resolveArquivosPath('blockdomi');
+    const notificar = (progresso: ProgressoBaixarPdfs) => {
+      opts.onProgresso?.(progresso);
+    };
     await fs.mkdir(diretorio, { recursive: true });
+    notificar({
+      fase: 'lendo',
+      total: 0,
+      processados: 0,
+      pdfsBaixados: 0,
+      pdfsJaLocais: 0,
+      registrosAtualizados: 0,
+      falhas: 0,
+      ignoradosNaoPdf: 0,
+      atual: null,
+    });
 
     const urls = new Set<string>();
     for (const tabela of TABELAS) {
@@ -194,10 +221,27 @@ export class BaixarPdfsBlockdomiService {
       falhas: 0,
       ignoradosNaoPdf: 0,
     };
+    let processados = 0;
+    const notificarAndamento = (atual: string | null) => {
+      notificar({
+        fase: 'baixando',
+        total: urls.size,
+        processados,
+        pdfsBaixados: resultado.pdfsBaixados,
+        pdfsJaLocais: resultado.pdfsJaLocais,
+        registrosAtualizados: resultado.registrosAtualizados,
+        falhas: resultado.falhas,
+        ignoradosNaoPdf: resultado.ignoradosNaoPdf,
+        atual,
+      });
+    };
+    notificarAndamento(null);
 
     for (const url of urls) {
       if (urlJaEhDesteServidor(url, publicBaseUrl)) {
         resultado.pdfsJaLocais += 1;
+        processados += 1;
+        notificarAndamento(url);
         continue;
       }
 
@@ -217,6 +261,8 @@ export class BaixarPdfsBlockdomiService {
           const buffer = await baixar(url);
           if (!bufferEhPdf(buffer)) {
             resultado.ignoradosNaoPdf += 1;
+            processados += 1;
+            notificarAndamento(url);
             continue;
           }
           await fs.writeFile(destino, buffer);
@@ -228,8 +274,12 @@ export class BaixarPdfsBlockdomiService {
           resultado.registrosAtualizados += await atualizarCampoExato(tabela, 'link_planilha_dominios', url, novaUrl);
           resultado.registrosAtualizados += await atualizarJustica(tabela, url, novaUrl);
         }
+        processados += 1;
+        notificarAndamento(url);
       } catch (error) {
         resultado.falhas += 1;
+        processados += 1;
+        notificarAndamento(url);
         logger.warn('Falha ao baixar PDF do Blockdomi', {
           url,
           error: error instanceof Error ? error.message : 'Erro desconhecido',
@@ -240,4 +290,125 @@ export class BaixarPdfsBlockdomiService {
     logger.info('PDFs do Blockdomi gravados no servidor', resultado);
     return resultado;
   }
+}
+
+export type EstadoBaixarPdfs = 'ocioso' | 'executando' | 'concluido' | 'erro';
+
+export interface StatusBaixarPdfs {
+  estado: EstadoBaixarPdfs;
+  iniciadoEm: string | null;
+  concluidoEm: string | null;
+  resultado: BaixarPdfsOficioResult | null;
+  erro: string | null;
+  progresso: ProgressoBaixarPdfs;
+}
+
+type ExecutarBaixarPdfs = typeof BaixarPdfsBlockdomiService.executar;
+
+const progressoInicial = (): ProgressoBaixarPdfs => ({
+  fase: 'lendo',
+  total: 0,
+  processados: 0,
+  pdfsBaixados: 0,
+  pdfsJaLocais: 0,
+  registrosAtualizados: 0,
+  falhas: 0,
+  ignoradosNaoPdf: 0,
+  atual: null,
+});
+
+const statusInicial = (): StatusBaixarPdfs => ({
+  estado: 'ocioso',
+  iniciadoEm: null,
+  concluidoEm: null,
+  resultado: null,
+  erro: null,
+  progresso: progressoInicial(),
+});
+
+let geracaoBaixarPdfs = 0;
+let baixarPdfsEmExecucao = false;
+let statusBaixarPdfs: StatusBaixarPdfs = statusInicial();
+
+export function obterStatusBaixarPdfs(): StatusBaixarPdfs {
+  return {
+    ...statusBaixarPdfs,
+    resultado: statusBaixarPdfs.resultado ? { ...statusBaixarPdfs.resultado } : null,
+    progresso: { ...statusBaixarPdfs.progresso },
+  };
+}
+
+export function resetBaixarPdfsJob(): void {
+  geracaoBaixarPdfs += 1;
+  baixarPdfsEmExecucao = false;
+  statusBaixarPdfs = statusInicial();
+}
+
+/**
+ * Dispara o download e devolve na hora. A conexão HTTP não espera os PDFs,
+ * porque o proxy (Cloudflare) encerra por volta de 100 segundos com 524.
+ */
+export function iniciarBaixarPdfs(
+  opts: Parameters<ExecutarBaixarPdfs>[0],
+  executar: ExecutarBaixarPdfs = (entrada) => BaixarPdfsBlockdomiService.executar(entrada),
+  hooks?: {
+    aoAtualizar?: (status: StatusBaixarPdfs) => void;
+    aoConcluir?: (resultado: BaixarPdfsOficioResult) => void;
+  }
+): { iniciado: boolean; status: StatusBaixarPdfs } {
+  if (baixarPdfsEmExecucao) {
+    return { iniciado: false, status: obterStatusBaixarPdfs() };
+  }
+
+  const geracao = geracaoBaixarPdfs;
+  baixarPdfsEmExecucao = true;
+  statusBaixarPdfs = {
+    estado: 'executando',
+    iniciadoEm: new Date().toISOString(),
+    concluidoEm: null,
+    resultado: null,
+    erro: null,
+    progresso: progressoInicial(),
+  };
+  hooks?.aoAtualizar?.(obterStatusBaixarPdfs());
+
+  void executar({
+    ...opts,
+    onProgresso: (progresso) => {
+      if (geracao !== geracaoBaixarPdfs) return;
+      statusBaixarPdfs = { ...statusBaixarPdfs, progresso };
+      hooks?.aoAtualizar?.(obterStatusBaixarPdfs());
+    },
+  })
+    .then((resultado) => {
+      if (geracao !== geracaoBaixarPdfs) return;
+      statusBaixarPdfs = {
+        ...statusBaixarPdfs,
+        estado: 'concluido',
+        iniciadoEm: statusBaixarPdfs.iniciadoEm,
+        concluidoEm: new Date().toISOString(),
+        resultado,
+        erro: null,
+      };
+      baixarPdfsEmExecucao = false;
+      hooks?.aoAtualizar?.(obterStatusBaixarPdfs());
+      hooks?.aoConcluir?.(resultado);
+    })
+    .catch((error: unknown) => {
+      if (geracao !== geracaoBaixarPdfs) return;
+      const mensagem = error instanceof Error ? error.message : 'Erro ao baixar PDFs do Blockdomi';
+      statusBaixarPdfs = {
+        ...statusBaixarPdfs,
+        estado: 'erro',
+        iniciadoEm: statusBaixarPdfs.iniciadoEm,
+        concluidoEm: new Date().toISOString(),
+        resultado: null,
+        erro: mensagem,
+      };
+      baixarPdfsEmExecucao = false;
+      hooks?.aoAtualizar?.(obterStatusBaixarPdfs());
+      logger.error('Falha no download de PDFs do Blockdomi', { error: mensagem });
+    });
+
+  return { iniciado: true, status: obterStatusBaixarPdfs() };
 }

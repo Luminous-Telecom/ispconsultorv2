@@ -27,6 +27,33 @@ class DominioServiceClass extends BaseService<Dominio, CreateDominio, UpdateDomi
 
 const dominioServiceInstance = new DominioServiceClass();
 
+export type BaixarPdfsBlockdomiResult = {
+  pdfsBaixados: number;
+  pdfsJaLocais: number;
+  registrosAtualizados: number;
+  falhas: number;
+  ignoradosNaoPdf: number;
+};
+
+export type ProgressoBaixarPdfsBlockdomi = {
+  fase: 'lendo' | 'baixando';
+  total: number;
+  processados: number;
+  pdfsBaixados: number;
+  pdfsJaLocais: number;
+  registrosAtualizados: number;
+  falhas: number;
+  ignoradosNaoPdf: number;
+  atual: string | null;
+};
+
+export type StatusBaixarPdfsBlockdomi = {
+  estado: 'ocioso' | 'executando' | 'concluido' | 'erro';
+  resultado: BaixarPdfsBlockdomiResult | null;
+  erro: string | null;
+  progresso: ProgressoBaixarPdfsBlockdomi;
+};
+
 export class DominioService {
   static async list(filters: DominioFilters = {}): Promise<PaginatedResponse<Dominio>> {
     return dominioServiceInstance.list(filters);
@@ -85,26 +112,20 @@ export class DominioService {
     return data ?? { updated: 0 };
   }
 
-  /** Sincroniza número SEI a partir dos PDFs de ofício Anatel (uma extração por link único). */
-  static async baixarPdfs(): Promise<{
-    pdfsBaixados: number;
-    pdfsJaLocais: number;
-    registrosAtualizados: number;
-    falhas: number;
-    ignoradosNaoPdf: number;
-  }> {
+  /**
+   * Dispara o download. O andamento e o fim chegam pelo socket blockdomi:pdfs.
+   */
+  static async baixarPdfs(): Promise<StatusBaixarPdfsBlockdomi> {
     const { defaultApiClient } = await import('./core');
-    const response: ApiResponse<{
-      pdfsBaixados: number;
-      pdfsJaLocais: number;
-      registrosAtualizados: number;
-      falhas: number;
-      ignoradosNaoPdf: number;
-    }> = await defaultApiClient.post('/dominios/baixar-pdfs', {}, { timeout: 1800000 });
-    if (!response.success || response.data == null) {
-      throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.BLOCKDOMI_DOWNLOAD_PDFS_ERROR));
+    const inicio: ApiResponse<StatusBaixarPdfsBlockdomi> = await defaultApiClient.post(
+      '/dominios/baixar-pdfs',
+      {},
+      { timeout: 60000 }
+    );
+    if (!inicio.success || inicio.data == null) {
+      throw new Error(resolveServiceErrorMessage(inicio.message, CONTEXT_ERROR_MESSAGES.BLOCKDOMI_DOWNLOAD_PDFS_ERROR));
     }
-    return response.data;
+    return inicio.data;
   }
 
   static async sincronizarSeiAnatel(): Promise<SincronizarSeiAnatelDominiosResponse> {

@@ -5,6 +5,7 @@ const router = Router();
 
 // Rotas para domínios
 router.get('/', DominioController.list);
+router.get('/baixar-pdfs/status', DominioController.baixarPdfsStatus);
 router.get('/:id', DominioController.getById);
 router.post('/bulk', DominioController.bulkCreate);
 router.post('/bulk-update', DominioController.bulkUpdate);

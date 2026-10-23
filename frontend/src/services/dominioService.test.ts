@@ -43,6 +43,37 @@ describe('DominioService', () => {
     expect(String(getHttp().put.mock.calls[0][0])).toContain('4');
   });
 
+  it('dispara o download e devolve o status inicial sem esperar os PDFs', async () => {
+    getHttp().post.mockResolvedValue(ok({
+      estado: 'executando',
+      resultado: null,
+      erro: null,
+      progresso: {
+        fase: 'lendo',
+        total: 0,
+        processados: 0,
+        pdfsBaixados: 0,
+        pdfsJaLocais: 0,
+        registrosAtualizados: 0,
+        falhas: 0,
+        ignoradosNaoPdf: 0,
+        atual: null,
+      },
+    }));
+
+    const status = await DominioService.baixarPdfs();
+
+    expect(String(getHttp().post.mock.calls[0][0])).toContain('/dominios/baixar-pdfs');
+    expect(getHttp().get).not.toHaveBeenCalled();
+    expect(status.estado).toBe('executando');
+    expect(status.progresso.fase).toBe('lendo');
+  });
+
+  it('não abre o download quando o servidor recusa', async () => {
+    getHttp().post.mockResolvedValue({ success: false, message: 'sem sessão' });
+    await expect(DominioService.baixarPdfs()).rejects.toThrow('sem sessão');
+  });
+
   it('id inexistente não devolve registro gravado', async () => {
     getHttp().get.mockResolvedValue(ok(null));
     try {

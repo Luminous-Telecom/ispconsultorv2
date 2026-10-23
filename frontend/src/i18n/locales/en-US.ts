@@ -479,10 +479,17 @@ const enUS: TranslationKeys = {
     'blockdomi.syncSeiAnatelError': 'Could not complete SEI synchronization.',
     'blockdomi.downloadPdfs': 'Download PDFs',
     'blockdomi.downloadPdfsConfirm':
-      'Download to this server every warrant PDF that still points to another address and update the links? This may take a while.',
+      'Download to this server every warrant PDF that still points to another address and update the links? The server keeps downloading and this screen notifies you when it finishes.',
+    'blockdomi.downloadPdfsStarted':
+      'PDF download is running on this server.',
+    'blockdomi.downloadPdfsProgressTitle': 'PDF download',
+    'blockdomi.downloadPdfsReading': 'Reading the stored links.',
+    'blockdomi.downloadPdfsProgress': '${processados} of ${total}',
     'blockdomi.downloadPdfsDone':
       '${baixados} PDF(s) saved on this server. ${atualizados} record(s) with updated link. ${locais} PDF(s) were already on this server.',
     'blockdomi.downloadPdfsPartial': 'Warning: ${n} PDF(s) could not be downloaded.',
+    'blockdomi.downloadPdfsError': 'Could not download the PDFs.',
+    'blockdomi.downloadPdfsSocket': 'Could not follow the download. It continues on this server.',
     'blockdomi.seiExtractSuccess': 'SEI number extracted from the PDF.',
     'blockdomi.seiExtractError': 'Could not extract SEI from this PDF.',
     'blockdomi.seiExtractNoPdf': 'Select the Anatel warrant PDF file before extracting the SEI.',

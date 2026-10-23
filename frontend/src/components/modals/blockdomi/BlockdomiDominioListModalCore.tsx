@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDeleteDominio } from 'hooks/useDominios';
-import { DominioService } from 'services/dominioService';
+import { DominioService, type StatusBaixarPdfsBlockdomi } from 'services/dominioService';
 import { useEntityListModal } from 'hooks/useEntityListModal';
 import { Dominio } from 'types';
 import { useI18n } from 'contexts/I18nContext';
@@ -18,6 +18,7 @@ import {
 } from './blockdomiDominioListColumns';
 import { buildBlockdomiOficioBulkActions } from './buildBlockdomiOficioBulkActions';
 import { buildBaixarPdfsBulkAction } from './buildBaixarPdfsBulkAction';
+import BlockdomiBaixarPdfsModal from './BlockdomiBaixarPdfsModal';
 
 const EMPTY_DOMINIO_LIST: Dominio[] = [];
 
@@ -45,6 +46,8 @@ const BlockdomiDominioListModalCore: React.FC<BlockdomiDominioListModalCoreProps
   const [dominiosToBulkEdit, setDominiosToBulkEdit] = useState<Dominio[]>([]);
   const [isSyncingSei, setIsSyncingSei] = useState(false);
   const [isDownloadingPdfs, setIsDownloadingPdfs] = useState(false);
+  const [showBaixarPdfs, setShowBaixarPdfs] = useState(false);
+  const [statusBaixarPdfs, setStatusBaixarPdfs] = useState<StatusBaixarPdfsBlockdomi | null>(null);
 
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
@@ -156,23 +159,27 @@ const BlockdomiDominioListModalCore: React.FC<BlockdomiDominioListModalCoreProps
     if (!window.confirm(t('blockdomi.downloadPdfsConfirm'))) return;
     setIsDownloadingPdfs(true);
     try {
-      const data = await DominioService.baixarPdfs();
-      const base = t('blockdomi.downloadPdfsDone', {
-        baixados: String(data.pdfsBaixados),
-        atualizados: String(data.registrosAtualizados),
-        locais: String(data.pdfsJaLocais),
-      });
-      success(data.falhas > 0 ? `${base} ${t('blockdomi.downloadPdfsPartial', { n: String(data.falhas) })}` : base);
-      refetch();
-      queryClient.invalidateQueries({ queryKey: ['dominios'] });
-      queryClient.invalidateQueries({ queryKey: ['ipv4'] });
-      queryClient.invalidateQueries({ queryKey: ['ipv6'] });
+      const status = await DominioService.baixarPdfs();
+      setStatusBaixarPdfs(status);
+      setShowBaixarPdfs(true);
     } catch (e) {
-      showApiError(e, CONTEXT_ERROR_MESSAGES.BLOCKDOMI_DOWNLOAD_PDFS_ERROR);
-    } finally {
       setIsDownloadingPdfs(false);
+      showApiError(e, CONTEXT_ERROR_MESSAGES.BLOCKDOMI_DOWNLOAD_PDFS_ERROR);
     }
-  }, [t, success, showApiError, refetch, queryClient]);
+  }, [t, showApiError]);
+
+  const handleFecharBaixarPdfs = useCallback(() => {
+    setShowBaixarPdfs(false);
+    setIsDownloadingPdfs(false);
+  }, []);
+
+  const handleBaixarPdfsFinalizado = useCallback((status: StatusBaixarPdfsBlockdomi) => {
+    if (status.estado !== 'concluido') return;
+    refetch();
+    queryClient.invalidateQueries({ queryKey: ['dominios'] });
+    queryClient.invalidateQueries({ queryKey: ['ipv4'] });
+    queryClient.invalidateQueries({ queryKey: ['ipv6'] });
+  }, [refetch, queryClient]);
 
   const handleSincronizarSeiAnatel = useCallback(async () => {
     if (!window.confirm(t('blockdomi.syncSeiAnatelConfirm'))) return;
@@ -377,6 +384,12 @@ const BlockdomiDominioListModalCore: React.FC<BlockdomiDominioListModalCoreProps
         }}
         dominios={dominiosToBulkEdit}
         onSuccess={invalidate}
+      />
+      <BlockdomiBaixarPdfsModal
+        show={showBaixarPdfs}
+        inicial={statusBaixarPdfs}
+        onClose={handleFecharBaixarPdfs}
+        onFinished={handleBaixarPdfsFinalizado}
       />
       <ImprimirModal
         show={auditoria.showPreview}

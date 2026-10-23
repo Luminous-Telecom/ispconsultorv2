@@ -4,10 +4,12 @@ import { logger } from '../utils/logger';
 import { registerSshNamespaces } from './sshManagerSocket';
 import { registerAgentNamespace, registerAgentTerminalNamespace } from './agentSocket';
 import { registerSystemUpdateNamespace } from './systemUpdateSocket';
+import { obterStatusBaixarPdfs, type StatusBaixarPdfs } from '../services/blockdomi/BaixarPdfsBlockdomiService';
 
 let io: SocketIOServer | null = null;
 
 const BLOCKDOMI_LOGS_ROOM = 'blockdomi-logs';
+const BLOCKDOMI_PDFS_ROOM = 'blockdomi-pdfs';
 
 export function setIO(server: SocketIOServer): void {
   io = server;
@@ -29,7 +31,14 @@ export function setIO(server: SocketIOServer): void {
   });
   io.on('connection', (socket) => {
     socket.on('subscribe-blockdomi-logs', () => socket.join(BLOCKDOMI_LOGS_ROOM));
-    socket.on('disconnect', () => socket.leave(BLOCKDOMI_LOGS_ROOM));
+    socket.on('subscribe-blockdomi-pdfs', () => {
+      socket.join(BLOCKDOMI_PDFS_ROOM);
+      socket.emit('blockdomi:pdfs', obterStatusBaixarPdfs());
+    });
+    socket.on('disconnect', () => {
+      socket.leave(BLOCKDOMI_LOGS_ROOM);
+      socket.leave(BLOCKDOMI_PDFS_ROOM);
+    });
   });
 
   registerSshNamespaces(io);
@@ -48,5 +57,14 @@ export function emitBlockdomiLog(log: Record<string, unknown>): void {
     io.to(BLOCKDOMI_LOGS_ROOM).emit('blockdomi:log', log);
   } catch (err) {
     logger.warn('Socket emitBlockdomiLog', { error: err });
+  }
+}
+
+export function emitBlockdomiPdfs(status: StatusBaixarPdfs): void {
+  if (!io) return;
+  try {
+    io.to(BLOCKDOMI_PDFS_ROOM).emit('blockdomi:pdfs', status);
+  } catch (err) {
+    logger.warn('Socket emitBlockdomiPdfs', { error: err });
   }
 }

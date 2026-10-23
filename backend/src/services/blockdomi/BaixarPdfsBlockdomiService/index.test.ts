@@ -6,10 +6,15 @@ import {
   BaixarPdfsBlockdomiService,
   bufferEhPdf,
   extrairUrlsDeCampo,
+  iniciarBaixarPdfs,
   nomeArquivoPdfLocal,
+  obterStatusBaixarPdfs,
+  resetBaixarPdfsJob,
+  type ProgressoBaixarPdfs,
   substituirUrlNoCampo,
   urlJaEhDesteServidor,
   urlPublicaDoPdf,
+  type BaixarPdfsOficioResult,
 } from './index';
 
 jest.mock('../../../db/prisma', () => ({
@@ -155,6 +160,32 @@ describe('BaixarPdfsBlockdomiService.executar', () => {
     await fs.rm(diretorio, { recursive: true, force: true });
   });
 
+  it('informa o progresso a cada PDF', async () => {
+    const diretorio = await fs.mkdtemp(path.join(os.tmpdir(), 'blockdomi-pdf-'));
+    const onProgresso = jest.fn();
+    dominios.findMany.mockResolvedValueOnce([
+      {
+        link_oficio_anatel: 'https://antigo.example/oficio.pdf',
+        link_oficio_justica: null,
+        link_planilha_dominios: null,
+      },
+    ]);
+
+    await BaixarPdfsBlockdomiService.executar({
+      publicBaseUrl: base,
+      diretorio,
+      baixar: async () => Buffer.from('%PDF-1.4 oficio'),
+      onProgresso,
+    });
+
+    expect(onProgresso.mock.calls[0][0].fase).toBe('lendo');
+    const ultimo = onProgresso.mock.calls[onProgresso.mock.calls.length - 1][0];
+    expect(ultimo.total).toBe(1);
+    expect(ultimo.processados).toBe(1);
+    expect(ultimo.pdfsBaixados).toBe(1);
+    await fs.rm(diretorio, { recursive: true, force: true });
+  });
+
   it('mantém o link quando o endereço não devolve PDF', async () => {
     dominios.findMany.mockResolvedValueOnce([
       {
@@ -173,5 +204,86 @@ describe('BaixarPdfsBlockdomiService.executar', () => {
     expect(resultado.ignoradosNaoPdf).toBe(1);
     expect(resultado.registrosAtualizados).toBe(0);
     expect(dominios.updateMany).not.toHaveBeenCalled();
+  });
+});
+
+describe('iniciarBaixarPdfs', () => {
+  const resultadoPronto: BaixarPdfsOficioResult = {
+    pdfsBaixados: 2,
+    pdfsJaLocais: 1,
+    registrosAtualizados: 4,
+    falhas: 0,
+    ignoradosNaoPdf: 0,
+  };
+
+  beforeEach(() => {
+    resetBaixarPdfsJob();
+  });
+
+  it('devolve na hora e não dispara um segundo download enquanto o primeiro roda', async () => {
+    let liberar: (valor: BaixarPdfsOficioResult) => void = () => undefined;
+    const pendente = new Promise<BaixarPdfsOficioResult>((resolve) => {
+      liberar = resolve;
+    });
+    const executar = jest.fn(() => pendente);
+
+    const primeiro = iniciarBaixarPdfs({ publicBaseUrl: 'https://isp.example' }, executar);
+    const segundo = iniciarBaixarPdfs({ publicBaseUrl: 'https://isp.example' }, executar);
+
+    expect(primeiro.iniciado).toBe(true);
+    expect(primeiro.status.estado).toBe('executando');
+    expect(segundo.iniciado).toBe(false);
+    expect(executar).toHaveBeenCalledTimes(1);
+
+    liberar(resultadoPronto);
+    await pendente;
+    await Promise.resolve();
+
+    const fim = obterStatusBaixarPdfs();
+    expect(fim.estado).toBe('concluido');
+    expect(fim.resultado).toEqual(resultadoPronto);
+  });
+
+  it('avisa o andamento e o fim para a tela', async () => {
+    const aoAtualizar = jest.fn();
+    const executar = jest.fn(async (opts: { onProgresso?: (progresso: ProgressoBaixarPdfs) => void }) => {
+      const progresso: ProgressoBaixarPdfs = {
+        fase: 'baixando',
+        total: 2,
+        processados: 1,
+        pdfsBaixados: 1,
+        pdfsJaLocais: 0,
+        registrosAtualizados: 1,
+        falhas: 0,
+        ignoradosNaoPdf: 0,
+        atual: 'https://antigo.example/a.pdf',
+      };
+      opts.onProgresso?.(progresso);
+      return resultadoPronto;
+    });
+
+    iniciarBaixarPdfs({ publicBaseUrl: 'https://isp.example' }, executar, { aoAtualizar });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const estados = aoAtualizar.mock.calls.map((chamada) => chamada[0].estado);
+    expect(estados).toContain('executando');
+    expect(estados[estados.length - 1]).toBe('concluido');
+    expect(obterStatusBaixarPdfs().progresso.processados).toBe(1);
+  });
+
+  it('guarda o erro quando o download falha', async () => {
+    const executar = jest.fn(async () => {
+      throw new Error('disco cheio');
+    });
+
+    const inicio = iniciarBaixarPdfs({ publicBaseUrl: 'https://isp.example' }, executar);
+    expect(inicio.status.estado).toBe('executando');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const fim = obterStatusBaixarPdfs();
+    expect(fim.estado).toBe('erro');
+    expect(fim.erro).toBe('disco cheio');
   });
 });
