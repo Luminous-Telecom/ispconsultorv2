@@ -27,12 +27,31 @@ class DominioServiceClass extends BaseService<Dominio, CreateDominio, UpdateDomi
 
 const dominioServiceInstance = new DominioServiceClass();
 
+export type CodigoMotivoBaixarPdf =
+  | 'http'
+  | 'timeout'
+  | 'link_invalido'
+  | 'tamanho'
+  | 'nao_pdf'
+  | 'rede'
+  | 'desconhecido';
+
+export type MotivoBaixarPdf = {
+  codigo: CodigoMotivoBaixarPdf;
+  detalhe: string | null;
+};
+
+export type OcorrenciaBaixarPdf = MotivoBaixarPdf & {
+  quantidade: number;
+};
+
 export type BaixarPdfsBlockdomiResult = {
   pdfsBaixados: number;
   pdfsJaLocais: number;
   registrosAtualizados: number;
   falhas: number;
   ignoradosNaoPdf: number;
+  ocorrencias: OcorrenciaBaixarPdf[];
 };
 
 export type ProgressoBaixarPdfsBlockdomi = {
@@ -45,6 +64,7 @@ export type ProgressoBaixarPdfsBlockdomi = {
   falhas: number;
   ignoradosNaoPdf: number;
   atual: string | null;
+  motivo: MotivoBaixarPdf | null;
 };
 
 export type StatusBaixarPdfsBlockdomi = {

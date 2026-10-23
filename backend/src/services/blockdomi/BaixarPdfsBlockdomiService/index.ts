@@ -34,12 +34,34 @@ interface RepositorioLinks {
   }): Promise<unknown>;
 }
 
+export const CODIGOS_MOTIVO_BAIXAR_PDF = [
+  'http',
+  'timeout',
+  'link_invalido',
+  'tamanho',
+  'nao_pdf',
+  'rede',
+  'desconhecido',
+] as const;
+
+export type CodigoMotivoBaixarPdf = (typeof CODIGOS_MOTIVO_BAIXAR_PDF)[number];
+
+export interface MotivoBaixarPdf {
+  codigo: CodigoMotivoBaixarPdf;
+  detalhe: string | null;
+}
+
+export interface OcorrenciaBaixarPdf extends MotivoBaixarPdf {
+  quantidade: number;
+}
+
 export interface BaixarPdfsOficioResult {
   pdfsBaixados: number;
   pdfsJaLocais: number;
   registrosAtualizados: number;
   falhas: number;
   ignoradosNaoPdf: number;
+  ocorrencias: OcorrenciaBaixarPdf[];
 }
 
 export type BaixarPdfFn = (url: string) => Promise<Buffer>;
@@ -54,6 +76,7 @@ export interface ProgressoBaixarPdfs {
   falhas: number;
   ignoradosNaoPdf: number;
   atual: string | null;
+  motivo: MotivoBaixarPdf | null;
 }
 
 export function extrairUrlsDeCampo(valor: string | null | undefined): string[] {
@@ -92,6 +115,75 @@ export function nomeArquivoPdfLocal(url: string): string {
 
 export function bufferEhPdf(buffer: Buffer): boolean {
   return buffer.length >= 5 && buffer.subarray(0, 4).equals(Buffer.from('%PDF'));
+}
+
+function detalheSeguro(texto: string): string | null {
+  const primeira = texto.split('\n')[0] ?? '';
+  let limpo = '';
+  for (const char of primeira) {
+    if (char.charCodeAt(0) >= 32) limpo += char;
+  }
+  const linha = limpo.trim();
+  if (!linha) return null;
+  return linha.slice(0, 120);
+}
+
+function nomeErro(error: unknown): string {
+  if (error && typeof error === 'object' && 'name' in error && typeof (error as { name: unknown }).name === 'string') {
+    return (error as { name: string }).name;
+  }
+  return '';
+}
+
+function codigoCausa(error: unknown): string {
+  if (!error || typeof error !== 'object' || !('cause' in error)) return '';
+  const cause = (error as { cause?: unknown }).cause;
+  if (!cause || typeof cause !== 'object' || !('code' in cause)) return '';
+  const code = (cause as { code?: unknown }).code;
+  return typeof code === 'string' ? code : '';
+}
+
+const CODIGOS_REDE = new Set([
+  'ECONNREFUSED',
+  'ENOTFOUND',
+  'ECONNRESET',
+  'ETIMEDOUT',
+  'EAI_AGAIN',
+  'UND_ERR_CONNECT_TIMEOUT',
+  'UND_ERR_SOCKET',
+  'CERT_HAS_EXPIRED',
+  'UNABLE_TO_VERIFY_LEAF_SIGNATURE',
+  'DEPTH_ZERO_SELF_SIGNED_CERT',
+]);
+
+export function classificarFalhaDownload(error: unknown): MotivoBaixarPdf {
+  if (nomeErro(error) === 'AbortError' || codigoCausa(error) === 'ABORT_ERR') {
+    return { codigo: 'timeout', detalhe: null };
+  }
+  const message = error instanceof Error ? error.message : '';
+  if (message === 'Link inválido') return { codigo: 'link_invalido', detalhe: null };
+  const http = message.match(/^Falha ao baixar PDF \((\d{3})\)$/);
+  if (http) return { codigo: 'http', detalhe: http[1] };
+  if (message === 'PDF excede o tamanho máximo permitido') return { codigo: 'tamanho', detalhe: null };
+  if (message === 'fetch failed' || CODIGOS_REDE.has(codigoCausa(error)) || /certificate|getaddrinfo/i.test(message)) {
+    return { codigo: 'rede', detalhe: null };
+  }
+  return { codigo: 'desconhecido', detalhe: detalheSeguro(message) };
+}
+
+export function registrarOcorrencia(lista: OcorrenciaBaixarPdf[], motivo: MotivoBaixarPdf): void {
+  const existente = lista.find((item) => item.codigo === motivo.codigo && item.detalhe === motivo.detalhe);
+  if (existente) {
+    existente.quantidade += 1;
+    return;
+  }
+  lista.push({ codigo: motivo.codigo, detalhe: motivo.detalhe, quantidade: 1 });
+}
+
+export function textoOcorrenciasAuditoria(ocorrencias: OcorrenciaBaixarPdf[]): string {
+  return ocorrencias
+    .map((item) => `${item.codigo}${item.detalhe ? ` ${item.detalhe}` : ''}: ${item.quantidade}`)
+    .join('; ');
 }
 
 export function urlPublicaDoPdf(publicBaseUrl: string, filename: string): string {
@@ -200,6 +292,7 @@ export class BaixarPdfsBlockdomiService {
       falhas: 0,
       ignoradosNaoPdf: 0,
       atual: null,
+      motivo: null,
     });
 
     const urls = new Set<string>();
@@ -220,9 +313,10 @@ export class BaixarPdfsBlockdomiService {
       registrosAtualizados: 0,
       falhas: 0,
       ignoradosNaoPdf: 0,
+      ocorrencias: [],
     };
     let processados = 0;
-    const notificarAndamento = (atual: string | null) => {
+    const notificarAndamento = (atual: string | null, motivo: MotivoBaixarPdf | null) => {
       notificar({
         fase: 'baixando',
         total: urls.size,
@@ -233,15 +327,16 @@ export class BaixarPdfsBlockdomiService {
         falhas: resultado.falhas,
         ignoradosNaoPdf: resultado.ignoradosNaoPdf,
         atual,
+        motivo,
       });
     };
-    notificarAndamento(null);
+    notificarAndamento(null, null);
 
     for (const url of urls) {
       if (urlJaEhDesteServidor(url, publicBaseUrl)) {
         resultado.pdfsJaLocais += 1;
         processados += 1;
-        notificarAndamento(url);
+        notificarAndamento(url, null);
         continue;
       }
 
@@ -260,9 +355,11 @@ export class BaixarPdfsBlockdomiService {
         if (!jaNoDisco) {
           const buffer = await baixar(url);
           if (!bufferEhPdf(buffer)) {
+            const motivo: MotivoBaixarPdf = { codigo: 'nao_pdf', detalhe: null };
+            registrarOcorrencia(resultado.ocorrencias, motivo);
             resultado.ignoradosNaoPdf += 1;
             processados += 1;
-            notificarAndamento(url);
+            notificarAndamento(url, motivo);
             continue;
           }
           await fs.writeFile(destino, buffer);
@@ -275,11 +372,13 @@ export class BaixarPdfsBlockdomiService {
           resultado.registrosAtualizados += await atualizarJustica(tabela, url, novaUrl);
         }
         processados += 1;
-        notificarAndamento(url);
+        notificarAndamento(url, null);
       } catch (error) {
+        const motivo = classificarFalhaDownload(error);
+        registrarOcorrencia(resultado.ocorrencias, motivo);
         resultado.falhas += 1;
         processados += 1;
-        notificarAndamento(url);
+        notificarAndamento(url, motivo);
         logger.warn('Falha ao baixar PDF do Blockdomi', {
           url,
           error: error instanceof Error ? error.message : 'Erro desconhecido',
@@ -315,6 +414,7 @@ const progressoInicial = (): ProgressoBaixarPdfs => ({
   falhas: 0,
   ignoradosNaoPdf: 0,
   atual: null,
+  motivo: null,
 });
 
 const statusInicial = (): StatusBaixarPdfs => ({
@@ -333,8 +433,16 @@ let statusBaixarPdfs: StatusBaixarPdfs = statusInicial();
 export function obterStatusBaixarPdfs(): StatusBaixarPdfs {
   return {
     ...statusBaixarPdfs,
-    resultado: statusBaixarPdfs.resultado ? { ...statusBaixarPdfs.resultado } : null,
-    progresso: { ...statusBaixarPdfs.progresso },
+    resultado: statusBaixarPdfs.resultado
+      ? {
+          ...statusBaixarPdfs.resultado,
+          ocorrencias: statusBaixarPdfs.resultado.ocorrencias.map((item) => ({ ...item })),
+        }
+      : null,
+    progresso: {
+      ...statusBaixarPdfs.progresso,
+      motivo: statusBaixarPdfs.progresso.motivo ? { ...statusBaixarPdfs.progresso.motivo } : null,
+    },
   };
 }
 

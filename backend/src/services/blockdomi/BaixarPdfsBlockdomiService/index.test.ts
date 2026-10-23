@@ -5,6 +5,7 @@ import { prisma } from '../../../db/prisma';
 import {
   BaixarPdfsBlockdomiService,
   bufferEhPdf,
+  classificarFalhaDownload,
   extrairUrlsDeCampo,
   iniciarBaixarPdfs,
   nomeArquivoPdfLocal,
@@ -68,6 +69,15 @@ describe('classificação de URL do Blockdomi', () => {
     );
     expect(bufferEhPdf(Buffer.from('%PDF-1.4'))).toBe(true);
     expect(bufferEhPdf(Buffer.from('<html>'))).toBe(false);
+  });
+
+  it('traduz a falha de download para um motivo curto', () => {
+    const abortado = new Error('The operation was aborted');
+    abortado.name = 'AbortError';
+    expect(classificarFalhaDownload(abortado)).toEqual({ codigo: 'timeout', detalhe: null });
+    expect(classificarFalhaDownload(new Error('Falha ao baixar PDF (404)'))).toEqual({ codigo: 'http', detalhe: '404' });
+    expect(classificarFalhaDownload(new Error('Link inválido'))).toEqual({ codigo: 'link_invalido', detalhe: null });
+    expect(classificarFalhaDownload(new Error('fetch failed'))).toEqual({ codigo: 'rede', detalhe: null });
   });
 });
 
@@ -202,8 +212,35 @@ describe('BaixarPdfsBlockdomiService.executar', () => {
     });
 
     expect(resultado.ignoradosNaoPdf).toBe(1);
+    expect(resultado.ocorrencias).toEqual([{ codigo: 'nao_pdf', detalhe: null, quantidade: 1 }]);
     expect(resultado.registrosAtualizados).toBe(0);
     expect(dominios.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('guarda o motivo quando o endereço remoto recusa o PDF', async () => {
+    const onProgresso = jest.fn();
+    dominios.findMany.mockResolvedValueOnce([
+      {
+        link_oficio_anatel: 'https://antigo.example/oficio.pdf',
+        link_oficio_justica: null,
+        link_planilha_dominios: null,
+      },
+    ]);
+
+    const resultado = await BaixarPdfsBlockdomiService.executar({
+      publicBaseUrl: base,
+      diretorio: os.tmpdir(),
+      baixar: async () => {
+        throw new Error('Falha ao baixar PDF (403)');
+      },
+      onProgresso,
+    });
+
+    expect(resultado.falhas).toBe(1);
+    expect(resultado.ocorrencias).toEqual([{ codigo: 'http', detalhe: '403', quantidade: 1 }]);
+    const ultimo = onProgresso.mock.calls[onProgresso.mock.calls.length - 1][0];
+    expect(ultimo.motivo).toEqual({ codigo: 'http', detalhe: '403' });
+    expect(ultimo.atual).toBe('https://antigo.example/oficio.pdf');
   });
 });
 
@@ -214,6 +251,7 @@ describe('iniciarBaixarPdfs', () => {
     registrosAtualizados: 4,
     falhas: 0,
     ignoradosNaoPdf: 0,
+    ocorrencias: [],
   };
 
   beforeEach(() => {
@@ -257,6 +295,7 @@ describe('iniciarBaixarPdfs', () => {
         falhas: 0,
         ignoradosNaoPdf: 0,
         atual: 'https://antigo.example/a.pdf',
+        motivo: null,
       };
       opts.onProgresso?.(progresso);
       return resultadoPronto;

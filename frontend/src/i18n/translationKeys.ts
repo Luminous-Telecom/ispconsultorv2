@@ -465,6 +465,16 @@ export interface TranslationKeys {
   'blockdomi.downloadPdfsProgress': string;
   'blockdomi.downloadPdfsDone': string;
   'blockdomi.downloadPdfsPartial': string;
+  'blockdomi.downloadPdfsReasonHttp': string;
+  'blockdomi.downloadPdfsReasonTimeout': string;
+  'blockdomi.downloadPdfsReasonInvalid': string;
+  'blockdomi.downloadPdfsReasonSize': string;
+  'blockdomi.downloadPdfsReasonNotPdf': string;
+  'blockdomi.downloadPdfsReasonNetwork': string;
+  'blockdomi.downloadPdfsReasonUnknown': string;
+  'blockdomi.downloadPdfsReasonDetail': string;
+  'blockdomi.downloadPdfsFailLine': string;
+  'blockdomi.downloadPdfsFailReason': string;
   'blockdomi.downloadPdfsError': string;
   'blockdomi.downloadPdfsSocket': string;
   'blockdomi.seiExtractSuccess': string;

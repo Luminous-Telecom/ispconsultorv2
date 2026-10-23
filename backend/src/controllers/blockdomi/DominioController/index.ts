@@ -2,7 +2,7 @@ import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { prisma } from '../../../db/prisma';
 import { DominioService, type SincronizarSeiAnatelDominiosRow } from '../../../services/blockdomi/DominioService';
-import { iniciarBaixarPdfs, obterStatusBaixarPdfs } from '../../../services/blockdomi/BaixarPdfsBlockdomiService';
+import { iniciarBaixarPdfs, obterStatusBaixarPdfs, textoOcorrenciasAuditoria } from '../../../services/blockdomi/BaixarPdfsBlockdomiService';
 import { emitBlockdomiPdfs } from '../../../socket/socketServer';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { registrarAuditoria } from '../../../services/sistema/AuditoriaRegistroService';
@@ -528,10 +528,11 @@ export class DominioController {
       const { iniciado, status } = iniciarBaixarPdfs({ publicBaseUrl }, undefined, {
         aoAtualizar: emitBlockdomiPdfs,
         aoConcluir: (result) => {
+          const motivos = textoOcorrenciasAuditoria(result.ocorrencias);
           void registrarAuditoria(req, {
             acao: 'executar',
             entidade: 'Dominio',
-            observacoes: `PDFs do Blockdomi gravados neste servidor. Baixados: ${result.pdfsBaixados}. Links atualizados: ${result.registrosAtualizados}. Já locais: ${result.pdfsJaLocais}. Falhas: ${result.falhas}. Não PDF: ${result.ignoradosNaoPdf}.`.slice(0, 32000),
+            observacoes: `PDFs do Blockdomi gravados neste servidor. Baixados: ${result.pdfsBaixados}. Links atualizados: ${result.registrosAtualizados}. Já locais: ${result.pdfsJaLocais}. Falhas: ${result.falhas}. Não PDF: ${result.ignoradosNaoPdf}.${motivos ? ` Motivos: ${motivos}.` : ''}`.slice(0, 32000),
             dados_novos: { baixar_pdfs: result },
             rota: '/api/dominios/baixar-pdfs',
             metodo_http: 'POST',
