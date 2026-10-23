@@ -135,6 +135,26 @@ describe('BaixarPdfsBlockdomiService.executar', () => {
     expect(dominios.updateMany).not.toHaveBeenCalled();
   });
 
+  it('lê dezenas de milhares de domínios sem estourar a pilha', async () => {
+    const diretorio = await fs.mkdtemp(path.join(os.tmpdir(), 'blockdomi-pdf-'));
+    const muitas = Array.from({ length: 150_000 }, () => ({
+      link_oficio_anatel: 'https://antigo.example/oficio.pdf',
+      link_oficio_justica: null,
+      link_planilha_dominios: null,
+    }));
+    dominios.findMany.mockResolvedValueOnce(muitas);
+
+    const resultado = await BaixarPdfsBlockdomiService.executar({
+      publicBaseUrl: base,
+      diretorio,
+      baixar: async () => Buffer.from('%PDF-1.4 oficio'),
+    });
+
+    expect(resultado.pdfsBaixados).toBe(1);
+    expect(resultado.falhas).toBe(0);
+    await fs.rm(diretorio, { recursive: true, force: true });
+  });
+
   it('mantém o link quando o endereço não devolve PDF', async () => {
     dominios.findMany.mockResolvedValueOnce([
       {

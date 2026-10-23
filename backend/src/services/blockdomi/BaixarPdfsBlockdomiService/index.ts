@@ -175,7 +175,7 @@ export class BaixarPdfsBlockdomiService {
     const diretorio = opts.diretorio ?? resolveArquivosPath('blockdomi');
     await fs.mkdir(diretorio, { recursive: true });
 
-    const linhas: LinhaLinks[] = [];
+    const urls = new Set<string>();
     for (const tabela of TABELAS) {
       const encontradas = await tabela.findMany({
         select: {
@@ -184,7 +184,7 @@ export class BaixarPdfsBlockdomiService {
           link_planilha_dominios: true,
         },
       });
-      linhas.push(...encontradas);
+      for (const url of coletarUrls(encontradas)) urls.add(url);
     }
 
     const resultado: BaixarPdfsOficioResult = {
@@ -195,7 +195,7 @@ export class BaixarPdfsBlockdomiService {
       ignoradosNaoPdf: 0,
     };
 
-    for (const url of coletarUrls(linhas)) {
+    for (const url of urls) {
       if (urlJaEhDesteServidor(url, publicBaseUrl)) {
         resultado.pdfsJaLocais += 1;
         continue;
