@@ -246,6 +246,7 @@ export const CONTEXT_ERROR_MESSAGES = {
   BLOCKDOMI_IPV6_DELETE_ERROR: 'Erro ao excluir IPv6.',
   BLOCKDOMI_DOMAIN_DELETE_ERROR: 'Erro ao excluir domínios.',
   BLOCKDOMI_SEI_SYNC_ERROR: 'Erro ao sincronizar SEI.',
+  BLOCKDOMI_DOWNLOAD_PDFS_ERROR: 'Erro ao baixar PDFs do Blockdomi.',
   BLOCKDOMI_SEI_EXTRACT_ERROR: 'Não foi possível extrair o SEI deste PDF.',
   BLOCKDOMI_WHOIS_ERROR: 'Erro ao consultar Whois',
   BLOCKDOMI_COPY_ERROR: 'Não foi possível copiar.',

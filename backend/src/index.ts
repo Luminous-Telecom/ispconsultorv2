@@ -236,6 +236,10 @@ app.use(ddosProtectionMiddleware({
       test: (pathname) => /\/api\/modelos-documento\/[^/]+\/pdf/.test(pathname),
       maxProcessingTime: 120_000,
     },
+    {
+      test: (pathname) => /\/api\/dominios\/baixar-pdfs\/?$/.test(pathname),
+      maxProcessingTime: 1_800_000,
+    },
   ],
   skipRoutes: [
     '/health',

@@ -86,6 +86,27 @@ export class DominioService {
   }
 
   /** Sincroniza número SEI a partir dos PDFs de ofício Anatel (uma extração por link único). */
+  static async baixarPdfs(): Promise<{
+    pdfsBaixados: number;
+    pdfsJaLocais: number;
+    registrosAtualizados: number;
+    falhas: number;
+    ignoradosNaoPdf: number;
+  }> {
+    const { defaultApiClient } = await import('./core');
+    const response: ApiResponse<{
+      pdfsBaixados: number;
+      pdfsJaLocais: number;
+      registrosAtualizados: number;
+      falhas: number;
+      ignoradosNaoPdf: number;
+    }> = await defaultApiClient.post('/dominios/baixar-pdfs', {}, { timeout: 1800000 });
+    if (!response.success || response.data == null) {
+      throw new Error(resolveServiceErrorMessage(response.message, CONTEXT_ERROR_MESSAGES.BLOCKDOMI_DOWNLOAD_PDFS_ERROR));
+    }
+    return response.data;
+  }
+
   static async sincronizarSeiAnatel(): Promise<SincronizarSeiAnatelDominiosResponse> {
     const { defaultApiClient } = await import('./core');
     const response: ApiResponse<SincronizarSeiAnatelDominiosResponse> = await defaultApiClient.post(

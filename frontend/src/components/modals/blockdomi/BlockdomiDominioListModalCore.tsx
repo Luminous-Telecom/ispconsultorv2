@@ -17,6 +17,7 @@ import {
   getBlockdomiDominioSearchFields,
 } from './blockdomiDominioListColumns';
 import { buildBlockdomiOficioBulkActions } from './buildBlockdomiOficioBulkActions';
+import { buildBaixarPdfsBulkAction } from './buildBaixarPdfsBulkAction';
 
 const EMPTY_DOMINIO_LIST: Dominio[] = [];
 
@@ -43,6 +44,7 @@ const BlockdomiDominioListModalCore: React.FC<BlockdomiDominioListModalCoreProps
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const [dominiosToBulkEdit, setDominiosToBulkEdit] = useState<Dominio[]>([]);
   const [isSyncingSei, setIsSyncingSei] = useState(false);
+  const [isDownloadingPdfs, setIsDownloadingPdfs] = useState(false);
 
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
@@ -150,6 +152,28 @@ const BlockdomiDominioListModalCore: React.FC<BlockdomiDominioListModalCoreProps
     [clearSelection, refetch, queryClient, success, showApiError]
   );
 
+  const handleBaixarPdfs = useCallback(async () => {
+    if (!window.confirm(t('blockdomi.downloadPdfsConfirm'))) return;
+    setIsDownloadingPdfs(true);
+    try {
+      const data = await DominioService.baixarPdfs();
+      const base = t('blockdomi.downloadPdfsDone', {
+        baixados: String(data.pdfsBaixados),
+        atualizados: String(data.registrosAtualizados),
+        locais: String(data.pdfsJaLocais),
+      });
+      success(data.falhas > 0 ? `${base} ${t('blockdomi.downloadPdfsPartial', { n: String(data.falhas) })}` : base);
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['dominios'] });
+      queryClient.invalidateQueries({ queryKey: ['ipv4'] });
+      queryClient.invalidateQueries({ queryKey: ['ipv6'] });
+    } catch (e) {
+      showApiError(e, CONTEXT_ERROR_MESSAGES.BLOCKDOMI_DOWNLOAD_PDFS_ERROR);
+    } finally {
+      setIsDownloadingPdfs(false);
+    }
+  }, [t, success, showApiError, refetch, queryClient]);
+
   const handleSincronizarSeiAnatel = useCallback(async () => {
     if (!window.confirm(t('blockdomi.syncSeiAnatelConfirm'))) return;
     setIsSyncingSei(true);
@@ -228,6 +252,14 @@ const BlockdomiDominioListModalCore: React.FC<BlockdomiDominioListModalCoreProps
         },
       },
       ...buildBlockdomiOficioBulkActions({ t, resolveItems }),
+      buildBaixarPdfsBulkAction({
+        label: t('blockdomi.downloadPdfs'),
+        variant: bulkBtn.baixar.variant,
+        isPending: isDownloadingPdfs,
+        onDownload: () => {
+          void handleBaixarPdfs();
+        },
+      }),
       {
         label: bulkBtn.sincronizar.label,
         variant: bulkBtn.sincronizar.variant,
@@ -247,7 +279,9 @@ const BlockdomiDominioListModalCore: React.FC<BlockdomiDominioListModalCoreProps
     handleDelete,
     handleBulkDelete,
     handleSincronizarSeiAnatel,
+    handleBaixarPdfs,
     isSyncingSei,
+    isDownloadingPdfs,
     t,
   ]);
 

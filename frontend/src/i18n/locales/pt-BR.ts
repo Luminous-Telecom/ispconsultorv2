@@ -477,6 +477,12 @@ const ptBR: TranslationKeys = {
       '${atualizados} domínio(s) atualizado(s). ${pdfs} PDF(s) distinto(s) processado(s). ${candidatos} domínio(s) elegíveis (sem SEI e com link Anatel).',
     'blockdomi.syncSeiAnatelPartial': 'Atenção: ${n} PDF(s) falharam ou não tiveram SEI extraído.',
     'blockdomi.syncSeiAnatelError': 'Não foi possível concluir a sincronização do SEI.',
+    'blockdomi.downloadPdfs': 'Baixar PDFs',
+    'blockdomi.downloadPdfsConfirm':
+      'Baixar para este servidor todos os PDFs de ofício que ainda apontam para outro endereço e atualizar os links? A operação pode demorar.',
+    'blockdomi.downloadPdfsDone':
+      '${baixados} PDF(s) gravado(s) neste servidor. ${atualizados} registro(s) com link atualizado. ${locais} PDF(s) já estavam neste servidor.',
+    'blockdomi.downloadPdfsPartial': 'Atenção: ${n} PDF(s) não puderam ser baixados.',
     'blockdomi.seiExtractSuccess': 'Número SEI extraído do PDF.',
     'blockdomi.seiExtractError': 'Não foi possível extrair o SEI deste PDF.',
     'blockdomi.seiExtractNoPdf': 'Selecione o arquivo PDF do ofício Anatel antes de extrair o SEI.',

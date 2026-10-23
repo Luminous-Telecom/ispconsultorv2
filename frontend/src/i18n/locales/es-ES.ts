@@ -479,6 +479,12 @@ const esES: TranslationKeys = {
       '${atualizados} dominio(s) actualizado(s). ${pdfs} PDF(s) distinto(s) procesado(s). ${candidatos} dominio(s) elegibles (sin SEI y con enlace Anatel).',
     'blockdomi.syncSeiAnatelPartial': 'Atención: ${n} PDF(s) fallaron o no tuvieron SEI extraído.',
     'blockdomi.syncSeiAnatelError': 'No fue posible completar la sincronización del SEI.',
+    'blockdomi.downloadPdfs': 'Descargar PDFs',
+    'blockdomi.downloadPdfsConfirm':
+      '¿Descargar en este servidor todos los PDF de oficio que aún apuntan a otra dirección y actualizar los enlaces? La operación puede tardar.',
+    'blockdomi.downloadPdfsDone':
+      '${baixados} PDF(s) guardado(s) en este servidor. ${atualizados} registro(s) con enlace actualizado. ${locais} PDF(s) ya estaban en este servidor.',
+    'blockdomi.downloadPdfsPartial': 'Atención: ${n} PDF(s) no pudieron descargarse.',
     'blockdomi.seiExtractSuccess': 'Número SEI extraído del PDF.',
     'blockdomi.seiExtractError': 'No fue posible extraer el SEI de este PDF.',
     'blockdomi.seiExtractNoPdf': 'Seleccione el archivo PDF del oficio Anatel antes de extraer el SEI.',

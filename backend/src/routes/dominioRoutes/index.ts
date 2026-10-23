@@ -10,6 +10,7 @@ router.post('/bulk', DominioController.bulkCreate);
 router.post('/bulk-update', DominioController.bulkUpdate);
 router.post('/bulk-delete', DominioController.bulkDelete);
 router.post('/sincronizar-sei-anatel', DominioController.sincronizarSeiAnatel);
+router.post('/baixar-pdfs', DominioController.baixarPdfs);
 router.post('/', DominioController.create);
 router.put('/:id', DominioController.update);
 router.delete('/:id', DominioController.delete);

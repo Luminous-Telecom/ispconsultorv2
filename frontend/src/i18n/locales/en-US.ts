@@ -477,6 +477,12 @@ const enUS: TranslationKeys = {
       '${atualizados} domain(s) updated. ${pdfs} distinct PDF(s) processed. ${candidatos} eligible domain(s) (no SEI, with Anatel link).',
     'blockdomi.syncSeiAnatelPartial': 'Warning: ${n} PDF(s) failed or had no SEI extracted.',
     'blockdomi.syncSeiAnatelError': 'Could not complete SEI synchronization.',
+    'blockdomi.downloadPdfs': 'Download PDFs',
+    'blockdomi.downloadPdfsConfirm':
+      'Download to this server every warrant PDF that still points to another address and update the links? This may take a while.',
+    'blockdomi.downloadPdfsDone':
+      '${baixados} PDF(s) saved on this server. ${atualizados} record(s) with updated link. ${locais} PDF(s) were already on this server.',
+    'blockdomi.downloadPdfsPartial': 'Warning: ${n} PDF(s) could not be downloaded.',
     'blockdomi.seiExtractSuccess': 'SEI number extracted from the PDF.',
     'blockdomi.seiExtractError': 'Could not extract SEI from this PDF.',
     'blockdomi.seiExtractNoPdf': 'Select the Anatel warrant PDF file before extracting the SEI.',

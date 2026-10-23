@@ -2,6 +2,7 @@ import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
 import { prisma } from '../../../db/prisma';
 import { DominioService, type SincronizarSeiAnatelDominiosRow } from '../../../services/blockdomi/DominioService';
+import { BaixarPdfsBlockdomiService } from '../../../services/blockdomi/BaixarPdfsBlockdomiService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { registrarAuditoria } from '../../../services/sistema/AuditoriaRegistroService';
 import { setAuditData } from '../../../middleware/auditMiddleware';
@@ -493,6 +494,42 @@ export class DominioController {
       sendError(res, error, 'Erro ao sincronizar SEI dos ofícios Anatel', 500, true, {
         context: 'DominioController',
         action: 'sincronizarSeiAnatel'
+      });
+    }
+  }
+
+  /**
+   * Baixa os PDFs de ofício que ainda apontam para outro servidor, grava em /arquivos/blockdomi
+   * e troca o link pela URL deste sistema. O mesmo arquivo é baixado uma vez.
+   */
+  static async baixarPdfs(req: Request, res: Response): Promise<void> {
+    try {
+      const empresaIdAudit = getEmpresaIdOrNull(req) ?? null;
+      const publicBaseUrl = (
+        process.env.BASE_URL ||
+        process.env.APP_URL ||
+        `${req.protocol}://${req.get('host') ?? ''}`
+      ).replace(/\/$/, '');
+      if (!publicBaseUrl) {
+        sendValidationError(res, 'URL pública do sistema não configurada');
+        return;
+      }
+
+      const result = await BaixarPdfsBlockdomiService.executar({ publicBaseUrl });
+      void registrarAuditoria(req, {
+        acao: 'executar',
+        entidade: 'Dominio',
+        observacoes: `PDFs do Blockdomi gravados neste servidor. Baixados: ${result.pdfsBaixados}. Links atualizados: ${result.registrosAtualizados}. Já locais: ${result.pdfsJaLocais}. Falhas: ${result.falhas}. Não PDF: ${result.ignoradosNaoPdf}.`.slice(0, 32000),
+        dados_novos: { baixar_pdfs: result },
+        rota: '/api/dominios/baixar-pdfs',
+        metodo_http: 'POST',
+        empresa_id: empresaIdAudit,
+      });
+      sendSuccess(res, result, 'PDFs do Blockdomi gravados neste servidor.');
+    } catch (error) {
+      sendError(res, error, 'Erro ao baixar PDFs do Blockdomi', 500, true, {
+        context: 'DominioController',
+        action: 'baixarPdfs',
       });
     }
   }
