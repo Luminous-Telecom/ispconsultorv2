@@ -204,7 +204,7 @@ export interface TableActions<T = Record<string, unknown>> {
   refresh: () => void;
   selectAll: () => void;
   clearSelection: () => void;
-  toggleSelection: (item: T) => void;
+  toggleSelection: (item: T, mode?: 'replace' | 'additive') => void;
 }
 
 export interface UseTableOptions<T = Record<string, unknown>> {

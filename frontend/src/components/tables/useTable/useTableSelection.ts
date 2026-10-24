@@ -1,6 +1,27 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { UseTableSelectionOptions } from './types';
 
+export type RowSelectionMode = 'replace' | 'additive';
+
+export function resolveRowSelection<T extends { id: number | string }>(
+  selectedItems: T[],
+  item: T,
+  options: { multiSelect: boolean; mode: RowSelectionMode }
+): T[] {
+  const isSelected = selectedItems.some((selected) => selected.id === item.id);
+  const additive = options.multiSelect && options.mode === 'additive';
+
+  if (!additive) {
+    if (isSelected && selectedItems.length === 1) return [];
+    return [item];
+  }
+
+  if (isSelected) {
+    return selectedItems.filter((selected) => selected.id !== item.id);
+  }
+  return [...selectedItems, item];
+}
+
 export function useTableSelection<T extends { id: number | string }>({
   selectable,
   multiSelect,
@@ -61,16 +82,10 @@ export function useTableSelection<T extends { id: number | string }>({
   }, [setState]);
 
   const toggleSelection = useCallback(
-    (item: T) => {
+    (item: T, mode: RowSelectionMode = 'additive') => {
       if (!selectable) return;
       setState((prev) => {
-        const isSelected = prev.selectedItems.some((selected) => selected.id === item.id);
-        let newSelection: T[];
-        if (isSelected) {
-          newSelection = prev.selectedItems.filter((selected) => selected.id !== item.id);
-        } else {
-          newSelection = multiSelect ? [...prev.selectedItems, item] : [item];
-        }
+        const newSelection = resolveRowSelection(prev.selectedItems, item, { multiSelect, mode });
         setPendingSelectionChange(newSelection);
         return { ...prev, selectedItems: newSelection };
       });

@@ -59,7 +59,7 @@ interface TableDesktopViewProps<T extends { id: number | string }> {
   emptyMessage: string;
   paginatedData: T[];
   selectedItems: T[];
-  onToggleSelection: (item: T) => void;
+  onToggleSelection: (item: T, mode?: 'replace' | 'additive') => void;
   onRowClick?: (item: T, index: number) => void;
   onRowDoubleClick?: (item: T, index: number) => void;
   onActionClick?: (action: TableAction<T>, item: T, index: number) => void;
@@ -257,8 +257,11 @@ function TableDesktopView<T extends { id: number | string }>({
                 <tr
                   key={item.id}
                   className={`${isSelected ? 'table-active' : ''} table-row-clickable`}
-                  onClick={() => {
-                    if (selectable) onToggleSelection(item);
+                  onClick={(event) => {
+                    if (selectable) {
+                      const additive = event.ctrlKey || event.metaKey;
+                      onToggleSelection(item, additive ? 'additive' : 'replace');
+                    }
                     drainPossiblePromise(onRowClick?.(item, index));
                   }}
                   onDoubleClick={() => drainPossiblePromise(onRowDoubleClick?.(item, index))}
@@ -271,7 +274,7 @@ function TableDesktopView<T extends { id: number | string }>({
                         checked={isSelected}
                         onChange={(e) => {
                           e.stopPropagation();
-                          onToggleSelection(item);
+                          onToggleSelection(item, 'additive');
                         }}
                         onClick={(e) => e.stopPropagation()}
                         id={`${uniqueTableId}-checkbox-${item.id}`}
