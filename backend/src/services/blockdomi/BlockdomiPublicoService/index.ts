@@ -59,13 +59,48 @@ export class BlockdomiPublicoService {
       blockdomi_numeros_sei_anatel: { select: { numero: true } },
     } as const;
     const [dominios, ipv4s, ipv6s] = await Promise.all([
-      prisma.blockdomi_dominios.findMany({ where: { ativo: true }, select: oficioSelect }),
+      prisma.blockdomi_dominios.findMany({
+        where: { ativo: true },
+        select: { ...oficioSelect, dominio: true },
+      }),
       prisma.blockdomi_ipv4.findMany({ where: { ativo: true }, select: oficioSelect }),
       prisma.blockdomi_ipv6.findMany({ where: { ativo: true }, select: oficioSelect }),
     ]);
 
     const seen = new Map<string, OficioPublico>();
+    const detalhesPorOficio = new Map<string, OficioDetalhes>();
     const oficios: OficioPublico[] = [];
+
+    const chaveOficio = (
+      nome: string | null,
+      di: string,
+      df: string,
+      versao: string | null,
+      numeroSei: string | null
+    ) => `${nome ?? ''}|${di}|${df}|${versao ?? ''}|${(numeroSei ?? '').trim()}`;
+
+    const chaveContagem = (
+      nome: string | null,
+      versao: string | null,
+      numeroSei: string | null
+    ) => `${(nome ?? '').trim()}|${(versao ?? '').trim()}|${(numeroSei ?? '').trim()}`;
+
+    const somar = (
+      nome: string | null,
+      versao: string | null,
+      numeroSei: string | null,
+      campo: keyof OficioDetalhes
+    ) => {
+      const key = chaveContagem(nome, versao, numeroSei);
+      const atual = detalhesPorOficio.get(key) ?? {
+        qtd_dominios: 0,
+        qtd_urls: 0,
+        qtd_ipv4: 0,
+        qtd_ipv6: 0,
+      };
+      atual[campo] += 1;
+      detalhesPorOficio.set(key, atual);
+    };
 
     const adicionar = (
       nome: string | null,
@@ -76,7 +111,7 @@ export class BlockdomiPublicoService {
       createdAt: string | null
     ) => {
       const seiKey = (numeroSei ?? '').trim();
-      const key = `${nome ?? ''}|${di}|${df}|${versao ?? ''}|${seiKey}`;
+      const key = chaveOficio(nome, di, df, versao, numeroSei);
       const existente = seen.get(key);
       if (existente) {
         // Mantém a inserção mais antiga do grupo (quando o ofício entrou no sistema).
@@ -114,18 +149,28 @@ export class BlockdomiPublicoService {
       created_at: row.created_at,
       versaoRef: row.blockdomi_versoes ?? undefined,
     });
-    const domPlain = dominios.map(toPlain);
+    const domPlain = dominios.map((row) => ({ ...toPlain(row), dominio: row.dominio }));
     const ipv4Plain = ipv4s.map(toPlain);
     const ipv6Plain = ipv6s.map(toPlain);
 
-    for (const r of [...domPlain, ...ipv4Plain, ...ipv6Plain]) {
+    const registrar = (
+      r: (typeof ipv4Plain)[number],
+      campo: keyof OficioDetalhes
+    ) => {
       const di = this.normalizarDataParaChave(r.data_inicio_bloqueio as string | Date | null | undefined);
       const df = this.normalizarDataParaChave(r.data_fim_bloqueio as string | Date | null | undefined);
       const versao = r.versaoRef?.numero ?? versaoIdParaNumero.get(r.versao_id) ?? null;
       const seiRaw = r.numero_sei_anatel;
       const sei = seiRaw != null && String(seiRaw).trim() !== '' ? String(seiRaw).trim() : null;
       adicionar(r.nome_oficio, di, df, versao, sei, this.normalizarCreatedAt(r.created_at));
+      somar(r.nome_oficio, versao, sei, campo);
+    };
+
+    for (const r of domPlain) {
+      registrar(r, String(r.dominio || '').includes('/') ? 'qtd_urls' : 'qtd_dominios');
     }
+    for (const r of ipv4Plain) registrar(r, 'qtd_ipv4');
+    for (const r of ipv6Plain) registrar(r, 'qtd_ipv6');
 
     // Mais novo inserido → mais antigo (por created_at, não pela data de bloqueio).
     oficios.sort((a, b) => {
@@ -143,9 +188,8 @@ export class BlockdomiPublicoService {
 
     const versaoAtual = await this.getVersaoAtual();
 
-    const detalhesPorOficio = await this.buscarDetalhesPorOficio();
     for (const o of oficios) {
-      const key = `${o.nome_oficio ?? ''}|${this.normalizarDataParaChave(o.data_inicio_bloqueio)}|${this.normalizarDataParaChave(o.data_fim_bloqueio)}|${o.versao ?? ''}|${(o.numero_sei_anatel ?? '').trim()}`;
+      const key = chaveContagem(o.nome_oficio, o.versao, o.numero_sei_anatel);
       o.detalhes = detalhesPorOficio.get(key) ?? {
         qtd_dominios: 0,
         qtd_urls: 0,
@@ -204,128 +248,6 @@ export class BlockdomiPublicoService {
     return null;
   }
 
-  /**
-   * Busca contagens por ofício: domínios, URLs, IPv4, IPv6.
-   */
-  private static async buscarDetalhesPorOficio(): Promise<Map<string, OficioDetalhes>> {
-    const map = new Map<string, OficioDetalhes>();
-
-    const versoes = await prisma.blockdomi_versoes.findMany({ select: { id: true, numero: true } });
-    const versaoIdParaNumero = new Map<number | null, string | null>();
-    versaoIdParaNumero.set(null, null);
-    for (const v of versoes) {
-      versaoIdParaNumero.set(v.id, v.numero ?? null);
-    }
-
-    const buildKey = (
-      nome: string | null,
-      dataInicio: string | Date | null,
-      dataFim: string | Date | null,
-      versaoId: number | null,
-      numeroSei: string | null | undefined
-    ) => {
-      const versao = versaoIdParaNumero.get(versaoId) ?? null;
-      const di = this.normalizarDataParaChave(dataInicio);
-      const df = this.normalizarDataParaChave(dataFim);
-      const sei = (numeroSei ?? '').trim();
-      return `${nome ?? ''}|${di}|${df}|${versao ?? ''}|${sei}`;
-    };
-
-    const mergeCount = (key: string, field: keyof OficioDetalhes, cnt: number) => {
-      let d = map.get(key);
-      if (!d) {
-        d = { qtd_dominios: 0, qtd_urls: 0, qtd_ipv4: 0, qtd_ipv6: 0 };
-        map.set(key, d);
-      }
-      d[field] += Number(cnt) || 0;
-    };
-
-    const [rowsDominios, rowsUrls, rowsIpv4, rowsIpv6] = await Promise.all([
-      prisma.$queryRawUnsafe<Array<{
-        nome_oficio: string | null;
-        di: string | null;
-        df: string | null;
-        versao_id: number | null;
-        numero_sei_anatel: string | null;
-        cnt: string;
-      }>>(
-        `SELECT d.nome_oficio,
-         DATE_FORMAT(d.data_inicio_bloqueio, '%Y-%m-%d') as di,
-         DATE_FORMAT(d.data_fim_bloqueio, '%Y-%m-%d') as df,
-         d.versao_id, s.numero as numero_sei_anatel, COUNT(*) as cnt
-         FROM blockdomi_dominios d
-         LEFT JOIN blockdomi_numeros_sei_anatel s ON d.numero_sei_anatel_id = s.id
-         WHERE d.ativo = true AND d.dominio NOT LIKE '%/%'
-         GROUP BY d.nome_oficio, d.data_inicio_bloqueio, d.data_fim_bloqueio, d.versao_id, s.numero`),
-      prisma.$queryRawUnsafe<Array<{
-        nome_oficio: string | null;
-        di: string | null;
-        df: string | null;
-        versao_id: number | null;
-        numero_sei_anatel: string | null;
-        cnt: string;
-      }>>(
-        `SELECT d.nome_oficio,
-         DATE_FORMAT(d.data_inicio_bloqueio, '%Y-%m-%d') as di,
-         DATE_FORMAT(d.data_fim_bloqueio, '%Y-%m-%d') as df,
-         d.versao_id, s.numero as numero_sei_anatel, COUNT(*) as cnt
-         FROM blockdomi_dominios d
-         LEFT JOIN blockdomi_numeros_sei_anatel s ON d.numero_sei_anatel_id = s.id
-         WHERE d.ativo = true AND d.dominio LIKE '%/%'
-         GROUP BY d.nome_oficio, d.data_inicio_bloqueio, d.data_fim_bloqueio, d.versao_id, s.numero`),
-      prisma.$queryRawUnsafe<Array<{
-        nome_oficio: string | null;
-        di: string | null;
-        df: string | null;
-        versao_id: number | null;
-        numero_sei_anatel: string | null;
-        cnt: string;
-      }>>(
-        `SELECT d.nome_oficio,
-         DATE_FORMAT(d.data_inicio_bloqueio, '%Y-%m-%d') as di,
-         DATE_FORMAT(d.data_fim_bloqueio, '%Y-%m-%d') as df,
-         d.versao_id, s.numero as numero_sei_anatel, COUNT(*) as cnt
-         FROM blockdomi_ipv4 d
-         LEFT JOIN blockdomi_numeros_sei_anatel s ON d.numero_sei_anatel_id = s.id
-         WHERE d.ativo = true
-         GROUP BY d.nome_oficio, d.data_inicio_bloqueio, d.data_fim_bloqueio, d.versao_id, s.numero`),
-      prisma.$queryRawUnsafe<Array<{
-        nome_oficio: string | null;
-        di: string | null;
-        df: string | null;
-        versao_id: number | null;
-        numero_sei_anatel: string | null;
-        cnt: string;
-      }>>(
-        `SELECT d.nome_oficio,
-         DATE_FORMAT(d.data_inicio_bloqueio, '%Y-%m-%d') as di,
-         DATE_FORMAT(d.data_fim_bloqueio, '%Y-%m-%d') as df,
-         d.versao_id, s.numero as numero_sei_anatel, COUNT(*) as cnt
-         FROM blockdomi_ipv6 d
-         LEFT JOIN blockdomi_numeros_sei_anatel s ON d.numero_sei_anatel_id = s.id
-         WHERE d.ativo = true
-         GROUP BY d.nome_oficio, d.data_inicio_bloqueio, d.data_fim_bloqueio, d.versao_id, s.numero`)
-    ]);
-
-    for (const r of rowsDominios) {
-      const key = buildKey(r.nome_oficio, r.di, r.df, r.versao_id, r.numero_sei_anatel);
-      mergeCount(key, 'qtd_dominios', parseInt(String(r.cnt), 10) || 0);
-    }
-    for (const r of rowsUrls) {
-      const key = buildKey(r.nome_oficio, r.di, r.df, r.versao_id, r.numero_sei_anatel);
-      mergeCount(key, 'qtd_urls', parseInt(String(r.cnt), 10) || 0);
-    }
-    for (const r of rowsIpv4) {
-      const key = buildKey(r.nome_oficio, r.di, r.df, r.versao_id, r.numero_sei_anatel);
-      mergeCount(key, 'qtd_ipv4', parseInt(String(r.cnt), 10) || 0);
-    }
-    for (const r of rowsIpv6) {
-      const key = buildKey(r.nome_oficio, r.di, r.df, r.versao_id, r.numero_sei_anatel);
-      mergeCount(key, 'qtd_ipv6', parseInt(String(r.cnt), 10) || 0);
-    }
-
-    return map;
-  }
 
   static async getVersaoAtual(): Promise<string | null> {
     const v = await prisma.blockdomi_versoes.findFirst({
