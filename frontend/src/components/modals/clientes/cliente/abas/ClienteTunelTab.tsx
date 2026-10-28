@@ -24,7 +24,6 @@ const ClienteTunelTab: React.FC<ClienteTunelTabProps> = ({ clienteId }) => {
           onClose={() => {}}
           skipWrapper
           clienteIdFilter={clienteId}
-          tableTitle={t('tabs.tunnelAgents')}
         />
   );
 };

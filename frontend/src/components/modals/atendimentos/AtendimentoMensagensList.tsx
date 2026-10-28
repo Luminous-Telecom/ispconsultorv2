@@ -143,7 +143,6 @@ const AtendimentoMensagensList: React.FC<AtendimentoMensagensListProps> = ({
     <>
       <EmbeddedTablePanel<AtendimentoMensagem>
         key={`atendimento-mensagens-${atendimentoId}`}
-        title="Histórico"
         className="no-padding"
         config={{
           columns,

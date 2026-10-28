@@ -190,7 +190,6 @@ const AtendimentoOrdensServicoList: React.FC<AtendimentoOrdensServicoListProps> 
     <>
       <EmbeddedTablePanel<OrdemServico>
         key={`atendimento-ordens-servico-${atendimentoId}`}
-        title="Ordens de serviço"
         className="no-padding"
         config={{
           columns,

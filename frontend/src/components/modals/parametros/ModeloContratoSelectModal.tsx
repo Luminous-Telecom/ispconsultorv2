@@ -136,7 +136,6 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
       className="no-padding"
     >
       <EmbeddedTablePanel
-            title={defaultTitle}
             config={{
               columns: tableColumns,
               data: modalData,

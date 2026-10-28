@@ -47,7 +47,6 @@ const TermosTab: React.FC<TermosTabProps> = ({
   return (
     <EmbeddedTablePanel
             key="termos-tab-table"
-            title={t('tabs.terms')}
             config={{
               columns: columns,
               data: sortedData,

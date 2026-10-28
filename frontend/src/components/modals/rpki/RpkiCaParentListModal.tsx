@@ -47,7 +47,7 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
   onClose,
   skipWrapper = false,
   clienteIdFilter,
-  tableTitle = 'CAs-pai',
+  tableTitle,
 }) => {
   const rpki = useRpkiListModal<RpkiCaParent>();
   const queryClient = useQueryClient();
@@ -263,9 +263,9 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = ({
         show={show}
         onClose={onClose}
         skipWrapper={skipWrapper}
-        showEmbeddedTableTitle={skipWrapper}
+        showEmbeddedTableTitle={skipWrapper && Boolean(tableTitle)}
         config={{
-          title: tableTitle,
+          title: tableTitle ?? 'CAs-pai',
           columns,
           searchPlaceholder: 'Buscar...',
           searchFields: [

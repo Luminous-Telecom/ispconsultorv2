@@ -215,7 +215,6 @@ const AtendimentoArquivosList: React.FC<AtendimentoArquivosListProps> = ({
     <>
       <EmbeddedTablePanel<AtendimentoArquivo>
         key={`atendimento-arquivos-${atendimentoId}`}
-        title="Arquivos"
         className="no-padding"
         config={{
           columns,

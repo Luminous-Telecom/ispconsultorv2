@@ -41,7 +41,6 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
     <>
     <EmbeddedTablePanel
             key={`cliente-contratos-${clienteId || 'new'}`}
-            title={t('nav.contracts')}
             search=""
             config={{
             columns: [

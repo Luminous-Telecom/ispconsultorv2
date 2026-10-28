@@ -128,7 +128,6 @@ const OrdemServicoMensagensList: React.FC<OrdemServicoMensagensListProps> = ({
     <>
       <EmbeddedTablePanel<OrdemServicoMensagem>
         key={`ordem-servico-mensagens-${ordemServicoId}`}
-        title="Histórico"
         className="no-padding"
         config={{
           columns,

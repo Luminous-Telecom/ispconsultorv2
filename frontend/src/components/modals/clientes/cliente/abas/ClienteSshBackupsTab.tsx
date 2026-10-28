@@ -204,7 +204,6 @@ const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }
     <>
           <EmbeddedTablePanel<ClienteBackupRow>
               key="cliente-ssh-backups-tab-table"
-              title={t('tabs.sshDeviceBackups')}
               className="no-padding"
               config={{
                 columns: tableColumns,

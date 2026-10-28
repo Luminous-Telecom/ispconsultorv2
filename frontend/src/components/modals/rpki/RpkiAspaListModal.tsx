@@ -41,7 +41,7 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = ({
   onClose,
   skipWrapper = false,
   clienteIdFilter,
-  tableTitle = 'ASPAs',
+  tableTitle,
 }) => {
   const rpki = useRpkiListModal<RpkiAspa>();
   const { success } = useNotificationContext();
@@ -165,9 +165,9 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = ({
         show={show}
         onClose={onClose}
         skipWrapper={skipWrapper}
-        showEmbeddedTableTitle={skipWrapper}
+        showEmbeddedTableTitle={skipWrapper && Boolean(tableTitle)}
         config={{
-          title: tableTitle,
+          title: tableTitle ?? 'ASPAs',
           columns,
           searchPlaceholder: 'Buscar...',
           searchFields: [

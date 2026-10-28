@@ -24,7 +24,6 @@ const ClienteRpkiAspasTab: React.FC<ClienteRpkiAspasTabProps> = ({ clienteId }) 
           onClose={() => {}}
           skipWrapper
           clienteIdFilter={clienteId}
-          tableTitle={t('tabs.rpkiAspas')}
         />
   );
 };

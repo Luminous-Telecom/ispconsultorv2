@@ -127,7 +127,6 @@ const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
     <>
     <EmbeddedTablePanel
             key={`financeiro-avulso-tab-table-${showCancelados}`}
-            title={t('tabs.financialMisc')}
             config={{
               columns: columns,
               data: sortedData,

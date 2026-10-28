@@ -50,7 +50,6 @@ const IxcProvedorIntegracaoTab: React.FC<IxcProvedorIntegracaoTabProps> = ({
   return (
     <EmbeddedTablePanel
       key="ixc-provedor-tab-table"
-      title={t('tabs.ixcProvedor')}
       config={{
         columns,
         data: sortedData,

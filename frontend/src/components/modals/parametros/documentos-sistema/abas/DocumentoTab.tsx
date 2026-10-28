@@ -242,7 +242,6 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
     <>
       <EmbeddedTablePanel
         key={`documentos-table-${tipo}`}
-        title={getTipoLabel(tipo)}
         config={{
           columns,
           data: documentos?.data as DocumentoUnion[] || [],

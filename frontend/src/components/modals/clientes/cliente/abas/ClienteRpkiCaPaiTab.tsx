@@ -24,7 +24,6 @@ const ClienteRpkiCaPaiTab: React.FC<ClienteRpkiCaPaiTabProps> = ({ clienteId }) 
           onClose={() => {}}
           skipWrapper
           clienteIdFilter={clienteId}
-          tableTitle={t('tabs.rpkiCaPai')}
         />
   );
 };

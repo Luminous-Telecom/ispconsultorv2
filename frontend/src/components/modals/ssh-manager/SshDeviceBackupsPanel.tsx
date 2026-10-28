@@ -272,7 +272,7 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
     <EmbeddedTablePanel<BackupTableRow>
       key={`ssh-device-backups-table-${deviceId}`}
       syncWithHeader={false}
-      title={t('tabs.sshDeviceBackups')}
+      title={variant === 'tab' ? undefined : t('tabs.sshDeviceBackups')}
       className="no-padding"
       config={{
         columns: tableColumns,

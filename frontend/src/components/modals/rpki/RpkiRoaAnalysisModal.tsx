@@ -109,7 +109,6 @@ const RpkiRoaAnalysisModal: React.FC<RpkiRoaAnalysisModalProps> = ({
           <EmbeddedTablePanel<AnalysisTableRow>
             layoutWrapper={false}
             className="no-padding"
-            title="Análise de ROAs"
             config={{
               columns,
               data: rowsWithId,

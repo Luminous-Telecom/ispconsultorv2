@@ -41,7 +41,7 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({
   onClose,
   skipWrapper = false,
   clienteIdFilter,
-  tableTitle = 'ROAs',
+  tableTitle,
 }) => {
   const rpki = useRpkiListModal<RpkiRoaRow>();
 
@@ -116,9 +116,9 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({
         show={show}
         onClose={onClose}
         skipWrapper={skipWrapper}
-        showEmbeddedTableTitle={skipWrapper}
+        showEmbeddedTableTitle={skipWrapper && Boolean(tableTitle)}
         config={{
-          title: tableTitle,
+          title: tableTitle ?? 'ROAs',
           columns: tableColumns,
           searchPlaceholder: 'Buscar...',
           searchFields,

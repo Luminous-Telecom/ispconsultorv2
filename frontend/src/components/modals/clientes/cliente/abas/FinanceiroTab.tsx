@@ -29,7 +29,6 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
     <>
     <EmbeddedTablePanel
             key="cliente-financeiro-tab-table"
-            title={t('tabs.financial')}
             config={{
             columns: columns as TableColumn<CarneParcela>[],
             data: sortedData,

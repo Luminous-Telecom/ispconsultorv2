@@ -193,7 +193,6 @@ const OrdemServicoArquivosList: React.FC<OrdemServicoArquivosListProps> = ({ ord
     <>
       <EmbeddedTablePanel<OrdemServicoArquivo>
         key={`ordem-servico-arquivos-${ordemServicoId}`}
-        title="Arquivos"
         className="no-padding"
         config={{
           columns,

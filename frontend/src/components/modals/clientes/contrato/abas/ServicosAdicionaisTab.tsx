@@ -41,7 +41,6 @@ const ServicosAdicionaisTab: React.FC<ServicosAdicionaisTabProps> = ({
   return (
     <EmbeddedTablePanel
             key="servicos-adicionais-tab-table"
-            title={t('tabs.additionalServices')}
             config={{
             columns: columns,
             data: sortedData,

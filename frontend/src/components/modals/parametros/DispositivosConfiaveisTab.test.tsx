@@ -25,14 +25,19 @@ jest.mock('contexts/I18nContext', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }));
 
+const mockEmbeddedTable = jest.fn();
+
 jest.mock('components/common/EmbeddedTablePanel', () => ({
   __esModule: true,
-  default: ({ config }: { config: { emptyMessage?: string; data?: unknown[] } }) => (
-    <div data-testid="embedded-table">
-      <span data-testid="empty-message">{config.emptyMessage}</span>
-      <span data-testid="row-count">{config.data?.length ?? 0}</span>
-    </div>
-  ),
+  default: (props: { title?: string; config: { emptyMessage?: string; data?: unknown[] } }) => {
+    mockEmbeddedTable(props);
+    return (
+      <div data-testid="embedded-table">
+        <span data-testid="empty-message">{props.config.emptyMessage}</span>
+        <span data-testid="row-count">{props.config.data?.length ?? 0}</span>
+      </div>
+    );
+  },
 }));
 
 describe('DispositivosConfiaveisTab', () => {
@@ -70,5 +75,6 @@ describe('DispositivosConfiaveisTab', () => {
       expect(screen.getByTestId('row-count').textContent).toBe('1');
     });
     expect(screen.getByTestId('empty-message').textContent).toBe('security.trustedDevicesEmpty');
+    expect(mockEmbeddedTable.mock.calls.at(-1)?.[0].title).toBeUndefined();
   });
 });

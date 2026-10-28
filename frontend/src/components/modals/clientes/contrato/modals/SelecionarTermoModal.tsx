@@ -178,7 +178,6 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
       className="no-padding"
     >
       <EmbeddedTablePanel
-            title="Termo"
             config={{
               columns: tableColumns,
               data: paginatedTermos,

@@ -147,7 +147,6 @@ const TemplateSelectModal: React.FC<TemplateSelectModalProps> = ({
         )}
         {!error && (
           <EmbeddedTablePanel
-              title={defaultTitle}
               config={{
                 columns: tableColumns,
                 data: filteredTemplates,

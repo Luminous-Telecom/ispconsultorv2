@@ -250,7 +250,6 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({
     <>
         <EmbeddedTablePanel
             key="cliente-arquivos-tab-table"
-            title={t('tabs.files')}
             config={{ ...tableConfig, loading: isLoading }}
             onRefresh={refetch}
             onSelectionChange={setSelectedItems}

@@ -59,7 +59,7 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = ({
   onClose,
   skipWrapper = false,
   clienteIdFilter,
-  tableTitle = 'Repositórios RPKI',
+  tableTitle,
 }) => {
   const rpki = useRpkiListModal<RepositoryRow>();
   const queryClient = useQueryClient();
@@ -218,9 +218,9 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = ({
         show={show}
         onClose={onClose}
         skipWrapper={skipWrapper}
-        showEmbeddedTableTitle={skipWrapper}
+        showEmbeddedTableTitle={skipWrapper && Boolean(tableTitle)}
         config={{
-          title: tableTitle,
+          title: tableTitle ?? 'Repositórios RPKI',
           columns,
           searchPlaceholder: 'Buscar...',
           searchFields: [

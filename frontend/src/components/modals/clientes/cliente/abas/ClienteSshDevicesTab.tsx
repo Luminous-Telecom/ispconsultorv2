@@ -24,7 +24,6 @@ const ClienteSshDevicesTab: React.FC<ClienteSshDevicesTabProps> = ({ clienteId }
           onClose={() => {}}
           skipWrapper
           clienteIdFilter={clienteId}
-          tableTitle={t('tabs.sshDevicesSection')}
         />
   );
 };

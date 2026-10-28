@@ -219,7 +219,6 @@ const DispositivosConfiaveisTab: React.FC = () => {
 
   return (
     <EmbeddedTablePanel<DeviceRow>
-      title={t('userConfig.tabTrustedDevices')}
       config={{
         columns: tableColumns,
         data: filteredDevices,
