@@ -157,6 +157,28 @@ function containingReleaseTag(commit) {
   return tags.split('\n').map((item) => item.trim()).filter(Boolean)[0] || '';
 }
 
+async function publishAheadPackageVersion(tag) {
+  const version = readPackageVersion();
+  const tagName = `v${version}`;
+  if (tag && compareSemver(version, tagVersion(tag)) <= 0) return false;
+
+  if (await releaseExists(tagName)) {
+    console.log(`Release ${tagName} já existe.`);
+    return true;
+  }
+
+  const subjects = tag ? subjectsInRange(`${tag}..HEAD`) : [];
+  console.log(`Publicando ${tagName}, já definida em backend/package.json.`);
+  sh('git config user.name "github-actions[bot]"');
+  sh('git config user.email "41898282+github-actions[bot]@users.noreply.github.com"');
+  if (!trySh(`git rev-parse -q --verify refs/tags/${tagName}`)) {
+    sh(`git tag -a ${tagName} -m "Release ${tagName}"`);
+  }
+  sh(`git push origin ${tagName}`);
+  await createRelease(tagName, releaseBody(subjects));
+  return true;
+}
+
 async function main() {
   sh('git fetch origin main --tags --force');
   const head = sh('git rev-parse HEAD');
@@ -174,6 +196,7 @@ async function main() {
   }
 
   const tag = latestTag();
+  if (process.env.RELEASE_FORCE !== 'true' && await publishAheadPackageVersion(tag)) return;
   const subjects = subjectsSince(tag);
   if (subjects.length === 0 && process.env.RELEASE_FORCE !== 'true') {
     console.log('Nenhum commit novo desde a última release.');
