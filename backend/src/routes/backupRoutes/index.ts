@@ -53,6 +53,7 @@ const uploadBackup = multer({
 
 router.get('/', BackupController.list);
 router.post('/manual', BackupController.executeManual);
+router.post('/manual-stream', BackupController.executeManualStream);
 router.post('/upload', (req, res, next) => {
   uploadBackup.single('arquivo')(req, res, (err) => {
     if (err) {

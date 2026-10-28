@@ -1,8 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 
+const isDirectFileDownload = (path: string): boolean => {
+  const cleaned = path.split('?')[0];
+  if (cleaned.startsWith('/api/cliente-arquivos/') && cleaned.includes('/download')) return true;
+  return /^\/api\/backups\/[^/]+\/download\/?$/i.test(cleaned);
+};
+
 export const copyProtectionMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  const isClienteArquivoDownload = req.path.startsWith('/api/cliente-arquivos/') && req.path.includes('/download');
-  const isSpecialRoute = isClienteArquivoDownload;
+  const isSpecialRoute = isDirectFileDownload(req.path);
 
   // Headers que o Helmet NÃO cobre — definidos aqui para todas as rotas
   // Referrer-Policy e X-Content-Type-Options são gerenciados pelo Helmet — não duplicar aqui

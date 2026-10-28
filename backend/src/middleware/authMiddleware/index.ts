@@ -85,6 +85,12 @@ const isPublicRoute = (req: Request): boolean => {
   });
 };
 
+/** Clique em <a download> do backup: o browser manda Sec-Fetch-Mode navigate, mas a rota continua autenticada pelo cookie. */
+const isAuthenticatedBrowserDownload = (cleanedPath: string, method: string): boolean => {
+  if (method.toUpperCase() !== 'GET') return false;
+  return /^\/api\/backups\/[^/]+\/download\/?$/i.test(cleanedPath);
+};
+
 const isBrowserDocumentNavigation = (req: Request): boolean => {
   const fetchMode = req.get('Sec-Fetch-Mode')?.toLowerCase();
   const fetchDest = req.get('Sec-Fetch-Dest')?.toLowerCase();
@@ -114,7 +120,8 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
 
   // Bloqueia navegação direta do browser para rotas protegidas da API.
   // Mantém AJAX, mobile e integrações via Authorization funcionando normalmente.
-  if (isApiRequest && !isPublic && isBrowserDocumentNavigation(req)) {
+  // Download de backup é exceção: o Chrome trata <a download> como navegação e, com 404, mostra "ficheiro não disponível".
+  if (isApiRequest && !isPublic && isBrowserDocumentNavigation(req) && !isAuthenticatedBrowserDownload(cleanedPath, req.method)) {
     res.status(404).end();
     return;
   }

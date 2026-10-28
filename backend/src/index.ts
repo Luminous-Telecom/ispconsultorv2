@@ -71,8 +71,11 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
   .filter(Boolean);
 
 // Middleware de segurança
-const isPdfOrDownloadRoute = (path: string) => 
-  path.startsWith('/api/cliente-arquivos/') && path.includes('/download');
+const isPdfOrDownloadRoute = (path: string) => {
+  const cleaned = path.split('?')[0];
+  if (cleaned.startsWith('/api/cliente-arquivos/') && cleaned.includes('/download')) return true;
+  return /^\/api\/backups\/[^/]+\/download\/?$/i.test(cleaned);
+};
 
 app.use((req, res, next) => {
   const frameguard = isPdfOrDownloadRoute(req.path) ? false : { action: 'deny' as const };
