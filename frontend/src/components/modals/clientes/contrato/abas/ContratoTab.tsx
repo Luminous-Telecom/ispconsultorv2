@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { Plano, Banco, PaginatedResponse } from 'types';
+import React, { useMemo, useState } from 'react';
+import { Cliente, Plano, Banco, PaginatedResponse } from 'types';
 import { FormValue } from 'types/common';
 import { useI18n } from 'contexts/I18nContext';
 import { DocumentoSistema } from 'services/documentoSistemaService';
@@ -10,6 +10,8 @@ import FormField from 'components/ui/FormField';
 import AtivoInativoField from 'components/ui/AtivoInativoField';
 import { EntityIdField } from 'components/ui';
 import { ContratoForm } from '../types';
+import ClienteListModal from 'components/modals/clientes/ClienteListModal';
+import { getClienteRazaoSocialLabel } from 'utils/clienteDisplay';
 
 interface ContratoTabProps {
   entityId?: number | null;
@@ -30,6 +32,7 @@ interface ContratoTabProps {
   tipoCobrancaContratoFromContrato?: TipoCobrancaContrato | { id: number; nome: string; quantidade_titulos: number } | null;
   modelosContratoData: { success: boolean; data: DocumentoSistema[]; message: string } | undefined;
   diasVencimento: DiasVencimento[];
+  clienteData?: Cliente | null;
   onShowPlanoModal: () => void;
   onShowBancoModal: () => void;
   onShowTipoCobrancaContratoModal: () => void;
@@ -55,12 +58,15 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
   tipoCobrancaContratoFromContrato,
   modelosContratoData,
   diasVencimento,
+  clienteData,
   onShowPlanoModal,
   onShowBancoModal,
   onShowTipoCobrancaContratoModal,
   onShowModeloContratoModal
 }) => {
   const { t } = useI18n();
+  const [showClienteModal, setShowClienteModal] = useState(false);
+  const [clienteNomeSelecionado, setClienteNomeSelecionado] = useState('');
   const [descontoPercentualDisplay, setDescontoPercentualDisplay] = React.useState<string>(
     formData.desconto_percentual > 0 ? formData.desconto_percentual.toString() : ''
   );
@@ -201,9 +207,30 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
     }
   };
 
+  const clienteIdSelecionado = formData.cliente_id || 0;
+  const clienteNome = clienteData && clienteData.id === clienteIdSelecionado
+    ? getClienteRazaoSocialLabel(clienteData, '')
+    : clienteNomeSelecionado;
+  const clienteEntities = clienteIdSelecionado > 0
+    ? [{ id: clienteIdSelecionado, nome: clienteNome || `Cliente #${clienteIdSelecionado}` }]
+    : [];
+
   return (
     <div className="row g-2">
       <EntityIdField id={entityId} />
+      <div className="col-12">
+        <EntitySelectField
+          value={clienteIdSelecionado}
+          onChange={(value) => handleInputChange('cliente_id', value || 0)}
+          onShowModal={() => setShowClienteModal(true)}
+          entities={clienteEntities}
+          label={t('form.client')}
+          placeholder={t('placeholder.selectClient')}
+          searchButtonTitle={t('ui.selectClient')}
+          error={errors.cliente_id}
+          required
+        />
+      </div>
       <div className="col-12">
         <EntitySelectField
           value={formData.plano_id || planoSelecionado?.id || 0}
@@ -422,6 +449,16 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           rows={3}
         />
       </div>
+      <ClienteListModal
+        show={showClienteModal}
+        onClose={() => setShowClienteModal(false)}
+        title={t('ui.selectClient')}
+        onSelectClient={(cliente) => {
+          handleInputChange('cliente_id', cliente.id);
+          setClienteNomeSelecionado(getClienteRazaoSocialLabel(cliente, ''));
+          setShowClienteModal(false);
+        }}
+      />
     </div>
   );
 };

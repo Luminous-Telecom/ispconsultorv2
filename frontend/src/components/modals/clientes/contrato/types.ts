@@ -1,4 +1,5 @@
 export interface ContratoForm {
+  cliente_id: number;
   plano_id: number;
   desconto_percentual: number;
   desconto_valor: number;

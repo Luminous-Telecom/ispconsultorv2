@@ -210,12 +210,13 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     refetchIntegracaoIxc();
   }, [refetchIntegracaoIxc]);
 
+  const clienteVinculadoId = formData.cliente_id || clienteId || contratoData?.cliente_id;
   const tabData = useContratoModalTabData({
     show,
     isEditMode,
     internalContratoId,
-    clienteId,
-    contratoClienteId: contratoData?.cliente_id,
+    clienteId: clienteVinculadoId,
+    contratoClienteId: clienteVinculadoId,
     selectedItems,
     setSelectedItems,
     selectedAvulsosItems,

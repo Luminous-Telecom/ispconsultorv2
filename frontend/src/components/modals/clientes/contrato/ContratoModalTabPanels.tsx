@@ -227,6 +227,7 @@ function ContratoModalTabPanels({
         tipoCobrancaContratoFromContrato={tipoCobrancaContratoFromContrato}
         modelosContratoData={modelosContratoData}
         diasVencimento={diasVencimento}
+        clienteData={clienteData}
         onShowPlanoModal={onShowPlanoModal}
         onShowBancoModal={onShowBancoModal}
         onShowTipoCobrancaContratoModal={onShowTipoCobrancaContratoModal}

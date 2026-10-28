@@ -50,12 +50,15 @@ interface UseContratoFormReturn {
   
   // ID do contrato criado (para habilitar abas após criação)
   createdContratoId: number | null;
+
+  invalidFields: string[];
   
   // Flag de edição
   isEditing: boolean;
 }
 
 const initialFormData: ContratoForm = {
+  cliente_id: 0,
   plano_id: 0,
   desconto_percentual: 0,
   desconto_valor: 0,
@@ -105,10 +108,6 @@ export const useContratoForm = ({
   const queryClient = useQueryClient();
   const [createdContratoId, setCreatedContratoId] = useState<number | null>(null);
 
-  // Criar schema sem cliente_id para o formulário (cliente_id será adicionado no submit)
-  const contratoFormSchema = contratoSchema.omit({ cliente_id: true });
-
-  // React Hook Form com Zod
   const {
     handleSubmit: rhfHandleSubmit,
     formState: { errors: rhfErrors },
@@ -116,10 +115,10 @@ export const useContratoForm = ({
     setValue,
     reset,
     trigger
-  } = useForm<Omit<ZodContratoFormData, 'cliente_id'>>({
+  } = useForm<ZodContratoFormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(contratoFormSchema) as any,
-    defaultValues: initialFormData as Omit<ZodContratoFormData, 'cliente_id'>,
+    resolver: zodResolver(contratoSchema) as any,
+    defaultValues: initialFormData as ZodContratoFormData,
     mode: 'onChange'
   });
 
@@ -145,6 +144,14 @@ export const useContratoForm = ({
     return convertedErrors;
   }, [rhfErrors]);
 
+  const invalidFields = useMemo(
+    () => Object.keys(rhfErrors).filter((field) => {
+      const error = rhfErrors[field as keyof typeof rhfErrors];
+      return Boolean(error?.message);
+    }),
+    [rhfErrors]
+  );
+
   // Buscar dados do contrato (se estiver editando ou após criação)
   const contratoIdToFetch = contratoId || createdContratoId;
   const { data: contrato, isPending: isContratoQueryPending } = useQuery({
@@ -161,6 +168,7 @@ export const useContratoForm = ({
     if (!contrato || typeof contrato !== 'object') return undefined;
     
     return {
+      cliente_id: contrato.cliente_id || clienteId || 0,
       plano_id: contrato.plano_id || 0,
       desconto_percentual: parseFloat(String(contrato.desconto_percentual || 0)) || 0,
       desconto_valor: parseFloat(String(contrato.desconto_valor || 0)) || 0,
@@ -181,22 +189,27 @@ export const useContratoForm = ({
       cidade: ensureString(contrato.cidade),
       estado: ensureString(contrato.estado),
       usar_endereco_cliente: contrato.usar_endereco_cliente || false
-    } as Omit<ZodContratoFormData, 'cliente_id'>;
-  }, [contrato]);
+    } as ZodContratoFormData;
+  }, [contrato, clienteId]);
 
   // Resetar formulário quando modal abrir/fechar ou quando contrato carregar
   useEffect(() => {
+    const blankForm = {
+      ...initialFormData,
+      cliente_id: clienteId && clienteId > 0 ? clienteId : 0,
+    } as ZodContratoFormData;
+
     if (!show) {
-      reset(initialFormData as Omit<ZodContratoFormData, 'cliente_id'>);
+      reset(initialFormData as ZodContratoFormData);
       return;
     }
 
     if (isEditing && customFormData) {
       reset(customFormData);
     } else if (!isEditing) {
-      reset(initialFormData as Omit<ZodContratoFormData, 'cliente_id'>);
+      reset(blankForm);
     }
-  }, [show, customFormData, isEditing, reset]);
+  }, [show, customFormData, isEditing, reset, clienteId]);
 
   // Mutation para atualizar contrato
   const updateContratoMutation = useMutation({
@@ -219,7 +232,7 @@ export const useContratoForm = ({
       setCreatedContratoId(novoContrato.id);
       success('Contrato salvo com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['contratos'] });
-      queryClient.invalidateQueries({ queryKey: ['cliente', clienteId] });
+      queryClient.invalidateQueries({ queryKey: ['cliente', novoContrato.cliente_id || clienteId] });
       queryClient.invalidateQueries({ queryKey: ['contrato', novoContrato.id] });
       queryClient.invalidateQueries({ queryKey: ['termos-contrato', novoContrato.id] });
       queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', novoContrato.id] });
@@ -233,10 +246,10 @@ export const useContratoForm = ({
   // Handler de mudança de input (mantido para compatibilidade)
   const handleInputChange = (field: keyof ContratoForm, value: string | number | boolean | null) => {
     // Atualizar React Hook Form
-    setValue(field as keyof Omit<ZodContratoFormData, 'cliente_id'>, value as never, { shouldValidate: true });
+    setValue(field as keyof ZodContratoFormData, value as never, { shouldValidate: true });
     
     // Trigger validação do campo (assíncrono mas não bloqueia)
-    trigger(field as keyof Omit<ZodContratoFormData, 'cliente_id'>).catch(() => {
+    trigger(field as keyof ZodContratoFormData).catch(() => {
       // Ignorar erros de validação
     });
   };
@@ -249,7 +262,8 @@ export const useContratoForm = ({
   // Handler de submit usando React Hook Form
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onSubmit = (data: any) => {
-    const typedData = data as Omit<ZodContratoFormData, 'cliente_id'>;
+    const typedData = data as ZodContratoFormData;
+    const clienteVinculadoId = typedData.cliente_id || clienteId || 0;
     
     // Função auxiliar para enviar valores numéricos (incluindo 0)
     const getNumericValue = (value: number | undefined | null): number | undefined => {
@@ -262,7 +276,7 @@ export const useContratoForm = ({
       const tipoId = (typedData.tipo_cobranca_contrato_id as number);
       const dataToSend: UpdateContratoData = {
         id: contratoId,
-        cliente_id: contrato?.cliente_id || 0,
+        cliente_id: clienteVinculadoId || contrato?.cliente_id || 0,
         plano_id: typedData.plano_id,
         desconto_percentual: getNumericValue(typedData.desconto_percentual),
         desconto_valor: getNumericValue(typedData.desconto_valor),
@@ -286,10 +300,9 @@ export const useContratoForm = ({
       };
       
       updateContratoMutation.mutate(dataToSend);
-    } else if (!isEditing && clienteId) {
-      // Modo criação
+    } else if (!isEditing && clienteVinculadoId > 0) {
       const dataToSend: CreateContratoData = {
-        cliente_id: clienteId,
+        cliente_id: clienteVinculadoId,
         plano_id: typedData.plano_id,
         desconto_percentual: getNumericValue(typedData.desconto_percentual),
         desconto_valor: getNumericValue(typedData.desconto_valor),
@@ -340,6 +353,7 @@ export const useContratoForm = ({
     validateForm,
     contrato,
     createdContratoId,
+    invalidFields,
     isEditing
   };
 };
