@@ -1,6 +1,6 @@
 import React from 'react';
 import { formatCPF } from 'utils/formatters';
-import { FormField } from 'components/ui';
+import { FileInput, FormField, LabelWithHelp } from 'components/ui';
 import { DadosEmpresaTabProps } from '../types';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -64,51 +64,45 @@ const ResponsavelTab: React.FC<DadosEmpresaTabProps & { onAssinaturaChange: (fil
       </div>
 
       {/* Assinatura do Responsável */}
-      {SHOW_ASSINATURA_RESPONSAVEL && <div className="row mt-4 pt-3 border-top">
-        <div className="col-12">
-          <label htmlFor="assinatura" className="form-label small fw-bold">{t('company.responsibleSignature')}</label>
-          <div className="d-flex align-items-start gap-3">
-            <div className="empresa-logo-wrap">
-              {dados.responsavel_assinatura ? (
-                <img 
-                  src={dados.responsavel_assinatura} 
-                  alt="Assinatura do responsável" 
-                  className="empresa-logo-img border rounded p-2 bg-light"
-                  
-                />
-              ) : (
-                <div 
-                  className="border rounded p-2 bg-light text-center text-secondary empresa-logo-placeholder"
-                  
-                >
-                  <div>
-                    <i className="bi bi-image fs-icon-md" ></i>
-                    <div className="small">{t('company.noSignature')}</div>
+      {SHOW_ASSINATURA_RESPONSAVEL && (
+        <div className="row g-2 mt-2 pt-3 border-top">
+          <div className="col-12">
+            <div className="form-field">
+              <LabelWithHelp htmlFor="assinatura" className="form-label" helpText={t('company.pngOnly')}>
+                {t('company.responsibleSignature')}
+              </LabelWithHelp>
+              <div className="form-field-control">
+                <div className="d-flex flex-column gap-2">
+                  <div className="empresa-logo-wrap">
+                    {dados.responsavel_assinatura ? (
+                      <img
+                        src={dados.responsavel_assinatura}
+                        alt={t('company.responsibleSignature')}
+                        className="empresa-logo-img border rounded p-2 bg-light"
+                      />
+                    ) : (
+                      <div className="border rounded p-2 bg-light text-center text-secondary empresa-logo-placeholder">
+                        <div>
+                          <i className="bi bi-image fs-icon-md" />
+                          <div className="small">{t('company.noSignature')}</div>
+                        </div>
+                      </div>
+                    )}
                   </div>
+                  <FileInput
+                    id="assinatura"
+                    name="assinatura"
+                    size="sm"
+                    accept="image/png"
+                    disabled={isPending}
+                    onFileChange={onAssinaturaChange}
+                  />
                 </div>
-              )}
-            </div>
-            <div className="flex-grow-1">
-              <FormField
-                name="assinatura"
-                id="assinatura"
-                type="file"
-                value=""
-                onChange={(value) => {
-                  if (value instanceof File) {
-                    onAssinaturaChange(value);
-                  } else if (value === null) {
-                    onAssinaturaChange(null);
-                  }
-                }}
-                disabled={isPending}
-                accept="image/png"
-                helpText={t('company.pngOnly')}
-              />
+              </div>
             </div>
           </div>
         </div>
-      </div>}
+      )}
     </>
   );
 };

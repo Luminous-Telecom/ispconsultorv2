@@ -37,26 +37,27 @@ const ImportarListaBlockdomiEditorSection: React.FC<ImportarListaBlockdomiEditor
   isCadastrando,
 }) => (
   <>
-    <div className="col-12">
-      <FormField
-        name="rawText"
-        type="textarea"
-        size="sm"
-        className="ilb-lista-entrada"
-        label={t('blockdomi.inputListLabel')}
-        helpText={
-          domainCount > 0
-            ? `${t('blockdomi.importIntro')} — ${domainCount} ${t('blockdomi.domainsDetected')}`
-            : t('blockdomi.importIntro')
-        }
-        placeholder={t('blockdomi.pasteListHint')}
-        value={rawText}
-        onChange={(value) => onRawTextChange(String(value ?? ''))}
-        rows={8}
-      />
+    <div className="row g-2">
+      <div className="col-12">
+        <FormField
+          name="rawText"
+          type="textarea"
+          size="sm"
+          label={t('blockdomi.inputListLabel')}
+          helpText={
+            domainCount > 0
+              ? `${t('blockdomi.importIntro')} — ${domainCount} ${t('blockdomi.domainsDetected')}`
+              : t('blockdomi.importIntro')
+          }
+          placeholder={t('blockdomi.pasteListHint')}
+          value={rawText}
+          onChange={(value) => onRawTextChange(String(value ?? ''))}
+          rows={8}
+        />
+      </div>
     </div>
 
-    <div className="ilb-actions">
+    <div className="ilb-actions form-modal-input-col">
       <BulkActionButton
         type="button"
         label={t('blockdomi.paste')}
@@ -95,15 +96,17 @@ const ImportarListaBlockdomiEditorSection: React.FC<ImportarListaBlockdomiEditor
     </div>
 
     {classified && (
-      <div className="col-12">
-        <AtivoInativoField
-          name="listaModo"
-          label={t('blockdomi.modoLista')}
-          value={listaModo === 'bloqueio'}
-          trueLabel={t('blockdomi.modoListaBloqueio')}
-          falseLabel={t('blockdomi.modoListaDesbloqueio')}
-          onChange={(isBloqueio) => onListaModoChange(isBloqueio ? 'bloqueio' : 'desbloqueio')}
-        />
+      <div className="row g-2">
+        <div className="col-12">
+          <AtivoInativoField
+            name="listaModo"
+            label={t('blockdomi.modoLista')}
+            value={listaModo === 'bloqueio'}
+            trueLabel={t('blockdomi.modoListaBloqueio')}
+            falseLabel={t('blockdomi.modoListaDesbloqueio')}
+            onChange={(isBloqueio) => onListaModoChange(isBloqueio ? 'bloqueio' : 'desbloqueio')}
+          />
+        </div>
       </div>
     )}
   </>

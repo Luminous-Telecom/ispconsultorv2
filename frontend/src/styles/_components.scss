@@ -5735,126 +5735,8 @@ input[type="week"]::-moz-calendar-picker-indicator {
   border-color: var(--border-color) !important;
 }
 
-/* Área de input estilo editor de código */
-.importar-lista-blockdomi .ilb-editor-wrapper {
-  position: relative;
-  border-radius: var(--ilb-radius);
-  overflow: hidden;
-  background: color-mix(in srgb, var(--color-black) 20%, transparent);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--ilb-shadow);
-  transition: box-shadow var(--ilb-transition), border-color var(--ilb-transition);
-}
-
-.importar-lista-blockdomi .ilb-editor-wrapper:hover {
-  border-color: var(--border-light);
-  box-shadow: var(--ilb-shadow-hover);
-}
-
-.importar-lista-blockdomi .ilb-editor-wrapper:focus-within {
-  border-color: var(--navbar-bg);
-}
-
-.importar-lista-blockdomi .ilb-editor-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.25rem 0.5rem;
-  background: color-mix(in srgb, var(--color-black) 15%, transparent);
-  border-bottom: 1px solid var(--border-color);
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-xs);
-  color: var(--text-muted);
-}
-
-.importar-lista-blockdomi .ilb-editor-counter {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  background: var(--ilb-accent);
-  border-radius: var(--border-radius);
-  font-weight: 600;
-  font-size: var(--font-size-xs);
-  color: var(--navbar-bg);
-  border: 1px solid var(--ilb-accent-border);
-}
-
-.importar-lista-blockdomi .ilb-editor-textarea {
-  width: 100%;
-  min-height: 140px;
-  padding: 0.25rem 0.5rem;
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-sm);
-  line-height: 1.6;
-  background: transparent;
-  border: none;
-  resize: vertical;
-  color: var(--text-primary);
-  outline: none;
-}
-
-.importar-lista-blockdomi .ilb-editor-textarea::placeholder {
-  color: var(--text-muted);
-  opacity: 0.7;
-}
-
-.importar-lista-blockdomi .ilb-empty-icon {
-  font-size: 2rem;
-}
-
 .importar-lista-blockdomi .ilb-list-item {
   min-height: 1.5em;
-}
-
-.importar-lista-blockdomi .ilb-editor-empty-state {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  color: var(--text-muted);
-  font-size: var(--font-size-sm);
-  pointer-events: none;
-  opacity: 0.6;
-}
-
-.importar-lista-blockdomi .ilb-editor-textarea:not(:placeholder-shown) ~ .ilb-editor-empty-state,
-.importar-lista-blockdomi .ilb-editor-wrapper.has-content .ilb-editor-empty-state {
-  display: none;
-}
-
-/*
- * Lista de entrada: mesma origem à esquerda dos cards (não da coluna de inputs).
- * Precisa bater a especificidade de form-modal-tab-padding .form-field.
- */
-.draggable-modal-body-custom
-  :is(form, div).form-modal-simple.importar-lista-blockdomi
-  .ilb-lista-entrada.form-field,
-.importar-lista-blockdomi .ilb-lista-entrada.form-field {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  max-width: var(--form-input-max-width);
-  width: 100%;
-  gap: 0.25rem;
-  margin-left: 0;
-
-  > .form-label,
-  > label.form-label:not(.form-check-label),
-  > span.form-label {
-    flex: none;
-    width: 100%;
-    max-width: none;
-    text-align: left;
-    padding-top: 0;
-  }
-
-  > .form-field-control {
-    flex: none;
-    max-width: none;
-    width: 100%;
-  }
 }
 
 .draggable-modal-body-custom
@@ -5866,9 +5748,6 @@ input[type="week"]::-moz-calendar-picker-indicator {
   gap: 0.5rem;
   align-items: center;
   margin-top: 0.5rem;
-  margin-left: 0;
-  max-width: var(--form-input-max-width);
-  width: 100%;
 }
 
 .importar-lista-blockdomi .ilb-actions .btn {
