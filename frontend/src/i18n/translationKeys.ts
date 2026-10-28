@@ -626,6 +626,8 @@ export interface TranslationKeys {
   'backup.restore': string;
   'backup.import': string;
   'backup.imported': string;
+  'backup.running': string;
+  'backup.finished': string;
   'params.validations': string;
   'params.validateCpfCnpj': string;
   'params.validateCpfCnpjHelp': string;

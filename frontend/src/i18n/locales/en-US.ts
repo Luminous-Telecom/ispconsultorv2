@@ -648,6 +648,8 @@ const enUS: TranslationKeys = {
     'backup.restore': 'Restore',
     'backup.import': 'Import',
     'backup.imported': 'Backup imported successfully.',
+    'backup.running': 'Backup in progress',
+    'backup.finished': 'Backup finished',
     'params.validateCpfCnpj': 'Validate CNPJ',
     'params.validateCpfCnpjHelp': 'When enabled, validates if CNPJ is valid when creating/editing clients',
     'params.validateCpfCnpjHelpSaas': 'Validates CNPJ when creating/editing clients',

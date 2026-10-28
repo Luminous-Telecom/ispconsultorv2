@@ -164,7 +164,7 @@ export class BackupController {
 
     let closed = false;
     res.on('close', () => {
-      closed = true;
+      if (!res.writableEnded) closed = true;
     });
     const send = (event: BackupProgressEvent) => {
       if (closed) return;

@@ -648,6 +648,8 @@ const ptBR: TranslationKeys = {
     'backup.restore': 'Restaurar',
     'backup.import': 'Importar',
     'backup.imported': 'Backup importado com sucesso.',
+    'backup.running': 'Backup em andamento',
+    'backup.finished': 'Backup concluído',
     'params.validateCpfCnpj': 'Validar CNPJ',
     'params.validateCpfCnpjHelp': 'Quando ativado, valida se CNPJ é válido ao cadastrar/editar clientes',
     'params.validateCpfCnpjHelpSaas': 'Valida CNPJ ao cadastrar/editar clientes',

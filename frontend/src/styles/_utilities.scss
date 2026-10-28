@@ -177,6 +177,42 @@
 .terminal-log-line--info { color: var(--info-color); }
 .terminal-log-line--muted { color: var(--text-muted); }
 
+.backup-modal-layout {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+  width: 100%;
+}
+
+.backup-modal-layout > .table-container-custom {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.backup-run-panel {
+  flex: 0 0 auto;
+  margin: 0.75rem 0.75rem 0;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--info-color);
+  border-radius: var(--border-radius-md);
+  padding: 0.75rem;
+  color: var(--text-primary);
+}
+
+.backup-run-bar {
+  height: 20px;
+  margin-top: 0.5rem;
+  border-radius: var(--border-radius-sm);
+  background-color: var(--bg-tertiary);
+}
+
+.logs-update-panel.backup-run-logs {
+  max-height: 220px;
+  margin-top: 0.5rem;
+}
+
 .logs-update-panel {
   max-height: 150px;
   overflow-y: auto;

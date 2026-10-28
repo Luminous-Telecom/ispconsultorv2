@@ -23,6 +23,33 @@ export interface BackupListResponse {
 
 export type BackupManualTipo = 'database' | 'arquivos' | 'logs' | 'completo';
 
+export interface BackupStreamEvent {
+  step?: string;
+  progress?: number;
+  message?: string;
+  logs?: string[];
+  success?: boolean;
+  error?: string;
+}
+
+export function consumeBackupSseBuffer(buffer: string): { events: BackupStreamEvent[]; rest: string } {
+  const parts = buffer.replace(/\r\n/g, '\n').split('\n\n');
+  const rest = parts.pop() ?? '';
+  const events: BackupStreamEvent[] = [];
+  for (const part of parts) {
+    const dataLine = part.split('\n').filter((line) => line.startsWith('data: ')).pop();
+    if (!dataLine) continue;
+    try {
+      const data = JSON.parse(dataLine.slice(6)) as BackupStreamEvent;
+      if (!data || typeof data !== 'object') continue;
+      events.push(data);
+    } catch {
+      // bloco incompleto ou comentário sem JSON
+    }
+  }
+  return { events, rest };
+}
+
 export class BackupService {
   static async list(): Promise<Backup[]> {
     const response = await apiService.get<Backup[]>('/backups');
@@ -71,6 +98,58 @@ export class BackupService {
       success: true,
       message: data.message ?? 'Restauracao solicitada.'
     };
+  }
+
+  static async executeManualStream(
+    tipo: BackupManualTipo,
+    onEvent: (event: BackupStreamEvent) => void
+  ): Promise<{ success: boolean; message: string }> {
+    const base = API_CONFIG.BASE_URL.replace(/\/+$/, '');
+    const response = await fetch(`${base}/backups/manual-stream`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'text/event-stream',
+      },
+      body: JSON.stringify({ tipo }),
+    });
+
+    if (!response.ok) {
+      let message = `Falha no backup (HTTP ${response.status})`;
+      try {
+        const body = await response.json() as { message?: string };
+        if (body.message) message = body.message;
+      } catch {
+        // corpo não JSON
+      }
+      throw new Error(message);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error('Resposta do backup sem conteúdo');
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let finalMessage = '';
+    let succeeded = false;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const parsed = consumeBackupSseBuffer(buffer);
+      buffer = parsed.rest;
+      for (const event of parsed.events) {
+        onEvent(event);
+        if (event.error) throw new Error(event.error);
+        if (event.message) finalMessage = event.message;
+        if (event.success) succeeded = true;
+      }
+    }
+
+    if (!succeeded) throw new Error(finalMessage || 'Backup encerrado sem confirmação');
+    return { success: true, message: finalMessage };
   }
 
   static async executeManual(tipo: BackupManualTipo): Promise<{ success: boolean; message: string }> {

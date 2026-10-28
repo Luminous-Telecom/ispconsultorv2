@@ -62,7 +62,7 @@ function spawnLogged(
     const attach = (stream: NodeJS.ReadableStream | null | undefined, keepTail: boolean) => {
       if (!stream) return;
       let carry = '';
-      stream.on('data', (chunk: Buffer) => {
+      stream.on('data', (chunk: Buffer | string) => {
         const text = chunk.toString();
         if (keepTail) stderrTail = (stderrTail + text).slice(-800);
         carry += text;
@@ -133,9 +133,10 @@ function captureStdout(cmd: string, args: string[]): Promise<string> {
   return new Promise((resolve, reject) => {
     const proc = spawn(cmd, args, { stdio: ['ignore', 'pipe', 'pipe'] });
     let out = '';
-    proc.stdout?.on('data', (chunk: Buffer) => {
+    proc.stdout?.on('data', (chunk: Buffer | string) => {
       out += chunk.toString();
     });
+    proc.stderr?.resume();
     proc.on('error', reject);
     proc.on('close', (code) => {
       if (code === 0) resolve(out);
@@ -375,7 +376,9 @@ export class BackupService {
     const ranges = phaseRanges(tipo);
     const pass = process.env.DB_PASSWORD || '';
     const secrets = pass ? [pass] : [];
+    let lastProgress = 1;
     const emit = (step: string, progress: number, message: string, log?: string) => {
+      lastProgress = progress;
       onProgress?.({
         step,
         progress,
@@ -509,7 +512,7 @@ export class BackupService {
       const msg = err instanceof Error ? err.message : 'Erro ao executar backup';
       logger.error('Erro no backup manual', { tipo, erro: msg });
       const message = `Falha no backup: ${msg}`;
-      onProgress?.({ step: 'erro', progress: 0, message, logs: [`✗ ${msg}`], error: msg });
+      onProgress?.({ step: 'erro', progress: lastProgress, message, logs: [`✗ ${msg}`], error: msg });
       return { success: false, message };
     }
   }

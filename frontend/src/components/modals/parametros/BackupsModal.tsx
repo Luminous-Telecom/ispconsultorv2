@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
@@ -11,8 +11,19 @@ import { TableConfig } from 'components/tables/types';
 import {
   BackupService,
   Backup,
-  BackupManualTipo
+  BackupManualTipo,
+  BackupStreamEvent,
 } from 'services/backupService';
+import BackupRunPanel from './BackupRunPanel';
+
+interface BackupRunState {
+  active: boolean;
+  progress: number;
+  message: string;
+  logs: string[];
+}
+
+const MAX_BACKUP_LOGS = 400;
 
 interface BackupsModalProps {
   show: boolean;
@@ -44,6 +55,23 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
   const [searchField, setSearchField] = useState('');
   const [sortColumn, setSortColumn] = useState<string>('data');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [run, setRun] = useState<BackupRunState | null>(null);
+
+  useEffect(() => {
+    if (!show) setRun(null);
+  }, [show]);
+
+  const applyStreamEvent = useCallback((event: BackupStreamEvent) => {
+    setRun((prev) => {
+      const logs = [...(prev?.logs ?? []), ...(event.logs ?? [])].slice(-MAX_BACKUP_LOGS);
+      return {
+        active: !event.success && !event.error,
+        progress: typeof event.progress === 'number' ? event.progress : (prev?.progress ?? 0),
+        message: event.message ?? prev?.message ?? '',
+        logs,
+      };
+    });
+  }, []);
 
   const { data: backups = [] as Backup[], isLoading, refetch } = useQuery<Backup[]>({
     queryKey: ['backups'],
@@ -53,13 +81,17 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
   });
 
   const manualMutation = useMutation({
-    mutationFn: (tipo: BackupManualTipo) => BackupService.executeManual(tipo),
+    mutationFn: (tipo: BackupManualTipo) => BackupService.executeManualStream(tipo, applyStreamEvent),
     onSuccess: (data) => {
-      success(data?.message ?? t('backup.manualQueued'));
+      setRun((prev) => (prev ? { ...prev, active: false, progress: 100 } : prev));
+      success(data?.message ?? t('backup.finished'));
       queryClient.invalidateQueries({ queryKey: ['backups'] });
       refetch();
     },
-    onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.BACKUP_CREATE_ERROR),
+    onError: (err) => {
+      setRun((prev) => (prev && prev.logs.length > 0 ? { ...prev, active: false } : null));
+      showApiError(err, CONTEXT_ERROR_MESSAGES.BACKUP_CREATE_ERROR);
+    },
   });
 
   const handleDelete = useCallback(async (item: BackupWithId) => {
@@ -204,14 +236,17 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
       dropdown: BACKUP_MANUAL_OPTIONS.map(opt => ({
         label: t(opt.labelKey as keyof typeof t),
         disabled: manualMutation.isPending,
-        action: () => manualMutation.mutate(opt.tipo)
+        action: () => {
+          setRun({ active: true, progress: 0, message: t('backup.running'), logs: [] });
+          manualMutation.mutate(opt.tipo);
+        }
       }))
     },
     {
       key: 'deletar',
       label: bulkBtn.deletar.label,
       variant: bulkBtn.deletar.variant,
-      disabled: (items: BackupWithId[]) => items.length === 0 || !!(actionLoading.delete || actionLoading.download || actionLoading.restore),
+      disabled: (items: BackupWithId[]) => manualMutation.isPending || items.length === 0 || !!(actionLoading.delete || actionLoading.download || actionLoading.restore),
       onClick: (items: BackupWithId[]) => {
         const item = items[0];
         if (item) handleDelete(item);
@@ -222,14 +257,14 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
       label: t('backup.import'),
       variant: 'primary' as const,
       requiresSelection: false,
-      disabled: (_items: BackupWithId[]) => !!(actionLoading.upload),
+      disabled: (_items: BackupWithId[]) => manualMutation.isPending || !!(actionLoading.upload),
       onClick: () => handleImportClick()
     },
     {
       key: 'baixar',
       label: bulkBtn.baixar.label,
       variant: bulkBtn.baixar.variant,
-      disabled: (items: BackupWithId[]) => items.length === 0 || !!(actionLoading.delete || actionLoading.download || actionLoading.restore),
+      disabled: (items: BackupWithId[]) => manualMutation.isPending || items.length === 0 || !!(actionLoading.delete || actionLoading.download || actionLoading.restore),
       onClick: (items: BackupWithId[]) => {
         const item = items[0];
         if (item) handleDownload(item);
@@ -239,7 +274,7 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
       key: 'restaurar',
       label: t('backup.restore'),
       variant: 'primary' as const,
-      disabled: (items: BackupWithId[]) => items.length === 0 || !!(actionLoading.delete || actionLoading.download || actionLoading.restore),
+      disabled: (items: BackupWithId[]) => manualMutation.isPending || items.length === 0 || !!(actionLoading.delete || actionLoading.download || actionLoading.restore),
       onClick: (items: BackupWithId[]) => {
         const item = items[0];
         if (item) handleRestore(item);
@@ -257,13 +292,21 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
   }), [sortedData.length]);
 
   const modalContent = (
-    <>
+    <div className="backup-modal-layout">
       <FileInput
         ref={fileInputRef}
         accept=".sql,.tar.gz,.ndjson,.txt"
         className="visually-hidden-input"
         onChange={handleFileChange}
       />
+      {run && (
+        <BackupRunPanel
+          active={run.active}
+          progress={run.progress}
+          message={run.message}
+          logs={run.logs}
+        />
+      )}
       <Table
           syncWithHeader={false}
           title={t('backup.title')}
@@ -297,7 +340,7 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
           onSort={handleSort}
           search={searchTerm}
           />
-    </>
+    </div>
   );
 
   if (skipWrapper) {

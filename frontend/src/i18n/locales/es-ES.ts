@@ -650,6 +650,8 @@ const esES: TranslationKeys = {
     'backup.restore': 'Restaurar',
     'backup.import': 'Importar',
     'backup.imported': 'Copia de seguridad importada con éxito.',
+    'backup.running': 'Copia en curso',
+    'backup.finished': 'Copia concluida',
     'params.validateCpfCnpj': 'Validar CNPJ',
     'params.validateCpfCnpjHelp': 'Cuando está activado, valida si CNPJ es válido al crear/editar clientes',
     'params.validateCpfCnpjHelpSaas': 'Valida CNPJ al crear/editar clientes',
