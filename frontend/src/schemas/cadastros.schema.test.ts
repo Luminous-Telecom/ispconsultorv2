@@ -14,6 +14,11 @@ describe('cadastro, edição e visualização dos schemas', () => {
       conta_boleto: 5,
       tipo_cobranca_contrato_id: 6,
       data_inicio: '2026-01-01',
+      endereco: 'Rua das Flores',
+      numero: '10',
+      bairro: 'Centro',
+      cidade: 'Natal',
+      estado: 'RN',
     });
     expect(parsed.status).toBe('ativo');
     expect(updateContratoSchema.parse({ status: 'suspenso' }).status).toBe('suspenso');
