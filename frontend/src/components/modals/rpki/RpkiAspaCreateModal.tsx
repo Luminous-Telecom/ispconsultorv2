@@ -51,49 +51,66 @@ const RpkiAspaCreateModal: React.FC<RpkiAspaCreateModalProps> = ({
     setProviders('');
   }, [show, initialCaId, selectableCas]);
 
+  const canSubmit = caId.trim() !== '' && customerAsn.trim() !== '' && providers.trim() !== '';
+
+  const handleSubmit = (event?: React.SyntheticEvent) => {
+    event?.preventDefault();
+    if (!canSubmit) return;
+    onSave({
+      caId: Number(caId),
+      customerAsn: customerAsn.trim(),
+      providers: providers.trim(),
+    });
+  };
+
   return (
-    <DraggableModal show={show} onClose={onClose} title="ASPA" size="sm" modalId="rpki-aspa-create-modal">
-      <form className="form-modal-simple" onSubmit={(event) => event.preventDefault()}>
-        <FormField
-          name="rpki_aspa_ca_id"
-          type="select"
-          label="CA"
-          size="sm"
-          value={caId}
-          options={selectableCas.map((ca) => ({ value: ca.id, label: ca.nome }))}
-          onChange={(v) => setCaId(String(v ?? ''))}
-        />
-        <div className="mt-2">
-          <FormField
-            name="rpki_aspa_customer_asn"
-            label="Customer ASN"
-            size="sm"
-            value={customerAsn}
-            onChange={(v) => setCustomerAsn(String(v ?? ''))}
-          />
-        </div>
-        <div className="mt-2">
-          <FormField
-            name="rpki_aspa_providers"
-            label="Providers ASN (csv)"
-            size="sm"
-            value={providers}
-            onChange={(v) => setProviders(String(v ?? ''))}
-          />
-        </div>
-        <div className="d-flex justify-content-end gap-2 mt-3">
+    <DraggableModal
+      show={show}
+      onClose={onClose}
+      title="ASPA"
+      size="sm"
+      modalId="rpki-aspa-create-modal"
+      headerActions={
+        <div className="d-flex gap-2 modal-header-actions">
           <CancelarButton type="button" onClick={onClose} />
-          <NovoButton
-            type="button"
-            disabled={!caId.trim() || !customerAsn.trim() || !providers.trim()}
-            onClick={() =>
-              onSave({
-                caId: Number(caId),
-                customerAsn: customerAsn.trim(),
-                providers: providers.trim(),
-              })
-            }
-          />
+          <NovoButton type="button" disabled={!canSubmit} onClick={handleSubmit} />
+        </div>
+      }
+    >
+      <form id="rpki-aspa-create-form" className="form-modal-simple" onSubmit={handleSubmit}>
+        <div className="row g-2">
+          <div className="col-12">
+            <FormField
+              name="rpki_aspa_ca_id"
+              type="select"
+              label="CA"
+              size="sm"
+              required
+              value={caId}
+              options={selectableCas.map((ca) => ({ value: ca.id, label: ca.nome }))}
+              onChange={(v) => setCaId(String(v ?? ''))}
+            />
+          </div>
+          <div className="col-12">
+            <FormField
+              name="rpki_aspa_customer_asn"
+              label="Customer ASN"
+              size="sm"
+              required
+              value={customerAsn}
+              onChange={(v) => setCustomerAsn(String(v ?? ''))}
+            />
+          </div>
+          <div className="col-12">
+            <FormField
+              name="rpki_aspa_providers"
+              label="Providers ASN (csv)"
+              size="sm"
+              required
+              value={providers}
+              onChange={(v) => setProviders(String(v ?? ''))}
+            />
+          </div>
         </div>
       </form>
     </DraggableModal>

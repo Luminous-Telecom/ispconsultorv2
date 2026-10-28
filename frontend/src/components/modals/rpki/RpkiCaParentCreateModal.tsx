@@ -114,9 +114,38 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_CA_PARENT_LINK_ERROR),
   });
 
+  const canSubmit = caId.trim() !== '' && parentName.trim() !== '' && responseXml.trim() !== '';
+
+  const handleSubmit = (event?: React.SyntheticEvent) => {
+    event?.preventDefault();
+    if (createMutation.isPending || !canSubmit) return;
+    createMutation.mutate({
+      caId: Number(caId),
+      parentName: parentName.trim(),
+      responseXml: responseXml.trim(),
+    });
+  };
+
   return (
-    <DraggableModal show={show} onClose={onClose} title="CA-pai" size="lg" modalId="rpki-ca-parent-create-modal">
-      <form className="form-modal-simple modal-inner-padding" onSubmit={(event) => event.preventDefault()}>
+    <DraggableModal
+      show={show}
+      onClose={onClose}
+      title="CA-pai"
+      size="lg"
+      modalId="rpki-ca-parent-create-modal"
+      headerActions={
+        <div className="d-flex gap-2 modal-header-actions">
+          <CancelarButton type="button" onClick={onClose} isPending={createMutation.isPending} />
+          <NovoButton
+            type="button"
+            disabled={createMutation.isPending || !canSubmit}
+            isPending={createMutation.isPending}
+            onClick={handleSubmit}
+          />
+        </div>
+      }
+    >
+      <form id="rpki-ca-parent-create-form" className="form-modal-simple" onSubmit={handleSubmit}>
         <div className="row g-2">
           <div className="col-12">
             <FormField
@@ -124,6 +153,7 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
               type="select"
               label="CA"
               size="sm"
+              required
               value={caId}
               options={selectableCas.map((ca) => ({ value: String(ca.id), label: ca.nome }))}
               onChange={(v) => setCaId(String(v ?? ''))}
@@ -134,6 +164,7 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
               name="rpki_parent_name"
               label="Nome da CA-pai"
               size="sm"
+              required
               value={parentName}
               onChange={(v) => setParentName(String(v ?? ''))}
             />
@@ -164,25 +195,11 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({
               label="Resposta da CA-pai (XML)"
               size="sm"
               rows={8}
+              required
               value={responseXml}
               onChange={(v) => setResponseXml(String(v ?? ''))}
             />
           </div>
-        </div>
-        <div className="d-flex justify-content-end gap-2 mt-3 form-modal-input-col">
-          <CancelarButton type="button" onClick={onClose} isPending={createMutation.isPending} />
-          <NovoButton
-            type="button"
-            disabled={createMutation.isPending || !caId.trim() || !parentName.trim() || !responseXml.trim()}
-            isPending={createMutation.isPending}
-            onClick={() =>
-              createMutation.mutate({
-                caId: Number(caId),
-                parentName: parentName.trim(),
-                responseXml: responseXml.trim(),
-              })
-            }
-          />
         </div>
       </form>
     </DraggableModal>

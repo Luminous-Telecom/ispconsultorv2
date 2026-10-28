@@ -117,9 +117,37 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.RPKI_REPOSITORY_IMPORT_ERROR),
   });
 
+  const canSubmit = caId.trim() !== '' && parentId.trim() !== '' && repositoryResponseXml.trim() !== '';
+
+  const handleSubmit = (event?: React.SyntheticEvent) => {
+    event?.preventDefault();
+    if (importMutation.isPending || !canSubmit) return;
+    importMutation.mutate({
+      caId: Number(caId),
+      responseXml: repositoryResponseXml.trim(),
+    });
+  };
+
   return (
-    <DraggableModal show={show} onClose={onClose} title="Repositório" size="lg" modalId="rpki-repository-create-modal">
-      <form className="form-modal-simple modal-inner-padding" onSubmit={(event) => event.preventDefault()}>
+    <DraggableModal
+      show={show}
+      onClose={onClose}
+      title="Repositório"
+      size="lg"
+      modalId="rpki-repository-create-modal"
+      headerActions={
+        <div className="d-flex gap-2 modal-header-actions">
+          <CancelarButton type="button" onClick={onClose} isPending={importMutation.isPending} />
+          <NovoButton
+            type="button"
+            disabled={importMutation.isPending || !canSubmit}
+            isPending={importMutation.isPending}
+            onClick={handleSubmit}
+          />
+        </div>
+      }
+    >
+      <form id="rpki-repository-create-form" className="form-modal-simple" onSubmit={handleSubmit}>
         <div className="row g-2">
           <div className="col-12">
             <FormField
@@ -127,6 +155,7 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
               type="select"
               label="CA"
               size="sm"
+              required
               value={caId}
               options={selectableCas.map((ca) => ({ value: ca.id, label: ca.nome }))}
               onChange={(v) => {
@@ -141,6 +170,7 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
               type="select"
               label="CA-pai"
               size="sm"
+              required
               value={parentId}
               options={parents.map((p) => ({ value: p.id, label: `${p.parent_name} (${p.parent_handle ?? '—'})` }))}
               onChange={(v) => setParentId(String(v ?? ''))}
@@ -171,24 +201,11 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
               label="repository_response"
               size="sm"
               rows={6}
+              required
               value={repositoryResponseXml}
               onChange={(v) => setRepositoryResponseXml(String(v ?? ''))}
             />
           </div>
-        </div>
-        <div className="d-flex justify-content-end gap-2 mt-3 form-modal-input-col">
-          <CancelarButton type="button" onClick={onClose} isPending={importMutation.isPending} />
-          <NovoButton
-            type="button"
-            disabled={importMutation.isPending || !caId.trim() || !parentId.trim() || !repositoryResponseXml.trim()}
-            isPending={importMutation.isPending}
-            onClick={() =>
-              importMutation.mutate({
-                caId: Number(caId),
-                responseXml: repositoryResponseXml.trim(),
-              })
-            }
-          />
         </div>
       </form>
     </DraggableModal>
