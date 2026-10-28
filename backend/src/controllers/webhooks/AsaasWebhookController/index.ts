@@ -16,7 +16,6 @@ export class AsaasWebhookController {
    * Valida token (obrigatório) e delega processamento ao service
    */
   static async handle(req: Request, res: Response): Promise<void> {
-    (req as import('../../../types/webhooks').WebhookRequest).webhookEmpresaIdentifier = req.params?.empresaIdentifier;
     const clientIp = assignWebhookClientIp(req);
     
     try {
@@ -52,7 +51,15 @@ export class AsaasWebhookController {
         return;
       }
 
-      const expectedSecret = await AsaasWebhookService.findExpectedToken(req.params?.empresaIdentifier);
+      const empresaIdentifier = await AsaasWebhookService.resolveEmpresaIdentifier({
+        urlIdentifier: req.params?.empresaIdentifier,
+        paymentId: payment?.id ? String(payment.id) : undefined,
+        externalReference: payment?.externalReference,
+        receivedSecret,
+      });
+      (req as import('../../../types/webhooks').WebhookRequest).webhookEmpresaIdentifier = empresaIdentifier;
+
+      const expectedSecret = await AsaasWebhookService.findExpectedToken(empresaIdentifier);
       const normalizedReceivedSecret = receivedSecret?.trim();
       const normalizedExpectedSecret = expectedSecret?.trim();
 

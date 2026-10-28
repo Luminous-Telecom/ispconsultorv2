@@ -325,7 +325,7 @@ Cadastre a URL no gateway e o `webhook_secret` no banco emissor do ERP.
 
 | Gateway | URL |
 |---------|-----|
-| Asaas (ERP) | `https://seu-dominio/webhook/asaas/:bancoId` |
+| Asaas (ERP) | `https://seu-dominio/webhook/asaas` (a URL do cadastro; `/:bancoId` também é aceito) |
 | Efí (ERP) | `https://seu-dominio/webhook/efi/:bancoId` |
 | Asaas/Efí (SaaS) | `https://seu-dominio/webhook/{asaas\|efi}/saas` |
 

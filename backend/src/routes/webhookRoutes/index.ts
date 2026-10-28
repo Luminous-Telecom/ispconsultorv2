@@ -14,8 +14,10 @@ efiRouter.post('/:empresaIdentifier', EfiWebhookController.handle);
 
 router.use('/efi', efiRouter);
 
-// Webhook Asaas: /webhook/asaas/:empresaIdentifier (ex: /saas ou ID do banco)
+// Webhook Asaas: /webhook/asaas (URL gerada no cadastro do banco)
+// e /webhook/asaas/:empresaIdentifier (ID do banco, quando a URL antiga traz o sufixo)
 const asaasRouter = Router();
+asaasRouter.post('/', AsaasWebhookController.handle);
 asaasRouter.post('/:empresaIdentifier', AsaasWebhookController.handle);
 router.use('/asaas', asaasRouter);
 

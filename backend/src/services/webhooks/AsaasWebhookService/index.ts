@@ -17,6 +17,14 @@ import { JsonValue } from '../../../types/index';
 import { AsaasPaymentPayload } from '../../../types/webhooks';
 import { registrarAtualizacao } from '../../sistema/AuditoriaRegistroService';
 
+function tituloIdFromExternalReference(value: string | undefined): number | null {
+  if (!value) return null;
+  const match = /^titulo_(\d+)$/.exec(value.trim());
+  if (!match) return null;
+  const id = Number(match[1]);
+  return Number.isInteger(id) && id > 0 ? id : null;
+}
+
 /**
  * Serviço para processamento de webhooks do Asaas
  */
@@ -135,6 +143,55 @@ export class AsaasWebhookService {
       });
       throw error;
     }
+  }
+
+  /**
+   * A URL do cadastro é `/webhook/asaas`, sem o id do banco.
+   * Com sufixo na URL, usa esse id. Sem sufixo, acha o banco pelo charge_id,
+   * por `externalReference` (`titulo_63`) ou pelo único banco Asaas ativo.
+   */
+  static async resolveEmpresaIdentifier(input: {
+    urlIdentifier?: string;
+    paymentId?: string;
+    externalReference?: string;
+    receivedSecret?: string;
+  }): Promise<string | undefined> {
+    const fromUrl = input.urlIdentifier?.trim();
+    if (fromUrl) return fromUrl;
+
+    const chargeId = input.paymentId?.trim();
+    if (chargeId) {
+      const fromCharge = await AsaasWebhookService.bancoIdFromTitulo({ charge_id: chargeId });
+      if (fromCharge) return fromCharge;
+    }
+
+    const tituloId = tituloIdFromExternalReference(input.externalReference);
+    if (tituloId != null) {
+      const fromTitulo = await AsaasWebhookService.bancoIdFromTitulo({ id: tituloId });
+      if (fromTitulo) return fromTitulo;
+    }
+
+    const bancos = await Banco.findAll({
+      where: { tipo_banco: 'asaas', ativo: true },
+    });
+    if (bancos.length === 1) return String(bancos[0].id);
+
+    const secret = input.receivedSecret?.trim();
+    if (!secret || bancos.length === 0) return undefined;
+
+    const matches = bancos.filter((banco) => PaymentCommonService.getWebhookToken(banco)?.trim() === secret);
+    return matches.length === 1 ? String(matches[0].id) : undefined;
+  }
+
+  private static async bancoIdFromTitulo(where: { charge_id: string } | { id: number }): Promise<string | undefined> {
+    const titulo = await Titulo.findOne({ where });
+    const bancoId = titulo?.banco_id;
+    if (bancoId == null) return undefined;
+
+    const banco = await Banco.findOne({
+      where: { id: bancoId, tipo_banco: 'asaas', ativo: true },
+    });
+    return banco ? String(banco.id) : undefined;
   }
 
   /**

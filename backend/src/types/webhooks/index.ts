@@ -110,6 +110,7 @@ export interface AsaasPaymentPayload {
     pixQrCodeUrl?: string;
     dueDate?: string;
     deleted?: boolean;
+    externalReference?: string;
   };
   invoice?: {
     id?: string;
