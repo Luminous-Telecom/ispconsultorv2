@@ -1,6 +1,6 @@
 {
   "name": "isp-consultor-backend",
-  "version": "1.105.6",
+  "version": "1.106.0",
   "description": "Backend API para ERP Assessoria",
   "main": "dist/index.js",
   "scripts": {
