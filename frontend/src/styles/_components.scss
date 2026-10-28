@@ -1819,6 +1819,11 @@ button {
 }
 
 /* Abas com overflow (⋯) no header unificado */
+.modal-tab-invalid-mark {
+  color: var(--bs-danger);
+  font-weight: 700;
+}
+
 .modal-tabs-overflow-container {
   display: flex !important;
   align-items: flex-end !important;
@@ -4660,10 +4665,10 @@ textarea:focus {
   justify-content: center;
 }
 
-/* EntitySelectField - Botão listar (lupa) */
+/* EntitySelectField - Botão listar (lupa) e editar o registro preenchido */
 .input-group .search-button {
   border: 1px solid var(--border-color);
-  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+  border-radius: 0;
   color: var(--text-secondary);
   padding: 0.375rem 0.75rem;
   background-color: var(--bg-secondary);
@@ -4671,6 +4676,19 @@ textarea:focus {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.input-group .search-button:last-child {
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+}
+
+.input-group .search-button + .search-button {
+  margin-left: -1px;
+}
+
+.input-group .search-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .input-group .search-button:hover {

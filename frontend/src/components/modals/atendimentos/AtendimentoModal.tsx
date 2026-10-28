@@ -36,6 +36,7 @@ import AtendimentoMensagensList from './AtendimentoMensagensList';
 import AtendimentoArquivosList from './AtendimentoArquivosList';
 import AtendimentoOrdensServicoList from './AtendimentoOrdensServicoList';
 import { isAtendimentoLocal } from './atendimentoHelpers';
+import { withInvalidTabs } from 'utils/tabValidation';
 
 interface AtendimentoModalProps {
   show: boolean;
@@ -75,16 +76,6 @@ const AtendimentoModal: React.FC<AtendimentoModalProps> = ({
   const formId = isPersisted ? 'atendimento-edit-form' : 'atendimento-create-form';
   const modalId = isPersisted ? 'atendimento-edit-modal' : 'atendimento-create-modal';
 
-  const tabs = useMemo(
-    (): ModalTabItem<AtendimentoTab>[] => [
-      { id: 'principal', label: 'Principal' },
-      { id: 'mensagens', label: 'Histórico', disabled: !isPersisted },
-      { id: 'arquivos', label: 'Arquivos', disabled: !isPersisted },
-      { id: 'ordens', label: 'Ordens de serviço', disabled: !isPersisted },
-    ],
-    [isPersisted]
-  );
-
   const handleTabChange = (tab: AtendimentoTab) => {
     if (tab !== 'principal' && !isPersisted) return;
     setActiveTab(tab);
@@ -93,6 +84,23 @@ const AtendimentoModal: React.FC<AtendimentoModalProps> = ({
   const [formData, setFormData] = useState<AtendimentoFormData>(initialAtendimentoForm);
   const [errors, setErrors] = useState<Partial<Record<keyof AtendimentoFormData, string>>>({});
   const [clienteError, setClienteError] = useState('');
+  const tabs = useMemo(
+    (): ModalTabItem<AtendimentoTab>[] => {
+      const fieldErrors = {
+        ...errors,
+        ...(clienteError ? { cliente: clienteError } : {}),
+      };
+      return withInvalidTabs([
+        { id: 'principal', label: 'Principal' },
+        { id: 'mensagens', label: 'Histórico', disabled: !isPersisted },
+        { id: 'arquivos', label: 'Arquivos', disabled: !isPersisted },
+        { id: 'ordens', label: 'Ordens de serviço', disabled: !isPersisted },
+      ], fieldErrors, {
+        principal: Object.keys(fieldErrors),
+      });
+    },
+    [clienteError, errors, isPersisted]
+  );
   const [clienteId, setClienteId] = useState(0);
   const [clienteNome, setClienteNome] = useState('');
   const [filialNome, setFilialNome] = useState('');

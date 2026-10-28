@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { useI18n } from 'contexts/I18nContext';
 import { ImprimirButton, ModalFormActions } from 'components/ui';
 import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
+import { withInvalidTabs } from 'utils/tabValidation';
 
 const CONTRACT_FINANCE_TABS = new Set(['financeiro', 'financeiro-avulso']);
 
@@ -12,6 +13,7 @@ interface ContratoModalHeaderProps {
   isSubmitting: boolean;
   showFinanceTabs?: boolean;
   formId?: string;
+  invalidFields?: readonly string[];
   onClose: () => void;
   onPrintContract: () => void;
   onTabChange: (tab: string) => void;
@@ -24,6 +26,7 @@ function ContratoModalHeader({
   isSubmitting,
   showFinanceTabs = true,
   formId = 'contrato-form',
+  invalidFields,
   onClose,
   onPrintContract,
   onTabChange,
@@ -40,9 +43,26 @@ function ContratoModalHeader({
       { id: 'servicos-adicionais', label: t('tabs.additionalServices'), disabled: !isEditMode },
       { id: 'ixc-provedor', label: t('tabs.ixcProvedor'), disabled: !isEditMode },
     ];
-    if (showFinanceTabs) return items;
-    return items.filter((tab) => !CONTRACT_FINANCE_TABS.has(tab.id));
-  }, [isEditMode, showFinanceTabs, t]);
+    const visible = showFinanceTabs ? items : items.filter((tab) => !CONTRACT_FINANCE_TABS.has(tab.id));
+    return withInvalidTabs(visible, invalidFields, {
+      contrato: [
+        'cliente_id',
+        'plano_id',
+        'modelo_documento_id',
+        'dia_vencimento_id',
+        'conta_boleto',
+        'tipo_cobranca_contrato_id',
+        'data_inicio',
+        'data_fim',
+        'desconto_percentual',
+        'desconto_valor',
+        'data_validade_desconto',
+        'status',
+        'observacoes',
+      ],
+      endereco: ['endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado'],
+    });
+  }, [invalidFields, isEditMode, showFinanceTabs, t]);
 
   const handleTabChange = (tab: string) => {
     const requiresEdit = tab !== 'contrato' && tab !== 'endereco';

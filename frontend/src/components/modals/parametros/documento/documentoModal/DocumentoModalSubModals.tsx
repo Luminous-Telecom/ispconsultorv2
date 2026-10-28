@@ -39,11 +39,13 @@ function DocumentoModalSubModals({
         />
       )}
 
-      <ClienteListModal
-        show={showClienteModal}
-        onClose={onCloseClienteModal}
-        onSelectClient={onSelectCliente}
-      />
+      {showClienteModal && (
+        <ClienteListModal
+          show
+          onClose={onCloseClienteModal}
+          onSelectClient={onSelectCliente}
+        />
+      )}
     </>
   );
 }

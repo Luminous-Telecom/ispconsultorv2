@@ -4,6 +4,7 @@
  */
 
 import { z } from 'zod';
+import { estadoSchema } from './brazilian-documents.schema';
 
 /**
  * Schema completo para criação/atualização de Contrato
@@ -28,7 +29,7 @@ export const contratoSchema = z.object({
   dia_vencimento_id: z
     .number()
     .int('ID do dia de vencimento deve ser um número inteiro')
-    .min(1),
+    .min(1, 'Dia de vencimento é obrigatório'),
   
   conta_boleto: z
     .number()
@@ -116,45 +117,39 @@ export const contratoSchema = z.object({
   // Endereço do contrato
   endereco: z
     .string()
-    .max(255, 'Endereço deve ter no máximo 255 caracteres')
     .trim()
-    .default('')
-    .optional(),
-  
+    .min(1, 'Endereço é obrigatório')
+    .min(3, 'Endereço deve ter pelo menos 3 caracteres')
+    .max(255, 'Endereço deve ter no máximo 255 caracteres'),
+
   numero: z
     .string()
-    .max(20, 'Número deve ter no máximo 20 caracteres')
     .trim()
-    .default('')
-    .optional(),
-  
+    .min(1, 'Número é obrigatório')
+    .max(20, 'Número deve ter no máximo 20 caracteres'),
+
   complemento: z
     .string()
     .max(100, 'Complemento deve ter no máximo 100 caracteres')
     .trim()
     .default('')
     .optional(),
-  
+
   bairro: z
     .string()
-    .max(100, 'Bairro deve ter no máximo 100 caracteres')
     .trim()
-    .default('')
-    .optional(),
-  
+    .min(1, 'Bairro é obrigatório')
+    .min(2, 'Bairro deve ter pelo menos 2 caracteres')
+    .max(100, 'Bairro deve ter no máximo 100 caracteres'),
+
   cidade: z
     .string()
-    .max(100, 'Cidade deve ter no máximo 100 caracteres')
     .trim()
-    .default('')
-    .optional(),
-  
-  estado: z
-    .string()
-    .length(2, 'Estado deve ter 2 caracteres')
-    .trim()
-    .default('')
-    .optional(),
+    .min(1, 'Cidade é obrigatória')
+    .min(2, 'Cidade deve ter pelo menos 2 caracteres')
+    .max(100, 'Cidade deve ter no máximo 100 caracteres'),
+
+  estado: estadoSchema,
   
   usar_endereco_cliente: z
     .boolean()

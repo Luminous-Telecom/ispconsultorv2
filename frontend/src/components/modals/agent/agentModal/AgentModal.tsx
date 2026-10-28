@@ -34,6 +34,8 @@ const AgentModal: React.FC<AgentModalProps> = (props) => {
       onGenerateCmd={modal.handleGenerateCmd}
       wireguardPending={wireguard.isPending}
       onConfigureWireguard={() => { void wireguard.handleConfigure(); }}
+      errors={modal.errors}
+      sshErrors={modal.sshErrors}
     />
   );
 

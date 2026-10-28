@@ -230,24 +230,7 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
   );
 
   const bulkActions = useMemo(() => {
-    if (onSelectIntegracao) {
-      const selectActions = list.buildSelectBulkActions();
-      if (allowManage) {
-        return [
-          {
-            label: bulkBtn.novo.label,
-            variant: bulkBtn.novo.variant,
-            action: () => list.openCreateForm(),
-          },
-          ...selectActions,
-          testBulkAction,
-          checkPermissionsBulkAction,
-          syncOsBulkAction,
-        ];
-      }
-      return selectActions;
-    }
-    return [
+    const standard = [
       ...list.buildCrudBulkActions({
         onNew: list.openCreateForm,
         onEdit: list.openEditForm,
@@ -257,13 +240,16 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
       checkPermissionsBulkAction,
       syncOsBulkAction,
     ];
+    if (onSelectIntegracao) {
+      if (!allowManage) return list.buildSelectBulkActions();
+      return list.appendSelectInsert(standard);
+    }
+    return standard;
   }, [
     onSelectIntegracao,
     allowManage,
     list,
     handleDelete,
-    bulkBtn.novo.label,
-    bulkBtn.novo.variant,
     testBulkAction,
     checkPermissionsBulkAction,
     syncOsBulkAction,

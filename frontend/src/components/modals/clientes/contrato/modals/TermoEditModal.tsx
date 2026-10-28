@@ -4,6 +4,7 @@ import { TermoContrato } from 'services/termoContratoService';
 import { useCreateTermoContrato, useUpdateTermoContrato } from 'hooks/useTermosContrato';
 import { useModelosTermo } from 'hooks/useModelosTermo';
 import EntitySelectField from 'components/ui/EntitySelectField';
+import { useEntityRecordEdit } from 'hooks/useEntityRecordEdit';
 import DraggableModal from 'components/common/DraggableModal';
 import { AtivoInativoField, ModalFormActions } from 'components/ui';
 import { TermoFormData } from '../types';
@@ -30,6 +31,7 @@ const TermoEditModal: React.FC<TermoEditModalProps> = ({
   onShowSelecionarTermo
 }) => {
   const { error } = useNotificationContext();
+  const termoEdit = useEntityRecordEdit('modeloTermo');
   const createTermoMutation = useCreateTermoContrato();
   const updateTermoMutation = useUpdateTermoContrato();
   const { data: termosSistema } = useModelosTermo();
@@ -95,6 +97,7 @@ const TermoEditModal: React.FC<TermoEditModalProps> = ({
               value={termoFormData.termoCadastradoId || 0}
               onChange={(value) => setTermoFormData({ ...termoFormData, termoCadastradoId: value })}
               onShowModal={onShowSelecionarTermo}
+              onEdit={() => termoEdit.open(termoFormData.termoCadastradoId || 0)}
               entities={termosSistema || []}
               label="Termo Cadastrado"
               idFieldTitle="Digite o ID do termo cadastrado"
@@ -113,6 +116,7 @@ const TermoEditModal: React.FC<TermoEditModalProps> = ({
           </div>
         </div>
       </form>
+      {termoEdit.modal}
     </DraggableModal>
   );
 };

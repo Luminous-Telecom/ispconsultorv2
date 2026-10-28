@@ -301,10 +301,7 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
   );
 
   const bulkActions = useMemo(() => {
-    if (onSelectAgent) {
-      return list.buildSelectBulkActions();
-    }
-    return [
+    const actions = [
       {
         label: bulkBtn.novo.label,
         variant: bulkBtn.novo.variant,
@@ -373,6 +370,8 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
         ],
       },
     ];
+    if (onSelectAgent) return list.appendSelectInsert(actions);
+    return actions;
   }, [
     bulkBtn,
     onSelectAgent,

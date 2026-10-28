@@ -7,12 +7,14 @@ import { ContratoForm } from '../types';
 
 interface EnderecoTabProps {
   formData: ContratoForm;
+  errors?: Partial<ContratoForm>;
   handleInputChange: (field: keyof ContratoForm, value: string | number | boolean) => void;
   clienteData?: Cliente | null;
 }
 
 const EnderecoTab: React.FC<EnderecoTabProps> = ({
   formData,
+  errors,
   handleInputChange,
   clienteData
 }) => {
@@ -48,6 +50,7 @@ const EnderecoTab: React.FC<EnderecoTabProps> = ({
           label={t('form.address')}
           size="md"
           value={formData.endereco || ''}
+          error={errors?.endereco ? String(errors.endereco) : undefined}
           onChange={(value) => handleInputChange('endereco', value as string)}
           disabled={formData.usar_endereco_cliente}
         />
@@ -60,6 +63,7 @@ const EnderecoTab: React.FC<EnderecoTabProps> = ({
           label={t('form.number')}
           size="md"
           value={formData.numero || ''}
+          error={errors?.numero ? String(errors.numero) : undefined}
           onChange={(value) => handleInputChange('numero', value as string)}
           disabled={formData.usar_endereco_cliente}
         />
@@ -72,6 +76,7 @@ const EnderecoTab: React.FC<EnderecoTabProps> = ({
           label={t('form.complement')}
           size="md"
           value={formData.complemento || ''}
+          error={errors?.complemento ? String(errors.complemento) : undefined}
           onChange={(value) => handleInputChange('complemento', value as string)}
           disabled={formData.usar_endereco_cliente}
         />
@@ -84,6 +89,7 @@ const EnderecoTab: React.FC<EnderecoTabProps> = ({
           label={t('form.neighborhood')}
           size="md"
           value={formData.bairro || ''}
+          error={errors?.bairro ? String(errors.bairro) : undefined}
           onChange={(value) => handleInputChange('bairro', value as string)}
           disabled={formData.usar_endereco_cliente}
         />
@@ -96,6 +102,7 @@ const EnderecoTab: React.FC<EnderecoTabProps> = ({
           label={t('form.city')}
           size="md"
           value={formData.cidade || ''}
+          error={errors?.cidade ? String(errors.cidade) : undefined}
           onChange={(value) => handleInputChange('cidade', value as string)}
           disabled={formData.usar_endereco_cliente}
         />
@@ -108,6 +115,7 @@ const EnderecoTab: React.FC<EnderecoTabProps> = ({
           label={t('form.state')}
           size="md"
           value={formData.estado || ''}
+          error={errors?.estado ? String(errors.estado) : undefined}
           onChange={(value) => handleInputChange('estado', value as string)}
           disabled={formData.usar_endereco_cliente}
           maxLength={2}

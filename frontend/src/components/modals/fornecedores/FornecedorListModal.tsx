@@ -192,10 +192,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
   );
 
   const bulkActions = useMemo(() => {
-    if (onSelectFornecedor) {
-      return list.buildSelectBulkActions();
-    }
-    return list.buildCrudBulkActions({
+    const crud = list.buildCrudBulkActions({
       onNew: () => setShowCreateModal(true),
       onEdit: (item) => {
         setSelectedFornecedorId(item.id);
@@ -203,6 +200,8 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
       },
       onDelete: handleDelete,
     });
+    if (onSelectFornecedor) return list.appendSelectInsert(crud);
+    return crud;
   }, [onSelectFornecedor, list, handleDelete]);
 
   const pagination = useMemo(

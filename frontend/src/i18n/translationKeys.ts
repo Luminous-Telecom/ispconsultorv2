@@ -857,6 +857,7 @@ export interface TranslationKeys {
   'buttons.close': string;
   'buttons.create': string;
   'buttons.edit': string;
+  'buttons.editRecord': string;
   'buttons.delete': string;
   'buttons.print': string;
   'buttons.generate': string;
@@ -1285,6 +1286,7 @@ export interface TranslationKeys {
   'tabs.messages': string;
   'tabs.responsible': string;
   'tabs.communicationPreferences': string;
+  'tabs.pendingFields': string;
   'tabs.ixcProvedor': string;
 
   // Status Labels

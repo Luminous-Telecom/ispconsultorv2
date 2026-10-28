@@ -28,6 +28,7 @@ import {
 import { ClienteModalProps } from './clienteModal/types';
 import { authService } from 'services/authService';
 import { canSeeFinanceAreas, canSeeModal } from 'constants/userRoles';
+import { withInvalidTabs } from 'utils/tabValidation';
 
 const ClienteModal = ({
   show,
@@ -131,12 +132,21 @@ const ClienteModal = ({
 
   const columns = useMemo(() => buildClienteTituloColumns(t), [t]);
 
-  const clienteTabs = useClienteModalTabs({
+  const clienteTabsBase = useClienteModalTabs({
     canEditContratosFinanceiro,
     hasModuloEquipamentos,
     hasModuloRpki,
     showFinanceTabs,
   });
+  const clienteTabs = useMemo(
+    () => withInvalidTabs(clienteTabsBase, formHook.errors, {
+      'dados-basicos': ['cnpj', 'razao_social', 'nome_fantasia', 'ativo', 'tipo_cobranca', 'valor_primeiro_titulo'],
+      contato: ['email', 'telefone', 'whatsapp', 'central_assinante_senha', 'recebe_email', 'recebe_whatsapp'],
+      endereco: ['cep', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado'],
+      observacoes: ['observacoes'],
+    }),
+    [clienteTabsBase, formHook.errors]
+  );
 
   const handleClose = useCallback(() => {
     onClose();

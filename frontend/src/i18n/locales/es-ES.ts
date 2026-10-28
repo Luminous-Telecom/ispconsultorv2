@@ -880,6 +880,7 @@ const esES: TranslationKeys = {
     'buttons.close': 'Cerrar',
     'buttons.create': 'Nuevo',
     'buttons.edit': 'Editar',
+    'buttons.editRecord': 'Editar registro',
     'buttons.delete': 'Eliminar',
     'buttons.print': 'Imprimir',
     'buttons.generate': 'Generar',
@@ -1272,6 +1273,7 @@ const esES: TranslationKeys = {
     'tabs.messages': 'Mensajes',
     'tabs.responsible': 'Responsable',
     'tabs.communicationPreferences': 'Preferencias de Comunicación',
+    'tabs.pendingFields': 'Campos obligatorios pendientes',
 
     // Status Labels
     'status.processing': 'Procesando',

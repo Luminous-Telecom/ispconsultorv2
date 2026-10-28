@@ -10,6 +10,7 @@ import DraggableModal from 'components/common/DraggableModal';
 import { ModalFormActions } from 'components/ui';
 import FormField from 'components/ui/FormField';
 import EntitySelectField from 'components/ui/EntitySelectField';
+import { useEntityRecordEdit } from 'hooks/useEntityRecordEdit';
 import PlanoListModal from 'components/modals/planos/PlanoListModal';
 
 interface ServicoAdicionalModalProps {
@@ -35,6 +36,7 @@ const ServicoAdicionalModal: React.FC<ServicoAdicionalModalProps> = ({
   const updateMutation = useUpdateContratoPlanoAdicional();
   const { data: planosData } = usePlanos({ page: 1, limit: 1000 });
 
+  const planoEdit = useEntityRecordEdit('plano');
   const [planoId, setPlanoId] = useState<number>(0);
   const [descontoPercentual, setDescontoPercentual] = useState<number>(0);
   const [descontoValor, setDescontoValor] = useState<number>(0);
@@ -174,6 +176,7 @@ const ServicoAdicionalModal: React.FC<ServicoAdicionalModalProps> = ({
                   }
                 }}
                 onShowModal={() => setShowPlanoModal(true)}
+                onEdit={() => planoEdit.open(planoId)}
                 entities={planos.map((p: Plano) => ({
                   id: p.id,
                   nome: p.nome_plano
@@ -249,6 +252,7 @@ const ServicoAdicionalModal: React.FC<ServicoAdicionalModalProps> = ({
         </form>
       </DraggableModal>
 
+      {planoEdit.modal}
       {showPlanoModal && (
         <PlanoListModal
           show={showPlanoModal}

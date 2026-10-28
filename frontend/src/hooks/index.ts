@@ -21,6 +21,7 @@ export * from './useModalSelect';
 export * from './useEntityListModal';
 export * from './useEntityFormModal';
 export * from './useEntitySelectField';
+export * from './useEntityRecordEdit';
 export * from './useSelectedEntity';
 export * from './useCep';
 export * from './useDashboard';

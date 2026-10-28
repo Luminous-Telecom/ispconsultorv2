@@ -1,12 +1,14 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PositionedFixed, NavLinkButton } from 'components/ui';
+import { useI18n } from 'contexts/I18nContext';
 import { computeFixedDropdownPosition } from 'utils/fixedDropdownPosition';
 
 export interface ModalTabItem<T extends string = string> {
   id: T;
   label: string;
   disabled?: boolean;
+  invalid?: boolean;
 }
 
 interface ModalTabsOverflowProps<T extends string = string> {
@@ -30,6 +32,7 @@ function ModalTabsOverflow<T extends string = string>({
   isMobile = false,
   id,
 }: ModalTabsOverflowProps<T>) {
+  const { t } = useI18n();
   const containerRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLUListElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -196,6 +199,17 @@ function ModalTabsOverflow<T extends string = string>({
     [onTabChange]
   );
 
+  const renderTabLabel = (tab: ModalTabItem<T>) => (
+    <>
+      {tab.label}
+      {tab.invalid ? (
+        <span className="modal-tab-invalid-mark" title={t('tabs.pendingFields')} aria-hidden="true">
+          {' !'}
+        </span>
+      ) : null}
+    </>
+  );
+
   const renderTabButton = (tab: ModalTabItem<T>) => (
     <NavLinkButton
       className={`nav-link ${activeTab === tab.id ? 'active' : ''} ${tab.disabled && disabledClassName ? disabledClassName : ''}`}
@@ -203,14 +217,14 @@ function ModalTabsOverflow<T extends string = string>({
       disabled={tab.disabled}
       ariaLabel={tab.label}
     >
-      {tab.label}
+      {renderTabLabel(tab)}
     </NavLinkButton>
   );
 
   const renderMeasureTab = (tab: ModalTabItem<T>) => (
     <li key={tab.id} className="nav-item" role="presentation" data-tab-measure>
       <NavLinkButton className="nav-link" tabIndex={-1} ariaLabel={tab.label}>
-        {tab.label}
+        {renderTabLabel(tab)}
       </NavLinkButton>
     </li>
   );
@@ -272,7 +286,7 @@ function ModalTabsOverflow<T extends string = string>({
                     role="menuitem"
                     ariaLabel={tab.label}
                   >
-                    {tab.label}
+                    {renderTabLabel(tab)}
                   </NavLinkButton>
                 ))}
               </div>

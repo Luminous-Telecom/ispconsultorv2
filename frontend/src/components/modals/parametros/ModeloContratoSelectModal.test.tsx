@@ -31,7 +31,7 @@ jest.mock('hooks/useEntityRecordEdit', () => ({
 
 jest.mock('components/modals/parametros/documento/documentoModal/DocumentoModal', () => ({
   __esModule: true,
-  default: () => null,
+  default: () => <div>documento-modal</div>,
 }));
 
 jest.mock('components/common/DraggableModal', () => ({
@@ -69,5 +69,6 @@ describe('ModeloContratoSelectModal', () => {
       'Modelo de contrato'
     );
     expect(mockPanel.mock.calls.at(-1)?.[0].title).toBeUndefined();
+    expect(screen.queryByText('documento-modal')).toBeNull();
   });
 });

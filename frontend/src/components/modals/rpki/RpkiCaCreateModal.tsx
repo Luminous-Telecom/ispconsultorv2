@@ -4,6 +4,7 @@ import DraggableModal from 'components/common/DraggableModal';
 import { FormField } from 'components/ui';
 import { CancelarButton, LimparButton, NovoButton } from 'components/ui';
 import EntitySelectField from 'components/ui/EntitySelectField';
+import { useEntityRecordEdit } from 'hooks/useEntityRecordEdit';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
@@ -19,6 +20,7 @@ interface RpkiCaCreateModalProps {
 }
 
 const RpkiCaCreateModal: React.FC<RpkiCaCreateModalProps> = ({ show, onClose, defaultClienteId }) => {
+  const clienteEdit = useEntityRecordEdit('cliente');
   const [nome, setNome] = useState('');
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
   const [showClienteSelector, setShowClienteSelector] = useState(false);
@@ -100,6 +102,7 @@ const RpkiCaCreateModal: React.FC<RpkiCaCreateModalProps> = ({ show, onClose, de
                   if (!id) setSelectedCliente(null);
                 }}
                 onShowModal={() => setShowClienteSelector(true)}
+                onEdit={() => clienteEdit.open(selectedCliente?.id || 0)}
                 entities={
                   selectedCliente
                     ? [
@@ -132,6 +135,7 @@ const RpkiCaCreateModal: React.FC<RpkiCaCreateModalProps> = ({ show, onClose, de
           setShowClienteSelector(false);
         }}
       />
+      {clienteEdit.modal}
     </DraggableModal>
   );
 };

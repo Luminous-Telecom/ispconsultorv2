@@ -30,6 +30,7 @@ const SshDeviceModal: React.FC<SshDeviceModalProps> = (props) => {
       manualBackupLabel={modal.t('sshDevice.manualBackup')}
       basicDataLabel={modal.t('tabs.basicData')}
       backupsLabel={modal.t('tabs.sshDeviceBackups')}
+      errors={modal.errors}
       onClose={onClose}
       onTabChange={modal.setActiveTab}
       onOpenTerminal={modal.handleOpenTerminal}

@@ -10,6 +10,7 @@ import {
 import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
 import { useI18n } from 'contexts/I18nContext';
 import { ActiveTab } from './types';
+import { tabHasError } from 'utils/tabValidation';
 
 interface AgentModalHeaderProps {
   activeTab: ActiveTab;
@@ -28,6 +29,8 @@ interface AgentModalHeaderProps {
   onGenerateCmd: () => void;
   wireguardPending?: boolean;
   onConfigureWireguard?: () => void;
+  errors?: object;
+  sshErrors?: object;
 }
 
 const AgentModalHeader: React.FC<AgentModalHeaderProps> = ({
@@ -47,28 +50,35 @@ const AgentModalHeader: React.FC<AgentModalHeaderProps> = ({
   onGenerateCmd,
   wireguardPending = false,
   onConfigureWireguard,
+  errors,
+  sshErrors,
 }) => {
   const { t } = useI18n();
+  const configInvalid = tabHasError(errors, ['name', 'cliente_id', 'description']);
+  const installAutoInvalid = tabHasError(sshErrors, ['cliente_id', 'host', 'port', 'username', 'password']);
   const tabs = useMemo(
     (): ModalTabItem<ActiveTab>[] => [
-      { id: 'config', label: 'Configurações' },
+      { id: 'config', label: 'Configurações', invalid: configInvalid },
       {
         id: 'install-auto',
         label: 'Instalar Automático',
         disabled: !canUseInstallTabs,
+        invalid: installAutoInvalid,
       },
       {
         id: 'install-manual',
         label: 'Instalar Manual',
         disabled: !canUseInstallTabs,
+        invalid: false,
       },
       {
         id: 'wireguard',
         label: t('agent.tabWireguard'),
         disabled: !canUseInstallTabs,
+        invalid: false,
       },
     ],
-    [canUseInstallTabs, t]
+    [canUseInstallTabs, configInvalid, installAutoInvalid, t]
   );
 
   const handleTabChange = (tab: ActiveTab) => {

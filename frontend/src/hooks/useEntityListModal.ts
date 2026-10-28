@@ -191,6 +191,15 @@ export function useEntityListModal<T extends { id: number | string }>({
     [bulkBtn, isNothingSelected, resolveItem, t]
   );
 
+  const appendSelectInsert = useCallback(
+    (actions: BulkAction<T>[], insertLabel?: string): BulkAction<T>[] => {
+      const insert = buildSelectBulkActions()[1];
+      if (!insert) return actions;
+      return [...actions, insertLabel ? { ...insert, label: insertLabel } : insert];
+    },
+    [buildSelectBulkActions]
+  );
+
   return {
     t,
     bulkBtn,
@@ -214,5 +223,6 @@ export function useEntityListModal<T extends { id: number | string }>({
     buildPagination,
     buildSelectBulkActions,
     buildCrudBulkActions,
+    appendSelectInsert,
   };
 }

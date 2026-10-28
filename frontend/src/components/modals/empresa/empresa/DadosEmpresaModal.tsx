@@ -11,6 +11,7 @@ import { useFormReset } from 'hooks/useFormReset';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
 import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
+import { withInvalidTabs } from 'utils/tabValidation';
 import { CancelarButton, SalvarButton } from 'components/ui';
 import { DadosEmpresaForm, DadosEmpresaModalProps } from './types';
 import DadosBasicosTab from './abas/DadosBasicosTab';
@@ -37,6 +38,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   void itemId;
 
   const [activeTab, setActiveTab] = useState<'basico' | 'endereco' | 'contato' | 'responsavel'>('basico');
+  const [emailError, setEmailError] = useState('');
   const { success, info } = useNotificationContext();
   const { showApiError } = useApiError();
   const queryClient = useQueryClient();
@@ -158,6 +160,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   const isPending = updateAdminMutation.isPending;
 
   const handleInputChange = useCallback((field: keyof DadosEmpresaForm, value: string) => {
+    if (field === 'email') setEmailError('');
     setDados((prev) => ({ ...prev, [field]: value ?? '' }));
   }, []);
 
@@ -165,9 +168,11 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
     (e: React.FormEvent) => {
       e.preventDefault();
       if (!dados.email?.trim()) {
+        setEmailError('E-mail é obrigatório');
         showApiError('E-mail é obrigatório');
         return;
       }
+      setEmailError('');
       updateAdminMutation.mutate(dados);
     },
     [dados, showApiError, updateAdminMutation]
@@ -217,12 +222,14 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
 
   type EmpresaTabId = 'basico' | 'endereco' | 'contato' | 'responsavel';
 
-  const empresaTabs = useMemo((): ModalTabItem<EmpresaTabId>[] => [
+  const empresaTabs = useMemo((): ModalTabItem<EmpresaTabId>[] => withInvalidTabs([
     { id: 'basico', label: 'Empresa' },
     { id: 'endereco', label: 'Endereço' },
     { id: 'contato', label: 'Contato' },
     { id: 'responsavel', label: 'Responsável' },
-  ], []);
+  ], emailError ? { email: emailError } : {}, {
+    contato: ['email'],
+  }), [emailError]);
 
   const headerActionsContent = useMemo(
     () => (
@@ -274,7 +281,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
         <form id="empresa-form" onSubmit={handleSubmit} className="form-modal-simple">
           {activeTab === 'basico' && <DadosBasicosTab dados={dados} onChange={handleInputChange} isPending={isPending} onLogoChange={onLogoChange} />}
           {activeTab === 'endereco' && <EnderecoTab dados={dados} onChange={handleInputChange} isPending={isPending} />}
-          {activeTab === 'contato' && <ContatoTab dados={dados} onChange={handleInputChange} isPending={isPending} />}
+          {activeTab === 'contato' && <ContatoTab dados={dados} onChange={handleInputChange} isPending={isPending} emailError={emailError} />}
           {activeTab === 'responsavel' && <ResponsavelTab dados={dados} onChange={handleInputChange} isPending={isPending} onAssinaturaChange={onAssinaturaChange} />}
         </form>
       </div>

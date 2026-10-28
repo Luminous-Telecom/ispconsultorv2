@@ -37,6 +37,27 @@ describe('ModalTabsOverflow', () => {
     expect(onTabChange).toHaveBeenCalledWith('b');
   });
 
+  it('mostra ! na aba com campos pendentes', () => {
+    const onTabChange = jest.fn();
+    localStorage.setItem('app-language', 'pt-BR');
+    render(
+      <I18nProvider>
+        <ModalTabsOverflow
+          tabs={[
+            { id: 'a', label: 'Principal' },
+            { id: 'b', label: 'Endereço', invalid: true },
+          ]}
+          activeTab="a"
+          onTabChange={onTabChange}
+        />
+      </I18nProvider>
+    );
+
+    const tablist = screen.getByRole('tablist');
+    expect(tablist.textContent).toContain('Endereço !');
+    expect(tablist.querySelector('[title="Campos obrigatórios pendentes"]')).toBeTruthy();
+  });
+
   it('não troca de aba ao passar o mouse', () => {
     const onTabChange = jest.fn();
     renderTabs(onTabChange);

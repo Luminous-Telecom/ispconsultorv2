@@ -1,5 +1,6 @@
 import React from 'react';
 import { FormField, EntitySelectField, EntityIdField } from 'components/ui';
+import { useEntityRecordEdit } from 'hooks/useEntityRecordEdit';
 import type { EntityItem, StringEntityItem } from 'components/ui/EntitySelectField';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -107,6 +108,7 @@ const AtendimentoFormFields: React.FC<AtendimentoFormFieldsProps> = ({
   onShowResponsavelModal,
 }) => {
   const { t } = useI18n();
+  const clienteEdit = useEntityRecordEdit('cliente');
 
   return (
     <div className="row g-2">
@@ -144,6 +146,7 @@ const AtendimentoFormFields: React.FC<AtendimentoFormFieldsProps> = ({
           value={clienteId}
           onChange={(v) => onClienteIdChange?.(v)}
           onShowModal={onShowClienteModal}
+          onEdit={() => clienteEdit.open(clienteId || 0)}
           entities={clienteEntities}
           placeholder={t('placeholder.selectClient')}
           error={clienteError}
@@ -313,6 +316,7 @@ const AtendimentoFormFields: React.FC<AtendimentoFormFieldsProps> = ({
           />
         </div>
       ) : null}
+      {clienteEdit.modal}
     </div>
   );
 };

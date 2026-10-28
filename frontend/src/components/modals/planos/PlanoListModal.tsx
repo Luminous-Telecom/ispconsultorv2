@@ -195,10 +195,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
   );
 
   const bulkActions = useMemo(() => {
-    if (onSelectPlano) {
-      return list.buildSelectBulkActions();
-    }
-    return list.buildCrudBulkActions({
+    const crud = list.buildCrudBulkActions({
       onNew: () => {
         list.setSelectedEntityId(null);
         setIsEditMode(false);
@@ -211,6 +208,8 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       },
       onDelete: handleDelete,
     });
+    if (onSelectPlano) return list.appendSelectInsert(crud);
+    return crud;
   }, [onSelectPlano, list, handleDelete]);
 
   const pagination = useMemo(

@@ -25,7 +25,7 @@ jest.mock('hooks/useEntityRecordEdit', () => ({
 
 jest.mock('components/modals/clientes/ClienteListModal', () => ({
   __esModule: true,
-  default: ({ show }: { show: boolean }) => (show ? <div>lista-clientes</div> : null),
+  default: () => <div>lista-clientes</div>,
 }));
 
 const formData: ContratoForm = {
@@ -82,6 +82,7 @@ describe('ContratoTab cliente', () => {
   it('abre a lista para escolher o cliente', async () => {
     renderTab(0, '');
     expect(screen.queryByDisplayValue('Provedor Alfa')).toBeNull();
+    expect(screen.queryByText('lista-clientes')).toBeNull();
     fireEvent.click(screen.getByTitle('ui.selectClient'));
     expect(screen.getByText('lista-clientes')).toBeTruthy();
   });

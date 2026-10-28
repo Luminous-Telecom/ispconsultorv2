@@ -1,6 +1,7 @@
 import React from 'react';
 import { FormField, AtivoInativoField } from 'components/ui';
 import EntitySelectField from 'components/ui/EntitySelectField';
+import { useEntityRecordEdit } from 'hooks/useEntityRecordEdit';
 import { useI18n } from 'contexts/I18nContext';
 import { DEVICE_TYPE_OPTIONS } from './constants';
 import { getClienteRazaoSocialLabel } from 'utils/clienteDisplay';
@@ -46,6 +47,7 @@ const SshDeviceModalDadosTab: React.FC<SshDeviceModalDadosTabProps> = ({
   onShowClientePicker,
   onShowAgentPicker,
 }) => {
+  const clienteEdit = useEntityRecordEdit('cliente');
   const { t } = useI18n();
   const backupAgendamentoHint = renderBackupAgendamentoHint(agendamentoBackup, t);
 
@@ -70,6 +72,7 @@ const SshDeviceModalDadosTab: React.FC<SshDeviceModalDadosTabProps> = ({
             value={adminClienteId || 0}
             onChange={onAdminClienteChange}
             onShowModal={onShowClientePicker}
+            onEdit={() => clienteEdit.open(adminClienteId || 0)}
             entities={
               adminClienteId && adminClienteNome
                 ? [{ id: adminClienteId, nome: adminClienteNome }]
@@ -239,6 +242,7 @@ const SshDeviceModalDadosTab: React.FC<SshDeviceModalDadosTabProps> = ({
           </div>
         )}
       </div>
+      {clienteEdit.modal}
     </div>
   );
 };

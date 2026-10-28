@@ -1,5 +1,6 @@
 import React from 'react';
 import { FormField, AtivoInativoField, EntitySelectField } from 'components/ui';
+import { useEntityRecordEdit } from 'hooks/useEntityRecordEdit';
 import type { EntityItem } from 'components/ui/EntitySelectField';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -36,6 +37,8 @@ const IntegracaoIxcProvedorFormFields: React.FC<IntegracaoIxcProvedorFormFieldsP
   onShowContratoModal,
 }) => {
   const { t } = useI18n();
+  const clienteEdit = useEntityRecordEdit('cliente');
+  const contratoEdit = useEntityRecordEdit('contrato');
 
   return (
     <div className="row g-2">
@@ -46,6 +49,7 @@ const IntegracaoIxcProvedorFormFields: React.FC<IntegracaoIxcProvedorFormFieldsP
           value={form.cliente_id}
           onChange={(id) => onChange('cliente_id', id || 0)}
           onShowModal={onShowClienteModal}
+          onEdit={() => clienteEdit.open(form.cliente_id)}
           entities={clienteEntities}
           placeholder={t('placeholder.selectClient')}
           error={errors.cliente_id}
@@ -62,6 +66,7 @@ const IntegracaoIxcProvedorFormFields: React.FC<IntegracaoIxcProvedorFormFieldsP
           value={form.contrato_id}
           onChange={(id) => onChange('contrato_id', id || 0)}
           onShowModal={onShowContratoModal}
+          onEdit={() => contratoEdit.open(form.contrato_id)}
           entities={contratoEntities}
           placeholder={t('placeholder.selectContract')}
           error={errors.contrato_id}
@@ -131,6 +136,8 @@ const IntegracaoIxcProvedorFormFields: React.FC<IntegracaoIxcProvedorFormFieldsP
           }
         />
       </div>
+      {clienteEdit.modal}
+      {contratoEdit.modal}
     </div>
   );
 };

@@ -95,18 +95,13 @@ const ServidorWhatsappListModal: React.FC<ServidorWhatsappListModalProps> = ({
   ], [t]);
 
   const bulkActions = useMemo(() => {
-    if (onSelect) {
-      return list.buildSelectBulkActions().map((action, index) => (
-        index === 1
-          ? { ...action, label: list.bulkBtn.inserir.label, variant: list.bulkBtn.inserir.variant }
-          : action
-      ));
-    }
-    return list.buildCrudBulkActions({
+    const crud = list.buildCrudBulkActions({
       onNew: list.openCreateForm,
       onEdit: list.openEditForm,
       onDelete: handleDelete,
     });
+    if (onSelect) return list.appendSelectInsert(crud, list.bulkBtn.inserir.label);
+    return crud;
   }, [onSelect, list, handleDelete]);
 
   return (

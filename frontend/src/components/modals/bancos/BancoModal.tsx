@@ -16,6 +16,7 @@ import { InformacoesBasicasTab, ConfiguracoesApiTab } from './banco';
 import { BancoForm } from './banco/types';
 import AsaasForm from './banco/especificos/AsaasForm';
 import EfiForm from './banco/especificos/EfiForm';
+import { withInvalidTabs } from 'utils/tabValidation';
 
 interface BancoModalProps {
   show: boolean;
@@ -51,11 +52,19 @@ const BancoModal: React.FC<BancoModalProps> = ({
   const [activeTab, setActiveTab] = useState('informacoes-basicas');
 
   const bancoTabs = useMemo(
-    () => [
+    () => withInvalidTabs([
       { id: 'informacoes-basicas', label: t('tabs.basicInfo') },
       { id: 'configuracoes-api', label: t('tabs.apiConfig') },
-    ],
-    [t]
+    ], errors, {
+      'informacoes-basicas': ['nome', 'codigo', 'descricao', 'ativo', 'tipo_banco', 'servidor_email_cobranca_id', 'servidor_whatsapp_cobranca_id'],
+      'configuracoes-api': [
+        'api_url', 'api_key', 'api_secret', 'webhook_secret', 'identificador_conta',
+        'client_id_producao', 'client_secret_producao', 'url_retorno', 'percentual_multa',
+        'percentual_juros', 'desconto_tipo', 'desconto_valor', 'maximo_dias_recalcular',
+        'layout_web', 'layout_pdf', 'local_pagamento', 'dados_avalista', 'taxa_cobranca',
+      ],
+    }),
+    [errors, t]
   );
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();

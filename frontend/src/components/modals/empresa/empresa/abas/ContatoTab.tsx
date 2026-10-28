@@ -3,10 +3,11 @@ import { formatPhone } from 'utils/formatters';
 import { FormField } from 'components/ui';
 import { DadosEmpresaTabProps } from '../types';
 
-const ContatoTab: React.FC<DadosEmpresaTabProps> = ({
+const ContatoTab: React.FC<DadosEmpresaTabProps & { emailError?: string }> = ({
   dados,
   onChange,
-  isPending
+  isPending,
+  emailError,
 }) => {
   const handleInputChange = (field: keyof typeof dados, value: string) => {
     let formattedValue = value;
@@ -51,6 +52,7 @@ const ContatoTab: React.FC<DadosEmpresaTabProps> = ({
           required
           size="md"
           value={dados.email}
+          error={emailError}
           onChange={(value) => handleInputChange('email', String(value ?? ''))}
           disabled={isPending}
         />

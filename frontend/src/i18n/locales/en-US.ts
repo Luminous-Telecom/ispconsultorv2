@@ -878,6 +878,7 @@ const enUS: TranslationKeys = {
     'buttons.close': 'Close',
     'buttons.create': 'New',
     'buttons.edit': 'Edit',
+    'buttons.editRecord': 'Edit record',
     'buttons.delete': 'Delete',
     'buttons.print': 'Print',
     'buttons.generate': 'Generate',
@@ -1269,6 +1270,7 @@ const enUS: TranslationKeys = {
     'tabs.messages': 'Messages',
     'tabs.responsible': 'Responsible',
     'tabs.communicationPreferences': 'Communication Preferences',
+    'tabs.pendingFields': 'Required fields pending',
     'tabs.ixcProvedor': 'IXC Provider',
 
     // Status Labels

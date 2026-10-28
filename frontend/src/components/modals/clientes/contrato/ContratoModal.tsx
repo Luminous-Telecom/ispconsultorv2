@@ -511,6 +511,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             isSubmitting={formHook.isSubmitting}
             showFinanceTabs={showFinanceTabs}
             formId="contrato-form"
+            invalidFields={formHook.invalidFields}
             onClose={onClose}
             onPrintContract={handleImprimirContrato}
             onTabChange={handleTabChange}

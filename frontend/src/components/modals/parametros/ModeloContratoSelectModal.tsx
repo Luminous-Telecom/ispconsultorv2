@@ -1,13 +1,19 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useModalSelect } from 'hooks/useModalSelect';
 import { useTableFilters } from 'hooks/useTableFilters';
+import { useEntityRecordEdit } from 'hooks/useEntityRecordEdit';
+import { useApiError } from 'hooks/useApiError';
 import { formatDate } from 'utils/formatters';
 import DocumentoSistemaService, { DocumentoSistema } from 'services/documentoSistemaService';
 import DraggableModal from 'components/common/DraggableModal';
 import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
+import DocumentoModal from 'components/modals/parametros/documento/documentoModal/DocumentoModal';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useBulkBtn } from 'components/ui';
 import { TableConfig } from 'components/tables/types';
 import { useI18n } from 'contexts/I18nContext';
+import { ERROR_MESSAGES } from 'constants/ErrorMessages';
 
 interface ModeloContratoSelectModalProps {
   show: boolean;
@@ -23,6 +29,11 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
   title
 }) => {
   const { t } = useI18n();
+  const bulkBtn = useBulkBtn();
+  const { success } = useNotificationContext();
+  const { showApiError } = useApiError();
+  const modeloEdit = useEntityRecordEdit('modeloContrato');
+  const [showCreate, setShowCreate] = useState(false);
   const defaultTitle = title || t('modal.selectContractModel');
   // Hook unificado para filtros, busca e paginação
   const tableFilters = useTableFilters({
@@ -97,22 +108,55 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
     }
   }, [selectedItem, clearSelection, onSelect, onClose]);
 
+  const resolveSelected = useCallback((selectedItems?: DocumentoSistema[]) => {
+    if (selectedItems && selectedItems.length > 0) return selectedItems[0];
+    return selectedItem;
+  }, [selectedItem]);
+
+  const handleDelete = useCallback(async (selectedItems?: DocumentoSistema[]) => {
+    const item = resolveSelected(selectedItems);
+    if (!item) return;
+    if (!window.confirm(t('messages.confirmDelete'))) return;
+    try {
+      const response = await DocumentoSistemaService.delete(item.id);
+      success(response.message);
+      clearSelection();
+      refetch();
+    } catch (err) {
+      showApiError(err, ERROR_MESSAGES.DELETE_ERROR);
+    }
+  }, [clearSelection, refetch, resolveSelected, showApiError, success, t]);
+
   const bulkActions = useMemo(() => onSelect ? [
     {
-      label: 'Cancelar',
-      variant: 'primary' as const,
-      action: () => {
-        clearSelection();
-        onClose();
-      }
+      label: bulkBtn.novo.label,
+      variant: bulkBtn.novo.variant,
+      action: () => setShowCreate(true),
     },
     {
-      label: 'Inserir',
-      variant: 'primary' as const,
-      disabled: (selectedItems: DocumentoSistema[]) => selectedItems.length === 0 && !selectedItem,
-      action: (selectedItems: DocumentoSistema[]) => handleSelect(selectedItems)
-    }
-  ] : [], [onSelect, selectedItem, clearSelection, onClose, handleSelect]);
+      label: bulkBtn.editar.label,
+      variant: bulkBtn.editar.variant,
+      disabled: (selectedItems: DocumentoSistema[]) => !resolveSelected(selectedItems),
+      action: (selectedItems: DocumentoSistema[]) => {
+        const item = resolveSelected(selectedItems);
+        if (item) modeloEdit.open(item.id);
+      },
+    },
+    {
+      label: bulkBtn.deletar.label,
+      variant: bulkBtn.deletar.variant,
+      disabled: (selectedItems: DocumentoSistema[]) => !resolveSelected(selectedItems),
+      action: (selectedItems: DocumentoSistema[]) => {
+        void handleDelete(selectedItems);
+      },
+    },
+    {
+      label: bulkBtn.inserir.label,
+      variant: bulkBtn.inserir.variant,
+      disabled: (selectedItems: DocumentoSistema[]) => !resolveSelected(selectedItems),
+      action: (selectedItems: DocumentoSistema[]) => handleSelect(selectedItems),
+    },
+  ] : [], [onSelect, bulkBtn, resolveSelected, modeloEdit, handleDelete, handleSelect]);
 
   const modalData = useMemo(() => modelosData?.data || [], [modelosData?.data]);
 
@@ -124,6 +168,7 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
   }, [tableFilters]);
 
   return (
+    <>
     <DraggableModal
       show={show}
       onClose={() => {
@@ -188,6 +233,19 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
             search={tableFilters.search}
           />
     </DraggableModal>
+    {showCreate && (
+      <DocumentoModal
+        show
+        tipo="contrato"
+        onClose={() => setShowCreate(false)}
+        onSuccess={() => {
+          setShowCreate(false);
+          refetch();
+        }}
+      />
+    )}
+    {modeloEdit.modal}
+    </>
   );
 };
 

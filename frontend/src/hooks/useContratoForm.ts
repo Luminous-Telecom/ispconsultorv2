@@ -192,7 +192,8 @@ export const useContratoForm = ({
     } as ZodContratoFormData;
   }, [contrato, clienteId]);
 
-  // Resetar formulário quando modal abrir/fechar ou quando contrato carregar
+  // Resetar formulário quando modal abrir/fechar ou quando contrato carregar.
+  // createdContratoId precisa zerar ao fechar: senão o próximo "novo" reabre o contrato anterior.
   useEffect(() => {
     const blankForm = {
       ...initialFormData,
@@ -200,6 +201,7 @@ export const useContratoForm = ({
     } as ZodContratoFormData;
 
     if (!show) {
+      setCreatedContratoId(null);
       reset(initialFormData as ZodContratoFormData);
       return;
     }
@@ -333,6 +335,12 @@ export const useContratoForm = ({
     const requiredMessage = getRequiredValidationMessage(submitErrors);
     if (requiredMessage) {
       notifyError(requiredMessage);
+      return;
+    }
+
+    const firstMessage = Object.values(submitErrors).find((item) => typeof item?.message === 'string')?.message;
+    if (typeof firstMessage === 'string') {
+      notifyError(firstMessage);
     }
   };
 

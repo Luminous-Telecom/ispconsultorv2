@@ -102,15 +102,17 @@ function ClienteModalSubModals({
         onSuccess={onReceberSuccess}
       />
 
-      <ContratoModal
-        show={showContratoCreateModal || showContratoEditModal}
-        clienteId={contratoClienteId}
-        contratoId={showContratoEditModal ? selectedContratoId : null}
-        onClose={onCloseContratoModal}
-        onSuccess={() => {
-          // Não fechar o modal automaticamente - permitir criar múltiplos contratos
-        }}
-      />
+      {(showContratoCreateModal || showContratoEditModal) && (
+        <ContratoModal
+          show
+          clienteId={contratoClienteId}
+          contratoId={showContratoEditModal ? selectedContratoId : null}
+          onClose={onCloseContratoModal}
+          onSuccess={() => {
+            // Não fechar o modal automaticamente - permitir criar múltiplos contratos
+          }}
+        />
+      )}
 
       <ImprimirModal
         show={showImprimirModal}

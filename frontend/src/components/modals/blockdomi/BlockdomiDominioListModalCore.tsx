@@ -69,7 +69,7 @@ const BlockdomiDominioListModalCore: React.FC<BlockdomiDominioListModalCoreProps
 
   const {
     buildPagination,
-    buildSelectBulkActions,
+    appendSelectInsert,
     bulkBtn,
     isNothingSelected,
     handleSelectionChange,
@@ -214,10 +214,7 @@ const BlockdomiDominioListModalCore: React.FC<BlockdomiDominioListModalCoreProps
   );
 
   const bulkActions = useMemo(() => {
-    if (onSelect) {
-      return buildSelectBulkActions();
-    }
-    return [
+    const actions = [
       {
         label: bulkBtn.novo.label,
         variant: bulkBtn.novo.variant,
@@ -277,9 +274,11 @@ const BlockdomiDominioListModalCore: React.FC<BlockdomiDominioListModalCoreProps
         },
       },
     ];
+    if (onSelect) return appendSelectInsert(actions);
+    return actions;
   }, [
     onSelect,
-    buildSelectBulkActions,
+    appendSelectInsert,
     bulkBtn,
     resolveItems,
     isNothingSelected,

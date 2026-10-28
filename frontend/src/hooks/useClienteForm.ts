@@ -12,6 +12,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ClienteService } from '../services/clienteService';
 import { ParametrosService } from '../services/parametrosService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
+import { getRequiredValidationMessage } from '../utils/requiredValidationToast';
 import { useApiError } from './useApiError';
 import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 import { Cliente, CreateCliente, UpdateCliente } from '../types';
@@ -82,14 +83,18 @@ export const useClienteForm = ({
   show,
   onSuccess
 }: UseClienteFormParams): UseClienteFormReturn => {
-  const isEditing = !!clienteId;
-  const { success, info } = useNotificationContext();
+  const { success, info, error: notifyError } = useNotificationContext();
   const { showApiError } = useApiError();
   const queryClient = useQueryClient();
   
   const [isConsultingCnpj, setIsConsultingCnpj] = useState(false);
   const [isConsultingCep, setIsConsultingCep] = useState(false);
   const [createdClienteId, setCreatedClienteId] = useState<number | null>(null);
+  const [createdCliente, setCreatedCliente] = useState<Cliente | null>(null);
+  const persistedClienteId = clienteId || createdClienteId;
+  const persistedClienteIdRef = useRef<number | null>(persistedClienteId);
+  persistedClienteIdRef.current = persistedClienteId;
+  const isEditing = !!persistedClienteId;
   
   const lastCnpjConsulted = useRef<string>('');
   const lastCepConsulted = useRef<string>('');
@@ -147,11 +152,14 @@ export const useClienteForm = ({
   }, [show]);
 
   // Buscar dados do cliente (apenas se estiver editando)
-  const { data: cliente, isLoading: isLoadingCliente } = useQuery({
-    queryKey: ['cliente', clienteId],
-    queryFn: () => ClienteService.getById(clienteId!),
-    enabled: isEditing && !!clienteId,
+  const { data: clienteCarregado, isPending: isClienteQueryPending } = useQuery({
+    queryKey: ['cliente', persistedClienteId],
+    queryFn: () => ClienteService.getById(persistedClienteId!),
+    enabled: !!persistedClienteId,
   });
+  const cliente = clienteCarregado
+    ?? (createdCliente?.id === persistedClienteId ? createdCliente : undefined);
+  const isLoadingCliente = !!persistedClienteId && isClienteQueryPending && !cliente;
 
 
   // Dados customizados do cliente (quando editando)
@@ -187,6 +195,7 @@ export const useClienteForm = ({
     if (!show) {
       reset(initialFormData as ZodClienteFormData);
       setCreatedClienteId(null);
+      setCreatedCliente(null);
       return;
     }
 
@@ -198,18 +207,25 @@ export const useClienteForm = ({
 
   // Reset separado quando os dados do cliente carregam
   useEffect(() => {
-    if (show && isEditing && customFormData && cliente) {
+    if (show && clienteId && customFormData && cliente) {
       reset(customFormData);
     }
-  }, [cliente, show, isEditing]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [cliente, show, clienteId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Mutation para atualizar cliente
   const updateClienteMutation = useMutation({
-    mutationFn: (data: UpdateCliente) => ClienteService.update(clienteId!, data),
+    mutationFn: (data: UpdateCliente) => {
+      const id = persistedClienteIdRef.current;
+      if (!id) {
+        return Promise.reject(new Error('Cliente não identificado'));
+      }
+      return ClienteService.update(id, data);
+    },
     onSuccess: () => {
+      const id = persistedClienteIdRef.current;
       success('Cliente atualizado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
-      queryClient.invalidateQueries({ queryKey: ['cliente', clienteId] });
+      queryClient.invalidateQueries({ queryKey: ['cliente', id] });
       onSuccess?.();
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CLIENT_UPDATE_ERROR),
@@ -218,10 +234,12 @@ export const useClienteForm = ({
   // Mutation para criar cliente
   const createClienteMutation = useMutation({
     mutationFn: (data: Partial<Cliente>) => ClienteService.create(data as CreateCliente),
-    onSuccess: (createdCliente: Cliente) => {
+    onSuccess: (clienteCriado: Cliente) => {
+      queryClient.setQueryData(['cliente', clienteCriado.id], clienteCriado);
+      setCreatedCliente(clienteCriado);
+      setCreatedClienteId(clienteCriado.id);
       success('Cliente salvo com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
-      setCreatedClienteId(createdCliente.id);
       onSuccess?.();
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CLIENT_CREATE_ERROR),
@@ -408,7 +426,12 @@ export const useClienteForm = ({
   // Handler de submit mantido para compatibilidade
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
-    rhfHandleSubmit(onSubmit)(e as React.FormEvent);
+    rhfHandleSubmit(onSubmit, (submitErrors) => {
+      const requiredMessage = getRequiredValidationMessage(
+        submitErrors as Record<string, { message?: unknown }>
+      );
+      if (requiredMessage) notifyError(requiredMessage);
+    })(e as React.FormEvent);
   };
 
   return {

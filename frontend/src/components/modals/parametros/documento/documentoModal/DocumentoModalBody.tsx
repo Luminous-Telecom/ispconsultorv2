@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import FormField from 'components/ui/FormField';
 import EntitySelectField from 'components/ui/EntitySelectField';
+import { useEntityRecordEdit } from 'hooks/useEntityRecordEdit';
 import { LabelWithHelp } from 'components/ui/LabelWithHelp';
 import { useI18n } from 'contexts/I18nContext';
 import { formatDateTime } from 'utils/formatters';
@@ -51,6 +52,7 @@ function DocumentoModalBody({
   onSubmit,
 }: DocumentoModalBodyProps) {
   const { t } = useI18n();
+  const clienteEdit = useEntityRecordEdit('cliente');
   const [modeloPadraoPreset, setModeloPadraoPreset] = useState('');
   const editorKeyPrefix = `${isEditing ? currentDocumento?.id : 'create'}`;
   const ultimaAtualizacao = isEditing && currentDocumento?.updated_at
@@ -193,6 +195,7 @@ function DocumentoModalBody({
               value={clienteTesteId || 0}
               onChange={(value) => setClienteTesteId(value)}
               onShowModal={onShowClienteModal}
+              onEdit={() => clienteEdit.open(clienteTesteId || 0)}
               entities={clientesDisponiveis.map((c) => ({
                 id: c.id,
                 nome: c.razao_social,
@@ -205,6 +208,7 @@ function DocumentoModalBody({
         </div>
         </div>
       </form>
+      {clienteEdit.modal}
     </div>
   );
 }

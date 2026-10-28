@@ -38,10 +38,12 @@ Complementa layout horizontal: `frontend-form-modal-layout.mdc` — **referênci
   onChange={setClienteId}
   entities={clientes}
   onShowModal={() => setShowClienteList(true)}
+  onEdit={() => clienteEdit.open(clienteId)}
   required
 />
 ```
 
+- `onEdit` + `useEntityRecordEdit` abre a edição do registro preenchido (botão depois da lupa)
 - Modal de listagem para escolher → `ListModal` + `onSelect`
 - Ícone busca: `IconOnlyButton` interno — não `<button>` cru
 

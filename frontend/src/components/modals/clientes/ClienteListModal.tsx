@@ -206,10 +206,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   );
 
   const bulkActions = useMemo(() => {
-    if (onSelectClient) {
-      return list.buildSelectBulkActions();
-    }
-    return list.buildCrudBulkActions({
+    const crud = list.buildCrudBulkActions({
       onNew: () => setShowCreateModal(true),
       onEdit: (item) => {
         setSelectedClienteId(item.id);
@@ -217,6 +214,8 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       },
       onDelete: handleDelete,
     });
+    if (onSelectClient) return list.appendSelectInsert(crud);
+    return crud;
   }, [onSelectClient, list, handleDelete]);
 
   const pagination = useMemo(
@@ -271,26 +270,30 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
 
   const auxiliaryModals = (
     <>
-      <ClienteModal
-        key="create-modal"
-        show={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onSuccess={() => {
-          refetch();
-        }}
-      />
+      {showCreateModal && (
+        <ClienteModal
+          key="create-modal"
+          show
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={() => {
+            refetch();
+          }}
+        />
+      )}
 
-      <ClienteModal
-        show={showEditModal}
-        onClose={() => {
-          setShowEditModal(false);
-          setSelectedClienteId(null);
-        }}
-        clienteId={selectedClienteId}
-        onSuccess={() => {
-          refetch();
-        }}
-      />
+      {showEditModal && (
+        <ClienteModal
+          show
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedClienteId(null);
+          }}
+          clienteId={selectedClienteId}
+          onSuccess={() => {
+            refetch();
+          }}
+        />
+      )}
 
       <ImprimirModal
         show={list.auditoria.showPreview}

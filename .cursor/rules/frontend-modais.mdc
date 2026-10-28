@@ -152,6 +152,10 @@ const handleTabChange = (tab: TabId) => {
 
 **Proibido** deixar abas secundárias clicáveis no cadastro novo só para exibir texto “Salve para visualizar…” — usar `disabled` na aba.
 
+### Aba com campo pendente
+
+Quando o salvamento falha por campo de outra aba, a aba recebe `invalid: true` via `withInvalidTabs` (`utils/tabValidation`). O `ModalTabsOverflow` mostra **!** nessa aba. Mapear cada campo validado para a aba em que ele aparece.
+
 ## Checklist
 
 1. Form/detalhe → `DraggableModal`

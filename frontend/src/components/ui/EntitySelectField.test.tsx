@@ -42,4 +42,38 @@ describe('EntitySelectField', () => {
     expect(screen.getByDisplayValue('1')).toBeTruthy();
     expect(screen.getByDisplayValue('SMTP principal')).toBeTruthy();
   });
+
+  it('abre a edição do registro preenchido e fica desabilitado sem id', () => {
+    const onEdit = jest.fn();
+    const { rerender } = renderField(
+      <EntitySelectField
+        label="Plano"
+        value={7712}
+        onChange={jest.fn()}
+        onEdit={onEdit}
+        entities={[{ id: 7712, nome: 'AGILITY - FIBRA - 410M' }]}
+      />,
+    );
+
+    const editButton = screen.getByRole('button', { name: 'Editar registro' }) as HTMLButtonElement;
+    expect(editButton.disabled).toBe(false);
+    fireEvent.click(editButton);
+    expect(onEdit).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <I18nProvider>
+        <NotificationProvider>
+          <EntitySelectField label="Plano" value={0} onChange={jest.fn()} onEdit={onEdit} entities={[]} />
+        </NotificationProvider>
+      </I18nProvider>,
+    );
+    expect((screen.getByRole('button', { name: 'Editar registro' }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('não mostra o botão de edição quando o campo não abre cadastro', () => {
+    renderField(
+      <EntitySelectField label="Cliente" value={4} onChange={jest.fn()} entities={[{ id: 4, nome: 'Cliente' }]} />,
+    );
+    expect(screen.queryByRole('button', { name: 'Editar registro' })).toBeNull();
+  });
 });

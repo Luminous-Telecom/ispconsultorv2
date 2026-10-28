@@ -21,6 +21,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = (props) => {
       basicDataLabel={modal.t('tabs.basicData')}
       addressLabel={modal.t('tabs.address')}
       observationsLabel={modal.t('tabs.observations')}
+      errors={modal.errors}
       onClose={onClose}
       onTabChange={modal.setActiveTab}
     />

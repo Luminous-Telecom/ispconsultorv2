@@ -1,6 +1,7 @@
 import React from 'react';
 import { useI18n } from 'contexts/I18nContext';
 import EntitySelectField from 'components/ui/EntitySelectField';
+import { useEntityRecordEdit } from 'hooks/useEntityRecordEdit';
 import FormField from 'components/ui/FormField';
 import type { ContaPagarFormData, ContaPagarFormErrors } from '../types';
 
@@ -24,6 +25,7 @@ const ContaPagarFornecedorSection: React.FC<ContaPagarFornecedorSectionProps> = 
   onTipoCriacaoChange
 }) => {
   const { t } = useI18n();
+  const fornecedorEdit = useEntityRecordEdit('fornecedor');
 
   return (
     <>
@@ -31,6 +33,7 @@ const ContaPagarFornecedorSection: React.FC<ContaPagarFornecedorSectionProps> = 
         value={formData.fornecedor_id}
         onChange={onFornecedorChange}
         onShowModal={onShowFornecedorModal}
+        onEdit={() => fornecedorEdit.open(formData.fornecedor_id)}
         entities={fornecedores}
         label={t('form.supplier')}
         idFieldTitle={t('placeholder.enterSupplierId')}
@@ -52,6 +55,7 @@ const ContaPagarFornecedorSection: React.FC<ContaPagarFornecedorSectionProps> = 
           size="sm"
         />
       )}
+      {fornecedorEdit.modal}
     </>
   );
 };

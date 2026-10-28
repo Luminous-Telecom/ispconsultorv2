@@ -63,7 +63,7 @@ const BlockdomiIpListModalCore: React.FC<BlockdomiIpListModalCoreProps> = ({
   } = list.tableFilters;
 
   const {
-    buildSelectBulkActions,
+    appendSelectInsert,
     bulkBtn,
     isNothingSelected,
     resolveItem,
@@ -179,10 +179,7 @@ const BlockdomiIpListModalCore: React.FC<BlockdomiIpListModalCoreProps> = ({
   );
 
   const bulkActions = useMemo(() => {
-    if (onSelect) {
-      return buildSelectBulkActions();
-    }
-    return [
+    const actions = [
       {
         label: bulkBtn.novo.label,
         variant: bulkBtn.novo.variant,
@@ -220,12 +217,14 @@ const BlockdomiIpListModalCore: React.FC<BlockdomiIpListModalCoreProps> = ({
             await handleBulkDelete(items.map((i) => i.id));
           }
         },
-      ...buildBlockdomiOficioBulkActions({ t, resolveItems }),
       },
+      ...buildBlockdomiOficioBulkActions({ t, resolveItems }),
     ];
+    if (onSelect) return appendSelectInsert(actions);
+    return actions;
   }, [
     onSelect,
-    buildSelectBulkActions,
+    appendSelectInsert,
     bulkBtn,
     isNothingSelected,
     resolveItem,

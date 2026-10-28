@@ -878,6 +878,7 @@ const ptBR: TranslationKeys = {
     'buttons.close': 'Fechar',
     'buttons.create': 'Novo',
     'buttons.edit': 'Editar',
+    'buttons.editRecord': 'Editar registro',
     'buttons.delete': 'Deletar',
     'buttons.print': 'Imprimir',
     'buttons.generate': 'Gerar',
@@ -1270,6 +1271,7 @@ const ptBR: TranslationKeys = {
     'tabs.messages': 'Mensagens',
     'tabs.responsible': 'Responsável',
     'tabs.communicationPreferences': 'Preferências de Comunicação',
+    'tabs.pendingFields': 'Campos obrigatórios pendentes',
 
     // Status Labels
     'status.processing': 'Processando',

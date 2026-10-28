@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { AppButton, ModalFormActions } from 'components/ui';
 import ModalTabsOverflow, { ModalTabItem } from 'components/common/ModalTabsOverflow';
 import { SshDeviceTab } from './types';
+import { withInvalidTabs } from 'utils/tabValidation';
 
 interface SshDeviceModalHeaderProps {
   activeTab: SshDeviceTab;
@@ -19,6 +20,7 @@ interface SshDeviceModalHeaderProps {
   manualBackupLabel: string;
   basicDataLabel: string;
   backupsLabel: string;
+  errors?: object;
   onClose: () => void;
   onTabChange: (tab: SshDeviceTab) => void;
   onOpenTerminal: () => void;
@@ -42,6 +44,7 @@ const SshDeviceModalHeader: React.FC<SshDeviceModalHeaderProps> = ({
   manualBackupLabel,
   basicDataLabel,
   backupsLabel,
+  errors,
   onClose,
   onTabChange,
   onOpenTerminal,
@@ -49,11 +52,13 @@ const SshDeviceModalHeader: React.FC<SshDeviceModalHeaderProps> = ({
   onManualBackup,
 }) => {
   const tabs = useMemo(
-    (): ModalTabItem<SshDeviceTab>[] => [
+    (): ModalTabItem<SshDeviceTab>[] => withInvalidTabs([
       { id: 'dados', label: basicDataLabel },
       { id: 'backups', label: backupsLabel, disabled: !canOpenBackupsTab },
-    ],
-    [basicDataLabel, backupsLabel, canOpenBackupsTab]
+    ], errors, {
+      dados: Object.keys(errors ?? {}),
+    }),
+    [basicDataLabel, backupsLabel, canOpenBackupsTab, errors]
   );
 
   const handleTabChange = (tab: SshDeviceTab) => {

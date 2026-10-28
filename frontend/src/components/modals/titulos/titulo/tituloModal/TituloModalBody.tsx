@@ -4,6 +4,7 @@ import type { PaginatedResponse } from 'types/api';
 import { FormValue } from 'types/common';
 import FormField from 'components/ui/FormField';
 import EntitySelectField from 'components/ui/EntitySelectField';
+import { useEntityRecordEdit } from 'hooks/useEntityRecordEdit';
 import { EntityIdField } from 'components/ui';
 import { TituloForm, TituloFormErrors } from '../types';
 import {
@@ -92,6 +93,7 @@ const TituloModalBody: React.FC<TituloModalBodyProps> = ({
   onShowPlanoModal,
   labels,
 }) => {
+  const planoEdit = useEntityRecordEdit('plano');
   const clienteDisplayLabel = getClienteDisplayLabel(
     tituloData?.data,
     formData.cliente_id,
@@ -327,6 +329,7 @@ const TituloModalBody: React.FC<TituloModalBodyProps> = ({
               value={formData.plano_id}
               onChange={(value) => onInputChange('plano_id', value)}
               onShowModal={onShowPlanoModal}
+              onEdit={() => planoEdit.open(formData.plano_id)}
               entities={
                 planos?.data?.map((plano: Plano) => ({
                   id: plano.id,
@@ -508,6 +511,7 @@ const TituloModalBody: React.FC<TituloModalBodyProps> = ({
           />
         </div>
       </div>
+      {planoEdit.modal}
     </form>
   );
 };

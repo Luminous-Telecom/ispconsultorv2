@@ -6,6 +6,7 @@ import { DocumentoSistema } from 'services/documentoSistemaService';
 import { DiasVencimento } from 'services/diasVencimentoService';
 import { TipoCobrancaContrato } from 'services/tipoCobrancaContratoService';
 import EntitySelectField from 'components/ui/EntitySelectField';
+import { useEntityRecordEdit } from 'hooks/useEntityRecordEdit';
 import FormField from 'components/ui/FormField';
 import AtivoInativoField from 'components/ui/AtivoInativoField';
 import { EntityIdField } from 'components/ui';
@@ -65,8 +66,13 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
   onShowModeloContratoModal
 }) => {
   const { t } = useI18n();
+  const clienteEdit = useEntityRecordEdit('cliente');
+  const planoEdit = useEntityRecordEdit('plano');
   const [showClienteModal, setShowClienteModal] = useState(false);
   const [clienteNomeSelecionado, setClienteNomeSelecionado] = useState('');
+  const bancoEdit = useEntityRecordEdit('banco');
+  const tipoCobrancaEdit = useEntityRecordEdit('tipoCobranca');
+  const modeloEdit = useEntityRecordEdit('modeloContrato');
   const [descontoPercentualDisplay, setDescontoPercentualDisplay] = React.useState<string>(
     formData.desconto_percentual > 0 ? formData.desconto_percentual.toString() : ''
   );
@@ -223,6 +229,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           value={clienteIdSelecionado}
           onChange={(value) => handleInputChange('cliente_id', value || 0)}
           onShowModal={() => setShowClienteModal(true)}
+          onEdit={() => clienteEdit.open(clienteIdSelecionado)}
           entities={clienteEntities}
           label={t('form.client')}
           placeholder={t('placeholder.selectClient')}
@@ -246,6 +253,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
             }
           }}
           onShowModal={onShowPlanoModal}
+          onEdit={() => planoEdit.open(formData.plano_id || planoSelecionado?.id || 0)}
           entities={planosEntities}
           label={t('form.plan')}
           idFieldTitle={t('form.enterClientId')}
@@ -328,6 +336,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
             }
           }}
           onShowModal={onShowBancoModal}
+          onEdit={() => bancoEdit.open(formData.conta_boleto || bancoSelecionado?.id || 0)}
           entities={bancosList.map((b) => ({
             id: b.id,
             nome: b.nome
@@ -352,6 +361,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
             }
           }}
           onShowModal={onShowTipoCobrancaContratoModal}
+          onEdit={() => tipoCobrancaEdit.open((formData.tipo_cobranca_contrato_id ?? tipoCobrancaContratoSelecionado?.id) || 0)}
           entities={tipoCobrancaEntities}
           label={t('modal.billingType')}
           required
@@ -426,6 +436,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
             }
           }}
           onShowModal={onShowModeloContratoModal}
+          onEdit={() => modeloEdit.open(formData.modelo_documento_id || modeloContratoSelecionado?.id || 0)}
           entities={(Array.isArray(modelosContratoData) ? modelosContratoData : modelosContratoData?.data || []).map((m) => ({
             id: m.id,
             nome: m.nome
@@ -449,16 +460,23 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           rows={3}
         />
       </div>
-      <ClienteListModal
-        show={showClienteModal}
-        onClose={() => setShowClienteModal(false)}
-        title={t('ui.selectClient')}
-        onSelectClient={(cliente) => {
-          handleInputChange('cliente_id', cliente.id);
-          setClienteNomeSelecionado(getClienteRazaoSocialLabel(cliente, ''));
-          setShowClienteModal(false);
-        }}
-      />
+      {planoEdit.modal}
+      {bancoEdit.modal}
+      {tipoCobrancaEdit.modal}
+      {modeloEdit.modal}
+      {clienteEdit.modal}
+      {showClienteModal && (
+        <ClienteListModal
+          show
+          onClose={() => setShowClienteModal(false)}
+          title={t('ui.selectClient')}
+          onSelectClient={(cliente) => {
+            handleInputChange('cliente_id', cliente.id);
+            setClienteNomeSelecionado(getClienteRazaoSocialLabel(cliente, ''));
+            setShowClienteModal(false);
+          }}
+        />
+      )}
     </div>
   );
 };

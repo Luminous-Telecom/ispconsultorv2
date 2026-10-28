@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FormField, AtivoInativoField, EntityIdField, EntitySelectField } from 'components/ui';
+import { useEntityRecordEdit } from 'hooks/useEntityRecordEdit';
 import { BancoTabProps } from '../types';
 import { useI18n } from 'contexts/I18nContext';
 import { ServidorEmail, ServidorEmailService } from 'services/servidorEmailService';
@@ -25,6 +26,8 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
   entityId,
 }) => {
   const { t } = useI18n();
+  const emailEdit = useEntityRecordEdit('servidorEmail');
+  const whatsappEdit = useEntityRecordEdit('servidorWhatsapp');
   const [showEmailList, setShowEmailList] = useState(false);
   const [showWhatsappList, setShowWhatsappList] = useState(false);
   const emailId = formData.servidor_email_cobranca_id;
@@ -124,6 +127,7 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
             disabled={isPending}
             entities={emailsEntities}
             onShowModal={() => setShowEmailList(true)}
+            onEdit={() => emailEdit.open(emailId ?? 0)}
             onChange={(value) => handleInputChange('servidor_email_cobranca_id', value || null)}
           />
         </div>
@@ -136,6 +140,7 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
             disabled={isPending}
             entities={whatsappEntities}
             onShowModal={() => setShowWhatsappList(true)}
+            onEdit={() => whatsappEdit.open(whatsappId ?? 0)}
             onChange={(value) => handleInputChange('servidor_whatsapp_cobranca_id', value || null)}
           />
         </div>
@@ -166,6 +171,8 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
         onClose={() => setShowWhatsappList(false)}
         onSelect={(item) => handleInputChange('servidor_whatsapp_cobranca_id', item.id)}
       />
+      {emailEdit.modal}
+      {whatsappEdit.modal}
     </>
   );
 };

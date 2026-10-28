@@ -240,6 +240,7 @@ function ContratoModalTabPanels({
     return (
       <EnderecoTab
         formData={formData}
+        errors={errors}
         handleInputChange={handleInputChange}
         clienteData={clienteData ?? null}
       />

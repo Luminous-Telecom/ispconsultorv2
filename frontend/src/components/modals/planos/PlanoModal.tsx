@@ -5,6 +5,7 @@ import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
 import ModalTabsOverflow from 'components/common/ModalTabsOverflow';
 import { Loading, ModalFormActions } from 'components/ui';
+import { withInvalidTabs } from 'utils/tabValidation';
 import { InformacoesBasicasTab, ServicosObservacoesTab } from './plano';
 
 interface PlanoModalProps {
@@ -24,20 +25,32 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('informacoes-basicas');
 
-  const planoTabs = useMemo(
-    () => [
-      { id: 'informacoes-basicas', label: t('tabs.salePlan') },
-      { id: 'servicos-observacoes', label: t('tabs.servicesObservations') },
-    ],
-    [t]
-  );
-
-  // Hook de formulário com React Hook Form + Zod
   const formHook = usePlanoForm({
     planoId: planoId || null,
     show,
     onSuccess
   });
+
+  const planoTabs = useMemo(
+    () => withInvalidTabs([
+      { id: 'informacoes-basicas', label: t('tabs.salePlan') },
+      { id: 'servicos-observacoes', label: t('tabs.servicesObservations') },
+    ], formHook.errors, {
+      'informacoes-basicas': [
+        'nome_plano',
+        'tipo_servico',
+        'descricao',
+        'valor_mensal',
+        'quantidade_usuarios',
+        'data_inicio',
+        'data_fim',
+        'status',
+        'servicos_inclusos',
+      ],
+      'servicos-observacoes': ['observacoes'],
+    }),
+    [formHook.errors, t]
+  );
 
   // Resetar aba ativa quando modal abrir
   useEffect(() => {

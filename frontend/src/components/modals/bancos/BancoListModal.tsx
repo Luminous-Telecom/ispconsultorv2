@@ -152,14 +152,13 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
   );
 
   const bulkActions = useMemo(() => {
-    if (onSelectBanco) {
-      return list.buildSelectBulkActions();
-    }
-    return list.buildCrudBulkActions({
+    const crud = list.buildCrudBulkActions({
       onNew: list.openCreateForm,
       onEdit: list.openEditForm,
       onDelete: handleDelete,
     });
+    if (onSelectBanco) return list.appendSelectInsert(crud);
+    return crud;
   }, [onSelectBanco, list, handleDelete]);
 
   const pagination = useMemo(

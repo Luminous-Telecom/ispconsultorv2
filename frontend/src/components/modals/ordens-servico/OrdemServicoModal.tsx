@@ -28,6 +28,7 @@ import OrdemServicoMensagensList from './OrdemServicoMensagensList';
 import OrdemServicoArquivosList from './OrdemServicoArquivosList';
 import IxcLookupSelectModal from './IxcLookupSelectModal';
 import { clearDependentesAoMudarSetor, isOrdemServicoExcluivel, isOrdemServicoLocal } from './ordemServicoAcoes';
+import { withInvalidTabs } from 'utils/tabValidation';
 import { ixcToDatetimeLocal, datetimeLocalToIxc } from 'utils/ixcDateTime';
 
 export interface OrdemServicoAtendimentoPrefill {
@@ -70,15 +71,6 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
   const { t } = useI18n();
   const isEdit = !!ordemServicoId;
 
-  const ordemServicoTabs = useMemo(
-    (): ModalTabItem<OrdemServicoTab>[] => [
-      { id: 'principal', label: 'Principal' },
-      { id: 'mensagens', label: 'Histórico', disabled: !isEdit },
-      { id: 'arquivos', label: 'Arquivos', disabled: !isEdit },
-    ],
-    [isEdit]
-  );
-
   const handleTabChange = (tab: OrdemServicoTab) => {
     if (tab !== 'principal' && !isEdit) return;
     setActiveTab(tab);
@@ -90,6 +82,22 @@ const OrdemServicoModal: React.FC<OrdemServicoModalProps> = ({
   const [formData, setFormData] = useState<OrdemServicoFormData>(initialOrdemServicoForm);
   const [errors, setErrors] = useState<Partial<Record<keyof OrdemServicoFormData, string>>>({});
   const [clienteError, setClienteError] = useState('');
+  const ordemServicoTabs = useMemo(
+    (): ModalTabItem<OrdemServicoTab>[] => {
+      const fieldErrors = {
+        ...errors,
+        ...(clienteError ? { cliente: clienteError } : {}),
+      };
+      return withInvalidTabs([
+        { id: 'principal', label: 'Principal' },
+        { id: 'mensagens', label: 'Histórico', disabled: !isEdit },
+        { id: 'arquivos', label: 'Arquivos', disabled: !isEdit },
+      ], fieldErrors, {
+        principal: Object.keys(fieldErrors),
+      });
+    },
+    [clienteError, errors, isEdit]
+  );
   const [clienteId, setClienteId] = useState(0);
   const [clienteNome, setClienteNome] = useState('');
   const [filialNome, setFilialNome] = useState('');

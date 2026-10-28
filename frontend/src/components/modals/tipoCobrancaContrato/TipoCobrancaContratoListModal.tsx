@@ -120,14 +120,13 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
   );
 
   const bulkActions = useMemo(() => {
-    if (onSelectTipo) {
-      return list.buildSelectBulkActions();
-    }
-    return list.buildCrudBulkActions({
+    const crud = list.buildCrudBulkActions({
       onNew: list.openCreateForm,
       onEdit: list.openEditForm,
       onDelete: handleDelete,
     });
+    if (onSelectTipo) return list.appendSelectInsert(crud);
+    return crud;
   }, [onSelectTipo, list, handleDelete]);
 
   const pagination = useMemo(

@@ -29,6 +29,9 @@ interface EntitySelectFieldBaseProps {
   disabled?: boolean;
   idFieldTitle?: string;
   searchButtonTitle?: string;
+  /** Abre a edição do registro preenchido. O botão só aparece quando informado. */
+  onEdit?: () => void;
+  editButtonTitle?: string;
   helpText?: string;
   idPlaceholder?: string;
 }
@@ -65,6 +68,8 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = (props) => {
     disabled = false,
     idFieldTitle,
     searchButtonTitle = 'Abrir listagem de registros',
+    onEdit,
+    editButtonTitle,
     helpText,
     placeholder,
   } = props;
@@ -77,6 +82,10 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = (props) => {
   const idGuard = useAutofillGuard(true, false);
   const idPlaceholder = props.idPlaceholder ?? (stringIdMode ? 'UUID' : t('table.id'));
   const idTitle = idFieldTitle ?? (stringIdMode ? 'UUID' : 'Digite o ID');
+  const resolvedEditTitle = editButtonTitle ?? t('buttons.editRecord');
+  const hasSelectedValue = stringIdMode
+    ? String(props.value ?? '').trim() !== ''
+    : Number(props.value) > 0;
   const errorMessage = error != null ? String(error) : undefined;
   const inlineError = shouldShowInlineValidationMessage(errorMessage) ? errorMessage : undefined;
   const requiredToastMessage = isRequiredValidationMessage(errorMessage) ? errorMessage : null;
@@ -150,6 +159,17 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = (props) => {
           >
             {SEARCH_ICON}
           </IconOnlyButton>
+          {onEdit && (
+            <IconOnlyButton
+              onClick={onEdit}
+              title={resolvedEditTitle}
+              label={resolvedEditTitle}
+              className="search-button"
+              disabled={disabled || !hasSelectedValue}
+            >
+              <i className="bi bi-box-arrow-up-right" aria-hidden />
+            </IconOnlyButton>
+          )}
         </div>
         {inlineError && <div className="invalid-feedback entity-select-error">{inlineError}</div>}
       </div>

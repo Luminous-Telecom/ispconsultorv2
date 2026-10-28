@@ -3,6 +3,7 @@ import type { TranslationKeys } from 'contexts/I18nContext';
 import { Agent } from 'types';
 import { getClienteRazaoSocialLabel } from 'utils/clienteDisplay';
 import EntitySelectField from 'components/ui/EntitySelectField';
+import { useEntityRecordEdit } from 'hooks/useEntityRecordEdit';
 import { FormField, GerarTokenButton } from 'components/ui';
 import { DadosEmpresa } from 'services/dadosEmpresaService';
 import { AgentFormData } from './types';
@@ -52,6 +53,7 @@ function AgentModalConfigTab({
   onFormSubmit,
   onRegenerate,
 }: AgentModalConfigTabProps) {
+  const clienteEdit = useEntityRecordEdit('cliente');
   const shouldShowEmpresaTenant = !isEditing && !isAdmin && Boolean(me);
   const empresaTenantLabel = dadosEmpresaTenant
     ? getClienteRazaoSocialLabel(dadosEmpresaTenant, 'Carregando…')
@@ -84,6 +86,7 @@ function AgentModalConfigTab({
                 if (errors.cliente_id) setErrors((prev) => ({ ...prev, cliente_id: '' }));
               }}
               onShowModal={onShowClientePicker}
+              onEdit={() => clienteEdit.open(adminClienteId || 0)}
               entities={
                 adminClienteId && adminClienteNome
                   ? [{ id: adminClienteId, nome: adminClienteNome }]
@@ -164,6 +167,7 @@ function AgentModalConfigTab({
           </>
         )}
       </div>
+      {clienteEdit.modal}
     </form>
   );
 }
