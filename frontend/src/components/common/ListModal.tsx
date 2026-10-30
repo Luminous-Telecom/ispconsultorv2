@@ -49,6 +49,7 @@ function ListModal<T extends { id: number | string }>({
   modalSize = 'lg',
   wrapperTitle,
   onSelectAllPages,
+  onColumnFiltersChange,
 }: ListModalProps<T> & {
   filters?: Array<{
     key: string;
@@ -85,6 +86,10 @@ function ListModal<T extends { id: number | string }>({
         resizable: col.resizable,
         sortValue: col.sortValue,
         badgeLabels: col.badgeLabels,
+        hidden: col.hidden,
+        filterable: col.filterable,
+        filterType: col.filterType,
+        filterOptions: col.filterOptions,
         render: col.render,
       })),
     [columns]
@@ -202,6 +207,7 @@ function ListModal<T extends { id: number | string }>({
     onRowClick,
     onRowDoubleClick,
     onSelectAllPages,
+    onColumnFiltersChange,
     tableId,
   };
 

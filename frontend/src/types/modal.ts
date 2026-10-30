@@ -1,4 +1,5 @@
 import type { ButtonVariant } from 'components/ui/Button';
+import type { ColumnFilterRule } from 'components/tables/tableView/model';
 
 /** Variantes permitidas em bulk actions de modais (sem `unstyled`). */
 type ListModalBulkActionVariant = Exclude<ButtonVariant, 'unstyled'>;
@@ -14,6 +15,10 @@ export interface ListModalColumn<T> {
   resizable?: boolean;
   sortValue?: (row: T) => unknown;
   badgeLabels?: string[];
+  hidden?: boolean;
+  filterable?: boolean;
+  filterType?: 'text' | 'number' | 'date' | 'boolean' | 'select';
+  filterOptions?: Array<{ value: string | number; label: string }>;
   render: (item: T) => React.ReactNode;
 }
 
@@ -100,4 +105,5 @@ export interface ListModalProps<T> {
   /** Título do DraggableModal; se omitido, usa `config.title`. */
   wrapperTitle?: string;
   onSelectAllPages?: () => T[] | Promise<T[]>;
+  onColumnFiltersChange?: (rules: ColumnFilterRule[]) => void;
 }

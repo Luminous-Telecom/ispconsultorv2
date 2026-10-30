@@ -1,6 +1,7 @@
 // Tipos para sistema de tabelas unificado
 import React from 'react';
 import { RenderFunction, FilterValue } from 'types/common';
+import type { ColumnFilterRule } from './tableView/model';
 
 export type SortDirection = 'asc' | 'desc';
 export type TableSize = 'sm' | 'md' | 'lg';
@@ -24,6 +25,8 @@ export interface TableColumn<T = Record<string, unknown>> {
   hidden?: boolean;
   searchable?: boolean;
   filterable?: boolean;
+  /** text, number, date, boolean ou select. Sem valor, o painel infere pelo nome da coluna. */
+  filterType?: 'text' | 'number' | 'date' | 'boolean' | 'select';
   filterOptions?: Array<{ value: FilterValue; label: string }>;
   tooltip?: string;
   /** Valor usado só para ordenação quando `key` não reflete o dado exibido (ex.: objeto aninhado). */
@@ -233,6 +236,9 @@ export interface UseTableOptions<T = Record<string, unknown>> {
   onSort?: (column: string, direction: SortDirection) => void;
   onFilter?: (filters: Record<string, FilterValue>) => void;
   onSearch?: (term: string, field?: string) => void;
+  columnRules?: ColumnFilterRule[];
+  /** Quando true, o servidor já aplicou `columnRules` e a tabela não filtra de novo. */
+  serverHandlesColumnFilters?: boolean;
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (size: number) => void;
   onRefresh?: () => void;

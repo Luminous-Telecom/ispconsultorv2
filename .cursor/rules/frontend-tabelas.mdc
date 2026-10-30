@@ -76,6 +76,14 @@ const list = useEntityListModal<Cliente>({ onClose, initialSearchField: 'razao_s
 
 **Proibido** `<input type="search">` custom com classes próprias.
 
+## Painel da listagem (engrenagem)
+
+Ao lado da busca, `Table` abre `TableViewPanel` como janela suspensa e arrastável pelo título: colunas visíveis, condições e consulta salva em `localStorage` (`table-views-` + `tableId`). A ordenação fica no cabeçalho da coluna.
+
+- Ordenação continua no backend, pelo `onSort` do clique no cabeçalho. A consulta salva ainda pode repor a ordenação ao ser escolhida.
+- Filtro de coluna: `onColumnFiltersChange`. Quem passa o callback (hoje Clientes) envia `columnFilters` na query e o service aplica com `buildPrismaColumnFilters` numa allowlist. Sem callback, o filtro vale só para as linhas já carregadas na página.
+- A listagem abre com todas as colunas. O **Seletor** monta coluna, condição e valor (os dados da coluna na tela, ou sim/não). **OK** inclui o filtro na hora. **Salvar** só grava. A consulta substitui colunas, condições e ordenação quando é escolhida em **Consultas salvas**.
+
 ## TableHeaderContext
 
 Listagens na **página** (não modal) com busca/recarregar no header:

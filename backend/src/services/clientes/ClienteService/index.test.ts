@@ -51,6 +51,28 @@ describe('ClienteService visualização', () => {
     }));
   });
 
+  it('aplica filtro de coluna permitido e ignora coluna fora da lista', async () => {
+    (clientes.count as jest.Mock).mockResolvedValue(1);
+    (clientes.findMany as jest.Mock).mockResolvedValue([]);
+
+    await ClienteService.list({
+      empresa_id: 10,
+      page: 1,
+      limit: 15,
+      columnFilters: [
+        { columnKey: 'razao_social', operator: 'contains', value: 'Acme' },
+        { columnKey: 'password_hash', operator: 'contains', value: 'segredo' },
+      ],
+    });
+
+    expect(clientes.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        empresa_id: 10,
+        AND: [{ razao_social: { contains: 'Acme' } }],
+      }),
+    }));
+  });
+
   it('devolve nulo quando o cliente não existe', async () => {
     (clientes.findUnique as jest.Mock).mockResolvedValue(null);
 

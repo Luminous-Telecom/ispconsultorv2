@@ -2,6 +2,8 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useSearch } from './useSearch';
 import { useFilters } from './useFilters';
+import type { ColumnFilterRule } from 'components/tables/tableView/model';
+import { ruleIsComplete } from 'components/tables/tableView/model';
 
 /**
  * Direção de ordenação
@@ -127,6 +129,9 @@ export interface UseTableFiltersReturn<
   // Campo de busca (field)
   searchField: string;
   setSearchField: (field: string) => void;
+
+  columnFilters: string | undefined;
+  setColumnFilters: (rules: ColumnFilterRule[]) => void;
   
   // Utilitários
   resetAll: () => void;
@@ -140,6 +145,7 @@ export interface UseTableFiltersReturn<
     sortColumn?: string;
     sortDirection?: SortDirection;
     filters: TFilters;
+    columnFilters?: string;
   };
 }
 
@@ -208,10 +214,44 @@ export const useTableFilters = <
 
   // Campo de busca (field)
   const [searchField, setSearchFieldState] = useState<string>(initialSearchField);
+  const [columnFilterRules, setColumnFilterRules] = useState<ColumnFilterRule[]>([]);
+  const columnFiltersKey = JSON.stringify(columnFilterRules.map((rule) => ({
+    columnKey: rule.columnKey,
+    operator: rule.operator,
+    value: rule.value,
+  })));
+  const skipColumnFilterPageReset = useRef(true);
 
   const setSearchField = useCallback((field: string) => {
     setSearchFieldState(field);
   }, []);
+
+  const setColumnFilters = useCallback((rules: ColumnFilterRule[]) => {
+    const complete = rules.filter(ruleIsComplete);
+    setColumnFilterRules((prev) => {
+      const prevKey = JSON.stringify(prev.map((rule) => ({
+        columnKey: rule.columnKey,
+        operator: rule.operator,
+        value: rule.value,
+      })));
+      const nextKey = JSON.stringify(complete.map((rule) => ({
+        columnKey: rule.columnKey,
+        operator: rule.operator,
+        value: rule.value,
+      })));
+      return prevKey === nextKey ? prev : complete;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (skipColumnFilterPageReset.current) {
+      skipColumnFilterPageReset.current = false;
+      return;
+    }
+    if (!resetPageOnFilterChange) return;
+    setPageState(1);
+    onPageChangeRef.current?.(1);
+  }, [columnFiltersKey, resetPageOnFilterChange]);
 
   // Hook de filtros
   const filtersHook = useFilters<TFilters>({
@@ -313,6 +353,7 @@ export const useTableFilters = <
       sortColumn?: string;
       sortDirection?: SortDirection;
       filters: TFilters;
+      columnFilters?: string;
     } = {
       page,
       limit,
@@ -328,8 +369,12 @@ export const useTableFilters = <
       params.sortDirection = sortDirection;
     }
 
+    if (columnFilterRules.length > 0) {
+      params.columnFilters = columnFiltersKey;
+    }
+
     return params;
-  }, [page, limit, searchHook.debouncedSearch, sortColumn, sortDirection, filtersHook.filters]);
+  }, [page, limit, searchHook.debouncedSearch, sortColumn, sortDirection, filtersHook.filters, columnFilterRules.length, columnFiltersKey]);
 
   return {
     // Busca
@@ -363,6 +408,8 @@ export const useTableFilters = <
     // Campo de busca
     searchField,
     setSearchField,
+    columnFilters: columnFilterRules.length > 0 ? columnFiltersKey : undefined,
+    setColumnFilters,
     
     // Utilitários
     resetAll,

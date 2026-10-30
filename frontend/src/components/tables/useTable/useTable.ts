@@ -27,6 +27,8 @@ export const useTable = <T extends { id: number | string }>(
     sortDirection: propSortDirection,
     selectable = true,
     multiSelect = false,
+    columnRules = [],
+    serverHandlesColumnFilters = false,
   } = options;
 
   const normalizedPagination = useMemo(() => normalizePagination(pagination), [pagination]);
@@ -57,9 +59,11 @@ export const useTable = <T extends { id: number | string }>(
         state.searchTerm,
         state.filters,
         searchable,
-        !!pagination
+        !!pagination,
+        columnRules,
+        serverHandlesColumnFilters
       ),
-    [state.data, state.searchTerm, state.filters, columns, searchable, pagination]
+    [state.data, state.searchTerm, state.filters, columns, searchable, pagination, columnRules, serverHandlesColumnFilters]
   );
 
   const { sortedData, setSort } = useTableSort({

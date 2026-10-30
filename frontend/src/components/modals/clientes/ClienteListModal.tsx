@@ -52,6 +52,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     limit: list.tableFilters.limit,
     sortColumn: list.tableFilters.sortColumn,
     sortDirection: list.tableFilters.sortDirection,
+    columnFilters: list.tableFilters.columnFilters,
     ...(initialFilters && Object.keys(initialFilters).length > 0 ? initialFilters : {}),
   });
 
@@ -254,6 +255,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       sortColumn={list.tableFilters.sortColumn}
       sortDirection={list.tableFilters.sortDirection}
       onSortChange={list.tableFilters.setSort}
+      onColumnFiltersChange={list.tableFilters.setColumnFilters}
       pagination={pagination}
       onPageChange={list.tableFilters.setPage}
       onLimitChange={list.tableFilters.setLimit}

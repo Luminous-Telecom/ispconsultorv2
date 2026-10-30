@@ -707,6 +707,39 @@ export interface TranslationKeys {
   'ui.serverUnavailable': string;
   'ui.loading': string;
 
+  'tableView.open': string;
+  'tableView.title': string;
+  'tableView.filters': string;
+  'tableView.savedQueries': string;
+  'tableView.noSavedQueries': string;
+  'tableView.selector': string;
+  'tableView.ok': string;
+  'tableView.selectField': string;
+  'tableView.operatorLabel': string;
+  'tableView.value': string;
+  'tableView.removeRule': string;
+  'tableView.pageOnlyHint': string;
+  'tableView.sort': string;
+  'tableView.sortDirection': string;
+  'tableView.sortAsc': string;
+  'tableView.sortDesc': string;
+  'tableView.reset': string;
+  'tableView.columns': string;
+  'tableView.disableAll': string;
+  'tableView.enableAll': string;
+  'tableView.defaultQuery': string;
+  'tableView.listOnOpen': string;
+  'tableView.queryName': string;
+  'tableView.deleteQuery': string;
+  'tableView.nameRequired': string;
+  'tableView.operator.contains': string;
+  'tableView.operator.equals': string;
+  'tableView.operator.startsWith': string;
+  'tableView.operator.gt': string;
+  'tableView.operator.lt': string;
+  'tableView.operator.gte': string;
+  'tableView.operator.lte': string;
+
   // Company Labels
   'company.title': string;
   'company.id': string;

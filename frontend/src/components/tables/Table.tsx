@@ -23,6 +23,9 @@ import { normalizePagination } from './tableUtils';
 import { computeTablePaginationValues } from './tablePaginationUtils';
 import { useTableHeaderSync } from './useTableHeaderSync';
 import { resolveDefaultSearchField } from 'utils/resolveDefaultSearchField';
+import { useTableView } from './tableView/useTableView';
+import TableViewPanel from './tableView/TableViewPanel';
+import type { ColumnFilterRule } from './tableView/model';
 
 /** Altura aproximada de cada linha do tbody (2rem em _tables.scss). */
 const TABLE_BODY_ROW_HEIGHT_PX = 32;
@@ -86,6 +89,7 @@ export interface TableProps<T = Record<string, unknown>> {
   onAudit?: (item: T) => void | Promise<void>;
   auditEntity?: string;
   onSelectAllPages?: () => T[] | Promise<T[]>;
+  onColumnFiltersChange?: (rules: ColumnFilterRule[]) => void;
   className?: string;
   tableId?: string;
   title?: string;
@@ -111,13 +115,15 @@ function Table<T extends { id: number | string }>({
   auditEntity,
   onSelectAllPages,
   onSearchFieldChange,
+  onColumnFiltersChange,
   className = '',
   tableId,
   title,
   syncWithHeader = true,
   layoutWrapper,
 }: TableProps<T>) {
-  const uniqueTableId = tableId || `table-${Math.random().toString(36).substr(2, 9)}`;
+  const generatedTableIdRef = useRef(`table-${Math.random().toString(36).slice(2, 11)}`);
+  const uniqueTableId = tableId || title || generatedTableIdRef.current;
   const isMobile = useIsMobile();
   const { t } = useI18n();
   const { searchField: headerSearchField } = useTableHeader();
@@ -269,6 +275,16 @@ function Table<T extends { id: number | string }>({
     [onSelectionChange]
   );
 
+  const serverHandlesColumnFilters = Boolean(onColumnFiltersChange) && Boolean(configPagination);
+  const tableView = useTableView({
+    tableId: uniqueTableId,
+    columns,
+    sortColumn,
+    sortDirection,
+    onSort,
+    onColumnFiltersChange,
+  });
+
   const {
     state,
     actions: tableActions,
@@ -293,6 +309,8 @@ function Table<T extends { id: number | string }>({
     onPageChange,
     onPageSizeChange,
     onRefresh,
+    columnRules: tableView.appliedRules,
+    serverHandlesColumnFilters,
   });
 
   tableActionsRef.current = tableActions;
@@ -318,21 +336,20 @@ function Table<T extends { id: number | string }>({
     [normalizedPagination, state.currentPage, state.pageSize, totalPages, data.length]
   );
 
+  const visibleColumns = useMemo(
+    () => columns.filter((col) => !col.hidden && !tableView.hiddenColumnKeys.includes(col.key)),
+    [columns, tableView.hiddenColumnKeys]
+  );
+
   const tableMinWidth = useMemo(() => {
-    const cols = columns.filter((col) => !col.hidden);
     let total = 0;
-    cols.forEach((col) => {
+    visibleColumns.forEach((col) => {
       total += resolveColumnWidthPx(col, columnWidths, hasCustomWidths) ?? DEFAULT_COLUMN_WIDTH_PX;
     });
     if (selectable) total += CHECKBOX_COLUMN_WIDTH_PX;
     if (tableActionsList.length > 0) total += ACTIONS_COLUMN_WIDTH_PX;
     return total;
-  }, [columns, columnWidths, hasCustomWidths, selectable, tableActionsList.length]);
-
-  const visibleColumns = useMemo(
-    () => columns.filter((col) => !col.hidden),
-    [columns]
-  );
+  }, [visibleColumns, columnWidths, hasCustomWidths, selectable, tableActionsList.length]);
 
   const handleReloadClick = useCallback(() => {
     if (onRefreshRef.current) {
@@ -579,6 +596,33 @@ function Table<T extends { id: number | string }>({
       normalizedPagination ||
       (!normalizedPagination && data.length > 0));
 
+  const viewPanel = showToolbar ? (
+    <TableViewPanel
+      columns={columns}
+      rows={data}
+      hiddenColumnKeys={tableView.hiddenColumnKeys}
+      views={tableView.views}
+      rules={tableView.rules}
+      activeViewId={tableView.activeViewId}
+      draftName={tableView.draftName}
+      isDefault={tableView.isDefault}
+      filtersOnPage={Boolean(configPagination) && !onColumnFiltersChange}
+      hasActiveState={tableView.appliedRules.length > 0 || tableView.hiddenColumnKeys.length > 0}
+      onDraftName={tableView.setDraftName}
+      onIsDefault={tableView.setIsDefault}
+      onToggleColumn={tableView.toggleColumn}
+      onSetAllColumns={tableView.setAllColumns}
+      onCommitRule={tableView.commitRule}
+      onRemoveRule={tableView.removeRule}
+      onApplyRules={tableView.applyRules}
+      onClearRules={tableView.clearRules}
+      onSave={tableView.saveView}
+      onDeleteView={tableView.deleteView}
+      onApplyView={tableView.applyView}
+      onReset={tableView.resetView}
+    />
+  ) : null;
+
   const tableElement = (
     <div
       ref={tableContainerRef}
@@ -616,12 +660,15 @@ function Table<T extends { id: number | string }>({
           onRefresh={onRefresh}
           openDropdownIndex={openDropdown}
           onOpenDropdownChange={setOpenDropdown}
+          viewControls={viewPanel}
         />
       )}
 
       {isMobile ? (
-        <TableMobileView
-          columns={columns}
+        <>
+          {viewPanel && <div className="table-mobile-view-bar">{viewPanel}</div>}
+          <TableMobileView
+            columns={visibleColumns}
           paginatedData={paginatedData}
           loading={isTableContentLoading}
           loadingMessage={defaultLoadingMessage}
@@ -644,6 +691,7 @@ function Table<T extends { id: number | string }>({
             </div>
           )}
         </TableMobileView>
+        </>
       ) : (
         <TableDesktopView
           tableRef={tableRef}

@@ -1,6 +1,7 @@
 import type { FilterValue } from 'types/common';
 import type { TableColumn, TablePagination } from '../types';
 import type { UseTableOptions } from './types';
+import { rowMatchesRules, type ColumnFilterRule } from '../tableView/model';
 
 export const normalizePagination = (
   pagination: UseTableOptions<unknown>['pagination']
@@ -29,7 +30,9 @@ export function filterTableData<T extends { id: number | string }>(
   searchTerm: string,
   filters: Record<string, FilterValue>,
   searchable: boolean,
-  hasServerPagination: boolean
+  hasServerPagination: boolean,
+  columnRules: ColumnFilterRule[] = [],
+  skipColumnRules = false
 ): T[] {
   let result = [...data];
 
@@ -56,6 +59,10 @@ export function filterTableData<T extends { id: number | string }>(
       });
     }
   });
+
+  if (!skipColumnRules && columnRules.length > 0) {
+    result = result.filter((item) => rowMatchesRules(item, columnRules));
+  }
 
   return result;
 }

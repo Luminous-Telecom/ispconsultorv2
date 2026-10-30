@@ -10,6 +10,7 @@ import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../..
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { parseListQuery, queryString } from '../../../utils/listQuery';
+import { parseColumnFiltersParam } from '../../../utils/columnFilters';
 import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
 
 export class ClienteController {
@@ -131,6 +132,7 @@ export class ClienteController {
         created_at_fim,
         sortColumn,
         sortDirection,
+        columnFilters: parseColumnFiltersParam(queryString(req.query.columnFilters)),
         empresa_id: empresaId ?? undefined,
       });
 

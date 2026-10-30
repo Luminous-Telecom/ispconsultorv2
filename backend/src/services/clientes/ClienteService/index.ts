@@ -5,6 +5,7 @@ import { logger } from '../../../utils/logger';
 import { buildPagination } from '../../../utils/pagination';
 import { dateBounds, sortDirection, toPrismaWhere } from '../../cadastros/prismaWhere';
 import { cnpjLookupValues } from '../../../utils/cnpj';
+import { buildPrismaColumnFilters, type ColumnFilterKind, type ColumnFilterRule } from '../../../utils/columnFilters';
 
 export interface ListClientesFilters {
   page?: number;
@@ -18,6 +19,7 @@ export interface ListClientesFilters {
   created_at_fim?: string;
   sortColumn?: string;
   sortDirection?: string;
+  columnFilters?: ColumnFilterRule[];
   empresa_id?: number;
 }
 
@@ -29,6 +31,32 @@ const CLIENTE_COLUMNS = [
 ] as const;
 
 const SEARCH_FIELDS = ['id', 'cnpj', 'razao_social', 'nome_fantasia', 'email', 'whatsapp', 'telefone', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado'] as const;
+
+const CLIENTE_FILTER_ALLOW: Record<string, ColumnFilterKind> = {
+  id: 'number',
+  cnpj: 'string',
+  razao_social: 'string',
+  nome_fantasia: 'string',
+  email: 'string',
+  telefone: 'string',
+  whatsapp: 'string',
+  cep: 'string',
+  endereco: 'string',
+  numero: 'string',
+  complemento: 'string',
+  bairro: 'string',
+  cidade: 'string',
+  estado: 'string',
+  observacoes: 'string',
+  ativo: 'boolean',
+  tipo_cobranca: 'string',
+  valor_primeiro_titulo: 'string',
+  recebe_email: 'boolean',
+  recebe_sms: 'boolean',
+  recebe_whatsapp: 'boolean',
+  created_at: 'date',
+  updated_at: 'date',
+};
 
 const planoListaSelect = { id: true, nome_plano: true, valor_mensal: true, status: true } as const;
 const tituloListaSelect = { id: true, numero_titulo: true, status: true, valor: true } as const;
@@ -76,7 +104,7 @@ function shapeCliente<T extends { contratos?: Array<{ cadastros_planos?: { id: n
 
 export class ClienteService {
   static async list(filters: ListClientesFilters) {
-    const { page = 1, limit = 15, search, searchField, ativo, cidade, estado, created_at_inicio, created_at_fim, sortColumn, sortDirection: direction, empresa_id } = filters;
+    const { page = 1, limit = 15, search, searchField, ativo, cidade, estado, created_at_inicio, created_at_fim, sortColumn, sortDirection: direction, columnFilters, empresa_id } = filters;
     const offset = (page - 1) * limit;
     const where: Prisma.clientesWhereInput = {};
 
@@ -118,6 +146,12 @@ export class ClienteService {
     if (estado) where.estado = estado.toUpperCase();
     const createdBounds = dateBounds(created_at_inicio, created_at_fim);
     if (createdBounds) where.created_at = createdBounds;
+    const columnClauses = buildPrismaColumnFilters(columnFilters, CLIENTE_FILTER_ALLOW);
+    if (columnClauses.length > 0) {
+      const currentAnd = where.AND;
+      const andList = Array.isArray(currentAnd) ? currentAnd : currentAnd ? [currentAnd] : [];
+      where.AND = [...andList, ...(columnClauses as Prisma.clientesWhereInput[])];
+    }
 
     const dir = sortDirection(direction);
     const orderBy: Prisma.clientesOrderByWithRelationInput =

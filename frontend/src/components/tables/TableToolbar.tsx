@@ -21,6 +21,7 @@ interface TableToolbarProps<T> {
   searchField: string;
   onSearchFieldChange: (field: string) => void;
   searchFields: Array<{ key: string; label: string }>;
+  viewControls?: React.ReactNode;
   showSelectAllPagesCheckbox: boolean;
   isAllPagesSelected: boolean;
   isLoadingSelectAllPages: boolean;
@@ -51,6 +52,7 @@ function TableToolbar<T>({
   searchField,
   onSearchFieldChange,
   searchFields,
+  viewControls,
   showSelectAllPagesCheckbox,
   isAllPagesSelected,
   isLoadingSelectAllPages,
@@ -122,6 +124,7 @@ function TableToolbar<T>({
               autoComplete="off"
             />
           )}
+          {viewControls}
           {customControls && <div className="table-custom-controls">{customControls}</div>}
         </div>
 
