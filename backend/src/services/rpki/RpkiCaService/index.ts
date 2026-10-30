@@ -24,6 +24,14 @@ function normalizeHandleBase(input: string): string {
     .slice(0, 50) || 'ca';
 }
 
+function plainCa<T extends { manifest_number: bigint | number; crl_number: bigint | number }>(row: T) {
+  return {
+    ...row,
+    manifest_number: typeof row.manifest_number === 'bigint' ? row.manifest_number.toString() : row.manifest_number,
+    crl_number: typeof row.crl_number === 'bigint' ? row.crl_number.toString() : row.crl_number,
+  };
+}
+
 async function generateUniqueHandle(empresa_id: number | null, nome: string): Promise<string> {
   const base = normalizeHandleBase(nome);
   const prefix = `${base}`;
@@ -45,10 +53,11 @@ async function generateUniqueHandle(empresa_id: number | null, nome: string): Pr
 
 export class RpkiCaService {
   static async list(filters: ListRpkiCaFilters) {
-    return prisma.rpki_cas.findMany({
+    const rows = await prisma.rpki_cas.findMany({
       where: { empresa_id: filters.empresa_id },
       orderBy: { id: 'desc' },
     });
+    return rows.map(plainCa);
   }
 
   static async create(input: CreateRpkiCaInput) {
@@ -60,7 +69,7 @@ export class RpkiCaService {
 
     await KrillApiService.ensureCa(handle);
 
-    return prisma.rpki_cas.create({
+    return plainCa(await prisma.rpki_cas.create({
       data: {
         empresa_id,
         cliente_id,
@@ -68,7 +77,7 @@ export class RpkiCaService {
         handle,
         status: 'pending',
       },
-    });
+    }));
   }
 
   static async listParents(ca_id: number) {
