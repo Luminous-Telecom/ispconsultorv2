@@ -653,19 +653,110 @@ colgroup col.col-status {
   color: var(--text-primary) !important;
 }
 
-.draggable-modal-container-custom .form-control,
-.draggable-modal-body-custom .form-control,
-.responsive-dialog-mobile-custom .form-control {
+.draggable-modal-container-custom .form-control:not(.entity-select-input):not(.id-field),
+.draggable-modal-body-custom .form-control:not(.entity-select-input):not(.id-field),
+.responsive-dialog-mobile-custom .form-control:not(.entity-select-input):not(.id-field) {
   background-color: var(--bg-secondary) !important;
-  color: var(--text-primary) !important;
+  color: var(--input-text-color) !important;
+  -webkit-text-fill-color: var(--input-text-color) !important;
   border-color: var(--border-color) !important;
 }
 
-.draggable-modal-container-custom .form-control:focus,
-.draggable-modal-body-custom .form-control:focus,
-.responsive-dialog-mobile-custom .form-control:focus {
+.draggable-modal-container-custom .form-control:not(.entity-select-input):not(.id-field):focus,
+.draggable-modal-body-custom .form-control:not(.entity-select-input):not(.id-field):focus,
+.responsive-dialog-mobile-custom .form-control:not(.entity-select-input):not(.id-field):focus {
   background-color: var(--bg-tertiary) !important;
+  color: var(--input-text-color) !important;
+  -webkit-text-fill-color: var(--input-text-color) !important;
+}
+
+[data-theme="dark"] .draggable-modal-container-custom .input-group .entity-select-input,
+[data-theme="dark"] .draggable-modal-body-custom .input-group .entity-select-input,
+[data-theme="dark"] .responsive-dialog-mobile-custom .input-group .entity-select-input,
+[data-theme="dark"] .draggable-modal-container-custom input.form-control[readonly]:not(.id-field),
+[data-theme="dark"] .draggable-modal-body-custom input.form-control[readonly]:not(.id-field),
+[data-theme="dark"] .responsive-dialog-mobile-custom input.form-control[readonly]:not(.id-field),
+[data-theme="dark"] .draggable-modal-container-custom input.form-control:disabled:not(.id-field),
+[data-theme="dark"] .draggable-modal-body-custom input.form-control:disabled:not(.id-field),
+[data-theme="dark"] .responsive-dialog-mobile-custom input.form-control:disabled:not(.id-field),
+[data-theme="dark"] .draggable-modal-container-custom textarea.form-control[readonly],
+[data-theme="dark"] .draggable-modal-body-custom textarea.form-control[readonly],
+[data-theme="dark"] .responsive-dialog-mobile-custom textarea.form-control[readonly],
+[data-theme="dark"] .draggable-modal-container-custom textarea.form-control:disabled,
+[data-theme="dark"] .draggable-modal-body-custom textarea.form-control:disabled,
+[data-theme="dark"] .responsive-dialog-mobile-custom textarea.form-control:disabled,
+[data-theme="dark"] .draggable-modal-container-custom input.form-control[readonly]:not(.id-field):focus,
+[data-theme="dark"] .draggable-modal-body-custom input.form-control[readonly]:not(.id-field):focus,
+[data-theme="dark"] .responsive-dialog-mobile-custom input.form-control[readonly]:not(.id-field):focus,
+[data-theme="dark"] .draggable-modal-container-custom input.form-control:disabled:not(.id-field):focus,
+[data-theme="dark"] .draggable-modal-body-custom input.form-control:disabled:not(.id-field):focus,
+[data-theme="dark"] .responsive-dialog-mobile-custom input.form-control:disabled:not(.id-field):focus {
+  background-color: var(--bg-primary) !important;
+}
+
+[data-theme="dark"] .draggable-modal-container-custom .form-select,
+[data-theme="dark"] .draggable-modal-body-custom .form-select,
+[data-theme="dark"] .responsive-dialog-mobile-custom .form-select {
   color: var(--text-primary) !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .draggable-modal-container-custom .form-control[readonly]:not([data-autofill-guard]):not(.id-field):not(.entity-select-input),
+[data-theme="dark"] .draggable-modal-body-custom .form-control[readonly]:not([data-autofill-guard]):not(.id-field):not(.entity-select-input),
+[data-theme="dark"] .responsive-dialog-mobile-custom .form-control[readonly]:not([data-autofill-guard]):not(.id-field):not(.entity-select-input),
+[data-theme="dark"] .draggable-modal-container-custom .form-control:disabled:not(.id-field):not(.entity-select-input),
+[data-theme="dark"] .draggable-modal-body-custom .form-control:disabled:not(.id-field):not(.entity-select-input),
+[data-theme="dark"] .responsive-dialog-mobile-custom .form-control:disabled:not(.id-field):not(.entity-select-input) {
+  color: var(--input-lookup-text-color) !important;
+  -webkit-text-fill-color: var(--input-lookup-text-color) !important;
+}
+
+[data-theme="dark"] .draggable-modal-container-custom .input-group .entity-select-input,
+[data-theme="dark"] .draggable-modal-body-custom .input-group .entity-select-input,
+[data-theme="dark"] .responsive-dialog-mobile-custom .input-group .entity-select-input {
+  color: var(--input-lookup-text-color) !important;
+  -webkit-text-fill-color: var(--input-lookup-text-color) !important;
+}
+
+[data-theme="dark"] .draggable-modal-container-custom .input-group .id-field,
+[data-theme="dark"] .draggable-modal-body-custom .input-group .id-field,
+[data-theme="dark"] .responsive-dialog-mobile-custom .input-group .id-field {
+  color: var(--input-text-color) !important;
+  -webkit-text-fill-color: var(--input-text-color) !important;
+}
+
+.draggable-modal-container-custom .input-group .id-field,
+.draggable-modal-body-custom .input-group .id-field,
+.responsive-dialog-mobile-custom .input-group .id-field,
+.draggable-modal-container-custom .input-group .id-field:focus,
+.draggable-modal-body-custom .input-group .id-field:focus,
+.responsive-dialog-mobile-custom .input-group .id-field:focus {
+  color: var(--input-text-color) !important;
+  -webkit-text-fill-color: var(--input-text-color) !important;
+  background-color: var(--bg-secondary) !important;
+}
+
+.draggable-modal-container-custom .input-group .entity-select-input,
+.draggable-modal-body-custom .input-group .entity-select-input,
+.responsive-dialog-mobile-custom .input-group .entity-select-input,
+.draggable-modal-container-custom .input-group .entity-select-input:focus,
+.draggable-modal-body-custom .input-group .entity-select-input:focus,
+.responsive-dialog-mobile-custom .input-group .entity-select-input:focus,
+.draggable-modal-container-custom .form-control:disabled:not(.id-field),
+.draggable-modal-body-custom .form-control:disabled:not(.id-field),
+.responsive-dialog-mobile-custom .form-control:disabled:not(.id-field),
+.draggable-modal-container-custom .form-control:disabled:not(.id-field):focus,
+.draggable-modal-body-custom .form-control:disabled:not(.id-field):focus,
+.responsive-dialog-mobile-custom .form-control:disabled:not(.id-field):focus,
+.draggable-modal-container-custom .form-control[readonly]:not(.id-field):not(.entity-select-input),
+.draggable-modal-body-custom .form-control[readonly]:not(.id-field):not(.entity-select-input),
+.responsive-dialog-mobile-custom .form-control[readonly]:not(.id-field):not(.entity-select-input),
+.draggable-modal-container-custom .form-control[readonly]:not(.id-field):not(.entity-select-input):focus,
+.draggable-modal-body-custom .form-control[readonly]:not(.id-field):not(.entity-select-input):focus,
+.responsive-dialog-mobile-custom .form-control[readonly]:not(.id-field):not(.entity-select-input):focus {
+  color: var(--input-lookup-text-color) !important;
+  -webkit-text-fill-color: var(--input-lookup-text-color) !important;
+  background-color: var(--input-locked-surface) !important;
 }
 
 [data-theme="dark"] .table tbody tr:hover {

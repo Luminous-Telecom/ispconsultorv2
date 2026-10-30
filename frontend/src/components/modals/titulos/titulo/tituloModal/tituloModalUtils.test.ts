@@ -1,4 +1,4 @@
-import { formatTituloCurrency, getTituloStatusLabel } from './tituloModalUtils';
+import { entitySelectNome, formatTituloCurrency, getTituloStatusLabel } from './tituloModalUtils';
 
 const statusLabels = {
   statusPending: 'Pendente',
@@ -23,4 +23,13 @@ it('traduz status do título', () => {
 
 it('retorna traço sem status', () => {
   expect(getTituloStatusLabel(undefined, statusLabels)).toBe('-');
+});
+
+it('tira o prefixo de id do nome exibido no campo de entidade', () => {
+  expect(entitySelectNome('#13 · Plano Enterprise · Ativo', 13)).toBe('Plano Enterprise · Ativo');
+});
+
+it('devolve vazio quando o rótulo é só o id ou um traço', () => {
+  expect(entitySelectNome('#13', 13)).toBe('');
+  expect(entitySelectNome('-', 4)).toBe('');
 });

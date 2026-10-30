@@ -136,31 +136,22 @@ const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
         <form id="ips-permitido-form" onSubmit={handleSubmit} className="form-modal-simple">
           <div className="row g-2">
             <div className="col-12">
-              {isEditing ? (
-                <FormField
-                  name="cliente"
-                  type="text"
-                  label={t('blockdomi.cliente')}
-                  value={clienteNome}
-                  onChange={() => {}}
-                  readOnly
-                />
-              ) : (
-                <EntitySelectField
-                  value={clienteId || 0}
-                  onChange={(id) => {
-                    setClienteId(id || null);
-                    if (!id) setClienteNome('');
-                  }}
-                  onShowModal={() => setShowClienteSelect(true)}
-                  onEdit={() => clienteEdit.open(clienteId || 0)}
-                  entities={clienteEntities}
-                  label={t('blockdomi.cliente')}
-                  placeholder={t('blockdomi.selectCliente')}
-                  required
-                  error={errors.cliente}
-                />
-              )}
+              <EntitySelectField
+                selectionLocked={isEditing}
+                value={clienteId || 0}
+                onChange={(id) => {
+                  if (isEditing) return;
+                  setClienteId(id || null);
+                  if (!id) setClienteNome('');
+                }}
+                onShowModal={() => setShowClienteSelect(true)}
+                onEdit={() => clienteEdit.open(clienteId || 0)}
+                entities={clienteEntities}
+                label={t('blockdomi.cliente')}
+                placeholder={t('blockdomi.selectCliente')}
+                required={!isEditing}
+                error={errors.cliente}
+              />
             </div>
             <div className="col-12">
               <FormField

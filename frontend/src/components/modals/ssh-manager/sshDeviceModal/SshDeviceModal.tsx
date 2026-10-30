@@ -64,6 +64,7 @@ const SshDeviceModal: React.FC<SshDeviceModalProps> = (props) => {
                 adminClienteId={modal.adminClienteId}
                 adminClienteNome={modal.adminClienteNome}
                 clienteEdicaoLabel={modal.clienteEdicaoLabel}
+                clienteIdEdicao={modal.effectiveClienteId}
                 dadosEmpresaTenant={modal.dadosEmpresaTenant}
                 agentEntities={modal.agentEntities}
                 formData={modal.formData}

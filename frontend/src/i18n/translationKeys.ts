@@ -793,7 +793,9 @@ export interface TranslationKeys {
   'titulo.validationErrors': string;
   'titulo.clientNotFound': string;
   'titulo.clientCannotBeChanged': string;
+  'titulo.contractCannotBeChanged': string;
   'titulo.planoCannotBeChanged': string;
+  'titulo.bankCannotBeChanged': string;
   'titulo.valorCannotBeChanged': string;
   'titulo.dataVencimentoCannotBeChanged': string;
   'titulo.discountPercent': string;

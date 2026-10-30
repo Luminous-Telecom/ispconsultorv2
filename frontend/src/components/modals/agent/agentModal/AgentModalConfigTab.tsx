@@ -54,6 +54,7 @@ function AgentModalConfigTab({
   onRegenerate,
 }: AgentModalConfigTabProps) {
   const clienteEdit = useEntityRecordEdit('cliente');
+  const clienteIdEdicao = agentData?.cliente_id || agentData?.cliente?.id || 0;
   const shouldShowEmpresaTenant = !isEditing && !isAdmin && Boolean(me);
   const empresaTenantLabel = dadosEmpresaTenant
     ? getClienteRazaoSocialLabel(dadosEmpresaTenant, 'Carregando…')
@@ -64,15 +65,13 @@ function AgentModalConfigTab({
       <div className="row g-2">
         {isEditing && (
           <div className="col-12">
-            <FormField
-              name="cliente_display"
-              type="text"
+            <EntitySelectField
+              selectionLocked
               label={t('table.client')}
-              size="sm"
-              readOnly
-              disabled
-              value={clienteEdicaoLabel}
-              onChange={() => {}}
+              value={clienteIdEdicao}
+              onChange={() => undefined}
+              onEdit={() => clienteEdit.open(clienteIdEdicao)}
+              entities={clienteIdEdicao > 0 ? [{ id: clienteIdEdicao, nome: clienteEdicaoLabel }] : []}
             />
           </div>
         )}

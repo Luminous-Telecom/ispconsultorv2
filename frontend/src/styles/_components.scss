@@ -1419,7 +1419,7 @@ button {
 
 /* Formulários */
 .form-label {
-  color: var(--text-primary);
+  color: var(--input-label-color);
   font-weight: 400;
   margin-bottom: 0.25rem;
   font-size: var(--font-size-sm);
@@ -1631,6 +1631,7 @@ button {
   border-radius: var(--border-radius-sm);
   background-color: var(--bg-secondary) !important;
   color: var(--text-primary) !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
   font-size: var(--font-size-sm);
   padding: 0.25rem 0.5rem !important;
   height: 33px; /* Mesma altura dos inputs */
@@ -2245,7 +2246,7 @@ button {
 }
 
 [data-theme="dark"] .form-label {
-  color: var(--text-secondary);
+  color: var(--input-label-color);
   font-weight: 400;
 }
 
@@ -2356,15 +2357,26 @@ textarea:focus {
 .form-control,
 .form-select {
   background-color: var(--bg-secondary) !important;
-  color: var(--text-primary) !important;
   border-color: var(--border-color) !important;
   border-radius: var(--border-radius-sm) !important;
+}
+
+.form-control:not(.entity-select-input):not(.id-field),
+.form-control:not(.entity-select-input):not(.id-field):focus,
+textarea {
+  color: var(--input-text-color) !important;
+  -webkit-text-fill-color: var(--input-text-color) !important;
+}
+
+.form-select,
+.form-select:focus {
+  color: var(--text-primary) !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
 }
 
 .form-control:focus,
 .form-select:focus {
   background-color: var(--bg-tertiary) !important;
-  color: var(--text-primary) !important;
 }
 
 .form-control::placeholder {
@@ -4669,7 +4681,7 @@ textarea:focus {
 .input-group .search-button {
   border: 1px solid var(--border-color);
   border-radius: 0;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   padding: 0.375rem 0.75rem;
   background-color: var(--bg-secondary);
   cursor: pointer;
@@ -4689,6 +4701,31 @@ textarea:focus {
 .input-group .search-button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
+}
+
+/* ID do vínculo: fonte clara. O nome ao lado não edita e fica mais escuro. */
+[data-theme="dark"] .input-group .entity-select-input,
+[data-theme="dark"] .input-group .entity-select-input:focus {
+  color: var(--input-lookup-text-color) !important;
+  -webkit-text-fill-color: var(--input-lookup-text-color) !important;
+}
+
+[data-theme="dark"] .input-group .id-field,
+[data-theme="dark"] .input-group .id-field:focus,
+[data-theme="dark"] .input-group.entity-select-locked .id-field {
+  color: var(--input-text-color) !important;
+  -webkit-text-fill-color: var(--input-text-color) !important;
+}
+
+[data-theme="dark"] .input-group .entity-select-input,
+[data-theme="dark"] .input-group .entity-select-input:focus {
+  background-color: var(--bg-primary) !important;
+  opacity: 1;
+}
+
+.input-group:not(.entity-select-locked) .id-field,
+.input-group:not(.entity-select-locked) .id-field:focus {
+  background-color: var(--bg-secondary) !important;
 }
 
 .input-group .search-button:hover {
@@ -4801,7 +4838,7 @@ textarea:focus {
 }
 
 .form-field .form-label {
-  color: var(--text-primary) !important;
+  color: var(--input-label-color) !important;
   font-weight: 500;
 }
 
@@ -4841,7 +4878,7 @@ form p.text-muted.small {
 
 /* Reduzir espaçamento em modais */
 .modal-content .form-label {
-  color: var(--text-primary) !important;
+  color: var(--input-label-color) !important;
 }
 
 
@@ -5219,46 +5256,54 @@ input[type='file'].form-control:focus-visible {
   visibility: visible !important;
 }
 
-/* Editável nos modais: fundo distinto do somente leitura.
-   data-autofill-guard continua readonly no DOM, mas é campo editável. */
-.form-modal-simple .form-control:not([readonly]):not(:disabled):not(.entity-select-input),
-.form-modal-simple .form-control[data-autofill-guard]:not(:disabled):not(.entity-select-input),
-.form-modal-simple .form-select:not(:disabled) {
-  background-color: var(--input-bg) !important;
-  color: var(--text-primary) !important;
-  -webkit-text-fill-color: var(--text-primary) !important;
+[data-theme="dark"] .form-control:disabled:not(.id-field),
+[data-theme="dark"] .form-control:disabled:not(.id-field):focus,
+[data-theme="dark"] .form-control[readonly]:not(.id-field),
+[data-theme="dark"] .form-control[readonly]:not(.id-field):focus {
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
+  opacity: 1 !important;
 }
 
-/* Disabled/readonly: tom diferente do editável (sem opacity no controle) */
-.form-control:disabled,
-.form-select:disabled {
-  background-color: var(--input-readonly-bg) !important;
-  color: var(--input-readonly-color) !important;
-  -webkit-text-fill-color: var(--input-readonly-color) !important;
+[data-theme="dark"] .form-control:disabled:not(.entity-select-input):not(.id-field),
+[data-theme="dark"] .form-control[readonly]:not(.entity-select-input):not(.id-field),
+[data-theme="dark"] .form-control[readonly]:not(.entity-select-input):not(.id-field):focus,
+[data-theme="dark"] .form-control[readonly]:disabled:not(.entity-select-input):not(.id-field),
+[data-theme="dark"] .form-control[readonly]:disabled:not(.entity-select-input):not(.id-field):focus {
+  color: var(--input-lookup-text-color) !important;
+  -webkit-text-fill-color: var(--input-lookup-text-color) !important;
+  cursor: default;
+}
+
+[data-theme="dark"] .form-select:disabled {
+  background-color: var(--bg-dropdown-hover) !important;
   border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
   opacity: 1 !important;
   cursor: not-allowed;
 }
 
-/* Readonly estático (não .entity-select-input — listagem/busca; não o bloqueio de autofill) */
-.form-control[readonly]:not(.entity-select-input):not([data-autofill-guard]),
-.form-control[readonly]:not(.entity-select-input):not([data-autofill-guard]):focus {
-  background-color: var(--input-readonly-bg) !important;
-  color: var(--input-readonly-color) !important;
-  -webkit-text-fill-color: var(--input-readonly-color) !important;
-  border-color: var(--border-color) !important;
-  opacity: 1 !important;
-  cursor: default;
+[data-theme="dark"] .form-select,
+[data-theme="dark"] .form-select:focus,
+[data-theme="dark"] .form-select:disabled {
+  background-color: var(--bg-dropdown-hover) !important;
+  color: var(--text-primary) !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
 }
 
-/* Readonly + disabled juntos (ex.: ID, campos fixos do título) */
-.form-control[readonly]:disabled:not(.entity-select-input),
-.form-control[readonly]:disabled:not(.entity-select-input):focus {
-  background-color: var(--input-readonly-bg) !important;
-  color: var(--input-readonly-color) !important;
-  -webkit-text-fill-color: var(--input-readonly-color) !important;
-  opacity: 1 !important;
-  cursor: default;
+[data-theme="dark"] .input-group .entity-select-input,
+[data-theme="dark"] .input-group .entity-select-input:focus,
+[data-theme="dark"] .form-modal-simple .input-group .entity-select-input {
+  background-color: var(--bg-primary) !important;
+  color: var(--input-lookup-text-color) !important;
+  -webkit-text-fill-color: var(--input-lookup-text-color) !important;
+}
+
+.form-modal-simple .input-group:not(.entity-select-locked) .id-field,
+.form-modal-simple .input-group:not(.entity-select-locked) .id-field:focus,
+.form-modal-simple .input-group:not(.entity-select-locked) .id-field[data-autofill-guard] {
+  background-color: var(--bg-secondary) !important;
 }
 
 /* Campos de data (calendários) - cursor pointer */

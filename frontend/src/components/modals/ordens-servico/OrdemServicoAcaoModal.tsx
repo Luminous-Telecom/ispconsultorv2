@@ -302,34 +302,24 @@ const OrdemServicoAcaoModal: React.FC<OrdemServicoAcaoModalProps> = ({
                   />
                 </div>
                 <div className="col-12">
-                  {setorEncaminhamentoDesabilitado ? (
-                    <FormField
-                      name="setor_readonly"
-                      type="text"
-                      label="Setor"
-                      value={setorNome || form.setor}
-                      onChange={() => {}}
-                      readOnly
-                      error={errors.setor}
-                      isInvalid={!!errors.setor}
-                      size="sm"
-                    />
-                  ) : (
-                    <EntitySelectField
-                      stringIdMode
-                      label="Setor"
-                      required
-                      value={form.setor}
-                      onChange={(v) => handleChange('setor', v)}
-                      onShowModal={() => setShowSetorModal(true)}
-                      entities={setorEntities}
-                      placeholder={t('ui.selectOption')}
-                      error={errors.setor}
-                      idFieldTitle="ID do setor"
-                      idPlaceholder="ID"
-                      searchButtonTitle="Buscar setor"
-                    />
-                  )}
+                  <EntitySelectField
+                    stringIdMode
+                    selectionLocked={setorEncaminhamentoDesabilitado}
+                    label="Setor"
+                    required
+                    value={form.setor}
+                    onChange={(v) => {
+                      if (setorEncaminhamentoDesabilitado) return;
+                      handleChange('setor', v);
+                    }}
+                    onShowModal={() => setShowSetorModal(true)}
+                    entities={setorEntities}
+                    placeholder={t('ui.selectOption')}
+                    error={errors.setor}
+                    idFieldTitle="ID do setor"
+                    idPlaceholder="ID"
+                    searchButtonTitle="Buscar setor"
+                  />
                 </div>
                 <div className="col-12">
                   <EntitySelectField

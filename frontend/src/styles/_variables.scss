@@ -78,6 +78,10 @@
   --input-bg: var(--color-white);
   --input-readonly-bg: var(--color-bg);
   --input-readonly-color: var(--color-text-muted);
+  --input-label-color: var(--text-primary);
+  --input-text-color: var(--text-primary);
+  --input-lookup-text-color: var(--text-primary);
+  --input-locked-surface: var(--bg-secondary);
   --border-color: var(--color-border);
   --border-light: var(--border-color);
   --btn-close-filter: none;
@@ -140,10 +144,13 @@
   --bg-modal: var(--bg-tertiary);
   --bg-dropdown: var(--color-bg-dropdown-dark);
   --bg-dropdown-hover: var(--color-bg-dropdown-hover-dark);
-  /* Inputs: editável elevado vs somente leitura rebaixado */
   --input-bg: var(--color-bg-dropdown-dark);
   --input-readonly-bg: var(--color-bg-dark);
   --input-readonly-color: var(--color-text-muted-dark);
+  --input-label-color: var(--color-input-label-dark);
+  --input-text-color: var(--color-input-text-dark);
+  --input-lookup-text-color: var(--color-input-lookup-text-dark);
+  --input-locked-surface: var(--bg-primary);
   --border-color: var(--color-border-dark);
   --btn-close-filter: invert(1);
 

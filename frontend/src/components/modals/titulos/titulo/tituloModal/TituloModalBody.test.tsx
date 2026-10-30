@@ -17,7 +17,9 @@ const labels = {
   description: 'Descrição',
   observations: 'Observações',
   clientCannotBeChanged: 'Cliente fixo',
+  contractCannotBeChanged: 'Contrato fixo',
   planoCannotBeChanged: 'Plano fixo',
+  bankCannotBeChanged: 'Banco fixo',
   valorCannotBeChanged: 'Valor fixo',
   dataVencimentoCannotBeChanged: 'Vencimento fixo',
   descriptionPlaceholder: 'Desc...',
@@ -135,4 +137,59 @@ it('marca campos somente leitura como disabled', () => {
   expect((screen.getByLabelText('Status') as HTMLInputElement).disabled).toBe(true);
   expect((screen.getByLabelText('ID da Cobrança') as HTMLInputElement).readOnly).toBe(true);
   expect((screen.getByLabelText('Descrição') as HTMLInputElement).disabled).toBe(false);
+});
+
+it('mostra cliente, contrato, plano e banco com edição e sem troca do vínculo', () => {
+  renderEditBody({
+    formData: {
+      cliente_id: 1,
+      contrato_id: 13,
+      plano_id: 2,
+      data_vencimento: '2026-11-01',
+      valor: 100,
+      descricao: 'Mensalidade',
+      observacoes: '',
+      desconto_percentual: 5,
+      desconto_valor: 0,
+      acrescimo_percentual: 0,
+      acrescimo_valor: 0,
+    },
+    tituloData: {
+      success: true,
+      data: {
+        ...tituloBase,
+        cliente: { id: 1, razao_social: 'Fenix' } as Titulo['cliente'],
+        contrato: {
+          id: 13,
+          status: 'ativo',
+          plano: { nome_plano: 'Enterprise' },
+        } as Titulo['contrato'],
+        plano: { id: 2, nome_plano: 'Enterprise' } as Titulo['plano'],
+      },
+    },
+  });
+
+  const cliente = document.getElementById('cliente_id_field') as HTMLInputElement;
+  const contrato = document.getElementById('contrato_id_field') as HTMLInputElement;
+  const plano = document.getElementById('plano_id_field') as HTMLInputElement;
+  const banco = document.getElementById('banco_id_field') as HTMLInputElement;
+  expect(cliente.value).toBe('1');
+  expect(cliente.readOnly).toBe(true);
+  expect(contrato.value).toBe('13');
+  expect(contrato.readOnly).toBe(true);
+  expect(plano.value).toBe('2');
+  expect(plano.readOnly).toBe(true);
+  expect(banco.value).toBe('3');
+  expect(banco.readOnly).toBe(true);
+  expect(screen.getByDisplayValue('Fenix')).toBeTruthy();
+  expect(screen.getByDisplayValue('Enterprise · Ativo')).toBeTruthy();
+  expect(screen.getByDisplayValue('EFI')).toBeTruthy();
+
+  const editButtons = screen.getAllByRole('button', { name: 'Editar registro' });
+  expect(editButtons).toHaveLength(4);
+  editButtons.forEach((button) => expect((button as HTMLButtonElement).disabled).toBe(false));
+
+  screen.getAllByRole('button', { name: 'Abrir listagem de registros' }).forEach((button) => {
+    expect((button as HTMLButtonElement).disabled).toBe(true);
+  });
 });

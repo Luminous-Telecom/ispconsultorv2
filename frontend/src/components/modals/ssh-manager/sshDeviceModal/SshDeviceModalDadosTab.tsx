@@ -16,6 +16,7 @@ interface SshDeviceModalDadosTabProps {
   adminClienteId: number | null;
   adminClienteNome: string;
   clienteEdicaoLabel: string;
+  clienteIdEdicao?: number;
   dadosEmpresaTenant: { nome_fantasia?: string; razao_social?: string } | null | undefined;
   agentEntities: { id: string; nome: string }[];
   formData: SshDeviceFormData;
@@ -36,6 +37,7 @@ const SshDeviceModalDadosTab: React.FC<SshDeviceModalDadosTabProps> = ({
   adminClienteId,
   adminClienteNome,
   clienteEdicaoLabel,
+  clienteIdEdicao = 0,
   dadosEmpresaTenant,
   agentEntities,
   formData,
@@ -55,14 +57,13 @@ const SshDeviceModalDadosTab: React.FC<SshDeviceModalDadosTabProps> = ({
     <div className="row g-2">
       {isEditing && (
         <div className="col-12">
-          <FormField
-            name="cliente_readonly"
-            type="text"
+          <EntitySelectField
+            selectionLocked
             label={t('table.client')}
-            value={clienteEdicaoLabel}
-            onChange={() => {}}
-            readOnly
-            size="sm"
+            value={clienteIdEdicao}
+            onChange={() => undefined}
+            onEdit={() => clienteEdit.open(clienteIdEdicao)}
+            entities={clienteIdEdicao > 0 ? [{ id: clienteIdEdicao, nome: clienteEdicaoLabel }] : []}
           />
         </div>
       )}

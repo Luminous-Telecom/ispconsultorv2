@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import DraggableModal from 'components/common/DraggableModal';
 import { CancelarButton, FormField, GerarNFSeAvulsaButton } from 'components/ui';
+import EntitySelectField from 'components/ui/EntitySelectField';
+import { useEntityRecordEdit } from 'hooks/useEntityRecordEdit';
 import { useI18n } from 'contexts/I18nContext';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
@@ -28,6 +30,7 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
   onSuccess
 }) => {
   const { t } = useI18n();
+  const clienteEdit = useEntityRecordEdit('cliente');
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
   const queryClient = useQueryClient();
@@ -161,7 +164,10 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
     handleInputChange(field, numericValue);
   };
 
+  const clienteNome = cliente?.razao_social?.trim() || cliente?.nome_fantasia?.trim() || '';
+
   return (
+    <>
     <DraggableModal
       show={show}
       onClose={onClose}
@@ -194,14 +200,13 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
         <div className="row g-2">
           {cliente && (
             <div className="col-12">
-              <FormField
-                name="cliente_display"
-                type="text"
+              <EntitySelectField
+                selectionLocked
                 label={t('form.client')}
-                value={cliente.razao_social}
-                disabled
-                readOnly
-                onChange={() => {}}
+                value={cliente.id}
+                onChange={() => undefined}
+                onEdit={() => clienteEdit.open(cliente.id)}
+                entities={[{ id: cliente.id, nome: clienteNome }]}
               />
             </div>
           )}
@@ -329,6 +334,8 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
         </div>
       </form>
     </DraggableModal>
+    {clienteEdit.modal}
+    </>
   );
 };
 

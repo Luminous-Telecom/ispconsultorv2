@@ -40,6 +40,18 @@ type ClienteListItem = {
   cnpj?: string;
 };
 
+/** Nome exibido no campo de entidade. O ID fica no input ao lado, então o prefixo `#id` sai daqui. */
+export const entitySelectNome = (label: string, id?: number): string => {
+  const trimmed = label.trim();
+  if (!trimmed || trimmed === '-') return '';
+  if (id && id > 0) {
+    const prefix = `#${id}`;
+    if (trimmed === prefix) return '';
+    if (trimmed.startsWith(`${prefix} · `)) return trimmed.slice(prefix.length + 3);
+  }
+  return trimmed;
+};
+
 export const formatTituloReadOnlyValue = (value: string | number | null | undefined): string => {
   if (value === null || value === undefined || String(value).trim() === '') {
     return '-';

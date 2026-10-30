@@ -8,6 +8,7 @@ import { useEntityRecordEdit } from 'hooks/useEntityRecordEdit';
 import { EntityIdField } from 'components/ui';
 import { TituloForm, TituloFormErrors } from '../types';
 import {
+  entitySelectNome,
   formatTituloCurrency,
   formatTituloReadOnlyValue,
   getClienteDisplayLabel,
@@ -42,7 +43,9 @@ interface TituloModalBodyProps {
     description: string;
     observations: string;
     clientCannotBeChanged: string;
+    contractCannotBeChanged: string;
     planoCannotBeChanged: string;
+    bankCannotBeChanged: string;
     valorCannotBeChanged: string;
     dataVencimentoCannotBeChanged: string;
     descriptionPlaceholder: string;
@@ -93,7 +96,10 @@ const TituloModalBody: React.FC<TituloModalBodyProps> = ({
   onShowPlanoModal,
   labels,
 }) => {
+  const clienteEdit = useEntityRecordEdit('cliente');
+  const contratoEdit = useEntityRecordEdit('contrato');
   const planoEdit = useEntityRecordEdit('plano');
+  const bancoEdit = useEntityRecordEdit('banco');
   const clienteDisplayLabel = getClienteDisplayLabel(
     tituloData?.data,
     formData.cliente_id,
@@ -113,6 +119,29 @@ const TituloModalBody: React.FC<TituloModalBodyProps> = ({
     statusSuspended: labels.statusSuspended,
   });
   const titulo = tituloData?.data;
+  const clienteId = Number(
+    formData.cliente_id
+      || (titulo && 'cliente_id' in titulo ? titulo.cliente_id : 0)
+      || (titulo && 'cliente' in titulo ? titulo.cliente?.id : 0)
+      || 0
+  );
+  const contratoId = Number(
+    formData.contrato_id
+      || (titulo && 'contrato_id' in titulo ? titulo.contrato_id : 0)
+      || (titulo && 'contrato' in titulo ? titulo.contrato?.id : 0)
+      || 0
+  );
+  const planoId = Number(
+    formData.plano_id
+      || titulo?.plano_id
+      || (titulo && 'plano' in titulo ? titulo.plano?.id : 0)
+      || 0
+  );
+  const bancoId = Number(
+    (titulo && 'banco_id' in titulo ? titulo.banco_id : 0)
+      || (titulo && 'banco' in titulo ? titulo.banco?.id : 0)
+      || 0
+  );
   const numeroTituloDisplay = formatTituloReadOnlyValue(titulo?.numero_titulo);
   const chargeIdDisplay = formatTituloReadOnlyValue(titulo?.charge_id);
   const nossoNumeroDisplay = formatTituloReadOnlyValue(titulo?.nosso_numero);
@@ -175,53 +204,47 @@ const TituloModalBody: React.FC<TituloModalBodyProps> = ({
               />
             </div>
             <div className="col-12">
-              <FormField
-                name="cliente_readonly"
-                type="text"
+              <EntitySelectField
+                selectionLocked
                 label={labels.client}
-                value={clienteDisplayLabel}
-                onChange={() => {}}
-                readOnly
-                disabled
+                value={clienteId}
+                onChange={() => undefined}
+                onEdit={() => clienteEdit.open(clienteId)}
+                entities={clienteId > 0 ? [{ id: clienteId, nome: entitySelectNome(clienteDisplayLabel) }] : []}
                 helpText={labels.clientCannotBeChanged}
-                size="sm"
               />
             </div>
             <div className="col-12">
-              <FormField
-                name="contrato_readonly"
-                type="text"
+              <EntitySelectField
+                selectionLocked
                 label={labels.contract}
-                value={contratoDisplayLabel}
-                onChange={() => {}}
-                readOnly
-                disabled
-                size="sm"
+                value={contratoId}
+                onChange={() => undefined}
+                onEdit={() => contratoEdit.open(contratoId)}
+                entities={contratoId > 0 ? [{ id: contratoId, nome: entitySelectNome(contratoDisplayLabel, contratoId) }] : []}
+                helpText={labels.contractCannotBeChanged}
               />
             </div>
             <div className="col-12">
-              <FormField
-                name="plano_readonly"
-                type="text"
+              <EntitySelectField
+                selectionLocked
                 label={labels.plan}
-                value={planoDisplayLabel}
-                onChange={() => {}}
-                readOnly
-                disabled
+                value={planoId}
+                onChange={() => undefined}
+                onEdit={() => planoEdit.open(planoId)}
+                entities={planoId > 0 ? [{ id: planoId, nome: entitySelectNome(planoDisplayLabel) }] : []}
                 helpText={labels.planoCannotBeChanged}
-                size="sm"
               />
             </div>
             <div className="col-12">
-              <FormField
-                name="banco_readonly"
-                type="text"
+              <EntitySelectField
+                selectionLocked
                 label={labels.bank}
-                value={bancoDisplay}
-                onChange={() => {}}
-                readOnly
-                disabled
-                size="sm"
+                value={bancoId}
+                onChange={() => undefined}
+                onEdit={() => bancoEdit.open(bancoId)}
+                entities={bancoId > 0 ? [{ id: bancoId, nome: entitySelectNome(bancoDisplay) }] : []}
+                helpText={labels.bankCannotBeChanged}
               />
             </div>
             <div className="col-12">
@@ -511,7 +534,10 @@ const TituloModalBody: React.FC<TituloModalBodyProps> = ({
           />
         </div>
       </div>
+      {clienteEdit.modal}
+      {contratoEdit.modal}
       {planoEdit.modal}
+      {bancoEdit.modal}
     </form>
   );
 };

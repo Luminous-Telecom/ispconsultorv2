@@ -44,6 +44,7 @@ Complementa layout horizontal: `frontend-form-modal-layout.mdc` — **referênci
 ```
 
 - `onEdit` + `useEntityRecordEdit` abre a edição do registro preenchido (botão depois da lupa)
+- Vínculo que não pode ser trocado: `selectionLocked`. A lupa fica desabilitada e o botão de editar o cadastro continua ativo
 - Modal de listagem para escolher → `ListModal` + `onSelect`
 - Ícone busca: `IconOnlyButton` interno — não `<button>` cru
 

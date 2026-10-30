@@ -131,12 +131,12 @@ body[data-app="system"] .login-card * {
 }
 
 /* Só campos de texto — não aplicar em checkbox/radio (quebra o "90 dias") */
-body[data-app="system"] .login-card .form-control,
-body[data-app="system"] .login-card .form-control-sm,
+body[data-app="system"] .login-card .form-control:not(.entity-select-input):not(.id-field),
+body[data-app="system"] .login-card .form-control-sm:not(.entity-select-input):not(.id-field),
 body[data-app="system"] .login-card .form-select,
-body[data-app="system"] .login-card input[type="text"],
-body[data-app="system"] .login-card input[type="email"],
-body[data-app="system"] .login-card input[type="password"],
+body[data-app="system"] .login-card input[type="text"]:not(.entity-select-input):not(.id-field),
+body[data-app="system"] .login-card input[type="email"]:not(.entity-select-input):not(.id-field),
+body[data-app="system"] .login-card input[type="password"]:not(.entity-select-input):not(.id-field),
 body[data-app="system"] .login-card textarea {
   background-color: var(--color-white) !important;
   background-image: none !important;
@@ -158,12 +158,12 @@ body[data-app="system"] .login-card input[type="password"]::placeholder {
   opacity: 1 !important;
 }
 
-body[data-app="system"] .login-card .form-control:focus,
-body[data-app="system"] .login-card .form-control-sm:focus,
+body[data-app="system"] .login-card .form-control:not(.entity-select-input):not(.id-field):focus,
+body[data-app="system"] .login-card .form-control-sm:not(.entity-select-input):not(.id-field):focus,
 body[data-app="system"] .login-card .form-select:focus,
-body[data-app="system"] .login-card input[type="text"]:focus,
-body[data-app="system"] .login-card input[type="email"]:focus,
-body[data-app="system"] .login-card input[type="password"]:focus,
+body[data-app="system"] .login-card input[type="text"]:not(.entity-select-input):not(.id-field):focus,
+body[data-app="system"] .login-card input[type="email"]:not(.entity-select-input):not(.id-field):focus,
+body[data-app="system"] .login-card input[type="password"]:not(.entity-select-input):not(.id-field):focus,
 body[data-app="system"] .login-card textarea:focus {
   background-color: var(--color-white) !important;
   color: var(--color-text-ink) !important;
@@ -174,10 +174,10 @@ body[data-app="system"] .login-card textarea:focus {
   transform: none !important;
 }
 
-body[data-app="system"] .login-card .form-control:disabled,
-body[data-app="system"] .login-card input[type="text"]:disabled,
-body[data-app="system"] .login-card input[type="email"]:disabled,
-body[data-app="system"] .login-card input[type="password"]:disabled {
+body[data-app="system"] .login-card .form-control:not(.entity-select-input):not(.id-field):disabled,
+body[data-app="system"] .login-card input[type="text"]:not(.entity-select-input):not(.id-field):disabled,
+body[data-app="system"] .login-card input[type="email"]:not(.entity-select-input):not(.id-field):disabled,
+body[data-app="system"] .login-card input[type="password"]:not(.entity-select-input):not(.id-field):disabled {
   background-color: var(--color-gray-100) !important;
   color: var(--color-text-soft) !important;
   -webkit-text-fill-color: var(--color-text-soft) !important;

@@ -34,6 +34,8 @@ interface EntitySelectFieldBaseProps {
   editButtonTitle?: string;
   helpText?: string;
   idPlaceholder?: string;
+  /** Impede trocar o vínculo. A lupa fica desabilitada; a edição do cadastro continua disponível. */
+  selectionLocked?: boolean;
 }
 
 export type EntitySelectFieldProps =
@@ -72,6 +74,7 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = (props) => {
     editButtonTitle,
     helpText,
     placeholder,
+    selectionLocked = false,
   } = props;
 
   const defaultPlaceholder = placeholder || t('layout.searchPlaceholder');
@@ -109,11 +112,17 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = (props) => {
     : (entities as EntityItem[]).find((e) => Number(e.id) === Number(props.value))?.nome;
 
   const handleIdChange = (raw: string) => {
+    if (selectionLocked) return;
     if (stringIdMode) {
       (props.onChange as (value: string) => void)(raw.trim());
       return;
     }
     (props.onChange as (value: number) => void)(parseInt(raw, 10) || 0);
+  };
+
+  const unlockIdField = (element: HTMLInputElement) => {
+    if (selectionLocked) return;
+    idGuard.unlock(element);
   };
 
   return (
@@ -122,7 +131,7 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = (props) => {
         {label}
       </LabelWithHelp>
       <div className="form-field-control">
-        <div className="input-group">
+        <div className={`input-group${selectionLocked ? ' entity-select-locked' : ''}`}>
           <input
             id={fieldId}
             title={idTitle}
@@ -131,10 +140,10 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = (props) => {
             placeholder={idPlaceholder}
             name={fieldId}
             disabled={disabled}
-            readOnly={idGuard.readOnly}
-            onFocus={(event) => idGuard.unlock(event.currentTarget)}
-            onMouseDown={(event) => idGuard.unlock(event.currentTarget)}
-            onKeyDown={(event) => idGuard.unlock(event.currentTarget)}
+            readOnly={selectionLocked || idGuard.readOnly}
+            onFocus={(event) => unlockIdField(event.currentTarget)}
+            onMouseDown={(event) => unlockIdField(event.currentTarget)}
+            onKeyDown={(event) => unlockIdField(event.currentTarget)}
             onChange={(e) => handleIdChange(e.target.value)}
             value={props.value ? String(props.value) : ''}
             {...idGuard.domProps}
@@ -155,7 +164,7 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = (props) => {
             title={searchButtonTitle}
             label={searchButtonTitle}
             className="search-button"
-            disabled={disabled}
+            disabled={disabled || selectionLocked}
           >
             {SEARCH_ICON}
           </IconOnlyButton>

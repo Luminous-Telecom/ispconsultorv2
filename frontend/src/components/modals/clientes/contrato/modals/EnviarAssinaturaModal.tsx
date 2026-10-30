@@ -8,6 +8,8 @@ import { AssinaturaDigitalService, EnviarAssinaturaRequest } from 'services/assi
 import DraggableModal from 'components/common/DraggableModal';
 import { CancelarButton, EnviarButton } from 'components/ui';
 import FormField from 'components/ui/FormField';
+import EntitySelectField from 'components/ui/EntitySelectField';
+import { useEntityRecordEdit } from 'hooks/useEntityRecordEdit';
 import { useI18n } from 'contexts/I18nContext';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -27,6 +29,7 @@ const EnviarAssinaturaModal: React.FC<EnviarAssinaturaModalProps> = ({
   onSuccess
 }) => {
   const { t } = useI18n();
+  const modeloEdit = useEntityRecordEdit('modeloTermo');
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
   const queryClient = useQueryClient();
@@ -126,6 +129,7 @@ const EnviarAssinaturaModal: React.FC<EnviarAssinaturaModalProps> = ({
   );
 
   return (
+    <>
     <DraggableModal
       show={show}
       onClose={onClose}
@@ -136,13 +140,21 @@ const EnviarAssinaturaModal: React.FC<EnviarAssinaturaModalProps> = ({
       <form id="enviar-assinatura-form" onSubmit={handleSubmit} className="form-modal-simple" autoComplete="off" data-form-type="other">
         <div className="row g-2">
           <div className="col-12">
-            <FormField
-              name="termo_readonly"
-              type="text"
+            <EntitySelectField
+              selectionLocked
               label="Termo"
-              value={termo ? `Termo #${termo.id} - ${termo.modeloDocumento?.nome || 'Sem nome'}` : ''}
-              onChange={() => {}}
-              readOnly
+              value={termo?.id || 0}
+              onChange={() => undefined}
+              onEdit={
+                termo?.modelo_documento_id
+                  ? () => modeloEdit.open(termo.modelo_documento_id as number)
+                  : undefined
+              }
+              entities={
+                termo
+                  ? [{ id: termo.id, nome: termo.modeloDocumento?.nome || 'Sem nome' }]
+                  : []
+              }
             />
           </div>
 
@@ -210,6 +222,8 @@ const EnviarAssinaturaModal: React.FC<EnviarAssinaturaModalProps> = ({
         </div>
       </form>
     </DraggableModal>
+    {modeloEdit.modal}
+    </>
   );
 };
 
