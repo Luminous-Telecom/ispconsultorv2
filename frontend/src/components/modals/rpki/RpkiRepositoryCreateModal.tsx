@@ -33,12 +33,18 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
     queryKey: ['rpki-cas'],
     queryFn: () => RpkiCaService.list(),
   });
+  const allowedCaIdsKey = (allowedCaIds ?? []).join(',');
   const selectableCas = useMemo((): RpkiCa[] => {
     const caList = cas as RpkiCa[];
-    if (!allowedCaIds?.length) return caList;
-    const allowed = new Set(allowedCaIds);
+    if (!allowedCaIdsKey) return caList;
+    const allowed = new Set(
+      allowedCaIdsKey
+        .split(',')
+        .map((id) => Number(id))
+        .filter((id) => Number.isFinite(id) && id > 0)
+    );
     return caList.filter((ca) => allowed.has(ca.id));
-  }, [cas, allowedCaIds]);
+  }, [cas, allowedCaIdsKey]);
   const selectedCaId = Number(caId || 0);
   const { data: parents = [] as RpkiCaParent[] } = useQuery<RpkiCaParent[]>({
     queryKey: ['rpki-ca-parents', selectedCaId],
@@ -46,19 +52,28 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({
     enabled: selectedCaId > 0,
   });
 
+  // Só reseta campos ao abrir — evita limpar/cancelar o publisher_request a cada re-render do pai
+  useEffect(() => {
+    if (!show) return;
+    setParentId('');
+    setPublisherRequestXml('');
+    setRepositoryResponseXml('');
+  }, [show]);
+
   useEffect(() => {
     if (!show) return;
     if (initialCaId && selectableCas.some((ca) => ca.id === initialCaId)) {
       setCaId(String(initialCaId));
-    } else if (selectableCas.length > 0) {
-      setCaId(String(selectableCas[0].id));
-    } else {
-      setCaId('');
+      return;
     }
-    setParentId('');
-    setPublisherRequestXml('');
-    setRepositoryResponseXml('');
-  }, [show, selectableCas, initialCaId]);
+    if (selectableCas.length > 0) {
+      setCaId((prev) =>
+        prev && selectableCas.some((ca) => String(ca.id) === prev) ? prev : String(selectableCas[0].id)
+      );
+      return;
+    }
+    setCaId('');
+  }, [show, initialCaId, selectableCas]);
 
   useEffect(() => {
     showApiErrorRef.current = showApiError;

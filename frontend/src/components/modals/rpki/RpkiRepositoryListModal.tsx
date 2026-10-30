@@ -75,6 +75,7 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = ({
   );
 
   const { cas, caIdsKey } = useRpkiCas(clienteIdFilter);
+  const allowedCaIds = useMemo(() => cas.map((c) => c.id), [cas]);
   const { data: clientes = [] as Cliente[] } = useQuery<Cliente[]>({
     queryKey: ['clientes-rpki'],
     queryFn: async () => {
@@ -254,7 +255,7 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = ({
       <RpkiRepositoryCreateModal
         show={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        allowedCaIds={cas.map((c) => c.id)}
+        allowedCaIds={allowedCaIds}
         initialCaId={cas.length === 1 ? cas[0].id : null}
       />
 

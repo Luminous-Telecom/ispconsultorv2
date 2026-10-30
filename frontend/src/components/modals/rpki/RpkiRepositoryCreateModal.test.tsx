@@ -80,4 +80,36 @@ describe('RpkiRepositoryCreateModal', () => {
       });
     });
   });
+
+  it('não recarrega o publisher_request quando a lista de CAs só muda de referência', async () => {
+    localStorage.setItem('app-language', 'pt-BR');
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+    const view = render(
+      <QueryClientProvider client={client}>
+        <I18nProvider>
+          <RpkiRepositoryCreateModal show onClose={jest.fn()} allowedCaIds={[4]} />
+        </I18nProvider>
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => {
+      expect(RpkiCaService.generatePublisherRequest).toHaveBeenCalledTimes(1);
+      expect((screen.getByLabelText(/publisher_request/) as HTMLTextAreaElement).value).toBe('<pub/>');
+    });
+
+    const resposta = screen.getByLabelText(/repository_response/) as HTMLTextAreaElement;
+    fireEvent.change(resposta, { target: { value: '<repo/>' } });
+
+    view.rerender(
+      <QueryClientProvider client={client}>
+        <I18nProvider>
+          <RpkiRepositoryCreateModal show onClose={jest.fn()} allowedCaIds={[4]} />
+        </I18nProvider>
+      </QueryClientProvider>
+    );
+
+    expect((screen.getByLabelText(/repository_response/) as HTMLTextAreaElement).value).toBe('<repo/>');
+    expect((screen.getByLabelText(/publisher_request/) as HTMLTextAreaElement).value).toBe('<pub/>');
+    expect(RpkiCaService.generatePublisherRequest).toHaveBeenCalledTimes(1);
+  });
 });
