@@ -82,9 +82,9 @@ const RpkiRoaAnalysisModal: React.FC<RpkiRoaAnalysisModalProps> = ({
       title={`Análise de ROA - ${caNome}`}
       size="xl"
       modalId="rpki-roa-analysis-modal"
-      className="no-padding list-modal-no-body-scroll d-flex gap-2 modal-header-actions"
+      className="no-padding list-modal-no-body-scroll"
       headerActions={
-        <div >
+        <div className="d-flex gap-2 modal-header-actions">
           <CancelarButton type="button" onClick={onClose} />
           <ConfirmarButton
             type="button"
