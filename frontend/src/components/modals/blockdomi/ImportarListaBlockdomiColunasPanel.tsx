@@ -26,7 +26,7 @@ const ImportarListaBlockdomiColunasPanel: React.FC<ImportarListaBlockdomiColunas
   onAplicar,
   t,
 }) => (
-  <div className="mb-3">
+  <div className="ilb-colunas-panel">
     <div className="form-section-heading-row">
       <span className="form-section-heading-pill">{t('blockdomi.colunasDetectadas')}</span>
       <div className="form-section-heading-line" aria-hidden />

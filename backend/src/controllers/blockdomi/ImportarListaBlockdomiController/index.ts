@@ -250,7 +250,7 @@ export class ImportarListaBlockdomiController {
   }
 
   /**
-   * Extrai o número SEI do ofício Anatel (texto nas últimas páginas / código verificador).
+   * Extrai o número SEI do ofício Anatel (código verificador, cabeçalho SEI/ANATEL ou referência).
    * O arquivo enviado é processado e removido do disco (não fica armazenado como ofício).
    */
   static async extractSeiAnatelFromPdf(req: Request, res: Response): Promise<void> {

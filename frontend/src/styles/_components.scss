@@ -5850,6 +5850,27 @@ input[type="week"]::-moz-calendar-picker-indicator {
   width: 100%;
 }
 
+.importar-lista-blockdomi .ilb-entrada-layout {
+  display: grid;
+  grid-template-columns: minmax(0, var(--form-block-max-width)) minmax(220px, 1fr);
+  gap: 1rem 1.5rem;
+  align-items: start;
+}
+
+.importar-lista-blockdomi .ilb-entrada-layout:not(:has(.ilb-colunas-panel)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.importar-lista-blockdomi .ilb-colunas-panel .ilb-classification-cards {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+@media (max-width: 767.98px) {
+  .importar-lista-blockdomi .ilb-entrada-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .importar-lista-blockdomi .ilb-class-card {
   border-radius: var(--ilb-radius);
   overflow: hidden;

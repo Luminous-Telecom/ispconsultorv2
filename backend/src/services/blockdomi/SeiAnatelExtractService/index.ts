@@ -39,7 +39,7 @@ function runPythonSeiExtract(scriptPath: string, pdfPath: string, timeoutMs: num
 export type SeiExtractResult = { success: boolean; sei?: string; message?: string };
 
 /**
- * Extrai o número SEI do ofício Anatel a partir do texto do PDF (últimas páginas / código verificador).
+ * Extrai o número SEI do ofício Anatel (código verificador, cabeçalho SEI/ANATEL ou referência SEI nº).
  */
 export class SeiAnatelExtractService {
   static async extractFromPdfPath(pdfPath: string): Promise<SeiExtractResult> {

@@ -474,7 +474,7 @@ const enUS: TranslationKeys = {
     'blockdomi.seiAnatelRequired': 'Enter the Anatel SEI number.',
     'blockdomi.nomeOficioRequired': 'Enter the warrant name.',
     'blockdomi.dataInicioRequired': 'Enter the block start date.',
-    'blockdomi.seiAnatelHelp': 'SEI protocol number at the end of the signed PDF (e.g. verification code on the authenticity page). Use the button to fill it from the warrant PDF.',
+    'blockdomi.seiAnatelHelp': 'SEI protocol of the signed warrant (verification code or SEI/ANATEL header). The button reads the whole PDF, even when the domain list is in the same file.',
     'blockdomi.extractSeiFromAnatelPdf': 'Extract SEI',
     'blockdomi.syncSeiAnatel': 'Sync SEI',
     'blockdomi.syncSeiAnatelHelp':

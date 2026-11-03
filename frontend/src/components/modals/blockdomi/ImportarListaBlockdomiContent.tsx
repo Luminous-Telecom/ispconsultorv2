@@ -142,34 +142,36 @@ const ImportarListaBlockdomiContent: React.FC<ImportarListaBlockdomiContentProps
         onPdfMainFileChange={props.onPdfMainFileChange}
       />
 
-      {colunasDisponiveis && Object.keys(colunasDisponiveis).length > 0 && (
-        <ImportarListaBlockdomiColunasPanel
-          colunasDisponiveis={colunasDisponiveis}
-          colunasSeleccionadas={props.colunasSeleccionadas}
-          onColunaToggle={props.onColunaToggle}
-          onSelectAll={props.onColunasSelectAll}
-          onSelectNone={props.onColunasSelectNone}
-          onAplicar={props.onColunasAplicar}
+      <div className="ilb-entrada-layout">
+        <ImportarListaBlockdomiEditorSection
           t={t}
+          rawText={props.rawText}
+          domainCount={props.domainCount}
+          onRawTextChange={props.onRawTextChange}
+          onPaste={props.onPaste}
+          onClear={props.onClear}
+          onAnalisar={props.onAnalisar}
+          isAnalyzing={isAnalyzing}
+          classified={classified}
+          listaModo={props.listaModo}
+          onListaModoChange={props.onListaModoChange}
+          onCadastrar={props.onCadastrar}
+          canCadastrar={props.canCadastrar}
+          isCadastrando={props.isCadastrando}
         />
-      )}
 
-      <ImportarListaBlockdomiEditorSection
-        t={t}
-        rawText={props.rawText}
-        domainCount={props.domainCount}
-        onRawTextChange={props.onRawTextChange}
-        onPaste={props.onPaste}
-        onClear={props.onClear}
-        onAnalisar={props.onAnalisar}
-        isAnalyzing={isAnalyzing}
-        classified={classified}
-        listaModo={props.listaModo}
-        onListaModoChange={props.onListaModoChange}
-        onCadastrar={props.onCadastrar}
-        canCadastrar={props.canCadastrar}
-        isCadastrando={props.isCadastrando}
-      />
+        {colunasDisponiveis && Object.keys(colunasDisponiveis).length > 0 && (
+          <ImportarListaBlockdomiColunasPanel
+            colunasDisponiveis={colunasDisponiveis}
+            colunasSeleccionadas={props.colunasSeleccionadas}
+            onColunaToggle={props.onColunaToggle}
+            onSelectAll={props.onColunasSelectAll}
+            onSelectNone={props.onColunasSelectNone}
+            onAplicar={props.onColunasAplicar}
+            t={t}
+          />
+        )}
+      </div>
 
       {showFiltrosExtract && (
         <ImportarListaBlockdomiFiltrosCards

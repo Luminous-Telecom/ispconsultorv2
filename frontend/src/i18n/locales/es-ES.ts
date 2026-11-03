@@ -476,7 +476,7 @@ const esES: TranslationKeys = {
     'blockdomi.seiAnatelRequired': 'Informe el N.º SEI Anatel.',
     'blockdomi.nomeOficioRequired': 'Informe el nombre del oficio.',
     'blockdomi.dataInicioRequired': 'Informe la fecha inicio bloqueo.',
-    'blockdomi.seiAnatelHelp': 'Número de protocolo SEI al final del PDF firmado (p. ej., código verificador en la página de autenticidad). Use el botón para rellenar desde el PDF del oficio.',
+    'blockdomi.seiAnatelHelp': 'Protocolo SEI del oficio firmado (código verificador o encabezado SEI/ANATEL). El botón lee el PDF completo, aunque la lista de dominios esté en el mismo archivo.',
     'blockdomi.extractSeiFromAnatelPdf': 'Extraer SEI',
     'blockdomi.syncSeiAnatel': 'Sincronizar SEI',
     'blockdomi.syncSeiAnatelHelp':
