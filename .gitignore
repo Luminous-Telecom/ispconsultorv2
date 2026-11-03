@@ -16,4 +16,8 @@ dist/
 build/
 *.tsbuildinfo
 
+# Python
+__pycache__/
+*.py[cod]
+
 testesuploads/
