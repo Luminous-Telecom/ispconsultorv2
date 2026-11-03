@@ -2,7 +2,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { spawnSync } from 'child_process';
-import { SeiAnatelExtractService } from './index';
+import { SeiAnatelExtractService, parseSeiStdout } from './index';
 
 const python = process.env.PDF_EXTRACT_PYTHON?.trim() || 'python3';
 
@@ -112,6 +112,23 @@ doc.close()
     const result = await SeiAnatelExtractService.extractFromPdfPath(pdf);
 
     expect(result).toEqual({ success: true, sei: '13193909' });
+  });
+
+  it('lê o JSON do extrator mesmo quando há lixo antes da última linha', () => {
+    expect(parseSeiStdout('aviso\n{"success":false,"message":"Arquivo PDF não encontrado"}')).toEqual({
+      success: false,
+      message: 'Arquivo PDF não encontrado',
+    });
+    expect(parseSeiStdout('sem json')).toBeNull();
+  });
+
+  it('informa quando o arquivo não existe, sem derrubar a requisição', async () => {
+    const result = await SeiAnatelExtractService.extractFromPdfPath(
+      path.join(os.tmpdir(), 'sei-anatel-inexistente.pdf')
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.message).toMatch(/não encontrado|indisponível/i);
   });
 
   it('recusa PDF sem número SEI', async () => {

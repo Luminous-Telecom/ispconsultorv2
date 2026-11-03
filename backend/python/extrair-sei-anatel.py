@@ -15,29 +15,38 @@ Prioridade:
 Uso: python extrair-sei-anatel.py <caminho_pdf>
 Saída: JSON {"success": true, "sei": "15497675"} ou {"success": false, "message": "..."}
 """
+from __future__ import annotations
+
 import json
 import re
 import sys
 import os
 import unicodedata
 
-_orig_out, _orig_err = sys.stdout, sys.stderr
 
 class _Null:
-    def write(self, _): pass
-    def flush(self): pass
+    def write(self, _):
+        return 0
 
-sys.stdout = sys.stderr = _Null()
-import warnings
-warnings.filterwarnings('ignore')
-os.environ.update({'PYTHONWARNINGS': 'ignore', 'PYTHONDONTWRITEBYTECODE': '1'})
+    def flush(self):
+        pass
 
-try:
-    import fitz  # pymupdf < 1.25
-except ModuleNotFoundError:
-    import pymupdf as fitz  # type: ignore[no-redef]
 
-sys.stdout, sys.stderr = _orig_out, _orig_err
+def _carregar_fitz():
+    """Importa pymupdf sem deixar aviso ir para o stdout (o Node lê só o JSON)."""
+    orig_out, orig_err = sys.stdout, sys.stderr
+    sys.stdout = sys.stderr = _Null()
+    try:
+        import warnings
+        warnings.filterwarnings('ignore')
+        os.environ.update({'PYTHONWARNINGS': 'ignore', 'PYTHONDONTWRITEBYTECODE': '1'})
+        try:
+            import fitz  # pymupdf < 1.25
+        except ModuleNotFoundError:
+            import pymupdf as fitz  # type: ignore[no-redef]
+        return fitz
+    finally:
+        sys.stdout, sys.stderr = orig_out, orig_err
 
 # Código verificador na página de autenticidade (número SEI deste documento)
 _RE_VERIFICADOR = re.compile(
@@ -98,6 +107,10 @@ def extrair_sei(pdf_path: str) -> dict:
     if not pdf_path or not os.path.isfile(pdf_path):
         return {'success': False, 'message': 'Arquivo PDF não encontrado'}
     try:
+        fitz = _carregar_fitz()
+    except Exception as e:
+        return {'success': False, 'message': f'Extrator SEI indisponível: {e}'}
+    try:
         doc = fitz.open(pdf_path)
     except Exception as e:
         return {'success': False, 'message': f'Não foi possível abrir o PDF: {e}'}
@@ -107,7 +120,10 @@ def extrair_sei(pdf_path: str) -> dict:
         if total == 0:
             return {'success': False, 'message': 'Nenhum texto extraído do PDF'}
 
-        meta_sei = _sei_metadados(doc)
+        try:
+            meta_sei = _sei_metadados(doc)
+        except Exception:
+            meta_sei = None
         verificador = None
         header = None
         sei_no_inicio = None
@@ -119,7 +135,10 @@ def extrair_sei(pdf_path: str) -> dict:
         ordem = sorted(inicio | fim) + [i for i in range(total) if i not in inicio and i not in fim]
 
         for indice in ordem:
-            texto = _texto_pagina(doc.load_page(indice))
+            try:
+                texto = _texto_pagina(doc.load_page(indice))
+            except Exception:
+                continue
             if texto.strip():
                 teve_texto = True
             if verificador is None:
@@ -151,7 +170,10 @@ def main():
     if len(sys.argv) < 2:
         print(json.dumps({'success': False, 'message': 'Uso: extrair-sei-anatel.py <caminho_pdf>'}))
         sys.exit(1)
-    out = extrair_sei(sys.argv[1])
+    try:
+        out = extrair_sei(sys.argv[1])
+    except Exception as exc:
+        out = {'success': False, 'message': f'Falha ao extrair SEI: {exc}'}
     print(json.dumps(out, ensure_ascii=False))
 
 

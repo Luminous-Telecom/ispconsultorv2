@@ -23,8 +23,6 @@ function runPythonSeiExtract(scriptPath: string, pdfPath: string, timeoutMs: num
       clearTimeout(t);
       if (signal) {
         reject(Object.assign(new Error(`Processo finalizado por signal: ${signal}`), { stdout, stderr, code, killed: true }));
-      } else if (code !== 0) {
-        reject(Object.assign(new Error(`Python exit code ${code}`), { stdout, stderr, code }));
       } else {
         resolve({ stdout, stderr, code });
       }
@@ -38,21 +36,37 @@ function runPythonSeiExtract(scriptPath: string, pdfPath: string, timeoutMs: num
 
 export type SeiExtractResult = { success: boolean; sei?: string; message?: string };
 
+export function parseSeiStdout(stdout: string): SeiExtractResult | null {
+  const line = stdout.trim().split(/\r?\n/).filter(Boolean).pop() ?? '';
+  if (!line) return null;
+  try {
+    const parsed = JSON.parse(line) as SeiExtractResult;
+    if (parsed && typeof parsed.success === 'boolean') return parsed;
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+function detalheStderr(stderr: string): string {
+  return stderr.trim().split(/\r?\n/).map((linha) => linha.trim()).filter(Boolean).pop() ?? '';
+}
+
 /**
  * Extrai o número SEI do ofício Anatel (código verificador, cabeçalho SEI/ANATEL ou referência SEI nº).
  */
 export class SeiAnatelExtractService {
   static async extractFromPdfPath(pdfPath: string): Promise<SeiExtractResult> {
     const scriptPath = path.join(__dirname, relativeToRoot, 'python/extrair-sei-anatel.py');
-    const { stdout } = await runPythonSeiExtract(scriptPath, pdfPath, 60000);
-    const line = stdout.trim().split(/\r?\n/).filter(Boolean).pop() ?? stdout.trim();
-    try {
-      const parsed = JSON.parse(line) as SeiExtractResult;
-      if (parsed && typeof parsed.success === 'boolean') {
-        return parsed;
-      }
-    } catch {
-      /* ignore */
+    const { stdout, stderr, code } = await runPythonSeiExtract(scriptPath, pdfPath, 60000);
+    const parsed = parseSeiStdout(stdout);
+    if (parsed) return parsed;
+    if (code !== 0) {
+      const detalhe = detalheStderr(stderr);
+      return {
+        success: false,
+        message: detalhe ? `Python exit code ${code}: ${detalhe}` : `Python exit code ${code}`,
+      };
     }
     return { success: false, message: 'Resposta inválida do extrator SEI' };
   }
