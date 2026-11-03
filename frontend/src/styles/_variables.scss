@@ -53,6 +53,7 @@
 /* Tema claro — grafite claro */
 [data-theme="light"],
 :root {
+  color-scheme: light;
   --primary-color: var(--color-accent-light);
   --primary-hover: var(--color-primary-fill-hover-light);
   --btn-primary-color: var(--color-primary-fill-light);
@@ -138,6 +139,7 @@
 
 /* Tema escuro — grafite azulado com accents saturados */
 [data-theme="dark"] {
+  color-scheme: dark;
   --bg-primary: var(--color-bg-dark);
   --bg-secondary: var(--color-bg-secondary-dark);
   --bg-tertiary: var(--color-bg-tertiary-dark);
