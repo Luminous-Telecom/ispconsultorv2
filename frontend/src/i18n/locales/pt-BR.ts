@@ -295,6 +295,7 @@ const ptBR: TranslationKeys = {
 
     // Logs
     'logs.title': 'Logs',
+    'logs.usuarioEspecifico': 'Logs — ${name}',
     'logs.usuarios': 'Logs de Usuários',
     'logs.agendaTarefas': 'Logs de Agenda de Tarefas',
     'logs.email': 'Logs de Email',
@@ -1214,6 +1215,7 @@ const ptBR: TranslationKeys = {
     'table.actions': 'Ações',
     'table.balanceDue': 'Saldo Devedor',
     'table.createdAt': 'Data cadastro',
+    'table.lastAccess': 'Último acesso',
     'table.updatedAt': 'Atualizado em',
     'table.documentNumber': 'Número do Documento',
     'table.supplier': 'Fornecedor',

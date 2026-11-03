@@ -7,7 +7,7 @@ import { useBlockdomiLogs } from 'hooks/useBlockdomiLogs';
 import { LOGS_AUDITORIA_CONFIG } from '../constants';
 import type { LogsModalType, MensagemItem } from '../types';
 
-export function useLogsContent(logType: LogsModalType, show: boolean) {
+export function useLogsContent(logType: LogsModalType, show: boolean, usuarioId?: number) {
   const mensagemService = getMensagemHistoricoService();
 
   const isEquipamentosOuAgentes = logType === 'equipamentos' || logType === 'agentes';
@@ -50,13 +50,14 @@ export function useLogsContent(logType: LogsModalType, show: boolean) {
       entidade: preset.entidade,
       moduloBlockdomi: preset.moduloBlockdomi,
       comUsuarioObrigatorio: preset.comUsuarioObrigatorio,
+      usuario_id: usuarioId != null && usuarioId > 0 ? usuarioId : undefined,
       origemAuditoria: preset.origemAuditoria,
       data_inicio: isEquipamentosOuAgentes ? filterStartDate || undefined : undefined,
       data_fim: isEquipamentosOuAgentes ? filterEndDate || undefined : undefined,
       sortColumn: tableFilters.sortColumn,
       sortDirection: tableFilters.sortDirection,
     }),
-    [tableFilters, preset, isEquipamentosOuAgentes, filterStartDate, filterEndDate]
+    [tableFilters, preset, isEquipamentosOuAgentes, filterStartDate, filterEndDate, usuarioId]
   );
 
   const mensagemFilters = useMemo(

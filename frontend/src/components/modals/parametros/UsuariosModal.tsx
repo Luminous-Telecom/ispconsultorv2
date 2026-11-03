@@ -13,6 +13,8 @@ import { Usuario } from 'types';
 import { userRoleBadgeClass, userRoleLabelKey } from 'constants/userRoles';
 import UsuarioFormModal from './UsuarioFormModal';
 import ImprimirModal from 'components/common/ImprimirModal';
+import DraggableModal from 'components/common/DraggableModal';
+import LogsModal from 'components/modals/logs/LogsModal';
 
 interface UsuariosModalProps {
   show: boolean;
@@ -26,6 +28,7 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({ show, onClose, skipWrappe
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedUsuarioId, setSelectedUsuarioId] = useState<number | null>(null);
+  const [logsUsuario, setLogsUsuario] = useState<Usuario | null>(null);
 
   const list = useEntityListModal<Usuario>({ onClose });
 
@@ -96,6 +99,12 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({ show, onClose, skipWrappe
         }),
       },
       {
+        key: 'ultimo_login',
+        label: list.t('table.lastAccess'),
+        sortable: true,
+        render: (item) => (item.ultimo_login ? formatDateTime(item.ultimo_login) : '-'),
+      },
+      {
         key: 'webhook_secret',
         label: list.t('user.webhookSecret'),
         sortable: true,
@@ -131,8 +140,8 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({ show, onClose, skipWrappe
   );
 
   const bulkActions = useMemo(
-    () =>
-      list.buildCrudBulkActions({
+    () => [
+      ...list.buildCrudBulkActions({
         onNew: () => setShowCreateModal(true),
         onEdit: (item) => {
           setSelectedUsuarioId(item.id);
@@ -140,6 +149,16 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({ show, onClose, skipWrappe
         },
         onDelete: handleDelete,
       }),
+      {
+        label: list.t('logs.title'),
+        variant: 'primary' as const,
+        disabled: (selectedItems: Usuario[]) => list.isNothingSelected(selectedItems),
+        action: (selectedItems: Usuario[]) => {
+          const item = list.resolveItem(selectedItems);
+          if (item) setLogsUsuario(item);
+        },
+      },
+    ],
     [list, handleDelete]
   );
 
@@ -203,6 +222,28 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({ show, onClose, skipWrappe
         title="Relatórios de logs"
         modalId="auditoria-usuario-modal"
       />
+
+      <DraggableModal
+        show={logsUsuario != null}
+        onClose={() => setLogsUsuario(null)}
+        title={
+          logsUsuario
+            ? list.t('logs.usuarioEspecifico', { name: logsUsuario.nome })
+            : list.t('logs.title')
+        }
+        size="xl"
+        className="no-padding"
+        modalId="usuario-logs-modal"
+      >
+        {logsUsuario ? (
+          <LogsModal
+            show
+            onClose={() => setLogsUsuario(null)}
+            logType="usuarios"
+            usuarioId={logsUsuario.id}
+          />
+        ) : null}
+      </DraggableModal>
     </>
   );
 };

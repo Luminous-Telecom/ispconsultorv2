@@ -41,4 +41,6 @@ export interface LogsModalProps {
   logType?: LogsModalType;
   /** Origem ERP vs SaaS — definido pelo registro de modais (não inferir pela URL). */
   variant?: 'erp';
+  /** Quando informado, a listagem fica restrita aos logs desse usuário. */
+  usuarioId?: number;
 }

@@ -279,6 +279,7 @@ export interface TranslationKeys {
 
   // Logs
   'logs.title': string;
+  'logs.usuarioEspecifico': string;
   'logs.usuarios': string;
   'logs.agendaTarefas': string;
   'logs.email': string;
@@ -1207,6 +1208,7 @@ export interface TranslationKeys {
   'table.actions': string;
   'table.balanceDue': string;
   'table.createdAt': string;
+  'table.lastAccess': string;
   'table.updatedAt': string;
   'table.documentNumber': string;
   'table.supplier': string;

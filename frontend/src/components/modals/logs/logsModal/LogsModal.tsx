@@ -20,11 +20,12 @@ const LogsModal: React.FC<LogsModalProps> = ({
   onClose: _onClose,
   logType = 'usuarios',
   variant: _variant = 'erp',
+  usuarioId,
 }) => {
   const effectiveVariant = 'erp' as const;
   const showEmpresaColumn = false;
 
-  const ctx = useLogsContent(logType, show);
+  const ctx = useLogsContent(logType, show, usuarioId);
   const [showBlockdomiLogsReal, setShowBlockdomiLogsReal] = useState(false);
   const [whoisIp, setWhoisIp] = useState<string | null>(null);
 

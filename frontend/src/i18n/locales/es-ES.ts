@@ -296,6 +296,7 @@ const esES: TranslationKeys = {
 
     // Logs
     'logs.title': 'Registros',
+    'logs.usuarioEspecifico': 'Registros — ${name}',
     'logs.usuarios': 'Registros de Usuarios',
     'logs.agendaTarefas': 'Registros de Agenda de Tareas',
     'logs.email': 'Registros de Email',
@@ -1216,6 +1217,7 @@ const esES: TranslationKeys = {
     'table.actions': 'Acciones',
     'table.balanceDue': 'Saldo Deudor',
     'table.createdAt': 'Creado en',
+    'table.lastAccess': 'Último acceso',
     'table.updatedAt': 'Actualizado en',
     'table.documentNumber': 'Número de Documento',
     'table.supplier': 'Proveedor',
