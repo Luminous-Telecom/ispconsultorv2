@@ -1,6 +1,7 @@
 /**
  * Serviço público do Blockdomi - dados para o site público.
- * Retorna ofícios, datas de bloqueio, versões e totais (sem listas de domínios/IPs).
+ * Agrupa cada ofício (nome, datas, versão e Nº SEI) e já devolve
+ * domínios, URLs, IPv4 e IPv6 com a contagem de cada lista.
  */
 import { prisma } from '../../../db/prisma';
 
@@ -9,6 +10,10 @@ export interface OficioDetalhes {
   qtd_urls: number;
   qtd_ipv4: number;
   qtd_ipv6: number;
+  dominios: string[];
+  urls: string[];
+  ipv4: string[];
+  ipv6: string[];
 }
 
 export interface OficioPublico {
@@ -63,8 +68,14 @@ export class BlockdomiPublicoService {
         where: { ativo: true },
         select: { ...oficioSelect, dominio: true },
       }),
-      prisma.blockdomi_ipv4.findMany({ where: { ativo: true }, select: oficioSelect }),
-      prisma.blockdomi_ipv6.findMany({ where: { ativo: true }, select: oficioSelect }),
+      prisma.blockdomi_ipv4.findMany({
+        where: { ativo: true },
+        select: { ...oficioSelect, ip: true },
+      }),
+      prisma.blockdomi_ipv6.findMany({
+        where: { ativo: true },
+        select: { ...oficioSelect, ip: true },
+      }),
     ]);
 
     const seen = new Map<string, OficioPublico>();
@@ -79,27 +90,12 @@ export class BlockdomiPublicoService {
       numeroSei: string | null
     ) => `${nome ?? ''}|${di}|${df}|${versao ?? ''}|${(numeroSei ?? '').trim()}`;
 
-    const chaveContagem = (
-      nome: string | null,
-      versao: string | null,
-      numeroSei: string | null
-    ) => `${(nome ?? '').trim()}|${(versao ?? '').trim()}|${(numeroSei ?? '').trim()}`;
-
-    const somar = (
-      nome: string | null,
-      versao: string | null,
-      numeroSei: string | null,
-      campo: keyof OficioDetalhes
-    ) => {
-      const key = chaveContagem(nome, versao, numeroSei);
-      const atual = detalhesPorOficio.get(key) ?? {
-        qtd_dominios: 0,
-        qtd_urls: 0,
-        qtd_ipv4: 0,
-        qtd_ipv6: 0,
-      };
-      atual[campo] += 1;
-      detalhesPorOficio.set(key, atual);
+    const garantirDetalhes = (key: string): OficioDetalhes => {
+      const atual = detalhesPorOficio.get(key);
+      if (atual) return atual;
+      const vazio = this.detalhesVazios();
+      detalhesPorOficio.set(key, vazio);
+      return vazio;
     };
 
     const adicionar = (
@@ -150,12 +146,13 @@ export class BlockdomiPublicoService {
       versaoRef: row.blockdomi_versoes ?? undefined,
     });
     const domPlain = dominios.map((row) => ({ ...toPlain(row), dominio: row.dominio }));
-    const ipv4Plain = ipv4s.map(toPlain);
-    const ipv6Plain = ipv6s.map(toPlain);
+    const ipv4Plain = ipv4s.map((row) => ({ ...toPlain(row), ip: row.ip }));
+    const ipv6Plain = ipv6s.map((row) => ({ ...toPlain(row), ip: row.ip }));
 
     const registrar = (
-      r: (typeof ipv4Plain)[number],
-      campo: keyof OficioDetalhes
+      r: (typeof domPlain)[number] | (typeof ipv4Plain)[number],
+      valor: string | null | undefined,
+      campo: 'dominios' | 'urls' | 'ipv4' | 'ipv6'
     ) => {
       const di = this.normalizarDataParaChave(r.data_inicio_bloqueio as string | Date | null | undefined);
       const df = this.normalizarDataParaChave(r.data_fim_bloqueio as string | Date | null | undefined);
@@ -163,14 +160,29 @@ export class BlockdomiPublicoService {
       const seiRaw = r.numero_sei_anatel;
       const sei = seiRaw != null && String(seiRaw).trim() !== '' ? String(seiRaw).trim() : null;
       adicionar(r.nome_oficio, di, df, versao, sei, this.normalizarCreatedAt(r.created_at));
-      somar(r.nome_oficio, versao, sei, campo);
+      const item = String(valor ?? '').trim();
+      if (!item) return;
+      const detalhes = garantirDetalhes(chaveOficio(r.nome_oficio, di, df, versao, sei));
+      detalhes[campo].push(item);
+      if (campo === 'dominios') detalhes.qtd_dominios += 1;
+      else if (campo === 'urls') detalhes.qtd_urls += 1;
+      else if (campo === 'ipv4') detalhes.qtd_ipv4 += 1;
+      else detalhes.qtd_ipv6 += 1;
     };
 
     for (const r of domPlain) {
-      registrar(r, String(r.dominio || '').includes('/') ? 'qtd_urls' : 'qtd_dominios');
+      const valor = String(r.dominio || '');
+      registrar(r, valor, valor.includes('/') ? 'urls' : 'dominios');
     }
-    for (const r of ipv4Plain) registrar(r, 'qtd_ipv4');
-    for (const r of ipv6Plain) registrar(r, 'qtd_ipv6');
+    for (const r of ipv4Plain) registrar(r, r.ip, 'ipv4');
+    for (const r of ipv6Plain) registrar(r, r.ip, 'ipv6');
+
+    for (const detalhes of detalhesPorOficio.values()) {
+      this.ordenarLista(detalhes.dominios);
+      this.ordenarLista(detalhes.urls);
+      this.ordenarLista(detalhes.ipv4);
+      this.ordenarLista(detalhes.ipv6);
+    }
 
     // Mais novo → mais antigo pela versão (YYYYMMDD + sequência).
     // created_at do registro não muda quando o ofício é republicado.
@@ -192,13 +204,14 @@ export class BlockdomiPublicoService {
     const versaoAtual = await this.getVersaoAtual();
 
     for (const o of oficios) {
-      const key = chaveContagem(o.nome_oficio, o.versao, o.numero_sei_anatel);
-      o.detalhes = detalhesPorOficio.get(key) ?? {
-        qtd_dominios: 0,
-        qtd_urls: 0,
-        qtd_ipv4: 0,
-        qtd_ipv6: 0
-      };
+      const key = chaveOficio(
+        o.nome_oficio,
+        o.data_inicio_bloqueio ?? '',
+        o.data_fim_bloqueio ?? '',
+        o.versao,
+        o.numero_sei_anatel
+      );
+      o.detalhes = detalhesPorOficio.get(key) ?? this.detalhesVazios();
     }
 
     const [totalDominios, totalIpv4, totalIpv6, totalUrls] = await Promise.all([
@@ -220,6 +233,23 @@ export class BlockdomiPublicoService {
     };
 
     return { oficios, versao_atual: versaoAtual, stats };
+  }
+
+  private static detalhesVazios(): OficioDetalhes {
+    return {
+      qtd_dominios: 0,
+      qtd_urls: 0,
+      qtd_ipv4: 0,
+      qtd_ipv6: 0,
+      dominios: [],
+      urls: [],
+      ipv4: [],
+      ipv6: [],
+    };
+  }
+
+  private static ordenarLista(itens: string[]): void {
+    itens.sort((a, b) => a.localeCompare(b, 'pt-BR'));
   }
 
   /**
