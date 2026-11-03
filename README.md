@@ -259,7 +259,7 @@ cd frontend && npm run dev
 | `KRILL_API_URL` / `KRILL_API_TOKEN` | RPKI | Motor Krill local |
 | `GITHUB_REPO` | atualização pelo ERP | Ex.: `Luminous-Telecom/ispconsultorv2` |
 | `GITHUB_TOKEN` | atualização (repo privado) | PAT com leitura de releases; sem token o GitHub responde 404 |
-| `PDF_EXTRACT_PYTHON` | opcional | Python do venv com `pymupdf` (Debian PEP 668) |
+| `PDF_EXTRACT_PYTHON` | opcional | Substitui o Python do `backend/.venv` criado no build (pymupdf) |
 
 \* Sem Redis, recursos que usam fila (ex.: extração de PDF) falham.
 

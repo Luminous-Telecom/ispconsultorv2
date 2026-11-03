@@ -1,16 +1,14 @@
 import { spawn } from 'child_process';
 import path from 'path';
-
-function getPdfExtractPython(): string {
-  return process.env.PDF_EXTRACT_PYTHON?.trim() || 'python3';
-}
+import { resolvePdfExtractPython } from '../../../utils/pdfExtractPython';
 
 const isDist = __dirname.includes(`${path.sep}dist${path.sep}`);
 const relativeToRoot = isDist ? '../../../' : '../../../../';
 
 function runPythonSeiExtract(scriptPath: string, pdfPath: string, timeoutMs: number): Promise<{ stdout: string; stderr: string; code: number | null }> {
   return new Promise((resolve, reject) => {
-    const proc = spawn(getPdfExtractPython(), [scriptPath, pdfPath]);
+    const python = resolvePdfExtractPython(__dirname);
+    const proc = spawn(python.command, [scriptPath, pdfPath], { env: python.env });
     let stdout = '';
     let stderr = '';
     proc.stdout.on('data', (d) => { stdout += d.toString(); });

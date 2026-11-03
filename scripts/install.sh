@@ -368,7 +368,7 @@ apt_install update -y
 log "Instalando ferramentas de build e dependências nativas..."
 apt_install install -y \
   curl ca-certificates gnupg lsb-release git rsync \
-  build-essential python3 \
+  build-essential python3 python3-venv python3-pip \
   libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev \
   pkg-config
 

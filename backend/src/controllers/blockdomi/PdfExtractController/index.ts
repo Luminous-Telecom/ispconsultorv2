@@ -7,6 +7,7 @@ import { logger } from '../../../utils/logger';
 import { SYSTEM_NAME } from '../../../constants/systemBrand';
 import { isRedisAvailable } from '../../../config/redis';
 import { setPdfExtractJob, getPdfExtractJob } from '../../../services/pdfExtractJobService';
+import { resolvePdfExtractPython } from '../../../utils/pdfExtractPython';
 
 const USER_AGENT = `${SYSTEM_NAME.replace(/\s+/g, '-')}/1.0`;
 
@@ -41,12 +42,6 @@ function sseRegister(jobId: string, res: Response): void {
 function sseUnregister(jobId: string, res: Response): void {
   sseClients.get(jobId)?.delete(res);
   if (sseClients.get(jobId)?.size === 0) sseClients.delete(jobId);
-}
-
-/** Interpretador para `extrair-dominios.py`. Em Debian/Ubuntu recentes use um venv e defina `PDF_EXTRACT_PYTHON=/caminho/venv/bin/python`. */
-function getPdfExtractPython(): string {
-  const v = process.env.PDF_EXTRACT_PYTHON?.trim();
-  return v || 'python3';
 }
 
 /** Detecta se está rodando do dist (produção) ou src (desenvolvimento) */
@@ -104,7 +99,9 @@ async function runExtractFromUrlBackground(jobId: string, url: string): Promise<
  * Ao terminar, atualiza o Redis com resultado ou erro e remove o arquivo temporário.
  */
 function runPythonInBackground(scriptPath: string, tempFilePath: string, jobId: string): void {
-  const proc = spawn(getPdfExtractPython(), [scriptPath, tempFilePath], {
+  const python = resolvePdfExtractPython(__dirname);
+  const proc = spawn(python.command, [scriptPath, tempFilePath], {
+    env: python.env,
     detached: true,
     stdio: ['ignore', 'pipe', 'pipe']
   });

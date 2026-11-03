@@ -136,4 +136,12 @@ if (fs.existsSync(pythonSrc)) {
   warn('⚠ backend/python/ não encontrado — scripts Python não serão incluídos');
 }
 
+log('🐍 Instalando pymupdf para o extrator de PDF...');
+try {
+  execSync('bash python/install-python-deps.sh', { stdio: 'inherit', cwd: ROOT });
+  log('✓ pymupdf instalado');
+} catch {
+  fail('✗ pymupdf não instalado — o extrator SEI em produção precisa desse módulo');
+}
+
 log('\n🎉 Build concluído com sucesso!');

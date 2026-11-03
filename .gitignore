@@ -19,5 +19,7 @@ build/
 # Python
 __pycache__/
 *.py[cod]
+.venv/
+.python-packages/
 
 testesuploads/
