@@ -447,6 +447,50 @@ model cadastros_tipos_cobranca_contrato {
   @@index([empresa_id], map: "idx_tipos_cobranca_contrato_empresa_id")
 }
 
+model cadastros_vendedores {
+  id                    Int                                        @id @default(autoincrement())
+  empresa_id            Int?
+  nome                  String                                     @db.VarChar(255)
+  comissao_percentual   Decimal?                                   @db.Decimal(5, 2)
+  comissao_valor        Decimal?                                   @db.Decimal(10, 2)
+  cep                   String?                                    @db.VarChar(10)
+  endereco              String?                                    @db.VarChar(255)
+  numero                String?                                    @db.VarChar(20)
+  complemento           String?                                    @db.VarChar(100)
+  bairro                String?                                    @db.VarChar(100)
+  cidade                String?                                    @db.VarChar(100)
+  estado                String?                                    @db.VarChar(2)
+  telefone              String?                                    @db.VarChar(20)
+  celular               String?                                    @db.VarChar(20)
+  cpf_cnpj              String?                                    @db.VarChar(18)
+  email                 String?                                    @db.VarChar(180)
+  ativo                 Boolean                                    @default(true)
+  forma_recebimento     cadastros_vendedores_forma_recebimento?
+  tipo_conta            cadastros_vendedores_tipo_conta?
+  banco_nome            String?                                    @db.VarChar(100)
+  codigo_banco          String?                                    @db.VarChar(10)
+  tipo_chave_pix        cadastros_vendedores_tipo_chave_pix?
+  chave_pix             String?                                    @db.VarChar(200)
+  tipo_pessoa_titular   cadastros_vendedores_tipo_pessoa_titular?
+  nome_titular          String?                                    @db.VarChar(255)
+  cpf_cnpj_titular      String?                                    @db.VarChar(18)
+  agencia               String?                                    @db.VarChar(10)
+  digito_agencia        String?                                    @db.VarChar(2)
+  conta                 String?                                    @db.VarChar(20)
+  digito_conta          String?                                    @db.VarChar(2)
+  codigo_operacao       String?                                    @db.VarChar(10)
+  created_at            DateTime                                   @default(now()) @db.DateTime(0)
+  updated_at            DateTime                                   @updatedAt @db.DateTime(0)
+  sistema_tenants       sistema_tenants?                           @relation(fields: [empresa_id], references: [id], map: "vendedores_empresa_id_foreign_idx")
+  contratos             contratos[]
+
+  @@index([empresa_id], map: "idx_vendedores_empresa_id")
+  @@index([nome], map: "idx_vendedores_nome")
+  @@index([cpf_cnpj], map: "idx_vendedores_cpf_cnpj")
+  @@index([ativo], map: "idx_vendedores_ativo")
+  @@index([cidade], map: "idx_vendedores_cidade")
+}
+
 model cadastros_usuarios {
   id                                Int                                 @id @default(autoincrement())
   nome                              String                              @db.VarChar(150)
@@ -756,6 +800,8 @@ model contratos {
   cadastros_bancos                  cadastros_bancos?                   @relation(fields: [conta_boleto], references: [id], onUpdate: Restrict, map: "contratos_ibfk_4")
   documentos_modelo                 documentos_modelo?                  @relation(fields: [modelo_documento_id], references: [id], map: "contratos_modelo_documento_fk")
   cadastros_tipos_cobranca_contrato cadastros_tipos_cobranca_contrato?  @relation(fields: [tipo_cobranca_contrato_id], references: [id], map: "contratos_tipo_cobranca_contrato_id_foreign_idx")
+  vendedor_id                      Int?
+  cadastros_vendedores             cadastros_vendedores?               @relation(fields: [vendedor_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "contratos_vendedor_id_fk")
   contratos_integracao_ixc_vinculos contratos_integracao_ixc_vinculos[]
   contratos_planos_adicionais       contratos_planos_adicionais[]
   contratos_termos                  contratos_termos[]
@@ -772,6 +818,7 @@ model contratos {
   @@index([empresa_id], map: "idx_contratos_empresa_id")
   @@index([status, data_inicio], map: "idx_contratos_status_data_inicio")
   @@index([tipo_cobranca_contrato_id], map: "tipo_cobranca_contrato_id")
+  @@index([vendedor_id], map: "contratos_vendedor_id_idx")
 }
 
 model contratos_integracao_ixc_vinculos {
@@ -1614,6 +1661,7 @@ model sistema_tenants {
   cadastros_dias_vencimento         cadastros_dias_vencimento[]
   cadastros_planos                  cadastros_planos[]
   cadastros_tipos_cobranca_contrato cadastros_tipos_cobranca_contrato[]
+  cadastros_vendedores              cadastros_vendedores[]
   cadastros_usuarios                cadastros_usuarios[]
   clientes                          clientes[]
   clientes_arquivos                 clientes_arquivos[]
@@ -1996,6 +2044,31 @@ enum contratos_status {
   ativo
   inativo
   suspenso
+}
+
+enum cadastros_vendedores_forma_recebimento {
+  BOLETO
+  DEBITO_CONTA
+  TRANSFERENCIA
+  PIX
+  OUTRAS
+}
+
+enum cadastros_vendedores_tipo_conta {
+  CORRENTE
+  POUPANCA
+}
+
+enum cadastros_vendedores_tipo_chave_pix {
+  CPF
+  CELULAR
+  EMAIL
+  ALEATORIA
+}
+
+enum cadastros_vendedores_tipo_pessoa_titular {
+  FISICA
+  JURIDICA
 }
 
 enum nfse_config_portal_nacional_ambiente {

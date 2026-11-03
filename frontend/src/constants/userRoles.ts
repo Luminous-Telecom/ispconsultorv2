@@ -16,6 +16,7 @@ const FINANCEIRO_MODALS = new Set([
   'nfse',
   'bancos',
   'tipos-cobranca-contrato',
+  'vendedores',
   'contas-receber',
   'contas-pagar',
   'notas-fiscais',

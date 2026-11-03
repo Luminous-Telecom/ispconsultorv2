@@ -28,6 +28,7 @@ export const mapContratoToRow = (contrato: Contrato): ContratoRow => {
     ...contrato,
     cliente_razao_social: contrato.cliente?.razao_social || '',
     plano_nome: contrato.plano?.nome_plano || '',
+    vendedor_nome: contrato.vendedor?.nome || '',
     valor_plano_num: contrato.plano?.valor_mensal ? Number(contrato.plano.valor_mensal) : 0,
     desconto_num: descontoValor,
     valor_final_num: contrato.valor_final ? Number(contrato.valor_final) : 0,

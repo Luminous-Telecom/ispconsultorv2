@@ -69,4 +69,14 @@ describe('respostas HTTP', () => {
     expect(res.body).toEqual({ success: false, message: 'Erro interno' });
     process.env.NODE_ENV = anterior;
   });
+
+  it('recusa exclusão quando o cadastro tem vínculo', () => {
+    const res = mockRes();
+    sendError(res as unknown as Response, { code: 'P2003' }, 'Erro ao excluir', 500, false);
+    expect(res.statusCode).toBe(403);
+    expect(res.body).toMatchObject({
+      success: false,
+      message: 'Não é possível excluir: existem registros vinculados a este cadastro.',
+    });
+  });
 });

@@ -13,6 +13,7 @@ describe('cadastro, edição e visualização dos schemas', () => {
       dia_vencimento_id: 4,
       conta_boleto: 5,
       tipo_cobranca_contrato_id: 6,
+      vendedor_id: 7,
       data_inicio: '2026-01-01',
       endereco: 'Rua das Flores',
       numero: '10',

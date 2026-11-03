@@ -24,6 +24,7 @@ export const MODAL_MODULO_MAP: Record<string, PlanoModuloId> = {
   planos: 'cadastros',
   bancos: 'cadastros',
   'tipos-cobranca-contrato': 'cadastros',
+  vendedores: 'cadastros',
   fornecedores: 'cadastros',
   'contas-receber': 'financeiro',
   'contas-pagar': 'financeiro',

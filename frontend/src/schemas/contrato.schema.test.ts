@@ -7,6 +7,7 @@ const contratoValido = {
   dia_vencimento_id: 4,
   conta_boleto: 5,
   tipo_cobranca_contrato_id: 6,
+  vendedor_id: 7,
   data_inicio: '2026-01-15',
   endereco: 'Rua das Flores',
   numero: '10',
@@ -20,6 +21,14 @@ describe('contratoSchema', () => {
     const parsed = contratoSchema.parse(contratoValido);
     expect(parsed.estado).toBe('RN');
     expect(parsed.endereco).toBe('Rua das Flores');
+  });
+
+  it('recusa contrato sem vendedor', () => {
+    const { vendedor_id: _omit, ...semVendedor } = contratoValido;
+    const result = contratoSchema.safeParse(semVendedor);
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues.some((issue) => issue.path.join('.') === 'vendedor_id')).toBe(true);
   });
 
   it('recusa contrato sem endereço', () => {

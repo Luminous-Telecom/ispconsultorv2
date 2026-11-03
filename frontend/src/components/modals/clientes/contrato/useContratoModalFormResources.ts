@@ -3,10 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import { usePlanos } from 'hooks/usePlanos';
 import { useBancos } from 'hooks/useBancos';
 import { useTipoCobrancaContratosAtivos } from 'hooks/useTipoCobrancaContratos';
+import { useVendedoresAtivos } from 'hooks/useVendedores';
 import { useSelectedEntity } from 'hooks/useSelectedEntity';
 import DocumentoSistemaService, { DocumentoSistema } from 'services/documentoSistemaService';
 import { DiasVencimentoService, type DiasVencimento } from 'services/diasVencimentoService';
 import { TipoCobrancaContrato, TipoCobrancaContratoService } from 'services/tipoCobrancaContratoService';
+import { Vendedor, VendedorService } from 'services/vendedorService';
 import { Contrato } from 'hooks/useContratos';
 import { Banco, Plano } from 'types';
 import { ContratoForm } from './types';
@@ -25,6 +27,7 @@ export function useContratoModalFormResources({
   const { data: planosData } = usePlanos();
   const { data: bancosData } = useBancos();
   const { data: tiposCobrancaContratoData } = useTipoCobrancaContratosAtivos();
+  const { data: vendedoresData } = useVendedoresAtivos();
   const { data: modelosContratoData } = useQuery<{ success: boolean; data: DocumentoSistema[]; message: string }>({
     queryKey: ['modelos-documento', 'contrato'],
     queryFn: () => DocumentoSistemaService.getByType('contrato'),
@@ -45,6 +48,9 @@ export function useContratoModalFormResources({
   const tiposCobrancaContrato = useMemo((): TipoCobrancaContrato[] => (
     Array.isArray(tiposCobrancaContratoData) ? tiposCobrancaContratoData : []
   ), [tiposCobrancaContratoData]);
+  const vendedores = useMemo((): Vendedor[] => (
+    Array.isArray(vendedoresData) ? vendedoresData : []
+  ), [vendedoresData]);
   const modelosContrato = useMemo((): DocumentoSistema[] => modelosContratoData?.data || [], [modelosContratoData]);
   const diasVencimento = useMemo(
     () =>
@@ -56,6 +62,8 @@ export function useContratoModalFormResources({
   const [bancoSelecionado, setBancoSelecionado] = useSelectedEntity<Banco>(formData.conta_boleto, bancos);
   const [tipoCobrancaContratoSelecionado, setTipoCobrancaContratoSelecionado] =
     useSelectedEntity<TipoCobrancaContrato>(formData.tipo_cobranca_contrato_id ?? undefined, tiposCobrancaContrato);
+  const [vendedorSelecionado, setVendedorSelecionado] =
+    useSelectedEntity<Vendedor>(formData.vendedor_id ?? undefined, vendedores);
   const [modeloContratoSelecionado, setModeloContratoSelecionado] = useSelectedEntity<DocumentoSistema>(
     formData.modelo_documento_id,
     modelosContrato
@@ -135,10 +143,37 @@ export function useContratoModalFormResources({
     setTipoCobrancaContratoSelecionado,
   ]);
 
+  useEffect(() => {
+    const id = formData.vendedor_id;
+    if (!id) return;
+    const fromList = vendedores.find((item) => item.id === id);
+    const fromContract = contratoData?.vendedor?.id === id ? (contratoData.vendedor as Vendedor) : null;
+    const vendedor = fromList ?? fromContract;
+    if (vendedor && vendedorSelecionado?.id !== vendedor.id) setVendedorSelecionado(vendedor);
+    if (fromList || vendedorSelecionado?.id === id || fromContract) return;
+
+    let cancelled = false;
+    VendedorService.getById(id)
+      .then((item) => {
+        if (!cancelled && item?.id === id) setVendedorSelecionado(item);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    formData.vendedor_id,
+    vendedores,
+    contratoData?.vendedor,
+    vendedorSelecionado?.id,
+    setVendedorSelecionado,
+  ]);
+
   return {
     planosData,
     bancosData,
     tiposCobrancaContrato,
+    vendedores,
     modelosContratoData,
     diasVencimento,
     planoSelecionado,
@@ -147,6 +182,8 @@ export function useContratoModalFormResources({
     setBancoSelecionado,
     tipoCobrancaContratoSelecionado,
     setTipoCobrancaContratoSelecionado,
+    vendedorSelecionado,
+    setVendedorSelecionado,
     modeloContratoSelecionado,
     setModeloContratoSelecionado,
   };

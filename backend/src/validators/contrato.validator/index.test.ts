@@ -6,6 +6,7 @@ const contratoValido = {
   dia_vencimento_id: 3,
   conta_boleto: 4,
   modelo_documento_id: 5,
+  vendedor_id: 6,
 };
 
 describe('contratoCreateSchema', () => {
@@ -20,6 +21,12 @@ describe('contratoCreateSchema', () => {
     const { plano_id: _omit, ...semPlano } = contratoValido;
     const { error } = contratoCreateSchema.validate(semPlano, { abortEarly: false });
     expect(error?.details.some((item) => item.path.join('.') === 'plano_id')).toBe(true);
+  });
+
+  it('recusa cadastro sem vendedor', () => {
+    const { vendedor_id: _omit, ...semVendedor } = contratoValido;
+    const { error } = contratoCreateSchema.validate(semVendedor, { abortEarly: false });
+    expect(error?.details.some((item) => item.path.join('.') === 'vendedor_id')).toBe(true);
   });
 
   it('recusa desconto percentual acima de 100', () => {

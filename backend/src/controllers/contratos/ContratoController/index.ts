@@ -4,6 +4,7 @@ import { ContratoService } from '../../../services/contratos/ContratoService';
 import { ClienteService } from '../../../services/clientes/ClienteService';
 import { BancoService } from '../../../services/cadastros/BancoService';
 import { PlanoService } from '../../../services/cadastros/PlanoService';
+import { VendedorService } from '../../../services/cadastros/VendedorService';
 import { ContratoPlanoAdicionalService } from '../../../services/contratos/ContratoPlanoAdicionalService';
 import { prisma } from '../../../db/prisma';
 import * as Joi from 'joi';
@@ -88,7 +89,8 @@ export class ContratoController {
     bairro: Joi.string().max(100).allow(null, '').optional(),
     cidade: Joi.string().max(100).allow(null, '').optional(),
     estado: Joi.string().length(2).allow(null, '').optional(),
-    usar_endereco_cliente: Joi.boolean().default(false).optional()
+    usar_endereco_cliente: Joi.boolean().default(false).optional(),
+    vendedor_id: Joi.number().integer().min(1).required()
   });
 
   // Schema de validação para atualização
@@ -113,7 +115,8 @@ export class ContratoController {
     bairro: Joi.string().max(100).allow(null, '').optional(),
     cidade: Joi.string().max(100).allow(null, '').optional(),
     estado: Joi.string().length(2).allow(null, '').optional(),
-    usar_endereco_cliente: Joi.boolean().allow(null).optional()
+    usar_endereco_cliente: Joi.boolean().allow(null).optional(),
+    vendedor_id: Joi.number().integer().min(1)
   });
 
   // Listar todos os contratos com paginação
@@ -242,6 +245,15 @@ export class ContratoController {
       const cliente = await ClienteService.getById(value.cliente_id);
       if (!cliente) {
         sendNotFound(res, 'Cliente não encontrado');
+        return;
+      }
+
+      const vendedor = await VendedorService.getById(value.vendedor_id);
+      const vendedorDaEmpresa = vendedor != null && (
+        empresaId == null || vendedor.empresa_id == null || vendedor.empresa_id === empresaId
+      );
+      if (!vendedorDaEmpresa) {
+        sendNotFound(res, 'Vendedor não encontrado');
         return;
       }
 
@@ -434,6 +446,18 @@ export class ContratoController {
           empresaId == null || doc.empresa_id === empresaId || doc.empresa_id === null;
         if (!modeloDocumento || !pertenceEmpresa(modeloDocumento)) {
           sendNotFound(res, 'Modelo de documento não encontrado');
+          return;
+        }
+      }
+
+      if (value.vendedor_id != null) {
+        const vendedor = await VendedorService.getById(value.vendedor_id);
+        const empresaId = getEmpresaIdOrNull(req);
+        const vendedorDaEmpresa = vendedor != null && (
+          empresaId == null || vendedor.empresa_id == null || vendedor.empresa_id === empresaId
+        );
+        if (!vendedorDaEmpresa) {
+          sendNotFound(res, 'Vendedor não encontrado');
           return;
         }
       }

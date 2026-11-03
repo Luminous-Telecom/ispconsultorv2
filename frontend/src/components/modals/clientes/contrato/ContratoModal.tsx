@@ -6,6 +6,7 @@ import { TermoContrato } from 'services/termoContratoService';
 import { Titulo, Plano } from 'types';
 import { Banco } from 'types';
 import { TipoCobrancaContrato } from 'services/tipoCobrancaContratoService';
+import { Vendedor, NOME_VENDEDOR_PADRAO } from 'services/vendedorService';
 import { DocumentoSistema } from 'services/documentoSistemaService';
 import { ContratoPlanoAdicional } from 'services/contratoPlanoAdicionalService';
 import { useImpressaoContrato } from 'hooks/useImpressaoContrato';
@@ -103,6 +104,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   const [showIntegracaoIxcLinkModal, setShowIntegracaoIxcLinkModal] = useState(false);
   const [editingIntegracaoIxcId, setEditingIntegracaoIxcId] = useState<number | null>(null);
   const [showTipoCobrancaContratoModal, setShowTipoCobrancaContratoModal] = useState(false);
+  const [showVendedorModal, setShowVendedorModal] = useState(false);
   const [showModeloContratoModal, setShowModeloContratoModal] = useState(false);
   const [showServicoAdicionalModal, setShowServicoAdicionalModal] = useState(false);
   const [editingServicoAdicional, setEditingServicoAdicional] = useState<ContratoPlanoAdicional | null>(null);
@@ -272,6 +274,22 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     [formResources, handleInputChange]
   );
 
+  const handleVendedorSelect = useCallback(
+    (vendedor: Vendedor) => {
+      formResources.setVendedorSelecionado(vendedor);
+      handleInputChange('vendedor_id', vendedor.id);
+      setShowVendedorModal(false);
+    },
+    [formResources, handleInputChange]
+  );
+
+  useEffect(() => {
+    if (!show || isEditMode || formData.vendedor_id) return;
+    const padrao = formResources.vendedores.find((item) => item.nome === NOME_VENDEDOR_PADRAO);
+    if (!padrao) return;
+    handleVendedorSelect(padrao);
+  }, [show, isEditMode, formData.vendedor_id, formResources.vendedores, handleVendedorSelect]);
+
   const handleModeloContratoSelect = useCallback(
     (modelo: DocumentoSistema) => {
       formResources.setModeloContratoSelecionado(modelo);
@@ -402,20 +420,24 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       planoSelecionado={formResources.planoSelecionado}
       bancoSelecionado={formResources.bancoSelecionado}
       tipoCobrancaContratoSelecionado={formResources.tipoCobrancaContratoSelecionado}
+      vendedorSelecionado={formResources.vendedorSelecionado}
       modeloContratoSelecionado={formResources.modeloContratoSelecionado}
       onPlanoSelect={handlePlanoSelect}
       onBancoSelect={handleBancoSelect}
       onTipoCobrancaContratoSelect={handleTipoCobrancaContratoSelect}
+      onVendedorSelect={handleVendedorSelect}
       onModeloContratoSelect={handleModeloContratoSelect}
       planosData={formResources.planosData}
       bancosData={formResources.bancosData}
       tiposCobrancaContrato={formResources.tiposCobrancaContrato}
+      vendedores={formResources.vendedores}
       tipoCobrancaContratoFromContrato={contratoData?.tipoCobrancaContrato ?? undefined}
       modelosContratoData={formResources.modelosContratoData}
       diasVencimento={formResources.diasVencimento}
       onShowPlanoModal={() => setShowPlanoModal(true)}
       onShowBancoModal={() => setShowBancoModal(true)}
       onShowTipoCobrancaContratoModal={() => setShowTipoCobrancaContratoModal(true)}
+      onShowVendedorModal={() => setShowVendedorModal(true)}
       onShowModeloContratoModal={() => setShowModeloContratoModal(true)}
       clienteData={tabData.clienteData ?? null}
       limit={limit}
@@ -569,6 +591,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         setShowBancoModal={setShowBancoModal}
         showTipoCobrancaContratoModal={showTipoCobrancaContratoModal}
         setShowTipoCobrancaContratoModal={setShowTipoCobrancaContratoModal}
+        showVendedorModal={showVendedorModal}
+        setShowVendedorModal={setShowVendedorModal}
         showModeloContratoModal={showModeloContratoModal}
         setShowModeloContratoModal={setShowModeloContratoModal}
         showIntegracaoIxcFormModal={showIntegracaoIxcFormModal}
@@ -582,6 +606,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         onPlanoSelect={handlePlanoSelect}
         onBancoSelect={handleBancoSelect}
         onTipoCobrancaContratoSelect={handleTipoCobrancaContratoSelect}
+        onVendedorSelect={handleVendedorSelect}
         onModeloContratoSelect={handleModeloContratoSelect}
         impressaoShowModal={impressaoHook.showModal}
         impressaoPdfUrl={impressaoHook.pdfUrl}

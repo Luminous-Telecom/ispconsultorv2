@@ -41,6 +41,7 @@ const formData: ContratoForm = {
   dia_vencimento_id: 0,
   conta_boleto: 0,
   tipo_cobranca_contrato_id: null,
+  vendedor_id: null,
   data_validade_desconto: '',
   modelo_documento_id: 0,
 };
@@ -54,20 +55,24 @@ function renderTab(clienteId = 4, razao = 'Provedor Alfa') {
       planoSelecionado={null}
       bancoSelecionado={null}
       tipoCobrancaContratoSelecionado={null}
+      vendedorSelecionado={null}
       modeloContratoSelecionado={null}
       onPlanoSelect={jest.fn()}
       onBancoSelect={jest.fn()}
       onTipoCobrancaContratoSelect={jest.fn()}
+      onVendedorSelect={jest.fn()}
       onModeloContratoSelect={jest.fn()}
       planosData={[]}
       bancosData={[]}
       tiposCobrancaContratoData={[]}
+      vendedoresData={[]}
       modelosContratoData={undefined}
       diasVencimento={[]}
       clienteData={clienteId > 0 ? ({ id: clienteId, razao_social: razao } as never) : null}
       onShowPlanoModal={jest.fn()}
       onShowBancoModal={jest.fn()}
       onShowTipoCobrancaContratoModal={jest.fn()}
+      onShowVendedorModal={jest.fn()}
       onShowModeloContratoModal={jest.fn()}
     />
   );

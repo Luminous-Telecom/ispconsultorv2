@@ -198,8 +198,13 @@ body .draggable-modal-container-custom .modal-body.draggable-modal-body-custom:h
   overflow: hidden !important;
 }
 
-/* Conteúdo com abas/tabelas: preencher o modal e fundo bg-primary (continua a aba ativa) */
-.draggable-modal-body-custom > [class*="-modal-content"] {
+/* Conteúdo com abas: fundo bg-primary, igual à aba ativa.
+   Qualquer classe *-modal-content herda — filho direto do corpo ou dentro do form.
+   Não criar bloco por entidade só para repetir esse fundo. */
+.draggable-modal-body-custom > [class*="-modal-content"],
+.draggable-modal-body-custom > form > [class*="-modal-content"],
+.responsive-dialog-mobile-content > [class*="-modal-content"],
+.responsive-dialog-mobile-content > form > [class*="-modal-content"] {
   flex: 1 1 0 !important;
   min-height: 0 !important;
   overflow: hidden !important;
@@ -234,12 +239,6 @@ body .draggable-modal-container-custom .modal-body.draggable-modal-body-custom:h
   display: flex !important;
   flex-direction: column !important;
   padding: 0 !important;
-}
-
-.draggable-modal-body-custom > form > [class*="-modal-content"] {
-  flex: 1 1 0 !important;
-  min-height: 0 !important;
-  overflow: hidden !important;
 }
 
 /* Form dentro de abas (ex: DadosEmpresaModal): preencher área da aba */
@@ -2422,13 +2421,6 @@ textarea {
    CONTRATO MODAL - Estilos específicos
    ============================================ */
 
-.contrato-modal-content {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg-primary);
-}
-
 .contrato-tabs {
   flex-shrink: 0;
   margin-bottom: 0;
@@ -2652,13 +2644,6 @@ textarea {
    PLANO MODAL - Estilos específicos
    ============================================ */
 
-.plano-modal-content {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg-primary);
-}
-
 .plano-tabs {
   flex-shrink: 0;
   margin-bottom: 0;
@@ -2860,13 +2845,6 @@ textarea {
 /* ============================================
    FORNECEDOR MODAL - Estilos específicos
    ============================================ */
-
-.fornecedor-modal-content {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg-primary);
-}
 
 .fornecedor-tabs {
   flex-shrink: 0;
@@ -3112,13 +3090,6 @@ textarea {
    ORDEM DE SERVIÇO MODAL - Estilos específicos
    ============================================ */
 
-.ordem-servico-modal-content {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg-primary);
-}
-
 .ordem-servico-tab-content {
   flex: 1;
   overflow: hidden;
@@ -3198,13 +3169,6 @@ textarea {
 /* ============================================
    BANCO MODAL - Estilos específicos
    ============================================ */
-
-.banco-modal-content {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg-primary);
-}
 
 .banco-tabs {
   flex-shrink: 0;
@@ -3386,13 +3350,6 @@ textarea {
 /* ============================================
    DOCUMENTO MODAL - Estilos específicos
    ============================================ */
-
-.documento-modal-content {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg-primary);
-}
 
 .draggable-modal-container-custom.documento-modal {
   > .draggable-modal-body-custom {
@@ -3653,13 +3610,6 @@ textarea {
    EMPRESA MODAL - Estilos específicos
    ============================================ */
 
-.empresa-modal-content {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg-primary);
-}
-
 .empresa-tabs {
   flex-shrink: 0;
   margin-bottom: 0;
@@ -3832,13 +3782,6 @@ textarea {
    WHATSAPP MODAL - Estilos específicos
    ============================================ */
 
-.whatsapp-modal-content {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg-primary);
-}
-
 .whatsapp-tabs {
   flex-shrink: 0;
   margin-bottom: 0;
@@ -4002,13 +3945,6 @@ textarea {
 /* ============================================
    EMAIL MODAL - Estilos específicos
    ============================================ */
-
-.email-modal-content {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg-primary);
-}
 
 .email-tabs {
   flex-shrink: 0;
@@ -4183,13 +4119,6 @@ textarea {
    SISTEMA MODAL - Estilos específicos
    ============================================ */
 
-.sistema-modal-content {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg-primary);
-}
-
 .sistema-tabs {
   flex-shrink: 0;
   margin-bottom: 0;
@@ -4353,13 +4282,6 @@ textarea {
 /* ============================================
    CLIENTE MODAL - Estilos específicos
    ============================================ */
-
-.cliente-modal-content {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg-primary);
-}
 
 .cliente-tabs {
   flex-shrink: 0;
@@ -4618,13 +4540,6 @@ textarea {
   margin-right: 0.5rem;
 }
 
-/* ContratoModal - Layout principal */
-.contrato-modal-content {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg-primary);
-}
 
 /* ContratoModal - Navegação por abas */
 .contrato-tabs {

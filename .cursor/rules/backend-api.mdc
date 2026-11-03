@@ -23,6 +23,10 @@ export class EntityService {
 }
 ```
 
+## Exclusão de cadastro vinculativo
+
+Cadastro referenciado por outro registro não pode ser excluído. Antes do `delete`, chame `impedirExclusaoComVinculos` (`utils/exclusaoVinculo`). A chave estrangeira fica com `onDelete: Restrict`. `sendError` e o middleware global convertem `ExclusaoVinculadaError` e o Prisma `P2003` em `403` com a mensagem padrão.
+
 ## Ordenação (obrigatória)
 - Ordenação SEMPRE no backend, nunca no frontend
 - Receba `sortColumn` e `sortDirection` da query string

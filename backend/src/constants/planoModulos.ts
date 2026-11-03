@@ -20,7 +20,7 @@ export type PlanoModuloId = (typeof PLANO_MODULOS)[number];
 
 /** Mapeamento: módulo -> rotas/prefixos que requerem esse módulo */
 export const MODULO_ROTAS: Record<PlanoModuloId, string[]> = {
-  cadastros: ['/api/clientes', '/api/contratos', '/api/planos', '/api/bancos', '/api/tipos-cobranca-contrato', '/api/fornecedores'],
+  cadastros: ['/api/clientes', '/api/contratos', '/api/planos', '/api/bancos', '/api/tipos-cobranca-contrato', '/api/vendedores', '/api/fornecedores'],
   financeiro: ['/api/titulos', '/api/contas-pagar', '/api/notas-fiscais', '/boleto'],
   blockdomi: ['/api/dominios', '/api/ipv4', '/api/ipv6', '/api/blockdomi', '/api/ips-permitidos', '/api/logs-acesso', '/api/blockdomi-listas', '/api/pdf-extract'],
   equipamentos: ['/api/agents', '/api/ssh-manager'],

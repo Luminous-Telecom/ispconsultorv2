@@ -173,6 +173,11 @@ export const CONTEXT_ERROR_MESSAGES = {
   TIPO_COBRANCA_UPDATE_ERROR: 'Erro ao atualizar tipo de cobrança',
   TIPO_COBRANCA_DELETE_ERROR: 'Erro ao deletar tipo de cobrança',
 
+  // Vendedor
+  VENDEDOR_CREATE_ERROR: 'Erro ao salvar vendedor',
+  VENDEDOR_UPDATE_ERROR: 'Erro ao atualizar vendedor',
+  VENDEDOR_DELETE_ERROR: 'Erro ao excluir vendedor',
+
   // Parâmetros e sistema
   PARAMS_UPDATE_ERROR: 'Erro ao atualizar parâmetros',
   ASSINATURA_DIGITAL_UPDATE_ERROR: 'Erro ao atualizar assinatura digital',

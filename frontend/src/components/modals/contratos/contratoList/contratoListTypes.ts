@@ -10,6 +10,7 @@ export type ContratoTranslateFn = (
 export type ContratoRow = Contrato & {
   cliente_razao_social?: string;
   plano_nome?: string;
+  vendedor_nome?: string;
   valor_plano_num?: number;
   desconto_num?: number;
   valor_final_num?: number;

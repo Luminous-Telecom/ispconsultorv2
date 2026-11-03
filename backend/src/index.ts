@@ -357,6 +357,13 @@ const startServer = async () => {
     await prisma.$queryRawUnsafe('SELECT 1');
     logger.info('Conexão com banco de dados estabelecida');
 
+    try {
+      const { VendedorService } = await import('./services/cadastros/VendedorService');
+      await VendedorService.garantirPadrao();
+    } catch (error) {
+      logger.error('Erro ao garantir vendedor padrão', error);
+    }
+
     httpServer.once('error', (error: NodeJS.ErrnoException) => {
       if (error.code === 'EADDRINUSE') {
         logger.error(`Porta ${PORT} já está em uso. Encerre o processo atual ou altere a variável PORT.`);

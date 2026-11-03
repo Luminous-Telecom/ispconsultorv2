@@ -33,6 +33,7 @@ import { Banco } from './cadastros/Banco';
 import { Usuario } from './cadastros/Usuario';
 import { DiasVencimento } from './cadastros/DiasVencimento';
 import { TipoCobrancaContrato } from './cadastros/TipoCobrancaContrato';
+import { Vendedor } from './cadastros/Vendedor';
 
 // Sistema
 import { DadosEmpresa } from './sistema/DadosEmpresa';
@@ -170,6 +171,16 @@ Contrato.belongsTo(TipoCobrancaContrato, {
 
 TipoCobrancaContrato.hasMany(Contrato, {
   foreignKey: 'tipo_cobranca_contrato_id',
+  as: 'contratos'
+});
+
+Contrato.belongsTo(Vendedor, {
+  foreignKey: 'vendedor_id',
+  as: 'vendedor'
+});
+
+Vendedor.hasMany(Contrato, {
+  foreignKey: 'vendedor_id',
   as: 'contratos'
 });
 
@@ -442,6 +453,7 @@ export {
   Plano,
   Banco,
   TipoCobrancaContrato,
+  Vendedor,
   Titulo,
   Contrato,
   ContratoPlanoAdicional,

@@ -3,6 +3,7 @@ import { useI18n } from 'contexts/I18nContext';
 import { SortDirection, TableColumn as TableColumnType } from 'components/tables/types';
 import { Titulo, Plano, Banco, PaginatedResponse, Cliente } from 'types';
 import { TipoCobrancaContrato } from 'services/tipoCobrancaContratoService';
+import { Vendedor } from 'services/vendedorService';
 import { DocumentoSistema } from 'services/documentoSistemaService';
 import { DiasVencimento } from 'services/diasVencimentoService';
 import { TermoContrato } from 'services/termoContratoService';
@@ -27,14 +28,17 @@ interface ContratoModalTabPanelsProps {
   planoSelecionado: Plano | null;
   bancoSelecionado: Banco | null;
   tipoCobrancaContratoSelecionado: TipoCobrancaContrato | null;
+  vendedorSelecionado: Vendedor | null;
   modeloContratoSelecionado: DocumentoSistema | null;
   onPlanoSelect: (plano: Plano) => void;
   onBancoSelect: (banco: Banco) => void;
   onTipoCobrancaContratoSelect: (tipo: TipoCobrancaContrato) => void;
+  onVendedorSelect: (vendedor: Vendedor) => void;
   onModeloContratoSelect: (modelo: DocumentoSistema) => void;
   planosData: PaginatedResponse<Plano> | Plano[] | undefined;
   bancosData: PaginatedResponse<Banco> | Banco[] | undefined;
   tiposCobrancaContrato: TipoCobrancaContrato[];
+  vendedores: Vendedor[];
   tipoCobrancaContratoFromContrato?:
     | TipoCobrancaContrato
     | { id: number; nome: string; quantidade_titulos: number; periodicidade?: string }
@@ -44,6 +48,7 @@ interface ContratoModalTabPanelsProps {
   onShowPlanoModal: () => void;
   onShowBancoModal: () => void;
   onShowTipoCobrancaContratoModal: () => void;
+  onShowVendedorModal: () => void;
   onShowModeloContratoModal: () => void;
   clienteData?: Cliente | null;
   limit: number;
@@ -129,20 +134,24 @@ function ContratoModalTabPanels({
   planoSelecionado,
   bancoSelecionado,
   tipoCobrancaContratoSelecionado,
+  vendedorSelecionado,
   modeloContratoSelecionado,
   onPlanoSelect,
   onBancoSelect,
   onTipoCobrancaContratoSelect,
+  onVendedorSelect,
   onModeloContratoSelect,
   planosData,
   bancosData,
   tiposCobrancaContrato,
+  vendedores,
   tipoCobrancaContratoFromContrato,
   modelosContratoData,
   diasVencimento,
   onShowPlanoModal,
   onShowBancoModal,
   onShowTipoCobrancaContratoModal,
+  onShowVendedorModal,
   onShowModeloContratoModal,
   clienteData,
   limit,
@@ -216,14 +225,17 @@ function ContratoModalTabPanels({
         planoSelecionado={planoSelecionado}
         bancoSelecionado={bancoSelecionado}
         tipoCobrancaContratoSelecionado={tipoCobrancaContratoSelecionado}
+        vendedorSelecionado={vendedorSelecionado}
         modeloContratoSelecionado={modeloContratoSelecionado}
         onPlanoSelect={onPlanoSelect}
         onBancoSelect={onBancoSelect}
         onTipoCobrancaContratoSelect={onTipoCobrancaContratoSelect}
+        onVendedorSelect={onVendedorSelect}
         onModeloContratoSelect={onModeloContratoSelect}
         planosData={planosData}
         bancosData={bancosData}
         tiposCobrancaContratoData={tiposCobrancaContrato}
+        vendedoresData={vendedores}
         tipoCobrancaContratoFromContrato={tipoCobrancaContratoFromContrato}
         modelosContratoData={modelosContratoData}
         diasVencimento={diasVencimento}
@@ -231,6 +243,7 @@ function ContratoModalTabPanels({
         onShowPlanoModal={onShowPlanoModal}
         onShowBancoModal={onShowBancoModal}
         onShowTipoCobrancaContratoModal={onShowTipoCobrancaContratoModal}
+        onShowVendedorModal={onShowVendedorModal}
         onShowModeloContratoModal={onShowModeloContratoModal}
       />
     );

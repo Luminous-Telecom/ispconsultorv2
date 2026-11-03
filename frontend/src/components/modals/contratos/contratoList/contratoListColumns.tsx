@@ -101,6 +101,13 @@ export function useContratoListColumns(): ListModalConfig<ContratoRow>['columns'
         render: (item) => item.plano?.nome_plano || item.plano_nome || '-',
       },
       {
+        key: 'vendedor_nome',
+        label: 'Vendedor',
+        sortable: true,
+        width: '140px',
+        render: (item) => item.vendedor?.nome || item.vendedor_nome || '-',
+      },
+      {
         key: 'valor_plano_num',
         label: 'Valor Plano',
         sortable: true,

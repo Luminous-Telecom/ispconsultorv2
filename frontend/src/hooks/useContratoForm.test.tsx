@@ -34,6 +34,7 @@ const contratoCriado = {
   dia_vencimento_id: 3,
   conta_boleto: 4,
   tipo_cobranca_contrato_id: 8,
+  vendedor_id: 3,
   data_validade_desconto: null,
   modelo_documento_id: 6,
   endereco: 'Rua A',
@@ -75,6 +76,7 @@ describe('useContratoForm', () => {
       result.current.handleInputChange('dia_vencimento_id', 3);
       result.current.handleInputChange('conta_boleto', 4);
       result.current.handleInputChange('tipo_cobranca_contrato_id', 8);
+      result.current.handleInputChange('vendedor_id', 3);
       result.current.handleInputChange('endereco', 'Rua A');
       result.current.handleInputChange('numero', '10');
       result.current.handleInputChange('bairro', 'Centro');
@@ -140,6 +142,7 @@ describe('useContratoForm', () => {
       result.current.handleInputChange('dia_vencimento_id', 3);
       result.current.handleInputChange('conta_boleto', 4);
       result.current.handleInputChange('tipo_cobranca_contrato_id', 8);
+      result.current.handleInputChange('vendedor_id', 3);
       result.current.handleInputChange('endereco', 'Rua A');
       result.current.handleInputChange('numero', '10');
       result.current.handleInputChange('bairro', 'Centro');

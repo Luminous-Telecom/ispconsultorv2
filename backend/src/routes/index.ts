@@ -47,6 +47,7 @@ import atualizacoesRoutes from './atualizacoesRoutes';
 import ipsPermitidosRoutes from './ipsPermitidosRoutes';
 import pdfExtractRoutes from './pdfExtractRoutes';
 import tipoCobrancaContratoRoutes from './tipoCobrancaContratoRoutes';
+import vendedorRoutes from './vendedorRoutes';
 import empresaRoutes from './empresaRoutes';
 import sshManagerRoutes from './sshManagerRoutes';
 import agentRoutes from './agentRoutes';
@@ -65,6 +66,7 @@ const routes = [
     { path: '/api/planos', route: planoRoutes },
     { path: '/api/bancos', route: bancoRoutes },
     { path: '/api/tipos-cobranca-contrato', route: tipoCobrancaContratoRoutes },
+    { path: '/api/vendedores', route: vendedorRoutes },
     { path: '/api/usuarios', route: usuarioRoutes },
     { path: '/api/titulos', route: tituloRoutes },
     { path: '/api/contratos', route: contratoRoutes },

@@ -35,6 +35,7 @@ export const useMenuItems = ({ t, openModal, hasModulo, userRole }: UseMenuItems
         { id: 'planos', modalId: 'planos', label: t('menu.plans'), icon: 'bi-card-list', onClick: () => handleOpenModal('planos') },
         { id: 'bancos', modalId: 'bancos', label: t('menu.banks'), icon: 'bi-bank', onClick: () => handleOpenModal('bancos') },
         { id: 'tipos-cobranca-contrato', modalId: 'tipos-cobranca-contrato', label: t('menu.billingType'), icon: 'bi-credit-card', onClick: () => handleOpenModal('tipos-cobranca-contrato') },
+        { id: 'vendedores', modalId: 'vendedores', label: t('menu.sellers'), icon: 'bi-person-badge', onClick: () => handleOpenModal('vendedores') },
         { id: 'fornecedores', modalId: 'fornecedores', label: t('menu.suppliers'), icon: 'bi-truck', onClick: () => handleOpenModal('fornecedores') },
         { id: 'documentos-sistema', modalId: 'documentos-sistema', label: t('menu.documentModels'), icon: 'bi-folder', onClick: () => handleOpenModal('documentos-sistema') },
       ].filter(filterItem),

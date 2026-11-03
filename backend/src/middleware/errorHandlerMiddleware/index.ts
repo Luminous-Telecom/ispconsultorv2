@@ -2,6 +2,11 @@ import { Request, Response, NextFunction } from 'express';
 import { Prisma } from '@prisma/client';
 import { logger } from '../../utils/logger';
 import { isJoiError, getErrorMessage, getErrorStack, getErrorName } from '../../utils/errorUtils';
+import {
+  isExclusaoVinculadaError,
+  isPrismaForeignKeyError,
+  MENSAGEM_EXCLUSAO_VINCULADA,
+} from '../../utils/exclusaoVinculo';
 
 /**
  * Interface para erros com detalhes adicionais
@@ -42,6 +47,14 @@ export const errorHandlerMiddleware = (
   });
   
   const isProd = process.env.NODE_ENV === 'production';
+
+  if (isExclusaoVinculadaError(err) || isPrismaForeignKeyError(err)) {
+    res.status(403).json({
+      success: false,
+      message: isExclusaoVinculadaError(err) ? errorMessage : MENSAGEM_EXCLUSAO_VINCULADA,
+    });
+    return;
+  }
 
   // Erro de validação Joi
   if (isJoiError(err)) {

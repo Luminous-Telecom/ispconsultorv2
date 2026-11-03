@@ -175,6 +175,8 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(({
     });
   };
 
+  const hasEmptyChoice = options.some((option) => option.value === '' || option.value === null);
+
   return (
     <>
       <select
@@ -195,7 +197,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(({
         data-testid={dataTestId}
         {...getBootstrapTooltipProps(tooltip, tooltipPosition)}
       >
-        {!multiple && !value && (
+        {!multiple && !value && !hasEmptyChoice && (
           <option value="" disabled>
             {defaultPlaceholder}
           </option>

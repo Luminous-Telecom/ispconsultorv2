@@ -8,6 +8,7 @@ import { formatCEP } from '../../../utils/dateUtils';
 import axios from 'axios';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { impedirExclusaoComVinculos } from '../../../utils/exclusaoVinculo';
 import { parseListQuery, queryString } from '../../../utils/listQuery';
 import { isNumericCnpj, stripCnpj } from '../../../utils/cnpj';
 
@@ -212,14 +213,13 @@ export class FornecedorController {
         return;
       }
 
-      // Verificar se há contas vinculadas
       const { ContaPagarService } = await import('../../../services/financeiro/ContaPagarService');
-      const contasVinculadas = await ContaPagarService.count({ fornecedor_id: id });
-
-      if (contasVinculadas > 0) {
-        sendForbidden(res, `Existem ${contasVinculadas} conta(s) vinculada(s) a este fornecedor`);
-        return;
-      }
+      await impedirExclusaoComVinculos([
+        {
+          rotulo: 'conta(s) a pagar',
+          contar: () => ContaPagarService.count({ fornecedor_id: id }),
+        },
+      ]);
 
       // Capturar dados anteriores para auditoria
       const dadosAnteriores = toPlain(fornecedor) as Record<string, unknown>;

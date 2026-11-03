@@ -1,6 +1,11 @@
 import { Response } from 'express';
 import { logger } from '../logger';
 import { getErrorMessage, getErrorStack } from '../errorUtils';
+import {
+  isExclusaoVinculadaError,
+  isPrismaForeignKeyError,
+  MENSAGEM_EXCLUSAO_VINCULADA,
+} from '../exclusaoVinculo';
 
 /**
  * Interface padrão para respostas de sucesso
@@ -63,6 +68,14 @@ export function sendError(
   logError = true,
   context?: { [key: string]: unknown }
 ): void {
+  if (isExclusaoVinculadaError(error) || isPrismaForeignKeyError(error)) {
+    sendForbidden(
+      res,
+      isExclusaoVinculadaError(error) ? getErrorMessage(error) : MENSAGEM_EXCLUSAO_VINCULADA
+    );
+    return;
+  }
+
   const errorMessage = getErrorMessage(error);
   // Em produção, erros 500 não devem expor mensagens internas ao cliente
   const isProd = process.env.NODE_ENV === 'production';

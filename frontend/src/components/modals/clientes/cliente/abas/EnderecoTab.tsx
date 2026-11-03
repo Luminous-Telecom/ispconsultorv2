@@ -10,7 +10,7 @@ const EnderecoTab: React.FC<ClienteTabProps> = ({
 }) => {
   return (
     <AddressFields 
-      required={false}
+      required
       size="md"
       formData={formData as unknown as Record<string, FormValue>}
       onChange={(name: string, value: FormValue) => {

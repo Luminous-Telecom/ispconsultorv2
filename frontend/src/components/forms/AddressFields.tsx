@@ -162,7 +162,7 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
             type="text"
             label={field.label}
             placeholder={field.placeholder}
-            required={field.fieldRequired !== undefined ? field.fieldRequired : required}
+            required={required ? field.fieldRequired : false}
             size={size}
             value={getFieldValue(field.name)}
             onChange={(value) => handleChange(field.name, value)}

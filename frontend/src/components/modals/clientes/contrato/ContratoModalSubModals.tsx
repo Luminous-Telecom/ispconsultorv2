@@ -5,6 +5,7 @@ import ReceberModal from 'components/modals/pagamentos/ReceberModal';
 import PlanoListModal from 'components/modals/planos/PlanoListModal';
 import BancoListModal from 'components/modals/bancos/BancoListModal';
 import { TipoCobrancaContratoListModal } from 'components/modals/tipoCobrancaContrato';
+import { VendedorListModal } from 'components/modals/vendedores';
 import { IntegracaoIxcProvedorModal, IntegracaoIxcProvedorListModal } from 'components/modals/integracao-ixc-provedor';
 import ModeloContratoSelectModal from 'components/modals/parametros/ModeloContratoSelectModal';
 import ImprimirModal from 'components/common/ImprimirModal';
@@ -12,6 +13,7 @@ import { useI18n } from 'contexts/I18nContext';
 import { Banco, Cliente, Plano, Titulo } from 'types';
 import { Contrato } from 'hooks/useContratos';
 import { TipoCobrancaContrato } from 'services/tipoCobrancaContratoService';
+import { Vendedor } from 'services/vendedorService';
 import { DocumentoSistema } from 'services/documentoSistemaService';
 import { TermoContrato } from 'services/termoContratoService';
 import { ContratoPlanoAdicional } from 'services/contratoPlanoAdicionalService';
@@ -54,6 +56,8 @@ interface ContratoModalSubModalsProps {
   setShowBancoModal: (show: boolean) => void;
   showTipoCobrancaContratoModal: boolean;
   setShowTipoCobrancaContratoModal: (show: boolean) => void;
+  showVendedorModal: boolean;
+  setShowVendedorModal: (show: boolean) => void;
   showModeloContratoModal: boolean;
   setShowModeloContratoModal: (show: boolean) => void;
   showIntegracaoIxcFormModal: boolean;
@@ -67,6 +71,7 @@ interface ContratoModalSubModalsProps {
   onPlanoSelect: (plano: Plano) => void;
   onBancoSelect: (banco: Banco) => void;
   onTipoCobrancaContratoSelect: (tipo: TipoCobrancaContrato) => void;
+  onVendedorSelect: (vendedor: Vendedor) => void;
   onModeloContratoSelect: (modelo: DocumentoSistema) => void;
   impressaoShowModal: boolean;
   impressaoPdfUrl: string | null;
@@ -122,6 +127,8 @@ function ContratoModalSubModals({
   setShowBancoModal,
   showTipoCobrancaContratoModal,
   setShowTipoCobrancaContratoModal,
+  showVendedorModal,
+  setShowVendedorModal,
   showModeloContratoModal,
   setShowModeloContratoModal,
   showIntegracaoIxcFormModal,
@@ -135,6 +142,7 @@ function ContratoModalSubModals({
   onPlanoSelect,
   onBancoSelect,
   onTipoCobrancaContratoSelect,
+  onVendedorSelect,
   onModeloContratoSelect,
   impressaoShowModal,
   impressaoPdfUrl,
@@ -315,6 +323,13 @@ function ContratoModalSubModals({
         onClose={() => setShowTipoCobrancaContratoModal(false)}
         onSelectTipo={onTipoCobrancaContratoSelect}
         title={t('modal.billingType')}
+      />
+
+      <VendedorListModal
+        show={showVendedorModal}
+        onClose={() => setShowVendedorModal(false)}
+        onSelectVendedor={onVendedorSelect}
+        title={t('ui.selectSeller')}
       />
 
       <ModeloContratoSelectModal

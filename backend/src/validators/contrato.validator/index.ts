@@ -23,7 +23,8 @@ export const contratoCreateSchema = Joi.object({
   bairro: Joi.string().max(100).allow(null, '').optional(),
   cidade: Joi.string().max(100).allow(null, '').optional(),
   estado: Joi.string().length(2).allow(null, '').optional(),
-  usar_endereco_cliente: Joi.boolean().default(false).optional()
+  usar_endereco_cliente: Joi.boolean().default(false).optional(),
+  vendedor_id: Joi.number().integer().min(1).required()
 });
 
 export const contratoUpdateSchema = Joi.object({
@@ -46,6 +47,7 @@ export const contratoUpdateSchema = Joi.object({
   bairro: Joi.string().max(100).allow(null, '').optional(),
   cidade: Joi.string().max(100).allow(null, '').optional(),
   estado: Joi.string().length(2).allow(null, '').optional(),
-  usar_endereco_cliente: Joi.boolean().allow(null).optional()
+  usar_endereco_cliente: Joi.boolean().allow(null).optional(),
+  vendedor_id: Joi.number().integer().min(1)
 });
 

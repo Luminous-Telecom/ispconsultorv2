@@ -107,7 +107,7 @@ const headerActionsContent = (
 | Form | `form-modal-simple` + `col-12` por campo |
 
 - **Abas (visual)**: usar `tabsClassName` com `*-tabs-unified` (padrão Agente: `banco-tabs-unified`). Aba ativa = `bg-primary`; corpo do modal = mesma cor via `*-modal-content`.
-- **`*-modal-content`**: nome da classe **deve** terminar/conter `-modal-content` (ex.: `conf-usuario-modal-content`, `banco-modal-content`) — sem isso o fundo fica `bg-modal` e a aba ativa “não continua” no conteúdo.
+- **`*-modal-content`**: o nome da classe **deve** conter `-modal-content` (ex.: `conf-usuario-modal-content`, `banco-modal-content`). Esse seletor já pinta `background-color: var(--bg-primary)` no filho direto do corpo e dentro do `form`. Sem essa classe o fundo fica `bg-modal` e a aba ativa não continua no conteúdo. Não criar regra SCSS por entidade só para repetir esse fundo.
 - **`*-tab-content-padded`**: obrigatório em aba de formulário — layout horizontal (label à esquerda, input à direita). CSS usa `[class*='-tab-content-padded']` (não `$=` — espaço no fim do `className` quebrava o padding). Sem `-padded`, o form fica vertical / fora do padrão.
 - Aba com tabela → `EmbeddedTablePanel` / `*-tab-content-scrollable` / `no-padding` — **não** usar `-padded` nem `form-modal-simple`
 - Layout de campos: `frontend-form-modal-layout.mdc`

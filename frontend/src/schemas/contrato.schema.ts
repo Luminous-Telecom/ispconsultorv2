@@ -40,6 +40,11 @@ export const contratoSchema = z.object({
     (val) => (val === null || val === 0 || val === '' ? undefined : val),
     z.number({ message: 'Tipo de cobrança é obrigatório' }).min(1, 'Tipo de cobrança é obrigatório')
   ),
+
+  vendedor_id: z.preprocess(
+    (val) => (val === '' || val === 0 || val === undefined || val === null ? undefined : val),
+    z.number({ message: 'Vendedor é obrigatório' }).int().min(1, 'Vendedor é obrigatório')
+  ),
   
   // Descontos
   desconto_percentual: z

@@ -16,6 +16,7 @@ const ROUTE_ENTITY_MAP: Record<string, string> = {
   '/api/planos': 'Plano',
   '/api/bancos': 'Banco',
   '/api/tipos-cobranca-contrato': 'TipoCobrancaContrato',
+  '/api/vendedores': 'Vendedor',
   '/api/usuarios': 'Usuario',
   '/api/titulos': 'Titulo',
   '/api/contratos': 'Contrato',

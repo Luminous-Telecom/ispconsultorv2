@@ -11,6 +11,7 @@ import { DocumentoUnion } from 'components/modals/parametros/documento/types';
 const PlanoModal = lazy(() => import('components/modals/planos/PlanoModal'));
 const BancoModal = lazy(() => import('components/modals/bancos/BancoModal'));
 const TipoCobrancaContratoModal = lazy(() => import('components/modals/tipoCobrancaContrato/TipoCobrancaContratoModal'));
+const VendedorModal = lazy(() => import('components/modals/vendedores/VendedorModal'));
 const ClienteModal = lazy(() => import('components/modals/clientes/cliente/ClienteModal'));
 const FornecedorModal = lazy(() => import('components/modals/fornecedores/fornecedorModal/FornecedorModal'));
 const ServidorEmailModal = lazy(() => import('components/modals/parametros/servidor-email/ServidorEmailModal'));
@@ -22,6 +23,7 @@ export type EntityRecordKind =
   | 'plano'
   | 'banco'
   | 'tipoCobranca'
+  | 'vendedor'
   | 'cliente'
   | 'fornecedor'
   | 'servidorEmail'
@@ -97,6 +99,8 @@ const EntityRecordEditModal: React.FC<EntityRecordEditModalProps> = ({ kind, rec
     content = <BancoModal show bancoId={recordId} onClose={onClose} onSuccess={onClose} />;
   } else if (kind === 'tipoCobranca') {
     content = <TipoCobrancaContratoModal show tipoId={recordId} onClose={onClose} onSuccess={onClose} />;
+  } else if (kind === 'vendedor') {
+    content = <VendedorModal show vendedorId={recordId} onClose={onClose} onSuccess={onClose} />;
   } else if (kind === 'cliente') {
     content = <ClienteModal show clienteId={recordId} onClose={onClose} onSuccess={onClose} />;
   } else if (kind === 'fornecedor') {

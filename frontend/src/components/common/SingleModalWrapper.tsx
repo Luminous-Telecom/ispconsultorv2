@@ -13,6 +13,7 @@ const ClienteModal = lazy(() => import('../modals/clientes').then(m => ({ defaul
 const PlanoListModal = lazy(() => import('../modals/planos').then(m => ({ default: m.PlanoListModal })));
 const BancoListModal = lazy(() => import('../modals/bancos').then(m => ({ default: m.BancoListModal })));
 const TipoCobrancaContratoListModal = lazy(() => import('../modals/tipoCobrancaContrato').then(m => ({ default: m.TipoCobrancaContratoListModal })));
+const VendedorListModal = lazy(() => import('../modals/vendedores').then(m => ({ default: m.VendedorListModal })));
 const DadosEmpresaModal = lazy(() => import('../modals/empresa/empresa').then(m => ({ default: m.DadosEmpresaModal })));
 const ServidorEmailModal = lazy(() => import('../modals/parametros/servidor-email').then(m => ({ default: m.ServidorEmailListModal })));
 const ServidorWhatsappModal = lazy(() => import('../modals/parametros/servidor-whatsapp').then(m => ({ default: m.ServidorWhatsappListModal })));
@@ -148,6 +149,7 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
   planos: { component: PlanoListModal, titleKey: 'modal.plans', loadingMessageKey: 'ui.loadingPage', className: 'no-padding list-modal-no-body-scroll' },
   bancos: { component: BancoListModal, titleKey: 'modal.banks', loadingMessageKey: 'ui.loadingPage', className: 'no-padding list-modal-no-body-scroll' },
   'tipos-cobranca-contrato': { component: TipoCobrancaContratoListModal, titleKey: 'modal.billingType', loadingMessageKey: 'ui.loadingPage', className: 'no-padding list-modal-no-body-scroll' },
+  vendedores: { component: VendedorListModal, titleKey: 'modal.sellers', loadingMessageKey: 'ui.loadingPage', className: 'no-padding list-modal-no-body-scroll' },
   contratos: { component: ContratoListModal, titleKey: 'modal.contracts', loadingMessageKey: 'ui.loadingPage', className: 'no-padding list-modal-no-body-scroll' },
   'contas-receber': { component: ContasReceberListModal, titleKey: 'modal.accountsReceivable', loadingMessageKey: 'ui.loadingPage', className: 'no-padding list-modal-no-body-scroll' },
   fornecedores: { component: FornecedorListModal, titleKey: 'modal.suppliers', loadingMessageKey: 'ui.loadingPage', className: 'no-padding list-modal-no-body-scroll' },
@@ -309,7 +311,7 @@ const SingleModalWrapper: React.FC = () => {
     show: true,
     onClose: closeModal,
     onHeaderActionsReady: setHeaderActions,
-    ...(['clientes', 'planos', 'bancos', 'tipos-cobranca-contrato', 'contratos'].includes(activeModal) && { title: modalTitle }),
+    ...(['clientes', 'planos', 'bancos', 'tipos-cobranca-contrato', 'vendedores', 'contratos'].includes(activeModal) && { title: modalTitle }),
     ...(isClienteModal && { clienteId }),
     // Para outros modais, passamos os dados adicionais normalmente
     ...(!isClienteModal && modalData && modalData),

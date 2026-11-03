@@ -5,6 +5,7 @@ import { useI18n } from 'contexts/I18nContext';
 import { DocumentoSistema } from 'services/documentoSistemaService';
 import { DiasVencimento } from 'services/diasVencimentoService';
 import { TipoCobrancaContrato } from 'services/tipoCobrancaContratoService';
+import { Vendedor } from 'services/vendedorService';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import { useEntityRecordEdit } from 'hooks/useEntityRecordEdit';
 import FormField from 'components/ui/FormField';
@@ -22,14 +23,17 @@ interface ContratoTabProps {
   planoSelecionado: Plano | null;
   bancoSelecionado: Banco | null;
   tipoCobrancaContratoSelecionado: TipoCobrancaContrato | null;
+  vendedorSelecionado: Vendedor | null;
   modeloContratoSelecionado: DocumentoSistema | null;
   onPlanoSelect: (plano: Plano) => void;
   onBancoSelect: (banco: Banco) => void;
   onTipoCobrancaContratoSelect: (tipo: TipoCobrancaContrato) => void;
+  onVendedorSelect: (vendedor: Vendedor) => void;
   onModeloContratoSelect: (modelo: DocumentoSistema) => void;
   planosData: PaginatedResponse<Plano> | Plano[] | undefined;
   bancosData: PaginatedResponse<Banco> | Banco[] | undefined;
   tiposCobrancaContratoData: TipoCobrancaContrato[];
+  vendedoresData: Vendedor[];
   tipoCobrancaContratoFromContrato?: TipoCobrancaContrato | { id: number; nome: string; quantidade_titulos: number } | null;
   modelosContratoData: { success: boolean; data: DocumentoSistema[]; message: string } | undefined;
   diasVencimento: DiasVencimento[];
@@ -37,6 +41,7 @@ interface ContratoTabProps {
   onShowPlanoModal: () => void;
   onShowBancoModal: () => void;
   onShowTipoCobrancaContratoModal: () => void;
+  onShowVendedorModal: () => void;
   onShowModeloContratoModal: () => void;
 }
 
@@ -48,14 +53,17 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
   planoSelecionado,
   bancoSelecionado,
   tipoCobrancaContratoSelecionado,
+  vendedorSelecionado,
   modeloContratoSelecionado,
   onPlanoSelect,
   onBancoSelect,
   onTipoCobrancaContratoSelect,
+  onVendedorSelect,
   onModeloContratoSelect,
   planosData,
   bancosData,
   tiposCobrancaContratoData,
+  vendedoresData,
   tipoCobrancaContratoFromContrato,
   modelosContratoData,
   diasVencimento,
@@ -63,6 +71,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
   onShowPlanoModal,
   onShowBancoModal,
   onShowTipoCobrancaContratoModal,
+  onShowVendedorModal,
   onShowModeloContratoModal
 }) => {
   const { t } = useI18n();
@@ -72,6 +81,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
   const [clienteNomeSelecionado, setClienteNomeSelecionado] = useState('');
   const bancoEdit = useEntityRecordEdit('banco');
   const tipoCobrancaEdit = useEntityRecordEdit('tipoCobranca');
+  const vendedorEdit = useEntityRecordEdit('vendedor');
   const modeloEdit = useEntityRecordEdit('modeloContrato');
   const [descontoPercentualDisplay, setDescontoPercentualDisplay] = React.useState<string>(
     formData.desconto_percentual > 0 ? formData.desconto_percentual.toString() : ''
@@ -126,6 +136,15 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
     return Array.from(map.entries()).map(([id, nome]) => ({ id, nome }));
   }, [tiposCobrancaContratoData, tipoCobrancaContratoSelecionado, tipoCobrancaContratoFromContrato]);
 
+  const vendedorEntities = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const item of vendedoresData) map.set(item.id, item.nome);
+    if (vendedorSelecionado && !map.has(vendedorSelecionado.id)) {
+      map.set(vendedorSelecionado.id, vendedorSelecionado.nome);
+    }
+    return Array.from(map.entries()).map(([id, nome]) => ({ id, nome }));
+  }, [vendedoresData, vendedorSelecionado]);
+
   const resolveTipoCobranca = (value: number): TipoCobrancaContrato | null => {
     const fromList = tiposCobrancaContratoData.find((item) => item.id === value);
     if (fromList) return fromList;
@@ -137,15 +156,12 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
   };
 
   const diaVencimentoOptions = useMemo(
-    () => [
-      { value: 0, label: t('ui.selectOption') },
-      ...diasVencimento
-        .filter((item) => item.ativo)
-        .map((item) => ({
-          value: item.id,
-          label: `${t('other.day')} ${String(item.dia).padStart(2, '0')}`,
-        })),
-    ],
+    () => diasVencimento
+      .filter((item) => item.ativo)
+      .map((item) => ({
+        value: item.id,
+        label: `${t('other.day')} ${String(item.dia).padStart(2, '0')}`,
+      })),
     [diasVencimento, t]
   );
 
@@ -369,6 +385,27 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
       </div>
 
       <div className="col-12">
+        <EntitySelectField
+          value={(formData.vendedor_id ?? vendedorSelecionado?.id) || 0}
+          onChange={(value) => {
+            if (!value) {
+              handleInputChange('vendedor_id', null);
+              return;
+            }
+            handleInputChange('vendedor_id', value);
+            const vendedor = vendedoresData.find((item) => item.id === value) || vendedorSelecionado;
+            if (vendedor && vendedor.id === value) onVendedorSelect(vendedor);
+          }}
+          onShowModal={onShowVendedorModal}
+          onEdit={() => vendedorEdit.open((formData.vendedor_id ?? vendedorSelecionado?.id) || 0)}
+          entities={vendedorEntities}
+          label={t('form.seller')}
+          required
+          error={errors.vendedor_id?.toString()}
+        />
+      </div>
+
+      <div className="col-12">
         <FormField
           name="desconto_percentual"
           type="number"
@@ -463,6 +500,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
       {planoEdit.modal}
       {bancoEdit.modal}
       {tipoCobrancaEdit.modal}
+      {vendedorEdit.modal}
       {modeloEdit.modal}
       {clienteEdit.modal}
       {showClienteModal && (

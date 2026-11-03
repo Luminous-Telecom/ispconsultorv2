@@ -32,6 +32,7 @@ import { Cliente } from '../../clientes/Cliente';
 import { Plano } from '../../cadastros/Plano';
 import { Banco } from '../../cadastros/Banco';
 import { TipoCobrancaContrato } from '../../cadastros/TipoCobrancaContrato';
+import { Vendedor } from '../../cadastros/Vendedor';
 import { TermoContrato } from '../TermoContrato';
 import { ModeloDocumento } from '../../documentos/ModeloDocumento';
 import { IntegracaoIxcProvedor } from '../../integracao/IntegracaoIxcProvedor';
@@ -56,6 +57,7 @@ export class Contrato extends Model<
   declare dia_vencimento_id: number | null;
   declare conta_boleto: number | null;
   declare tipo_cobranca_contrato_id: number;
+  declare vendedor_id: number | null;
   declare data_validade_desconto: Date | null;
   declare modelo_documento_id: number | null;
   declare endereco: string | null;
@@ -80,6 +82,9 @@ export class Contrato extends Model<
   declare getBancoBoleto: BelongsToGetAssociationMixin<Banco>;
   declare setBancoBoleto: BelongsToSetAssociationMixin<Banco, number>;
   declare createBancoBoleto: BelongsToCreateAssociationMixin<Banco>;
+
+  declare getVendedor: BelongsToGetAssociationMixin<Vendedor>;
+  declare setVendedor: BelongsToSetAssociationMixin<Vendedor, number>;
 
   declare getTipoCobrancaContrato: BelongsToGetAssociationMixin<TipoCobrancaContrato>;
   declare setTipoCobrancaContrato: BelongsToSetAssociationMixin<TipoCobrancaContrato, number>;
@@ -297,6 +302,14 @@ Contrato.init(
       comment: 'Tipo de cobrança (quantidade de títulos e periodicidade)',
       references: {
         model: 'cadastros_tipos_cobranca_contrato',
+        key: 'id'
+      }
+    },
+    vendedor_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'cadastros_vendedores',
         key: 'id'
       }
     },

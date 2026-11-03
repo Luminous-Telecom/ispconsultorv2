@@ -26,7 +26,7 @@ const CONTRATO_COLUMNS = [
   'data_inicio', 'data_fim', 'status', 'observacoes', 'isento_mensalidade', 'dia_vencimento_id',
   'conta_boleto', 'data_validade_desconto', 'modelo_documento_id', 'created_at', 'updated_at',
   'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado', 'usar_endereco_cliente',
-  'tipo_cobranca_contrato_id', 'empresa_id',
+  'tipo_cobranca_contrato_id', 'empresa_id', 'vendedor_id',
 ] as const;
 
 const TEXT_FIELDS = ['observacoes', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado'] as const;
@@ -39,6 +39,7 @@ const contratoInclude = {
   cadastros_planos: true,
   cadastros_bancos: true,
   cadastros_tipos_cobranca_contrato: true,
+  cadastros_vendedores: { select: { id: true, nome: true } },
 } as const;
 
 function shapeContrato<T extends {
@@ -46,6 +47,7 @@ function shapeContrato<T extends {
   cadastros_planos?: unknown;
   cadastros_bancos?: unknown;
   cadastros_tipos_cobranca_contrato?: unknown;
+  cadastros_vendedores?: unknown;
 }>(row: T) {
   return {
     ...row,
@@ -53,6 +55,7 @@ function shapeContrato<T extends {
     plano: row.cadastros_planos ?? null,
     bancoBoleto: row.cadastros_bancos ?? null,
     tipoCobrancaContrato: row.cadastros_tipos_cobranca_contrato ?? null,
+    vendedor: row.cadastros_vendedores ?? null,
   };
 }
 
@@ -208,6 +211,8 @@ export class ContratoService {
       valor_plano_num: { cadastros_planos: { valor_mensal: dir } },
       valor_mensal: { cadastros_planos: { valor_mensal: dir } },
       banco_nome: { cadastros_bancos: { nome: dir } },
+      vendedor: { cadastros_vendedores: { nome: dir } },
+      vendedor_nome: { cadastros_vendedores: { nome: dir } },
     };
 
     try {

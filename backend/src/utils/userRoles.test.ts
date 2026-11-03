@@ -19,6 +19,7 @@ describe('canAccessApiPath', () => {
     expect(canAccessApiPath('financeiro', '/api/clientes')).toBe(true);
     expect(canAccessApiPath('financeiro', '/api/contratos/2')).toBe(true);
     expect(canAccessApiPath('financeiro', '/api/planos')).toBe(true);
+    expect(canAccessApiPath('financeiro', '/api/vendedores')).toBe(true);
 
     expect(canAccessApiPath('financeiro', '/api/blockdomi/dominios')).toBe(false);
     expect(canAccessApiPath('financeiro', '/api/rpki/roas')).toBe(false);
@@ -32,6 +33,7 @@ describe('canAccessApiPath', () => {
   it('usuário acessa cadastros, contratos, equipamentos e rpki e não acessa financeiro nem bancos', () => {
     expect(canAccessApiPath('user', '/api/clientes')).toBe(true);
     expect(canAccessApiPath('user', '/api/contratos/3')).toBe(true);
+    expect(canAccessApiPath('user', '/api/vendedores')).toBe(true);
     expect(canAccessApiPath('user', '/api/ssh-manager/devices')).toBe(true);
     expect(canAccessApiPath('user', '/api/rpki/roas')).toBe(true);
     expect(canAccessApiPath('user', '/api/blockdomi/dominios')).toBe(true);
