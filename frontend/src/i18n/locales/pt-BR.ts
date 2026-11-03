@@ -563,6 +563,8 @@ const ptBR: TranslationKeys = {
     'blockdomi.pdfExtractError': 'Nenhum domínio ou IP encontrado no PDF.',
     'blockdomi.pdfExtractLogTitle': 'Log do processamento (servidor)',
     'blockdomi.colunasDetectadas': 'Colunas detectadas no PDF',
+    'blockdomi.colunasVerMais': 'Ver mais',
+    'blockdomi.colunasVerMenos': 'Ver menos',
     'blockdomi.colunasSelecAll': 'Todas',
     'blockdomi.colunasSelecNone': 'Nenhuma',
     'blockdomi.colunasAplicar': 'Aplicar seleção',

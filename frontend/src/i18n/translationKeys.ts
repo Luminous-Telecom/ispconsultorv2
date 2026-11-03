@@ -540,6 +540,8 @@ export interface TranslationKeys {
   'blockdomi.pdfExtractError': string;
   'blockdomi.pdfExtractLogTitle': string;
   'blockdomi.colunasDetectadas': string;
+  'blockdomi.colunasVerMais': string;
+  'blockdomi.colunasVerMenos': string;
   'blockdomi.colunasSelecAll': string;
   'blockdomi.colunasSelecNone': string;
   'blockdomi.colunasAplicar': string;

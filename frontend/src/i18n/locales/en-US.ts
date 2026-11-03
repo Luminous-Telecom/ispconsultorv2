@@ -563,6 +563,8 @@ const enUS: TranslationKeys = {
     'blockdomi.pdfExtractError': 'No domains or IPs found in PDF.',
     'blockdomi.pdfExtractLogTitle': 'Processing log (server)',
     'blockdomi.colunasDetectadas': 'Columns detected in PDF',
+    'blockdomi.colunasVerMais': 'Show more',
+    'blockdomi.colunasVerMenos': 'Show less',
     'blockdomi.colunasSelecAll': 'All',
     'blockdomi.colunasSelecNone': 'None',
     'blockdomi.colunasAplicar': 'Apply selection',

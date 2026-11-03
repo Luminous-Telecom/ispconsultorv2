@@ -565,6 +565,8 @@ const esES: TranslationKeys = {
     'blockdomi.pdfExtractError': 'No se encontraron dominios ni IPs en el PDF.',
     'blockdomi.pdfExtractLogTitle': 'Registro de procesamiento (servidor)',
     'blockdomi.colunasDetectadas': 'Columnas detectadas en el PDF',
+    'blockdomi.colunasVerMais': 'Ver más',
+    'blockdomi.colunasVerMenos': 'Ver menos',
     'blockdomi.colunasSelecAll': 'Todas',
     'blockdomi.colunasSelecNone': 'Ninguna',
     'blockdomi.colunasAplicar': 'Aplicar selección',

@@ -36,7 +36,7 @@ const ImportarListaBlockdomiEditorSection: React.FC<ImportarListaBlockdomiEditor
   canCadastrar,
   isCadastrando,
 }) => (
-  <>
+  <div className="ilb-entrada-editor">
     <div className="row g-2">
       <div className="col-12">
         <FormField
@@ -109,7 +109,7 @@ const ImportarListaBlockdomiEditorSection: React.FC<ImportarListaBlockdomiEditor
         </div>
       </div>
     )}
-  </>
+  </div>
 );
 
 export default ImportarListaBlockdomiEditorSection;
