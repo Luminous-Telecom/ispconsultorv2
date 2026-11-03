@@ -201,6 +201,164 @@ def _limpar_texto_cabecalho(texto):
     return re.sub(r'\s+', ' ', str(texto).replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')).strip()
 
 
+# find_tables junta réguas mais próximas que este valor (snap_tolerance padrão).
+_SNAP_TABELA_PADRAO = 3.0
+_GRADE_DENSA_MIN_GAPS = 12
+
+
+def _agrupar_coords(valores, tol):
+    if not valores:
+        return []
+    ordenados = sorted(valores)
+    grupos = [[ordenados[0]]]
+    for valor in ordenados[1:]:
+        if valor - grupos[-1][-1] <= tol:
+            grupos[-1].append(valor)
+        else:
+            grupos.append([valor])
+    return [sum(grupo) / len(grupo) for grupo in grupos]
+
+
+def _acumular_segmento(horizontais, verticais, x0, y0, x1, y1):
+    dx = abs(x1 - x0)
+    dy = abs(y1 - y0)
+    if dy <= 0.4 and dx >= 12:
+        horizontais.append((y0 + y1) / 2)
+    elif dx <= 0.4 and dy >= 3:
+        verticais.append((x0 + x1) / 2)
+
+
+def _tabela_por_grade_densa(page):
+    """
+    Monta a tabela pelas réguas do PDF quando as linhas são mais próximas
+    que o snap padrão do find_tables. Nesse caso o find_tables funde centenas
+    de linhas numa célula só e o remonte de texto inventa domínios.
+    """
+    horizontais = []
+    verticais = []
+    try:
+        desenhos = page.get_drawings()
+    except Exception:
+        return None
+    for desenho in desenhos:
+        for item in desenho.get('items') or []:
+            tipo = item[0]
+            if tipo == 'l':
+                p1, p2 = item[1], item[2]
+                _acumular_segmento(horizontais, verticais, p1.x, p1.y, p2.x, p2.y)
+            elif tipo == 're':
+                rect = item[1]
+                _acumular_segmento(horizontais, verticais, rect.x0, rect.y0, rect.x1, rect.y0)
+                _acumular_segmento(horizontais, verticais, rect.x0, rect.y1, rect.x1, rect.y1)
+                _acumular_segmento(horizontais, verticais, rect.x0, rect.y0, rect.x0, rect.y1)
+                _acumular_segmento(horizontais, verticais, rect.x1, rect.y0, rect.x1, rect.y1)
+    ys = _agrupar_coords(horizontais, 0.45)
+    xs = _agrupar_coords(verticais, 0.8)
+    if len(ys) < 4 or len(xs) < 2:
+        return None
+    gaps = [b - a for a, b in zip(ys, ys[1:]) if b - a > 0.35]
+    if sum(1 for gap in gaps if gap <= _SNAP_TABELA_PADRAO) < _GRADE_DENSA_MIN_GAPS:
+        return None
+
+    palavras = page.get_text('words') or []
+    faixas_y = [(y0, y1) for y0, y1 in zip(ys, ys[1:]) if y1 - y0 >= 0.35]
+    faixas_x = list(zip(xs, xs[1:]))
+    por_linha = [[] for _ in faixas_y]
+    for palavra in palavras:
+        cy = (palavra[1] + palavra[3]) / 2
+        linha = None
+        for i, (y0, y1) in enumerate(faixas_y):
+            if y0 <= cy < y1:
+                linha = i
+                break
+        if linha is None:
+            continue
+        por_linha[linha].append(palavra)
+
+    tabela = []
+    for da_faixa in por_linha:
+        celulas = []
+        for x0, x1 in faixas_x:
+            partes = [
+                palavra[4]
+                for palavra in sorted(da_faixa, key=lambda item: (item[0], item[1]))
+                if x0 <= (palavra[0] + palavra[2]) / 2 < x1
+            ]
+            celulas.append(' '.join(partes))
+        tabela.append(celulas)
+    return tabela or None
+
+
+def _escolher_cabecalho_largo(table_data):
+    """
+    Entre as linhas anteriores ao primeiro domínio, fica com a que tem mais
+    células preenchidas — o título do ofício ocupa uma linha, o nome real
+    da coluna vem numa linha seguinte.
+    """
+    melhor = None
+    melhor_n = -1
+    for row_idx, row in enumerate((table_data or [])[:12]):
+        if not row:
+            continue
+        if any(_extrair_dados_celula(str(celula)) for celula in row if celula):
+            break
+        celulas = [str(celula).strip() for celula in row if celula and str(celula).strip()]
+        if celulas and len(celulas) >= melhor_n and all(_eh_celula_cabecalho(c) for c in celulas):
+            melhor = row_idx
+            melhor_n = len(celulas)
+    return melhor
+
+
+def _agregar_tabela(td, colunas_ativas, grade_densa=False):
+    colunas_agregado = {}
+    novos_colunas = None
+    num_cols = max((len(r) for r in td if r), default=0)
+    if num_cols == 0:
+        return colunas_agregado, novos_colunas
+
+    if grade_densa:
+        hrow = _escolher_cabecalho_largo(td)
+        if hrow is not None:
+            colunas_idx = _construir_colunas_idx(td, hrow, num_cols)
+            novos_colunas = colunas_idx
+            start = hrow + 1
+        elif colunas_ativas:
+            colunas_idx = colunas_ativas
+            start = 0
+        else:
+            colunas_idx = _detectar_colunas_por_conteudo(td)
+            start = 0
+    elif colunas_ativas is None:
+        hrow = _detectar_linha_cabecalho(td)
+        if hrow is not None:
+            colunas_idx = _construir_colunas_idx(td, hrow, num_cols)
+            novos_colunas = colunas_idx
+            start = hrow + 1
+        else:
+            colunas_idx = _detectar_colunas_por_conteudo(td)
+            start = 0
+    elif num_cols > len(colunas_ativas):
+        hrow = _detectar_linha_cabecalho(td)
+        if hrow is not None:
+            colunas_idx = _construir_colunas_idx(td, hrow, num_cols)
+            novos_colunas = colunas_idx
+            start = hrow + 1
+        else:
+            colunas_idx = colunas_ativas
+            start = 0
+    else:
+        colunas_idx = colunas_ativas
+        start = 0
+
+    if not colunas_idx:
+        return colunas_agregado, novos_colunas
+
+    dados = _extrair_por_colunas(td, colunas_idx, start)
+    for header, items in dados.items():
+        colunas_agregado.setdefault(header, []).extend(items)
+    return colunas_agregado, novos_colunas
+
+
 def _construir_colunas_idx(td, hrow, num_cols):
     """
     Constrói {col_idx: header_text} para TODAS as colunas da tabela.
@@ -232,6 +390,16 @@ def extrair_dados_de_tabelas(page, colunas_ativas=None):
 
     Retorna (colunas_agregado, novos_colunas_idx).
     """
+    try:
+        grade = _tabela_por_grade_densa(page)
+        if grade:
+            dados, novos = _agregar_tabela(grade, colunas_ativas, grade_densa=True)
+            if any(dados.values()):
+                _log(f"grade densa: {len(grade)} linhas")
+                return dados, novos
+    except Exception as e:
+        _log(f"Erro ao ler grade densa: {e}")
+
     colunas_agregado = {}
     novos_colunas = None
     try:
@@ -241,46 +409,12 @@ def extrair_dados_de_tabelas(page, colunas_ativas=None):
             td = table.extract()
             if not td:
                 continue
-
-            num_cols = max((len(r) for r in td if r), default=0)
-            if num_cols == 0:
-                continue
-
-            if colunas_ativas is None:
-                # Primeira vez: tenta detectar o cabeçalho
-                hrow = _detectar_linha_cabecalho(td)
-                if hrow is not None:
-                    colunas_idx = _construir_colunas_idx(td, hrow, num_cols)
-                    novos_colunas = colunas_idx
-                    start = hrow + 1
-                else:
-                    # Sem cabeçalho: inclui apenas colunas com ≥ 40% de itens válidos
-                    colunas_idx = _detectar_colunas_por_conteudo(td)
-                    start = 0
-            else:
-                # Continuação: reutiliza estrutura conhecida
-                # Só re-detecta se a tabela tiver mais colunas (nova seção do PDF)
-                if num_cols > len(colunas_ativas):
-                    hrow = _detectar_linha_cabecalho(td)
-                    if hrow is not None:
-                        colunas_idx = _construir_colunas_idx(td, hrow, num_cols)
-                        novos_colunas = colunas_idx
-                        start = hrow + 1
-                    else:
-                        colunas_idx = colunas_ativas
-                        start = 0
-                else:
-                    colunas_idx = colunas_ativas
-                    start = 0
-
-            if not colunas_idx:
-                continue
-
-            dados = _extrair_por_colunas(td, colunas_idx, start)
-            for h, items in dados.items():
-                if h not in colunas_agregado:
-                    colunas_agregado[h] = []
-                colunas_agregado[h].extend(items)
+            dados, novos = _agregar_tabela(td, colunas_ativas, grade_densa=False)
+            if novos is not None:
+                novos_colunas = novos
+                colunas_ativas = novos
+            for header, items in dados.items():
+                colunas_agregado.setdefault(header, []).extend(items)
     except Exception as e:
         _log(f"Erro ao extrair dados de tabelas: {e}")
     return colunas_agregado, novos_colunas
