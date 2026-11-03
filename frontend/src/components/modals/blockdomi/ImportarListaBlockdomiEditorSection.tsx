@@ -61,14 +61,14 @@ const ImportarListaBlockdomiEditorSection: React.FC<ImportarListaBlockdomiEditor
       <BulkActionButton
         type="button"
         label={t('blockdomi.paste')}
-        variant="secondary"
+        variant="primary"
         size="sm"
         onClick={onPaste}
       />
       <BulkActionButton
         type="button"
         label={t('buttons.clear')}
-        variant="outline-secondary"
+        variant="primary"
         size="sm"
         onClick={onClear}
         disabled={!rawText.trim()}
@@ -86,7 +86,7 @@ const ImportarListaBlockdomiEditorSection: React.FC<ImportarListaBlockdomiEditor
         <BulkActionButton
           type="button"
           label={listaModo === 'desbloqueio' ? t('blockdomi.registerRemover') : t('blockdomi.register')}
-          variant={listaModo === 'desbloqueio' ? 'danger' : 'primary'}
+          variant="primary"
           size="sm"
           onClick={onCadastrar}
           disabled={!canCadastrar || isCadastrando}
@@ -96,7 +96,7 @@ const ImportarListaBlockdomiEditorSection: React.FC<ImportarListaBlockdomiEditor
     </div>
 
     {classified && (
-      <div className="row g-2">
+      <div className="row g-2 ilb-modo">
         <div className="col-12">
           <AtivoInativoField
             name="listaModo"

@@ -5879,8 +5879,11 @@ input[type="week"]::-moz-calendar-picker-indicator {
   min-width: 0;
 }
 
-.importar-lista-blockdomi .ilb-entrada-editor > .ilb-actions + .row {
-  margin-top: 1rem;
+.draggable-modal-body-custom
+  :is(form, div).form-modal-simple.importar-lista-blockdomi
+  .ilb-entrada-editor
+  > .ilb-modo {
+  margin-top: 1.5rem;
 }
 
 .importar-lista-blockdomi .ilb-colunas-panel {

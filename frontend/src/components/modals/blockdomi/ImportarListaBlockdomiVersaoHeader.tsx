@@ -35,7 +35,7 @@ const ImportarListaBlockdomiVersaoHeader: React.FC<ImportarListaBlockdomiVersaoH
             />
             <GerarButton
               type="button"
-              variant="secondary"
+              variant="primary"
               onClick={onGerarVersao}
               disabled={isGerandoVersao}
               isPending={isGerandoVersao}

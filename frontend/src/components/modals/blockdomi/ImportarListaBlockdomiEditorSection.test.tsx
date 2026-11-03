@@ -56,4 +56,6 @@ it('coloca Lista de entrada antes do textarea, na mesma linha dos inputs', () =>
   expect(textarea.parentElement?.classList.contains('form-field-control')).toBe(true);
   expect(field?.classList.contains('ilb-lista-entrada')).toBe(false);
   expect(screen.getByRole('button', { name: 'Colar' }).closest('.form-modal-input-col')).not.toBeNull();
+  expect(screen.getByRole('button', { name: 'Limpar' }).classList.contains('btn-primary')).toBe(true);
+  expect(screen.getByRole('button', { name: 'Colar' }).classList.contains('btn-primary')).toBe(true);
 });
