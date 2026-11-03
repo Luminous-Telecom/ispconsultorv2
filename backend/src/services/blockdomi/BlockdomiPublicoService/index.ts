@@ -172,8 +172,11 @@ export class BlockdomiPublicoService {
     for (const r of ipv4Plain) registrar(r, 'qtd_ipv4');
     for (const r of ipv6Plain) registrar(r, 'qtd_ipv6');
 
-    // Mais novo inserido → mais antigo (por created_at, não pela data de bloqueio).
+    // Mais novo → mais antigo pela versão (YYYYMMDD + sequência).
+    // created_at do registro não muda quando o ofício é republicado.
     oficios.sort((a, b) => {
+      const versaoCmp = this.cmpVersaoNumero(a.versao, b.versao);
+      if (versaoCmp !== 0) return versaoCmp;
       const da = a.created_at || '';
       const db = b.created_at || '';
       if (da !== db) {
@@ -235,6 +238,24 @@ export class BlockdomiPublicoService {
       return `${y}-${m}-${d}`;
     }
     return '';
+  }
+
+  /** Desc: data da versão (YYYYMMDD) mais nova primeiro; no mesmo dia, a sequência maior. */
+  private static cmpVersaoNumero(a: string | null, b: string | null): number {
+    const partir = (v: string | null) => {
+      const m = (v ?? '').trim().match(/^(\d{8})(\d+)$/);
+      if (!m) return null;
+      return { data: Number(m[1]), seq: Number(m[2]) };
+    };
+    const pa = partir(a);
+    const pb = partir(b);
+    if (pa && pb) {
+      if (pa.data !== pb.data) return pb.data - pa.data;
+      if (pa.seq !== pb.seq) return pb.seq - pa.seq;
+      return 0;
+    }
+    if (pa !== pb) return pa ? -1 : 1;
+    return (b ?? '').localeCompare(a ?? '');
   }
 
   /** Normaliza created_at para ISO string comparável (YYYY-MM-DDTHH:mm:ss.sssZ). */
