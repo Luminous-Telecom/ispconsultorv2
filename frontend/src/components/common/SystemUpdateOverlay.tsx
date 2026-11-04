@@ -6,7 +6,11 @@ import { CircularProgress } from 'components/ui';
 import { getSocketUrl } from 'components/common/terminal/constants';
 import { authService } from 'services/authService';
 import { getAuthToken, getSocketToken } from 'services/core';
-import { clearSystemUpdateDriver, isSystemUpdateDriver } from 'utils/systemUpdateDriver';
+import {
+  SYSTEM_UPDATE_HANDOFF_EVENT,
+  clearSystemUpdateDriver,
+  isSystemUpdateDriver,
+} from 'utils/systemUpdateDriver';
 
 interface SystemUpdateStatus {
   active: boolean;
@@ -33,6 +37,7 @@ const SystemUpdateOverlay: React.FC = () => {
   const [percent, setPercent] = useState(0);
   const sawSystemRef = useRef(false);
   const reloadingRef = useRef(false);
+  const lastStatusRef = useRef<SystemUpdateStatus | null>(null);
 
   useEffect(() => {
     if (!getAuthToken()) return undefined;
@@ -43,6 +48,7 @@ const SystemUpdateOverlay: React.FC = () => {
     const applyStatus = (body: unknown) => {
       const status = parseStatus(body);
       if (cancelled || reloadingRef.current || !status) return;
+      lastStatusRef.current = status;
 
       if (isSystemUpdateDriver()) {
         if (!status.active) clearSystemUpdateDriver();
@@ -85,10 +91,20 @@ const SystemUpdateOverlay: React.FC = () => {
       socket.on('system-update:status', applyStatus);
     };
 
+    const showLastRunningStatus = () => {
+      const status = lastStatusRef.current;
+      if (cancelled || reloadingRef.current || !status?.active || status.phase !== 'running') return;
+      if (status.kind === 'system') sawSystemRef.current = true;
+      setPercent(status.progress);
+      setVisible(true);
+    };
+
     void connect();
+    window.addEventListener(SYSTEM_UPDATE_HANDOFF_EVENT, showLastRunningStatus);
 
     return () => {
       cancelled = true;
+      window.removeEventListener(SYSTEM_UPDATE_HANDOFF_EVENT, showLastRunningStatus);
       socket?.off('system-update:status', applyStatus);
       socket?.disconnect();
     };

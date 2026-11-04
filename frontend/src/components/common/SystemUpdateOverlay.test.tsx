@@ -4,7 +4,7 @@ import { io } from 'socket.io-client';
 import { I18nProvider } from 'contexts/I18nContext';
 import { removeAuthToken, setAuthToken } from 'services/core';
 import SystemUpdateOverlay from './SystemUpdateOverlay';
-import { markSystemUpdateDriver } from 'utils/systemUpdateDriver';
+import { SYSTEM_UPDATE_HANDOFF_EVENT, markSystemUpdateDriver } from 'utils/systemUpdateDriver';
 
 jest.mock('socket.io-client', () => ({
   io: jest.fn(),
@@ -105,6 +105,27 @@ describe('SystemUpdateOverlay', () => {
     });
 
     expect(screen.queryByRole('progressbar')).toBeNull();
+    view.unmount();
+  });
+
+  it('mostra o aviso quando a conexão do progresso cai e a atualização segue', async () => {
+    setAuthToken('jwt-de-teste');
+    markSystemUpdateDriver();
+    const view = renderOverlay();
+
+    await waitFor(() => expect(ioMock).toHaveBeenCalledTimes(1));
+    act(() => {
+      emitStatus({ active: true, progress: 100, kind: 'system', phase: 'running' });
+    });
+    expect(screen.queryByRole('progressbar')).toBeNull();
+
+    act(() => {
+      window.dispatchEvent(new Event(SYSTEM_UPDATE_HANDOFF_EVENT));
+    });
+
+    expect(
+      screen.getByRole('progressbar', { name: 'Atualização em andamento, aguarde' }).getAttribute('aria-valuenow')
+    ).toBe('100');
     view.unmount();
   });
 });

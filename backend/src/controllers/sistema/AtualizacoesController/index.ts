@@ -107,6 +107,18 @@ function parseReleaseItens(body: string): string[] {
   return [...new Set(itens)];
 }
 
+/** Mantém o stream aberto enquanto npm/build ficam minutos sem enviar progresso. */
+export function startSseKeepAlive(write: (chunk: string) => void, intervalMs = 10_000): () => void {
+  const timer = setInterval(() => {
+    try {
+      write(': ping\n\n');
+    } catch {
+      clearInterval(timer);
+    }
+  }, intervalMs);
+  return () => clearInterval(timer);
+}
+
 function trackUpdateProgress(progress: { step: string; progress: number }): void {
   if (progress.step === 'erro') {
     SystemUpdateProgressService.fail();
@@ -234,6 +246,7 @@ export class AtualizacoesController {
    */
   static async updateStream(req: Request, res: Response): Promise<void> {
     let branch = 'main';
+    let stopKeepAlive = (): void => {};
 
     logger.info('Atualização iniciada');
 
@@ -256,10 +269,14 @@ export class AtualizacoesController {
 
       res.writeHead(200, {
         'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-transform',
         'Connection': 'keep-alive',
         'X-Accel-Buffering': 'no',
       });
+      stopKeepAlive = startSseKeepAlive((chunk) => {
+        res.write(chunk);
+      });
+      res.on('close', stopKeepAlive);
 
       SystemUpdateProgressService.begin('system');
 
@@ -372,6 +389,8 @@ export class AtualizacoesController {
       } catch (writeError) {
         logger.error('Erro ao escrever resposta SSE');
       }
+    } finally {
+      stopKeepAlive();
     }
   }
 

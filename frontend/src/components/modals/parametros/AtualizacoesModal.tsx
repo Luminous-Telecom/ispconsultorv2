@@ -9,7 +9,8 @@ import { API_CONFIG } from 'config/api';
 import { useI18n } from 'contexts/I18nContext';
 import { DynamicProgressBar } from 'components/ui';
 import { waitForBackendHealth } from 'utils/healthCheck';
-import { clearSystemUpdateDriver, markSystemUpdateDriver } from 'utils/systemUpdateDriver';
+import { clearSystemUpdateDriver, handoffSystemUpdateToOverlay, markSystemUpdateDriver } from 'utils/systemUpdateDriver';
+import { isUpdateStreamDisconnect } from './updateStreamDisconnect';
 
 interface Atualizacao {
   versao: string;
@@ -69,8 +70,23 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
     retry: false,
   });
 
-  const executeUpdateWithSSE = async (streamPath: string): Promise<void> => {
+  const executeUpdateWithSSE = async (streamPath: string): Promise<'completed' | 'handoff'> => {
     return new Promise((resolve, reject) => {
+      let streamStarted = false;
+      let receivedProgress = false;
+
+      const handoff = () => resolve('handoff');
+
+      const failOrHandoff = (streamError: unknown) => {
+        if (streamStarted && (receivedProgress || isUpdateStreamDisconnect(streamError))) {
+          handoff();
+          return;
+        }
+        setIsUpdating(false);
+        setUpdateProgress('');
+        setUpdateProgressPercent(0);
+        reject(streamError);
+      };
 
       setIsUpdating(true);
       setUpdateProgress('Iniciando atualização...');
@@ -94,7 +110,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
             throw new Error('Response body não disponível');
           }
 
-
+          streamStarted = true;
           const decoder = new TextDecoder();
 
           const processStream = async () => {
@@ -102,7 +118,9 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
               while (true) {
                 const { done, value } = await reader.read();
                 if (done) {
-                  break;
+                  if (receivedProgress) handoff();
+                  else reject(new Error(t('updates.error')));
+                  return;
                 }
 
                 const lines = decoder.decode(value, { stream: true }).split('\n');
@@ -120,6 +138,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
                     }
 
                     if (data.step && data.progress !== undefined && data.message) {
+                      receivedProgress = true;
                       setUpdateProgress(data.message);
                       setUpdateProgressPercent(data.progress);
                       if (data.logs?.length) {
@@ -127,10 +146,11 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
                       }
                     }
 
-                    if (data.success || (data.step === 'finalizado' && data.progress === 100)) {
+                    const restartScheduled = data.step === 'pm2Reload' && data.progress === 100;
+                    if (data.success || (data.step === 'finalizado' && data.progress === 100) || restartScheduled) {
                       setUpdateProgress(data.message || t('updates.concluded'));
                       setUpdateProgressPercent(100);
-                      resolve();
+                      resolve('completed');
                       return;
                     }
                   } catch {
@@ -139,17 +159,14 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
                 }
               }
             } catch (streamError) {
-              reject(streamError);
+              failOrHandoff(streamError);
             }
           };
 
           processStream();
         })
         .catch(error => {
-          setIsUpdating(false);
-          setUpdateProgress('');
-          setUpdateProgressPercent(0);
-          reject(error);
+          failOrHandoff(error);
         });
     });
   };
@@ -159,7 +176,13 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
 
   const updateMutation = useMutation({
     mutationFn: () => executeUpdateWithSSE('/atualizacoes/update-stream'),
-    onSuccess: async () => {
+    onSuccess: async (outcome) => {
+      if (outcome === 'handoff') {
+        setIsUpdating(false);
+        setUpdateProgress('');
+        handoffSystemUpdateToOverlay();
+        return;
+      }
       success(t('updates.success'), {
         id: `update-success-${Date.now()}`,
         duration: 5000,

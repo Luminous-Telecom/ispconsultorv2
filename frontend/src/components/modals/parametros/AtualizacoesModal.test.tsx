@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { render, screen } from '@testing-library/react';
+import { TextDecoder, TextEncoder } from 'util';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { I18nProvider } from 'contexts/I18nContext';
 import { NotificationProvider } from 'components/notifications/NotificationProvider';
 import AtualizacoesModal from './AtualizacoesModal';
 import { apiService } from 'services/api';
+import { isSystemUpdateDriver } from 'utils/systemUpdateDriver';
 
 jest.mock('services/api', () => ({
   apiService: {
@@ -45,7 +47,12 @@ function renderModal() {
 describe('AtualizacoesModal', () => {
   beforeEach(() => {
     localStorage.setItem('app-language', 'pt-BR');
+    sessionStorage.clear();
     (apiService.get as jest.Mock).mockReset();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('mostra Atualizar Sistema quando há versão e não oferece atualizar documentação', async () => {
@@ -84,5 +91,36 @@ describe('AtualizacoesModal', () => {
     expect(await screen.findByText('Erro ao buscar atualizações')).toBeTruthy();
     expect(await screen.findByText('Falha na rede')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Atualizar Documentação' })).toBeNull();
+  });
+
+  it('não mostra erro de rede quando o stream cai no meio da atualização', async () => {
+    (apiService.get as jest.Mock).mockResolvedValue({
+      success: true,
+      data: { data: [atualizacao], versao_atual: '1.0.0' },
+    });
+    jest.spyOn(window, 'confirm').mockReturnValue(true);
+    Object.assign(global, { TextEncoder, TextDecoder });
+    const encoder = new TextEncoder();
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      body: {
+        getReader: () => ({
+          read: jest.fn()
+            .mockResolvedValueOnce({
+              done: false,
+              value: encoder.encode('data: {"step":"build","progress":60,"message":"Compilando"}\n\n'),
+            })
+            .mockRejectedValueOnce(new TypeError('Failed to fetch')),
+        }),
+      },
+    }) as typeof fetch;
+
+    renderModal();
+    const atualizar = await screen.findByRole('button', { name: 'Atualizar Sistema' });
+    fireEvent.click(atualizar);
+
+    await waitFor(() => expect(isSystemUpdateDriver()).toBe(false));
+    expect(screen.queryByText('Failed to fetch')).toBeNull();
+    expect(screen.queryByText('Network Error')).toBeNull();
   });
 });
