@@ -29,6 +29,7 @@ export function isClienteScrollableTab(activeTab: string): boolean {
   return (
     activeTab === 'contratos' ||
     activeTab === 'financeiro' ||
+    activeTab === 'ips-dns' ||
     activeTab === 'arquivos' ||
     activeTab === 'tunel' ||
     activeTab === 'ssh-devices' ||

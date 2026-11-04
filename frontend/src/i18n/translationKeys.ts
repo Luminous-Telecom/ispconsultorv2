@@ -1000,6 +1000,8 @@ export interface TranslationKeys {
   'form.observations': string;
   'form.ipsDns': string;
   'form.ipsDnsHelp': string;
+  'form.ipsDnsInvalid': string;
+  'form.ipsDnsDuplicate': string;
   'form.address': string;
   'form.number': string;
   'form.complement': string;
@@ -1806,6 +1808,7 @@ export interface TranslationKeys {
   'empty.noContracts': string;
   'empty.noTitles': string;
   'empty.noFiles': string;
+  'empty.noIpsDns': string;
   'empty.noTermsRegistered': string;
   'empty.noAdditionalServices': string;
   'filter.showInactive': string;

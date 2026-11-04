@@ -48,21 +48,59 @@ function renderTab(errors: ClienteFormErrors = {}, value = '') {
 }
 
 describe('IpsDnsTab', () => {
-  it('mostra o campo vazio e a ajuda da API do Blockdomi', () => {
+  it('mostra a tabela vazia', () => {
     renderTab();
-    const field = screen.getByRole('textbox', { name: /IPs DNS/ }) as HTMLTextAreaElement;
-    expect(field.value).toBe('');
-    expect(screen.getByRole('img', { name: /API do Blockdomi/ })).toBeTruthy();
+    expect(screen.getByText('Nenhum IP DNS cadastrado')).toBeTruthy();
+    expect(screen.queryByRole('textbox', { name: /Faixa de IPs/ })).toBeNull();
   });
 
-  it('mostra erro quando o IP é inválido', () => {
+  it('lista cada IP em uma linha', () => {
+    renderTab({}, '192.168.1.1; 10.0.0.0/24');
+    expect(screen.getByText('192.168.1.1')).toBeTruthy();
+    expect(screen.getByText('10.0.0.0/24')).toBeTruthy();
+  });
+
+  it('mostra o erro de validação do cadastro', () => {
     renderTab({ ips_dns: 'Informe IPv4, IPv6 ou CIDR separados por ;' });
     expect(screen.getByText('Informe IPv4, IPv6 ou CIDR separados por ;')).toBeTruthy();
   });
 
-  it('envia o IP digitado', () => {
+  it('inclui o IP informado em Novo', () => {
     const { handleInputChange } = renderTab();
-    fireEvent.change(screen.getByRole('textbox', { name: /IPs DNS/ }), { target: { value: '10.0.0.1' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Novo' }));
+    fireEvent.change(screen.getByRole('textbox', { name: /Faixa de IPs/ }), { target: { value: '10.0.0.1' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
     expect(handleInputChange).toHaveBeenCalledWith('ips_dns', '10.0.0.1');
+  });
+
+  it('recusa IP inválido e duplicado', () => {
+    const { handleInputChange } = renderTab({}, '10.0.0.1');
+    fireEvent.click(screen.getByRole('button', { name: 'Novo' }));
+    fireEvent.change(screen.getByRole('textbox', { name: /Faixa de IPs/ }), { target: { value: 'dns.provedor.net' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+    expect(screen.getByText('Informe um IPv4, IPv6 ou CIDR')).toBeTruthy();
+    expect(handleInputChange).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByRole('textbox', { name: /Faixa de IPs/ }), { target: { value: '10.0.0.1' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+    expect(screen.getByText('Este IP já está na lista')).toBeTruthy();
+    expect(handleInputChange).not.toHaveBeenCalled();
+  });
+
+  it('edita e remove a linha selecionada', () => {
+    const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
+    const { handleInputChange } = renderTab({}, '10.0.0.1; 10.0.0.2');
+
+    fireEvent.click(screen.getByText('10.0.0.1'));
+    fireEvent.click(screen.getByRole('button', { name: 'Editar' }));
+    fireEvent.change(screen.getByRole('textbox', { name: /Faixa de IPs/ }), { target: { value: '10.0.0.9' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+    expect(handleInputChange).toHaveBeenCalledWith('ips_dns', '10.0.0.9; 10.0.0.2');
+
+    fireEvent.click(screen.getByText('10.0.0.2'));
+    fireEvent.click(screen.getByRole('button', { name: 'Deletar' }));
+    expect(confirmSpy).toHaveBeenCalled();
+    expect(handleInputChange).toHaveBeenCalledWith('ips_dns', '10.0.0.1');
+    confirmSpy.mockRestore();
   });
 });
