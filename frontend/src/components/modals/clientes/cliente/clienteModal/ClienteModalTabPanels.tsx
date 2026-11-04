@@ -209,6 +209,7 @@ function ClienteModalTabPanels({
             handleInputChange={handleInputChange}
             isSubmitting={isSubmitting}
             formPrefix={formPrefix}
+            entityId={effectiveClienteIdForParcelas ?? null}
           />
         )}
 

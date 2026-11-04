@@ -285,7 +285,9 @@ export class ClienteService {
       }
     }
 
-    await prisma.clientes.update({ where: { id: numericId }, data: dadosParaSalvar });
+    if (Object.keys(dadosParaSalvar).length > 0) {
+      await prisma.clientes.update({ where: { id: numericId }, data: dadosParaSalvar });
+    }
     await syncIpsDns(numericId, cliente.empresa_id ?? null, ips_dns);
     const atualizado = await ClienteService.getById(numericId);
     if (!atualizado) throw new Error('Cliente não encontrado');

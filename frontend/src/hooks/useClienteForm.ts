@@ -99,6 +99,7 @@ export const useClienteForm = ({
   
   const lastCnpjConsulted = useRef<string>('');
   const lastCepConsulted = useRef<string>('');
+  const hydratedClienteIdRef = useRef<number | null>(null);
 
   // React Hook Form com Zod
   const {
@@ -207,12 +208,17 @@ export const useClienteForm = ({
     }
   }, [show, isEditing, reset]);
 
-  // Reset separado quando os dados do cliente carregam
+  // Preenche o formulário uma vez por abertura. Recarregar o mesmo cliente não desfaz edição local.
   useEffect(() => {
-    if (show && clienteId && customFormData && cliente) {
-      reset(customFormData);
+    if (!show) {
+      hydratedClienteIdRef.current = null;
+      return;
     }
-  }, [cliente, show, clienteId]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!clienteId || !cliente || !customFormData) return;
+    if (hydratedClienteIdRef.current === clienteId) return;
+    reset(customFormData);
+    hydratedClienteIdRef.current = clienteId;
+  }, [show, clienteId, cliente, customFormData, reset]);
 
   // Mutation para atualizar cliente
   const updateClienteMutation = useMutation({

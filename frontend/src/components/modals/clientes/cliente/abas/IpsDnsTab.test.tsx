@@ -1,9 +1,19 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { I18nProvider } from 'contexts/I18nContext';
 import { NotificationProvider } from 'components/notifications/NotificationProvider';
+import { ClienteService } from 'services/clienteService';
 import IpsDnsTab from './IpsDnsTab';
 import { ClienteFormData, ClienteFormErrors } from 'types';
+
+jest.mock('services/clienteService', () => ({
+  ClienteService: { update: jest.fn() },
+}));
+
+jest.mock('hooks/useApiError', () => ({
+  useApiError: () => ({ showApiError: jest.fn() }),
+}));
 
 const formData = {
   cnpj: '',
@@ -28,26 +38,36 @@ const formData = {
   ips_dns: '',
 } as ClienteFormData;
 
-function renderTab(errors: ClienteFormErrors = {}, value = '') {
+function renderTab(errors: ClienteFormErrors = {}, value = '', entityId?: number) {
   localStorage.setItem('app-language', 'pt-BR');
   const handleInputChange = jest.fn();
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
   render(
-    <I18nProvider>
-      <NotificationProvider>
-        <IpsDnsTab
-          formData={{ ...formData, ips_dns: value }}
-          errors={errors}
-          handleInputChange={handleInputChange}
-          isSubmitting={false}
-          formPrefix="cliente"
-        />
-      </NotificationProvider>
-    </I18nProvider>
+    <QueryClientProvider client={queryClient}>
+      <I18nProvider>
+        <NotificationProvider>
+          <IpsDnsTab
+            formData={{ ...formData, ips_dns: value }}
+            errors={errors}
+            handleInputChange={handleInputChange}
+            isSubmitting={false}
+            formPrefix="cliente"
+            entityId={entityId}
+          />
+        </NotificationProvider>
+      </I18nProvider>
+    </QueryClientProvider>
   );
   return { handleInputChange };
 }
 
 describe('IpsDnsTab', () => {
+  beforeEach(() => {
+    jest.mocked(ClienteService.update).mockReset();
+  });
+
   it('mostra a tabela vazia', () => {
     renderTab();
     expect(screen.getByText('Nenhum IP DNS cadastrado')).toBeTruthy();
@@ -101,6 +121,37 @@ describe('IpsDnsTab', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Deletar' }));
     expect(confirmSpy).toHaveBeenCalled();
     expect(handleInputChange).toHaveBeenCalledWith('ips_dns', '10.0.0.1');
+    confirmSpy.mockRestore();
+  });
+
+  it('grava a exclusão no cliente já salvo', async () => {
+    const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
+    jest.mocked(ClienteService.update).mockResolvedValue({ id: 8, ips_dns: '10.0.0.2' } as never);
+    const { handleInputChange } = renderTab({}, '10.0.0.1; 10.0.0.2', 8);
+
+    fireEvent.click(screen.getByText('10.0.0.1'));
+    fireEvent.click(screen.getByRole('button', { name: 'Deletar' }));
+
+    await waitFor(() => {
+      expect(ClienteService.update).toHaveBeenCalledWith(8, { ips_dns: '10.0.0.2' });
+    });
+    expect(handleInputChange).toHaveBeenCalledWith('ips_dns', '10.0.0.2');
+    confirmSpy.mockRestore();
+  });
+
+  it('mantém a lista quando a gravação da exclusão falha', async () => {
+    const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
+    jest.mocked(ClienteService.update).mockRejectedValue(new Error('falha'));
+    const { handleInputChange } = renderTab({}, '10.0.0.1; 10.0.0.2', 8);
+
+    fireEvent.click(screen.getByText('10.0.0.1'));
+    fireEvent.click(screen.getByRole('button', { name: 'Deletar' }));
+
+    await waitFor(() => {
+      expect(ClienteService.update).toHaveBeenCalled();
+    });
+    expect(handleInputChange).not.toHaveBeenCalled();
+    expect(screen.getByText('10.0.0.1')).toBeTruthy();
     confirmSpy.mockRestore();
   });
 });

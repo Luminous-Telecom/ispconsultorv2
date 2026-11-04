@@ -1,9 +1,13 @@
 import React, { useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useI18n } from 'contexts/I18nContext';
 import { ModalFormActions, useBulkBtn } from 'components/ui';
 import DraggableModal from 'components/common/DraggableModal';
 import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import FormField from 'components/ui/FormField';
+import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
+import { useApiError } from 'hooks/useApiError';
+import { ClienteService } from 'services/clienteService';
 import { isDnsIpToken } from 'utils/dnsIps';
 import { ClienteTabProps } from '../types';
 
@@ -121,19 +125,44 @@ const IpsDnsTab: React.FC<ClienteTabProps> = ({
   errors,
   handleInputChange,
   isSubmitting,
+  entityId,
 }) => {
   const { t } = useI18n();
   const bulkBtn = useBulkBtn();
+  const queryClient = useQueryClient();
+  const { showApiError } = useApiError();
   const rows = useMemo(() => parseDnsIpRows(formData.ips_dns || ''), [formData.ips_dns]);
   const [editor, setEditor] = useState<EditorState | null>(null);
+  const [isSavingIps, setIsSavingIps] = useState(false);
+  const isBusy = isSubmitting || isSavingIps;
 
-  const commit = (next: DnsIpRow[]) => {
-    handleInputChange('ips_dns', joinDnsIpRows(next));
+  const commit = async (next: DnsIpRow[]) => {
+    const value = joinDnsIpRows(next);
+    if (entityId) {
+      setIsSavingIps(true);
+      await queryClient.cancelQueries({ queryKey: ['cliente', entityId] });
+      try {
+        const updated = await ClienteService.update(entityId, { ips_dns: value });
+        const saved = updated.ips_dns ?? value;
+        handleInputChange('ips_dns', saved);
+        queryClient.setQueryData(['cliente', entityId], (current: { ips_dns?: string } | undefined) => (
+          current ? { ...current, ips_dns: saved } : updated
+        ));
+        queryClient.invalidateQueries({ queryKey: ['ips-permitidos'] });
+        setEditor(null);
+      } catch (err) {
+        showApiError(err, CONTEXT_ERROR_MESSAGES.CLIENT_UPDATE_ERROR);
+      } finally {
+        setIsSavingIps(false);
+      }
+      return;
+    }
+    handleInputChange('ips_dns', value);
     setEditor(null);
   };
 
   const openEdit = (item: DnsIpRow) => {
-    if (isSubmitting) return;
+    if (isBusy) return;
     setEditor({ id: item.id, value: item.faixa_ips });
   };
 
@@ -180,14 +209,14 @@ const IpsDnsTab: React.FC<ClienteTabProps> = ({
               label: bulkBtn.novo.label,
               variant: bulkBtn.novo.variant,
               requiresSelection: false,
-              disabled: () => isSubmitting,
+              disabled: () => isBusy,
               onClick: () => setEditor({ id: null, value: '' }),
             },
             {
               key: 'edit',
               label: bulkBtn.editar.label,
               variant: bulkBtn.editar.variant,
-              disabled: (items) => isSubmitting || items.length === 0,
+              disabled: (items) => isBusy || items.length === 0,
               onClick: (items) => {
                 if (items[0]) openEdit(items[0]);
               },
@@ -196,7 +225,7 @@ const IpsDnsTab: React.FC<ClienteTabProps> = ({
               key: 'delete',
               label: bulkBtn.deletar.label,
               variant: bulkBtn.deletar.variant,
-              disabled: (items) => isSubmitting || items.length === 0,
+              disabled: (items) => isBusy || items.length === 0,
               onClick: (items) => {
                 if (items.length === 0) return;
                 if (!window.confirm(t('messages.confirmDelete'))) return;
@@ -212,7 +241,7 @@ const IpsDnsTab: React.FC<ClienteTabProps> = ({
           key={`${editor.id ?? 'new'}-${editor.value}`}
           editor={editor}
           rows={rows}
-          isSubmitting={isSubmitting}
+          isSubmitting={isBusy}
           onClose={() => setEditor(null)}
           onSave={commit}
         />

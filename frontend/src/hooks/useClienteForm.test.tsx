@@ -135,4 +135,33 @@ describe('useClienteForm', () => {
       }));
     });
   });
+
+  it('mantém o IP DNS removido quando o mesmo cliente é recarregado', async () => {
+    const cliente = { ...clienteCriado, id: 4, ips_dns: '10.0.0.1; 10.0.0.2' };
+    jest.mocked(ClienteService.getById).mockResolvedValue(cliente as never);
+
+    const { result } = renderHook(
+      () => useClienteForm({ clienteId: 4, show: true }),
+      { wrapper }
+    );
+
+    await waitFor(() => {
+      expect(result.current.formData.ips_dns).toBe('10.0.0.1; 10.0.0.2');
+    });
+
+    await act(async () => {
+      result.current.handleInputChange('ips_dns', '10.0.0.2');
+    });
+
+    const callsBefore = jest.mocked(ClienteService.getById).mock.calls.length;
+    jest.mocked(ClienteService.getById).mockResolvedValue({ ...cliente } as never);
+    await act(async () => {
+      await queryClient.invalidateQueries({ queryKey: ['cliente', 4] });
+    });
+
+    await waitFor(() => {
+      expect(jest.mocked(ClienteService.getById).mock.calls.length).toBeGreaterThan(callsBefore);
+    });
+    expect(result.current.formData.ips_dns).toBe('10.0.0.2');
+  });
 });

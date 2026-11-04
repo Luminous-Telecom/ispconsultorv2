@@ -163,7 +163,7 @@ describe('ClienteService edição', () => {
 
     expect(ipsPermitidos.deleteMany).toHaveBeenCalledWith({ where: { cliente_id: 4 } });
     expect(ipsPermitidos.upsert).not.toHaveBeenCalled();
-    expect((clientes.update as jest.Mock).mock.calls[0][0].data.ips_dns).toBeUndefined();
+    expect(clientes.update).not.toHaveBeenCalled();
   });
 
   it('não grava quando o id não existe', async () => {
