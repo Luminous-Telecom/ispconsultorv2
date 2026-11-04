@@ -97,4 +97,16 @@ describe('IpPermitidoService', () => {
     (ips.findUnique as jest.Mock).mockResolvedValue(null);
     await expect(IpPermitidoService.update(99, { faixa_ips: '1.1.1.1' })).rejects.toThrow('não encontrado');
   });
+
+  it('troca o cliente da faixa', async () => {
+    (ips.findUnique as jest.Mock)
+      .mockResolvedValueOnce({ id: 3, cliente_id: 8 })
+      .mockResolvedValueOnce({ id: 3, cliente_id: 22, faixa_ips: '1.1.1.1', empresa_id: 1 });
+    (ips.update as jest.Mock).mockResolvedValue({});
+    await IpPermitidoService.update(3, { cliente_id: 22, empresa_id: 1, faixa_ips: '1.1.1.1' });
+    expect(ips.update).toHaveBeenCalledWith({
+      where: { id: 3 },
+      data: { cliente_id: 22, empresa_id: 1, faixa_ips: '1.1.1.1' },
+    });
+  });
 });

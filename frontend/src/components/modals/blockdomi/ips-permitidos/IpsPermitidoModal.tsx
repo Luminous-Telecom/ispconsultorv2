@@ -49,7 +49,7 @@ const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
   const { data: clientesData } = useQuery({
     queryKey: ['clientes-ativos-entity-select'],
     queryFn: () => ClienteService.list({ ativo: true, limit: 500 }),
-    enabled: show && !isEditing,
+    enabled: show,
     staleTime: 60 * 1000,
   });
 
@@ -102,7 +102,7 @@ const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
     if (ips.length === 0) {
       newErrors.faixa_ips = t('blockdomi.ipsPermitidosRequired');
     }
-    if (!isEditing && !clienteId) {
+    if (!clienteId) {
       newErrors.cliente = t('blockdomi.clienteRequired');
     }
     if (Object.keys(newErrors).length > 0) {
@@ -112,7 +112,10 @@ const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
 
     try {
       if (isEditing && ipPermitidoId) {
-        const updated = await updateMutation.mutateAsync({ id: ipPermitidoId, data: { faixa_ips: ips.join('; '), ativo } });
+        const updated = await updateMutation.mutateAsync({
+          id: ipPermitidoId,
+          data: { faixa_ips: ips.join('; '), ativo, cliente_id: clienteId ?? undefined },
+        });
         onSuccess?.(updated);
       } else if (clienteId) {
         const created = await createMutation.mutateAsync({ cliente_id: clienteId, faixa_ips: ips.join('; ') });
@@ -147,19 +150,22 @@ const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
           <div className="row g-2">
             <div className="col-12">
               <EntitySelectField
-                selectionLocked={isEditing}
                 value={clienteId || 0}
                 onChange={(id) => {
-                  if (isEditing) return;
                   setClienteId(id || null);
-                  if (!id) setClienteNome('');
+                  const encontrado = (clientesData?.data ?? []).find((cliente) => cliente.id === id);
+                  setClienteNome(
+                    encontrado
+                      ? encontrado.razao_social?.trim() || encontrado.nome_fantasia?.trim() || String(encontrado.id)
+                      : '',
+                  );
                 }}
                 onShowModal={() => setShowClienteSelect(true)}
                 onEdit={() => clienteEdit.open(clienteId || 0)}
                 entities={clienteEntities}
                 label={t('blockdomi.cliente')}
                 placeholder={t('blockdomi.selectCliente')}
-                required={!isEditing}
+                required
                 error={errors.cliente}
               />
             </div>

@@ -88,17 +88,6 @@ export class IpPermitidoController {
       }
       sendSuccess(res, json, 'IPs permitidos cadastrados', 201);
     } catch (error) {
-      const msg = error instanceof Error ? error.message : 'Erro ao cadastrar';
-      const code = error && typeof error === 'object' && 'code' in error ? String((error as { code?: unknown }).code) : '';
-      const isUniqueCliente =
-        code === 'P2002' ||
-        msg.includes('cliente_id') ||
-        msg.includes('Unique') ||
-        msg === 'Validation error';
-      if (isUniqueCliente) {
-        sendValidationError(res, 'Este cliente já possui IPs permitidos cadastrados.');
-        return;
-      }
       logControllerError('create', error);
       sendError(res, error, 'Erro ao cadastrar IPs permitidos', 500, true, {
         context: 'IpPermitidoController',
@@ -110,10 +99,26 @@ export class IpPermitidoController {
   static async update(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const { faixa_ips, ativo } = req.body;
+      const { faixa_ips, ativo, cliente_id } = req.body;
       if (!faixa_ips || typeof faixa_ips !== 'string') {
         sendValidationError(res, 'faixa_ips é obrigatório. IPs separados por ;');
         return;
+      }
+      let clienteId: number | undefined;
+      let empresaId: number | null | undefined;
+      if (cliente_id !== undefined && cliente_id !== null && cliente_id !== '') {
+        const parsed = Number(cliente_id);
+        if (!Number.isInteger(parsed) || parsed <= 0) {
+          sendValidationError(res, 'cliente_id inválido');
+          return;
+        }
+        const cliente = await ClienteService.getById(parsed);
+        if (!cliente) {
+          sendValidationError(res, 'Cliente não encontrado');
+          return;
+        }
+        clienteId = parsed;
+        empresaId = cliente.empresa_id ?? getEmpresaIdOrNull(req) ?? null;
       }
       const existing = await IpPermitidoService.getById(id);
       if (!existing) {
@@ -124,6 +129,8 @@ export class IpPermitidoController {
       const row = await IpPermitidoService.update(id, {
         faixa_ips,
         ativo: typeof ativo === 'boolean' ? ativo : undefined,
+        cliente_id: clienteId,
+        empresa_id: empresaId,
       });
       const dadosNovos = toPlain(row) as Record<string, unknown>;
       try {

@@ -61,7 +61,7 @@ export class IpsPermitidosService {
     return resData;
   }
 
-  static async update(id: number, data: { faixa_ips: string; ativo?: boolean }): Promise<IpPermitido> {
+  static async update(id: number, data: { faixa_ips: string; ativo?: boolean; cliente_id?: number }): Promise<IpPermitido> {
     const response = await defaultApiClient.put<IpPermitido>(`/ips-permitidos/${id}`, data);
     const resData = (response as { data?: IpPermitido }).data;
     if (!resData) throw new Error('Resposta inválida');

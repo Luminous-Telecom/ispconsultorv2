@@ -30,8 +30,8 @@ describe('IpsPermitidosService', () => {
     await expect(IpsPermitidosService.create({"cliente_id":1,"faixa_ips":"10.0.0.0/24"})).rejects.toBeTruthy();
   });
 
-  it('edição envia só o campo informado', async () => {
-    const patch = {"faixa_ips":"10.1.0.0/24"};
+  it('edição envia a faixa e o cliente sem empresa_id', async () => {
+    const patch = {"faixa_ips":"10.1.0.0/24","cliente_id":22};
     getHttp().put.mockResolvedValue(ok({ id: 4, ...patch }));
     await IpsPermitidosService.update(4, patch);
     const body = getHttp().put.mock.calls[0][1];

@@ -237,7 +237,7 @@ model blockdomi_dominios {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model blockdomi_ips_permitidos {
   id              Int              @id @default(autoincrement())
-  cliente_id      Int              @unique(map: "ips_permitidos_blockdomi_cliente_id")
+  cliente_id      Int
   faixa_ips       String           @db.Text
   ativo           Boolean          @default(true)
   created_at      DateTime         @default(now()) @db.DateTime(0)
@@ -247,6 +247,7 @@ model blockdomi_ips_permitidos {
   sistema_tenants sistema_tenants? @relation(fields: [empresa_id], references: [id], map: "ips_permitidos_blockdomi_empresa_id_foreign_idx")
 
   @@index([ativo], map: "ips_permitidos_blockdomi_ativo")
+  @@index([cliente_id], map: "ips_permitidos_blockdomi_cliente_id")
   @@index([empresa_id], map: "ips_permitidos_blockdomi_empresa_id_foreign_idx")
 }
 
@@ -591,7 +592,7 @@ model clientes {
   empresa_id                     Int?
   agent_agents                   agent_agents[]
   assinatura_digital_assinaturas assinatura_digital_assinaturas[]
-  blockdomi_ips_permitidos       blockdomi_ips_permitidos?
+  blockdomi_ips_permitidos       blockdomi_ips_permitidos[]
   sistema_tenants                sistema_tenants?                 @relation(fields: [empresa_id], references: [id], map: "clientes_empresa_id_foreign_idx")
   clientes_arquivos              clientes_arquivos[]
   contratos                      contratos[]

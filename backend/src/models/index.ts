@@ -290,7 +290,7 @@ NumeroSeiAnatelBlockdomi.hasMany(IPv6, { foreignKey: 'numero_sei_anatel_id' });
 IPv6.belongsTo(NumeroSeiAnatelBlockdomi, { foreignKey: 'numero_sei_anatel_id', as: 'numeroSeiRef' });
 
 // IpPermitidoBlockdomi
-Cliente.hasOne(IpPermitidoBlockdomi, { foreignKey: 'cliente_id', as: 'ipPermitido' });
+Cliente.hasMany(IpPermitidoBlockdomi, { foreignKey: 'cliente_id', as: 'ipPermitido' });
 IpPermitidoBlockdomi.belongsTo(Cliente, { foreignKey: 'cliente_id', as: 'cliente' });
 
 // AssinaturaDigital

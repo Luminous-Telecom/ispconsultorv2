@@ -108,17 +108,20 @@ type ClienteComIpsDns = Prisma.clientesUncheckedCreateInput & {
   ips_dns?: string | null;
 };
 
+function juntarFaixas(rows: Array<{ faixa_ips?: string | null }> | null | undefined): string {
+  return (rows ?? [])
+    .map((row) => (row.faixa_ips || '').trim())
+    .filter(Boolean)
+    .join('; ');
+}
+
 async function syncIpsDns(clienteId: number, empresaId: number | null, ipsDns: string | null | undefined): Promise<void> {
   if (ipsDns === undefined) return;
   const faixa = normalizeDnsIps(ipsDns);
-  if (!faixa) {
-    await prisma.blockdomi_ips_permitidos.deleteMany({ where: { cliente_id: clienteId } });
-    return;
-  }
-  await prisma.blockdomi_ips_permitidos.upsert({
-    where: { cliente_id: clienteId },
-    create: { cliente_id: clienteId, faixa_ips: faixa, empresa_id: empresaId },
-    update: { faixa_ips: faixa },
+  await prisma.blockdomi_ips_permitidos.deleteMany({ where: { cliente_id: clienteId } });
+  if (!faixa) return;
+  await prisma.blockdomi_ips_permitidos.create({
+    data: { cliente_id: clienteId, faixa_ips: faixa, empresa_id: empresaId },
   });
 }
 
@@ -237,7 +240,7 @@ export class ClienteService {
     const { blockdomi_ips_permitidos, ...rest } = cliente;
     return {
       ...shapeCliente(rest, false),
-      ips_dns: blockdomi_ips_permitidos?.faixa_ips ?? '',
+      ips_dns: juntarFaixas(blockdomi_ips_permitidos),
       titulos: cliente.financeiro_titulos.map((titulo) => ({
         ...titulo,
         plano: titulo.cadastros_planos,

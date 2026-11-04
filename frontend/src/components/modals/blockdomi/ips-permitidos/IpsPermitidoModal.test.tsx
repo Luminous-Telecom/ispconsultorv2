@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { I18nProvider } from 'contexts/I18nContext';
 import { NotificationProvider } from 'components/notifications/NotificationProvider';
@@ -16,9 +16,14 @@ jest.mock('components/modals/clientes/ClienteListModal', () => ({
   default: () => null,
 }));
 
+const mockUpdateMutate = jest.fn();
+
 jest.mock('hooks/useIpsPermitidos', () => ({
   useCreateIpPermitido: () => ({ mutateAsync: jest.fn(), isPending: false }),
-  useUpdateIpPermitido: () => ({ mutateAsync: jest.fn(), isPending: false }),
+  useUpdateIpPermitido: () => ({
+    mutateAsync: (...args: unknown[]) => mockUpdateMutate(...args),
+    isPending: false,
+  }),
 }));
 
 jest.mock('services/ipsPermitidosService', () => ({
@@ -36,6 +41,11 @@ jest.mock('services/clienteService', () => ({
   ClienteService: { list: jest.fn().mockResolvedValue({ data: [] }) },
 }));
 
+beforeEach(() => {
+  (ClienteService.list as jest.Mock).mockResolvedValue({ data: [] });
+  mockUpdateMutate.mockReset();
+});
+
 function renderModal(props: Partial<React.ComponentProps<typeof IpsPermitidoModal>> = {}) {
   localStorage.setItem('app-language', 'pt-BR');
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -50,15 +60,22 @@ function renderModal(props: Partial<React.ComponentProps<typeof IpsPermitidoModa
   );
 }
 
-it('mostra o cliente na edição com o vínculo travado e o cadastro abrível', async () => {
+it('permite trocar o cliente na edição e envia o novo vínculo', async () => {
+  mockUpdateMutate.mockResolvedValue({ id: 1, cliente_id: 22, faixa_ips: '10.0.0.1' });
   renderModal();
   const cliente = await screen.findByDisplayValue('8');
-  expect((cliente as HTMLInputElement).readOnly).toBe(true);
   expect(await screen.findByDisplayValue('Fenix')).toBeTruthy();
+  expect((screen.getByRole('button', { name: 'Abrir listagem de registros' }) as HTMLButtonElement).disabled).toBe(false);
+  fireEvent.focus(cliente);
+  expect((cliente as HTMLInputElement).readOnly).toBe(false);
+  fireEvent.change(cliente, { target: { value: '22' } });
+  fireEvent.submit(document.getElementById('ips-permitido-form') as HTMLFormElement);
   await waitFor(() => {
-    expect((screen.getByRole('button', { name: 'Editar registro' }) as HTMLButtonElement).disabled).toBe(false);
+    expect(mockUpdateMutate).toHaveBeenCalledWith({
+      id: 1,
+      data: { faixa_ips: '10.0.0.1', ativo: true, cliente_id: 22 },
+    });
   });
-  expect((screen.getByRole('button', { name: 'Abrir listagem de registros' }) as HTMLButtonElement).disabled).toBe(true);
 });
 
 it('preenche a faixa com o IP vindo do log', async () => {

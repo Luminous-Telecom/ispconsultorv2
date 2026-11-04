@@ -63,7 +63,6 @@ IpPermitidoBlockdomi.init(
     underscored: true,
     indexes: [
       {
-        unique: true,
         fields: ['cliente_id']
       }
     ]

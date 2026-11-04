@@ -48,7 +48,7 @@ export const useUpdateIpPermitido = () => {
   const { success, error } = useNotificationContext();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: { faixa_ips: string; ativo?: boolean } }) =>
+    mutationFn: ({ id, data }: { id: number; data: { faixa_ips: string; ativo?: boolean; cliente_id?: number } }) =>
       IpsPermitidosService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ips-permitidos'] });

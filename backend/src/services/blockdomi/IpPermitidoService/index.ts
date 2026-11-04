@@ -138,11 +138,15 @@ export class IpPermitidoService {
     return plainIp(comCliente(created, mapa), false);
   }
 
-  static async update(id: string | number, data: { faixa_ips?: string; ativo?: boolean }): Promise<{ id: number; empresa_id?: number | null } & Record<string, unknown>> {
+  static async update(id: string | number, data: { faixa_ips?: string; ativo?: boolean; cliente_id?: number; empresa_id?: number | null }): Promise<{ id: number; empresa_id?: number | null } & Record<string, unknown>> {
     const numericId = Number(id);
     const row = await prisma.blockdomi_ips_permitidos.findUnique({ where: { id: numericId } });
     if (!row) throw new Error('Registro não encontrado');
-    const dataUpdate: Prisma.blockdomi_ips_permitidosUpdateInput = {};
+    const dataUpdate: Prisma.blockdomi_ips_permitidosUncheckedUpdateInput = {};
+    if (typeof data.cliente_id === 'number') {
+      dataUpdate.cliente_id = data.cliente_id;
+      if (data.empresa_id !== undefined) dataUpdate.empresa_id = data.empresa_id;
+    }
     if (data.faixa_ips !== undefined) {
       const faixaNormalizada = (data.faixa_ips || '')
         .split(';')

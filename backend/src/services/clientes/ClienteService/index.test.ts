@@ -11,7 +11,7 @@ jest.mock('../../../db/prisma', () => ({
     },
     financeiro_titulos: { count: jest.fn() },
     blockdomi_ips_permitidos: {
-      upsert: jest.fn(),
+      create: jest.fn(),
       deleteMany: jest.fn(),
     },
   },
@@ -87,13 +87,16 @@ describe('ClienteService visualização', () => {
   it('devolve os IPs DNS liberados para a API do Blockdomi', async () => {
     (clientes.findUnique as jest.Mock).mockResolvedValue({
       ...clienteBase,
-      blockdomi_ips_permitidos: { faixa_ips: '203.0.113.10' },
+      blockdomi_ips_permitidos: [
+        { faixa_ips: '203.0.113.10' },
+        { faixa_ips: '198.51.100.8' },
+      ],
       financeiro_titulos: [],
     });
 
     const cliente = await ClienteService.getById(4);
 
-    expect(cliente?.ips_dns).toBe('203.0.113.10');
+    expect(cliente?.ips_dns).toBe('203.0.113.10; 198.51.100.8');
     expect(cliente).not.toHaveProperty('blockdomi_ips_permitidos');
   });
 });
@@ -116,7 +119,7 @@ describe('ClienteService cadastro', () => {
     expect(data.central_assinante_senha).not.toBe('senha-plana');
     expect(String(data.central_assinante_senha).startsWith('$2')).toBe(true);
     expect(data.ips_dns).toBeUndefined();
-    expect(ipsPermitidos.upsert).not.toHaveBeenCalled();
+    expect(ipsPermitidos.create).not.toHaveBeenCalled();
   });
 
   it('grava os IPs DNS na lista que libera a API do Blockdomi', async () => {
@@ -132,10 +135,9 @@ describe('ClienteService cadastro', () => {
 
     const data = (clientes.create as jest.Mock).mock.calls[0][0].data;
     expect(data.ips_dns).toBeUndefined();
-    expect(ipsPermitidos.upsert).toHaveBeenCalledWith({
-      where: { cliente_id: 8 },
-      create: { cliente_id: 8, faixa_ips: '192.168.1.1; 10.0.0.0/24', empresa_id: 10 },
-      update: { faixa_ips: '192.168.1.1; 10.0.0.0/24' },
+    expect(ipsPermitidos.deleteMany).toHaveBeenCalledWith({ where: { cliente_id: 8 } });
+    expect(ipsPermitidos.create).toHaveBeenCalledWith({
+      data: { cliente_id: 8, faixa_ips: '192.168.1.1; 10.0.0.0/24', empresa_id: 10 },
     });
   });
 });
@@ -151,7 +153,7 @@ describe('ClienteService edição', () => {
       where: { id: 4 },
       data: { razao_social: 'Cliente B' },
     });
-    expect(ipsPermitidos.upsert).not.toHaveBeenCalled();
+    expect(ipsPermitidos.create).not.toHaveBeenCalled();
     expect(ipsPermitidos.deleteMany).not.toHaveBeenCalled();
   });
 
@@ -162,7 +164,7 @@ describe('ClienteService edição', () => {
     await ClienteService.update(4, { ips_dns: '  ;  ' });
 
     expect(ipsPermitidos.deleteMany).toHaveBeenCalledWith({ where: { cliente_id: 4 } });
-    expect(ipsPermitidos.upsert).not.toHaveBeenCalled();
+    expect(ipsPermitidos.create).not.toHaveBeenCalled();
     expect(clientes.update).not.toHaveBeenCalled();
   });
 
