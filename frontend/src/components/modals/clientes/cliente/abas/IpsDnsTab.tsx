@@ -125,12 +125,10 @@ const IpsDnsTab: React.FC<ClienteTabProps> = ({
   const { t } = useI18n();
   const bulkBtn = useBulkBtn();
   const rows = useMemo(() => parseDnsIpRows(formData.ips_dns || ''), [formData.ips_dns]);
-  const [selected, setSelected] = useState<DnsIpRow[]>([]);
   const [editor, setEditor] = useState<EditorState | null>(null);
 
   const commit = (next: DnsIpRow[]) => {
     handleInputChange('ips_dns', joinDnsIpRows(next));
-    setSelected([]);
     setEditor(null);
   };
 
@@ -144,7 +142,6 @@ const IpsDnsTab: React.FC<ClienteTabProps> = ({
       {errors.ips_dns ? <div className="text-danger small px-3 pt-2">{errors.ips_dns}</div> : null}
       <EmbeddedTablePanel<DnsIpRow>
         tableId="cliente-ips-dns"
-        onSelectionChange={setSelected}
         onRowDoubleClick={openEdit}
         config={{
           columns: [
