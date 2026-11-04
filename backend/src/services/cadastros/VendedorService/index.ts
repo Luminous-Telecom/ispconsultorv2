@@ -16,6 +16,16 @@ export interface ListVendedorFilters {
 }
 
 export const NOME_VENDEDOR_PADRAO = 'Vendedor padrão';
+export const MENSAGEM_UNICO_VENDEDOR = 'Não é possível excluir o único vendedor.';
+
+export class UnicoVendedorError extends Error {
+  readonly code = 'UNICO_VENDEDOR';
+
+  constructor() {
+    super(MENSAGEM_UNICO_VENDEDOR);
+    this.name = 'UnicoVendedorError';
+  }
+}
 
 const SORT_COLUMNS = [
   'id', 'nome', 'comissao_percentual', 'comissao_valor', 'cidade', 'telefone',
@@ -157,7 +167,7 @@ export class VendedorService {
 
   static async garantirPadrao() {
     const existente = await prisma.cadastros_vendedores.findFirst({
-      where: { empresa_id: null, nome: NOME_VENDEDOR_PADRAO },
+      orderBy: { id: 'asc' },
       select: { id: true },
     });
     const padrao = existente ?? await prisma.cadastros_vendedores.create({
@@ -168,6 +178,7 @@ export class VendedorService {
         ativo: true,
         empresa_id: null,
       },
+      select: { id: true },
     });
     await prisma.contratos.updateMany({
       where: { vendedor_id: null },
@@ -180,6 +191,8 @@ export class VendedorService {
     const numericId = Number(id);
     const item = await prisma.cadastros_vendedores.findUnique({ where: { id: numericId } });
     if (!item) throw new Error('Vendedor não encontrado');
+    const total = await prisma.cadastros_vendedores.count();
+    if (total <= 1) throw new UnicoVendedorError();
     await impedirExclusaoComVinculos([
       {
         rotulo: 'contrato(s)',

@@ -17,7 +17,7 @@ jest.mock('../../../db/prisma', () => ({
 }));
 
 import { prisma } from '../../../db/prisma';
-import { VendedorService } from './index';
+import { UnicoVendedorError, VendedorService } from './index';
 import { ExclusaoVinculadaError } from '../../../utils/exclusaoVinculo';
 
 const vendedores = prisma.cadastros_vendedores;
@@ -86,8 +86,17 @@ describe('VendedorService', () => {
     expect(vendedores.update).not.toHaveBeenCalled();
   });
 
+  it('não exclui o único vendedor, qualquer que seja o nome', async () => {
+    (vendedores.findUnique as jest.Mock).mockResolvedValue({ ...row, nome: 'João' });
+    (vendedores.count as jest.Mock).mockResolvedValue(1);
+
+    await expect(VendedorService.delete(3)).rejects.toBeInstanceOf(UnicoVendedorError);
+    expect(vendedores.delete).not.toHaveBeenCalled();
+  });
+
   it('não exclui vendedor vinculado a contrato', async () => {
     (vendedores.findUnique as jest.Mock).mockResolvedValue(row);
+    (vendedores.count as jest.Mock).mockResolvedValue(2);
     (contratos.count as jest.Mock).mockResolvedValue(1);
 
     await expect(VendedorService.delete(3)).rejects.toBeInstanceOf(ExclusaoVinculadaError);
@@ -96,6 +105,7 @@ describe('VendedorService', () => {
 
   it('exclui vendedor sem vínculo', async () => {
     (vendedores.findUnique as jest.Mock).mockResolvedValue(row);
+    (vendedores.count as jest.Mock).mockResolvedValue(2);
     (contratos.count as jest.Mock).mockResolvedValue(0);
     (vendedores.delete as jest.Mock).mockResolvedValue(row);
 
@@ -118,6 +128,7 @@ describe('VendedorService', () => {
         ativo: true,
         empresa_id: null,
       },
+      select: { id: true },
     });
     expect(contratos.updateMany).toHaveBeenCalledWith({
       where: { vendedor_id: null },
@@ -134,6 +145,22 @@ describe('VendedorService', () => {
     expect(contratos.updateMany).toHaveBeenCalledWith({
       where: { vendedor_id: null },
       data: { vendedor_id: 1 },
+    });
+  });
+
+  it('não cria outro vendedor quando o existente foi renomeado', async () => {
+    (vendedores.findFirst as jest.Mock).mockResolvedValue({ id: 4 });
+
+    await VendedorService.garantirPadrao();
+
+    expect(vendedores.findFirst).toHaveBeenCalledWith({
+      orderBy: { id: 'asc' },
+      select: { id: true },
+    });
+    expect(vendedores.create).not.toHaveBeenCalled();
+    expect(contratos.updateMany).toHaveBeenCalledWith({
+      where: { vendedor_id: null },
+      data: { vendedor_id: 4 },
     });
   });
 });

@@ -1,6 +1,6 @@
 import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
-import { VendedorService } from '../../../services/cadastros/VendedorService';
+import { UnicoVendedorError, VendedorService } from '../../../services/cadastros/VendedorService';
 import { vendedorCreateSchema, vendedorUpdateSchema } from '../../../validators/vendedor.validator';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
@@ -147,7 +147,15 @@ export class VendedorController {
       }
 
       const dadosAnteriores = toPlain(existing) as Record<string, unknown>;
-      await VendedorService.delete(existing.id);
+      try {
+        await VendedorService.delete(existing.id);
+      } catch (error) {
+        if (error instanceof UnicoVendedorError) {
+          sendForbidden(res, error.message);
+          return;
+        }
+        throw error;
+      }
       try {
         await registrarExclusao(
           req,

@@ -285,7 +285,9 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
 
   useEffect(() => {
     if (!show || isEditMode || formData.vendedor_id) return;
-    const padrao = formResources.vendedores.find((item) => item.nome === NOME_VENDEDOR_PADRAO);
+    const lista = formResources.vendedores;
+    const padrao = lista.find((item) => item.nome === NOME_VENDEDOR_PADRAO)
+      ?? (lista.length === 1 ? lista[0] : undefined);
     if (!padrao) return;
     handleVendedorSelect(padrao);
   }, [show, isEditMode, formData.vendedor_id, formResources.vendedores, handleVendedorSelect]);
