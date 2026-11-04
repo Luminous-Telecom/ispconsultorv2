@@ -41,16 +41,15 @@ async function listarLogs(
   return { count, rows: rows.map((row) => ({ ...row, id: Number(row.id) })) };
 }
 
-/** Rotas das listas TXT públicas (mesmo critério do blockdomiIpsPermitidosMiddleware). */
+/** Rotas públicas do Blockdomi que aparecem em Logs API. */
 const ROTAS_API_TXT: readonly string[] = [
   '/domain/version',
-  '/domain/version/',
   '/domain/all',
-  '/domain/all/',
+  '/domains/all/adlist',
+  '/commands/mikrotik/v6',
   '/v4/all',
-  '/v4/all/',
   '/v6/all',
-  '/v6/all/',
+  '/api/blockdomi-publico',
 ];
 
 export class SistemaLogOperacionalQueryService {
@@ -115,6 +114,8 @@ export class SistemaLogOperacionalQueryService {
       metodo: p.metodo ?? null,
       status_http: p.status_http ?? null,
       sucesso: p.sucesso ?? null,
+      em_andamento: p.em_andamento === true,
+      duracao_ms: typeof p.duracao_ms === 'number' ? p.duracao_ms : null,
       mensagem_erro: p.mensagem_erro ?? null,
       user_agent: p.user_agent ?? row.user_agent ?? null,
       empresa_id: row.empresa_id ?? null,

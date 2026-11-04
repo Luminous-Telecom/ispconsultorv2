@@ -215,8 +215,12 @@ export function useLogsModalColumns({
         sortable: true,
         width: '90px',
         render: (i) => (
-          <Badge variant={i.sucesso ? 'success' : 'danger'}>
-            {i.sucesso ? t('blockdomi.logsSucessoOk') : t('blockdomi.logsSucessoErro')}
+          <Badge variant={i.em_andamento ? 'warning' : i.sucesso ? 'success' : 'danger'}>
+            {i.em_andamento
+              ? t('blockdomi.logsEmAndamento')
+              : i.sucesso
+                ? t('blockdomi.logsSucessoOk')
+                : t('blockdomi.logsSucessoErro')}
           </Badge>
         ),
       },

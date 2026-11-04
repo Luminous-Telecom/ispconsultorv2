@@ -584,6 +584,7 @@ export interface TranslationKeys {
   'blockdomi.logsSucesso': string;
   'blockdomi.logsSucessoOk': string;
   'blockdomi.logsSucessoErro': string;
+  'blockdomi.logsEmAndamento': string;
   'blockdomi.logsMensagemErro': string;
   'blockdomi.logsSearchPlaceholder': string;
   'blockdomi.logsEmpty': string;

@@ -1,7 +1,7 @@
 /**
- * Middleware que restringe acesso às rotas TXT do Blockdomi (dominios, versao, ipv4, ipv6)
- * somente para IPs cadastrados em ips_permitidos_blockdomi.
- * Registra log de acesso (IP, rota, status) em sistema_logs_operacionais para requisições a essas rotas.
+ * Restringe as listas TXT do Blockdomi aos IPs cadastrados.
+ * Grava o log da API assim que a solicitação chega e atualiza quando a resposta termina,
+ * inclusive se a consulta está lenta ou o cliente desiste antes do fim.
  */
 import { Request, Response, NextFunction } from 'express';
 import { IpPermitidoService } from '../../services/blockdomi/IpPermitidoService';
@@ -20,30 +20,61 @@ const BLOCKDOMI_TXT_PATHS = [
   /^\/v6\/all\/?$/i,
 ];
 
+const BLOCKDOMI_PUBLICO_PATH = /^\/api\/blockdomi-publico(\/.*)?$/i;
+
 function isBlockdomiTxtRoute(path: string): boolean {
   return BLOCKDOMI_TXT_PATHS.some((re) => re.test(path));
 }
 
-function registerAccessLog(req: Request, res: Response, path: string): void {
-  res.once('finish', () => {
-    const statusCode = res.statusCode;
-    const clientIp = getClientIp(req);
-    const userAgent = (req.headers['user-agent'] as string) ?? null;
-    let mensagemErro: string | null = null;
-    if (statusCode === 403) mensagemErro = 'IP não autorizado';
-    else if (statusCode >= 500) mensagemErro = `Erro interno (${statusCode})`;
-    const payload = {
-      ip: clientIp ?? null,
-      rota: path,
-      metodo: req.method,
-      status_http: statusCode,
-      sucesso: statusCode < 400,
-      mensagem_erro: mensagemErro,
-      user_agent: userAgent,
-    };
-    BlockdomiLogAcessoService.registrar(payload)
-      .then((row) => emitBlockdomiLog(row))
-      .catch(() => {});
+function mensagemDoStatus(statusCode: number): string | null {
+  if (statusCode === 403) return 'IP não autorizado';
+  if (statusCode === 499) return 'Consulta encerrada antes da resposta';
+  if (statusCode >= 500) return `Erro interno (${statusCode})`;
+  return null;
+}
+
+function observarAcesso(req: Request, res: Response, path: string): void {
+  const inicio = Date.now();
+  let encerrado = false;
+  const registro = BlockdomiLogAcessoService.registrar({
+    ip: getClientIp(req) ?? null,
+    rota: path,
+    metodo: req.method,
+    status_http: null,
+    sucesso: null,
+    em_andamento: true,
+    mensagem_erro: null,
+    user_agent: (req.headers['user-agent'] as string) ?? null,
+  })
+    .then((row) => {
+      emitBlockdomiLog(row);
+      return Number(row.id);
+    })
+    .catch(() => null);
+
+  const encerrar = (statusCode: number) => {
+    if (encerrado) return;
+    encerrado = true;
+    void registro.then((id) => {
+      if (!id) return;
+      BlockdomiLogAcessoService.concluir(id, {
+        status_http: statusCode,
+        sucesso: statusCode < 400,
+        mensagem_erro: mensagemDoStatus(statusCode),
+        duracao_ms: Date.now() - inicio,
+      })
+        .then((row) => {
+          if (row) emitBlockdomiLog(row);
+        })
+        .catch(() => undefined);
+    });
+  };
+
+  res.once('finish', () => encerrar(res.statusCode));
+  res.once('close', () => {
+    setImmediate(() => {
+      if (!res.writableFinished) encerrar(499);
+    });
   });
 }
 
@@ -53,12 +84,18 @@ export const blockdomiIpsPermitidosMiddleware = async (
   next: NextFunction
 ): Promise<void> => {
   const path = req.originalUrl.split('?')[0];
+  const txt = isBlockdomiTxtRoute(path);
+  const publico = BLOCKDOMI_PUBLICO_PATH.test(path);
 
-  if (!isBlockdomiTxtRoute(path)) {
+  if (!txt && !publico) {
     return next();
   }
 
-  registerAccessLog(req, res, path);
+  observarAcesso(req, res, path);
+
+  if (!txt) {
+    return next();
+  }
 
   const clientIp = getClientIp(req);
   const allowed = await IpPermitidoService.isIpAllowed(clientIp);

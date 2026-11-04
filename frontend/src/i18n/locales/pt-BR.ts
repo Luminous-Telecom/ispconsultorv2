@@ -607,6 +607,7 @@ const ptBR: TranslationKeys = {
     'blockdomi.logsSucesso': 'Sucesso',
     'blockdomi.logsSucessoOk': 'Sim',
     'blockdomi.logsSucessoErro': 'Erro',
+    'blockdomi.logsEmAndamento': 'Em andamento',
     'blockdomi.logsMensagemErro': 'Mensagem erro',
     'blockdomi.logsSearchPlaceholder': 'Buscar por IP, rota...',
     'blockdomi.logsEmpty': 'Nenhum log encontrado',

@@ -7,7 +7,9 @@ export interface BlockdomiLogAcessoItem {
   rota: string;
   metodo: string;
   status_http: number | null;
-  sucesso: boolean;
+  sucesso: boolean | null;
+  em_andamento?: boolean;
+  duracao_ms?: number | null;
   mensagem_erro: string | null;
   user_agent: string | null;
   created_at?: string;

@@ -116,6 +116,7 @@ export function useLogsContent(logType: LogsModalType, show: boolean, usuarioId?
   const blockdomiQuery = useBlockdomiLogs(blockdomiFilters, {
     enabled: show && isBlockdomiApi,
     scope: 'erp',
+    refetchInterval: show && isBlockdomiApi ? 3000 : undefined,
   });
 
   const data = isAuditoria ? auditoriaQuery.data : isBlockdomiApi ? blockdomiQuery.data : mensagemQuery.data;

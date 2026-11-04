@@ -27,20 +27,28 @@ interface BlockdomiLogsRealModalProps {
 function formatLogLine(item: BlockdomiLogAcessoItem): string {
   const time = item.created_at_formatada ?? item.created_at ?? '-';
   const ip = item.ip ?? '-';
-  const status = item.status_http ?? '-';
-  const ok = item.sucesso ? 'OK' : 'ERRO';
+  const status = item.em_andamento && item.status_http == null ? '…' : (item.status_http ?? '-');
+  const estado = item.status_http === 200
+    ? 'OK'
+    : item.em_andamento && item.status_http == null
+      ? 'em andamento'
+      : 'ERRO';
+  const duracao = item.duracao_ms != null ? ` | ${item.duracao_ms} ms` : '';
   const msg = item.mensagem_erro ? ` | ${item.mensagem_erro}` : '';
-  return `[${time}] ${ip} | ${item.metodo} ${item.rota} | ${status} ${ok}${msg}`;
+  return `[${time}] ${ip} | ${item.metodo} ${item.rota} | ${status} ${estado}${duracao}${msg}`;
 }
 
 function getBlockdomiLogLineClass(item: BlockdomiLogAcessoItem): string {
-  return item.sucesso ? 'terminal-log-line--success' : 'terminal-log-line--danger';
+  if (item.status_http === 200) return 'terminal-log-line--success';
+  if (item.em_andamento && item.status_http == null) return 'terminal-log-line--info';
+  return 'terminal-log-line--danger';
 }
 
 function matchesSearch(item: BlockdomiLogAcessoItem, q: string, field?: string): boolean {
   if (!q.trim()) return true;
   const lower = q.toLowerCase();
   const getVal = (f: string) => {
+    if (f === 'id') return String(item.id ?? '').toLowerCase();
     if (f === 'ip') return (item.ip ?? '').toLowerCase();
     if (f === 'rota') return (item.rota ?? '').toLowerCase();
     if (f === 'metodo') return (item.metodo ?? '').toLowerCase();
@@ -59,7 +67,7 @@ const BlockdomiLogsRealModal: React.FC<BlockdomiLogsRealModalProps> = ({ show, o
   const initialLoadedRef = useRef(false);
   const [lines, setLines] = useState<BlockdomiLogAcessoItem[]>([]);
   const [search, setSearch] = useState('');
-  const [searchField, setSearchField] = useState('');
+  const [searchField, setSearchField] = useState('ip');
 
   const { data: logsData, isLoading } = useBlockdomiLogs(
     { limit: INITIAL_LIMIT, page: 1, sortColumn: 'id', sortDirection: 'desc' },
@@ -67,7 +75,7 @@ const BlockdomiLogsRealModal: React.FC<BlockdomiLogsRealModalProps> = ({ show, o
   );
 
   const filteredLines = useMemo(
-    () => lines.filter((item) => matchesSearch(item, search, searchField || undefined)),
+    () => lines.filter((item) => matchesSearch(item, search, searchField || 'ip')),
     [lines, search, searchField]
   );
 
@@ -76,6 +84,7 @@ const BlockdomiLogsRealModal: React.FC<BlockdomiLogsRealModalProps> = ({ show, o
       initialLoadedRef.current = false;
       setLines([]);
       setSearch('');
+      setSearchField('ip');
       return;
     }
     if (initialLoadedRef.current || !logsData?.data?.length) return;
@@ -96,7 +105,13 @@ const BlockdomiLogsRealModal: React.FC<BlockdomiLogsRealModalProps> = ({ show, o
       });
       socket.on('connect', () => socket?.emit('subscribe-blockdomi-logs'));
       socket.on('blockdomi:log', (log: BlockdomiLogAcessoItem) => {
-        setLines((prev) => [...prev, log]);
+        setLines((prev) => {
+          const index = prev.findIndex((line) => line.id === log.id);
+          if (index === -1) return [...prev, log];
+          const next = [...prev];
+          next[index] = log;
+          return next;
+        });
       });
     }, 150);
     return () => {
@@ -120,33 +135,33 @@ const BlockdomiLogsRealModal: React.FC<BlockdomiLogsRealModalProps> = ({ show, o
       title={t('blockdomi.logsReal')}
       size="xl"
       modalId="blockdomi-logs-real-modal"
+      className="no-padding list-modal-no-body-scroll"
     >
-      <div className="form-modal-simple d-flex flex-column flex-fill-min-h-0">
-        <div className="row g-2 mb-2">
-          <div className="col-12">
-            <SearchBar
-              id="blockdomi-logs-real-search"
-              variant="table"
-              value={search}
-              onChange={setSearch}
-              onSearch={setSearch}
-              onSearchFieldChange={setSearchField}
-              placeholder={t('layout.searchPlaceholder')}
-              searchField={searchField || 'ip'}
-              searchFields={[
-                { key: 'ip', label: t('blockdomi.logsIp') },
-                { key: 'rota', label: t('blockdomi.logsRota') },
-                { key: 'metodo', label: t('blockdomi.logsMetodo') },
-                { key: 'mensagem_erro', label: t('blockdomi.logsMensagemErro') },
-                { key: 'status_http', label: t('blockdomi.logsStatus') },
-              ]}
-            />
+      <div className="logs-real-layout">
+        <div className="border-bottom table-header-custom">
+          <div className="table-pagination-header">
+            <div className="table-pagination-header__start">
+              <SearchBar
+                id="blockdomi-logs-real-search"
+                variant="table"
+                value={search}
+                onChange={setSearch}
+                onSearch={setSearch}
+                onSearchFieldChange={setSearchField}
+                placeholder={t('layout.searchPlaceholder')}
+                searchField={searchField}
+                searchFields={[
+                  { key: 'id', label: t('table.id') },
+                  { key: 'ip', label: t('blockdomi.logsIp') },
+                  { key: 'rota', label: t('blockdomi.logsRota') },
+                  { key: 'mensagem_erro', label: t('blockdomi.logsMensagemErro') },
+                ]}
+                autoComplete="off"
+              />
+            </div>
           </div>
         </div>
-        <div
-          ref={containerRef}
-          className="terminal-log-panel terminal-log-panel--300 flex-fill-min-h-0"
-        >
+        <div ref={containerRef} className="terminal-log-panel logs-real-layout__panel">
           {isLoading && lines.length === 0 ? (
             <Loading variant="inline" size="sm" />
           ) : null}
@@ -154,7 +169,7 @@ const BlockdomiLogsRealModal: React.FC<BlockdomiLogsRealModalProps> = ({ show, o
             <span className="terminal-log-line--muted">{t('blockdomi.logsEmpty')}</span>
           ) : null}
           {filteredLines.map((item) => (
-            <div key={item.id} className={`lh-15 ${getBlockdomiLogLineClass(item)}`}>
+            <div key={item.id} className={`logs-real-layout__line ${getBlockdomiLogLineClass(item)}`}>
               {formatLogLine(item)}
             </div>
           ))}

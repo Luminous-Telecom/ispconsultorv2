@@ -889,14 +889,19 @@ export class SistemaLogOperacionalService {
     ip: string | null;
     rota: string;
     metodo: string;
-    status_http: number;
-    sucesso?: boolean;
+    status_http: number | null;
+    sucesso?: boolean | null;
     mensagem_erro?: string | null;
     user_agent?: string | null;
     empresa_id?: number | null;
+    em_andamento?: boolean;
   }): Promise<Record<string, unknown>> {
-    const sucesso =
-      payload.sucesso !== undefined ? payload.sucesso : payload.status_http < 400;
+    const emAndamento = payload.em_andamento === true;
+    const sucesso = emAndamento
+      ? null
+      : payload.sucesso !== undefined
+        ? payload.sucesso
+        : (payload.status_http ?? 500) < 400;
     const ua =
       payload.user_agent != null && payload.user_agent !== ''
         ? payload.user_agent.trim().slice(0, 500)
@@ -916,22 +921,72 @@ export class SistemaLogOperacionalService {
         metodo: payload.metodo,
         status_http: payload.status_http,
         sucesso,
+        em_andamento: emAndamento,
+        duracao_ms: null,
         mensagem_erro: payload.mensagem_erro ?? null,
         user_agent: ua,
       },
       ip_address: payload.ip,
       user_agent: ua,
-      mensagem: `${payload.metodo} ${payload.rota} → ${payload.status_http}`,
+      mensagem: emAndamento
+        ? `${payload.metodo} ${payload.rota} → em andamento`
+        : `${payload.metodo} ${payload.rota} → ${payload.status_http}`,
     });
 
+    return SistemaLogOperacionalService.blockdomiAcessoFromRow(row, payload.ip, ua);
+  }
+
+  static async concluirBlockdomiAcesso(
+    id: number,
+    patch: {
+      status_http: number;
+      sucesso: boolean;
+      mensagem_erro: string | null;
+      duracao_ms: number;
+    }
+  ): Promise<Record<string, unknown> | null> {
+    const atual = await prisma.sistema_logs_operacionais.findUnique({ where: { id } });
+    if (!atual) return null;
+    const payloadAtual = normalizeOperacionalPayload(atual.payload) ?? {};
+    const payload = {
+      ...payloadAtual,
+      status_http: patch.status_http,
+      sucesso: patch.sucesso,
+      em_andamento: false,
+      duracao_ms: patch.duracao_ms,
+      mensagem_erro: patch.mensagem_erro,
+    };
+    const metodo = typeof payload.metodo === 'string' ? payload.metodo : '';
+    const rota = typeof payload.rota === 'string' ? payload.rota : '';
+    const row = await prisma.sistema_logs_operacionais.update({
+      where: { id },
+      data: {
+        payload: asPayload(payload),
+        mensagem: `${metodo} ${rota} → ${patch.status_http} (${patch.duracao_ms} ms)`.trim(),
+      },
+    });
+    return SistemaLogOperacionalService.blockdomiAcessoFromRow(
+      { ...row, id: Number(row.id) },
+      typeof payload.ip === 'string' ? payload.ip : null,
+      typeof payload.user_agent === 'string' ? payload.user_agent : null
+    );
+  }
+
+  private static blockdomiAcessoFromRow(
+    row: { id: number; empresa_id: number | null; payload: unknown; created_at: Date },
+    ip: string | null,
+    ua: string | null
+  ): Record<string, unknown> {
     const p = normalizeOperacionalPayload(row.payload) ?? {};
     return {
       id: row.id,
-      ip: p.ip ?? payload.ip,
-      rota: p.rota ?? payload.rota,
-      metodo: p.metodo ?? payload.metodo,
-      status_http: p.status_http ?? payload.status_http,
-      sucesso: p.sucesso ?? sucesso,
+      ip: p.ip ?? ip,
+      rota: p.rota ?? null,
+      metodo: p.metodo ?? null,
+      status_http: p.status_http ?? null,
+      sucesso: p.sucesso ?? null,
+      em_andamento: p.em_andamento === true,
+      duracao_ms: typeof p.duracao_ms === 'number' ? p.duracao_ms : null,
       mensagem_erro: p.mensagem_erro ?? null,
       user_agent: p.user_agent ?? ua,
       empresa_id: row.empresa_id ?? null,

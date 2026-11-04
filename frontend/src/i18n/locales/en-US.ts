@@ -607,6 +607,7 @@ const enUS: TranslationKeys = {
     'blockdomi.logsSucesso': 'Success',
     'blockdomi.logsSucessoOk': 'Yes',
     'blockdomi.logsSucessoErro': 'Error',
+    'blockdomi.logsEmAndamento': 'In progress',
     'blockdomi.logsMensagemErro': 'Error message',
     'blockdomi.logsSearchPlaceholder': 'Search by IP, route...',
     'blockdomi.logsEmpty': 'No logs found',
