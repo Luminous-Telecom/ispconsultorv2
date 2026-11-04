@@ -40,6 +40,7 @@ export interface ClienteFormData {
   recebe_email: boolean;
   recebe_whatsapp: boolean;
   observacoes: string;
+  ips_dns: string;
   central_assinante_senha?: string;
 }
 
@@ -58,6 +59,7 @@ export interface ClienteFormErrors {
   cidade?: string;
   estado?: string;
   observacoes?: string;
+  ips_dns?: string;
   central_assinante_senha?: string;
 }
 

@@ -998,6 +998,8 @@ export interface TranslationKeys {
   'form.discountValidity': string;
   'form.contractModel': string;
   'form.observations': string;
+  'form.ipsDns': string;
+  'form.ipsDnsHelp': string;
   'form.address': string;
   'form.number': string;
   'form.complement': string;
@@ -1340,6 +1342,7 @@ export interface TranslationKeys {
   'tabs.contracts': string;
   'tabs.financial': string;
   'tabs.observations': string;
+  'tabs.ipsDns': string;
   'tabs.files': string;
   'tabs.tunnelAgents': string;
   'tabs.sshDevicesSection': string;
@@ -1401,6 +1404,7 @@ export interface TranslationKeys {
   'placeholder.companyName': string;
   'placeholder.tradeName': string;
   'placeholder.observations': string;
+  'placeholder.ipsDns': string;
   'placeholder.discountPercent': string;
   'placeholder.discountValue': string;
   'placeholder.fileName': string;

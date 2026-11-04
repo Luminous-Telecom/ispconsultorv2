@@ -55,6 +55,7 @@ export interface Cliente {
   recebe_email: boolean;
   recebe_whatsapp: boolean;
   observacoes?: string;
+  ips_dns?: string;
   central_assinante_senha?: string | null;
   isento_mensalidade?: boolean;
   dia_vencimento_id?: number;

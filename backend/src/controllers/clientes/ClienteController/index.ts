@@ -12,6 +12,7 @@ import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { parseListQuery, queryString } from '../../../utils/listQuery';
 import { parseColumnFiltersParam } from '../../../utils/columnFilters';
 import { joiErrorsToFieldMap } from '../../../utils/validationUtils';
+import { ipsDnsField } from '../../../validators/cliente.validator';
 
 export class ClienteController {
   // Schema de validação para criação
@@ -70,7 +71,8 @@ export class ClienteController {
     central_assinante_senha: Joi.string().min(6).max(255).allow(null, '').messages({
       'string.min': 'Senha deve ter pelo menos 6 caracteres',
       'string.max': 'Senha deve ter no máximo 255 caracteres'
-    })
+    }),
+    ips_dns: ipsDnsField,
   });
 
   // Schema de validação para atualização
@@ -105,7 +107,8 @@ export class ClienteController {
     central_assinante_senha: Joi.string().min(6).max(255).allow(null, '').messages({
       'string.min': 'Senha deve ter pelo menos 6 caracteres',
       'string.max': 'Senha deve ter no máximo 255 caracteres'
-    })
+    }),
+    ips_dns: ipsDnsField,
   });
 
   // Listar todos os clientes

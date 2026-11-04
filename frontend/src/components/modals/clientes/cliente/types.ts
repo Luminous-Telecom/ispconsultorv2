@@ -41,6 +41,7 @@ export interface ClienteForm {
   recebe_email: boolean;
   recebe_whatsapp: boolean;
   observacoes: string;
+  ips_dns: string;
 }
 
 export interface ClienteTabProps {

@@ -35,6 +35,7 @@ export function useClienteModalTabs({
         }]
         : []),
       { id: 'observacoes', label: t('tabs.observations') },
+      { id: 'ips-dns', label: t('tabs.ipsDns') },
       {
         id: 'arquivos',
         label: t('tabs.files'),

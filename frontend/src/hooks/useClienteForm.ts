@@ -75,6 +75,7 @@ const initialFormData: ClienteFormData = {
   recebe_email: true,
   recebe_whatsapp: true,
   observacoes: '',
+  ips_dns: '',
   central_assinante_senha: ''
 };
 
@@ -186,6 +187,7 @@ export const useClienteForm = ({
       recebe_email: cliente.recebe_email ?? true,
       recebe_whatsapp: cliente.recebe_whatsapp ?? true,
       observacoes: cliente.observacoes || '',
+      ips_dns: cliente.ips_dns || '',
       central_assinante_senha: '' // Não mostrar senha atual por segurança
     } as ZodClienteFormData;
   }, [cliente, clienteId]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -226,6 +228,7 @@ export const useClienteForm = ({
       success('Cliente atualizado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
       queryClient.invalidateQueries({ queryKey: ['cliente', id] });
+      queryClient.invalidateQueries({ queryKey: ['ips-permitidos'] });
       onSuccess?.();
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CLIENT_UPDATE_ERROR),
@@ -240,6 +243,7 @@ export const useClienteForm = ({
       setCreatedClienteId(clienteCriado.id);
       success('Cliente salvo com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
+      queryClient.invalidateQueries({ queryKey: ['ips-permitidos'] });
       onSuccess?.();
     },
     onError: (err) => showApiError(err, CONTEXT_ERROR_MESSAGES.CLIENT_CREATE_ERROR),
@@ -403,6 +407,7 @@ export const useClienteForm = ({
         recebe_email: data.recebe_email,
         recebe_whatsapp: data.recebe_whatsapp,
       observacoes: data.observacoes || undefined,
+      ips_dns: data.ips_dns?.trim() ?? '',
       central_assinante_senha: data.central_assinante_senha && data.central_assinante_senha.trim() !== '' 
         ? data.central_assinante_senha 
         : undefined

@@ -144,6 +144,7 @@ const ClienteModal = ({
       contato: ['email', 'telefone', 'whatsapp', 'central_assinante_senha', 'recebe_email', 'recebe_whatsapp'],
       endereco: ['cep', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado'],
       observacoes: ['observacoes'],
+      'ips-dns': ['ips_dns'],
     }),
     [clienteTabsBase, formHook.errors]
   );

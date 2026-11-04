@@ -113,4 +113,26 @@ describe('useClienteForm', () => {
     });
     expect(ClienteService.create).toHaveBeenCalledTimes(1);
   });
+
+  it('envia os IPs DNS no cadastro para liberar a API do Blockdomi', async () => {
+    const { result } = renderHook(
+      () => useClienteForm({ clienteId: null, show: true }),
+      { wrapper }
+    );
+
+    await preencher(result);
+    await act(async () => {
+      result.current.handleInputChange('ips_dns', '192.168.1.1; 10.0.0.0/24');
+    });
+
+    await act(async () => {
+      result.current.handleSubmit({ preventDefault() {} } as React.FormEvent);
+    });
+
+    await waitFor(() => {
+      expect(ClienteService.create).toHaveBeenCalledWith(expect.objectContaining({
+        ips_dns: '192.168.1.1; 10.0.0.0/24',
+      }));
+    });
+  });
 });

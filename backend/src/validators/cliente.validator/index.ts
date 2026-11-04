@@ -3,6 +3,16 @@
  */
 import Joi from 'joi';
 import { formatCnpj, isValidCnpj, stripCnpj } from '../../utils/cnpj';
+import { parseDnsIps } from '../../utils/dnsIps';
+
+export const ipsDnsField = Joi.string().allow(null, '').custom((value, helpers) => {
+  if (value == null || String(value).trim() === '') return '';
+  const { ips, invalid } = parseDnsIps(String(value));
+  if (invalid.length > 0) return helpers.error('string.ipsDns');
+  return ips.join('; ');
+}).messages({
+  'string.ipsDns': 'Informe IPv4, IPv6 ou CIDR separados por ;',
+});
 
 const cnpjField = (required: boolean) => {
   let schema = Joi.string().custom((value, helpers) => {
@@ -66,7 +76,8 @@ export const clienteCreateSchema = Joi.object({
   valor_primeiro_titulo: Joi.string().valid('total', 'proporcional').required(),
   recebe_email: Joi.boolean().default(true),
   recebe_sms: Joi.boolean().default(false),
-  recebe_whatsapp: Joi.boolean().default(false)
+  recebe_whatsapp: Joi.boolean().default(false),
+  ips_dns: ipsDnsField,
 });
 
 export const clienteUpdateSchema = Joi.object({
@@ -94,6 +105,7 @@ export const clienteUpdateSchema = Joi.object({
   valor_primeiro_titulo: Joi.string().valid('total', 'proporcional'),
   recebe_email: Joi.boolean(),
   recebe_sms: Joi.boolean(),
-  recebe_whatsapp: Joi.boolean()
+  recebe_whatsapp: Joi.boolean(),
+  ips_dns: ipsDnsField,
 });
 

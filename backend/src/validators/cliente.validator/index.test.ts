@@ -46,6 +46,28 @@ describe('clienteCreateSchema', () => {
   });
 });
 
+describe('ips DNS do cliente', () => {
+  it('aceita IPs e faixas e grava normalizado', () => {
+    const { error, value } = clienteCreateSchema.validate({
+      ...clienteValido,
+      ips_dns: ' 192.168.1.1;\n10.0.0.0/24 ',
+    });
+    expect(error).toBeUndefined();
+    expect(value.ips_dns).toBe('192.168.1.1; 10.0.0.0/24');
+  });
+
+  it('aceita cadastro sem IPs DNS', () => {
+    const { error, value } = clienteCreateSchema.validate({ ...clienteValido, ips_dns: '' });
+    expect(error).toBeUndefined();
+    expect(value.ips_dns).toBe('');
+  });
+
+  it('recusa IP inválido no campo ips_dns', () => {
+    const { error } = clienteUpdateSchema.validate({ ips_dns: 'dns.provedor.net' });
+    expect(error?.details.some((item) => item.path.join('.') === 'ips_dns')).toBe(true);
+  });
+});
+
 describe('clienteUpdateSchema', () => {
   it('aceita edição parcial', () => {
     const { error, value } = clienteUpdateSchema.validate({ razao_social: 'Nome Novo' });

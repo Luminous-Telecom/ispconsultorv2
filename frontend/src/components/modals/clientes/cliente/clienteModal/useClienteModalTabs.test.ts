@@ -33,5 +33,6 @@ describe('abas do cliente', () => {
     );
 
     expect(result.current.some((tab) => tab.id === 'financeiro')).toBe(true);
+    expect(result.current.find((tab) => tab.id === 'ips-dns')?.disabled).toBeFalsy();
   });
 });

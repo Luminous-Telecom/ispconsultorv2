@@ -86,4 +86,21 @@ describe('FormField', () => {
     expect(input.getAttribute('autocomplete')).toBe('new-password');
     expect(input.readOnly).toBe(false);
   });
+
+  it('mostra a mensagem de erro do textarea', () => {
+    renderField(
+      <FormField
+        name="ips_dns"
+        type="textarea"
+        label="IPs DNS"
+        value="nao-e-ip"
+        error="Informe IPv4, IPv6 ou CIDR separados por ;"
+        onChange={jest.fn()}
+      />,
+    );
+
+    const field = screen.getByRole('textbox', { name: 'IPs DNS' }) as HTMLTextAreaElement;
+    expect(field.classList.contains('is-invalid')).toBe(true);
+    expect(screen.getByText('Informe IPv4, IPv6 ou CIDR separados por ;')).toBeTruthy();
+  });
 });

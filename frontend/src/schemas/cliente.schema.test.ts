@@ -26,6 +26,14 @@ describe('clienteSchema', () => {
     expect(clienteSchema.safeParse({ ...clienteValido, central_assinante_senha: '123' }).success).toBe(false);
   });
 
+  it('aceita IPs DNS vazios e recusa hostname', () => {
+    expect(clienteSchema.parse({ ...clienteValido, ips_dns: '192.168.0.1; 2001:db8::1' }).ips_dns).toBe(
+      '192.168.0.1; 2001:db8::1'
+    );
+    expect(clienteSchema.parse(clienteValido).ips_dns).toBe('');
+    expect(clienteSchema.safeParse({ ...clienteValido, ips_dns: 'dns.provedor.net' }).success).toBe(false);
+  });
+
   it('edição parcial não exige o cadastro inteiro', () => {
     const parsed = updateClienteSchema.parse({ cidade: 'Campinas' });
     expect(parsed.cidade).toBe('Campinas');

@@ -246,32 +246,37 @@ const FormField: React.FC<FormFieldProps> = ({
           />
         );
 
-      case 'textarea':
+      case 'textarea': {
+        const textareaError = inlineValidationMessage || inlineError;
         return (
-          <textarea
-            id={fieldId}
-            name={name}
-            value={convertToTextareaValue(value)}
-            onChange={(e) => handleChange(e.target.value, name)}
-            placeholder={placeholder}
-            required={required}
-            disabled={disabled}
-            readOnly={textareaGuard.readOnly}
-            autoComplete={resolvedAutoComplete}
-            autoFocus={autoFocus}
-            onFocus={(event) => textareaGuard.unlock(event.currentTarget)}
-            onMouseDown={(event) => textareaGuard.unlock(event.currentTarget)}
-            onKeyDown={(event) => textareaGuard.unlock(event.currentTarget)}
-            rows={rows}
-            cols={cols}
-            minLength={minLength}
-            maxLength={maxLength}
-            className={`form-control ${size !== 'md' ? `form-control-${size}` : ''} ${className}`}
-            data-testid={dataTestId}
-            {...textareaGuard.domProps}
-            {...getBootstrapTooltipProps(tooltip, tooltipPosition)}
-          />
+          <>
+            <textarea
+              id={fieldId}
+              name={name}
+              value={convertToTextareaValue(value)}
+              onChange={(e) => handleChange(e.target.value, name)}
+              placeholder={placeholder}
+              required={required}
+              disabled={disabled}
+              readOnly={textareaGuard.readOnly}
+              autoComplete={resolvedAutoComplete}
+              autoFocus={autoFocus}
+              onFocus={(event) => textareaGuard.unlock(event.currentTarget)}
+              onMouseDown={(event) => textareaGuard.unlock(event.currentTarget)}
+              onKeyDown={(event) => textareaGuard.unlock(event.currentTarget)}
+              rows={rows}
+              cols={cols}
+              minLength={minLength}
+              maxLength={maxLength}
+              className={`form-control ${size !== 'md' ? `form-control-${size}` : ''} ${textareaError ? 'is-invalid' : ''} ${className}`}
+              data-testid={dataTestId}
+              {...textareaGuard.domProps}
+              {...getBootstrapTooltipProps(tooltip, tooltipPosition)}
+            />
+            {textareaError ? <div className="form-text form-hint text-danger">{textareaError}</div> : null}
+          </>
         );
+      }
 
       case 'file':
         return (

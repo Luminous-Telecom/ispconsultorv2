@@ -5,5 +5,6 @@ export { default as EnderecoTab } from './abas/EnderecoTab';
 export { default as ContratosTab } from './abas/ContratosTab';
 export { default as FinanceiroTab } from './abas/FinanceiroTab';
 export { default as ObservacoesTab } from './abas/ObservacoesTab';
+export { default as IpsDnsTab } from './abas/IpsDnsTab';
 export * from './types';
 

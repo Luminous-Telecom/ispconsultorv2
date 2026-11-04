@@ -10,6 +10,10 @@ jest.mock('../../../db/prisma', () => ({
       delete: jest.fn(),
     },
     financeiro_titulos: { count: jest.fn() },
+    blockdomi_ips_permitidos: {
+      upsert: jest.fn(),
+      deleteMany: jest.fn(),
+    },
   },
 }));
 
@@ -22,6 +26,7 @@ import { ClienteService } from './index';
 
 const clientes = prisma.clientes;
 const titulosCount = prisma.financeiro_titulos.count as jest.Mock;
+const ipsPermitidos = prisma.blockdomi_ips_permitidos;
 
 const clienteBase = {
   id: 4,
@@ -78,6 +83,19 @@ describe('ClienteService visualização', () => {
 
     await expect(ClienteService.getById(99)).resolves.toBeNull();
   });
+
+  it('devolve os IPs DNS liberados para a API do Blockdomi', async () => {
+    (clientes.findUnique as jest.Mock).mockResolvedValue({
+      ...clienteBase,
+      blockdomi_ips_permitidos: { faixa_ips: '203.0.113.10' },
+      financeiro_titulos: [],
+    });
+
+    const cliente = await ClienteService.getById(4);
+
+    expect(cliente?.ips_dns).toBe('203.0.113.10');
+    expect(cliente).not.toHaveProperty('blockdomi_ips_permitidos');
+  });
 });
 
 describe('ClienteService cadastro', () => {
@@ -97,6 +115,28 @@ describe('ClienteService cadastro', () => {
     expect(data.razao_social).toBe('Cliente A');
     expect(data.central_assinante_senha).not.toBe('senha-plana');
     expect(String(data.central_assinante_senha).startsWith('$2')).toBe(true);
+    expect(data.ips_dns).toBeUndefined();
+    expect(ipsPermitidos.upsert).not.toHaveBeenCalled();
+  });
+
+  it('grava os IPs DNS na lista que libera a API do Blockdomi', async () => {
+    (clientes.create as jest.Mock).mockImplementation(async ({ data }) => ({ id: 8, ...data }));
+
+    await ClienteService.create({
+      razao_social: 'Cliente DNS',
+      cnpj: '11444777000161',
+      email: 'dns@ispconsultor.com.br',
+      empresa_id: 10,
+      ips_dns: '192.168.1.1; 10.0.0.0/24',
+    });
+
+    const data = (clientes.create as jest.Mock).mock.calls[0][0].data;
+    expect(data.ips_dns).toBeUndefined();
+    expect(ipsPermitidos.upsert).toHaveBeenCalledWith({
+      where: { cliente_id: 8 },
+      create: { cliente_id: 8, faixa_ips: '192.168.1.1; 10.0.0.0/24', empresa_id: 10 },
+      update: { faixa_ips: '192.168.1.1; 10.0.0.0/24' },
+    });
   });
 });
 
@@ -111,6 +151,19 @@ describe('ClienteService edição', () => {
       where: { id: 4 },
       data: { razao_social: 'Cliente B' },
     });
+    expect(ipsPermitidos.upsert).not.toHaveBeenCalled();
+    expect(ipsPermitidos.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it('remove a liberação quando os IPs DNS são apagados', async () => {
+    (clientes.findUnique as jest.Mock).mockResolvedValue(clienteBase);
+    (clientes.update as jest.Mock).mockResolvedValue(clienteBase);
+
+    await ClienteService.update(4, { ips_dns: '  ;  ' });
+
+    expect(ipsPermitidos.deleteMany).toHaveBeenCalledWith({ where: { cliente_id: 4 } });
+    expect(ipsPermitidos.upsert).not.toHaveBeenCalled();
+    expect((clientes.update as jest.Mock).mock.calls[0][0].data.ips_dns).toBeUndefined();
   });
 
   it('não grava quando o id não existe', async () => {

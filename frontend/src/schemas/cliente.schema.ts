@@ -10,6 +10,7 @@ import {
   emailSchema,
   estadoSchema
 } from './brazilian-documents.schema';
+import { isDnsIpList } from '../utils/dnsIps';
 
 /**
  * Schema completo para criação/atualização de Cliente
@@ -126,6 +127,15 @@ export const clienteSchema = z.object({
     .default('')
     .optional(),
   
+  ips_dns: z
+    .string()
+    .trim()
+    .default('')
+    .refine(
+      (value) => value === '' || isDnsIpList(value),
+      { message: 'Informe IPv4, IPv6 ou CIDR separados por ;' }
+    ),
+
   // Central do Assinante
   central_assinante_senha: z
     .string()

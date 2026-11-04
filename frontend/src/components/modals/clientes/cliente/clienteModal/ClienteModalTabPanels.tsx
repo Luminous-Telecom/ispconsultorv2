@@ -9,6 +9,7 @@ import EnderecoTab from '../abas/EnderecoTab';
 import ContratosTab from '../abas/ContratosTab';
 import FinanceiroTab from '../abas/FinanceiroTab';
 import ObservacoesTab from '../abas/ObservacoesTab';
+import IpsDnsTab from '../abas/IpsDnsTab';
 import ArquivosTab from '../abas/ArquivosTab';
 import ClienteTunelTab from '../abas/ClienteTunelTab';
 import ClienteSshDevicesTab from '../abas/ClienteSshDevicesTab';
@@ -193,6 +194,16 @@ function ClienteModalTabPanels({
 
         {activeTab === 'observacoes' && (
           <ObservacoesTab
+            formData={formData}
+            errors={errors}
+            handleInputChange={handleInputChange}
+            isSubmitting={isSubmitting}
+            formPrefix={formPrefix}
+          />
+        )}
+
+        {activeTab === 'ips-dns' && (
+          <IpsDnsTab
             formData={formData}
             errors={errors}
             handleInputChange={handleInputChange}

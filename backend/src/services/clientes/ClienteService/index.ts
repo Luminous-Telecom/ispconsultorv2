@@ -1,4 +1,5 @@
 import type { Prisma } from '@prisma/client';
+import { normalizeDnsIps } from '../../../utils/dnsIps';
 import bcrypt from 'bcryptjs';
 import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
@@ -102,6 +103,25 @@ function shapeCliente<T extends { contratos?: Array<{ cadastros_planos?: { id: n
   return { ...row, planos: planosDeContratos(row.contratos, limitPlanoFields) };
 }
 
+type ClienteComIpsDns = Prisma.clientesUncheckedCreateInput & {
+  central_assinante_senha?: string | null;
+  ips_dns?: string | null;
+};
+
+async function syncIpsDns(clienteId: number, empresaId: number | null, ipsDns: string | null | undefined): Promise<void> {
+  if (ipsDns === undefined) return;
+  const faixa = normalizeDnsIps(ipsDns);
+  if (!faixa) {
+    await prisma.blockdomi_ips_permitidos.deleteMany({ where: { cliente_id: clienteId } });
+    return;
+  }
+  await prisma.blockdomi_ips_permitidos.upsert({
+    where: { cliente_id: clienteId },
+    create: { cliente_id: clienteId, faixa_ips: faixa, empresa_id: empresaId },
+    update: { faixa_ips: faixa },
+  });
+}
+
 export class ClienteService {
   static async list(filters: ListClientesFilters) {
     const { page = 1, limit = 15, search, searchField, ativo, cidade, estado, created_at_inicio, created_at_fim, sortColumn, sortDirection: direction, columnFilters, empresa_id } = filters;
@@ -195,6 +215,7 @@ export class ClienteService {
     const cliente = await prisma.clientes.findUnique({
       where: { id: Number(id) },
       include: {
+        blockdomi_ips_permitidos: { select: { faixa_ips: true } },
         contratos: {
           include: {
             cadastros_planos: {
@@ -213,8 +234,10 @@ export class ClienteService {
       },
     });
     if (!cliente) return null;
+    const { blockdomi_ips_permitidos, ...rest } = cliente;
     return {
-      ...shapeCliente(cliente, false),
+      ...shapeCliente(rest, false),
+      ips_dns: blockdomi_ips_permitidos?.faixa_ips ?? '',
       titulos: cliente.financeiro_titulos.map((titulo) => ({
         ...titulo,
         plano: titulo.cadastros_planos,
@@ -235,20 +258,24 @@ export class ClienteService {
     return !!cliente;
   }
 
-  static async create(dadosCliente: Prisma.clientesUncheckedCreateInput & { central_assinante_senha?: string | null }) {
-    const dadosParaSalvar = { ...dadosCliente };
+  static async create(dadosCliente: ClienteComIpsDns) {
+    const { ips_dns, ...resto } = dadosCliente;
+    const dadosParaSalvar = { ...resto };
     if (dadosParaSalvar.central_assinante_senha) {
       dadosParaSalvar.central_assinante_senha = await bcrypt.hash(dadosParaSalvar.central_assinante_senha, 10);
     }
-    return prisma.clientes.create({ data: dadosParaSalvar });
+    const cliente = await prisma.clientes.create({ data: dadosParaSalvar });
+    await syncIpsDns(cliente.id, cliente.empresa_id ?? null, ips_dns);
+    return cliente;
   }
 
-  static async update(id: string | number, dadosCliente: Prisma.clientesUncheckedUpdateInput & { central_assinante_senha?: string | null }) {
+  static async update(id: string | number, dadosCliente: Prisma.clientesUncheckedUpdateInput & { central_assinante_senha?: string | null; ips_dns?: string | null }) {
     const numericId = Number(id);
     const cliente = await prisma.clientes.findUnique({ where: { id: numericId } });
     if (!cliente) throw new Error('Cliente não encontrado');
 
-    const dadosParaSalvar = { ...dadosCliente };
+    const { ips_dns, ...resto } = dadosCliente;
+    const dadosParaSalvar = { ...resto };
     if (dadosParaSalvar.central_assinante_senha !== undefined) {
       const senha = dadosParaSalvar.central_assinante_senha;
       if (typeof senha === 'string' && senha.trim() !== '') {
@@ -259,6 +286,7 @@ export class ClienteService {
     }
 
     await prisma.clientes.update({ where: { id: numericId }, data: dadosParaSalvar });
+    await syncIpsDns(numericId, cliente.empresa_id ?? null, ips_dns);
     const atualizado = await ClienteService.getById(numericId);
     if (!atualizado) throw new Error('Cliente não encontrado');
     return atualizado;
