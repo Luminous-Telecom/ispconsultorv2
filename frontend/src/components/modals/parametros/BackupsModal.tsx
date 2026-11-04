@@ -51,6 +51,7 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
   const queryClient = useQueryClient();
   const [actionLoading, setActionLoading] = useState<{ delete?: string; download?: string; restore?: string; upload?: boolean }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const finishedNoticeRef = useRef(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchField, setSearchField] = useState('');
   const [sortColumn, setSortColumn] = useState<string>('data');
@@ -61,17 +62,28 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
     if (!show) setRun(null);
   }, [show]);
 
+  const finishRun = useCallback((message?: string) => {
+    setRun(null);
+    if (finishedNoticeRef.current) return;
+    finishedNoticeRef.current = true;
+    success(message || t('backup.finished'));
+  }, [success, t]);
+
   const applyStreamEvent = useCallback((event: BackupStreamEvent) => {
+    if (event.success) {
+      finishRun(event.message);
+      return;
+    }
     setRun((prev) => {
       const logs = [...(prev?.logs ?? []), ...(event.logs ?? [])].slice(-MAX_BACKUP_LOGS);
       return {
-        active: !event.success && !event.error,
+        active: !event.error,
         progress: typeof event.progress === 'number' ? event.progress : (prev?.progress ?? 0),
         message: event.message ?? prev?.message ?? '',
         logs,
       };
     });
-  }, []);
+  }, [finishRun]);
 
   const { data: backups = [] as Backup[], isLoading, refetch } = useQuery<Backup[]>({
     queryKey: ['backups'],
@@ -83,8 +95,7 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
   const manualMutation = useMutation({
     mutationFn: (tipo: BackupManualTipo) => BackupService.executeManualStream(tipo, applyStreamEvent),
     onSuccess: (data) => {
-      setRun((prev) => (prev ? { ...prev, active: false, progress: 100 } : prev));
-      success(data?.message ?? t('backup.finished'));
+      finishRun(data?.message);
       queryClient.invalidateQueries({ queryKey: ['backups'] });
       refetch();
     },
@@ -133,6 +144,7 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
     setActionLoading(prev => ({ ...prev, upload: true }));
     try {
       const result = await BackupService.uploadBackup(file);
+      setRun(null);
       success(result?.message ?? t('backup.imported'));
       queryClient.invalidateQueries({ queryKey: ['backups'] });
       refetch();
@@ -149,6 +161,7 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
     setActionLoading(prev => ({ ...prev, restore: item.nome }));
     try {
       const result = await BackupService.restoreBackup(item.nome);
+      setRun(null);
       success(result?.message ?? t('backup.restoreRequested'));
       // Limpa todo o cache pois a restauração altera todos os dados do banco
       queryClient.clear();
@@ -237,6 +250,7 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
         label: t(opt.labelKey as keyof typeof t),
         disabled: manualMutation.isPending,
         action: () => {
+          finishedNoticeRef.current = false;
           setRun({ active: true, progress: 0, message: t('backup.running'), logs: [] });
           manualMutation.mutate(opt.tipo);
         }

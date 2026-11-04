@@ -29,9 +29,9 @@ describe('BackupRunPanel', () => {
     expect(screen.getByText('✗ falha ao gravar').className).toContain('terminal-log-line--danger');
   });
 
-  it('marca o painel como concluído quando o backup termina', () => {
+  it('tira a barra quando o backup termina', () => {
     renderPanel(false);
     expect(screen.getByText('Backup concluído').textContent).toBe('Backup concluído');
-    expect(screen.getByRole('progressbar', { name: 'Backup concluído' }).getAttribute('aria-valuenow')).toBe('40');
+    expect(screen.queryByRole('progressbar')).toBeNull();
   });
 });

@@ -1,6 +1,6 @@
 jest.mock('axios', () => require('../test/httpMock').createAxiosMockModule());
 
-import { BackupService, consumeBackupSseBuffer } from './backupService';
+import { BackupService, consumeBackupSseBuffer, isBackupStreamFinished } from './backupService';
 import { entityId, getHttp, ok, okPage, resetHttp, rowsOf } from '../test/httpMock';
 
 describe('BackupService', () => {
@@ -29,6 +29,12 @@ describe('BackupService', () => {
     expect(parsed.events.map((event) => event.progress)).toEqual([1, 40]);
     expect(parsed.events[1]?.logs).toEqual(['clientes']);
     expect(parsed.rest.startsWith('data: {"step":"fina')).toBe(true);
+  });
+
+  it('trata sucesso e erro como fim do progresso', () => {
+    expect(isBackupStreamFinished({ success: true, progress: 100 })).toBe(true);
+    expect(isBackupStreamFinished({ error: 'falhou' })).toBe(true);
+    expect(isBackupStreamFinished({ progress: 40, message: 'Exportando' })).toBe(false);
   });
 
   it('ignora bloco sem data e aceita o evento de falha', () => {

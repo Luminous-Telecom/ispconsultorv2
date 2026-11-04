@@ -30,18 +30,20 @@ const BackupRunPanel: React.FC<BackupRunPanelProps> = ({ active, progress, messa
     <div className="backup-run-panel" role="status">
       <strong className="small">{title}</strong>
       <p className="mb-0 small mt-1">{message}</p>
-      <div
-        className="progress backup-run-bar"
-        role="progressbar"
-        aria-valuenow={progress}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-label={title}
-      >
-        <DynamicProgressBar percent={progress}>
-          <span className="small fw-semibold">{progress}%</span>
-        </DynamicProgressBar>
-      </div>
+      {active && (
+        <div
+          className="progress backup-run-bar"
+          role="progressbar"
+          aria-valuenow={progress}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={title}
+        >
+          <DynamicProgressBar percent={progress}>
+            <span className="small fw-semibold">{progress}%</span>
+          </DynamicProgressBar>
+        </div>
+      )}
       <div ref={panelRef} className="logs-update-panel backup-run-logs" role="log" aria-live="polite">
         {logs.map((line, index) => (
           <div key={`${index}-${line}`} className={logLineClass(line)}>

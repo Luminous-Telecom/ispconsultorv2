@@ -32,6 +32,10 @@ export interface BackupStreamEvent {
   error?: string;
 }
 
+export function isBackupStreamFinished(event: BackupStreamEvent): boolean {
+  return event.success === true || Boolean(event.error);
+}
+
 export function consumeBackupSseBuffer(buffer: string): { events: BackupStreamEvent[]; rest: string } {
   const parts = buffer.replace(/\r\n/g, '\n').split('\n\n');
   const rest = parts.pop() ?? '';
@@ -133,19 +137,28 @@ export class BackupService {
     let buffer = '';
     let finalMessage = '';
     let succeeded = false;
+    let finished = false;
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const parsed = consumeBackupSseBuffer(buffer);
-      buffer = parsed.rest;
-      for (const event of parsed.events) {
-        onEvent(event);
-        if (event.error) throw new Error(event.error);
-        if (event.message) finalMessage = event.message;
-        if (event.success) succeeded = true;
+    try {
+      while (!finished) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const parsed = consumeBackupSseBuffer(buffer);
+        buffer = parsed.rest;
+        for (const event of parsed.events) {
+          onEvent(event);
+          if (event.message) finalMessage = event.message;
+          if (event.error) throw new Error(event.error);
+          if (event.success) succeeded = true;
+          if (isBackupStreamFinished(event)) {
+            finished = true;
+            break;
+          }
+        }
       }
+    } finally {
+      await reader.cancel().catch(() => undefined);
     }
 
     if (!succeeded) throw new Error(finalMessage || 'Backup encerrado sem confirmação');
