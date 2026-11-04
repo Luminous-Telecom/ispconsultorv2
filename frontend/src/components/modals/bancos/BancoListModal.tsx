@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { useBancos, useDeleteBanco } from 'hooks/useBancos';
 import { useEntityListModal } from 'hooks/useEntityListModal';
+import { filtroSomenteAtivos, useMostrarInativos } from 'hooks/useMostrarInativos';
 import { Banco } from 'types';
 import { useI18n } from 'contexts/I18nContext';
 import { formatDateTime } from 'utils/formatters';
@@ -32,6 +33,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     onSelect: onSelectBanco,
     initialSearchField: 'nome',
   });
+  const inativos = useMostrarInativos(list.tableFilters.setPage);
 
   const { data: bancosData, isLoading, refetch } = useBancos({
     search: list.tableFilters.debouncedSearch || undefined,
@@ -41,6 +43,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     limit: list.tableFilters.limit,
     sortColumn: list.tableFilters.sortColumn,
     sortDirection: list.tableFilters.sortDirection,
+    status: filtroSomenteAtivos(inativos.showInactive, 'ativo'),
   });
 
   const deleteBancoMutation = useDeleteBanco();
@@ -201,6 +204,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       onPageChange={list.tableFilters.setPage}
       onLimitChange={list.tableFilters.setLimit}
       onRefresh={refetch}
+      customControls={inativos.control}
       bulkActions={bulkActions}
       onSelectionChange={list.handleSelectionChange}
       onRowDoubleClick={onSelectBanco ? handleRowSelect : undefined}

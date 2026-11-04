@@ -21,7 +21,7 @@ export class SchedulerController {
   // Listar todas as rotinas
   public async index(req: Request, res: Response): Promise<void> {
     try {
-      const { page, limit, search, searchField, sortColumn, sortDirection } = parseSchedulerListQuery(
+      const { page, limit, search, searchField, ativo, sortColumn, sortDirection } = parseSchedulerListQuery(
         req.query
       );
       const empresaId = getEmpresaIdOrNull(req);
@@ -48,6 +48,7 @@ export class SchedulerController {
         searchField,
         sort: sortColumn ?? 'created_at',
         direction: sortDirection ?? 'desc',
+        ativo,
         empresa_id: empresaId ?? undefined,
       });
       res.json({

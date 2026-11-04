@@ -70,10 +70,14 @@ export const buildDisplayTitle = (
 };
 
 export const buildListFilters = (
-  initialFilters: Partial<ContratoFilters> | undefined
+  initialFilters: Partial<ContratoFilters> | undefined,
+  showInactive = false
 ): ContratoFilters => {
-  const statusFilter =
-    initialFilters?.em_atraso === true ? undefined : initialFilters?.status ?? 'ativo';
+  const statusFilter = showInactive
+    ? undefined
+    : initialFilters?.em_atraso === true
+      ? undefined
+      : initialFilters?.status ?? 'ativo';
 
   return {
     ...(initialFilters?.em_atraso === true && { em_atraso: true }),

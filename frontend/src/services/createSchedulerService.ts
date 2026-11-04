@@ -57,6 +57,7 @@ export function createSchedulerService(
       searchField?: string;
       sort?: string;
       direction?: 'asc' | 'desc';
+      ativo?: boolean;
     }): Promise<SchedulerResponse> {
       const response = await apiService.get<SchedulerResponse>(basePath, { params });
       if (response.success && response.data) {

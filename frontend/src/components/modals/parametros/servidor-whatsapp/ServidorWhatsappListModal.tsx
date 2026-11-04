@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useEntityListModal } from 'hooks/useEntityListModal';
+import { filtroSomenteAtivos, useMostrarInativos } from 'hooks/useMostrarInativos';
 import { useI18n } from 'contexts/I18nContext';
 import ListModal from 'components/common/ListModal';
 import { StatusBadge } from 'components/ui';
@@ -31,9 +32,11 @@ const ServidorWhatsappListModal: React.FC<ServidorWhatsappListModalProps> = ({
     onSelect,
     initialSearchField: 'descricao',
   });
+  const inativos = useMostrarInativos(list.tableFilters.setPage);
+  const ativo = filtroSomenteAtivos(inativos.showInactive, true);
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['servidores-whatsapp', list.tableFilters.debouncedSearch, list.tableFilters.searchField, list.tableFilters.page, list.tableFilters.limit, list.tableFilters.sortColumn, list.tableFilters.sortDirection],
+    queryKey: ['servidores-whatsapp', list.tableFilters.debouncedSearch, list.tableFilters.searchField, list.tableFilters.page, list.tableFilters.limit, list.tableFilters.sortColumn, list.tableFilters.sortDirection, ativo],
     queryFn: () => ServidorWhatsAppService.list({
       search: list.tableFilters.debouncedSearch || undefined,
       searchField: list.tableFilters.searchField || undefined,
@@ -41,6 +44,7 @@ const ServidorWhatsappListModal: React.FC<ServidorWhatsappListModalProps> = ({
       limit: list.tableFilters.limit,
       sortColumn: list.tableFilters.sortColumn,
       sortDirection: list.tableFilters.sortDirection,
+      ativo,
     }),
     enabled: show,
   });
@@ -130,6 +134,7 @@ const ServidorWhatsappListModal: React.FC<ServidorWhatsappListModalProps> = ({
         onPageChange={list.tableFilters.setPage}
         onLimitChange={list.tableFilters.setLimit}
         onRefresh={refetch}
+        customControls={inativos.control}
         bulkActions={bulkActions}
         onSelectionChange={list.handleSelectionChange}
         onRowDoubleClick={onSelect ? (item) => { onSelect(item); onClose(); } : undefined}

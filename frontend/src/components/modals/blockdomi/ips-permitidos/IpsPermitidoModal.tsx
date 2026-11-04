@@ -6,7 +6,7 @@ import { ClienteService } from 'services/clienteService';
 import { buildNumberEntitySelectEntities } from 'utils/entitySelectUtils';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
-import { ModalFormActions } from 'components/ui';
+import { AtivoInativoField, ModalFormActions } from 'components/ui';
 import FormField from 'components/ui/FormField';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import { useEntityRecordEdit } from 'hooks/useEntityRecordEdit';
@@ -39,6 +39,7 @@ const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
   const [clienteId, setClienteId] = useState<number | null>(null);
   const [clienteNome, setClienteNome] = useState('');
   const [faixaIps, setFaixaIps] = useState('');
+  const [ativo, setAtivo] = useState(true);
   const [showClienteSelect, setShowClienteSelect] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -68,12 +69,14 @@ const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
       setClienteId(null);
       setClienteNome('');
       setFaixaIps('');
+      setAtivo(true);
       IpsPermitidosService.getById(requestedId)
         .then((data: IpPermitido) => {
           if (loadingIdRef.current !== requestedId) return;
           setClienteId(data.cliente_id);
           setClienteNome(data.cliente_nome || data.cliente?.razao_social || '-');
           setFaixaIps(data.faixa_ips || '');
+          setAtivo(data.ativo !== false);
         })
         .catch(() => {
           if (loadingIdRef.current === requestedId) {
@@ -86,6 +89,7 @@ const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
       setClienteId(null);
       setClienteNome('');
       setFaixaIps(initialFaixaIps?.trim() ?? '');
+      setAtivo(true);
     }
     setErrors({});
   }, [show, isEditing, ipPermitidoId, initialFaixaIps]);
@@ -108,7 +112,7 @@ const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
 
     try {
       if (isEditing && ipPermitidoId) {
-        const updated = await updateMutation.mutateAsync({ id: ipPermitidoId, data: { faixa_ips: ips.join('; ') } });
+        const updated = await updateMutation.mutateAsync({ id: ipPermitidoId, data: { faixa_ips: ips.join('; '), ativo } });
         onSuccess?.(updated);
       } else if (clienteId) {
         const created = await createMutation.mutateAsync({ cliente_id: clienteId, faixa_ips: ips.join('; ') });
@@ -172,6 +176,14 @@ const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
                 rows={4}
                 disabled={isSubmitting}
                 error={errors.faixa_ips}
+              />
+            </div>
+            <div className="col-12">
+              <AtivoInativoField
+                name="ip-permitido-ativo"
+                value={ativo}
+                onChange={setAtivo}
+                disabled={isSubmitting}
               />
             </div>
           </div>

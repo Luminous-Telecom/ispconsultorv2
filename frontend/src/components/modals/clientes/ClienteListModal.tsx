@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { useClientes, useDeleteCliente } from 'hooks/useClientes';
 import { useEntityListModal } from 'hooks/useEntityListModal';
+import { useMostrarInativos } from 'hooks/useMostrarInativos';
 import { formatDateTime } from 'utils/formatters';
 import { useI18n } from 'contexts/I18nContext';
 import ListModal from 'components/common/ListModal';
@@ -36,6 +37,12 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     onSelect: onSelectClient,
     initialSearchField: 'razao_social',
   });
+  const inativos = useMostrarInativos(list.tableFilters.setPage);
+  const ativo = inativos.showInactive
+    ? undefined
+    : initialFilters?.ativo !== undefined
+      ? initialFilters.ativo
+      : true;
 
   const filterTitleSuffix = initialFilters?.ativo === true
     ? ` - ${t('status.active')}`
@@ -54,6 +61,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     sortDirection: list.tableFilters.sortDirection,
     columnFilters: list.tableFilters.columnFilters,
     ...(initialFilters && Object.keys(initialFilters).length > 0 ? initialFilters : {}),
+    ativo,
   });
 
   const deleteClienteMutation = useDeleteCliente();
@@ -260,6 +268,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       onPageChange={list.tableFilters.setPage}
       onLimitChange={list.tableFilters.setLimit}
       onRefresh={refetch}
+      customControls={inativos.control}
       bulkActions={bulkActions}
       onSelectionChange={list.handleSelectionChange}
       onRowDoubleClick={onSelectClient ? handleRowSelect : undefined}

@@ -17,14 +17,18 @@ import { ContratoRow } from './contratoListTypes';
 interface UseContratoListDataParams {
   show: boolean;
   initialFilters?: Partial<ContratoFilters>;
+  showInactive?: boolean;
   list: ReturnType<typeof useEntityListModal<Contrato>>;
 }
 
-export function useContratoListData({ show, initialFilters, list }: UseContratoListDataParams) {
+export function useContratoListData({ show, initialFilters, showInactive = false, list }: UseContratoListDataParams) {
   const { success } = useNotificationContext();
   const { showApiError } = useApiError();
 
-  const listFilters = useMemo(() => buildListFilters(initialFilters), [initialFilters]);
+  const listFilters = useMemo(
+    () => buildListFilters(initialFilters, showInactive),
+    [initialFilters, showInactive]
+  );
 
   const { data: contratosData, isLoading, refetch } = useQuery({
     queryKey: [

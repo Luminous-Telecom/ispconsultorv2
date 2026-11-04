@@ -5,6 +5,7 @@ import { renderStatusBadge } from 'components/ui';
 import { useI18n } from 'contexts/I18nContext';
 import { useDeleteVendedor, useVendedores } from 'hooks/useVendedores';
 import { useEntityListModal } from 'hooks/useEntityListModal';
+import { filtroSomenteAtivos, useMostrarInativos } from 'hooks/useMostrarInativos';
 import { Vendedor } from 'services/vendedorService';
 import { ListModalConfig } from 'types/modal';
 import { formatCurrency, formatDateTime } from 'utils/formatters';
@@ -31,6 +32,7 @@ const VendedorListModal: React.FC<VendedorListModalProps> = ({
     onSelect: onSelectVendedor,
     initialSearchField: 'nome',
   });
+  const inativos = useMostrarInativos(list.tableFilters.setPage);
 
   const { data, isLoading, refetch } = useVendedores({
     search: list.tableFilters.debouncedSearch || undefined,
@@ -39,6 +41,7 @@ const VendedorListModal: React.FC<VendedorListModalProps> = ({
     limit: list.tableFilters.limit,
     sortColumn: list.tableFilters.sortColumn,
     sortDirection: list.tableFilters.sortDirection,
+    ativo: filtroSomenteAtivos(inativos.showInactive, 'true'),
   });
 
   const deleteMutation = useDeleteVendedor();
@@ -117,6 +120,7 @@ const VendedorListModal: React.FC<VendedorListModalProps> = ({
         show={show}
         onClose={onSelectVendedor ? onClose : list.handleModalClose}
         skipWrapper={skipWrapper}
+        customControls={inativos.control}
         config={{
           title: title || t('modal.sellers'),
           columns,

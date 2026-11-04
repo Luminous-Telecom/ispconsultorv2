@@ -54,6 +54,19 @@ describe('IpPermitidoService', () => {
     expect(ips.findMany).toHaveBeenCalledWith(expect.not.objectContaining({ include: expect.anything() }));
   });
 
+  it('lista só os ativos e autoriza só faixa ativa', async () => {
+    (ips.count as jest.Mock).mockResolvedValue(0);
+    (ips.findMany as jest.Mock).mockResolvedValue([]);
+    await IpPermitidoService.list({ page: 1, limit: 15, ativo: true });
+    expect(ips.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ ativo: true }),
+    }));
+
+    (ips.findMany as jest.Mock).mockResolvedValue([{ faixa_ips: '1.1.1.1' }]);
+    await expect(IpPermitidoService.isIpAllowed('1.1.1.1')).resolves.toBe(true);
+    expect(ips.findMany).toHaveBeenCalledWith({ where: { ativo: true }, select: { faixa_ips: true } });
+  });
+
   it('grava a faixa na empresa informada', async () => {
     (ips.create as jest.Mock).mockResolvedValue({
       id: 3,

@@ -3,6 +3,7 @@ import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-quer
 import { useDeleteDominio } from 'hooks/useDominios';
 import { DominioService, type StatusBaixarPdfsBlockdomi } from 'services/dominioService';
 import { useEntityListModal } from 'hooks/useEntityListModal';
+import { filtroSomenteAtivos, useMostrarInativos } from 'hooks/useMostrarInativos';
 import { Dominio } from 'types';
 import { useI18n } from 'contexts/I18nContext';
 import ListModal from 'components/common/ListModal';
@@ -67,6 +68,9 @@ const BlockdomiDominioListModalCore: React.FC<BlockdomiDominioListModalCoreProps
     setSort,
   } = list.tableFilters;
 
+  const inativos = useMostrarInativos(setPage);
+  const ativo = filtroSomenteAtivos(inativos.showInactive, true);
+
   const {
     buildPagination,
     appendSelectInsert,
@@ -98,7 +102,7 @@ const BlockdomiDominioListModalCore: React.FC<BlockdomiDominioListModalCoreProps
   const searchFields = useMemo(() => getBlockdomiDominioSearchFields(t), [language]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { data: listData, isLoading, refetch } = useQuery({
-    queryKey: ['dominios', page, limit, debouncedSearch, searchField, sortColumn, sortDirection],
+    queryKey: ['dominios', page, limit, debouncedSearch, searchField, sortColumn, sortDirection, ativo],
     queryFn: () =>
       DominioService.list({
         search: debouncedSearch || undefined,
@@ -107,6 +111,7 @@ const BlockdomiDominioListModalCore: React.FC<BlockdomiDominioListModalCoreProps
         limit,
         sortColumn,
         sortDirection,
+        ativo,
       }),
     enabled: show,
     placeholderData: keepPreviousData,
@@ -301,9 +306,10 @@ const BlockdomiDominioListModalCore: React.FC<BlockdomiDominioListModalCoreProps
       limit: 99999,
       sortColumn,
       sortDirection,
+      ativo,
     });
     return res?.data ?? [];
-  }, [debouncedSearch, searchField, sortColumn, sortDirection]);
+  }, [debouncedSearch, searchField, sortColumn, sortDirection, ativo]);
 
   const handleRowSelect = useCallback(
     (item: Dominio) => {
@@ -352,6 +358,7 @@ const BlockdomiDominioListModalCore: React.FC<BlockdomiDominioListModalCoreProps
       onPageChange={setPage}
       onLimitChange={handleLimitChange}
       onRefresh={refetch}
+      customControls={inativos.control}
       bulkActions={bulkActions}
       onSelectionChange={handleSelectionChange}
       onRowDoubleClick={onSelect ? handleRowSelect : undefined}

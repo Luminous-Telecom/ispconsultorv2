@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { SchedulerService, type RotinaAgendada } from 'services/schedulerService';
 import { useEntityListModal } from 'hooks/useEntityListModal';
+import { filtroSomenteAtivos, useMostrarInativos } from 'hooks/useMostrarInativos';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
@@ -39,6 +40,8 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
   const [selectedRotinaId, setSelectedRotinaId] = useState<number | null>(null);
 
   const list = useEntityListModal<RotinaAgendada>({ onClose });
+  const inativos = useMostrarInativos(list.tableFilters.setPage);
+  const ativo = filtroSomenteAtivos(inativos.showInactive, true);
 
   const { data: rotinasData, isLoading, refetch } = useQuery({
     queryKey: [
@@ -49,6 +52,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
       list.tableFilters.searchField,
       list.tableFilters.sortColumn,
       list.tableFilters.sortDirection,
+      ativo,
     ],
     queryFn: () =>
       SchedulerService.getRotinas({
@@ -58,6 +62,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
         searchField: list.tableFilters.searchField || undefined,
         sort: list.tableFilters.sortColumn,
         direction: list.tableFilters.sortDirection,
+        ativo,
       }),
     enabled: show,
   });
@@ -298,6 +303,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
       <ListModal<RotinaAgendada>
         show={show}
         onClose={list.handleModalClose}
+        customControls={inativos.control}
         config={{
           title: list.t('scheduler.title'),
           columns,

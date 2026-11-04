@@ -90,6 +90,7 @@ export interface PlanoFilters extends BaseFilters {
 
 export interface BancoFilters extends BaseFilters {
   ativo?: boolean;
+  status?: string;
   tipo?: string;
   tipo_banco?: string;
   sandbox?: boolean;

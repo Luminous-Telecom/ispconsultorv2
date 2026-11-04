@@ -7,6 +7,7 @@ import {
   useTestIntegracaoIxcProvedor,
 } from 'hooks/useIntegracaoIxcProvedor';
 import { useEntityListModal } from 'hooks/useEntityListModal';
+import { filtroSomenteAtivos, useMostrarInativos } from 'hooks/useMostrarInativos';
 import { IntegracaoIxcProvedor, type IxcApiPermissionsCheckResult } from 'services/integracaoIxcProvedorService';
 import { useI18n } from 'contexts/I18nContext';
 import { formatDateTime } from 'utils/formatters';
@@ -44,6 +45,7 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
     onSelect: onSelectIntegracao,
     initialSearchField: 'nome',
   });
+  const inativos = useMostrarInativos(list.tableFilters.setPage);
 
   const { data: integracoesData, isLoading, refetch } = useIntegracaoIxcProvedorList({
     search: list.tableFilters.debouncedSearch || undefined,
@@ -52,6 +54,7 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
     limit: list.tableFilters.limit,
     sortColumn: list.tableFilters.sortColumn,
     sortDirection: list.tableFilters.sortDirection,
+    ativo: filtroSomenteAtivos(inativos.showInactive, 'ativo'),
   });
 
   const deleteMutation = useDeleteIntegracaoIxcProvedor();
@@ -278,6 +281,7 @@ const IntegracaoIxcProvedorListModal: React.FC<IntegracaoIxcProvedorListModalPro
       show={show}
       onClose={onSelectIntegracao ? onClose : list.handleModalClose}
       skipWrapper={skipWrapper}
+      customControls={inativos.control}
       config={{
         title: defaultTitle,
         columns,

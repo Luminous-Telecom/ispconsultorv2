@@ -11,6 +11,7 @@ export interface ListScheduledRoutinesFilters {
   searchField?: string;
   sort?: string;
   direction?: 'asc' | 'desc';
+  ativo?: boolean;
   empresa_id?: number | null;
 }
 
@@ -104,6 +105,7 @@ export function createScheduledRoutineService<T>(
         searchField,
         sort = 'created_at',
         direction = 'desc',
+        ativo,
         empresa_id,
       } = filters;
 
@@ -114,6 +116,7 @@ export function createScheduledRoutineService<T>(
 
       const conditions: PrismaWhere[] = [];
       if (empresa_id !== undefined && empresa_id !== null) conditions.push({ empresa_id });
+      if (ativo !== undefined) conditions.push({ ativo });
       const searchWhere = buildSearchFilter(search, searchFieldsList, searchField);
       if (searchWhere) conditions.push(searchWhere);
       const where: PrismaWhere = conditions.length > 1 ? { AND: conditions } : conditions[0] || {};

@@ -7,6 +7,7 @@ export interface ListIpPermitidoFilters {
   limit?: number;
   search?: string;
   searchField?: string;
+  ativo?: boolean;
   sortColumn?: string;
   sortDirection?: string;
 }
@@ -57,12 +58,13 @@ function plainIp(row: {
 
 export class IpPermitidoService {
   static async list(filters: ListIpPermitidoFilters): Promise<ListIpPermitidoResponse> {
-    const { page = 1, limit = 15, search, searchField, sortColumn = 'id', sortDirection = 'DESC' } = filters;
+    const { page = 1, limit = 15, search, searchField, ativo, sortColumn = 'id', sortDirection = 'DESC' } = filters;
     const dir = sortDirection?.toUpperCase() === 'ASC' ? 'asc' as const : 'desc' as const;
-    const allowedCols = ['id', 'faixa_ips', 'created_at'] as const;
+    const allowedCols = ['id', 'ativo', 'faixa_ips', 'created_at'] as const;
     const col = (allowedCols as readonly string[]).includes(sortColumn) ? sortColumn : 'id';
 
     const where: Prisma.blockdomi_ips_permitidosWhereInput = {};
+    if (ativo !== undefined) where.ativo = ativo;
     if (search?.trim()) {
       const term = search.trim();
       if (searchField === 'id') {
@@ -136,10 +138,11 @@ export class IpPermitidoService {
     return plainIp(comCliente(created, mapa), false);
   }
 
-  static async update(id: string | number, data: { faixa_ips?: string }): Promise<{ id: number; empresa_id?: number | null } & Record<string, unknown>> {
+  static async update(id: string | number, data: { faixa_ips?: string; ativo?: boolean }): Promise<{ id: number; empresa_id?: number | null } & Record<string, unknown>> {
     const numericId = Number(id);
     const row = await prisma.blockdomi_ips_permitidos.findUnique({ where: { id: numericId } });
     if (!row) throw new Error('Registro não encontrado');
+    const dataUpdate: Prisma.blockdomi_ips_permitidosUpdateInput = {};
     if (data.faixa_ips !== undefined) {
       const faixaNormalizada = (data.faixa_ips || '')
         .split(';')
@@ -147,9 +150,13 @@ export class IpPermitidoService {
         .filter(Boolean)
         .join('; ');
       if (!faixaNormalizada) throw new Error('Faixa de IPs é obrigatória');
+      dataUpdate.faixa_ips = faixaNormalizada;
+    }
+    if (typeof data.ativo === 'boolean') dataUpdate.ativo = data.ativo;
+    if (Object.keys(dataUpdate).length > 0) {
       await prisma.blockdomi_ips_permitidos.update({
         where: { id: numericId },
-        data: { faixa_ips: faixaNormalizada },
+        data: dataUpdate,
       });
     }
     const reloaded = await prisma.blockdomi_ips_permitidos.findUnique({
@@ -177,7 +184,10 @@ export class IpPermitidoService {
     }
 
     const ip = clientIp.trim();
-    const rows = await prisma.blockdomi_ips_permitidos.findMany({ select: { faixa_ips: true } });
+    const rows = await prisma.blockdomi_ips_permitidos.findMany({
+      where: { ativo: true },
+      select: { faixa_ips: true },
+    });
     const allRanges = rows
       .map((r) => (r.faixa_ips || '').split(';').map((s: string) => s.trim()).filter(Boolean))
       .flat();

@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { useUsuarios, useDeleteUsuario } from 'hooks/useUsuarios';
 import { useEntityListModal } from 'hooks/useEntityListModal';
+import { filtroSomenteAtivos, useMostrarInativos } from 'hooks/useMostrarInativos';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useApiError } from 'hooks/useApiError';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
@@ -31,6 +32,7 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({ show, onClose, skipWrappe
   const [logsUsuario, setLogsUsuario] = useState<Usuario | null>(null);
 
   const list = useEntityListModal<Usuario>({ onClose });
+  const inativos = useMostrarInativos(list.tableFilters.setPage);
 
   const { data: usuariosData, isLoading, refetch } = useUsuarios({
     page: list.tableFilters.page,
@@ -39,6 +41,7 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({ show, onClose, skipWrappe
     searchField: list.tableFilters.searchField || 'nome',
     sortColumn: list.tableFilters.sortColumn,
     sortDirection: list.tableFilters.sortDirection,
+    ativo: filtroSomenteAtivos(inativos.showInactive, true),
   });
 
   const deleteUsuarioMutation = useDeleteUsuario();
@@ -175,6 +178,7 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({ show, onClose, skipWrappe
         show={show}
         onClose={list.handleModalClose}
         skipWrapper={skipWrapper}
+        customControls={inativos.control}
         config={{
           title: list.t('params.users'),
           columns,

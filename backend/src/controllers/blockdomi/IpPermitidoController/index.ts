@@ -22,13 +22,14 @@ function logControllerError(action: string, error: unknown): void {
 export class IpPermitidoController {
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const { page, limit, search, searchField, sortColumn, sortDirection } = parseListQuery(req.query);
+      const { page, limit, search, searchField, ativo, sortColumn, sortDirection } = parseListQuery(req.query);
 
       const result = await IpPermitidoService.list({
         page,
         limit,
         search,
         searchField,
+        ativo,
         sortColumn,
         sortDirection
       });
@@ -109,7 +110,7 @@ export class IpPermitidoController {
   static async update(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const { faixa_ips } = req.body;
+      const { faixa_ips, ativo } = req.body;
       if (!faixa_ips || typeof faixa_ips !== 'string') {
         sendValidationError(res, 'faixa_ips é obrigatório. IPs separados por ;');
         return;
@@ -120,7 +121,10 @@ export class IpPermitidoController {
         return;
       }
       const dadosAnteriores = toPlain(existing) as Record<string, unknown>;
-      const row = await IpPermitidoService.update(id, { faixa_ips });
+      const row = await IpPermitidoService.update(id, {
+        faixa_ips,
+        ativo: typeof ativo === 'boolean' ? ativo : undefined,
+      });
       const dadosNovos = toPlain(row) as Record<string, unknown>;
       try {
         const empresaIdAudit = getEmpresaIdOrNull(req) ?? row.empresa_id ?? null;

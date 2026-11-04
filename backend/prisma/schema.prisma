@@ -239,12 +239,14 @@ model blockdomi_ips_permitidos {
   id              Int              @id @default(autoincrement())
   cliente_id      Int              @unique(map: "ips_permitidos_blockdomi_cliente_id")
   faixa_ips       String           @db.Text
+  ativo           Boolean          @default(true)
   created_at      DateTime         @default(now()) @db.DateTime(0)
   updated_at      DateTime         @default(now()) @db.DateTime(0)
   empresa_id      Int?
   clientes        clientes         @relation(fields: [cliente_id], references: [id], onDelete: Cascade, map: "blockdomi_ips_permitidos_ibfk_1")
   sistema_tenants sistema_tenants? @relation(fields: [empresa_id], references: [id], map: "ips_permitidos_blockdomi_empresa_id_foreign_idx")
 
+  @@index([ativo], map: "ips_permitidos_blockdomi_ativo")
   @@index([empresa_id], map: "ips_permitidos_blockdomi_empresa_id_foreign_idx")
 }
 

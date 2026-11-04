@@ -66,6 +66,7 @@ export class ServidorEmailService {
     searchField?: string;
     sortColumn?: string;
     sortDirection?: 'asc' | 'desc';
+    ativo?: boolean;
   }): Promise<ApiResponse<ServidorEmail[]> & { pagination?: { current_page: number; per_page: number; total: number; last_page: number } }> {
     const response = await apiService.get<{ data: ServidorEmail[]; pagination?: { current_page: number; per_page: number; total: number; last_page: number } } | ServidorEmail[]>(
       '/servidores-email',

@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Contrato } from 'hooks/useContratos';
 import { useEntityListModal } from 'hooks/useEntityListModal';
+import { useMostrarInativos } from 'hooks/useMostrarInativos';
 import { useI18n } from 'contexts/I18nContext';
 import ListModal from 'components/common/ListModal';
 import { ContratoListModalProps, ContratoRow } from './contratoListTypes';
@@ -31,6 +32,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     onSelect: onSelectContrato,
     initialSearchField: CONTRATO_LIST_DEFAULT_SEARCH_FIELD,
   });
+  const inativos = useMostrarInativos(list.tableFilters.setPage);
 
   const {
     dataWithVirtualFields,
@@ -40,7 +42,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     isLoading,
     refetch,
     handleDelete,
-  } = useContratoListData({ show, initialFilters, list });
+  } = useContratoListData({ show, initialFilters, showInactive: inativos.showInactive, list });
 
   const {
     impressaoHook,
@@ -106,6 +108,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
         show={show}
         onClose={list.handleModalClose}
         skipWrapper={skipWrapper}
+        customControls={inativos.control}
         config={{
           title: displayTitle,
           columns,

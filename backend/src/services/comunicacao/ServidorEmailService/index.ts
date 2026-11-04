@@ -40,6 +40,7 @@ export class ServidorEmailService {
 
   static async listPaginated(empresaId: number | null | undefined, filters: ParsedListQuery) {
     const where = (whereComunicacaoEmpresaEstrito(empresaId) ?? {}) as Prisma.comunicacao_servidores_emailWhereInput;
+    if (filters.ativo !== undefined) where.ativo = filters.ativo;
     const termo = filters.search?.trim();
     if (termo) {
       const campo = filters.searchField;

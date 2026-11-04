@@ -3,6 +3,7 @@ import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-quer
 import { useDeleteIPv4 } from 'hooks/useIPv4';
 import { useDeleteIPv6 } from 'hooks/useIPv6';
 import { useEntityListModal } from 'hooks/useEntityListModal';
+import { filtroSomenteAtivos, useMostrarInativos } from 'hooks/useMostrarInativos';
 import { useI18n } from 'contexts/I18nContext';
 import ListModal from 'components/common/ListModal';
 import ImprimirModal from 'components/common/ImprimirModal';
@@ -62,6 +63,9 @@ const BlockdomiIpListModalCore: React.FC<BlockdomiIpListModalCoreProps> = ({
     setSort,
   } = list.tableFilters;
 
+  const inativos = useMostrarInativos(setPage);
+  const ativo = filtroSomenteAtivos(inativos.showInactive, true);
+
   const {
     appendSelectInsert,
     bulkBtn,
@@ -105,6 +109,7 @@ const BlockdomiIpListModalCore: React.FC<BlockdomiIpListModalCoreProps> = ({
       searchField,
       sortColumn,
       sortDirection,
+      ativo,
     ],
     queryFn: () =>
       config.list({
@@ -114,6 +119,7 @@ const BlockdomiIpListModalCore: React.FC<BlockdomiIpListModalCoreProps> = ({
         limit,
         sortColumn,
         sortDirection,
+        ativo,
       }),
     enabled: show,
     placeholderData: keepPreviousData,
@@ -245,9 +251,10 @@ const BlockdomiIpListModalCore: React.FC<BlockdomiIpListModalCoreProps> = ({
       limit: 99999,
       sortColumn,
       sortDirection,
+      ativo,
     });
     return res?.data ?? [];
-  }, [config, debouncedSearch, searchField, sortColumn, sortDirection]);
+  }, [config, debouncedSearch, searchField, sortColumn, sortDirection, ativo]);
 
   const handleRowSelect = useCallback(
     (item: BlockdomiIpRow) => {
@@ -296,6 +303,7 @@ const BlockdomiIpListModalCore: React.FC<BlockdomiIpListModalCoreProps> = ({
       onPageChange={setPage}
       onLimitChange={handleLimitChange}
       onRefresh={refetch}
+      customControls={inativos.control}
       bulkActions={bulkActions}
       onSelectionChange={handleSelectionChange}
       onRowDoubleClick={onSelect ? handleRowSelect : undefined}

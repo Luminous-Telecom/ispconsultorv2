@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { usePlanos, useDeletePlano } from 'hooks/usePlanos';
 import { useEntityListModal } from 'hooks/useEntityListModal';
+import { useMostrarInativos } from 'hooks/useMostrarInativos';
 import { Plano, PlanoFilters } from 'types';
 import { useI18n } from 'contexts/I18nContext';
 import { formatDateTime } from 'utils/formatters';
@@ -38,6 +39,8 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     onSelect: onSelectPlano,
     initialSearchField: 'nome_plano',
   });
+  const inativos = useMostrarInativos(list.tableFilters.setPage);
+  const status = inativos.showInactive ? undefined : initialFilters?.status ?? 'ativo';
 
   const getStatusBadgeClass = useCallback((status: string) => getPlanoStatusBadgeClass(status), []);
 
@@ -69,6 +72,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     sortColumn: list.tableFilters.sortColumn,
     sortDirection: list.tableFilters.sortDirection,
     ...(initialFilters && Object.keys(initialFilters).length > 0 ? initialFilters : {}),
+    status,
   });
 
   const deletePlanoMutation = useDeletePlano();
@@ -229,6 +233,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
 
   const listModal = (
     <ListModal<Plano>
+      customControls={inativos.control}
       show={show}
       onClose={list.handleModalClose}
       skipWrapper={skipWrapper}

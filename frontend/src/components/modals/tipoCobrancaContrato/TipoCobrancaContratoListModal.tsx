@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { useTipoCobrancaContratos, useDeleteTipoCobrancaContrato } from 'hooks/useTipoCobrancaContratos';
 import { useEntityListModal } from 'hooks/useEntityListModal';
+import { filtroSomenteAtivos, useMostrarInativos } from 'hooks/useMostrarInativos';
 import { TipoCobrancaContrato } from 'services/tipoCobrancaContratoService';
 import { useI18n } from 'contexts/I18nContext';
 import { formatDateTime } from 'utils/formatters';
@@ -33,6 +34,7 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
     onSelect: onSelectTipo,
     initialSearchField: 'nome',
   });
+  const inativos = useMostrarInativos(list.tableFilters.setPage);
 
   const { data: tiposData, isLoading, refetch } = useTipoCobrancaContratos({
     search: list.tableFilters.debouncedSearch || undefined,
@@ -41,6 +43,7 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
     limit: list.tableFilters.limit,
     sortColumn: list.tableFilters.sortColumn,
     sortDirection: list.tableFilters.sortDirection,
+    ativo: filtroSomenteAtivos(inativos.showInactive, 'ativo'),
   });
 
   const deleteMutation = useDeleteTipoCobrancaContrato();
@@ -152,6 +155,7 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
       show={show}
       onClose={onSelectTipo ? onClose : list.handleModalClose}
       skipWrapper={skipWrapper}
+      customControls={inativos.control}
       config={{
         title: defaultTitle,
         columns,

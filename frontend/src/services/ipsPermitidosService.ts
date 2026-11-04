@@ -5,6 +5,7 @@ export interface IpPermitido {
   id: number;
   cliente_id: number;
   faixa_ips: string;
+  ativo?: boolean;
   cliente_nome?: string;
   cliente?: { id: number; razao_social: string; nome_fantasia?: string; cnpj: string };
   created_at?: string;
@@ -15,6 +16,7 @@ export interface IpPermitidoFilters {
   limit?: number;
   search?: string;
   searchField?: string;
+  ativo?: boolean;
   sortColumn?: string;
   sortDirection?: string;
 }
@@ -59,7 +61,7 @@ export class IpsPermitidosService {
     return resData;
   }
 
-  static async update(id: number, data: { faixa_ips: string }): Promise<IpPermitido> {
+  static async update(id: number, data: { faixa_ips: string; ativo?: boolean }): Promise<IpPermitido> {
     const response = await defaultApiClient.put<IpPermitido>(`/ips-permitidos/${id}`, data);
     const resData = (response as { data?: IpPermitido }).data;
     if (!resData) throw new Error('Resposta inválida');

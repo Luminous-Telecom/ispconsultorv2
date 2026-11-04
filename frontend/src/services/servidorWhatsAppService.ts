@@ -115,6 +115,7 @@ export class ServidorWhatsAppService {
     searchField?: string;
     sortColumn?: string;
     sortDirection?: 'asc' | 'desc';
+    ativo?: boolean;
   }): Promise<ApiResponse<ServidorWhatsApp[]> & { pagination?: { current_page: number; per_page: number; total: number; last_page: number } }> {
     const response = await apiService.get<{ data: ServidorWhatsApp[]; pagination?: { current_page: number; per_page: number; total: number; last_page: number } } | ServidorWhatsApp[]>(
       '/servidores-whatsapp',

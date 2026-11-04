@@ -2,7 +2,10 @@ import React, { useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useIpsPermitidos, useDeleteIpPermitido } from 'hooks/useIpsPermitidos';
 import { useEntityListModal } from 'hooks/useEntityListModal';
+import { filtroSomenteAtivos, useMostrarInativos } from 'hooks/useMostrarInativos';
 import { useI18n } from 'contexts/I18nContext';
+import { renderStatusBadge } from 'components/ui';
+import { getAtivoBadgeConfig } from 'utils/tableStatusBadges';
 import { formatDateTime } from 'utils/formatters';
 import ListModal from 'components/common/ListModal';
 import { ListModalConfig } from 'types/modal';
@@ -28,6 +31,8 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
   const defaultTitle = title || t('blockdomi.ipsPermitidos');
 
   const list = useEntityListModal<IpPermitido>({ onClose });
+  const inativos = useMostrarInativos(list.tableFilters.setPage);
+  const ativo = filtroSomenteAtivos(inativos.showInactive, true);
 
   const { data: ipsData, isLoading, refetch } = useIpsPermitidos({
     search: list.tableFilters.debouncedSearch || undefined,
@@ -36,6 +41,7 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
     limit: list.tableFilters.limit,
     sortColumn: list.tableFilters.sortColumn,
     sortDirection: list.tableFilters.sortDirection,
+    ativo,
   });
 
   const deleteMutation = useDeleteIpPermitido();
@@ -61,6 +67,13 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
 
   const columns = useMemo(
     (): ListModalConfig<IpPermitido>['columns'] => [
+      {
+        key: 'ativo',
+        label: t('table.status'),
+        sortable: true,
+        badgeLabels: [t('status.active'), t('status.inactive')],
+        render: (item) => renderStatusBadge(getAtivoBadgeConfig(item.ativo !== false, t)),
+      },
       {
         key: 'id',
         label: t('table.id'),
@@ -160,6 +173,7 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
       onPageChange={list.tableFilters.setPage}
       onLimitChange={list.tableFilters.setLimit}
       onRefresh={refetch}
+      customControls={inativos.control}
       bulkActions={bulkActions}
       onSelectionChange={list.handleSelectionChange}
       onRowDoubleClick={handleRowDoubleClick}
