@@ -12,8 +12,6 @@ router.get('/domain/version', ListasBlockdomiController.versaoAtual);
 router.get('/domain/all', ListasBlockdomiController.dominiosTxt);
 router.get('/domain/all/adlist', ListasBlockdomiController.dominiosAdlist);
 router.get('/domain/all/adlist/:ip', ListasBlockdomiController.dominiosAdlist);
-router.get('/api/domain/all/adlist', ListasBlockdomiController.dominiosAdlist);
-router.get('/api/domain/all/adlist/:ip', ListasBlockdomiController.dominiosAdlist);
 router.get('/domains/all/adlist', ListasBlockdomiController.dominiosAdlist);
 router.get('/domains/all/adlist/:ip', ListasBlockdomiController.dominiosAdlist);
 router.get('/commands/mikrotik/v6', ListasBlockdomiController.dominiosMikrotikV6);

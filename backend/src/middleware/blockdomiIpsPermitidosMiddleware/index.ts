@@ -14,7 +14,6 @@ const BLOCKDOMI_TXT_PATHS = [
   /^\/domain\/version\/?$/i,
   /^\/domain\/all\/?$/i,
   /^\/domain\/all\/adlist(\/.*)?$/i,
-  /^\/api\/domain\/all\/adlist(\/.*)?$/i,
   /^\/domains\/all\/adlist(\/.*)?$/i,
   /^\/commands\/mikrotik\/v6\/?$/i,
   /^\/v4\/all\/?$/i,

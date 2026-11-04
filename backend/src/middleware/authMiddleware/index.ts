@@ -25,7 +25,6 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { path: /^\/domain\/version\/?$/i },
   { path: /^\/api\/domain\/all\/?$/i },
   { path: /^\/domain\/all\/?$/i },
-  { path: /^\/api\/domain\/all\/adlist(\/.*)?$/i },
   { path: /^\/domain\/all\/adlist(\/.*)?$/i },
   { path: /^\/domains\/all\/adlist(\/.*)?$/i },
   { path: /^\/commands\/mikrotik\/v6\/?$/i },
