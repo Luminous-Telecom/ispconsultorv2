@@ -4,7 +4,19 @@ import { io } from 'socket.io-client';
 import { I18nProvider } from 'contexts/I18nContext';
 import { removeAuthToken, setAuthToken } from 'services/core';
 import SystemUpdateOverlay from './SystemUpdateOverlay';
-import { SYSTEM_UPDATE_HANDOFF_EVENT, markSystemUpdateDriver } from 'utils/systemUpdateDriver';
+import {
+  SYSTEM_UPDATE_HANDOFF_EVENT,
+  markSystemUpdateDriver,
+  reloadAfterSystemUpdate,
+} from 'utils/systemUpdateDriver';
+
+jest.mock('utils/systemUpdateDriver', () => {
+  const actual = jest.requireActual('utils/systemUpdateDriver');
+  return {
+    ...actual,
+    reloadAfterSystemUpdate: jest.fn(),
+  };
+});
 
 jest.mock('socket.io-client', () => ({
   io: jest.fn(),
@@ -105,6 +117,26 @@ describe('SystemUpdateOverlay', () => {
     });
 
     expect(screen.queryByRole('progressbar')).toBeNull();
+    view.unmount();
+  });
+
+  it('recarrega a aba que iniciou a atualização quando o processo reinicia', async () => {
+    setAuthToken('jwt-de-teste');
+    markSystemUpdateDriver();
+    (reloadAfterSystemUpdate as jest.Mock).mockClear();
+    const view = renderOverlay();
+
+    await waitFor(() => expect(ioMock).toHaveBeenCalledTimes(1));
+    act(() => {
+      emitStatus({ active: true, progress: 70, kind: 'system', phase: 'running' });
+    });
+    expect(screen.queryByRole('progressbar')).toBeNull();
+
+    act(() => {
+      emitStatus({ active: false, progress: 0, kind: null, phase: 'idle' });
+    });
+
+    expect(reloadAfterSystemUpdate).toHaveBeenCalledTimes(1);
     view.unmount();
   });
 

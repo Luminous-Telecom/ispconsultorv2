@@ -19,3 +19,7 @@ export function handoffSystemUpdateToOverlay(): void {
 export function isSystemUpdateDriver(): boolean {
   return sessionStorage.getItem(SYSTEM_UPDATE_DRIVER_KEY) === '1';
 }
+
+export function reloadAfterSystemUpdate(): void {
+  window.location.reload();
+}

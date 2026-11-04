@@ -10,6 +10,7 @@ import {
   SYSTEM_UPDATE_HANDOFF_EVENT,
   clearSystemUpdateDriver,
   isSystemUpdateDriver,
+  reloadAfterSystemUpdate,
 } from 'utils/systemUpdateDriver';
 
 interface SystemUpdateStatus {
@@ -50,6 +51,19 @@ const SystemUpdateOverlay: React.FC = () => {
       if (cancelled || reloadingRef.current || !status) return;
       lastStatusRef.current = status;
 
+      if (status.phase === 'failed') sawSystemRef.current = false;
+      if (status.active && status.phase === 'running' && status.kind === 'system') {
+        sawSystemRef.current = true;
+      }
+
+      // O processo novo nasce ocioso. Quem viu a atualização em andamento recarrega,
+      // inclusive a aba que a iniciou (o aviso dela fica oculto enquanto o modal conduz).
+      if (sawSystemRef.current && status.phase === 'idle') {
+        reloadingRef.current = true;
+        reloadAfterSystemUpdate();
+        return;
+      }
+
       if (isSystemUpdateDriver()) {
         if (!status.active) clearSystemUpdateDriver();
         setVisible(false);
@@ -57,21 +71,8 @@ const SystemUpdateOverlay: React.FC = () => {
       }
 
       if (status.active && status.phase === 'running') {
-        if (status.kind === 'system') sawSystemRef.current = true;
         setPercent(status.progress);
         setVisible(true);
-        return;
-      }
-
-      if (status.phase === 'failed') {
-        sawSystemRef.current = false;
-        setVisible(false);
-        return;
-      }
-
-      if (sawSystemRef.current && status.phase === 'idle') {
-        reloadingRef.current = true;
-        window.location.reload();
         return;
       }
 
