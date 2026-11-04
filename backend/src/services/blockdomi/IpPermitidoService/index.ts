@@ -25,8 +25,24 @@ export interface ListIpPermitidoResponse {
 
 const CLIENTE_SELECT = { id: true, razao_social: true, nome_fantasia: true, cnpj: true } as const;
 
+type ClienteResumo = { id: number; razao_social: string; nome_fantasia: string | null; cnpj: string };
+
+async function clientesPorId(ids: number[]): Promise<Map<number, ClienteResumo>> {
+  const unicos = [...new Set(ids.filter((id) => Number.isInteger(id)))];
+  if (unicos.length === 0) return new Map();
+  const clientes = await prisma.clientes.findMany({
+    where: { id: { in: unicos } },
+    select: CLIENTE_SELECT,
+  });
+  return new Map(clientes.map((cliente) => [cliente.id, cliente]));
+}
+
+function comCliente<T extends { cliente_id: number }>(row: T, mapa: Map<number, ClienteResumo>) {
+  return { ...row, clientes: mapa.get(row.cliente_id) ?? null };
+}
+
 function plainIp(row: {
-  clientes: { id: number; razao_social: string; nome_fantasia: string | null; cnpj: string } | null;
+  clientes: ClienteResumo | null;
   [key: string]: unknown;
 }, withClienteNome: boolean): { id: number; empresa_id?: number | null } & Record<string, unknown> {
   const { clientes, ...rest } = row;
@@ -76,15 +92,15 @@ export class IpPermitidoService {
       prisma.blockdomi_ips_permitidos.count({ where }),
       prisma.blockdomi_ips_permitidos.findMany({
         where,
-        include: { clientes: { select: CLIENTE_SELECT } },
         orderBy: { [col]: dir },
         skip: (page - 1) * limit,
         take: limit,
       }),
     ]);
+    const mapa = await clientesPorId(rows.map((row) => row.cliente_id));
 
     return {
-      data: rows.map((row) => plainIp(row, true)),
+      data: rows.map((row) => plainIp(comCliente(row, mapa), true)),
       pagination: buildPagination(page, limit, count),
     };
   }
@@ -94,9 +110,10 @@ export class IpPermitidoService {
     if (Number.isNaN(numericId)) return null;
     const row = await prisma.blockdomi_ips_permitidos.findUnique({
       where: { id: numericId },
-      include: { clientes: { select: CLIENTE_SELECT } },
     });
-    return row ? plainIp(row, false) : null;
+    if (!row) return null;
+    const mapa = await clientesPorId([row.cliente_id]);
+    return plainIp(comCliente(row, mapa), false);
   }
 
   static async create(data: { cliente_id: number; faixa_ips: string; empresa_id?: number | null }): Promise<{ id: number; empresa_id?: number | null } & Record<string, unknown>> {
@@ -114,9 +131,9 @@ export class IpPermitidoService {
         faixa_ips: faixaNormalizada,
         empresa_id: data.empresa_id ?? null,
       },
-      include: { clientes: { select: CLIENTE_SELECT } },
     });
-    return plainIp(created, false);
+    const mapa = await clientesPorId([created.cliente_id]);
+    return plainIp(comCliente(created, mapa), false);
   }
 
   static async update(id: string | number, data: { faixa_ips?: string }): Promise<{ id: number; empresa_id?: number | null } & Record<string, unknown>> {
@@ -137,10 +154,10 @@ export class IpPermitidoService {
     }
     const reloaded = await prisma.blockdomi_ips_permitidos.findUnique({
       where: { id: numericId },
-      include: { clientes: { select: CLIENTE_SELECT } },
     });
     if (!reloaded) throw new Error('Registro não encontrado');
-    return plainIp(reloaded, false);
+    const mapa = await clientesPorId([reloaded.cliente_id]);
+    return plainIp(comCliente(reloaded, mapa), false);
   }
 
   static async delete(id: string | number): Promise<void> {

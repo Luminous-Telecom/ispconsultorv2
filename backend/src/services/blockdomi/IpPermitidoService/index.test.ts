@@ -7,6 +7,9 @@ jest.mock('../../../db/prisma', () => ({
       create: jest.fn(),
       update: jest.fn(),
     },
+    clientes: {
+      findMany: jest.fn(),
+    },
   },
 }));
 
@@ -14,9 +17,11 @@ import { prisma } from '../../../db/prisma';
 import { IpPermitidoService } from './index';
 
 const ips = prisma.blockdomi_ips_permitidos;
+const clientes = prisma.clientes;
 
 beforeEach(() => {
   jest.clearAllMocks();
+  (clientes.findMany as jest.Mock).mockResolvedValue([]);
 });
 
 describe('IpPermitidoService', () => {
@@ -28,6 +33,25 @@ describe('IpPermitidoService', () => {
     expect(resultado.pagination.total).toBe(0);
     (ips.findUnique as jest.Mock).mockResolvedValue(null);
     await expect(IpPermitidoService.getById(99)).resolves.toBeNull();
+  });
+
+  it('lista o IP do cliente mesmo com outro registro sem cliente', async () => {
+    (ips.count as jest.Mock).mockResolvedValue(2);
+    (ips.findMany as jest.Mock).mockResolvedValue([
+      { id: 30, cliente_id: 22, faixa_ips: '1.1.1.1', empresa_id: 1 },
+      { id: 23, cliente_id: 26, faixa_ips: '240.157.234.255', empresa_id: 1 },
+    ]);
+    (clientes.findMany as jest.Mock).mockResolvedValue([
+      { id: 22, razao_social: 'E J R E SILVA', nome_fantasia: null, cnpj: '21.138.575/0001-45' },
+    ]);
+
+    const resultado = await IpPermitidoService.list({ page: 1, limit: 15 });
+
+    expect(resultado.data).toEqual([
+      expect.objectContaining({ id: 30, faixa_ips: '1.1.1.1', cliente_nome: 'E J R E SILVA' }),
+      expect.objectContaining({ id: 23, faixa_ips: '240.157.234.255', cliente_nome: '-' }),
+    ]);
+    expect(ips.findMany).toHaveBeenCalledWith(expect.not.objectContaining({ include: expect.anything() }));
   });
 
   it('grava a faixa na empresa informada', async () => {
