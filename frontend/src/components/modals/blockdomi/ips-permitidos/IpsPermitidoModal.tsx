@@ -18,13 +18,18 @@ interface IpsPermitidoModalProps {
   /** Chamado após criar ou editar. No create, recebe o registro criado para o pai poder mudar para modo edição sem fechar o modal. */
   onSuccess?: (createdOrUpdated?: IpPermitido) => void;
   ipPermitidoId?: number | null;
+  /** IP ou faixa já conhecido (ex.: linha do log da API) para preencher o cadastro. */
+  initialFaixaIps?: string;
+  modalId?: string;
 }
 
 const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
   show,
   onClose,
   onSuccess,
-  ipPermitidoId
+  ipPermitidoId,
+  initialFaixaIps,
+  modalId,
 }) => {
   const { t } = useI18n();
   const clienteEdit = useEntityRecordEdit('cliente');
@@ -80,10 +85,10 @@ const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
     } else {
       setClienteId(null);
       setClienteNome('');
-      setFaixaIps('');
+      setFaixaIps(initialFaixaIps?.trim() ?? '');
     }
     setErrors({});
-  }, [show, isEditing, ipPermitidoId]);
+  }, [show, isEditing, ipPermitidoId, initialFaixaIps]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,6 +136,7 @@ const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
         onClose={onClose}
         title={isEditing ? t('blockdomi.editIpsPermitidos') : t('blockdomi.createIpsPermitidos')}
         size="md"
+        modalId={modalId}
         headerActions={headerActions}
       >
         <form id="ips-permitido-form" onSubmit={handleSubmit} className="form-modal-simple">

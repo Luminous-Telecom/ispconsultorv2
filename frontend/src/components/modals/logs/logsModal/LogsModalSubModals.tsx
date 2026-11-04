@@ -5,6 +5,7 @@ import MensagemDetalhesModal from 'components/modals/comunicacao/MensagemDetalhe
 import AuditoriaDetalhesModal from 'components/modals/auditoria/AuditoriaDetalhesModal';
 import BlockdomiLogsRealModal from 'components/modals/blockdomi/BlockdomiLogsRealModal';
 import WhoisModal from 'components/modals/blockdomi/WhoisModal';
+import IpsPermitidoModal from 'components/modals/blockdomi/ips-permitidos/IpsPermitidoModal';
 import type { MensagemItem } from './types';
 
 interface LogsModalSubModalsProps {
@@ -13,6 +14,8 @@ interface LogsModalSubModalsProps {
   setShowBlockdomiLogsReal: (v: boolean) => void;
   whoisIp: string | null;
   setWhoisIp: (ip: string | null) => void;
+  cadastrarIp: string | null;
+  setCadastrarIp: (ip: string | null) => void;
   showDetailsModal: boolean;
   setShowDetailsModal: (v: boolean) => void;
   setSelectedAuditoria: (v: AuditoriaLog | null) => void;
@@ -28,6 +31,8 @@ const LogsModalSubModals: React.FC<LogsModalSubModalsProps> = ({
   setShowBlockdomiLogsReal,
   whoisIp,
   setWhoisIp,
+  cadastrarIp,
+  setCadastrarIp,
   showDetailsModal,
   setShowDetailsModal,
   setSelectedAuditoria,
@@ -74,6 +79,13 @@ const LogsModalSubModals: React.FC<LogsModalSubModalsProps> = ({
     <>
       <BlockdomiLogsRealModal show={showBlockdomiLogsReal} onClose={() => setShowBlockdomiLogsReal(false)} />
       <WhoisModal show={!!whoisIp} onClose={() => setWhoisIp(null)} ip={whoisIp ?? ''} />
+      <IpsPermitidoModal
+        show={!!cadastrarIp}
+        onClose={() => setCadastrarIp(null)}
+        onSuccess={() => setCadastrarIp(null)}
+        initialFaixaIps={cadastrarIp ?? ''}
+        modalId="logs-blockdomi-cadastrar-ip"
+      />
     </>
   );
 

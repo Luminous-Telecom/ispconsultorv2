@@ -613,6 +613,7 @@ const esES: TranslationKeys = {
     'blockdomi.logsSearchPlaceholder': 'Buscar por IP, ruta...',
     'blockdomi.logsEmpty': 'Ningún log encontrado',
     'blockdomi.logsReal': 'Logs en tiempo real',
+    'blockdomi.cadastrarIp': 'Registrar IP',
     'blockdomi.whois': 'Whois',
     'blockdomi.whoisOrganizacao': 'Organización',
     'blockdomi.whoisBloco': 'Bloque de IP',

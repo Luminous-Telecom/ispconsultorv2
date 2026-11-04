@@ -611,6 +611,7 @@ const enUS: TranslationKeys = {
     'blockdomi.logsSearchPlaceholder': 'Search by IP, route...',
     'blockdomi.logsEmpty': 'No logs found',
     'blockdomi.logsReal': 'Real-time logs',
+    'blockdomi.cadastrarIp': 'Register IP',
     'blockdomi.whois': 'Whois',
     'blockdomi.whoisOrganizacao': 'Organization',
     'blockdomi.whoisBloco': 'IP Block',

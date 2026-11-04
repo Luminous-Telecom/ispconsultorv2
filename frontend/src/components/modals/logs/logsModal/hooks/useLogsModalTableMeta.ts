@@ -21,6 +21,7 @@ interface UseLogsModalTableMetaParams {
   isBlockdomiApi: boolean;
   setShowBlockdomiLogsReal: (v: boolean) => void;
   setWhoisIp: (ip: string | null) => void;
+  setCadastrarIp: (ip: string | null) => void;
   selectedItem: { id: number | string } | null;
   handleViewDetails: (item: unknown) => void;
   canal: 'email' | 'whatsapp' | null;
@@ -36,6 +37,7 @@ export function useLogsModalTableMeta({
   isBlockdomiApi,
   setShowBlockdomiLogsReal,
   setWhoisIp,
+  setCadastrarIp,
   selectedItem,
   handleViewDetails,
   canal,
@@ -148,6 +150,17 @@ export function useLogsModalTableMeta({
             if (ip) setWhoisIp(ip);
           },
         },
+        {
+          label: t('blockdomi.cadastrarIp'),
+          variant: 'primary' as const,
+          disabled: (items: unknown[]) =>
+            items.length !== 1 || !(items[0] as BlockdomiLogAcessoItem)?.ip?.trim(),
+          requiresSelection: true,
+          action: (items: unknown[]) => {
+            const ip = (items[0] as BlockdomiLogAcessoItem)?.ip?.trim();
+            if (ip) setCadastrarIp(ip);
+          },
+        },
       ];
     }
     const visualizar = {
@@ -186,7 +199,7 @@ export function useLogsModalTableMeta({
         ],
       },
     ];
-  }, [t, selectedItem, handleViewDetails, isAuditoria, isBlockdomiApi, setShowBlockdomiLogsReal, setWhoisIp, canal, isResending, handleReenviarFalhas]);
+  }, [t, selectedItem, handleViewDetails, isAuditoria, isBlockdomiApi, setShowBlockdomiLogsReal, setWhoisIp, setCadastrarIp, canal, isResending, handleReenviarFalhas]);
 
   const emptyMessage = isEquipamentosOuAgentes
     ? 'Nenhum log encontrado'

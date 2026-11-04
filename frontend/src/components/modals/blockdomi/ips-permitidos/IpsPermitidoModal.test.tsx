@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { I18nProvider } from 'contexts/I18nContext';
 import { NotificationProvider } from 'components/notifications/NotificationProvider';
 import IpsPermitidoModal from './IpsPermitidoModal';
+import { ClienteService } from 'services/clienteService';
 
 jest.mock('components/common/DraggableModal', () => ({
   __esModule: true,
@@ -35,14 +36,14 @@ jest.mock('services/clienteService', () => ({
   ClienteService: { list: jest.fn().mockResolvedValue({ data: [] }) },
 }));
 
-function renderModal() {
+function renderModal(props: Partial<React.ComponentProps<typeof IpsPermitidoModal>> = {}) {
   localStorage.setItem('app-language', 'pt-BR');
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={client}>
       <I18nProvider>
         <NotificationProvider>
-          <IpsPermitidoModal show onClose={jest.fn()} ipPermitidoId={1} />
+          <IpsPermitidoModal show onClose={jest.fn()} ipPermitidoId={1} {...props} />
         </NotificationProvider>
       </I18nProvider>
     </QueryClientProvider>,
@@ -58,4 +59,10 @@ it('mostra o cliente na edição com o vínculo travado e o cadastro abrível', 
     expect((screen.getByRole('button', { name: 'Editar registro' }) as HTMLButtonElement).disabled).toBe(false);
   });
   expect((screen.getByRole('button', { name: 'Abrir listagem de registros' }) as HTMLButtonElement).disabled).toBe(true);
+});
+
+it('preenche a faixa com o IP vindo do log', async () => {
+  (ClienteService.list as jest.Mock).mockResolvedValue({ data: [] });
+  renderModal({ ipPermitidoId: null, initialFaixaIps: '203.0.113.10' });
+  expect(await screen.findByDisplayValue('203.0.113.10')).toBeTruthy();
 });

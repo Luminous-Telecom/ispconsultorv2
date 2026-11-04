@@ -588,6 +588,7 @@ export interface TranslationKeys {
   'blockdomi.logsSearchPlaceholder': string;
   'blockdomi.logsEmpty': string;
   'blockdomi.logsReal': string;
+  'blockdomi.cadastrarIp': string;
   'blockdomi.whois': string;
   'blockdomi.whoisOrganizacao': string;
   'blockdomi.whoisBloco': string;

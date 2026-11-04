@@ -28,6 +28,7 @@ const LogsModal: React.FC<LogsModalProps> = ({
   const ctx = useLogsContent(logType, show, usuarioId);
   const [showBlockdomiLogsReal, setShowBlockdomiLogsReal] = useState(false);
   const [whoisIp, setWhoisIp] = useState<string | null>(null);
+  const [cadastrarIp, setCadastrarIp] = useState<string | null>(null);
 
   const {
     data,
@@ -87,6 +88,7 @@ const LogsModal: React.FC<LogsModalProps> = ({
     isBlockdomiApi,
     setShowBlockdomiLogsReal,
     setWhoisIp,
+    setCadastrarIp,
     selectedItem,
     handleViewDetails,
     canal: logType === 'email' ? 'email' : logType === 'whatsapp' ? 'whatsapp' : null,
@@ -126,6 +128,8 @@ const LogsModal: React.FC<LogsModalProps> = ({
         setShowBlockdomiLogsReal={setShowBlockdomiLogsReal}
         whoisIp={whoisIp}
         setWhoisIp={setWhoisIp}
+        cadastrarIp={cadastrarIp}
+        setCadastrarIp={setCadastrarIp}
         showDetailsModal={showDetailsModal}
         setShowDetailsModal={setShowDetailsModal}
         setSelectedAuditoria={setSelectedAuditoria}

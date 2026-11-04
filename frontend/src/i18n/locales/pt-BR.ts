@@ -611,6 +611,7 @@ const ptBR: TranslationKeys = {
     'blockdomi.logsSearchPlaceholder': 'Buscar por IP, rota...',
     'blockdomi.logsEmpty': 'Nenhum log encontrado',
     'blockdomi.logsReal': 'Logs real',
+    'blockdomi.cadastrarIp': 'Cadastrar IP',
     'blockdomi.whois': 'Whois',
     'blockdomi.whoisOrganizacao': 'Organização',
     'blockdomi.whoisBloco': 'Bloco de IP',
