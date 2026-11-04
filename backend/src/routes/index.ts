@@ -128,7 +128,7 @@ const routes = [
     // API pública Blockdomi (site público) - sem auth, sem IP
     { path: '/api/blockdomi-publico', route: blockdomiPublicoRoutes },
 
-    // Rotas TXT do Blockdomi (raiz, sem /api): /domain/version, /domain/all, /v4/all, /v6/all
+    // Rotas TXT do Blockdomi: /domain/all, adlist v7 e script MikroTik v6
     { path: '', route: blockdomiListasRoutes },
     // Rotas de health check (sem /api para facilitar monitoramento)
     { path: '', route: healthRoutes },

@@ -1,4 +1,5 @@
 import { prisma } from '../../../db/prisma';
+import { formatarAdlist, formatarMikrotikV6 } from '../mikrotikLista';
 
 export interface ListasTxtFilters {
   versao?: string | number;
@@ -31,18 +32,36 @@ export class ListasBlockdomiService {
     return where;
   }
 
-  /**
-   * Lista domínios em texto (um por linha)
-   */
-  static async listarDominiosTxt(filters: ListasTxtFilters = {}): Promise<string> {
+  private static async listarDominios(filters: ListasTxtFilters): Promise<string[]> {
     const where = await this.whereFromFilters(filters);
     const dominios = await prisma.blockdomi_dominios.findMany({
       where,
       select: { dominio: true },
       orderBy: { dominio: 'asc' },
     });
-    const txt = dominios.map((row) => row.dominio).filter(Boolean).join('\n');
+    return dominios.map((row) => row.dominio).filter((dominio): dominio is string => Boolean(dominio));
+  }
+
+  /**
+   * Lista domínios em texto (um por linha)
+   */
+  static async listarDominiosTxt(filters: ListasTxtFilters = {}): Promise<string> {
+    const txt = (await this.listarDominios(filters)).join('\n');
     return txt || 'Nenhum domínio encontrado';
+  }
+
+  /**
+   * DNS Adlist do RouterOS v7: uma linha `IP domínio`.
+   */
+  static async listarDominiosAdlist(filters: ListasTxtFilters, ip: string): Promise<string> {
+    return formatarAdlist(await this.listarDominios(filters), ip);
+  }
+
+  /**
+   * Script de DNS Static do RouterOS v6.
+   */
+  static async listarDominiosMikrotikV6(filters: ListasTxtFilters = {}): Promise<string> {
+    return formatarMikrotikV6(await this.listarDominios(filters));
   }
 
   /**
