@@ -948,6 +948,11 @@ export class SistemaLogOperacionalService {
     const atual = await prisma.sistema_logs_operacionais.findUnique({ where: { id } });
     if (!atual) return null;
     const payloadAtual = normalizeOperacionalPayload(atual.payload) ?? {};
+    const metodo = typeof payloadAtual.metodo === 'string' ? payloadAtual.metodo : '';
+    const rota = typeof payloadAtual.rota === 'string' ? payloadAtual.rota : '';
+    const ip = typeof payloadAtual.ip === 'string' ? payloadAtual.ip : null;
+    const userAgent =
+      typeof payloadAtual.user_agent === 'string' ? payloadAtual.user_agent : null;
     const payload = {
       ...payloadAtual,
       status_http: patch.status_http,
@@ -956,8 +961,6 @@ export class SistemaLogOperacionalService {
       duracao_ms: patch.duracao_ms,
       mensagem_erro: patch.mensagem_erro,
     };
-    const metodo = typeof payload.metodo === 'string' ? payload.metodo : '';
-    const rota = typeof payload.rota === 'string' ? payload.rota : '';
     const row = await prisma.sistema_logs_operacionais.update({
       where: { id },
       data: {
@@ -967,8 +970,8 @@ export class SistemaLogOperacionalService {
     });
     return SistemaLogOperacionalService.blockdomiAcessoFromRow(
       { ...row, id: Number(row.id) },
-      typeof payload.ip === 'string' ? payload.ip : null,
-      typeof payload.user_agent === 'string' ? payload.user_agent : null
+      ip,
+      userAgent
     );
   }
 
