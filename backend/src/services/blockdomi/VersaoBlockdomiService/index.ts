@@ -1,5 +1,6 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../../../db/prisma';
+import { formatDateOnly } from '../../../utils/timezoneUtils';
 
 export type TipoVersao = 'lista' | 'dominio' | 'ipv4' | 'ipv6' | 'dominio_delete' | 'ipv4_delete' | 'ipv6_delete';
 
@@ -9,8 +10,20 @@ export interface VersaoResult {
 }
 
 /**
+ * Prefixo YYYYMMDD do número da versão, no dia local do servidor.
+ * Não usa UTC: depois das 21h em Brasília o dia UTC já é o seguinte.
+ */
+export function prefixoNumeroVersaoBlockdomi(data: Date): string {
+  const anoMesDia = formatDateOnly(data);
+  if (!anoMesDia) {
+    throw new Error('Data inválida para número de versão Blockdomi');
+  }
+  return anoMesDia.replace(/-/g, '');
+}
+
+/**
  * Gera versões na tabela blockdomi_versoes.
- * Cada versão é um registro com id e numero (YYYYMMDD + contador).
+ * Cada versão é um registro com id e numero (YYYYMMDD local + contador).
  * Domínios, listas e operações vinculam via versao_id.
  */
 export class VersaoBlockdomiService {
@@ -24,7 +37,7 @@ export class VersaoBlockdomiService {
     data: Date,
     tx: Prisma.TransactionClient
   ): Promise<number[]> {
-    const prefix = data.toISOString().slice(0, 10).replace(/-/g, '');
+    const prefix = prefixoNumeroVersaoBlockdomi(data);
     const rows = await tx.$queryRawUnsafe<Array<{ numero: string }>>(
       `SELECT numero FROM blockdomi_versoes
        WHERE numero LIKE ?
@@ -47,7 +60,7 @@ export class VersaoBlockdomiService {
 
   static async obterProximaVersao(tipo: TipoVersao, data?: Date, empresaId?: number | null): Promise<VersaoResult> {
     const d = data ?? new Date();
-    const anoMesDia = d.toISOString().slice(0, 10).replace(/-/g, '');
+    const anoMesDia = prefixoNumeroVersaoBlockdomi(d);
     return prisma.$transaction(async (tx) => {
       const contadores = await VersaoBlockdomiService._obterProximosContadores(tipo, 1, d, tx);
       const c = contadores[0] ?? 1;
@@ -68,7 +81,7 @@ export class VersaoBlockdomiService {
     if (quantidade <= 0) return [];
 
     const d = data ?? new Date();
-    const anoMesDia = d.toISOString().slice(0, 10).replace(/-/g, '');
+    const anoMesDia = prefixoNumeroVersaoBlockdomi(d);
     return prisma.$transaction(async (tx) => {
       const contadores = await VersaoBlockdomiService._obterProximosContadores(tipo, quantidade, d, tx);
       const resultado: VersaoResult[] = [];
