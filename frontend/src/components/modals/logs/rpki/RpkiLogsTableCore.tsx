@@ -276,6 +276,7 @@ const RpkiLogsTableCore: React.FC<RpkiLogsTableCoreProps> = ({ kind, show }) => 
   return (
     <>
       <EmbeddedTablePanel<RpkiSyncLogRow>
+        cadastroDates={false}
         config={{
           columns,
           data: rows,

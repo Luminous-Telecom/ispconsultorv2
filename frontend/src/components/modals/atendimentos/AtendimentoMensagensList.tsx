@@ -142,6 +142,7 @@ const AtendimentoMensagensList: React.FC<AtendimentoMensagensListProps> = ({
   return (
     <>
       <EmbeddedTablePanel<AtendimentoMensagem>
+        cadastroDates={false}
         key={`atendimento-mensagens-${atendimentoId}`}
         className="no-padding"
         config={{

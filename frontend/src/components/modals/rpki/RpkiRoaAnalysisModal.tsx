@@ -107,6 +107,7 @@ const RpkiRoaAnalysisModal: React.FC<RpkiRoaAnalysisModalProps> = ({
         </div>
         <div className="list-modal-scroll-wrapper">
           <EmbeddedTablePanel<AnalysisTableRow>
+            cadastroDates={false}
             layoutWrapper={false}
             className="no-padding"
             config={{

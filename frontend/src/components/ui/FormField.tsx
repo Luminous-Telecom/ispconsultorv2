@@ -255,6 +255,7 @@ const FormField: React.FC<FormFieldProps> = ({
               name={name}
               value={convertToTextareaValue(value)}
               onChange={(e) => handleChange(e.target.value, name)}
+              onBlur={onBlur}
               placeholder={placeholder}
               required={required}
               disabled={disabled}

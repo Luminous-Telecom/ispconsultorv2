@@ -2,6 +2,8 @@ import React, { useMemo } from 'react';
 import DraggableModal from './DraggableModal';
 import EmbeddedTablePanel from './EmbeddedTablePanel';
 import { Table } from '../tables';
+import { withCadastroDateColumns } from 'components/tables/cadastroDateColumns';
+import { useI18n } from 'contexts/I18nContext';
 import { ListModalProps } from 'types/modal';
 import { FilterValue } from 'types/common';
 
@@ -72,10 +74,11 @@ function ListModal<T extends { id: number | string }>({
     emptyMessage = 'Nenhum item encontrado',
     multiSelect = false,
   } = config;
+  const { t } = useI18n();
 
   const tableColumns = useMemo(
     () =>
-      columns.map((col) => ({
+      withCadastroDateColumns(columns.map((col) => ({
         key: col.key,
         label: col.label,
         sortable: col.sortable,
@@ -91,8 +94,8 @@ function ListModal<T extends { id: number | string }>({
         filterType: col.filterType,
         filterOptions: col.filterOptions,
         render: col.render,
-      })),
-    [columns]
+      })), t),
+    [columns, t]
   );
 
   const mappedBulkActions = useMemo(

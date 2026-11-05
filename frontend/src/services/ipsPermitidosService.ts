@@ -7,6 +7,9 @@ export interface IpPermitido {
   faixa_ips: string;
   ativo?: boolean;
   cliente_nome?: string;
+  razao_social?: string;
+  nome_fantasia?: string;
+  cnpj?: string;
   cliente?: { id: number; razao_social: string; nome_fantasia?: string; cnpj: string };
   created_at?: string;
 }

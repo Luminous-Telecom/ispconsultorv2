@@ -1,6 +1,6 @@
 import { toPlain } from '../../../utils/toPlain';
 import { Request, Response } from 'express';
-import { IpPermitidoService } from '../../../services/blockdomi/IpPermitidoService';
+import { FAIXA_JA_CADASTRADA, IpPermitidoService } from '../../../services/blockdomi/IpPermitidoService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { ClienteService } from '../../../services/clientes/ClienteService';
@@ -88,6 +88,11 @@ export class IpPermitidoController {
       }
       sendSuccess(res, json, 'IPs permitidos cadastrados', 201);
     } catch (error) {
+      const msg = error instanceof Error ? error.message : '';
+      if (msg === FAIXA_JA_CADASTRADA) {
+        sendValidationError(res, FAIXA_JA_CADASTRADA);
+        return;
+      }
       logControllerError('create', error);
       sendError(res, error, 'Erro ao cadastrar IPs permitidos', 500, true, {
         context: 'IpPermitidoController',
@@ -148,6 +153,10 @@ export class IpPermitidoController {
       }
       if (msg.includes('Faixa de IPs é obrigatória')) {
         sendValidationError(res, 'Informe pelo menos um IP ou faixa.');
+        return;
+      }
+      if (msg === FAIXA_JA_CADASTRADA) {
+        sendValidationError(res, FAIXA_JA_CADASTRADA);
         return;
       }
       logControllerError('update', error);

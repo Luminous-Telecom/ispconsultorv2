@@ -19,6 +19,8 @@ import AddressFields from 'components/forms/AddressFields';
 import ContactFields from 'components/forms/ContactFields';
 import { FormValue } from 'types/common';
 import { normalizeListPagination } from 'utils/pagination';
+import { useI18n } from 'contexts/I18nContext';
+import { withCadastroDateColumns } from 'components/tables/cadastroDateColumns';
 
 interface EmpresasModalProps {
   show: boolean;
@@ -46,6 +48,7 @@ const INITIAL_FORM: CreateEmpresa = {
 };
 
 const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrapper = false }) => {
+  const { t } = useI18n();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<CreateEmpresa>(INITIAL_FORM);
@@ -245,19 +248,19 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
       { key: 'cidade', label: 'Cidade' },
     ],
     emptyMessage: 'Nenhuma empresa cadastrada',
-    columns: [
+    columns: withCadastroDateColumns<Empresa>([
       { key: 'id', label: 'ID', sortable: true, render: (v) => String(v) },
       { key: 'razao_social', label: 'Razão Social', sortable: true, render: (v) => String(v) },
       { key: 'nome_fantasia', label: 'Fantasia', sortable: true, render: (v) => String(v || '-') },
       { key: 'cnpj', label: 'CNPJ', sortable: true, render: (v) => String(v) },
       { key: 'email', label: 'E-mail', sortable: true, render: (v) => String(v) },
       { key: 'cidade', label: 'Cidade', sortable: true, render: (v) => String(v || '-') },
-    ],
+    ], t),
     actions: [
       { key: 'editar', label: 'Editar', variant: 'secondary', onClick: (e: Empresa) => handleOpenEdit(e) },
       { key: 'excluir', label: 'Excluir', variant: 'danger', onClick: (e: Empresa) => handleDelete(e) },
     ],
-  }), [empresas, isLoading, pagination, tableFilters.sortColumn, tableFilters.sortDirection, tableFilters.searchField, handleOpenEdit, handleDelete]);
+  }), [empresas, isLoading, pagination, tableFilters.sortColumn, tableFilters.sortDirection, tableFilters.searchField, handleOpenEdit, handleDelete, t]);
 
   const isPending = createEmpresa.isPending || updateEmpresa.isPending;
 

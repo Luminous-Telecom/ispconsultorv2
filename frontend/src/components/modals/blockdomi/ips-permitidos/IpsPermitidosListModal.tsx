@@ -81,11 +81,25 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
         render: (item) => item.id,
       },
       {
-        key: 'cliente_nome',
-        label: t('blockdomi.cliente'),
+        key: 'cnpj',
+        label: t('form.cnpj'),
+        sortable: true,
+        width: '150px',
+        render: (item) => item.cnpj || item.cliente?.cnpj || '-',
+      },
+      {
+        key: 'razao_social',
+        label: t('form.companyName'),
         sortable: true,
         width: '220px',
-        render: (item) => item.cliente_nome || '-',
+        render: (item) => item.razao_social || item.cliente?.razao_social || '-',
+      },
+      {
+        key: 'nome_fantasia',
+        label: t('form.tradeName'),
+        sortable: true,
+        width: '180px',
+        render: (item) => item.nome_fantasia || item.cliente?.nome_fantasia || '-',
       },
       {
         key: 'faixa_ips',
@@ -108,7 +122,9 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
   const searchFields = useMemo(
     () => [
       { key: 'id', label: t('table.id') },
-      { key: 'cliente_nome', label: t('blockdomi.cliente') },
+      { key: 'cnpj', label: t('form.cnpj') },
+      { key: 'razao_social', label: t('form.companyName') },
+      { key: 'nome_fantasia', label: t('form.tradeName') },
       { key: 'faixa_ips', label: t('blockdomi.faixaIps') },
     ],
     [t]

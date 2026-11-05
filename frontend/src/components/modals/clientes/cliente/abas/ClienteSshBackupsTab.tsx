@@ -203,6 +203,7 @@ const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }
   return (
     <>
           <EmbeddedTablePanel<ClienteBackupRow>
+            cadastroDates={false}
               key="cliente-ssh-backups-tab-table"
               className="no-padding"
               config={{

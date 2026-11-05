@@ -311,6 +311,7 @@ const IxcOsSyncLogsModal: React.FC<IxcOsSyncLogsModalProps> = ({ show }) => {
   return (
     <>
       <EmbeddedTablePanel<IxcOsSyncLogRow>
+        cadastroDates={false}
         config={{
           columns,
           data: rows,

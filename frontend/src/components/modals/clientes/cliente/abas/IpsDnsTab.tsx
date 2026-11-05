@@ -1,124 +1,25 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useI18n } from 'contexts/I18nContext';
-import { ModalFormActions, useBulkBtn } from 'components/ui';
-import DraggableModal from 'components/common/DraggableModal';
-import EmbeddedTablePanel from 'components/common/EmbeddedTablePanel';
 import FormField from 'components/ui/FormField';
 import { CONTEXT_ERROR_MESSAGES } from 'constants/ErrorMessages';
 import { useApiError } from 'hooks/useApiError';
 import { ClienteService } from 'services/clienteService';
-import { isDnsIpToken } from 'utils/dnsIps';
+import { isDnsIpList } from 'utils/dnsIps';
 import { ClienteTabProps } from '../types';
 
-interface DnsIpRow {
-  id: number;
-  faixa_ips: string;
-}
-
-interface EditorState {
-  id: number | null;
-  value: string;
-}
-
-function parseDnsIpRows(raw: string): DnsIpRow[] {
-  const rows: DnsIpRow[] = [];
+function normalizarFaixa(raw: string): string {
   const seen = new Set<string>();
+  const tokens: string[] = [];
   for (const token of raw.split(/[;\n,]+/)) {
     const faixa = token.trim();
     const key = faixa.toLowerCase();
     if (!faixa || seen.has(key)) continue;
     seen.add(key);
-    rows.push({ id: rows.length + 1, faixa_ips: faixa });
+    tokens.push(faixa);
   }
-  return rows;
+  return tokens.join('; ');
 }
-
-function joinDnsIpRows(rows: DnsIpRow[]): string {
-  return rows.map((row) => row.faixa_ips).join('; ');
-}
-
-interface IpsDnsItemModalProps {
-  editor: EditorState | null;
-  rows: DnsIpRow[];
-  isSubmitting: boolean;
-  onClose: () => void;
-  onSave: (rows: DnsIpRow[]) => void;
-}
-
-const IpsDnsItemModal: React.FC<IpsDnsItemModalProps> = ({
-  editor,
-  rows,
-  isSubmitting,
-  onClose,
-  onSave,
-}) => {
-  const { t } = useI18n();
-  const [value, setValue] = useState(editor?.value ?? '');
-  const [error, setError] = useState('');
-
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    const faixa = value.trim();
-    if (!faixa) {
-      setError(t('blockdomi.ipsPermitidosRequired'));
-      return;
-    }
-    if (!isDnsIpToken(faixa)) {
-      setError(t('form.ipsDnsInvalid'));
-      return;
-    }
-    const key = faixa.toLowerCase();
-    const duplicate = rows.some((row) => row.faixa_ips.toLowerCase() === key && row.id !== editor?.id);
-    if (duplicate) {
-      setError(t('form.ipsDnsDuplicate'));
-      return;
-    }
-    const next = editor?.id == null
-      ? [...rows, { id: rows.length + 1, faixa_ips: faixa }]
-      : rows.map((row) => (row.id === editor.id ? { ...row, faixa_ips: faixa } : row));
-    onSave(next);
-  };
-
-  return (
-    <DraggableModal
-      show={editor != null}
-      onClose={onClose}
-      title={editor?.id == null ? t('blockdomi.createIpsPermitidos') : t('blockdomi.editIpsPermitidos')}
-      size="md"
-      modalId="cliente-ips-dns-item-modal"
-      headerActions={(
-        <ModalFormActions
-          onCancel={onClose}
-          formId="cliente-ips-dns-item-form"
-          isPending={isSubmitting}
-        />
-      )}
-    >
-      <form id="cliente-ips-dns-item-form" onSubmit={handleSubmit} className="form-modal-simple">
-        <div className="row g-2">
-          <div className="col-12">
-            <FormField
-              name="faixa_ips"
-              type="text"
-              label={t('blockdomi.faixaIps')}
-              placeholder={t('placeholder.ipsDns')}
-              helpText={t('form.ipsDnsHelp')}
-              value={value}
-              onChange={(next) => {
-                setValue(String(next ?? ''));
-                setError('');
-              }}
-              required
-              disabled={isSubmitting}
-              error={error}
-            />
-          </div>
-        </div>
-      </form>
-    </DraggableModal>
-  );
-};
 
 const IpsDnsTab: React.FC<ClienteTabProps> = ({
   formData,
@@ -128,125 +29,70 @@ const IpsDnsTab: React.FC<ClienteTabProps> = ({
   entityId,
 }) => {
   const { t } = useI18n();
-  const bulkBtn = useBulkBtn();
   const queryClient = useQueryClient();
   const { showApiError } = useApiError();
-  const rows = useMemo(() => parseDnsIpRows(formData.ips_dns || ''), [formData.ips_dns]);
-  const [editor, setEditor] = useState<EditorState | null>(null);
-  const [isSavingIps, setIsSavingIps] = useState(false);
-  const isBusy = isSubmitting || isSavingIps;
+  const [localError, setLocalError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const valueRef = useRef(formData.ips_dns || '');
 
-  const commit = async (next: DnsIpRow[]) => {
-    const value = joinDnsIpRows(next);
-    if (entityId) {
-      setIsSavingIps(true);
-      await queryClient.cancelQueries({ queryKey: ['cliente', entityId] });
-      try {
-        const updated = await ClienteService.update(entityId, { ips_dns: value });
-        const saved = updated.ips_dns ?? value;
-        handleInputChange('ips_dns', saved);
-        queryClient.setQueryData(['cliente', entityId], (current: { ips_dns?: string } | undefined) => (
-          current ? { ...current, ips_dns: saved } : updated
-        ));
-        queryClient.invalidateQueries({ queryKey: ['ips-permitidos'] });
-        setEditor(null);
-      } catch (err) {
-        showApiError(err, CONTEXT_ERROR_MESSAGES.CLIENT_UPDATE_ERROR);
-      } finally {
-        setIsSavingIps(false);
-      }
+  useEffect(() => {
+    valueRef.current = formData.ips_dns || '';
+  }, [formData.ips_dns]);
+
+  const persist = async (raw: string) => {
+    const trimmed = raw.trim();
+    if (trimmed && !isDnsIpList(trimmed)) {
+      setLocalError(t('form.ipsDnsInvalid'));
       return;
     }
-    handleInputChange('ips_dns', value);
-    setEditor(null);
-  };
-
-  const openEdit = (item: DnsIpRow) => {
-    if (isBusy) return;
-    setEditor({ id: item.id, value: item.faixa_ips });
+    const faixa = normalizarFaixa(raw);
+    setLocalError('');
+    handleInputChange('ips_dns', faixa);
+    if (!entityId || faixa === (formData.ips_dns || '')) return;
+    setIsSaving(true);
+    await queryClient.cancelQueries({ queryKey: ['cliente', entityId] });
+    try {
+      const updated = await ClienteService.update(entityId, { ips_dns: faixa });
+      const saved = updated.ips_dns ?? faixa;
+      handleInputChange('ips_dns', saved);
+      queryClient.setQueryData(['cliente', entityId], (current: { ips_dns?: string } | undefined) => (
+        current ? { ...current, ips_dns: saved } : updated
+      ));
+      queryClient.invalidateQueries({ queryKey: ['ips-permitidos'] });
+    } catch (err) {
+      showApiError(err, CONTEXT_ERROR_MESSAGES.CLIENT_UPDATE_ERROR);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
-    <div className="d-flex flex-column flex-grow-1 min-h-0">
-      {errors.ips_dns ? <div className="text-danger small px-3 pt-2">{errors.ips_dns}</div> : null}
-      <EmbeddedTablePanel<DnsIpRow>
-        tableId="cliente-ips-dns"
-        onRowDoubleClick={openEdit}
-        config={{
-          columns: [
-            {
-              key: 'id',
-              label: t('table.id'),
-              sortable: true,
-              searchable: true,
-              render: (item) => item.id,
-            },
-            {
-              key: 'faixa_ips',
-              label: t('blockdomi.faixaIps'),
-              sortable: true,
-              searchable: true,
-              render: (item) => item.faixa_ips,
-            },
-          ],
-          data: rows,
-          loading: false,
-          selectable: true,
-          multiSelect: false,
-          searchable: true,
-          sortable: true,
-          searchPlaceholder: t('layout.searchPlaceholder'),
-          searchField: 'faixa_ips',
-          searchFields: [
-            { key: 'id', label: t('table.id') },
-            { key: 'faixa_ips', label: t('blockdomi.faixaIps') },
-          ],
-          emptyMessage: t('empty.noIpsDns'),
-          className: 'no-padding',
-          bulkActions: [
-            {
-              key: 'new',
-              label: bulkBtn.novo.label,
-              variant: bulkBtn.novo.variant,
-              requiresSelection: false,
-              disabled: () => isBusy,
-              onClick: () => setEditor({ id: null, value: '' }),
-            },
-            {
-              key: 'edit',
-              label: bulkBtn.editar.label,
-              variant: bulkBtn.editar.variant,
-              disabled: (items) => isBusy || items.length === 0,
-              onClick: (items) => {
-                if (items[0]) openEdit(items[0]);
-              },
-            },
-            {
-              key: 'delete',
-              label: bulkBtn.deletar.label,
-              variant: bulkBtn.deletar.variant,
-              disabled: (items) => isBusy || items.length === 0,
-              onClick: (items) => {
-                if (items.length === 0) return;
-                if (!window.confirm(t('messages.confirmDelete'))) return;
-                const ids = new Set(items.map((item) => item.id));
-                commit(rows.filter((row) => !ids.has(row.id)));
-              },
-            },
-          ],
-        }}
-      />
-      {editor ? (
-        <IpsDnsItemModal
-          key={`${editor.id ?? 'new'}-${editor.value}`}
-          editor={editor}
-          rows={rows}
-          isSubmitting={isBusy}
-          onClose={() => setEditor(null)}
-          onSave={commit}
-        />
-      ) : null}
-    </div>
+    <form className="form-modal-simple" onSubmit={(event) => event.preventDefault()}>
+      <div className="row g-2">
+        <div className="col-12">
+          <FormField
+            name="ips_dns"
+            type="textarea"
+            label={t('blockdomi.faixaIps')}
+            placeholder={t('placeholder.ipsDns')}
+            helpText={t('form.ipsDnsHelp')}
+            value={formData.ips_dns || ''}
+            onChange={(next) => {
+              const text = String(next ?? '');
+              valueRef.current = text;
+              setLocalError('');
+              handleInputChange('ips_dns', text);
+            }}
+            onBlur={() => {
+              void persist(valueRef.current);
+            }}
+            rows={6}
+            disabled={isSubmitting || isSaving}
+            error={localError || errors.ips_dns}
+          />
+        </div>
+      </div>
+    </form>
   );
 };
 

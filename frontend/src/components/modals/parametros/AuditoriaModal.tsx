@@ -292,6 +292,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({
 
   const tablePanel = (
     <EmbeddedTablePanel<AuditoriaLog>
+      cadastroDates={false}
       config={{
         columns: tableColumns,
         data: modalData,

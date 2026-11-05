@@ -24,7 +24,20 @@ export interface ListIpPermitidoResponse {
   };
 }
 
+export const FAIXA_JA_CADASTRADA = 'Este cliente já possui IPs permitidos cadastrados.';
+
 const CLIENTE_SELECT = { id: true, razao_social: true, nome_fantasia: true, cnpj: true } as const;
+
+async function clienteJaTemFaixa(clienteId: number, ignoreId?: number): Promise<boolean> {
+  const existente = await prisma.blockdomi_ips_permitidos.findFirst({
+    where: {
+      cliente_id: clienteId,
+      ...(ignoreId !== undefined ? { id: { not: ignoreId } } : {}),
+    },
+    select: { id: true },
+  });
+  return existente != null;
+}
 
 type ClienteResumo = { id: number; razao_social: string; nome_fantasia: string | null; cnpj: string };
 
@@ -47,7 +60,13 @@ function plainIp(row: {
   [key: string]: unknown;
 }, withClienteNome: boolean): { id: number; empresa_id?: number | null } & Record<string, unknown> {
   const { clientes, ...rest } = row;
-  const json: Record<string, unknown> = { ...rest, cliente: clientes };
+  const json: Record<string, unknown> = {
+    ...rest,
+    cliente: clientes,
+    razao_social: clientes?.razao_social || '-',
+    nome_fantasia: clientes?.nome_fantasia || '-',
+    cnpj: clientes?.cnpj || '-',
+  };
   if (withClienteNome) {
     json.cliente_nome = clientes
       ? (clientes.razao_social || clientes.nome_fantasia || clientes.cnpj || '-')
@@ -60,8 +79,12 @@ export class IpPermitidoService {
   static async list(filters: ListIpPermitidoFilters): Promise<ListIpPermitidoResponse> {
     const { page = 1, limit = 15, search, searchField, ativo, sortColumn = 'id', sortDirection = 'DESC' } = filters;
     const dir = sortDirection?.toUpperCase() === 'ASC' ? 'asc' as const : 'desc' as const;
-    const allowedCols = ['id', 'ativo', 'faixa_ips', 'created_at'] as const;
-    const col = (allowedCols as readonly string[]).includes(sortColumn) ? sortColumn : 'id';
+    const allowedCols = ['id', 'ativo', 'faixa_ips', 'created_at', 'updated_at'] as const;
+    const clienteSort: Record<string, 'razao_social' | 'nome_fantasia' | 'cnpj'> = {
+      razao_social: 'razao_social',
+      nome_fantasia: 'nome_fantasia',
+      cnpj: 'cnpj',
+    };
 
     const where: Prisma.blockdomi_ips_permitidosWhereInput = {};
     if (ativo !== undefined) where.ativo = ativo;
@@ -72,6 +95,8 @@ export class IpPermitidoService {
         if (num !== null) where.id = num;
       } else if (searchField === 'faixa_ips') {
         where.faixa_ips = { contains: term };
+      } else if (searchField === 'razao_social' || searchField === 'nome_fantasia' || searchField === 'cnpj') {
+        where.clientes = { [searchField]: { contains: term } };
       } else if (searchField === 'cliente_nome') {
         where.clientes = {
           OR: [
@@ -94,7 +119,9 @@ export class IpPermitidoService {
       prisma.blockdomi_ips_permitidos.count({ where }),
       prisma.blockdomi_ips_permitidos.findMany({
         where,
-        orderBy: { [col]: dir },
+        orderBy: clienteSort[sortColumn]
+          ? { clientes: { [clienteSort[sortColumn]]: dir } }
+          : { [(allowedCols as readonly string[]).includes(sortColumn) ? sortColumn : 'id']: dir },
         skip: (page - 1) * limit,
         take: limit,
       }),
@@ -127,6 +154,9 @@ export class IpPermitidoService {
     if (!faixaNormalizada) {
       throw new Error('Faixa de IPs é obrigatória');
     }
+    if (await clienteJaTemFaixa(data.cliente_id)) {
+      throw new Error(FAIXA_JA_CADASTRADA);
+    }
     const created = await prisma.blockdomi_ips_permitidos.create({
       data: {
         cliente_id: data.cliente_id,
@@ -144,6 +174,9 @@ export class IpPermitidoService {
     if (!row) throw new Error('Registro não encontrado');
     const dataUpdate: Prisma.blockdomi_ips_permitidosUncheckedUpdateInput = {};
     if (typeof data.cliente_id === 'number') {
+      if (await clienteJaTemFaixa(data.cliente_id, numericId)) {
+        throw new Error(FAIXA_JA_CADASTRADA);
+      }
       dataUpdate.cliente_id = data.cliente_id;
       if (data.empresa_id !== undefined) dataUpdate.empresa_id = data.empresa_id;
     }

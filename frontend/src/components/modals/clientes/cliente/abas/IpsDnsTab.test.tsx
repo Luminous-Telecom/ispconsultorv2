@@ -68,16 +68,11 @@ describe('IpsDnsTab', () => {
     jest.mocked(ClienteService.update).mockReset();
   });
 
-  it('mostra a tabela vazia', () => {
-    renderTab();
-    expect(screen.getByText('Nenhum IP DNS cadastrado')).toBeTruthy();
-    expect(screen.queryByRole('textbox', { name: /Faixa de IPs/ })).toBeNull();
-  });
-
-  it('lista cada IP em uma linha', () => {
+  it('mostra uma única faixa com todos os IPs', () => {
     renderTab({}, '192.168.1.1; 10.0.0.0/24');
-    expect(screen.getByText('192.168.1.1')).toBeTruthy();
-    expect(screen.getByText('10.0.0.0/24')).toBeTruthy();
+    const campo = screen.getByRole('textbox', { name: /Faixa de IPs/ }) as HTMLTextAreaElement;
+    expect(campo.value).toBe('192.168.1.1; 10.0.0.0/24');
+    expect(screen.queryByText('Nenhum IP DNS cadastrado')).toBeNull();
   });
 
   it('mostra o erro de validação do cadastro', () => {
@@ -85,73 +80,27 @@ describe('IpsDnsTab', () => {
     expect(screen.getByText('Informe IPv4, IPv6 ou CIDR separados por ;')).toBeTruthy();
   });
 
-  it('inclui o IP informado em Novo', () => {
-    const { handleInputChange } = renderTab();
-    fireEvent.click(screen.getByRole('button', { name: 'Novo' }));
-    fireEvent.change(screen.getByRole('textbox', { name: /Faixa de IPs/ }), { target: { value: '10.0.0.1' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
-    expect(handleInputChange).toHaveBeenCalledWith('ips_dns', '10.0.0.1');
-  });
-
-  it('recusa IP inválido e duplicado', () => {
+  it('recusa IP inválido e não grava', () => {
     const { handleInputChange } = renderTab({}, '10.0.0.1');
-    fireEvent.click(screen.getByRole('button', { name: 'Novo' }));
-    fireEvent.change(screen.getByRole('textbox', { name: /Faixa de IPs/ }), { target: { value: 'dns.provedor.net' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+    const campo = screen.getByRole('textbox', { name: /Faixa de IPs/ });
+    fireEvent.focus(campo);
+    fireEvent.change(campo, { target: { value: 'dns.provedor.net' } });
+    fireEvent.blur(campo);
     expect(screen.getByText('Informe um IPv4, IPv6 ou CIDR')).toBeTruthy();
-    expect(handleInputChange).not.toHaveBeenCalled();
-
-    fireEvent.change(screen.getByRole('textbox', { name: /Faixa de IPs/ }), { target: { value: '10.0.0.1' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
-    expect(screen.getByText('Este IP já está na lista')).toBeTruthy();
-    expect(handleInputChange).not.toHaveBeenCalled();
+    expect(ClienteService.update).not.toHaveBeenCalled();
+    expect(handleInputChange).toHaveBeenCalledWith('ips_dns', 'dns.provedor.net');
   });
 
-  it('edita e remove a linha selecionada', () => {
-    const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
-    const { handleInputChange } = renderTab({}, '10.0.0.1; 10.0.0.2');
-
-    fireEvent.click(screen.getByText('10.0.0.1'));
-    fireEvent.click(screen.getByRole('button', { name: 'Editar' }));
-    fireEvent.change(screen.getByRole('textbox', { name: /Faixa de IPs/ }), { target: { value: '10.0.0.9' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
-    expect(handleInputChange).toHaveBeenCalledWith('ips_dns', '10.0.0.9; 10.0.0.2');
-
-    fireEvent.click(screen.getByText('10.0.0.2'));
-    fireEvent.click(screen.getByRole('button', { name: 'Deletar' }));
-    expect(confirmSpy).toHaveBeenCalled();
-    expect(handleInputChange).toHaveBeenCalledWith('ips_dns', '10.0.0.1');
-    confirmSpy.mockRestore();
-  });
-
-  it('grava a exclusão no cliente já salvo', async () => {
-    const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
-    jest.mocked(ClienteService.update).mockResolvedValue({ id: 8, ips_dns: '10.0.0.2' } as never);
-    const { handleInputChange } = renderTab({}, '10.0.0.1; 10.0.0.2', 8);
-
-    fireEvent.click(screen.getByText('10.0.0.1'));
-    fireEvent.click(screen.getByRole('button', { name: 'Deletar' }));
-
+  it('junta os IPs numa faixa e grava uma vez no cliente salvo', async () => {
+    jest.mocked(ClienteService.update).mockResolvedValue({ id: 8, ips_dns: '10.0.0.1; 10.0.0.0/24' } as never);
+    const { handleInputChange } = renderTab({}, '', 8);
+    const campo = screen.getByRole('textbox', { name: /Faixa de IPs/ });
+    fireEvent.focus(campo);
+    fireEvent.change(campo, { target: { value: '10.0.0.1\n10.0.0.0/24' } });
+    fireEvent.blur(campo);
     await waitFor(() => {
-      expect(ClienteService.update).toHaveBeenCalledWith(8, { ips_dns: '10.0.0.2' });
+      expect(ClienteService.update).toHaveBeenCalledWith(8, { ips_dns: '10.0.0.1; 10.0.0.0/24' });
     });
-    expect(handleInputChange).toHaveBeenCalledWith('ips_dns', '10.0.0.2');
-    confirmSpy.mockRestore();
-  });
-
-  it('mantém a lista quando a gravação da exclusão falha', async () => {
-    const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
-    jest.mocked(ClienteService.update).mockRejectedValue(new Error('falha'));
-    const { handleInputChange } = renderTab({}, '10.0.0.1; 10.0.0.2', 8);
-
-    fireEvent.click(screen.getByText('10.0.0.1'));
-    fireEvent.click(screen.getByRole('button', { name: 'Deletar' }));
-
-    await waitFor(() => {
-      expect(ClienteService.update).toHaveBeenCalled();
-    });
-    expect(handleInputChange).not.toHaveBeenCalled();
-    expect(screen.getByText('10.0.0.1')).toBeTruthy();
-    confirmSpy.mockRestore();
+    expect(handleInputChange).toHaveBeenCalledWith('ips_dns', '10.0.0.1; 10.0.0.0/24');
   });
 });

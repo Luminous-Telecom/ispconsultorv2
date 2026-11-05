@@ -127,6 +127,7 @@ const OrdemServicoMensagensList: React.FC<OrdemServicoMensagensListProps> = ({
   return (
     <>
       <EmbeddedTablePanel<OrdemServicoMensagem>
+        cadastroDates={false}
         key={`ordem-servico-mensagens-${ordemServicoId}`}
         className="no-padding"
         config={{

@@ -83,7 +83,7 @@ const VendedorListModal: React.FC<VendedorListModalProps> = ({
     { key: 'email', label: t('form.email'), sortable: true, render: (item) => item.email || '—' },
     {
       key: 'updated_at',
-      label: t('form.lastUpdate'),
+      label: t('table.updatedAt'),
       sortable: true,
       render: (item) => (item.updated_at ? formatDateTime(item.updated_at) : '—'),
     },

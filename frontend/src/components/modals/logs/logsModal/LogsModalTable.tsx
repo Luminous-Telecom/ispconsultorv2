@@ -103,6 +103,7 @@ const LogsModalTable: React.FC<LogsModalTableProps> = ({
 
   return (
     <EmbeddedTablePanel
+      cadastroDates={false}
       config={{
         columns,
         data: modalData,

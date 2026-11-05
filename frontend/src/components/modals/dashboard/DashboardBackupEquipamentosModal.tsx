@@ -236,6 +236,7 @@ const DashboardBackupEquipamentosModal: React.FC<DashboardBackupEquipamentosModa
   return (
     <>
           <EmbeddedTablePanel<BackupEquipRow>
+            cadastroDates={false}
             key={tableResetKey}
             tableId="dashboard-backup-equipamentos"
             config={{
