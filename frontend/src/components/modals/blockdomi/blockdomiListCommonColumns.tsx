@@ -3,6 +3,12 @@ import { formatDateTime, formatDate } from 'utils/formatters';
 import type { ListModalColumn } from 'types/modal';
 import type { BlockdomiOficioListRow, BlockdomiTranslateFn } from './blockdomiListTypes';
 
+/** Hora já formatada no servidor. O fallback só existe se a API não mandou esse texto. */
+export function textoHoraBlockdomi(formatada?: string | null, bruta?: string | null): string {
+  if (formatada) return formatada;
+  return bruta ? formatDateTime(bruta) : '-';
+}
+
 export function getBlockdomiAtivoColumn<T extends BlockdomiOficioListRow>(
   t: BlockdomiTranslateFn
 ): ListModalColumn<T> {
@@ -105,17 +111,14 @@ export function getBlockdomiCommonColumns<T extends BlockdomiOficioListRow>(
       label: t('table.createdAt'),
       sortable: true,
       width: '130px',
-      render: (item) => {
-        if (item.created_at_formatada) return item.created_at_formatada;
-        return item.created_at ? formatDateTime(item.created_at) : '-';
-      },
+      render: (item) => textoHoraBlockdomi(item.created_at_formatada, item.created_at),
     },
     {
       key: 'updated_at',
       label: t('table.updatedAt'),
       sortable: true,
       width: '130px',
-      render: (item) => (item.updated_at ? formatDateTime(item.updated_at) : '-'),
+      render: (item) => textoHoraBlockdomi(item.updated_at_formatada, item.updated_at),
     },
   ];
 }

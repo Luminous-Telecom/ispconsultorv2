@@ -21,4 +21,5 @@ export interface BlockdomiOficioListRow {
   created_at?: string;
   updated_at?: string;
   created_at_formatada?: string | null;
+  updated_at_formatada?: string | null;
 }

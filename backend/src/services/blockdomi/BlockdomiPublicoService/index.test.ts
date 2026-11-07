@@ -8,6 +8,7 @@ jest.mock('../../../db/prisma', () => ({
 }));
 
 import { prisma } from '../../../db/prisma';
+import { formatDateISOLocal } from '../../../utils/timezoneUtils';
 import { BlockdomiPublicoService } from './index';
 
 const versoes = prisma.blockdomi_versoes;
@@ -60,6 +61,8 @@ describe('BlockdomiPublicoService.listarDadosPublicos', () => {
     expect(data.oficios[0].nome_oficio).toBe('Ofício nº 10');
     expect(data.oficios[0].numero_sei_anatel).toBe('12345');
     expect(data.oficios[0].versao).toBe('2026010201');
+    expect(data.oficios[0].created_at).toBe(formatDateISOLocal(new Date('2026-01-02T12:00:00.000Z')));
+    expect(data.oficios[0].created_at?.endsWith('Z')).toBe(false);
     expect(data.oficios[0].detalhes).toEqual({
       qtd_dominios: 1,
       qtd_urls: 1,
@@ -103,5 +106,28 @@ describe('BlockdomiPublicoService.listarDadosPublicos', () => {
     expect(oficio11?.detalhes?.qtd_ipv4).toBe(0);
     expect(oficio11?.detalhes?.ipv4).toEqual([]);
     expect(oficio11?.detalhes?.urls).toEqual([]);
+  });
+
+  it('mantém o dia do bloqueio gravado e a hora de criação no relógio do servidor', async () => {
+    const criado = new Date('2026-10-14T15:30:00.000Z');
+    (dominios.findMany as jest.Mock).mockResolvedValue([
+      linha({
+        dominio: 'calendario.com',
+        data_inicio_bloqueio: new Date('2026-10-14T00:00:00.000Z'),
+        data_fim_bloqueio: new Date('2026-12-01T00:00:00.000Z'),
+        created_at: criado,
+      }),
+    ]);
+    (ipv4.findMany as jest.Mock).mockResolvedValue([]);
+    (ipv6.findMany as jest.Mock).mockResolvedValue([]);
+
+    const data = await BlockdomiPublicoService.listarDadosPublicos();
+
+    expect(data.oficios[0].data_inicio_bloqueio).toBe('2026-10-14');
+    expect(data.oficios[0].data_fim_bloqueio).toBe('2026-12-01');
+    const hora = String(criado.getHours()).padStart(2, '0');
+    const minuto = String(criado.getMinutes()).padStart(2, '0');
+    expect(data.oficios[0].created_at).toContain(`T${hora}:${minuto}:`);
+    expect(data.oficios[0].created_at).not.toBe(criado.toISOString());
   });
 });

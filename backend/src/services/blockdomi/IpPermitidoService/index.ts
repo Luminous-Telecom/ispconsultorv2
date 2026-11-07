@@ -1,6 +1,7 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../../../db/prisma';
 import { buildPagination } from '../../../utils/pagination';
+import { aplicarHoraServidor } from '../blockdomiPrisma';
 
 export interface ListIpPermitidoFilters {
   page?: number;
@@ -72,6 +73,7 @@ function plainIp(row: {
       ? (clientes.razao_social || clientes.nome_fantasia || clientes.cnpj || '-')
       : '-';
   }
+  aplicarHoraServidor(json);
   return json as { id: number; empresa_id?: number | null } & Record<string, unknown>;
 }
 

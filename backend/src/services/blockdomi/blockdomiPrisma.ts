@@ -1,7 +1,9 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../../db/prisma';
+import { formatCreatedAt } from '../../utils/dateUtils';
 import { logger } from '../../utils/logger';
 import { buildPagination } from '../../utils/pagination';
+import { formatDateISOLocal } from '../../utils/timezoneUtils';
 
 export type BlockdomiTabela = 'blockdomi_dominios' | 'blockdomi_ipv4' | 'blockdomi_ipv6';
 
@@ -81,6 +83,19 @@ type BlockdomiRow = {
   blockdomi_numeros_sei_anatel?: { numero: string } | null;
 };
 
+const CAMPOS_HORA = ['created_at', 'updated_at'] as const;
+
+/** Grava created_at/updated_at no relógio do servidor, antes do JSON virar UTC. */
+export function aplicarHoraServidor(plain: Record<string, unknown>): void {
+  for (const campo of CAMPOS_HORA) {
+    const valor = plain[campo];
+    if (!(valor instanceof Date) && typeof valor !== 'string') continue;
+    const iso = formatDateISOLocal(valor);
+    if (iso) plain[campo] = iso;
+    plain[`${campo}_formatada`] = formatCreatedAt(valor);
+  }
+}
+
 export function plainBlockdomi<T extends BlockdomiRow>(row: T, withRefs: boolean): T & Record<string, unknown> {
   const { blockdomi_versoes, blockdomi_numeros_sei_anatel, ...rest } = row;
   const plain: Record<string, unknown> = {
@@ -88,6 +103,7 @@ export function plainBlockdomi<T extends BlockdomiRow>(row: T, withRefs: boolean
     data_inicio_bloqueio: dateOnlyString(row.data_inicio_bloqueio),
     data_fim_bloqueio: dateOnlyString(row.data_fim_bloqueio),
   };
+  aplicarHoraServidor(plain);
   if (withRefs) {
     plain.versaoRef = blockdomi_versoes ? { numero: blockdomi_versoes.numero } : null;
     plain.numeroSeiRef = blockdomi_numeros_sei_anatel ? { numero: blockdomi_numeros_sei_anatel.numero } : null;

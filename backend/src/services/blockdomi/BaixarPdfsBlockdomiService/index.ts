@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { prisma } from '../../../db/prisma';
 import { logger } from '../../../utils/logger';
+import { formatDateISOLocal } from '../../../utils/timezoneUtils';
 import { resolveArquivosPath } from '../../../utils/pathUtils';
 import { SYSTEM_NAME } from '../../../constants/systemBrand';
 
@@ -472,7 +473,7 @@ export function iniciarBaixarPdfs(
   baixarPdfsEmExecucao = true;
   statusBaixarPdfs = {
     estado: 'executando',
-    iniciadoEm: new Date().toISOString(),
+    iniciadoEm: formatDateISOLocal(new Date()),
     concluidoEm: null,
     resultado: null,
     erro: null,
@@ -494,7 +495,7 @@ export function iniciarBaixarPdfs(
         ...statusBaixarPdfs,
         estado: 'concluido',
         iniciadoEm: statusBaixarPdfs.iniciadoEm,
-        concluidoEm: new Date().toISOString(),
+        concluidoEm: formatDateISOLocal(new Date()),
         resultado,
         erro: null,
       };
@@ -509,7 +510,7 @@ export function iniciarBaixarPdfs(
         ...statusBaixarPdfs,
         estado: 'erro',
         iniciadoEm: statusBaixarPdfs.iniciadoEm,
-        concluidoEm: new Date().toISOString(),
+        concluidoEm: formatDateISOLocal(new Date()),
         resultado: null,
         erro: mensagem,
       };

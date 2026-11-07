@@ -4,6 +4,8 @@
  * domínios, URLs, IPv4 e IPv6 com a contagem de cada lista.
  */
 import { prisma } from '../../../db/prisma';
+import { dateOnlyString } from '../blockdomiPrisma';
+import { formatDateISOLocal } from '../../../utils/timezoneUtils';
 
 export interface OficioDetalhes {
   qtd_dominios: number;
@@ -253,21 +255,10 @@ export class BlockdomiPublicoService {
   }
 
   /**
-   * Normaliza data para chave (YYYY-MM-DD).
+   * Data de bloqueio no mesmo calendário da listagem (dia gravado, sem deslocar a hora).
    */
   private static normalizarDataParaChave(val: string | Date | null | undefined): string {
-    if (val == null) return '';
-    if (typeof val === 'string') {
-      const m = val.match(/^(\d{4})-(\d{2})-(\d{2})/);
-      return m ? `${m[1]}-${m[2]}-${m[3]}` : val;
-    }
-    if (val instanceof Date && !Number.isNaN(val.getTime())) {
-      const y = val.getFullYear();
-      const m = String(val.getMonth() + 1).padStart(2, '0');
-      const d = String(val.getDate()).padStart(2, '0');
-      return `${y}-${m}-${d}`;
-    }
-    return '';
+    return dateOnlyString(val) ?? '';
   }
 
   /** Desc: data da versão (YYYYMMDD) mais nova primeiro; no mesmo dia, a sequência maior. */
@@ -288,15 +279,9 @@ export class BlockdomiPublicoService {
     return (b ?? '').localeCompare(a ?? '');
   }
 
-  /** Normaliza created_at para ISO string comparável (YYYY-MM-DDTHH:mm:ss.sssZ). */
+  /** created_at no relógio do servidor (YYYY-MM-DDTHH:mm:ss.sss±HH:MM), ordenável como texto. */
   private static normalizarCreatedAt(val: string | Date | null | undefined): string | null {
-    if (val == null) return null;
-    if (val instanceof Date && !Number.isNaN(val.getTime())) return val.toISOString();
-    if (typeof val === 'string') {
-      const d = new Date(val);
-      if (!Number.isNaN(d.getTime())) return d.toISOString();
-    }
-    return null;
+    return formatDateISOLocal(val ?? null);
   }
 
 

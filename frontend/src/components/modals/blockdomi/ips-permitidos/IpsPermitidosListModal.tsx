@@ -6,7 +6,7 @@ import { filtroSomenteAtivos, useMostrarInativos } from 'hooks/useMostrarInativo
 import { useI18n } from 'contexts/I18nContext';
 import { renderStatusBadge } from 'components/ui';
 import { getAtivoBadgeConfig } from 'utils/tableStatusBadges';
-import { formatDateTime } from 'utils/formatters';
+import { textoHoraBlockdomi } from '../blockdomiListCommonColumns';
 import ListModal from 'components/common/ListModal';
 import { ListModalConfig } from 'types/modal';
 import IpsPermitidoModal from './IpsPermitidoModal';
@@ -113,7 +113,7 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
         label: t('table.createdAt'),
         sortable: true,
         width: '140px',
-        render: (item) => (item.created_at ? formatDateTime(item.created_at) : '-'),
+        render: (item) => textoHoraBlockdomi(item.created_at_formatada, item.created_at),
       },
     ],
     [t]

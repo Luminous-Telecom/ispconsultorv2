@@ -1,30 +1,27 @@
 /**
- * Utilitários para conversão e formatação de horários com timezone
- * Mantém o horário local do servidor (Brasil -03:00) ao invés de converter para UTC
+ * Horário do processo do servidor. Os dígitos saem de getHours/getDate
+ * (o relógio do sistema) e o sufixo é o offset real desse processo.
+ * JSON.stringify em Date usaria toISOString e mudaria o relógio para UTC.
  */
 
 /**
- * Formata uma data para string ISO mantendo o horário local do servidor
- * A data já chega no horário local do servidor (timezone: '-03:00')
- * Esta função apenas formata como string ISO com timezone local antes da serialização JSON
- * (evita que JSON.stringify converta automaticamente para UTC)
- * 
- * @param date - Data como string, Date ou null/undefined (já no horário local)
- * @returns String no formato ISO com timezone local (YYYY-MM-DDTHH:mm:ss.sss-03:00) ou null se inválida
- * 
+ * Formata uma data em ISO com o relógio e o offset do servidor.
+ *
+ * @param date - Data como string, Date ou null/undefined
+ * @returns String YYYY-MM-DDTHH:mm:ss.sss±HH:MM ou null se inválida
+ *
  * @example
- * const date = new Date(); // Horário local do servidor
- * const isoLocal = formatDateISOLocal(date); // "2025-01-15T14:30:00.000-03:00"
+ * const date = new Date();
+ * const isoLocal = formatDateISOLocal(date); // "2025-01-15T14:30:00.000-03:00" se o servidor estiver nesse fuso
  */
 export function formatDateISOLocal(date: string | Date | null | undefined): string | null {
   if (!date) return null;
-  
+
   try {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
-    
+
     if (isNaN(dateObj.getTime())) return null;
-    
-    // Componentes no horário local do servidor, sem converter para UTC
+
     const year = dateObj.getFullYear();
     const month = String(dateObj.getMonth() + 1).padStart(2, '0');
     const day = String(dateObj.getDate()).padStart(2, '0');
@@ -32,15 +29,13 @@ export function formatDateISOLocal(date: string | Date | null | undefined): stri
     const minutes = String(dateObj.getMinutes()).padStart(2, '0');
     const seconds = String(dateObj.getSeconds()).padStart(2, '0');
     const milliseconds = String(dateObj.getMilliseconds()).padStart(3, '0');
-    
-    // Timezone do Brasil (UTC-3) - necessário para o JavaScript interpretar corretamente
-    // Strings ISO sem timezone são interpretadas como UTC pelo new Date()
-    const timezoneOffset = -3;
-    const offsetHours = Math.abs(timezoneOffset);
-    const offsetSign = timezoneOffset < 0 ? '-' : '+';
-    const offsetString = `${offsetSign}${String(offsetHours).padStart(2, '0')}:00`;
-    
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}${offsetString}`;
+    const offsetMinutes = -dateObj.getTimezoneOffset();
+    const offsetSign = offsetMinutes >= 0 ? '+' : '-';
+    const abs = Math.abs(offsetMinutes);
+    const offsetHours = String(Math.floor(abs / 60)).padStart(2, '0');
+    const offsetMins = String(abs % 60).padStart(2, '0');
+
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}${offsetSign}${offsetHours}:${offsetMins}`;
   } catch {
     return null;
   }
@@ -58,11 +53,11 @@ export function safeFormatDateISOLocal(date: string | Date | null | undefined): 
 }
 
 /**
- * Obtém o offset de timezone do servidor (Brasil -03:00)
- * @returns Offset em horas (ex: -3 para UTC-3)
+ * Offset do processo do servidor, em horas (o mesmo de getTimezoneOffset).
+ * @returns Ex.: -3 quando o relógio do servidor está em UTC-3
  */
 export function getServerTimezoneOffset(): number {
-  return -3; // Brasil (UTC-3)
+  return -new Date().getTimezoneOffset() / 60;
 }
 
 /**

@@ -12,6 +12,9 @@ export interface IpPermitido {
   cnpj?: string;
   cliente?: { id: number; razao_social: string; nome_fantasia?: string; cnpj: string };
   created_at?: string;
+  created_at_formatada?: string | null;
+  updated_at?: string;
+  updated_at_formatada?: string | null;
 }
 
 export interface IpPermitidoFilters {
