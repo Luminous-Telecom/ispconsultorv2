@@ -46,6 +46,7 @@ export const useMenuItems = ({ t, openModal, hasModulo, userRole }: UseMenuItems
     () =>
       [
         { id: 'contas-receber', modalId: 'contas-receber', label: t('menu.accountsReceivable'), icon: 'bi-cash-stack', onClick: () => handleOpenModal('contas-receber') },
+        { id: 'cobranca-painel', modalId: 'cobranca-painel', label: t('menu.billingInsights'), icon: 'bi-calendar-check', onClick: () => handleOpenModal('cobranca-painel') },
         { id: 'contas-pagar', modalId: 'contas-pagar', label: t('menu.accountsPayable'), icon: 'bi-arrow-down-circle', onClick: () => handleOpenModal('contas-pagar') },
         { id: 'notas-fiscais', modalId: 'notas-fiscais', label: t('menu.invoices'), icon: 'bi-receipt', onClick: () => handleOpenModal('notas-fiscais') },
       ].filter(filterItem),

@@ -27,6 +27,7 @@ export const MODAL_MODULO_MAP: Record<string, PlanoModuloId> = {
   vendedores: 'cadastros',
   fornecedores: 'cadastros',
   'contas-receber': 'financeiro',
+  'cobranca-painel': 'financeiro',
   'contas-pagar': 'financeiro',
   'notas-fiscais': 'financeiro',
   'blockdomi-dominios': 'blockdomi',

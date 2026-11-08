@@ -20,6 +20,7 @@ const ServidorWhatsappModal = lazy(() => import('../modals/parametros/servidor-w
 const NFSeModal = lazy(() => import('../modals/parametros/NFSeModal'));
 const ContratoListModal = lazy(() => import('../modals/contratos').then(m => ({ default: m.ContratoListModal })));
 const ContasReceberListModal = lazy(() => import('../modals/contas-receber').then(m => ({ default: m.ContasReceberListModal })));
+const CobrancaPainelModal = lazy(() => import('../modals/cobranca').then(m => ({ default: m.CobrancaPainelModal })));
 const FornecedorListModal = lazy(() => import('../modals/fornecedores').then(m => ({ default: m.FornecedorListModal })));
 const ContasPagarListModal = lazy(() => import('../modals/contas-pagar').then(m => ({ default: m.ContasPagarListModal })));
 const NotaFiscalListModal = lazy(() => import('../modals/notas-fiscais/NotaFiscalListModal'));
@@ -152,6 +153,7 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
   vendedores: { component: VendedorListModal, titleKey: 'modal.sellers', loadingMessageKey: 'ui.loadingPage', className: 'no-padding list-modal-no-body-scroll' },
   contratos: { component: ContratoListModal, titleKey: 'modal.contracts', loadingMessageKey: 'ui.loadingPage', className: 'no-padding list-modal-no-body-scroll' },
   'contas-receber': { component: ContasReceberListModal, titleKey: 'modal.accountsReceivable', loadingMessageKey: 'ui.loadingPage', className: 'no-padding list-modal-no-body-scroll' },
+  'cobranca-painel': { component: CobrancaPainelModal, titleKey: 'modal.billingInsights', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding list-modal-no-body-scroll' },
   fornecedores: { component: FornecedorListModal, titleKey: 'modal.suppliers', loadingMessageKey: 'ui.loadingPage', className: 'no-padding list-modal-no-body-scroll' },
   'contas-pagar': { component: ContasPagarListModal, titleKey: 'modal.accountsPayable', loadingMessageKey: 'ui.loadingPage', className: 'no-padding list-modal-no-body-scroll' },
   'notas-fiscais': { component: NotaFiscalListModal, titleKey: 'modal.invoices', loadingMessageKey: 'ui.loadingPage', className: 'no-padding list-modal-no-body-scroll' },

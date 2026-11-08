@@ -10,6 +10,7 @@ export type ModalType =
   | 'vendedores'
   | 'contratos'
   | 'contas-receber'
+  | 'cobranca-painel'
   | 'dados-empresa'
   | 'fornecedores'
   | 'contas-pagar'

@@ -13,6 +13,7 @@ const ADMIN_ONLY_PREFIXES = [
 
 const FINANCE_PREFIXES = [
   '/api/titulos',
+  '/api/cobranca',
   '/api/contas-pagar',
   '/api/notas-fiscais',
   '/api/bancos',

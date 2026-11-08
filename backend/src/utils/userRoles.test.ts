@@ -16,6 +16,8 @@ describe('canAccessApiPath', () => {
     expect(canAccessApiPath('financeiro', '/api/nfse-config')).toBe(true);
     expect(canAccessApiPath('financeiro', '/api/fornecedores')).toBe(true);
     expect(canAccessApiPath('financeiro', '/api/dashboard')).toBe(true);
+    expect(canAccessApiPath('financeiro', '/api/cobranca/indicadores')).toBe(true);
+    expect(canAccessApiPath('financeiro', '/api/cobranca/agenda')).toBe(true);
     expect(canAccessApiPath('financeiro', '/api/clientes')).toBe(true);
     expect(canAccessApiPath('financeiro', '/api/contratos/2')).toBe(true);
     expect(canAccessApiPath('financeiro', '/api/planos')).toBe(true);
@@ -40,6 +42,7 @@ describe('canAccessApiPath', () => {
     expect(canAccessApiPath('user', '/api/servidores-email')).toBe(true);
 
     expect(canAccessApiPath('user', '/api/titulos')).toBe(false);
+    expect(canAccessApiPath('user', '/api/cobranca/indicadores')).toBe(false);
     expect(canAccessApiPath('user', '/api/bancos/1')).toBe(false);
     expect(canAccessApiPath('user', '/api/contas-pagar')).toBe(false);
     expect(canAccessApiPath('user', '/api/notas-fiscais')).toBe(false);

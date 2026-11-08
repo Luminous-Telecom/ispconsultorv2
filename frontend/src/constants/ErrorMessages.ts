@@ -84,6 +84,7 @@ export const CONTEXT_ERROR_MESSAGES = {
   // Títulos
   TITULO_NOT_FOUND: 'Título não encontrado',
   TITULO_LOAD_ERROR: 'Erro ao carregar título',
+  COBRANCA_LOAD_ERROR: 'Erro ao carregar indicadores de cobrança',
   TITULO_CREATE_ERROR: 'Erro ao salvar título',
   TITULO_UPDATE_ERROR: 'Erro ao atualizar título',
   TITULO_DELETE_ERROR: 'Erro ao deletar título',

@@ -34,6 +34,7 @@ import auditoriaRoutes from './auditoriaRoutes';
 import fornecedorRoutes from './fornecedorRoutes';
 import contaPagarRoutes from './contaPagarRoutes';
 import notaFiscalRoutes from './notaFiscalRoutes';
+import cobrancaRoutes from './cobrancaRoutes';
 import nfseConfigRoutes from './nfseConfigRoutes';
 import centralAssinanteRoutes from './centralAssinanteRoutes';
 import dominioRoutes from './dominioRoutes';
@@ -100,6 +101,7 @@ const routes = [
     { path: '/api/fornecedores', route: fornecedorRoutes },
     { path: '/api/contas-pagar', route: contaPagarRoutes },
     { path: '/api/notas-fiscais', route: notaFiscalRoutes },
+    { path: '/api/cobranca', route: cobrancaRoutes },
     { path: '/api/nfse-config', route: nfseConfigRoutes },
     { path: '/api/dominios', route: dominioRoutes },
     { path: '/api/ipv4', route: ipv4Routes },

@@ -5,6 +5,7 @@ describe('perfis do ERP', () => {
     expect(canSeeDashboardSection('financeiro', 'financeiro')).toBe(true);
     expect(canSeeDashboardSection('financeiro', 'operacional')).toBe(false);
     expect(canSeeModal('financeiro', 'contas-receber')).toBe(true);
+    expect(canSeeModal('financeiro', 'cobranca-painel')).toBe(true);
     expect(canSeeModal('financeiro', 'bancos')).toBe(true);
     expect(canSeeModal('financeiro', 'clientes')).toBe(true);
     expect(canSeeModal('financeiro', 'contratos')).toBe(true);
@@ -31,6 +32,7 @@ describe('perfis do ERP', () => {
     expect(canSeeModal('user', 'atendimentos')).toBe(true);
     expect(canSeeModal('user', 'auditoria')).toBe(true);
     expect(canSeeModal('user', 'contas-receber')).toBe(false);
+    expect(canSeeModal('user', 'cobranca-painel')).toBe(false);
     expect(canSeeModal('user', 'bancos')).toBe(false);
     expect(canSeeModal('user', 'nfse')).toBe(false);
     expect(canSeeModal('user', 'usuarios')).toBe(false);

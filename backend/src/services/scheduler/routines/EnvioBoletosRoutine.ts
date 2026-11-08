@@ -2,6 +2,7 @@ import { WhatsAppService } from '../../comunicacao/WhatsAppService';
 import { EmailService } from '../../comunicacao/EmailService';
 import { logger } from '../../../utils/logger';
 import { prisma } from '../../../db/prisma';
+import { configPadraoEnvioBoletos } from '../../cobranca/passosCobranca';
 
 export interface EnvioBoletosConfig {
   antesVencimento?: number[];
@@ -56,9 +57,9 @@ export class EnvioBoletosRoutine {
   }> {
     try {
       const configuracoes = {
-        antesVencimento: (config?.antesVencimento?.length ?? 0) > 0 ? config.antesVencimento : [10, 5, 2],
-        mesmoDia: config?.mesmoDia ?? true,
-        depoisVencimento: (config?.depoisVencimento?.length ?? 0) > 0 ? config.depoisVencimento : [1, 5, 10, 15]
+        antesVencimento: (config?.antesVencimento?.length ?? 0) > 0 ? config.antesVencimento : configPadraoEnvioBoletos.antesVencimento,
+        mesmoDia: config?.mesmoDia ?? configPadraoEnvioBoletos.mesmoDia,
+        depoisVencimento: (config?.depoisVencimento?.length ?? 0) > 0 ? config.depoisVencimento : configPadraoEnvioBoletos.depoisVencimento
       };
 
       const canais = config?.canais || ['whatsapp', 'email'];
