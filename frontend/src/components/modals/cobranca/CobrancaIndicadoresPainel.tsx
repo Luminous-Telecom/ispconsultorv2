@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import StatTilesCard from 'components/dashboard/cards/StatTilesCard';
 import Table from 'components/tables/Table';
-import { FormField, StatusBadge } from 'components/ui';
+import { StatusBadge } from 'components/ui';
 import { COLOR } from 'constants/colors';
 import { useI18n } from 'contexts/I18nContext';
 import { IndicadoresCobranca } from 'services/cobrancaPainelService';
@@ -9,12 +9,10 @@ import { formatCurrency } from 'utils/formatters';
 import { formatarPercentual, rotuloFaixa } from './cobrancaLabels';
 
 interface CobrancaIndicadoresPainelProps {
-  mes: string;
-  onMesChange: (mes: string) => void;
   dados: IndicadoresCobranca;
 }
 
-const CobrancaIndicadoresPainel: React.FC<CobrancaIndicadoresPainelProps> = ({ mes, onMesChange, dados }) => {
+const CobrancaIndicadoresPainel: React.FC<CobrancaIndicadoresPainelProps> = ({ dados }) => {
   const { t, language } = useI18n();
   const percentual = (valor: number) => formatarPercentual(valor, language);
 
@@ -28,21 +26,8 @@ const CobrancaIndicadoresPainel: React.FC<CobrancaIndicadoresPainelProps> = ({ m
   );
 
   return (
-    <div className="cobranca-painel-tab-content cobranca-painel-tab-content-padded overflow-auto">
-      <form className="form-modal-simple">
-        <div className="row g-2">
-          <div className="col-12">
-            <FormField
-              name="mes"
-              type="month"
-              size="sm"
-              label={t('cobranca.month')}
-              value={mes}
-              onChange={(value) => onMesChange(String(value ?? ''))}
-            />
-          </div>
-        </div>
-      </form>
+    <div className="row align-items-stretch">
+      <div className="col-12">
       <StatTilesCard
         title={t('cobranca.tabIndicators')}
         columns={3}
@@ -56,6 +41,8 @@ const CobrancaIndicadoresPainel: React.FC<CobrancaIndicadoresPainelProps> = ({ m
       />
       <p className="form-helper-message">{t('cobranca.bestDatesHelp', { min: dados.volume_minimo })}</p>
       {dados.melhor_dia == null ? <p className="form-helper-message">{t('cobranca.noBestDay')}</p> : null}
+      </div>
+      <div className="col-12 col-xl-6">
       <Table
         tableId="cobranca-faixas"
         title={t('cobranca.agingTitle')}
@@ -74,6 +61,8 @@ const CobrancaIndicadoresPainel: React.FC<CobrancaIndicadoresPainelProps> = ({ m
           emptyMessage: t('cobranca.emptyIndicators'),
         }}
       />
+      </div>
+      <div className="col-12 col-xl-6">
       <Table
         tableId="cobranca-datas"
         title={t('cobranca.bestDatesTitle')}
@@ -102,6 +91,7 @@ const CobrancaIndicadoresPainel: React.FC<CobrancaIndicadoresPainelProps> = ({ m
           emptyMessage: t('cobranca.noBestDay'),
         }}
       />
+      </div>
     </div>
   );
 };
