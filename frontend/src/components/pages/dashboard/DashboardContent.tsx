@@ -7,7 +7,6 @@ import type { useDashboardChartClicks } from 'hooks/useDashboardChartClicks';
 import type { useChartHiddenItems } from 'hooks/useChartHiddenItems';
 import DashboardPieChartsRow from './sections/DashboardPieChartsRow';
 import DashboardLineChartsRow from './sections/DashboardLineChartsRow';
-import DashboardCobrancaSection from './sections/DashboardCobrancaSection';
 
 interface DashboardContentProps {
   charts: ReturnType<typeof useDashboardCharts>;
@@ -46,7 +45,6 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
       showOperacional={showOperacional}
       showCadastros={showCadastros}
     />
-    {showFinanceiro && <DashboardCobrancaSection />}
     <DashboardLineChartsRow
       charts={charts}
       t={t}
