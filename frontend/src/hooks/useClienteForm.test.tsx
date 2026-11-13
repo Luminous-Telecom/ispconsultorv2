@@ -164,4 +164,38 @@ describe('useClienteForm', () => {
     });
     expect(result.current.formData.ips_dns).toBe('10.0.0.2');
   });
+
+  it('grava comunicação desmarcada como false', async () => {
+    const cliente = { ...clienteCriado, id: 8, recebe_email: true, recebe_whatsapp: true };
+    jest.mocked(ClienteService.getById).mockResolvedValue(cliente as never);
+
+    const { result } = renderHook(
+      () => useClienteForm({ clienteId: 8, show: true }),
+      { wrapper }
+    );
+
+    await waitFor(() => {
+      expect(result.current.cliente?.id).toBe(8);
+      expect(result.current.formData.razao_social).toBe('Empresa Teste');
+    });
+
+    await act(async () => {
+      await result.current.handleInputChange('recebe_email', false);
+      await result.current.handleInputChange('recebe_whatsapp', false);
+    });
+
+    expect(result.current.formData.recebe_email).toBe(false);
+    expect(result.current.formData.recebe_whatsapp).toBe(false);
+
+    await act(async () => {
+      result.current.handleSubmit({ preventDefault() {} } as React.FormEvent);
+    });
+
+    await waitFor(() => {
+      expect(ClienteService.update).toHaveBeenCalledWith(8, expect.objectContaining({
+        recebe_email: false,
+        recebe_whatsapp: false,
+      }));
+    });
+  });
 });

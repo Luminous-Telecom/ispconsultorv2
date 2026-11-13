@@ -236,6 +236,15 @@ export class WhatsAppBoletoService {
         continue;
       }
 
+      if (cliente.recebe_whatsapp !== true) {
+        logger.info('WhatsAppBoletoService.processarEnvio - Comunicação por WhatsApp desativada', {
+          context: 'WhatsAppBoletoService',
+          tituloId: titulo.id,
+          clienteId: cliente.id,
+        });
+        continue;
+      }
+
       try {
         logger.info('WhatsAppBoletoService.processarEnvio - Enviando mensagem para título', {
           context: 'WhatsAppBoletoService',
@@ -542,6 +551,14 @@ export class WhatsAppBoletoService {
   static async enviarReciboPagamento(titulo: Titulo, cliente: Cliente): Promise<boolean> {
     try {
       logger.info('[Recibo WhatsApp] Iniciando envio', { titulo_id: titulo.id });
+
+      if (cliente?.recebe_whatsapp !== true) {
+        logger.info('[Recibo WhatsApp] Comunicação por WhatsApp desativada no cadastro do cliente', {
+          titulo_id: titulo.id,
+          cliente_id: cliente?.id,
+        });
+        return false;
+      }
 
       if (!cliente?.telefone?.trim()) {
         logger.info('[Recibo WhatsApp] Cliente sem telefone', { titulo_id: titulo.id });
