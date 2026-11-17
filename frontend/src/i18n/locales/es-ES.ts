@@ -165,6 +165,8 @@ const esES: TranslationKeys = {
 
     // Panel
     'dashboard.title': 'Panel',
+    'dashboard.hideData': 'Ofuscar datos',
+    'dashboard.showData': 'Mostrar datos',
     'dashboard.overview': 'Resumen',
     'dashboard.totalClients': 'Total de Clientes',
     'dashboard.totalPlans': 'Total de Planes',

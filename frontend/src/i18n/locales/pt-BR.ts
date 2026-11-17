@@ -165,6 +165,8 @@ const ptBR: TranslationKeys = {
 
     // Dashboard
     'dashboard.title': 'Dashboard',
+    'dashboard.hideData': 'Ofuscar dados',
+    'dashboard.showData': 'Mostrar dados',
     'dashboard.overview': 'Visão Geral',
     'dashboard.totalClients': 'Total de Clientes',
     'dashboard.totalPlans': 'Total de Planos',

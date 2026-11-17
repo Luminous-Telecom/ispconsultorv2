@@ -165,6 +165,8 @@ const enUS: TranslationKeys = {
 
     // Dashboard
     'dashboard.title': 'Dashboard',
+    'dashboard.hideData': 'Hide data',
+    'dashboard.showData': 'Show data',
     'dashboard.overview': 'Overview',
     'dashboard.totalClients': 'Total Clients',
     'dashboard.totalPlans': 'Total Plans',

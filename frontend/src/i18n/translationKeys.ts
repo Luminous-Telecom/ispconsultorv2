@@ -163,6 +163,8 @@ export interface TranslationKeys {
 
   // Dashboard
   'dashboard.title': string;
+  'dashboard.hideData': string;
+  'dashboard.showData': string;
   'dashboard.overview': string;
   'dashboard.totalClients': string;
   'dashboard.totalPlans': string;

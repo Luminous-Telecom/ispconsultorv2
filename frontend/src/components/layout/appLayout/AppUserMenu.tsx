@@ -3,6 +3,7 @@ import { NavLinkButton } from 'components/ui';
 import { useTheme } from 'contexts/ThemeContext';
 import { useFontSize, type FontSize } from 'contexts/FontSizeContext';
 import { useModal } from 'contexts/ModalContext';
+import { useDashboardDataObfuscation } from 'hooks/useDashboardDataObfuscation';
 import type { Language } from 'contexts/I18nContext';
 import UserMenuFlyout from '../layout/UserMenuFlyout';
 import type { TranslateFn } from '../layout/types';
@@ -56,6 +57,7 @@ const AppUserMenu: React.FC<AppUserMenuProps> = ({
   const { theme, setTheme } = useTheme();
   const { fontSize, setFontSize } = useFontSize();
   const { openModal } = useModal();
+  const { isObfuscated, toggle: toggleDashboardObfuscation } = useDashboardDataObfuscation();
 
   const displayName = currentUser?.nome || userTitleFallback;
   const initials = getInitials(currentUser?.nome, userTitleFallback.charAt(0).toUpperCase() || 'U');
@@ -135,6 +137,18 @@ const AppUserMenu: React.FC<AppUserMenuProps> = ({
               ariaLabel={t('layout.fontSize')}
               options={fontSizeOptions}
             />
+
+            <li>
+              <NavLinkButton
+                className="layout-user-dropdown__row"
+                aria-pressed={isObfuscated}
+                onClick={toggleDashboardObfuscation}
+                ariaLabel={isObfuscated ? t('dashboard.showData') : t('dashboard.hideData')}
+              >
+                <i className={isObfuscated ? 'bi bi-eye-slash' : 'bi bi-eye'} aria-hidden />
+                <span>{isObfuscated ? t('dashboard.showData') : t('dashboard.hideData')}</span>
+              </NavLinkButton>
+            </li>
 
             <li>
               <NavLinkButton

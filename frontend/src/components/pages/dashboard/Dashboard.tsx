@@ -20,6 +20,7 @@ import { DASHBOARD_SEARCH_DEBOUNCE_MS } from './constants';
 import { useDashboardBackupStatus } from './hooks/useDashboardBackupStatus';
 import { useDashboardMetrics } from './hooks/useDashboardMetrics';
 import DashboardContent from './DashboardContent';
+import DashboardPrivacyFrame from './DashboardPrivacyFrame';
 import { authService } from 'services/authService';
 import { canSeeDashboardSection } from 'constants/userRoles';
 
@@ -86,16 +87,16 @@ const Dashboard: React.FC = () => {
 
   if (showClientSearch && debouncedSearch && !activeModal) {
     return (
-      <div className="dashboard-container">
+      <DashboardPrivacyFrame>
         <div className="container-fluid px-0">
           <DashboardSearchResult searchTerm={debouncedSearch} searchField={searchField} />
         </div>
-      </div>
+      </DashboardPrivacyFrame>
     );
   }
 
   return (
-    <div className="dashboard-container">
+    <DashboardPrivacyFrame>
       <DashboardContent
         charts={charts}
         t={t}
@@ -107,7 +108,7 @@ const Dashboard: React.FC = () => {
         showOperacional={showOperacional}
         showCadastros={showCadastros}
       />
-    </div>
+    </DashboardPrivacyFrame>
   );
 };
 

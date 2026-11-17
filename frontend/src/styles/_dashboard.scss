@@ -82,6 +82,12 @@
   }
 }
 
+.dashboard-container--obfuscated {
+  filter: blur(10px);
+  user-select: none;
+  pointer-events: none;
+}
+
 /* Cards de Gráficos */
 .chart-card {
   background: var(--bg-secondary);
